@@ -3587,7 +3587,7 @@
                 }
               },
               "documentation": "\n    <p>\n    Represents metadata to associate with Amazon EC2 resources.\n    Each tag consists of a user-defined key and value.\n    Use tags to categorize EC2 resources, such as by purpose,\n    owner, or environment.\n    </p>\n   ",
-              "xmlname": "Item"
+              "xmlname": "Tag"
             },
             "documentation": "\n    <p>\n    The tags to add or overwrite for the specified resources. Each tag item consists of a key-value pair.\n    </p>\n   ",
             "required": true,
