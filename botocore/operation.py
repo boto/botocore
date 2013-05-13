@@ -23,6 +23,7 @@
 import logging
 from .parameters import get_parameter
 from .exceptions import MissingParametersError
+from .events import create_event
 from .paginate import Paginator
 from . import BotoCoreObject
 
@@ -49,18 +50,18 @@ class Operation(BotoCoreObject):
 
     def call(self, endpoint, **kwargs):
         logger.debug("%s called with kwargs: %s", self, kwargs)
-        self.service.session.emit('before-call.%s' % self._event_name(),
-                                  operation=self, endpoint=endpoint,
+        event = create_event('before-call', self.service.endpoint_prefix,
+                             self.name)
+        self.service.session.emit(event, operation=self, endpoint=endpoint,
                                   params=kwargs)
         params = self.build_parameters(**kwargs)
         response = endpoint.make_request(self, params)
-        self.service.session.emit('after-call.%s' % self._event_name(),
-                                  operation=self, http_response=response[0],
+        event = create_event('after-call', self.service.endpoint_prefix,
+                             self.name)
+        self.service.session.emit(event, operation=self,
+                                  http_response=response[0],
                                   parsed=response[1])
         return response
-
-    def _event_name(self):
-        return "%s.%s" % (self.service.endpoint_prefix, self.name)
 
     @property
     def can_paginate(self):

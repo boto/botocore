@@ -36,6 +36,7 @@ import botocore.credentials
 import botocore.base
 import botocore.service
 from botocore.exceptions import ConfigNotFound
+from botocore.events import create_event
 from botocore.hooks import HierarchicalEmitter
 from botocore import __version__
 from botocore import handlers
@@ -352,8 +353,10 @@ class Session(object):
 
         :returns: :class:`botocore.service.Service`
         """
-        service = botocore.service.get_service(self, service_name, provider_name)
-        self._events.emit('service-created', service=service)
+        service = botocore.service.get_service(self, service_name,
+                                               provider_name)
+        event = create_event('service-created')
+        self._events.emit(event, service=service)
         return service
 
     def set_debug_logger(self):
