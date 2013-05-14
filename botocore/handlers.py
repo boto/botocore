@@ -38,9 +38,17 @@ def decode_console_output(**kwargs):
     return value
 
 
-def decode_jsondoc(**kwargs):
+def decode_quoted_jsondoc(**kwargs):
     try:
         value = json.loads(unquote(kwargs['value']))
+    except:
+        value = kwargs['value']
+    return value
+
+
+def decode_jsondoc(**kwargs):
+    try:
+        value = json.loads(kwargs['value'])
     except:
         value = kwargs['value']
     return value
@@ -52,5 +60,7 @@ BUILTIN_HANDLERS = [
     ('after-parsed.ec2.GetConsoleOutput.String.Output',
      decode_console_output),
     ('after-parsed.iam.*.policyDocumentType.PolicyDocument',
+     decode_quoted_jsondoc),
+    ('after-parsed.cloudformation.*.TemplateBody.TemplateBody',
      decode_jsondoc)
 ]

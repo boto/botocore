@@ -24,7 +24,6 @@ import sys
 import xml.etree.cElementTree
 from botocore import ScalarTypes
 from .hooks import first_non_none_response
-from .events import create_event
 import json
 import logging
 
@@ -248,10 +247,10 @@ class XmlResponse(Response):
 
     def emit_event(self, tag, shape, value):
         if 'shape_name' in shape:
-            event = create_event('after-parsed',
-                                 self.operation.service.endpoint_prefix,
-                                 self.operation.name,
-                                 shape['shape_name'], tag)
+            event = self.session.create_event('after-parsed',
+                                              self.operation.service.endpoint_prefix,
+                                              self.operation.name,
+                                              shape['shape_name'], tag)
             rv = first_non_none_response(self.session.emit(event,
                                                            shape=shape,
                                                            value=value),
