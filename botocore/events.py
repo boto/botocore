@@ -21,12 +21,15 @@
 # IN THE SOFTWARE.
 #
 
+from .exceptions import EventNotFound
+
 AllEvents = {
     'after-call': '.%s.%s',
     'after-parsed': '.%s.%s.%s.%s',
     'before-call': '.%s.%s',
-    'service-created': None
+    'service-created': ''
     }
+
 
 def create_event(event_name, *fmtargs):
     if event_name in AllEvents:
@@ -36,4 +39,4 @@ def create_event(event_name, *fmtargs):
         else:
             event = event_name
         return event
-    raise ValueError('Unknown event: %s' % event_name)
+    raise EventNotFound(event_name=event_name)
