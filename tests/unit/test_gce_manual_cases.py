@@ -29,7 +29,6 @@ class TestDisks(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gce = self.session.get_service('gce')
-        self.endpoint = self.gce.get_endpoint()
 
     def test_service_type(self):
         self.assertTrue(self.gce.type == 'rest-json')
