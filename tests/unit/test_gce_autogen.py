@@ -32,7 +32,6 @@ class TestAddresses(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gce = self.session.get_service('gce')
-        self.endpoint = self.gce.get_endpoint()
 
     def test_addresses_aggregatedList(self):
         op = self.gce.get_operation('compute.addresses.aggregatedList')
@@ -222,7 +221,6 @@ class TestDisks(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gce = self.session.get_service('gce')
-        self.endpoint = self.gce.get_endpoint()
 
     def test_disks_aggregatedList(self):
         op = self.gce.get_operation('compute.disks.aggregatedList')
@@ -514,7 +512,6 @@ class TestFirewalls(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gce = self.session.get_service('gce')
-        self.endpoint = self.gce.get_endpoint()
 
     def test_firewalls_delete(self):
         op = self.gce.get_operation('compute.firewalls.delete')
@@ -703,7 +700,6 @@ class TestGlobaloperations(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gce = self.session.get_service('gce')
-        self.endpoint = self.gce.get_endpoint()
 
     def test_globalOperations_aggregatedList(self):
         op = self.gce.get_operation('compute.globalOperations.aggregatedList')
@@ -782,7 +778,6 @@ class TestImages(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gce = self.session.get_service('gce')
-        self.endpoint = self.gce.get_endpoint()
 
     def test_images_delete(self):
         op = self.gce.get_operation('compute.images.delete')
@@ -922,7 +917,6 @@ class TestInstances(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gce = self.session.get_service('gce')
-        self.endpoint = self.gce.get_endpoint()
 
     def test_instances_addAccessConfig(self):
         op = self.gce.get_operation('compute.instances.addAccessConfig')
@@ -1999,7 +1993,6 @@ class TestKernels(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gce = self.session.get_service('gce')
-        self.endpoint = self.gce.get_endpoint()
 
     def test_kernels_get(self):
         op = self.gce.get_operation('compute.kernels.get')
@@ -2042,7 +2035,6 @@ class TestMachinetypes(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gce = self.session.get_service('gce')
-        self.endpoint = self.gce.get_endpoint()
 
     def test_machineTypes_aggregatedList(self):
         op = self.gce.get_operation('compute.machineTypes.aggregatedList')
@@ -2134,7 +2126,6 @@ class TestNetworks(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gce = self.session.get_service('gce')
-        self.endpoint = self.gce.get_endpoint()
 
     def test_networks_delete(self):
         op = self.gce.get_operation('compute.networks.delete')
@@ -2225,7 +2216,6 @@ class TestProjects(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gce = self.session.get_service('gce')
-        self.endpoint = self.gce.get_endpoint()
 
     def test_projects_get(self):
         op = self.gce.get_operation('compute.projects.get')
@@ -2268,7 +2258,6 @@ class TestRegionoperations(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gce = self.session.get_service('gce')
-        self.endpoint = self.gce.get_endpoint()
 
     def test_regionOperations_delete(self):
         op = self.gce.get_operation('compute.regionOperations.delete')
@@ -2397,7 +2386,6 @@ class TestRegions(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gce = self.session.get_service('gce')
-        self.endpoint = self.gce.get_endpoint()
 
     def test_regions_get(self):
         op = self.gce.get_operation('compute.regions.get')
@@ -2440,7 +2428,6 @@ class TestRoutes(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gce = self.session.get_service('gce')
-        self.endpoint = self.gce.get_endpoint()
 
     def test_routes_delete(self):
         op = self.gce.get_operation('compute.routes.delete')
@@ -2531,7 +2518,6 @@ class TestSnapshots(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gce = self.session.get_service('gce')
-        self.endpoint = self.gce.get_endpoint()
 
     def test_snapshots_delete(self):
         op = self.gce.get_operation('compute.snapshots.delete')
@@ -2598,7 +2584,6 @@ class TestZoneoperations(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gce = self.session.get_service('gce')
-        self.endpoint = self.gce.get_endpoint()
 
     def test_zoneOperations_delete(self):
         op = self.gce.get_operation('compute.zoneOperations.delete')
@@ -2727,7 +2712,6 @@ class TestZones(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gce = self.session.get_service('gce')
-        self.endpoint = self.gce.get_endpoint()
 
     def test_zones_get(self):
         op = self.gce.get_operation('compute.zones.get')

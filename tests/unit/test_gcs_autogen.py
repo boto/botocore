@@ -32,7 +32,6 @@ class TestBucketaccesscontrols(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gcs = self.session.get_service('gcs')
-        self.endpoint = self.gcs.get_endpoint()
 
     def test_bucketAccessControls_delete(self):
         op = self.gcs.get_operation('storage.bucketAccessControls.delete')
@@ -221,7 +220,6 @@ class TestBuckets(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gcs = self.session.get_service('gcs')
-        self.endpoint = self.gcs.get_endpoint()
 
     def test_buckets_delete(self):
         op = self.gcs.get_operation('storage.buckets.delete')
@@ -336,7 +334,6 @@ class TestChannels(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gcs = self.session.get_service('gcs')
-        self.endpoint = self.gcs.get_endpoint()
 
     def test_channels_stop(self):
         op = self.gcs.get_operation('storage.channels.stop')
@@ -355,7 +352,6 @@ class TestDefaultobjectaccesscontrols(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gcs = self.session.get_service('gcs')
-        self.endpoint = self.gcs.get_endpoint()
 
     def test_defaultObjectAccessControls_delete(self):
         op = self.gcs.get_operation('storage.defaultObjectAccessControls.delete')
@@ -544,7 +540,6 @@ class TestObjectaccesscontrols(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gcs = self.session.get_service('gcs')
-        self.endpoint = self.gcs.get_endpoint()
 
     def test_objectAccessControls_delete(self):
         op = self.gcs.get_operation('storage.objectAccessControls.delete')
@@ -926,7 +921,6 @@ class TestObjects(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.gcs = self.session.get_service('gcs')
-        self.endpoint = self.gcs.get_endpoint()
 
     def test_objects_compose(self):
         op = self.gcs.get_operation('storage.objects.compose')
