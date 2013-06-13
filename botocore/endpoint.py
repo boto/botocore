@@ -26,7 +26,8 @@ import json
 from requests.sessions import Session
 from requests.utils import get_environ_proxies
 
-from botocore.auth import AUTH_TYPE_MAPS, UnknownSignatureVersionError
+from botocore.auth import AUTH_TYPE_MAPS, UnknownSignatureVersionError, \
+    GCPOAuth2Auth
 import botocore.response
 import botocore.exceptions
 from botocore.awsrequest import AWSRequest
@@ -153,8 +154,10 @@ class RestEndpoint(Endpoint):
         logger.debug('path: %s' % path)
         logger.debug('query_params: %s' % query_params)
         path_components = []
+        used_uri_params = []
         for pc in path.split('/'):
             if pc:
+                used_uri_params.append(pc.strip('{}'))
                 pc = pc.format(**params['uri_params'])
             path_components.append(pc)
         path = '/'.join(path_components)
@@ -172,12 +175,19 @@ class RestEndpoint(Endpoint):
                         value = params['uri_params'][value_name]
                         query_param_components.append('%s=%s' % (key_name,
                                                                  value))
+                        used_parameters.append(value_name)
                 else:
                     query_param_components.append(key_name)
+        query_param_components.extend('%s=%s' % (k, params['uri_params'][k])
+                                      for k in params['uri_params']
+                                      if k not in used_uri_params)
         query_params = '&'.join(query_param_components)
         logger.debug('path: %s' % path)
         logger.debug('query_params: %s' % query_params)
-        return path + '?' + query_params
+        if query_params:
+            return path + '?' + query_params
+        else:
+            return path
 
     def make_request(self, operation, params):
         """
@@ -189,8 +199,10 @@ class RestEndpoint(Endpoint):
         logger.debug('SSL Verify: %s' % self.verify)
         user_agent = self.session.user_agent()
         params['headers']['User-Agent'] = user_agent
+
         uri = self.build_uri(operation, params)
         uri = urljoin(self.host, uri)
+
         if params['payload'] is None:
             request = AWSRequest(method=operation.http['method'],
                                  url=uri, headers=params['headers'])
@@ -243,5 +255,5 @@ SERVICE_TO_ENDPOINT = {
     'query': QueryEndpoint,
     'json': JSONEndpoint,
     'rest-xml': RestEndpoint,
-    'rest-json': RestEndpoint,
+    'rest-json': RestEndpoint
 }

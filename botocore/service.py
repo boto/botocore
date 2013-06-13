@@ -20,11 +20,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 #
+
 import logging
 
 from .endpoint import get_endpoint
 from .operation import Operation
 from .exceptions import ServiceNotInRegionError, NoRegionError
+
 
 
 logger = logging.getLogger(__name__)
@@ -85,11 +87,13 @@ class Service(object):
             scheme = 'https'
         else:
             scheme = 'http'
+
         if scheme not in self.metadata['protocols']:
             raise ValueError('Unsupported protocol: %s' % scheme)
         endpoint_url = '%s://%s%s' % (scheme, host, self.path)
         if self.port:
             endpoint_url += ':%d' % self.port
+
         return endpoint_url
 
     def get_endpoint(self, region_name=None, is_secure=True,
@@ -97,34 +101,47 @@ class Service(object):
         """
         Return the Endpoint object for this service in a particular
         region.
-
+        
         :type region_name: str
         :param region_name: The name of the region.
-
+        
         :type is_secure: bool
         :param is_secure: True if you want the secure (HTTPS) endpoint.
-
+        
         :type endpoint_url: str
         :param endpoint_url: You can explicitly override the default
             computed endpoint name with this parameter.
         """
-        if not region_name:
-            region_name = self.session.get_variable('region')
-            if region_name is None and not self.global_endpoint:
-                envvar_name = self.session.env_vars['region'][1]
-                raise NoRegionError(env_var=envvar_name)
-        if region_name not in self.metadata['regions']:
-            if self.global_endpoint:
-                endpoint_url = self._build_endpoint_url(self.global_endpoint,
-                                                        is_secure)
-                region_name = 'us-east-1'
-            else:
-                raise ServiceNotInRegionError(service_name=self.endpoint_prefix,
-                                              region_name=region_name)
-        endpoint_url = endpoint_url or self.metadata['regions'][region_name]
+        endpoint_url = None
+        if 'regions' in self.metadata:
+            if not region_name:
+                region_name = self.session.get_variable('region')
+                if region_name is None and not self.global_endpoint:
+                    envvar_name = self.session.env_vars['region'][1]
+                    raise NoRegionError(env_var=envvar_name)
+            if region_name not in self.metadata['regions']:
+                if self.global_endpoint:
+                    endpoint_url = self._build_endpoint_url(
+                        self.global_endpoint,
+                        is_secure
+                    )
+                    region_name = 'us-east-1'
+                else:
+                    raise ServiceNotInRegionError(
+                        service_name=self.endpoint_prefix,
+                        region_name=region_name
+                    )
+            endpoint_url = endpoint_url or self.metadata['regions'][region_name]
         if endpoint_url is None:
-            host = '%s.%s.amazonaws.com' % (self.endpoint_prefix, region_name)
-            endpoint_url = self._build_endpoint_url(host, is_secure)
+            #Allow for explicit endpoints in the model JSON
+            if hasattr(self, 'endpoint_url'):
+                endpoint_url = self.endpoint_url
+            else:
+                host = '%s.%s.amazonaws.com' % (
+                    self.endpoint_prefix,
+                    region_name
+                )
+                endpoint_url = self._build_endpoint_url(host, is_secure)
         return get_endpoint(self, region_name, endpoint_url)
 
     def get_operation(self, operation_name):

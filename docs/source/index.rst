@@ -7,7 +7,7 @@ Welcome to botocore
 ===================
 
 Botocore is a low-level interface to a growing number of Amazon Web
-Services.  Botocore serves as the foundation for the
+Services and Google Cloud Platform services.  Botocore serves as the foundation for the
 `AWS-CLI <https://github.com/aws/aws-cli/>`_ command line utilities.
 It will also play an important role in the boto3.x project.
 
@@ -17,13 +17,13 @@ The botocore package is compatible with Python versions 2.6.x - 3.3.x.
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    tutorial/index
    reference/index
    topics/index
    development/index
-
+   google/index
 
 Indices and tables
 ==================
