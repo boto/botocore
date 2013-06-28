@@ -25,7 +25,6 @@ from .parameters import get_parameter
 from .exceptions import MissingParametersError
 from .paginate import Paginator
 from . import BotoCoreObject
-
 logger = logging.getLogger(__name__)
 
 
@@ -125,8 +124,8 @@ class Operation(BotoCoreObject):
             if param.required:
                 missing.append(param)
             if param.py_name in kwargs:
-                if missing:
-                    missing.pop()
+                if missing and param in missing:
+                    missing.remove(param)
                 param.build_parameter(self.service.type,
                                       kwargs[param.py_name],
                                       built_params)

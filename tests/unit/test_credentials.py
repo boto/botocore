@@ -44,6 +44,9 @@ metadata = {'foobar': {'Code': 'Success', 'LastUpdated':
 def path(filename):
     return os.path.join(os.path.dirname(__file__), 'cfg', filename)
 
+def data_path(filename):
+    return os.path.join(os.path.dirname(__file__), 'data', filename)
+
 
 class EnvVarTest(BaseEnvVar):
 
@@ -128,6 +131,90 @@ class BotoConfigTest(BaseEnvVar):
         self.assertEqual(credentials.access_key, 'foo')
         self.assertEqual(credentials.secret_key, 'bar')
         self.assertEqual(credentials.method, 'boto')
+
+
+class BotoConfigGCPTest(BaseEnvVar):
+
+    def setUp(self):
+        super(BotoConfigGCPTest, self).setUp()
+        self.environ['BOTO_CONFIG'] = path('boto_config_gcp')
+        self.session = botocore.session.get_session(env_vars=TESTENVVARS)
+
+    def test_boto_config(self):
+        credentials = self.session.get_credentials()
+        self.assertEqual(credentials.gcp_account, 'foo')
+        self.assertEqual(credentials.gcp_private_key_file, 'bar')
+        self.assertTrue('scope_1' in credentials.gcp_scopes and
+                         'scope_2' in credentials.gcp_scopes)
+        self.assertEqual(credentials.gcp_client_id, 'baz')
+        self.assertEqual(credentials.gcp_client_secret, 'foobaz')
+
+    def test_boto_config_bad_installed_credentials(self):
+        credentials = self.session.get_credentials()
+        credentials.load_installed_auth(data_path('inst_app_bad.json'))
+        self.assertEqual(credentials.gcp_access_token, None)
+        self.assertEqual(credentials.gcp_refresh_token, None)
+        self.assertEqual(credentials.gcp_token_type, 'Bearer')
+
+    def test_boto_config_good_installed_credentials(self):
+        credentials = self.session.get_credentials()
+        credentials.load_installed_auth(data_path('inst_app_good.json'))
+        self.assertEqual(credentials.gcp_access_token, 'ACCESS_TOKEN')
+        self.assertEqual(credentials.gcp_refresh_token, 'REFRESH_TOKEN')
+        self.assertEqual(credentials.gcp_token_type, 'Bearer')
+
+
+class BotoConfigGCPTestMissingBothCredentials(BaseEnvVar):
+
+    def setUp(self):
+        super(BotoConfigGCPTestMissingBothCredentials, self).setUp()
+        self.environ['BOTO_CONFIG'] = path('boto_config_gcp_missing_both')
+        self.session = botocore.session.get_session(env_vars=TESTENVVARS)
+
+    def test_boto_config(self):
+        credentials = self.session.get_credentials()
+        self.assertEqual(credentials, None)
+
+
+class BotoConfigGCPTestMissingServiceCredentials(BaseEnvVar):
+
+    def setUp(self):
+        super(BotoConfigGCPTestMissingServiceCredentials, self).setUp()
+        self.environ['BOTO_CONFIG'] = path('boto_config_gcp_missing_service')
+        self.session = botocore.session.get_session(env_vars=TESTENVVARS)
+
+    def test_boto_config_installed(self):
+        credentials = self.session.get_credentials()
+        credentials.load_installed_auth(data_path('inst_app_good.json'))
+        self.assertEqual(credentials.gcp_access_token, 'ACCESS_TOKEN')
+        self.assertEqual(credentials.gcp_refresh_token, 'REFRESH_TOKEN')
+        self.assertEqual(credentials.gcp_token_type, 'Bearer')
+
+    def test_boto_config_service(self):
+        credentials = self.session.get_credentials()
+        self.assertEqual(credentials.gcp_account, None)
+        self.assertEqual(credentials.gcp_private_key_file, None)
+        self.assertEqual(credentials.gcp_scopes, None)
+
+class BotoConfigGCPTestMissingInstalledCredentials(BaseEnvVar):
+
+    def setUp(self):
+        super(BotoConfigGCPTestMissingInstalledCredentials, self).setUp()
+        self.environ['BOTO_CONFIG'] = path('boto_config_gcp_missing_installed')
+        self.session = botocore.session.get_session(env_vars=TESTENVVARS)
+
+    def test_boto_config_installed(self):
+        credentials = self.session.get_credentials()
+        self.assertEqual(credentials.gcp_client_id, None)
+        self.assertEqual(credentials.gcp_client_secret, None)
+        self.assertEqual(credentials.gcp_installed_auth_file, None)
+
+    def test_boto_config_service(self):
+        credentials = self.session.get_credentials()
+        self.assertEqual(credentials.gcp_account, 'foo')
+        self.assertEqual(credentials.gcp_private_key_file, 'bar')
+        self.assertTrue('scope_1' in credentials.gcp_scopes and
+                         'scope_2' in credentials.gcp_scopes)
 
 
 class IamRoleTest(BaseEnvVar):

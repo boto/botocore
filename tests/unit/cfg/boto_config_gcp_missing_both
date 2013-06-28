@@ -1,0 +1,10 @@
+[Credentials]
+#SERVICE ACCOUNT
+gcp_service_account_email=foo
+#gcp_private_key_file=bar
+gcp_scopes=scope_1,scope_2
+
+#INSTALLED APPLICATION
+gcp_installed_auth_file=foobar
+#gcp_client_id=baz
+gcp_client_secret=foobaz

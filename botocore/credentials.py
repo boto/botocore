@@ -40,15 +40,59 @@ class Credentials(object):
     :ivar token: The security token, valid only for session credentials.
     :ivar method: A string which identifies where the credentials
         were found.  Valid values are: iam_role|env|config|boto.
+    :ivar gcp_account: Service account email.
+    :ivar gcp_private_key_file: Service account .pem file.
+    :ivar gcp_scopes: OAuth Scopes.
+    :ivar gcp_token_received_time: Time last access_token was obtained.
+    :ivar gcp_token_lifetime: Lifetime of last access_token obtained.
+    :ivar gcp_token_type: Authorization type (default: "Bearer").
+    :ivar gcp_access_token: Last obtained access_token.
+    :ivar gcp_refresh_token: The secret key part of the credentials.
+    :ivar gcp_client_id: Installed application client_id.
+    :ivar gcp_client_secret: Installed application client_secret.
+    :ivar installed_auth_file: Installed application auth file.
     """
 
-    def __init__(self, access_key=None, secret_key=None, token=None):
+    def __init__(self, access_key=None, secret_key=None, token=None,
+                 account=None, **kwargs):
         self.access_key = access_key
         self.secret_key = secret_key
         self.token = token
         self.method = None
         self.profiles = []
 
+        #Set default values for Google Authentication
+        self.gcp_account = None
+        self.gcp_private_key_file = None
+        self.gcp_scopes = None
+        self.gcp_token_received_time = 0
+        self.gcp_token_lifetime = 0
+        self.gcp_token_type = 'Bearer'
+        self.gcp_access_token = None
+        self.gcp_refresh_token = None
+        self.gcp_client_id = None
+        self.gcp_client_secret = None
+
+        #Update credentials from arguments
+        self.__dict__.update(kwargs)
+        if hasattr(self, 'gcp_installed_auth_file'):
+            if self.gcp_installed_auth_file:
+                self.load_installed_auth(self.gcp_installed_auth_file)
+
+    def load_installed_auth(self, auth_file):
+        """Loads OAuth information from installed application auth file."""
+        path = os.path.expanduser(auth_file)
+        path = os.path.expandvars(path)
+        try:
+            with open(path, 'r') as f:
+                json_data = json.loads(f.read())
+                self.gcp_access_token = json_data['access_token']
+                self.gcp_refresh_token = json_data['refresh_token']
+                self.gcp_token_type = json_data['token_type']
+        except IOError:
+            logger.error('Bad authentication file specified')
+        except KeyError:
+            logger.error('Corrupted authentication file')
 
 def _search_md(url='http://169.254.169.254/latest/meta-data/iam/security-credentials/'):
     d = {}
@@ -147,7 +191,8 @@ def search_boto_config(**kwargs):
     """
     Look for credentials in boto config file.
     """
-    credentials = access_key = secret_key = None
+    credentials = access_key = secret_key = private_key_file = \
+        account = scopes = installed_auth = client_id = client_secret = None
     if 'BOTO_CONFIG' in os.environ:
         paths = [os.environ['BOTO_CONFIG']]
     else:
@@ -161,10 +206,32 @@ def search_boto_config(**kwargs):
             access_key = cp.get('Credentials', 'aws_access_key_id')
         if cp.has_option('Credentials', 'aws_secret_access_key'):
             secret_key = cp.get('Credentials', 'aws_secret_access_key')
-    if access_key and secret_key:
-        credentials = Credentials(access_key, secret_key)
-        credentials.method = 'boto'
-        logger.info('Found credentials in boto config file')
+        if cp.has_option('Credentials', 'gcp_service_account_email'):
+            account = cp.get('Credentials', 'gcp_service_account_email')
+        if cp.has_option('Credentials', 'gcp_private_key_file'):
+            private_key_file = cp.get('Credentials', 'gcp_private_key_file')
+        if cp.has_option('Credentials', 'gcp_scopes'):
+            scopes = cp.get('Credentials', 'gcp_scopes').split(',')
+        if cp.has_option('Credentials', 'gcp_installed_auth_file'):
+            installed_auth = cp.get('Credentials', 'gcp_installed_auth_file')
+        if cp.has_option('Credentials', 'gcp_client_id'):
+            client_id = cp.get('Credentials', 'gcp_client_id')
+        if cp.has_option('Credentials', 'gcp_client_secret'):
+            client_secret = cp.get('Credentials', 'gcp_client_secret')
+
+        #Only create if boto config is valid
+        if (access_key and secret_key) or (private_key_file and
+        account and scopes) or (installed_auth and client_id and client_secret):
+            credentials = Credentials(access_key,
+                                    secret_key,
+                                    gcp_account=account,
+                                    gcp_private_key_file=private_key_file,
+                                    gcp_scopes=scopes,
+                                    gcp_installed_auth_file=installed_auth,
+                                    gcp_client_secret=client_secret,
+                                    gcp_client_id=client_id)
+            credentials.method = 'boto'
+            logger.info('Found credentials in boto config file')
     return credentials
 
 AllCredentialFunctions = [search_environment,

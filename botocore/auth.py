@@ -21,6 +21,7 @@
 # IN THE SOFTWARE.
 #
 import base64
+
 import datetime
 from hashlib import sha256
 from hashlib import sha1
@@ -33,10 +34,16 @@ from botocore.exceptions import NoCredentialsError
 from botocore.utils import normalize_url_path
 from botocore.compat import HTTPHeaders
 from botocore.compat import quote, unquote, urlsplit, parse_qsl
+from botocore.gcpcrypto import OAuth2
 from six.moves import http_client
+
+import time
+
 
 logger = logging.getLogger(__name__)
 
+#Minimum percentage of access token life before requesting a new token
+REFRESH_THRESHOLD_PCT = 0.05
 
 EMPTY_SHA256_HASH = (
     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
@@ -371,9 +378,77 @@ class HmacV1Auth(object):
         logger.debug('Method: %s' % request.method)
         signature = self.get_signature(request.method, split,
                                        request.headers)
-        request.headers['Authorization'] = ("AWS %s:%s" % (self.credentials.access_key,
-                                                           signature))
+        request.headers['Authorization'] = ("AWS %s:%s" %
+                                            (self.credentials.access_key,
+                                             signature))
 
+class GCPOAuth2Auth(object):
+    """
+    Sign a request with OAuth2.
+    """
+    def __init__(self, credentials, service_name=None, region_name=None):
+        self.credentials = credentials
+        if self.credentials is None:
+            raise NoCredentialsError
+        self.service_name = service_name
+        self.region_name = region_name
+        if not self.verify_credentials():
+            raise NoCredentialsError
+
+    def verify_credentials(self):
+        """Determines whether there is correct information for getting auth"""
+        return (
+            #Attributes required for Installed Application Account
+            hasattr(self.credentials, 'gcp_client_id') and
+            hasattr(self.credentials, 'gcp_client_secret') and
+            hasattr(self.credentials, 'gcp_refresh_token')
+        ) or (
+            #Attributes required for Service Account
+            hasattr(self.credentials, 'gcp_account') and
+            hasattr(self.credentials, 'gcp_private_key_file') and
+            hasattr(self.credentials, 'gcp_scopes')
+        )
+
+    def get_service_account_token(self):
+        """Tries to get an access token via Service Accounts"""
+        return OAuth2(self.credentials).get_new_access_token()
+
+    def get_installed_app_token(self):
+        """Tries to get an access token via installed application credentials"""
+        return OAuth2(self.credentials).get_new_access_token_from_refresh()
+
+    def add_auth(self, request):
+        """Add an access token to our request"""
+
+        #check if we need an update
+        current_time = time.time()
+        time_left = current_time - self.credentials.gcp_token_received_time
+        min_time = REFRESH_THRESHOLD_PCT * self.credentials.gcp_token_lifetime
+
+        if time_left >= min_time:
+            token = self.get_service_account_token()
+            if not token:
+                token = self.get_installed_app_token()
+            if token:
+                if 'access_token' in token:
+                    #Update credentials
+                    self.credentials.gcp_token_type = token['token_type']
+                    self.credentials.gcp_access_token = token['access_token']
+                    self.credentials.gcp_token_lifetime = token['expires_in']
+                    self.credentials.gcp_token_received_time = current_time
+                else:
+                    logger.warning('Failed to refresh access token!')
+            else:
+                logger.error('No credentials found!')
+        #Add correct authentication type
+        request.headers['Authorization'] = \
+         '{0.gcp_token_type} {0.gcp_access_token}'.format(self.credentials)
+
+        #Add a default content-type
+        if not 'Content-Type' in request.headers:
+            request.headers['Content-Type'] = 'application/json'
+
+        return request
 
 # Defined at the bottom instead of the top of the module because the Auth
 # classes weren't defined yet.
@@ -382,4 +457,5 @@ AUTH_TYPE_MAPS = {
     'v4': SigV4Auth,
     'v3': SigV3Auth,
     's3': HmacV1Auth,
+    'oauth2-gcp': GCPOAuth2Auth,
 }

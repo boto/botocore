@@ -93,6 +93,8 @@ class Parameter(BotoCoreObject):
                 else:
                     key = self.name
                 built_params['headers'][key] = value
+            elif self.location == 'payload':
+                built_params['payload'] = value
         elif style == 'rest-json':
             logger.debug('JSON Payload found')
             if built_params['payload'] is None:
@@ -216,7 +218,7 @@ class TimestampParameter(Parameter):
 
     def totalseconds(self, td):
         value = td.microseconds + (td.seconds + td.days * 24 * 3600)
-        return value * 10**6 / 10**6
+        return value * 10 ** 6 / 10 ** 6
 
     def validate(self, value):
         try:

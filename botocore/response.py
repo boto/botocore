@@ -386,6 +386,10 @@ def get_response(session, operation, http_response):
     # We are defaulting to an XML response handler because many query
     # services send XML error responses but do not include a Content-Type
     # header.
-    xml_response = XmlResponse(session, operation)
-    xml_response.parse(body, encoding)
+    try:
+        xml_response = XmlResponse(session, operation)
+        xml_response.parse(body, encoding)
+    except xml.etree.cElementTree.ParseError:
+        #TODO: see if somehow streaming response works for GCS
+        return (http_response, http_response)
     return (http_response, xml_response.get_value())
