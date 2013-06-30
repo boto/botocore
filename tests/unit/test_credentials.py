@@ -129,6 +129,15 @@ class BotoConfigTest(BaseEnvVar):
         self.assertEqual(credentials.secret_key, 'bar')
         self.assertEqual(credentials.method, 'boto')
 
+    def test_boto_config_keyring_is_used(self):
+        self.environ['BOTO_CONFIG'] = path('boto_config_keyring')
+        import keyring
+        with mock.patch('keyring.get_password', create=True):
+            keyring.get_password.side_effect = (lambda gp, login: "krgp" + login + "pw" )
+            credentials = self.session.get_credentials()
+            self.assertEqual(credentials.access_key, 'foo')
+            self.assertEqual(credentials.secret_key, 'krgpfoopw')
+            self.assertEqual(credentials.method, 'boto')
 
 class IamRoleTest(BaseEnvVar):
     def setUp(self):
