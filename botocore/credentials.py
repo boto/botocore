@@ -161,7 +161,7 @@ def search_boto_config(**kwargs):
             access_key = cp.get('Credentials', 'aws_access_key_id')
         if cp.has_option('Credentials', 'aws_secret_access_key'):
             secret_key = cp.get('Credentials', 'aws_secret_access_key')
-        if access_key and cp.has_option('Credentials', 'keyring'):
+        elif access_key and cp.has_option('Credentials', 'keyring'):
             try:
                 import keyring
             except ImportError:
