@@ -115,6 +115,16 @@ class ConfigTest(BaseEnvVar):
         self.assertIn('default', session.available_profiles)
         self.assertIn('personal', session.available_profiles)
 
+    def test_config_keyring_is_used(self):
+        self.environ['AWS_CONFIG_FILE'] = path('aws_config_keyring')
+        import keyring
+        with mock.patch('keyring.get_password', create=True):
+            keyring.get_password.side_effect = (lambda gp, login: "krgp" + login + "pw" )
+            credentials = self.session.get_credentials()
+            self.assertEqual(credentials.access_key, 'foo')
+            self.assertEqual(credentials.secret_key, 'krgpfoopw')
+            self.assertEqual(credentials.method, 'config')
+
 
 class BotoConfigTest(BaseEnvVar):
 
