@@ -136,6 +136,15 @@ def search_file(**kwargs):
     access_key = session.get_variable('access_key', methods=('config',))
     secret_key = session.get_variable('secret_key', methods=('config',))
     token = session.get_variable('token', ('config',))
+    keyring = session.get_variable('keyring', methods=('config',))
+    if not secret_key and keyring:
+        try:
+            import keyring
+        except ImportError:
+            logger.error('The keyring could not be imported, for keyring support install the keyring module')
+            raise
+        secret_key = keyring.get_password(keyring, access_key)
+        logger.info('Found credentials through keyring in config file')
     if access_key and secret_key:
         credentials = Credentials(access_key, secret_key, token)
         credentials.method = 'config'
