@@ -1,9 +1,7 @@
 {
     "OwnerId": "111122223333", 
     "ReservationId": "r-157ad274", 
-    "ResponseMetadata": {
-        "RequestId": "e86ff3c8-2400-45e3-a4e7-f158a69283d4"
-    }, 
+    "requestId": "e86ff3c8-2400-45e3-a4e7-f158a69283d4", 
     "Groups": [], 
     "Instances": [
         {
@@ -11,10 +9,7 @@
                 "State": "disabled"
             }, 
             "PublicDnsName": null, 
-            "StateReason": {
-                "Message": "pending", 
-                "Code": "pending"
-            }, 
+            "KernelId": "aki-805ea7e9", 
             "State": {
                 "Code": 0, 
                 "Name": "pending"
@@ -63,14 +58,17 @@
             ], 
             "SourceDestCheck": true, 
             "Placement": {
-                "GroupName": null, 
                 "Tenancy": "default", 
+                "GroupName": null, 
                 "AvailabilityZone": "us-east-1b"
             }, 
             "Hypervisor": "xen", 
             "BlockDeviceMappings": [], 
             "Architecture": "i386", 
-            "KernelId": "aki-805ea7e9", 
+            "StateReason": {
+                "Message": "pending", 
+                "Code": "pending"
+            }, 
             "RootDeviceName": "/dev/sda1", 
             "VirtualizationType": "paravirtual", 
             "RootDeviceType": "ebs", 

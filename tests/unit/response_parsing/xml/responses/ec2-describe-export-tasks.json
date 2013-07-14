@@ -1,11 +1,21 @@
-{"ExportTasks": [{"Description": "Example for docs",
-                   "ExportTaskId": "export-i-1234wxyz",
-                   "ExportToS3Task": {"ContainerFormat": "OVA",
-                                       "DiskImageFormat": "VMDK",
-                                       "S3Bucket": "my-bucket-for-exported-vm",
-                                       "S3Key": "my-exports/ export-i-1234wxyz .ova"},
-                   "InstanceExportDetails": {"InstanceId": "i-12345678",
-                                              "TargetEnvironment": "VMWare"},
-                   "State": "active",
-                   "StatusMessage": "Running"}],
- "ResponseMetadata": {"RequestId": "59dbff89-35bd-4eac-99ed-be587EXAMPLE"}}
+{
+    "ExportTasks": [
+        {
+            "Description": "Example for docs", 
+            "InstanceExportDetails": {
+                "InstanceId": "i-12345678", 
+                "TargetEnvironment": "VMWare"
+            }, 
+            "ExportTaskId": "export-i-1234wxyz", 
+            "State": "active", 
+            "StatusMessage": "Running", 
+            "ExportToS3Task": {
+                "S3Bucket": "my-bucket-for-exported-vm", 
+                "S3Key": "my-exports/ export-i-1234wxyz .ova", 
+                "DiskImageFormat": "VMDK", 
+                "ContainerFormat": "OVA"
+            }
+        }
+    ], 
+    "requestId": "59dbff89-35bd-4eac-99ed-be587EXAMPLE"
+}

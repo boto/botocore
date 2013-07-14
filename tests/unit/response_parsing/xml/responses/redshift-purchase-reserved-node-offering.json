@@ -3,7 +3,7 @@
         "OfferingType": "Heavy Utilization", 
         "FixedPrice": 12452.0, 
         "NodeType": "dw.hs1.8xlarge", 
-        "ReservedNodeId": "1ba8e2e3-dacf-48d9-841f-cc675182a8a6", 
+        "NodeCount": 2, 
         "UsagePrice": 0.0, 
         "RecurringCharges": [
             {
@@ -11,7 +11,7 @@
                 "RecurringChargeFrequency": "Hourly"
             }
         ], 
-        "NodeCount": 2, 
+        "ReservedNodeId": "1ba8e2e3-dacf-48d9-841f-cc675182a8a6", 
         "State": "payment-pending", 
         "StartTime": "2013-01-18T21:42:44.402Z", 
         "Duration": 94608000

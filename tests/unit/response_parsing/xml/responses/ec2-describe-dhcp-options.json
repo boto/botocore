@@ -18,7 +18,5 @@
             "DhcpOptionsId": "dopt-eb291082"
         }
     ], 
-    "ResponseMetadata": {
-        "RequestId": "684ba87f-78a1-4c29-a70b-f6103a15c162"
-    }
+    "requestId": "684ba87f-78a1-4c29-a70b-f6103a15c162"
 }

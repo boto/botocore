@@ -1,7 +1,10 @@
-{"PlacementGroups": [{"GroupName": "Project-cluster",
-                       "State": "available",
-                       "Strategy": "cluster"}],
- "ResponseMetadata": {
-     "RequestId": "d4904fd9-82c2-4ea5-adfe-a9cc3EXAMPLE"
- }
+{
+    "PlacementGroups": [
+        {
+            "GroupName": "Project-cluster", 
+            "State": "available", 
+            "Strategy": "cluster"
+        }
+    ], 
+    "requestId": "d4904fd9-82c2-4ea5-adfe-a9cc3EXAMPLE"
 }

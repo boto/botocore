@@ -8,233 +8,233 @@
     "DateCreated": "2010-11-17T03:48:19.640Z", 
     "OptionSettings": [
         {
-            "Namespace": "aws:autoscaling:launchconfiguration", 
             "OptionName": "ImageId", 
+            "Namespace": "aws:autoscaling:launchconfiguration", 
             "Value": "ami-f2f0069b"
         }, 
         {
-            "Namespace": "aws:elasticbeanstalk:sns:topics", 
             "OptionName": "Notification Endpoint", 
+            "Namespace": "aws:elasticbeanstalk:sns:topics", 
             "Value": null
         }, 
         {
-            "Namespace": "aws:elasticbeanstalk:application:environment", 
             "OptionName": "PARAM4", 
-            "Value": null
-        }, 
-        {
             "Namespace": "aws:elasticbeanstalk:application:environment", 
-            "OptionName": "JDBC_CONNECTION_STRING", 
             "Value": null
         }, 
         {
-            "Namespace": "aws:autoscaling:launchconfiguration", 
+            "OptionName": "JDBC_CONNECTION_STRING", 
+            "Namespace": "aws:elasticbeanstalk:application:environment", 
+            "Value": null
+        }, 
+        {
             "OptionName": "SecurityGroups", 
+            "Namespace": "aws:autoscaling:launchconfiguration", 
             "Value": "elasticbeanstalk-default"
         }, 
         {
-            "Namespace": "aws:elb:healthcheck", 
             "OptionName": "UnhealthyThreshold", 
+            "Namespace": "aws:elb:healthcheck", 
             "Value": "5"
         }, 
         {
-            "Namespace": "aws:autoscaling:launchconfiguration", 
             "OptionName": "InstanceType", 
+            "Namespace": "aws:autoscaling:launchconfiguration", 
             "Value": "t1.micro"
         }, 
         {
-            "Namespace": "aws:autoscaling:trigger", 
             "OptionName": "Statistic", 
+            "Namespace": "aws:autoscaling:trigger", 
             "Value": "Average"
         }, 
         {
-            "Namespace": "aws:elb:loadbalancer", 
             "OptionName": "LoadBalancerHTTPSPort", 
+            "Namespace": "aws:elb:loadbalancer", 
             "Value": "OFF"
         }, 
         {
-            "Namespace": "aws:elb:policies", 
             "OptionName": "Stickiness Cookie Expiration", 
+            "Namespace": "aws:elb:policies", 
             "Value": "0"
         }, 
         {
-            "Namespace": "aws:elasticbeanstalk:application:environment", 
             "OptionName": "PARAM5", 
+            "Namespace": "aws:elasticbeanstalk:application:environment", 
             "Value": null
         }, 
         {
-            "Namespace": "aws:autoscaling:trigger", 
             "OptionName": "MeasureName", 
+            "Namespace": "aws:autoscaling:trigger", 
             "Value": "NetworkOut"
         }, 
         {
-            "Namespace": "aws:elb:healthcheck", 
             "OptionName": "Interval", 
+            "Namespace": "aws:elb:healthcheck", 
             "Value": "30"
         }, 
         {
-            "Namespace": "aws:elasticbeanstalk:application", 
             "OptionName": "Application Healthcheck URL", 
+            "Namespace": "aws:elasticbeanstalk:application", 
             "Value": "/"
         }, 
         {
-            "Namespace": "aws:elasticbeanstalk:sns:topics", 
             "OptionName": "Notification Topic ARN", 
+            "Namespace": "aws:elasticbeanstalk:sns:topics", 
             "Value": null
         }, 
         {
-            "Namespace": "aws:autoscaling:trigger", 
             "OptionName": "LowerBreachScaleIncrement", 
+            "Namespace": "aws:autoscaling:trigger", 
             "Value": "-1"
         }, 
         {
-            "Namespace": "aws:elasticbeanstalk:container:tomcat:jvmoptions", 
             "OptionName": "XX:MaxPermSize", 
+            "Namespace": "aws:elasticbeanstalk:container:tomcat:jvmoptions", 
             "Value": "64m"
         }, 
         {
-            "Namespace": "aws:autoscaling:trigger", 
             "OptionName": "UpperBreachScaleIncrement", 
+            "Namespace": "aws:autoscaling:trigger", 
             "Value": "1"
         }, 
         {
-            "Namespace": "aws:autoscaling:asg", 
             "OptionName": "MinSize", 
+            "Namespace": "aws:autoscaling:asg", 
             "Value": "1"
         }, 
         {
-            "Namespace": "aws:autoscaling:asg", 
             "OptionName": "Custom Availability Zones", 
+            "Namespace": "aws:autoscaling:asg", 
             "Value": "us-east-1a"
         }, 
         {
-            "Namespace": "aws:autoscaling:asg", 
             "OptionName": "Availability Zones", 
+            "Namespace": "aws:autoscaling:asg", 
             "Value": "Any 1"
         }, 
         {
-            "Namespace": "aws:elasticbeanstalk:hostmanager", 
             "OptionName": "LogPublicationControl", 
+            "Namespace": "aws:elasticbeanstalk:hostmanager", 
             "Value": "false"
         }, 
         {
-            "Namespace": "aws:elasticbeanstalk:container:tomcat:jvmoptions", 
             "OptionName": "JVM Options", 
+            "Namespace": "aws:elasticbeanstalk:container:tomcat:jvmoptions", 
             "Value": null
         }, 
         {
-            "Namespace": "aws:elasticbeanstalk:sns:topics", 
             "OptionName": "Notification Topic Name", 
+            "Namespace": "aws:elasticbeanstalk:sns:topics", 
             "Value": null
         }, 
         {
-            "Namespace": "aws:elasticbeanstalk:application:environment", 
             "OptionName": "PARAM2", 
+            "Namespace": "aws:elasticbeanstalk:application:environment", 
             "Value": null
         }, 
         {
-            "Namespace": "aws:elb:loadbalancer", 
             "OptionName": "LoadBalancerHTTPPort", 
+            "Namespace": "aws:elb:loadbalancer", 
             "Value": "80"
         }, 
         {
-            "Namespace": "aws:elb:healthcheck", 
             "OptionName": "Timeout", 
+            "Namespace": "aws:elb:healthcheck", 
             "Value": "5"
         }, 
         {
-            "Namespace": "aws:autoscaling:trigger", 
             "OptionName": "BreachDuration", 
+            "Namespace": "aws:autoscaling:trigger", 
             "Value": "2"
         }, 
         {
-            "Namespace": "aws:autoscaling:launchconfiguration", 
             "OptionName": "MonitoringInterval", 
+            "Namespace": "aws:autoscaling:launchconfiguration", 
             "Value": "5 minute"
         }, 
         {
-            "Namespace": "aws:elasticbeanstalk:application:environment", 
             "OptionName": "PARAM1", 
+            "Namespace": "aws:elasticbeanstalk:application:environment", 
             "Value": null
         }, 
         {
-            "Namespace": "aws:autoscaling:asg", 
             "OptionName": "MaxSize", 
+            "Namespace": "aws:autoscaling:asg", 
             "Value": "4"
         }, 
         {
-            "Namespace": "aws:autoscaling:trigger", 
             "OptionName": "LowerThreshold", 
+            "Namespace": "aws:autoscaling:trigger", 
             "Value": "2000000"
         }, 
         {
-            "Namespace": "aws:elasticbeanstalk:application:environment", 
             "OptionName": "AWS_SECRET_KEY", 
-            "Value": null
-        }, 
-        {
             "Namespace": "aws:elasticbeanstalk:application:environment", 
-            "OptionName": "AWS_ACCESS_KEY_ID", 
             "Value": null
         }, 
         {
-            "Namespace": "aws:autoscaling:trigger", 
+            "OptionName": "AWS_ACCESS_KEY_ID", 
+            "Namespace": "aws:elasticbeanstalk:application:environment", 
+            "Value": null
+        }, 
+        {
             "OptionName": "UpperThreshold", 
+            "Namespace": "aws:autoscaling:trigger", 
             "Value": "6000000"
         }, 
         {
-            "Namespace": "aws:elasticbeanstalk:sns:topics", 
             "OptionName": "Notification Protocol", 
+            "Namespace": "aws:elasticbeanstalk:sns:topics", 
             "Value": "email"
         }, 
         {
-            "Namespace": "aws:autoscaling:trigger", 
             "OptionName": "Unit", 
+            "Namespace": "aws:autoscaling:trigger", 
             "Value": "Bytes"
         }, 
         {
-            "Namespace": "aws:elasticbeanstalk:container:tomcat:jvmoptions", 
             "OptionName": "Xmx", 
+            "Namespace": "aws:elasticbeanstalk:container:tomcat:jvmoptions", 
             "Value": "256m"
         }, 
         {
-            "Namespace": "aws:autoscaling:asg", 
             "OptionName": "Cooldown", 
+            "Namespace": "aws:autoscaling:asg", 
             "Value": "360"
         }, 
         {
-            "Namespace": "aws:autoscaling:trigger", 
             "OptionName": "Period", 
+            "Namespace": "aws:autoscaling:trigger", 
             "Value": "1"
         }, 
         {
-            "Namespace": "aws:elasticbeanstalk:container:tomcat:jvmoptions", 
             "OptionName": "Xms", 
+            "Namespace": "aws:elasticbeanstalk:container:tomcat:jvmoptions", 
             "Value": "256m"
         }, 
         {
-            "Namespace": "aws:autoscaling:launchconfiguration", 
             "OptionName": "EC2KeyName", 
+            "Namespace": "aws:autoscaling:launchconfiguration", 
             "Value": null
         }, 
         {
-            "Namespace": "aws:elb:policies", 
             "OptionName": "Stickiness Policy", 
+            "Namespace": "aws:elb:policies", 
             "Value": "false"
         }, 
         {
-            "Namespace": "aws:elasticbeanstalk:application:environment", 
             "OptionName": "PARAM3", 
+            "Namespace": "aws:elasticbeanstalk:application:environment", 
             "Value": null
         }, 
         {
-            "Namespace": "aws:elb:healthcheck", 
             "OptionName": "HealthyThreshold", 
+            "Namespace": "aws:elb:healthcheck", 
             "Value": "3"
         }, 
         {
-            "Namespace": "aws:elb:loadbalancer", 
             "OptionName": "SSLCertificateId", 
+            "Namespace": "aws:elb:loadbalancer", 
             "Value": null
         }
     ], 

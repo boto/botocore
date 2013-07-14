@@ -13,7 +13,5 @@
         "Progress": "70%", 
         "BundleId": "bun-c1a540a8"
     }, 
-    "ResponseMetadata": {
-        "RequestId": "59dbff89-35bd-4eac-99ed-be587EXAMPLE"
-    }
+    "requestId": "59dbff89-35bd-4eac-99ed-be587EXAMPLE"
 }

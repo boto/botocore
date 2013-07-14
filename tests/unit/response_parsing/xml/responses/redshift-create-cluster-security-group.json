@@ -1,9 +1,9 @@
 {
     "ClusterSecurityGroup": {
-        "Description": "my security group", 
+        "IPRanges": [], 
         "ClusterSecurityGroupName": "securitygroup1", 
-        "EC2SecurityGroups": [], 
-        "IPRanges": []
+        "Description": "my security group", 
+        "EC2SecurityGroups": []
     }, 
     "ResponseMetadata": {
         "RequestId": "f9ee270f-64f7-11e2-a8da-655adc216806"

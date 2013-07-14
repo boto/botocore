@@ -28,428 +28,428 @@
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "Protocol-SSLv2", 
-                    "Description": "A description for Protocol-SSLv2", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for Protocol-SSLv2"
                 }, 
                 {
                     "DefaultValue": "true", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "Protocol-TLSv1", 
-                    "Description": "A description for Protocol-TLSv1", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for Protocol-TLSv1"
                 }, 
                 {
                     "DefaultValue": "true", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "Protocol-SSLv3", 
-                    "Description": "A description for Protocol-SSLv3", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for Protocol-SSLv3"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "DHE-RSA-AES256-SHA", 
-                    "Description": "A description for DHE-RSA-AES256-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for DHE-RSA-AES256-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "DHE-DSS-AES256-SHA", 
-                    "Description": "A description for DHE-DSS-AES256-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for DHE-DSS-AES256-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "DHE-RSA-CAMELLIA256-SHA", 
-                    "Description": "A description for DHE-RSA-CAMELLIA256-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for DHE-RSA-CAMELLIA256-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "DHE-DSS-CAMELLIA256-SHA", 
-                    "Description": "A description for DHE-DSS-CAMELLIA256-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for DHE-DSS-CAMELLIA256-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "ADH-AES256-SHA", 
-                    "Description": "A description for ADH-AES256-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for ADH-AES256-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "ADH-CAMELLIA256-SHA", 
-                    "Description": "A description for ADH-CAMELLIA256-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for ADH-CAMELLIA256-SHA"
                 }, 
                 {
                     "DefaultValue": "true", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "AES256-SHA", 
-                    "Description": "A description for AES256-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for AES256-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "CAMELLIA256-SHA", 
-                    "Description": "A description for CAMELLIA256-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for CAMELLIA256-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "PSK-AES256-CBC-SHA", 
-                    "Description": "A description for PSK-AES256-CBC-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for PSK-AES256-CBC-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "EDH-RSA-DES-CBC3-SHA", 
-                    "Description": "A description for EDH-RSA-DES-CBC3-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for EDH-RSA-DES-CBC3-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "EDH-DSS-DES-CBC3-SHA", 
-                    "Description": "A description for EDH-DSS-DES-CBC3-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for EDH-DSS-DES-CBC3-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "ADH-DES-CBC3-SHA", 
-                    "Description": "A description for ADH-DES-CBC3-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for ADH-DES-CBC3-SHA"
                 }, 
                 {
                     "DefaultValue": "true", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "DES-CBC3-SHA", 
-                    "Description": "A description for DES-CBC3-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for DES-CBC3-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "DES-CBC3-MD5", 
-                    "Description": "A description for DES-CBC3-MD5", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for DES-CBC3-MD5"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "PSK-3DES-EDE-CBC-SHA", 
-                    "Description": "A description for PSK-3DES-EDE-CBC-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for PSK-3DES-EDE-CBC-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "KRB5-DES-CBC3-SHA", 
-                    "Description": "A description for KRB5-DES-CBC3-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for KRB5-DES-CBC3-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "KRB5-DES-CBC3-MD5", 
-                    "Description": "A description for KRB5-DES-CBC3-MD5", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for KRB5-DES-CBC3-MD5"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "DHE-RSA-AES128-SHA", 
-                    "Description": "A description for DHE-RSA-AES128-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for DHE-RSA-AES128-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "DHE-DSS-AES128-SHA", 
-                    "Description": "A description for DHE-DSS-AES128-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for DHE-DSS-AES128-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "DHE-RSA-SEED-SHA", 
-                    "Description": "A description for DHE-RSA-SEED-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for DHE-RSA-SEED-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "DHE-DSS-SEED-SHA", 
-                    "Description": "A description for DHE-DSS-SEED-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for DHE-DSS-SEED-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "DHE-RSA-CAMELLIA128-SHA", 
-                    "Description": "A description for DHE-RSA-CAMELLIA128-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for DHE-RSA-CAMELLIA128-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "DHE-DSS-CAMELLIA128-SHA", 
-                    "Description": "A description for DHE-DSS-CAMELLIA128-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for DHE-DSS-CAMELLIA128-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "ADH-AES128-SHA", 
-                    "Description": "A description for ADH-AES128-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for ADH-AES128-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "ADH-SEED-SHA", 
-                    "Description": "A description for ADH-SEED-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for ADH-SEED-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "ADH-CAMELLIA128-SHA", 
-                    "Description": "A description for ADH-CAMELLIA128-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for ADH-CAMELLIA128-SHA"
                 }, 
                 {
                     "DefaultValue": "true", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "AES128-SHA", 
-                    "Description": "A description for AES128-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for AES128-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "SEED-SHA", 
-                    "Description": "A description for SEED-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for SEED-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "CAMELLIA128-SHA", 
-                    "Description": "A description for CAMELLIA128-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for CAMELLIA128-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "RC2-CBC-MD5", 
-                    "Description": "A description for RC2-CBC-MD5", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for RC2-CBC-MD5"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "PSK-AES128-CBC-SHA", 
-                    "Description": "A description for PSK-AES128-CBC-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for PSK-AES128-CBC-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "ADH-RC4-MD5", 
-                    "Description": "A description for ADH-RC4-MD5", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for ADH-RC4-MD5"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "IDEA-CBC-SHA", 
-                    "Description": "A description for IDEA-CBC-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for IDEA-CBC-SHA"
                 }, 
                 {
                     "DefaultValue": "true", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "RC4-SHA", 
-                    "Description": "A description for RC4-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for RC4-SHA"
                 }, 
                 {
                     "DefaultValue": "true", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "RC4-MD5", 
-                    "Description": "A description for RC4-MD5", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for RC4-MD5"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "PSK-RC4-SHA", 
-                    "Description": "A description for PSK-RC4-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for PSK-RC4-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "KRB5-RC4-SHA", 
-                    "Description": "A description for KRB5-RC4-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for KRB5-RC4-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "KRB5-RC4-MD5", 
-                    "Description": "A description for KRB5-RC4-MD5", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for KRB5-RC4-MD5"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "EDH-RSA-DES-CBC-SHA", 
-                    "Description": "A description for EDH-RSA-DES-CBC-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for EDH-RSA-DES-CBC-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "EDH-DSS-DES-CBC-SHA", 
-                    "Description": "A description for EDH-DSS-DES-CBC-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for EDH-DSS-DES-CBC-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "ADH-DES-CBC-SHA", 
-                    "Description": "A description for ADH-DES-CBC-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for ADH-DES-CBC-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "DES-CBC-SHA", 
-                    "Description": "A description for DES-CBC-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for DES-CBC-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "DES-CBC-MD5", 
-                    "Description": "A description for DES-CBC-MD5", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for DES-CBC-MD5"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "KRB5-DES-CBC-SHA", 
-                    "Description": "A description for KRB5-DES-CBC-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for KRB5-DES-CBC-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "KRB5-DES-CBC-MD5", 
-                    "Description": "A description for KRB5-DES-CBC-MD5", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for KRB5-DES-CBC-MD5"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "EXP-EDH-RSA-DES-CBC-SHA", 
-                    "Description": "A description for EXP-EDH-RSA-DES-CBC-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for EXP-EDH-RSA-DES-CBC-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "EXP-EDH-DSS-DES-CBC-SHA", 
-                    "Description": "A description for EXP-EDH-DSS-DES-CBC-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for EXP-EDH-DSS-DES-CBC-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "EXP-ADH-DES-CBC-SHA", 
-                    "Description": "A description for EXP-ADH-DES-CBC-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for EXP-ADH-DES-CBC-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "EXP-DES-CBC-SHA", 
-                    "Description": "A description for EXP-DES-CBC-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for EXP-DES-CBC-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "EXP-RC2-CBC-MD5", 
-                    "Description": "A description for EXP-RC2-CBC-MD5", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for EXP-RC2-CBC-MD5"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "EXP-KRB5-RC2-CBC-SHA", 
-                    "Description": "A description for EXP-KRB5-RC2-CBC-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for EXP-KRB5-RC2-CBC-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "EXP-KRB5-DES-CBC-SHA", 
-                    "Description": "A description for EXP-KRB5-DES-CBC-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for EXP-KRB5-DES-CBC-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "EXP-KRB5-RC2-CBC-MD5", 
-                    "Description": "A description for EXP-KRB5-RC2-CBC-MD5", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for EXP-KRB5-RC2-CBC-MD5"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "EXP-KRB5-DES-CBC-MD5", 
-                    "Description": "A description for EXP-KRB5-DES-CBC-MD5", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for EXP-KRB5-DES-CBC-MD5"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "EXP-ADH-RC4-MD5", 
-                    "Description": "A description for EXP-ADH-RC4-MD5", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for EXP-ADH-RC4-MD5"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "EXP-RC4-MD5", 
-                    "Description": "A description for EXP-RC4-MD5", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for EXP-RC4-MD5"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "EXP-KRB5-RC4-SHA", 
-                    "Description": "A description for EXP-KRB5-RC4-SHA", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for EXP-KRB5-RC4-SHA"
                 }, 
                 {
                     "DefaultValue": "false", 
                     "Cardinality": "ZERO_OR_ONE", 
                     "AttributeName": "EXP-KRB5-RC4-MD5", 
-                    "Description": "A description for EXP-KRB5-RC4-MD5", 
-                    "AttributeType": "Boolean"
+                    "AttributeType": "Boolean", 
+                    "Description": "A description for EXP-KRB5-RC4-MD5"
                 }
             ], 
             "PolicyTypeName": "SSLNegotiationPolicyType", 

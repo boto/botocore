@@ -1,27 +1,41 @@
-{"Events": [{"ApplicationName": "SampleApp",
-              "EnvironmentName": "SampleAppVersion",
-              "EventDate": "2010-11-17T20:25:35.191Z",
-              "Message": "Successfully completed createEnvironment activity.",
-              "RequestId": "bb01fa74-f287-11df-8a78-9f77047e0d0c",
-              "Severity": "INFO",
-              "VersionLabel": "New Version"},
-             {"ApplicationName": "SampleApp",
-              "EnvironmentName": "SampleAppVersion",
-              "EventDate": "2010-11-17T20:21:30Z",
-              "Message": "Launching a new EC2 instance: i-04a8c569",
-              "Severity": "DEBUG",
-              "VersionLabel": "New Version"},
-             {"ApplicationName": "SampleApp",
-              "EnvironmentName": "SampleAppVersion",
-              "EventDate": "2010-11-17T20:20:32.008Z",
-              "Message": "At least one EC2 instance has entered the InService lifecycle state.",
-              "RequestId": "bb01fa74-f287-11df-8a78-9f77047e0d0c",
-              "Severity": "INFO",
-              "VersionLabel": "New Version"},
-             {"ApplicationName": "SampleApp",
-              "EnvironmentName": "SampleAppVersion",
-              "EventDate": "2010-11-17T20:19:28Z",
-              "Message": "Elastic Load Balancer elasticbeanstalk-SampleAppVersion has failed 0 healthy instances - Environment may not be available.",
-              "Severity": "WARN",
-              "VersionLabel": "New Version"}],
- "ResponseMetadata": {"RequestId": "f10d02dd-f288-11df-8a78-9f77047e0d0c"}}
+{
+    "Events": [
+        {
+            "ApplicationName": "SampleApp", 
+            "EnvironmentName": "SampleAppVersion", 
+            "VersionLabel": "New Version", 
+            "Severity": "INFO", 
+            "RequestId": "bb01fa74-f287-11df-8a78-9f77047e0d0c", 
+            "Message": "Successfully completed createEnvironment activity.", 
+            "EventDate": "2010-11-17T20:25:35.191Z"
+        }, 
+        {
+            "ApplicationName": "SampleApp", 
+            "EnvironmentName": "SampleAppVersion", 
+            "VersionLabel": "New Version", 
+            "Severity": "DEBUG", 
+            "Message": "Launching a new EC2 instance: i-04a8c569", 
+            "EventDate": "2010-11-17T20:21:30Z"
+        }, 
+        {
+            "ApplicationName": "SampleApp", 
+            "EnvironmentName": "SampleAppVersion", 
+            "VersionLabel": "New Version", 
+            "Severity": "INFO", 
+            "RequestId": "bb01fa74-f287-11df-8a78-9f77047e0d0c", 
+            "Message": "At least one EC2 instance has entered the InService lifecycle state.", 
+            "EventDate": "2010-11-17T20:20:32.008Z"
+        }, 
+        {
+            "ApplicationName": "SampleApp", 
+            "EnvironmentName": "SampleAppVersion", 
+            "VersionLabel": "New Version", 
+            "Severity": "WARN", 
+            "Message": "Elastic Load Balancer elasticbeanstalk-SampleAppVersion has failed 0 healthy instances - Environment may not be available.", 
+            "EventDate": "2010-11-17T20:19:28Z"
+        }
+    ], 
+    "ResponseMetadata": {
+        "RequestId": "f10d02dd-f288-11df-8a78-9f77047e0d0c"
+    }
+}
