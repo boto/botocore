@@ -1,6 +1,6 @@
 {
     "DhcpOptions": {
-        "DhcpOptionsId": "dopt-7a8b9c2d", 
+        "Tags": [], 
         "DhcpConfigurations": [
             {
                 "Values": [
@@ -16,9 +16,7 @@
                 "Key": "domain-name-servers"
             }
         ], 
-        "Tags": []
+        "DhcpOptionsId": "dopt-7a8b9c2d"
     }, 
-    "ResponseMetadata": {
-        "RequestId": "7a62c49f-347e-4fc4-9331-6e8eEXAMPLE"
-    }
+    "requestId": "7a62c49f-347e-4fc4-9331-6e8eEXAMPLE"
 }

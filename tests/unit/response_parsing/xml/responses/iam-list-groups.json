@@ -1,16 +1,26 @@
-{"Groups": [
-    {"Arn": "arn:aws:iam::123456789012:group/Admins",
-     "GroupId": "AGPACKCEVSQ6C2EXAMPLE",
-     "GroupName": "Admins",
-     "Path": "/division_abc/subdivision_xyz/"},
-    {"Arn": "arn:aws:iam::123456789012:group/division_abc/subdivision_xyz/product_1234/engineering/Test",
-     "GroupId": "AGP2MAB8DPLSRHEXAMPLE",
-     "GroupName": "Test",
-     "Path": "/division_abc/subdivision_xyz/product_1234/engineering/"},
-    {"Arn": "arn:aws:iam::123456789012:group/division_abc/subdivision_xyz/product_1234/Managers",
-     "GroupId": "AGPIODR4TAW7CSEXAMPLE",
-     "GroupName": "Managers",
-     "Path": "/division_abc/subdivision_xyz/product_1234/"}],
- "IsTruncated": false,
- "ResponseMetadata": {"RequestId": "7a62c49f-347e-4fc4-9331-6e8eEXAMPLE"}
+{
+    "ResponseMetadata": {
+        "RequestId": "7a62c49f-347e-4fc4-9331-6e8eEXAMPLE"
+    }, 
+    "IsTruncated": false, 
+    "Groups": [
+        {
+            "Path": "/division_abc/subdivision_xyz/", 
+            "GroupId": "AGPACKCEVSQ6C2EXAMPLE", 
+            "Arn": "arn:aws:iam::123456789012:group/Admins", 
+            "GroupName": "Admins"
+        }, 
+        {
+            "Path": "/division_abc/subdivision_xyz/product_1234/engineering/", 
+            "GroupId": "AGP2MAB8DPLSRHEXAMPLE", 
+            "Arn": "arn:aws:iam::123456789012:group/division_abc/subdivision_xyz/product_1234/engineering/Test", 
+            "GroupName": "Test"
+        }, 
+        {
+            "Path": "/division_abc/subdivision_xyz/product_1234/", 
+            "GroupId": "AGPIODR4TAW7CSEXAMPLE", 
+            "Arn": "arn:aws:iam::123456789012:group/division_abc/subdivision_xyz/product_1234/Managers", 
+            "GroupName": "Managers"
+        }
+    ]
 }

@@ -1,16 +1,16 @@
 {
     "Cluster": {
-        "NodeType": "dw.hs1.xlarge", 
         "ClusterVersion": "1.0", 
+        "NodeType": "dw.hs1.xlarge", 
         "PubliclyAccessible": true, 
         "MasterUsername": "adminuser", 
-        "Encrypted": false, 
         "ClusterParameterGroups": [
             {
-                "ParameterApplyStatus": "in-sync", 
-                "ParameterGroupName": "default.redshift-1.0"
+                "ParameterGroupName": "default.redshift-1.0", 
+                "ParameterApplyStatus": "in-sync"
             }
         ], 
+        "Encrypted": false, 
         "ClusterSecurityGroups": [
             {
                 "Status": "active", 
@@ -19,12 +19,12 @@
         ], 
         "AllowVersionUpgrade": true, 
         "VpcSecurityGroups": [], 
-        "PreferredMaintenanceWindow": "sun:06:30-sun:07:00", 
+        "NumberOfNodes": 2, 
         "AutomatedSnapshotRetentionPeriod": 1, 
         "ClusterStatus": "creating", 
         "ClusterIdentifier": "examplecluster-restored", 
         "DBName": "dev", 
-        "NumberOfNodes": 2, 
+        "PreferredMaintenanceWindow": "sun:06:30-sun:07:00", 
         "PendingModifiedValues": {}
     }, 
     "ResponseMetadata": {

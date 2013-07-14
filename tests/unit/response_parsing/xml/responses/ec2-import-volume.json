@@ -19,6 +19,5 @@
         "ExpirationTime": "2010-12-22T12:01Z", 
         "State": "active", 
         "StatusMessage": null
-    }, 
-    "ResponseMetadata": {}
+    }
 }

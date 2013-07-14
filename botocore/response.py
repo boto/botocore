@@ -73,9 +73,8 @@ class XmlResponse(Response):
             self.build_element_map(self.operation.output, 'root')
         self.start(self.tree)
 
-    def get_response_metadata(self):
-        rmd = {}
-        self.value['ResponseMetadata'] = rmd
+    def get_request_id(self):
+        request_id = None
         rmd_elem = self.tree.find(self.clark_notation('ResponseMetadata'))
         if rmd_elem is not None:
             rmd_elem.tail = True
@@ -86,9 +85,7 @@ class XmlResponse(Response):
                 request_id = self.tree.find(self.clark_notation('RequestId'))
             if request_id is None:
                 request_id = self.tree.find('RequestID')
-        if request_id is not None:
-            request_id.tail = True
-            rmd['RequestId'] = request_id.text.strip()
+        return request_id
 
     def _get_error_data(self, error_elem):
         data = {}
@@ -112,6 +109,9 @@ class XmlResponse(Response):
                 errors = [self._get_error_data(self.tree)]
         if errors:
             self.value['Errors'] = errors
+            request_id = self.get_request_id()
+            if request_id:
+                self.value['RequestId'] = request_id
 
     def build_element_map(self, defn, keyname):
         xmlname = defn.get('xmlname', keyname)
@@ -302,7 +302,6 @@ class XmlResponse(Response):
                 if child is not None:
                     self.value[member_name] = self.handle_elem(member_name,
                                                                child, member)
-        self.get_response_metadata()
         self.get_response_errors()
         for child in self.tree:
             if child.tail is not True:

@@ -1,33 +1,31 @@
 {
     "InstanceStatuses": [
         {
-            "InstanceId": "i-78f1b94a",
+            "InstanceId": "i-78f1b94a", 
             "InstanceState": {
-                "Code": 16,
+                "Code": 16, 
                 "Name": "running"
-            },
-            "AvailabilityZone": "us-west-2b",
+            }, 
+            "AvailabilityZone": "us-west-2b", 
             "SystemStatus": {
-                "Status": "ok",
+                "Status": "ok", 
                 "Details": [
                     {
-                        "Status": "passed",
+                        "Status": "passed", 
                         "Name": "reachability"
                     }
                 ]
-            },
+            }, 
             "InstanceStatus": {
-                "Status": "ok",
+                "Status": "ok", 
                 "Details": [
                     {
-                        "Status": "passed",
+                        "Status": "passed", 
                         "Name": "reachability"
                     }
                 ]
             }
         }
-    ],
-    "ResponseMetadata": {
-	"RequestId": "8be1454b-ea0f-4037-9911-b48eda6d79c8"
-    }
+    ], 
+    "requestId": "8be1454b-ea0f-4037-9911-b48eda6d79c8"
 }

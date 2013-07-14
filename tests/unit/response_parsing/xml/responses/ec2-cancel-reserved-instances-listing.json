@@ -1,7 +1,5 @@
 {
-    "ResponseMetadata": {
-        "RequestId": "bec2cf62-98ef-434a-8a15-886fcexample"
-    }, 
+    "requestId": "bec2cf62-98ef-434a-8a15-886fcexample", 
     "ReservedInstancesListings": [
         {
             "ReservedInstancesId": "af9f760e-9b3f-417a-ad5e-93f0cexample", 

@@ -1,14 +1,14 @@
 {
     "ClusterSecurityGroup": {
-        "Description": "my security group", 
-        "ClusterSecurityGroupName": "securitygroup1", 
-        "EC2SecurityGroups": [], 
         "IPRanges": [
             {
                 "Status": "authorized", 
                 "CIDRIP": "192.168.40.3/32"
             }
-        ]
+        ], 
+        "ClusterSecurityGroupName": "securitygroup1", 
+        "Description": "my security group", 
+        "EC2SecurityGroups": []
     }, 
     "ResponseMetadata": {
         "RequestId": "8c7cd4c8-6501-11e2-a8da-655adc216806"

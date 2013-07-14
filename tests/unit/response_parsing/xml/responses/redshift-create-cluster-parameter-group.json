@@ -1,8 +1,8 @@
 {
     "ClusterParameterGroup": {
         "ParameterGroupFamily": "redshift-1.0", 
-        "Description": "description my parameter group", 
-        "ParameterGroupName": "parametergroup1"
+        "ParameterGroupName": "parametergroup1", 
+        "Description": "description my parameter group"
     }, 
     "ResponseMetadata": {
         "RequestId": "6d6df847-64f3-11e2-bea9-49e0ce183f07"

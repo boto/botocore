@@ -1,21 +1,21 @@
 {
     "ClusterSecurityGroups": [
         {
-            "Description": "default", 
-            "ClusterSecurityGroupName": "default", 
-            "EC2SecurityGroups": [], 
             "IPRanges": [
                 {
                     "Status": "authorized", 
                     "CIDRIP": "0.0.0.0/0"
                 }
-            ]
+            ], 
+            "ClusterSecurityGroupName": "default", 
+            "Description": "default", 
+            "EC2SecurityGroups": []
         }, 
         {
-            "Description": "my security group", 
+            "IPRanges": [], 
             "ClusterSecurityGroupName": "securitygroup1", 
-            "EC2SecurityGroups": [], 
-            "IPRanges": []
+            "Description": "my security group", 
+            "EC2SecurityGroups": []
         }
     ], 
     "ResponseMetadata": {

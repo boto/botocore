@@ -1,27 +1,37 @@
-{"ResponseMetadata": {"RequestId": "56a9daf4-64fa-11e2-a8da-655adc216806"},
- "Snapshots": [{"AvailabilityZone": "us-east-1c",
-                 "ClusterCreateTime": "2013-01-22T19:23:59.368Z",
-                 "ClusterIdentifier": "examplecluster",
-                 "ClusterVersion": "1.0",
-                 "DBName": "dev",
-                 "MasterUsername": "adminuser",
-                 "NodeType": "dw.hs1.xlarge",
-                 "NumberOfNodes": 2,
-                 "Port": 5439,
-                 "SnapshotCreateTime": "2013-01-22T19:27:58.931Z",
-                 "SnapshotIdentifier": "cm:examplecluster-2013-01-22-19-27-58",
-                 "SnapshotType": "automated",
-                 "Status": "available"},
-                {"AvailabilityZone": "us-east-1c",
-                 "ClusterCreateTime": "2013-01-22T19:23:59.368Z",
-                 "ClusterIdentifier": "examplecluster",
-                 "ClusterVersion": "1.0",
-                 "DBName": "dev",
-                 "MasterUsername": "adminuser",
-                 "NodeType": "dw.hs1.xlarge",
-                 "NumberOfNodes": 2,
-                 "Port": 5439,
-                 "SnapshotCreateTime": "2013-01-23T01:09:03.149Z",
-                 "SnapshotIdentifier": "my-snapshot-123",
-                 "SnapshotType": "manual",
-                 "Status": "available"}]}
+{
+    "ResponseMetadata": {
+        "RequestId": "56a9daf4-64fa-11e2-a8da-655adc216806"
+    }, 
+    "Snapshots": [
+        {
+            "Status": "available", 
+            "SnapshotCreateTime": "2013-01-22T19:27:58.931Z", 
+            "AvailabilityZone": "us-east-1c", 
+            "ClusterVersion": "1.0", 
+            "MasterUsername": "adminuser", 
+            "DBName": "dev", 
+            "ClusterCreateTime": "2013-01-22T19:23:59.368Z", 
+            "SnapshotType": "automated", 
+            "NodeType": "dw.hs1.xlarge", 
+            "ClusterIdentifier": "examplecluster", 
+            "Port": 5439, 
+            "NumberOfNodes": 2, 
+            "SnapshotIdentifier": "cm:examplecluster-2013-01-22-19-27-58"
+        }, 
+        {
+            "Status": "available", 
+            "SnapshotCreateTime": "2013-01-23T01:09:03.149Z", 
+            "AvailabilityZone": "us-east-1c", 
+            "ClusterVersion": "1.0", 
+            "MasterUsername": "adminuser", 
+            "DBName": "dev", 
+            "ClusterCreateTime": "2013-01-22T19:23:59.368Z", 
+            "SnapshotType": "manual", 
+            "NodeType": "dw.hs1.xlarge", 
+            "ClusterIdentifier": "examplecluster", 
+            "Port": 5439, 
+            "NumberOfNodes": 2, 
+            "SnapshotIdentifier": "my-snapshot-123"
+        }
+    ]
+}
