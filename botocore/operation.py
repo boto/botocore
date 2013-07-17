@@ -20,11 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 #
-import time
 import logging
 from botocore.parameters import get_parameter
 from botocore.exceptions import MissingParametersError
 from botocore.paginate import Paginator
+from botocore.payload import XMLPayload, JSONPayload
 from botocore import BotoCoreObject
 
 logger = logging.getLogger(__name__)
@@ -110,7 +110,15 @@ class Operation(BotoCoreObject):
         if self.service.type in ('rest-xml', 'rest-json'):
             d['uri_params'] = {}
             d['headers'] = {}
-            d['payload'] = None
+            if self.service.type == 'rest-xml':
+                namespace = self.service.xmlnamespace
+                root_element_name = None
+                if 'shape_name' in self.input:
+                    root_element_name = self.input['shape_name']
+                d['payload'] = XMLPayload(root_element_name=root_element_name,
+                                          namespace=namespace)
+            else:
+                d['payload'] = JSONPayload()
         return d
 
     def build_parameters(self, **kwargs):

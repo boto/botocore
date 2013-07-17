@@ -22,7 +22,6 @@
 #
 
 import logging
-import re
 import time
 
 from requests.sessions import Session
@@ -209,15 +208,16 @@ class RestEndpoint(Endpoint):
         params['headers']['User-Agent'] = user_agent
         uri = self.build_uri(operation, params)
         uri = urljoin(self.host, uri)
-        if params['payload'] is None:
+        payload = None
+        if params['payload']:
+            payload = params['payload'].getvalue()
+        if payload is None:
             request = AWSRequest(method=operation.http['method'],
                                  url=uri, headers=params['headers'])
         else:
-            if self.service.type == 'rest-json':
-                params['payload'] = json.dumps(params['payload'])
             request = AWSRequest(method=operation.http['method'],
                                  url=uri, headers=params['headers'],
-                                 data=params['payload'])
+                                 data=payload)
         return request
 
 
