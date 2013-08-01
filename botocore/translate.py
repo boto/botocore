@@ -1,6 +1,5 @@
 """Translate the raw json files into python specific descriptions."""
 import os
-import sys
 import re
 from copy import deepcopy
 
@@ -64,6 +63,7 @@ def translate(model):
     add_retry_configs(
         new_model, model.retry.get('retry', {}), definitions=model.retry.get('definitions', {}))
     handle_op_renames(new_model, model.enhancements)
+    handle_remove_deprecated_params(new_model, model.enhancements)
     return new_model
 
 
@@ -84,6 +84,27 @@ def handle_op_renames(new_model, enhancements):
             new_key = remove_regex.sub('', key)
             new_operation[new_key] = operations[key]
         new_model['operations'] = new_operation
+
+
+def handle_remove_deprecated_params(new_model, enhancements):
+    # This removes any parameter whose documentation string contains
+    # the specified phrase that marks a deprecated parameter.
+    keyword = enhancements.get('transformations', {}).get(
+        'remove-deprecated-params', {}).get('deprecated_keyword')
+    if keyword is not None:
+        operations = new_model['operations']
+        for op_name in operations:
+            operation = operations[op_name]
+            params = operation.get('input', {}).get('members')
+            if params:
+                new_params = OrderedDict()
+                for param_name in params:
+                    param = params[param_name]
+                    docs = param['documentation']
+                    if docs and docs.find(keyword) >= 0:
+                        continue
+                    new_params[param_name] = param
+                operation['input']['members'] = new_params
 
 
 def add_pagination_configs(new_model, pagination):
