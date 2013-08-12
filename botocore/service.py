@@ -38,10 +38,14 @@ class Service(object):
     WAITER_CLASS = Waiter
 
     def __init__(self, session, provider, service_name,
-                 path='/', port=None):
+                 path='/', port=None, api_version=None):
         self.global_endpoint = None
         self.timestamp_format = 'iso8601'
-        sdata = session.get_service_data(service_name)
+        self.api_version = api_version
+        sdata = session.get_service_data(
+            service_name,
+            api_version=self.api_version
+        )
         self.__dict__.update(sdata)
         self._operations_data = self.__dict__.pop('operations')
         self._operations = None
@@ -187,7 +191,7 @@ class Service(object):
         return self.WAITER_CLASS(waiter_name, operation, config)
 
 
-def get_service(session, service_name, provider):
+def get_service(session, service_name, provider, api_version=None):
     """
     Return a Service object for a given provider name and service name.
 
