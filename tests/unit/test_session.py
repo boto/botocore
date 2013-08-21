@@ -103,6 +103,7 @@ class SessionTest(BaseSessionTest):
 
     def test_get_aws_services_in_alphabetical_order(self):
         session = botocore.session.get_session(self.env_vars)
+        import pdb; pdb.set_trace()
         services = session.get_data('aws')
         self.assertEqual(sorted(services), services)
 

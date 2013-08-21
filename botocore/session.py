@@ -150,7 +150,7 @@ class Session(object):
         self._credentials = None
         self._profile_map = None
         self._provider = None
-        self.loader = loader(self)
+        self.loader = loader_class(self)
 
     def _register_builtin_handlers(self, events):
         for event_name, handler in handlers.BUILTIN_HANDLERS:
@@ -355,15 +355,14 @@ class Session(object):
                                           platform.system(),
                                           platform.release())
 
-    def get_data(self, data_path):
+    def get_data(self, data_path, api_version=None):
         """
         Retrieve the data associated with `data_path`.
 
         :type data_path: str
         :param data_path: The path to the data you wish to retrieve.
         """
-        return self.loader.get_data()
-        return botocore.base.get_data(self, data_path)
+        return self.loader.get_data(data_path, api_version=api_version)
 
     def get_service_data(self, service_name, api_version=None):
         """
