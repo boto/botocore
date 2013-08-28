@@ -4,6 +4,7 @@ import os
 from botocore import BOTOCORE_ROOT
 from botocore.compat import json
 from botocore.compat import OrderedDict
+from botocore.exceptions import ApiVersionNotFound
 from botocore.exceptions import DataNotFoundError
 
 
@@ -146,15 +147,27 @@ class Loader(object):
                 return data
 
         """
-        def _wrapper(self, key):
+        def _wrapper(self, orig_key, **kwargs):
             cls = self.__class__
+            key = orig_key
+
+            # Make the full key, including all kwargs.
+            # Sort them to prevent hash randomization from creating accidental
+            # cache misses.
+            for name in sorted(kwargs.keys()):
+                key += '/{0}/{1}'.format(
+                    name,
+                    kwargs[name]
+                )
 
             if key in cls._cache:
                 return cls._cache[key]
 
-            data = func(key)
+            data = func(self, orig_key, **kwargs)
             cls._cache[key] = data
             return data
+
+        return _wrapper
 
 
 class JSONLoader(Loader):
@@ -194,7 +207,7 @@ class JSONLoader(Loader):
         # Now look for optional user-configured paths.
         # We keep the order in a familiar manner of traditional UNIX paths
         # (overrides first).
-        search_path = session.get_variable('data_path')
+        search_path = self.session.get_variable('data_path')
 
         if search_path is not None:
             extra_paths = search_path.split(os.pathsep)
@@ -251,7 +264,16 @@ class JSONLoader(Loader):
             {
                 # ...Region data...
             }
+
         """
+        # Here, we'll cache it.
+        return self._get_data(data_path)
+
+    def _get_data(self, data_path):
+        # This is the uncached version for use with ``get_service_data``.
+
+        # Per the original behavior, this builds the data & updates/overrides
+        # it as it goes.
         data = {}
         data_found = False
 
@@ -273,9 +295,7 @@ class JSONLoader(Loader):
                 continue
 
         if not data_found:
-            raise DataNotFoundError(
-                "No data could be found for path '{0}'.".format(data_path)
-            )
+            raise DataNotFoundError(data_path=data_path)
 
         return data
 
@@ -295,24 +315,30 @@ class JSONLoader(Loader):
         An example looks like ``2013-08-27``. Default is ``None``, which means
         pick the latest.
 
-        .. note::
-
-            Should use ``determine_latest`` to actually find the correct file
-            path to load.
-
         Returns a dictionary of service data.
 
-        .. warning::
+        Usage::
 
-            This method is not implemented here. Subclasses must override this
-            method & provide a valid implementation.
+            >>> from botocore.session import Session
+            >>> session = Session()
+            >>> loader = JSONLoader(session)
+            >>> loader.get_service_data('aws/ec2')
+            {
+                # ...The latest EC2 service data...
+            }
+            >>> loader.get_service_data('aws/ec2', api_version='2013-02-01')
+            {
+                # ...The EC2 service data for version 2013-02-01...
+            }
 
-            They should also use the ``Loader.cachable`` decorator to cache the
-            data.
         """
-        raise NotImplementedError(
-            "Subclasses must implement 'get_service_data'."
+        actual_data_path = self.determine_latest(
+            data_path,
+            api_version=api_version
         )
+
+        # Use the private method, so that we don't double-cache.
+        return self._get_data(actual_data_path)
 
     @Loader.cachable
     def get_service_options(self, data_path):
@@ -322,16 +348,31 @@ class JSONLoader(Loader):
         Requires a ``data_path`` parameter, which should be a string. This
         indicates the desired path to load, seperated by slashes if needed.
 
-        .. warning::
+        Returns a list of service names.
 
-            This method is not implemented here. Subclasses must override this
-            method & provide a valid implementation.
+        Usage::
 
-            They should also use the ``Loader.cachable`` to cache the data.
+            >>> from botocore.session import Session
+            >>> session = Session()
+            >>> loader = JSONLoader(session)
+            >>> loader.get_service_options('aws')
+            [
+                'autoscaling',
+                'cloudformation',
+                # ...
+            ]
+
         """
-        raise NotImplementedError(
-            "Subclasses must implement 'get_service_options'."
-        )
+        options = []
+
+        for possible_path in self.get_search_paths():
+            option_glob = os.path.join(possible_path, data_path, '*')
+
+            for possible_option in glob.glob(option_glob):
+                if os.path.isdir(possible_option):
+                    options.append(os.path.basename(possible_option))
+
+        return options
 
     def determine_latest(self, data_path, api_version=None):
         """
@@ -357,58 +398,108 @@ class JSONLoader(Loader):
         version. If a compatible version can not be found, an
         ``ApiVersionNotFound`` exception will be thrown.
 
-            # Directory
-            'aws'
-            # Plain files
-            'cli'
-            'messages'
-            'aws/_regions'
-            # Directory, discovered version
-            'aws/ec2'
-            # Plain file
-            'aws/ec2/2013-02-01'
+        Usage::
+
+            >>> from botocore.session import Session
+            >>> session = Session()
+            >>> loader = JSONLoader(session)
+
+            # Just grabs the latest.
+            >>> loader.determine_latest('aws/rds')
+            'aws/rds/2013-05-15'
+
+            # Grabs the matching version.
+            >>> loader.determine_latest('aws/rds', api_version='2013-02-12')
+            'aws/rds/2013-02-12'
+
+            # Finds the best match.
+            >>> loader.determine_latest('aws/rds', api_version='2013-01-31')
+            'aws/rds/2013-01-10'
+
+            # Couldn't find a match.
+            >>> loader.determine_latest('aws/rds', api_version='2010-05-16')
+            # Traceback, then...
+            ApiVersionNotFound: Unable to load data aws/rds for: 2010-05-16
 
         """
-        # If we've got a version, toss it on the path & hope for the best.
-        if api_version is not None:
-            return os.path.join(data_path, api_version)
+        all_options = []
+        best_match = None
 
-        # We don't have an api_version, so we'll need to find the latest
-        # release.
-        for base_path in botocore.base.get_search_path(self.session):
+        # Hunt down the options.
+        for base_path in self.get_search_paths():
             path = os.path.join(base_path, data_path)
 
+            # If it doesn't exist, skip it (might be in a later path).
             if not os.path.exists(path):
                 continue
 
-            # If it's a directory, look inside for the right version.
+            # If it's not a directory, we're not going to find versions.
+            # Carry on.
             if not os.path.isdir(path):
                 continue
 
+            # If it's a directory, look inside for the right version.
             glob_exp = os.path.join(path, "*.json")
-            # Reverse the list, so we can find the most recent
-            # lexicographically.
-            options = sorted(glob.glob(glob_exp), reverse=True)
+            options = glob.glob(glob_exp)
 
+            # No options == no dice. Move along.
             if not len(options):
                 continue
 
-            # Remove the extension.
-            latest = os.path.splitext(options[0])[0]
-            # Cut off the path.
-            latest = latest.replace(base_path, '')
+            for raw_opt in options:
+                # Rip off the extension.
+                opt = os.path.splitext(raw_opt)[0]
+                # Cut off the path.
+                opt = opt.replace(path, '')
 
-            # If the left-most character is a path separator,
-            # remove that too.
-            if latest[0] == os.path.sep:
-                latest = latest[1:]
+                # If the left-most character is a path separator,
+                # remove that too.
+                if opt[0] == os.path.sep:
+                    opt = opt[1:]
 
-            # One last check. Ensure it looks roughly like a versioned file.
-            # We need to do this in the case where someone is trying to
-            # recursively load all files (like ``aws``).
-            if not latest.count('-') == 2:
-                continue
+                # One last check. Ensure it looks roughly like a versioned file.
+                if not opt.count('-') == 2:
+                    continue
 
-            return latest
+                all_options.append(opt)
 
-        return data_path
+        if not len(all_options):
+            # We don't have any matches. Error out.
+            raise ApiVersionNotFound(
+                data_path=data_path,
+                api_version=api_version
+            )
+
+        # Reverse the list, so we can find the most correct/recent
+        # lexicographically.
+        all_options = sorted(all_options, reverse=True)
+
+        if api_version is None:
+            # We just care about the latest. Since they're in the proper order,
+            # simply use the first one.
+            best_match = all_options[0]
+        else:
+            # We need to look for an API version that either matches or is
+            # the first to come before that (and hence, backward-compatible).
+            for opt in all_options:
+                if opt == api_version:
+                    # Exact match. We win!
+                    best_match = opt
+                    break
+                elif opt < api_version:
+                    # Since it's in reverse sorted order & nothing previously
+                    # matched, we know this is the closest API version that's
+                    # backward-compatible.
+                    best_match = opt
+                    break
+
+        if not best_match:
+            # We didn't find anything. Error out.
+            raise ApiVersionNotFound(
+                data_path=data_path,
+                api_version=api_version
+            )
+
+        # We've got the best match. Make a real path out of it & return that
+        # for use elsewhere.
+        return os.path.join(data_path, best_match)
