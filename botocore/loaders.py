@@ -8,18 +8,115 @@ from botocore.exceptions import ApiVersionNotFound
 from botocore.exceptions import DataNotFoundError
 
 
-class Loader(object):
+class Cache(object):
     """
-    A no-op base class, mostly to establish the protocol for loading
-    the model data.
+    A plain, relatively naive cache.
+
+    Caches & retains everything for the duration of the cache's life.
+
+    Usage::
+
+        >>> cache = Cache()
+        >>> 'test' in cache
+        False
+        >>> cache['test']
+        KeyError:...
+        >>> cache['test'] = 'abc'
+        >>> 'test' in cache
+        True
+        >>> cache['test']
+        'abc'
+        >>> len(cache)
+        1
+        >>> cache['whatever'] = 1
+        >>> len(cache)
+        2
+        >>> del cache['test']
+        >>> len(cache)
+        1
+        >>> cache.clear()
+        >>> len(cache)
+        0
+
     """
-    # TODO: Think about thread-safety here. Should this be a thread-local?
-    _cache = {}
+    def __init__(self):
+        super(Cache, self).__init__()
+        # TODO: Think about thread-safety here. Should this be a thread-local?
+        self._data = {}
 
-    def __init__(self, session):
-        super(Loader, self).__init__()
-        self.session = session
+    def __len__(self):
+        return len(self._data.keys())
 
+    def __contains__(self, key):
+        return key in self._data
+
+    def __getitem__(self, key):
+        return self._data[key]
+
+    def __setitem__(self, key, value):
+        self._data[key] = value
+
+    def __delitem__(self, key):
+        try:
+            del self._data[key]
+        except KeyError:
+            # It's not worth the error. We're just trying to make sure the
+            # data isn't there, which it's not.
+            pass
+
+    def clear(self):
+        self._data = {}
+
+
+def cachable(func):
+    """
+    A convenient decorator for getting the data (either from the cache or
+    populating the cache).
+
+    Required to be used on a class & the class must have a ``_cache`` that
+    either is ``botocore.loaders.Cache`` or a compatible class.
+
+    Usage::
+
+        class Loader(object):
+            _cache = Cache()
+
+            @cachable
+            def get_service_data(self, service):
+                data = self.load_file(self, 'aws/{0}'.format(service))
+                return data
+
+    """
+    def _wrapper(self, orig_key, **kwargs):
+        cls = self.__class__
+        key = orig_key
+
+        # Make the full key, including all kwargs.
+        # Sort them to prevent hash randomization from creating accidental
+        # cache misses.
+        for name in sorted(kwargs.keys()):
+            key += '/{0}/{1}'.format(
+                name,
+                kwargs[name]
+            )
+
+        if key in cls._cache:
+            return cls._cache[key]
+
+        data = func(self, orig_key, **kwargs)
+        cls._cache[key] = data
+        return data
+
+    return _wrapper
+
+
+class JSONFileLoader(object):
+    """
+    Handles actually loading the files themselves.
+
+    Split off as a seperate class to allow for swapping with more complex
+    implementations.
+    """
     def load_file(self, file_path):
         """
         Loads a regular data file (format-specific to subclass).
@@ -27,153 +124,56 @@ class Loader(object):
         This load is done uncached, so that you can always get the latest data
         as needed.
 
-        .. warning::
-
-            This method is not implemented here. Subclasses must override this
-            method & provide a valid implementation.
-
-        """
-        raise NotImplementedError("Subclasses must implement 'load_file'.")
-
-    def get_data(self, data_path):
-        """
-        Either loads a regular data file (format-specific to subclass) or
-        returns previously loaded data from the cache.
-
-        Returns a dictionary of data from the file.
-
-        .. warning::
-
-            This method is not implemented here. Subclasses must override this
-            method & provide a valid implementation.
-
-            They should also use the ``Loader.cachable`` decorator to cache the
-            data.
-
-        """
-        raise NotImplementedError("Subclasses must implement 'get_data'.")
-
-    def get_service_data(self, data_path, api_version=None):
-        """
-        Loads a given service's data.
-
-        Requires a ``data_path`` parameter, which should be a string. This
-        indicates the desired path to load, seperated by slashes. It should
-        **NOT** include absolute path information nor file extensions. (i.e.
-        ``aws/ec2``, not ``/botocore/data/aws/ec2/2010-01-01.json``)
-
-        Optionally accepts an ``api_version`` parameter, which should be a
-        string of the desired API version. This is used when you want to pin to
-        a given API version rather than picking up the latest version.
-        An example looks like ``2013-08-27``. Default is ``None``, which means
-        pick the latest.
-
-        .. note::
-
-            Should use ``determine_latest`` to actually find the correct file
-            path to load.
-
-        Returns a dictionary of service data.
-
-        .. warning::
-
-            This method is not implemented here. Subclasses must override this
-            method & provide a valid implementation.
-
-            They should also use the ``Loader.cachable`` decorator to cache the
-            data.
-
-        """
-        raise NotImplementedError(
-            "Subclasses must implement 'get_service_data'."
-        )
-
-    def get_service_options(self, data_path):
-        """
-        Loads all the service options available.
-
-        Requires a ``data_path`` parameter, which should be a string. This
-        indicates the desired path to load, seperated by slashes if needed.
-
-        .. warning::
-
-            This method is not implemented here. Subclasses must override this
-            method & provide a valid implementation.
-
-            They should also use the ``Loader.cachable`` to cache the data.
-
-        """
-        raise NotImplementedError(
-            "Subclasses must implement 'get_service_options'."
-        )
-
-    @classmethod
-    def clear_cache(cls, key=None):
-        """
-        Clears either the entire cache or a given key from the cache.
-
-        Called without parameters, it will clear out the entire cache.
-
-        Optionally accepts ``key``, which should be a string. If provided, only
-        the given key will be removed from the cache if found.
-        Default is ``None``.
-        """
-        if key is None:
-            cls._cache = {}
-        else:
-            try:
-                del cls._cache[key]
-            except KeyError:
-                # It's not worth the error. We're just trying to make sure the
-                # data isn't there, which it's not.
-                pass
-
-        return
-
-    @staticmethod
-    def cachable(func):
-        """
-        A convenient decorator for getting the data (either from the cache or
-        populating the cache).
-
-        Used primarily on the ``get_*`` methods. The ``load_file`` method should
-        be left uncached, as a way to always get the freshest data.
-
         Usage::
 
-            @Loader.cachable
-            def get_service_data(self, service):
-                data = self.load_file(self, 'aws/{0}'.format(service))
-                return data
+            >>> from botocore.session import Session
+            >>> session = Session()
+            >>> loader = JSONFileLoader()
+            >>> loader.load_file('/path/to/some/thing.json')
+            {
+                # ...JSON data...
+            }
 
         """
-        def _wrapper(self, orig_key, **kwargs):
-            cls = self.__class__
-            key = orig_key
-
-            # Make the full key, including all kwargs.
-            # Sort them to prevent hash randomization from creating accidental
-            # cache misses.
-            for name in sorted(kwargs.keys()):
-                key += '/{0}/{1}'.format(
-                    name,
-                    kwargs[name]
-                )
-
-            if key in cls._cache:
-                return cls._cache[key]
-
-            data = func(self, orig_key, **kwargs)
-            cls._cache[key] = data
-            return data
-
-        return _wrapper
+        with open(file_path) as fp:
+            return json.load(fp, object_pairs_hook=OrderedDict)
 
 
-class JSONLoader(Loader):
+class Loader(object):
     """
-    A JSON-specific loader that uses the filesystem to load files.
+    Intelligently loads the data botocore needs.
+
+    Handles listing the available services, loading service data & loading
+    arbitrary data.
+
+    Default implementation uses JSON files (the ``JSONFileLoader``) & a plain
+    cache (``Cache``).
     """
+    # Shared class-wide.
+    _cache = Cache()
+    # Per-instance default.
+    file_loader_class = JSONFileLoader
+    # Per-instance default.
+    extension = '.json'
+
+    def __init__(self, session):
+        """
+        Sets up the Loader.
+
+        Requires a ``session`` argument, which should be a
+        ``botocore.session.Session`` instance.
+        """
+        super(Loader, self).__init__()
+        self.session = session
+        self.file_loader = self.file_loader_class()
+
+    @classmethod
+    def clear_cache(cls):
+        """
+        Clears the entire cache used for this class.
+        """
+        cls._cache.clear()
+
     def get_search_paths(self):
         """
         Return the all the paths that data could be found on when searching for
@@ -184,7 +184,7 @@ class JSONLoader(Loader):
             # Default:
             >>> from botocore.session import Session
             >>> session = Session()
-            >>> loader = JSONLoader(session)
+            >>> loader = Loader(session)
             >>> loader.get_search_paths()
             [
                 '/path/to/botocore/data',
@@ -194,7 +194,7 @@ class JSONLoader(Loader):
             >>> session = Session(env_vars={
             ...     'data_path': '~/.botocore/my_overrides',
             ... })
-            >>> loader = JSONLoader(session)
+            >>> loader = Loader(session)
             >>> loader.get_search_paths()
             [
                 '/home/somebody/.botocore/my_overrides',
@@ -222,28 +222,7 @@ class JSONLoader(Loader):
         paths.append(os.path.join(BOTOCORE_ROOT, 'data'))
         return paths
 
-    def load_file(self, file_path):
-        """
-        Loads a regular data file (format-specific to subclass).
-
-        This load is done uncached, so that you can always get the latest data
-        as needed.
-
-        Usage::
-
-            >>> from botocore.session import Session
-            >>> session = Session()
-            >>> loader = JSONLoader(session)
-            >>> loader.load_file()
-            {
-                # ...JSON data...
-            }
-
-        """
-        with open(file_path) as fp:
-            return json.load(fp, object_pairs_hook=OrderedDict)
-
-    @Loader.cachable
+    @cachable
     def get_data(self, data_path):
         """
         Either loads a regular data file (format-specific to subclass) or
@@ -255,7 +234,7 @@ class JSONLoader(Loader):
 
             >>> from botocore.session import Session
             >>> session = Session()
-            >>> loader = JSONLoader(session)
+            >>> loader = Loader(session)
             >>> loader.get_data('aws/ec2/2013-02-01')
             {
                 # ...EC2 service data...
@@ -282,12 +261,12 @@ class JSONLoader(Loader):
         for possible_path in reversed(self.get_search_paths()):
             full_path = os.path.join(
                 possible_path,
-                data_path + '.json'
+                data_path + self.extension
             )
 
             try:
                 # Attempt loading it.
-                found_data = self.load_file(full_path)
+                found_data = self.file_loader.load_file(full_path)
                 data.update(found_data)
                 data_found = True
             except IOError:
@@ -299,10 +278,10 @@ class JSONLoader(Loader):
 
         return data
 
-    @Loader.cachable
-    def get_service_data(self, data_path, api_version=None):
+    @cachable
+    def get_service_model(self, data_path, api_version=None):
         """
-        Loads a given service's data.
+        Loads a given service's model data.
 
         Requires a ``data_path`` parameter, which should be a string. This
         indicates the desired path to load, seperated by slashes. It should
@@ -315,20 +294,24 @@ class JSONLoader(Loader):
         An example looks like ``2013-08-27``. Default is ``None``, which means
         pick the latest.
 
-        Returns a dictionary of service data.
+        Returns a dictionary of service model data.
 
         Usage::
 
             >>> from botocore.session import Session
             >>> session = Session()
-            >>> loader = JSONLoader(session)
+            >>> loader = Loader(session)
             >>> loader.get_service_data('aws/ec2')
             {
-                # ...The latest EC2 service data...
+                # The latest EC2 service data...
+                'api_version': '2013-08-27',
+                # ...many more keys & values...
             }
             >>> loader.get_service_data('aws/ec2', api_version='2013-02-01')
             {
-                # ...The EC2 service data for version 2013-02-01...
+                # The EC2 service data for version 2013-02-01...
+                'api_version': '2013-02-01',
+                # ...many more keys & values...
             }
 
         """
@@ -340,8 +323,8 @@ class JSONLoader(Loader):
         # Use the private method, so that we don't double-cache.
         return self._get_data(actual_data_path)
 
-    @Loader.cachable
-    def get_service_options(self, data_path):
+    @cachable
+    def list_available_services(self, data_path):
         """
         Loads all the service options available.
 
@@ -354,8 +337,8 @@ class JSONLoader(Loader):
 
             >>> from botocore.session import Session
             >>> session = Session()
-            >>> loader = JSONLoader(session)
-            >>> loader.get_service_options('aws')
+            >>> loader = Loader(session)
+            >>> loader.list_available_services('aws')
             [
                 'autoscaling',
                 'cloudformation',
@@ -402,7 +385,7 @@ class JSONLoader(Loader):
 
             >>> from botocore.session import Session
             >>> session = Session()
-            >>> loader = JSONLoader(session)
+            >>> loader = Loader(session)
 
             # Just grabs the latest.
             >>> loader.determine_latest('aws/rds')
@@ -439,7 +422,7 @@ class JSONLoader(Loader):
                 continue
 
             # If it's a directory, look inside for the right version.
-            glob_exp = os.path.join(path, "*.json")
+            glob_exp = os.path.join(path, '*' + self.extension)
             options = glob.glob(glob_exp)
 
             # No options == no dice. Move along.

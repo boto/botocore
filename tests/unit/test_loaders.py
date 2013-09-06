@@ -21,30 +21,99 @@
 #
 import os
 
-import mock
-
+from botocore.exceptions import ApiVersionNotFound
 from botocore.exceptions import DataNotFoundError
-from botocore.loaders import JSONLoader
+from botocore.loaders import Cache
+from botocore.loaders import cachable
+from botocore.loaders import JSONFileLoader
+from botocore.loaders import Loader
 import botocore.session
 
 from tests import unittest, BaseEnvVar
 
 
-class JSONLoaderTestCase(BaseEnvVar):
+class CacheTestCase(BaseEnvVar):
     def setUp(self):
-        super(JSONLoaderTestCase, self).setUp()
-        data_path = os.path.join(os.path.dirname(__file__), 'data')
-        self.environ['BOTO_DATA_PATH'] = data_path
+        super(CacheTestCase, self).setUp()
+        self.cache = Cache()
+
+    def test_len(self):
+        self.assertEqual(len(self.cache), 0)
+
+        self.cache['whatever'] = 'something'
+        self.assertEqual(len(self.cache), 1)
+
+        self.cache['whatever'] = 'something'
+        self.assertEqual(len(self.cache), 1)
+
+        self.cache['another'] = 'thing'
+        self.assertEqual(len(self.cache), 2)
+
+    def test_contains(self):
+        self.cache['whatever'] = 'something'
+        self.assertTrue('whatever' in self.cache)
+        self.assertFalse('another' in self.cache)
+
+    def test_get(self):
+        self.cache['abc'] = 123
+        self.assertEqual(self.cache['abc'], 123)
+
+        with self.assertRaises(KeyError):
+            self.cache['def']
+
+    def test_set(self):
+        with self.assertRaises(KeyError):
+            self.cache['a_thing']
+
+        self.cache['a_thing'] = 'that_lives'
+        self.assertEqual(self.cache['a_thing'], 'that_lives')
+
+    def test_del(self):
+        self.cache['a_thing'] = 'that_lives'
+        self.cache['whatever'] = 'something'
+        self.assertEqual(len(self.cache), 2)
+
+        del self.cache['a_thing']
+        self.assertEqual(len(self.cache), 1)
+
+        # Make sure no exceptions are thrown.
+        del self.cache['a_thing']
+        self.assertEqual(len(self.cache), 1)
+
+    def test_clear(self):
+        self.cache['a_thing'] = 'that_lives'
+        self.cache['whatever'] = 'something'
+        self.assertEqual(len(self.cache), 2)
+
+        self.cache.clear()
+        self.assertEqual(len(self.cache), 0)
+
+
+class JSONFileLoaderTestCase(BaseEnvVar):
+    def setUp(self):
+        super(JSONFileLoaderTestCase, self).setUp()
+        self.data_path = os.path.join(os.path.dirname(__file__), 'data')
+        self.file_loader = JSONFileLoader()
+
+    def test_load_file(self):
+        data = self.file_loader.load_file(
+            os.path.join(self.data_path, 'foo.json')
+        )
+        self.assertEqual(len(data), 3)
+        self.assertTrue('test_key_1' in data)
+
+
+class LoaderTestCase(BaseEnvVar):
+    def setUp(self):
+        super(LoaderTestCase, self).setUp()
+        self.data_path = os.path.join(os.path.dirname(__file__), 'data')
+        self.environ['BOTO_DATA_PATH'] = self.data_path
         self.session = botocore.session.get_session()
-        self.loader = JSONLoader(session=self.session)
+        self.loader = Loader(session=self.session)
 
-    def test_determine_latest_plain_file(self):
-        path = self.loader.determine_latest('foo')
-        self.assertEqual(path, 'foo')
-
-    def test_determine_latest_directory(self):
-        path = self.loader.determine_latest('sub')
-        self.assertEqual(path, 'sub')
+    def test_get_search_paths(self):
+        paths = self.loader.get_search_paths()
+        self.assertTrue(self.data_path in paths)
 
     def test_determine_latest_no_version(self):
         path = self.loader.determine_latest('someservice')
@@ -58,39 +127,53 @@ class JSONLoaderTestCase(BaseEnvVar):
         self.assertEqual(path, 'someservice/2012-10-01')
 
     def test_determine_latest_with_version_the_wrong_way(self):
-        path = self.loader.determine_latest('someservice/2012-10-01')
-        # We've tried to traverse to find it & didn't, so it just gets returned
-        # for ``botocore.base`` to have a whack at it.
-        self.assertEqual(path, 'someservice/2012-10-01')
+        with self.assertRaises(ApiVersionNotFound):
+            self.loader.determine_latest('someservice/2012-10-01')
 
     def test_determine_latest_with_version_not_found(self):
-        path = self.loader.determine_latest(
-            'someservice',
-            api_version='2010-02-02'
-        )
-        # We just return it, even if it's wrong, to let ``botocore.base`` try
-        # to find it (maybe it's a key or something).
-        self.assertEqual(path, 'someservice/2010-02-02')
+        with self.assertRaises(ApiVersionNotFound):
+            path = self.loader.determine_latest(
+                'someservice',
+                api_version='2010-02-02'
+            )
 
-    def test_get_data_plain_file_no_version(self):
+    def test_get_data_plain_file(self):
         data = self.loader.get_data('foo')
         self.assertEqual(data['test_key_1'], 'test_value_1')
 
-    def test_get_data_plain_directory(self):
-        data = self.loader.get_data('sub')
-        self.assertEqual(data[0], 'fie')
+    def test_get_data_plain_file_nonexistant(self):
+        with self.assertRaises(DataNotFoundError):
+            data = self.loader.get_data('i_totally_dont_exist')
 
-    def test_get_data_latest_without_version(self):
-        data = self.loader.get_data('someservice')
+    def test_get_service_model_latest_without_version(self):
+        data = self.loader.get_service_model('someservice')
         self.assertEqual(data['api_version'], '2013-08-21')
 
-    def test_get_data_with_version(self):
-        data = self.loader.get_data('someservice', api_version='2012-10-01')
+    def test_get_service_model_with_version(self):
+        data = self.loader.get_service_model(
+            'someservice',
+            api_version='2012-10-01'
+        )
         self.assertEqual(data['api_version'], '2012-10-01')
 
-    def test_get_data_with_version_not_found(self):
-        with self.assertRaises(DataNotFoundError):
-            data = self.loader.get_data('someservice', api_version='2010-02-02')
+    def test_get_service_model_version_not_found(self):
+        with self.assertRaises(ApiVersionNotFound):
+            data = self.loader.get_service_model(
+                'someservice',
+                api_version='2010-02-02'
+            )
+
+    def test_list_available_services(self):
+        avail = self.loader.list_available_services('')
+        self.assertEqual(sorted(avail), [
+            'aws',
+            'someservice',
+            'sub',
+        ])
+
+        aws_avail = self.loader.list_available_services('aws')
+        self.assertTrue(len(aws_avail) > 10)
+        self.assertTrue('ec2' in aws_avail)
 
 
 if __name__ == "__main__":

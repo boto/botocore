@@ -37,7 +37,7 @@ import botocore.credentials
 from botocore.exceptions import ConfigNotFound, EventNotFound, ProfileNotFound
 from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
-from botocore.loaders import JSONLoader
+from botocore.loaders import Loader
 from botocore.provider import get_provider
 import botocore.service
 
@@ -115,7 +115,7 @@ class Session(object):
     FmtString = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
     def __init__(self, env_vars=None, event_hooks=None,
-                 include_builtin_handlers=True, loader_class=JSONLoader):
+                 include_builtin_handlers=True, loader_class=Loader):
         """
         Create a new Session object.
 
