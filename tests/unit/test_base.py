@@ -28,7 +28,6 @@ import mock
 
 import botocore.session
 import botocore.exceptions
-import botocore.base
 
 
 class TestConfig(BaseEnvVar):
@@ -77,21 +76,6 @@ class TestConfig(BaseEnvVar):
     def test_subdir_not_found(self):
         self.assertRaises(botocore.exceptions.DataNotFoundError,
                           self.session.get_data, 'sub/foo')
-
-
-class TestWindowsSearchPath(BaseEnvVar):
-    def setUp(self):
-        self.session = botocore.session.get_session()
-        super(TestWindowsSearchPath, self).setUp()
-
-    @mock.patch('os.pathsep', ';')
-    def test_search_path_on_windows(self):
-        # On windows, the search path is separated by ';' chars.
-        self.environ['BOTO_DATA_PATH'] = 'c:\\path1;c:\\path2'
-        # The bulitin botocore data path is added as the 0th element
-        # so we're only interested inchecking the two that we've added.
-        paths = botocore.base.get_search_path(self.session)[1:]
-        self.assertEqual(paths, ['c:\\path1', 'c:\\path2'])
 
 
 if __name__ == "__main__":

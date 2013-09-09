@@ -21,6 +21,8 @@
 #
 import os
 
+import mock
+
 from botocore.exceptions import ApiVersionNotFound
 from botocore.exceptions import DataNotFoundError
 from botocore.loaders import Cache
@@ -111,6 +113,9 @@ class LoaderTestCase(BaseEnvVar):
         self.session = botocore.session.get_session()
         self.loader = Loader(session=self.session)
 
+        # Make sure the cache is clear.
+        Loader.clear_cache()
+
     def test_get_search_paths(self):
         paths = self.loader.get_search_paths()
         self.assertTrue(self.data_path in paths)
@@ -174,6 +179,38 @@ class LoaderTestCase(BaseEnvVar):
         aws_avail = self.loader.list_available_services('aws')
         self.assertTrue(len(aws_avail) > 10)
         self.assertTrue('ec2' in aws_avail)
+
+    def test_get_data_overridden(self):
+        self.overrides_path = os.path.join(
+            os.path.dirname(__file__),
+            'data_overrides'
+        )
+        self.environ['BOTO_DATA_PATH'] = "{0}{1}{2}".format(
+            self.overrides_path,
+            os.pathsep,
+            self.data_path
+        )
+        # This should load the data from all the different paths it's found
+        # on, updating as it goes.
+        data = self.loader.get_service_model(
+            'someservice',
+            api_version='2012-10-01'
+        )
+        # An overridden key.
+        self.assertEqual(data['api_version'], '2013-09-06')
+        # A key unique to the override.
+        self.assertEqual(data['Purpose'][:10], 'Prove that')
+        # A key unique to the base.
+        self.assertEqual(data['something-else'], 'another')
+
+    @mock.patch('os.pathsep', ';')
+    def test_search_path_on_windows(self):
+        # On windows, the search path is separated by ';' chars.
+        self.environ['BOTO_DATA_PATH'] = 'c:\\path1;c:\\path2'
+        # The builtin botocore data path is added as the last element
+        # so we're only interested in checking the two that we've added.
+        paths = self.loader.get_search_paths()[:-1]
+        self.assertEqual(paths, ['c:\\path1', 'c:\\path2'])
 
 
 if __name__ == "__main__":
