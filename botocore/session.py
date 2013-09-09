@@ -355,21 +355,24 @@ class Session(object):
                                           platform.system(),
                                           platform.release())
 
-    def get_data(self, data_path, api_version=None):
+    def get_data(self, data_path):
         """
         Retrieve the data associated with `data_path`.
 
         :type data_path: str
         :param data_path: The path to the data you wish to retrieve.
         """
-        return self.loader.get_data(data_path, api_version=api_version)
+        return self.loader.get_data(data_path)
 
     def get_service_data(self, service_name, api_version=None):
         """
         Retrieve the fully merged data associated with a service.
         """
         data_path = '%s/%s' % (self.provider.name, service_name)
-        service_data = self.get_data(data_path, api_version=api_version)
+        service_data = self.loader.get_service_model(
+            data_path,
+            api_version=api_version
+        )
         return service_data
 
     def get_available_services(self):
@@ -377,7 +380,7 @@ class Session(object):
         Return a list of names of available services.
         """
         data_path = '%s' % self.provider.name
-        return self.get_data(data_path)
+        return self.loader.list_available_services(data_path)
 
     def get_service(self, service_name, api_version=None):
         """

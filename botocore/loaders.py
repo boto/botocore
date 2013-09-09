@@ -135,8 +135,14 @@ class JSONFileLoader(object):
             }
 
         """
-        with open(file_path) as fp:
-            return json.load(fp, object_pairs_hook=OrderedDict)
+        try:
+            with open(file_path) as fp:
+                return json.load(fp, object_pairs_hook=OrderedDict)
+        except ValueError:
+            # For backward-compatibility with the previous implementation,
+            # if the JSON is bad, we'll raise a ``DataNotFoundError`` exception
+            # instead of letting it propagate.
+            raise DataNotFoundError(data_path=file_path)
 
 
 class Loader(object):

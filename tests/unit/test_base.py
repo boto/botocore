@@ -52,22 +52,22 @@ class TestConfig(BaseEnvVar):
         self.assertTrue('test_key_2' in data)
 
     def test_not_there(self):
-        self.assertRaises(botocore.exceptions.DataNotFoundError,
-                          self.session.get_data,
-                          'foo/test_key_4')
+        data = self.session.get_data('foo')
+        self.assertFalse('foo/test_key_4' in data)
 
     def test_sub_data(self):
-        data = self.session.get_data('foo/test_key_2')
-        self.assertEqual(len(data), 2)
-        self.assertTrue('test_value_2_1' in data)
-        self.assertTrue('test_value_2_2' in data)
+        data = self.session.get_data('foo')
+        self.assertEqual(len(data['test_key_2']), 2)
+        self.assertTrue('test_value_2_1' in data['test_key_2'])
+        self.assertTrue('test_value_2_2' in data['test_key_2'])
 
     def test_sublist_data(self):
-        data = self.session.get_data('foo/test_key_3/test_list_2')
-        self.assertTrue('name' in data)
-        self.assertEqual(data['name'], 'test_list_2')
-        self.assertTrue('value' in data)
-        self.assertEqual(data['value'], 'test_list_value_2')
+        data = self.session.get_data('foo')
+        sublist = data['test_key_3'][1]
+        self.assertTrue('name' in sublist)
+        self.assertEqual(sublist['name'], 'test_list_2')
+        self.assertTrue('value' in sublist)
+        self.assertEqual(sublist['value'], 'test_list_value_2')
 
     def test_subdir(self):
         data = self.session.get_data('sub/fie')
