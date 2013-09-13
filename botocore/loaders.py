@@ -72,14 +72,12 @@ def cachable(func):
     A convenient decorator for getting the data (either from the cache or
     populating the cache).
 
-    Required to be used on a class & the class must have a ``_cache`` that
-    either is ``botocore.loaders.Cache`` or a compatible class.
+    For use on instances (not plain functions) that have a ``self._cache``
+    instance variable.
 
     Usage::
 
         class Loader(object):
-            _cache = Cache()
-
             @cachable
             def load_service_model(self, service):
                 data = self.load_file(self, 'aws/{0}'.format(service))
@@ -87,7 +85,6 @@ def cachable(func):
 
     """
     def _wrapper(self, orig_key, **kwargs):
-        cls = self.__class__
         key = orig_key
 
         # Make the full key, including all kwargs.
@@ -99,11 +96,11 @@ def cachable(func):
                 kwargs[name]
             )
 
-        if key in cls._cache:
-            return cls._cache[key]
+        if key in self._cache:
+            return self._cache[key]
 
         data = func(self, orig_key, **kwargs)
-        cls._cache[key] = data
+        self._cache[key] = data
         return data
 
     return _wrapper
@@ -152,14 +149,11 @@ class Loader(object):
     Default implementation uses JSON files (the ``JSONFileLoader``) & a plain
     cache (``Cache``).
     """
-    # Shared class-wide.
-    _cache = Cache()
-    # Per-instance default.
     file_loader_class = JSONFileLoader
-    # Per-instance default.
     extension = '.json'
 
-    def __init__(self, data_path, file_loader_class=None, extension=None):
+    def __init__(self, data_path, file_loader_class=None, extension=None,
+                 cache=None):
         """
         Sets up the Loader.
 
@@ -171,9 +165,14 @@ class Loader(object):
 
         Optionally accepts an ``extension`` parameter, which should be a
         string of the file extension to use. Default is ``.json``.
+
+        Optionally accepts a ``cache`` parameter, which should be a
+        an instance with the same interface as the ``Cache`` class.
+        Default is ``None`` (creates its own ``Cache()`` instance).
         """
         super(Loader, self).__init__()
         self.data_path = data_path
+        self._cache = Cache()
 
         if file_loader_class is not None:
             self.file_loader_class = file_loader_class
@@ -181,14 +180,12 @@ class Loader(object):
         if extension is not None:
             self.extension = extension
 
+        if cache is not None:
+            self._cache = cache
+
         self.file_loader = self.file_loader_class()
 
-    @classmethod
-    def clear_cache(cls):
-        """
-        Clears the entire cache used for this class.
-        """
-        cls._cache.clear()
+
 
     def get_search_paths(self):
         """

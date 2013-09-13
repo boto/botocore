@@ -113,7 +113,7 @@ class LoaderTestCase(BaseEnvVar):
         self.loader = Loader(data_path=self.environ['BOTO_DATA_PATH'])
 
         # Make sure the cache is clear.
-        Loader.clear_cache()
+        self.loader._cache.clear()
 
     def test_get_search_paths(self):
         paths = self.loader.get_search_paths()
