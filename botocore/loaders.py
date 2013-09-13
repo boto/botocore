@@ -41,7 +41,6 @@ class Cache(object):
     """
     def __init__(self):
         super(Cache, self).__init__()
-        # TODO: Think about thread-safety here. Should this be a thread-local?
         self._data = {}
 
     def __len__(self):
@@ -82,7 +81,7 @@ def cachable(func):
             _cache = Cache()
 
             @cachable
-            def get_service_data(self, service):
+            def load_service_model(self, service):
                 data = self.load_file(self, 'aws/{0}'.format(service))
                 return data
 
@@ -126,8 +125,6 @@ class JSONFileLoader(object):
 
         Usage::
 
-            >>> from botocore.session import Session
-            >>> session = Session()
             >>> loader = JSONFileLoader()
             >>> loader.load_file('/path/to/some/thing.json')
             {
@@ -162,15 +159,28 @@ class Loader(object):
     # Per-instance default.
     extension = '.json'
 
-    def __init__(self, session):
+    def __init__(self, data_path, file_loader_class=None, extension=None):
         """
         Sets up the Loader.
 
-        Requires a ``session`` argument, which should be a
-        ``botocore.session.Session`` instance.
+        Requires a ``data_path`` argument, which should be a unix-style PATH
+        variable (multiple file paths, colon-delimited).
+
+        Optionally accepts a ``file_loader_class`` parameter, which should be a
+        class to use for loading files. Default is ``JSONFileLoader``.
+
+        Optionally accepts an ``extension`` parameter, which should be a
+        string of the file extension to use. Default is ``.json``.
         """
         super(Loader, self).__init__()
-        self.session = session
+        self.data_path = data_path
+
+        if file_loader_class is not None:
+            self.file_loader_class = file_loader_class
+
+        if extension is not None:
+            self.extension = extension
+
         self.file_loader = self.file_loader_class()
 
     @classmethod
@@ -188,19 +198,14 @@ class Loader(object):
         Usage::
 
             # Default:
-            >>> from botocore.session import Session
-            >>> session = Session()
-            >>> loader = Loader(session)
+            >>> loader = Loader('/path/to/botocore/data')
             >>> loader.get_search_paths()
             [
                 '/path/to/botocore/data',
             ]
 
             # User-added paths
-            >>> session = Session(env_vars={
-            ...     'data_path': '~/.botocore/my_overrides',
-            ... })
-            >>> loader = Loader(session)
+            >>> loader = Loader('~/.botocore/my_overrides:/path/to/botocore/data')
             >>> loader.get_search_paths()
             [
                 '/home/somebody/.botocore/my_overrides',
@@ -213,7 +218,7 @@ class Loader(object):
         # Now look for optional user-configured paths.
         # We keep the order in a familiar manner of traditional UNIX paths
         # (overrides first).
-        search_path = self.session.get_variable('data_path')
+        search_path = self.data_path
 
         if search_path is not None:
             extra_paths = search_path.split(os.pathsep)
@@ -229,7 +234,7 @@ class Loader(object):
         return paths
 
     @cachable
-    def get_data(self, data_path):
+    def load_data(self, data_path):
         """
         Either loads a regular data file (format-specific to subclass) or
         returns previously loaded data from the cache.
@@ -238,24 +243,22 @@ class Loader(object):
 
         Usage::
 
-            >>> from botocore.session import Session
-            >>> session = Session()
-            >>> loader = Loader(session)
-            >>> loader.get_data('aws/ec2/2013-02-01')
+            >>> loader = Loader('/path/to/botocore/data')
+            >>> loader.load_data('aws/ec2/2013-02-01')
             {
                 # ...EC2 service data...
             }
-            >>> loader.get_data('_regions')
+            >>> loader.load_data('_regions')
             {
                 # ...Region data...
             }
 
         """
         # Here, we'll cache it.
-        return self._get_data(data_path)
+        return self._load_data(data_path)
 
-    def _get_data(self, data_path):
-        # This is the uncached version for use with ``get_service_data``.
+    def _load_data(self, data_path):
+        # This is the uncached version for use with ``load_service_model``.
 
         # Per the original behavior, this builds the data & updates/overrides
         # it as it goes.
@@ -285,7 +288,7 @@ class Loader(object):
         return data
 
     @cachable
-    def get_service_model(self, data_path, api_version=None):
+    def load_service_model(self, data_path, api_version=None):
         """
         Loads a given service's model data.
 
@@ -304,16 +307,14 @@ class Loader(object):
 
         Usage::
 
-            >>> from botocore.session import Session
-            >>> session = Session()
-            >>> loader = Loader(session)
-            >>> loader.get_service_data('aws/ec2')
+            >>> loader = Loader('/path/to/botocore/data')
+            >>> loader.load_service_model('aws/ec2')
             {
                 # The latest EC2 service data...
                 'api_version': '2013-08-27',
                 # ...many more keys & values...
             }
-            >>> loader.get_service_data('aws/ec2', api_version='2013-02-01')
+            >>> loader.load_service_model('aws/ec2', api_version='2013-02-01')
             {
                 # The EC2 service data for version 2013-02-01...
                 'api_version': '2013-02-01',
@@ -327,7 +328,7 @@ class Loader(object):
         )
 
         # Use the private method, so that we don't double-cache.
-        return self._get_data(actual_data_path)
+        return self._load_data(actual_data_path)
 
     @cachable
     def list_available_services(self, data_path):
@@ -341,9 +342,7 @@ class Loader(object):
 
         Usage::
 
-            >>> from botocore.session import Session
-            >>> session = Session()
-            >>> loader = Loader(session)
+            >>> loader = Loader('/path/to/botocore/data')
             >>> loader.list_available_services('aws')
             [
                 'autoscaling',
@@ -389,9 +388,7 @@ class Loader(object):
 
         Usage::
 
-            >>> from botocore.session import Session
-            >>> session = Session()
-            >>> loader = Loader(session)
+            >>> loader = Loader('~/.botocore/my_overrides:/path/to/botocore/data')
 
             # Just grabs the latest.
             >>> loader.determine_latest('aws/rds')

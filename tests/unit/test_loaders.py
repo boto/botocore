@@ -110,8 +110,7 @@ class LoaderTestCase(BaseEnvVar):
         super(LoaderTestCase, self).setUp()
         self.data_path = os.path.join(os.path.dirname(__file__), 'data')
         self.environ['BOTO_DATA_PATH'] = self.data_path
-        self.session = botocore.session.get_session()
-        self.loader = Loader(session=self.session)
+        self.loader = Loader(data_path=self.environ['BOTO_DATA_PATH'])
 
         # Make sure the cache is clear.
         Loader.clear_cache()
@@ -142,28 +141,28 @@ class LoaderTestCase(BaseEnvVar):
                 api_version='2010-02-02'
             )
 
-    def test_get_data_plain_file(self):
-        data = self.loader.get_data('foo')
+    def test_load_data_plain_file(self):
+        data = self.loader.load_data('foo')
         self.assertEqual(data['test_key_1'], 'test_value_1')
 
-    def test_get_data_plain_file_nonexistant(self):
+    def test_load_data_plain_file_nonexistant(self):
         with self.assertRaises(DataNotFoundError):
-            data = self.loader.get_data('i_totally_dont_exist')
+            data = self.loader.load_data('i_totally_dont_exist')
 
-    def test_get_service_model_latest_without_version(self):
-        data = self.loader.get_service_model('someservice')
+    def test_load_service_model_latest_without_version(self):
+        data = self.loader.load_service_model('someservice')
         self.assertEqual(data['api_version'], '2013-08-21')
 
-    def test_get_service_model_with_version(self):
-        data = self.loader.get_service_model(
+    def test_load_service_model_with_version(self):
+        data = self.loader.load_service_model(
             'someservice',
             api_version='2012-10-01'
         )
         self.assertEqual(data['api_version'], '2012-10-01')
 
-    def test_get_service_model_version_not_found(self):
+    def test_load_service_model_version_not_found(self):
         with self.assertRaises(ApiVersionNotFound):
-            data = self.loader.get_service_model(
+            data = self.loader.load_service_model(
                 'someservice',
                 api_version='2010-02-02'
             )
@@ -180,7 +179,7 @@ class LoaderTestCase(BaseEnvVar):
         self.assertTrue(len(aws_avail) > 10)
         self.assertTrue('ec2' in aws_avail)
 
-    def test_get_data_overridden(self):
+    def test_load_data_overridden(self):
         self.overrides_path = os.path.join(
             os.path.dirname(__file__),
             'data_overrides'
@@ -190,9 +189,10 @@ class LoaderTestCase(BaseEnvVar):
             os.pathsep,
             self.data_path
         )
+        loader = Loader(data_path=self.environ['BOTO_DATA_PATH'])
         # This should load the data from all the different paths it's found
         # on, updating as it goes.
-        data = self.loader.get_service_model(
+        data = loader.load_service_model(
             'someservice',
             api_version='2012-10-01'
         )
@@ -209,7 +209,8 @@ class LoaderTestCase(BaseEnvVar):
         self.environ['BOTO_DATA_PATH'] = 'c:\\path1;c:\\path2'
         # The builtin botocore data path is added as the last element
         # so we're only interested in checking the two that we've added.
-        paths = self.loader.get_search_paths()[:-1]
+        loader = Loader(data_path=self.environ['BOTO_DATA_PATH'])
+        paths = loader.get_search_paths()[:-1]
         self.assertEqual(paths, ['c:\\path1', 'c:\\path2'])
 
 

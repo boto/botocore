@@ -150,7 +150,7 @@ class Session(object):
         self._credentials = None
         self._profile_map = None
         self._provider = None
-        self.loader = loader_class(self)
+        self.loader = loader_class(self.get_variable('data_path'))
 
     def _register_builtin_handlers(self, events):
         for event_name, handler in handlers.BUILTIN_HANDLERS:
@@ -362,14 +362,14 @@ class Session(object):
         :type data_path: str
         :param data_path: The path to the data you wish to retrieve.
         """
-        return self.loader.get_data(data_path)
+        return self.loader.load_data(data_path)
 
     def get_service_data(self, service_name, api_version=None):
         """
         Retrieve the fully merged data associated with a service.
         """
         data_path = '%s/%s' % (self.provider.name, service_name)
-        service_data = self.loader.get_service_model(
+        service_data = self.loader.load_service_model(
             data_path,
             api_version=api_version
         )
