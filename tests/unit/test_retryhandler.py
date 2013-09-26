@@ -25,6 +25,7 @@ from tests import unittest
 
 import mock
 from requests import ConnectionError
+from requests.packages.urllib3.exceptions import ClosedPoolError
 
 from botocore import retryhandler
 from botocore.exceptions import ChecksumError
@@ -219,6 +220,21 @@ class TestCreateRetryConfiguration(unittest.TestCase):
         with self.assertRaises(ValueError):
             sleep_time = handler(response=None, attempts=1,
                                 caught_exception=ValueError())
+
+    def test_retry_pool_closed_errors(self):
+        # A ClosedPoolError is retried (this is a workaround for a urllib3
+        # bug).  Can be removed once we upgrade to requests 2.0.0.
+        handler = retryhandler.create_retry_handler(
+            self.retry_config, operation_name='OperationBar')
+        # 4th attempt is retried.
+        sleep_time = handler(
+            response=None, attempts=4,
+            caught_exception=ClosedPoolError('FakePool', 'Message'))
+        self.assertEqual(sleep_time, 8)
+        # But the 5th time propogates the error.
+        with self.assertRaises(ClosedPoolError):
+            handler(response=None, attempts=10,
+                    caught_exception=ClosedPoolError('FakePool', 'Message'))
 
     def test_create_retry_handler_with_no_operation(self):
         handler = retryhandler.create_retry_handler(
