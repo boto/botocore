@@ -1681,6 +1681,15 @@
         }
       }
     },
+    "CopyImage": {
+      "input": {
+        "members": {
+          "Name": {
+            "required": false
+          }
+        }
+      }
+    },
     "RunInstances": {
       "input": {
         "members": {
