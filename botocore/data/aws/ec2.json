@@ -1355,7 +1355,7 @@
                         "shape_name": "String",
                         "type": "string",
                         "documentation": null,
-                        "required": true
+                        "required": false
                     },
                     "Description": {
                         "shape_name": "String",
