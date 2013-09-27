@@ -65,7 +65,8 @@
         "KeyMarker",
         "VersionIdMarker"
       ],
-      "result_key": "Versions"
+      "result_key": ["Versions",
+                     "DeleteMarkers"]
     },
     "ListObjects": {
       "more_key": "IsTruncated",
