@@ -2609,7 +2609,10 @@
                     "KeyMarker",
                     "VersionIdMarker"
                 ],
-                "result_key": "Versions",
+                "result_key": [
+                    "Versions",
+                    "DeleteMarkers"
+                ],
                 "py_input_token": [
                     "key_marker",
                     "version_id_marker"
@@ -4285,7 +4288,10 @@
                 "KeyMarker",
                 "VersionIdMarker"
             ],
-            "result_key": "Versions",
+            "result_key": [
+                "Versions",
+                "DeleteMarkers"
+            ],
             "py_input_token": [
                 "key_marker",
                 "version_id_marker"
