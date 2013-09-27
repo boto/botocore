@@ -1,9 +1,9 @@
 {
   "extra": {
-    "global_endpoint": "support.amazonaws.com",
+    "global_endpoint": "support.us-east-1.amazonaws.com",
     "metadata": {
       "regions": {
-        "us-east-1": "https://support.amazonaws.com"
+        "us-east-1": "https://support.us-east-1.amazonaws.com"
       },
       "protocols": [
         "https"
