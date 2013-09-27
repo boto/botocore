@@ -26,6 +26,7 @@ import logging
 from binascii import crc32
 
 from requests import ConnectionError
+from requests.packages.urllib3.exceptions import ClosedPoolError
 
 from botocore.exceptions import ChecksumError
 
@@ -36,7 +37,7 @@ logger = logging.getLogger(__name__)
 # to get more specific exceptions from requests we can update
 # this mapping with more specific exceptions.
 EXCEPTION_MAP = {
-    'GENERAL_CONNECTION_ERROR': ConnectionError
+    'GENERAL_CONNECTION_ERROR': [ConnectionError, ClosedPoolError],
 }
 
 
@@ -153,8 +154,9 @@ def _extract_retryable_exception(config):
     if 'crc32body' in applies_when.get('response', {}):
         return [ChecksumError]
     elif 'socket_errors' in applies_when:
-        exceptions = [EXCEPTION_MAP[name] for name in
-                      applies_when['socket_errors']]
+        exceptions = []
+        for name in applies_when['socket_errors']:
+            exceptions.extend(EXCEPTION_MAP[name])
         return exceptions
 
 
