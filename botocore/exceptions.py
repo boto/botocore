@@ -209,3 +209,11 @@ class ChecksumError(BotoCoreError):
     fmt = ('Checksum {checksum_type} failed, expected checksum '
            '{expected_checksum} did not match calculated checksum '
            '{actual_checksum}.')
+
+
+class UnseekableStreamError(BotoCoreError):
+    """Need to seek a stream, but stream does not support seeking.
+
+    """
+    fmt = ('Need to rewind the stream {stream_object}, but stream '
+           'is not seekable.')

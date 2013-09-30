@@ -20,9 +20,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 #
+import logging
 from requests import models
+from requests.sessions import REDIRECT_STATI
 
-from botocore.compat import HTTPHeaders
+from botocore.compat import HTTPHeaders, file_type
+from botocore.exceptions import UnseekableStreamError
+
+
+logger = logging.getLogger(__name__)
 
 
 class AWSRequest(models.RequestEncodingMixin, models.Request):
@@ -77,3 +83,14 @@ class AWSPreparedRequest(models.PreparedRequest):
     def __init__(self, original_request):
         self.original = original_request
         super(AWSPreparedRequest, self).__init__()
+        self.hooks.setdefault('response', []).append(self.reset_stream)
+
+    def reset_stream(self, response, **kwargs):
+        if response.status_code in REDIRECT_STATI and \
+                isinstance(self.body, file_type):
+            logger.debug("Redirect received, rewinding stream: %s", self.body)
+            try:
+                self.body.seek(0)
+            except Exception as e:
+                logger.debug("Unable to rewind stream: %s", e)
+                raise UnseekableStreamError(stream_object=self.body)
