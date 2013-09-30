@@ -19,10 +19,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 #
+import os
 import time
 import random
 from tests import unittest
 from collections import defaultdict
+import tempfile
+import shutil
 import threading
 try:
     from itertools import izip_longest as zip_longest
@@ -39,6 +42,31 @@ class BaseS3Test(unittest.TestCase):
         self.session = botocore.session.get_session()
         self.service = self.session.get_service('s3')
         self.endpoint = self.service.get_endpoint('us-east-1')
+        self.keys = []
+
+    def create_object(self, key_name, body='foo'):
+        self.keys.append(key_name)
+        operation = self.service.get_operation('PutObject')
+        response = operation.call(
+            self.endpoint, bucket=self.bucket_name, key=key_name,
+            body=body)[0]
+        self.assertEqual(response.status_code, 200)
+
+    def create_multipart_upload(self, key_name):
+        operation = self.service.get_operation('CreateMultipartUpload')
+        http_response, parsed = operation.call(self.endpoint,
+                                               bucket=self.bucket_name,
+                                               key=key_name)
+        upload_id = parsed['UploadId']
+        self.addCleanup(self.service.get_operation('AbortMultipartUpload').call,
+                        self.endpoint, upload_id=upload_id,
+                        bucket=self.bucket_name, key=key_name)
+
+    def create_object_catch_exceptions(self, key_name):
+        try:
+            self.create_object(key_name=key_name)
+        except Exception as e:
+            self.caught_exceptions.append(e)
 
 
 class TestS3Buckets(BaseS3Test):
@@ -61,7 +89,6 @@ class TestS3Objects(BaseS3Test):
             int(time.time()), random.randint(1, 1000))
         operation = self.service.get_operation('CreateBucket')
         operation.call(self.endpoint, bucket=self.bucket_name)
-        self.keys = []
 
     def tearDown(self):
         for key in self.keys:
@@ -71,32 +98,8 @@ class TestS3Objects(BaseS3Test):
         operation = self.service.get_operation('DeleteBucket')
         operation.call(self.endpoint, bucket=self.bucket_name)
 
-    def create_object(self, key_name, body='foo'):
-        self.keys.append(key_name)
-        operation = self.service.get_operation('PutObject')
-        response = operation.call(
-            self.endpoint, bucket=self.bucket_name, key=key_name,
-            body=body)[0]
-        self.assertEqual(response.status_code, 200)
-
-    def create_multipart_upload(self, key_name):
-        operation = self.service.get_operation('CreateMultipartUpload')
-        http_response, parsed = operation.call(self.endpoint,
-                                               bucket=self.bucket_name,
-                                               key=key_name)
-        upload_id = parsed['UploadId']
-        self.addCleanup(self.service.get_operation('AbortMultipartUpload').call,
-                        self.endpoint, upload_id=upload_id,
-                        bucket=self.bucket_name, key=key_name)
-
     def increment_auth(self, request, auth, **kwargs):
         self.auth_paths.append(auth.auth_path)
-
-    def create_object_catch_exceptions(self, key_name):
-        try:
-            self.create_object(key_name=key_name)
-        except Exception as e:
-            self.caught_exceptions.append(e)
 
     def test_can_delete_urlencoded_object(self):
         key_name = 'a+b/foo'
@@ -267,6 +270,48 @@ class TestS3Objects(BaseS3Test):
         self.assertEqual(
             len(set(self.auth_paths)), 10,
             "Expected 10 unique auth paths, instead received: %s" % (self.auth_paths))
+
+
+class TestS3Regions(BaseS3Test):
+    def setUp(self):
+        super(TestS3Regions, self).setUp()
+        self.tempdir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
+    def create_bucket_in_region(self, region):
+        bucket_name = 'botocoretest%s-%s' % (
+            int(time.time()), random.randint(1, 1000))
+        operation = self.service.get_operation('CreateBucket')
+        response, parsed = operation.call(
+            self.endpoint, bucket=bucket_name,
+            create_bucket_configuration={'LocationConstraint': 'us-west-2'})
+        self.assertEqual(response.status_code, 200)
+        self.addCleanup(self.service.get_operation('DeleteBucket').call,
+                        bucket=bucket_name, endpoint=self.endpoint)
+        return bucket_name
+
+    def test_reset_stream_on_redirects(self):
+        # Create a bucket in a non classic region.
+        bucket_name = self.create_bucket_in_region('us-west-2')
+        # Then try to put a file like object to this location.
+        filename = os.path.join(self.tempdir, 'foo')
+        with open(filename, 'wb') as f:
+            f.write(b'foo' * 1024)
+        put_object = self.service.get_operation('PutObject')
+        with open(filename, 'rb') as f:
+            response, parsed = put_object.call(
+                self.endpoint, bucket=bucket_name, key='foo', body=f)
+        self.assertEqual(
+            response.status_code, 200,
+            "Non 200 status code (%s) received: %s" % (
+                response.status_code, parsed))
+
+        operation = self.service.get_operation('GetObject')
+        data = operation.call(self.endpoint, bucket=bucket_name,
+                              key='foo')[1]
+        self.assertEqual(data['Body'].read(), b'foo' * 1024)
 
 
 if __name__ == '__main__':
