@@ -23,10 +23,13 @@ import time
 import random
 from tests import unittest
 from collections import defaultdict
+import threading
 try:
     from itertools import izip_longest as zip_longest
 except ImportError:
     from itertools import zip_longest
+
+import mock
 
 import botocore.session
 
@@ -71,8 +74,9 @@ class TestS3Objects(BaseS3Test):
     def create_object(self, key_name, body='foo'):
         self.keys.append(key_name)
         operation = self.service.get_operation('PutObject')
-        response = operation.call(self.endpoint, bucket=self.bucket_name, key=key_name,
-                                  body=body)[0]
+        response = operation.call(
+            self.endpoint, bucket=self.bucket_name, key=key_name,
+            body=body)[0]
         self.assertEqual(response.status_code, 200)
 
     def create_multipart_upload(self, key_name):
@@ -84,6 +88,15 @@ class TestS3Objects(BaseS3Test):
         self.addCleanup(self.service.get_operation('AbortMultipartUpload').call,
                         self.endpoint, upload_id=upload_id,
                         bucket=self.bucket_name, key=key_name)
+
+    def increment_auth(self, request, auth, **kwargs):
+        self.auth_paths.append(auth.auth_path)
+
+    def create_object_catch_exceptions(self, key_name):
+        try:
+            self.create_object(key_name=key_name)
+        except Exception as e:
+            self.caught_exceptions.append(e)
 
     def test_can_delete_urlencoded_object(self):
         key_name = 'a+b/foo'
@@ -232,6 +245,28 @@ class TestS3Objects(BaseS3Test):
         operation = self.service.get_operation('GetObject')
         parsed = operation.call(self.endpoint, bucket=self.bucket_name, key=key_name)[1]
         self.assertEqual(parsed['Body'].read().decode('utf-8'), 'foo')
+
+    def test_thread_safe_auth(self):
+        self.auth_paths = []
+        self.caught_exceptions = []
+        self.session.register('before-auth', self.increment_auth)
+        self.create_object(key_name='foo1')
+        threads = []
+        for i in range(10):
+            t = threading.Thread(target=self.create_object_catch_exceptions,
+                                 args=('foo%s' % i,))
+            t.daemon = True
+            threads.append(t)
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+        self.assertEqual(
+            self.caught_exceptions, [],
+            "Unexpectedly caught exceptions: %s" % self.caught_exceptions)
+        self.assertEqual(
+            len(set(self.auth_paths)), 10,
+            "Expected 10 unique auth paths, instead received: %s" % (self.auth_paths))
 
 
 if __name__ == '__main__':
