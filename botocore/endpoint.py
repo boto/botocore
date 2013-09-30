@@ -23,6 +23,7 @@
 
 import logging
 import time
+import threading
 
 from requests.sessions import Session
 from requests.utils import get_environ_proxies
@@ -61,6 +62,7 @@ class Endpoint(object):
             proxies = {}
         self.proxies = proxies
         self.http_session = Session()
+        self._lock = threading.Lock()
 
     def __repr__(self):
         return '%s(%s)' % (self.service.endpoint_prefix, self.host)
@@ -77,11 +79,15 @@ class Endpoint(object):
 
     def prepare_request(self, request):
         if self.auth is not None:
-            event = self.session.create_event('before-auth',
-                                              self.service.endpoint_prefix)
-            self.session.emit(event, endpoint=self,
-                              request=request, auth=self.auth)
-            self.auth.add_auth(request=request)
+            with self._lock:
+                # Parts of the auth signing code aren't thread safe (things
+                # that manipulate .auth_path), so we're using a lock here to
+                # prevent race conditions.
+                event = self.session.create_event('before-auth',
+                                                self.service.endpoint_prefix)
+                self.session.emit(event, endpoint=self,
+                                request=request, auth=self.auth)
+                self.auth.add_auth(request=request)
         prepared_request = request.prepare()
         return prepared_request
 
