@@ -32,6 +32,8 @@ if six.PY3:
     from urllib.parse import urlunsplit
     from urllib.parse import urljoin
     from urllib.parse import parse_qsl
+    from io import IOBase as _IOBase
+    file_type = _IOBase
 else:
     from urllib import quote
     from urllib import unquote
@@ -40,6 +42,7 @@ else:
     from urlparse import urljoin
     from urlparse import parse_qsl
     from email.message import Message
+    file_type = file
     class HTTPHeaders(Message):
 
         # The __iter__ method is not available in python2.x, so we have
