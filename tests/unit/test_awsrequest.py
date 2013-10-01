@@ -61,6 +61,7 @@ class TestAWSRequest(unittest.TestCase):
         with open(self.filename, 'wb') as f:
             f.write(b'foobarbaz')
         body = open(self.filename, 'rb')
+        self.addCleanup(body.close)
         self.prepared_request.body = body
 
         # Now pretend we try to send the request.
@@ -81,6 +82,7 @@ class TestAWSRequest(unittest.TestCase):
         with open(self.filename, 'wb') as f:
             f.write(b'foobarbaz')
         body = open(self.filename, 'rb')
+        self.addCleanup(body.close)
         self.prepared_request.body = Unseekable(body)
 
         # Now pretend we try to send the request.
