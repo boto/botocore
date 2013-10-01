@@ -60,42 +60,40 @@ class TestAWSRequest(unittest.TestCase):
     def test_should_reset_stream(self):
         with open(self.filename, 'wb') as f:
             f.write(b'foobarbaz')
-        body = open(self.filename, 'rb')
-        self.addCleanup(body.close)
-        self.prepared_request.body = body
+        with open(self.filename, 'rb') as body:
+            self.prepared_request.body = body
 
-        # Now pretend we try to send the request.
-        # This means that we read the body:
-        body.read()
-        # And create a response object that indicates
-        # a redirect.
-        fake_response = Mock()
-        fake_response.status_code = 307
+            # Now pretend we try to send the request.
+            # This means that we read the body:
+            body.read()
+            # And create a response object that indicates
+            # a redirect.
+            fake_response = Mock()
+            fake_response.status_code = 307
 
-        # Then requests calls our reset_stream hook.
-        self.prepared_request.reset_stream(fake_response)
+            # Then requests calls our reset_stream hook.
+            self.prepared_request.reset_stream(fake_response)
 
-        # The stream should now be reset.
-        self.assertEqual(body.tell(), 0)
+            # The stream should now be reset.
+            self.assertEqual(body.tell(), 0)
 
     def test_cannot_reset_stream_raises_error(self):
         with open(self.filename, 'wb') as f:
             f.write(b'foobarbaz')
-        body = open(self.filename, 'rb')
-        self.addCleanup(body.close)
-        self.prepared_request.body = Unseekable(body)
+        with open(self.filename, 'rb') as body:
+            self.prepared_request.body = Unseekable(body)
 
-        # Now pretend we try to send the request.
-        # This means that we read the body:
-        body.read()
-        # And create a response object that indicates
-        # a redirect.
-        fake_response = Mock()
-        fake_response.status_code = 307
+            # Now pretend we try to send the request.
+            # This means that we read the body:
+            body.read()
+            # And create a response object that indicates
+            # a redirect.
+            fake_response = Mock()
+            fake_response.status_code = 307
 
-        # Then requests calls our reset_stream hook.
-        with self.assertRaises(UnseekableStreamError):
-            self.prepared_request.reset_stream(fake_response)
+            # Then requests calls our reset_stream hook.
+            with self.assertRaises(UnseekableStreamError):
+                self.prepared_request.reset_stream(fake_response)
 
 
 if __name__ == "__main__":
