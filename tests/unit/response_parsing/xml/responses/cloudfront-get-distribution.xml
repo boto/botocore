@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Distribution xmlns="http://cloudfront.amazonaws.com/doc/2013-05-12/">
+<Distribution xmlns="http://cloudfront.amazonaws.com/doc/2013-08-26/">
    <Id>EDFDVBD6EXAMPLE</Id>
    <Status>Deployed</Status>
    <LastModifiedTime>2012-05-19T19:37:58Z</LastModifiedTime>
@@ -128,3 +128,4 @@
       <Enabled>true</Enabled>
    </DistributionConfig>
 </Distribution>
+

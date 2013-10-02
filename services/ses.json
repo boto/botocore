@@ -107,7 +107,8 @@
                     "Pending",
                     "Success",
                     "Failed",
-                    "TemporaryFailure"
+                    "TemporaryFailure",
+                    "NotStarted"
                   ],
                   "documentation": "\n        <p>Describes whether Amazon SES has successfully verified the DKIM DNS records\n            (tokens) published in the domain name's DNS.  (This only applies to domain identities, not email address identities.)</p>\n    ",
                   "required": true
@@ -120,7 +121,7 @@
                     "type": "string",
                     "documentation": null
                   },
-                  "documentation": "\n        <p>A set of DNS records (tokens) that must be published in the\n        domain name's DNS for DKIM verification to complete, and which must remain published in order for DKIM signing to succeed. \n        The tokens are <code>CNAME</code> DNS records that point to DKIM public keys hosted by Amazon SES.  (This only applies to domain entities, not email address identities.)</p>\n    "
+                  "documentation": "\n        <p>A set of character strings that represent the domain's identity. Using these tokens, you\n            will need to create DNS CNAME records that point to DKIM public keys hosted by Amazon\n            SES. Amazon Web Services will eventually detect that you have updated your DNS records;\n            this detection process may take up to 72 hours. Upon successful detection, Amazon SES\n            will be able to DKIM-sign email originating from that domain. (This only applies to\n            domain identities, not email address identities.)</p>\n        <p>For more information about creating DNS records using DKIM tokens, go to the <a href=\"http://docs.aws.amazon.com/ses/latest/DeveloperGuide/easy-dkim-dns-records.html\">Amazon SES\n                Developer Guide</a>.</p>\n    "
                 }
               },
               "documentation": "\n        <p>Represents the DKIM attributes of a verified email address or a domain.</p>\n    "
@@ -247,7 +248,8 @@
                     "Pending",
                     "Success",
                     "Failed",
-                    "TemporaryFailure"
+                    "TemporaryFailure",
+                    "NotStarted"
                   ],
                   "documentation": "\n        <p>The verification status of the identity: \"Pending\", \"Success\", \"Failed\", or \"TemporaryFailure\".</p>\n    ",
                   "required": true
@@ -443,7 +445,7 @@
           "Source": {
             "shape_name": "Address",
             "type": "string",
-            "documentation": "\n        <p>The identity's email address.</p>\n    ",
+            "documentation": "\n        <p>The identity's email address.</p>\n        <p>\n            By default, the string must be 7-bit ASCII. If the text must contain any other characters, \n            then you must use MIME encoded-word syntax (RFC 2047) instead of a literal string. \n            MIME encoded-word syntax uses the following form: <code>=?charset?encoding?encoded-text?=</code>. \n            For more information, see <a href=\"http://tools.ietf.org/html/rfc2047\">RFC 2047</a>.\n        </p>\n    ",
             "required": true
           },
           "Destination": {
@@ -606,7 +608,7 @@
           "Source": {
             "shape_name": "Address",
             "type": "string",
-            "documentation": "\n        <p>The identity's email address.</p>\n        <note>If you specify the\n            <code>Source</code>\n            parameter, then bounce notifications and\n            complaints will be sent to this email address. This takes precedence over any\n            <i>Return-Path</i>\n            header that you might include in the raw text of the message.\n        </note>\n    "
+            "documentation": "\n        <p>The identity's email address.</p>\n        <p>\n            By default, the string must be 7-bit ASCII. If the text must contain any other characters, \n            then you must use MIME encoded-word syntax (RFC 2047) instead of a literal string. \n            MIME encoded-word syntax uses the following form: <code>=?charset?encoding?encoded-text?=</code>. \n            For more information, see <a href=\"http://tools.ietf.org/html/rfc2047\">RFC 2047</a>.\n        </p>\n        <note>If you specify the\n            <code>Source</code>\n            parameter, then bounce notifications and\n            complaints will be sent to this email address. This takes precedence over any\n            <i>Return-Path</i>\n            header that you might include in the raw text of the message.\n        </note>\n    "
           },
           "Destinations": {
             "shape_name": "AddressList",
@@ -625,11 +627,11 @@
               "Data": {
                 "shape_name": "RawMessageData",
                 "type": "blob",
-                "documentation": "\n        <p>The raw data of the message. The client must ensure that the message format complies with Internet email\n            standards regarding email header fields, MIME types, MIME encoding, and base64 encoding (if necessary).\n        </p>\n        <p>For more information, go to the<a href=\"http://docs.amazonwebservices.com/ses/latest/DeveloperGuide\">Amazon SES Developer Guide</a>.\n        </p>\n    ",
+                "documentation": "\n        <p>The raw data of the message. The client must ensure that the message format complies with Internet email\n            standards regarding email header fields, MIME types, MIME encoding, and base64 encoding (if necessary).\n        </p>\n        <p>For more information, go to the <a href=\"http://docs.aws.amazon.com/ses/latest/DeveloperGuide/send-email-raw.html\">Amazon SES Developer Guide</a>.\n        </p>\n    ",
                 "required": true
               }
             },
-            "documentation": "\n        <p>The raw text of the message. The client is responsible for ensuring the following:</p>\n        <p>\n            <ul>\n                <li>Message must contain a header and a body, separated by a blank line.</li>\n                <li>All required header fields must be present.</li>\n                <li>Each part of a multipart MIME message must be formatted properly.</li>\n                <li>MIME content types must be among those supported by Amazon SES. Refer to the\n                    <a href=\"http://docs.amazonwebservices.com/ses/latest/DeveloperGuide\">Amazon SES Developer Guide</a>\n                    for more details.\n                </li>\n                <li>Content must be base64-encoded, if MIME requires it.</li>\n            </ul>\n        </p>\n    ",
+            "documentation": "\n        <p>The raw text of the message. The client is responsible for ensuring the following:</p>\n        <p>\n            <ul>\n                <li>Message must contain a header and a body, separated by a blank line.</li>\n                <li>All required header fields must be present.</li>\n                <li>Each part of a multipart MIME message must be formatted properly.</li>\n                <li>MIME content types must be among those supported by Amazon SES. For more information, go to the\n                    <a href=\"http://docs.aws.amazon.com/ses/latest/DeveloperGuide/mime-types.html\">Amazon SES\n                        Developer Guide</a>.\n                </li>\n                <li>Content must be base64-encoded, if MIME requires it.</li>\n            </ul>\n        </p>\n    ",
             "required": true
           }
         },
@@ -750,7 +752,7 @@
           "SnsTopic": {
             "shape_name": "NotificationTopic",
             "type": "string",
-            "documentation": "\n        <p>The Amazon Resource Name (ARN) of the Amazon Simple Notification Service (Amazon SNS) topic. \n        If the parameter is ommited from the request or a null value is passed, the topic is cleared and publishing is disabled.</p>\n    "
+            "documentation": "\n        <p>The Amazon Resource Name (ARN) of the Amazon Simple Notification Service (Amazon SNS) topic. \n        If the parameter is omitted from the request or a null value is passed, the topic is cleared and publishing is disabled.</p>\n    "
           }
         },
         "documentation": "\n        <p>Represents a request to set or clear an identity's notification topic.</p>\n    "
@@ -794,7 +796,7 @@
               "type": "string",
               "documentation": null
             },
-            "documentation": "\n        <p>A set of DNS records (tokens) that must be published in the domain name's DNS for DKIM verification to complete, and which must remain published in order for DKIM signing to succeed. The tokens are CNAME DNS records pointing to DKIM public keys hosted by Amazon SES.</p>\n    ",
+            "documentation": "\n        <p>A set of character strings that represent the domain's identity. If the identity is an\n            email address, the tokens represent the domain of that address.</p>\n        <p>Using these tokens, you will need to create DNS CNAME records that point to DKIM public\n            keys hosted by Amazon SES. Amazon Web Services will eventually detect that you have\n            updated your DNS records; this detection process may take up to 72 hours. Upon\n            successful detection, Amazon SES will be able to DKIM-sign emails originating from that\n            domain.</p>\n        <p>For more information about creating DNS records using DKIM tokens, go to the <a href=\"http://docs.aws.amazon.com/ses/latest/DeveloperGuide/easy-dkim-dns-records.html\">Amazon SES\n                Developer Guide</a>.</p>\n    ",
             "required": true
           }
         },

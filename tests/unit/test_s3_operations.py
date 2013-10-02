@@ -49,6 +49,10 @@ XMLBODY5 = ('<BucketLoggingStatus><LoggingEnabled><TargetBucket>mybucketlogs'
             '</EmailAddress></Grantee><Permission>READ</Permission></Grant>'
             '</TargetGrants><TargetPrefix>mybucket-access_log-/</TargetPrefix>'
             '</LoggingEnabled></BucketLoggingStatus>')
+XMLBODY6 = ('<VersioningConfiguration>' 
+            '<MfaDelete>Enabled</MfaDelete>'
+            '<Status>Enabled</Status>'
+            '</VersioningConfiguration>')
 
 POLICY = ('{"Version": "2008-10-17","Statement": [{"Sid": "AddPerm",'
           '"Effect": "Allow","Principal": {"AWS": "*"},'
@@ -181,6 +185,18 @@ class TestS3Operations(BaseEnvVar):
         self.assertEqual(params['uri_params'], uri_params)
         self.assertEqual(params['payload'].getvalue(), XMLBODY5)
         self.assertEqual(params['headers'], {})
+
+    def test_put_bucket_versioning_mfa(self):
+        op = self.s3.get_operation('PutBucketVersioning')
+        mfa = {'MfaDelete': 'Enabled',
+               'Status': 'Enabled'}
+        params = op.build_parameters(bucket=self.bucket_name,
+                                     versioning_configuration=mfa,
+                                     mfa="GAK000000000 123456")
+        uri_params = {'Bucket': self.bucket_name}
+        self.assertEqual(params['uri_params'], uri_params)
+        self.assertEqual(params['payload'].getvalue(), XMLBODY6)
+        self.assertEqual(params['headers'], {'x-amz-mfa': 'GAK000000000 123456'})
 
     def test_put_object(self):
         op = self.s3.get_operation('PutObject')

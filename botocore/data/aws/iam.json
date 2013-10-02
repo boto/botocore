@@ -730,11 +730,11 @@
                         "documentation": "\n    <p>The path to the role. For more information about paths, see <a href=\"http://docs.amazonwebservices.com/IAM/latest/UserGuide/index.html?Using_Identifiers.html\" target=\"_blank\">Identifiers for IAM Entities</a> in <i>Using AWS Identity and Access Management</i>.</p>\n\n    <p>This parameter is optional. If it is not included, it defaults to a slash (/).</p>\n  "
                     },
                     "RoleName": {
-                        "shape_name": "roleNameType",
+                        "shape_name": "roleNameRestrictedType",
                         "type": "string",
                         "min_length": 1,
                         "max_length": 64,
-                        "pattern": "[\\w+=,.@-]*",
+                        "pattern": "[\\w-]*",
                         "documentation": "\n    <p>Name of the role to create.</p>\n  ",
                         "required": true
                     },
@@ -2021,7 +2021,7 @@
                         "type": "integer",
                         "min_length": 1,
                         "max_length": 1000,
-                        "documentation": "\n    <p>Use this only when paginating results to indicate the maximum number of user names you want in the response.\n    If there are additional user names beyond the maximum you specify, the <code>IsTruncated</code> response element is \n    <code>true</code>.</p>\n  "
+                        "documentation": "\n    <p>Use this only when paginating results to indicate the maximum number of user names you want in the response.\n    If there are additional user names beyond the maximum you specify, the <code>IsTruncated</code> response element is \n    <code>true</code>. This parameter is optional. If you do not include it, it defaults to 100.</p>\n  "
                     }
                 },
                 "documentation": " "
@@ -2947,7 +2947,7 @@
                         "type": "integer",
                         "min_length": 1,
                         "max_length": 1000,
-                        "documentation": "\n    <p>Use this parameter only when paginating results to indicate the maximum number of keys you want in the response. If there are\n      additional keys beyond the maximum you specify, the <code>IsTruncated</code> response element is <code>true</code>.</p>\n  "
+                        "documentation": "\n    <p>Use this parameter only when paginating results to indicate the maximum number of keys you want in the response. If there are\n      additional keys beyond the maximum you specify, the <code>IsTruncated</code> response element is <code>true</code>. \n      This parameter is optional. If you do not include it, it defaults to 100.</p>\n  "
                     }
                 },
                 "documentation": " "
@@ -3057,7 +3057,7 @@
                         "type": "integer",
                         "min_length": 1,
                         "max_length": 1000,
-                        "documentation": "\n    <p>Use this only when paginating results to indicate the maximum number of account aliases you want in \n    the response. If there are additional account aliases beyond the maximum you specify, the <code>IsTruncated</code>\n    response element is <code>true</code>.</p>\n  "
+                        "documentation": "\n    <p>Use this only when paginating results to indicate the maximum number of account aliases you want in \n    the response. If there are additional account aliases beyond the maximum you specify, the <code>IsTruncated</code>\n      response element is <code>true</code>. This parameter is optional. If you do not include it, it defaults to 100.</p>\n  "
                     }
                 },
                 "documentation": " "
@@ -3134,7 +3134,7 @@
                         "type": "integer",
                         "min_length": 1,
                         "max_length": 1000,
-                        "documentation": "\n    <p>Use this only when paginating results to indicate the maximum number of policy names you want in the response.\n    If there are additional policy names beyond the maximum you specify, the <code>IsTruncated</code> response element is\n    <code>true</code>.</p>\n  "
+                        "documentation": "\n    <p>Use this only when paginating results to indicate the maximum number of policy names you want in the response.\n    If there are additional policy names beyond the maximum you specify, the <code>IsTruncated</code> response element is\n    <code>true</code>. This parameter is optional. If you do not include it, it defaults to 100.</p>\n  "
                     }
                 },
                 "documentation": " "
@@ -3223,7 +3223,7 @@
                         "type": "integer",
                         "min_length": 1,
                         "max_length": 1000,
-                        "documentation": "\n    <p>Use this only when paginating results to indicate the maximum number of groups you want in the response.\n    If there are additional groups beyond the maximum you specify, the <code>IsTruncated</code> response element is <code>true</code>.</p>\n  "
+                        "documentation": "\n    <p>Use this only when paginating results to indicate the maximum number of groups you want in the response.\n    If there are additional groups beyond the maximum you specify, the <code>IsTruncated</code> response element is <code>true</code>.\n    This parameter is optional. If you do not include it, it defaults to 100.</p>\n  "
                     }
                 },
                 "documentation": " "
@@ -3340,7 +3340,7 @@
                         "type": "integer",
                         "min_length": 1,
                         "max_length": 1000,
-                        "documentation": "\n    <p>Use this only when paginating results to indicate the maximum number of groups you want in the response.\n    If there are additional groups beyond the maximum you specify, the <code>IsTruncated</code> response element is <code>true</code>.</p>\n  "
+                        "documentation": "\n    <p>Use this only when paginating results to indicate the maximum number of groups you want in the response.\n    If there are additional groups beyond the maximum you specify, the <code>IsTruncated</code> response element is <code>true</code>.\n    This parameter is optional. If you do not include it, it defaults to 100.</p>\n  "
                     }
                 },
                 "documentation": " "
@@ -3469,7 +3469,7 @@
                         "type": "integer",
                         "min_length": 1,
                         "max_length": 1000,
-                        "documentation": "\n    <p>Use this parameter only when paginating results to indicate the maximum number of user names you want in the response. If\n    there are additional user names beyond the maximum you specify, the <code>IsTruncated</code> response element \n      is <code>true</code>.</p>\n  "
+                        "documentation": "\n    <p>Use this parameter only when paginating results to indicate the maximum number of user names you want in the response. If\n    there are additional user names beyond the maximum you specify, the <code>IsTruncated</code> response element \n    is <code>true</code>. This parameter is optional. If you do not include it, it defaults to 100.</p>\n  "
                     }
                 },
                 "documentation": " "
@@ -3648,7 +3648,7 @@
                         "type": "integer",
                         "min_length": 1,
                         "max_length": 1000,
-                        "documentation": "\n    <p>Use this parameter only when paginating results to indicate the maximum number of user names you want in the response. If\n    there are additional user names beyond the maximum you specify, the <code>IsTruncated</code> response element \n      is <code>true</code>.</p>\n  "
+                        "documentation": "\n    <p>Use this parameter only when paginating results to indicate the maximum number of user names you want in the response. If\n    there are additional user names beyond the maximum you specify, the <code>IsTruncated</code> response element \n    is <code>true</code>. This parameter is optional. If you do not include it, it defaults to 100.</p>\n  "
                     }
                 },
                 "documentation": null
@@ -3839,7 +3839,7 @@
                         "type": "integer",
                         "min_length": 1,
                         "max_length": 1000,
-                        "documentation": "\n    <p>Use this only when paginating results to indicate the maximum number of MFA devices you want in the response. If there are\n    additional MFA devices beyond the maximum you specify, the <code>IsTruncated</code> response element is <code>true</code>.</p>\n  "
+                        "documentation": "\n    <p>Use this only when paginating results to indicate the maximum number of MFA devices you want in the response. If there are\n    additional MFA devices beyond the maximum you specify, the <code>IsTruncated</code> response element is <code>true</code>.\n    This parameter is optional. If you do not include it, it defaults to 100.</p>\n  "
                     }
                 },
                 "documentation": " "
@@ -3952,7 +3952,7 @@
                         "type": "integer",
                         "min_length": 1,
                         "max_length": 1000,
-                        "documentation": "\n    <p>Use this parameter only when paginating results to indicate the maximum number of user names you want in the response. If\n    there are additional user names beyond the maximum you specify, the <code>IsTruncated</code> response element \n      is <code>true</code>.</p>\n  "
+                        "documentation": "\n    <p>Use this parameter only when paginating results to indicate the maximum number of user names you want in the response. If\n    there are additional user names beyond the maximum you specify, the <code>IsTruncated</code> response element \n    is <code>true</code>. This parameter is optional. If you do not include it, it defaults to 100.</p>\n  "
                     }
                 },
                 "documentation": " "
@@ -4041,7 +4041,7 @@
                         "type": "integer",
                         "min_length": 1,
                         "max_length": 1000,
-                        "documentation": "\n    <p>Use this parameter only when paginating results to indicate the maximum number of user names you want in the response. If\n    there are additional user names beyond the maximum you specify, the <code>IsTruncated</code> response element \n      is <code>true</code>.</p>\n  "
+                        "documentation": "\n    <p>Use this parameter only when paginating results to indicate the maximum number of user names you want in the response. If\n    there are additional user names beyond the maximum you specify, the <code>IsTruncated</code> response element \n    is <code>true</code>. This parameter is optional. If you do not include it, it defaults to 100.</p>\n  "
                     }
                 },
                 "documentation": " "
@@ -4165,7 +4165,7 @@
                         "type": "integer",
                         "min_length": 1,
                         "max_length": 1000,
-                        "documentation": "\n    <p>Use this only when paginating results to indicate the maximum number of server certificates you want in the response. If\n    there are additional server certificates beyond the maximum you specify, the <code>IsTruncated</code> response element will\n    be set to <code>true</code>.</p>\n  "
+                        "documentation": "\n    <p>Use this only when paginating results to indicate the maximum number of server certificates you want in the response. If\n    there are additional server certificates beyond the maximum you specify, the <code>IsTruncated</code> response element will\n    be set to <code>true</code>. This parameter is optional. If you do not include it, it defaults to 100.</p>\n  "
                     }
                 },
                 "documentation": " "
@@ -4280,7 +4280,7 @@
                         "type": "integer",
                         "min_length": 1,
                         "max_length": 1000,
-                        "documentation": "\n    <p>Use this only when paginating results to indicate the maximum number of certificate IDs you want in \n    the response. If there are additional certificate IDs beyond the maximum you specify, the <code>IsTruncated</code>\n    response element is <code>true</code>.</p>\n  "
+                        "documentation": "\n    <p>Use this only when paginating results to indicate the maximum number of certificate IDs you want in \n    the response. If there are additional certificate IDs beyond the maximum you specify, the <code>IsTruncated</code>\n    response element is <code>true</code>. This parameter is optional. If you do not include it, it defaults to 100.</p>\n  "
                     }
                 },
                 "documentation": " "
@@ -4411,7 +4411,7 @@
                         "type": "integer",
                         "min_length": 1,
                         "max_length": 1000,
-                        "documentation": "\n    <p>Use this only when paginating results to indicate the maximum number of policy names you want in the response.\n    If there are additional policy names beyond the maximum you specify, the <code>IsTruncated</code> response element is\n    <code>true</code>.</p>\n  "
+                        "documentation": "\n    <p>Use this only when paginating results to indicate the maximum number of policy names you want in the response.\n    If there are additional policy names beyond the maximum you specify, the <code>IsTruncated</code> response element is\n    <code>true</code>. This parameter is optional. If you do not include it, it defaults to 100.</p>\n  "
                     }
                 },
                 "documentation": " "
@@ -4500,7 +4500,7 @@
                         "type": "integer",
                         "min_length": 1,
                         "max_length": 1000,
-                        "documentation": "\n    <p>Use this parameter only when paginating results to indicate the maximum number of user names you want in the response. If\n    there are additional user names beyond the maximum you specify, the <code>IsTruncated</code> response element \n      is <code>true</code>.</p>\n  "
+                        "documentation": "\n    <p>Use this parameter only when paginating results to indicate the maximum number of user names you want in the response. If\n    there are additional user names beyond the maximum you specify, the <code>IsTruncated</code> response element \n      is <code>true</code>. This parameter is optional. If you do not include it, it defaults to 100.</p>\n  "
                     }
                 },
                 "documentation": " "
@@ -4618,7 +4618,7 @@
                         "type": "integer",
                         "min_length": 1,
                         "max_length": 1000,
-                        "documentation": "\n    <p>Use this parameter only when paginating results to indicate the maximum number of user names you want in the response. If\n      there are additional user names beyond the maximum you specify, the <code>IsTruncated</code> response element is <code>true</code>.</p>\n  "
+                        "documentation": "\n    <p>Use this parameter only when paginating results to indicate the maximum number of user names you want in the response. If\n      there are additional user names beyond the maximum you specify, the <code>IsTruncated</code> response element \n      is <code>true</code>. This parameter is optional. If you do not include it, it defaults to 100.</p>\n  "
                     }
                 },
                 "documentation": null
@@ -5394,7 +5394,8 @@
                         "min_length": 1,
                         "max_length": 128,
                         "pattern": "[\\u0009\\u000A\\u000D\\u0020-\\u00FF]+",
-                        "documentation": "\n    <p>The new password for the user name.</p>\n  "
+                        "documentation": "\n    <p>The new password for the user name.</p>\n  ",
+                        "required": true
                     }
                 },
                 "documentation": null
