@@ -2736,7 +2736,7 @@
             "pagination": {
                 "more_key": "IsTruncated",
                 "limit_key": "MaxKeys",
-                "output_token": "NextMarker or Contents[-1].Key",
+                "output_token": "NextMarker || Contents[-1].Key",
                 "input_token": "Marker",
                 "result_key": [
                     "Contents",
@@ -4293,7 +4293,7 @@
         "ListObjects": {
             "more_key": "IsTruncated",
             "limit_key": "MaxKeys",
-            "output_token": "NextMarker or Contents[-1].Key",
+            "output_token": "NextMarker || Contents[-1].Key",
             "input_token": "Marker",
             "result_key": [
                 "Contents",
