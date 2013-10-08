@@ -39,6 +39,9 @@ class TestPagination(unittest.TestCase):
         self.operation.pagination = self.paginate_config
         self.paginator = Paginator(self.operation)
 
+    def test_result_key_available(self):
+        self.assertEqual(self.paginator.result_keys, ['Foo'])
+
     def test_no_next_token(self):
         response = {'not_the_next_token': 'foobar'}
         self.operation.call.return_value = None, response
