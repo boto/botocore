@@ -43,7 +43,11 @@ class Paginator(object):
         self._output_token = self._get_output_tokens(self._pagination_cfg)
         self._input_token = self._get_input_tokens(self._pagination_cfg)
         self._more_results = self._get_more_results_token(self._pagination_cfg)
-        self._result_key = self._get_result_key(self._pagination_cfg)
+        self._result_keys = self._get_result_keys(self._pagination_cfg)
+
+    @property
+    def result_keys(self):
+        return self._result_keys
 
     def _get_output_tokens(self, config):
         output = []
@@ -65,7 +69,7 @@ class Paginator(object):
         if more_results is not None:
             return jmespath.compile(more_results)
 
-    def _get_result_key(self, config):
+    def _get_result_keys(self, config):
         result_key = config.get('result_key')
         if result_key is not None:
             if not isinstance(result_key, list):
@@ -88,7 +92,7 @@ class Paginator(object):
         page_params = self._extract_paging_params(kwargs)
         return PageIterator(self._operation, self._input_token,
                             self._output_token, self._more_results,
-                            self._result_key, page_params['max_items'],
+                            self._result_keys, page_params['max_items'],
                             page_params['starting_token'],
                             endpoint, kwargs)
 
