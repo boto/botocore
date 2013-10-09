@@ -19,7 +19,7 @@ packages = [
 
 requires = ['requests==1.2.3',
             'six>=1.1.0',
-            'jmespath==0.0.2',
+            'jmespath==0.0.3',
             'python-dateutil>=2.1']
 
 if sys.version_info[:2] == (2, 6):

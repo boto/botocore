@@ -1,18 +1,18 @@
 {
-    "api_version": "2013-05-12",
+    "api_version": "2013-08-26",
     "type": "rest-xml",
     "signature_version": "v4",
     "service_full_name": "Amazon CloudFront",
     "service_abbreviation": "CloudFront",
     "global_endpoint": "cloudfront.amazonaws.com",
     "endpoint_prefix": "cloudfront",
-    "xmlnamespace": "http://cloudfront.amazonaws.com/doc/2013-05-12/",
+    "xmlnamespace": "http://cloudfront.amazonaws.com/doc/2013-08-26/",
     "documentation": "\n  ",
     "operations": {
         "CreateCloudFrontOriginAccessIdentity": {
-            "name": "CreateCloudFrontOriginAccessIdentity2013_05_12",
+            "name": "CreateCloudFrontOriginAccessIdentity2013_08_26",
             "http": {
-                "uri": "/2013-05-12/origin-access-identity/cloudfront",
+                "uri": "/2013-08-26/origin-access-identity/cloudfront",
                 "method": "POST",
                 "response_code": 201
             },
@@ -169,9 +169,9 @@
             "documentation": "\n    Create a new origin access identity.\n  "
         },
         "CreateDistribution": {
-            "name": "CreateDistribution2013_05_12",
+            "name": "CreateDistribution2013_08_26",
             "http": {
-                "uri": "/2013-05-12/distribution",
+                "uri": "/2013-08-26/distribution",
                 "method": "POST",
                 "response_code": 201
             },
@@ -562,6 +562,53 @@
                                 },
                                 "documentation": "\n    A complex type that contains zero or more CacheBehavior elements.\n  ",
                                 "required": true
+                            },
+                            "CustomErrorResponses": {
+                                "shape_name": "CustomErrorResponses",
+                                "type": "structure",
+                                "members": {
+                                    "Quantity": {
+                                        "shape_name": "integer",
+                                        "type": "integer",
+                                        "documentation": "\n    The number of custom error responses for this distribution.\n  ",
+                                        "required": true
+                                    },
+                                    "Items": {
+                                        "shape_name": "CustomErrorResponseList",
+                                        "type": "list",
+                                        "members": {
+                                            "shape_name": "CustomErrorResponse",
+                                            "type": "structure",
+                                            "members": {
+                                                "ErrorCode": {
+                                                    "shape_name": "integer",
+                                                    "type": "integer",
+                                                    "documentation": "\n    The 4xx or 5xx HTTP status code that you want to customize. For a list of \n    HTTP status codes that you can customize, see CloudFront documentation.\n  ",
+                                                    "required": true
+                                                },
+                                                "ResponsePagePath": {
+                                                    "shape_name": "string",
+                                                    "type": "string",
+                                                    "documentation": "\n    The path of the custom error page (for example, /custom_404.html). The \n    path is relative to the distribution and must begin with a slash (/). If\n    the path includes any non-ASCII characters or unsafe characters as defined \n    in RFC 1783 (http://www.ietf.org/rfc/rfc1738.txt), URL encode those characters.\n    Do not URL encode any other characters in the path, or CloudFront will not \n    return the custom error page to the viewer.\n  "
+                                                },
+                                                "ResponseCode": {
+                                                    "shape_name": "string",
+                                                    "type": "string",
+                                                    "documentation": "\n    The HTTP status code that you want CloudFront to return with the custom error \n    page to the viewer. For a list of HTTP status codes that you can replace, see \n    CloudFront Documentation.\n  "
+                                                },
+                                                "ErrorCachingMinTTL": {
+                                                    "shape_name": "long",
+                                                    "type": "long",
+                                                    "documentation": "\n    The minimum amount of time you want HTTP error codes to stay in CloudFront caches \n    before CloudFront queries your origin to see whether the object has been updated.\n    You can specify a value from 0 to 31,536,000. \n  "
+                                                }
+                                            },
+                                            "documentation": "\n    A complex type that describes how you'd prefer CloudFront to respond to\n    requests that result in either a 4xx or 5xx response. You can control \n    whether a custom error page should be displayed, what the desired response\n    code should be for this error page and how long should the error response\n    be cached by CloudFront.\n    If you don't want to specify any custom error responses, include only an \n    empty CustomErrorResponses element. \n    To delete all custom error responses in an existing distribution, update the\n    distribution configuration and include only an empty CustomErrorResponses\n    element.\n    To add, change, or remove one or more custom error responses, update the\n    distribution configuration and specify all of the custom error responses that\n    you want to include in the updated distribution.\n  ",
+                                            "xmlname": "CustomErrorResponse"
+                                        },
+                                        "documentation": "\n    Optional: A complex type that contains custom error responses for this\n    distribution. If Quantity is 0, you can omit Items.\n  "
+                                    }
+                                },
+                                "documentation": "\n    A complex type that contains zero or more CustomErrorResponse elements.\n  "
                             },
                             "Comment": {
                                 "shape_name": "string",
@@ -1127,6 +1174,53 @@
                                         "documentation": "\n    A complex type that contains zero or more CacheBehavior elements.\n  ",
                                         "required": true
                                     },
+                                    "CustomErrorResponses": {
+                                        "shape_name": "CustomErrorResponses",
+                                        "type": "structure",
+                                        "members": {
+                                            "Quantity": {
+                                                "shape_name": "integer",
+                                                "type": "integer",
+                                                "documentation": "\n    The number of custom error responses for this distribution.\n  ",
+                                                "required": true
+                                            },
+                                            "Items": {
+                                                "shape_name": "CustomErrorResponseList",
+                                                "type": "list",
+                                                "members": {
+                                                    "shape_name": "CustomErrorResponse",
+                                                    "type": "structure",
+                                                    "members": {
+                                                        "ErrorCode": {
+                                                            "shape_name": "integer",
+                                                            "type": "integer",
+                                                            "documentation": "\n    The 4xx or 5xx HTTP status code that you want to customize. For a list of \n    HTTP status codes that you can customize, see CloudFront documentation.\n  ",
+                                                            "required": true
+                                                        },
+                                                        "ResponsePagePath": {
+                                                            "shape_name": "string",
+                                                            "type": "string",
+                                                            "documentation": "\n    The path of the custom error page (for example, /custom_404.html). The \n    path is relative to the distribution and must begin with a slash (/). If\n    the path includes any non-ASCII characters or unsafe characters as defined \n    in RFC 1783 (http://www.ietf.org/rfc/rfc1738.txt), URL encode those characters.\n    Do not URL encode any other characters in the path, or CloudFront will not \n    return the custom error page to the viewer.\n  "
+                                                        },
+                                                        "ResponseCode": {
+                                                            "shape_name": "string",
+                                                            "type": "string",
+                                                            "documentation": "\n    The HTTP status code that you want CloudFront to return with the custom error \n    page to the viewer. For a list of HTTP status codes that you can replace, see \n    CloudFront Documentation.\n  "
+                                                        },
+                                                        "ErrorCachingMinTTL": {
+                                                            "shape_name": "long",
+                                                            "type": "long",
+                                                            "documentation": "\n    The minimum amount of time you want HTTP error codes to stay in CloudFront caches \n    before CloudFront queries your origin to see whether the object has been updated.\n    You can specify a value from 0 to 31,536,000. \n  "
+                                                        }
+                                                    },
+                                                    "documentation": "\n    A complex type that describes how you'd prefer CloudFront to respond to\n    requests that result in either a 4xx or 5xx response. You can control \n    whether a custom error page should be displayed, what the desired response\n    code should be for this error page and how long should the error response\n    be cached by CloudFront.\n    If you don't want to specify any custom error responses, include only an \n    empty CustomErrorResponses element. \n    To delete all custom error responses in an existing distribution, update the\n    distribution configuration and include only an empty CustomErrorResponses\n    element.\n    To add, change, or remove one or more custom error responses, update the\n    distribution configuration and specify all of the custom error responses that\n    you want to include in the updated distribution.\n  ",
+                                                    "xmlname": "CustomErrorResponse"
+                                                },
+                                                "documentation": "\n    Optional: A complex type that contains custom error responses for this\n    distribution. If Quantity is 0, you can omit Items.\n  "
+                                            }
+                                        },
+                                        "documentation": "\n    A complex type that contains zero or more CustomErrorResponse elements.\n  "
+                                    },
                                     "Comment": {
                                         "shape_name": "string",
                                         "type": "string",
@@ -1370,6 +1464,42 @@
                     "documentation": "\n    The default root object file name is too big or contains an invalid character.\n  "
                 },
                 {
+                    "shape_name": "InvalidRelativePath",
+                    "type": "structure",
+                    "members": {
+                        "Message": {
+                            "shape_name": "string",
+                            "type": "string",
+                            "documentation": null
+                        }
+                    },
+                    "documentation": "\n    The relative path is too big, is not URL-encoded, or\n    does not begin with a slash (/).\n  "
+                },
+                {
+                    "shape_name": "InvalidErrorCode",
+                    "type": "structure",
+                    "members": {
+                        "Message": {
+                            "shape_name": "string",
+                            "type": "string",
+                            "documentation": null
+                        }
+                    },
+                    "documentation": null
+                },
+                {
+                    "shape_name": "InvalidResponseCode",
+                    "type": "structure",
+                    "members": {
+                        "Message": {
+                            "shape_name": "string",
+                            "type": "string",
+                            "documentation": null
+                        }
+                    },
+                    "documentation": null
+                },
+                {
                     "shape_name": "InvalidArgument",
                     "type": "structure",
                     "members": {
@@ -1481,9 +1611,9 @@
             "documentation": "\n    Create a new distribution.\n  "
         },
         "CreateInvalidation": {
-            "name": "CreateInvalidation2013_05_12",
+            "name": "CreateInvalidation2013_08_26",
             "http": {
-                "uri": "/2013-05-12/distribution/{DistributionId}/invalidation",
+                "uri": "/2013-08-26/distribution/{DistributionId}/invalidation",
                 "method": "POST",
                 "response_code": 201
             },
@@ -1709,9 +1839,9 @@
             "documentation": "\n    Create a new invalidation.\n  "
         },
         "CreateStreamingDistribution": {
-            "name": "CreateStreamingDistribution2013_05_12",
+            "name": "CreateStreamingDistribution2013_08_26",
             "http": {
-                "uri": "/2013-05-12/streaming-distribution",
+                "uri": "/2013-08-26/streaming-distribution",
                 "method": "POST",
                 "response_code": 201
             },
@@ -2264,9 +2394,9 @@
             "documentation": "\n    Create a new streaming distribution.\n  "
         },
         "DeleteCloudFrontOriginAccessIdentity": {
-            "name": "DeleteCloudFrontOriginAccessIdentity2013_05_12",
+            "name": "DeleteCloudFrontOriginAccessIdentity2013_08_26",
             "http": {
-                "uri": "/2013-05-12/origin-access-identity/cloudfront/{Id}",
+                "uri": "/2013-08-26/origin-access-identity/cloudfront/{Id}",
                 "method": "DELETE",
                 "response_code": 204
             },
@@ -2356,9 +2486,9 @@
             "documentation": "\n    Delete an origin access identity.\n  "
         },
         "DeleteDistribution": {
-            "name": "DeleteDistribution2013_05_12",
+            "name": "DeleteDistribution2013_08_26",
             "http": {
-                "uri": "/2013-05-12/distribution/{Id}",
+                "uri": "/2013-08-26/distribution/{Id}",
                 "method": "DELETE",
                 "response_code": 204
             },
@@ -2448,9 +2578,9 @@
             "documentation": "\n    Delete a distribution.\n  "
         },
         "DeleteStreamingDistribution": {
-            "name": "DeleteStreamingDistribution2013_05_12",
+            "name": "DeleteStreamingDistribution2013_08_26",
             "http": {
-                "uri": "/2013-05-12/streaming-distribution/{Id}",
+                "uri": "/2013-08-26/streaming-distribution/{Id}",
                 "method": "DELETE",
                 "response_code": 204
             },
@@ -2540,9 +2670,9 @@
             "documentation": "\n    Delete a streaming distribution.\n  "
         },
         "GetCloudFrontOriginAccessIdentity": {
-            "name": "GetCloudFrontOriginAccessIdentity2013_05_12",
+            "name": "GetCloudFrontOriginAccessIdentity2013_08_26",
             "http": {
-                "uri": "/2013-05-12/origin-access-identity/cloudfront/{Id}",
+                "uri": "/2013-08-26/origin-access-identity/cloudfront/{Id}",
                 "method": "GET"
             },
             "input": {
@@ -2640,9 +2770,9 @@
             "documentation": "\n    Get the information about an origin access identity.\n  "
         },
         "GetCloudFrontOriginAccessIdentityConfig": {
-            "name": "GetCloudFrontOriginAccessIdentityConfig2013_05_12",
+            "name": "GetCloudFrontOriginAccessIdentityConfig2013_08_26",
             "http": {
-                "uri": "/2013-05-12/origin-access-identity/cloudfront/{Id}/config",
+                "uri": "/2013-08-26/origin-access-identity/cloudfront/{Id}/config",
                 "method": "GET"
             },
             "input": {
@@ -2721,9 +2851,9 @@
             "documentation": "\n    Get the configuration information about an origin access identity.\n  "
         },
         "GetDistribution": {
-            "name": "GetDistribution2013_05_12",
+            "name": "GetDistribution2013_08_26",
             "http": {
-                "uri": "/2013-05-12/distribution/{Id}",
+                "uri": "/2013-08-26/distribution/{Id}",
                 "method": "GET"
             },
             "input": {
@@ -3223,6 +3353,53 @@
                                         "documentation": "\n    A complex type that contains zero or more CacheBehavior elements.\n  ",
                                         "required": true
                                     },
+                                    "CustomErrorResponses": {
+                                        "shape_name": "CustomErrorResponses",
+                                        "type": "structure",
+                                        "members": {
+                                            "Quantity": {
+                                                "shape_name": "integer",
+                                                "type": "integer",
+                                                "documentation": "\n    The number of custom error responses for this distribution.\n  ",
+                                                "required": true
+                                            },
+                                            "Items": {
+                                                "shape_name": "CustomErrorResponseList",
+                                                "type": "list",
+                                                "members": {
+                                                    "shape_name": "CustomErrorResponse",
+                                                    "type": "structure",
+                                                    "members": {
+                                                        "ErrorCode": {
+                                                            "shape_name": "integer",
+                                                            "type": "integer",
+                                                            "documentation": "\n    The 4xx or 5xx HTTP status code that you want to customize. For a list of \n    HTTP status codes that you can customize, see CloudFront documentation.\n  ",
+                                                            "required": true
+                                                        },
+                                                        "ResponsePagePath": {
+                                                            "shape_name": "string",
+                                                            "type": "string",
+                                                            "documentation": "\n    The path of the custom error page (for example, /custom_404.html). The \n    path is relative to the distribution and must begin with a slash (/). If\n    the path includes any non-ASCII characters or unsafe characters as defined \n    in RFC 1783 (http://www.ietf.org/rfc/rfc1738.txt), URL encode those characters.\n    Do not URL encode any other characters in the path, or CloudFront will not \n    return the custom error page to the viewer.\n  "
+                                                        },
+                                                        "ResponseCode": {
+                                                            "shape_name": "string",
+                                                            "type": "string",
+                                                            "documentation": "\n    The HTTP status code that you want CloudFront to return with the custom error \n    page to the viewer. For a list of HTTP status codes that you can replace, see \n    CloudFront Documentation.\n  "
+                                                        },
+                                                        "ErrorCachingMinTTL": {
+                                                            "shape_name": "long",
+                                                            "type": "long",
+                                                            "documentation": "\n    The minimum amount of time you want HTTP error codes to stay in CloudFront caches \n    before CloudFront queries your origin to see whether the object has been updated.\n    You can specify a value from 0 to 31,536,000. \n  "
+                                                        }
+                                                    },
+                                                    "documentation": "\n    A complex type that describes how you'd prefer CloudFront to respond to\n    requests that result in either a 4xx or 5xx response. You can control \n    whether a custom error page should be displayed, what the desired response\n    code should be for this error page and how long should the error response\n    be cached by CloudFront.\n    If you don't want to specify any custom error responses, include only an \n    empty CustomErrorResponses element. \n    To delete all custom error responses in an existing distribution, update the\n    distribution configuration and include only an empty CustomErrorResponses\n    element.\n    To add, change, or remove one or more custom error responses, update the\n    distribution configuration and specify all of the custom error responses that\n    you want to include in the updated distribution.\n  ",
+                                                    "xmlname": "CustomErrorResponse"
+                                                },
+                                                "documentation": "\n    Optional: A complex type that contains custom error responses for this\n    distribution. If Quantity is 0, you can omit Items.\n  "
+                                            }
+                                        },
+                                        "documentation": "\n    A complex type that contains zero or more CustomErrorResponse elements.\n  "
+                                    },
                                     "Comment": {
                                         "shape_name": "string",
                                         "type": "string",
@@ -3342,9 +3519,9 @@
             "documentation": "\n    Get the information about a distribution.\n  "
         },
         "GetDistributionConfig": {
-            "name": "GetDistributionConfig2013_05_12",
+            "name": "GetDistributionConfig2013_08_26",
             "http": {
-                "uri": "/2013-05-12/distribution/{Id}/config",
+                "uri": "/2013-08-26/distribution/{Id}/config",
                 "method": "GET"
             },
             "input": {
@@ -3748,6 +3925,53 @@
                                 "documentation": "\n    A complex type that contains zero or more CacheBehavior elements.\n  ",
                                 "required": true
                             },
+                            "CustomErrorResponses": {
+                                "shape_name": "CustomErrorResponses",
+                                "type": "structure",
+                                "members": {
+                                    "Quantity": {
+                                        "shape_name": "integer",
+                                        "type": "integer",
+                                        "documentation": "\n    The number of custom error responses for this distribution.\n  ",
+                                        "required": true
+                                    },
+                                    "Items": {
+                                        "shape_name": "CustomErrorResponseList",
+                                        "type": "list",
+                                        "members": {
+                                            "shape_name": "CustomErrorResponse",
+                                            "type": "structure",
+                                            "members": {
+                                                "ErrorCode": {
+                                                    "shape_name": "integer",
+                                                    "type": "integer",
+                                                    "documentation": "\n    The 4xx or 5xx HTTP status code that you want to customize. For a list of \n    HTTP status codes that you can customize, see CloudFront documentation.\n  ",
+                                                    "required": true
+                                                },
+                                                "ResponsePagePath": {
+                                                    "shape_name": "string",
+                                                    "type": "string",
+                                                    "documentation": "\n    The path of the custom error page (for example, /custom_404.html). The \n    path is relative to the distribution and must begin with a slash (/). If\n    the path includes any non-ASCII characters or unsafe characters as defined \n    in RFC 1783 (http://www.ietf.org/rfc/rfc1738.txt), URL encode those characters.\n    Do not URL encode any other characters in the path, or CloudFront will not \n    return the custom error page to the viewer.\n  "
+                                                },
+                                                "ResponseCode": {
+                                                    "shape_name": "string",
+                                                    "type": "string",
+                                                    "documentation": "\n    The HTTP status code that you want CloudFront to return with the custom error \n    page to the viewer. For a list of HTTP status codes that you can replace, see \n    CloudFront Documentation.\n  "
+                                                },
+                                                "ErrorCachingMinTTL": {
+                                                    "shape_name": "long",
+                                                    "type": "long",
+                                                    "documentation": "\n    The minimum amount of time you want HTTP error codes to stay in CloudFront caches \n    before CloudFront queries your origin to see whether the object has been updated.\n    You can specify a value from 0 to 31,536,000. \n  "
+                                                }
+                                            },
+                                            "documentation": "\n    A complex type that describes how you'd prefer CloudFront to respond to\n    requests that result in either a 4xx or 5xx response. You can control \n    whether a custom error page should be displayed, what the desired response\n    code should be for this error page and how long should the error response\n    be cached by CloudFront.\n    If you don't want to specify any custom error responses, include only an \n    empty CustomErrorResponses element. \n    To delete all custom error responses in an existing distribution, update the\n    distribution configuration and include only an empty CustomErrorResponses\n    element.\n    To add, change, or remove one or more custom error responses, update the\n    distribution configuration and specify all of the custom error responses that\n    you want to include in the updated distribution.\n  ",
+                                            "xmlname": "CustomErrorResponse"
+                                        },
+                                        "documentation": "\n    Optional: A complex type that contains custom error responses for this\n    distribution. If Quantity is 0, you can omit Items.\n  "
+                                    }
+                                },
+                                "documentation": "\n    A complex type that contains zero or more CustomErrorResponse elements.\n  "
+                            },
                             "Comment": {
                                 "shape_name": "string",
                                 "type": "string",
@@ -3863,9 +4087,9 @@
             "documentation": "\n    Get the configuration information about a distribution.\n  "
         },
         "GetInvalidation": {
-            "name": "GetInvalidation2013_05_12",
+            "name": "GetInvalidation2013_08_26",
             "http": {
-                "uri": "/2013-05-12/distribution/{DistributionId}/invalidation/{Id}",
+                "uri": "/2013-08-26/distribution/{DistributionId}/invalidation/{Id}",
                 "method": "GET"
             },
             "input": {
@@ -4002,9 +4226,9 @@
             "documentation": "\n    Get the information about an invalidation.\n  "
         },
         "GetStreamingDistribution": {
-            "name": "GetStreamingDistribution2013_05_12",
+            "name": "GetStreamingDistribution2013_08_26",
             "http": {
-                "uri": "/2013-05-12/streaming-distribution/{Id}",
+                "uri": "/2013-08-26/streaming-distribution/{Id}",
                 "method": "GET"
             },
             "input": {
@@ -4295,9 +4519,9 @@
             "documentation": "\n    Get the information about a streaming distribution.\n  "
         },
         "GetStreamingDistributionConfig": {
-            "name": "GetStreamingDistributionConfig2013_05_12",
+            "name": "GetStreamingDistributionConfig2013_08_26",
             "http": {
-                "uri": "/2013-05-12/streaming-distribution/{Id}/config",
+                "uri": "/2013-08-26/streaming-distribution/{Id}/config",
                 "method": "GET"
             },
             "input": {
@@ -4495,9 +4719,9 @@
             "documentation": "\n    Get the configuration information about a streaming distribution.\n  "
         },
         "ListCloudFrontOriginAccessIdentities": {
-            "name": "ListCloudFrontOriginAccessIdentities2013_05_12",
+            "name": "ListCloudFrontOriginAccessIdentities2013_08_26",
             "http": {
-                "uri": "/2013-05-12/origin-access-identity/cloudfront?Marker={Marker}&MaxItems={MaxItems}",
+                "uri": "/2013-08-26/origin-access-identity/cloudfront?Marker={Marker}&MaxItems={MaxItems}",
                 "method": "GET"
             },
             "input": {
@@ -4625,9 +4849,9 @@
             }
         },
         "ListDistributions": {
-            "name": "ListDistributions2013_05_12",
+            "name": "ListDistributions2013_08_26",
             "http": {
-                "uri": "/2013-05-12/distribution?Marker={Marker}&MaxItems={MaxItems}",
+                "uri": "/2013-08-26/distribution?Marker={Marker}&MaxItems={MaxItems}",
                 "method": "GET"
             },
             "input": {
@@ -5085,6 +5309,54 @@
                                             "documentation": "\n    A complex type that contains zero or more CacheBehavior elements.\n   ",
                                             "required": true
                                         },
+                                        "CustomErrorResponses": {
+                                            "shape_name": "CustomErrorResponses",
+                                            "type": "structure",
+                                            "members": {
+                                                "Quantity": {
+                                                    "shape_name": "integer",
+                                                    "type": "integer",
+                                                    "documentation": "\n    The number of custom error responses for this distribution.\n  ",
+                                                    "required": true
+                                                },
+                                                "Items": {
+                                                    "shape_name": "CustomErrorResponseList",
+                                                    "type": "list",
+                                                    "members": {
+                                                        "shape_name": "CustomErrorResponse",
+                                                        "type": "structure",
+                                                        "members": {
+                                                            "ErrorCode": {
+                                                                "shape_name": "integer",
+                                                                "type": "integer",
+                                                                "documentation": "\n    The 4xx or 5xx HTTP status code that you want to customize. For a list of \n    HTTP status codes that you can customize, see CloudFront documentation.\n  ",
+                                                                "required": true
+                                                            },
+                                                            "ResponsePagePath": {
+                                                                "shape_name": "string",
+                                                                "type": "string",
+                                                                "documentation": "\n    The path of the custom error page (for example, /custom_404.html). The \n    path is relative to the distribution and must begin with a slash (/). If\n    the path includes any non-ASCII characters or unsafe characters as defined \n    in RFC 1783 (http://www.ietf.org/rfc/rfc1738.txt), URL encode those characters.\n    Do not URL encode any other characters in the path, or CloudFront will not \n    return the custom error page to the viewer.\n  "
+                                                            },
+                                                            "ResponseCode": {
+                                                                "shape_name": "string",
+                                                                "type": "string",
+                                                                "documentation": "\n    The HTTP status code that you want CloudFront to return with the custom error \n    page to the viewer. For a list of HTTP status codes that you can replace, see \n    CloudFront Documentation.\n  "
+                                                            },
+                                                            "ErrorCachingMinTTL": {
+                                                                "shape_name": "long",
+                                                                "type": "long",
+                                                                "documentation": "\n    The minimum amount of time you want HTTP error codes to stay in CloudFront caches \n    before CloudFront queries your origin to see whether the object has been updated.\n    You can specify a value from 0 to 31,536,000. \n  "
+                                                            }
+                                                        },
+                                                        "documentation": "\n    A complex type that describes how you'd prefer CloudFront to respond to\n    requests that result in either a 4xx or 5xx response. You can control \n    whether a custom error page should be displayed, what the desired response\n    code should be for this error page and how long should the error response\n    be cached by CloudFront.\n    If you don't want to specify any custom error responses, include only an \n    empty CustomErrorResponses element. \n    To delete all custom error responses in an existing distribution, update the\n    distribution configuration and include only an empty CustomErrorResponses\n    element.\n    To add, change, or remove one or more custom error responses, update the\n    distribution configuration and specify all of the custom error responses that\n    you want to include in the updated distribution.\n  ",
+                                                        "xmlname": "CustomErrorResponse"
+                                                    },
+                                                    "documentation": "\n    Optional: A complex type that contains custom error responses for this\n    distribution. If Quantity is 0, you can omit Items.\n  "
+                                                }
+                                            },
+                                            "documentation": "\n     A complex type that contains zero or more CustomErrorResponses elements.\n   ",
+                                            "required": true
+                                        },
                                         "Comment": {
                                             "shape_name": "string",
                                             "type": "string",
@@ -5170,9 +5442,9 @@
             }
         },
         "ListInvalidations": {
-            "name": "ListInvalidations2013_05_12",
+            "name": "ListInvalidations2013_08_26",
             "http": {
-                "uri": "/2013-05-12/distribution/{DistributionId}/invalidation?Marker={Marker}&MaxItems={MaxItems}",
+                "uri": "/2013-08-26/distribution/{DistributionId}/invalidation?Marker={Marker}&MaxItems={MaxItems}",
                 "method": "GET"
             },
             "input": {
@@ -5331,9 +5603,9 @@
             }
         },
         "ListStreamingDistributions": {
-            "name": "ListStreamingDistributions2013_05_12",
+            "name": "ListStreamingDistributions2013_08_26",
             "http": {
-                "uri": "/2013-05-12/streaming-distribution?Marker={Marker}&MaxItems={MaxItems}",
+                "uri": "/2013-08-26/streaming-distribution?Marker={Marker}&MaxItems={MaxItems}",
                 "method": "GET"
             },
             "input": {
@@ -5566,9 +5838,9 @@
             }
         },
         "UpdateCloudFrontOriginAccessIdentity": {
-            "name": "UpdateCloudFrontOriginAccessIdentity2013_05_12",
+            "name": "UpdateCloudFrontOriginAccessIdentity2013_08_26",
             "http": {
-                "uri": "/2013-05-12/origin-access-identity/cloudfront/{Id}/config",
+                "uri": "/2013-08-26/origin-access-identity/cloudfront/{Id}/config",
                 "method": "PUT"
             },
             "input": {
@@ -5766,9 +6038,9 @@
             "documentation": "\n    Update an origin access identity.\n  "
         },
         "UpdateDistribution": {
-            "name": "UpdateDistribution2013_05_12",
+            "name": "UpdateDistribution2013_08_26",
             "http": {
-                "uri": "/2013-05-12/distribution/{Id}/config",
+                "uri": "/2013-08-26/distribution/{Id}/config",
                 "method": "PUT"
             },
             "input": {
@@ -6158,6 +6430,53 @@
                                 },
                                 "documentation": "\n    A complex type that contains zero or more CacheBehavior elements.\n  ",
                                 "required": true
+                            },
+                            "CustomErrorResponses": {
+                                "shape_name": "CustomErrorResponses",
+                                "type": "structure",
+                                "members": {
+                                    "Quantity": {
+                                        "shape_name": "integer",
+                                        "type": "integer",
+                                        "documentation": "\n    The number of custom error responses for this distribution.\n  ",
+                                        "required": true
+                                    },
+                                    "Items": {
+                                        "shape_name": "CustomErrorResponseList",
+                                        "type": "list",
+                                        "members": {
+                                            "shape_name": "CustomErrorResponse",
+                                            "type": "structure",
+                                            "members": {
+                                                "ErrorCode": {
+                                                    "shape_name": "integer",
+                                                    "type": "integer",
+                                                    "documentation": "\n    The 4xx or 5xx HTTP status code that you want to customize. For a list of \n    HTTP status codes that you can customize, see CloudFront documentation.\n  ",
+                                                    "required": true
+                                                },
+                                                "ResponsePagePath": {
+                                                    "shape_name": "string",
+                                                    "type": "string",
+                                                    "documentation": "\n    The path of the custom error page (for example, /custom_404.html). The \n    path is relative to the distribution and must begin with a slash (/). If\n    the path includes any non-ASCII characters or unsafe characters as defined \n    in RFC 1783 (http://www.ietf.org/rfc/rfc1738.txt), URL encode those characters.\n    Do not URL encode any other characters in the path, or CloudFront will not \n    return the custom error page to the viewer.\n  "
+                                                },
+                                                "ResponseCode": {
+                                                    "shape_name": "string",
+                                                    "type": "string",
+                                                    "documentation": "\n    The HTTP status code that you want CloudFront to return with the custom error \n    page to the viewer. For a list of HTTP status codes that you can replace, see \n    CloudFront Documentation.\n  "
+                                                },
+                                                "ErrorCachingMinTTL": {
+                                                    "shape_name": "long",
+                                                    "type": "long",
+                                                    "documentation": "\n    The minimum amount of time you want HTTP error codes to stay in CloudFront caches \n    before CloudFront queries your origin to see whether the object has been updated.\n    You can specify a value from 0 to 31,536,000. \n  "
+                                                }
+                                            },
+                                            "documentation": "\n    A complex type that describes how you'd prefer CloudFront to respond to\n    requests that result in either a 4xx or 5xx response. You can control \n    whether a custom error page should be displayed, what the desired response\n    code should be for this error page and how long should the error response\n    be cached by CloudFront.\n    If you don't want to specify any custom error responses, include only an \n    empty CustomErrorResponses element. \n    To delete all custom error responses in an existing distribution, update the\n    distribution configuration and include only an empty CustomErrorResponses\n    element.\n    To add, change, or remove one or more custom error responses, update the\n    distribution configuration and specify all of the custom error responses that\n    you want to include in the updated distribution.\n  ",
+                                            "xmlname": "CustomErrorResponse"
+                                        },
+                                        "documentation": "\n    Optional: A complex type that contains custom error responses for this\n    distribution. If Quantity is 0, you can omit Items.\n  "
+                                    }
+                                },
+                                "documentation": "\n    A complex type that contains zero or more CustomErrorResponse elements.\n  "
                             },
                             "Comment": {
                                 "shape_name": "string",
@@ -6736,6 +7055,53 @@
                                         "documentation": "\n    A complex type that contains zero or more CacheBehavior elements.\n  ",
                                         "required": true
                                     },
+                                    "CustomErrorResponses": {
+                                        "shape_name": "CustomErrorResponses",
+                                        "type": "structure",
+                                        "members": {
+                                            "Quantity": {
+                                                "shape_name": "integer",
+                                                "type": "integer",
+                                                "documentation": "\n    The number of custom error responses for this distribution.\n  ",
+                                                "required": true
+                                            },
+                                            "Items": {
+                                                "shape_name": "CustomErrorResponseList",
+                                                "type": "list",
+                                                "members": {
+                                                    "shape_name": "CustomErrorResponse",
+                                                    "type": "structure",
+                                                    "members": {
+                                                        "ErrorCode": {
+                                                            "shape_name": "integer",
+                                                            "type": "integer",
+                                                            "documentation": "\n    The 4xx or 5xx HTTP status code that you want to customize. For a list of \n    HTTP status codes that you can customize, see CloudFront documentation.\n  ",
+                                                            "required": true
+                                                        },
+                                                        "ResponsePagePath": {
+                                                            "shape_name": "string",
+                                                            "type": "string",
+                                                            "documentation": "\n    The path of the custom error page (for example, /custom_404.html). The \n    path is relative to the distribution and must begin with a slash (/). If\n    the path includes any non-ASCII characters or unsafe characters as defined \n    in RFC 1783 (http://www.ietf.org/rfc/rfc1738.txt), URL encode those characters.\n    Do not URL encode any other characters in the path, or CloudFront will not \n    return the custom error page to the viewer.\n  "
+                                                        },
+                                                        "ResponseCode": {
+                                                            "shape_name": "string",
+                                                            "type": "string",
+                                                            "documentation": "\n    The HTTP status code that you want CloudFront to return with the custom error \n    page to the viewer. For a list of HTTP status codes that you can replace, see \n    CloudFront Documentation.\n  "
+                                                        },
+                                                        "ErrorCachingMinTTL": {
+                                                            "shape_name": "long",
+                                                            "type": "long",
+                                                            "documentation": "\n    The minimum amount of time you want HTTP error codes to stay in CloudFront caches \n    before CloudFront queries your origin to see whether the object has been updated.\n    You can specify a value from 0 to 31,536,000. \n  "
+                                                        }
+                                                    },
+                                                    "documentation": "\n    A complex type that describes how you'd prefer CloudFront to respond to\n    requests that result in either a 4xx or 5xx response. You can control \n    whether a custom error page should be displayed, what the desired response\n    code should be for this error page and how long should the error response\n    be cached by CloudFront.\n    If you don't want to specify any custom error responses, include only an \n    empty CustomErrorResponses element. \n    To delete all custom error responses in an existing distribution, update the\n    distribution configuration and include only an empty CustomErrorResponses\n    element.\n    To add, change, or remove one or more custom error responses, update the\n    distribution configuration and specify all of the custom error responses that\n    you want to include in the updated distribution.\n  ",
+                                                    "xmlname": "CustomErrorResponse"
+                                                },
+                                                "documentation": "\n    Optional: A complex type that contains custom error responses for this\n    distribution. If Quantity is 0, you can omit Items.\n  "
+                                            }
+                                        },
+                                        "documentation": "\n    A complex type that contains zero or more CustomErrorResponse elements.\n  "
+                                    },
                                     "Comment": {
                                         "shape_name": "string",
                                         "type": "string",
@@ -6936,6 +7302,42 @@
                     "documentation": "\n    The default root object file name is too big or contains an invalid character.\n  "
                 },
                 {
+                    "shape_name": "InvalidRelativePath",
+                    "type": "structure",
+                    "members": {
+                        "Message": {
+                            "shape_name": "string",
+                            "type": "string",
+                            "documentation": null
+                        }
+                    },
+                    "documentation": "\n    The relative path is too big, is not URL-encoded, or\n    does not begin with a slash (/).\n  "
+                },
+                {
+                    "shape_name": "InvalidErrorCode",
+                    "type": "structure",
+                    "members": {
+                        "Message": {
+                            "shape_name": "string",
+                            "type": "string",
+                            "documentation": null
+                        }
+                    },
+                    "documentation": null
+                },
+                {
+                    "shape_name": "InvalidResponseCode",
+                    "type": "structure",
+                    "members": {
+                        "Message": {
+                            "shape_name": "string",
+                            "type": "string",
+                            "documentation": null
+                        }
+                    },
+                    "documentation": null
+                },
+                {
                     "shape_name": "InvalidArgument",
                     "type": "structure",
                     "members": {
@@ -7095,9 +7497,9 @@
             "documentation": "\n    Update a distribution.\n  "
         },
         "UpdateStreamingDistribution": {
-            "name": "UpdateStreamingDistribution2013_05_12",
+            "name": "UpdateStreamingDistribution2013_08_26",
             "http": {
-                "uri": "/2013-05-12/streaming-distribution/{Id}/config",
+                "uri": "/2013-08-26/streaming-distribution/{Id}/config",
                 "method": "PUT"
             },
             "input": {
@@ -7676,7 +8078,7 @@
         }
     },
     "pagination": {
-        "ListCloudFrontOriginAccessIdentities2013_05_12": {
+        "ListCloudFrontOriginAccessIdentities2013_08_26": {
             "input_token": [
                 "Marker"
             ],
@@ -7690,7 +8092,7 @@
                 "marker"
             ]
         },
-        "ListDistributions2013_05_12": {
+        "ListDistributions2013_08_26": {
             "input_token": [
                 "Marker"
             ],
@@ -7704,7 +8106,7 @@
                 "marker"
             ]
         },
-        "ListInvalidations2013_05_12": {
+        "ListInvalidations2013_08_26": {
             "input_token": [
                 "Marker"
             ],
@@ -7718,7 +8120,7 @@
                 "marker"
             ]
         },
-        "ListStreamingDistributions2013_05_12": {
+        "ListStreamingDistributions2013_08_26": {
             "input_token": [
                 "Marker"
             ],

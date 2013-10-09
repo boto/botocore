@@ -39,6 +39,9 @@ class TestPagination(unittest.TestCase):
         self.operation.pagination = self.paginate_config
         self.paginator = Paginator(self.operation)
 
+    def test_result_key_available(self):
+        self.assertEqual(self.paginator.result_keys, ['Foo'])
+
     def test_no_next_token(self):
         response = {'not_the_next_token': 'foobar'}
         self.operation.call.return_value = None, response
@@ -81,7 +84,7 @@ class TestPagination(unittest.TestCase):
 
     def test_next_token_with_or_expression(self):
         self.operation.pagination = {
-            'output_token': 'NextToken or NextToken2',
+            'output_token': 'NextToken || NextToken2',
             'py_input_token': 'NextToken',
             'result_key': 'Foo',
         }
@@ -181,7 +184,7 @@ class TestPaginatorWithPathExpressions(unittest.TestCase):
         # This is something we'd see in s3 pagination.
         self.paginate_config = {
             'output_token': [
-                'NextMarker or ListBucketResult.Contents[-1].Key'],
+                'NextMarker || ListBucketResult.Contents[-1].Key'],
             'py_input_token': 'next_marker',
             'result_key': 'Contents',
         }

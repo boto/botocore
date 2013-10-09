@@ -33,7 +33,7 @@ from botocore.exceptions import UnknownServiceStyle
 from botocore.exceptions import UnknownSignatureVersionError
 
 
-class TestGetEdnpoint(unittest.TestCase):
+class TestGetEndpoint(unittest.TestCase):
     def create_mock_service(self, service_type, signature_version='v2'):
         service = Mock()
         service.type = service_type

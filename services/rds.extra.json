@@ -66,6 +66,12 @@
       "output_token": "Marker",
       "result_key": "EngineDefaults"
     },
+    "DescribeEventSubscriptions": {
+      "input_token": "Marker",
+      "output_token": "Marker",
+      "limit_key": "MaxRecords",
+      "result_key": "EventSubscriptionsList"
+    },
     "DescribeEvents": {
       "limit_key": "MaxRecords",
       "input_token": "Marker",
