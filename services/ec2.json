@@ -1,12 +1,12 @@
 {
-  "api_version": "2013-08-15",
+  "api_version": "2013-10-01",
   "type": "query",
   "result_wrapped": false,
   "signature_version": "v2",
   "service_full_name": "Amazon Elastic Compute Cloud",
   "service_abbreviation": "Amazon EC2",
   "endpoint_prefix": "ec2",
-  "xmlnamespace": "http://ec2.amazonaws.com/doc/2013-08-15",
+  "xmlnamespace": "http://ec2.amazonaws.com/doc/2013-10-01",
   "documentation": "\n        <p>\n        Amazon Elastic Compute Cloud (Amazon EC2) is a web service that provides\n        resizable compute capacity in the cloud.\n        It is designed to make web-scale computing easier for developers.\n        </p>\n        <p>\n        Amazon EC2's simple web service interface allows you to obtain and configure\n        capacity with minimal friction. It provides you with complete control of your\n        computing resources and lets you run on Amazon's proven computing environment.\n        Amazon EC2 reduces the time required to obtain and boot new server instances to\n        minutes, allowing you to quickly scale capacity, both up and down, as your\n        computing requirements change. Amazon EC2 changes the economics of computing by\n        allowing you to pay only for capacity that you actually use. Amazon EC2 provides\n        developers the tools to build failure resilient applications and isolate\n        themselves from common failure scenarios.\n        </p>\n        <p>\n        Visit <a href=\"http://aws.amazon.com/ec2/\">http://aws.amazon.com/ec2/</a> for\n        more information.\n        </p>\n    ",
   "operations": {
     "ActivateLicense": {
@@ -489,8 +489,14 @@
                 "xmlname": "vpcId"
               },
               "State": {
-                "shape_name": "String",
+                "shape_name": "AttachmentStatus",
                 "type": "string",
+                "enum": [
+                  "attaching",
+                  "attached",
+                  "detaching",
+                  "detached"
+                ],
                 "documentation": "\n        <p>\n\n        </p>\n    ",
                 "xmlname": "state"
               }
@@ -853,8 +859,17 @@
                 "xmlname": "bundleId"
               },
               "State": {
-                "shape_name": "String",
+                "shape_name": "BundleTaskState",
                 "type": "string",
+                "enum": [
+                  "pending",
+                  "waiting-for-shutdown",
+                  "bundling",
+                  "storing",
+                  "cancelling",
+                  "complete",
+                  "failed"
+                ],
                 "documentation": "\n        <p>\n        The state of this task.\n        </p>\n    ",
                 "xmlname": "state"
               },
@@ -993,8 +1008,17 @@
                 "xmlname": "bundleId"
               },
               "State": {
-                "shape_name": "String",
+                "shape_name": "BundleTaskState",
                 "type": "string",
+                "enum": [
+                  "pending",
+                  "waiting-for-shutdown",
+                  "bundling",
+                  "storing",
+                  "cancelling",
+                  "complete",
+                  "failed"
+                ],
                 "documentation": "\n        <p>\n        The state of this task.\n        </p>\n    ",
                 "xmlname": "state"
               },
@@ -1195,8 +1219,14 @@
                   "xmlname": "updateDate"
                 },
                 "Status": {
-                  "shape_name": "String",
+                  "shape_name": "ListingStatus",
                   "type": "string",
+                  "enum": [
+                    "active",
+                    "pending",
+                    "cancelled",
+                    "closed"
+                  ],
                   "documentation": null,
                   "xmlname": "status"
                 },
@@ -1214,8 +1244,14 @@
                     "type": "structure",
                     "members": {
                       "State": {
-                        "shape_name": "String",
+                        "shape_name": "ListingState",
                         "type": "string",
+                        "enum": [
+                          "available",
+                          "sold",
+                          "cancelled",
+                          "pending"
+                        ],
                         "documentation": null,
                         "xmlname": "state"
                       },
@@ -1252,8 +1288,11 @@
                         "xmlname": "price"
                       },
                       "CurrencyCode": {
-                        "shape_name": "String",
+                        "shape_name": "CurrencyCodeValues",
                         "type": "string",
+                        "enum": [
+                          "USD"
+                        ],
                         "documentation": null,
                         "xmlname": "currencyCode"
                       },
@@ -1362,8 +1401,15 @@
                   "xmlname": "spotInstanceRequestId"
                 },
                 "State": {
-                  "shape_name": "String",
+                  "shape_name": "CancelSpotInstanceRequestState",
                   "type": "string",
+                  "enum": [
+                    "active",
+                    "open",
+                    "closed",
+                    "cancelled",
+                    "completed"
+                  ],
                   "documentation": null,
                   "xmlname": "state"
                 }
@@ -1547,8 +1593,11 @@
             "documentation": null
           },
           "Type": {
-            "shape_name": "String",
+            "shape_name": "GatewayType",
             "type": "string",
+            "enum": [
+              "ipsec.1"
+            ],
             "documentation": "\n        <p>\n        The type of VPN connection this customer gateway supports.\n        </p>\n    ",
             "required": true
           },
@@ -1915,7 +1964,8 @@
             "type": "string",
             "enum": [
               "citrix",
-              "vmware"
+              "vmware",
+              "microsoft"
             ],
             "documentation": null
           },
@@ -1927,8 +1977,9 @@
                 "shape_name": "DiskImageFormat",
                 "type": "string",
                 "enum": [
-                  "vmdk",
-                  "vhd"
+                  "VMDK",
+                  "RAW",
+                  "VHD"
                 ],
                 "documentation": null
               },
@@ -1978,8 +2029,14 @@
                 "xmlname": "description"
               },
               "State": {
-                "shape_name": "String",
+                "shape_name": "ExportTaskState",
                 "type": "string",
+                "enum": [
+                  "active",
+                  "cancelling",
+                  "cancelled",
+                  "completed"
+                ],
                 "documentation": null,
                 "xmlname": "state"
               },
@@ -2004,7 +2061,8 @@
                     "type": "string",
                     "enum": [
                       "citrix",
-                      "vmware"
+                      "vmware",
+                      "microsoft"
                     ],
                     "documentation": null,
                     "xmlname": "targetEnvironment"
@@ -2021,8 +2079,9 @@
                     "shape_name": "DiskImageFormat",
                     "type": "string",
                     "enum": [
-                      "vmdk",
-                      "vhd"
+                      "VMDK",
+                      "RAW",
+                      "VHD"
                     ],
                     "documentation": null,
                     "xmlname": "diskImageFormat"
@@ -2106,8 +2165,14 @@
                       "xmlname": "vpcId"
                     },
                     "State": {
-                      "shape_name": "String",
+                      "shape_name": "AttachmentStatus",
                       "type": "string",
+                      "enum": [
+                        "attaching",
+                        "attached",
+                        "detaching",
+                        "detached"
+                      ],
                       "documentation": null,
                       "xmlname": "state"
                     }
@@ -2633,8 +2698,14 @@
                 "xmlname": "requesterManaged"
               },
               "Status": {
-                "shape_name": "String",
+                "shape_name": "NetworkInterfaceStatus",
                 "type": "string",
+                "enum": [
+                  "available",
+                  "attaching",
+                  "in-use",
+                  "detaching"
+                ],
                 "documentation": null,
                 "xmlname": "status"
               },
@@ -2717,8 +2788,14 @@
                     "xmlname": "deviceIndex"
                   },
                   "Status": {
-                    "shape_name": "String",
+                    "shape_name": "AttachmentStatus",
                     "type": "string",
+                    "enum": [
+                      "attaching",
+                      "attached",
+                      "detaching",
+                      "detached"
+                    ],
                     "documentation": null,
                     "xmlname": "status"
                   },
@@ -2943,8 +3020,11 @@
                   "documentation": null
                 },
                 "CurrencyCode": {
-                  "shape_name": "String",
+                  "shape_name": "CurrencyCodeValues",
                   "type": "string",
+                  "enum": [
+                    "USD"
+                  ],
                   "documentation": null
                 }
               },
@@ -2999,8 +3079,14 @@
                   "xmlname": "updateDate"
                 },
                 "Status": {
-                  "shape_name": "String",
+                  "shape_name": "ListingStatus",
                   "type": "string",
+                  "enum": [
+                    "active",
+                    "pending",
+                    "cancelled",
+                    "closed"
+                  ],
                   "documentation": null,
                   "xmlname": "status"
                 },
@@ -3018,8 +3104,14 @@
                     "type": "structure",
                     "members": {
                       "State": {
-                        "shape_name": "String",
+                        "shape_name": "ListingState",
                         "type": "string",
+                        "enum": [
+                          "available",
+                          "sold",
+                          "cancelled",
+                          "pending"
+                        ],
                         "documentation": null,
                         "xmlname": "state"
                       },
@@ -3056,8 +3148,11 @@
                         "xmlname": "price"
                       },
                       "CurrencyCode": {
-                        "shape_name": "String",
+                        "shape_name": "CurrencyCodeValues",
                         "type": "string",
+                        "enum": [
+                          "USD"
+                        ],
                         "documentation": null,
                         "xmlname": "currencyCode"
                       },
@@ -3246,8 +3341,12 @@
                       "xmlname": "networkInterfaceId"
                     },
                     "State": {
-                      "shape_name": "String",
+                      "shape_name": "RouteState",
                       "type": "string",
+                      "enum": [
+                        "active",
+                        "blackhole"
+                      ],
                       "documentation": null,
                       "xmlname": "state"
                     }
@@ -3579,8 +3678,12 @@
                 "xmlname": "prefix"
               },
               "State": {
-                "shape_name": "String",
+                "shape_name": "DatafeedSubscriptionState",
                 "type": "string",
+                "enum": [
+                  "Active",
+                  "Inactive"
+                ],
                 "documentation": "\n        <p>\n        Specifies the state of the Spot Instance request.\n        </p>\n    ",
                 "xmlname": "state"
               },
@@ -3662,8 +3765,12 @@
                 "xmlname": "subnetId"
               },
               "State": {
-                "shape_name": "String",
+                "shape_name": "SubnetState",
                 "type": "string",
+                "enum": [
+                  "pending",
+                  "available"
+                ],
                 "documentation": "\n        <p>\n        Describes the current state of the subnet.\n        The state of the subnet may be either\n        <code>pending</code> or\n        <code>available</code>.\n        </p>\n    ",
                 "xmlname": "state"
               },
@@ -3879,6 +3986,7 @@
               "available",
               "in-use",
               "deleting",
+              "deleted",
               "error"
             ],
             "documentation": "\n        <p>\n        State of this volume (e.g., creating, available).\n        </p>\n    ",
@@ -4015,8 +4123,12 @@
             "required": true
           },
           "InstanceTenancy": {
-            "shape_name": "String",
+            "shape_name": "Tenancy",
             "type": "string",
+            "enum": [
+              "default",
+              "dedicated"
+            ],
             "documentation": "\n        <p>\n        The allowed tenancy of instances launched into the VPC. A value of default means instances can be launched with any tenancy; a value of dedicated means instances must be launched with tenancy as dedicated.\n        </p>\n    "
           }
         },
@@ -4037,8 +4149,12 @@
                 "xmlname": "vpcId"
               },
               "State": {
-                "shape_name": "String",
+                "shape_name": "VpcState",
                 "type": "string",
+                "enum": [
+                  "pending",
+                  "available"
+                ],
                 "documentation": "\n        <p>\n        Describes the current state of the VPC.\n        The state of the subnet may be either\n        <code>pending</code> or\n        <code>available</code>.\n        </p>\n    ",
                 "xmlname": "state"
               },
@@ -4081,8 +4197,12 @@
                 "xmlname": "tagSet"
               },
               "InstanceTenancy": {
-                "shape_name": "String",
+                "shape_name": "Tenancy",
                 "type": "string",
+                "enum": [
+                  "default",
+                  "dedicated"
+                ],
                 "documentation": "\n        <p>\n        The allowed tenancy of instances launched into the VPC.\n        </p>\n    ",
                 "xmlname": "instanceTenancy"
               },
@@ -4163,8 +4283,14 @@
                 "xmlname": "vpnConnectionId"
               },
               "State": {
-                "shape_name": "String",
+                "shape_name": "VpnState",
                 "type": "string",
+                "enum": [
+                  "pending",
+                  "available",
+                  "deleting",
+                  "deleted"
+                ],
                 "documentation": "\n        <p>\n        Describes the current state of the VPN connection.\n        Valid values are\n        <code>pending</code>,\n        <code>available</code>,\n        <code>deleting</code>,\n        and <code>deleted</code>.\n        </p>\n    ",
                 "xmlname": "state"
               },
@@ -4175,8 +4301,11 @@
                 "xmlname": "customerGatewayConfiguration"
               },
               "Type": {
-                "shape_name": "String",
+                "shape_name": "GatewayType",
                 "type": "string",
+                "enum": [
+                  "ipsec.1"
+                ],
                 "documentation": "\n        <p>\n        Specifies the type of VPN connection.\n        </p>\n    ",
                 "xmlname": "type"
               },
@@ -4232,8 +4361,12 @@
                       "xmlname": "outsideIpAddress"
                     },
                     "Status": {
-                      "shape_name": "String",
+                      "shape_name": "TelemetryStatus",
                       "type": "string",
+                      "enum": [
+                        "UP",
+                        "DOWN"
+                      ],
                       "documentation": null,
                       "xmlname": "status"
                     },
@@ -4290,14 +4423,23 @@
                       "xmlname": "destinationCidrBlock"
                     },
                     "Source": {
-                      "shape_name": "String",
+                      "shape_name": "VpnStaticRouteSource",
                       "type": "string",
+                      "enum": [
+                        "Static"
+                      ],
                       "documentation": null,
                       "xmlname": "source"
                     },
                     "State": {
-                      "shape_name": "String",
+                      "shape_name": "VpnState",
                       "type": "string",
+                      "enum": [
+                        "pending",
+                        "available",
+                        "deleting",
+                        "deleted"
+                      ],
                       "documentation": null,
                       "xmlname": "state"
                     }
@@ -4359,8 +4501,11 @@
             "documentation": null
           },
           "Type": {
-            "shape_name": "String",
+            "shape_name": "GatewayType",
             "type": "string",
+            "enum": [
+              "ipsec.1"
+            ],
             "documentation": "\n        <p>\n        The type of VPN connection this VPN gateway supports.\n        </p>\n    ",
             "required": true
           },
@@ -4387,14 +4532,23 @@
                 "xmlname": "vpnGatewayId"
               },
               "State": {
-                "shape_name": "String",
+                "shape_name": "VpnState",
                 "type": "string",
+                "enum": [
+                  "pending",
+                  "available",
+                  "deleting",
+                  "deleted"
+                ],
                 "documentation": "\n        <p>\n        Describes the current state of the VPN gateway.\n        Valid values are\n        <code>pending</code>,\n        <code>available</code>,\n        <code>deleting</code>,\n        and <code>deleted</code>.\n        </p>\n    ",
                 "xmlname": "state"
               },
               "Type": {
-                "shape_name": "String",
+                "shape_name": "GatewayType",
                 "type": "string",
+                "enum": [
+                  "ipsec.1"
+                ],
                 "documentation": "\n        <p>\n        Specifies the type of VPN connection the VPN gateway supports.\n        </p>\n    ",
                 "xmlname": "type"
               },
@@ -4418,8 +4572,14 @@
                       "xmlname": "vpcId"
                     },
                     "State": {
-                      "shape_name": "String",
+                      "shape_name": "AttachmentStatus",
                       "type": "string",
+                      "enum": [
+                        "attaching",
+                        "attached",
+                        "detaching",
+                        "detached"
+                      ],
                       "documentation": "\n        <p>\n\n        </p>\n    ",
                       "xmlname": "state"
                     }
@@ -5109,8 +5269,12 @@
             "shape_name": "AccountAttributeNameStringList",
             "type": "list",
             "members": {
-              "shape_name": "String",
+              "shape_name": "AccountAttributeName",
               "type": "string",
+              "enum": [
+                "supported-platforms",
+                "default-vpc"
+              ],
               "documentation": null,
               "xmlname": "AttributeName"
             },
@@ -5394,8 +5558,11 @@
                   "xmlname": "zoneName"
                 },
                 "State": {
-                  "shape_name": "String",
+                  "shape_name": "AvailabilityZoneState",
                   "type": "string",
+                  "enum": [
+                    "available"
+                  ],
                   "documentation": "\n        <p>\n        State of the Availability Zone.\n        </p>\n   ",
                   "xmlname": "zoneState"
                 },
@@ -5521,8 +5688,17 @@
                   "xmlname": "bundleId"
                 },
                 "State": {
-                  "shape_name": "String",
+                  "shape_name": "BundleTaskState",
                   "type": "string",
+                  "enum": [
+                    "pending",
+                    "waiting-for-shutdown",
+                    "bundling",
+                    "storing",
+                    "cancelling",
+                    "complete",
+                    "failed"
+                  ],
                   "documentation": "\n        <p>\n        The state of this task.\n        </p>\n    ",
                   "xmlname": "state"
                 },
@@ -5734,8 +5910,13 @@
                             "type": "structure",
                             "members": {
                               "Format": {
-                                "shape_name": "String",
+                                "shape_name": "DiskImageFormat",
                                 "type": "string",
+                                "enum": [
+                                  "VMDK",
+                                  "RAW",
+                                  "VHD"
+                                ],
                                 "documentation": null,
                                 "required": true,
                                 "xmlname": "format"
@@ -5821,8 +6002,11 @@
                       "xmlname": "instanceId"
                     },
                     "Platform": {
-                      "shape_name": "String",
+                      "shape_name": "PlatformValues",
                       "type": "string",
+                      "enum": [
+                        "Windows"
+                      ],
                       "documentation": null,
                       "xmlname": "platform"
                     },
@@ -5865,8 +6049,13 @@
                       "type": "structure",
                       "members": {
                         "Format": {
-                          "shape_name": "String",
+                          "shape_name": "DiskImageFormat",
                           "type": "string",
+                          "enum": [
+                            "VMDK",
+                            "RAW",
+                            "VHD"
+                          ],
                           "documentation": null,
                           "required": true,
                           "xmlname": "format"
@@ -5923,8 +6112,14 @@
                   "xmlname": "importVolume"
                 },
                 "State": {
-                  "shape_name": "String",
+                  "shape_name": "ConversionTaskState",
                   "type": "string",
+                  "enum": [
+                    "active",
+                    "cancelling",
+                    "cancelled",
+                    "completed"
+                  ],
                   "documentation": null,
                   "required": true,
                   "xmlname": "state"
@@ -6307,8 +6502,14 @@
                   "xmlname": "description"
                 },
                 "State": {
-                  "shape_name": "String",
+                  "shape_name": "ExportTaskState",
                   "type": "string",
+                  "enum": [
+                    "active",
+                    "cancelling",
+                    "cancelled",
+                    "completed"
+                  ],
                   "documentation": null,
                   "xmlname": "state"
                 },
@@ -6333,7 +6534,8 @@
                       "type": "string",
                       "enum": [
                         "citrix",
-                        "vmware"
+                        "vmware",
+                        "microsoft"
                       ],
                       "documentation": null,
                       "xmlname": "targetEnvironment"
@@ -6350,8 +6552,9 @@
                       "shape_name": "DiskImageFormat",
                       "type": "string",
                       "enum": [
-                        "vmdk",
-                        "vhd"
+                        "VMDK",
+                        "RAW",
+                        "VHD"
                       ],
                       "documentation": null,
                       "xmlname": "diskImageFormat"
@@ -6414,8 +6617,16 @@
             "required": true
           },
           "Attribute": {
-            "shape_name": "String",
+            "shape_name": "ImageAttributeName",
             "type": "string",
+            "enum": [
+              "description",
+              "kernel",
+              "ramdisk",
+              "launchPermission",
+              "productCodes",
+              "blockDeviceMapping"
+            ],
             "documentation": "\n        <p>\n        The name of the attribute to describe.\n        </p>\n        <p>\n        Available attribute names: <code>productCodes</code>, <code>kernel</code>,\n        <code>ramdisk</code>, <code>launchPermisson</code>, <code>blockDeviceMapping</code>\n        </p>\n    ",
             "required": true
           }
@@ -6446,8 +6657,11 @@
                   "xmlname": "userId"
                 },
                 "Group": {
-                  "shape_name": "String",
+                  "shape_name": "PermissionGroup",
                   "type": "string",
+                  "enum": [
+                    "all"
+                  ],
                   "documentation": "\n        <p>\n        The AWS group of the user involved in this launch permission.\n        </p>\n        <p>\n        Available groups: <code>all</code>\n        </p>\n    ",
                   "xmlname": "group"
                 }
@@ -6472,8 +6686,12 @@
                   "xmlname": "productCode"
                 },
                 "ProductCodeType": {
-                  "shape_name": "String",
+                  "shape_name": "ProductCodeValues",
                   "type": "string",
+                  "enum": [
+                    "devpay",
+                    "marketplace"
+                  ],
                   "documentation": null,
                   "xmlname": "type"
                 }
@@ -6749,8 +6967,12 @@
                         "xmlname": "productCode"
                       },
                       "ProductCodeType": {
-                        "shape_name": "String",
+                        "shape_name": "ProductCodeValues",
                         "type": "string",
+                        "enum": [
+                          "devpay",
+                          "marketplace"
+                        ],
                         "documentation": null,
                         "xmlname": "type"
                       }
@@ -6762,14 +6984,23 @@
                   "xmlname": "productCodes"
                 },
                 "Architecture": {
-                  "shape_name": "String",
+                  "shape_name": "ArchitectureValues",
                   "type": "string",
+                  "enum": [
+                    "i386",
+                    "x86_64"
+                  ],
                   "documentation": "\n        <p>\n        The architecture of the image.\n        </p>\n   ",
                   "xmlname": "architecture"
                 },
                 "ImageType": {
-                  "shape_name": "String",
+                  "shape_name": "ImageTypeValues",
                   "type": "string",
+                  "enum": [
+                    "machine",
+                    "kernel",
+                    "ramdisk"
+                  ],
                   "documentation": "\n        <p>\n        The type of image (machine, kernel, or ramdisk).\n        </p>\n   ",
                   "xmlname": "imageType"
                 },
@@ -6786,8 +7017,11 @@
                   "xmlname": "ramdiskId"
                 },
                 "Platform": {
-                  "shape_name": "String",
+                  "shape_name": "PlatformValues",
                   "type": "string",
+                  "enum": [
+                    "Windows"
+                  ],
                   "documentation": "\n        <p>\n        The operating platform of the AMI.\n        </p>\n   ",
                   "xmlname": "platform"
                 },
@@ -6830,8 +7064,12 @@
                   "xmlname": "description"
                 },
                 "RootDeviceType": {
-                  "shape_name": "String",
+                  "shape_name": "DeviceType",
                   "type": "string",
+                  "enum": [
+                    "ebs",
+                    "instance-store"
+                  ],
                   "documentation": "\n        <p>\n        The root device type used by the AMI. The AMI can use an Amazon EBS or\n        instance store root device.\n        </p>\n    ",
                   "xmlname": "rootDeviceType"
                 },
@@ -7148,8 +7386,14 @@
                       "xmlname": "volumeId"
                     },
                     "Status": {
-                      "shape_name": "String",
+                      "shape_name": "AttachmentStatus",
                       "type": "string",
+                      "enum": [
+                        "attaching",
+                        "attached",
+                        "detaching",
+                        "detached"
+                      ],
                       "documentation": "\n        <p>\n        The status of the EBS volume.\n        </p>\n    ",
                       "xmlname": "status"
                     },
@@ -7190,8 +7434,12 @@
                   "xmlname": "productCode"
                 },
                 "ProductCodeType": {
-                  "shape_name": "String",
+                  "shape_name": "ProductCodeValues",
                   "type": "string",
+                  "enum": [
+                    "devpay",
+                    "marketplace"
+                  ],
                   "documentation": null,
                   "xmlname": "type"
                 }
@@ -7327,8 +7575,15 @@
                     "type": "structure",
                     "members": {
                       "Code": {
-                        "shape_name": "String",
+                        "shape_name": "EventCode",
                         "type": "string",
+                        "enum": [
+                          "instance-reboot",
+                          "system-reboot",
+                          "system-maintenance",
+                          "instance-retirement",
+                          "instance-stop"
+                        ],
                         "documentation": "\n     The associated code of the event.\n     Valid values: instance-reboot, system-reboot, instance-retirement\n   ",
                         "xmlname": "code"
                       },
@@ -7390,8 +7645,14 @@
                   "type": "structure",
                   "members": {
                     "Status": {
-                      "shape_name": "String",
+                      "shape_name": "SummaryStatus",
                       "type": "string",
+                      "enum": [
+                        "ok",
+                        "impaired",
+                        "insufficient-data",
+                        "not-applicable"
+                      ],
                       "documentation": null,
                       "xmlname": "status"
                     },
@@ -7403,14 +7664,22 @@
                         "type": "structure",
                         "members": {
                           "Name": {
-                            "shape_name": "String",
+                            "shape_name": "StatusName",
                             "type": "string",
+                            "enum": [
+                              "reachability"
+                            ],
                             "documentation": null,
                             "xmlname": "name"
                           },
                           "Status": {
-                            "shape_name": "String",
+                            "shape_name": "StatusType",
                             "type": "string",
+                            "enum": [
+                              "passed",
+                              "failed",
+                              "insufficient-data"
+                            ],
                             "documentation": null,
                             "xmlname": "status"
                           },
@@ -7436,8 +7705,14 @@
                   "type": "structure",
                   "members": {
                     "Status": {
-                      "shape_name": "String",
+                      "shape_name": "SummaryStatus",
                       "type": "string",
+                      "enum": [
+                        "ok",
+                        "impaired",
+                        "insufficient-data",
+                        "not-applicable"
+                      ],
                       "documentation": null,
                       "xmlname": "status"
                     },
@@ -7449,14 +7724,22 @@
                         "type": "structure",
                         "members": {
                           "Name": {
-                            "shape_name": "String",
+                            "shape_name": "StatusName",
                             "type": "string",
+                            "enum": [
+                              "reachability"
+                            ],
                             "documentation": null,
                             "xmlname": "name"
                           },
                           "Status": {
-                            "shape_name": "String",
+                            "shape_name": "StatusType",
                             "type": "string",
+                            "enum": [
+                              "passed",
+                              "failed",
+                              "insufficient-data"
+                            ],
                             "documentation": null,
                             "xmlname": "status"
                           },
@@ -7701,8 +7984,12 @@
                               "xmlname": "productCode"
                             },
                             "ProductCodeType": {
-                              "shape_name": "String",
+                              "shape_name": "ProductCodeValues",
                               "type": "string",
+                              "enum": [
+                                "devpay",
+                                "marketplace"
+                              ],
                               "documentation": null,
                               "xmlname": "type"
                             }
@@ -7762,8 +8049,12 @@
                             "xmlname": "groupName"
                           },
                           "Tenancy": {
-                            "shape_name": "String",
+                            "shape_name": "Tenancy",
                             "type": "string",
+                            "enum": [
+                              "default",
+                              "dedicated"
+                            ],
                             "documentation": "\n        <p>\n        The allowed tenancy of instances launched into the VPC. A value of default means instances can be launched with any tenancy; a value of dedicated means all instances launched into the VPC will be launched as dedicated tenancy regardless of the tenancy assigned to the instance at launch.\n        </p>\n    ",
                             "xmlname": "tenancy"
                           }
@@ -7784,8 +8075,11 @@
                         "xmlname": "ramdiskId"
                       },
                       "Platform": {
-                        "shape_name": "String",
+                        "shape_name": "PlatformValues",
                         "type": "string",
+                        "enum": [
+                          "Windows"
+                        ],
                         "documentation": "\n        <p>\n        Platform of the instance (e.g., Windows).\n        </p>\n   ",
                         "xmlname": "platform"
                       },
@@ -7794,8 +8088,13 @@
                         "type": "structure",
                         "members": {
                           "State": {
-                            "shape_name": "String",
+                            "shape_name": "MonitoringState",
                             "type": "string",
+                            "enum": [
+                              "disabled",
+                              "enabled",
+                              "pending"
+                            ],
                             "documentation": "\n        <p>\n        The state of monitoring on an Amazon EC2 instance (ex: enabled,\n        disabled).\n        </p>\n    ",
                             "xmlname": "state"
                           }
@@ -7848,14 +8147,22 @@
                         "xmlname": "stateReason"
                       },
                       "Architecture": {
-                        "shape_name": "String",
+                        "shape_name": "ArchitectureValues",
                         "type": "string",
+                        "enum": [
+                          "i386",
+                          "x86_64"
+                        ],
                         "documentation": "\n        <p>\n        The architecture of this instance.\n        </p>\n    ",
                         "xmlname": "architecture"
                       },
                       "RootDeviceType": {
-                        "shape_name": "String",
+                        "shape_name": "DeviceType",
                         "type": "string",
+                        "enum": [
+                          "ebs",
+                          "instance-store"
+                        ],
                         "documentation": "\n        <p>\n        The root device type used by the AMI. The AMI can use an Amazon EBS or\n        instance store root device.\n        </p>\n    ",
                         "xmlname": "rootDeviceType"
                       },
@@ -7889,8 +8196,14 @@
                                   "xmlname": "volumeId"
                                 },
                                 "Status": {
-                                  "shape_name": "String",
+                                  "shape_name": "AttachmentStatus",
                                   "type": "string",
+                                  "enum": [
+                                    "attaching",
+                                    "attached",
+                                    "detaching",
+                                    "detached"
+                                  ],
                                   "documentation": "\n        <p>\n        The status of the EBS volume.\n        </p>\n    ",
                                   "xmlname": "status"
                                 },
@@ -7928,8 +8241,11 @@
                         "xmlname": "virtualizationType"
                       },
                       "InstanceLifecycle": {
-                        "shape_name": "String",
+                        "shape_name": "InstanceLifecycleType",
                         "type": "string",
+                        "enum": [
+                          "spot"
+                        ],
                         "documentation": "\n        <p>\n\n        </p>\n    ",
                         "xmlname": "instanceLifecycle"
                       },
@@ -8065,8 +8381,14 @@
                               "xmlname": "ownerId"
                             },
                             "Status": {
-                              "shape_name": "String",
+                              "shape_name": "NetworkInterfaceStatus",
                               "type": "string",
+                              "enum": [
+                                "available",
+                                "attaching",
+                                "in-use",
+                                "detaching"
+                              ],
                               "documentation": null,
                               "xmlname": "status"
                             },
@@ -8131,8 +8453,14 @@
                                   "xmlname": "deviceIndex"
                                 },
                                 "Status": {
-                                  "shape_name": "String",
+                                  "shape_name": "AttachmentStatus",
                                   "type": "string",
+                                  "enum": [
+                                    "attaching",
+                                    "attached",
+                                    "detaching",
+                                    "detached"
+                                  ],
                                   "documentation": null,
                                   "xmlname": "status"
                                 },
@@ -8379,8 +8707,14 @@
                         "xmlname": "vpcId"
                       },
                       "State": {
-                        "shape_name": "String",
+                        "shape_name": "AttachmentStatus",
                         "type": "string",
+                        "enum": [
+                          "attaching",
+                          "attached",
+                          "detaching",
+                          "detached"
+                        ],
                         "documentation": null,
                         "xmlname": "state"
                       }
@@ -9073,8 +9407,14 @@
                 "xmlname": "deviceIndex"
               },
               "Status": {
-                "shape_name": "String",
+                "shape_name": "AttachmentStatus",
                 "type": "string",
+                "enum": [
+                  "attaching",
+                  "attached",
+                  "detaching",
+                  "detached"
+                ],
                 "documentation": null,
                 "xmlname": "status"
               },
@@ -9219,8 +9559,14 @@
                   "xmlname": "requesterManaged"
                 },
                 "Status": {
-                  "shape_name": "String",
+                  "shape_name": "NetworkInterfaceStatus",
                   "type": "string",
+                  "enum": [
+                    "available",
+                    "attaching",
+                    "in-use",
+                    "detaching"
+                  ],
                   "documentation": null,
                   "xmlname": "status"
                 },
@@ -9303,8 +9649,14 @@
                       "xmlname": "deviceIndex"
                     },
                     "Status": {
-                      "shape_name": "String",
+                      "shape_name": "AttachmentStatus",
                       "type": "string",
+                      "enum": [
+                        "attaching",
+                        "attached",
+                        "detaching",
+                        "detached"
+                      ],
                       "documentation": null,
                       "xmlname": "status"
                     },
@@ -9721,8 +10073,13 @@
             "flattened": true
           },
           "OfferingType": {
-            "shape_name": "String",
+            "shape_name": "OfferingTypeValues",
             "type": "string",
+            "enum": [
+              "Heavy Utilization",
+              "Medium Utilization",
+              "Light Utilization"
+            ],
             "documentation": "\n\tThe Reserved Instance offering type.\n   "
           }
         },
@@ -9814,14 +10171,26 @@
                   "xmlname": "instanceCount"
                 },
                 "ProductDescription": {
-                  "shape_name": "String",
+                  "shape_name": "RIProductDescription",
                   "type": "string",
+                  "enum": [
+                    "Linux/UNIX",
+                    "Linux/UNIX (Amazon VPC)",
+                    "Windows",
+                    "Windows (Amazon VPC)"
+                  ],
                   "documentation": "\n        <p>\n        The Reserved Instances product description (ex: Windows or Unix/Linux).\n        </p>\n    ",
                   "xmlname": "productDescription"
                 },
                 "State": {
-                  "shape_name": "String",
+                  "shape_name": "ReservedInstanceState",
                   "type": "string",
+                  "enum": [
+                    "payment-pending",
+                    "active",
+                    "payment-failed",
+                    "retired"
+                  ],
                   "documentation": "\n        <p>\n        The state of the Reserved Instances purchase.\n        </p>\n    ",
                   "xmlname": "state"
                 },
@@ -9852,20 +10221,32 @@
                   "xmlname": "tagSet"
                 },
                 "InstanceTenancy": {
-                  "shape_name": "String",
+                  "shape_name": "Tenancy",
                   "type": "string",
+                  "enum": [
+                    "default",
+                    "dedicated"
+                  ],
                   "documentation": "\n        <p>\n        The tenancy of the reserved instance (ex: default or dedicated).\n        </p>\n    ",
                   "xmlname": "instanceTenancy"
                 },
                 "CurrencyCode": {
-                  "shape_name": "String",
+                  "shape_name": "CurrencyCodeValues",
                   "type": "string",
+                  "enum": [
+                    "USD"
+                  ],
                   "documentation": "\n        <p>\n        The currency of the reserved instance. Specified using ISO 4217 standard (e.g., USD, JPY).\n        </p>\n    ",
                   "xmlname": "currencyCode"
                 },
                 "OfferingType": {
-                  "shape_name": "String",
+                  "shape_name": "OfferingTypeValues",
                   "type": "string",
+                  "enum": [
+                    "Heavy Utilization",
+                    "Medium Utilization",
+                    "Light Utilization"
+                  ],
                   "documentation": "\n\tThe Reserved Instance offering type.\n   ",
                   "xmlname": "offeringType"
                 },
@@ -9877,8 +10258,11 @@
                     "type": "structure",
                     "members": {
                       "Frequency": {
-                        "shape_name": "String",
+                        "shape_name": "RecurringChargeFrequency",
                         "type": "string",
+                        "enum": [
+                          "Hourly"
+                        ],
                         "documentation": "\n     The frequency of the recurring charge.\n   ",
                         "xmlname": "frequency"
                       },
@@ -9995,8 +10379,14 @@
                   "xmlname": "updateDate"
                 },
                 "Status": {
-                  "shape_name": "String",
+                  "shape_name": "ListingStatus",
                   "type": "string",
+                  "enum": [
+                    "active",
+                    "pending",
+                    "cancelled",
+                    "closed"
+                  ],
                   "documentation": null,
                   "xmlname": "status"
                 },
@@ -10014,8 +10404,14 @@
                     "type": "structure",
                     "members": {
                       "State": {
-                        "shape_name": "String",
+                        "shape_name": "ListingState",
                         "type": "string",
+                        "enum": [
+                          "available",
+                          "sold",
+                          "cancelled",
+                          "pending"
+                        ],
                         "documentation": null,
                         "xmlname": "state"
                       },
@@ -10052,8 +10448,11 @@
                         "xmlname": "price"
                       },
                       "CurrencyCode": {
-                        "shape_name": "String",
+                        "shape_name": "CurrencyCodeValues",
                         "type": "string",
+                        "enum": [
+                          "USD"
+                        ],
                         "documentation": null,
                         "xmlname": "currencyCode"
                       },
@@ -10245,6 +10644,32 @@
                             "type": "integer",
                             "documentation": "\n      <p>\n      The number of modified Reserved Instances.\n      </p>\n    ",
                             "xmlname": "instanceCount"
+                          },
+                          "InstanceType": {
+                            "shape_name": "InstanceType",
+                            "type": "string",
+                            "enum": [
+                              "t1.micro",
+                              "m1.small",
+                              "m1.medium",
+                              "m1.large",
+                              "m1.xlarge",
+                              "m2.xlarge",
+                              "m2.2xlarge",
+                              "m2.4xlarge",
+                              "m3.xlarge",
+                              "m3.2xlarge",
+                              "c1.medium",
+                              "c1.xlarge",
+                              "hi1.4xlarge",
+                              "hs1.8xlarge",
+                              "cc1.4xlarge",
+                              "cc2.8xlarge",
+                              "cg1.4xlarge",
+                              "cr1.8xlarge"
+                            ],
+                            "documentation": "\n      <p>\n      The instance type for the modified Reserved Instances.\n      </p>\n    ",
+                            "xmlname": "instanceType"
                           }
                         },
                         "documentation": "\n      <p>\n      The configuration settings for the modified Reserved Instances.\n      </p>\n    ",
@@ -10368,8 +10793,14 @@
             "documentation": "\n        <p>\n        The Availability Zone in which the Reserved Instance can be used.\n        </p>\n    "
           },
           "ProductDescription": {
-            "shape_name": "String",
+            "shape_name": "RIProductDescription",
             "type": "string",
+            "enum": [
+              "Linux/UNIX",
+              "Linux/UNIX (Amazon VPC)",
+              "Windows",
+              "Windows (Amazon VPC)"
+            ],
             "documentation": "\n        <p>\n        The Reserved Instance product description.\n        </p>\n    "
           },
           "Filters": {
@@ -10404,13 +10835,22 @@
             "flattened": true
           },
           "InstanceTenancy": {
-            "shape_name": "String",
+            "shape_name": "Tenancy",
             "type": "string",
+            "enum": [
+              "default",
+              "dedicated"
+            ],
             "documentation": "\n        <p>\n        The tenancy of the Reserved Instance offering. A Reserved Instance with tenancy of dedicated will run on single-tenant hardware and can only be launched within a VPC.\n        </p>\n    "
           },
           "OfferingType": {
-            "shape_name": "String",
+            "shape_name": "OfferingTypeValues",
             "type": "string",
+            "enum": [
+              "Heavy Utilization",
+              "Medium Utilization",
+              "Light Utilization"
+            ],
             "documentation": "\n\tThe Reserved Instance offering type.\n   "
           },
           "NextToken": {
@@ -10514,26 +10954,44 @@
                   "xmlname": "fixedPrice"
                 },
                 "ProductDescription": {
-                  "shape_name": "String",
+                  "shape_name": "RIProductDescription",
                   "type": "string",
+                  "enum": [
+                    "Linux/UNIX",
+                    "Linux/UNIX (Amazon VPC)",
+                    "Windows",
+                    "Windows (Amazon VPC)"
+                  ],
                   "documentation": "\n        <p>\n        The Reserved Instances description (ex: Windows or Unix/Linux).\n        </p>\n    ",
                   "xmlname": "productDescription"
                 },
                 "InstanceTenancy": {
-                  "shape_name": "String",
+                  "shape_name": "Tenancy",
                   "type": "string",
+                  "enum": [
+                    "default",
+                    "dedicated"
+                  ],
                   "documentation": "\n        <p>\n        The tenancy of the reserved instance (ex: default or dedicated).\n        </p>\n    ",
                   "xmlname": "instanceTenancy"
                 },
                 "CurrencyCode": {
-                  "shape_name": "String",
+                  "shape_name": "CurrencyCodeValues",
                   "type": "string",
+                  "enum": [
+                    "USD"
+                  ],
                   "documentation": "\n        <p>\n        The currency of the reserved instance. Specified using ISO 4217 standard (e.g., USD, JPY).\n        </p>\n    ",
                   "xmlname": "currencyCode"
                 },
                 "OfferingType": {
-                  "shape_name": "String",
+                  "shape_name": "OfferingTypeValues",
                   "type": "string",
+                  "enum": [
+                    "Heavy Utilization",
+                    "Medium Utilization",
+                    "Light Utilization"
+                  ],
                   "documentation": "\n\tThe Reserved Instance offering type.\n   ",
                   "xmlname": "offeringType"
                 },
@@ -10545,8 +11003,11 @@
                     "type": "structure",
                     "members": {
                       "Frequency": {
-                        "shape_name": "String",
+                        "shape_name": "RecurringChargeFrequency",
                         "type": "string",
+                        "enum": [
+                          "Hourly"
+                        ],
                         "documentation": "\n     The frequency of the recurring charge.\n   ",
                         "xmlname": "frequency"
                       },
@@ -10734,8 +11195,12 @@
                         "xmlname": "networkInterfaceId"
                       },
                       "State": {
-                        "shape_name": "String",
+                        "shape_name": "RouteState",
                         "type": "string",
+                        "enum": [
+                          "active",
+                          "blackhole"
+                        ],
                         "documentation": null,
                         "xmlname": "state"
                       }
@@ -11218,8 +11683,11 @@
                   "xmlname": "userId"
                 },
                 "Group": {
-                  "shape_name": "String",
+                  "shape_name": "PermissionGroup",
                   "type": "string",
+                  "enum": [
+                    "all"
+                  ],
                   "documentation": "\n        <p>\n        The group that is allowed to create volumes from the snapshot (currently\n        supports \"all\").\n        </p>\n    ",
                   "xmlname": "group"
                 }
@@ -11244,8 +11712,12 @@
                   "xmlname": "productCode"
                 },
                 "ProductCodeType": {
-                  "shape_name": "String",
+                  "shape_name": "ProductCodeValues",
                   "type": "string",
+                  "enum": [
+                    "devpay",
+                    "marketplace"
+                  ],
                   "documentation": null,
                   "xmlname": "type"
                 }
@@ -11497,8 +11969,12 @@
                 "xmlname": "prefix"
               },
               "State": {
-                "shape_name": "String",
+                "shape_name": "DatafeedSubscriptionState",
                 "type": "string",
+                "enum": [
+                  "Active",
+                  "Inactive"
+                ],
                 "documentation": "\n        <p>\n        Specifies the state of the Spot Instance request.\n        </p>\n    ",
                 "xmlname": "state"
               },
@@ -11625,8 +12101,15 @@
                   "xmlname": "type"
                 },
                 "State": {
-                  "shape_name": "String",
+                  "shape_name": "SpotInstanceState",
                   "type": "string",
+                  "enum": [
+                    "open",
+                    "active",
+                    "closed",
+                    "cancelled",
+                    "failed"
+                  ],
                   "documentation": null,
                   "xmlname": "state"
                 },
@@ -12042,8 +12525,14 @@
                   "xmlname": "createTime"
                 },
                 "ProductDescription": {
-                  "shape_name": "String",
+                  "shape_name": "RIProductDescription",
                   "type": "string",
+                  "enum": [
+                    "Linux/UNIX",
+                    "Linux/UNIX (Amazon VPC)",
+                    "Windows",
+                    "Windows (Amazon VPC)"
+                  ],
                   "documentation": null,
                   "xmlname": "productDescription"
                 },
@@ -12246,8 +12735,14 @@
                   "xmlname": "instanceType"
                 },
                 "ProductDescription": {
-                  "shape_name": "String",
+                  "shape_name": "RIProductDescription",
                   "type": "string",
+                  "enum": [
+                    "Linux/UNIX",
+                    "Linux/UNIX (Amazon VPC)",
+                    "Windows",
+                    "Windows (Amazon VPC)"
+                  ],
                   "documentation": null,
                   "xmlname": "productDescription"
                 },
@@ -12365,8 +12860,12 @@
                   "xmlname": "subnetId"
                 },
                 "State": {
-                  "shape_name": "String",
+                  "shape_name": "SubnetState",
                   "type": "string",
+                  "enum": [
+                    "pending",
+                    "available"
+                  ],
                   "documentation": "\n        <p>\n        Describes the current state of the subnet.\n        The state of the subnet may be either\n        <code>pending</code> or\n        <code>available</code>.\n        </p>\n    ",
                   "xmlname": "state"
                 },
@@ -12517,9 +13016,15 @@
                     "dhcp-options",
                     "image",
                     "instance",
+                    "internet-gateway",
+                    "network-acl",
+                    "network-interface",
+                    "reserved-instances",
+                    "route-table",
                     "snapshot",
                     "spot-instances-request",
                     "subnet",
+                    "security-group",
                     "volume",
                     "vpc",
                     "vpn-connection",
@@ -12622,8 +13127,12 @@
                   "xmlname": "productCode"
                 },
                 "ProductCodeType": {
-                  "shape_name": "String",
+                  "shape_name": "ProductCodeValues",
                   "type": "string",
+                  "enum": [
+                    "devpay",
+                    "marketplace"
+                  ],
                   "documentation": null,
                   "xmlname": "type"
                 }
@@ -12737,8 +13246,13 @@
                   "type": "structure",
                   "members": {
                     "Status": {
-                      "shape_name": "String",
+                      "shape_name": "VolumeStatusInfoStatus",
                       "type": "string",
+                      "enum": [
+                        "ok",
+                        "impaired",
+                        "insufficient-data"
+                      ],
                       "documentation": null,
                       "xmlname": "status"
                     },
@@ -12750,8 +13264,12 @@
                         "type": "structure",
                         "members": {
                           "Name": {
-                            "shape_name": "String",
+                            "shape_name": "VolumeStatusName",
                             "type": "string",
+                            "enum": [
+                              "io-enabled",
+                              "io-performance"
+                            ],
                             "documentation": null,
                             "xmlname": "name"
                           },
@@ -12975,6 +13493,7 @@
                     "available",
                     "in-use",
                     "deleting",
+                    "deleted",
                     "error"
                   ],
                   "documentation": "\n        <p>\n        State of this volume (e.g., creating, available).\n        </p>\n    ",
@@ -13249,8 +13768,12 @@
                   "xmlname": "vpcId"
                 },
                 "State": {
-                  "shape_name": "String",
+                  "shape_name": "VpcState",
                   "type": "string",
+                  "enum": [
+                    "pending",
+                    "available"
+                  ],
                   "documentation": "\n        <p>\n        Describes the current state of the VPC.\n        The state of the subnet may be either\n        <code>pending</code> or\n        <code>available</code>.\n        </p>\n    ",
                   "xmlname": "state"
                 },
@@ -13293,8 +13816,12 @@
                   "xmlname": "tagSet"
                 },
                 "InstanceTenancy": {
-                  "shape_name": "String",
+                  "shape_name": "Tenancy",
                   "type": "string",
+                  "enum": [
+                    "default",
+                    "dedicated"
+                  ],
                   "documentation": "\n        <p>\n        The allowed tenancy of instances launched into the VPC.\n        </p>\n    ",
                   "xmlname": "instanceTenancy"
                 },
@@ -13394,8 +13921,14 @@
                   "xmlname": "vpnConnectionId"
                 },
                 "State": {
-                  "shape_name": "String",
+                  "shape_name": "VpnState",
                   "type": "string",
+                  "enum": [
+                    "pending",
+                    "available",
+                    "deleting",
+                    "deleted"
+                  ],
                   "documentation": "\n        <p>\n        Describes the current state of the VPN connection.\n        Valid values are\n        <code>pending</code>,\n        <code>available</code>,\n        <code>deleting</code>,\n        and <code>deleted</code>.\n        </p>\n    ",
                   "xmlname": "state"
                 },
@@ -13406,8 +13939,11 @@
                   "xmlname": "customerGatewayConfiguration"
                 },
                 "Type": {
-                  "shape_name": "String",
+                  "shape_name": "GatewayType",
                   "type": "string",
+                  "enum": [
+                    "ipsec.1"
+                  ],
                   "documentation": "\n        <p>\n        Specifies the type of VPN connection.\n        </p>\n    ",
                   "xmlname": "type"
                 },
@@ -13463,8 +13999,12 @@
                         "xmlname": "outsideIpAddress"
                       },
                       "Status": {
-                        "shape_name": "String",
+                        "shape_name": "TelemetryStatus",
                         "type": "string",
+                        "enum": [
+                          "UP",
+                          "DOWN"
+                        ],
                         "documentation": null,
                         "xmlname": "status"
                       },
@@ -13521,14 +14061,23 @@
                         "xmlname": "destinationCidrBlock"
                       },
                       "Source": {
-                        "shape_name": "String",
+                        "shape_name": "VpnStaticRouteSource",
                         "type": "string",
+                        "enum": [
+                          "Static"
+                        ],
                         "documentation": null,
                         "xmlname": "source"
                       },
                       "State": {
-                        "shape_name": "String",
+                        "shape_name": "VpnState",
                         "type": "string",
+                        "enum": [
+                          "pending",
+                          "available",
+                          "deleting",
+                          "deleted"
+                        ],
                         "documentation": null,
                         "xmlname": "state"
                       }
@@ -13629,14 +14178,23 @@
                   "xmlname": "vpnGatewayId"
                 },
                 "State": {
-                  "shape_name": "String",
+                  "shape_name": "VpnState",
                   "type": "string",
+                  "enum": [
+                    "pending",
+                    "available",
+                    "deleting",
+                    "deleted"
+                  ],
                   "documentation": "\n        <p>\n        Describes the current state of the VPN gateway.\n        Valid values are\n        <code>pending</code>,\n        <code>available</code>,\n        <code>deleting</code>,\n        and <code>deleted</code>.\n        </p>\n    ",
                   "xmlname": "state"
                 },
                 "Type": {
-                  "shape_name": "String",
+                  "shape_name": "GatewayType",
                   "type": "string",
+                  "enum": [
+                    "ipsec.1"
+                  ],
                   "documentation": "\n        <p>\n        Specifies the type of VPN connection the VPN gateway supports.\n        </p>\n    ",
                   "xmlname": "type"
                 },
@@ -13660,8 +14218,14 @@
                         "xmlname": "vpcId"
                       },
                       "State": {
-                        "shape_name": "String",
+                        "shape_name": "AttachmentStatus",
                         "type": "string",
+                        "enum": [
+                          "attaching",
+                          "attached",
+                          "detaching",
+                          "detached"
+                        ],
                         "documentation": "\n        <p>\n\n        </p>\n    ",
                         "xmlname": "state"
                       }
@@ -14155,8 +14719,12 @@
             "type": "structure",
             "members": {
               "Architecture": {
-                "shape_name": "String",
+                "shape_name": "ArchitectureValues",
                 "type": "string",
+                "enum": [
+                  "i386",
+                  "x86_64"
+                ],
                 "documentation": null
               },
               "GroupNames": {
@@ -14221,8 +14789,12 @@
                     "documentation": "\n        <p>\n        The name of the <a>PlacementGroup</a> in which an Amazon EC2 instance runs.  Placement\n        groups are primarily used for launching High Performance Computing instances\n        in the same group to ensure fast connection speeds.\n        </p>\n    "
                   },
                   "Tenancy": {
-                    "shape_name": "String",
+                    "shape_name": "Tenancy",
                     "type": "string",
+                    "enum": [
+                      "default",
+                      "dedicated"
+                    ],
                     "documentation": "\n        <p>\n        The allowed tenancy of instances launched into the VPC. A value of default means instances can be launched with any tenancy; a value of dedicated means all instances launched into the VPC will be launched as dedicated tenancy regardless of the tenancy assigned to the instance at launch.\n        </p>\n    "
                   }
                 },
@@ -14239,8 +14811,12 @@
                 "documentation": null
               },
               "InstanceInitiatedShutdownBehavior": {
-                "shape_name": "String",
+                "shape_name": "ShutdownBehavior",
                 "type": "string",
+                "enum": [
+                  "stop",
+                  "terminate"
+                ],
                 "documentation": null
               },
               "PrivateIpAddress": {
@@ -14263,8 +14839,13 @@
                   "type": "structure",
                   "members": {
                     "Format": {
-                      "shape_name": "String",
+                      "shape_name": "DiskImageFormat",
                       "type": "string",
+                      "enum": [
+                        "VMDK",
+                        "RAW",
+                        "VHD"
+                      ],
                       "documentation": null,
                       "required": true
                     },
@@ -14309,8 +14890,11 @@
             "flattened": true
           },
           "Platform": {
-            "shape_name": "String",
+            "shape_name": "PlatformValues",
             "type": "string",
+            "enum": [
+              "Windows"
+            ],
             "documentation": null,
             "required": true
           }
@@ -14368,8 +14952,13 @@
                           "type": "structure",
                           "members": {
                             "Format": {
-                              "shape_name": "String",
+                              "shape_name": "DiskImageFormat",
                               "type": "string",
+                              "enum": [
+                                "VMDK",
+                                "RAW",
+                                "VHD"
+                              ],
                               "documentation": null,
                               "required": true,
                               "xmlname": "format"
@@ -14455,8 +15044,11 @@
                     "xmlname": "instanceId"
                   },
                   "Platform": {
-                    "shape_name": "String",
+                    "shape_name": "PlatformValues",
                     "type": "string",
+                    "enum": [
+                      "Windows"
+                    ],
                     "documentation": null,
                     "xmlname": "platform"
                   },
@@ -14499,8 +15091,13 @@
                     "type": "structure",
                     "members": {
                       "Format": {
-                        "shape_name": "String",
+                        "shape_name": "DiskImageFormat",
                         "type": "string",
+                        "enum": [
+                          "VMDK",
+                          "RAW",
+                          "VHD"
+                        ],
                         "documentation": null,
                         "required": true,
                         "xmlname": "format"
@@ -14557,8 +15154,14 @@
                 "xmlname": "importVolume"
               },
               "State": {
-                "shape_name": "String",
+                "shape_name": "ConversionTaskState",
                 "type": "string",
+                "enum": [
+                  "active",
+                  "cancelling",
+                  "cancelled",
+                  "completed"
+                ],
                 "documentation": null,
                 "required": true,
                 "xmlname": "state"
@@ -14678,8 +15281,13 @@
             "type": "structure",
             "members": {
               "Format": {
-                "shape_name": "String",
+                "shape_name": "DiskImageFormat",
                 "type": "string",
+                "enum": [
+                  "VMDK",
+                  "RAW",
+                  "VHD"
+                ],
                 "documentation": null,
                 "required": true
               },
@@ -14770,8 +15378,13 @@
                           "type": "structure",
                           "members": {
                             "Format": {
-                              "shape_name": "String",
+                              "shape_name": "DiskImageFormat",
                               "type": "string",
+                              "enum": [
+                                "VMDK",
+                                "RAW",
+                                "VHD"
+                              ],
                               "documentation": null,
                               "required": true,
                               "xmlname": "format"
@@ -14857,8 +15470,11 @@
                     "xmlname": "instanceId"
                   },
                   "Platform": {
-                    "shape_name": "String",
+                    "shape_name": "PlatformValues",
                     "type": "string",
+                    "enum": [
+                      "Windows"
+                    ],
                     "documentation": null,
                     "xmlname": "platform"
                   },
@@ -14901,8 +15517,13 @@
                     "type": "structure",
                     "members": {
                       "Format": {
-                        "shape_name": "String",
+                        "shape_name": "DiskImageFormat",
                         "type": "string",
+                        "enum": [
+                          "VMDK",
+                          "RAW",
+                          "VHD"
+                        ],
                         "documentation": null,
                         "required": true,
                         "xmlname": "format"
@@ -14959,8 +15580,14 @@
                 "xmlname": "importVolume"
               },
               "State": {
-                "shape_name": "String",
+                "shape_name": "ConversionTaskState",
                 "type": "string",
+                "enum": [
+                  "active",
+                  "cancelling",
+                  "cancelled",
+                  "completed"
+                ],
                 "documentation": null,
                 "required": true,
                 "xmlname": "state"
@@ -15094,8 +15721,11 @@
                       "documentation": "\n        <p>\n        The AWS user ID of the user involved in this launch permission.\n        </p>\n    "
                     },
                     "Group": {
-                      "shape_name": "String",
+                      "shape_name": "PermissionGroup",
                       "type": "string",
+                      "enum": [
+                        "all"
+                      ],
                       "documentation": "\n        <p>\n        The AWS group of the user involved in this launch permission.\n        </p>\n        <p>\n        Available groups: <code>all</code>\n        </p>\n    "
                     }
                   },
@@ -15117,8 +15747,11 @@
                       "documentation": "\n        <p>\n        The AWS user ID of the user involved in this launch permission.\n        </p>\n    "
                     },
                     "Group": {
-                      "shape_name": "String",
+                      "shape_name": "PermissionGroup",
                       "type": "string",
+                      "enum": [
+                        "all"
+                      ],
                       "documentation": "\n        <p>\n        The AWS group of the user involved in this launch permission.\n        </p>\n        <p>\n        Available groups: <code>all</code>\n        </p>\n    "
                     }
                   },
@@ -15479,6 +16112,31 @@
                   "shape_name": "Integer",
                   "type": "integer",
                   "documentation": "\n      <p>\n      The number of modified Reserved Instances.\n      </p>\n    "
+                },
+                "InstanceType": {
+                  "shape_name": "InstanceType",
+                  "type": "string",
+                  "enum": [
+                    "t1.micro",
+                    "m1.small",
+                    "m1.medium",
+                    "m1.large",
+                    "m1.xlarge",
+                    "m2.xlarge",
+                    "m2.2xlarge",
+                    "m2.4xlarge",
+                    "m3.xlarge",
+                    "m3.2xlarge",
+                    "c1.medium",
+                    "c1.xlarge",
+                    "hi1.4xlarge",
+                    "hs1.8xlarge",
+                    "cc1.4xlarge",
+                    "cc2.8xlarge",
+                    "cg1.4xlarge",
+                    "cr1.8xlarge"
+                  ],
+                  "documentation": "\n      <p>\n      The instance type for the modified Reserved Instances.\n      </p>\n    "
                 }
               },
               "documentation": "\n      <p>\n      The configuration settings for the modified Reserved Instances.\n      </p>\n    ",
@@ -15507,7 +16165,7 @@
       "errors": [
 
       ],
-      "documentation": "\n        <p>\n        The ModifyReservedInstances operation modifies the Availability Zone,\n        instance count, or network platform (EC2-Classic or EC2-VPC) of your Reserved\n        Instances.\n        </p>\n    "
+      "documentation": "\n        <p>\n        The ModifyReservedInstances operation modifies the Availability Zone,\n        instance count, instance type, or network platform (EC2-Classic or EC2-VPC)\n        of your Reserved Instances.\n        </p>\n    "
     },
     "ModifySnapshotAttribute": {
       "name": "ModifySnapshotAttribute",
@@ -15581,8 +16239,11 @@
                       "documentation": "\n        <p>\n        The user ID of the user that can create volumes from the snapshot.\n        </p>\n    "
                     },
                     "Group": {
-                      "shape_name": "String",
+                      "shape_name": "PermissionGroup",
                       "type": "string",
+                      "enum": [
+                        "all"
+                      ],
                       "documentation": "\n        <p>\n        The group that is allowed to create volumes from the snapshot (currently\n        supports \"all\").\n        </p>\n    "
                     }
                   },
@@ -15604,8 +16265,11 @@
                       "documentation": "\n        <p>\n        The user ID of the user that can create volumes from the snapshot.\n        </p>\n    "
                     },
                     "Group": {
-                      "shape_name": "String",
+                      "shape_name": "PermissionGroup",
                       "type": "string",
+                      "enum": [
+                        "all"
+                      ],
                       "documentation": "\n        <p>\n        The group that is allowed to create volumes from the snapshot (currently\n        supports \"all\").\n        </p>\n    "
                     }
                   },
@@ -15751,8 +16415,13 @@
                   "type": "structure",
                   "members": {
                     "State": {
-                      "shape_name": "String",
+                      "shape_name": "MonitoringState",
                       "type": "string",
+                      "enum": [
+                        "disabled",
+                        "enabled",
+                        "pending"
+                      ],
                       "documentation": "\n        <p>\n        The state of monitoring on an Amazon EC2 instance (ex: enabled,\n        disabled).\n        </p>\n    ",
                       "xmlname": "state"
                     }
@@ -15808,8 +16477,11 @@
                 "documentation": null
               },
               "CurrencyCode": {
-                "shape_name": "String",
+                "shape_name": "CurrencyCodeValues",
                 "type": "string",
+                "enum": [
+                  "USD"
+                ],
                 "documentation": null
               }
             },
@@ -15896,8 +16568,12 @@
             "documentation": "\n        The description describing the new AMI.\n   "
           },
           "Architecture": {
-            "shape_name": "String",
+            "shape_name": "ArchitectureValues",
             "type": "string",
+            "enum": [
+              "i386",
+              "x86_64"
+            ],
             "documentation": "\n        The architecture of the image.\n        <p>\n        Valid Values: <code>i386</code>, <code>x86_64</code>\n        </p>\n   "
           },
           "KernelId": {
@@ -16285,8 +16961,12 @@
             "flattened": true
           },
           "Status": {
-            "shape_name": "String",
+            "shape_name": "ReportStatusType",
             "type": "string",
+            "enum": [
+              "ok",
+              "impaired"
+            ],
             "documentation": null
           },
           "StartTime": {
@@ -16303,8 +16983,19 @@
             "shape_name": "ReasonCodesList",
             "type": "list",
             "members": {
-              "shape_name": "String",
+              "shape_name": "ReportInstanceReasonCodes",
               "type": "string",
+              "enum": [
+                "instance-stuck-in-state",
+                "unresponsive",
+                "not-accepting-credentials",
+                "password-not-available",
+                "performance-network",
+                "performance-instance-store",
+                "performance-ebs-volume",
+                "performance-other",
+                "other"
+              ],
               "documentation": null,
               "xmlname": "ReasonCode"
             },
@@ -16695,8 +17386,15 @@
                   "xmlname": "type"
                 },
                 "State": {
-                  "shape_name": "String",
+                  "shape_name": "SpotInstanceState",
                   "type": "string",
+                  "enum": [
+                    "open",
+                    "active",
+                    "closed",
+                    "cancelled",
+                    "failed"
+                  ],
                   "documentation": null,
                   "xmlname": "state"
                 },
@@ -17112,8 +17810,14 @@
                   "xmlname": "createTime"
                 },
                 "ProductDescription": {
-                  "shape_name": "String",
+                  "shape_name": "RIProductDescription",
                   "type": "string",
+                  "enum": [
+                    "Linux/UNIX",
+                    "Linux/UNIX (Amazon VPC)",
+                    "Windows",
+                    "Windows (Amazon VPC)"
+                  ],
                   "documentation": null,
                   "xmlname": "productDescription"
                 },
@@ -17182,8 +17886,11 @@
             "required": true
           },
           "Attribute": {
-            "shape_name": "String",
+            "shape_name": "ResetImageAttributeName",
             "type": "string",
+            "enum": [
+              "launchPermission"
+            ],
             "documentation": "\n        <p>\n        The name of the attribute being reset.\n        </p>\n        <p>\n        Available attribute names: <code>launchPermission</code>\n        </p>\n    ",
             "required": true
           }
@@ -17678,8 +18385,12 @@
                 "documentation": "\n        <p>\n        The name of the <a>PlacementGroup</a> in which an Amazon EC2 instance runs.  Placement\n        groups are primarily used for launching High Performance Computing instances\n        in the same group to ensure fast connection speeds.\n        </p>\n    "
               },
               "Tenancy": {
-                "shape_name": "String",
+                "shape_name": "Tenancy",
                 "type": "string",
+                "enum": [
+                  "default",
+                  "dedicated"
+                ],
                 "documentation": "\n        <p>\n        The allowed tenancy of instances launched into the VPC. A value of default means instances can be launched with any tenancy; a value of dedicated means all instances launched into the VPC will be launched as dedicated tenancy regardless of the tenancy assigned to the instance at launch.\n        </p>\n    "
               }
             },
@@ -17784,8 +18495,12 @@
             "documentation": "\n        <p>\n        Specifies whether the instance can be terminated using the APIs.\n        You must modify this attribute before you can terminate any \"locked\"\n        instances from the APIs.\n        </p>\n    "
           },
           "InstanceInitiatedShutdownBehavior": {
-            "shape_name": "String",
+            "shape_name": "ShutdownBehavior",
             "type": "string",
+            "enum": [
+              "stop",
+              "terminate"
+            ],
             "documentation": "\n        <p>\n        Specifies whether the instance's Amazon EBS volumes are stopped or terminated\n        when the instance is shut down.\n        </p>\n    "
           },
           "License": {
@@ -18070,8 +18785,12 @@
                         "xmlname": "productCode"
                       },
                       "ProductCodeType": {
-                        "shape_name": "String",
+                        "shape_name": "ProductCodeValues",
                         "type": "string",
+                        "enum": [
+                          "devpay",
+                          "marketplace"
+                        ],
                         "documentation": null,
                         "xmlname": "type"
                       }
@@ -18131,8 +18850,12 @@
                       "xmlname": "groupName"
                     },
                     "Tenancy": {
-                      "shape_name": "String",
+                      "shape_name": "Tenancy",
                       "type": "string",
+                      "enum": [
+                        "default",
+                        "dedicated"
+                      ],
                       "documentation": "\n        <p>\n        The allowed tenancy of instances launched into the VPC. A value of default means instances can be launched with any tenancy; a value of dedicated means all instances launched into the VPC will be launched as dedicated tenancy regardless of the tenancy assigned to the instance at launch.\n        </p>\n    ",
                       "xmlname": "tenancy"
                     }
@@ -18153,8 +18876,11 @@
                   "xmlname": "ramdiskId"
                 },
                 "Platform": {
-                  "shape_name": "String",
+                  "shape_name": "PlatformValues",
                   "type": "string",
+                  "enum": [
+                    "Windows"
+                  ],
                   "documentation": "\n        <p>\n        Platform of the instance (e.g., Windows).\n        </p>\n   ",
                   "xmlname": "platform"
                 },
@@ -18163,8 +18889,13 @@
                   "type": "structure",
                   "members": {
                     "State": {
-                      "shape_name": "String",
+                      "shape_name": "MonitoringState",
                       "type": "string",
+                      "enum": [
+                        "disabled",
+                        "enabled",
+                        "pending"
+                      ],
                       "documentation": "\n        <p>\n        The state of monitoring on an Amazon EC2 instance (ex: enabled,\n        disabled).\n        </p>\n    ",
                       "xmlname": "state"
                     }
@@ -18217,14 +18948,22 @@
                   "xmlname": "stateReason"
                 },
                 "Architecture": {
-                  "shape_name": "String",
+                  "shape_name": "ArchitectureValues",
                   "type": "string",
+                  "enum": [
+                    "i386",
+                    "x86_64"
+                  ],
                   "documentation": "\n        <p>\n        The architecture of this instance.\n        </p>\n    ",
                   "xmlname": "architecture"
                 },
                 "RootDeviceType": {
-                  "shape_name": "String",
+                  "shape_name": "DeviceType",
                   "type": "string",
+                  "enum": [
+                    "ebs",
+                    "instance-store"
+                  ],
                   "documentation": "\n        <p>\n        The root device type used by the AMI. The AMI can use an Amazon EBS or\n        instance store root device.\n        </p>\n    ",
                   "xmlname": "rootDeviceType"
                 },
@@ -18258,8 +18997,14 @@
                             "xmlname": "volumeId"
                           },
                           "Status": {
-                            "shape_name": "String",
+                            "shape_name": "AttachmentStatus",
                             "type": "string",
+                            "enum": [
+                              "attaching",
+                              "attached",
+                              "detaching",
+                              "detached"
+                            ],
                             "documentation": "\n        <p>\n        The status of the EBS volume.\n        </p>\n    ",
                             "xmlname": "status"
                           },
@@ -18297,8 +19042,11 @@
                   "xmlname": "virtualizationType"
                 },
                 "InstanceLifecycle": {
-                  "shape_name": "String",
+                  "shape_name": "InstanceLifecycleType",
                   "type": "string",
+                  "enum": [
+                    "spot"
+                  ],
                   "documentation": "\n        <p>\n\n        </p>\n    ",
                   "xmlname": "instanceLifecycle"
                 },
@@ -18434,8 +19182,14 @@
                         "xmlname": "ownerId"
                       },
                       "Status": {
-                        "shape_name": "String",
+                        "shape_name": "NetworkInterfaceStatus",
                         "type": "string",
+                        "enum": [
+                          "available",
+                          "attaching",
+                          "in-use",
+                          "detaching"
+                        ],
                         "documentation": null,
                         "xmlname": "status"
                       },
@@ -18500,8 +19254,14 @@
                             "xmlname": "deviceIndex"
                           },
                           "Status": {
-                            "shape_name": "String",
+                            "shape_name": "AttachmentStatus",
                             "type": "string",
+                            "enum": [
+                              "attaching",
+                              "attached",
+                              "detaching",
+                              "detached"
+                            ],
                             "documentation": null,
                             "xmlname": "status"
                           },
@@ -19092,8 +19852,13 @@
                   "type": "structure",
                   "members": {
                     "State": {
-                      "shape_name": "String",
+                      "shape_name": "MonitoringState",
                       "type": "string",
+                      "enum": [
+                        "disabled",
+                        "enabled",
+                        "pending"
+                      ],
                       "documentation": "\n        <p>\n        The state of monitoring on an Amazon EC2 instance (ex: enabled,\n        disabled).\n        </p>\n    ",
                       "xmlname": "state"
                     }
