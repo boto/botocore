@@ -53,6 +53,9 @@ XMLBODY6 = ('<VersioningConfiguration>'
             '<MfaDelete>Enabled</MfaDelete>'
             '<Status>Enabled</Status>'
             '</VersioningConfiguration>')
+XMLBODY7 = ('<Delete><Object><Key>foobar</Key>'
+           '</Object><Object><Key>fiebaz</Key></Object>'
+            '</Delete>')
 
 POLICY = ('{"Version": "2008-10-17","Statement": [{"Sid": "AddPerm",'
           '"Effect": "Allow","Principal": {"AWS": "*"},'
@@ -158,6 +161,30 @@ class TestS3Operations(BaseEnvVar):
         headers = {'Content-MD5': 'uj9D08gqRQUY0al4Po043w=='}
         self.assertEqual(params['uri_params'], uri_params)
         self.assertEqual(params['payload'].getvalue(), XMLBODY4)
+        self.assertEqual(params['headers'], headers)
+
+    def test_delete_objects(self):
+        op = self.s3.get_operation('DeleteObjects')
+        delete = {"Objects": [
+                {
+                    "Key": "foobar"
+                    },
+                {
+                    "Key": "fiebaz"
+                    }
+                ]
+                  }
+        params = op.build_parameters(bucket=self.bucket_name,
+                                     delete=delete)
+        # There is a handler for the before-call event that will
+        # add the Content-MD5 header to the parameters if it is not
+        # already there.  We are going to fire the event here to
+        # simulate that and make sure the right header is added.
+        self.session.emit('before-call.s3.DeleteObjects', params=params)
+        uri_params = {'Bucket': self.bucket_name}
+        headers = {'Content-MD5': '1qryost37c7QBmno21C08w=='}
+        self.assertEqual(params['uri_params'], uri_params)
+        self.assertEqual(params['payload'].getvalue(), XMLBODY7)
         self.assertEqual(params['headers'], headers)
 
     def test_put_bucket_policy(self):
