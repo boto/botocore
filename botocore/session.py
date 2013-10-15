@@ -424,7 +424,7 @@ class Session(object):
 
         """
         log = logging.getLogger(logger_name)
-        log.setLevel(log_level)
+        log.setLevel(logging.DEBUG)
 
         ch = logging.StreamHandler(stream)
         ch.setLevel(log_level)
@@ -453,7 +453,7 @@ class Session(object):
             if it doesn't already exist.
         """
         log = logging.getLogger(logger_name)
-        log.setLevel(log_level)
+        log.setLevel(logging.DEBUG)
 
         # create console handler and set level to debug
         ch = logging.FileHandler(path)
