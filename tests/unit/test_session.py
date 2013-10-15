@@ -218,7 +218,7 @@ class SessionTest(BaseSessionTest):
     def test_general_purpose_logger(self, formatter, file_handler, get_logger):
         self.session.set_stream_logger('foo.bar', 'ERROR', format_string='foo')
         get_logger.assert_called_with('foo.bar')
-        get_logger.return_value.setLevel.assert_called_with('ERROR')
+        get_logger.return_value.setLevel.assert_called_with(logging.DEBUG)
         formatter.assert_called_with('foo')
 
     def test_register_with_unique_id(self):
