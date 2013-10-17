@@ -21,6 +21,8 @@
 # IN THE SOFTWARE.
 #
 import logging
+
+import six
 from requests import models
 from requests.sessions import REDIRECT_STATI
 
@@ -93,7 +95,16 @@ class AWSPreparedRequest(models.PreparedRequest):
             self.reset_stream()
 
     def reset_stream(self):
+        # Trying to reset a stream when there is a no stream will
+        # just immediately return.  It's not an error, it will produce
+        # the same result as if we had actually reset the stream (we'll send
+        # the entire bdoy contents again if we need to).
+        # Same case if the body is a string/bytes type.
+        if self.body is None or isinstance(self.body, six.text_type) or \
+                isinstance(self.body, six.binary_type):
+            return
         try:
+            logger.debug("Rewinding stream: %s", self.body)
             self.body.seek(0)
         except Exception as e:
             logger.debug("Unable to rewind stream: %s", e)
