@@ -269,8 +269,12 @@ class MaxAttemptsDecorator(BaseChecker):
             try:
                 return self._checker(attempt_number, response, caught_exception)
             except self._retryable_exceptions as e:
+                logger.debug("retry needed, retryable exception caught: %s",
+                             e, exc_info=True)
                 return True
         else:
+            # If we've exceeded the max attempts we just let the exception
+            # propogate if one has occurred.
             return self._checker(attempt_number, response, caught_exception)
 
 
@@ -279,7 +283,13 @@ class HTTPStatusCodeChecker(BaseChecker):
         self._status_code = status_code
 
     def _check_response(self, attempt_number, response):
-        return response[0].status_code == self._status_code
+        if response[0].status_code == self._status_code:
+            logger.debug(
+                "retry needed: retryable HTTP status code received: %s",
+                self._status_code)
+            return True
+        else:
+            return False
 
 
 class ServiceErrorCodeChecker(BaseChecker):
@@ -289,8 +299,12 @@ class ServiceErrorCodeChecker(BaseChecker):
 
     def _check_response(self, attempt_number, response):
         if response[0].status_code == self._status_code:
-            return any([e.get('Code') == self._error_code
-                        for e in response[1].get('Errors', [])])
+            if any([e.get('Code') == self._error_code
+                    for e in response[1].get('Errors', [])]):
+                logger.debug(
+                    "retry needed: matching HTTP status and error code seen: "
+                    "%s, %s", self._status_code, self._error_code)
+                return True
         return False
 
 
@@ -321,8 +335,9 @@ class CRC32Checker(BaseChecker):
         else:
             actual_crc32 = crc32(response[0].content) & 0xffffffff
             if not actual_crc32 == int(expected_crc):
-                logger.debug("crc32 check failed, expected != actual: "
-                             "%s != %s", int(expected_crc), actual_crc32)
+                logger.debug(
+                    "retry needed: crc32 check failed, expected != actual: "
+                    "%s != %s", int(expected_crc), actual_crc32)
                 raise ChecksumError(checksum_type='crc32',
                                     expected_checksum=int(expected_crc),
                                     actual_checksum=actual_crc32)
