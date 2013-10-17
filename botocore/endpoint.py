@@ -83,8 +83,8 @@ class Endpoint(object):
                 # Parts of the auth signing code aren't thread safe (things
                 # that manipulate .auth_path), so we're using a lock here to
                 # prevent race conditions.
-                event = self.session.create_event('before-auth',
-                                                self.service.endpoint_prefix)
+                event = self.session.create_event(
+                    'before-auth', self.service.endpoint_prefix)
                 self.session.emit(event, endpoint=self,
                                 request=request, auth=self.auth)
                 self.auth.add_auth(request=request)
@@ -96,6 +96,11 @@ class Endpoint(object):
         response, exception = self._get_response(request, operation, attempts)
         while self._needs_retry(attempts, operation, response, exception):
             attempts += 1
+            # If there is a stream associated with the request, we need
+            # to reset it before attempting to send the request again.
+            # This will ensure that we resend the entire contents of the
+            # body.
+            request.reset_stream()
             response, exception = self._get_response(request, operation,
                                                      attempts)
         return response
