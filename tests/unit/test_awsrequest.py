@@ -72,7 +72,7 @@ class TestAWSRequest(unittest.TestCase):
             fake_response.status_code = 307
 
             # Then requests calls our reset_stream hook.
-            self.prepared_request.reset_stream(fake_response)
+            self.prepared_request.reset_stream_on_redirect(fake_response)
 
             # The stream should now be reset.
             self.assertEqual(body.tell(), 0)
@@ -93,7 +93,7 @@ class TestAWSRequest(unittest.TestCase):
 
             # Then requests calls our reset_stream hook.
             with self.assertRaises(UnseekableStreamError):
-                self.prepared_request.reset_stream(fake_response)
+                self.prepared_request.reset_stream_on_redirect(fake_response)
 
 
 if __name__ == "__main__":

@@ -83,14 +83,18 @@ class AWSPreparedRequest(models.PreparedRequest):
     def __init__(self, original_request):
         self.original = original_request
         super(AWSPreparedRequest, self).__init__()
-        self.hooks.setdefault('response', []).append(self.reset_stream)
+        self.hooks.setdefault('response', []).append(
+            self.reset_stream_on_redirect)
 
-    def reset_stream(self, response, **kwargs):
+    def reset_stream_on_redirect(self, response, **kwargs):
         if response.status_code in REDIRECT_STATI and \
                 isinstance(self.body, file_type):
             logger.debug("Redirect received, rewinding stream: %s", self.body)
-            try:
-                self.body.seek(0)
-            except Exception as e:
-                logger.debug("Unable to rewind stream: %s", e)
-                raise UnseekableStreamError(stream_object=self.body)
+            self.reset_stream()
+
+    def reset_stream(self):
+        try:
+            self.body.seek(0)
+        except Exception as e:
+            logger.debug("Unable to rewind stream: %s", e)
+            raise UnseekableStreamError(stream_object=self.body)
