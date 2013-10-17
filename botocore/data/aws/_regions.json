@@ -25,5 +25,8 @@
     },
     "us-gov-west-1": {
         "description": "AWS GovCloud"
+    },
+    "fips-us-gov-west-1": {
+        "description": "AWS GovCloud (FIPS 140-2) S3 Only"
     }
 }

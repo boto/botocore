@@ -1476,7 +1476,8 @@
             "ap-southeast-2": "http://ap-southeast-2.elasticmapreduce.amazonaws.com/",
             "us-west-2": "http://us-west-2.elasticmapreduce.amazonaws.com/",
             "us-west-1": "http://us-west-1.elasticmapreduce.amazonaws.com/",
-            "eu-west-1": "http://eu-west-1.elasticmapreduce.amazonaws.com/"
+            "eu-west-1": "http://eu-west-1.elasticmapreduce.amazonaws.com/",
+            "us-gov-west-1": null
         },
         "protocols": [
             "https"

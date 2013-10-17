@@ -173,6 +173,7 @@ BUILTIN_HANDLERS = [
     ('before-call.s3.PutBucketTagging', calculate_md5),
     ('before-call.s3.PutBucketLifecycle', calculate_md5),
     ('before-call.s3.PutBucketCors', calculate_md5),
+    ('before-call.s3.DeleteObjects', calculate_md5),
     ('before-auth.s3', fix_s3_host),
     ('service-created', register_retries_for_service),
 ]

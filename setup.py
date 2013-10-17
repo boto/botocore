@@ -17,9 +17,9 @@ packages = [
     'botocore',
 ]
 
-requires = ['requests==1.2.3',
+requires = ['requests==2.0.0',
             'six>=1.1.0',
-            'jmespath==0.0.3',
+            'jmespath==0.1.0',
             'python-dateutil>=2.1']
 
 if sys.version_info[:2] == (2, 6):
