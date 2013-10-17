@@ -9,7 +9,9 @@
         "ap-southeast-2": "https://s3-ap-southeast-2.amazonaws.com/",
         "us-west-2": "https://s3-us-west-2.amazonaws.com/",
         "us-west-1": "https://s3-us-west-1.amazonaws.com/",
-        "eu-west-1": "https://s3-eu-west-1.amazonaws.com/"
+        "eu-west-1": "https://s3-eu-west-1.amazonaws.com/",
+        "us-gov-west-1": "https://s3-us-gov-west-1.amazonaws.com/",
+        "fips-gov-west-1": "https://s3-fips-us-gov-west-1.amazonaws.com/"
       },
       "protocols": [
         "https",
