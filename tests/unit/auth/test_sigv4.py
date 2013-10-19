@@ -140,8 +140,8 @@ def _test_signature_version_4(test_case):
     test_case = _SignatureTestCase(test_case)
     request = create_request_from_raw_request(test_case.raw_request)
 
-    auth = SigV4Auth(test_case.credentials, 'host', 'us-east-1')
-    auth.timestamp = TIMESTAMP
+    auth = SigV4Auth(test_case.credentials, 'host', 'us-east-1',
+                     use_timestamp=TIMESTAMP)
 
     actual_canonical_request = auth.canonical_request(request)
     assert_equal(actual_canonical_request, test_case.canonical_request,
