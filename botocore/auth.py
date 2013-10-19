@@ -125,12 +125,19 @@ class SigV4Auth(object):
     Sign a request with Signature V4.
     """
 
-    def __init__(self, credentials, service_name=None, region_name=None):
+    def __init__(self, credentials, service_name=None, region_name=None,
+                 use_timestamp=None):
         self.credentials = credentials
         if self.credentials is None:
             raise NoCredentialsError
-        self.now = datetime.datetime.utcnow()
-        self.timestamp = self.now.strftime('%Y%m%dT%H%M%SZ')
+        # We initialize these value here so the unit tests can have
+        # valid values.  But these will get overriden in ``add_auth``
+        # later for real requests.
+        self._use_timestamp = use_timestamp
+        if self._use_timestamp:
+            self.timestamp = self._use_timestamp
+        else:
+            self.timestamp = None
         self.region_name = region_name
         self.service_name = service_name
 
@@ -243,6 +250,10 @@ class SigV4Auth(object):
         return self._sign(k_signing, string_to_sign, hex=True)
 
     def add_auth(self, request):
+        # Create a new timestamp for each signing event
+        if not self._use_timestamp:
+            now = datetime.datetime.utcnow()
+            self.timestamp = now.strftime('%Y%m%dT%H%M%SZ')
         # This could be a retry.  Make sure the previous
         # authorization header is removed first.
         if 'Authorization' in request.headers:
