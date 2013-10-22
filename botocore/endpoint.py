@@ -253,19 +253,26 @@ def get_endpoint(service, region_name, endpoint_url):
         auth = _get_auth(service.signature_version,
                          credentials=service.session.get_credentials(),
                          service_name=service_name,
-                         region_name=region_name)
+                         region_name=region_name,
+                         service_object=service)
     proxies = _get_proxies(endpoint_url)
     return cls(service, region_name, endpoint_url, auth=auth, proxies=proxies)
 
 
-def _get_auth(signature_version, credentials, service_name, region_name):
+def _get_auth(signature_version, credentials, service_name, region_name,
+              service_object):
     cls = AUTH_TYPE_MAPS.get(signature_version)
     if cls is None:
         raise UnknownSignatureVersionError(signature_version=signature_version)
     else:
-        return cls(credentials=credentials,
-                   service_name=service_name,
-                   region_name=region_name)
+        kwargs = {'credentials': credentials}
+        if cls.REQUIRES_REGION:
+            if region_name is None:
+                envvar_name = service_object.session.env_vars['region'][1]
+                raise botocore.exceptions.NoRegionError(env_var=envvar_name)
+            kwargs['region_name'] = region_name
+            kwargs['service_name'] = service_name
+        return cls(**kwargs)
 
 
 SERVICE_TO_ENDPOINT = {

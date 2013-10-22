@@ -40,7 +40,7 @@ class TestSignatureVersion3(unittest.TestCase):
         self.secret_key = 'secret_key'
         self.credentials = botocore.credentials.Credentials(self.access_key,
                                                             self.secret_key)
-        self.auth = botocore.auth.SigV3Auth(self.credentials, None, None)
+        self.auth = botocore.auth.SigV3Auth(self.credentials)
 
     def test_signature_with_date_headers(self):
         request = AWSRequest()
