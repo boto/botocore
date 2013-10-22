@@ -75,6 +75,13 @@ class TestService(BaseSessionTest):
         with self.assertRaises(botocore.exceptions.NoRegionError):
             service.get_endpoint(endpoint_url='https://wherever.i.want.com')
 
+    def test_region_required_for_non_global_endpoint(self):
+        # If you don't provide an endpoint_url, than you need to
+        # provide a region_name.
+        service = self.session.get_service('ec2')
+        with self.assertRaises(botocore.exceptions.NoRegionError):
+            service.get_endpoint()
+
 
 if __name__ == "__main__":
     unittest.main()
