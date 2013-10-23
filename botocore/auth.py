@@ -134,10 +134,10 @@ class SigV4Auth(BaseSigner):
         self.credentials = credentials
         if self.credentials is None:
             raise NoCredentialsError
-        now = datetime.datetime.utcnow()
         # We initialize these value here so the unit tests can have
         # valid values.  But these will get overriden in ``add_auth``
         # later for real requests.
+        now = datetime.datetime.utcnow()
         self.timestamp = now.strftime('%Y%m%dT%H%M%SZ')
         self._region_name = region_name
         self._service_name = service_name
@@ -252,9 +252,8 @@ class SigV4Auth(BaseSigner):
 
     def add_auth(self, request):
         # Create a new timestamp for each signing event
-        if not self._use_timestamp:
-            now = datetime.datetime.utcnow()
-            self.timestamp = now.strftime('%Y%m%dT%H%M%SZ')
+        now = datetime.datetime.utcnow()
+        self.timestamp = now.strftime('%Y%m%dT%H%M%SZ')
         # This could be a retry.  Make sure the previous
         # authorization header is removed first.
         if 'Authorization' in request.headers:
