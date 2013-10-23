@@ -139,8 +139,8 @@ class SigV4Auth(BaseSigner):
         # later for real requests.
         now = datetime.datetime.utcnow()
         self.timestamp = now.strftime('%Y%m%dT%H%M%SZ')
-        self.region_name = region_name
-        self.service_name = service_name
+        self._region_name = region_name
+        self._service_name = service_name
 
     def _sign(self, key, msg, hex=False):
         if hex:
