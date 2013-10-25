@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 #
+import os
 import re
 import logging
 
@@ -40,6 +41,8 @@ _number_cap_regex = re.compile('([a-z])([0-9]+)')
 _end_cap_regex = re.compile('([a-z0-9])([A-Z])')
 
 ScalarTypes = ('string', 'integer', 'boolean', 'timestamp', 'float', 'double')
+
+BOTOCORE_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
 def xform_name(name, sep='_'):

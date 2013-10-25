@@ -18,9 +18,10 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
+   :glob:
 
    tutorial/index
-   reference/index
+   reference/*
    topics/index
    development/index
 
