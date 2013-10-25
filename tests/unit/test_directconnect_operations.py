@@ -34,8 +34,8 @@ class TestDirectconnectOperations(unittest.TestCase):
     def test_create_connection(self):
         op = self.dc.get_operation('CreateConnection')
         params = op.build_parameters(connection_name='foobarconn',
-                                     offering_id='foobaroffer')
-        result = {'offeringId': 'foobaroffer',
+                                     location='location', bandwidth='bandwidth')
+        result = {'location': 'location', 'bandwidth': 'bandwidth',
                   'connectionName': 'foobarconn'}
         self.assertEqual(params, result)
 
