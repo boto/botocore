@@ -26,6 +26,9 @@ import botocore.exceptions
 
 
 class TestService(BaseSessionTest):
+    def setUp(self):
+        super(TestService, self).setUp()
+        self.environ['AWS_CONFIG_FILE'] = 'nowhere-foobar'
 
     def test_get_endpoint_with_no_region(self):
         # Test global endpoint service such as iam.
