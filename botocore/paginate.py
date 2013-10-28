@@ -105,17 +105,21 @@ class Paginator(object):
 
 class PageIterator(object):
     def __init__(self, operation, input_token, output_token, more_results,
-                 result_key, max_items, starting_token, endpoint, op_kwargs):
+                 result_keys, max_items, starting_token, endpoint, op_kwargs):
         self._operation = operation
         self._input_token = input_token
         self._output_token = output_token
         self._more_results = more_results
-        self._result_key = result_key
+        self._result_keys = result_keys
         self._max_items = max_items
         self._starting_token = starting_token
         self._endpoint = endpoint
         self._op_kwargs = op_kwargs
         self._resume_token = None
+
+    @property
+    def result_keys(self):
+        return self._result_keys
 
     @property
     def resume_token(self):
@@ -135,7 +139,7 @@ class PageIterator(object):
         # The number of items from result_key we've seen so far.
         total_items = 0
         first_request = True
-        primary_result_key = self._result_key[0]
+        primary_result_key = self.result_keys[0]
         starting_truncation = 0
         self._inject_starting_token(current_kwargs)
         while True:
@@ -205,7 +209,7 @@ class PageIterator(object):
         # We also need to truncate any secondary result keys
         # because they were not truncated in the previous last
         # response.
-        for token in self._result_key:
+        for token in self.result_keys:
             if token == primary_result_key:
                 continue
             parsed[token] = []
@@ -241,9 +245,9 @@ class PageIterator(object):
         return next_tokens
 
     def result_key_iters(self):
-        teed_results = tee(self, len(self._result_key))
+        teed_results = tee(self, len(self.result_keys))
         return [ResultKeyIterator(i, result_key) for i, result_key
-                in zip(teed_results, self._result_key)]
+                in zip(teed_results, self.result_keys)]
 
     def build_full_result(self):
         iterators = self.result_key_iters()
