@@ -1,18 +1,18 @@
 {
-    "api_version": "2013-08-26",
+    "api_version": "2013-09-27",
     "type": "rest-xml",
     "signature_version": "v4",
     "service_full_name": "Amazon CloudFront",
     "service_abbreviation": "CloudFront",
     "global_endpoint": "cloudfront.amazonaws.com",
     "endpoint_prefix": "cloudfront",
-    "xmlnamespace": "http://cloudfront.amazonaws.com/doc/2013-08-26/",
+    "xmlnamespace": "http://cloudfront.amazonaws.com/doc/2013-09-27/",
     "documentation": "\n  ",
     "operations": {
         "CreateCloudFrontOriginAccessIdentity": {
-            "name": "CreateCloudFrontOriginAccessIdentity2013_08_26",
+            "name": "CreateCloudFrontOriginAccessIdentity2013_09_27",
             "http": {
-                "uri": "/2013-08-26/origin-access-identity/cloudfront",
+                "uri": "/2013-09-27/origin-access-identity/cloudfront",
                 "method": "POST",
                 "response_code": 201
             },
@@ -169,9 +169,9 @@
             "documentation": "\n    Create a new origin access identity.\n  "
         },
         "CreateDistribution": {
-            "name": "CreateDistribution2013_08_26",
+            "name": "CreateDistribution2013_09_27",
             "http": {
-                "uri": "/2013-08-26/distribution",
+                "uri": "/2013-09-27/distribution",
                 "method": "POST",
                 "response_code": 201
             },
@@ -415,6 +415,39 @@
                                         "type": "long",
                                         "documentation": "\n    The minimum amount of time that you want objects to stay in CloudFront\n    caches before CloudFront queries your origin to see whether the object\n    has been updated.You can specify a value from 0 to 3,153,600,000\n    seconds (100 years).\n  ",
                                         "required": true
+                                    },
+                                    "AllowedMethods": {
+                                        "shape_name": "AllowedMethods",
+                                        "type": "structure",
+                                        "members": {
+                                            "Quantity": {
+                                                "shape_name": "integer",
+                                                "type": "integer",
+                                                "documentation": "\n\tThe number of HTTP methods that you want CloudFront to forward to your origin. \n\tValid values are 2 (for GET and HEAD requests) and 7 (for DELETE, GET, HEAD, \n\tOPTIONS, PATCH, POST, and PUT requests).\n   ",
+                                                "required": true
+                                            },
+                                            "Items": {
+                                                "shape_name": "AllowedMethodsList",
+                                                "type": "list",
+                                                "members": {
+                                                    "shape_name": "Method",
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "GET",
+                                                        "HEAD",
+                                                        "POST",
+                                                        "PUT",
+                                                        "PATCH",
+                                                        "OPTIONS",
+                                                        "DELETE"
+                                                    ],
+                                                    "documentation": null,
+                                                    "xmlname": "Method"
+                                                },
+                                                "documentation": "\n\tA complex type that contains the HTTP methods that you want \n\tCloudFront to process and forward to your origin. \n   "
+                                            }
+                                        },
+                                        "documentation": "\n\tA complex type that controls which HTTP methods CloudFront processes and \n\tforwards to your Amazon S3 bucket or your custom origin. There are two \n\toptions:\n\t- CloudFront forwards only GET and HEAD requests.\n\t- CloudFront forwards DELETE, GET, HEAD, OPTIONS, PATCH, POST, and PUT\n\trequests.\n\tIf you choose the second option, you may need to restrict access to your \n\tAmazon S3 bucket or to your custom origin so users can't perform operations \n\tthat you don't want them to. For example, you may not want users to have \n\tpermission to delete objects from your origin.\n   "
                                     }
                                 },
                                 "documentation": "\n    A complex type that describes the default cache behavior if you do not\n    specify a CacheBehavior element or if files don't match any of the values\n    of PathPattern in CacheBehavior elements.You must create exactly\n    one default cache behavior.\n  ",
@@ -552,6 +585,39 @@
                                                     "type": "long",
                                                     "documentation": "\n    The minimum amount of time that you want objects to stay in CloudFront\n    caches before CloudFront queries your origin to see whether the object\n    has been updated.You can specify a value from 0 to 3,153,600,000\n    seconds (100 years).\n  ",
                                                     "required": true
+                                                },
+                                                "AllowedMethods": {
+                                                    "shape_name": "AllowedMethods",
+                                                    "type": "structure",
+                                                    "members": {
+                                                        "Quantity": {
+                                                            "shape_name": "integer",
+                                                            "type": "integer",
+                                                            "documentation": "\n\tThe number of HTTP methods that you want CloudFront to forward to your origin. \n\tValid values are 2 (for GET and HEAD requests) and 7 (for DELETE, GET, HEAD, \n\tOPTIONS, PATCH, POST, and PUT requests).\n   ",
+                                                            "required": true
+                                                        },
+                                                        "Items": {
+                                                            "shape_name": "AllowedMethodsList",
+                                                            "type": "list",
+                                                            "members": {
+                                                                "shape_name": "Method",
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "GET",
+                                                                    "HEAD",
+                                                                    "POST",
+                                                                    "PUT",
+                                                                    "PATCH",
+                                                                    "OPTIONS",
+                                                                    "DELETE"
+                                                                ],
+                                                                "documentation": null,
+                                                                "xmlname": "Method"
+                                                            },
+                                                            "documentation": "\n\tA complex type that contains the HTTP methods that you want \n\tCloudFront to process and forward to your origin. \n   "
+                                                        }
+                                                    },
+                                                    "documentation": "\n\tA complex type that controls which HTTP methods CloudFront processes and \n\tforwards to your Amazon S3 bucket or your custom origin. There are two \n\toptions:\n\t- CloudFront forwards only GET and HEAD requests.\n\t- CloudFront forwards DELETE, GET, HEAD, OPTIONS, PATCH, POST, and PUT\n\trequests.\n\tIf you choose the second option, you may need to restrict access to your \n\tAmazon S3 bucket or to your custom origin so users can't perform operations \n\tthat you don't want them to. For example, you may not want users to have \n\tpermission to delete objects from your origin.\n   "
                                                 }
                                             },
                                             "documentation": "\n    A complex type that describes how CloudFront processes requests.\n    You can create up to 10 cache behaviors.You must create at least as\n    many cache behaviors (including the default cache behavior) as you have\n    origins if you want CloudFront to distribute objects from all of the origins.\n    Each cache behavior specifies the one origin from which you want\n    CloudFront to get objects. If you have two origins and only the default\n    cache behavior, the default cache behavior will cause CloudFront to get\n    objects from one of the origins, but the other origin will never be used.\n    If you don't want to specify any cache behaviors, include only an empty\n    CacheBehaviors element. Don't include an empty CacheBehavior\n    element, or CloudFront returns a MalformedXML error.\n    To delete all cache behaviors in an existing distribution, update the\n    distribution configuration and include only an empty CacheBehaviors\n    element.\n    To add, change, or remove one or more cache behaviors, update the\n    distribution configuration and specify all of the cache behaviors that you\n    want to include in the updated distribution.\n  ",
@@ -1026,6 +1092,39 @@
                                                 "type": "long",
                                                 "documentation": "\n    The minimum amount of time that you want objects to stay in CloudFront\n    caches before CloudFront queries your origin to see whether the object\n    has been updated.You can specify a value from 0 to 3,153,600,000\n    seconds (100 years).\n  ",
                                                 "required": true
+                                            },
+                                            "AllowedMethods": {
+                                                "shape_name": "AllowedMethods",
+                                                "type": "structure",
+                                                "members": {
+                                                    "Quantity": {
+                                                        "shape_name": "integer",
+                                                        "type": "integer",
+                                                        "documentation": "\n\tThe number of HTTP methods that you want CloudFront to forward to your origin. \n\tValid values are 2 (for GET and HEAD requests) and 7 (for DELETE, GET, HEAD, \n\tOPTIONS, PATCH, POST, and PUT requests).\n   ",
+                                                        "required": true
+                                                    },
+                                                    "Items": {
+                                                        "shape_name": "AllowedMethodsList",
+                                                        "type": "list",
+                                                        "members": {
+                                                            "shape_name": "Method",
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "GET",
+                                                                "HEAD",
+                                                                "POST",
+                                                                "PUT",
+                                                                "PATCH",
+                                                                "OPTIONS",
+                                                                "DELETE"
+                                                            ],
+                                                            "documentation": null,
+                                                            "xmlname": "Method"
+                                                        },
+                                                        "documentation": "\n\tA complex type that contains the HTTP methods that you want \n\tCloudFront to process and forward to your origin. \n   "
+                                                    }
+                                                },
+                                                "documentation": "\n\tA complex type that controls which HTTP methods CloudFront processes and \n\tforwards to your Amazon S3 bucket or your custom origin. There are two \n\toptions:\n\t- CloudFront forwards only GET and HEAD requests.\n\t- CloudFront forwards DELETE, GET, HEAD, OPTIONS, PATCH, POST, and PUT\n\trequests.\n\tIf you choose the second option, you may need to restrict access to your \n\tAmazon S3 bucket or to your custom origin so users can't perform operations \n\tthat you don't want them to. For example, you may not want users to have \n\tpermission to delete objects from your origin.\n   "
                                             }
                                         },
                                         "documentation": "\n    A complex type that describes the default cache behavior if you do not\n    specify a CacheBehavior element or if files don't match any of the values\n    of PathPattern in CacheBehavior elements.You must create exactly\n    one default cache behavior.\n  ",
@@ -1163,6 +1262,39 @@
                                                             "type": "long",
                                                             "documentation": "\n    The minimum amount of time that you want objects to stay in CloudFront\n    caches before CloudFront queries your origin to see whether the object\n    has been updated.You can specify a value from 0 to 3,153,600,000\n    seconds (100 years).\n  ",
                                                             "required": true
+                                                        },
+                                                        "AllowedMethods": {
+                                                            "shape_name": "AllowedMethods",
+                                                            "type": "structure",
+                                                            "members": {
+                                                                "Quantity": {
+                                                                    "shape_name": "integer",
+                                                                    "type": "integer",
+                                                                    "documentation": "\n\tThe number of HTTP methods that you want CloudFront to forward to your origin. \n\tValid values are 2 (for GET and HEAD requests) and 7 (for DELETE, GET, HEAD, \n\tOPTIONS, PATCH, POST, and PUT requests).\n   ",
+                                                                    "required": true
+                                                                },
+                                                                "Items": {
+                                                                    "shape_name": "AllowedMethodsList",
+                                                                    "type": "list",
+                                                                    "members": {
+                                                                        "shape_name": "Method",
+                                                                        "type": "string",
+                                                                        "enum": [
+                                                                            "GET",
+                                                                            "HEAD",
+                                                                            "POST",
+                                                                            "PUT",
+                                                                            "PATCH",
+                                                                            "OPTIONS",
+                                                                            "DELETE"
+                                                                        ],
+                                                                        "documentation": null,
+                                                                        "xmlname": "Method"
+                                                                    },
+                                                                    "documentation": "\n\tA complex type that contains the HTTP methods that you want \n\tCloudFront to process and forward to your origin. \n   "
+                                                                }
+                                                            },
+                                                            "documentation": "\n\tA complex type that controls which HTTP methods CloudFront processes and \n\tforwards to your Amazon S3 bucket or your custom origin. There are two \n\toptions:\n\t- CloudFront forwards only GET and HEAD requests.\n\t- CloudFront forwards DELETE, GET, HEAD, OPTIONS, PATCH, POST, and PUT\n\trequests.\n\tIf you choose the second option, you may need to restrict access to your \n\tAmazon S3 bucket or to your custom origin so users can't perform operations \n\tthat you don't want them to. For example, you may not want users to have \n\tpermission to delete objects from your origin.\n   "
                                                         }
                                                     },
                                                     "documentation": "\n    A complex type that describes how CloudFront processes requests.\n    You can create up to 10 cache behaviors.You must create at least as\n    many cache behaviors (including the default cache behavior) as you have\n    origins if you want CloudFront to distribute objects from all of the origins.\n    Each cache behavior specifies the one origin from which you want\n    CloudFront to get objects. If you have two origins and only the default\n    cache behavior, the default cache behavior will cause CloudFront to get\n    objects from one of the origins, but the other origin will never be used.\n    If you don't want to specify any cache behaviors, include only an empty\n    CacheBehaviors element. Don't include an empty CacheBehavior\n    element, or CloudFront returns a MalformedXML error.\n    To delete all cache behaviors in an existing distribution, update the\n    distribution configuration and include only an empty CacheBehaviors\n    element.\n    To add, change, or remove one or more cache behaviors, update the\n    distribution configuration and specify all of the cache behaviors that you\n    want to include in the updated distribution.\n  ",
@@ -1611,9 +1743,9 @@
             "documentation": "\n    Create a new distribution.\n  "
         },
         "CreateInvalidation": {
-            "name": "CreateInvalidation2013_08_26",
+            "name": "CreateInvalidation2013_09_27",
             "http": {
-                "uri": "/2013-08-26/distribution/{DistributionId}/invalidation",
+                "uri": "/2013-09-27/distribution/{DistributionId}/invalidation",
                 "method": "POST",
                 "response_code": 201
             },
@@ -1839,9 +1971,9 @@
             "documentation": "\n    Create a new invalidation.\n  "
         },
         "CreateStreamingDistribution": {
-            "name": "CreateStreamingDistribution2013_08_26",
+            "name": "CreateStreamingDistribution2013_09_27",
             "http": {
-                "uri": "/2013-08-26/streaming-distribution",
+                "uri": "/2013-09-27/streaming-distribution",
                 "method": "POST",
                 "response_code": 201
             },
@@ -2394,9 +2526,9 @@
             "documentation": "\n    Create a new streaming distribution.\n  "
         },
         "DeleteCloudFrontOriginAccessIdentity": {
-            "name": "DeleteCloudFrontOriginAccessIdentity2013_08_26",
+            "name": "DeleteCloudFrontOriginAccessIdentity2013_09_27",
             "http": {
-                "uri": "/2013-08-26/origin-access-identity/cloudfront/{Id}",
+                "uri": "/2013-09-27/origin-access-identity/cloudfront/{Id}",
                 "method": "DELETE",
                 "response_code": 204
             },
@@ -2486,9 +2618,9 @@
             "documentation": "\n    Delete an origin access identity.\n  "
         },
         "DeleteDistribution": {
-            "name": "DeleteDistribution2013_08_26",
+            "name": "DeleteDistribution2013_09_27",
             "http": {
-                "uri": "/2013-08-26/distribution/{Id}",
+                "uri": "/2013-09-27/distribution/{Id}",
                 "method": "DELETE",
                 "response_code": 204
             },
@@ -2578,9 +2710,9 @@
             "documentation": "\n    Delete a distribution.\n  "
         },
         "DeleteStreamingDistribution": {
-            "name": "DeleteStreamingDistribution2013_08_26",
+            "name": "DeleteStreamingDistribution2013_09_27",
             "http": {
-                "uri": "/2013-08-26/streaming-distribution/{Id}",
+                "uri": "/2013-09-27/streaming-distribution/{Id}",
                 "method": "DELETE",
                 "response_code": 204
             },
@@ -2670,9 +2802,9 @@
             "documentation": "\n    Delete a streaming distribution.\n  "
         },
         "GetCloudFrontOriginAccessIdentity": {
-            "name": "GetCloudFrontOriginAccessIdentity2013_08_26",
+            "name": "GetCloudFrontOriginAccessIdentity2013_09_27",
             "http": {
-                "uri": "/2013-08-26/origin-access-identity/cloudfront/{Id}",
+                "uri": "/2013-09-27/origin-access-identity/cloudfront/{Id}",
                 "method": "GET"
             },
             "input": {
@@ -2770,9 +2902,9 @@
             "documentation": "\n    Get the information about an origin access identity.\n  "
         },
         "GetCloudFrontOriginAccessIdentityConfig": {
-            "name": "GetCloudFrontOriginAccessIdentityConfig2013_08_26",
+            "name": "GetCloudFrontOriginAccessIdentityConfig2013_09_27",
             "http": {
-                "uri": "/2013-08-26/origin-access-identity/cloudfront/{Id}/config",
+                "uri": "/2013-09-27/origin-access-identity/cloudfront/{Id}/config",
                 "method": "GET"
             },
             "input": {
@@ -2851,9 +2983,9 @@
             "documentation": "\n    Get the configuration information about an origin access identity.\n  "
         },
         "GetDistribution": {
-            "name": "GetDistribution2013_08_26",
+            "name": "GetDistribution2013_09_27",
             "http": {
-                "uri": "/2013-08-26/distribution/{Id}",
+                "uri": "/2013-09-27/distribution/{Id}",
                 "method": "GET"
             },
             "input": {
@@ -3205,6 +3337,39 @@
                                                 "type": "long",
                                                 "documentation": "\n    The minimum amount of time that you want objects to stay in CloudFront\n    caches before CloudFront queries your origin to see whether the object\n    has been updated.You can specify a value from 0 to 3,153,600,000\n    seconds (100 years).\n  ",
                                                 "required": true
+                                            },
+                                            "AllowedMethods": {
+                                                "shape_name": "AllowedMethods",
+                                                "type": "structure",
+                                                "members": {
+                                                    "Quantity": {
+                                                        "shape_name": "integer",
+                                                        "type": "integer",
+                                                        "documentation": "\n\tThe number of HTTP methods that you want CloudFront to forward to your origin. \n\tValid values are 2 (for GET and HEAD requests) and 7 (for DELETE, GET, HEAD, \n\tOPTIONS, PATCH, POST, and PUT requests).\n   ",
+                                                        "required": true
+                                                    },
+                                                    "Items": {
+                                                        "shape_name": "AllowedMethodsList",
+                                                        "type": "list",
+                                                        "members": {
+                                                            "shape_name": "Method",
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "GET",
+                                                                "HEAD",
+                                                                "POST",
+                                                                "PUT",
+                                                                "PATCH",
+                                                                "OPTIONS",
+                                                                "DELETE"
+                                                            ],
+                                                            "documentation": null,
+                                                            "xmlname": "Method"
+                                                        },
+                                                        "documentation": "\n\tA complex type that contains the HTTP methods that you want \n\tCloudFront to process and forward to your origin. \n   "
+                                                    }
+                                                },
+                                                "documentation": "\n\tA complex type that controls which HTTP methods CloudFront processes and \n\tforwards to your Amazon S3 bucket or your custom origin. There are two \n\toptions:\n\t- CloudFront forwards only GET and HEAD requests.\n\t- CloudFront forwards DELETE, GET, HEAD, OPTIONS, PATCH, POST, and PUT\n\trequests.\n\tIf you choose the second option, you may need to restrict access to your \n\tAmazon S3 bucket or to your custom origin so users can't perform operations \n\tthat you don't want them to. For example, you may not want users to have \n\tpermission to delete objects from your origin.\n   "
                                             }
                                         },
                                         "documentation": "\n    A complex type that describes the default cache behavior if you do not\n    specify a CacheBehavior element or if files don't match any of the values\n    of PathPattern in CacheBehavior elements.You must create exactly\n    one default cache behavior.\n  ",
@@ -3342,6 +3507,39 @@
                                                             "type": "long",
                                                             "documentation": "\n    The minimum amount of time that you want objects to stay in CloudFront\n    caches before CloudFront queries your origin to see whether the object\n    has been updated.You can specify a value from 0 to 3,153,600,000\n    seconds (100 years).\n  ",
                                                             "required": true
+                                                        },
+                                                        "AllowedMethods": {
+                                                            "shape_name": "AllowedMethods",
+                                                            "type": "structure",
+                                                            "members": {
+                                                                "Quantity": {
+                                                                    "shape_name": "integer",
+                                                                    "type": "integer",
+                                                                    "documentation": "\n\tThe number of HTTP methods that you want CloudFront to forward to your origin. \n\tValid values are 2 (for GET and HEAD requests) and 7 (for DELETE, GET, HEAD, \n\tOPTIONS, PATCH, POST, and PUT requests).\n   ",
+                                                                    "required": true
+                                                                },
+                                                                "Items": {
+                                                                    "shape_name": "AllowedMethodsList",
+                                                                    "type": "list",
+                                                                    "members": {
+                                                                        "shape_name": "Method",
+                                                                        "type": "string",
+                                                                        "enum": [
+                                                                            "GET",
+                                                                            "HEAD",
+                                                                            "POST",
+                                                                            "PUT",
+                                                                            "PATCH",
+                                                                            "OPTIONS",
+                                                                            "DELETE"
+                                                                        ],
+                                                                        "documentation": null,
+                                                                        "xmlname": "Method"
+                                                                    },
+                                                                    "documentation": "\n\tA complex type that contains the HTTP methods that you want \n\tCloudFront to process and forward to your origin. \n   "
+                                                                }
+                                                            },
+                                                            "documentation": "\n\tA complex type that controls which HTTP methods CloudFront processes and \n\tforwards to your Amazon S3 bucket or your custom origin. There are two \n\toptions:\n\t- CloudFront forwards only GET and HEAD requests.\n\t- CloudFront forwards DELETE, GET, HEAD, OPTIONS, PATCH, POST, and PUT\n\trequests.\n\tIf you choose the second option, you may need to restrict access to your \n\tAmazon S3 bucket or to your custom origin so users can't perform operations \n\tthat you don't want them to. For example, you may not want users to have \n\tpermission to delete objects from your origin.\n   "
                                                         }
                                                     },
                                                     "documentation": "\n    A complex type that describes how CloudFront processes requests.\n    You can create up to 10 cache behaviors.You must create at least as\n    many cache behaviors (including the default cache behavior) as you have\n    origins if you want CloudFront to distribute objects from all of the origins.\n    Each cache behavior specifies the one origin from which you want\n    CloudFront to get objects. If you have two origins and only the default\n    cache behavior, the default cache behavior will cause CloudFront to get\n    objects from one of the origins, but the other origin will never be used.\n    If you don't want to specify any cache behaviors, include only an empty\n    CacheBehaviors element. Don't include an empty CacheBehavior\n    element, or CloudFront returns a MalformedXML error.\n    To delete all cache behaviors in an existing distribution, update the\n    distribution configuration and include only an empty CacheBehaviors\n    element.\n    To add, change, or remove one or more cache behaviors, update the\n    distribution configuration and specify all of the cache behaviors that you\n    want to include in the updated distribution.\n  ",
@@ -3519,9 +3717,9 @@
             "documentation": "\n    Get the information about a distribution.\n  "
         },
         "GetDistributionConfig": {
-            "name": "GetDistributionConfig2013_08_26",
+            "name": "GetDistributionConfig2013_09_27",
             "http": {
-                "uri": "/2013-08-26/distribution/{Id}/config",
+                "uri": "/2013-09-27/distribution/{Id}/config",
                 "method": "GET"
             },
             "input": {
@@ -3777,6 +3975,39 @@
                                         "type": "long",
                                         "documentation": "\n    The minimum amount of time that you want objects to stay in CloudFront\n    caches before CloudFront queries your origin to see whether the object\n    has been updated.You can specify a value from 0 to 3,153,600,000\n    seconds (100 years).\n  ",
                                         "required": true
+                                    },
+                                    "AllowedMethods": {
+                                        "shape_name": "AllowedMethods",
+                                        "type": "structure",
+                                        "members": {
+                                            "Quantity": {
+                                                "shape_name": "integer",
+                                                "type": "integer",
+                                                "documentation": "\n\tThe number of HTTP methods that you want CloudFront to forward to your origin. \n\tValid values are 2 (for GET and HEAD requests) and 7 (for DELETE, GET, HEAD, \n\tOPTIONS, PATCH, POST, and PUT requests).\n   ",
+                                                "required": true
+                                            },
+                                            "Items": {
+                                                "shape_name": "AllowedMethodsList",
+                                                "type": "list",
+                                                "members": {
+                                                    "shape_name": "Method",
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "GET",
+                                                        "HEAD",
+                                                        "POST",
+                                                        "PUT",
+                                                        "PATCH",
+                                                        "OPTIONS",
+                                                        "DELETE"
+                                                    ],
+                                                    "documentation": null,
+                                                    "xmlname": "Method"
+                                                },
+                                                "documentation": "\n\tA complex type that contains the HTTP methods that you want \n\tCloudFront to process and forward to your origin. \n   "
+                                            }
+                                        },
+                                        "documentation": "\n\tA complex type that controls which HTTP methods CloudFront processes and \n\tforwards to your Amazon S3 bucket or your custom origin. There are two \n\toptions:\n\t- CloudFront forwards only GET and HEAD requests.\n\t- CloudFront forwards DELETE, GET, HEAD, OPTIONS, PATCH, POST, and PUT\n\trequests.\n\tIf you choose the second option, you may need to restrict access to your \n\tAmazon S3 bucket or to your custom origin so users can't perform operations \n\tthat you don't want them to. For example, you may not want users to have \n\tpermission to delete objects from your origin.\n   "
                                     }
                                 },
                                 "documentation": "\n    A complex type that describes the default cache behavior if you do not\n    specify a CacheBehavior element or if files don't match any of the values\n    of PathPattern in CacheBehavior elements.You must create exactly\n    one default cache behavior.\n  ",
@@ -3914,6 +4145,39 @@
                                                     "type": "long",
                                                     "documentation": "\n    The minimum amount of time that you want objects to stay in CloudFront\n    caches before CloudFront queries your origin to see whether the object\n    has been updated.You can specify a value from 0 to 3,153,600,000\n    seconds (100 years).\n  ",
                                                     "required": true
+                                                },
+                                                "AllowedMethods": {
+                                                    "shape_name": "AllowedMethods",
+                                                    "type": "structure",
+                                                    "members": {
+                                                        "Quantity": {
+                                                            "shape_name": "integer",
+                                                            "type": "integer",
+                                                            "documentation": "\n\tThe number of HTTP methods that you want CloudFront to forward to your origin. \n\tValid values are 2 (for GET and HEAD requests) and 7 (for DELETE, GET, HEAD, \n\tOPTIONS, PATCH, POST, and PUT requests).\n   ",
+                                                            "required": true
+                                                        },
+                                                        "Items": {
+                                                            "shape_name": "AllowedMethodsList",
+                                                            "type": "list",
+                                                            "members": {
+                                                                "shape_name": "Method",
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "GET",
+                                                                    "HEAD",
+                                                                    "POST",
+                                                                    "PUT",
+                                                                    "PATCH",
+                                                                    "OPTIONS",
+                                                                    "DELETE"
+                                                                ],
+                                                                "documentation": null,
+                                                                "xmlname": "Method"
+                                                            },
+                                                            "documentation": "\n\tA complex type that contains the HTTP methods that you want \n\tCloudFront to process and forward to your origin. \n   "
+                                                        }
+                                                    },
+                                                    "documentation": "\n\tA complex type that controls which HTTP methods CloudFront processes and \n\tforwards to your Amazon S3 bucket or your custom origin. There are two \n\toptions:\n\t- CloudFront forwards only GET and HEAD requests.\n\t- CloudFront forwards DELETE, GET, HEAD, OPTIONS, PATCH, POST, and PUT\n\trequests.\n\tIf you choose the second option, you may need to restrict access to your \n\tAmazon S3 bucket or to your custom origin so users can't perform operations \n\tthat you don't want them to. For example, you may not want users to have \n\tpermission to delete objects from your origin.\n   "
                                                 }
                                             },
                                             "documentation": "\n    A complex type that describes how CloudFront processes requests.\n    You can create up to 10 cache behaviors.You must create at least as\n    many cache behaviors (including the default cache behavior) as you have\n    origins if you want CloudFront to distribute objects from all of the origins.\n    Each cache behavior specifies the one origin from which you want\n    CloudFront to get objects. If you have two origins and only the default\n    cache behavior, the default cache behavior will cause CloudFront to get\n    objects from one of the origins, but the other origin will never be used.\n    If you don't want to specify any cache behaviors, include only an empty\n    CacheBehaviors element. Don't include an empty CacheBehavior\n    element, or CloudFront returns a MalformedXML error.\n    To delete all cache behaviors in an existing distribution, update the\n    distribution configuration and include only an empty CacheBehaviors\n    element.\n    To add, change, or remove one or more cache behaviors, update the\n    distribution configuration and specify all of the cache behaviors that you\n    want to include in the updated distribution.\n  ",
@@ -4087,9 +4351,9 @@
             "documentation": "\n    Get the configuration information about a distribution.\n  "
         },
         "GetInvalidation": {
-            "name": "GetInvalidation2013_08_26",
+            "name": "GetInvalidation2013_09_27",
             "http": {
-                "uri": "/2013-08-26/distribution/{DistributionId}/invalidation/{Id}",
+                "uri": "/2013-09-27/distribution/{DistributionId}/invalidation/{Id}",
                 "method": "GET"
             },
             "input": {
@@ -4226,9 +4490,9 @@
             "documentation": "\n    Get the information about an invalidation.\n  "
         },
         "GetStreamingDistribution": {
-            "name": "GetStreamingDistribution2013_08_26",
+            "name": "GetStreamingDistribution2013_09_27",
             "http": {
-                "uri": "/2013-08-26/streaming-distribution/{Id}",
+                "uri": "/2013-09-27/streaming-distribution/{Id}",
                 "method": "GET"
             },
             "input": {
@@ -4519,9 +4783,9 @@
             "documentation": "\n    Get the information about a streaming distribution.\n  "
         },
         "GetStreamingDistributionConfig": {
-            "name": "GetStreamingDistributionConfig2013_08_26",
+            "name": "GetStreamingDistributionConfig2013_09_27",
             "http": {
-                "uri": "/2013-08-26/streaming-distribution/{Id}/config",
+                "uri": "/2013-09-27/streaming-distribution/{Id}/config",
                 "method": "GET"
             },
             "input": {
@@ -4719,9 +4983,9 @@
             "documentation": "\n    Get the configuration information about a streaming distribution.\n  "
         },
         "ListCloudFrontOriginAccessIdentities": {
-            "name": "ListCloudFrontOriginAccessIdentities2013_08_26",
+            "name": "ListCloudFrontOriginAccessIdentities2013_09_27",
             "http": {
-                "uri": "/2013-08-26/origin-access-identity/cloudfront?Marker={Marker}&MaxItems={MaxItems}",
+                "uri": "/2013-09-27/origin-access-identity/cloudfront?Marker={Marker}&MaxItems={MaxItems}",
                 "method": "GET"
             },
             "input": {
@@ -4849,9 +5113,9 @@
             }
         },
         "ListDistributions": {
-            "name": "ListDistributions2013_08_26",
+            "name": "ListDistributions2013_09_27",
             "http": {
-                "uri": "/2013-08-26/distribution?Marker={Marker}&MaxItems={MaxItems}",
+                "uri": "/2013-09-27/distribution?Marker={Marker}&MaxItems={MaxItems}",
                 "method": "GET"
             },
             "input": {
@@ -5161,6 +5425,39 @@
                                                     "type": "long",
                                                     "documentation": "\n    The minimum amount of time that you want objects to stay in CloudFront\n    caches before CloudFront queries your origin to see whether the object\n    has been updated.You can specify a value from 0 to 3,153,600,000\n    seconds (100 years).\n  ",
                                                     "required": true
+                                                },
+                                                "AllowedMethods": {
+                                                    "shape_name": "AllowedMethods",
+                                                    "type": "structure",
+                                                    "members": {
+                                                        "Quantity": {
+                                                            "shape_name": "integer",
+                                                            "type": "integer",
+                                                            "documentation": "\n\tThe number of HTTP methods that you want CloudFront to forward to your origin. \n\tValid values are 2 (for GET and HEAD requests) and 7 (for DELETE, GET, HEAD, \n\tOPTIONS, PATCH, POST, and PUT requests).\n   ",
+                                                            "required": true
+                                                        },
+                                                        "Items": {
+                                                            "shape_name": "AllowedMethodsList",
+                                                            "type": "list",
+                                                            "members": {
+                                                                "shape_name": "Method",
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "GET",
+                                                                    "HEAD",
+                                                                    "POST",
+                                                                    "PUT",
+                                                                    "PATCH",
+                                                                    "OPTIONS",
+                                                                    "DELETE"
+                                                                ],
+                                                                "documentation": null,
+                                                                "xmlname": "Method"
+                                                            },
+                                                            "documentation": "\n\tA complex type that contains the HTTP methods that you want \n\tCloudFront to process and forward to your origin. \n   "
+                                                        }
+                                                    },
+                                                    "documentation": "\n\tA complex type that controls which HTTP methods CloudFront processes and \n\tforwards to your Amazon S3 bucket or your custom origin. There are two \n\toptions:\n\t- CloudFront forwards only GET and HEAD requests.\n\t- CloudFront forwards DELETE, GET, HEAD, OPTIONS, PATCH, POST, and PUT\n\trequests.\n\tIf you choose the second option, you may need to restrict access to your \n\tAmazon S3 bucket or to your custom origin so users can't perform operations \n\tthat you don't want them to. For example, you may not want users to have \n\tpermission to delete objects from your origin.\n   "
                                                 }
                                             },
                                             "documentation": "\n    A complex type that describes the default cache behavior if you do not\n    specify a CacheBehavior element or if files don't match any of the values\n    of PathPattern in CacheBehavior elements.You must create exactly\n    one default cache behavior.\n   ",
@@ -5298,6 +5595,39 @@
                                                                 "type": "long",
                                                                 "documentation": "\n    The minimum amount of time that you want objects to stay in CloudFront\n    caches before CloudFront queries your origin to see whether the object\n    has been updated.You can specify a value from 0 to 3,153,600,000\n    seconds (100 years).\n  ",
                                                                 "required": true
+                                                            },
+                                                            "AllowedMethods": {
+                                                                "shape_name": "AllowedMethods",
+                                                                "type": "structure",
+                                                                "members": {
+                                                                    "Quantity": {
+                                                                        "shape_name": "integer",
+                                                                        "type": "integer",
+                                                                        "documentation": "\n\tThe number of HTTP methods that you want CloudFront to forward to your origin. \n\tValid values are 2 (for GET and HEAD requests) and 7 (for DELETE, GET, HEAD, \n\tOPTIONS, PATCH, POST, and PUT requests).\n   ",
+                                                                        "required": true
+                                                                    },
+                                                                    "Items": {
+                                                                        "shape_name": "AllowedMethodsList",
+                                                                        "type": "list",
+                                                                        "members": {
+                                                                            "shape_name": "Method",
+                                                                            "type": "string",
+                                                                            "enum": [
+                                                                                "GET",
+                                                                                "HEAD",
+                                                                                "POST",
+                                                                                "PUT",
+                                                                                "PATCH",
+                                                                                "OPTIONS",
+                                                                                "DELETE"
+                                                                            ],
+                                                                            "documentation": null,
+                                                                            "xmlname": "Method"
+                                                                        },
+                                                                        "documentation": "\n\tA complex type that contains the HTTP methods that you want \n\tCloudFront to process and forward to your origin. \n   "
+                                                                    }
+                                                                },
+                                                                "documentation": "\n\tA complex type that controls which HTTP methods CloudFront processes and \n\tforwards to your Amazon S3 bucket or your custom origin. There are two \n\toptions:\n\t- CloudFront forwards only GET and HEAD requests.\n\t- CloudFront forwards DELETE, GET, HEAD, OPTIONS, PATCH, POST, and PUT\n\trequests.\n\tIf you choose the second option, you may need to restrict access to your \n\tAmazon S3 bucket or to your custom origin so users can't perform operations \n\tthat you don't want them to. For example, you may not want users to have \n\tpermission to delete objects from your origin.\n   "
                                                             }
                                                         },
                                                         "documentation": "\n    A complex type that describes how CloudFront processes requests.\n    You can create up to 10 cache behaviors.You must create at least as\n    many cache behaviors (including the default cache behavior) as you have\n    origins if you want CloudFront to distribute objects from all of the origins.\n    Each cache behavior specifies the one origin from which you want\n    CloudFront to get objects. If you have two origins and only the default\n    cache behavior, the default cache behavior will cause CloudFront to get\n    objects from one of the origins, but the other origin will never be used.\n    If you don't want to specify any cache behaviors, include only an empty\n    CacheBehaviors element. Don't include an empty CacheBehavior\n    element, or CloudFront returns a MalformedXML error.\n    To delete all cache behaviors in an existing distribution, update the\n    distribution configuration and include only an empty CacheBehaviors\n    element.\n    To add, change, or remove one or more cache behaviors, update the\n    distribution configuration and specify all of the cache behaviors that you\n    want to include in the updated distribution.\n  ",
@@ -5442,9 +5772,9 @@
             }
         },
         "ListInvalidations": {
-            "name": "ListInvalidations2013_08_26",
+            "name": "ListInvalidations2013_09_27",
             "http": {
-                "uri": "/2013-08-26/distribution/{DistributionId}/invalidation?Marker={Marker}&MaxItems={MaxItems}",
+                "uri": "/2013-09-27/distribution/{DistributionId}/invalidation?Marker={Marker}&MaxItems={MaxItems}",
                 "method": "GET"
             },
             "input": {
@@ -5603,9 +5933,9 @@
             }
         },
         "ListStreamingDistributions": {
-            "name": "ListStreamingDistributions2013_08_26",
+            "name": "ListStreamingDistributions2013_09_27",
             "http": {
-                "uri": "/2013-08-26/streaming-distribution?Marker={Marker}&MaxItems={MaxItems}",
+                "uri": "/2013-09-27/streaming-distribution?Marker={Marker}&MaxItems={MaxItems}",
                 "method": "GET"
             },
             "input": {
@@ -5838,9 +6168,9 @@
             }
         },
         "UpdateCloudFrontOriginAccessIdentity": {
-            "name": "UpdateCloudFrontOriginAccessIdentity2013_08_26",
+            "name": "UpdateCloudFrontOriginAccessIdentity2013_09_27",
             "http": {
-                "uri": "/2013-08-26/origin-access-identity/cloudfront/{Id}/config",
+                "uri": "/2013-09-27/origin-access-identity/cloudfront/{Id}/config",
                 "method": "PUT"
             },
             "input": {
@@ -6038,9 +6368,9 @@
             "documentation": "\n    Update an origin access identity.\n  "
         },
         "UpdateDistribution": {
-            "name": "UpdateDistribution2013_08_26",
+            "name": "UpdateDistribution2013_09_27",
             "http": {
-                "uri": "/2013-08-26/distribution/{Id}/config",
+                "uri": "/2013-09-27/distribution/{Id}/config",
                 "method": "PUT"
             },
             "input": {
@@ -6283,6 +6613,39 @@
                                         "type": "long",
                                         "documentation": "\n    The minimum amount of time that you want objects to stay in CloudFront\n    caches before CloudFront queries your origin to see whether the object\n    has been updated.You can specify a value from 0 to 3,153,600,000\n    seconds (100 years).\n  ",
                                         "required": true
+                                    },
+                                    "AllowedMethods": {
+                                        "shape_name": "AllowedMethods",
+                                        "type": "structure",
+                                        "members": {
+                                            "Quantity": {
+                                                "shape_name": "integer",
+                                                "type": "integer",
+                                                "documentation": "\n\tThe number of HTTP methods that you want CloudFront to forward to your origin. \n\tValid values are 2 (for GET and HEAD requests) and 7 (for DELETE, GET, HEAD, \n\tOPTIONS, PATCH, POST, and PUT requests).\n   ",
+                                                "required": true
+                                            },
+                                            "Items": {
+                                                "shape_name": "AllowedMethodsList",
+                                                "type": "list",
+                                                "members": {
+                                                    "shape_name": "Method",
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "GET",
+                                                        "HEAD",
+                                                        "POST",
+                                                        "PUT",
+                                                        "PATCH",
+                                                        "OPTIONS",
+                                                        "DELETE"
+                                                    ],
+                                                    "documentation": null,
+                                                    "xmlname": "Method"
+                                                },
+                                                "documentation": "\n\tA complex type that contains the HTTP methods that you want \n\tCloudFront to process and forward to your origin. \n   "
+                                            }
+                                        },
+                                        "documentation": "\n\tA complex type that controls which HTTP methods CloudFront processes and \n\tforwards to your Amazon S3 bucket or your custom origin. There are two \n\toptions:\n\t- CloudFront forwards only GET and HEAD requests.\n\t- CloudFront forwards DELETE, GET, HEAD, OPTIONS, PATCH, POST, and PUT\n\trequests.\n\tIf you choose the second option, you may need to restrict access to your \n\tAmazon S3 bucket or to your custom origin so users can't perform operations \n\tthat you don't want them to. For example, you may not want users to have \n\tpermission to delete objects from your origin.\n   "
                                     }
                                 },
                                 "documentation": "\n    A complex type that describes the default cache behavior if you do not\n    specify a CacheBehavior element or if files don't match any of the values\n    of PathPattern in CacheBehavior elements.You must create exactly\n    one default cache behavior.\n  ",
@@ -6420,6 +6783,39 @@
                                                     "type": "long",
                                                     "documentation": "\n    The minimum amount of time that you want objects to stay in CloudFront\n    caches before CloudFront queries your origin to see whether the object\n    has been updated.You can specify a value from 0 to 3,153,600,000\n    seconds (100 years).\n  ",
                                                     "required": true
+                                                },
+                                                "AllowedMethods": {
+                                                    "shape_name": "AllowedMethods",
+                                                    "type": "structure",
+                                                    "members": {
+                                                        "Quantity": {
+                                                            "shape_name": "integer",
+                                                            "type": "integer",
+                                                            "documentation": "\n\tThe number of HTTP methods that you want CloudFront to forward to your origin. \n\tValid values are 2 (for GET and HEAD requests) and 7 (for DELETE, GET, HEAD, \n\tOPTIONS, PATCH, POST, and PUT requests).\n   ",
+                                                            "required": true
+                                                        },
+                                                        "Items": {
+                                                            "shape_name": "AllowedMethodsList",
+                                                            "type": "list",
+                                                            "members": {
+                                                                "shape_name": "Method",
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "GET",
+                                                                    "HEAD",
+                                                                    "POST",
+                                                                    "PUT",
+                                                                    "PATCH",
+                                                                    "OPTIONS",
+                                                                    "DELETE"
+                                                                ],
+                                                                "documentation": null,
+                                                                "xmlname": "Method"
+                                                            },
+                                                            "documentation": "\n\tA complex type that contains the HTTP methods that you want \n\tCloudFront to process and forward to your origin. \n   "
+                                                        }
+                                                    },
+                                                    "documentation": "\n\tA complex type that controls which HTTP methods CloudFront processes and \n\tforwards to your Amazon S3 bucket or your custom origin. There are two \n\toptions:\n\t- CloudFront forwards only GET and HEAD requests.\n\t- CloudFront forwards DELETE, GET, HEAD, OPTIONS, PATCH, POST, and PUT\n\trequests.\n\tIf you choose the second option, you may need to restrict access to your \n\tAmazon S3 bucket or to your custom origin so users can't perform operations \n\tthat you don't want them to. For example, you may not want users to have \n\tpermission to delete objects from your origin.\n   "
                                                 }
                                             },
                                             "documentation": "\n    A complex type that describes how CloudFront processes requests.\n    You can create up to 10 cache behaviors.You must create at least as\n    many cache behaviors (including the default cache behavior) as you have\n    origins if you want CloudFront to distribute objects from all of the origins.\n    Each cache behavior specifies the one origin from which you want\n    CloudFront to get objects. If you have two origins and only the default\n    cache behavior, the default cache behavior will cause CloudFront to get\n    objects from one of the origins, but the other origin will never be used.\n    If you don't want to specify any cache behaviors, include only an empty\n    CacheBehaviors element. Don't include an empty CacheBehavior\n    element, or CloudFront returns a MalformedXML error.\n    To delete all cache behaviors in an existing distribution, update the\n    distribution configuration and include only an empty CacheBehaviors\n    element.\n    To add, change, or remove one or more cache behaviors, update the\n    distribution configuration and specify all of the cache behaviors that you\n    want to include in the updated distribution.\n  ",
@@ -6907,6 +7303,39 @@
                                                 "type": "long",
                                                 "documentation": "\n    The minimum amount of time that you want objects to stay in CloudFront\n    caches before CloudFront queries your origin to see whether the object\n    has been updated.You can specify a value from 0 to 3,153,600,000\n    seconds (100 years).\n  ",
                                                 "required": true
+                                            },
+                                            "AllowedMethods": {
+                                                "shape_name": "AllowedMethods",
+                                                "type": "structure",
+                                                "members": {
+                                                    "Quantity": {
+                                                        "shape_name": "integer",
+                                                        "type": "integer",
+                                                        "documentation": "\n\tThe number of HTTP methods that you want CloudFront to forward to your origin. \n\tValid values are 2 (for GET and HEAD requests) and 7 (for DELETE, GET, HEAD, \n\tOPTIONS, PATCH, POST, and PUT requests).\n   ",
+                                                        "required": true
+                                                    },
+                                                    "Items": {
+                                                        "shape_name": "AllowedMethodsList",
+                                                        "type": "list",
+                                                        "members": {
+                                                            "shape_name": "Method",
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "GET",
+                                                                "HEAD",
+                                                                "POST",
+                                                                "PUT",
+                                                                "PATCH",
+                                                                "OPTIONS",
+                                                                "DELETE"
+                                                            ],
+                                                            "documentation": null,
+                                                            "xmlname": "Method"
+                                                        },
+                                                        "documentation": "\n\tA complex type that contains the HTTP methods that you want \n\tCloudFront to process and forward to your origin. \n   "
+                                                    }
+                                                },
+                                                "documentation": "\n\tA complex type that controls which HTTP methods CloudFront processes and \n\tforwards to your Amazon S3 bucket or your custom origin. There are two \n\toptions:\n\t- CloudFront forwards only GET and HEAD requests.\n\t- CloudFront forwards DELETE, GET, HEAD, OPTIONS, PATCH, POST, and PUT\n\trequests.\n\tIf you choose the second option, you may need to restrict access to your \n\tAmazon S3 bucket or to your custom origin so users can't perform operations \n\tthat you don't want them to. For example, you may not want users to have \n\tpermission to delete objects from your origin.\n   "
                                             }
                                         },
                                         "documentation": "\n    A complex type that describes the default cache behavior if you do not\n    specify a CacheBehavior element or if files don't match any of the values\n    of PathPattern in CacheBehavior elements.You must create exactly\n    one default cache behavior.\n  ",
@@ -7044,6 +7473,39 @@
                                                             "type": "long",
                                                             "documentation": "\n    The minimum amount of time that you want objects to stay in CloudFront\n    caches before CloudFront queries your origin to see whether the object\n    has been updated.You can specify a value from 0 to 3,153,600,000\n    seconds (100 years).\n  ",
                                                             "required": true
+                                                        },
+                                                        "AllowedMethods": {
+                                                            "shape_name": "AllowedMethods",
+                                                            "type": "structure",
+                                                            "members": {
+                                                                "Quantity": {
+                                                                    "shape_name": "integer",
+                                                                    "type": "integer",
+                                                                    "documentation": "\n\tThe number of HTTP methods that you want CloudFront to forward to your origin. \n\tValid values are 2 (for GET and HEAD requests) and 7 (for DELETE, GET, HEAD, \n\tOPTIONS, PATCH, POST, and PUT requests).\n   ",
+                                                                    "required": true
+                                                                },
+                                                                "Items": {
+                                                                    "shape_name": "AllowedMethodsList",
+                                                                    "type": "list",
+                                                                    "members": {
+                                                                        "shape_name": "Method",
+                                                                        "type": "string",
+                                                                        "enum": [
+                                                                            "GET",
+                                                                            "HEAD",
+                                                                            "POST",
+                                                                            "PUT",
+                                                                            "PATCH",
+                                                                            "OPTIONS",
+                                                                            "DELETE"
+                                                                        ],
+                                                                        "documentation": null,
+                                                                        "xmlname": "Method"
+                                                                    },
+                                                                    "documentation": "\n\tA complex type that contains the HTTP methods that you want \n\tCloudFront to process and forward to your origin. \n   "
+                                                                }
+                                                            },
+                                                            "documentation": "\n\tA complex type that controls which HTTP methods CloudFront processes and \n\tforwards to your Amazon S3 bucket or your custom origin. There are two \n\toptions:\n\t- CloudFront forwards only GET and HEAD requests.\n\t- CloudFront forwards DELETE, GET, HEAD, OPTIONS, PATCH, POST, and PUT\n\trequests.\n\tIf you choose the second option, you may need to restrict access to your \n\tAmazon S3 bucket or to your custom origin so users can't perform operations \n\tthat you don't want them to. For example, you may not want users to have \n\tpermission to delete objects from your origin.\n   "
                                                         }
                                                     },
                                                     "documentation": "\n    A complex type that describes how CloudFront processes requests.\n    You can create up to 10 cache behaviors.You must create at least as\n    many cache behaviors (including the default cache behavior) as you have\n    origins if you want CloudFront to distribute objects from all of the origins.\n    Each cache behavior specifies the one origin from which you want\n    CloudFront to get objects. If you have two origins and only the default\n    cache behavior, the default cache behavior will cause CloudFront to get\n    objects from one of the origins, but the other origin will never be used.\n    If you don't want to specify any cache behaviors, include only an empty\n    CacheBehaviors element. Don't include an empty CacheBehavior\n    element, or CloudFront returns a MalformedXML error.\n    To delete all cache behaviors in an existing distribution, update the\n    distribution configuration and include only an empty CacheBehaviors\n    element.\n    To add, change, or remove one or more cache behaviors, update the\n    distribution configuration and specify all of the cache behaviors that you\n    want to include in the updated distribution.\n  ",
@@ -7497,9 +7959,9 @@
             "documentation": "\n    Update a distribution.\n  "
         },
         "UpdateStreamingDistribution": {
-            "name": "UpdateStreamingDistribution2013_08_26",
+            "name": "UpdateStreamingDistribution2013_09_27",
             "http": {
-                "uri": "/2013-08-26/streaming-distribution/{Id}/config",
+                "uri": "/2013-09-27/streaming-distribution/{Id}/config",
                 "method": "PUT"
             },
             "input": {
@@ -8078,7 +8540,7 @@
         }
     },
     "pagination": {
-        "ListCloudFrontOriginAccessIdentities2013_08_26": {
+        "ListCloudFrontOriginAccessIdentities": {
             "input_token": [
                 "Marker"
             ],
@@ -8092,7 +8554,7 @@
                 "marker"
             ]
         },
-        "ListDistributions2013_08_26": {
+        "ListDistributions": {
             "input_token": [
                 "Marker"
             ],
@@ -8106,7 +8568,7 @@
                 "marker"
             ]
         },
-        "ListInvalidations2013_08_26": {
+        "ListInvalidations": {
             "input_token": [
                 "Marker"
             ],
@@ -8120,7 +8582,7 @@
                 "marker"
             ]
         },
-        "ListStreamingDistributions2013_08_26": {
+        "ListStreamingDistributions": {
             "input_token": [
                 "Marker"
             ],
