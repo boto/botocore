@@ -77,6 +77,10 @@ def translate(model):
         del new_model['pagination']
     except KeyError:
         pass
+    handle_op_renames(new_model, model.enhancements)
+    handle_remove_deprecated_params(new_model, model.enhancements)
+    handle_remove_deprecated_operations(new_model, model.enhancements)
+    handle_filter_documentation(new_model, model.enhancements)
     add_pagination_configs(
         new_model,
         model.enhancements.get('pagination', {}))
@@ -84,10 +88,6 @@ def translate(model):
     merge_dicts(new_model['operations'], model.enhancements.get('operations', {}))
     add_retry_configs(
         new_model, model.retry.get('retry', {}), definitions=model.retry.get('definitions', {}))
-    handle_op_renames(new_model, model.enhancements)
-    handle_remove_deprecated_params(new_model, model.enhancements)
-    handle_remove_deprecated_operations(new_model, model.enhancements)
-    handle_filter_documentation(new_model, model.enhancements)
     return new_model
 
 
@@ -211,12 +211,18 @@ def add_pagination_configs(new_model, pagination):
         if 'result_key' not in config:
             raise ValueError("Required key 'result_key' is missing from "
                              "from pagination config: %s" % config)
+        if name not in new_model['operations']:
+            raise ValueError("Trying to add pagination config for non "
+                             "existent operation: %s" % name)
         operation = new_model['operations'].get(name)
         # result_key must match a key in the output.
         if not isinstance(config['result_key'], list):
             result_keys = [config['result_key']]
         else:
             result_keys = config['result_key']
+        if result_keys and not operation['output']:
+            raise ValueError("Trying to add pagination config for an "
+                             "operation with no output members: %s" % name)
         for result_key in result_keys:
             if result_key not in operation['output']['members']:
                 raise ValueError("result_key %r is not an output member: %s" %
