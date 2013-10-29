@@ -514,6 +514,13 @@ class TestMultipleInputKeys(unittest.TestCase):
             self.operation.call.call_args_list,
             [mock.call(None, InMarker1='m1', InMarker2='m2'),])
 
+    def test_result_key_exposed_on_paginator(self):
+        self.assertEqual(self.paginator.result_keys, ['Users', 'Groups'])
+
+    def test_result_key_exposed_on_page_iterator(self):
+        pages = self.paginator.paginate(None, max_items=3)
+        self.assertEqual(pages.result_keys, ['Users', 'Groups'])
+
 
 if __name__ == '__main__':
     unittest.main()
