@@ -693,7 +693,7 @@ class TestReplacePartOfOperation(unittest.TestCase):
 
 
 class TestRemovalOfDeprecatedParams(unittest.TestCase):
-    
+
     def test_remove_deprecated_params(self):
         enhancements = {
             'transformations': {
@@ -709,7 +709,7 @@ class TestRemovalOfDeprecatedParams(unittest.TestCase):
         self.assertNotIn('FieBaz', operation['input']['members'])
 
 class TestRemovalOfDeprecatedOps(unittest.TestCase):
-    
+
     def test_remove_deprecated_ops(self):
         enhancements = {
             'transformations': {
@@ -723,9 +723,9 @@ class TestRemovalOfDeprecatedOps(unittest.TestCase):
         # The deprecated operation should be gone
         self.assertNotIn('DeprecatedOperation2', new_model['operations'])
 
-        
+
 class TestFilteringOfDocumentation(unittest.TestCase):
-    
+
     def test_remove_deprecated_params(self):
         enhancements = {
             "transformations": {
