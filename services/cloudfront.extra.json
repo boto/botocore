@@ -8,28 +8,28 @@
     }
   },
   "pagination": {
-    "ListCloudFrontOriginAccessIdentities2013_08_26": {
+    "ListCloudFrontOriginAccessIdentities": {
       "input_token": ["Marker"],
       "limit_key": "MaxItems",
       "more_key": "IsTruncated",
       "output_token": ["NextMarker"],
       "result_key": "CloudFrontOriginAccessIdentityList"
     },
-    "ListDistributions2013_08_26": {
+    "ListDistributions": {
       "input_token": ["Marker"],
       "limit_key": "MaxItems",
       "more_key": "IsTruncated",
       "output_token": ["NextMarker"],
       "result_key": "DistributionList"
     },
-    "ListInvalidations2013_08_26": {
+    "ListInvalidations": {
       "input_token": ["Marker"],
       "limit_key": "MaxItems",
       "more_key": "IsTruncated",
       "output_token": ["NextMarker"],
       "result_key": "InvalidationList"
     },
-    "ListStreamingDistributions2013_08_26": {
+    "ListStreamingDistributions": {
       "input_token": ["Marker"],
       "limit_key": "MaxItems",
       "more_key": "IsTruncated",
