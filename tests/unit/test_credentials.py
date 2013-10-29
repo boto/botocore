@@ -149,7 +149,7 @@ class IamRoleTest(BaseEnvVar):
         self.assertEqual(credentials.access_key, 'foo')
         self.assertEqual(credentials.secret_key, 'bar')
 
-    @mock.patch('requests.get')
+    @mock.patch('botocore.vendored.requests.get')
     def test_get_credentials_with_metadata_mock(self, get):
         self.environ['BOTO_CONFIG'] = ''
         first = mock.Mock()

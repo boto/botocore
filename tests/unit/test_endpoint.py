@@ -23,7 +23,7 @@
 from tests import unittest, BaseSessionTest
 
 from mock import Mock, patch, sentinel
-from requests import ConnectionError
+from botocore.vendored.requests import ConnectionError
 import six
 
 from botocore.endpoint import get_endpoint, QueryEndpoint, JSONEndpoint, \
