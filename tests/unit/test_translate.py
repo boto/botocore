@@ -81,7 +81,7 @@ SERVICES = {
             "pattern": "[\\w+=,.@:-]*",
             "documentation": "docs"
           },
-          # Not in the actual description, but this is to test iterators.
+          # Not in the actual description, but this is to test pagination.
           "NextToken": {
               "shape_name": "String",
               "type": "string",
@@ -209,6 +209,23 @@ SERVICES = {
     },
     "RealOperation2013_02_04": {
       "name": "RealOperation2013_02_04",
+      "input": {},
+      "output": {
+        "shape_name": "RealOperation2013_02_04Response",
+        "type": "structure",
+        "members": {
+          "Result": {
+            "shape_name": "Result",
+            "type": "string",
+            "documentation": ""
+          }
+        }
+      },
+      "errors": [],
+      "documentation": "docs"
+    },
+    "NoOutputOperation": {
+      "name": "NoOutputOperation",
       "input": {},
       "output": {},
       "errors": [],
@@ -560,8 +577,45 @@ class TestTranslateModel(unittest.TestCase):
         with self.assertRaises(ValueError):
             translate(self.model)
 
+    def test_cant_add_pagination_to_nonexistent_operation(self):
+        extra = {
+            'pagination': {
+                'ThisOperationDoesNotExist': {
+                    'input_token': 'NextToken',
+                    'output_token': ['NextToken', 'NextTokenToken'],
+                    'result_key': ['Credentials', 'AssumedRoleUser'],
+                    'limit_key': 'Foo',
+                }
+            }
+        }
+        self.model.enhancements = extra
+        with self.assertRaisesRegexp(
+                ValueError, "Trying to add pagination config for non "
+                            "existent operation: ThisOperationDoesNotExist"):
+            translate(self.model)
 
-class TestDictMerg(unittest.TestCase):
+    def test_result_key_validation_with_no_output(self):
+        extra = {
+            'pagination': {
+                # RealOperation does not have any output members so
+                # we should get an error message telling us this.
+                'NoOutputOperation': {
+                    'input_token': 'NextToken',
+                    'output_token': ['NextToken', 'NextTokenToken'],
+                    'result_key': ['Credentials', 'AssumedRoleUser'],
+                    'limit_key': 'Foo',
+                }
+            }
+        }
+        self.model.enhancements = extra
+        with self.assertRaisesRegexp(
+                ValueError, "Trying to add pagination config for an "
+                            "operation with no output members: "
+                            "NoOutputOperation"):
+            translate(self.model)
+
+
+class TestDictMerge(unittest.TestCase):
     def test_merge_dicts_overrides(self):
         first = {'foo': {'bar': {'baz': {'one': 'ORIGINAL', 'two': 'ORIGINAL'}}}}
         second = {'foo': {'bar': {'baz': {'one': 'UPDATE'}}}}
@@ -686,10 +740,33 @@ class TestReplacePartOfOperation(unittest.TestCase):
         # matched regex.
         self.assertEqual(list(sorted(new_model['operations'].keys())),
                          ['AssumeRole', 'DeprecatedOperation',
-                          'DeprecatedOperation2', 'RealOperation'])
+                          'DeprecatedOperation2', 'NoOutputOperation',
+                          'RealOperation'])
         # But the name key attribute is left unchanged.
         self.assertEqual(new_model['operations']['RealOperation']['name'],
                          'RealOperation2013_02_04')
+
+    def test_merging_occurs_after_transformation(self):
+        enhancements = {
+            'transformations': {
+                'operation-name': {'remove': r'\d{4}_\d{2}_\d{2}'}
+            },
+            'operations': {
+                'RealOperation': {
+                    'input': {
+                        'checksum': 'md5',
+                    }
+                },
+            }
+        }
+        model = ModelFiles(SERVICES, regions={}, retry={},
+                           enhancements=enhancements)
+        model.enhancements = enhancements
+        new_model = translate(model)
+        self.assertIn('RealOperation', new_model['operations'])
+        self.assertEqual(
+            new_model['operations']['RealOperation']['input']['checksum'],
+            'md5')
 
 
 class TestRemovalOfDeprecatedParams(unittest.TestCase):
