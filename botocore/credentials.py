@@ -21,7 +21,7 @@
 # IN THE SOFTWARE.
 #
 import os
-import requests
+from botocore.vendored import requests
 import logging
 
 from six.moves import configparser

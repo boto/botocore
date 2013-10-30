@@ -25,8 +25,8 @@ import functools
 import logging
 from binascii import crc32
 
-from requests import ConnectionError
-from requests.packages.urllib3.exceptions import ClosedPoolError
+from botocore.vendored.requests import ConnectionError
+from botocore.vendored.requests.packages.urllib3.exceptions import ClosedPoolError
 
 from botocore.exceptions import ChecksumError
 

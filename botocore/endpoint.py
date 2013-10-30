@@ -25,8 +25,8 @@ import logging
 import time
 import threading
 
-from requests.sessions import Session
-from requests.utils import get_environ_proxies
+from botocore.vendored.requests.sessions import Session
+from botocore.vendored.requests.utils import get_environ_proxies
 import six
 
 import botocore.response
