@@ -24,8 +24,8 @@
 from tests import unittest
 
 import mock
-from requests import ConnectionError
-from requests.packages.urllib3.exceptions import ClosedPoolError
+from botocore.vendored.requests import ConnectionError
+from botocore.vendored.requests.packages.urllib3.exceptions import ClosedPoolError
 
 from botocore import retryhandler
 from botocore.exceptions import ChecksumError
