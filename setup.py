@@ -7,19 +7,13 @@ distutils/setuptools install script.
 import sys
 import botocore
 
-try:
-    from setuptools import setup
-    setup
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup, find_packages
 
-packages = [
-    'botocore',
-]
 
 requires = ['six>=1.1.0',
             'jmespath==0.1.0',
             'python-dateutil>=2.1']
+
 
 if sys.version_info[:2] == (2, 6):
     # For python2.6 we have a few other dependencies.
@@ -43,7 +37,7 @@ setup(
     author_email='garnaat@amazon.com',
     url='https://github.com/boto/botocore',
     scripts=[],
-    packages=packages,
+    packages=find_packages(),
     package_data={'botocore': ['data/*.json', 'data/aws/*.json']},
     package_dir={'botocore': 'botocore'},
     include_package_data=True,
