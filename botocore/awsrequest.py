@@ -23,8 +23,8 @@
 import logging
 
 import six
-from requests import models
-from requests.sessions import REDIRECT_STATI
+from botocore.vendored.requests import models
+from botocore.vendored.requests.sessions import REDIRECT_STATI
 
 from botocore.compat import HTTPHeaders, file_type
 from botocore.exceptions import UnseekableStreamError
