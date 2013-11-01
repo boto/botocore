@@ -37,7 +37,7 @@ setup(
     author_email='garnaat@amazon.com',
     url='https://github.com/boto/botocore',
     scripts=[],
-    packages=find_packages(),
+    packages=find_packages(exclude=['tests*']),
     package_data={'botocore': ['data/*.json', 'data/aws/*.json'],
                   'botocore.vendored.requests': ['*.pem']},
     package_dir={'botocore': 'botocore'},
