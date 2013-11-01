@@ -121,7 +121,7 @@ def fix_s3_host(event_name, endpoint, request, auth, **kwargs):
                 if auth.auth_path[-1] != '/':
                     auth.auth_path += '/'
             path_parts.remove(bucket_name)
-            host = bucket_name + '.' + endpoint.service.global_endpoint
+            host = bucket_name + '.' + parts.netloc
             new_tuple = (parts.scheme, host, '/'.join(path_parts),
                          parts.query, '')
             new_uri = urlunsplit(new_tuple)
