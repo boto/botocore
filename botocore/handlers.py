@@ -36,7 +36,12 @@ from botocore import retryhandler
 
 
 logger = logging.getLogger(__name__)
-LabelRE = re.compile('[a-z0-9][a-z0-9\-]*[a-z0-9]')
+LABEL_RE = re.compile('[a-z0-9][a-z0-9\-]*[a-z0-9]')
+RESTRICTED_REGIONS = [
+    'us-gov-west-1',
+    'fips-gov-west-1',
+]
+
 
 
 def decode_console_output(event_name, shape, value, **kwargs):
@@ -91,7 +96,7 @@ def check_dns_name(bucket_name):
     if n == 1:
         if not bucket_name.isalnum():
             return False
-    match = LabelRE.match(bucket_name)
+    match = LABEL_RE.match(bucket_name)
     if match is None or match.end() != len(bucket_name):
         return False
     return True
@@ -114,7 +119,7 @@ def fix_s3_host(event_name, endpoint, request, auth, **kwargs):
         bucket_name = path_parts[1]
         logger.debug('Checking for DNS compatible bucket for: %s',
                      request.url)
-        if check_dns_name(bucket_name):
+        if check_dns_name(bucket_name) and _allowed_region(endpoint.region_name):
             # If the operation is on a bucket, the auth_path must be
             # terminated with a '/' character.
             if len(path_parts) == 2:
@@ -130,6 +135,10 @@ def fix_s3_host(event_name, endpoint, request, auth, **kwargs):
         else:
             logger.debug('Not changing URI, bucket is not DNS compatible: %s',
                          bucket_name)
+
+
+def _allowed_region(region_name):
+    return region_name not in RESTRICTED_REGIONS
 
 
 def register_retries_for_service(service, **kwargs):
