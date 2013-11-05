@@ -40,6 +40,7 @@ LABEL_RE = re.compile('[a-z0-9][a-z0-9\-]*[a-z0-9]')
 RESTRICTED_REGIONS = [
     'us-gov-west-1',
     'fips-gov-west-1',
+    'mock'
 ]
 
 
