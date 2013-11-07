@@ -4348,6 +4348,14 @@
                             "http_status_code": 509
                         }
                     }
+                },
+                "timeouts": {
+                    "applies_when": {
+                        "response": {
+                            "http_status_code": 400,
+                            "service_error_code": "RequestTimeout"
+                        }
+                    }
                 }
             }
         }
