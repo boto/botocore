@@ -1,6 +1,5 @@
 {
   "extra": {
-    "xmlnamespace": "http://cloudformation.amazonaws.com/doc/2010-05-15/",
     "metadata": {
       "regions": {
         "us-east-1": null,
