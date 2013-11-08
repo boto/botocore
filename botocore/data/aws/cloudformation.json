@@ -5,7 +5,8 @@
     "signature_version": "v4",
     "service_full_name": "AWS CloudFormation",
     "endpoint_prefix": "cloudformation",
-    "documentation": "\n      <fullname>AWS CloudFormation</fullname>\n      <p>AWS CloudFormation enables you to create and manage AWS infrastructure deployments predictably and repeatedly.\n         AWS CloudFormation helps you leverage AWS products such as Amazon EC2, EBS, Amazon SNS, ELB, and Auto Scaling\n         to build highly-reliable, highly scalable, cost effective applications without worrying about creating and\n         configuring the underlying the AWS infrastructure.</p>\n      <p>With AWS CloudFormation, you declare all of your resources and dependencies in a template file. The template\n         defines a collection of resources as a single unit called a stack. AWS CloudFormation creates and deletes all\n         member resources of the stack together and manages all dependencies between the resources for you.</p>\n      <p>For more information about this product, go to the <a href=\"http://aws.amazon.com/cloudformation/\">CloudFormation Product Page</a>.</p>\n      <p>Amazon CloudFormation makes use of other AWS products. If you need additional technical information about a\n         specific AWS product, you can find the product's technical documentation at <a href=\"http://aws.amazon.com/documentation/\">http://aws.amazon.com/documentation/</a>.</p>\n\n   ",
+    "xmlnamespace": "http://cloudformation.amazonaws.com/doc/2010-05-15/",
+    "documentation": "\n      <fullname>AWS CloudFormation</fullname>\n      <p>AWS CloudFormation enables you to create and manage AWS infrastructure deployments predictably and repeatedly.\n         AWS CloudFormation helps you leverage AWS products such as Amazon EC2, EBS, Amazon SNS, ELB, and Auto Scaling\n         to build highly-reliable, highly scalable, cost effective applications without worrying about creating and\n         configuring the underlying the AWS infrastructure.</p>\n      <p>With AWS CloudFormation, you declare all of your resources and dependencies in a template file. The template\n         defines a collection of resources as a single unit called a stack. AWS CloudFormation creates and deletes all\n         member resources of the stack together and manages all dependencies between the resources for you.</p>\n      <p>For more information about this product, go to the <a href=\"http://aws.amazon.com/cloudformation/\">CloudFormation Product Page</a>.</p>\n      <p>Amazon CloudFormation makes use of other AWS products. If you need additional technical information about a\n         specific AWS product, you can find the product's technical documentation at <a href=\"http://aws.amazon.com/documentation/\">http://aws.amazon.com/documentation/</a>.</p>\n      <note>You must call the AWS CloudFormation API as a regular IAM user. AWS CloudFormation does not support calling the API with\n         an <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/WorkingWithRoles.html\">IAM\n            role</a></note>\n\n   ",
     "operations": {
         "CancelUpdateStack": {
             "name": "CancelUpdateStack",
@@ -42,15 +43,14 @@
                         "shape_name": "TemplateBody",
                         "type": "string",
                         "min_length": 1,
-                        "max_length": 51200,
-                        "documentation": "\n      <p>Structure containing the template body. (For more information, go to the <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n         Guide</a>.)</p>\n      <p>Conditional: You must pass <code>TemplateBody</code> or <code>TemplateURL</code>. If both are passed, only\n         <code>TemplateBody</code> is used.</p>\n   "
+                        "documentation": "\n      <p>Structure containing the template body. (For more information, go to the <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n         Guide</a>.)</p>\n      <p>Conditional: You must pass <code>TemplateBody</code> or <code>TemplateURL</code>. If both are passed, only\n         <code>TemplateBody</code> is used.</p>\n   "
                     },
                     "TemplateURL": {
                         "shape_name": "TemplateURL",
                         "type": "string",
                         "min_length": 1,
                         "max_length": 1024,
-                        "documentation": "\n      <p>Location of file containing the template body. The URL must point to a template (max size: 307,200 bytes)\n         located in an S3 bucket in the same region as the stack. For more information, go to the <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n         Guide</a>.</p>\n      <p>Conditional: You must pass <code>TemplateURL</code> or <code>TemplateBody</code>. If both are passed, only\n         <code>TemplateBody</code> is used.</p>\n   ",
+                        "documentation": "\n      <p>Location of file containing the template body. The URL must point to a template (max size: 307,200 bytes)\n         located in an S3 bucket in the same region as the stack. For more information, go to the <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n         Guide</a>.</p>\n      <p>Conditional: You must pass <code>TemplateURL</code> or <code>TemplateBody</code>. If both are passed, only\n         <code>TemplateBody</code> is used.</p>\n   ",
                         "no_paramfile": true
                     },
                     "Parameters": {
@@ -108,7 +108,7 @@
                             ],
                             "documentation": null
                         },
-                        "documentation": "\n      <p>The list of capabilities that you want to allow in the stack. If your template contains IAM resources, you\n         must specify the CAPABILITY_IAM value for this parameter; otherwise, this action returns an\n         InsufficientCapabilities error. IAM resources are the following: <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-accesskey.html\">AWS::IAM::AccessKey</a>, <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-group.html\">AWS::IAM::Group</a>, <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-policy.html\">AWS::IAM::Policy</a>, <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-user.html\">AWS::IAM::User</a>, and <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-addusertogroup.html\">AWS::IAM::UserToGroupAddition</a>.</p>\n   "
+                        "documentation": "\n      <p>The list of capabilities that you want to allow in the stack. If your template contains IAM resources, you\n         must specify the CAPABILITY_IAM value for this parameter; otherwise, this action returns an\n         InsufficientCapabilities error. IAM resources are the following: <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-accesskey.html\">AWS::IAM::AccessKey</a>, <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-group.html\">AWS::IAM::Group</a>, <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-policy.html\">AWS::IAM::Policy</a>, <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-user.html\">AWS::IAM::User</a>, and <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-addusertogroup.html\">AWS::IAM::UserToGroupAddition</a>.</p>\n   "
                     },
                     "OnFailure": {
                         "shape_name": "OnFailure",
@@ -119,6 +119,20 @@
                             "DELETE"
                         ],
                         "documentation": "\n      <p>Determines what action will be taken if stack creation fails. This must be one of: DO_NOTHING, ROLLBACK, or\n      DELETE. You can specify either <code>OnFailure</code> or <code>DisableRollback</code>, but not both.</p>\n      <p>Default: <code>ROLLBACK</code></p>\n   "
+                    },
+                    "StackPolicyBody": {
+                        "shape_name": "StackPolicyBody",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 16384,
+                        "documentation": "\n       <p>Structure containing the stack policy body. (For more information, go to the <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/protect-stack-resources.html\">\n            AWS CloudFormation User Guide</a>.)</p>\n      <p>If you pass <code>StackPolicyBody</code> and <code>StackPolicyURL</code>, only\n         <code>StackPolicyBody</code> is used.</p>\n   "
+                    },
+                    "StackPolicyURL": {
+                        "shape_name": "StackPolicyURL",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 1350,
+                        "documentation": "\n      <p>Location of a file containing the stack policy. The URL must point to a policy (max size: 16KB) located in an S3 bucket in the same region as the stack. If you pass <code>StackPolicyBody</code> and <code>StackPolicyURL</code>, only\n         <code>StackPolicyBody</code> is used.</p>\n   "
                     },
                     "Tags": {
                         "shape_name": "Tags",
@@ -140,7 +154,7 @@
                             },
                             "documentation": "\n      <p>The Tag type is used by <code>CreateStack</code> in the <code>Tags</code> parameter. It allows you to specify a\n      key/value pair that can be used to store information related to cost allocation for an AWS CloudFormation\n      stack.</p>\n   "
                         },
-                        "documentation": "\n      <p>A set of user-defined <code>Tags</code> to associate with this stack, represented by key/value pairs. Tags\n      defined for the stack are propogated to EC2 resources that are created as part of the stack. A maximum number of\n      10 tags can be specified.</p>\n   "
+                        "documentation": "\n      <p>A set of user-defined <code>Tags</code> to associate with this stack, represented by key/value pairs. Tags\n      defined for the stack are propagated to EC2 resources that are created as part of the stack. A maximum number of\n      10 tags can be specified.</p>\n   "
                     }
                 },
                 "documentation": "\n      <p>The input for <a>CreateStack</a> action.</p>\n   "
@@ -261,7 +275,7 @@
                                 "ResourceType": {
                                     "shape_name": "ResourceType",
                                     "type": "string",
-                                    "documentation": "\n      <p>Type of the resource. (For more information, go to the <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n            Guide</a>.)</p>\n   "
+                                    "documentation": "\n      <p>Type of the resource. (For more information, go to the <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n            Guide</a>.)</p>\n   "
                                 },
                                 "Timestamp": {
                                     "shape_name": "Timestamp",
@@ -311,7 +325,7 @@
                 "documentation": "\n      <p>The output for a <a>DescribeStackEvents</a> action.</p>\n   "
             },
             "errors": [],
-            "documentation": "\n      <p>Returns all the stack related events for the AWS account. If <code>StackName</code> is specified, returns\n         events related to all the stacks with the given name. If <code>StackName</code> is not specified, returns all\n         the events for the account. For more information about a stack's event history, go to the <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n            Guide</a>.</p>\n      <note>Events are returned, even if the stack never existed or has been successfully deleted.</note>\n\n      <examples>\n         <queryrequest>\nhttps://cloudformation.us-east-1.amazonaws.com/\n ?Action=DescribeStackEvents\n &StackName=MyStack\n &Version=2010-05-15\n &SignatureVersion=2\n &Timestamp=2010-07-27T22%3A26%3A28.000Z\n &AWSAccessKeyId=[AWS Access KeyID]\n &Signature=[Signature]</queryrequest>\n\n         <queryresponse>\n<DescribeStackEventsResult>\n  <StackEvents>\n    <member>\n      <EventId>Event-1-Id</EventId>\n      <StackId>arn:aws:cloudformation:us-east-1:123456789:stack/MyStack/aaf549a0-a413-11df-adb3-5081b3858e83</StackId>\n      <StackName>MyStack</StackName>\n      <LogicalResourceId>MyStack</LogicalResourceId>\n      <PhysicalResourceId>MyStack_One</PhysicalResourceId>\n      <ResourceType>AWS::CloudFormation::Stack</ResourceType>\n      <Timestamp>2010-07-27T22:26:28Z</Timestamp>\n      <ResourceStatus>CREATE_IN_PROGRESS</ResourceStatus>\n      <ResourceStatusReason>User initiated</ ResourceStatusReason>\n    </member>\n    <member>\n      <EventId>Event-2-Id</EventId>\n      <StackId>arn:aws:cloudformation:us-east-1:123456789:stack/MyStack/aaf549a0-a413-11df-adb3-5081b3858e83</StackId>\n      <StackName>MyStack</StackName>\n      <LogicalResourceId>MyDBInstance</LogicalResourceId>\n      <PhysicalResourceId>MyStack_DB1</PhysicalResourceId>\n      <ResourceType>AWS::SecurityGroup</ResourceType>\n      <Timestamp>2010-07-27T22:27:28Z</Timestamp>\n      <ResourceStatus>CREATE_IN_PROGRESS</ResourceStatus>\n      <ResourceProperties>{\"GroupDescription\":...}</ResourceProperties>\n    </member>\n    <member>\n      <EventId>Event-3-Id</EventId>\n      <StackId>arn:aws:cloudformation:us-east-1:123456789:stack/MyStack/aaf549a0-a413-11df-adb3-5081b3858e83</StackId>\n      <StackName>MyStack</StackName>\n      <LogicalResourceId>MySG1</LogicalResourceId>\n      <PhysicalResourceId>MyStack_SG1</PhysicalResourceId>\n      <ResourceType>AWS:: SecurityGroup</ResourceType>\n      <Timestamp>2010-07-27T22:28:28Z</Timestamp>\n      <ResourceStatus>CREATE_COMPLETE</ResourceStatus>\n    </member>\n  </StackEvents>\n</DescribeStackEventsResult></queryresponse>\n      </examples>\n   ",
+            "documentation": "\n      <p>Returns all stack related events for a specified stack. For more information about a stack's event history, go to the <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n            Guide</a>.</p>\n      <note>Events are returned, even if the stack never existed or has been successfully deleted.</note>\n\n      <examples>\n         <queryrequest>\nhttps://cloudformation.us-east-1.amazonaws.com/\n ?Action=DescribeStackEvents\n &StackName=MyStack\n &Version=2010-05-15\n &SignatureVersion=2\n &Timestamp=2010-07-27T22%3A26%3A28.000Z\n &AWSAccessKeyId=[AWS Access KeyID]\n &Signature=[Signature]</queryrequest>\n\n         <queryresponse>\n<DescribeStackEventsResult>\n  <StackEvents>\n    <member>\n      <EventId>Event-1-Id</EventId>\n      <StackId>arn:aws:cloudformation:us-east-1:123456789:stack/MyStack/aaf549a0-a413-11df-adb3-5081b3858e83</StackId>\n      <StackName>MyStack</StackName>\n      <LogicalResourceId>MyStack</LogicalResourceId>\n      <PhysicalResourceId>MyStack_One</PhysicalResourceId>\n      <ResourceType>AWS::CloudFormation::Stack</ResourceType>\n      <Timestamp>2010-07-27T22:26:28Z</Timestamp>\n      <ResourceStatus>CREATE_IN_PROGRESS</ResourceStatus>\n      <ResourceStatusReason>User initiated</ ResourceStatusReason>\n    </member>\n    <member>\n      <EventId>Event-2-Id</EventId>\n      <StackId>arn:aws:cloudformation:us-east-1:123456789:stack/MyStack/aaf549a0-a413-11df-adb3-5081b3858e83</StackId>\n      <StackName>MyStack</StackName>\n      <LogicalResourceId>MyDBInstance</LogicalResourceId>\n      <PhysicalResourceId>MyStack_DB1</PhysicalResourceId>\n      <ResourceType>AWS::SecurityGroup</ResourceType>\n      <Timestamp>2010-07-27T22:27:28Z</Timestamp>\n      <ResourceStatus>CREATE_IN_PROGRESS</ResourceStatus>\n      <ResourceProperties>{\"GroupDescription\":...}</ResourceProperties>\n    </member>\n    <member>\n      <EventId>Event-3-Id</EventId>\n      <StackId>arn:aws:cloudformation:us-east-1:123456789:stack/MyStack/aaf549a0-a413-11df-adb3-5081b3858e83</StackId>\n      <StackName>MyStack</StackName>\n      <LogicalResourceId>MySG1</LogicalResourceId>\n      <PhysicalResourceId>MyStack_SG1</PhysicalResourceId>\n      <ResourceType>AWS:: SecurityGroup</ResourceType>\n      <Timestamp>2010-07-27T22:28:28Z</Timestamp>\n      <ResourceStatus>CREATE_COMPLETE</ResourceStatus>\n    </member>\n  </StackEvents>\n</DescribeStackEventsResult></queryresponse>\n      </examples>\n   ",
             "pagination": {
                 "input_token": "NextToken",
                 "output_token": "NextToken",
@@ -372,7 +386,7 @@
                             "ResourceType": {
                                 "shape_name": "ResourceType",
                                 "type": "string",
-                                "documentation": "\n      <p>Type of the resource. (For more information, go to the <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n            Guide</a>.)</p>\n   ",
+                                "documentation": "\n      <p>Type of the resource. (For more information, go to the <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n            Guide</a>.)</p>\n   ",
                                 "required": true
                             },
                             "LastUpdatedTimestamp": {
@@ -411,7 +425,7 @@
                             "Metadata": {
                                 "shape_name": "Metadata",
                                 "type": "string",
-                                "documentation": "\n      <p>The JSON format content of the <code>Metadata</code> attribute declared for the resource. For more\n         information, see <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/aws-attribute-metadata.html\">Metadata Attribute</a> in the AWS CloudFormation User Guide.</p>\n   "
+                                "documentation": "\n      <p>The JSON format content of the <code>Metadata</code> attribute declared for the resource. For more\n         information, see <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-metadata.html\">Metadata Attribute</a> in the AWS CloudFormation User Guide.</p>\n   "
                             }
                         },
                         "documentation": "\n      <p>A <code>StackResourceDetail</code> structure containing the description of the specified resource in the\n         specified stack.</p>\n   "
@@ -481,7 +495,7 @@
                                 "ResourceType": {
                                     "shape_name": "ResourceType",
                                     "type": "string",
-                                    "documentation": "\n      <p>Type of the resource. (For more information, go to the <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n            Guide</a>.)</p>\n   ",
+                                    "documentation": "\n      <p>Type of the resource. (For more information, go to the <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n            Guide</a>.)</p>\n   ",
                                     "required": true
                                 },
                                 "Timestamp": {
@@ -756,15 +770,14 @@
                         "shape_name": "TemplateBody",
                         "type": "string",
                         "min_length": 1,
-                        "max_length": 51200,
-                        "documentation": "\n      <p>Structure containing the template body. (For more information, go to the <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n            Guide</a>.)</p>\n      <p>Conditional: You must pass <code>TemplateBody</code> or <code>TemplateURL</code>. If both are passed, only\n            <code>TemplateBody</code> is used.</p>\n   "
+                        "documentation": "\n      <p>Structure containing the template body. (For more information, go to the <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n            Guide</a>.)</p>\n      <p>Conditional: You must pass <code>TemplateBody</code> or <code>TemplateURL</code>. If both are passed, only\n            <code>TemplateBody</code> is used.</p>\n   "
                     },
                     "TemplateURL": {
                         "shape_name": "TemplateURL",
                         "type": "string",
                         "min_length": 1,
                         "max_length": 1024,
-                        "documentation": "\n      <p>Location of file containing the template body. The URL must point to a template located in an S3 bucket in the\n         same region as the stack. For more information, go to the <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n            Guide</a>.</p>\n      <p>Conditional: You must pass <code>TemplateURL</code> or <code>TemplateBody</code>. If both are passed, only\n            <code>TemplateBody</code> is used.</p>\n   ",
+                        "documentation": "\n      <p>Location of file containing the template body. The URL must point to a template located in an S3 bucket in the\n         same region as the stack. For more information, go to the <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n            Guide</a>.</p>\n      <p>Conditional: You must pass <code>TemplateURL</code> or <code>TemplateBody</code>. If both are passed, only\n            <code>TemplateBody</code> is used.</p>\n   ",
                         "no_paramfile": true
                     },
                     "Parameters": {
@@ -805,7 +818,39 @@
                 "documentation": "\n      <p>The output for a <a>EstimateTemplateCost</a> action.</p>\n   "
             },
             "errors": [],
-            "documentation": "\n      <p>Returns the estimated monthly cost of a template. The return value is an AWS Simple Monthly Calculator URL with\n         a query string that describes the resources required to run the template.</p>\n\n      <examples>\n         <queryrequest>\nhttps://cloudformation.us-east-1.amazonaws.com/\n ?Action=EstimateTemplateCost\n &TemplateURL= https://s3.amazonaws.com/cloudformation-samples-us-east-1/Drupal_Simple.template\n &Version=2010-05-15\n &SignatureVersion=2\n &Timestamp=2011-12-04T22%3A26%3A28.000Z\n &AWSAccessKeyId=[AWS Access KeyID]\n &Signature=[Signature]</queryrequest>\n\n         <queryresponse>\n<EstimateTemplateCostResult>\n  <Url>http://calculator.s3.amazonaws.com/calc5.html?key=cf-2e351785-e821-450c-9d58-625e1e1ebfb6</Url>\n</EstimateTemplateCostResult></queryresponse>\n      </examples>\n   "
+            "documentation": "\n      <p>Returns the estimated monthly cost of a template. The return value is an AWS Simple Monthly Calculator URL with\n         a query string that describes the resources required to run the template.</p>\n      <examples>\n         <queryrequest>\nhttps://cloudformation.us-east-1.amazonaws.com/\n ?Action=EstimateTemplateCost\n &TemplateURL= https://s3.amazonaws.com/cloudformation-samples-us-east-1/Drupal_Simple.template\n &Version=2010-05-15\n &SignatureVersion=2\n &Timestamp=2011-12-04T22%3A26%3A28.000Z\n &AWSAccessKeyId=[AWS Access KeyID]\n &Signature=[Signature]</queryrequest>\n\n         <queryresponse>\n<EstimateTemplateCostResult>\n  <Url>http://calculator.s3.amazonaws.com/calc5.html?key=cf-2e351785-e821-450c-9d58-625e1e1ebfb6</Url>\n</EstimateTemplateCostResult></queryresponse>\n      </examples>\n   "
+        },
+        "GetStackPolicy": {
+            "name": "GetStackPolicy",
+            "input": {
+                "shape_name": "GetStackPolicyInput",
+                "type": "structure",
+                "members": {
+                    "StackName": {
+                        "shape_name": "StackName",
+                        "type": "string",
+                        "documentation": "\n       <p>The name or stack ID that is associated with the stack whose policy you want to get.</p>\n   ",
+                        "required": true
+                    }
+                },
+                "documentation": "\n       <p>The input for the <a>GetStackPolicy</a> action.</p>\n   "
+            },
+            "output": {
+                "shape_name": "GetStackPolicyOutput",
+                "type": "structure",
+                "members": {
+                    "StackPolicyBody": {
+                        "shape_name": "StackPolicyBody",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 16384,
+                        "documentation": "\n       <p>Structure containing the stack policy body. (For more information, go to the <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/protect-stack-resources.html\">\n            AWS CloudFormation User Guide</a>.)</p>\n   "
+                    }
+                },
+                "documentation": "\n       <p>The output for the <a>GetStackPolicy</a> action.</p>\n   "
+            },
+            "errors": [],
+            "documentation": "\n       <p>Returns the stack policy for a specified stack. If a stack doesn't have a policy, a null value is returned.</p>\n       <examples>\n           <queryrequest>\nhttps://cloudformation.us-east-1.amazonaws.com/\n ?Action=GetStackPolicy\n &StackName=MyStack\n &Version=2010-05-15\n &SignatureVersion=2\n &Timestamp=2010-07-27T22%3A26%3A28.000Z\n &AWSAccessKeyId=[AWS Access KeyID]\n &Signature=[Signature]</queryrequest>\n           <queryresponse>\n<GetTemplateResult>\n    <StackPolicyBody>\"{\n    \"Statement\" : [\n      {\n        \"Effect\" : \"Deny\",\n        \"Action\" : \"Update*\",\n        \"Resource\" : \"LogicalResourceId/ProductionDatabase\"\n      },\n      {\n        \"Effect\" : \"Allow\",\n        \"Action\" : \"Update:*\",\n        \"Resource\" : \"*\"\n      }\n    ]\n  }</StackPolicyBody>\n</GetTemplateResult></queryresponse>\n       </examples>\n   "
         },
         "GetTemplate": {
             "name": "GetTemplate",
@@ -816,7 +861,7 @@
                     "StackName": {
                         "shape_name": "StackName",
                         "type": "string",
-                        "documentation": "\n      <p>The name or the unique identifier associated with the stack.</p>\n   ",
+                        "documentation": "\n      <p>The name or the unique identifier associated with the stack, which are not always interchangeable:</p>\n      <ul>\n         <li>Running stacks: You can specify either the stack's name or its unique stack ID.</li>\n         <li>Deleted stacks: You must specify the unique stack ID.</li>\n      </ul>\n      <p>Default: There is no default value.</p>\n   ",
                         "required": true
                     }
                 },
@@ -830,14 +875,13 @@
                         "shape_name": "TemplateBody",
                         "type": "string",
                         "min_length": 1,
-                        "max_length": 51200,
-                        "documentation": "\n      <p>Structure containing the template body. (For more information, go to the <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/\">AWS CloudFormation User\n            Guide</a>.)</p>\n   "
+                        "documentation": "\n      <p>Structure containing the template body. (For more information, go to the <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/\">AWS CloudFormation User\n            Guide</a>.)</p>\n   "
                     }
                 },
                 "documentation": "\n      <p>The output for <a>GetTemplate</a> action.</p>\n   "
             },
             "errors": [],
-            "documentation": "\n      <p>Returns the template body for a specified stack name. You can get the template for running or deleted\n         stacks.</p>\n      <p>For deleted stacks, GetTemplate returns the template for up to 90 days after the stack has been deleted.</p>\n      <note> If the template does not exist, a <code>ValidationError</code> is returned. </note>\n\n      <examples>\n         <queryrequest>\nhttps://cloudformation.us-east-1.amazonaws.com/\n ?Action=GetTemplate\n &StackName=MyStack\n &Version=2010-05-15\n &SignatureVersion=2\n &Timestamp=2010-07-27T22%3A26%3A28.000Z\n &AWSAccessKeyId=[AWS Access KeyID]\n &Signature=[Signature]</queryrequest>\n\n         <queryresponse>\n<GetTemplateResult>\n  <TemplateBody>\"{\n  \"AWSTemplateFormatVersion\" : \"2010-09-09\",\n  \"Description\" : \"Simple example\",\n  \"Resources\" : {\n    \"MySQS\" : {\n      \"Type\" : \"AWS::SQS::Queue\",\n      \"Properties\" : {\n      }\n    }\n  }\n}</TemplateBody>\n</GetTemplateResult></queryresponse>\n      </examples>\n   "
+            "documentation": "\n      <p>Returns the template body for a specified stack. You can get the template for running or deleted\n         stacks.</p>\n      <p>For deleted stacks, GetTemplate returns the template for up to 90 days after the stack has been deleted.</p>\n      <note> If the template does not exist, a <code>ValidationError</code> is returned. </note>\n\n      <examples>\n         <queryrequest>\nhttps://cloudformation.us-east-1.amazonaws.com/\n ?Action=GetTemplate\n &StackName=MyStack\n &Version=2010-05-15\n &SignatureVersion=2\n &Timestamp=2010-07-27T22%3A26%3A28.000Z\n &AWSAccessKeyId=[AWS Access KeyID]\n &Signature=[Signature]</queryrequest>\n\n         <queryresponse>\n<GetTemplateResult>\n  <TemplateBody>\"{\n  \"AWSTemplateFormatVersion\" : \"2010-09-09\",\n  \"Description\" : \"Simple example\",\n  \"Resources\" : {\n    \"MySQS\" : {\n      \"Type\" : \"AWS::SQS::Queue\",\n      \"Properties\" : {\n      }\n    }\n  }\n}</TemplateBody>\n</GetTemplateResult></queryresponse>\n      </examples>\n   "
         },
         "ListStackResources": {
             "name": "ListStackResources",
@@ -848,7 +892,7 @@
                     "StackName": {
                         "shape_name": "StackName",
                         "type": "string",
-                        "documentation": "\n      <p>The name or the unique identifier associated with the stack.</p>\n      <p>Default: There is no default value.</p>\n   ",
+                        "documentation": "\n      <p>The name or the unique identifier associated with the stack, which are not always interchangeable:</p>\n      <ul>\n         <li>Running stacks: You can specify either the stack's name or its unique stack ID.</li>\n         <li>Deleted stacks: You must specify the unique stack ID.</li>\n      </ul>\n      <p>Default: There is no default value.</p>\n   ",
                         "required": true
                     },
                     "NextToken": {
@@ -886,7 +930,7 @@
                                 "ResourceType": {
                                     "shape_name": "ResourceType",
                                     "type": "string",
-                                    "documentation": "\n      <p>Type of the resource. (For more information, go to the <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n            Guide</a>.)</p>\n   ",
+                                    "documentation": "\n      <p>Type of the resource. (For more information, go to the <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n            Guide</a>.)</p>\n   ",
                                     "required": true
                                 },
                                 "LastUpdatedTimestamp": {
@@ -1081,6 +1125,39 @@
                 "py_input_token": "next_token"
             }
         },
+        "SetStackPolicy": {
+            "name": "SetStackPolicy",
+            "input": {
+                "shape_name": "SetStackPolicyInput",
+                "type": "structure",
+                "members": {
+                    "StackName": {
+                        "shape_name": "StackName",
+                        "type": "string",
+                        "documentation": "\n       <p>The name or stack ID that you want to associate a policy with.</p>\n   ",
+                        "required": true
+                    },
+                    "StackPolicyBody": {
+                        "shape_name": "StackPolicyBody",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 16384,
+                        "documentation": "\n       <p>Structure containing the stack policy body. (For more information, go to the <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/protect-stack-resources.html\">\n            AWS CloudFormation User Guide</a>.)</p>\n      <p>You must pass <code>StackPolicyBody</code> or <code>StackPolicyURL</code>. If both are passed, only\n         <code>StackPolicyBody</code> is used.</p>\n   "
+                    },
+                    "StackPolicyURL": {
+                        "shape_name": "StackPolicyURL",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 1350,
+                        "documentation": "\n      <p>Location of a file containing the stack policy. The URL must point to a policy (max size: 16KB) located in an S3 bucket in the same region as the stack. You must pass <code>StackPolicyBody</code> or <code>StackPolicyURL</code>. If both are passed, only\n         <code>StackPolicyBody</code> is used.</p>\n   "
+                    }
+                },
+                "documentation": "\n       <p>The input for the <a>SetStackPolicy</a> action.</p>\n   "
+            },
+            "output": null,
+            "errors": [],
+            "documentation": "\n       <p>Sets a stack policy for a specified stack.</p>\n   "
+        },
         "UpdateStack": {
             "name": "UpdateStack",
             "input": {
@@ -1097,16 +1174,29 @@
                         "shape_name": "TemplateBody",
                         "type": "string",
                         "min_length": 1,
-                        "max_length": 51200,
-                        "documentation": "\n      <p>Structure containing the template body. (For more information, go to the <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n            Guide</a>.)</p>\n      <p>Conditional: You must pass <code>TemplateBody</code> or <code>TemplateURL</code>. If both are passed, only\n            <code>TemplateBody</code> is used.</p>\n   "
+                        "documentation": "\n      <p>Structure containing the template body. (For more information, go to the <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n            Guide</a>.)</p>\n      <p>Conditional: You must pass <code>TemplateBody</code> or <code>TemplateURL</code>. If both are passed, only\n            <code>TemplateBody</code> is used.</p>\n   "
                     },
                     "TemplateURL": {
                         "shape_name": "TemplateURL",
                         "type": "string",
                         "min_length": 1,
                         "max_length": 1024,
-                        "documentation": "\n      <p>Location of file containing the template body. The URL must point to a template located in an S3 bucket in the\n         same region as the stack. For more information, go to the <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n            Guide</a>.</p>\n      <p>Conditional: You must pass <code>TemplateURL</code> or <code>TemplateBody</code>. If both are passed, only\n            <code>TemplateBody</code> is used.</p>\n   ",
+                        "documentation": "\n      <p>Location of file containing the template body. The URL must point to a template located in an S3 bucket in the\n         same region as the stack. For more information, go to the <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n            Guide</a>.</p>\n      <p>Conditional: You must pass <code>TemplateURL</code> or <code>TemplateBody</code>. If both are passed, only\n            <code>TemplateBody</code> is used.</p>\n   ",
                         "no_paramfile": true
+                    },
+                    "StackPolicyDuringUpdateBody": {
+                        "shape_name": "StackPolicyDuringUpdateBody",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 16384,
+                        "documentation": "\n      <p>Structure containing the temporary overriding stack policy body. If you pass <code>StackPolicyDuringUpdateBody</code> and <code>StackPolicyDuringUpdateURL</code>, only\n         <code>StackPolicyDuringUpdateBody</code> is used.</p>\n       <p>If you want to update protected resources, specify a temporary overriding stack policy during this update. If you do not specify a stack policy, the current policy that associated with the stack will be used.</p>\n   "
+                    },
+                    "StackPolicyDuringUpdateURL": {
+                        "shape_name": "StackPolicyDuringUpdateURL",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 1350,
+                        "documentation": "\n      <p>Location of a file containing the temporary overriding stack policy. The URL must point to a policy (max size: 16KB) located in an S3 bucket in the same region as the stack. If you pass <code>StackPolicyDuringUpdateBody</code> and <code>StackPolicyDuringUpdateURL</code>, only\n          <code>StackPolicyDuringUpdateBody</code> is used.</p>\n       <p>If you want to update protected resources, specify a temporary overriding stack policy during this update. If you do not specify a stack policy, the current policy that is associated with the stack will be used.</p>\n   "
                     },
                     "Parameters": {
                         "shape_name": "Parameters",
@@ -1141,7 +1231,21 @@
                             ],
                             "documentation": null
                         },
-                        "documentation": "\n      <p>The list of capabilities that you want to allow in the stack. If your stack contains IAM resources, you must\n         specify the CAPABILITY_IAM value for this parameter; otherwise, this action returns an InsufficientCapabilities\n         error. IAM resources are the following: <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-accesskey.html\">AWS::IAM::AccessKey</a>, <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-group.html\">AWS::IAM::Group</a>, <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-policy.html\">AWS::IAM::Policy</a>, <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-user.html\">AWS::IAM::User</a>, and <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-addusertogroup.html\">AWS::IAM::UserToGroupAddition</a>.</p>\n   "
+                        "documentation": "\n      <p>The list of capabilities that you want to allow in the stack. If your stack contains IAM resources, you must\n         specify the CAPABILITY_IAM value for this parameter; otherwise, this action returns an InsufficientCapabilities\n         error. IAM resources are the following: <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-accesskey.html\">AWS::IAM::AccessKey</a>, <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-group.html\">AWS::IAM::Group</a>, <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-policy.html\">AWS::IAM::Policy</a>, <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-user.html\">AWS::IAM::User</a>, and <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-addusertogroup.html\">AWS::IAM::UserToGroupAddition</a>.</p>\n   "
+                    },
+                    "StackPolicyBody": {
+                        "shape_name": "StackPolicyBody",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 16384,
+                        "documentation": "\n      <p>Structure containing the updated stack policy body. If you pass <code>StackPolicyBody</code> and <code>StackPolicyURL</code>, only\n         <code>StackPolicyBody</code> is used.</p>\n       <p>If you want to update a stack policy during a stack update, specify an updated stack policy. For example, you can include an updated stack policy to protect a new resource created in the stack update. If you do not specify a stack policy, the current policy that is associated with the stack is unchanged.</p>\n   "
+                    },
+                    "StackPolicyURL": {
+                        "shape_name": "StackPolicyURL",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 1350,
+                        "documentation": "\n      <p>Location of a file containing the updated stack policy. The URL must point to a policy (max size: 16KB) located in an S3 bucket in the same region as the stack. If you pass <code>StackPolicyBody</code> and <code>StackPolicyURL</code>, only\n         <code>StackPolicyBody</code> is used.</p>\n       <p>If you want to update a stack policy during a stack update, specify an updated stack policy. For example, you can include an updated stack policy to protect a new resource created in the stack update. If you do not specify a stack policy, the current policy that is associated with the stack is unchanged.</p>\n   "
                     }
                 },
                 "documentation": "\n      <p>The input for <a>UpdateStack</a> action.</p>\n   "
@@ -1166,7 +1270,7 @@
                     "documentation": "\n      <p>The template contains resources with capabilities that were not specified in the Capabilities parameter.</p>\n   "
                 }
             ],
-            "documentation": "\n      <p>Updates a stack as specified in the template. After the call completes successfully, the stack update starts.\n         You can check the status of the stack via the <a>DescribeStacks</a> action.</p>\n      <p>To get a copy of the template for an existing stack, you can use the <a>GetTemplate</a> action.</p>\n      <p>Tags that were associated with this stack during creation time will still be associated with the stack after an\n      <code>UpdateStack</code> operation.</p>\n      <p>For more information about creating an update template, updating a stack, and monitoring the progress of the\n         update, see <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks.html\">Updating a Stack</a>.</p>\n\n      <examples>\n         <queryrequest>\nhttps://cloudformation.us-east-1.amazonaws.com/\n ?Action=UpdateStack\n &StackName=MyStack\n &TemplateBody=[Template Document]\n &Parameters.member.1.ParameterKey=AvailabilityZone\n &Parameters.member.1.ParameterValue=us-east-1a\n &Version=2010-05-15\n &SignatureVersion=2\n &Timestamp=2010-07-27T22%3A26%3A28.000Z\n &AWSAccessKeyId=[AWS Access KeyID]\n &Signature=[Signature]</queryrequest>\n\n         <queryresponse>\n<UpdateStackResult>\n  <StackId>arn:aws:cloudformation:us-east-1:123456789:stack/MyStack/aaf549a0-a413-11df-adb3-5081b3858e83</StackId>\n</UpdateStackResult></queryresponse>\n      </examples>\n   "
+            "documentation": "\n      <p>Updates a stack as specified in the template. After the call completes successfully, the stack update starts.\n         You can check the status of the stack via the <a>DescribeStacks</a> action.</p>\n      <p></p>\n      <p><b>Note: </b>You cannot update <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-bucket.html\">AWS::S3::Bucket</a>\n         resources, for example, to add or modify tags.</p>\n      <p></p>\n      <p>To get a copy of the template for an existing stack, you can use the <a>GetTemplate</a> action.</p>\n      <p>Tags that were associated with this stack during creation time will still be associated with the stack after an\n      <code>UpdateStack</code> operation.</p>\n      <p>For more information about creating an update template, updating a stack, and monitoring the progress of the\n         update, see <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks.html\">Updating a Stack</a>.</p>\n\n      <examples>\n         <queryrequest>\nhttps://cloudformation.us-east-1.amazonaws.com/\n ?Action=UpdateStack\n &StackName=MyStack\n &TemplateBody=[Template Document]\n &Parameters.member.1.ParameterKey=AvailabilityZone\n &Parameters.member.1.ParameterValue=us-east-1a\n &Version=2010-05-15\n &SignatureVersion=2\n &Timestamp=2010-07-27T22%3A26%3A28.000Z\n &AWSAccessKeyId=[AWS Access KeyID]\n &Signature=[Signature]</queryrequest>\n\n         <queryresponse>\n<UpdateStackResult>\n  <StackId>arn:aws:cloudformation:us-east-1:123456789:stack/MyStack/aaf549a0-a413-11df-adb3-5081b3858e83</StackId>\n</UpdateStackResult></queryresponse>\n      </examples>\n   "
         },
         "ValidateTemplate": {
             "name": "ValidateTemplate",
@@ -1178,15 +1282,14 @@
                         "shape_name": "TemplateBody",
                         "type": "string",
                         "min_length": 1,
-                        "max_length": 51200,
-                        "documentation": "\n      <p>String containing the template body. (For more information, go to the <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n         Guide</a>.)</p>\n      <p>Conditional: You must pass <code>TemplateURL</code> or <code>TemplateBody</code>. If both are passed, only\n         <code>TemplateBody</code> is used.</p>\n   "
+                        "documentation": "\n      <p>String containing the template body. (For more information, go to the <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n         Guide</a>.)</p>\n      <p>Conditional: You must pass <code>TemplateURL</code> or <code>TemplateBody</code>. If both are passed, only\n         <code>TemplateBody</code> is used.</p>\n   "
                     },
                     "TemplateURL": {
                         "shape_name": "TemplateURL",
                         "type": "string",
                         "min_length": 1,
                         "max_length": 1024,
-                        "documentation": "\n      <p>Location of file containing the template body. The URL must point to a template (max size: 307,200 bytes)\n         located in an S3 bucket in the same region as the stack. For more information, go to the <a href=\"http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n         Guide</a>.</p>\n      <p>Conditional: You must pass <code>TemplateURL</code> or <code>TemplateBody</code>. If both are passed, only\n         <code>TemplateBody</code> is used.</p>\n   ",
+                        "documentation": "\n      <p>Location of file containing the template body. The URL must point to a template (max size: 307,200 bytes)\n         located in an S3 bucket in the same region as the stack. For more information, go to the <a href=\"http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide\">AWS CloudFormation User\n         Guide</a>.</p>\n      <p>Conditional: You must pass <code>TemplateURL</code> or <code>TemplateBody</code>. If both are passed, only\n         <code>TemplateBody</code> is used.</p>\n   ",
                         "no_paramfile": true
                     }
                 },
@@ -1244,7 +1347,7 @@
                             ],
                             "documentation": null
                         },
-                        "documentation": "\n      <p>The capabitilites found within the template. Currently, CAPABILITY_IAM is the only capability detected. If\n         your template contains IAM resources, you must specify the CAPABILITY_IAM value for this parameter when you use\n         the <a>CreateStack</a> or <a>UpdateStack</a> actions with your template; otherwise, those actions return an\n         InsufficientCapabilities error.</p>\n   "
+                        "documentation": "\n      <p>The capabilities found within the template. Currently, CAPABILITY_IAM is the only capability detected. If\n         your template contains IAM resources, you must specify the CAPABILITY_IAM value for this parameter when you use\n         the <a>CreateStack</a> or <a>UpdateStack</a> actions with your template; otherwise, those actions return an\n         InsufficientCapabilities error.</p>\n   "
                     },
                     "CapabilitiesReason": {
                         "shape_name": "CapabilitiesReason",
@@ -1258,7 +1361,6 @@
             "documentation": "\n      <p>Validates a specified template.</p>\n\n      <examples>\n         <queryrequest>\nhttps://cloudformation.us-east-1.amazonaws.com/\n ?Action=ValidateTemplate\n &TemplateBody=http://myTemplateRepository/TemplateOne.template\n &Version=2010-05-15\n &SignatureVersion=2\n &Timestamp=2010-07-27T22%3A26%3A28.000Z\n &AWSAccessKeyId=[AWS Access KeyID]\n &Signature=[Signature]</queryrequest>\n\n         <queryresponse>\n<ValidateTemplateResponse xmlns=\"http://cloudformation.amazonaws.com/doc/2010-05-15/\">\n  <ValidateTemplateResult>\n    <Description></Description>\n    <Parameters>\n      <member>\n        <NoEcho>false</NoEcho>\n        <ParameterKey>InstanceType</ParameterKey>\n        <Description>Type of instance to launch</Description>\n        <DefaultValue>m1.small</DefaultValue>\n      </member>\n      <member>\n        <NoEcho>false</NoEcho>\n        <ParameterKey>WebServerPort</ParameterKey>\n        <Description>The TCP port for the Web Server</Description>\n        <DefaultValue>8888</DefaultValue>\n      </member>\n      <member>\n        <NoEcho>false</NoEcho>\n        <ParameterKey>KeyName</ParameterKey>\n        <Description>Name of an existing EC2 KeyPair to enable SSH access into the server</Description>\n      </member>\n    </Parameters>\n  </ValidateTemplateResult>\n  <ResponseMetadata>\n    <RequestId>0be7b6e8-e4a0-11e0-a5bd-9f8d5a7dbc91</RequestId>\n  </ResponseMetadata>\n</ValidateTemplateResponse>\n</queryresponse>\n      </examples>\n   "
         }
     },
-    "xmlnamespace": "http://cloudformation.amazonaws.com/doc/2010-05-15/",
     "metadata": {
         "regions": {
             "us-east-1": null,
