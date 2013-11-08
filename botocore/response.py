@@ -208,13 +208,18 @@ class XmlResponse(Response):
 
     def _handle_structure(self, elem, shape):
         new_data = {}
+        xmlname = shape.get('xmlname')
+        if xmlname:
+            tagname = self.get_element_base_tag(elem)
+            if xmlname != tagname:
+                return new_data
         for member_name in shape['members']:
             member_shape = shape['members'][member_name]
             xmlname = member_shape.get('xmlname', member_name)
             child = self.find(elem, xmlname)
             if child is not None:
-                new_data[member_name] = self.handle_elem(member_name, child,
-                                                         member_shape)
+                new_data[member_name] = self.handle_elem(
+                    member_name, child, member_shape)
         return new_data
 
     def _handle_list(self, elem, shape):
