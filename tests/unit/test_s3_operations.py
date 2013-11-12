@@ -56,6 +56,10 @@ XMLBODY6 = ('<VersioningConfiguration>'
 XMLBODY7 = ('<Delete><Object><Key>foobar</Key>'
            '</Object><Object><Key>fiebaz</Key></Object>'
             '</Delete>')
+XMLBODY8 = ('<WebsiteConfiguration>'
+            '<ErrorDocument><Key>SomeErrorDocument.html</Key></ErrorDocument>'
+            '<IndexDocument><Suffix>index.html</Suffix></IndexDocument>'
+            '</WebsiteConfiguration>')
 
 POLICY = ('{"Version": "2008-10-17","Statement": [{"Sid": "AddPerm",'
           '"Effect": "Allow","Principal": {"AWS": "*"},'
@@ -162,6 +166,16 @@ class TestS3Operations(BaseEnvVar):
         self.assertEqual(params['uri_params'], uri_params)
         self.assertEqual(params['payload'].getvalue(), XMLBODY4)
         self.assertEqual(params['headers'], headers)
+
+    def test_put_bucket_website(self):
+        op = self.s3.get_operation('PutBucketWebsite')
+        website = {"IndexDocument": {'Suffix': 'index.html'},
+                   "ErrorDocument": {'Key': 'SomeErrorDocument.html'}}
+        params = op.build_parameters(bucket=self.bucket_name,
+                                     website_configuration=website)
+        uri_params = {'Bucket': self.bucket_name}
+        self.assertEqual(params['uri_params'], uri_params)
+        self.assertEqual(params['payload'].getvalue(), XMLBODY8)
 
     def test_delete_objects(self):
         op = self.s3.get_operation('DeleteObjects')
