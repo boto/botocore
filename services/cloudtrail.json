@@ -1,0 +1,653 @@
+{
+  "api_version": "2013-11-01",
+  "type": "json",
+  "json_version": 1.1,
+  "target_prefix": "com.amazonaws.cloudtrail.v20131101.CloudTrail_20131101",
+  "signature_version": "v4",
+  "service_full_name": "AWS CloudTrail",
+  "service_abbreviation": "CloudTrail",
+  "endpoint_prefix": "cloudtrail",
+  "xmlnamespace": "http://cloudtrail.amazonaws.com/doc/2013-11-01/",
+  "documentation": "\n   <fullname>AWS Cloud Trail</fullname>\n      <p>This is the CloudTrail API Reference. It provides descriptions of actions, data types, common parameters, and common errors for CloudTrail. </p> \n      <p>CloudTrail is a web service that records AWS API calls for your AWS account and delivers log files to an Amazon S3 bucket. The recorded information includes the identity of the user, the start time of the event, the source IP address, the request parameters, and the response elements returned by the service.</p>\n      \n      \n      <note>\n         As an alternative to using the API, you can use one of the AWS SDKs, which consist of libraries and sample code \n         for various programming languages and platforms (Java, Ruby, .NET, iOS, Android, etc.). The SDKs provide a convenient way to create programmatic access to AWSCloudTrail. For example, the SDKs take care of cryptographically \n         signing requests, managing errors, and retrying requests automatically. For information about the AWS SDKs, including how to download and install them, see the <a href=\"http://aws.amazon.com/tools/\">Tools for Amazon Web Services page</a>.\n      </note>\n      \n      \n<p>See the CloudTrail User Guide for information about the data that is included with each event listed in the log files.</p>  ",
+  "operations": {
+    "CreateTrail": {
+      "name": "CreateTrail",
+      "input": {
+        "shape_name": "CreateTrailRequest",
+        "type": "structure",
+        "members": {
+          "trail": {
+            "shape_name": "Trail",
+            "type": "structure",
+            "members": {
+              "Name": {
+                "shape_name": "String",
+                "type": "string",
+                "documentation": "\n      <p>Name of the trail defined when you call when you call <a>CreateTrail</a></p>\n   "
+              },
+              "S3BucketName": {
+                "shape_name": "String",
+                "type": "string",
+                "documentation": "\n      <p>Name of the Amazon S3 bucket into which CloudTrail delivers your trail files. Passed when you call <a>CreateTrail</a>.</p>\n   "
+              },
+              "S3KeyPrefix": {
+                "shape_name": "String",
+                "type": "string",
+                "documentation": "\n      <p>Value of the Amazon S3 prefix </p>\n   "
+              },
+              "SnsTopicName": {
+                "shape_name": "String",
+                "type": "string",
+                "documentation": "\n      <p>Name of the existing Amazon SNS topic that CloudTrail uses to notify the account owner when new CloudTrail log files have been delivered. </p>\n   "
+              },
+              "IncludeGlobalServiceEvents": {
+                "shape_name": "Boolean",
+                "type": "boolean",
+                "documentation": "\n      <p>Set to <b>True</b> to include events from AWS global services such as IAM. Otherwise, <b>False</b>.</p>\n   "
+              }
+            },
+            "documentation": "\n      <p>Contains the <a>Trail</a> structure that specifies the settings for each trail.</p>\n   "
+          }
+        },
+        "documentation": "\n      <p>The <a>Trail</a> structures that specify settings for each trail.</p>\n   "
+      },
+      "output": {
+        "shape_name": "CreateTrailResponse",
+        "type": "structure",
+        "members": {
+          "trail": {
+            "shape_name": "Trail",
+            "type": "structure",
+            "members": {
+              "Name": {
+                "shape_name": "String",
+                "type": "string",
+                "documentation": "\n      <p>Name of the trail defined when you call when you call <a>CreateTrail</a></p>\n   "
+              },
+              "S3BucketName": {
+                "shape_name": "String",
+                "type": "string",
+                "documentation": "\n      <p>Name of the Amazon S3 bucket into which CloudTrail delivers your trail files. Passed when you call <a>CreateTrail</a>.</p>\n   "
+              },
+              "S3KeyPrefix": {
+                "shape_name": "String",
+                "type": "string",
+                "documentation": "\n      <p>Value of the Amazon S3 prefix </p>\n   "
+              },
+              "SnsTopicName": {
+                "shape_name": "String",
+                "type": "string",
+                "documentation": "\n      <p>Name of the existing Amazon SNS topic that CloudTrail uses to notify the account owner when new CloudTrail log files have been delivered. </p>\n   "
+              },
+              "IncludeGlobalServiceEvents": {
+                "shape_name": "Boolean",
+                "type": "boolean",
+                "documentation": "\n      <p>Set to <b>True</b> to include events from AWS global services such as IAM. Otherwise, <b>False</b>.</p>\n   "
+              }
+            },
+            "documentation": "\n      <p>Data type that represents the settings for a trail.</p>\n   "
+          }
+        },
+        "documentation": "\n      <p>A JSON-formatted <a>Trail</a> object that represents the settings for the requested trail.</p>\n   "
+      },
+      "errors": [
+        {
+          "shape_name": "MaximumNumberOfTrailsExceededException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "TrailAlreadyExistsException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "S3BucketDoesNotExistException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InsufficientS3BucketPolicyException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InsufficientSnsTopicPolicyException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InternalErrorException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InvalidS3BucketNameException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InvalidS3PrefixException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InvalidSnsTopicNameException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InvalidTrailNameException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "TrailNotProvidedException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        }
+      ],
+      "documentation": "\n      <p>From the command line, use create-subscription. </p>\n      <p>Creates a trail that specifies the settings for delivery of log data to an Amazon S3 bucket. The request includes a <a>Trail</a> structure that specifies the following:</p>\n      <ul>\n          <li>Trail name.</li>\n         <li>The name of the Amazon S3 bucket to which CloudTrail delivers your log files.</li>\n         <li>The name of the Amazon S3 key prefix that precedes each log file.</li>\n         <li>The name of the Amazon SNS topic that notifies you that a new file is available in your bucket.</li>\n         <li>Whether the log file should include events from global services. Currently, the only  events included in CloudTrail log files are from IAM and AWS STS.</li>\n      </ul>\n      <p>Returns the appropriate HTTP status code if successful. If not, it returns either one of the CommonErrors or a FrontEndException with one of the following error codes:</p>\n      \n      <p><b>MaximumNumberOfTrailsExceeded</b></p>\n      <p>An attempt was made to create more trails than allowed. You can only create one trail for each account in each region. </p>\n      <p><b>TrailAlreadyExists</b></p>\n      <p>At attempt was made to create a trail with a name that already exists. </p>\n      <p><b>S3BucketDoesNotExist</b></p>\n      <p>Specified Amazon S3 bucket does not exist.</p>\n      <p><b>InsufficientS3BucketPolicy</b></p>\n      <p>Policy on Amazon S3 bucket does not permit CloudTrail to write to your bucket. See the AWS AWS CloudTrail User Guide for the required bucket policy. </p>\n      <p><b>InsufficientSnsTopicPolicy</b></p>\n      <p>The policy on Amazon SNS topic does not permit CloudTrail to write to it. Can also occur when an Amazon SNS topic does not exist. </p>\n      \n   "
+    },
+    "DeleteTrail": {
+      "name": "DeleteTrail",
+      "input": {
+        "shape_name": "DeleteTrailRequest",
+        "type": "structure",
+        "members": {
+          "Name": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": "\n      <p>The name of a trail to be deleted.</p>\n   "
+          }
+        },
+        "documentation": "\n      <a>The request that specifies the name of a trail to delete.</a>\n   "
+      },
+      "output": {
+        "shape_name": "DeleteTrailResponse",
+        "type": "structure",
+        "members": {
+        },
+        "documentation": "\n   <p>Returns the objects or data listed below if successful. Otherwise, returns an error.</p>\n   "
+      },
+      "errors": [
+        {
+          "shape_name": "TrailNotFoundException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InternalErrorException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InvalidTrailNameException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        }
+      ],
+      "documentation": "\n      <p>Deletes a trail.  </p>\n   "
+    },
+    "DescribeTrails": {
+      "name": "DescribeTrails",
+      "input": {
+        "shape_name": "DescribeTrailsRequest",
+        "type": "structure",
+        "members": {
+          "trailNameList": {
+            "shape_name": "TrailNameList",
+            "type": "list",
+            "members": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            },
+            "documentation": "\n      <p>The list of <a>Trail</a> object names.</p>\n   "
+          }
+        },
+        "documentation": "\n      <p>The name of the trail for which you want the <a>Trail</a> structure returned.</p>\n   "
+      },
+      "output": {
+        "shape_name": "DescribeTrailsResponse",
+        "type": "structure",
+        "members": {
+          "trailList": {
+            "shape_name": "TrailList",
+            "type": "list",
+            "members": {
+              "shape_name": "Trail",
+              "type": "structure",
+              "members": {
+                "Name": {
+                  "shape_name": "String",
+                  "type": "string",
+                  "documentation": "\n      <p>Name of the trail defined when you call when you call <a>CreateTrail</a></p>\n   "
+                },
+                "S3BucketName": {
+                  "shape_name": "String",
+                  "type": "string",
+                  "documentation": "\n      <p>Name of the Amazon S3 bucket into which CloudTrail delivers your trail files. Passed when you call <a>CreateTrail</a>.</p>\n   "
+                },
+                "S3KeyPrefix": {
+                  "shape_name": "String",
+                  "type": "string",
+                  "documentation": "\n      <p>Value of the Amazon S3 prefix </p>\n   "
+                },
+                "SnsTopicName": {
+                  "shape_name": "String",
+                  "type": "string",
+                  "documentation": "\n      <p>Name of the existing Amazon SNS topic that CloudTrail uses to notify the account owner when new CloudTrail log files have been delivered. </p>\n   "
+                },
+                "IncludeGlobalServiceEvents": {
+                  "shape_name": "Boolean",
+                  "type": "boolean",
+                  "documentation": "\n      <p>Set to <b>True</b> to include events from AWS global services such as IAM. Otherwise, <b>False</b>.</p>\n   "
+                }
+              },
+              "documentation": "\n      The settings for a trail.\n   "
+            },
+            "documentation": "\n      <p>An array of <a>Trail</a> objects.</p>\n   "
+          }
+        },
+        "documentation": "\n      <p>Returns the objects or data listed below if successful. Otherwise, returns an error.</p>\n   "
+      },
+      "errors": [
+        {
+          "shape_name": "InternalErrorException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        }
+      ],
+      "documentation": "\n      <p>Retrieves the settings for some or all trails associated with an account. Returns a list of <a>Trail</a> structures in JSON format. </p>\n   "
+    },
+    "GetTrailStatus": {
+      "name": "GetTrailStatus",
+      "input": {
+        "shape_name": "GetTrailStatusRequest",
+        "type": "structure",
+        "members": {
+          "Name": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": "\n      <p>The name of the trail for which you are requesting the current status.</p>\n   "
+          }
+        },
+        "documentation": "\n      <p>The name of a trail about which you want the current status.</p>\n   "
+      },
+      "output": {
+        "shape_name": "GetTrailStatusResponse",
+        "type": "structure",
+        "members": {
+          "IsLogging": {
+            "shape_name": "Boolean",
+            "type": "boolean",
+            "documentation": "\n      <p>Whether the CloudTrail is currently logging user events.</p>\n   "
+          },
+          "LatestDeliveryError": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": "\n      <p>Information about the most recent error CloudTrail encountered when attempting to deliver log files to the account's Amazon S3 bucket.</p>\n   "
+          },
+          "LatestNotificationError": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": "\n      <p>Information about the most recent error CloudTrail encountered when attempting to send an Amazon SNS notification.</p>\n   "
+          },
+          "LatestDeliveryAttemptTime": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": "\n      <p>The last time CloudTrail attempted to deliver a file to an account's Amazon S3 bucket. </p>\n   "
+          },
+          "LatestDeliveryAttemptSucceeded": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": "\n      <p>The last time CloudTrail successfully delivered a log file to an account's Amazon S3 bucket.</p>\n   "
+          },
+          "LatestNotificationAttemptTime": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": "\n      <p>The last time CloudTrail attempted to notify an account's owner of a log delivery to the account's Amazon S3 bucket. </p>\n   "
+          },
+          "LatestNotificationAttemptSucceeded": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": "\n      <p>The last time CloudTrail successfully notified an account's owner of a log delivery to the account's Amazon S3 bucket. </p>\n   "
+          },
+          "TimeLoggingStarted": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": "\n      <p>The time at which CloudTrail started logging events for an account. </p>\n   "
+          },
+          "TimeLoggingStopped": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": "\n      <p>The time at which CloudTrail stopped logging events for an account. </p>\n   "
+          }
+        },
+        "documentation": "\n      <p>Returns the objects or data listed below if successful. Otherwise, returns an error.</p>\n   "
+      },
+      "errors": [
+        {
+          "shape_name": "TrailNotFoundException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InternalErrorException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InvalidTrailNameException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        }
+      ],
+      "documentation": "\n      <p>Returns <a>GetTrailStatusResult</a>, which contains a JSON-formatted list of information about the trail specified in the request. JSON fields include information such as delivery errors, Amazon SNS and Amazon S3 errors, and times that logging started and stopped for each trail.  </p>\n   "
+    },
+    "StartLogging": {
+      "name": "StartLogging",
+      "input": {
+        "shape_name": "StartLoggingRequest",
+        "type": "structure",
+        "members": {
+          "Name": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": "\n      <p>The name of the <a>Trail</a> for which CloudTrail logs events. </p>\n   "
+          }
+        },
+        "documentation": "\n      <p>The request to CloudTrail to start logging events for an account.</p>\n   "
+      },
+      "output": {
+        "shape_name": "StartLoggingResponse",
+        "type": "structure",
+        "members": {
+        },
+        "documentation": "\n      <p>Returns the objects or data listed below if successful. Otherwise, returns an error.</p>\n   "
+      },
+      "errors": [
+        {
+          "shape_name": "S3BucketDoesNotExistException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InsufficientS3BucketPolicyException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InsufficientSnsTopicPolicyException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "TrailNotFoundException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InternalErrorException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InvalidTrailNameException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        }
+      ],
+      "documentation": "\n      <p>Starts the processing of recording user activity events and log file delivery for a trail. </p>\n   "
+    },
+    "StopLogging": {
+      "name": "StopLogging",
+      "input": {
+        "shape_name": "StopLoggingRequest",
+        "type": "structure",
+        "members": {
+          "Name": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": "\n      <p>Communicates to CloudTrail the name of the <a>Trail</a> for which to stop logging events. </p>\n   "
+          }
+        },
+        "documentation": "\n   <p>Passes the request to CloudTrail to stop logging events for the specified account.</p>\n   "
+      },
+      "output": {
+        "shape_name": "StopLoggingResponse",
+        "type": "structure",
+        "members": {
+        },
+        "documentation": "\n      <p>Returns the objects or data listed below if successful. Otherwise, returns an error.</p>\n   "
+      },
+      "errors": [
+        {
+          "shape_name": "TrailNotFoundException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InternalErrorException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InvalidTrailNameException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        }
+      ],
+      "documentation": "\n      <p>Suspends the recording of user activity events and log file delivery for the specified trail. Under most circumstances, there is no need to use this action. You can update a trail without stopping it first. This action is the only way to stop logging activity.</p>\n   "
+    },
+    "UpdateTrail": {
+      "name": "UpdateTrail",
+      "input": {
+        "shape_name": "UpdateTrailRequest",
+        "type": "structure",
+        "members": {
+          "trail": {
+            "shape_name": "Trail",
+            "type": "structure",
+            "members": {
+              "Name": {
+                "shape_name": "String",
+                "type": "string",
+                "documentation": "\n      <p>Name of the trail defined when you call when you call <a>CreateTrail</a></p>\n   "
+              },
+              "S3BucketName": {
+                "shape_name": "String",
+                "type": "string",
+                "documentation": "\n      <p>Name of the Amazon S3 bucket into which CloudTrail delivers your trail files. Passed when you call <a>CreateTrail</a>.</p>\n   "
+              },
+              "S3KeyPrefix": {
+                "shape_name": "String",
+                "type": "string",
+                "documentation": "\n      <p>Value of the Amazon S3 prefix </p>\n   "
+              },
+              "SnsTopicName": {
+                "shape_name": "String",
+                "type": "string",
+                "documentation": "\n      <p>Name of the existing Amazon SNS topic that CloudTrail uses to notify the account owner when new CloudTrail log files have been delivered. </p>\n   "
+              },
+              "IncludeGlobalServiceEvents": {
+                "shape_name": "Boolean",
+                "type": "boolean",
+                "documentation": "\n      <p>Set to <b>True</b> to include events from AWS global services such as IAM. Otherwise, <b>False</b>.</p>\n   "
+              }
+            },
+            "documentation": "\n      <p>Represents the <a>Trail</a> structure that contains the CloudTrail setting for an account. </p>\n   "
+          }
+        },
+        "documentation": "\n      <p>Passes a <a>Trail</a> structure to CloudTrail specifying settings to update for the specified trail.</p>\n   "
+      },
+      "output": {
+        "shape_name": "UpdateTrailResponse",
+        "type": "structure",
+        "members": {
+          "trail": {
+            "shape_name": "Trail",
+            "type": "structure",
+            "members": {
+              "Name": {
+                "shape_name": "String",
+                "type": "string",
+                "documentation": "\n      <p>Name of the trail defined when you call when you call <a>CreateTrail</a></p>\n   "
+              },
+              "S3BucketName": {
+                "shape_name": "String",
+                "type": "string",
+                "documentation": "\n      <p>Name of the Amazon S3 bucket into which CloudTrail delivers your trail files. Passed when you call <a>CreateTrail</a>.</p>\n   "
+              },
+              "S3KeyPrefix": {
+                "shape_name": "String",
+                "type": "string",
+                "documentation": "\n      <p>Value of the Amazon S3 prefix </p>\n   "
+              },
+              "SnsTopicName": {
+                "shape_name": "String",
+                "type": "string",
+                "documentation": "\n      <p>Name of the existing Amazon SNS topic that CloudTrail uses to notify the account owner when new CloudTrail log files have been delivered. </p>\n   "
+              },
+              "IncludeGlobalServiceEvents": {
+                "shape_name": "Boolean",
+                "type": "boolean",
+                "documentation": "\n      <p>Set to <b>True</b> to include events from AWS global services such as IAM. Otherwise, <b>False</b>.</p>\n   "
+              }
+            },
+            "documentation": "\n      <p>Represents the CloudTrail settings that were updated by calling <a>UpdateTrail</a>.</p>\n   "
+          }
+        },
+        "documentation": "\n      Returns the objects or data listed below if successful. Otherwise, returns an error.\n   "
+      },
+      "errors": [
+        {
+          "shape_name": "S3BucketDoesNotExistException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InsufficientS3BucketPolicyException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InsufficientSnsTopicPolicyException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "TrailNotFoundException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InternalErrorException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InvalidS3BucketNameException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InvalidS3PrefixException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InvalidSnsTopicNameException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InvalidTrailNameException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "TrailNotProvidedException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": null
+        }
+      ],
+      "documentation": "\n      <p>From the command line, use update-subscription.</p> \n      <p>Updates the settings that specify delivery of log files. Changes to a trail do not require stopping the CloudTrail service. You can use this action to designate an existing bucket for log delivery, or to create a new bucket and prefix. If the existing bucket has previously been a target for CloudTrail log files, an IAM policy exists for the bucket. If you create a new bucket using UpdateTrail, you need to apply the policy to the bucket using one of the means provided by the Amazon S3 service.</p> \n      \n      <p> The request includes a <a>Trail</a> structure that specifies the following:</p>\n      <ul>\n         <li>Trail name.</li>\n         <li>The name of the Amazon S3 bucket to which CloudTrail delivers your log files.</li>\n         <li>The name of the Amazon S3 key prefix that precedes each log file.</li>\n         <li>The name of the Amazon SNS topic that notifies you that a new file is available in your bucket.</li>\n         <li>Whether the log file should include events from global services, such as IAM or AWS STS.</li>\n      </ul>\n      <b>CreateTrail</b> returns the appropriate HTTP status code if successful. If not, it returns either one of the common errors or one of the exceptions listed at the end of this page. \n   "
+    }
+  }
+}
