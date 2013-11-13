@@ -1,0 +1,10 @@
+{
+  "extra": {
+    "metadata": {
+      "regions": {
+        "us-east-1": "https://cloudtrail.us-east-1.amazonaws.com",
+        "us-west-2": "https://cloudtrail.us-west-2.amazonaws.com"
+      }
+    }
+  }
+}
