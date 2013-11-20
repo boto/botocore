@@ -4,8 +4,8 @@
 distutils/setuptools install script.
 """
 
+import re
 import sys
-import botocore
 
 from setuptools import setup, find_packages
 
@@ -13,6 +13,24 @@ from setuptools import setup, find_packages
 requires = ['six>=1.1.0',
             'jmespath==0.1.0',
             'python-dateutil>=2.1']
+
+
+VERSIONFILE='botocore/_version.py'
+
+def get_version_string():
+    verstrline = open(VERSIONFILE, 'rt').read()
+    vsre = r'^__version__ = [\'"]([^\'"]*)[\'"]'
+    match_object = re.search(vsre, verstrline, re.M)
+    if match_object:
+        verstr = match_object.group(1)
+    else:
+        raise RuntimeError(
+                "Unable to find version string in {0}.".format(
+                        VERSIONFILE)
+        )
+    return verstr
+
+VERSION = get_version_string()
 
 
 if sys.version_info[:2] == (2, 6):
@@ -30,7 +48,7 @@ if sys.version_info[:2] == (2, 6):
 
 setup(
     name='botocore',
-    version=botocore.__version__,
+    version=VERSION,
     description='Low-level, data-driven core of boto 3.',
     long_description=open('README.rst').read(),
     author='Mitch Garnaat',
