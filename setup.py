@@ -43,7 +43,7 @@ setup(
     package_dir={'botocore': 'botocore'},
     include_package_data=True,
     install_requires=requires,
-    license=open("LICENSE.txt").read(),
+    license='MIT License',
     classifiers=(
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',

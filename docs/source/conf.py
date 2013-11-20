@@ -42,7 +42,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'botocore'
-copyright = u'2013, Mitch Garnaat'
+copyright = u'2012-2013, Amazon.com, Inc. or its affiliates, Mitch Garnaat'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
