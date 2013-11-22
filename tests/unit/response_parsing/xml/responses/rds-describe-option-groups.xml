@@ -1,4 +1,4 @@
-<DescribeOptionGroupsResponse xmlns="http://rds.amazonaws.com/doc/2013-05-15/">
+<DescribeOptionGroupsResponse xmlns="http://rds.amazonaws.com/doc/2013-09-09/">
   <DescribeOptionGroupsResult>
     <OptionGroupsList>
       <OptionGroup>

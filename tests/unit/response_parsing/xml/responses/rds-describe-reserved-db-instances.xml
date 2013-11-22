@@ -1,4 +1,4 @@
-<DescribeReservedDBInstancesResponse xmlns="http://rds.amazonaws.com/doc/2013-05-15/">
+<DescribeReservedDBInstancesResponse xmlns="http://rds.amazonaws.com/doc/2013-09-09/">
   <DescribeReservedDBInstancesResult>
     <ReservedDBInstances>
       <ReservedDBInstance>

@@ -1,6 +1,6 @@
 {
   "extra": {
-    "xmlnamespace": "http://ec2.amazonaws.com/doc/2013-10-01/",
+    "xmlnamespace": "http://ec2.amazonaws.com/doc/2013-10-15/",
     "metadata": {
       "regions": {
         "us-east-1": null,
@@ -1735,6 +1735,18 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "VolumeStatuses"
+    },
+    "DescribeInstances": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Reservations"
+    },
+    "DescribeTags": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Tags"
     }
   },
   "transformations": {
