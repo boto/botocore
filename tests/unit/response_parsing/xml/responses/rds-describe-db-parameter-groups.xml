@@ -1,4 +1,4 @@
-<DescribeDBParameterGroupsResponse xmlns="http://rds.amazonaws.com/doc/2013-05-15/">
+<DescribeDBParameterGroupsResponse xmlns="http://rds.amazonaws.com/doc/2013-09-09/">
   <DescribeDBParameterGroupsResult>
     <DBParameterGroups>
       <DBParameterGroup>
