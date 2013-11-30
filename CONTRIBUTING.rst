@@ -18,7 +18,9 @@ Contributing Code
    the included patch, or demonstrates the newly added feature.
 -  If it adds/changes a public API, it must also include documentation
    for those changes.
--  Must be appropriately licensed (New BSD).
+-  Must be appropriately licensed (compatible with `MIT license`_).
+
+.. _Mit license: http://en.wikipedia.org/wiki/Mit_license
 
 Reporting An Issue/Feature
 --------------------------
