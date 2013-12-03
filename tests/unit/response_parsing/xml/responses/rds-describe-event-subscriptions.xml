@@ -1,4 +1,4 @@
-<DescribeEventSubscriptionsResponse xmlns="http://rds.amazonaws.com/doc/2013-05-15/">
+<DescribeEventSubscriptionsResponse xmlns="http://rds.amazonaws.com/doc/2013-09-09/">
   <DescribeEventSubscriptionsResult>
     <EventSubscriptionsList/>
   </DescribeEventSubscriptionsResult>

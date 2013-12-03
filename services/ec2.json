@@ -1,12 +1,12 @@
 {
-  "api_version": "2013-10-01",
+  "api_version": "2013-10-15",
   "type": "query",
   "result_wrapped": false,
   "signature_version": "v2",
   "service_full_name": "Amazon Elastic Compute Cloud",
   "service_abbreviation": "Amazon EC2",
   "endpoint_prefix": "ec2",
-  "xmlnamespace": "http://ec2.amazonaws.com/doc/2013-10-01",
+  "xmlnamespace": "http://ec2.amazonaws.com/doc/2013-10-15",
   "documentation": "\n        <p>\n        Amazon Elastic Compute Cloud (Amazon EC2) is a web service that provides\n        resizable compute capacity in the cloud.\n        It is designed to make web-scale computing easier for developers.\n        </p>\n        <p>\n        Amazon EC2's simple web service interface allows you to obtain and configure\n        capacity with minimal friction. It provides you with complete control of your\n        computing resources and lets you run on Amazon's proven computing environment.\n        Amazon EC2 reduces the time required to obtain and boot new server instances to\n        minutes, allowing you to quickly scale capacity, both up and down, as your\n        computing requirements change. Amazon EC2 changes the economics of computing by\n        allowing you to pay only for capacity that you actually use. Amazon EC2 provides\n        developers the tools to build failure resilient applications and isolate\n        themselves from common failure scenarios.\n        </p>\n        <p>\n        Visit <a href=\"http://aws.amazon.com/ec2/\">http://aws.amazon.com/ec2/</a> for\n        more information.\n        </p>\n    ",
   "operations": {
     "ActivateLicense": {
@@ -6744,6 +6744,20 @@
             "documentation": "\n        <p>\n        User-created description of the associated AMI.\n        </p>\n    ",
             "xmlname": "description"
           },
+          "SriovNetSupport": {
+            "shape_name": "AttributeValue",
+            "type": "structure",
+            "members": {
+              "Value": {
+                "shape_name": "String",
+                "type": "string",
+                "documentation": "String value",
+                "xmlname": "value"
+              }
+            },
+            "documentation": "String value",
+            "xmlname": "sriovNetSupport"
+          },
           "BlockDeviceMappings": {
             "shape_name": "BlockDeviceMappingList",
             "type": "list",
@@ -7024,6 +7038,12 @@
                   ],
                   "documentation": "\n        <p>\n        The operating platform of the AMI.\n        </p>\n   ",
                   "xmlname": "platform"
+                },
+                "SriovNetSupport": {
+                  "shape_name": "String",
+                  "type": "string",
+                  "documentation": null,
+                  "xmlname": "sriovNetSupport"
                 },
                 "StateReason": {
                   "shape_name": "StateReason",
@@ -7463,6 +7483,20 @@
             },
             "documentation": "Boolean value",
             "xmlname": "ebsOptimized"
+          },
+          "SriovNetSupport": {
+            "shape_name": "AttributeValue",
+            "type": "structure",
+            "members": {
+              "Value": {
+                "shape_name": "String",
+                "type": "string",
+                "documentation": "String value",
+                "xmlname": "value"
+              }
+            },
+            "documentation": "String value",
+            "xmlname": "sriovNetSupport"
           }
         },
         "documentation": "\n        <p>\n        The described instance attribute.\n        </p>\n    "
@@ -7834,6 +7868,16 @@
             },
             "documentation": "\n      <p>\n      A list of filters used to match properties for Instances.\n      For a complete reference to the available filter keys for this operation, see the\n      <a href=\"http://docs.amazonwebservices.com/AWSEC2/latest/APIReference/index.html?ApiReference-query-DescribeInstances.html\">Amazon EC2 API reference</a>.\n      </p>\n    ",
             "flattened": true
+          },
+          "NextToken": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": null
+          },
+          "MaxResults": {
+            "shape_name": "Integer",
+            "type": "integer",
+            "documentation": null
           }
         },
         "documentation": "\n        <p>\n        A request to describe the Amazon EC2 instances in a user's account.\n        </p>\n        <p>\n        If you specify one or more instance IDs, Amazon EC2 returns information\n        for those instances.\n        If you do not specify instance IDs, Amazon EC2 returns information for\n        all relevant instances.\n        If you specify an invalid instance ID, a fault is returned.\n        If you specify an instance that you do not own, it will not be included\n        in the returned results.\n        </p>\n        <p>\n        Recently terminated instances might appear in the returned results.\n\n        The interval within which this could occur is usually less than one hour\n        from the time the instance is terminated.\n        </p>\n    "
@@ -8009,19 +8053,25 @@
                           "m1.medium",
                           "m1.large",
                           "m1.xlarge",
+                          "m3.xlarge",
+                          "m3.2xlarge",
                           "m2.xlarge",
                           "m2.2xlarge",
                           "m2.4xlarge",
-                          "m3.xlarge",
-                          "m3.2xlarge",
-                          "c1.medium",
-                          "c1.xlarge",
+                          "cr1.8xlarge",
                           "hi1.4xlarge",
                           "hs1.8xlarge",
+                          "c1.medium",
+                          "c1.xlarge",
+                          "c3.large",
+                          "c3.xlarge",
+                          "c3.2xlarge",
+                          "c3.4xlarge",
+                          "c3.8xlarge",
                           "cc1.4xlarge",
                           "cc2.8xlarge",
-                          "cg1.4xlarge",
-                          "cr1.8xlarge"
+                          "g2.2xlarge",
+                          "cg1.4xlarge"
                         ],
                         "documentation": "\n        <p>\n        The instance type. For more information on instance types, please see\n        the\n        <a href=\"http://docs.amazonwebservices.com/AWSEC2/2009-07-15/DeveloperGuide/\">\n        Amazon Elastic Compute Cloud Developer Guide</a>.\n        </p>\n    ",
                         "xmlname": "instanceType"
@@ -8596,6 +8646,12 @@
                         "type": "boolean",
                         "documentation": null,
                         "xmlname": "ebsOptimized"
+                      },
+                      "SriovNetSupport": {
+                        "shape_name": "String",
+                        "type": "string",
+                        "documentation": null,
+                        "xmlname": "sriovNetSupport"
                       }
                     },
                     "documentation": "\n        <p>\n        Represents an Amazon EC2 instance.\n        </p>\n    ",
@@ -8610,6 +8666,12 @@
             },
             "documentation": "\n        <p>\n        The list of reservations containing the describes instances.\n        </p>\n    ",
             "xmlname": "reservationSet"
+          },
+          "NextToken": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": null,
+            "xmlname": "nextToken"
           }
         },
         "documentation": "\n        <p>\n        The result of describing Amazon EC2 instances.\n        </p>\n    "
@@ -10111,19 +10173,25 @@
                     "m1.medium",
                     "m1.large",
                     "m1.xlarge",
+                    "m3.xlarge",
+                    "m3.2xlarge",
                     "m2.xlarge",
                     "m2.2xlarge",
                     "m2.4xlarge",
-                    "m3.xlarge",
-                    "m3.2xlarge",
-                    "c1.medium",
-                    "c1.xlarge",
+                    "cr1.8xlarge",
                     "hi1.4xlarge",
                     "hs1.8xlarge",
+                    "c1.medium",
+                    "c1.xlarge",
+                    "c3.large",
+                    "c3.xlarge",
+                    "c3.2xlarge",
+                    "c3.4xlarge",
+                    "c3.8xlarge",
                     "cc1.4xlarge",
                     "cc2.8xlarge",
-                    "cg1.4xlarge",
-                    "cr1.8xlarge"
+                    "g2.2xlarge",
+                    "cg1.4xlarge"
                   ],
                   "documentation": "\n        <p>\n        The instance type on which the Reserved Instances can be used.\n        </p>\n    ",
                   "xmlname": "instanceType"
@@ -10654,19 +10722,25 @@
                               "m1.medium",
                               "m1.large",
                               "m1.xlarge",
+                              "m3.xlarge",
+                              "m3.2xlarge",
                               "m2.xlarge",
                               "m2.2xlarge",
                               "m2.4xlarge",
-                              "m3.xlarge",
-                              "m3.2xlarge",
-                              "c1.medium",
-                              "c1.xlarge",
+                              "cr1.8xlarge",
                               "hi1.4xlarge",
                               "hs1.8xlarge",
+                              "c1.medium",
+                              "c1.xlarge",
+                              "c3.large",
+                              "c3.xlarge",
+                              "c3.2xlarge",
+                              "c3.4xlarge",
+                              "c3.8xlarge",
                               "cc1.4xlarge",
                               "cc2.8xlarge",
-                              "cg1.4xlarge",
-                              "cr1.8xlarge"
+                              "g2.2xlarge",
+                              "cg1.4xlarge"
                             ],
                             "documentation": "\n      <p>\n      The instance type for the modified Reserved Instances.\n      </p>\n    ",
                             "xmlname": "instanceType"
@@ -10771,19 +10845,25 @@
               "m1.medium",
               "m1.large",
               "m1.xlarge",
+              "m3.xlarge",
+              "m3.2xlarge",
               "m2.xlarge",
               "m2.2xlarge",
               "m2.4xlarge",
-              "m3.xlarge",
-              "m3.2xlarge",
-              "c1.medium",
-              "c1.xlarge",
+              "cr1.8xlarge",
               "hi1.4xlarge",
               "hs1.8xlarge",
+              "c1.medium",
+              "c1.xlarge",
+              "c3.large",
+              "c3.xlarge",
+              "c3.2xlarge",
+              "c3.4xlarge",
+              "c3.8xlarge",
               "cc1.4xlarge",
               "cc2.8xlarge",
-              "cg1.4xlarge",
-              "cr1.8xlarge"
+              "g2.2xlarge",
+              "cg1.4xlarge"
             ],
             "documentation": "\n        <p>\n        The instance type on which the Reserved Instance can be used.\n        </p>\n    "
           },
@@ -10912,19 +10992,25 @@
                     "m1.medium",
                     "m1.large",
                     "m1.xlarge",
+                    "m3.xlarge",
+                    "m3.2xlarge",
                     "m2.xlarge",
                     "m2.2xlarge",
                     "m2.4xlarge",
-                    "m3.xlarge",
-                    "m3.2xlarge",
-                    "c1.medium",
-                    "c1.xlarge",
+                    "cr1.8xlarge",
                     "hi1.4xlarge",
                     "hs1.8xlarge",
+                    "c1.medium",
+                    "c1.xlarge",
+                    "c3.large",
+                    "c3.xlarge",
+                    "c3.2xlarge",
+                    "c3.4xlarge",
+                    "c3.8xlarge",
                     "cc1.4xlarge",
                     "cc2.8xlarge",
-                    "cg1.4xlarge",
-                    "cr1.8xlarge"
+                    "g2.2xlarge",
+                    "cg1.4xlarge"
                   ],
                   "documentation": "\n        <p>\n        The instance type on which the Reserved Instances can be used.\n        </p>\n    ",
                   "xmlname": "instanceType"
@@ -12246,19 +12332,25 @@
                         "m1.medium",
                         "m1.large",
                         "m1.xlarge",
+                        "m3.xlarge",
+                        "m3.2xlarge",
                         "m2.xlarge",
                         "m2.2xlarge",
                         "m2.4xlarge",
-                        "m3.xlarge",
-                        "m3.2xlarge",
-                        "c1.medium",
-                        "c1.xlarge",
+                        "cr1.8xlarge",
                         "hi1.4xlarge",
                         "hs1.8xlarge",
+                        "c1.medium",
+                        "c1.xlarge",
+                        "c3.large",
+                        "c3.xlarge",
+                        "c3.2xlarge",
+                        "c3.4xlarge",
+                        "c3.8xlarge",
                         "cc1.4xlarge",
                         "cc2.8xlarge",
-                        "cg1.4xlarge",
-                        "cr1.8xlarge"
+                        "g2.2xlarge",
+                        "cg1.4xlarge"
                       ],
                       "documentation": "\n        <p>\n        Specifies the instance type.\n        </p>\n    ",
                       "xmlname": "instanceType"
@@ -12616,19 +12708,25 @@
                 "m1.medium",
                 "m1.large",
                 "m1.xlarge",
+                "m3.xlarge",
+                "m3.2xlarge",
                 "m2.xlarge",
                 "m2.2xlarge",
                 "m2.4xlarge",
-                "m3.xlarge",
-                "m3.2xlarge",
-                "c1.medium",
-                "c1.xlarge",
+                "cr1.8xlarge",
                 "hi1.4xlarge",
                 "hs1.8xlarge",
+                "c1.medium",
+                "c1.xlarge",
+                "c3.large",
+                "c3.xlarge",
+                "c3.2xlarge",
+                "c3.4xlarge",
+                "c3.8xlarge",
                 "cc1.4xlarge",
                 "cc2.8xlarge",
-                "cg1.4xlarge",
-                "cr1.8xlarge"
+                "g2.2xlarge",
+                "cg1.4xlarge"
               ],
               "documentation": null,
               "xmlname": "InstanceType"
@@ -12717,19 +12815,25 @@
                     "m1.medium",
                     "m1.large",
                     "m1.xlarge",
+                    "m3.xlarge",
+                    "m3.2xlarge",
                     "m2.xlarge",
                     "m2.2xlarge",
                     "m2.4xlarge",
-                    "m3.xlarge",
-                    "m3.2xlarge",
-                    "c1.medium",
-                    "c1.xlarge",
+                    "cr1.8xlarge",
                     "hi1.4xlarge",
                     "hs1.8xlarge",
+                    "c1.medium",
+                    "c1.xlarge",
+                    "c3.large",
+                    "c3.xlarge",
+                    "c3.2xlarge",
+                    "c3.4xlarge",
+                    "c3.8xlarge",
                     "cc1.4xlarge",
                     "cc2.8xlarge",
-                    "cg1.4xlarge",
-                    "cr1.8xlarge"
+                    "g2.2xlarge",
+                    "cg1.4xlarge"
                   ],
                   "documentation": null,
                   "xmlname": "instanceType"
@@ -12987,6 +13091,16 @@
             },
             "documentation": "\n    <p>\n    A list of filters used to match properties for tags.\n    </p>\n   ",
             "flattened": true
+          },
+          "MaxResults": {
+            "shape_name": "Integer",
+            "type": "integer",
+            "documentation": null
+          },
+          "NextToken": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": null
           }
         },
         "documentation": "\n    <p></p>\n   "
@@ -13051,6 +13165,12 @@
             },
             "documentation": "\n    <p>\n    A list of the tags for the specified resources.\n    </p>\n   ",
             "xmlname": "tagSet"
+          },
+          "NextToken": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": null,
+            "xmlname": "nextToken"
           }
         },
         "documentation": "\n    <p></p>\n   "
@@ -14758,19 +14878,25 @@
                   "m1.medium",
                   "m1.large",
                   "m1.xlarge",
+                  "m3.xlarge",
+                  "m3.2xlarge",
                   "m2.xlarge",
                   "m2.2xlarge",
                   "m2.4xlarge",
-                  "m3.xlarge",
-                  "m3.2xlarge",
-                  "c1.medium",
-                  "c1.xlarge",
+                  "cr1.8xlarge",
                   "hi1.4xlarge",
                   "hs1.8xlarge",
+                  "c1.medium",
+                  "c1.xlarge",
+                  "c3.large",
+                  "c3.xlarge",
+                  "c3.2xlarge",
+                  "c3.4xlarge",
+                  "c3.8xlarge",
                   "cc1.4xlarge",
                   "cc2.8xlarge",
-                  "cg1.4xlarge",
-                  "cr1.8xlarge"
+                  "g2.2xlarge",
+                  "cg1.4xlarge"
                 ],
                 "documentation": null
               },
@@ -15978,6 +16104,18 @@
               }
             },
             "documentation": "Boolean value"
+          },
+          "SriovNetSupport": {
+            "shape_name": "AttributeValue",
+            "type": "structure",
+            "members": {
+              "Value": {
+                "shape_name": "String",
+                "type": "string",
+                "documentation": "String value"
+              }
+            },
+            "documentation": "String value"
           }
         },
         "documentation": "\n        <p>\n        A request to modify an attribute of an Amazon EC2 instance. Only one\n        attribute can be changed per request.\n        </p>\n    "
@@ -16122,19 +16260,25 @@
                     "m1.medium",
                     "m1.large",
                     "m1.xlarge",
+                    "m3.xlarge",
+                    "m3.2xlarge",
                     "m2.xlarge",
                     "m2.2xlarge",
                     "m2.4xlarge",
-                    "m3.xlarge",
-                    "m3.2xlarge",
-                    "c1.medium",
-                    "c1.xlarge",
+                    "cr1.8xlarge",
                     "hi1.4xlarge",
                     "hs1.8xlarge",
+                    "c1.medium",
+                    "c1.xlarge",
+                    "c3.large",
+                    "c3.xlarge",
+                    "c3.2xlarge",
+                    "c3.4xlarge",
+                    "c3.8xlarge",
                     "cc1.4xlarge",
                     "cc2.8xlarge",
-                    "cg1.4xlarge",
-                    "cr1.8xlarge"
+                    "g2.2xlarge",
+                    "cg1.4xlarge"
                   ],
                   "documentation": "\n      <p>\n      The instance type for the modified Reserved Instances.\n      </p>\n    "
                 }
@@ -16655,6 +16799,16 @@
             },
             "documentation": "\n        <p>\n        The block device mappings for the new AMI, which specify how different\n        block devices (ex: EBS volumes and ephemeral drives) will be\n        exposed on instances launched from the new image.\n        </p>\n    ",
             "flattened": true
+          },
+          "VirtualizationType": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": null
+          },
+          "SriovNetSupport": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": null
           }
         },
         "documentation": "\n        <p>\n        A request to register an AMI with Amazon EC2. Images must be registered\n        before they can be launched.\n        To launch instances, use the <a>RunInstances</a> operation.\n        </p>\n        <p>\n        Each AMI is associated with an unique ID which is provided by the Amazon\n        EC2 service through this operation.\n        If needed, you can deregister an AMI at any time.\n        </p>\n        <note>\n            <p>\n            AMIs backed by Amazon EBS are automatically registered when you\n            create the image.\n            However, you can use this to register a snapshot of an instance backed by\n            Amazon EBS.\n            Amazon EBS snapshots are not guaranteed to be bootable. For information on\n            creating AMIs backed by Amazon EBS,\n            go to the Amazon Elastic Compute Cloud Developer Guide or Amazon Elastic\n            Compute Cloud User Guide.\n            </p>\n        </note>\n        <p>\n        Any modifications to an AMI backed by Amazon S3 invalidates this\n        registration.\n        If you make changes to an image, deregister the previous image and\n        register the new image.\n        </p>\n   "
@@ -17100,19 +17254,25 @@
                   "m1.medium",
                   "m1.large",
                   "m1.xlarge",
+                  "m3.xlarge",
+                  "m3.2xlarge",
                   "m2.xlarge",
                   "m2.2xlarge",
                   "m2.4xlarge",
-                  "m3.xlarge",
-                  "m3.2xlarge",
-                  "c1.medium",
-                  "c1.xlarge",
+                  "cr1.8xlarge",
                   "hi1.4xlarge",
                   "hs1.8xlarge",
+                  "c1.medium",
+                  "c1.xlarge",
+                  "c3.large",
+                  "c3.xlarge",
+                  "c3.2xlarge",
+                  "c3.4xlarge",
+                  "c3.8xlarge",
                   "cc1.4xlarge",
                   "cc2.8xlarge",
-                  "cg1.4xlarge",
-                  "cr1.8xlarge"
+                  "g2.2xlarge",
+                  "cg1.4xlarge"
                 ],
                 "documentation": "\n        <p>\n        Specifies the instance type.\n        </p>\n    "
               },
@@ -17531,19 +17691,25 @@
                         "m1.medium",
                         "m1.large",
                         "m1.xlarge",
+                        "m3.xlarge",
+                        "m3.2xlarge",
                         "m2.xlarge",
                         "m2.2xlarge",
                         "m2.4xlarge",
-                        "m3.xlarge",
-                        "m3.2xlarge",
-                        "c1.medium",
-                        "c1.xlarge",
+                        "cr1.8xlarge",
                         "hi1.4xlarge",
                         "hs1.8xlarge",
+                        "c1.medium",
+                        "c1.xlarge",
+                        "c3.large",
+                        "c3.xlarge",
+                        "c3.2xlarge",
+                        "c3.4xlarge",
+                        "c3.8xlarge",
                         "cc1.4xlarge",
                         "cc2.8xlarge",
-                        "cg1.4xlarge",
-                        "cr1.8xlarge"
+                        "g2.2xlarge",
+                        "cg1.4xlarge"
                       ],
                       "documentation": "\n        <p>\n        Specifies the instance type.\n        </p>\n    ",
                       "xmlname": "instanceType"
@@ -18354,19 +18520,25 @@
               "m1.medium",
               "m1.large",
               "m1.xlarge",
+              "m3.xlarge",
+              "m3.2xlarge",
               "m2.xlarge",
               "m2.2xlarge",
               "m2.4xlarge",
-              "m3.xlarge",
-              "m3.2xlarge",
-              "c1.medium",
-              "c1.xlarge",
+              "cr1.8xlarge",
               "hi1.4xlarge",
               "hs1.8xlarge",
+              "c1.medium",
+              "c1.xlarge",
+              "c3.large",
+              "c3.xlarge",
+              "c3.2xlarge",
+              "c3.4xlarge",
+              "c3.8xlarge",
               "cc1.4xlarge",
               "cc2.8xlarge",
-              "cg1.4xlarge",
-              "cr1.8xlarge"
+              "g2.2xlarge",
+              "cg1.4xlarge"
             ],
             "documentation": "\n        <p>\n        Specifies the instance type for the launched instances.\n        </p>\n    "
           },
@@ -18810,19 +18982,25 @@
                     "m1.medium",
                     "m1.large",
                     "m1.xlarge",
+                    "m3.xlarge",
+                    "m3.2xlarge",
                     "m2.xlarge",
                     "m2.2xlarge",
                     "m2.4xlarge",
-                    "m3.xlarge",
-                    "m3.2xlarge",
-                    "c1.medium",
-                    "c1.xlarge",
+                    "cr1.8xlarge",
                     "hi1.4xlarge",
                     "hs1.8xlarge",
+                    "c1.medium",
+                    "c1.xlarge",
+                    "c3.large",
+                    "c3.xlarge",
+                    "c3.2xlarge",
+                    "c3.4xlarge",
+                    "c3.8xlarge",
                     "cc1.4xlarge",
                     "cc2.8xlarge",
-                    "cg1.4xlarge",
-                    "cr1.8xlarge"
+                    "g2.2xlarge",
+                    "cg1.4xlarge"
                   ],
                   "documentation": "\n        <p>\n        The instance type. For more information on instance types, please see\n        the\n        <a href=\"http://docs.amazonwebservices.com/AWSEC2/2009-07-15/DeveloperGuide/\">\n        Amazon Elastic Compute Cloud Developer Guide</a>.\n        </p>\n    ",
                   "xmlname": "instanceType"
@@ -19397,6 +19575,12 @@
                   "type": "boolean",
                   "documentation": null,
                   "xmlname": "ebsOptimized"
+                },
+                "SriovNetSupport": {
+                  "shape_name": "String",
+                  "type": "string",
+                  "documentation": null,
+                  "xmlname": "sriovNetSupport"
                 }
               },
               "documentation": "\n        <p>\n        Represents an Amazon EC2 instance.\n        </p>\n    ",
