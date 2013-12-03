@@ -415,13 +415,21 @@ class MapParameter(Parameter):
 
     def build_parameter_query(self, value, built_params, label=''):
         label = self.get_label()
+        if not self.flattened:
+            label = '%s.entry' % label
         key_type = self.keys
         member_type = self.members
         for i, v in enumerate(value, 1):
-            built_params['%s.%d.%s' % (label, i, key_type.xmlname)] = v
+            key_name = key_type.xmlname
+            if not key_name:
+                key_name = 'key'
+            built_params['%s.%d.%s' % (label, i, key_name)] = v
+            member_name = member_type.xmlname
+            if not member_name:
+                member_name = 'value'
             member_type.build_parameter_query(
                 value[v], built_params,
-                '%s.%d.%s' % (label, i, member_type.xmlname))
+                '%s.%d.%s' % (label, i, member_name))
 
     def build_parameter_json(self, value, built_params, label=''):
         label = self.get_label()
