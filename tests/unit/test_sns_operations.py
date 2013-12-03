@@ -22,8 +22,9 @@
 #
 import unittest
 
-from mock import Mock, sentinel
+from mock import Mock
 
+from botocore.compat import OrderedDict
 import botocore.session
 
 
@@ -73,6 +74,21 @@ class TestSNSOperations(unittest.TestCase):
         self.assertEqual(calls[0]['operation'], op)
         self.assertEqual(calls[0]['http_response'], self.http_response)
         self.assertEqual(calls[0]['parsed'], self.parsed_response)
+
+    def test_create_platform_application(self):
+        op = self.sns.get_operation('CreatePlatformApplication')
+        attributes = OrderedDict()
+        attributes['PlatformCredential'] = 'foo'
+        attributes['PlatformPrincipal'] = 'bar'
+        params = op.build_parameters(name='gcmpushapp', platform='GCM',
+                                     attributes=attributes)
+        result = {'Name': 'gcmpushapp',
+                  'Platform': 'GCM',
+                  'Attributes.entry.1.key': 'PlatformCredential',
+                  'Attributes.entry.1.value': 'foo',
+                  'Attributes.entry.2.key': 'PlatformPrincipal',
+                  'Attributes.entry.2.value': 'bar'}
+        self.assertEqual(params, result)
 
 
 if __name__ == "__main__":
