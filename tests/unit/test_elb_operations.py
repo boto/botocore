@@ -76,6 +76,27 @@ class TestELBOperations(unittest.TestCase):
                   'Instances.member.2.InstanceId': 'i-87654321'}
         self.assertEqual(params, result)
 
+    def test_set_lb_policies_for_backend_server(self):
+        op = self.elb.get_operation('SetLoadBalancerPoliciesForBackendServer')
+        params = op.build_parameters(load_balancer_name='foobar',
+                                     instance_port=443,
+                                     policy_names=['fie', 'baz'])
+        result = {'LoadBalancerName': 'foobar',
+                  'InstancePort': '443',
+                  'PolicyNames.member.1': 'fie',
+                  'PolicyNames.member.2': 'baz'}
+        self.assertEqual(params, result)
+
+    def test_clear_lb_policies_for_backend_server(self):
+        op = self.elb.get_operation('SetLoadBalancerPoliciesForBackendServer')
+        params = op.build_parameters(load_balancer_name='foobar',
+                                     instance_port=443,
+                                     policy_names=[])
+        result = {'LoadBalancerName': 'foobar',
+                  'InstancePort': '443',
+                  'PolicyNames': ''}
+        self.assertEqual(params, result)
+
 
 if __name__ == "__main__":
     unittest.main()
