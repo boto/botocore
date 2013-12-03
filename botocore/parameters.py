@@ -374,9 +374,17 @@ class ListParameter(Parameter):
             else:
                 label = self.get_label()
             label = '%s.%s' % (label, 'member')
-        for i, v in enumerate(value, 1):
-            member_type.build_parameter_query(v, built_params,
-                                              '%s.%d' % (label, i))
+        if len(value) == 0 and self.required:
+            # If the parameter is required and an empty list is
+            # provided as a value, we should insert a parameter
+            # into the dictionary with the base name of the
+            # parameter and a value of the empty string. See
+            # ELB SetLoadBalancerPoliciesForBackendServer for example.
+            built_params[label.split('.')[0]] = ''
+        else:
+            for i, v in enumerate(value, 1):
+                member_type.build_parameter_query(v, built_params,
+                                                  '%s.%d' % (label, i))
 
     def build_parameter_json(self, value, built_params, label=''):
         value = self.validate(value)
