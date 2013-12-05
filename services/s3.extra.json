@@ -40,6 +40,33 @@
             }
           }
         }
+      },
+      "PutObject": {
+          "input": {
+              "members": {
+                  "WebsiteRedirectLocation": {
+                      "no_paramfile": true
+                  }
+              }
+          }
+      },
+      "CopyObject": {
+          "input": {
+              "members": {
+                  "WebsiteRedirectLocation": {
+                      "no_paramfile": true
+                  }
+              }
+          }
+      },
+      "CreateMultipartUpload": {
+          "input": {
+              "members": {
+                  "WebsiteRedirectLocation": {
+                      "no_paramfile": true
+                  }
+              }
+          }
       }
     },
   "pagination": {

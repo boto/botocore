@@ -318,7 +318,8 @@
                         "type": "string",
                         "location": "header",
                         "location_name": "x-amz-website-redirect-location",
-                        "documentation": "If the bucket is configured as a website, redirects requests for this object to another object in the same bucket or to an external URL. Amazon S3 stores the value of this header in the object metadata."
+                        "documentation": "If the bucket is configured as a website, redirects requests for this object to another object in the same bucket or to an external URL. Amazon S3 stores the value of this header in the object metadata.",
+                        "no_paramfile": true
                     }
                 }
             },
@@ -604,7 +605,8 @@
                         "type": "string",
                         "location": "header",
                         "location_name": "x-amz-website-redirect-location",
-                        "documentation": "If the bucket is configured as a website, redirects requests for this object to another object in the same bucket or to an external URL. Amazon S3 stores the value of this header in the object metadata."
+                        "documentation": "If the bucket is configured as a website, redirects requests for this object to another object in the same bucket or to an external URL. Amazon S3 stores the value of this header in the object metadata.",
+                        "no_paramfile": true
                     }
                 }
             },
@@ -3816,7 +3818,8 @@
                         "type": "string",
                         "location": "header",
                         "location_name": "x-amz-website-redirect-location",
-                        "documentation": "If the bucket is configured as a website, redirects requests for this object to another object in the same bucket or to an external URL. Amazon S3 stores the value of this header in the object metadata."
+                        "documentation": "If the bucket is configured as a website, redirects requests for this object to another object in the same bucket or to an external URL. Amazon S3 stores the value of this header in the object metadata.",
+                        "no_paramfile": true
                     }
                 }
             },
