@@ -28,12 +28,10 @@ import hmac
 import logging
 from email.utils import formatdate
 from operator import itemgetter
-from botocore.exceptions import UnknownSignatureVersionError
 from botocore.exceptions import NoCredentialsError
 from botocore.utils import normalize_url_path
 from botocore.compat import HTTPHeaders
-from botocore.compat import quote, unquote, urlsplit, parse_qsl
-from six.moves import http_client
+from botocore.compat import quote, unquote, urlsplit
 
 logger = logging.getLogger(__name__)
 
@@ -41,18 +39,26 @@ logger = logging.getLogger(__name__)
 EMPTY_SHA256_HASH = (
     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
 
-class SigV2Auth(object):
+
+class BaseSigner(object):
+    REQUIRES_REGION = False
+
+    def add_auth(self, request):
+        raise NotImplementedError("add_auth")
+
+
+class SigV2Auth(BaseSigner):
     """
     Sign a request with Signature V2.
     """
-    def __init__(self, credentials, service_name=None, region_name=None):
+
+    def __init__(self, credentials):
         self.credentials = credentials
         if self.credentials is None:
             raise NoCredentialsError
-        self.service_name = service_name
-        self.region_name = region_name
 
     def calc_signature(self, request, params):
+        logger.debug("Calculating signature using v2 auth.")
         split = urlsplit(request.url)
         path = split.path
         if len(path) == 0:
@@ -69,8 +75,7 @@ class SigV2Auth(object):
                          quote(value, safe='-_~'))
         qs = '&'.join(pairs)
         string_to_sign += qs
-        logger.debug('string_to_sign')
-        logger.debug(string_to_sign)
+        logger.debug('String to sign: %s', string_to_sign)
         lhmac.update(string_to_sign.encode('utf-8'))
         b64 = base64.b64encode(lhmac.digest()).strip().decode('utf-8')
         return (qs, b64)
@@ -98,13 +103,11 @@ class SigV2Auth(object):
         return request
 
 
-class SigV3Auth(object):
-    def __init__(self, credentials, service_name=None, region_name=None):
+class SigV3Auth(BaseSigner):
+    def __init__(self, credentials):
         self.credentials = credentials
         if self.credentials is None:
             raise NoCredentialsError
-        self.service_name = service_name
-        self.region_name = region_name
 
     def add_auth(self, request):
         if 'Date' not in request.headers:
@@ -121,19 +124,23 @@ class SigV3Auth(object):
         request.headers['X-Amzn-Authorization'] = signature
 
 
-class SigV4Auth(object):
+class SigV4Auth(BaseSigner):
     """
     Sign a request with Signature V4.
     """
+    REQUIRES_REGION = True
 
-    def __init__(self, credentials, service_name=None, region_name=None):
+    def __init__(self, credentials, service_name, region_name):
         self.credentials = credentials
         if self.credentials is None:
             raise NoCredentialsError
-        self.now = datetime.datetime.utcnow()
-        self.timestamp = self.now.strftime('%Y%m%dT%H%M%SZ')
-        self.region_name = region_name
-        self.service_name = service_name
+        # We initialize these value here so the unit tests can have
+        # valid values.  But these will get overriden in ``add_auth``
+        # later for real requests.
+        now = datetime.datetime.utcnow()
+        self.timestamp = now.strftime('%Y%m%dT%H%M%SZ')
+        self._region_name = region_name
+        self._service_name = service_name
 
     def _sign(self, key, msg, hex=False):
         if hex:
@@ -179,7 +186,7 @@ class SigV4Auth(object):
         headers = []
         for key in set(headers_to_sign):
             value = ','.join(v.strip() for v in
-                            sorted(headers_to_sign.get_all(key)))
+                             sorted(headers_to_sign.get_all(key)))
             headers.append('%s:%s' % (key, value))
         headers.sort()
         return '\n'.join(headers)
@@ -209,16 +216,16 @@ class SigV4Auth(object):
     def scope(self, args):
         scope = [self.credentials.access_key]
         scope.append(self.timestamp[0:8])
-        scope.append(self.region_name)
-        scope.append(self.service_name)
+        scope.append(self._region_name)
+        scope.append(self._service_name)
         scope.append('aws4_request')
         return '/'.join(scope)
 
     def credential_scope(self, args):
         scope = []
         scope.append(self.timestamp[0:8])
-        scope.append(self.region_name)
-        scope.append(self.service_name)
+        scope.append(self._region_name)
+        scope.append(self._service_name)
         scope.append('aws4_request')
         return '/'.join(scope)
 
@@ -238,15 +245,17 @@ class SigV4Auth(object):
         key = self.credentials.secret_key
         k_date = self._sign(('AWS4' + key).encode('utf-8'),
                             self.timestamp[0:8])
-        k_region = self._sign(k_date, self.region_name)
-        k_service = self._sign(k_region, self.service_name)
+        k_region = self._sign(k_date, self._region_name)
+        k_service = self._sign(k_region, self._service_name)
         k_signing = self._sign(k_service, 'aws4_request')
         return self._sign(k_signing, string_to_sign, hex=True)
 
     def add_auth(self, request):
+        # Create a new timestamp for each signing event
+        now = datetime.datetime.utcnow()
+        self.timestamp = now.strftime('%Y%m%dT%H%M%SZ')
         # This could be a retry.  Make sure the previous
         # authorization header is removed first.
-        split = urlsplit(request.url)
         if 'Authorization' in request.headers:
             del request.headers['Authorization']
         if 'Date' not in request.headers:
@@ -254,11 +263,13 @@ class SigV4Auth(object):
         if self.credentials.token:
             request.headers['X-Amz-Security-Token'] = self.credentials.token
         canonical_request = self.canonical_request(request)
-        logger.debug('CanonicalRequest:\n%s' % canonical_request)
+        logger.debug("Calculating signature using v4 auth.")
+        logger.debug('CanonicalRequest:\n%s', canonical_request)
         string_to_sign = self.string_to_sign(request, canonical_request)
-        logger.debug('StringToSign:\n%s' % string_to_sign)
+        logger.debug('StringToSign:\n%s', string_to_sign)
         signature = self.signature(string_to_sign)
-        logger.debug('Signature:\n%s' % signature)
+        logger.debug('Signature:\n%s', signature)
+
         l = ['AWS4-HMAC-SHA256 Credential=%s' % self.scope(request)]
         headers_to_sign = self.headers_to_sign(request)
         l.append('SignedHeaders=%s' % self.signed_headers(headers_to_sign))
@@ -267,7 +278,7 @@ class SigV4Auth(object):
         return request
 
 
-class HmacV1Auth(object):
+class HmacV1Auth(BaseSigner):
 
     # List of Query String Arguments of Interest
     QSAOfInterest = ['acl', 'cors', 'defaultObjectAcl', 'location', 'logging',
@@ -277,14 +288,13 @@ class HmacV1Auth(object):
                      'response-content-language', 'response-expires',
                      'response-cache-control', 'response-content-disposition',
                      'response-content-encoding', 'delete', 'lifecycle',
-                     'tagging', 'restore', 'storageClass']
+                     'tagging', 'restore', 'storageClass', 'notification']
 
     def __init__(self, credentials, service_name=None, region_name=None):
         self.credentials = credentials
         if self.credentials is None:
             raise NoCredentialsError
-        self.service_name = service_name
-        self.region_name = region_name
+        self.auth_path = None  # see comment in canonical_resource below
 
     def sign_string(self, string_to_sign):
         new_hmac = hmac.new(self.credentials.secret_key.encode('utf-8'),
@@ -301,7 +311,7 @@ class HmacV1Auth(object):
             found = False
             for key in headers:
                 lk = key.lower()
-                if headers[key] != None and lk == ih:
+                if headers[key] is not  None and lk == ih:
                     hoi.append(headers[key].strip())
                     found = True
             if not found:
@@ -312,11 +322,11 @@ class HmacV1Auth(object):
         custom_headers = {}
         for key in headers:
             lk = key.lower()
-            if headers[key] != None:
+            if headers[key] is not  None:
                 # TODO: move hardcoded prefix to provider
                 if lk.startswith('x-amz-'):
                     custom_headers[lk] = ','.join(v.strip() for v in
-                                                   headers.get_all(key))
+                                                  headers.get_all(key))
         sorted_header_keys = sorted(custom_headers.keys())
         hoi = []
         for key in sorted_header_keys:
@@ -335,7 +345,16 @@ class HmacV1Auth(object):
     def canonical_resource(self, split):
         # don't include anything after the first ? in the resource...
         # unless it is one of the QSA of interest, defined above
-        buf = split.path
+        # NOTE:
+        # The path in the canonical resource should always be the
+        # full path including the bucket name, even for virtual-hosting
+        # style addressing.  The ``auth_path`` keeps track of the full
+        # path for the canonical resource and would be passed in if
+        # the client was using virtual-hosting style.
+        if self.auth_path:
+            buf = self.auth_path
+        else:
+            buf = split.path
         if split.query:
             qsa = split.query.split('&')
             qsa = [a.split('=', 1) for a in qsa]
@@ -363,12 +382,13 @@ class HmacV1Auth(object):
         string_to_sign = self.canonical_string(method,
                                                split,
                                                headers)
-        logger.debug('StringToSign:\n%s' % string_to_sign)
+        logger.debug('StringToSign:\n%s', string_to_sign)
         return self.sign_string(string_to_sign)
 
     def add_auth(self, request):
+        logger.debug("Calculating signature using hmacv1 auth.")
         split = urlsplit(request.url)
-        logger.debug('Method: %s' % request.method)
+        logger.debug('HTTP request method: %s', request.method)
         signature = self.get_signature(request.method, split,
                                        request.headers)
         request.headers['Authorization'] = ("AWS %s:%s" % (self.credentials.access_key,
@@ -381,5 +401,6 @@ AUTH_TYPE_MAPS = {
     'v2': SigV2Auth,
     'v4': SigV4Auth,
     'v3': SigV3Auth,
+    'v3https': SigV3Auth,
     's3': HmacV1Auth,
 }

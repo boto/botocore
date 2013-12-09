@@ -34,20 +34,20 @@ class TestDirectconnectOperations(unittest.TestCase):
     def test_create_connection(self):
         op = self.dc.get_operation('CreateConnection')
         params = op.build_parameters(connection_name='foobarconn',
-                                     offering_id='foobaroffer')
-        result = {'offeringId': 'foobaroffer',
+                                     location='location', bandwidth='bandwidth')
+        result = {'location': 'location', 'bandwidth': 'bandwidth',
                   'connectionName': 'foobarconn'}
         self.assertEqual(params, result)
 
     def test_describe_virtual_gateways(self):
-        new_int = {'amazon_address': 'amzaddress',
-                   'customer_address': 'custaddress',
+        new_int = {'amazonAddress': 'amzaddress',
+                   'customerAddress': 'custaddress',
                    'asn': 42,
                    'vlan': 43,
-                   'auth_key': 'my_auth_key',
-                   'virtual_interface_name': 'viname',
-                   'route_filter_prefixes': [{'cidr': '1.2.3.4/5'},
-                                             {'cidr': '6.7.8.9/10'}]}
+                   'authKey': 'my_auth_key',
+                   'virtualInterfaceName': 'viname',
+                   'routeFilterPrefixes': [{'cidr': '1.2.3.4/5'},
+                                           {'cidr': '6.7.8.9/10'}]}
         op = self.dc.get_operation('CreatePublicVirtualInterface')
         params = op.build_parameters(connection_id='dxcon-fg5678gh',
                                      new_public_virtual_interface=new_int)

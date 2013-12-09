@@ -33,6 +33,9 @@ else:
     import unittest
 
 
+import botocore.session
+
+
 class BaseEnvVar(unittest.TestCase):
     def setUp(self):
         # Automatically patches out os.environ for you
@@ -45,3 +48,36 @@ class BaseEnvVar(unittest.TestCase):
 
     def tearDown(self):
         self.environ_patch.stop()
+
+
+class BaseSessionTest(BaseEnvVar):
+    """Base class used to provide credentials.
+
+    This class can be used as a base class that want to use a real
+    session class but want to be completely isolated from the
+    external environment (including environment variables).
+
+    This class will also set credential vars so you can make fake
+    requests to services.
+
+    """
+
+    def setUp(self):
+        super(BaseSessionTest, self).setUp()
+        self.environ['AWS_ACCESS_KEY_ID'] = 'access_key'
+        self.environ['AWS_SECRET_ACCESS_KEY'] = 'secret_key'
+        self.session = botocore.session.get_session()
+
+
+class TestParamSerialization(BaseSessionTest):
+    def setUp(self):
+        super(TestParamSerialization, self).setUp()
+        self.session = botocore.session.get_session()
+
+    def assert_params_serialize_to(self, dotted_name, input_params,
+                                   serialized_params):
+        service_name, operation_name = dotted_name.split('.')
+        service = self.session.get_service(service_name)
+        operation = service.get_operation(operation_name)
+        serialized = operation.build_parameters(**input_params)
+        self.assertDictEqual(serialized, serialized_params)

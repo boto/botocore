@@ -37,6 +37,7 @@ import botocore.base
 import botocore.service
 from botocore.exceptions import ConfigNotFound, EventNotFound, ProfileNotFound
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
+from botocore.provider import get_provider
 from botocore import __version__
 from botocore import handlers
 
@@ -44,9 +45,12 @@ from botocore import handlers
 AllEvents = {
     'after-call': '.%s.%s',
     'after-parsed': '.%s.%s.%s.%s',
+    'before-parameter-build': '.%s.%s',
     'before-call': '.%s.%s',
-    'service-created': ''
-    }
+    'service-created': '',
+    'before-auth': '.%s',
+    'needs-retry': '.%s.%s',
+}
 """
 A dictionary where each key is an event name and the value
 is the formatting string used to construct a new event.
@@ -147,10 +151,17 @@ class Session(object):
         self._config = None
         self._credentials = None
         self._profile_map = None
+        self._provider = None
 
     def _register_builtin_handlers(self, events):
         for event_name, handler in handlers.BUILTIN_HANDLERS:
             self.register(event_name, handler)
+
+    @property
+    def provider(self):
+        if self._provider is None:
+            self._provider = get_provider(self, self.get_variable('provider'))
+        return self._provider
 
     @property
     def available_profiles(self):
@@ -184,6 +195,9 @@ class Session(object):
 
     @profile.setter
     def profile(self, profile):
+        # Since provider can be specified in profile, changing the
+        # profile should reset the provider.
+        self._provider = None
         self._profile = profile
 
     def get_variable(self, logical_name, methods=('env', 'config')):
@@ -243,7 +257,6 @@ class Session(object):
         :raises: ConfigNotFound, ConfigParseError, ProfileNotFound
         :rtype: dict
         """
-        config = self.full_config
         profile_name = self.get_variable('profile')
         profile_map = self._build_profile_map()
         # If a profile is not explicitly set return the default
@@ -352,36 +365,32 @@ class Session(object):
         """
         return botocore.base.get_data(self, data_path)
 
-    def get_service_data(self, service_name, provider_name='aws'):
+    def get_service_data(self, service_name):
         """
         Retrieve the fully merged data associated with a service.
         """
-        data_path = '%s/%s' % (provider_name, service_name)
+        data_path = '%s/%s' % (self.provider.name, service_name)
         service_data = self.get_data(data_path)
         return service_data
 
-    def get_available_services(self, provider_name='aws'):
+    def get_available_services(self):
         """
         Return a list of names of available services.
         """
-        data_path = '%s' % provider_name
+        data_path = '%s' % self.provider.name
         return self.get_data(data_path)
 
-    def get_service(self, service_name, provider_name='aws'):
+    def get_service(self, service_name):
         """
         Get information about a service.
 
         :type service_name: str
         :param service_name: The name of the service (e.g. 'ec2')
 
-        :type provider_name: str
-        :param provider_name: The name of the provider.  Defaults
-            to 'aws'.
-
         :returns: :class:`botocore.service.Service`
         """
         service = botocore.service.get_service(self, service_name,
-                                               provider_name)
+                                               self.provider)
         event = self.create_event('service-created')
         self._events.emit(event, service=service)
         return service
@@ -391,15 +400,41 @@ class Session(object):
         Convenience function to quickly configure full debug output
         to go to the console.
         """
+        self.set_stream_logger(logger_name, logging.DEBUG)
+
+    def set_stream_logger(self, logger_name, log_level, stream=None,
+                          format_string=None):
+        """
+        Convenience method to configure a stream logger.
+
+        :type logger_name: str
+        :param logger_name: The name of the logger to configure
+
+        :type log_level: str
+        :param log_level: The log level to set for the logger.  This
+            is any param supported by the ``.setLevel()`` method of
+            a ``Log`` object.
+
+        :type stream: file
+        :param stream: A file like object to log to.  If none is provided
+            then sys.stderr will be used.
+
+        :type format_string: str
+        :param format_string: The format string to use for the log
+            formatter.  If none is provided this will default to
+            ``self.FmtString``.
+
+        """
         log = logging.getLogger(logger_name)
         log.setLevel(logging.DEBUG)
 
-        # create console handler and set level to debug
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.DEBUG)
+        ch = logging.StreamHandler(stream)
+        ch.setLevel(log_level)
 
         # create formatter
-        formatter = logging.Formatter(self.FmtString)
+        if format_string is None:
+            format_string = self.FmtString
+        formatter = logging.Formatter(format_string)
 
         # add formatter to ch
         ch.setFormatter(formatter)
@@ -420,7 +455,7 @@ class Session(object):
             if it doesn't already exist.
         """
         log = logging.getLogger(logger_name)
-        log.setLevel(log_level)
+        log.setLevel(logging.DEBUG)
 
         # create console handler and set level to debug
         ch = logging.FileHandler(path)
@@ -435,7 +470,7 @@ class Session(object):
         # add ch to logger
         log.addHandler(ch)
 
-    def register(self, event_name, handler):
+    def register(self, event_name, handler, unique_id=None):
         """Register a handler with an event.
 
         :type event_name: str
@@ -447,10 +482,17 @@ class Session(object):
             accept ``**kwargs``.  If either of these preconditions are
             not met, a ``ValueError`` will be raised.
 
-        """
-        self._events.register(event_name, handler)
+        :type unique_id: str
+        :param unique_id: An optional identifier to associate with the
+            registration.  A unique_id can only be used once for
+            the entire session registration (unless it is unregistered).
+            This can be used to prevent an event handler from being
+            registered twice.
 
-    def unregister(self, event_name, handler):
+        """
+        self._events.register(event_name, handler, unique_id)
+
+    def unregister(self, event_name, handler=None, unique_id=None):
         """Unregister a handler with an event.
 
         :type event_name: str
@@ -459,8 +501,28 @@ class Session(object):
         :type handler: callable
         :param handler: The callback to unregister.
 
+        :type unique_id: str
+        :param unique_id: A unique identifier identifying the callback
+            to unregister.  You can provide either the handler or the
+            unique_id, you do not have to provide both.
+
         """
-        self._events.unregister(event_name, handler)
+        self._events.unregister(event_name, handler=handler,
+                                unique_id=unique_id)
+
+    def register_event(self, event_name, fmtstr):
+        """
+        Register a new event.  The event will be added to ``AllEvents``
+        and will then be able to be created using ``create_event``.
+
+        :type event_name: str
+        :param event_name: The base name of the event.
+
+        :type fmtstr: str
+        :param fmtstr: The formatting string for the event.
+        """
+        if event_name not in AllEvents:
+            AllEvents[event_name] = fmtstr
 
     def create_event(self, event_name, *fmtargs):
         """

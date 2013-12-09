@@ -21,10 +21,12 @@
 # IN THE SOFTWARE.
 #
 import logging
-from .parameters import get_parameter
-from .exceptions import MissingParametersError
-from .paginate import Paginator
-from . import BotoCoreObject
+from botocore.parameters import get_parameter
+from botocore.exceptions import MissingParametersError
+from botocore.exceptions import UnknownParameterError
+from botocore.paginate import Paginator
+from botocore.payload import Payload, XMLPayload, JSONPayload
+from botocore import BotoCoreObject
 
 logger = logging.getLogger(__name__)
 
@@ -53,10 +55,22 @@ class Operation(BotoCoreObject):
 
     def call(self, endpoint, **kwargs):
         logger.debug("%s called with kwargs: %s", self, kwargs)
+        # It probably seems a little weird to be firing two different
+        # events here.  The reason is that the first event is fired
+        # with the parameters exactly as supplied.  The second event
+        # is fired with the built parameters.  Generally, it's easier
+        # to manipulate the former but at times, like with ReST operations
+        # that build an XML or JSON payload, you have to wait for
+        # build_parameters to do it's job and the latter is necessary.
+        event = self.session.create_event('before-parameter-build',
+                                          self.service.endpoint_prefix,
+                                          self.name)
+        self.session.emit(event, operation=self, endpoint=endpoint,
+                          params=kwargs)
+        params = self.build_parameters(**kwargs)
         event = self.session.create_event('before-call',
                                           self.service.endpoint_prefix,
                                           self.name)
-        params = self.build_parameters(**kwargs)
         self.session.emit(event, operation=self, endpoint=endpoint,
                           params=params)
         response = endpoint.make_request(self, params)
@@ -104,12 +118,42 @@ class Operation(BotoCoreObject):
                 params.append(param)
         return params
 
+    def _find_payload(self):
+        """
+        Searches the parameters for an operation to find the payload
+        parameter, if it exists.  Returns that param or None.
+        """
+        payload = None
+        for param in self.params:
+            if hasattr(param, 'payload') and param.payload:
+                payload = param
+                break
+        return payload
+
     def _get_built_params(self):
         d = {}
         if self.service.type in ('rest-xml', 'rest-json'):
             d['uri_params'] = {}
             d['headers'] = {}
-            d['payload'] = None
+            if self.service.type == 'rest-xml':
+                payload = self._find_payload()
+                if payload and payload.type in ('blob', 'string'):
+                    # If we have a payload parameter which is a scalar
+                    # type (either string or blob) it means we need a
+                    # simple payload object rather than an XMLPayload.
+                    d['payload'] = Payload()
+                else:
+                    # Otherwise, use an XMLPayload.  Since Route53
+                    # doesn't actually use the payload attribute, we
+                    # have to err on the safe side.
+                    namespace = self.service.xmlnamespace
+                    root_element_name = None
+                    if self.input and 'shape_name' in self.input:
+                        root_element_name = self.input['shape_name']
+                    d['payload'] = XMLPayload(root_element_name=root_element_name,
+                                              namespace=namespace)
+            else:
+                d['payload'] = JSONPayload()
         return d
 
     def build_parameters(self, **kwargs):
@@ -118,9 +162,9 @@ class Operation(BotoCoreObject):
         given operation formatted as required to pass to the service
         in a request.
         """
-        logger.debug(kwargs)
         built_params = self._get_built_params()
         missing = []
+        self._check_for_unknown_params(kwargs)
         for param in self.params:
             if param.required:
                 missing.append(param)
@@ -131,9 +175,17 @@ class Operation(BotoCoreObject):
                                       kwargs[param.py_name],
                                       built_params)
         if missing:
-            missing_str = ','.join([p.py_name for p in missing])
-            raise MissingParametersError(missing=missing_str)
+            missing_str = ', '.join([p.py_name for p in missing])
+            raise MissingParametersError(missing=missing_str,
+                                         object_name=self)
         return built_params
+
+    def _check_for_unknown_params(self, kwargs):
+        valid_names = [p.py_name for p in self.params]
+        for key in kwargs:
+            if key not in valid_names:
+                raise UnknownParameterError(name=key, operation=self,
+                                            choices=', '.join(valid_names))
 
     def is_streaming(self):
         is_streaming = False

@@ -1,6 +1,6 @@
 {
   "extra": {
-    "xmlnamespace": "http://ec2.amazonaws.com/doc/2013-02-01/",
+    "xmlnamespace": "http://ec2.amazonaws.com/doc/2013-10-15/",
     "metadata": {
       "regions": {
         "us-east-1": null,
@@ -19,6 +19,17 @@
     }
   },
   "operations": {
+    "RegisterImage": {
+      "input": {
+        "members": {
+          "VirtualizationType": {
+            "type": "string",
+            "enum": ["paravirtual", "hvm"],
+            "documentation": "The type of virtualization"
+          }
+        }
+      }
+    },
     "DescribeAddresses": {
       "filters": {
         "allocation-id": {
@@ -1670,11 +1681,31 @@
         }
       }
     },
+    "CopyImage": {
+      "input": {
+        "members": {
+          "Name": {
+            "required": false
+          }
+        }
+      }
+    },
     "RunInstances": {
       "input": {
         "members": {
           "UserData": {
             "type": "blob"
+          },
+          "NetworkInterfaces": {
+            "members": {
+              "members": {
+                "PrivateIpAddresses": {
+                  "members": {
+                    "xmlname": "PrivateIpAddresses"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -1704,6 +1735,23 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "VolumeStatuses"
+    },
+    "DescribeInstances": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Reservations"
+    },
+    "DescribeTags": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Tags"
+    }
+  },
+  "transformations": {
+    "remove-deprecated-params": {
+      "deprecated_keyword": "Deprecated"
     }
   }
 }

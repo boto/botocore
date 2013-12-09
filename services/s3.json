@@ -414,6 +414,7 @@
                   "us-west-1",
                   "us-west-2",
                   "ap-southeast-1",
+                  "ap-southeast-2",
                   "ap-northeast-1",
                   "sa-east-1",
                   ""
@@ -785,7 +786,7 @@
       "documentation": "Removes the null version (if there is one) of an object and inserts a delete marker, which becomes the latest version of the object. If there isn't a null version, Amazon S3 does not remove any objects.",
       "http": {
         "method": "DELETE",
-        "uri": "/{Bucket}/{Key}"
+        "uri": "/{Bucket}/{Key}?versionId={VersionId}"
       },
       "input": {
         "type": "structure",
@@ -799,6 +800,17 @@
             "type": "string",
             "required": true,
             "location": "uri"
+          },
+          "MFA": {
+            "type": "string",
+            "documentation": "The concatenation of the authentication device's serial number, a space, and the value that is displayed on your authentication device.",
+            "location": "header",
+            "location_name": "x-amz-mfa"
+          },
+          "VersionId": {
+            "type": "string",
+            "location": "uri",
+            "documentation": "VersionId used to reference a specific version of the object."
           }
         }
       },
@@ -806,7 +818,7 @@
         "type": "structure",
         "members": {
           "DeleteMarker": {
-            "type": "string",
+            "type": "boolean",
             "location": "header",
             "location_name": "x-amz-delete-marker",
             "documentation": "Specifies whether the versioned object that was permanently deleted was (true) or was not (false) a delete marker."
@@ -1502,11 +1514,11 @@
             "type": "string",
             "enum": [
               "Enabled",
-              "Disabled"
+              "Suspended"
             ],
             "documentation": "The versioning state of the bucket."
           },
-          "MFADelete": {
+          "MfaDelete": {
             "type": "string",
             "enum": [
               "Enabled",
@@ -1601,6 +1613,10 @@
                   "type": "structure",
                   "documentation": "Container for redirect information. You can redirect requests to another host, to another page, or with another protocol. In the event of an error, you can can specify a different error code to return.",
                   "members": {
+                    "HostName": {
+                      "type": "string",
+                      "documentation": "The host name to use in the redirect request."
+                    },
                     "ReplaceKeyPrefixWith": {
                       "type": "string",
                       "documentation": "The object key prefix to use in the redirect request. For example, to redirect requests for all pages with prefix docs/ (objects in the docs/ folder) to documents/, you can set a condition block with KeyPrefixEquals set to docs/ and in the Redirect set ReplaceKeyPrefixWith to /documents. Not required if one of the siblings is present. Can be present only if ReplaceKeyWith is not provided."
@@ -1612,10 +1628,6 @@
                     "HttpRedirectCode": {
                       "type": "string",
                       "documentation": "The HTTP redirect code to use on the response. Not required if one of the siblings is present."
-                    },
-                    "HostName": {
-                      "type": "string",
-                      "documentation": "Name of the host where requests will be redirected."
                     },
                     "Protocol": {
                       "type": "string",
@@ -1735,14 +1747,10 @@
             "documentation": "Object data."
           },
           "DeleteMarker": {
-            "type": "string",
+            "type": "boolean",
             "location": "header",
             "location_name": "x-amz-delete-marker",
-            "documentation": "Specifies whether the object retrieved was (true) or was not (false) a Delete Marker. If false, this response header does not appear in the response.",
-            "enum": [
-              "true",
-              "false"
-            ]
+            "documentation": "Specifies whether the object retrieved was (true) or was not (false) a Delete Marker. If false, this response header does not appear in the response."
           },
           "AcceptRanges": {
             "type": "string",
@@ -2105,14 +2113,10 @@
         "type": "structure",
         "members": {
           "DeleteMarker": {
-            "type": "string",
+            "type": "boolean",
             "location": "header",
             "location_name": "x-amz-delete-marker",
-            "documentation": "Specifies whether the object retrieved was (true) or was not (false) a Delete Marker. If false, this response header does not appear in the response.",
-            "enum": [
-              "true",
-              "false"
-            ]
+            "documentation": "Specifies whether the object retrieved was (true) or was not (false) a Delete Marker. If false, this response header does not appear in the response."
           },
           "AcceptRanges": {
             "type": "string",
@@ -2347,6 +2351,9 @@
             "type": "string",
             "documentation": "When a list is truncated, this element specifies the value that should be used for the key-marker request parameter in a subsequent request."
           },
+          "Prefix": {
+            "type": "string"
+          },
           "NextUploadIdMarker": {
             "type": "string",
             "documentation": "When a list is truncated, this element specifies the value that should be used for the upload-id-marker request parameter in a subsequent request."
@@ -2411,6 +2418,18 @@
                       "documentation": "Name of the Principal."
                     }
                   }
+                }
+              }
+            }
+          },
+          "CommonPrefixes": {
+            "type": "list",
+            "flattened": true,
+            "members": {
+              "type": "structure",
+              "members": {
+                "Prefix": {
+                  "type": "string"
                 }
               }
             }
@@ -3220,7 +3239,7 @@
             "members": {
               "LoggingEnabled": {
                 "type": "structure",
-                "required": true,
+                "required": false,
                 "members": {
                   "TargetBucket": {
                     "type": "string",
@@ -3504,7 +3523,7 @@
           },
           "MFA": {
             "type": "string",
-            "documentation": "The value is the concatenation of the authentication device's serial number, a space, and the value displayed on your authentication device.",
+            "documentation": "The concatenation of the authentication device's serial number, a space, and the value that is displayed on your authentication device.",
             "location": "header",
             "location_name": "x-amz-mfa"
           },
@@ -3513,7 +3532,7 @@
             "required": true,
             "payload": true,
             "members": {
-              "MFADelete": {
+              "MfaDelete": {
                 "type": "string",
                 "enum": [
                   "Enabled",
@@ -3525,7 +3544,7 @@
                 "type": "string",
                 "enum": [
                   "Enabled",
-                  "Disabled"
+                  "Suspended"
                 ],
                 "documentation": "The versioning state of the bucket."
               }
@@ -3629,8 +3648,7 @@
                       "members": {
                         "HostName": {
                           "type": "string",
-                          "required": true,
-                          "documentation": "Name of the host where requests will be redirected."
+                          "documentation": "The host name to use in the redirect request."
                         },
                         "HttpRedirectCode": {
                           "type": "string",
