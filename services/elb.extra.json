@@ -11,7 +11,8 @@
         "us-west-2": null,
         "us-west-1": null,
         "eu-west-1": null,
-        "us-gov-west-1": null
+        "us-gov-west-1": null,
+        "cn-north-1": "https://elasticloadbalancing.cn-north-1.amazonaws.com.cn"
       },
       "protocols": [
         "https",

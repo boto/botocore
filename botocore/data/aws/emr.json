@@ -2973,7 +2973,8 @@
             "us-west-2": "http://us-west-2.elasticmapreduce.amazonaws.com/",
             "us-west-1": "http://us-west-1.elasticmapreduce.amazonaws.com/",
             "eu-west-1": "http://eu-west-1.elasticmapreduce.amazonaws.com/",
-            "us-gov-west-1": null
+            "us-gov-west-1": null,
+            "cn-north-1": "https://elasticmapreduce.cn-north-1.amazonaws.com.cn"
         },
         "protocols": [
             "https"
