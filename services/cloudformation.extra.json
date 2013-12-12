@@ -23,7 +23,10 @@
         "members": {
           "TemplateURL": {
             "no_paramfile": true
-          }
+          },
+          "StackPolicyURL": {
+            "no_paramfile": true
+          }	  
         }
       }
     },
@@ -44,7 +47,10 @@
         "members": {
           "TemplateURL": {
             "no_paramfile": true
-          }
+          },
+          "StackPolicyURL": {
+            "no_paramfile": true
+          }	  
         }
       }
     },

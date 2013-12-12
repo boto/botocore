@@ -132,7 +132,8 @@
                         "type": "string",
                         "min_length": 1,
                         "max_length": 1350,
-                        "documentation": "\n      <p>Location of a file containing the stack policy. The URL must point to a policy (max size: 16KB) located in an S3 bucket in the same region as the stack. If you pass <code>StackPolicyBody</code> and <code>StackPolicyURL</code>, only\n         <code>StackPolicyBody</code> is used.</p>\n   "
+                        "documentation": "\n      <p>Location of a file containing the stack policy. The URL must point to a policy (max size: 16KB) located in an S3 bucket in the same region as the stack. If you pass <code>StackPolicyBody</code> and <code>StackPolicyURL</code>, only\n         <code>StackPolicyBody</code> is used.</p>\n   ",
+                        "no_paramfile": true
                     },
                     "Tags": {
                         "shape_name": "Tags",
@@ -1245,7 +1246,8 @@
                         "type": "string",
                         "min_length": 1,
                         "max_length": 1350,
-                        "documentation": "\n      <p>Location of a file containing the updated stack policy. The URL must point to a policy (max size: 16KB) located in an S3 bucket in the same region as the stack. If you pass <code>StackPolicyBody</code> and <code>StackPolicyURL</code>, only\n         <code>StackPolicyBody</code> is used.</p>\n       <p>If you want to update a stack policy during a stack update, specify an updated stack policy. For example, you can include an updated stack policy to protect a new resource created in the stack update. If you do not specify a stack policy, the current policy that is associated with the stack is unchanged.</p>\n   "
+                        "documentation": "\n      <p>Location of a file containing the updated stack policy. The URL must point to a policy (max size: 16KB) located in an S3 bucket in the same region as the stack. If you pass <code>StackPolicyBody</code> and <code>StackPolicyURL</code>, only\n         <code>StackPolicyBody</code> is used.</p>\n       <p>If you want to update a stack policy during a stack update, specify an updated stack policy. For example, you can include an updated stack policy to protect a new resource created in the stack update. If you do not specify a stack policy, the current policy that is associated with the stack is unchanged.</p>\n   ",
+                        "no_paramfile": true
                     }
                 },
                 "documentation": "\n      <p>The input for <a>UpdateStack</a> action.</p>\n   "

@@ -2,7 +2,7 @@
   "api_version": "2013-06-15",
   "type": "query",
   "result_wrapped": true,
-  "signature_version": "v2",
+  "signature_version": "v4",
   "service_full_name": "Amazon ElastiCache",
   "endpoint_prefix": "elasticache",
   "xmlnamespace": "http://elasticache.amazonaws.com/doc/2013-06-15/",
