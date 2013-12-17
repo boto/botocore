@@ -84,6 +84,9 @@ def translate(model):
     add_pagination_configs(
         new_model,
         model.enhancements.get('pagination', {}))
+    add_waiter_configs(
+        new_model,
+        model.enhancements.get('waiters', {}))
     # Merge in any per operation overrides defined in the .extras.json file.
     merge_dicts(new_model['operations'], model.enhancements.get('operations', {}))
     add_retry_configs(
@@ -234,6 +237,92 @@ def add_pagination_configs(new_model, pagination):
                              "existent operation '%s'" % name)
         operation['pagination'] = config.copy()
 
+
+def add_waiter_configs(new_model, waiters):
+    if waiters:
+        denormalized = denormalize_waiters(waiters)
+        # Before adding it to the new model, we need to verify the
+        # final denormalized model.
+        for value in denormalized.values():
+            if value['operation'] not in new_model['operations']:
+                raise ValueError()
+        new_model['waiters'] = denormalized
+
+
+def denormalize_waiters(waiters):
+    # The waiter configuration is normalized to avoid duplication.
+    # You can inherit defaults, and extend from other definitions.
+    # We're going to denormalize this so that the implementation for
+    # consuming waiters is simple.
+    default = waiters.get('__default__', {})
+    new_waiters = {}
+    for key, value in waiters.items():
+        if key.startswith('__'):
+            continue
+        new_waiters[key] = denormalize_single_waiter(value, default, waiters)
+    return new_waiters
+
+
+def denormalize_single_waiter(value, default, waiters):
+    lookup_chain = [value]
+    current = value
+    while True:
+        if 'extends' not in current:
+            break
+        current = waiters[current.get('extends')]
+        lookup_chain.append(current)
+    lookup_chain.append(default)
+    new_waiter = {}
+    for element in reversed(lookup_chain):
+        new_waiter.update(element)
+    # We don't care about 'extends' so we can safely remove that key.
+    new_waiter.pop('extends', {})
+    # Now we need to resolve the success/failure values.  We
+    # want to completely remove the acceptor types.
+    new_waiter['success_type'] = new_waiter.get('success_type',
+                                                new_waiter.get('acceptor_type'))
+    new_waiter['success_path'] = new_waiter.get('success_path',
+                                                new_waiter.get('acceptor_path'))
+    new_waiter['success_value'] = new_waiter.get('success_value',
+                                                 new_waiter.get('acceptor_value'))
+    new_waiter['failure_type'] = new_waiter.get('failure_type',
+                                                new_waiter.get('acceptor_type'))
+    new_waiter['failure_path'] = new_waiter.get('failure_path',
+                                                new_waiter.get('acceptor_path'))
+    new_waiter['failure_value'] = new_waiter.get('failure_value',
+                                                 new_waiter.get('acceptor_value'))
+    new_waiter.pop('acceptor_type', '')
+    new_waiter.pop('acceptor_path', '')
+    new_waiter.pop('acceptor_value', '')
+    # Remove any keys with a None value.
+    for key in list(new_waiter.keys()):
+        if new_waiter[key] is None:
+            del new_waiter[key]
+    # Check required keys.
+    for required in ['operation', 'success_type']:
+        if required not in new_waiter:
+            raise ValueError('Missing required waiter configuration '
+                                'value "%s": %s' % (required, new_waiter))
+        if new_waiter.get(required) is None:
+            raise ValueError('Required waiter configuration '
+                                'value cannot be None "%s": %s'
+                                % (required, new_waiter))
+    # Finally, success/failure values can be a scalar or a list.  We're going
+    # to just always make them a list.
+    if 'success_value' in new_waiter and not \
+            isinstance(new_waiter['success_value'], list):
+        new_waiter['success_value'] = [new_waiter['success_value']]
+    if 'failure_value' in new_waiter and not \
+            isinstance(new_waiter['failure_value'], list):
+        new_waiter['failure_value'] = [new_waiter['failure_value']]
+    _transform_waiter(new_waiter)
+    return new_waiter
+
+
+def _transform_waiter(new_waiter):
+    # This transforms the waiters into a format that's slightly
+    # easier to consume.
+    pass
 
 def _check_known_pagination_keys(config):
     # Verify that the pagination config only has keys we expect to see.

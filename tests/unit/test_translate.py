@@ -824,5 +824,183 @@ class TestFilteringOfDocumentation(unittest.TestCase):
         self.assertEqual(param['documentation'], 'blah blah blah blah')
 
 
+class TestWaiterDenormalization(unittest.TestCase):
+    def setUp(self):
+        self.model = ModelFiles(SERVICES, {}, {}, {})
+
+    def test_waiter_default_resolved(self):
+        extra = {
+            'waiters': {
+                '__default__': {
+                    'interval': 20,
+                    'operation': 'AssumeRole',
+                    'max_attempts': 25,
+                    'acceptor_type': 'output',
+                    'acceptor_path': 'path',
+                    'acceptor_value': 'value',
+                },
+                # Note that this config doesn't make any actual sense,
+                # this is just testing we denormalize fields properly.
+                'RoleExists': {
+                    'operation': 'AssumeRole',
+                    'ignore_errors': ['Error1'],
+                    'success_type': 'output',
+                    'success_path': 'Table.TableStatus',
+                    'success_value': ['ACTIVE'],
+                }
+            }
+        }
+        self.model.enhancements = extra
+        new_model = translate(self.model)
+        denormalized = {
+            'RoleExists': {
+                'interval': 20,
+                'max_attempts': 25,
+                'operation': 'AssumeRole',
+                'ignore_errors': ['Error1'],
+                'success_type': 'output',
+                'success_path': 'Table.TableStatus',
+                'success_value': ['ACTIVE'],
+                'failure_type': 'output',
+                'failure_path': 'path',
+                'failure_value': ['value'],
+            }
+        }
+        self.assertEqual(new_model['waiters'], denormalized)
+
+    def test_default_and_extends(self):
+        extra = {
+            'waiters': {
+                '__default__': {
+                    'interval': 20,
+                    'max_attempts': 25,
+                },
+                '__RoleResource': {
+                    'operation': 'AssumeRole',
+                    'max_attempts': 50,
+                },
+                'RoleExists': {
+                    'extends': '__RoleResource',
+                    'ignore_errors': ['Error1'],
+                    'success_type': 'output',
+                    'success_path': 'Table.TableStatus',
+                    'success_value': 'ACTIVE',
+                    'failure_type': 'output',
+                    'failure_path': 'Table.TableStatus',
+                    'failure_value': 'ACTIVE',
+                }
+            }
+        }
+        self.model.enhancements = extra
+        new_model = translate(self.model)
+        denormalized = {
+            'RoleExists': {
+                # From __default__
+                'interval': 20,
+                # Overriden from __RoleResource
+                'max_attempts': 50,
+                # Defined in __RoleResource
+                'operation': 'AssumeRole',
+                # Defined in RoleExists
+                'ignore_errors': ['Error1'],
+                'success_type': 'output',
+                'success_path': 'Table.TableStatus',
+                'success_value': ['ACTIVE'],
+                'failure_type': 'output',
+                'failure_path': 'Table.TableStatus',
+                'failure_value': ['ACTIVE'],
+            }
+        }
+        self.assertEqual(new_model['waiters'], denormalized)
+
+    def test_acceptor_path_resolution(self):
+        extra = {
+            'waiters': {
+                'RoleExists': {
+                    'operation': 'AssumeRole',
+                    'acceptor_type': 'output',
+                    'acceptor_path': 'acceptor_path',
+                    'success_value': 'success_value',
+                    'failure_value': 'failure_value',
+                }
+            }
+        }
+        self.model.enhancements = extra
+        new_model = translate(self.model)
+        denormalized = {
+            'RoleExists': {
+                'operation': 'AssumeRole',
+                # We should only have success/failure values,
+                # no acceptor types, those are all resolved.
+                # From acceptor_type.
+                'success_type': 'output',
+                # From acceptor_path.
+                'success_path': 'acceptor_path',
+                # From success_value.
+                'success_value': ['success_value'],
+                # From acceptor_type.
+                'failure_type': 'output',
+                # From acceptor_path.
+                'failure_path': 'acceptor_path',
+                # From failure_value.
+                'failure_value': ['failure_value'],
+            }
+        }
+        self.assertEqual(new_model['waiters'], denormalized)
+
+    def test_only_acceptors_provided(self):
+        extra = {
+            'waiters': {
+                'RoleExists': {
+                    'operation': 'AssumeRole',
+                    'acceptor_type': 'output',
+                    'acceptor_path': 'acceptor_path',
+                    'acceptor_value': 'acceptor_value',
+                }
+            }
+        }
+        self.model.enhancements = extra
+        new_model = translate(self.model)
+        denormalized = {
+            'RoleExists': {
+                'operation': 'AssumeRole',
+                'success_type': 'output',
+                'success_path': 'acceptor_path',
+                'success_value': ['acceptor_value'],
+                'failure_type': 'output',
+                'failure_path': 'acceptor_path',
+                'failure_value': ['acceptor_value'],
+            }
+        }
+        self.assertEqual(new_model['waiters'], denormalized)
+
+    def test_validate_valid_operation(self):
+        extra = {
+            'waiters': {
+                '__default__': {
+                    'interval': 20,
+                    'max_attempts': 25,
+                },
+                '__RoleResource': {
+                    'operation': 'THISOPERATIONDOESNOTEXIST',
+                    'max_attempts': 50,
+                },
+                'RoleExists': {
+                    'extends': '__RoleResource',
+                    'ignore_errors': ['Error1'],
+                    'success_type': 'output',
+                    'success_path': 'Table.TableStatus',
+                    'success_value': 'ACTIVE',
+                    'failure_type': 'output',
+                    'failure_path': 'Table.TableStatus',
+                    'failure_value': 'ACTIVE',
+                }
+            }
+        }
+        self.model.enhancements = extra
+        with self.assertRaises(ValueError):
+            new_model = translate(self.model)
+
+
 if __name__ == '__main__':
     unittest.main()
