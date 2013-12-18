@@ -825,6 +825,8 @@ class TestFilteringOfDocumentation(unittest.TestCase):
 
 
 class TestWaiterDenormalization(unittest.TestCase):
+    maxDiff = None
+
     def setUp(self):
         self.model = ModelFiles(SERVICES, {}, {}, {})
 
@@ -858,12 +860,16 @@ class TestWaiterDenormalization(unittest.TestCase):
                 'max_attempts': 25,
                 'operation': 'AssumeRole',
                 'ignore_errors': ['Error1'],
-                'success_type': 'output',
-                'success_path': 'Table.TableStatus',
-                'success_value': ['ACTIVE'],
-                'failure_type': 'output',
-                'failure_path': 'path',
-                'failure_value': ['value'],
+                'success': {
+                    'type': 'output',
+                    'path': 'Table.TableStatus',
+                    'value': ['ACTIVE'],
+                },
+                'failure': {
+                    'type': 'output',
+                    'path': 'path',
+                    'value': ['value'],
+                }
             }
         }
         self.assertEqual(new_model['waiters'], denormalized)
@@ -903,12 +909,16 @@ class TestWaiterDenormalization(unittest.TestCase):
                 'operation': 'AssumeRole',
                 # Defined in RoleExists
                 'ignore_errors': ['Error1'],
-                'success_type': 'output',
-                'success_path': 'Table.TableStatus',
-                'success_value': ['ACTIVE'],
-                'failure_type': 'output',
-                'failure_path': 'Table.TableStatus',
-                'failure_value': ['ACTIVE'],
+                'success': {
+                    'type': 'output',
+                    'path': 'Table.TableStatus',
+                    'value': ['ACTIVE'],
+                },
+                'failure': {
+                    'type': 'output',
+                    'path': 'Table.TableStatus',
+                    'value': ['ACTIVE'],
+                }
             }
         }
         self.assertEqual(new_model['waiters'], denormalized)
@@ -932,18 +942,22 @@ class TestWaiterDenormalization(unittest.TestCase):
                 'operation': 'AssumeRole',
                 # We should only have success/failure values,
                 # no acceptor types, those are all resolved.
-                # From acceptor_type.
-                'success_type': 'output',
-                # From acceptor_path.
-                'success_path': 'acceptor_path',
-                # From success_value.
-                'success_value': ['success_value'],
-                # From acceptor_type.
-                'failure_type': 'output',
-                # From acceptor_path.
-                'failure_path': 'acceptor_path',
-                # From failure_value.
-                'failure_value': ['failure_value'],
+                'success': {
+                    # From acceptor_type.
+                    'type': 'output',
+                    # From acceptor_path.
+                    'path': 'acceptor_path',
+                    # From success_value.
+                    'value': ['success_value'],
+                },
+                'failure': {
+                    # From acceptor_type.
+                    'type': 'output',
+                    # From acceptor_path.
+                    'path': 'acceptor_path',
+                    # From failure_value.
+                    'value': ['failure_value'],
+                }
             }
         }
         self.assertEqual(new_model['waiters'], denormalized)
@@ -964,12 +978,16 @@ class TestWaiterDenormalization(unittest.TestCase):
         denormalized = {
             'RoleExists': {
                 'operation': 'AssumeRole',
-                'success_type': 'output',
-                'success_path': 'acceptor_path',
-                'success_value': ['acceptor_value'],
-                'failure_type': 'output',
-                'failure_path': 'acceptor_path',
-                'failure_value': ['acceptor_value'],
+                'success': {
+                    'type': 'output',
+                    'path': 'acceptor_path',
+                    'value': ['acceptor_value'],
+                },
+                'failure': {
+                    'type': 'output',
+                    'path': 'acceptor_path',
+                    'value': ['acceptor_value'],
+                }
             }
         }
         self.assertEqual(new_model['waiters'], denormalized)

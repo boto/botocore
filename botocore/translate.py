@@ -322,7 +322,21 @@ def denormalize_single_waiter(value, default, waiters):
 def _transform_waiter(new_waiter):
     # This transforms the waiters into a format that's slightly
     # easier to consume.
-    pass
+    if 'success_type' in new_waiter:
+        success = {'type': new_waiter.pop('success_type')}
+        if 'success_path' in new_waiter:
+            success['path'] = new_waiter.pop('success_path')
+        if 'success_value' in new_waiter:
+            success['value'] = new_waiter.pop('success_value')
+        new_waiter['success'] = success
+    if 'failure_type' in new_waiter:
+        failure = {'type': new_waiter.pop('failure_type')}
+        if 'failure_path' in new_waiter:
+            failure['path'] = new_waiter.pop('failure_path')
+        if 'failure_value' in new_waiter:
+            failure['value'] = new_waiter.pop('failure_value')
+        new_waiter['failure'] = failure
+
 
 def _check_known_pagination_keys(config):
     # Verify that the pagination config only has keys we expect to see.
