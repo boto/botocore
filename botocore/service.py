@@ -24,6 +24,7 @@ import logging
 
 from .endpoint import get_endpoint
 from .operation import Operation
+from .waiter import Waiter
 from .exceptions import ServiceNotInRegionError, NoRegionError
 
 
@@ -42,6 +43,7 @@ class Service(object):
         optional value is an endpoint for that region.
     :ivar protocols: A list of protocols supported by the service.
     """
+    WAITER_CLASS = Waiter
 
     def __init__(self, session, provider, service_name,
                  path='/', port=None):
@@ -177,6 +179,13 @@ class Service(object):
             if operation_name in op_names:
                 return operation
         return None
+
+    def get_waiter(self, waiter_name):
+        if waiter_name not in self.waiters:
+            raise ValueError("Waiter does not exist: %s" % waiter_name)
+        config = self.waiters[waiter_name]
+        operation = self.get_operation(config['operation'])
+        return self.WAITER_CLASS(waiter_name, operation, config)
 
 
 def get_service(session, service_name, provider):
