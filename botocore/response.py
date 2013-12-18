@@ -402,8 +402,7 @@ def get_response(session, operation, http_response):
         return (http_response, streaming_response.get_value())
     body = http_response.content
     logger.debug("Response Body:\n%s", body)
-    if content_type in ('application/x-amz-json-1.0',
-                        'application/x-amz-json-1.1', 'application/json'):
+    if operation.service.type == 'json':
         json_response = JSONResponse(session, operation)
         if body:
             json_response.parse(body, encoding)
