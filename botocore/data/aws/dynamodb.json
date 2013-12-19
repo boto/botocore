@@ -6070,6 +6070,34 @@
             "http"
         ]
     },
+    "waiters": {
+        "TableNotExists": {
+            "success": {
+                "type": "error",
+                "value": [
+                    "ResourceNotFoundException"
+                ]
+            },
+            "interval": 20,
+            "operation": "DescribeTable",
+            "max_attempts": 25
+        },
+        "TableExists": {
+            "success": {
+                "path": "Table.TableStatus",
+                "type": "output",
+                "value": [
+                    "ACTIVE"
+                ]
+            },
+            "interval": 20,
+            "ignore_errors": [
+                "ResourceNotFoundException"
+            ],
+            "operation": "DescribeTable",
+            "max_attempts": 25
+        }
+    },
     "retry": {
         "__default__": {
             "max_attempts": 10,

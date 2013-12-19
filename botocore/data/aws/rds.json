@@ -10726,6 +10726,55 @@
             "py_input_token": "marker"
         }
     },
+    "waiters": {
+        "DBInstanceAvailable": {
+            "success": {
+                "path": "DBInstances[].DBInstanceStatus",
+                "type": "output",
+                "value": [
+                    "available"
+                ]
+            },
+            "interval": 30,
+            "failure": {
+                "path": "DBInstances[].DBInstanceStatus",
+                "type": "output",
+                "value": [
+                    "deleted",
+                    "deleting",
+                    "failed",
+                    "incompatible-restore",
+                    "incompatible-parameters",
+                    "incompatible-parameters",
+                    "incompatible-restore"
+                ]
+            },
+            "operation": "DescribeDBInstances",
+            "max_attempts": 60
+        },
+        "DBInstanceDeleted": {
+            "success": {
+                "path": "DBInstances[].DBInstanceStatus",
+                "type": "output",
+                "value": [
+                    "deleted"
+                ]
+            },
+            "interval": 30,
+            "failure": {
+                "path": "DBInstances[].DBInstanceStatus",
+                "type": "output",
+                "value": [
+                    "creating",
+                    "modifying",
+                    "rebooting",
+                    "resetting-master-credentials"
+                ]
+            },
+            "operation": "DescribeDBInstances",
+            "max_attempts": 60
+        }
+    },
     "retry": {
         "__default__": {
             "max_attempts": 5,

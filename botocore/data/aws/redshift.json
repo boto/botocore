@@ -9103,6 +9103,70 @@
             "https"
         ]
     },
+    "waiters": {
+        "ClusterAvailable": {
+            "success": {
+                "path": "Clusters[].ClusterStatus",
+                "type": "output",
+                "value": [
+                    "available"
+                ]
+            },
+            "interval": 60,
+            "failure": {
+                "path": "Clusters[].ClusterStatus",
+                "type": "output",
+                "value": [
+                    "deleting"
+                ]
+            },
+            "ignore_errors": [
+                "ClusterNotFound"
+            ],
+            "operation": "DescribeClusters",
+            "max_attempts": 30
+        },
+        "SnapshotAvailable": {
+            "failure": {
+                "path": "Snapshots[].Status",
+                "type": "output",
+                "value": [
+                    "failed",
+                    "deleted"
+                ]
+            },
+            "operation": "DescribeClusterSnapshots",
+            "success": {
+                "path": "Snapshots[].Status",
+                "type": "output",
+                "value": [
+                    "available"
+                ]
+            },
+            "interval": 15,
+            "max_attempts": 20
+        },
+        "ClusterDeleted": {
+            "success": {
+                "path": "Clusters[].ClusterStatus",
+                "type": "error",
+                "value": [
+                    "ClusterNotFound"
+                ]
+            },
+            "interval": 60,
+            "failure": {
+                "path": "Clusters[].ClusterStatus",
+                "type": "output",
+                "value": [
+                    "creating",
+                    "rebooting"
+                ]
+            },
+            "operation": "DescribeClusters",
+            "max_attempts": 30
+        }
+    },
     "retry": {
         "__default__": {
             "max_attempts": 5,
