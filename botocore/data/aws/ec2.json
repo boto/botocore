@@ -21316,6 +21316,330 @@
             "py_input_token": "next_token"
         }
     },
+    "waiters": {
+        "ConversionTaskCancelled": {
+            "failure": {
+                "path": "ConversionTasks[].State",
+                "type": "output"
+            },
+            "operation": "DescribeConversionTasks",
+            "success": {
+                "path": "ConversionTasks[].State",
+                "type": "output",
+                "value": [
+                    "cancelled"
+                ]
+            },
+            "interval": 15,
+            "max_attempts": 40
+        },
+        "VolumeAvailable": {
+            "success": {
+                "path": "VolumeStatuses[].VolumeStatus.Status",
+                "type": "output",
+                "value": [
+                    "available"
+                ]
+            },
+            "interval": 15,
+            "failure": {
+                "path": "VolumeStatuses[].VolumeStatus.Status",
+                "type": "output",
+                "value": [
+                    "deleted"
+                ]
+            },
+            "operation": "DescribeVolumes",
+            "max_attempts": 40
+        },
+        "ExportTaskCancelled": {
+            "failure": {
+                "path": "ExportTasks[].State",
+                "type": "output"
+            },
+            "operation": "DescribeExportTasks",
+            "success": {
+                "path": "ExportTasks[].State",
+                "type": "output",
+                "value": [
+                    "cancelled"
+                ]
+            },
+            "interval": 15,
+            "max_attempts": 40
+        },
+        "CustomerGatewayAvailable": {
+            "success": {
+                "path": "CustomerGateways[].State",
+                "type": "output",
+                "value": [
+                    "available"
+                ]
+            },
+            "interval": 15,
+            "failure": {
+                "path": "CustomerGateways[].State",
+                "type": "output",
+                "value": [
+                    "deleted",
+                    "deleting"
+                ]
+            },
+            "operation": "DescribeCustomerGateways",
+            "max_attempts": 40
+        },
+        "ConversionTaskCompleted": {
+            "success": {
+                "path": "ConversionTasks[].State",
+                "type": "output",
+                "value": [
+                    "completed"
+                ]
+            },
+            "interval": 15,
+            "failure": {
+                "path": "ConversionTasks[].State",
+                "type": "output",
+                "value": [
+                    "cancelled",
+                    "cancelling"
+                ]
+            },
+            "operation": "DescribeConversionTasks",
+            "max_attempts": 40
+        },
+        "VpnConnectionDeleted": {
+            "success": {
+                "path": "VpnConnections[].State",
+                "type": "output",
+                "value": [
+                    "deleted"
+                ]
+            },
+            "interval": 15,
+            "failure": {
+                "path": "VpnConnections[].State",
+                "type": "output",
+                "value": [
+                    "pending"
+                ]
+            },
+            "operation": "DescribeVpnConnections",
+            "max_attempts": 40
+        },
+        "BundleTaskComplete": {
+            "failure": {
+                "path": "BundleTasks[].State",
+                "type": "output",
+                "value": [
+                    "failed"
+                ]
+            },
+            "operation": "DescribeBundleTasks",
+            "success": {
+                "path": "BundleTasks[].State",
+                "type": "output",
+                "value": [
+                    "complete"
+                ]
+            },
+            "interval": 15,
+            "max_attempts": 40
+        },
+        "VolumeInUse": {
+            "success": {
+                "path": "VolumeStatuses[].VolumeStatus.Status",
+                "type": "output",
+                "value": [
+                    "in-use"
+                ]
+            },
+            "interval": 15,
+            "failure": {
+                "path": "VolumeStatuses[].VolumeStatus.Status",
+                "type": "output",
+                "value": [
+                    "deleted"
+                ]
+            },
+            "operation": "DescribeVolumes",
+            "max_attempts": 40
+        },
+        "VpnConnectionAvailable": {
+            "success": {
+                "path": "VpnConnections[].State",
+                "type": "output",
+                "value": [
+                    "available"
+                ]
+            },
+            "interval": 15,
+            "failure": {
+                "path": "VpnConnections[].State",
+                "type": "output",
+                "value": [
+                    "deleting",
+                    "deleted"
+                ]
+            },
+            "operation": "DescribeVpnConnections",
+            "max_attempts": 40
+        },
+        "InstanceRunning": {
+            "success": {
+                "path": "Reservations[].Instances[].State.Name",
+                "type": "output",
+                "value": [
+                    "running"
+                ]
+            },
+            "interval": 15,
+            "failure": {
+                "path": "Reservations[].Instances[].State.Name",
+                "type": "output",
+                "value": [
+                    "shutting-down",
+                    "terminated",
+                    "stopping"
+                ]
+            },
+            "operation": "DescribeInstances",
+            "max_attempts": 40
+        },
+        "ConversionTaskDeleted": {
+            "failure": {
+                "path": "CustomerGateways[].State",
+                "type": "output"
+            },
+            "operation": "DescribeCustomerGateways",
+            "success": {
+                "path": "CustomerGateways[].State",
+                "type": "output",
+                "value": [
+                    "deleted"
+                ]
+            },
+            "interval": 15,
+            "max_attempts": 40
+        },
+        "VpcAvailable": {
+            "success": {
+                "path": "Vpcs[].State",
+                "type": "output",
+                "value": [
+                    "available"
+                ]
+            },
+            "interval": 15,
+            "failure": {
+                "type": "output"
+            },
+            "operation": "DescribeVpcs",
+            "max_attempts": 40
+        },
+        "SubnetAvailable": {
+            "success": {
+                "path": "Subnets[].State",
+                "type": "output",
+                "value": [
+                    "available"
+                ]
+            },
+            "interval": 15,
+            "failure": {
+                "type": "output"
+            },
+            "operation": "DescribeSubnets",
+            "max_attempts": 40
+        },
+        "InstanceTerminated": {
+            "success": {
+                "path": "Reservations[].Instances[].State.Name",
+                "type": "output",
+                "value": [
+                    "terminated"
+                ]
+            },
+            "interval": 15,
+            "failure": {
+                "path": "Reservations[].Instances[].State.Name",
+                "type": "output",
+                "value": [
+                    "pending",
+                    "stopping"
+                ]
+            },
+            "operation": "DescribeInstances",
+            "max_attempts": 40
+        },
+        "VolumeDeleted": {
+            "failure": {
+                "path": "VolumeStatuses[].VolumeStatus.Status",
+                "type": "output"
+            },
+            "operation": "DescribeVolumes",
+            "success": {
+                "path": "VolumeStatuses[].VolumeStatus.Status",
+                "type": "output",
+                "value": [
+                    "deleted"
+                ]
+            },
+            "interval": 15,
+            "max_attempts": 40
+        },
+        "InstanceStopped": {
+            "success": {
+                "path": "Reservations[].Instances[].State.Name",
+                "type": "output",
+                "value": [
+                    "stopped"
+                ]
+            },
+            "interval": 15,
+            "failure": {
+                "path": "Reservations[].Instances[].State.Name",
+                "type": "output",
+                "value": [
+                    "pending",
+                    "terminated"
+                ]
+            },
+            "operation": "DescribeInstances",
+            "max_attempts": 40
+        },
+        "SnapshotCompleted": {
+            "success": {
+                "path": "Snapshots[].State",
+                "type": "output",
+                "value": [
+                    "completed"
+                ]
+            },
+            "interval": 15,
+            "failure": {
+                "type": "output"
+            },
+            "operation": "DescribeSnapshots",
+            "max_attempts": 40
+        },
+        "ExportTaskCompleted": {
+            "failure": {
+                "path": "ExportTasks[].State",
+                "type": "output"
+            },
+            "operation": "DescribeExportTasks",
+            "success": {
+                "path": "ExportTasks[].State",
+                "type": "output",
+                "value": [
+                    "completed"
+                ]
+            },
+            "interval": 15,
+            "max_attempts": 40
+        }
+    },
     "retry": {
         "__default__": {
             "max_attempts": 5,
