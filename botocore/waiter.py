@@ -42,7 +42,7 @@ class Waiter(object):
         ec2 = session.get_service('ec2')
         p = ec2.get_operation('RunInstances').call(endpoint, **kwargs)[1]
         instance_running = ec2.get_waiter('InstanceRunning')
-        isntance_id = p['Reservations'][0]['Instances'][0]['InstanceId']
+        instance_id = p['Reservations'][0]['Instances'][0]['InstanceId']
 
         # This will block until the instance reaches a 'running' state.
         instance_running.wait(instance_ids=[instance_id])

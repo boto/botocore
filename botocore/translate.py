@@ -261,7 +261,7 @@ def denormalize_waiters(waiters):
             # Keys that start with '__' are considered abstract/internal
             # and are only used for inheritance.  Because we're going
             # to denormalize the configs and perform all the lookups
-            # during this translation process, the abstractin/internal
+            # during this translation process, the abstract/internal
             # configs don't need to make it into the final translated
             # config so we can just skip these.
             continue
@@ -292,7 +292,7 @@ def denormalize_single_waiter(value, default, waiters):
     # a config that has no ``extends`` key.
     # And finally if we haven't found our value yet, we check in the
     # ``__default__`` key.
-    # So the first thing we need to do is buil the lookup chain that
+    # So the first thing we need to do is build the lookup chain that
     # starts with ``value`` and ends with ``__default__``.
     lookup_chain = [value]
     current = value
