@@ -217,3 +217,8 @@ class UnseekableStreamError(BotoCoreError):
     """
     fmt = ('Need to rewind the stream {stream_object}, but stream '
            'is not seekable.')
+
+
+class WaiterError(BotoCoreError):
+    """Waiter failed to reach desired state."""
+    fmt = 'Waiter {name} failed: {reason}'
