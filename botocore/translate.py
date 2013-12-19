@@ -258,12 +258,42 @@ def denormalize_waiters(waiters):
     new_waiters = {}
     for key, value in waiters.items():
         if key.startswith('__'):
+            # Keys that start with '__' are considered abstract/internal
+            # and are only used for inheritance.  Because we're going
+            # to denormalize the configs and perform all the lookups
+            # during this translation process, the abstractin/internal
+            # configs don't need to make it into the final translated
+            # config so we can just skip these.
             continue
         new_waiters[key] = denormalize_single_waiter(value, default, waiters)
     return new_waiters
 
 
 def denormalize_single_waiter(value, default, waiters):
+    """Denormalize a single waiter config.
+
+    :param value: The dictionary of a single waiter config, e.g.
+        the ``InstanceRunning`` or ``TableExists`` config.  This
+        is the config we're going to denormalize.
+    :param default: The ``__default__`` (if any) configuration.
+        This is needed to resolve the lookup process.
+    :param waiters: The full configuration of the waiters.
+        This is needed if we need to look up at parent class that the
+        current config extends.
+    :return: The denormalized config.
+    :rtype: dict
+
+    """
+    # First we need to resolve all the keys based on the inheritance
+    # hierarchy.  The lookup process is:
+    # The most bottom/leaf class is ``value``.  From there we need
+    # to look up anything it inherits from (denoted via the ``extends``
+    # key).  We need to perform this process recursively until we hit
+    # a config that has no ``extends`` key.
+    # And finally if we haven't found our value yet, we check in the
+    # ``__default__`` key.
+    # So the first thing we need to do is buil the lookup chain that
+    # starts with ``value`` and ends with ``__default__``.
     lookup_chain = [value]
     current = value
     while True:
@@ -273,12 +303,20 @@ def denormalize_single_waiter(value, default, waiters):
         lookup_chain.append(current)
     lookup_chain.append(default)
     new_waiter = {}
+    # Now that we have this lookup chain we can build the entire set
+    # of values by starting at the most parent class and walking down
+    # to the children.  At each step the child is merged onto the parent's
+    # config items.  This is the desired behavior as a child's values
+    # overrides its parents.  This is what the ``reversed(...)`` call
+    # is for.
     for element in reversed(lookup_chain):
         new_waiter.update(element)
     # We don't care about 'extends' so we can safely remove that key.
     new_waiter.pop('extends', {})
     # Now we need to resolve the success/failure values.  We
     # want to completely remove the acceptor types.
+    # The logic here is that if there is no success/failure_* variable
+    # defined, it inherits this value from the matching acceptor_* variable.
     new_waiter['success_type'] = new_waiter.get('success_type',
                                                 new_waiter.get('acceptor_type'))
     new_waiter['success_path'] = new_waiter.get('success_path',
@@ -291,6 +329,8 @@ def denormalize_single_waiter(value, default, waiters):
                                                 new_waiter.get('acceptor_path'))
     new_waiter['failure_value'] = new_waiter.get('failure_value',
                                                  new_waiter.get('acceptor_value'))
+    # We can remove acceptor_* vars because they're only used for lookups
+    # and we've already performed this step in the lines above.
     new_waiter.pop('acceptor_type', '')
     new_waiter.pop('acceptor_path', '')
     new_waiter.pop('acceptor_value', '')

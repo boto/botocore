@@ -31,7 +31,38 @@ logger = logging.getLogger(__name__)
 
 
 class Waiter(object):
+    """Wait for a resource to reach a certain state.
+
+    In addition to creating this class manually, you can
+    also use ``botocore.service.Service.get_waiter`` to
+    create an instance of ``Waiter```.
+
+    The typical usage pattern is from a ``Service`` object::
+
+        ec2 = session.get_service('ec2')
+        p = ec2.get_operation('RunInstances').call(endpoint, **kwargs)[1]
+        instance_running = ec2.get_waiter('InstanceRunning')
+        isntance_id = p['Reservations'][0]['Instances'][0]['InstanceId']
+
+        # This will block until the instance reaches a 'running' state.
+        instance_running.wait(instance_ids=[instance_id])
+
+    """
     def __init__(self, name, operation, config):
+        """
+
+        :type name: str
+        :param name: The name of the waiter.
+
+        :type operation: ``botocore.operation.Operation``
+        :param operation:  The operation associated with the waiter.
+            This is specified in the waiter configuration as the
+            ``operation`` key.
+
+        :type config: dict
+        :param config: The waiter configuration.
+
+        """
         self.name = name
         self.operation = operation
         self.sleep_time = config['interval']
@@ -49,7 +80,19 @@ class Waiter(object):
         return new_config
 
     def wait(self, endpoint, **kwargs):
-        logger.debug("Waiter %s waiting.")
+        """Wait until a resource reaches its success state.
+
+        Calling this method will block until the waiter reaches its
+        desired state. If the failure state is reached, a ``WaiterError``
+        is raised.
+
+        The ``**kwargs`` passed to this method will be forwarded to the
+        operation associated with the waiter.
+
+        :param endpoint:  An instance of ``botocore.endpoint.Endpoint``.
+
+        """
+        logger.debug("Waiter %s waiting.", self.name)
         num_attempts = 0
         while num_attempts < self.max_attempts:
             http_response, parsed = self.operation.call(endpoint, **kwargs)
