@@ -33,6 +33,7 @@ import six
 
 from botocore.compat import urlsplit, urlunsplit, unquote, json
 from botocore import retryhandler
+import botocore.auth
 
 
 logger = logging.getLogger(__name__)
@@ -115,6 +116,8 @@ def fix_s3_host(event_name, endpoint, request, auth, **kwargs):
     parts = urlsplit(request.url)
     auth.auth_path = parts.path
     path_parts = parts.path.split('/')
+    if isinstance(auth, botocore.auth.S3SigV4Auth):
+        return
     if len(path_parts) > 1:
         bucket_name = path_parts[1]
         logger.debug('Checking for DNS compatible bucket for: %s',
@@ -169,6 +172,20 @@ def _register_for_operations(config, session, service_name):
                          handler, unique_id=unique_id)
 
 
+def maybe_switch_to_s3sigv4(service, region_name, **kwargs):
+    if region_name.startswith('cn-'):
+        # This region only supports signature version 4 for
+        # s3, so we need to change the service's signature version.
+        service.signature_version = 's3v4'
+
+
+def maybe_switch_to_sigv4(service, region_name, **kwargs):
+    if region_name.startswith('cn-'):
+        # This region only supports signature version 4 for
+        # s3, so we need to change the service's signature version.
+        service.signature_version = 'v4'
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -185,4 +202,6 @@ BUILTIN_HANDLERS = [
     ('before-call.s3.DeleteObjects', calculate_md5),
     ('before-auth.s3', fix_s3_host),
     ('service-created', register_retries_for_service),
+    ('creating-endpoint.s3', maybe_switch_to_s3sigv4),
+    ('creating-endpoint.ec2', maybe_switch_to_sigv4),
 ]

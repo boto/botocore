@@ -28,6 +28,8 @@ import hmac
 import logging
 from email.utils import formatdate
 from operator import itemgetter
+import functools
+
 from botocore.exceptions import NoCredentialsError
 from botocore.utils import normalize_url_path
 from botocore.compat import HTTPHeaders
@@ -38,6 +40,10 @@ logger = logging.getLogger(__name__)
 
 EMPTY_SHA256_HASH = (
     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
+# This is the buffer size used when calculating sha256 checksums.
+# Experimenting with various buffer sizes showed that this value generally
+# gave the best result (in terms of performance).
+PAYLOAD_BUFFER = 1024 * 1024
 
 
 class BaseSigner(object):
@@ -184,11 +190,11 @@ class SigV4Auth(BaseSigner):
         them into a string, separated by newlines.
         """
         headers = []
-        for key in set(headers_to_sign):
+        sorted_header_names = sorted(set(headers_to_sign))
+        for key in sorted_header_names:
             value = ','.join(v.strip() for v in
                              sorted(headers_to_sign.get_all(key)))
             headers.append('%s:%s' % (key, value))
-        headers.sort()
         return '\n'.join(headers)
 
     def signed_headers(self, headers_to_sign):
@@ -197,21 +203,38 @@ class SigV4Auth(BaseSigner):
         return ';'.join(l)
 
     def payload(self, request):
-        if request.body:
+        if request.body and hasattr(request.body, 'seek'):
+            position = request.body.tell()
+            read_chunksize = functools.partial(request.body.read,
+                                               PAYLOAD_BUFFER)
+            checksum = sha256()
+            for chunk in iter(read_chunksize, b''):
+                checksum.update(chunk)
+            hex_checksum = checksum.hexdigest()
+            request.body.seek(position)
+            return hex_checksum
+        elif request.body:
             return sha256(request.body.encode('utf-8')).hexdigest()
         else:
             return EMPTY_SHA256_HASH
 
     def canonical_request(self, request):
         cr = [request.method.upper()]
-        path = normalize_url_path(urlsplit(request.url).path)
+        path = self._normalize_url_path(urlsplit(request.url).path)
         cr.append(path)
         cr.append(self.canonical_query_string(request))
         headers_to_sign = self.headers_to_sign(request)
         cr.append(self.canonical_headers(headers_to_sign) + '\n')
         cr.append(self.signed_headers(headers_to_sign))
-        cr.append(self.payload(request))
+        if 'X-Amz-Content-SHA256' in request.headers:
+            body_checksum = request.headers['X-Amz-Content-SHA256']
+        else:
+            body_checksum = self.payload(request)
+        cr.append(body_checksum)
         return '\n'.join(cr)
+
+    def _normalize_url_path(self, path):
+        return normalize_url_path(path)
 
     def scope(self, args):
         scope = [self.credentials.access_key]
@@ -256,12 +279,7 @@ class SigV4Auth(BaseSigner):
         self.timestamp = now.strftime('%Y%m%dT%H%M%SZ')
         # This could be a retry.  Make sure the previous
         # authorization header is removed first.
-        if 'Authorization' in request.headers:
-            del request.headers['Authorization']
-        if 'Date' not in request.headers:
-            request.headers['X-Amz-Date'] = self.timestamp
-        if self.credentials.token:
-            request.headers['X-Amz-Security-Token'] = self.credentials.token
+        self._add_headers_before_signing(request)
         canonical_request = self.canonical_request(request)
         logger.debug("Calculating signature using v4 auth.")
         logger.debug('CanonicalRequest:\n%s', canonical_request)
@@ -276,6 +294,44 @@ class SigV4Auth(BaseSigner):
         l.append('Signature=%s' % signature)
         request.headers['Authorization'] = ', '.join(l)
         return request
+
+    def _add_headers_before_signing(self, request):
+        if 'Authorization' in request.headers:
+            del request.headers['Authorization']
+        if 'Date' not in request.headers:
+            request.headers['X-Amz-Date'] = self.timestamp
+        if self.credentials.token:
+            request.headers['X-Amz-Security-Token'] = self.credentials.token
+
+
+class S3SigV4Auth(SigV4Auth):
+
+    def canonical_query_string(self, request):
+        split = urlsplit(request.url)
+        buf = ''
+        if split.query:
+            qsa = split.query.split('&')
+            qsa = [a.split('=', 1) for a in qsa]
+            quoted_qsa = []
+            for q in qsa:
+                if len(q) == 2:
+                    quoted_qsa.append(
+                        '%s=%s' % (quote(q[0], safe='-_.~'),
+                                   quote(unquote(q[1]), safe='-_.~')))
+                elif len(q) == 1:
+                    quoted_qsa.append('%s=' % quote(q[0], safe='-_.~'))
+            if len(quoted_qsa) > 0:
+                quoted_qsa.sort(key=itemgetter(0))
+                buf += '&'.join(quoted_qsa)
+        return buf
+
+    def _add_headers_before_signing(self, request):
+        super(S3SigV4Auth, self)._add_headers_before_signing(request)
+        request.headers['X-Amz-Content-SHA256'] = self.payload(request)
+
+    def _normalize_url_path(self, path):
+        # For S3, we do not normalize the path.
+        return path
 
 
 class HmacV1Auth(BaseSigner):
@@ -403,4 +459,5 @@ AUTH_TYPE_MAPS = {
     'v3': SigV3Auth,
     'v3https': SigV3Auth,
     's3': HmacV1Auth,
+    's3v4': S3SigV4Auth,
 }

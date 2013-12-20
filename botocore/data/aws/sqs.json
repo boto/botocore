@@ -1150,7 +1150,8 @@
             "us-west-2": "https://us-west-2.queue.amazonaws.com/",
             "us-west-1": "https://us-west-1.queue.amazonaws.com/",
             "eu-west-1": "https://eu-west-1.queue.amazonaws.com/",
-            "us-gov-west-1": null
+            "us-gov-west-1": null,
+            "cn-north-1": "https://sqs.cn-north-1.amazonaws.com.cn"
         },
         "protocols": [
             "https",
