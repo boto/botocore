@@ -63,7 +63,7 @@ class TestService(BaseSessionTest):
         # should require this param.  If we're talking to
         # a service that doesn't need this info, there's no
         # reason to require this param in botocore.
-        service = self.session.get_service('ec2')
+        service = self.session.get_service('importexport')
         service.metadata = {}
         endpoint = service.get_endpoint(
             endpoint_url='https://wherever.i.want.com')

@@ -1,18 +1,18 @@
 {
-    "api_version": "2013-09-27",
+    "api_version": "2013-11-11",
     "type": "rest-xml",
     "signature_version": "v4",
     "service_full_name": "Amazon CloudFront",
     "service_abbreviation": "CloudFront",
     "global_endpoint": "cloudfront.amazonaws.com",
     "endpoint_prefix": "cloudfront",
-    "xmlnamespace": "http://cloudfront.amazonaws.com/doc/2013-09-27/",
+    "xmlnamespace": "http://cloudfront.amazonaws.com/doc/2013-11-11/",
     "documentation": "\n  ",
     "operations": {
         "CreateCloudFrontOriginAccessIdentity": {
-            "name": "CreateCloudFrontOriginAccessIdentity2013_09_27",
+            "name": "CreateCloudFrontOriginAccessIdentity2013_11_11",
             "http": {
-                "uri": "/2013-09-27/origin-access-identity/cloudfront",
+                "uri": "/2013-11-11/origin-access-identity/cloudfront",
                 "method": "POST",
                 "response_code": 201
             },
@@ -169,9 +169,9 @@
             "documentation": "\n    Create a new origin access identity.\n  "
         },
         "CreateDistribution": {
-            "name": "CreateDistribution2013_09_27",
+            "name": "CreateDistribution2013_11_11",
             "http": {
-                "uri": "/2013-09-27/distribution",
+                "uri": "/2013-11-11/distribution",
                 "method": "POST",
                 "response_code": 201
             },
@@ -747,6 +747,49 @@
                                     }
                                 },
                                 "documentation": "\n    A complex type that contains information about viewer certificates for this distribution.\n  "
+                            },
+                            "Restrictions": {
+                                "shape_name": "Restrictions",
+                                "type": "structure",
+                                "members": {
+                                    "GeoRestriction": {
+                                        "shape_name": "GeoRestriction",
+                                        "type": "structure",
+                                        "members": {
+                                            "RestrictionType": {
+                                                "shape_name": "GeoRestrictionType",
+                                                "type": "string",
+                                                "enum": [
+                                                    "blacklist",
+                                                    "whitelist",
+                                                    "none"
+                                                ],
+                                                "documentation": "\n       The method that you want to use to restrict distribution of your content by country:\n       - none: No geo restriction is enabled, meaning access to content is not restricted\n                    by client geo location.\n       - blacklist: The Location elements specify the countries in which you do not want \n                    CloudFront to distribute your content.\n       - whitelist: The Location elements specify the countries in which you want CloudFront \n                    to distribute your content.\n   ",
+                                                "required": true
+                                            },
+                                            "Quantity": {
+                                                "shape_name": "integer",
+                                                "type": "integer",
+                                                "documentation": "\n       When geo restriction is enabled, this is the number of countries in your whitelist \n       or blacklist. Otherwise, when it is not enabled, Quantity is 0, and you can omit Items.\n   ",
+                                                "required": true
+                                            },
+                                            "Items": {
+                                                "shape_name": "LocationList",
+                                                "type": "list",
+                                                "members": {
+                                                    "shape_name": "string",
+                                                    "type": "string",
+                                                    "documentation": null,
+                                                    "xmlname": "Location"
+                                                },
+                                                "documentation": "\n       A complex type that contains a Location element for each country in which you want \n       CloudFront either to distribute your content (whitelist) or not distribute your \n       content (blacklist). \n\n       The Location element is a two-letter, uppercase country code for a country that \n       you want to include in your blacklist or whitelist. Include one Location element \n       for each country.\n\n       CloudFront and MaxMind both use ISO 3166 country codes. For the current list of \n       countries and the corresponding codes, see ISO 3166-1-alpha-2 code on the International \n       Organization for Standardization website. You can also refer to the country list \n       in the CloudFront console, which includes both country names and codes.\n   "
+                                            }
+                                        },
+                                        "documentation": "\n       A complex type that controls the countries in which your content is distributed. \n       For more information about geo restriction, go to Customizing Error Responses in \n       the Amazon CloudFront Developer Guide.\n\n       CloudFront determines the location of your users using MaxMind GeoIP databases. \n       For information about the accuracy of these databases, see How accurate are \n       your GeoIP databases? on the MaxMind website.\n   ",
+                                        "required": true
+                                    }
+                                },
+                                "documentation": "\n       A complex type that identifies ways in which you want to restrict distribution \n       of your content.\n   "
                             }
                         },
                         "documentation": "\n    The distribution's configuration information.\n  ",
@@ -1424,6 +1467,49 @@
                                             }
                                         },
                                         "documentation": "\n    A complex type that contains information about viewer certificates for this distribution.\n  "
+                                    },
+                                    "Restrictions": {
+                                        "shape_name": "Restrictions",
+                                        "type": "structure",
+                                        "members": {
+                                            "GeoRestriction": {
+                                                "shape_name": "GeoRestriction",
+                                                "type": "structure",
+                                                "members": {
+                                                    "RestrictionType": {
+                                                        "shape_name": "GeoRestrictionType",
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "blacklist",
+                                                            "whitelist",
+                                                            "none"
+                                                        ],
+                                                        "documentation": "\n       The method that you want to use to restrict distribution of your content by country:\n       - none: No geo restriction is enabled, meaning access to content is not restricted\n                    by client geo location.\n       - blacklist: The Location elements specify the countries in which you do not want \n                    CloudFront to distribute your content.\n       - whitelist: The Location elements specify the countries in which you want CloudFront \n                    to distribute your content.\n   ",
+                                                        "required": true
+                                                    },
+                                                    "Quantity": {
+                                                        "shape_name": "integer",
+                                                        "type": "integer",
+                                                        "documentation": "\n       When geo restriction is enabled, this is the number of countries in your whitelist \n       or blacklist. Otherwise, when it is not enabled, Quantity is 0, and you can omit Items.\n   ",
+                                                        "required": true
+                                                    },
+                                                    "Items": {
+                                                        "shape_name": "LocationList",
+                                                        "type": "list",
+                                                        "members": {
+                                                            "shape_name": "string",
+                                                            "type": "string",
+                                                            "documentation": null,
+                                                            "xmlname": "Location"
+                                                        },
+                                                        "documentation": "\n       A complex type that contains a Location element for each country in which you want \n       CloudFront either to distribute your content (whitelist) or not distribute your \n       content (blacklist). \n\n       The Location element is a two-letter, uppercase country code for a country that \n       you want to include in your blacklist or whitelist. Include one Location element \n       for each country.\n\n       CloudFront and MaxMind both use ISO 3166 country codes. For the current list of \n       countries and the corresponding codes, see ISO 3166-1-alpha-2 code on the International \n       Organization for Standardization website. You can also refer to the country list \n       in the CloudFront console, which includes both country names and codes.\n   "
+                                                    }
+                                                },
+                                                "documentation": "\n       A complex type that controls the countries in which your content is distributed. \n       For more information about geo restriction, go to Customizing Error Responses in \n       the Amazon CloudFront Developer Guide.\n\n       CloudFront determines the location of your users using MaxMind GeoIP databases. \n       For information about the accuracy of these databases, see How accurate are \n       your GeoIP databases? on the MaxMind website.\n   ",
+                                                "required": true
+                                            }
+                                        },
+                                        "documentation": "\n       A complex type that identifies ways in which you want to restrict distribution \n       of your content.\n   "
                                     }
                                 },
                                 "documentation": "\n    The current configuration information for the distribution.\n  ",
@@ -1738,14 +1824,38 @@
                         }
                     },
                     "documentation": "\n    You cannot create anymore custom ssl certificates.\n  "
+                },
+                {
+                    "shape_name": "InvalidLocationCode",
+                    "type": "structure",
+                    "members": {
+                        "Message": {
+                            "shape_name": "string",
+                            "type": "string",
+                            "documentation": null
+                        }
+                    },
+                    "documentation": null
+                },
+                {
+                    "shape_name": "InvalidGeoRestrictionParameter",
+                    "type": "structure",
+                    "members": {
+                        "Message": {
+                            "shape_name": "string",
+                            "type": "string",
+                            "documentation": null
+                        }
+                    },
+                    "documentation": null
                 }
             ],
             "documentation": "\n    Create a new distribution.\n  "
         },
         "CreateInvalidation": {
-            "name": "CreateInvalidation2013_09_27",
+            "name": "CreateInvalidation2013_11_11",
             "http": {
-                "uri": "/2013-09-27/distribution/{DistributionId}/invalidation",
+                "uri": "/2013-11-11/distribution/{DistributionId}/invalidation",
                 "method": "POST",
                 "response_code": 201
             },
@@ -1971,9 +2081,9 @@
             "documentation": "\n    Create a new invalidation.\n  "
         },
         "CreateStreamingDistribution": {
-            "name": "CreateStreamingDistribution2013_09_27",
+            "name": "CreateStreamingDistribution2013_11_11",
             "http": {
-                "uri": "/2013-09-27/streaming-distribution",
+                "uri": "/2013-11-11/streaming-distribution",
                 "method": "POST",
                 "response_code": 201
             },
@@ -2526,9 +2636,9 @@
             "documentation": "\n    Create a new streaming distribution.\n  "
         },
         "DeleteCloudFrontOriginAccessIdentity": {
-            "name": "DeleteCloudFrontOriginAccessIdentity2013_09_27",
+            "name": "DeleteCloudFrontOriginAccessIdentity2013_11_11",
             "http": {
-                "uri": "/2013-09-27/origin-access-identity/cloudfront/{Id}",
+                "uri": "/2013-11-11/origin-access-identity/cloudfront/{Id}",
                 "method": "DELETE",
                 "response_code": 204
             },
@@ -2618,9 +2728,9 @@
             "documentation": "\n    Delete an origin access identity.\n  "
         },
         "DeleteDistribution": {
-            "name": "DeleteDistribution2013_09_27",
+            "name": "DeleteDistribution2013_11_11",
             "http": {
-                "uri": "/2013-09-27/distribution/{Id}",
+                "uri": "/2013-11-11/distribution/{Id}",
                 "method": "DELETE",
                 "response_code": 204
             },
@@ -2710,9 +2820,9 @@
             "documentation": "\n    Delete a distribution.\n  "
         },
         "DeleteStreamingDistribution": {
-            "name": "DeleteStreamingDistribution2013_09_27",
+            "name": "DeleteStreamingDistribution2013_11_11",
             "http": {
-                "uri": "/2013-09-27/streaming-distribution/{Id}",
+                "uri": "/2013-11-11/streaming-distribution/{Id}",
                 "method": "DELETE",
                 "response_code": 204
             },
@@ -2802,9 +2912,9 @@
             "documentation": "\n    Delete a streaming distribution.\n  "
         },
         "GetCloudFrontOriginAccessIdentity": {
-            "name": "GetCloudFrontOriginAccessIdentity2013_09_27",
+            "name": "GetCloudFrontOriginAccessIdentity2013_11_11",
             "http": {
-                "uri": "/2013-09-27/origin-access-identity/cloudfront/{Id}",
+                "uri": "/2013-11-11/origin-access-identity/cloudfront/{Id}",
                 "method": "GET"
             },
             "input": {
@@ -2902,9 +3012,9 @@
             "documentation": "\n    Get the information about an origin access identity.\n  "
         },
         "GetCloudFrontOriginAccessIdentityConfig": {
-            "name": "GetCloudFrontOriginAccessIdentityConfig2013_09_27",
+            "name": "GetCloudFrontOriginAccessIdentityConfig2013_11_11",
             "http": {
-                "uri": "/2013-09-27/origin-access-identity/cloudfront/{Id}/config",
+                "uri": "/2013-11-11/origin-access-identity/cloudfront/{Id}/config",
                 "method": "GET"
             },
             "input": {
@@ -2983,9 +3093,9 @@
             "documentation": "\n    Get the configuration information about an origin access identity.\n  "
         },
         "GetDistribution": {
-            "name": "GetDistribution2013_09_27",
+            "name": "GetDistribution2013_11_11",
             "http": {
-                "uri": "/2013-09-27/distribution/{Id}",
+                "uri": "/2013-11-11/distribution/{Id}",
                 "method": "GET"
             },
             "input": {
@@ -3669,6 +3779,49 @@
                                             }
                                         },
                                         "documentation": "\n    A complex type that contains information about viewer certificates for this distribution.\n  "
+                                    },
+                                    "Restrictions": {
+                                        "shape_name": "Restrictions",
+                                        "type": "structure",
+                                        "members": {
+                                            "GeoRestriction": {
+                                                "shape_name": "GeoRestriction",
+                                                "type": "structure",
+                                                "members": {
+                                                    "RestrictionType": {
+                                                        "shape_name": "GeoRestrictionType",
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "blacklist",
+                                                            "whitelist",
+                                                            "none"
+                                                        ],
+                                                        "documentation": "\n       The method that you want to use to restrict distribution of your content by country:\n       - none: No geo restriction is enabled, meaning access to content is not restricted\n                    by client geo location.\n       - blacklist: The Location elements specify the countries in which you do not want \n                    CloudFront to distribute your content.\n       - whitelist: The Location elements specify the countries in which you want CloudFront \n                    to distribute your content.\n   ",
+                                                        "required": true
+                                                    },
+                                                    "Quantity": {
+                                                        "shape_name": "integer",
+                                                        "type": "integer",
+                                                        "documentation": "\n       When geo restriction is enabled, this is the number of countries in your whitelist \n       or blacklist. Otherwise, when it is not enabled, Quantity is 0, and you can omit Items.\n   ",
+                                                        "required": true
+                                                    },
+                                                    "Items": {
+                                                        "shape_name": "LocationList",
+                                                        "type": "list",
+                                                        "members": {
+                                                            "shape_name": "string",
+                                                            "type": "string",
+                                                            "documentation": null,
+                                                            "xmlname": "Location"
+                                                        },
+                                                        "documentation": "\n       A complex type that contains a Location element for each country in which you want \n       CloudFront either to distribute your content (whitelist) or not distribute your \n       content (blacklist). \n\n       The Location element is a two-letter, uppercase country code for a country that \n       you want to include in your blacklist or whitelist. Include one Location element \n       for each country.\n\n       CloudFront and MaxMind both use ISO 3166 country codes. For the current list of \n       countries and the corresponding codes, see ISO 3166-1-alpha-2 code on the International \n       Organization for Standardization website. You can also refer to the country list \n       in the CloudFront console, which includes both country names and codes.\n   "
+                                                    }
+                                                },
+                                                "documentation": "\n       A complex type that controls the countries in which your content is distributed. \n       For more information about geo restriction, go to Customizing Error Responses in \n       the Amazon CloudFront Developer Guide.\n\n       CloudFront determines the location of your users using MaxMind GeoIP databases. \n       For information about the accuracy of these databases, see How accurate are \n       your GeoIP databases? on the MaxMind website.\n   ",
+                                                "required": true
+                                            }
+                                        },
+                                        "documentation": "\n       A complex type that identifies ways in which you want to restrict distribution \n       of your content.\n   "
                                     }
                                 },
                                 "documentation": "\n    The current configuration information for the distribution.\n  ",
@@ -3717,9 +3870,9 @@
             "documentation": "\n    Get the information about a distribution.\n  "
         },
         "GetDistributionConfig": {
-            "name": "GetDistributionConfig2013_09_27",
+            "name": "GetDistributionConfig2013_11_11",
             "http": {
-                "uri": "/2013-09-27/distribution/{Id}/config",
+                "uri": "/2013-11-11/distribution/{Id}/config",
                 "method": "GET"
             },
             "input": {
@@ -4307,6 +4460,49 @@
                                     }
                                 },
                                 "documentation": "\n    A complex type that contains information about viewer certificates for this distribution.\n  "
+                            },
+                            "Restrictions": {
+                                "shape_name": "Restrictions",
+                                "type": "structure",
+                                "members": {
+                                    "GeoRestriction": {
+                                        "shape_name": "GeoRestriction",
+                                        "type": "structure",
+                                        "members": {
+                                            "RestrictionType": {
+                                                "shape_name": "GeoRestrictionType",
+                                                "type": "string",
+                                                "enum": [
+                                                    "blacklist",
+                                                    "whitelist",
+                                                    "none"
+                                                ],
+                                                "documentation": "\n       The method that you want to use to restrict distribution of your content by country:\n       - none: No geo restriction is enabled, meaning access to content is not restricted\n                    by client geo location.\n       - blacklist: The Location elements specify the countries in which you do not want \n                    CloudFront to distribute your content.\n       - whitelist: The Location elements specify the countries in which you want CloudFront \n                    to distribute your content.\n   ",
+                                                "required": true
+                                            },
+                                            "Quantity": {
+                                                "shape_name": "integer",
+                                                "type": "integer",
+                                                "documentation": "\n       When geo restriction is enabled, this is the number of countries in your whitelist \n       or blacklist. Otherwise, when it is not enabled, Quantity is 0, and you can omit Items.\n   ",
+                                                "required": true
+                                            },
+                                            "Items": {
+                                                "shape_name": "LocationList",
+                                                "type": "list",
+                                                "members": {
+                                                    "shape_name": "string",
+                                                    "type": "string",
+                                                    "documentation": null,
+                                                    "xmlname": "Location"
+                                                },
+                                                "documentation": "\n       A complex type that contains a Location element for each country in which you want \n       CloudFront either to distribute your content (whitelist) or not distribute your \n       content (blacklist). \n\n       The Location element is a two-letter, uppercase country code for a country that \n       you want to include in your blacklist or whitelist. Include one Location element \n       for each country.\n\n       CloudFront and MaxMind both use ISO 3166 country codes. For the current list of \n       countries and the corresponding codes, see ISO 3166-1-alpha-2 code on the International \n       Organization for Standardization website. You can also refer to the country list \n       in the CloudFront console, which includes both country names and codes.\n   "
+                                            }
+                                        },
+                                        "documentation": "\n       A complex type that controls the countries in which your content is distributed. \n       For more information about geo restriction, go to Customizing Error Responses in \n       the Amazon CloudFront Developer Guide.\n\n       CloudFront determines the location of your users using MaxMind GeoIP databases. \n       For information about the accuracy of these databases, see How accurate are \n       your GeoIP databases? on the MaxMind website.\n   ",
+                                        "required": true
+                                    }
+                                },
+                                "documentation": "\n       A complex type that identifies ways in which you want to restrict distribution \n       of your content.\n   "
                             }
                         },
                         "documentation": "\n    The distribution's configuration information.\n  ",
@@ -4351,9 +4547,9 @@
             "documentation": "\n    Get the configuration information about a distribution.\n  "
         },
         "GetInvalidation": {
-            "name": "GetInvalidation2013_09_27",
+            "name": "GetInvalidation2013_11_11",
             "http": {
-                "uri": "/2013-09-27/distribution/{DistributionId}/invalidation/{Id}",
+                "uri": "/2013-11-11/distribution/{DistributionId}/invalidation/{Id}",
                 "method": "GET"
             },
             "input": {
@@ -4490,9 +4686,9 @@
             "documentation": "\n    Get the information about an invalidation.\n  "
         },
         "GetStreamingDistribution": {
-            "name": "GetStreamingDistribution2013_09_27",
+            "name": "GetStreamingDistribution2013_11_11",
             "http": {
-                "uri": "/2013-09-27/streaming-distribution/{Id}",
+                "uri": "/2013-11-11/streaming-distribution/{Id}",
                 "method": "GET"
             },
             "input": {
@@ -4783,9 +4979,9 @@
             "documentation": "\n    Get the information about a streaming distribution.\n  "
         },
         "GetStreamingDistributionConfig": {
-            "name": "GetStreamingDistributionConfig2013_09_27",
+            "name": "GetStreamingDistributionConfig2013_11_11",
             "http": {
-                "uri": "/2013-09-27/streaming-distribution/{Id}/config",
+                "uri": "/2013-11-11/streaming-distribution/{Id}/config",
                 "method": "GET"
             },
             "input": {
@@ -4983,9 +5179,9 @@
             "documentation": "\n    Get the configuration information about a streaming distribution.\n  "
         },
         "ListCloudFrontOriginAccessIdentities": {
-            "name": "ListCloudFrontOriginAccessIdentities2013_09_27",
+            "name": "ListCloudFrontOriginAccessIdentities2013_11_11",
             "http": {
-                "uri": "/2013-09-27/origin-access-identity/cloudfront?Marker={Marker}&MaxItems={MaxItems}",
+                "uri": "/2013-11-11/origin-access-identity/cloudfront?Marker={Marker}&MaxItems={MaxItems}",
                 "method": "GET"
             },
             "input": {
@@ -5113,9 +5309,9 @@
             }
         },
         "ListDistributions": {
-            "name": "ListDistributions2013_09_27",
+            "name": "ListDistributions2013_11_11",
             "http": {
-                "uri": "/2013-09-27/distribution?Marker={Marker}&MaxItems={MaxItems}",
+                "uri": "/2013-11-11/distribution?Marker={Marker}&MaxItems={MaxItems}",
                 "method": "GET"
             },
             "input": {
@@ -5727,6 +5923,50 @@
                                             },
                                             "documentation": "\n    A complex type that contains information about viewer certificates for this distribution.\n  ",
                                             "required": true
+                                        },
+                                        "Restrictions": {
+                                            "shape_name": "Restrictions",
+                                            "type": "structure",
+                                            "members": {
+                                                "GeoRestriction": {
+                                                    "shape_name": "GeoRestriction",
+                                                    "type": "structure",
+                                                    "members": {
+                                                        "RestrictionType": {
+                                                            "shape_name": "GeoRestrictionType",
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "blacklist",
+                                                                "whitelist",
+                                                                "none"
+                                                            ],
+                                                            "documentation": "\n       The method that you want to use to restrict distribution of your content by country:\n       - none: No geo restriction is enabled, meaning access to content is not restricted\n                    by client geo location.\n       - blacklist: The Location elements specify the countries in which you do not want \n                    CloudFront to distribute your content.\n       - whitelist: The Location elements specify the countries in which you want CloudFront \n                    to distribute your content.\n   ",
+                                                            "required": true
+                                                        },
+                                                        "Quantity": {
+                                                            "shape_name": "integer",
+                                                            "type": "integer",
+                                                            "documentation": "\n       When geo restriction is enabled, this is the number of countries in your whitelist \n       or blacklist. Otherwise, when it is not enabled, Quantity is 0, and you can omit Items.\n   ",
+                                                            "required": true
+                                                        },
+                                                        "Items": {
+                                                            "shape_name": "LocationList",
+                                                            "type": "list",
+                                                            "members": {
+                                                                "shape_name": "string",
+                                                                "type": "string",
+                                                                "documentation": null,
+                                                                "xmlname": "Location"
+                                                            },
+                                                            "documentation": "\n       A complex type that contains a Location element for each country in which you want \n       CloudFront either to distribute your content (whitelist) or not distribute your \n       content (blacklist). \n\n       The Location element is a two-letter, uppercase country code for a country that \n       you want to include in your blacklist or whitelist. Include one Location element \n       for each country.\n\n       CloudFront and MaxMind both use ISO 3166 country codes. For the current list of \n       countries and the corresponding codes, see ISO 3166-1-alpha-2 code on the International \n       Organization for Standardization website. You can also refer to the country list \n       in the CloudFront console, which includes both country names and codes.\n   "
+                                                        }
+                                                    },
+                                                    "documentation": "\n       A complex type that controls the countries in which your content is distributed. \n       For more information about geo restriction, go to Customizing Error Responses in \n       the Amazon CloudFront Developer Guide.\n\n       CloudFront determines the location of your users using MaxMind GeoIP databases. \n       For information about the accuracy of these databases, see How accurate are \n       your GeoIP databases? on the MaxMind website.\n   ",
+                                                    "required": true
+                                                }
+                                            },
+                                            "documentation": "\n       A complex type that identifies ways in which you want to restrict distribution \n       of your content.\n   ",
+                                            "required": true
                                         }
                                     },
                                     "documentation": "\n     A summary of the information for an Amazon CloudFront distribution.\n   ",
@@ -5772,9 +6012,9 @@
             }
         },
         "ListInvalidations": {
-            "name": "ListInvalidations2013_09_27",
+            "name": "ListInvalidations2013_11_11",
             "http": {
-                "uri": "/2013-09-27/distribution/{DistributionId}/invalidation?Marker={Marker}&MaxItems={MaxItems}",
+                "uri": "/2013-11-11/distribution/{DistributionId}/invalidation?Marker={Marker}&MaxItems={MaxItems}",
                 "method": "GET"
             },
             "input": {
@@ -5933,9 +6173,9 @@
             }
         },
         "ListStreamingDistributions": {
-            "name": "ListStreamingDistributions2013_09_27",
+            "name": "ListStreamingDistributions2013_11_11",
             "http": {
-                "uri": "/2013-09-27/streaming-distribution?Marker={Marker}&MaxItems={MaxItems}",
+                "uri": "/2013-11-11/streaming-distribution?Marker={Marker}&MaxItems={MaxItems}",
                 "method": "GET"
             },
             "input": {
@@ -6168,9 +6408,9 @@
             }
         },
         "UpdateCloudFrontOriginAccessIdentity": {
-            "name": "UpdateCloudFrontOriginAccessIdentity2013_09_27",
+            "name": "UpdateCloudFrontOriginAccessIdentity2013_11_11",
             "http": {
-                "uri": "/2013-09-27/origin-access-identity/cloudfront/{Id}/config",
+                "uri": "/2013-11-11/origin-access-identity/cloudfront/{Id}/config",
                 "method": "PUT"
             },
             "input": {
@@ -6368,9 +6608,9 @@
             "documentation": "\n    Update an origin access identity.\n  "
         },
         "UpdateDistribution": {
-            "name": "UpdateDistribution2013_09_27",
+            "name": "UpdateDistribution2013_11_11",
             "http": {
-                "uri": "/2013-09-27/distribution/{Id}/config",
+                "uri": "/2013-11-11/distribution/{Id}/config",
                 "method": "PUT"
             },
             "input": {
@@ -6945,6 +7185,49 @@
                                     }
                                 },
                                 "documentation": "\n    A complex type that contains information about viewer certificates for this distribution.\n  "
+                            },
+                            "Restrictions": {
+                                "shape_name": "Restrictions",
+                                "type": "structure",
+                                "members": {
+                                    "GeoRestriction": {
+                                        "shape_name": "GeoRestriction",
+                                        "type": "structure",
+                                        "members": {
+                                            "RestrictionType": {
+                                                "shape_name": "GeoRestrictionType",
+                                                "type": "string",
+                                                "enum": [
+                                                    "blacklist",
+                                                    "whitelist",
+                                                    "none"
+                                                ],
+                                                "documentation": "\n       The method that you want to use to restrict distribution of your content by country:\n       - none: No geo restriction is enabled, meaning access to content is not restricted\n                    by client geo location.\n       - blacklist: The Location elements specify the countries in which you do not want \n                    CloudFront to distribute your content.\n       - whitelist: The Location elements specify the countries in which you want CloudFront \n                    to distribute your content.\n   ",
+                                                "required": true
+                                            },
+                                            "Quantity": {
+                                                "shape_name": "integer",
+                                                "type": "integer",
+                                                "documentation": "\n       When geo restriction is enabled, this is the number of countries in your whitelist \n       or blacklist. Otherwise, when it is not enabled, Quantity is 0, and you can omit Items.\n   ",
+                                                "required": true
+                                            },
+                                            "Items": {
+                                                "shape_name": "LocationList",
+                                                "type": "list",
+                                                "members": {
+                                                    "shape_name": "string",
+                                                    "type": "string",
+                                                    "documentation": null,
+                                                    "xmlname": "Location"
+                                                },
+                                                "documentation": "\n       A complex type that contains a Location element for each country in which you want \n       CloudFront either to distribute your content (whitelist) or not distribute your \n       content (blacklist). \n\n       The Location element is a two-letter, uppercase country code for a country that \n       you want to include in your blacklist or whitelist. Include one Location element \n       for each country.\n\n       CloudFront and MaxMind both use ISO 3166 country codes. For the current list of \n       countries and the corresponding codes, see ISO 3166-1-alpha-2 code on the International \n       Organization for Standardization website. You can also refer to the country list \n       in the CloudFront console, which includes both country names and codes.\n   "
+                                            }
+                                        },
+                                        "documentation": "\n       A complex type that controls the countries in which your content is distributed. \n       For more information about geo restriction, go to Customizing Error Responses in \n       the Amazon CloudFront Developer Guide.\n\n       CloudFront determines the location of your users using MaxMind GeoIP databases. \n       For information about the accuracy of these databases, see How accurate are \n       your GeoIP databases? on the MaxMind website.\n   ",
+                                        "required": true
+                                    }
+                                },
+                                "documentation": "\n       A complex type that identifies ways in which you want to restrict distribution \n       of your content.\n   "
                             }
                         },
                         "documentation": "\n    The distribution's configuration information.\n  ",
@@ -7635,6 +7918,49 @@
                                             }
                                         },
                                         "documentation": "\n    A complex type that contains information about viewer certificates for this distribution.\n  "
+                                    },
+                                    "Restrictions": {
+                                        "shape_name": "Restrictions",
+                                        "type": "structure",
+                                        "members": {
+                                            "GeoRestriction": {
+                                                "shape_name": "GeoRestriction",
+                                                "type": "structure",
+                                                "members": {
+                                                    "RestrictionType": {
+                                                        "shape_name": "GeoRestrictionType",
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "blacklist",
+                                                            "whitelist",
+                                                            "none"
+                                                        ],
+                                                        "documentation": "\n       The method that you want to use to restrict distribution of your content by country:\n       - none: No geo restriction is enabled, meaning access to content is not restricted\n                    by client geo location.\n       - blacklist: The Location elements specify the countries in which you do not want \n                    CloudFront to distribute your content.\n       - whitelist: The Location elements specify the countries in which you want CloudFront \n                    to distribute your content.\n   ",
+                                                        "required": true
+                                                    },
+                                                    "Quantity": {
+                                                        "shape_name": "integer",
+                                                        "type": "integer",
+                                                        "documentation": "\n       When geo restriction is enabled, this is the number of countries in your whitelist \n       or blacklist. Otherwise, when it is not enabled, Quantity is 0, and you can omit Items.\n   ",
+                                                        "required": true
+                                                    },
+                                                    "Items": {
+                                                        "shape_name": "LocationList",
+                                                        "type": "list",
+                                                        "members": {
+                                                            "shape_name": "string",
+                                                            "type": "string",
+                                                            "documentation": null,
+                                                            "xmlname": "Location"
+                                                        },
+                                                        "documentation": "\n       A complex type that contains a Location element for each country in which you want \n       CloudFront either to distribute your content (whitelist) or not distribute your \n       content (blacklist). \n\n       The Location element is a two-letter, uppercase country code for a country that \n       you want to include in your blacklist or whitelist. Include one Location element \n       for each country.\n\n       CloudFront and MaxMind both use ISO 3166 country codes. For the current list of \n       countries and the corresponding codes, see ISO 3166-1-alpha-2 code on the International \n       Organization for Standardization website. You can also refer to the country list \n       in the CloudFront console, which includes both country names and codes.\n   "
+                                                    }
+                                                },
+                                                "documentation": "\n       A complex type that controls the countries in which your content is distributed. \n       For more information about geo restriction, go to Customizing Error Responses in \n       the Amazon CloudFront Developer Guide.\n\n       CloudFront determines the location of your users using MaxMind GeoIP databases. \n       For information about the accuracy of these databases, see How accurate are \n       your GeoIP databases? on the MaxMind website.\n   ",
+                                                "required": true
+                                            }
+                                        },
+                                        "documentation": "\n       A complex type that identifies ways in which you want to restrict distribution \n       of your content.\n   "
                                     }
                                 },
                                 "documentation": "\n    The current configuration information for the distribution.\n  ",
@@ -7954,14 +8280,38 @@
                         }
                     },
                     "documentation": "\n    You cannot create anymore custom ssl certificates.\n  "
+                },
+                {
+                    "shape_name": "InvalidLocationCode",
+                    "type": "structure",
+                    "members": {
+                        "Message": {
+                            "shape_name": "string",
+                            "type": "string",
+                            "documentation": null
+                        }
+                    },
+                    "documentation": null
+                },
+                {
+                    "shape_name": "InvalidGeoRestrictionParameter",
+                    "type": "structure",
+                    "members": {
+                        "Message": {
+                            "shape_name": "string",
+                            "type": "string",
+                            "documentation": null
+                        }
+                    },
+                    "documentation": null
                 }
             ],
             "documentation": "\n    Update a distribution.\n  "
         },
         "UpdateStreamingDistribution": {
-            "name": "UpdateStreamingDistribution2013_09_27",
+            "name": "UpdateStreamingDistribution2013_11_11",
             "http": {
-                "uri": "/2013-09-27/streaming-distribution/{Id}/config",
+                "uri": "/2013-11-11/streaming-distribution/{Id}/config",
                 "method": "PUT"
             },
             "input": {

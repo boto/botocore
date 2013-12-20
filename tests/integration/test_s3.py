@@ -271,11 +271,20 @@ class TestS3Objects(BaseS3Test):
             len(set(self.auth_paths)), 10,
             "Expected 10 unique auth paths, instead received: %s" % (self.auth_paths))
 
+    def test_non_normalized_key_paths(self):
+        # The create_object method has assertEqual checks for 200 status.
+        self.create_object('key./././name')
+        bucket_contents = self.service.get_operation('ListObjects').call(
+            self.endpoint, bucket=self.bucket_name)[1]['Contents']
+        self.assertEqual(len(bucket_contents), 1)
+        self.assertEqual(bucket_contents[0]['Key'], 'key./././name')
+
 
 class TestS3Regions(BaseS3Test):
     def setUp(self):
         super(TestS3Regions, self).setUp()
         self.tempdir = tempfile.mkdtemp()
+        self.endpoint = self.service.get_endpoint('us-west-2')
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)

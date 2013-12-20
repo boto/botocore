@@ -48,6 +48,7 @@ AllEvents = {
     'before-parameter-build': '.%s.%s',
     'before-call': '.%s.%s',
     'service-created': '',
+    'creating-endpoint': '.%s',
     'before-auth': '.%s',
     'needs-retry': '.%s.%s',
 }

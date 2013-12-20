@@ -10,7 +10,8 @@
         "us-west-2": null,
         "us-west-1": null,
         "eu-west-1": null,
-        "us-gov-west-1": null
+        "us-gov-west-1": null,
+        "cn-north-1": "https://cloudformation.cn-north-1.amazonaws.com.cn"
       },
       "protocols": [
         "https"
@@ -22,6 +23,9 @@
       "input": {
         "members": {
           "TemplateURL": {
+            "no_paramfile": true
+          },
+          "StackPolicyURL": {
             "no_paramfile": true
           }
         }
@@ -44,7 +48,10 @@
         "members": {
           "TemplateURL": {
             "no_paramfile": true
-          }
+          },
+          "StackPolicyURL": {
+            "no_paramfile": true
+          }	  
         }
       }
     },

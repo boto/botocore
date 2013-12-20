@@ -396,6 +396,7 @@
             "pagination": {
                 "input_token": "NextToken",
                 "output_token": "NextToken",
+                "limit_key": "MaxItems",
                 "result_key": "Identities",
                 "py_input_token": "next_token"
             }
@@ -869,8 +870,23 @@
         "ListIdentities": {
             "input_token": "NextToken",
             "output_token": "NextToken",
+            "limit_key": "MaxItems",
             "result_key": "Identities",
             "py_input_token": "next_token"
+        }
+    },
+    "waiters": {
+        "IdentityExists": {
+            "success": {
+                "path": "VerificationAttributes[].VerificationStatus",
+                "type": "output",
+                "value": [
+                    true
+                ]
+            },
+            "operation": "GetIdentityVerificationAttributes",
+            "interval": 3,
+            "max_attempts": 20
         }
     },
     "retry": {

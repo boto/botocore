@@ -1,0 +1,12 @@
+{
+  "extra": {
+    "metadata": {
+      "regions": {
+        "us-east-1": "https://kinesis.us-east-1.amazonaws.com"
+      },
+      "protocols": [
+        "https"
+      ]
+    }
+  }
+}
