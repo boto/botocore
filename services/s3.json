@@ -9,6 +9,7 @@
   "global_endpoint": "s3.amazonaws.com",
   "endpoint_prefix": "s3",
   "xmlnamespace": "http://s3.amazonaws.com/doc/2006-03-01/",
+  "documentation": "",
   "operations": {
     "AbortMultipartUpload": {
       "name": "AbortMultipartUpload",
