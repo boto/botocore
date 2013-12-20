@@ -65,6 +65,7 @@ EnvironmentVariables = {
     'config_file': (None, 'AWS_CONFIG_FILE', '~/.aws/config'),
     'access_key': ('aws_access_key_id', 'AWS_ACCESS_KEY_ID', None),
     'secret_key': ('aws_secret_access_key', 'AWS_SECRET_ACCESS_KEY', None),
+    'keyring': ('keyring', 'AWS_KEYRING', None),
     'token': ('aws_security_token', 'AWS_SECURITY_TOKEN', None),
     'provider': ('provider', 'BOTO_PROVIDER_NAME', 'aws')
     }
@@ -85,6 +86,7 @@ The default set of logical variable names are:
 * config_file - Location of a Boto config file.
 * access_key - The AWS access key part of your credentials.
 * secret_key - The AWS secret key part of your credentials.
+* keyring - Keyring name to lookup a secret_key by access_key
 * token - The security token part of your credentials (session tokens only)
 * provider - The name of the service provider (e.g. aws)
 

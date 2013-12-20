@@ -115,6 +115,28 @@ class ConfigTest(BaseEnvVar):
         self.assertIn('default', session.available_profiles)
         self.assertIn('personal', session.available_profiles)
 
+    def test_config_keyring_is_used(self):
+        self.environ['AWS_CONFIG_FILE'] = path('aws_config_keyring')
+        import sys
+        try:
+            import keyring
+            imported = True
+        except ImportError:
+            sys.modules['keyring'] = keyring = type(mock)('keyring', '')
+            imported = False
+
+        try:
+            with mock.patch('keyring.get_password', create=True):
+                keyring.get_password.side_effect = (lambda gp, login: "krgp" + login + "pw" )
+                credentials = self.session.get_credentials()
+                self.assertEqual(credentials.access_key, 'foo')
+                self.assertEqual(credentials.secret_key, 'krgpfoopw')
+                self.assertEqual(credentials.method, 'config')
+
+        finally:
+            if not imported:
+                del sys.modules['keyring']
+
 
 class BotoConfigTest(BaseEnvVar):
 
@@ -129,6 +151,27 @@ class BotoConfigTest(BaseEnvVar):
         self.assertEqual(credentials.secret_key, 'bar')
         self.assertEqual(credentials.method, 'boto')
 
+    def test_boto_config_keyring_is_used(self):
+        self.environ['BOTO_CONFIG'] = path('boto_config_keyring')
+        import sys
+        try:
+            import keyring
+            imported = True
+        except ImportError:
+            sys.modules['keyring'] = keyring = type(mock)('keyring', '')
+            imported = False
+
+        try:
+            with mock.patch('keyring.get_password', create=True):
+                keyring.get_password.side_effect = (lambda gp, login: "krgp" + login + "pw" )
+                credentials = self.session.get_credentials()
+                self.assertEqual(credentials.access_key, 'foo')
+                self.assertEqual(credentials.secret_key, 'krgpfoopw')
+                self.assertEqual(credentials.method, 'boto')
+
+        finally:
+            if not imported:
+                del sys.modules['keyring']
 
 class IamRoleTest(BaseEnvVar):
     def setUp(self):

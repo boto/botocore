@@ -139,6 +139,15 @@ def search_file(**kwargs):
     access_key = session.get_variable('access_key', methods=('config',))
     secret_key = session.get_variable('secret_key', methods=('config',))
     token = session.get_variable('token', ('config',))
+    keyring = session.get_variable('keyring', methods=('config',))
+    if not secret_key and keyring:
+        try:
+            import keyring
+        except ImportError:
+            logger.error('The keyring could not be imported, for keyring support install the keyring module')
+            raise
+        secret_key = keyring.get_password(keyring, access_key)
+        logger.info('Found credentials through keyring in config file')
     if access_key and secret_key:
         credentials = Credentials(access_key, secret_key, token)
         credentials.method = 'config'
@@ -164,6 +173,15 @@ def search_boto_config(**kwargs):
             access_key = cp.get('Credentials', 'aws_access_key_id')
         if cp.has_option('Credentials', 'aws_secret_access_key'):
             secret_key = cp.get('Credentials', 'aws_secret_access_key')
+        elif access_key and cp.has_option('Credentials', 'keyring'):
+            try:
+                import keyring
+            except ImportError:
+                logger.error('The keyring could not be imported, for keyring support install the keyring module')
+                raise
+            keyring_name = cp.get('Credentials', 'keyring')
+            secret_key = keyring.get_password(keyring_name, access_key)
+            logger.info('Found credentials through keyring file')
     if access_key and secret_key:
         credentials = Credentials(access_key, secret_key)
         credentials.method = 'boto'
