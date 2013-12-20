@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<DistributionList xmlns="http://cloudfront.amazonaws.com/doc/2013-09-27/">
+<DistributionList xmlns="http://cloudfront.amazonaws.com/doc/2013-11-11/">
    <Marker>RMPARXS293KSTG7</Marker>
    <NextMarker>EMLARXS9EXAMPLE</NextMarker>
    <MaxItems>2</MaxItems>

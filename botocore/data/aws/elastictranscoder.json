@@ -4,6 +4,7 @@
     "signature_version": "v4",
     "service_full_name": "Amazon Elastic Transcoder",
     "endpoint_prefix": "elastictranscoder",
+    "xmlnamespace": "http://elastictranscoder.amazonaws.com/doc/2012-09-25/",
     "documentation": "\n        <fullname>AWS Elastic Transcoder Service</fullname>\n        <p>The AWS Elastic Transcoder Service.</p>\n    ",
     "operations": {
         "CancelJob": {
@@ -166,7 +167,7 @@
                             "SegmentDuration": {
                                 "shape_name": "Float",
                                 "type": "string",
-                                "pattern": "^\\d{1,5}([.]\\d{0,5})?$",
+                                "pattern": "^\\d{1,5}(\\.\\d{0,5})?$",
                                 "documentation": "\n        <p>If you specify a preset in <code>PresetId</code> for which the value of\n                <code>Container</code> is ts (MPEG-TS), SegmentDuration is the duration of each .ts\n            file in seconds. The range of valid values is 1 to 60 seconds.</p>\n    "
                             },
                             "Watermarks": {
@@ -273,13 +274,13 @@
                                                 "StartTime": {
                                                     "shape_name": "Time",
                                                     "type": "string",
-                                                    "pattern": "(^\\d{1,5}([.]\\d{0,3})?$)|(^(((([0-1]?\\d)|(2[0-3])):)?(([0-5]?\\d):))?(([0-5]?\\d))([.]\\d{0,3})?$)",
+                                                    "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
                                                     "documentation": "\n       <p>The place in the input file where you want a clip to start. The format can be either HH:mm:ss.SSS \n       (maximum value: 23:59:59.999; SSS is thousandths of a second) or sssss.SSS (maximum value: 86399.999). \n       If you don't specify a value, Elastic Transcoder starts at the beginning of the input file.</p>\n   "
                                                 },
                                                 "Duration": {
                                                     "shape_name": "Time",
                                                     "type": "string",
-                                                    "pattern": "(^\\d{1,5}([.]\\d{0,3})?$)|(^(((([0-1]?\\d)|(2[0-3])):)?(([0-5]?\\d):))?(([0-5]?\\d))([.]\\d{0,3})?$)",
+                                                    "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
                                                     "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file , Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
                                                 }
                                             },
@@ -329,7 +330,7 @@
                                 "SegmentDuration": {
                                     "shape_name": "Float",
                                     "type": "string",
-                                    "pattern": "^\\d{1,5}([.]\\d{0,5})?$",
+                                    "pattern": "^\\d{1,5}(\\.\\d{0,5})?$",
                                     "documentation": "\n        <p>If you specify a preset in <code>PresetId</code> for which the value of\n                <code>Container</code> is ts (MPEG-TS), SegmentDuration is the duration of each .ts\n            file in seconds. The range of valid values is 1 to 60 seconds.</p>\n    "
                                 },
                                 "Watermarks": {
@@ -436,13 +437,13 @@
                                                     "StartTime": {
                                                         "shape_name": "Time",
                                                         "type": "string",
-                                                        "pattern": "(^\\d{1,5}([.]\\d{0,3})?$)|(^(((([0-1]?\\d)|(2[0-3])):)?(([0-5]?\\d):))?(([0-5]?\\d))([.]\\d{0,3})?$)",
+                                                        "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
                                                         "documentation": "\n       <p>The place in the input file where you want a clip to start. The format can be either HH:mm:ss.SSS \n       (maximum value: 23:59:59.999; SSS is thousandths of a second) or sssss.SSS (maximum value: 86399.999). \n       If you don't specify a value, Elastic Transcoder starts at the beginning of the input file.</p>\n   "
                                                     },
                                                     "Duration": {
                                                         "shape_name": "Time",
                                                         "type": "string",
-                                                        "pattern": "(^\\d{1,5}([.]\\d{0,3})?$)|(^(((([0-1]?\\d)|(2[0-3])):)?(([0-5]?\\d):))?(([0-5]?\\d))([.]\\d{0,3})?$)",
+                                                        "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
                                                         "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file , Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
                                                     }
                                                 },
@@ -521,6 +522,11 @@
                                 "type": "string",
                                 "pattern": "^\\d{13}-\\w{6}$",
                                 "documentation": "\n        <p> The identifier that Elastic Transcoder assigned to the job. You use this value to get settings for the\n            job or to delete the job. </p>\n    "
+                            },
+                            "Arn": {
+                                "shape_name": "String",
+                                "type": "string",
+                                "documentation": "\n        <p>The Amazon Resource Name (ARN) for the job.</p>\n    "
                             },
                             "PipelineId": {
                                 "shape_name": "Id",
@@ -609,7 +615,7 @@
                                     "SegmentDuration": {
                                         "shape_name": "Float",
                                         "type": "string",
-                                        "pattern": "^\\d{1,5}([.]\\d{0,5})?$",
+                                        "pattern": "^\\d{1,5}(\\.\\d{0,5})?$",
                                         "documentation": "\n        <p><important>(Outputs in MPEG-TS format only.</important>If you specify a preset in\n                <code>PresetId</code> for which the value of <code>Container</code>is\n                <code>ts</code> (MPEG-TS), <code>SegmentDuration</code> is the maximum duration of\n            each .ts file in seconds. The range of valid values is 1 to 60 seconds. If the duration\n            of the video is not evenly divisible by <code>SegmentDuration</code>, the duration of\n            the last segment is the remainder of total length/SegmentDuration. Elastic Transcoder\n            creates an output-specific playlist for each output that you specify in OutputKeys. To\n            add an output to the master playlist for this job, include it in\n            <code>OutputKeys</code>.</p>\n    "
                                     },
                                     "Status": {
@@ -744,13 +750,13 @@
                                                         "StartTime": {
                                                             "shape_name": "Time",
                                                             "type": "string",
-                                                            "pattern": "(^\\d{1,5}([.]\\d{0,3})?$)|(^(((([0-1]?\\d)|(2[0-3])):)?(([0-5]?\\d):))?(([0-5]?\\d))([.]\\d{0,3})?$)",
+                                                            "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
                                                             "documentation": "\n       <p>The place in the input file where you want a clip to start. The format can be either HH:mm:ss.SSS \n       (maximum value: 23:59:59.999; SSS is thousandths of a second) or sssss.SSS (maximum value: 86399.999). \n       If you don't specify a value, Elastic Transcoder starts at the beginning of the input file.</p>\n   "
                                                         },
                                                         "Duration": {
                                                             "shape_name": "Time",
                                                             "type": "string",
-                                                            "pattern": "(^\\d{1,5}([.]\\d{0,3})?$)|(^(((([0-1]?\\d)|(2[0-3])):)?(([0-5]?\\d):))?(([0-5]?\\d))([.]\\d{0,3})?$)",
+                                                            "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
                                                             "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file , Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
                                                         }
                                                     },
@@ -804,7 +810,7 @@
                                         "SegmentDuration": {
                                             "shape_name": "Float",
                                             "type": "string",
-                                            "pattern": "^\\d{1,5}([.]\\d{0,5})?$",
+                                            "pattern": "^\\d{1,5}(\\.\\d{0,5})?$",
                                             "documentation": "\n        <p><important>(Outputs in MPEG-TS format only.</important>If you specify a preset in\n                <code>PresetId</code> for which the value of <code>Container</code>is\n                <code>ts</code> (MPEG-TS), <code>SegmentDuration</code> is the maximum duration of\n            each .ts file in seconds. The range of valid values is 1 to 60 seconds. If the duration\n            of the video is not evenly divisible by <code>SegmentDuration</code>, the duration of\n            the last segment is the remainder of total length/SegmentDuration. Elastic Transcoder\n            creates an output-specific playlist for each output that you specify in OutputKeys. To\n            add an output to the master playlist for this job, include it in\n            <code>OutputKeys</code>.</p>\n    "
                                         },
                                         "Status": {
@@ -939,13 +945,13 @@
                                                             "StartTime": {
                                                                 "shape_name": "Time",
                                                                 "type": "string",
-                                                                "pattern": "(^\\d{1,5}([.]\\d{0,3})?$)|(^(((([0-1]?\\d)|(2[0-3])):)?(([0-5]?\\d):))?(([0-5]?\\d))([.]\\d{0,3})?$)",
+                                                                "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
                                                                 "documentation": "\n       <p>The place in the input file where you want a clip to start. The format can be either HH:mm:ss.SSS \n       (maximum value: 23:59:59.999; SSS is thousandths of a second) or sssss.SSS (maximum value: 86399.999). \n       If you don't specify a value, Elastic Transcoder starts at the beginning of the input file.</p>\n   "
                                                             },
                                                             "Duration": {
                                                                 "shape_name": "Time",
                                                                 "type": "string",
-                                                                "pattern": "(^\\d{1,5}([.]\\d{0,3})?$)|(^(((([0-1]?\\d)|(2[0-3])):)?(([0-5]?\\d):))?(([0-5]?\\d))([.]\\d{0,3})?$)",
+                                                                "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
                                                                 "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file , Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
                                                             }
                                                         },
@@ -1646,13 +1652,13 @@
                                         "MaxWidth": {
                                             "shape_name": "PixelsOrPercent",
                                             "type": "string",
-                                            "pattern": "(^\\d{1,3}([.]\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                                            "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
                                             "documentation": "\n        <p>The maximum width of the watermark in one of the following formats: <ul>\n                <li>number of pixels (px): The minimum value is 16 pixels, and the maximum value is\n                    the value of <code>MaxWidth</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100. Use the value of\n                        <code>Target</code> to specify whether you want Elastic Transcoder to include the black\n                    bars that are added by Elastic Transcoder, if any, in the calculation.</li> If\n                you specify the value in pixels, it must be less than or equal to the value of\n                    <code>MaxWidth</code>.</ul></p>\n    "
                                         },
                                         "MaxHeight": {
                                             "shape_name": "PixelsOrPercent",
                                             "type": "string",
-                                            "pattern": "(^\\d{1,3}([.]\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                                            "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
                                             "documentation": "\n        <p>The maximum height of the watermark in one of the following formats: <ul>\n                <li>number of pixels (px): The minimum value is 16 pixels, and the maximum value is\n                    the value of <code>MaxHeight</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100. Use the value of\n                        <code>Target</code> to specify whether you want Elastic Transcoder to include the black\n                    bars that are added by Elastic Transcoder, if any, in the calculation.</li>\n            </ul> If you specify the value in pixels, it must be less than or equal to the value of\n                <code>MaxHeight</code>.</p>\n    "
                                         },
                                         "SizingPolicy": {
@@ -1670,7 +1676,7 @@
                                         "HorizontalOffset": {
                                             "shape_name": "PixelsOrPercent",
                                             "type": "string",
-                                            "pattern": "(^\\d{1,3}([.]\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                                            "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
                                             "documentation": "\n        <p>The amount by which you want the horizontal position of the watermark to be offset from\n            the position specified by HorizontalAlign: <ul>\n                <li>number of pixels (px): The minimum value is 0 pixels, and the maximum value is\n                    the value of MaxWidth.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100.</li>\n            </ul>For example, if you specify Left for <code>HorizontalAlign</code> and 5px for\n                <code>HorizontalOffset</code>, the left side of the watermark appears 5 pixels from\n            the left border of the output video.</p>\n        <p><code>HorizontalOffset</code> is only valid when the value of\n                <code>HorizontalAlign</code> is <code>Left</code> or <code>Right</code>. If you\n            specify an offset that causes the watermark to extend beyond the left or right border\n            and Elastic Transcoder has not added black bars, the watermark is cropped. If Elastic\n            Transcoder has added black bars, the watermark extends into the black bars. If the\n            watermark extends beyond the black bars, it is cropped.</p>\n        <p>Use the value of <code>Target</code> to specify whether you want to include the black\n            bars that are added by Elastic Transcoder, if any, in the offset calculation.</p>\n    "
                                         },
                                         "VerticalAlign": {
@@ -1682,13 +1688,13 @@
                                         "VerticalOffset": {
                                             "shape_name": "PixelsOrPercent",
                                             "type": "string",
-                                            "pattern": "(^\\d{1,3}([.]\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                                            "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
                                             "documentation": "\n        <code>VerticalOffset</code>\n        <p>The amount by which you want the vertical position of the watermark to be offset from the\n            position specified by VerticalAlign:<ul>\n                <li>number of pixels (px): The minimum value is 0 pixels, and the maximum value is\n                    the value of <code>MaxHeight</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100.</li>\n            </ul> For example, if you specify <code>Top</code> for <code>VerticalAlign</code> and\n                <code>5px</code> for <code>VerticalOffset</code>, the top of the watermark appears 5\n            pixels from the top border of the output video.</p>\n        <p><code>VerticalOffset</code> is only valid when the value of VerticalAlign is Top or\n            Bottom.</p>\n        <p>If you specify an offset that causes the watermark to extend beyond the top or bottom\n            border and Elastic Transcoder has not added black bars, the watermark is cropped. If\n            Elastic Transcoder has added black bars, the watermark extends into the black bars. If\n            the watermark extends beyond the black bars, it is cropped.</p>\n\n        <p>Use the value of <code>Target</code> to specify whether you want Elastic Transcoder to\n            include the black bars that are added by Elastic Transcoder, if any, in the offset\n            calculation.</p>\n    "
                                         },
                                         "Opacity": {
                                             "shape_name": "Opacity",
                                             "type": "string",
-                                            "pattern": "^\\d{1,3}([.]\\d{0,20})?$",
+                                            "pattern": "^\\d{1,3}(\\.\\d{0,20})?$",
                                             "documentation": "\n        <p>A percentage that indicates how much you want a watermark to obscure the video in the\n            location where it appears. Valid values are 0 (the watermark is invisible) to 100 (the\n            watermark completely obscures the video in the specified location). The datatype of\n                <code>Opacity</code> is float.</p>\n        <p>Elastic Transcoder supports transparent .png graphics. If you use a transparent .png, the transparent\n            portion of the video appears as if you had specified a value of 0 for\n                <code>Opacity</code>. The .jpg file format doesn't support transparency.</p>\n    "
                                         },
                                         "Target": {
@@ -1713,7 +1719,7 @@
                                 "shape_name": "AudioCodec",
                                 "type": "string",
                                 "pattern": "(^AAC$)|(^vorbis$)|(^mp3$)",
-                                "documentation": "\n        <p>the audio codec for the output file. Valid values include <code>aac</code>, \n            <code>mp3</code>, and <code>vorbis</code>.</p>\n    "
+                                "documentation": "\n        <p>The audio codec for the output file. Valid values include <code>aac</code>, \n            <code>mp3</code>, and <code>vorbis</code>.</p>\n    "
                             },
                             "SampleRate": {
                                 "shape_name": "AudioSampleRate",
@@ -1732,6 +1738,19 @@
                                 "type": "string",
                                 "pattern": "(^auto$)|(^0$)|(^1$)|(^2$)",
                                 "documentation": "\n        <p>The number of audio channels in the output file. Valid values include:</p>\n        <p><code>auto</code>, <code>0</code>, <code>1</code>, <code>2</code></p>\n        <p>If you specify <code>auto</code>, Elastic Transcoder automatically detects the number of channels in\n            the input file.</p>\n    "
+                            },
+                            "CodecOptions": {
+                                "shape_name": "AudioCodecOptions",
+                                "type": "structure",
+                                "members": {
+                                    "Profile": {
+                                        "shape_name": "AudioCodecProfile",
+                                        "type": "string",
+                                        "pattern": "(^auto$)|(^AAC-LC$)|(^HE-AAC$)|(^HE-AACv2$)",
+                                        "documentation": "\n        <p>If you specified <code>AAC</code> for <code>Audio:Codec</code>, choose the AAC profile for the output file.\n            Elastic Transcoder supports the following profiles:</p>\n        <ul>\n            <li>\n<code>auto</code>: If you specify <code>auto</code>, Elastic Transcoder will select\n                the profile based on the bit rate selected for the output file.</li>\n            <li>\n<code>AAC-LC</code>: The most common AAC profile. Use for bitrates larger than\n                64 kbps.</li>\n            <li>\n<code>HE-AAC</code>: Not supported on some older players and devices.\n                Use for bitrates between 40 and 80 kbps.</li>\n            <li>\n<code>HE-AACv2</code>: Not supported on some players and devices.\n                Use for bitrates less than 48 kbps.</li>\n        </ul>\n        <note><p>If you created any presets before AAC profiles were added, Elastic Transcoder automatically updated\n            your presets to use AAC-LC. You can change the value as required.</p></note>  \n    "
+                                    }
+                                },
+                                "documentation": "\n        <p>If you specified <code>AAC</code> for <code>Audio:Codec</code>, this is the <code>AAC</code> \n            compression profile to use. Valid values include:</p>\n        <p><code>auto</code>, <code>AAC-LC</code>, <code>HE-AAC</code>, <code>HE-AACv2</code></p>\n        <p>If you specify <code>auto</code>, Elastic Transcoder chooses a profile based on the bit rate of the output file.</p>\n    "
                             }
                         },
                         "documentation": "\n        <p>A section of the request body that specifies the audio parameters.</p>\n    "
@@ -1808,6 +1827,11 @@
                                 "pattern": "^\\d{13}-\\w{6}$",
                                 "documentation": "\n        <p>Identifier for the new preset. You use this value to get settings for the preset or to\n            delete it.</p>\n    "
                             },
+                            "Arn": {
+                                "shape_name": "String",
+                                "type": "string",
+                                "documentation": "\n    <p>The Amazon Resource Name (ARN) for the preset.</p>\n    "
+                            },
                             "Name": {
                                 "shape_name": "Name",
                                 "type": "string",
@@ -1836,7 +1860,7 @@
                                         "shape_name": "AudioCodec",
                                         "type": "string",
                                         "pattern": "(^AAC$)|(^vorbis$)|(^mp3$)",
-                                        "documentation": "\n        <p>the audio codec for the output file. Valid values include <code>aac</code>, \n            <code>mp3</code>, and <code>vorbis</code>.</p>\n    "
+                                        "documentation": "\n        <p>The audio codec for the output file. Valid values include <code>aac</code>, \n            <code>mp3</code>, and <code>vorbis</code>.</p>\n    "
                                     },
                                     "SampleRate": {
                                         "shape_name": "AudioSampleRate",
@@ -1855,6 +1879,19 @@
                                         "type": "string",
                                         "pattern": "(^auto$)|(^0$)|(^1$)|(^2$)",
                                         "documentation": "\n        <p>The number of audio channels in the output file. Valid values include:</p>\n        <p><code>auto</code>, <code>0</code>, <code>1</code>, <code>2</code></p>\n        <p>If you specify <code>auto</code>, Elastic Transcoder automatically detects the number of channels in\n            the input file.</p>\n    "
+                                    },
+                                    "CodecOptions": {
+                                        "shape_name": "AudioCodecOptions",
+                                        "type": "structure",
+                                        "members": {
+                                            "Profile": {
+                                                "shape_name": "AudioCodecProfile",
+                                                "type": "string",
+                                                "pattern": "(^auto$)|(^AAC-LC$)|(^HE-AAC$)|(^HE-AACv2$)",
+                                                "documentation": "\n        <p>If you specified <code>AAC</code> for <code>Audio:Codec</code>, choose the AAC profile for the output file.\n            Elastic Transcoder supports the following profiles:</p>\n        <ul>\n            <li>\n<code>auto</code>: If you specify <code>auto</code>, Elastic Transcoder will select\n                the profile based on the bit rate selected for the output file.</li>\n            <li>\n<code>AAC-LC</code>: The most common AAC profile. Use for bitrates larger than\n                64 kbps.</li>\n            <li>\n<code>HE-AAC</code>: Not supported on some older players and devices.\n                Use for bitrates between 40 and 80 kbps.</li>\n            <li>\n<code>HE-AACv2</code>: Not supported on some players and devices.\n                Use for bitrates less than 48 kbps.</li>\n        </ul>\n        <note><p>If you created any presets before AAC profiles were added, Elastic Transcoder automatically updated\n            your presets to use AAC-LC. You can change the value as required.</p></note>  \n    "
+                                            }
+                                        },
+                                        "documentation": "\n        <p>If you specified <code>AAC</code> for <code>Audio:Codec</code>, this is the <code>AAC</code> \n            compression profile to use. Valid values include:</p>\n        <p><code>auto</code>, <code>AAC-LC</code>, <code>HE-AAC</code>, <code>HE-AACv2</code></p>\n        <p>If you specify <code>auto</code>, Elastic Transcoder chooses a profile based on the bit rate of the output file.</p>\n    "
                                     }
                                 },
                                 "documentation": "\n        <p>A section of the response body that provides information about the audio preset\n            values.</p>\n    "
@@ -1978,13 +2015,13 @@
                                                 "MaxWidth": {
                                                     "shape_name": "PixelsOrPercent",
                                                     "type": "string",
-                                                    "pattern": "(^\\d{1,3}([.]\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                                                    "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
                                                     "documentation": "\n        <p>The maximum width of the watermark in one of the following formats: <ul>\n                <li>number of pixels (px): The minimum value is 16 pixels, and the maximum value is\n                    the value of <code>MaxWidth</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100. Use the value of\n                        <code>Target</code> to specify whether you want Elastic Transcoder to include the black\n                    bars that are added by Elastic Transcoder, if any, in the calculation.</li> If\n                you specify the value in pixels, it must be less than or equal to the value of\n                    <code>MaxWidth</code>.</ul></p>\n    "
                                                 },
                                                 "MaxHeight": {
                                                     "shape_name": "PixelsOrPercent",
                                                     "type": "string",
-                                                    "pattern": "(^\\d{1,3}([.]\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                                                    "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
                                                     "documentation": "\n        <p>The maximum height of the watermark in one of the following formats: <ul>\n                <li>number of pixels (px): The minimum value is 16 pixels, and the maximum value is\n                    the value of <code>MaxHeight</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100. Use the value of\n                        <code>Target</code> to specify whether you want Elastic Transcoder to include the black\n                    bars that are added by Elastic Transcoder, if any, in the calculation.</li>\n            </ul> If you specify the value in pixels, it must be less than or equal to the value of\n                <code>MaxHeight</code>.</p>\n    "
                                                 },
                                                 "SizingPolicy": {
@@ -2002,7 +2039,7 @@
                                                 "HorizontalOffset": {
                                                     "shape_name": "PixelsOrPercent",
                                                     "type": "string",
-                                                    "pattern": "(^\\d{1,3}([.]\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                                                    "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
                                                     "documentation": "\n        <p>The amount by which you want the horizontal position of the watermark to be offset from\n            the position specified by HorizontalAlign: <ul>\n                <li>number of pixels (px): The minimum value is 0 pixels, and the maximum value is\n                    the value of MaxWidth.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100.</li>\n            </ul>For example, if you specify Left for <code>HorizontalAlign</code> and 5px for\n                <code>HorizontalOffset</code>, the left side of the watermark appears 5 pixels from\n            the left border of the output video.</p>\n        <p><code>HorizontalOffset</code> is only valid when the value of\n                <code>HorizontalAlign</code> is <code>Left</code> or <code>Right</code>. If you\n            specify an offset that causes the watermark to extend beyond the left or right border\n            and Elastic Transcoder has not added black bars, the watermark is cropped. If Elastic\n            Transcoder has added black bars, the watermark extends into the black bars. If the\n            watermark extends beyond the black bars, it is cropped.</p>\n        <p>Use the value of <code>Target</code> to specify whether you want to include the black\n            bars that are added by Elastic Transcoder, if any, in the offset calculation.</p>\n    "
                                                 },
                                                 "VerticalAlign": {
@@ -2014,13 +2051,13 @@
                                                 "VerticalOffset": {
                                                     "shape_name": "PixelsOrPercent",
                                                     "type": "string",
-                                                    "pattern": "(^\\d{1,3}([.]\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                                                    "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
                                                     "documentation": "\n        <code>VerticalOffset</code>\n        <p>The amount by which you want the vertical position of the watermark to be offset from the\n            position specified by VerticalAlign:<ul>\n                <li>number of pixels (px): The minimum value is 0 pixels, and the maximum value is\n                    the value of <code>MaxHeight</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100.</li>\n            </ul> For example, if you specify <code>Top</code> for <code>VerticalAlign</code> and\n                <code>5px</code> for <code>VerticalOffset</code>, the top of the watermark appears 5\n            pixels from the top border of the output video.</p>\n        <p><code>VerticalOffset</code> is only valid when the value of VerticalAlign is Top or\n            Bottom.</p>\n        <p>If you specify an offset that causes the watermark to extend beyond the top or bottom\n            border and Elastic Transcoder has not added black bars, the watermark is cropped. If\n            Elastic Transcoder has added black bars, the watermark extends into the black bars. If\n            the watermark extends beyond the black bars, it is cropped.</p>\n\n        <p>Use the value of <code>Target</code> to specify whether you want Elastic Transcoder to\n            include the black bars that are added by Elastic Transcoder, if any, in the offset\n            calculation.</p>\n    "
                                                 },
                                                 "Opacity": {
                                                     "shape_name": "Opacity",
                                                     "type": "string",
-                                                    "pattern": "^\\d{1,3}([.]\\d{0,20})?$",
+                                                    "pattern": "^\\d{1,3}(\\.\\d{0,20})?$",
                                                     "documentation": "\n        <p>A percentage that indicates how much you want a watermark to obscure the video in the\n            location where it appears. Valid values are 0 (the watermark is invisible) to 100 (the\n            watermark completely obscures the video in the specified location). The datatype of\n                <code>Opacity</code> is float.</p>\n        <p>Elastic Transcoder supports transparent .png graphics. If you use a transparent .png, the transparent\n            portion of the video appears as if you had specified a value of 0 for\n                <code>Opacity</code>. The .jpg file format doesn't support transparency.</p>\n    "
                                                 },
                                                 "Target": {
@@ -2322,6 +2359,11 @@
                                     "pattern": "^\\d{13}-\\w{6}$",
                                     "documentation": "\n        <p> The identifier that Elastic Transcoder assigned to the job. You use this value to get settings for the\n            job or to delete the job. </p>\n    "
                                 },
+                                "Arn": {
+                                    "shape_name": "String",
+                                    "type": "string",
+                                    "documentation": "\n        <p>The Amazon Resource Name (ARN) for the job.</p>\n    "
+                                },
                                 "PipelineId": {
                                     "shape_name": "Id",
                                     "type": "string",
@@ -2409,7 +2451,7 @@
                                         "SegmentDuration": {
                                             "shape_name": "Float",
                                             "type": "string",
-                                            "pattern": "^\\d{1,5}([.]\\d{0,5})?$",
+                                            "pattern": "^\\d{1,5}(\\.\\d{0,5})?$",
                                             "documentation": "\n        <p><important>(Outputs in MPEG-TS format only.</important>If you specify a preset in\n                <code>PresetId</code> for which the value of <code>Container</code>is\n                <code>ts</code> (MPEG-TS), <code>SegmentDuration</code> is the maximum duration of\n            each .ts file in seconds. The range of valid values is 1 to 60 seconds. If the duration\n            of the video is not evenly divisible by <code>SegmentDuration</code>, the duration of\n            the last segment is the remainder of total length/SegmentDuration. Elastic Transcoder\n            creates an output-specific playlist for each output that you specify in OutputKeys. To\n            add an output to the master playlist for this job, include it in\n            <code>OutputKeys</code>.</p>\n    "
                                         },
                                         "Status": {
@@ -2544,13 +2586,13 @@
                                                             "StartTime": {
                                                                 "shape_name": "Time",
                                                                 "type": "string",
-                                                                "pattern": "(^\\d{1,5}([.]\\d{0,3})?$)|(^(((([0-1]?\\d)|(2[0-3])):)?(([0-5]?\\d):))?(([0-5]?\\d))([.]\\d{0,3})?$)",
+                                                                "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
                                                                 "documentation": "\n       <p>The place in the input file where you want a clip to start. The format can be either HH:mm:ss.SSS \n       (maximum value: 23:59:59.999; SSS is thousandths of a second) or sssss.SSS (maximum value: 86399.999). \n       If you don't specify a value, Elastic Transcoder starts at the beginning of the input file.</p>\n   "
                                                             },
                                                             "Duration": {
                                                                 "shape_name": "Time",
                                                                 "type": "string",
-                                                                "pattern": "(^\\d{1,5}([.]\\d{0,3})?$)|(^(((([0-1]?\\d)|(2[0-3])):)?(([0-5]?\\d):))?(([0-5]?\\d))([.]\\d{0,3})?$)",
+                                                                "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
                                                                 "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file , Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
                                                             }
                                                         },
@@ -2604,7 +2646,7 @@
                                             "SegmentDuration": {
                                                 "shape_name": "Float",
                                                 "type": "string",
-                                                "pattern": "^\\d{1,5}([.]\\d{0,5})?$",
+                                                "pattern": "^\\d{1,5}(\\.\\d{0,5})?$",
                                                 "documentation": "\n        <p><important>(Outputs in MPEG-TS format only.</important>If you specify a preset in\n                <code>PresetId</code> for which the value of <code>Container</code>is\n                <code>ts</code> (MPEG-TS), <code>SegmentDuration</code> is the maximum duration of\n            each .ts file in seconds. The range of valid values is 1 to 60 seconds. If the duration\n            of the video is not evenly divisible by <code>SegmentDuration</code>, the duration of\n            the last segment is the remainder of total length/SegmentDuration. Elastic Transcoder\n            creates an output-specific playlist for each output that you specify in OutputKeys. To\n            add an output to the master playlist for this job, include it in\n            <code>OutputKeys</code>.</p>\n    "
                                             },
                                             "Status": {
@@ -2739,13 +2781,13 @@
                                                                 "StartTime": {
                                                                     "shape_name": "Time",
                                                                     "type": "string",
-                                                                    "pattern": "(^\\d{1,5}([.]\\d{0,3})?$)|(^(((([0-1]?\\d)|(2[0-3])):)?(([0-5]?\\d):))?(([0-5]?\\d))([.]\\d{0,3})?$)",
+                                                                    "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
                                                                     "documentation": "\n       <p>The place in the input file where you want a clip to start. The format can be either HH:mm:ss.SSS \n       (maximum value: 23:59:59.999; SSS is thousandths of a second) or sssss.SSS (maximum value: 86399.999). \n       If you don't specify a value, Elastic Transcoder starts at the beginning of the input file.</p>\n   "
                                                                 },
                                                                 "Duration": {
                                                                     "shape_name": "Time",
                                                                     "type": "string",
-                                                                    "pattern": "(^\\d{1,5}([.]\\d{0,3})?$)|(^(((([0-1]?\\d)|(2[0-3])):)?(([0-5]?\\d):))?(([0-5]?\\d))([.]\\d{0,3})?$)",
+                                                                    "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
                                                                     "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file , Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
                                                                 }
                                                             },
@@ -2871,7 +2913,13 @@
                     "documentation": "\n        <p>Elastic Transcoder encountered an unexpected exception while trying to fulfill the request.</p>\n    "
                 }
             ],
-            "documentation": "\n        <p>The ListJobsByPipeline operation gets a list of the jobs currently in a pipeline.</p>\n        <p>Elastic Transcoder returns all of the jobs currently in the specified pipeline. The\n            response body contains one element for each job that satisfies the search criteria.</p>\n        <examples>\n            <example>\n                <request>GET /2012-09-25/jobsByPipeline/1111111111111-abcde1?Ascending=true HTTP/1.1\n                    Content-Type: charset=UTF-8\nAccept: */*\nHost: elastictranscoder.[Elastic Transcoder-endpoint].amazonaws.com:443\nx-amz-date: 20130114T174952Z\nAuthorization: AWS4-HMAC-SHA256\n               Credential=[access-key-id]/[request-date]/[Elastic Transcoder-endpoint]/ets/aws4_request,\n               SignedHeaders=host;x-amz-date;x-amz-target,\n               Signature=[calculated-signature] </request>\n                <response>Status: 200 OK x-amzn-RequestId: c321ec43-378e-11e2-8e4c-4d5b971203e9\nContent-Type: application/json\nContent-Length: [number-of-characters-in-response]\nDate: Mon, 14 Jan 2013 06:01:47 GMT { \"Jobs\":[ { \"Id\":\"3333333333333-abcde3\",\n                    \"Input\":{ \"AspectRatio\":\"auto\", \"Container\":\"mp4\", \"FrameRate\":\"auto\",\n                    \"Interlaced\":\"auto\", \"Key\":\"cooking/lasagna.mp4\", \"Resolution\":\"auto\" },\n                    \"Outputs \":[ { \"Id\":\"1\" \"Key\":\"cooking/lasagna-KindleFireHD.mp4\",\n                    \"PresetId\":\"5555555555555-abcde5\", \"Rotate\":\"0\", \"Status\":\"Submitted\",\n                    \"StatusDetail\":\"Job has been received.\",\n                    \"ThumbnailPattern\":\"cooking/lasagna-{count}-KindleFireHD\", \"Duration\":\"1003\",\n                    \"Width\":\"1280\", \"Height\":\"720\" }, { \"Id\":\"2\"\n                    \"Key\":\"cooking/lasagna-iPhone4s.mp4\", \"PresetId\":\"1351620000000-100020\",\n                    \"Rotate\":\"0\", \"Status\":\"Submitted\", \"StatusDetail\":\"Job has been received.\",\n                    \"ThumbnailPattern\":\"cooking/lasagna-{count}-iPhone4s\", \"Duration\":\"1003\",\n                    \"Width\":\"1920\", \"Height\":\"1080\" } ], \"Output\":{\n                    \"Key\":\"cooking/lasagna-KindleFireHD.mp4\", \"PresetId\":\"1351620000000-100080\",\n                    \"Rotate\":\"0\", \"Status\":\"Submitted\", \"StatusDetail\":\"Job has been received.\",\n                    \"ThumbnailPattern\":\"cooking/lasagna-{count}-KindleFireHD\" },\n                    \"PipelineId\":\"1111111111111-abcde1\" }, { \"Id\":\"4444444444444-abcde4\", \"Input\":{\n                    \"AspectRatio\":\"auto\", \"Container\":\"mp4\", \"FrameRate\":\"auto\",\n                    \"Interlaced\":\"auto\", \"Key\":\"cooking/baked-ziti.mp4\", \"Resolution\":\"auto\" },\n                    \"Outputs\":[ { \"Id\":\"1\" \"Key\":\"cooking/baked-ziti-KindleFireHD.mp4\",\n                    \"PresetId\":\"1351620000000-100080\", \"Rotate\":\"0\", \"Status\":\"Complete\",\n                    \"StatusDetail\":\"\", \"ThumbnailPattern\":\"cooking/baked-ziti-{count}-KindleFireHD\",\n                    \"Duration\":\"596\", \"Width\":\"1280\", \"Height\":\"720\" } ], \"Output\":{\n                    \"Key\":\"cooking/baked-ziti-KindleFireHD.mp4\", \"PresetId\":\"1351620000000-100080\",\n                    \"Rotate\":\"0\", \"Status\":\"Complete\", \"StatusDetail\":\"\",\n                    \"ThumbnailPattern\":\"cooking/baked-ziti-{count}-KindleFireHD\" },\n                    \"PipelineId\":\"1111111111111-abcde1\" } ], \"NextPageToken\":null </response>\n            </example>\n        </examples>\n    "
+            "documentation": "\n        <p>The ListJobsByPipeline operation gets a list of the jobs currently in a pipeline.</p>\n        <p>Elastic Transcoder returns all of the jobs currently in the specified pipeline. The\n            response body contains one element for each job that satisfies the search criteria.</p>\n        <examples>\n            <example>\n                <request>GET /2012-09-25/jobsByPipeline/1111111111111-abcde1?Ascending=true HTTP/1.1\n                    Content-Type: charset=UTF-8\nAccept: */*\nHost: elastictranscoder.[Elastic Transcoder-endpoint].amazonaws.com:443\nx-amz-date: 20130114T174952Z\nAuthorization: AWS4-HMAC-SHA256\n               Credential=[access-key-id]/[request-date]/[Elastic Transcoder-endpoint]/ets/aws4_request,\n               SignedHeaders=host;x-amz-date;x-amz-target,\n               Signature=[calculated-signature] </request>\n                <response>Status: 200 OK x-amzn-RequestId: c321ec43-378e-11e2-8e4c-4d5b971203e9\nContent-Type: application/json\nContent-Length: [number-of-characters-in-response]\nDate: Mon, 14 Jan 2013 06:01:47 GMT { \"Jobs\":[ { \"Id\":\"3333333333333-abcde3\",\n                    \"Input\":{ \"AspectRatio\":\"auto\", \"Container\":\"mp4\", \"FrameRate\":\"auto\",\n                    \"Interlaced\":\"auto\", \"Key\":\"cooking/lasagna.mp4\", \"Resolution\":\"auto\" },\n                    \"Outputs \":[ { \"Id\":\"1\" \"Key\":\"cooking/lasagna-KindleFireHD.mp4\",\n                    \"PresetId\":\"5555555555555-abcde5\", \"Rotate\":\"0\", \"Status\":\"Submitted\",\n                    \"StatusDetail\":\"Job has been received.\",\n                    \"ThumbnailPattern\":\"cooking/lasagna-{count}-KindleFireHD\", \"Duration\":\"1003\",\n                    \"Width\":\"1280\", \"Height\":\"720\" }, { \"Id\":\"2\"\n                    \"Key\":\"cooking/lasagna-iPhone4s.mp4\", \"PresetId\":\"1351620000000-100020\",\n                    \"Rotate\":\"0\", \"Status\":\"Submitted\", \"StatusDetail\":\"Job has been received.\",\n                    \"ThumbnailPattern\":\"cooking/lasagna-{count}-iPhone4s\", \"Duration\":\"1003\",\n                    \"Width\":\"1920\", \"Height\":\"1080\" } ], \"Output\":{\n                    \"Key\":\"cooking/lasagna-KindleFireHD.mp4\", \"PresetId\":\"1351620000000-100080\",\n                    \"Rotate\":\"0\", \"Status\":\"Submitted\", \"StatusDetail\":\"Job has been received.\",\n                    \"ThumbnailPattern\":\"cooking/lasagna-{count}-KindleFireHD\" },\n                    \"PipelineId\":\"1111111111111-abcde1\" }, { \"Id\":\"4444444444444-abcde4\", \"Input\":{\n                    \"AspectRatio\":\"auto\", \"Container\":\"mp4\", \"FrameRate\":\"auto\",\n                    \"Interlaced\":\"auto\", \"Key\":\"cooking/baked-ziti.mp4\", \"Resolution\":\"auto\" },\n                    \"Outputs\":[ { \"Id\":\"1\" \"Key\":\"cooking/baked-ziti-KindleFireHD.mp4\",\n                    \"PresetId\":\"1351620000000-100080\", \"Rotate\":\"0\", \"Status\":\"Complete\",\n                    \"StatusDetail\":\"\", \"ThumbnailPattern\":\"cooking/baked-ziti-{count}-KindleFireHD\",\n                    \"Duration\":\"596\", \"Width\":\"1280\", \"Height\":\"720\" } ], \"Output\":{\n                    \"Key\":\"cooking/baked-ziti-KindleFireHD.mp4\", \"PresetId\":\"1351620000000-100080\",\n                    \"Rotate\":\"0\", \"Status\":\"Complete\", \"StatusDetail\":\"\",\n                    \"ThumbnailPattern\":\"cooking/baked-ziti-{count}-KindleFireHD\" },\n                    \"PipelineId\":\"1111111111111-abcde1\" } ], \"NextPageToken\":null </response>\n            </example>\n        </examples>\n    ",
+            "pagination": {
+                "input_token": "PageToken",
+                "output_token": "NextPageToken",
+                "result_key": "Jobs",
+                "py_input_token": "page_token"
+            }
         },
         "ListJobsByStatus": {
             "name": "ListJobsByStatus",
@@ -2923,6 +2971,11 @@
                                     "type": "string",
                                     "pattern": "^\\d{13}-\\w{6}$",
                                     "documentation": "\n        <p> The identifier that Elastic Transcoder assigned to the job. You use this value to get settings for the\n            job or to delete the job. </p>\n    "
+                                },
+                                "Arn": {
+                                    "shape_name": "String",
+                                    "type": "string",
+                                    "documentation": "\n        <p>The Amazon Resource Name (ARN) for the job.</p>\n    "
                                 },
                                 "PipelineId": {
                                     "shape_name": "Id",
@@ -3011,7 +3064,7 @@
                                         "SegmentDuration": {
                                             "shape_name": "Float",
                                             "type": "string",
-                                            "pattern": "^\\d{1,5}([.]\\d{0,5})?$",
+                                            "pattern": "^\\d{1,5}(\\.\\d{0,5})?$",
                                             "documentation": "\n        <p><important>(Outputs in MPEG-TS format only.</important>If you specify a preset in\n                <code>PresetId</code> for which the value of <code>Container</code>is\n                <code>ts</code> (MPEG-TS), <code>SegmentDuration</code> is the maximum duration of\n            each .ts file in seconds. The range of valid values is 1 to 60 seconds. If the duration\n            of the video is not evenly divisible by <code>SegmentDuration</code>, the duration of\n            the last segment is the remainder of total length/SegmentDuration. Elastic Transcoder\n            creates an output-specific playlist for each output that you specify in OutputKeys. To\n            add an output to the master playlist for this job, include it in\n            <code>OutputKeys</code>.</p>\n    "
                                         },
                                         "Status": {
@@ -3146,13 +3199,13 @@
                                                             "StartTime": {
                                                                 "shape_name": "Time",
                                                                 "type": "string",
-                                                                "pattern": "(^\\d{1,5}([.]\\d{0,3})?$)|(^(((([0-1]?\\d)|(2[0-3])):)?(([0-5]?\\d):))?(([0-5]?\\d))([.]\\d{0,3})?$)",
+                                                                "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
                                                                 "documentation": "\n       <p>The place in the input file where you want a clip to start. The format can be either HH:mm:ss.SSS \n       (maximum value: 23:59:59.999; SSS is thousandths of a second) or sssss.SSS (maximum value: 86399.999). \n       If you don't specify a value, Elastic Transcoder starts at the beginning of the input file.</p>\n   "
                                                             },
                                                             "Duration": {
                                                                 "shape_name": "Time",
                                                                 "type": "string",
-                                                                "pattern": "(^\\d{1,5}([.]\\d{0,3})?$)|(^(((([0-1]?\\d)|(2[0-3])):)?(([0-5]?\\d):))?(([0-5]?\\d))([.]\\d{0,3})?$)",
+                                                                "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
                                                                 "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file , Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
                                                             }
                                                         },
@@ -3206,7 +3259,7 @@
                                             "SegmentDuration": {
                                                 "shape_name": "Float",
                                                 "type": "string",
-                                                "pattern": "^\\d{1,5}([.]\\d{0,5})?$",
+                                                "pattern": "^\\d{1,5}(\\.\\d{0,5})?$",
                                                 "documentation": "\n        <p><important>(Outputs in MPEG-TS format only.</important>If you specify a preset in\n                <code>PresetId</code> for which the value of <code>Container</code>is\n                <code>ts</code> (MPEG-TS), <code>SegmentDuration</code> is the maximum duration of\n            each .ts file in seconds. The range of valid values is 1 to 60 seconds. If the duration\n            of the video is not evenly divisible by <code>SegmentDuration</code>, the duration of\n            the last segment is the remainder of total length/SegmentDuration. Elastic Transcoder\n            creates an output-specific playlist for each output that you specify in OutputKeys. To\n            add an output to the master playlist for this job, include it in\n            <code>OutputKeys</code>.</p>\n    "
                                             },
                                             "Status": {
@@ -3341,13 +3394,13 @@
                                                                 "StartTime": {
                                                                     "shape_name": "Time",
                                                                     "type": "string",
-                                                                    "pattern": "(^\\d{1,5}([.]\\d{0,3})?$)|(^(((([0-1]?\\d)|(2[0-3])):)?(([0-5]?\\d):))?(([0-5]?\\d))([.]\\d{0,3})?$)",
+                                                                    "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
                                                                     "documentation": "\n       <p>The place in the input file where you want a clip to start. The format can be either HH:mm:ss.SSS \n       (maximum value: 23:59:59.999; SSS is thousandths of a second) or sssss.SSS (maximum value: 86399.999). \n       If you don't specify a value, Elastic Transcoder starts at the beginning of the input file.</p>\n   "
                                                                 },
                                                                 "Duration": {
                                                                     "shape_name": "Time",
                                                                     "type": "string",
-                                                                    "pattern": "(^\\d{1,5}([.]\\d{0,3})?$)|(^(((([0-1]?\\d)|(2[0-3])):)?(([0-5]?\\d):))?(([0-5]?\\d))([.]\\d{0,3})?$)",
+                                                                    "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
                                                                     "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file , Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
                                                                 }
                                                             },
@@ -3473,18 +3526,39 @@
                     "documentation": "\n        <p>Elastic Transcoder encountered an unexpected exception while trying to fulfill the request.</p>\n    "
                 }
             ],
-            "documentation": "\n        <p>The ListJobsByStatus operation gets a list of jobs that have a specified status. The\n            response body contains one element for each job that satisfies the search criteria.</p>\n        <examples>\n            <example>\n                <request> GET /2012-09-25/jobsByStatus/Complete?Ascending=true HTTP/1.1\n                    Content-Type: charset=UTF-8\nAccept: */*\nHost: elastictranscoder.[Elastic Transcoder-endpoint].amazonaws.com:443\nx-amz-date: 20130114T174952Z\nAuthorization: AWS4-HMAC-SHA256\n               Credential=[access-key-id]/[request-date]/[Elastic Transcoder-endpoint]/ets/aws4_request,\n               SignedHeaders=host;x-amz-date;x-amz-target,\n               Signature=[calculated-signature] </request>\n                <response> Status: 200 OK x-amzn-RequestId: c321ec43-378e-11e2-8e4c-4d5b971203e9\nContent-Type: application/json\nContent-Length: [number-of-characters-in-response]\nDate: Mon, 14 Jan 2013 06:01:47 GMT { \"Jobs\":[ {\n                    \"Id\":\"3333333333333-abcde3\", \"Input\":{ \"AspectRatio\":\"auto\", \"Container\":\"mp4\",\n                    \"FrameRate\":\"auto\", \"Interlaced\":\"auto\", \"Key\":\"cooking/lasagna.mp4\",\n                    \"Resolution\":\"auto\" }, \"Output\":{ \"Duration\":\"1003\", \"Height\":\"720\", \"Id\":\"1\",\n                    \"Key\":\"mp4/lasagna-kindlefirehd.mp4\", \"PresetId\":\"1351620000000-100080\",\n                    \"Rotate\":\"0\", \"Status\":\"Complete\", \"StatusDetail\":\"\",\n                    \"ThumbnailPattern\":\"mp4/thumbnails/lasagna-{count}\", \"Width\":\"1280\" },\n                    \"Outputs\":[ { \"Duration\":\"1003\", \"Height\":\"720\", \"Id\":\"1\",\n                    \"Key\":\"mp4/lasagna-kindlefirehd.mp4\", \"PresetId\":\"1351620000000-100080\",\n                    \"Rotate\":\"0\", \"Status\":\"Complete\", \"StatusDetail\":\"\",\n                    \"ThumbnailPattern\":\"mp4/thumbnails/lasagna-{count}\", \"Width\":\"1280\" }, {\n                    \"Duration\":\"1003\", \"Height\":\"640\", \"Id\":\"2\", \"Key\":\"iphone/lasagna-1024k\",\n                    \"PresetId\":\"1351620000000-987654\", \"Rotate\":\"0\", \"SegmentDuration\":\"5\",\n                    \"Status\":\"Complete\", \"StatusDetail\":\"\",\n                    \"ThumbnailPattern\":\"iphone/th1024k/lasagna-{count}\", \"Width\":\"1136\" }, ],\n                    \"PipelineId\":\"1111111111111-abcde1\", \"Playlists\":[ { \"Format\":\"HLSv3\",\n                    \"Name\":\"playlist-iPhone-lasagna.m3u8\", \"OutputKeys\":[ \"iphone/lasagna-1024k\",\n                    \"iphone/lasagna-512k\" ] } ], \"Status\":\"Complete\" }, {\n                    \"Id\":\"4444444444444-abcde4\", \"Input\":{ \"AspectRatio\":\"auto\", \"Container\":\"mp4\",\n                    \"FrameRate\":\"auto\", \"Interlaced\":\"auto\", \"Key\":\"cooking/spaghetti.mp4\",\n                    \"Resolution\":\"auto\" }, \"Output\":{ \"Duration\":\"1003\", \"Height\":\"640\", \"Id\":\"3\",\n                    \"Key\":\"iphone/spaghetti-512k\", \"PresetId\":\"1351620000000-456789\", \"Rotate\":\"0\",\n                    \"SegmentDuration\":\"5\", \"Status\":\"Complete\", \"StatusDetail\":\"\",\n                    \"ThumbnailPattern\":\"iphone/th512k/spaghetti-{count}\", \"Width\":\"1136\" },\n                    \"Outputs\":[ { \"Duration\":\"1003\", \"Height\":\"640\", \"Id\":\"3\",\n                    \"Key\":\"iphone/spaghetti-512k\", \"PresetId\":\"1351620000000-456789\", \"Rotate\":\"0\",\n                    \"SegmentDuration\":\"5\", \"Status\":\"Complete\", \"StatusDetail\":\"\",\n                    \"ThumbnailPattern\":\"iphone/th512k/spaghetti-{count}\", \"Width\":\"1136\" } ],\n                    \"Playlists\":[ { \"Format\":\"HLSv3\", \"Name\":\"playlist-iPhone-spaghetti.m3u8\",\n                    \"OutputKeys\":[ \"iphone/spaghetti-512k\" ] } ], \"Status\":\"Complete\" } ],\n                    \"NextPageToken\":null }</response>\n            </example>\n        </examples>\n    "
+            "documentation": "\n        <p>The ListJobsByStatus operation gets a list of jobs that have a specified status. The\n            response body contains one element for each job that satisfies the search criteria.</p>\n        <examples>\n            <example>\n                <request> GET /2012-09-25/jobsByStatus/Complete?Ascending=true HTTP/1.1\n                    Content-Type: charset=UTF-8\nAccept: */*\nHost: elastictranscoder.[Elastic Transcoder-endpoint].amazonaws.com:443\nx-amz-date: 20130114T174952Z\nAuthorization: AWS4-HMAC-SHA256\n               Credential=[access-key-id]/[request-date]/[Elastic Transcoder-endpoint]/ets/aws4_request,\n               SignedHeaders=host;x-amz-date;x-amz-target,\n               Signature=[calculated-signature] </request>\n                <response> Status: 200 OK x-amzn-RequestId: c321ec43-378e-11e2-8e4c-4d5b971203e9\nContent-Type: application/json\nContent-Length: [number-of-characters-in-response]\nDate: Mon, 14 Jan 2013 06:01:47 GMT { \"Jobs\":[ {\n                    \"Id\":\"3333333333333-abcde3\", \"Input\":{ \"AspectRatio\":\"auto\", \"Container\":\"mp4\",\n                    \"FrameRate\":\"auto\", \"Interlaced\":\"auto\", \"Key\":\"cooking/lasagna.mp4\",\n                    \"Resolution\":\"auto\" }, \"Output\":{ \"Duration\":\"1003\", \"Height\":\"720\", \"Id\":\"1\",\n                    \"Key\":\"mp4/lasagna-kindlefirehd.mp4\", \"PresetId\":\"1351620000000-100080\",\n                    \"Rotate\":\"0\", \"Status\":\"Complete\", \"StatusDetail\":\"\",\n                    \"ThumbnailPattern\":\"mp4/thumbnails/lasagna-{count}\", \"Width\":\"1280\" },\n                    \"Outputs\":[ { \"Duration\":\"1003\", \"Height\":\"720\", \"Id\":\"1\",\n                    \"Key\":\"mp4/lasagna-kindlefirehd.mp4\", \"PresetId\":\"1351620000000-100080\",\n                    \"Rotate\":\"0\", \"Status\":\"Complete\", \"StatusDetail\":\"\",\n                    \"ThumbnailPattern\":\"mp4/thumbnails/lasagna-{count}\", \"Width\":\"1280\" }, {\n                    \"Duration\":\"1003\", \"Height\":\"640\", \"Id\":\"2\", \"Key\":\"iphone/lasagna-1024k\",\n                    \"PresetId\":\"1351620000000-987654\", \"Rotate\":\"0\", \"SegmentDuration\":\"5\",\n                    \"Status\":\"Complete\", \"StatusDetail\":\"\",\n                    \"ThumbnailPattern\":\"iphone/th1024k/lasagna-{count}\", \"Width\":\"1136\" }, ],\n                    \"PipelineId\":\"1111111111111-abcde1\", \"Playlists\":[ { \"Format\":\"HLSv3\",\n                    \"Name\":\"playlist-iPhone-lasagna.m3u8\", \"OutputKeys\":[ \"iphone/lasagna-1024k\",\n                    \"iphone/lasagna-512k\" ] } ], \"Status\":\"Complete\" }, {\n                    \"Id\":\"4444444444444-abcde4\", \"Input\":{ \"AspectRatio\":\"auto\", \"Container\":\"mp4\",\n                    \"FrameRate\":\"auto\", \"Interlaced\":\"auto\", \"Key\":\"cooking/spaghetti.mp4\",\n                    \"Resolution\":\"auto\" }, \"Output\":{ \"Duration\":\"1003\", \"Height\":\"640\", \"Id\":\"3\",\n                    \"Key\":\"iphone/spaghetti-512k\", \"PresetId\":\"1351620000000-456789\", \"Rotate\":\"0\",\n                    \"SegmentDuration\":\"5\", \"Status\":\"Complete\", \"StatusDetail\":\"\",\n                    \"ThumbnailPattern\":\"iphone/th512k/spaghetti-{count}\", \"Width\":\"1136\" },\n                    \"Outputs\":[ { \"Duration\":\"1003\", \"Height\":\"640\", \"Id\":\"3\",\n                    \"Key\":\"iphone/spaghetti-512k\", \"PresetId\":\"1351620000000-456789\", \"Rotate\":\"0\",\n                    \"SegmentDuration\":\"5\", \"Status\":\"Complete\", \"StatusDetail\":\"\",\n                    \"ThumbnailPattern\":\"iphone/th512k/spaghetti-{count}\", \"Width\":\"1136\" } ],\n                    \"Playlists\":[ { \"Format\":\"HLSv3\", \"Name\":\"playlist-iPhone-spaghetti.m3u8\",\n                    \"OutputKeys\":[ \"iphone/spaghetti-512k\" ] } ], \"Status\":\"Complete\" } ],\n                    \"NextPageToken\":null }</response>\n            </example>\n        </examples>\n    ",
+            "pagination": {
+                "input_token": "PageToken",
+                "output_token": "NextPageToken",
+                "result_key": "Jobs",
+                "py_input_token": "page_token"
+            }
         },
         "ListPipelines": {
             "name": "ListPipelines",
             "http": {
                 "method": "GET",
-                "uri": "/2012-09-25/pipelines"
+                "uri": "/2012-09-25/pipelines?Ascending={Ascending}&PageToken={PageToken}"
             },
             "input": {
                 "shape_name": "ListPipelinesRequest",
                 "type": "structure",
-                "members": {},
+                "members": {
+                    "Ascending": {
+                        "shape_name": "Ascending",
+                        "type": "string",
+                        "pattern": "(^true$)|(^false$)",
+                        "documentation": "\n        <p>To list pipelines in chronological order by the date and time that they were created, enter\n            <code>true</code>. To list pipelines in reverse chronological order, enter\n            <code>false</code>.</p>\n    ",
+                        "location": "uri"
+                    },
+                    "PageToken": {
+                        "shape_name": "Id",
+                        "type": "string",
+                        "pattern": "^\\d{13}-\\w{6}$",
+                        "documentation": "\n        <p>When Elastic Transcoder returns more than one page of results, use <code>pageToken</code> in\n            subsequent <code>GET</code> requests to get each successive page of results. </p>\n    ",
+                        "location": "uri"
+                    }
+                },
                 "documentation": "\n        <p>The <code>ListPipelineRequest</code> structure.</p>\n    "
             },
             "output": {
@@ -3689,6 +3763,12 @@
                             "documentation": "\n        <p>The pipeline (queue) that is used to manage jobs.</p>\n    "
                         },
                         "documentation": "\n        <p>An array of <code>Pipeline</code> objects.</p>\n    "
+                    },
+                    "NextPageToken": {
+                        "shape_name": "Id",
+                        "type": "string",
+                        "pattern": "^\\d{13}-\\w{6}$",
+                        "documentation": "\n        <p>A value that you use to access the second and subsequent pages of results, if any. When\n            the pipelines fit on one page or when you've reached the last page\n            of results, the value of <code>NextPageToken</code> is <code>null</code>.</p>\n    "
                     }
                 },
                 "documentation": "\n        <p>A list of the pipelines associated with the current AWS account.</p>\n    "
@@ -3719,18 +3799,39 @@
                     "documentation": "\n        <p>Elastic Transcoder encountered an unexpected exception while trying to fulfill the request.</p>\n    "
                 }
             ],
-            "documentation": "\n        <p>The ListPipelines operation gets a list of the pipelines associated with the current AWS\n            account.</p>\n        <examples>\n            <example>\n                <request>GET /2012-09-25/pipelines HTTP/1.1 Content-Type: charset=UTF-8\nAccept: */*\nHost: elastictranscoder.[Elastic Transcoder-endpoint].amazonaws.com:443\nx-amz-date: 20130114T174952Z\nAuthorization: AWS4-HMAC-SHA256\n               Credential=[access-key-id]/[request-date]/[Elastic Transcoder-endpoint]/ets/aws4_request,\n               SignedHeaders=host;x-amz-date;x-amz-target,\n               Signature=[calculated-signature] </request>\n                <response>Status: 200 OK x-amzn-RequestId: c321ec43-378e-11e2-8e4c-4d5b971203e9\nContent-Type: application/json\nContent-Length: [number-of-characters-in-response]\nDate: Mon, 14 Jan 2013 06:01:47 GMT { \"Pipelines\":[ {\n                    \"Id\":\"1111111111111-abcde1\", \"Name\":\"Tokyo-Default\",\n                    \"InputBucket\":\"salesoffice-tokyo.example.com-source\",\n                    \"Role\":\"arn:aws:iam::123456789012:role/Elastic_Transcoder_Default_Role\",\n                    \"Notifications\":{ \"Progressing\":\"\", \"Completed\":\"\", \"Warning\":\"\",\n                    \"Error\":\"arn:aws:sns:us-east-1:111222333444:ETS_Errors\" }, \"ContentConfig\":{\n                    \"Bucket\":\"salesoffice-tokyo.example.com-public-promos\", \"Permissions\":[ {\n                    \"GranteeType\":\"Email\", \"Grantee\":\"marketing-promos-tokyo@example.com\",\n                    \"Access\":[ \"FullControl\" ] } ], \"StorageClass\":\"Standard\" }, \"ThumbnailConfig\":{\n                    \"Bucket\":\"salesoffice-tokyo.example.com-public-promos-thumbnails\",\n                    \"Permissions\":[ { \"GranteeType\":\"Email\",\n                    \"Grantee\":\"marketing-promos-tokyo@example.com\", \"Access\":[ \"FullControl\" ] } ],\n                    \"StorageClass\":\"ReducedRedundancy\" }, \"Status\":\"Active\" }, {\n                    \"Id\":\"2222222222222-abcde2\", \"Name\":\"Amsterdam-Default\",\n                    \"InputBucket\":\"salesoffice-amsterdam.example.com-source\",\n                    \"Role\":\"arn:aws:iam::123456789012:role/Elastic_Transcoder_Default_Role\",\n                    \"Notifications\":{ \"Progressing\":\"\", \"Completed\":\"\", \"Warning\":\"\",\n                    \"Error\":\"arn:aws:sns:us-east-1:111222333444:ETS_Errors\" }, \"ContentConfig\":{\n                    \"Bucket\":\"salesoffice-amsterdam.example.com-public-promos\", \"Permissions\":[ {\n                    \"GranteeType\":\"Email\", \"Grantee\":\"marketing-promos-amsterdam@example.com\",\n                    \"Access\":[ \"FullControl\" ] } ], \"StorageClass\":\"Standard\" }, nails\",\n                    \"ThumbnailConfig\":{\n                    \"Bucket\":\"salesoffice-amsterdam.example.com-public-promos-thumb \"Permissions\":[\n                    { \"GranteeType\":\"Email\", \"Grantee\":\"marketing-promos-amsterdam@example.com\",\n                    \"Access\":[ \"FullControl\" ] } ], \"StorageClass\":\"ReducedRedundancy\" },\n                    \"Status\":\"Active\" } ] } </response>\n            </example>\n        </examples>\n    "
+            "documentation": "\n        <p>The ListPipelines operation gets a list of the pipelines associated with the current AWS\n            account.</p>\n        <examples>\n            <example>\n                <request>GET /2012-09-25/pipelines HTTP/1.1 Content-Type: charset=UTF-8\nAccept: */*\nHost: elastictranscoder.[Elastic Transcoder-endpoint].amazonaws.com:443\nx-amz-date: 20130114T174952Z\nAuthorization: AWS4-HMAC-SHA256\n               Credential=[access-key-id]/[request-date]/[Elastic Transcoder-endpoint]/ets/aws4_request,\n               SignedHeaders=host;x-amz-date;x-amz-target,\n               Signature=[calculated-signature] </request>\n                <response>Status: 200 OK x-amzn-RequestId: c321ec43-378e-11e2-8e4c-4d5b971203e9\nContent-Type: application/json\nContent-Length: [number-of-characters-in-response]\nDate: Mon, 14 Jan 2013 06:01:47 GMT { \"Pipelines\":[ {\n                    \"Id\":\"1111111111111-abcde1\", \"Name\":\"Tokyo-Default\",\n                    \"InputBucket\":\"salesoffice-tokyo.example.com-source\",\n                    \"Role\":\"arn:aws:iam::123456789012:role/Elastic_Transcoder_Default_Role\",\n                    \"Notifications\":{ \"Progressing\":\"\", \"Completed\":\"\", \"Warning\":\"\",\n                    \"Error\":\"arn:aws:sns:us-east-1:111222333444:ETS_Errors\" }, \"ContentConfig\":{\n                    \"Bucket\":\"salesoffice-tokyo.example.com-public-promos\", \"Permissions\":[ {\n                    \"GranteeType\":\"Email\", \"Grantee\":\"marketing-promos-tokyo@example.com\",\n                    \"Access\":[ \"FullControl\" ] } ], \"StorageClass\":\"Standard\" }, \"ThumbnailConfig\":{\n                    \"Bucket\":\"salesoffice-tokyo.example.com-public-promos-thumbnails\",\n                    \"Permissions\":[ { \"GranteeType\":\"Email\",\n                    \"Grantee\":\"marketing-promos-tokyo@example.com\", \"Access\":[ \"FullControl\" ] } ],\n                    \"StorageClass\":\"ReducedRedundancy\" }, \"Status\":\"Active\" }, {\n                    \"Id\":\"2222222222222-abcde2\", \"Name\":\"Amsterdam-Default\",\n                    \"InputBucket\":\"salesoffice-amsterdam.example.com-source\",\n                    \"Role\":\"arn:aws:iam::123456789012:role/Elastic_Transcoder_Default_Role\",\n                    \"Notifications\":{ \"Progressing\":\"\", \"Completed\":\"\", \"Warning\":\"\",\n                    \"Error\":\"arn:aws:sns:us-east-1:111222333444:ETS_Errors\" }, \"ContentConfig\":{\n                    \"Bucket\":\"salesoffice-amsterdam.example.com-public-promos\", \"Permissions\":[ {\n                    \"GranteeType\":\"Email\", \"Grantee\":\"marketing-promos-amsterdam@example.com\",\n                    \"Access\":[ \"FullControl\" ] } ], \"StorageClass\":\"Standard\" }, nails\",\n                    \"ThumbnailConfig\":{\n                    \"Bucket\":\"salesoffice-amsterdam.example.com-public-promos-thumb \"Permissions\":[\n                    { \"GranteeType\":\"Email\", \"Grantee\":\"marketing-promos-amsterdam@example.com\",\n                    \"Access\":[ \"FullControl\" ] } ], \"StorageClass\":\"ReducedRedundancy\" },\n                    \"Status\":\"Active\" } ] } </response>\n            </example>\n        </examples>\n    ",
+            "pagination": {
+                "input_token": "PageToken",
+                "output_token": "NextPageToken",
+                "result_key": "Pipelines",
+                "py_input_token": "page_token"
+            }
         },
         "ListPresets": {
             "name": "ListPresets",
             "http": {
                 "method": "GET",
-                "uri": "/2012-09-25/presets"
+                "uri": "/2012-09-25/presets?Ascending={Ascending}&PageToken={PageToken}"
             },
             "input": {
                 "shape_name": "ListPresetsRequest",
                 "type": "structure",
-                "members": {},
+                "members": {
+                    "Ascending": {
+                        "shape_name": "Ascending",
+                        "type": "string",
+                        "pattern": "(^true$)|(^false$)",
+                        "documentation": "\n        <p>To list presets in chronological order by the date and time that they were created, enter\n            <code>true</code>. To list presets in reverse chronological order, enter\n            <code>false</code>.</p>\n    ",
+                        "location": "uri"
+                    },
+                    "PageToken": {
+                        "shape_name": "Id",
+                        "type": "string",
+                        "pattern": "^\\d{13}-\\w{6}$",
+                        "documentation": "\n        <p>When Elastic Transcoder returns more than one page of results, use <code>pageToken</code> in\n            subsequent <code>GET</code> requests to get each successive page of results. </p>\n    ",
+                        "location": "uri"
+                    }
+                },
                 "documentation": "\n        <p>The <code>ListPresetsRequest</code> structure.</p>\n    "
             },
             "output": {
@@ -3749,6 +3850,11 @@
                                     "type": "string",
                                     "pattern": "^\\d{13}-\\w{6}$",
                                     "documentation": "\n        <p>Identifier for the new preset. You use this value to get settings for the preset or to\n            delete it.</p>\n    "
+                                },
+                                "Arn": {
+                                    "shape_name": "String",
+                                    "type": "string",
+                                    "documentation": "\n    <p>The Amazon Resource Name (ARN) for the preset.</p>\n    "
                                 },
                                 "Name": {
                                     "shape_name": "Name",
@@ -3778,7 +3884,7 @@
                                             "shape_name": "AudioCodec",
                                             "type": "string",
                                             "pattern": "(^AAC$)|(^vorbis$)|(^mp3$)",
-                                            "documentation": "\n        <p>the audio codec for the output file. Valid values include <code>aac</code>, \n            <code>mp3</code>, and <code>vorbis</code>.</p>\n    "
+                                            "documentation": "\n        <p>The audio codec for the output file. Valid values include <code>aac</code>, \n            <code>mp3</code>, and <code>vorbis</code>.</p>\n    "
                                         },
                                         "SampleRate": {
                                             "shape_name": "AudioSampleRate",
@@ -3797,6 +3903,19 @@
                                             "type": "string",
                                             "pattern": "(^auto$)|(^0$)|(^1$)|(^2$)",
                                             "documentation": "\n        <p>The number of audio channels in the output file. Valid values include:</p>\n        <p><code>auto</code>, <code>0</code>, <code>1</code>, <code>2</code></p>\n        <p>If you specify <code>auto</code>, Elastic Transcoder automatically detects the number of channels in\n            the input file.</p>\n    "
+                                        },
+                                        "CodecOptions": {
+                                            "shape_name": "AudioCodecOptions",
+                                            "type": "structure",
+                                            "members": {
+                                                "Profile": {
+                                                    "shape_name": "AudioCodecProfile",
+                                                    "type": "string",
+                                                    "pattern": "(^auto$)|(^AAC-LC$)|(^HE-AAC$)|(^HE-AACv2$)",
+                                                    "documentation": "\n        <p>If you specified <code>AAC</code> for <code>Audio:Codec</code>, choose the AAC profile for the output file.\n            Elastic Transcoder supports the following profiles:</p>\n        <ul>\n            <li>\n<code>auto</code>: If you specify <code>auto</code>, Elastic Transcoder will select\n                the profile based on the bit rate selected for the output file.</li>\n            <li>\n<code>AAC-LC</code>: The most common AAC profile. Use for bitrates larger than\n                64 kbps.</li>\n            <li>\n<code>HE-AAC</code>: Not supported on some older players and devices.\n                Use for bitrates between 40 and 80 kbps.</li>\n            <li>\n<code>HE-AACv2</code>: Not supported on some players and devices.\n                Use for bitrates less than 48 kbps.</li>\n        </ul>\n        <note><p>If you created any presets before AAC profiles were added, Elastic Transcoder automatically updated\n            your presets to use AAC-LC. You can change the value as required.</p></note>  \n    "
+                                                }
+                                            },
+                                            "documentation": "\n        <p>If you specified <code>AAC</code> for <code>Audio:Codec</code>, this is the <code>AAC</code> \n            compression profile to use. Valid values include:</p>\n        <p><code>auto</code>, <code>AAC-LC</code>, <code>HE-AAC</code>, <code>HE-AACv2</code></p>\n        <p>If you specify <code>auto</code>, Elastic Transcoder chooses a profile based on the bit rate of the output file.</p>\n    "
                                         }
                                     },
                                     "documentation": "\n        <p>A section of the response body that provides information about the audio preset\n            values.</p>\n    "
@@ -3920,13 +4039,13 @@
                                                     "MaxWidth": {
                                                         "shape_name": "PixelsOrPercent",
                                                         "type": "string",
-                                                        "pattern": "(^\\d{1,3}([.]\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                                                        "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
                                                         "documentation": "\n        <p>The maximum width of the watermark in one of the following formats: <ul>\n                <li>number of pixels (px): The minimum value is 16 pixels, and the maximum value is\n                    the value of <code>MaxWidth</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100. Use the value of\n                        <code>Target</code> to specify whether you want Elastic Transcoder to include the black\n                    bars that are added by Elastic Transcoder, if any, in the calculation.</li> If\n                you specify the value in pixels, it must be less than or equal to the value of\n                    <code>MaxWidth</code>.</ul></p>\n    "
                                                     },
                                                     "MaxHeight": {
                                                         "shape_name": "PixelsOrPercent",
                                                         "type": "string",
-                                                        "pattern": "(^\\d{1,3}([.]\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                                                        "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
                                                         "documentation": "\n        <p>The maximum height of the watermark in one of the following formats: <ul>\n                <li>number of pixels (px): The minimum value is 16 pixels, and the maximum value is\n                    the value of <code>MaxHeight</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100. Use the value of\n                        <code>Target</code> to specify whether you want Elastic Transcoder to include the black\n                    bars that are added by Elastic Transcoder, if any, in the calculation.</li>\n            </ul> If you specify the value in pixels, it must be less than or equal to the value of\n                <code>MaxHeight</code>.</p>\n    "
                                                     },
                                                     "SizingPolicy": {
@@ -3944,7 +4063,7 @@
                                                     "HorizontalOffset": {
                                                         "shape_name": "PixelsOrPercent",
                                                         "type": "string",
-                                                        "pattern": "(^\\d{1,3}([.]\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                                                        "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
                                                         "documentation": "\n        <p>The amount by which you want the horizontal position of the watermark to be offset from\n            the position specified by HorizontalAlign: <ul>\n                <li>number of pixels (px): The minimum value is 0 pixels, and the maximum value is\n                    the value of MaxWidth.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100.</li>\n            </ul>For example, if you specify Left for <code>HorizontalAlign</code> and 5px for\n                <code>HorizontalOffset</code>, the left side of the watermark appears 5 pixels from\n            the left border of the output video.</p>\n        <p><code>HorizontalOffset</code> is only valid when the value of\n                <code>HorizontalAlign</code> is <code>Left</code> or <code>Right</code>. If you\n            specify an offset that causes the watermark to extend beyond the left or right border\n            and Elastic Transcoder has not added black bars, the watermark is cropped. If Elastic\n            Transcoder has added black bars, the watermark extends into the black bars. If the\n            watermark extends beyond the black bars, it is cropped.</p>\n        <p>Use the value of <code>Target</code> to specify whether you want to include the black\n            bars that are added by Elastic Transcoder, if any, in the offset calculation.</p>\n    "
                                                     },
                                                     "VerticalAlign": {
@@ -3956,13 +4075,13 @@
                                                     "VerticalOffset": {
                                                         "shape_name": "PixelsOrPercent",
                                                         "type": "string",
-                                                        "pattern": "(^\\d{1,3}([.]\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                                                        "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
                                                         "documentation": "\n        <code>VerticalOffset</code>\n        <p>The amount by which you want the vertical position of the watermark to be offset from the\n            position specified by VerticalAlign:<ul>\n                <li>number of pixels (px): The minimum value is 0 pixels, and the maximum value is\n                    the value of <code>MaxHeight</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100.</li>\n            </ul> For example, if you specify <code>Top</code> for <code>VerticalAlign</code> and\n                <code>5px</code> for <code>VerticalOffset</code>, the top of the watermark appears 5\n            pixels from the top border of the output video.</p>\n        <p><code>VerticalOffset</code> is only valid when the value of VerticalAlign is Top or\n            Bottom.</p>\n        <p>If you specify an offset that causes the watermark to extend beyond the top or bottom\n            border and Elastic Transcoder has not added black bars, the watermark is cropped. If\n            Elastic Transcoder has added black bars, the watermark extends into the black bars. If\n            the watermark extends beyond the black bars, it is cropped.</p>\n\n        <p>Use the value of <code>Target</code> to specify whether you want Elastic Transcoder to\n            include the black bars that are added by Elastic Transcoder, if any, in the offset\n            calculation.</p>\n    "
                                                     },
                                                     "Opacity": {
                                                         "shape_name": "Opacity",
                                                         "type": "string",
-                                                        "pattern": "^\\d{1,3}([.]\\d{0,20})?$",
+                                                        "pattern": "^\\d{1,3}(\\.\\d{0,20})?$",
                                                         "documentation": "\n        <p>A percentage that indicates how much you want a watermark to obscure the video in the\n            location where it appears. Valid values are 0 (the watermark is invisible) to 100 (the\n            watermark completely obscures the video in the specified location). The datatype of\n                <code>Opacity</code> is float.</p>\n        <p>Elastic Transcoder supports transparent .png graphics. If you use a transparent .png, the transparent\n            portion of the video appears as if you had specified a value of 0 for\n                <code>Opacity</code>. The .jpg file format doesn't support transparency.</p>\n    "
                                                     },
                                                     "Target": {
@@ -4044,6 +4163,12 @@
                             "documentation": "\n        <p>Presets are templates that contain most of the settings for transcoding media files from\n            one format to another. Elastic Transcoder includes some default presets for common formats, for\n            example, several iPod and iPhone versions. You can also create your own presets for\n            formats that aren't included among the default presets. You specify which preset you\n            want to use when you create a job.</p>\n    "
                         },
                         "documentation": "\n        <p>An array of <code>Preset</code> objects.</p>\n    "
+                    },
+                    "NextPageToken": {
+                        "shape_name": "Id",
+                        "type": "string",
+                        "pattern": "^\\d{13}-\\w{6}$",
+                        "documentation": "\n        <p>A value that you use to access the second and subsequent pages of results, if any. When\n            the presets fit on one page or when you've reached the last page\n            of results, the value of <code>NextPageToken</code> is <code>null</code>.</p>\n    "
                     }
                 },
                 "documentation": "\n        <p>The <code>ListPresetsResponse</code> structure.</p>\n    "
@@ -4074,7 +4199,13 @@
                     "documentation": "\n        <p>Elastic Transcoder encountered an unexpected exception while trying to fulfill the request.</p>\n    "
                 }
             ],
-            "documentation": "\n        <p>The ListPresets operation gets a list of the default presets included with Elastic Transcoder and the\n            presets that you've added in an AWS region.</p>\n        <examples>\n            <example>\n                <request>GET /2012-09-25/presets HTTP/1.1 Content-Type: charset=UTF-8\nAccept: */*\nHost: elastictranscoder.[Elastic Transcoder-endpoint].amazonaws.com:443\nx-amz-date: 20130114T174952Z\nAuthorization: AWS4-HMAC-SHA256\n               Credential=[access-key-id]/[request-date]/[Elastic Transcoder-endpoint]/ets/aws4_request,\n               SignedHeaders=host;x-amz-date;x-amz-target,\n               Signature=[calculated-signature]</request>\n                <response>Status: 200 OK x-amzn-RequestId: c321ec43-378e-11e2-8e4c-4d5b971203e9\nContent-Type: application/json\nContent-Length: [number-of-characters-in-response]\nDate: Mon, 14 Jan 2013 06:01:47 GMT { \"Presets\":[ { \"Audio\":{ \"BitRate\":\"96\",\n                    \"Channels\":\"2\", \"Codec\":\"AAC\", \"SampleRate\":\"44100\" }, \"Container\":\"mp4\",\n                    \"Description\":\"Use for published videos\", \"Id\":\"5555555555555-abcde5\",\n                    \"Name\":\"DefaultPreset\", \"Thumbnails\":{ \"Format\":\"png\", \"Interval\":\"120\",\n                    \"MaxHeight\":\"auto\", \"MaxWidth\":\"auto\", \"PaddingPolicy\":\"Pad\",\n                    \"SizingPolicy\":\"Fit\" }, \"Type\":\"Custom\", \"Video\":{ \"BitRate\":\"1600\",\n                    \"Codec\":\"H.264\", \"CodecOptions\":{ \"Level\":\"2.2\", \"MaxReferenceFrames\":\"3\",\n                    \"Profile\":\"main\", \"MaxBitRate\":\"\", \"BufferSize\":\"\" },\n                    \"DisplayAspectRatio\":\"auto\", \"FixedGOP\":\"false\", \"FrameRate\":\"30\",\n                    \"KeyframesMaxDist\":\"240\", \"MaxHeight\":\"auto\", \"MaxWidth\":\"auto\",\n                    \"PaddingPolicy\":\"Pad\", \"SizingPolicy\":\"Fit\" } }, {...} ] } </response>\n            </example>\n        </examples>\n    "
+            "documentation": "\n        <p>The ListPresets operation gets a list of the default presets included with Elastic Transcoder and the\n            presets that you've added in an AWS region.</p>\n        <examples>\n            <example>\n                <request>GET /2012-09-25/presets HTTP/1.1 Content-Type: charset=UTF-8\nAccept: */*\nHost: elastictranscoder.[Elastic Transcoder-endpoint].amazonaws.com:443\nx-amz-date: 20130114T174952Z\nAuthorization: AWS4-HMAC-SHA256\n               Credential=[access-key-id]/[request-date]/[Elastic Transcoder-endpoint]/ets/aws4_request,\n               SignedHeaders=host;x-amz-date;x-amz-target,\n               Signature=[calculated-signature]</request>\n                <response>Status: 200 OK x-amzn-RequestId: c321ec43-378e-11e2-8e4c-4d5b971203e9\nContent-Type: application/json\nContent-Length: [number-of-characters-in-response]\nDate: Mon, 14 Jan 2013 06:01:47 GMT { \"Presets\":[ { \"Audio\":{ \"BitRate\":\"96\",\n                    \"Channels\":\"2\", \"Codec\":\"AAC\", \"SampleRate\":\"44100\" }, \"Container\":\"mp4\",\n                    \"Description\":\"Use for published videos\", \"Id\":\"5555555555555-abcde5\",\n                    \"Name\":\"DefaultPreset\", \"Thumbnails\":{ \"Format\":\"png\", \"Interval\":\"120\",\n                    \"MaxHeight\":\"auto\", \"MaxWidth\":\"auto\", \"PaddingPolicy\":\"Pad\",\n                    \"SizingPolicy\":\"Fit\" }, \"Type\":\"Custom\", \"Video\":{ \"BitRate\":\"1600\",\n                    \"Codec\":\"H.264\", \"CodecOptions\":{ \"Level\":\"2.2\", \"MaxReferenceFrames\":\"3\",\n                    \"Profile\":\"main\", \"MaxBitRate\":\"\", \"BufferSize\":\"\" },\n                    \"DisplayAspectRatio\":\"auto\", \"FixedGOP\":\"false\", \"FrameRate\":\"30\",\n                    \"KeyframesMaxDist\":\"240\", \"MaxHeight\":\"auto\", \"MaxWidth\":\"auto\",\n                    \"PaddingPolicy\":\"Pad\", \"SizingPolicy\":\"Fit\" } }, {...} ] } </response>\n            </example>\n        </examples>\n    ",
+            "pagination": {
+                "input_token": "PageToken",
+                "output_token": "NextPageToken",
+                "result_key": "Presets",
+                "py_input_token": "page_token"
+            }
         },
         "ReadJob": {
             "name": "ReadJob",
@@ -4109,6 +4240,11 @@
                                 "type": "string",
                                 "pattern": "^\\d{13}-\\w{6}$",
                                 "documentation": "\n        <p> The identifier that Elastic Transcoder assigned to the job. You use this value to get settings for the\n            job or to delete the job. </p>\n    "
+                            },
+                            "Arn": {
+                                "shape_name": "String",
+                                "type": "string",
+                                "documentation": "\n        <p>The Amazon Resource Name (ARN) for the job.</p>\n    "
                             },
                             "PipelineId": {
                                 "shape_name": "Id",
@@ -4197,7 +4333,7 @@
                                     "SegmentDuration": {
                                         "shape_name": "Float",
                                         "type": "string",
-                                        "pattern": "^\\d{1,5}([.]\\d{0,5})?$",
+                                        "pattern": "^\\d{1,5}(\\.\\d{0,5})?$",
                                         "documentation": "\n        <p><important>(Outputs in MPEG-TS format only.</important>If you specify a preset in\n                <code>PresetId</code> for which the value of <code>Container</code>is\n                <code>ts</code> (MPEG-TS), <code>SegmentDuration</code> is the maximum duration of\n            each .ts file in seconds. The range of valid values is 1 to 60 seconds. If the duration\n            of the video is not evenly divisible by <code>SegmentDuration</code>, the duration of\n            the last segment is the remainder of total length/SegmentDuration. Elastic Transcoder\n            creates an output-specific playlist for each output that you specify in OutputKeys. To\n            add an output to the master playlist for this job, include it in\n            <code>OutputKeys</code>.</p>\n    "
                                     },
                                     "Status": {
@@ -4332,13 +4468,13 @@
                                                         "StartTime": {
                                                             "shape_name": "Time",
                                                             "type": "string",
-                                                            "pattern": "(^\\d{1,5}([.]\\d{0,3})?$)|(^(((([0-1]?\\d)|(2[0-3])):)?(([0-5]?\\d):))?(([0-5]?\\d))([.]\\d{0,3})?$)",
+                                                            "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
                                                             "documentation": "\n       <p>The place in the input file where you want a clip to start. The format can be either HH:mm:ss.SSS \n       (maximum value: 23:59:59.999; SSS is thousandths of a second) or sssss.SSS (maximum value: 86399.999). \n       If you don't specify a value, Elastic Transcoder starts at the beginning of the input file.</p>\n   "
                                                         },
                                                         "Duration": {
                                                             "shape_name": "Time",
                                                             "type": "string",
-                                                            "pattern": "(^\\d{1,5}([.]\\d{0,3})?$)|(^(((([0-1]?\\d)|(2[0-3])):)?(([0-5]?\\d):))?(([0-5]?\\d))([.]\\d{0,3})?$)",
+                                                            "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
                                                             "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file , Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
                                                         }
                                                     },
@@ -4392,7 +4528,7 @@
                                         "SegmentDuration": {
                                             "shape_name": "Float",
                                             "type": "string",
-                                            "pattern": "^\\d{1,5}([.]\\d{0,5})?$",
+                                            "pattern": "^\\d{1,5}(\\.\\d{0,5})?$",
                                             "documentation": "\n        <p><important>(Outputs in MPEG-TS format only.</important>If you specify a preset in\n                <code>PresetId</code> for which the value of <code>Container</code>is\n                <code>ts</code> (MPEG-TS), <code>SegmentDuration</code> is the maximum duration of\n            each .ts file in seconds. The range of valid values is 1 to 60 seconds. If the duration\n            of the video is not evenly divisible by <code>SegmentDuration</code>, the duration of\n            the last segment is the remainder of total length/SegmentDuration. Elastic Transcoder\n            creates an output-specific playlist for each output that you specify in OutputKeys. To\n            add an output to the master playlist for this job, include it in\n            <code>OutputKeys</code>.</p>\n    "
                                         },
                                         "Status": {
@@ -4527,13 +4663,13 @@
                                                             "StartTime": {
                                                                 "shape_name": "Time",
                                                                 "type": "string",
-                                                                "pattern": "(^\\d{1,5}([.]\\d{0,3})?$)|(^(((([0-1]?\\d)|(2[0-3])):)?(([0-5]?\\d):))?(([0-5]?\\d))([.]\\d{0,3})?$)",
+                                                                "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
                                                                 "documentation": "\n       <p>The place in the input file where you want a clip to start. The format can be either HH:mm:ss.SSS \n       (maximum value: 23:59:59.999; SSS is thousandths of a second) or sssss.SSS (maximum value: 86399.999). \n       If you don't specify a value, Elastic Transcoder starts at the beginning of the input file.</p>\n   "
                                                             },
                                                             "Duration": {
                                                                 "shape_name": "Time",
                                                                 "type": "string",
-                                                                "pattern": "(^\\d{1,5}([.]\\d{0,3})?$)|(^(((([0-1]?\\d)|(2[0-3])):)?(([0-5]?\\d):))?(([0-5]?\\d))([.]\\d{0,3})?$)",
+                                                                "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
                                                                 "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file , Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
                                                             }
                                                         },
@@ -4942,6 +5078,11 @@
                                 "pattern": "^\\d{13}-\\w{6}$",
                                 "documentation": "\n        <p>Identifier for the new preset. You use this value to get settings for the preset or to\n            delete it.</p>\n    "
                             },
+                            "Arn": {
+                                "shape_name": "String",
+                                "type": "string",
+                                "documentation": "\n    <p>The Amazon Resource Name (ARN) for the preset.</p>\n    "
+                            },
                             "Name": {
                                 "shape_name": "Name",
                                 "type": "string",
@@ -4970,7 +5111,7 @@
                                         "shape_name": "AudioCodec",
                                         "type": "string",
                                         "pattern": "(^AAC$)|(^vorbis$)|(^mp3$)",
-                                        "documentation": "\n        <p>the audio codec for the output file. Valid values include <code>aac</code>, \n            <code>mp3</code>, and <code>vorbis</code>.</p>\n    "
+                                        "documentation": "\n        <p>The audio codec for the output file. Valid values include <code>aac</code>, \n            <code>mp3</code>, and <code>vorbis</code>.</p>\n    "
                                     },
                                     "SampleRate": {
                                         "shape_name": "AudioSampleRate",
@@ -4989,6 +5130,19 @@
                                         "type": "string",
                                         "pattern": "(^auto$)|(^0$)|(^1$)|(^2$)",
                                         "documentation": "\n        <p>The number of audio channels in the output file. Valid values include:</p>\n        <p><code>auto</code>, <code>0</code>, <code>1</code>, <code>2</code></p>\n        <p>If you specify <code>auto</code>, Elastic Transcoder automatically detects the number of channels in\n            the input file.</p>\n    "
+                                    },
+                                    "CodecOptions": {
+                                        "shape_name": "AudioCodecOptions",
+                                        "type": "structure",
+                                        "members": {
+                                            "Profile": {
+                                                "shape_name": "AudioCodecProfile",
+                                                "type": "string",
+                                                "pattern": "(^auto$)|(^AAC-LC$)|(^HE-AAC$)|(^HE-AACv2$)",
+                                                "documentation": "\n        <p>If you specified <code>AAC</code> for <code>Audio:Codec</code>, choose the AAC profile for the output file.\n            Elastic Transcoder supports the following profiles:</p>\n        <ul>\n            <li>\n<code>auto</code>: If you specify <code>auto</code>, Elastic Transcoder will select\n                the profile based on the bit rate selected for the output file.</li>\n            <li>\n<code>AAC-LC</code>: The most common AAC profile. Use for bitrates larger than\n                64 kbps.</li>\n            <li>\n<code>HE-AAC</code>: Not supported on some older players and devices.\n                Use for bitrates between 40 and 80 kbps.</li>\n            <li>\n<code>HE-AACv2</code>: Not supported on some players and devices.\n                Use for bitrates less than 48 kbps.</li>\n        </ul>\n        <note><p>If you created any presets before AAC profiles were added, Elastic Transcoder automatically updated\n            your presets to use AAC-LC. You can change the value as required.</p></note>  \n    "
+                                            }
+                                        },
+                                        "documentation": "\n        <p>If you specified <code>AAC</code> for <code>Audio:Codec</code>, this is the <code>AAC</code> \n            compression profile to use. Valid values include:</p>\n        <p><code>auto</code>, <code>AAC-LC</code>, <code>HE-AAC</code>, <code>HE-AACv2</code></p>\n        <p>If you specify <code>auto</code>, Elastic Transcoder chooses a profile based on the bit rate of the output file.</p>\n    "
                                     }
                                 },
                                 "documentation": "\n        <p>A section of the response body that provides information about the audio preset\n            values.</p>\n    "
@@ -5112,13 +5266,13 @@
                                                 "MaxWidth": {
                                                     "shape_name": "PixelsOrPercent",
                                                     "type": "string",
-                                                    "pattern": "(^\\d{1,3}([.]\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                                                    "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
                                                     "documentation": "\n        <p>The maximum width of the watermark in one of the following formats: <ul>\n                <li>number of pixels (px): The minimum value is 16 pixels, and the maximum value is\n                    the value of <code>MaxWidth</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100. Use the value of\n                        <code>Target</code> to specify whether you want Elastic Transcoder to include the black\n                    bars that are added by Elastic Transcoder, if any, in the calculation.</li> If\n                you specify the value in pixels, it must be less than or equal to the value of\n                    <code>MaxWidth</code>.</ul></p>\n    "
                                                 },
                                                 "MaxHeight": {
                                                     "shape_name": "PixelsOrPercent",
                                                     "type": "string",
-                                                    "pattern": "(^\\d{1,3}([.]\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                                                    "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
                                                     "documentation": "\n        <p>The maximum height of the watermark in one of the following formats: <ul>\n                <li>number of pixels (px): The minimum value is 16 pixels, and the maximum value is\n                    the value of <code>MaxHeight</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100. Use the value of\n                        <code>Target</code> to specify whether you want Elastic Transcoder to include the black\n                    bars that are added by Elastic Transcoder, if any, in the calculation.</li>\n            </ul> If you specify the value in pixels, it must be less than or equal to the value of\n                <code>MaxHeight</code>.</p>\n    "
                                                 },
                                                 "SizingPolicy": {
@@ -5136,7 +5290,7 @@
                                                 "HorizontalOffset": {
                                                     "shape_name": "PixelsOrPercent",
                                                     "type": "string",
-                                                    "pattern": "(^\\d{1,3}([.]\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                                                    "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
                                                     "documentation": "\n        <p>The amount by which you want the horizontal position of the watermark to be offset from\n            the position specified by HorizontalAlign: <ul>\n                <li>number of pixels (px): The minimum value is 0 pixels, and the maximum value is\n                    the value of MaxWidth.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100.</li>\n            </ul>For example, if you specify Left for <code>HorizontalAlign</code> and 5px for\n                <code>HorizontalOffset</code>, the left side of the watermark appears 5 pixels from\n            the left border of the output video.</p>\n        <p><code>HorizontalOffset</code> is only valid when the value of\n                <code>HorizontalAlign</code> is <code>Left</code> or <code>Right</code>. If you\n            specify an offset that causes the watermark to extend beyond the left or right border\n            and Elastic Transcoder has not added black bars, the watermark is cropped. If Elastic\n            Transcoder has added black bars, the watermark extends into the black bars. If the\n            watermark extends beyond the black bars, it is cropped.</p>\n        <p>Use the value of <code>Target</code> to specify whether you want to include the black\n            bars that are added by Elastic Transcoder, if any, in the offset calculation.</p>\n    "
                                                 },
                                                 "VerticalAlign": {
@@ -5148,13 +5302,13 @@
                                                 "VerticalOffset": {
                                                     "shape_name": "PixelsOrPercent",
                                                     "type": "string",
-                                                    "pattern": "(^\\d{1,3}([.]\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                                                    "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
                                                     "documentation": "\n        <code>VerticalOffset</code>\n        <p>The amount by which you want the vertical position of the watermark to be offset from the\n            position specified by VerticalAlign:<ul>\n                <li>number of pixels (px): The minimum value is 0 pixels, and the maximum value is\n                    the value of <code>MaxHeight</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100.</li>\n            </ul> For example, if you specify <code>Top</code> for <code>VerticalAlign</code> and\n                <code>5px</code> for <code>VerticalOffset</code>, the top of the watermark appears 5\n            pixels from the top border of the output video.</p>\n        <p><code>VerticalOffset</code> is only valid when the value of VerticalAlign is Top or\n            Bottom.</p>\n        <p>If you specify an offset that causes the watermark to extend beyond the top or bottom\n            border and Elastic Transcoder has not added black bars, the watermark is cropped. If\n            Elastic Transcoder has added black bars, the watermark extends into the black bars. If\n            the watermark extends beyond the black bars, it is cropped.</p>\n\n        <p>Use the value of <code>Target</code> to specify whether you want Elastic Transcoder to\n            include the black bars that are added by Elastic Transcoder, if any, in the offset\n            calculation.</p>\n    "
                                                 },
                                                 "Opacity": {
                                                     "shape_name": "Opacity",
                                                     "type": "string",
-                                                    "pattern": "^\\d{1,3}([.]\\d{0,20})?$",
+                                                    "pattern": "^\\d{1,3}(\\.\\d{0,20})?$",
                                                     "documentation": "\n        <p>A percentage that indicates how much you want a watermark to obscure the video in the\n            location where it appears. Valid values are 0 (the watermark is invisible) to 100 (the\n            watermark completely obscures the video in the specified location). The datatype of\n                <code>Opacity</code> is float.</p>\n        <p>Elastic Transcoder supports transparent .png graphics. If you use a transparent .png, the transparent\n            portion of the video appears as if you had specified a value of 0 for\n                <code>Opacity</code>. The .jpg file format doesn't support transparency.</p>\n    "
                                                 },
                                                 "Target": {
@@ -6373,6 +6527,32 @@
         "protocols": [
             "https"
         ]
+    },
+    "pagination": {
+        "ListJobsByPipeline": {
+            "input_token": "PageToken",
+            "output_token": "NextPageToken",
+            "result_key": "Jobs",
+            "py_input_token": "page_token"
+        },
+        "ListJobsByStatus": {
+            "input_token": "PageToken",
+            "output_token": "NextPageToken",
+            "result_key": "Jobs",
+            "py_input_token": "page_token"
+        },
+        "ListPipelines": {
+            "input_token": "PageToken",
+            "output_token": "NextPageToken",
+            "result_key": "Pipelines",
+            "py_input_token": "page_token"
+        },
+        "ListPresets": {
+            "input_token": "PageToken",
+            "output_token": "NextPageToken",
+            "result_key": "Presets",
+            "py_input_token": "page_token"
+        }
     },
     "retry": {
         "__default__": {

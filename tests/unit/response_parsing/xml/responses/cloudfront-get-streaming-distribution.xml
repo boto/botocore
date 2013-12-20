@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<StreamingDistribution xmlns="http://cloudfront.amazonaws.com/doc/2013-09-27/">
+<StreamingDistribution xmlns="http://cloudfront.amazonaws.com/doc/2013-11-11/">
    <Id>EGTXBD79EXAMPLE</Id>
    <Status>Deployed</Status>
    <LastModifiedTime>2012-05-19T19:37:58Z</LastModifiedTime>
