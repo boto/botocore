@@ -28,5 +28,8 @@
     },
     "fips-us-gov-west-1": {
         "description": "AWS GovCloud (FIPS 140-2) S3 Only"
+    },
+    "cn-north-1": {
+        "description": "China (Beijing)"
     }
 }
