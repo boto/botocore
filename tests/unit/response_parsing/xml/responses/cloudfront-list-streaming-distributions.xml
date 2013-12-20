@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<StreamingDistributionList xmlns="http://cloudfront.amazonaws.com/doc/2013-09-27/">
+<StreamingDistributionList xmlns="http://cloudfront.amazonaws.com/doc/2013-11-11/">
    <Marker>EGTXBD79EXAMPLE</Marker>
    <NextMarker>ED4L98SBEXAMPLE</NextMarker>
    <MaxItems>1</MaxItems>

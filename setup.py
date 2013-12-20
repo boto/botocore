@@ -11,7 +11,7 @@ from setuptools import setup, find_packages
 
 
 requires = ['six>=1.1.0',
-            'jmespath==0.2.0',
+            'jmespath==0.2.1',
             'python-dateutil>=2.1']
 
 

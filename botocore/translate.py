@@ -84,6 +84,9 @@ def translate(model):
     add_pagination_configs(
         new_model,
         model.enhancements.get('pagination', {}))
+    add_waiter_configs(
+        new_model,
+        model.enhancements.get('waiters', {}))
     # Merge in any per operation overrides defined in the .extras.json file.
     merge_dicts(new_model['operations'], model.enhancements.get('operations', {}))
     add_retry_configs(
@@ -233,6 +236,146 @@ def add_pagination_configs(new_model, pagination):
             raise ValueError("Tried to add a pagination config for non "
                              "existent operation '%s'" % name)
         operation['pagination'] = config.copy()
+
+
+def add_waiter_configs(new_model, waiters):
+    if waiters:
+        denormalized = denormalize_waiters(waiters)
+        # Before adding it to the new model, we need to verify the
+        # final denormalized model.
+        for value in denormalized.values():
+            if value['operation'] not in new_model['operations']:
+                raise ValueError()
+        new_model['waiters'] = denormalized
+
+
+def denormalize_waiters(waiters):
+    # The waiter configuration is normalized to avoid duplication.
+    # You can inherit defaults, and extend from other definitions.
+    # We're going to denormalize this so that the implementation for
+    # consuming waiters is simple.
+    default = waiters.get('__default__', {})
+    new_waiters = {}
+    for key, value in waiters.items():
+        if key.startswith('__'):
+            # Keys that start with '__' are considered abstract/internal
+            # and are only used for inheritance.  Because we're going
+            # to denormalize the configs and perform all the lookups
+            # during this translation process, the abstract/internal
+            # configs don't need to make it into the final translated
+            # config so we can just skip these.
+            continue
+        new_waiters[key] = denormalize_single_waiter(value, default, waiters)
+    return new_waiters
+
+
+def denormalize_single_waiter(value, default, waiters):
+    """Denormalize a single waiter config.
+
+    :param value: The dictionary of a single waiter config, e.g.
+        the ``InstanceRunning`` or ``TableExists`` config.  This
+        is the config we're going to denormalize.
+    :param default: The ``__default__`` (if any) configuration.
+        This is needed to resolve the lookup process.
+    :param waiters: The full configuration of the waiters.
+        This is needed if we need to look up at parent class that the
+        current config extends.
+    :return: The denormalized config.
+    :rtype: dict
+
+    """
+    # First we need to resolve all the keys based on the inheritance
+    # hierarchy.  The lookup process is:
+    # The most bottom/leaf class is ``value``.  From there we need
+    # to look up anything it inherits from (denoted via the ``extends``
+    # key).  We need to perform this process recursively until we hit
+    # a config that has no ``extends`` key.
+    # And finally if we haven't found our value yet, we check in the
+    # ``__default__`` key.
+    # So the first thing we need to do is build the lookup chain that
+    # starts with ``value`` and ends with ``__default__``.
+    lookup_chain = [value]
+    current = value
+    while True:
+        if 'extends' not in current:
+            break
+        current = waiters[current.get('extends')]
+        lookup_chain.append(current)
+    lookup_chain.append(default)
+    new_waiter = {}
+    # Now that we have this lookup chain we can build the entire set
+    # of values by starting at the most parent class and walking down
+    # to the children.  At each step the child is merged onto the parent's
+    # config items.  This is the desired behavior as a child's values
+    # overrides its parents.  This is what the ``reversed(...)`` call
+    # is for.
+    for element in reversed(lookup_chain):
+        new_waiter.update(element)
+    # We don't care about 'extends' so we can safely remove that key.
+    new_waiter.pop('extends', {})
+    # Now we need to resolve the success/failure values.  We
+    # want to completely remove the acceptor types.
+    # The logic here is that if there is no success/failure_* variable
+    # defined, it inherits this value from the matching acceptor_* variable.
+    new_waiter['success_type'] = new_waiter.get('success_type',
+                                                new_waiter.get('acceptor_type'))
+    new_waiter['success_path'] = new_waiter.get('success_path',
+                                                new_waiter.get('acceptor_path'))
+    new_waiter['success_value'] = new_waiter.get('success_value',
+                                                 new_waiter.get('acceptor_value'))
+    new_waiter['failure_type'] = new_waiter.get('failure_type',
+                                                new_waiter.get('acceptor_type'))
+    new_waiter['failure_path'] = new_waiter.get('failure_path',
+                                                new_waiter.get('acceptor_path'))
+    new_waiter['failure_value'] = new_waiter.get('failure_value',
+                                                 new_waiter.get('acceptor_value'))
+    # We can remove acceptor_* vars because they're only used for lookups
+    # and we've already performed this step in the lines above.
+    new_waiter.pop('acceptor_type', '')
+    new_waiter.pop('acceptor_path', '')
+    new_waiter.pop('acceptor_value', '')
+    # Remove any keys with a None value.
+    for key in list(new_waiter.keys()):
+        if new_waiter[key] is None:
+            del new_waiter[key]
+    # Check required keys.
+    for required in ['operation', 'success_type']:
+        if required not in new_waiter:
+            raise ValueError('Missing required waiter configuration '
+                                'value "%s": %s' % (required, new_waiter))
+        if new_waiter.get(required) is None:
+            raise ValueError('Required waiter configuration '
+                                'value cannot be None "%s": %s'
+                                % (required, new_waiter))
+    # Finally, success/failure values can be a scalar or a list.  We're going
+    # to just always make them a list.
+    if 'success_value' in new_waiter and not \
+            isinstance(new_waiter['success_value'], list):
+        new_waiter['success_value'] = [new_waiter['success_value']]
+    if 'failure_value' in new_waiter and not \
+            isinstance(new_waiter['failure_value'], list):
+        new_waiter['failure_value'] = [new_waiter['failure_value']]
+    _transform_waiter(new_waiter)
+    return new_waiter
+
+
+def _transform_waiter(new_waiter):
+    # This transforms the waiters into a format that's slightly
+    # easier to consume.
+    if 'success_type' in new_waiter:
+        success = {'type': new_waiter.pop('success_type')}
+        if 'success_path' in new_waiter:
+            success['path'] = new_waiter.pop('success_path')
+        if 'success_value' in new_waiter:
+            success['value'] = new_waiter.pop('success_value')
+        new_waiter['success'] = success
+    if 'failure_type' in new_waiter:
+        failure = {'type': new_waiter.pop('failure_type')}
+        if 'failure_path' in new_waiter:
+            failure['path'] = new_waiter.pop('failure_path')
+        if 'failure_value' in new_waiter:
+            failure['value'] = new_waiter.pop('failure_value')
+        new_waiter['failure'] = failure
 
 
 def _check_known_pagination_keys(config):

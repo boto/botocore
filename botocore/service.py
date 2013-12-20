@@ -24,6 +24,7 @@ import logging
 
 from .endpoint import get_endpoint
 from .operation import Operation
+from .waiter import Waiter
 from .exceptions import ServiceNotInRegionError, NoRegionError
 
 
@@ -42,6 +43,7 @@ class Service(object):
         optional value is an endpoint for that region.
     :ivar protocols: A list of protocols supported by the service.
     """
+    WAITER_CLASS = Waiter
 
     def __init__(self, session, provider, service_name,
                  path='/', port=None):
@@ -125,7 +127,7 @@ class Service(object):
             # Before getting into any of the region/endpoint
             # logic, if an endpoint_url is explicitly
             # provided, just use what's been explicitly passed in.
-            return get_endpoint(self, region_name, endpoint_url)
+            return self._get_endpoint(region_name, endpoint_url)
         if region_name is None and not self.global_endpoint:
             # The only time it's ok to *not* provide a region is
             # if the service is a global_endpoint (e.g. IAM).
@@ -161,6 +163,13 @@ class Service(object):
             # endpoint_prefix.region.amazonaws.com.
             host = '%s.%s.amazonaws.com' % (self.endpoint_prefix, region_name)
             endpoint_url = self._build_endpoint_url(host, is_secure)
+        return self._get_endpoint(region_name, endpoint_url)
+
+    def _get_endpoint(self, region_name, endpoint_url):
+        event = self.session.create_event('creating-endpoint',
+                                          self.endpoint_prefix)
+        self.session.emit(event, service=self, region_name=region_name,
+                          endpoint_url=endpoint_url)
         return get_endpoint(self, region_name, endpoint_url)
 
     def get_operation(self, operation_name):
@@ -177,6 +186,13 @@ class Service(object):
             if operation_name in op_names:
                 return operation
         return None
+
+    def get_waiter(self, waiter_name):
+        if waiter_name not in self.waiters:
+            raise ValueError("Waiter does not exist: %s" % waiter_name)
+        config = self.waiters[waiter_name]
+        operation = self.get_operation(config['operation'])
+        return self.WAITER_CLASS(waiter_name, operation, config)
 
 
 def get_service(session, service_name, provider):

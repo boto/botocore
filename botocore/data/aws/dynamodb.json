@@ -6063,12 +6063,41 @@
             "us-west-2": null,
             "us-west-1": null,
             "eu-west-1": null,
-            "us-gov-west-1": null
+            "us-gov-west-1": null,
+            "cn-north-1": "https://dynamodb.cn-north-1.amazonaws.com.cn"
         },
         "protocols": [
             "https",
             "http"
         ]
+    },
+    "waiters": {
+        "TableNotExists": {
+            "success": {
+                "type": "error",
+                "value": [
+                    "ResourceNotFoundException"
+                ]
+            },
+            "interval": 20,
+            "operation": "DescribeTable",
+            "max_attempts": 25
+        },
+        "TableExists": {
+            "success": {
+                "path": "Table.TableStatus",
+                "type": "output",
+                "value": [
+                    "ACTIVE"
+                ]
+            },
+            "interval": 20,
+            "ignore_errors": [
+                "ResourceNotFoundException"
+            ],
+            "operation": "DescribeTable",
+            "max_attempts": 25
+        }
     },
     "retry": {
         "__default__": {
