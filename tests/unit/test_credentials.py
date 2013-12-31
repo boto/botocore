@@ -29,6 +29,7 @@ import mock
 
 import botocore.session
 import botocore.exceptions
+from botocore.vendored import requests
 
 # Passed to session to keep it from finding default config file
 TESTENVVARS = {'config_file': (None, 'AWS_CONFIG_FILE', None)}
@@ -163,6 +164,14 @@ class IamRoleTest(BaseEnvVar):
 
         credentials = self.session.get_credentials()
         self.assertEqual(credentials.method, 'iam-role')
+
+    @mock.patch('botocore.vendored.requests.get')
+    def test_search_md_returns_empty_when_metadata_is_not_available(self, get):
+        self.environ['BOTO_CONFIG'] = ''
+        get.side_effect = requests.ConnectionError()
+        d = botocore.credentials._search_md()
+
+        self.assertEqual(d, {})
 
 
 if __name__ == "__main__":
