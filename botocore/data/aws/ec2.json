@@ -18538,7 +18538,7 @@
                         "documentation": "\n        <p>\n        Specifies the Availability Zone group.\n        </p>\n        <p>\n        When specifying the same Availability Zone group for all\n        Spot Instance requests, all Spot Instances are launched\n        in the same Availability Zone.\n        </p>\n    "
                     },
                     "LaunchSpecification": {
-                        "shape_name": "LaunchSpecification",
+                        "shape_name": "SpotLaunchSpecification",
                         "type": "structure",
                         "members": {
                             "ImageId": {
