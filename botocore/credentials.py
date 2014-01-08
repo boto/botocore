@@ -30,6 +30,10 @@ from botocore.compat import json
 
 
 logger = logging.getLogger(__name__)
+DEFAULT_METADATA_SERVICE_TIMEOUT = 1
+METADATA_SECURITY_CREDENTIALS_URL = (
+    'http://169.254.169.254/latest/meta-data/iam/security-credentials/'
+)
 
 
 class Credentials(object):
@@ -53,34 +57,37 @@ class Credentials(object):
         self.profiles = []
 
 
-def _search_md(url='http://169.254.169.254/latest/meta-data/iam/security-credentials/'):
+def retrieve_iam_role_credentials(url=METADATA_SECURITY_CREDENTIALS_URL,
+                                  timeout=None):
+    if timeout is None:
+        timeout = DEFAULT_METADATA_SERVICE_TIMEOUT
     d = {}
     try:
-        r = requests.get(url, timeout=.1)
+        r = requests.get(url, timeout=timeout)
         if r.status_code == 200 and r.content:
             fields = r.content.decode('utf-8').split('\n')
             for field in fields:
                 if field.endswith('/'):
-                    d[field[0:-1]] = _search_md(url + field)
+                    d[field[0:-1]] = retrieve_iam_role_credentials(url + field)
                 else:
-                    val = requests.get(url + field).content.decode('utf-8')
+                    val = requests.get(url + field,
+                                       timeout=timeout).content.decode('utf-8')
                     if val[0] == '{':
                         val = json.loads(val)
-                    else:
-                        p = val.find('\n')
-                        if p > 0:
-                            val = r.content.decode('utf-8').split('\n')
                     d[field] = val
-    except (requests.Timeout, requests.ConnectionError):
-        pass
+        else:
+            logger.debug("Metadata service returned non 200 status code "
+                         "of %s for url: %s, content body: %s",
+                         r.status_code, url, r.content)
+    except (requests.Timeout, requests.ConnectionError) as e:
+        logger.debug("Caught exception wil trying to retrieve credentials "
+                     "from metadata service: %s", e, exc_info=True)
     return d
 
 
 def search_iam_role(**kwargs):
     credentials = None
-    metadata = kwargs.get('metadata', None)
-    if metadata is None:
-        metadata = _search_md()
+    metadata = retrieve_iam_role_credentials()
     if metadata:
         for role_name in metadata:
             credentials = Credentials(metadata[role_name]['AccessKeyId'],
@@ -183,11 +190,10 @@ _credential_methods = (('env', search_environment),
                        ('iam-role', search_iam_role))
 
 
-def get_credentials(session, metadata=None):
+def get_credentials(session):
     credentials = None
     for cred_method, cred_fn in _credential_methods:
-        credentials = cred_fn(session=session,
-                              metadata=metadata)
+        credentials = cred_fn(session=session)
         if credentials:
             break
     return credentials

@@ -29,6 +29,8 @@ import mock
 
 import botocore.session
 import botocore.exceptions
+from botocore import credentials
+from botocore.vendored.requests import ConnectionError
 
 # Passed to session to keep it from finding default config file
 TESTENVVARS = {'config_file': (None, 'AWS_CONFIG_FILE', None)}
@@ -76,14 +78,11 @@ class CredentialsFileTest(BaseEnvVar):
         self.assertEqual(credentials.secret_key, 'bar')
         self.assertEqual(credentials.method, 'credentials-file')
 
-    def test_bad_file(self):
+    @mock.patch('botocore.vendored.requests.get')
+    def test_bad_file(self, get):
         self.environ['AWS_CREDENTIAL_FILE'] = path('no_aws_credentials')
         credentials = self.session.get_credentials()
-        # There can be two cases, either credentials are None,
-        # or if we're able to get an IAM role the credentials method
-        # is not 'credentials-file'
-        if credentials is not None:
-            self.assertNotEqual(credentials.method, 'credentials-file')
+        self.assertIsNone(credentials)
 
 
 class ConfigTest(BaseEnvVar):
@@ -135,16 +134,20 @@ class IamRoleTest(BaseEnvVar):
         super(IamRoleTest, self).setUp()
         self.session = botocore.session.get_session(env_vars=TESTENVVARS)
 
-    def test_iam_role(self):
+    @mock.patch('botocore.credentials.retrieve_iam_role_credentials')
+    def test_iam_role(self, retriever):
+        retriever.return_value = metadata
         self.environ['BOTO_CONFIG'] = ''
-        credentials = self.session.get_credentials(metadata=metadata)
+        credentials = self.session.get_credentials()
         self.assertEqual(credentials.method, 'iam-role')
         self.assertEqual(credentials.access_key, 'foo')
         self.assertEqual(credentials.secret_key, 'bar')
 
-    def test_empty_boto_config_is_ignored(self):
+    @mock.patch('botocore.credentials.retrieve_iam_role_credentials')
+    def test_empty_boto_config_is_ignored(self, retriever):
+        retriever.return_value = metadata
         self.environ['BOTO_CONFIG'] = path('boto_config_empty')
-        credentials = self.session.get_credentials(metadata=metadata)
+        credentials = self.session.get_credentials()
         self.assertEqual(credentials.method, 'iam-role')
         self.assertEqual(credentials.access_key, 'foo')
         self.assertEqual(credentials.secret_key, 'bar')
@@ -163,6 +166,30 @@ class IamRoleTest(BaseEnvVar):
 
         credentials = self.session.get_credentials()
         self.assertEqual(credentials.method, 'iam-role')
+
+    @mock.patch('botocore.vendored.requests.get')
+    def test_timeout_argument_forwarded_to_requests(self, get):
+        self.environ['BOTO_CONFIG'] = ''
+        first = mock.Mock()
+        first.status_code = 200
+        first.content = 'foobar'.encode('utf-8')
+
+        second = mock.Mock()
+        second.status_code = 200
+        second.content = json.dumps(metadata['foobar']).encode('utf-8')
+        get.side_effect = [first, second]
+
+        credentials.retrieve_iam_role_credentials(timeout=10)
+        self.assertEqual(get.call_args[1]['timeout'], 10)
+
+    @mock.patch('botocore.vendored.requests.get')
+    def test_request_timeout_occurs(self, get):
+        self.environ['BOTO_CONFIG'] = ''
+        first = mock.Mock()
+        first.side_effect = ConnectionError
+
+        d = credentials.retrieve_iam_role_credentials(timeout=10)
+        self.assertEqual(d, {})
 
 
 if __name__ == "__main__":
