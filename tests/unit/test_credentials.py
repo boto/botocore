@@ -133,11 +133,11 @@ class IamRoleTest(BaseEnvVar):
     def setUp(self):
         super(IamRoleTest, self).setUp()
         self.session = botocore.session.get_session(env_vars=TESTENVVARS)
+        self.environ['BOTO_CONFIG'] = ''
 
     @mock.patch('botocore.credentials.retrieve_iam_role_credentials')
     def test_iam_role(self, retriever):
         retriever.return_value = metadata
-        self.environ['BOTO_CONFIG'] = ''
         credentials = self.session.get_credentials()
         self.assertEqual(credentials.method, 'iam-role')
         self.assertEqual(credentials.access_key, 'foo')
@@ -154,7 +154,6 @@ class IamRoleTest(BaseEnvVar):
 
     @mock.patch('botocore.vendored.requests.get')
     def test_get_credentials_with_metadata_mock(self, get):
-        self.environ['BOTO_CONFIG'] = ''
         first = mock.Mock()
         first.status_code = 200
         first.content = 'foobar'.encode('utf-8')
@@ -169,7 +168,6 @@ class IamRoleTest(BaseEnvVar):
 
     @mock.patch('botocore.vendored.requests.get')
     def test_timeout_argument_forwarded_to_requests(self, get):
-        self.environ['BOTO_CONFIG'] = ''
         first = mock.Mock()
         first.status_code = 200
         first.content = 'foobar'.encode('utf-8')
@@ -184,12 +182,32 @@ class IamRoleTest(BaseEnvVar):
 
     @mock.patch('botocore.vendored.requests.get')
     def test_request_timeout_occurs(self, get):
-        self.environ['BOTO_CONFIG'] = ''
         first = mock.Mock()
         first.side_effect = ConnectionError
 
         d = credentials.retrieve_iam_role_credentials(timeout=10)
         self.assertEqual(d, {})
+
+    @mock.patch('botocore.vendored.requests.get')
+    def test_retry_errors(self, get):
+        # First attempt we get a connection error.
+        first = mock.Mock()
+        first.side_effect = ConnectionError
+
+        # Next attempt we get a response with the foobar key.
+        second = mock.Mock()
+        second.status_code = 200
+        second.content = 'foobar'.encode('utf-8')
+
+        # Next attempt we get a response with the foobar creds.
+        third = mock.Mock()
+        third.status_code = 200
+        third.content = json.dumps(metadata['foobar']).encode('utf-8')
+        get.side_effect = [first, second, third]
+
+        retrieved = credentials.retrieve_iam_role_credentials(
+            num_retries=1)
+        self.assertEqual(retrieved['foobar']['AccessKeyId'], 'foo')
 
 
 if __name__ == "__main__":

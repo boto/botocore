@@ -36,6 +36,11 @@ METADATA_SECURITY_CREDENTIALS_URL = (
 )
 
 
+class _RetriesExceededError(Exception):
+    """Internal exception used when the number of retries are exceeded."""
+    pass
+
+
 class Credentials(object):
     """
     Holds the credentials needed to authenticate requests.  In addition
@@ -58,20 +63,23 @@ class Credentials(object):
 
 
 def retrieve_iam_role_credentials(url=METADATA_SECURITY_CREDENTIALS_URL,
-                                  timeout=None):
+                                  timeout=None, num_retries=0):
     if timeout is None:
         timeout = DEFAULT_METADATA_SERVICE_TIMEOUT
     d = {}
     try:
-        r = requests.get(url, timeout=timeout)
-        if r.status_code == 200 and r.content:
+        r = _get_request(url, timeout, num_retries)
+        if r.content:
             fields = r.content.decode('utf-8').split('\n')
             for field in fields:
                 if field.endswith('/'):
-                    d[field[0:-1]] = retrieve_iam_role_credentials(url + field)
+                    d[field[0:-1]] = retrieve_iam_role_credentials(
+                        url + field, timeout, num_retries)
                 else:
-                    val = requests.get(url + field,
-                                       timeout=timeout).content.decode('utf-8')
+                    val = _get_request(
+                        url + field,
+                        timeout=timeout,
+                        num_retries=num_retries).content.decode('utf-8')
                     if val[0] == '{':
                         val = json.loads(val)
                     d[field] = val
@@ -79,10 +87,24 @@ def retrieve_iam_role_credentials(url=METADATA_SECURITY_CREDENTIALS_URL,
             logger.debug("Metadata service returned non 200 status code "
                          "of %s for url: %s, content body: %s",
                          r.status_code, url, r.content)
-    except (requests.Timeout, requests.ConnectionError) as e:
-        logger.debug("Caught exception wil trying to retrieve credentials "
-                     "from metadata service: %s", e, exc_info=True)
+    except _RetriesExceededError:
+        logger.debug("Max number of retries exceeded (%s) when "
+                     "attempting to retrieve data from metadata service.",
+                     num_retries)
     return d
+
+
+def _get_request(url, timeout, num_retries):
+    for i in range(num_retries + 1):
+        try:
+            response = requests.get(url, timeout=timeout)
+        except (requests.Timeout, requests.ConnectionError) as e:
+            logger.debug("Caught exception wil trying to retrieve credentials "
+                        "from metadata service: %s", e, exc_info=True)
+        else:
+            if response.status_code == 200:
+                return response
+    raise _RetriesExceededError()
 
 
 def search_iam_role(**kwargs):
