@@ -30,6 +30,15 @@ from botocore.compat import json
 
 
 logger = logging.getLogger(__name__)
+DEFAULT_METADATA_SERVICE_TIMEOUT = 1
+METADATA_SECURITY_CREDENTIALS_URL = (
+    'http://169.254.169.254/latest/meta-data/iam/security-credentials/'
+)
+
+
+class _RetriesExceededError(Exception):
+    """Internal exception used when the number of retries are exceeded."""
+    pass
 
 
 class Credentials(object):
@@ -53,34 +62,54 @@ class Credentials(object):
         self.profiles = []
 
 
-def _search_md(url='http://169.254.169.254/latest/meta-data/iam/security-credentials/'):
+def retrieve_iam_role_credentials(url=METADATA_SECURITY_CREDENTIALS_URL,
+                                  timeout=None, num_retries=0):
+    if timeout is None:
+        timeout = DEFAULT_METADATA_SERVICE_TIMEOUT
     d = {}
     try:
-        r = requests.get(url, timeout=.1)
-        if r.status_code == 200 and r.content:
+        r = _get_request(url, timeout, num_retries)
+        if r.content:
             fields = r.content.decode('utf-8').split('\n')
             for field in fields:
                 if field.endswith('/'):
-                    d[field[0:-1]] = _search_md(url + field)
+                    d[field[0:-1]] = retrieve_iam_role_credentials(
+                        url + field, timeout, num_retries)
                 else:
-                    val = requests.get(url + field).content.decode('utf-8')
+                    val = _get_request(
+                        url + field,
+                        timeout=timeout,
+                        num_retries=num_retries).content.decode('utf-8')
                     if val[0] == '{':
                         val = json.loads(val)
-                    else:
-                        p = val.find('\n')
-                        if p > 0:
-                            val = r.content.decode('utf-8').split('\n')
                     d[field] = val
-    except (requests.Timeout, requests.ConnectionError):
-        pass
+        else:
+            logger.debug("Metadata service returned non 200 status code "
+                         "of %s for url: %s, content body: %s",
+                         r.status_code, url, r.content)
+    except _RetriesExceededError:
+        logger.debug("Max number of retries exceeded (%s) when "
+                     "attempting to retrieve data from metadata service.",
+                     num_retries)
     return d
+
+
+def _get_request(url, timeout, num_retries):
+    for i in range(num_retries + 1):
+        try:
+            response = requests.get(url, timeout=timeout)
+        except (requests.Timeout, requests.ConnectionError) as e:
+            logger.debug("Caught exception wil trying to retrieve credentials "
+                        "from metadata service: %s", e, exc_info=True)
+        else:
+            if response.status_code == 200:
+                return response
+    raise _RetriesExceededError()
 
 
 def search_iam_role(**kwargs):
     credentials = None
-    metadata = kwargs.get('metadata', None)
-    if metadata is None:
-        metadata = _search_md()
+    metadata = retrieve_iam_role_credentials()
     if metadata:
         for role_name in metadata:
             credentials = Credentials(metadata[role_name]['AccessKeyId'],
@@ -183,11 +212,10 @@ _credential_methods = (('env', search_environment),
                        ('iam-role', search_iam_role))
 
 
-def get_credentials(session, metadata=None):
+def get_credentials(session):
     credentials = None
     for cred_method, cred_fn in _credential_methods:
-        credentials = cred_fn(session=session,
-                              metadata=metadata)
+        credentials = cred_fn(session=session)
         if credentials:
             break
     return credentials
