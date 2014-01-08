@@ -3748,37 +3748,6 @@
                         "type": "string",
                         "documentation": "\n        <p>\n        The user-supplied instance identifier.\n        If this parameter is specified, information from only the\n        specific DB instance is returned.\n        This parameter isn't case sensitive.\n        </p>\n        <p>Constraints:</p>\n        <ul>\n            <li>Must contain from 1 to 63 alphanumeric characters or hyphens</li>\n            <li>First character must be a letter</li>\n            <li>Cannot end with a hyphen or contain two consecutive hyphens</li>\n        </ul>\n        \n        \n    "
                     },
-                    "Filters": {
-                        "shape_name": "FilterList",
-                        "type": "list",
-                        "members": {
-                            "shape_name": "Filter",
-                            "type": "structure",
-                            "members": {
-                                "FilterName": {
-                                    "shape_name": "String",
-                                    "type": "string",
-                                    "documentation": "\n        <p>This parameter is not currently supported.</p>   \n    ",
-                                    "required": true
-                                },
-                                "FilterValue": {
-                                    "shape_name": "FilterValueList",
-                                    "type": "list",
-                                    "members": {
-                                        "shape_name": "String",
-                                        "type": "string",
-                                        "documentation": null,
-                                        "xmlname": "Value"
-                                    },
-                                    "documentation": "\n        <p>This parameter is not currently supported.</p>   \n    ",
-                                    "required": true
-                                }
-                            },
-                            "documentation": "\n        \n    ",
-                            "xmlname": "Filter"
-                        },
-                        "documentation": "\n        <p>This parameter is not currently supported.</p>\n    "
-                    },
                     "MaxRecords": {
                         "shape_name": "IntegerOptional",
                         "type": "integer",
@@ -4320,37 +4289,6 @@
                         "type": "string",
                         "documentation": "\n        <p>\n        The name of a specific DB parameter group to return details for.\n        </p>\n        <p>Constraints:</p>\n        <ul>\n            <li>Must be 1 to 255 alphanumeric characters</li>\n            <li>First character must be a letter</li>\n            <li>Cannot end with a hyphen or contain two consecutive hyphens</li>\n        </ul>\n    "
                     },
-                    "Filters": {
-                        "shape_name": "FilterList",
-                        "type": "list",
-                        "members": {
-                            "shape_name": "Filter",
-                            "type": "structure",
-                            "members": {
-                                "FilterName": {
-                                    "shape_name": "String",
-                                    "type": "string",
-                                    "documentation": "\n        <p>This parameter is not currently supported.</p>   \n    ",
-                                    "required": true
-                                },
-                                "FilterValue": {
-                                    "shape_name": "FilterValueList",
-                                    "type": "list",
-                                    "members": {
-                                        "shape_name": "String",
-                                        "type": "string",
-                                        "documentation": null,
-                                        "xmlname": "Value"
-                                    },
-                                    "documentation": "\n        <p>This parameter is not currently supported.</p>   \n    ",
-                                    "required": true
-                                }
-                            },
-                            "documentation": "\n        \n    ",
-                            "xmlname": "Filter"
-                        },
-                        "documentation": "\n       <p>This parameter is not currently supported.</p> \n    "
-                    },
                     "MaxRecords": {
                         "shape_name": "IntegerOptional",
                         "type": "integer",
@@ -4559,37 +4497,6 @@
                         "type": "string",
                         "documentation": "\n        <p>\n        The name of the DB security group to return details for.\n        </p>\n    "
                     },
-                    "Filters": {
-                        "shape_name": "FilterList",
-                        "type": "list",
-                        "members": {
-                            "shape_name": "Filter",
-                            "type": "structure",
-                            "members": {
-                                "FilterName": {
-                                    "shape_name": "String",
-                                    "type": "string",
-                                    "documentation": "\n        <p>This parameter is not currently supported.</p>   \n    ",
-                                    "required": true
-                                },
-                                "FilterValue": {
-                                    "shape_name": "FilterValueList",
-                                    "type": "list",
-                                    "members": {
-                                        "shape_name": "String",
-                                        "type": "string",
-                                        "documentation": null,
-                                        "xmlname": "Value"
-                                    },
-                                    "documentation": "\n        <p>This parameter is not currently supported.</p>   \n    ",
-                                    "required": true
-                                }
-                            },
-                            "documentation": "\n        \n    ",
-                            "xmlname": "Filter"
-                        },
-                        "documentation": "\n        <p>This parameter is not currently supported.</p>    \n    "
-                    },
                     "MaxRecords": {
                         "shape_name": "IntegerOptional",
                         "type": "integer",
@@ -4742,37 +4649,6 @@
                         "shape_name": "String",
                         "type": "string",
                         "documentation": "\n        <p>\n        The type of snapshots that will be returned. Values can be \"automated\" or \"manual.\"\n        If not specified, the returned results will include all snapshots types.\n        </p>\n    "
-                    },
-                    "Filters": {
-                        "shape_name": "FilterList",
-                        "type": "list",
-                        "members": {
-                            "shape_name": "Filter",
-                            "type": "structure",
-                            "members": {
-                                "FilterName": {
-                                    "shape_name": "String",
-                                    "type": "string",
-                                    "documentation": "\n        <p>This parameter is not currently supported.</p>   \n    ",
-                                    "required": true
-                                },
-                                "FilterValue": {
-                                    "shape_name": "FilterValueList",
-                                    "type": "list",
-                                    "members": {
-                                        "shape_name": "String",
-                                        "type": "string",
-                                        "documentation": null,
-                                        "xmlname": "Value"
-                                    },
-                                    "documentation": "\n        <p>This parameter is not currently supported.</p>   \n    ",
-                                    "required": true
-                                }
-                            },
-                            "documentation": "\n        \n    ",
-                            "xmlname": "Filter"
-                        },
-                        "documentation": "\n        <p>This parameter is not currently supported.</p>    \n    "
                     },
                     "MaxRecords": {
                         "shape_name": "IntegerOptional",
@@ -4930,37 +4806,6 @@
                         "shape_name": "String",
                         "type": "string",
                         "documentation": "\n        <p>\n        The name of the DB subnet group to return details for.\n        </p>\n    "
-                    },
-                    "Filters": {
-                        "shape_name": "FilterList",
-                        "type": "list",
-                        "members": {
-                            "shape_name": "Filter",
-                            "type": "structure",
-                            "members": {
-                                "FilterName": {
-                                    "shape_name": "String",
-                                    "type": "string",
-                                    "documentation": "\n        <p>This parameter is not currently supported.</p>   \n    ",
-                                    "required": true
-                                },
-                                "FilterValue": {
-                                    "shape_name": "FilterValueList",
-                                    "type": "list",
-                                    "members": {
-                                        "shape_name": "String",
-                                        "type": "string",
-                                        "documentation": null,
-                                        "xmlname": "Value"
-                                    },
-                                    "documentation": "\n        <p>This parameter is not currently supported.</p>   \n    ",
-                                    "required": true
-                                }
-                            },
-                            "documentation": "\n        \n    ",
-                            "xmlname": "Filter"
-                        },
-                        "documentation": "\n        <p>This parameter is not currently supported.</p>   \n    "
                     },
                     "MaxRecords": {
                         "shape_name": "IntegerOptional",
@@ -5269,37 +5114,6 @@
                         "shape_name": "String",
                         "type": "string",
                         "documentation": "\n        <p>The name of the RDS event notification subscription you want to describe.</p>\n    "
-                    },
-                    "Filters": {
-                        "shape_name": "FilterList",
-                        "type": "list",
-                        "members": {
-                            "shape_name": "Filter",
-                            "type": "structure",
-                            "members": {
-                                "FilterName": {
-                                    "shape_name": "String",
-                                    "type": "string",
-                                    "documentation": "\n        <p>This parameter is not currently supported.</p>   \n    ",
-                                    "required": true
-                                },
-                                "FilterValue": {
-                                    "shape_name": "FilterValueList",
-                                    "type": "list",
-                                    "members": {
-                                        "shape_name": "String",
-                                        "type": "string",
-                                        "documentation": null,
-                                        "xmlname": "Value"
-                                    },
-                                    "documentation": "\n        <p>This parameter is not currently supported.</p>   \n    ",
-                                    "required": true
-                                }
-                            },
-                            "documentation": "\n        \n    ",
-                            "xmlname": "Filter"
-                        },
-                        "documentation": "\n        <p>This parameter is not currently supported.</p>    \n    "
                     },
                     "MaxRecords": {
                         "shape_name": "IntegerOptional",
@@ -5722,37 +5536,6 @@
                         "type": "string",
                         "documentation": "\n        <p>\n            The name of the option group to describe.  Cannot be supplied together with EngineName or MajorEngineVersion.\n        </p>\n    "
                     },
-                    "Filters": {
-                        "shape_name": "FilterList",
-                        "type": "list",
-                        "members": {
-                            "shape_name": "Filter",
-                            "type": "structure",
-                            "members": {
-                                "FilterName": {
-                                    "shape_name": "String",
-                                    "type": "string",
-                                    "documentation": "\n        <p>This parameter is not currently supported.</p>   \n    ",
-                                    "required": true
-                                },
-                                "FilterValue": {
-                                    "shape_name": "FilterValueList",
-                                    "type": "list",
-                                    "members": {
-                                        "shape_name": "String",
-                                        "type": "string",
-                                        "documentation": null,
-                                        "xmlname": "Value"
-                                    },
-                                    "documentation": "\n        <p>This parameter is not currently supported.</p>   \n    ",
-                                    "required": true
-                                }
-                            },
-                            "documentation": "\n        \n    ",
-                            "xmlname": "Filter"
-                        },
-                        "documentation": "\n        <p>This parameter is not currently supported.</p>   \n    "
-                    },
                     "Marker": {
                         "shape_name": "String",
                         "type": "string",
@@ -6171,37 +5954,6 @@
                         "shape_name": "BooleanOptional",
                         "type": "boolean",
                         "documentation": "\n    <p>\n    The Multi-AZ filter value. Specify this parameter to show only\n    those reservations matching the specified Multi-AZ parameter.\n    </p>\n   "
-                    },
-                    "Filters": {
-                        "shape_name": "FilterList",
-                        "type": "list",
-                        "members": {
-                            "shape_name": "Filter",
-                            "type": "structure",
-                            "members": {
-                                "FilterName": {
-                                    "shape_name": "String",
-                                    "type": "string",
-                                    "documentation": "\n        <p>This parameter is not currently supported.</p>   \n    ",
-                                    "required": true
-                                },
-                                "FilterValue": {
-                                    "shape_name": "FilterValueList",
-                                    "type": "list",
-                                    "members": {
-                                        "shape_name": "String",
-                                        "type": "string",
-                                        "documentation": null,
-                                        "xmlname": "Value"
-                                    },
-                                    "documentation": "\n        <p>This parameter is not currently supported.</p>   \n    ",
-                                    "required": true
-                                }
-                            },
-                            "documentation": "\n        \n    ",
-                            "xmlname": "Filter"
-                        },
-                        "documentation": "\n        <p>This parameter is not currently supported.</p>   \n    "
                     },
                     "MaxRecords": {
                         "shape_name": "IntegerOptional",
