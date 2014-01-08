@@ -310,7 +310,7 @@ class Session(object):
                                                              token)
         self._credentials.method = 'explicit'
 
-    def get_credentials(self, metadata=None):
+    def get_credentials(self):
         """
         Return the :class:`botocore.credential.Credential` object
         associated with this session.  If the credentials have not
@@ -318,16 +318,9 @@ class Session(object):
         have already been loaded, this will return the cached
         credentials.
 
-        :type metadata: dict
-        :param metadata: This parameter allows you to pass in
-            EC2 instance metadata containing IAM Role credentials.
-            This metadata will be used rather than retrieving the
-            metadata from the metadata service.  This is mainly used
-            for unit testing.
         """
         if self._credentials is None:
-            self._credentials = botocore.credentials.get_credentials(self,
-                                                                     metadata)
+            self._credentials = botocore.credentials.get_credentials(self)
         return self._credentials
 
     def user_agent(self):
