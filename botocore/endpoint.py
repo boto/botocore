@@ -21,6 +21,7 @@
 # IN THE SOFTWARE.
 #
 
+import os
 import logging
 import time
 import threading
@@ -51,12 +52,13 @@ class Endpoint(object):
     :ivar session: The session object.
     """
 
-    def __init__(self, service, region_name, host, auth, proxies=None):
+    def __init__(self, service, region_name, host, auth, proxies=None,
+                 verify=True):
         self.service = service
         self.session = self.service.session
         self.region_name = region_name
         self.host = host
-        self.verify = True
+        self.verify = verify
         self.auth = auth
         if proxies is None:
             proxies = {}
@@ -242,7 +244,7 @@ def _get_proxies(url):
     return get_environ_proxies(url)
 
 
-def get_endpoint(service, region_name, endpoint_url):
+def get_endpoint(service, region_name, endpoint_url, verify=None):
     cls = SERVICE_TO_ENDPOINT.get(service.type)
     if cls is None:
         raise botocore.exceptions.UnknownServiceStyle(
@@ -256,7 +258,23 @@ def get_endpoint(service, region_name, endpoint_url):
                          region_name=region_name,
                          service_object=service)
     proxies = _get_proxies(endpoint_url)
-    return cls(service, region_name, endpoint_url, auth=auth, proxies=proxies)
+    verify = _get_verify_value(verify)
+    return cls(service, region_name, endpoint_url, auth=auth, proxies=proxies,
+               verify=verify)
+
+
+def _get_verify_value(verify):
+    # This is to account for:
+    # https://github.com/kennethreitz/requests/issues/1436
+    # where we need to honor REQUESTS_CA_BUNDLE because we're creating our
+    # own request objects.
+    # First, if verify is not None, then the user explicitly specified
+    # a value so this automatically wins.
+    if verify is not None:
+        return verify
+    # Otherwise use the value from REQUESTS_CA_BUNDLE, or default to
+    # True if the env var does not exist.
+    return os.environ.get('REQUESTS_CA_BUNDLE', True)
 
 
 def _get_auth(signature_version, credentials, service_name, region_name,

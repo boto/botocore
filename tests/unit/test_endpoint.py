@@ -46,6 +46,14 @@ class RecordStreamResets(six.StringIO):
 
 
 class TestGetEndpoint(unittest.TestCase):
+    def setUp(self):
+        self.environ = {}
+        self.environ_patch = patch('os.environ', self.environ)
+        self.environ_patch.start()
+
+    def tearDown(self):
+        self.environ_patch.stop()
+
     def create_mock_service(self, service_type, signature_version='v2'):
         service = Mock()
         service.type = service_type
@@ -100,6 +108,42 @@ class TestGetEndpoint(unittest.TestCase):
         endpoint = get_endpoint(service, 'us-west-2',
                                 'https://service.region.amazonaws.com')
         self.assertIsNone(endpoint.auth)
+
+    def test_get_endpoint_default_verify_ssl(self):
+        service = self.create_mock_service('query')
+        endpoint = get_endpoint(service, 'us-west-2',
+                                'https://service.region.amazonaws.com')
+        self.assertTrue(endpoint.verify)
+
+    def test_verify_ssl_can_be_disabled(self):
+        service = self.create_mock_service('query')
+        endpoint = get_endpoint(service, 'us-west-2',
+                                'https://service.region.amazonaws.com',
+                                verify=False)
+        self.assertFalse(endpoint.verify)
+
+    def test_verify_ssl_can_specify_cert_bundle(self):
+        service = self.create_mock_service('query')
+        endpoint = get_endpoint(service, 'us-west-2',
+                                'https://service.region.amazonaws.com',
+                                verify='/path/cacerts.pem')
+        self.assertEqual(endpoint.verify, '/path/cacerts.pem')
+
+    def test_honor_cert_bundle_env_var(self):
+        self.environ['REQUESTS_CA_BUNDLE'] = '/env/cacerts.pem'
+        service = self.create_mock_service('query')
+        endpoint = get_endpoint(service, 'us-west-2',
+                                'https://service.region.amazonaws.com')
+        self.assertEqual(endpoint.verify, '/env/cacerts.pem')
+
+    def test_env_ignored_if_explicitly_passed(self):
+        self.environ['REQUESTS_CA_BUNDLE'] = '/env/cacerts.pem'
+        service = self.create_mock_service('query')
+        endpoint = get_endpoint(service, 'us-west-2',
+                                'https://service.region.amazonaws.com',
+                                verify='/path/cacerts.pem')
+        # /path/cacerts.pem wins over the value from the env var.
+        self.assertEqual(endpoint.verify, '/path/cacerts.pem')
 
 
 class TestEndpointBase(unittest.TestCase):

@@ -36,6 +36,11 @@ class TestService(BaseSessionTest):
         endpoint = service.get_endpoint()
         self.assertEqual(endpoint.host, 'https://iam.amazonaws.com/')
 
+    def test_get_endpoint_forwards_verify_args(self):
+        service = self.session.get_service('iam')
+        endpoint = service.get_endpoint(verify='/path/cacerts.pem')
+        self.assertEqual(endpoint.verify, '/path/cacerts.pem')
+
     def test_endpoint_arg_overrides_everything(self):
         service = self.session.get_service('iam')
         endpoint = service.get_endpoint(
