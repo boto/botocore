@@ -401,6 +401,9 @@ def get_response(session, operation, http_response):
         streaming_response.parse(http_response.headers, http_response.raw)
         return (http_response, streaming_response.get_value())
     body = http_response.content
+    logger.debug(
+        "Response Headers:\n%s",
+        '\n'.join("%s: %s" % (k, v) for k, v in http_response.headers.items()))
     logger.debug("Response Body:\n%s", body)
     if operation.service.type == 'json':
         json_response = JSONResponse(session, operation)
