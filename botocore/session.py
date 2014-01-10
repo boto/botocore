@@ -152,6 +152,9 @@ class Session(object):
         self._credentials = None
         self._profile_map = None
         self._provider = None
+        # This is a dict that stores per session specific config variable
+        # overrides via set_config_variable().
+        self._session_instance_vars = {}
 
     def _register_builtin_handlers(self, events):
         for event_name, handler in handlers.BUILTIN_HANDLERS:
@@ -201,7 +204,7 @@ class Session(object):
         self._provider = None
         self._profile = profile
 
-    def get_config_variable(self, logical_name, methods=('env', 'config')):
+    def get_config_variable(self, logical_name, methods=('instance', 'env', 'config')):
         """
         Retrieve the value associated with the specified logical_name
         from the environment or the config file.  Values found in the
@@ -219,7 +222,7 @@ class Session(object):
             the variable value.  By default, all available methods
             are tried but you can limit which methods are used
             by supplying a different value to this parameter.
-            Valid choices are: both|env|config
+            Valid choices are: instance|env|config
 
         :returns: str value of variable of None if not defined.
 
@@ -227,6 +230,11 @@ class Session(object):
         value = None
         default = None
         if logical_name in self.session_var_map:
+            # Short circuit case, check if the var has been explicitly
+            # overriden via set_config_variable.
+            if 'instance' in methods and \
+                    logical_name in self._session_instance_vars:
+                return self._session_instance_vars[logical_name]
             config_name, envvar_name, default = self.session_var_map[
                 logical_name]
             if logical_name in ('config_file', 'profile'):
@@ -245,6 +253,32 @@ class Session(object):
 
     # Alias to get_variable for backwards compatability.
     get_variable = get_config_variable
+
+    def set_config_variable(self, logical_name, value):
+        """Set a configuration variable to a specific value.
+
+        By using this method, you can override the normal lookup
+        process used in ``get_config_variable`` by explicitly setting
+        a value.  Subsequent calls to ``get_config_variable`` will
+        use the ``value``.  This gives you per-session specific
+        configuration values.
+
+        ::
+            >>> # Assume logical name 'foo' maps to env var 'FOO'
+            >>> os.environ['FOO'] = 'myvalue'
+            >>> s.get_config_variable('foo')
+            'myvalue'
+            >>> s.set_config_variable('foo', 'othervalue')
+            >>> s.get_config_variable('foo')
+            'othervalue'
+
+        :type logical_name: str
+        :param logical_name: The logical name of the session variable
+            you want to set.  These are the keys in ``SessionVariables``.
+        :param value: The value to associate with the config variable.
+
+        """
+        self._session_instance_vars[logical_name] = value
 
     def get_config(self):
         """

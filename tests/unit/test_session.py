@@ -252,5 +252,25 @@ class TestBuiltinEventHandlers(BaseSessionTest):
         self.assertTrue(self.foo_called)
 
 
+class TestSessionConfigurationVars(BaseSessionTest):
+    def test_per_session_config_vars(self):
+        self.session.session_var_map['foobar'] = (None, 'FOOBAR', 'default')
+        # Default value.
+        self.assertEqual(self.session.get_config_variable('foobar'), 'default')
+        # Retrieve from os environment variable.
+        environ = {'FOOBAR': 'fromenv'}
+        with mock.patch('os.environ', environ):
+            self.assertEqual(self.session.get_config_variable('foobar'), 'fromenv')
+
+        # Explicit override.
+        self.session.set_config_variable('foobar', 'session-instance')
+        self.assertEqual(self.session.get_config_variable('foobar'),
+                         'session-instance')
+
+        # Can disable this check via the ``methods`` arg.
+        self.assertEqual(self.session.get_config_variable(
+            'foobar', methods=('env', 'config')), 'default')
+
+
 if __name__ == "__main__":
     unittest.main()
