@@ -286,7 +286,7 @@ def _get_auth(signature_version, credentials, service_name, region_name,
         kwargs = {'credentials': credentials}
         if cls.REQUIRES_REGION:
             if region_name is None:
-                envvar_name = service_object.session.env_vars['region'][1]
+                envvar_name = service_object.session.session_var_map['region'][1]
                 raise botocore.exceptions.NoRegionError(env_var=envvar_name)
             kwargs['region_name'] = region_name
             kwargs['service_name'] = service_name

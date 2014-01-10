@@ -71,7 +71,7 @@ class Session(object):
     is the formatting string used to construct a new event.
     """
 
-    EnvironmentVariables = {
+    SessionVariables = {
         'profile': (None, 'BOTO_DEFAULT_PROFILE', None),
         'region': ('region', 'BOTO_DEFAULT_REGION', None),
         'data_path': ('data_path', 'BOTO_DATA_PATH', None),
@@ -116,16 +116,16 @@ class Session(object):
 
     FmtString = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
-    def __init__(self, env_vars=None, event_hooks=None,
+    def __init__(self, session_vars=None, event_hooks=None,
                  include_builtin_handlers=True):
         """
         Create a new Session object.
 
-        :type env_vars: dict
-        :param env_vars: A dictionary that is used to override some or all
+        :type session_vars: dict
+        :param session_vars: A dictionary that is used to override some or all
             of the environment variables associated with this session.  The
             key/value pairs defined in this dictionary will override the
-            corresponding variables defined in ``EnvironmentVariables``.
+            corresponding variables defined in ``SessionVariables``.
 
         :type event_hooks: BaseEventHooks
         :param event_hooks: The event hooks object to use. If one is not
@@ -136,9 +136,9 @@ class Session(object):
         :param include_builtin_handlers: Indicates whether or not to
             automatically register builtin handlers.
         """
-        self.env_vars = copy.copy(self.EnvironmentVariables)
-        if env_vars:
-            self.env_vars.update(env_vars)
+        self.session_var_map = copy.copy(self.SessionVariables)
+        if session_vars:
+            self.session_var_map.update(session_vars)
         if event_hooks is None:
             self._events = HierarchicalEmitter()
         else:
@@ -224,8 +224,9 @@ class Session(object):
         """
         value = None
         default = None
-        if logical_name in self.env_vars:
-            config_name, envvar_name, default = self.env_vars[logical_name]
+        if logical_name in self.session_var_map:
+            config_name, envvar_name, default = self.session_var_map[
+                logical_name]
             if logical_name in ('config_file', 'profile'):
                 config_name = None
             if logical_name == 'profile' and self._profile:
