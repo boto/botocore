@@ -63,23 +63,23 @@ class Credentials(object):
 
 
 def retrieve_iam_role_credentials(url=METADATA_SECURITY_CREDENTIALS_URL,
-                                  timeout=None, num_retries=0):
+                                  timeout=None, num_attempts=1):
     if timeout is None:
         timeout = DEFAULT_METADATA_SERVICE_TIMEOUT
     d = {}
     try:
-        r = _get_request(url, timeout, num_retries)
+        r = _get_request(url, timeout, num_attempts)
         if r.content:
             fields = r.content.decode('utf-8').split('\n')
             for field in fields:
                 if field.endswith('/'):
                     d[field[0:-1]] = retrieve_iam_role_credentials(
-                        url + field, timeout, num_retries)
+                        url + field, timeout, num_attempts)
                 else:
                     val = _get_request(
                         url + field,
                         timeout=timeout,
-                        num_retries=num_retries).content.decode('utf-8')
+                        num_attempts=num_attempts).content.decode('utf-8')
                     if val[0] == '{':
                         val = json.loads(val)
                     d[field] = val
@@ -88,14 +88,14 @@ def retrieve_iam_role_credentials(url=METADATA_SECURITY_CREDENTIALS_URL,
                          "of %s for url: %s, content body: %s",
                          r.status_code, url, r.content)
     except _RetriesExceededError:
-        logger.debug("Max number of retries exceeded (%s) when "
+        logger.debug("Max number of attempts exceeded (%s) when "
                      "attempting to retrieve data from metadata service.",
-                     num_retries)
+                     num_attempts)
     return d
 
 
-def _get_request(url, timeout, num_retries):
-    for i in range(num_retries + 1):
+def _get_request(url, timeout, num_attempts):
+    for i in range(num_attempts):
         try:
             response = requests.get(url, timeout=timeout)
         except (requests.Timeout, requests.ConnectionError) as e:
@@ -107,9 +107,16 @@ def _get_request(url, timeout, num_retries):
     raise _RetriesExceededError()
 
 
-def search_iam_role(**kwargs):
+def search_iam_role(session, **kwargs):
     credentials = None
-    metadata = retrieve_iam_role_credentials()
+    timeout = session.get_config_variable('metadata_service_timeout')
+    num_attempts = session.get_config_variable('metadata_service_num_attempts')
+    retrieve_kwargs = {}
+    if timeout is not None:
+        retrieve_kwargs['timeout'] = float(timeout)
+    if num_attempts is not None:
+        retrieve_kwargs['num_attempts'] = int(num_attempts)
+    metadata = retrieve_iam_role_credentials(**retrieve_kwargs)
     if metadata:
         for role_name in metadata:
             credentials = Credentials(metadata[role_name]['AccessKeyId'],

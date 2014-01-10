@@ -72,6 +72,7 @@ class Session(object):
     """
 
     SessionVariables = {
+        # logical:  config_file, env_var,        default_value
         'profile': (None, 'BOTO_DEFAULT_PROFILE', None),
         'region': ('region', 'BOTO_DEFAULT_REGION', None),
         'data_path': ('data_path', 'BOTO_DATA_PATH', None),
@@ -79,7 +80,17 @@ class Session(object):
         'access_key': ('aws_access_key_id', 'AWS_ACCESS_KEY_ID', None),
         'secret_key': ('aws_secret_access_key', 'AWS_SECRET_ACCESS_KEY', None),
         'token': ('aws_security_token', 'AWS_SECURITY_TOKEN', None),
-        'provider': ('provider', 'BOTO_PROVIDER_NAME', 'aws')
+        'provider': ('provider', 'BOTO_PROVIDER_NAME', 'aws'),
+
+        # These variables only exist in the config file.
+
+        # This is the number of seconds until we time out a request to
+        # the instance metadata service.
+        'metadata_service_timeout': ('metadata_service_timeout', None, None),
+        # This is the number of request attempts we make until we give
+        # up trying to retrieve data from the instance metadata service.
+        'metadata_service_num_attempts': ('metadata_service_num_attempts',
+                                          None, None),
         }
     """
     A default dictionary that maps the logical names for session variables

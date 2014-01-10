@@ -144,6 +144,22 @@ class IamRoleTest(BaseEnvVar):
         self.assertEqual(credentials.secret_key, 'bar')
 
     @mock.patch('botocore.credentials.retrieve_iam_role_credentials')
+    def test_session_config_timeout_var(self, retriever):
+        retriever.return_value = metadata
+        self.session.set_config_variable('metadata_service_timeout', '20.0')
+        credentials = self.session.get_credentials()
+        self.assertEqual(credentials.method, 'iam-role')
+        self.assertEqual(retriever.call_args[1]['timeout'], 20.0)
+
+    @mock.patch('botocore.credentials.retrieve_iam_role_credentials')
+    def test_session_config_num_attempts_var(self, retriever):
+        retriever.return_value = metadata
+        self.session.set_config_variable('metadata_service_num_attempts', '5')
+        credentials = self.session.get_credentials()
+        self.assertEqual(credentials.method, 'iam-role')
+        self.assertEqual(retriever.call_args[1]['num_attempts'], 5)
+
+    @mock.patch('botocore.credentials.retrieve_iam_role_credentials')
     def test_empty_boto_config_is_ignored(self, retriever):
         retriever.return_value = metadata
         self.environ['BOTO_CONFIG'] = path('boto_config_empty')
@@ -206,7 +222,7 @@ class IamRoleTest(BaseEnvVar):
         get.side_effect = [first, second, third]
 
         retrieved = credentials.retrieve_iam_role_credentials(
-            num_retries=1)
+            num_attempts=2)
         self.assertEqual(retrieved['foobar']['AccessKeyId'], 'foo')
 
 
