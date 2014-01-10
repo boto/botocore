@@ -42,64 +42,7 @@ from botocore import __version__
 from botocore import handlers
 
 
-AllEvents = {
-    'after-call': '.%s.%s',
-    'after-parsed': '.%s.%s.%s.%s',
-    'before-parameter-build': '.%s.%s',
-    'before-call': '.%s.%s',
-    'service-created': '',
-    'creating-endpoint': '.%s',
-    'before-auth': '.%s',
-    'needs-retry': '.%s.%s',
-}
-"""
-A dictionary where each key is an event name and the value
-is the formatting string used to construct a new event.
-"""
 
-
-EnvironmentVariables = {
-    'profile': (None, 'BOTO_DEFAULT_PROFILE', None),
-    'region': ('region', 'BOTO_DEFAULT_REGION', None),
-    'data_path': ('data_path', 'BOTO_DATA_PATH', None),
-    'config_file': (None, 'AWS_CONFIG_FILE', '~/.aws/config'),
-    'access_key': ('aws_access_key_id', 'AWS_ACCESS_KEY_ID', None),
-    'secret_key': ('aws_secret_access_key', 'AWS_SECRET_ACCESS_KEY', None),
-    'token': ('aws_security_token', 'AWS_SECURITY_TOKEN', None),
-    'provider': ('provider', 'BOTO_PROVIDER_NAME', 'aws')
-    }
-"""
-A default dictionary that maps the logical names for session variables
-to the specific environment variables and configuration file names
-that contain the values for these variables.
-
-When creating a new Session object, you can pass in your own
-dictionary to remap the logical names or to add new logical names.
-You can then get the current value for these variables by using the
-``get_variable`` method of the :class:`botocore.session.Session` class.
-The default set of logical variable names are:
-
-* profile - Default profile name you want to use.
-* region - Default region name to use, if not otherwise specified.
-* data_path - Additional directories to search for data files.
-* config_file - Location of a Boto config file.
-* access_key - The AWS access key part of your credentials.
-* secret_key - The AWS secret key part of your credentials.
-* token - The security token part of your credentials (session tokens only)
-* provider - The name of the service provider (e.g. aws)
-
-These form the keys of the dictionary.  The values in the dictionary
-are tuples of (<config_name>, <environment variable>, <default value).
-The ``profile`` and ``config_file`` variables should always have a
-None value for the first entry in the tuple because it doesn't make
-sense to look inside the config file for the location of the config
-file or for the default profile to use.
-
-The ``config_name`` is the name to look for in the configuration file,
-the ``env var`` is the OS environment variable (``os.environ``) to
-use, and ``default_value`` is the value to use if no value is otherwise
-found.
-"""
 
 
 class Session(object):
@@ -111,6 +54,64 @@ class Session(object):
     :ivar available_profiles: A list of profiles defined in the config
         file associated with this session.
     :ivar profile: The current profile.
+    """
+
+    AllEvents = {
+        'after-call': '.%s.%s',
+        'after-parsed': '.%s.%s.%s.%s',
+        'before-parameter-build': '.%s.%s',
+        'before-call': '.%s.%s',
+        'service-created': '',
+        'creating-endpoint': '.%s',
+        'before-auth': '.%s',
+        'needs-retry': '.%s.%s',
+    }
+    """
+    A dictionary where each key is an event name and the value
+    is the formatting string used to construct a new event.
+    """
+
+    EnvironmentVariables = {
+        'profile': (None, 'BOTO_DEFAULT_PROFILE', None),
+        'region': ('region', 'BOTO_DEFAULT_REGION', None),
+        'data_path': ('data_path', 'BOTO_DATA_PATH', None),
+        'config_file': (None, 'AWS_CONFIG_FILE', '~/.aws/config'),
+        'access_key': ('aws_access_key_id', 'AWS_ACCESS_KEY_ID', None),
+        'secret_key': ('aws_secret_access_key', 'AWS_SECRET_ACCESS_KEY', None),
+        'token': ('aws_security_token', 'AWS_SECURITY_TOKEN', None),
+        'provider': ('provider', 'BOTO_PROVIDER_NAME', 'aws')
+        }
+    """
+    A default dictionary that maps the logical names for session variables
+    to the specific environment variables and configuration file names
+    that contain the values for these variables.
+
+    When creating a new Session object, you can pass in your own
+    dictionary to remap the logical names or to add new logical names.
+    You can then get the current value for these variables by using the
+    ``get_variable`` method of the :class:`botocore.session.Session` class.
+    The default set of logical variable names are:
+
+    * profile - Default profile name you want to use.
+    * region - Default region name to use, if not otherwise specified.
+    * data_path - Additional directories to search for data files.
+    * config_file - Location of a Boto config file.
+    * access_key - The AWS access key part of your credentials.
+    * secret_key - The AWS secret key part of your credentials.
+    * token - The security token part of your credentials (session tokens only)
+    * provider - The name of the service provider (e.g. aws)
+
+    These form the keys of the dictionary.  The values in the dictionary
+    are tuples of (<config_name>, <environment variable>, <default value).
+    The ``profile`` and ``config_file`` variables should always have a
+    None value for the first entry in the tuple because it doesn't make
+    sense to look inside the config file for the location of the config
+    file or for the default profile to use.
+
+    The ``config_name`` is the name to look for in the configuration file,
+    the ``env var`` is the OS environment variable (``os.environ``) to
+    use, and ``default_value`` is the value to use if no value is otherwise
+    found.
     """
 
     FmtString = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -135,7 +136,7 @@ class Session(object):
         :param include_builtin_handlers: Indicates whether or not to
             automatically register builtin handlers.
         """
-        self.env_vars = copy.copy(EnvironmentVariables)
+        self.env_vars = copy.copy(self.EnvironmentVariables)
         if env_vars:
             self.env_vars.update(env_vars)
         if event_hooks is None:
@@ -513,8 +514,8 @@ class Session(object):
         :type fmtstr: str
         :param fmtstr: The formatting string for the event.
         """
-        if event_name not in AllEvents:
-            AllEvents[event_name] = fmtstr
+        if event_name not in self.AllEvents:
+            self.AllEvents[event_name] = fmtstr
 
     def create_event(self, event_name, *fmtargs):
         """
@@ -531,8 +532,8 @@ class Session(object):
             actual values passed depend on the type of event you
             are creating.
         """
-        if event_name in AllEvents:
-            fmt_string = AllEvents[event_name]
+        if event_name in self.AllEvents:
+            fmt_string = self.AllEvents[event_name]
             if fmt_string:
                 event = event_name + (fmt_string % fmtargs)
             else:

@@ -183,12 +183,6 @@ class SessionTest(BaseSessionTest):
         response = session.emit_first_non_none_response('foo')
         self.assertEqual(response, 'first')
 
-    def test_available_events(self):
-        self.assertTrue('after-call' in botocore.session.AllEvents)
-        self.assertTrue('after-parsed' in botocore.session.AllEvents)
-        self.assertTrue('before-call' in botocore.session.AllEvents)
-        self.assertTrue('service-created' in botocore.session.AllEvents)
-
     def test_create_events(self):
         event = self.session.create_event('before-call', 'foo', 'bar')
         self.assertEqual(event, 'before-call.foo.bar')
