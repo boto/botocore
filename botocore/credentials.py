@@ -126,9 +126,9 @@ def search_environment(**kwargs):
     """
     session = kwargs.get('session')
     credentials = None
-    access_key = session.get_variable('access_key', ('env',))
-    secret_key = session.get_variable('secret_key', ('env',))
-    token = session.get_variable('token', ('env',))
+    access_key = session.get_config_variable('access_key', ('env',))
+    secret_key = session.get_config_variable('secret_key', ('env',))
+    token = session.get_config_variable('token', ('env',))
     if access_key and secret_key:
         credentials = Credentials(access_key, secret_key, token)
         credentials.method = 'env'
@@ -165,9 +165,9 @@ def search_file(**kwargs):
     """
     credentials = None
     session = kwargs.get('session')
-    access_key = session.get_variable('access_key', methods=('config',))
-    secret_key = session.get_variable('secret_key', methods=('config',))
-    token = session.get_variable('token', ('config',))
+    access_key = session.get_config_variable('access_key', methods=('config',))
+    secret_key = session.get_config_variable('secret_key', methods=('config',))
+    token = session.get_config_variable('token', ('config',))
     if access_key and secret_key:
         credentials = Credentials(access_key, secret_key, token)
         credentials.method = 'config'

@@ -86,10 +86,10 @@ class Session(object):
     to the specific environment variables and configuration file names
     that contain the values for these variables.
 
-    When creating a new Session object, you can pass in your own
-    dictionary to remap the logical names or to add new logical names.
-    You can then get the current value for these variables by using the
-    ``get_variable`` method of the :class:`botocore.session.Session` class.
+    When creating a new Session object, you can pass in your own dictionary to
+    remap the logical names or to add new logical names.  You can then get the
+    current value for these variables by using the ``get_config_variable``
+    method of the :class:`botocore.session.Session` class.
     The default set of logical variable names are:
 
     * profile - Default profile name you want to use.
@@ -160,7 +160,8 @@ class Session(object):
     @property
     def provider(self):
         if self._provider is None:
-            self._provider = get_provider(self, self.get_variable('provider'))
+            self._provider = get_provider(
+                self, self.get_config_variable('provider'))
         return self._provider
 
     @property
@@ -200,7 +201,7 @@ class Session(object):
         self._provider = None
         self._profile = profile
 
-    def get_variable(self, logical_name, methods=('env', 'config')):
+    def get_config_variable(self, logical_name, methods=('env', 'config')):
         """
         Retrieve the value associated with the specified logical_name
         from the environment or the config file.  Values found in the
@@ -221,6 +222,7 @@ class Session(object):
             Valid choices are: both|env|config
 
         :returns: str value of variable of None if not defined.
+
         """
         value = None
         default = None
@@ -241,6 +243,9 @@ class Session(object):
             value = default
         return value
 
+    # Alias to get_variable for backwards compatability.
+    get_variable = get_config_variable
+
     def get_config(self):
         """
         Returns the configuration associated with this session.  If
@@ -258,7 +263,7 @@ class Session(object):
         :raises: ConfigNotFound, ConfigParseError, ProfileNotFound
         :rtype: dict
         """
-        profile_name = self.get_variable('profile')
+        profile_name = self.get_config_variable('profile')
         profile_map = self._build_profile_map()
         # If a profile is not explicitly set return the default
         # profile config or an empty config dict if we don't have

@@ -122,7 +122,7 @@ class Service(object):
 
         """
         if region_name is None:
-            region_name = self.session.get_variable('region')
+            region_name = self.session.get_config_variable('region')
         if endpoint_url is not None:
             # Before getting into any of the region/endpoint
             # logic, if an endpoint_url is explicitly
