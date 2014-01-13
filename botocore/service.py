@@ -122,7 +122,7 @@ class Service(object):
 
         """
         if region_name is None:
-            region_name = self.session.get_variable('region')
+            region_name = self.session.get_config_variable('region')
         if endpoint_url is not None:
             # Before getting into any of the region/endpoint
             # logic, if an endpoint_url is explicitly
@@ -131,7 +131,7 @@ class Service(object):
         if region_name is None and not self.global_endpoint:
             # The only time it's ok to *not* provide a region is
             # if the service is a global_endpoint (e.g. IAM).
-            envvar_name = self.session.env_vars['region'][1]
+            envvar_name = self.session.session_var_map['region'][1]
             raise NoRegionError(env_var=envvar_name)
         if region_name not in self.region_names:
             if self.global_endpoint:
