@@ -215,7 +215,9 @@ class Session(object):
         self._provider = None
         self._profile = profile
 
-    def get_config_variable(self, logical_name, methods=('instance', 'env', 'config')):
+    def get_config_variable(self, logical_name,
+                            methods=('instance', 'env', 'config'),
+                            default=None):
         """
         Retrieve the value associated with the specified logical_name
         from the environment or the config file.  Values found in the
@@ -235,18 +237,28 @@ class Session(object):
             by supplying a different value to this parameter.
             Valid choices are: instance|env|config
 
+        :param default: The default value to return if there is no
+            value associated with the config file.  This value will
+            override any default value specified in ``SessionVariables``.
+
         :returns: str value of variable of None if not defined.
 
         """
         value = None
-        default = None
+        # There's two types of defaults here.  One if the
+        # default value specified in the SessionVariables.
+        # The second is an explicit default value passed into this
+        # function (the default parameter).
+        # config_default is tracking the default value specified
+        # in the SessionVariables.
+        config_default = None
         if logical_name in self.session_var_map:
             # Short circuit case, check if the var has been explicitly
             # overriden via set_config_variable.
             if 'instance' in methods and \
                     logical_name in self._session_instance_vars:
                 return self._session_instance_vars[logical_name]
-            config_name, envvar_name, default = self.session_var_map[
+            config_name, envvar_name, config_default = self.session_var_map[
                 logical_name]
             if logical_name in ('config_file', 'profile'):
                 config_name = None
@@ -257,9 +269,14 @@ class Session(object):
             elif 'config' in methods:
                 if config_name:
                     config = self.get_config()
-                    value = config.get(config_name, default)
+                    value = config.get(config_name)
+        # If we don't have a value at this point, we need to try to assign
+        # a default value.  An explicit default argument will win over the
+        # default value from SessionVariables.
         if value is None and default is not None:
             value = default
+        if value is None and config_default is not None:
+            value = config_default
         return value
 
     # Alias to get_variable for backwards compatability.
