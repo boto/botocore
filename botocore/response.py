@@ -405,7 +405,7 @@ def get_response(session, operation, http_response):
         "Response Headers:\n%s",
         '\n'.join("%s: %s" % (k, v) for k, v in http_response.headers.items()))
     logger.debug("Response Body:\n%s", body)
-    if operation.service.type == 'json':
+    if operation.service.type in ('json', 'rest-json'):
         json_response = JSONResponse(session, operation)
         if body:
             json_response.parse(body, encoding)
