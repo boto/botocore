@@ -183,12 +183,6 @@ class SessionTest(BaseSessionTest):
         response = session.emit_first_non_none_response('foo')
         self.assertEqual(response, 'first')
 
-    def test_available_events(self):
-        self.assertTrue('after-call' in botocore.session.AllEvents)
-        self.assertTrue('after-parsed' in botocore.session.AllEvents)
-        self.assertTrue('before-call' in botocore.session.AllEvents)
-        self.assertTrue('service-created' in botocore.session.AllEvents)
-
     def test_create_events(self):
         event = self.session.create_event('before-call', 'foo', 'bar')
         self.assertEqual(event, 'before-call.foo.bar')
@@ -256,6 +250,34 @@ class TestBuiltinEventHandlers(BaseSessionTest):
                                            include_builtin_handlers=True)
         session.emit('foo')
         self.assertTrue(self.foo_called)
+
+
+class TestSessionConfigurationVars(BaseSessionTest):
+    def test_per_session_config_vars(self):
+        self.session.session_var_map['foobar'] = (None, 'FOOBAR', 'default')
+        # Default value.
+        self.assertEqual(self.session.get_config_variable('foobar'), 'default')
+        # Retrieve from os environment variable.
+        environ = {'FOOBAR': 'fromenv'}
+        with mock.patch('os.environ', environ):
+            self.assertEqual(self.session.get_config_variable('foobar'), 'fromenv')
+
+        # Explicit override.
+        self.session.set_config_variable('foobar', 'session-instance')
+        self.assertEqual(self.session.get_config_variable('foobar'),
+                         'session-instance')
+
+        # Can disable this check via the ``methods`` arg.
+        self.assertEqual(self.session.get_config_variable(
+            'foobar', methods=('env', 'config')), 'default')
+
+    def test_default_value_can_be_overriden(self):
+        self.session.session_var_map['foobar'] = (None, 'FOOBAR', 'default')
+        # Default value.
+        self.assertEqual(self.session.get_config_variable('foobar'), 'default')
+        self.assertEqual(
+            self.session.get_config_variable('foobar', default='per-call-default'),
+            'per-call-default')
 
 
 if __name__ == "__main__":
