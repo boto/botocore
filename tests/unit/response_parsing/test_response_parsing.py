@@ -4,7 +4,7 @@ import json
 import pprint
 import logging
 import difflib
-import unittest
+from tests import unittest
 
 from mock import Mock
 from botocore.vendored.requests.structures import CaseInsensitiveDict
