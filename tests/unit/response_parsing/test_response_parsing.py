@@ -4,13 +4,14 @@ import json
 import pprint
 import logging
 import difflib
-import unittest
+from tests import unittest
 
 from mock import Mock
-
+from botocore.vendored.requests.structures import CaseInsensitiveDict
 
 import botocore.session
 from botocore.response import XmlResponse, JSONResponse, get_response
+from botocore.exceptions import IncompleteReadError
 
 log = logging.getLogger(__name__)
 
@@ -122,13 +123,14 @@ class TestHeaderParsing(unittest.TestCase):
     def test_put_object(self):
         http_response = Mock()
         http_response.encoding = 'utf-8'
-        http_response.headers = {'Date': 'Thu, 22 Aug 2013 02:11:57 GMT',
-                                 'Content-Length': '0',
-                                 'x-amz-request-id': '2B74ECB010FF029E',
-                                 'ETag': '"b081e66e7e0c314285c655cafb4d1e71"',
-                                 'x-amz-id-2': 'bKECRRBFttBRVbJPIVBLQwwipI0i+s9HMvNFdttR17ouR0pvQSKEJUR+1c6cW1nQ',
-                                 'Server': 'AmazonS3',
-                                 'content-type': 'text/xml'}
+        http_response.headers = CaseInsensitiveDict(
+            {'Date': 'Thu, 22 Aug 2013 02:11:57 GMT',
+             'Content-Length': '0',
+             'x-amz-request-id': '2B74ECB010FF029E',
+             'ETag': '"b081e66e7e0c314285c655cafb4d1e71"',
+             'x-amz-id-2': 'bKECRRBFttBRVbJPIVBLQwwipI0i+s9HMvNFdttR17ouR0pvQSKEJUR+1c6cW1nQ',
+             'Server': 'AmazonS3',
+             'content-type': 'text/xml'})
         http_response.content = ''
         put_object = self.s3.get_operation('PutObject')
         expected = {"ETag": '"b081e66e7e0c314285c655cafb4d1e71"'}
@@ -138,18 +140,20 @@ class TestHeaderParsing(unittest.TestCase):
     def test_head_object(self):
         http_response = Mock()
         http_response.encoding = 'utf-8'
-        http_response.headers = {'Date': 'Thu, 22 Aug 2013 02:11:57 GMT',
-                                 'Content-Length': '265',
-                                 'x-amz-request-id': '2B74ECB010FF029E',
-                                 'ETag': '"40d06eb6194712ac1c915783004ef730"',
-                                 'Server': 'AmazonS3',
-                                 'content-type': 'binary/octet-stream',
-                                 'Content-Type': 'binary/octet-stream',
-                                 'accept-ranges': 'bytes',
-                                 'Last-Modified': 'Tue, 20 Aug 2013 18:33:25 GMT',
-                                 'x-amz-server-side-encryption': 'AES256'
-                                 }
+        http_response.headers = CaseInsensitiveDict(
+            {'Date': 'Thu, 22 Aug 2013 02:11:57 GMT',
+             'Content-Length': '265',
+             'x-amz-request-id': '2B74ECB010FF029E',
+             'ETag': '"40d06eb6194712ac1c915783004ef730"',
+             'Server': 'AmazonS3',
+             'content-type': 'binary/octet-stream',
+             'Content-Type': 'binary/octet-stream',
+             'accept-ranges': 'bytes',
+             'Last-Modified': 'Tue, 20 Aug 2013 18:33:25 GMT',
+             'x-amz-server-side-encryption': 'AES256'
+             })
         http_response.content = ''
+        http_response.request.method = 'HEAD'
         put_object = self.s3.get_operation('HeadObject')
         expected = {"AcceptRanges": "bytes",
                     "ContentType": "binary/octet-stream",
@@ -162,26 +166,58 @@ class TestHeaderParsing(unittest.TestCase):
                                      http_response)[1]
         self.assertEqual(response_data, expected)
 
+    def test_list_objects_with_invalid_content_length(self):
+        http_response = Mock()
+        http_response.encoding = 'utf-8'
+        http_response.headers = CaseInsensitiveDict(
+            {'Date': 'Thu, 22 Aug 2013 02:11:57 GMT',
+             # We say we have 265 bytes but we're returning 0,
+             # this should raise an exception because this is not
+             # a HEAD request.
+             'Content-Length': '265',
+             'x-amz-request-id': '2B74ECB010FF029E',
+             'ETag': '"40d06eb6194712ac1c915783004ef730"',
+             'Server': 'AmazonS3',
+             'content-type': 'binary/octet-stream',
+             'Content-Type': 'binary/octet-stream',
+             'accept-ranges': 'bytes',
+             'Last-Modified': 'Tue, 20 Aug 2013 18:33:25 GMT',
+             'x-amz-server-side-encryption': 'AES256'
+             })
+        http_response.content = ''
+        http_response.request.method = 'GET'
+        list_objects = self.s3.get_operation('ListObjects')
+        expected = {"AcceptRanges": "bytes",
+                    "ContentType": "binary/octet-stream",
+                    "LastModified": "Tue, 20 Aug 2013 18:33:25 GMT",
+                    "ContentLength": "265",
+                    "ETag": '"40d06eb6194712ac1c915783004ef730"',
+                    "ServerSideEncryption": "AES256"
+                    }
+        with self.assertRaises(IncompleteReadError):
+            response_data = get_response(self.session, list_objects,
+                                         http_response)[1]
+
     def test_head_object_with_json(self):
         http_response = Mock()
         http_response.encoding = 'utf-8'
-        http_response.headers = {'Date': 'Thu, 22 Aug 2013 02:11:57 GMT',
-                                 'Content-Length': '265',
-                                 'x-amz-request-id': '2B74ECB010FF029E',
-                                 'ETag': '"40d06eb6194712ac1c915783004ef730"',
-                                 'Server': 'AmazonS3',
-                                 'content-type': 'application/json',
-                                 'Content-Type': 'application/json',
-                                 'accept-ranges': 'bytes',
-                                 'Last-Modified': 'Tue, 20 Aug 2013 18:33:25 GMT',
-                                 'x-amz-server-side-encryption': 'AES256'
-                                 }
+        http_response.headers = CaseInsensitiveDict(
+            {'Date': 'Thu, 22 Aug 2013 02:11:57 GMT',
+             'Content-Length': '0',
+             'x-amz-request-id': '2B74ECB010FF029E',
+             'ETag': '"40d06eb6194712ac1c915783004ef730"',
+             'Server': 'AmazonS3',
+             'content-type': 'application/json',
+             'Content-Type': 'application/json',
+             'accept-ranges': 'bytes',
+             'Last-Modified': 'Tue, 20 Aug 2013 18:33:25 GMT',
+             'x-amz-server-side-encryption': 'AES256'})
         http_response.content = ''
         put_object = self.s3.get_operation('HeadObject')
         expected = {"AcceptRanges": "bytes",
                     "ContentType": "application/json",
                     "LastModified": "Tue, 20 Aug 2013 18:33:25 GMT",
-                    "ContentLength": "265",
+                    "ContentLength": "0",
                     "ETag": '"40d06eb6194712ac1c915783004ef730"',
                     "ServerSideEncryption": "AES256"
                     }

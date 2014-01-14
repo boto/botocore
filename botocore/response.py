@@ -22,10 +22,13 @@
 #
 import sys
 import xml.etree.cElementTree
-from botocore import ScalarTypes
-from .hooks import first_non_none_response
-from botocore.compat import json
 import logging
+
+from botocore import ScalarTypes
+from botocore.hooks import first_non_none_response
+from botocore.compat import json
+from botocore.exceptions import IncompleteReadError
+
 
 logger = logging.getLogger(__name__)
 
@@ -388,6 +391,72 @@ class StreamingResponse(Response):
                         self.value[member_name] = stream
 
 
+class StreamingBody(object):
+    """Wrapper class for an http response body.
+
+    This provides a few additional conveniences that do not exist
+    in the urllib3 model:
+
+        * Set the timeout on the socket (i.e read() timeouts)
+        * Auto validation of content length, if the amount of bytes
+          we read does not match the content length, an exception
+          is raised.
+
+    """
+    def __init__(self, raw_stream, content_length):
+        self._raw_stream = raw_stream
+        self._content_length = content_length
+        self._amount_read = 0
+
+    def set_socket_timeout(self, timeout):
+        """Set the timeout seconds on the socket."""
+        # The problem we're trying to solve is to prevent .read() calls from
+        # hanging.  This can happen in rare cases.  What we'd like to ideally
+        # do is set a timeout on the .read() call so that callers can retry
+        # the request.
+        # Unfortunately, this isn't currently possible in requests.
+        # See: https://github.com/kennethreitz/requests/issues/1803
+        # So what we're going to do is reach into the guts of the stream and
+        # grab the socket object, which we can set the timeout on.  We're
+        # putting in a check here so in case this interface goes away, we'll
+        # know.
+        try:
+            self._raw_stream._fp.fp._sock.settimeout(timeout)
+        except AttributeError:
+            LOGGER.error("Cannot access the socket object of "
+                         "a streaming response.  It's possible "
+                         "the interface has changed.", exc_info=True)
+            raise
+
+    def read(self, amt=None):
+        chunk = self._raw_stream.read(amt)
+        self._amount_read += len(chunk)
+        if not chunk or amt is None:
+            # If the server sends empty contents or
+            # we ask to read all of the contents, then we know
+            # we need to verify the content length.
+            self._verify_content_length()
+        return chunk
+
+    def _verify_content_length(self):
+        if self._content_length is not None and \
+                self._amount_read != int(self._content_length):
+            raise IncompleteReadError(
+                actual_bytes=self._amount_read,
+                expected_bytes=int(self._content_length))
+
+
+def _validate_content_length(expected_content_length, body_length):
+    # See: https://github.com/kennethreitz/requests/issues/1855
+    # Basically, our http library doesn't do this for us, so we have
+    # to do this ourself.
+    if expected_content_length is not None:
+        if int(expected_content_length) != body_length:
+            raise IncompleteReadError(
+                actual_bytes=body_length,
+                expected_bytes=int(expected_content_length))
+
+
 def get_response(session, operation, http_response):
     encoding = 'utf-8'
     if http_response.encoding:
@@ -398,9 +467,15 @@ def get_response(session, operation, http_response):
         logger.debug('Content type from response: %s', content_type)
     if operation.is_streaming():
         streaming_response = StreamingResponse(session, operation)
-        streaming_response.parse(http_response.headers, http_response.raw)
+        streaming_response.parse(
+            http_response.headers,
+            StreamingBody(http_response.raw,
+                          http_response.headers.get('content-length')))
         return (http_response, streaming_response.get_value())
     body = http_response.content
+    if not http_response.request.method == 'HEAD':
+        _validate_content_length(
+            http_response.headers.get('content-length'), len(body))
     logger.debug(
         "Response Headers:\n%s",
         '\n'.join("%s: %s" % (k, v) for k, v in http_response.headers.items()))
