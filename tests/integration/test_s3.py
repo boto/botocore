@@ -167,6 +167,17 @@ class TestS3Objects(BaseS3Test):
         data = response[1]
         self.assertEqual(data['Body'].read().decode('utf-8'), 'body contents')
 
+    def test_get_object_stream_wrapper(self):
+        self.create_object('foobarbaz', body='body contents')
+        operation = self.service.get_operation('GetObject')
+        response = operation.call(self.endpoint, bucket=self.bucket_name,
+                                  key='foobarbaz')
+        body = response[1]['Body']
+        # Am able to set a socket timeout
+        body.set_socket_timeout(10)
+        self.assertEqual(body.read(amt=1).decode('utf-8'), 'b')
+        self.assertEqual(body.read().decode('utf-8'), 'ody contents')
+
     def test_paginate_max_items(self):
         self.create_multipart_upload('foo/key1')
         self.create_multipart_upload('foo/key1')
