@@ -10,5 +10,13 @@
         "https"
       ]
     }
+  },
+  "operations": {
+    "AssumeRoleWithSAML": {
+      "no_auth": true
+    },
+    "AssumeRoleWithWebIdentity": {
+      "no_auth": true
+    }
   }
 }
