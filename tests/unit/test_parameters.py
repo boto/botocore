@@ -108,7 +108,7 @@ class TestParameters(unittest.TestCase):
     def test_utf8_string(self):
         p = botocore.parameters.StringParameter(None, name='foo')
         d = {}
-        value = '\u65e5\u672c\u8a9e'
+        value = u'\u65e5\u672c\u8a9e'
         p.build_parameter_query(value, d)
         self.assertEqual(d['foo'], value)
         with self.assertRaises(botocore.exceptions.ValidationError):
