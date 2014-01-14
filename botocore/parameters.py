@@ -79,7 +79,9 @@ class Parameter(BotoCoreObject):
             label = label.format(label=self.get_label())
         else:
             label = self.get_label()
-        built_params[label] = str(value)
+        if not isinstance(value, six.text_type):
+            value = str(value)
+        built_params[label] = value
 
     def build_parameter_query(self, value, built_params, label=''):
         value = self.validate(value)
