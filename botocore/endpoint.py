@@ -32,7 +32,7 @@ import six
 import botocore.response
 import botocore.exceptions
 from botocore.auth import AUTH_TYPE_MAPS
-from botocore.exceptions import UnknownSignatureVersionError
+from botocore.exceptions import UnknownSignatureVersionError, NoCredentialsError
 from botocore.awsrequest import AWSRequest
 from botocore.compat import urljoin, json, quote
 
@@ -70,15 +70,20 @@ class Endpoint(object):
     def make_request(self, operation, params):
         logger.debug("Making request for %s (verify_ssl=%s) with params: %s",
                      operation, self.verify, params)
+        no_auth = getattr(operation, 'no_auth', False)
+        # There are two situations where we will skip auth:
+        #   1. If the service as no signature_version attribute
+        #   2. If the operation allows anonymous calls
+        do_auth = self.auth and (not no_auth)
         request = self._create_request_object(operation, params)
-        prepared_request = self.prepare_request(request)
+        prepared_request = self.prepare_request(request, do_auth)
         return self._send_request(prepared_request, operation)
 
     def _create_request_object(self, operation, params):
         raise NotImplementedError('_create_request_object')
 
-    def prepare_request(self, request):
-        if self.auth is not None:
+    def prepare_request(self, request, do_auth=True):
+        if do_auth:
             with self._lock:
                 # Parts of the auth signing code aren't thread safe (things
                 # that manipulate .auth_path), so we're using a lock here to
