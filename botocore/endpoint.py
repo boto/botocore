@@ -32,7 +32,7 @@ import six
 import botocore.response
 import botocore.exceptions
 from botocore.auth import AUTH_TYPE_MAPS
-from botocore.exceptions import UnknownSignatureVersionError, NoCredentialsError
+from botocore.exceptions import UnknownSignatureVersionError
 from botocore.awsrequest import AWSRequest
 from botocore.compat import urljoin, json, quote
 
