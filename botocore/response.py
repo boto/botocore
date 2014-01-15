@@ -140,6 +140,9 @@ class XmlResponse(Response):
         child = parent.find(cn)
         if child is None:
             child = parent.find('*/%s' % cn)
+            if child is None \
+                    and parent.tag == cn:
+                child = parent
         return child
 
     def findall(self, parent, tag):
