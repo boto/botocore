@@ -222,3 +222,9 @@ class UnseekableStreamError(BotoCoreError):
 class WaiterError(BotoCoreError):
     """Waiter failed to reach desired state."""
     fmt = 'Waiter {name} failed: {reason}'
+
+
+class IncompleteReadError(BotoCoreError):
+    """HTTP response did not return expected number of bytes."""
+    fmt = ('{actual_bytes} read, but total bytes '
+           'expected is {expected_bytes}.')
