@@ -26,7 +26,7 @@ import logging
 
 from botocore import ScalarTypes
 from botocore.hooks import first_non_none_response
-from botocore.compat import json
+from botocore.compat import json, set_socket_timeout
 from botocore.exceptions import IncompleteReadError
 
 
@@ -421,9 +421,12 @@ class StreamingBody(object):
         # putting in a check here so in case this interface goes away, we'll
         # know.
         try:
-            self._raw_stream._fp.fp._sock.settimeout(timeout)
+            # To further complicate things, the way to grab the
+            # underlying socket object from an HTTPResponse is different
+            # in py2 and py3.  So this code has been pushed to botocore.compat.
+            set_socket_timeout(self._raw_stream, timeout)
         except AttributeError:
-            LOGGER.error("Cannot access the socket object of "
+            logger.error("Cannot access the socket object of "
                          "a streaming response.  It's possible "
                          "the interface has changed.", exc_info=True)
             raise
