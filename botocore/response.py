@@ -423,7 +423,7 @@ class StreamingBody(object):
         try:
             self._raw_stream._fp.fp._sock.settimeout(timeout)
         except AttributeError:
-            LOGGER.error("Cannot access the socket object of "
+            logger.error("Cannot access the socket object of "
                          "a streaming response.  It's possible "
                          "the interface has changed.", exc_info=True)
             raise
