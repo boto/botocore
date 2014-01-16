@@ -10,5 +10,13 @@
         "https"
       ]
     }
+  },
+  "operations": {
+    "AssumeRoleWithSAML": {
+      "signature_version": null
+    },
+    "AssumeRoleWithWebIdentity": {
+      "signature_version": null
+    }
   }
 }
