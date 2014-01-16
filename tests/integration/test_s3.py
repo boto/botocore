@@ -70,6 +70,21 @@ class BaseS3Test(unittest.TestCase):
 
 
 class TestS3Buckets(BaseS3Test):
+
+    def setUp(self):
+        super(TestS3Buckets, self).setUp()
+        self.bucket_name = 'botocoretest%s-%s' % (
+            int(time.time()), random.randint(1, 1000))
+        self.bucket_location = 'us-west-2'
+
+        operation = self.service.get_operation('CreateBucket')
+        operation.call(self.endpoint, bucket=self.bucket_name,
+            create_bucket_configuration={'LocationConstraint': self.bucket_location})
+
+    def tearDown(self):
+        operation = self.service.get_operation('DeleteBucket')
+        operation.call(self.endpoint, bucket=self.bucket_name)
+
     def test_can_make_request(self):
         # Basic smoke test to ensure we can talk to s3.
         operation = self.service.get_operation('ListBuckets')
@@ -79,6 +94,14 @@ class TestS3Buckets(BaseS3Test):
         # but we can assume something about the structure of the response.
         self.assertEqual(sorted(list(result.keys())),
                          ['Buckets', 'Owner', 'ResponseMetadata'])
+
+    def test_can_get_bucket_location(self):
+        operation = self.service.get_operation('GetBucketLocation')
+        http, result = operation.call(self.endpoint, bucket=self.bucket_name)
+        self.assertEqual(http.status_code, 200)
+        self.assertIn('LocationConstraint', result)
+        # For buckets in us-east-1 (US Classic Region) this will be None
+        self.assertEqual(result['LocationConstraint'], self.bucket_location)
 
 
 class TestS3Objects(BaseS3Test):
