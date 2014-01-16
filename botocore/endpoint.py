@@ -72,11 +72,15 @@ class Endpoint(object):
     def make_request(self, operation, params):
         logger.debug("Making request for %s (verify_ssl=%s) with params: %s",
                      operation, self.verify, params)
-        no_auth = getattr(operation, 'no_auth', False)
-        # There are two situations where we will skip auth:
-        #   1. If the service as no signature_version attribute
-        #   2. If the operation allows anonymous calls
-        do_auth = self.auth and (not no_auth)
+        # To decide if we need to do auth or not we check the
+        # signature_version attribute on both the service and
+        # the operation are not None and we make sure there is an
+        # auth class associated with the endpoint.
+        # If any of these are not true, we skip auth.
+        do_auth = (getattr(self.service, 'signature_version', None) and
+                   getattr(operation, 'signature_version', True) and
+                   self.auth)
+        logger.debug('do_auth: %s', do_auth)
         request = self._create_request_object(operation, params)
         prepared_request = self.prepare_request(request, do_auth)
         return self._send_request(prepared_request, operation)

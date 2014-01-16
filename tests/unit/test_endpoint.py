@@ -209,7 +209,7 @@ class TestQueryEndpointAnonymousOp(TestQueryEndpoint):
 
     def setUp(self):
         super(TestQueryEndpointAnonymousOp, self).setUp()
-        self.op.no_auth = True
+        self.op.signature_version = None
 
     def test_make_request(self):
         self.endpoint.make_request(self.op, {})
@@ -242,7 +242,7 @@ class TestJSONEndpointAnonymousOp(TestJSONEndpoint):
 
     def setUp(self):
         super(TestJSONEndpointAnonymousOp, self).setUp()
-        self.op.no_auth = True
+        self.op.signature_version = None
 
     def test_make_request(self):
         self.endpoint.make_request(self.op, {})
@@ -272,7 +272,7 @@ class TestRestEndpointAnonymousOp(TestRestEndpoint):
 
     def setUp(self):
         super(TestRestEndpointAnonymousOp, self).setUp()
-        self.op.no_auth = True
+        self.op.signature_version = None
 
     def test_make_request(self):
         self.op.http = {'uri': '/foo', 'method': 'POST'}

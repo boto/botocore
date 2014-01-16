@@ -13,10 +13,10 @@
   },
   "operations": {
     "AssumeRoleWithSAML": {
-      "no_auth": true
+      "signature_version": null
     },
     "AssumeRoleWithWebIdentity": {
-      "no_auth": true
+      "signature_version": null
     }
   }
 }

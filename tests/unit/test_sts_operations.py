@@ -61,7 +61,7 @@ class TestSTSOperationsWithCreds(BaseSessionTest):
 
     def test_assume_role_with_saml(self):
         op = self.sns.get_operation('AssumeRoleWithSAML')
-        self.assertEqual(op.no_auth, True)
+        self.assertEqual(op.signature_version, None)
         endpoint = self.get_mocked_endpoint()
         params = op.build_parameters(principal_arn='principal_arn',
                                      role_arn='role_arn',
@@ -101,7 +101,7 @@ class NoCredentialsTest(TestSTSOperationsWithCreds):
             session = botocore.session.get_session()
             sns = session.get_service('sts')
             op = sns.get_operation('AssumeRoleWithSAML')
-            self.assertEqual(op.no_auth, True)
+            self.assertEqual(op.signature_version, None)
             endpoint = self.get_mocked_endpoint()
             params = op.build_parameters(principal_arn='principal_arn',
                                          role_arn='role_arn',
