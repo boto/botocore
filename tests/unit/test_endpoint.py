@@ -154,7 +154,7 @@ class TestEndpointBase(unittest.TestCase):
         self.service.session.emit_first_non_none_response.return_value = None
         self.op = Mock()
         self.op.is_streaming.return_value = False
-        self.op.no_auth = False
+        self.signature_version = True
         self.auth = Mock()
         self.endpoint = self.ENDPOINT_CLASS(
             self.service, 'us-west-2', 'https://ec2.us-west-2.amazonaws.com/',
