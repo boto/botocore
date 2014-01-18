@@ -80,7 +80,6 @@ class Endpoint(object):
         do_auth = (getattr(self.service, 'signature_version', None) and
                    getattr(operation, 'signature_version', True) and
                    self.auth)
-        logger.debug('do_auth: %s', do_auth)
         request = self._create_request_object(operation, params)
         prepared_request = self.prepare_request(request, do_auth)
         return self._send_request(prepared_request, operation)
