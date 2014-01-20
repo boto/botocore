@@ -169,7 +169,7 @@ def get_search_path(session):
             os.path.dirname(
                 os.path.abspath(__file__))), 'botocore', 'data')
     paths = [builtin_path]
-    search_path = session.get_variable('data_path')
+    search_path = session.get_config_variable('data_path')
     if search_path is not None:
         extra_paths = search_path.split(os.pathsep)
         for path in extra_paths:

@@ -143,5 +143,10 @@
         "resetting-master-credentials"
       ]
     }
-  }
+  },
+  "transformations": {
+    "remove-deprecated-params": {
+      "deprecated_keyword": "not currently supported"
+    }
+  }      
 }

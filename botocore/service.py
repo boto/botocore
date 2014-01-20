@@ -99,7 +99,7 @@ class Service(object):
         return endpoint_url
 
     def get_endpoint(self, region_name=None, is_secure=True,
-                     endpoint_url=None):
+                     endpoint_url=None, verify=None):
         """
         Return the Endpoint object for this service in a particular
         region.
@@ -122,16 +122,16 @@ class Service(object):
 
         """
         if region_name is None:
-            region_name = self.session.get_variable('region')
+            region_name = self.session.get_config_variable('region')
         if endpoint_url is not None:
             # Before getting into any of the region/endpoint
             # logic, if an endpoint_url is explicitly
             # provided, just use what's been explicitly passed in.
-            return self._get_endpoint(region_name, endpoint_url)
+            return self._get_endpoint(region_name, endpoint_url, verify)
         if region_name is None and not self.global_endpoint:
             # The only time it's ok to *not* provide a region is
             # if the service is a global_endpoint (e.g. IAM).
-            envvar_name = self.session.env_vars['region'][1]
+            envvar_name = self.session.session_var_map['region'][1]
             raise NoRegionError(env_var=envvar_name)
         if region_name not in self.region_names:
             if self.global_endpoint:
@@ -163,14 +163,14 @@ class Service(object):
             # endpoint_prefix.region.amazonaws.com.
             host = '%s.%s.amazonaws.com' % (self.endpoint_prefix, region_name)
             endpoint_url = self._build_endpoint_url(host, is_secure)
-        return self._get_endpoint(region_name, endpoint_url)
+        return self._get_endpoint(region_name, endpoint_url, verify)
 
-    def _get_endpoint(self, region_name, endpoint_url):
+    def _get_endpoint(self, region_name, endpoint_url, verify):
         event = self.session.create_event('creating-endpoint',
                                           self.endpoint_prefix)
         self.session.emit(event, service=self, region_name=region_name,
                           endpoint_url=endpoint_url)
-        return get_endpoint(self, region_name, endpoint_url)
+        return get_endpoint(self, region_name, endpoint_url, verify)
 
     def get_operation(self, operation_name):
         """
