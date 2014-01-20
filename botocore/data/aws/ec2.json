@@ -18697,7 +18697,8 @@
                                         "required": true,
                                         "documentation": "\n        <p>\n        Enables monitoring for the instance.\n        </p>\n    "
                                     }
-                                }
+                                },
+                                "shape_name": "SpotInstanceMonitoring"
                             },
                             "SubnetId": {
                                 "shape_name": "String",
