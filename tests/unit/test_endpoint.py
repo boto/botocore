@@ -154,6 +154,7 @@ class TestEndpointBase(unittest.TestCase):
         self.service.session.emit_first_non_none_response.return_value = None
         self.op = Mock()
         self.op.is_streaming.return_value = False
+        self.signature_version = True
         self.auth = Mock()
         self.endpoint = self.ENDPOINT_CLASS(
             self.service, 'us-west-2', 'https://ec2.us-west-2.amazonaws.com/',
@@ -204,12 +205,48 @@ class TestQueryEndpoint(TestEndpointBase):
         self.assertNotIn('Authorization', prepared_request.headers)
 
 
+class TestQueryEndpointAnonymousOp(TestQueryEndpoint):
+
+    def setUp(self):
+        super(TestQueryEndpointAnonymousOp, self).setUp()
+        self.op.signature_version = None
+
+    def test_make_request(self):
+        self.endpoint.make_request(self.op, {})
+        # Should have authenticated the request
+        self.assertFalse(self.auth.add_auth.called)
+        # http_session should be used to send the request.
+        self.assertTrue(self.http_session.send.called)
+        prepared_request = self.http_session.send.call_args[0][0]
+        self.http_session.send.assert_called_with(
+            prepared_request, verify=True, stream=False,
+            proxies={})
+        self.get_response.assert_called_with(self.service.session,
+            self.op, sentinel.HTTP_RETURN_VALUE)
+
+
 class TestJSONEndpoint(TestEndpointBase):
     ENDPOINT_CLASS = JSONEndpoint
 
     def test_make_request(self):
         self.endpoint.make_request(self.op, {})
         self.assertTrue(self.auth.add_auth.called)
+        self.assertTrue(self.http_session.send.called)
+        prepared_request = self.http_session.send.call_args[0][0]
+        self.http_session.send.assert_called_with(
+            prepared_request, verify=True, stream=False,
+            proxies={})
+
+
+class TestJSONEndpointAnonymousOp(TestJSONEndpoint):
+
+    def setUp(self):
+        super(TestJSONEndpointAnonymousOp, self).setUp()
+        self.op.signature_version = None
+
+    def test_make_request(self):
+        self.endpoint.make_request(self.op, {})
+        self.assertFalse(self.auth.add_auth.called)
         self.assertTrue(self.http_session.send.called)
         prepared_request = self.http_session.send.call_args[0][0]
         self.http_session.send.assert_called_with(
@@ -225,6 +262,23 @@ class TestRestEndpoint(TestEndpointBase):
         self.endpoint.make_request(self.op, {
             'headers': {}, 'uri_params': {}, 'payload': None})
         self.assertTrue(self.auth.add_auth.called)
+        prepared_request = self.http_session.send.call_args[0][0]
+        self.http_session.send.assert_called_with(
+            prepared_request, verify=True, stream=False,
+            proxies={})
+
+
+class TestRestEndpointAnonymousOp(TestRestEndpoint):
+
+    def setUp(self):
+        super(TestRestEndpointAnonymousOp, self).setUp()
+        self.op.signature_version = None
+
+    def test_make_request(self):
+        self.op.http = {'uri': '/foo', 'method': 'POST'}
+        self.endpoint.make_request(self.op, {
+            'headers': {}, 'uri_params': {}, 'payload': None})
+        self.assertFalse(self.auth.add_auth.called)
         prepared_request = self.http_session.send.call_args[0][0]
         self.http_session.send.assert_called_with(
             prepared_request, verify=True, stream=False,

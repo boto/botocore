@@ -60,8 +60,6 @@ class SigV2Auth(BaseSigner):
 
     def __init__(self, credentials):
         self.credentials = credentials
-        if self.credentials is None:
-            raise NoCredentialsError
 
     def calc_signature(self, request, params):
         logger.debug("Calculating signature using v2 auth.")
@@ -92,6 +90,8 @@ class SigV2Auth(BaseSigner):
         # Because of this we have to parse the query params
         # from the request body so we can update them with
         # the sigv2 auth params.
+        if self.credentials is None:
+            raise NoCredentialsError
         if request.data:
             # POST
             params = request.data
@@ -112,10 +112,10 @@ class SigV2Auth(BaseSigner):
 class SigV3Auth(BaseSigner):
     def __init__(self, credentials):
         self.credentials = credentials
-        if self.credentials is None:
-            raise NoCredentialsError
 
     def add_auth(self, request):
+        if self.credentials is None:
+            raise NoCredentialsError
         if 'Date' not in request.headers:
             request.headers['Date'] = formatdate(usegmt=True)
         if self.credentials.token:
@@ -138,8 +138,6 @@ class SigV4Auth(BaseSigner):
 
     def __init__(self, credentials, service_name, region_name):
         self.credentials = credentials
-        if self.credentials is None:
-            raise NoCredentialsError
         # We initialize these value here so the unit tests can have
         # valid values.  But these will get overriden in ``add_auth``
         # later for real requests.
@@ -301,6 +299,8 @@ class SigV4Auth(BaseSigner):
         return self._sign(k_signing, string_to_sign, hex=True)
 
     def add_auth(self, request):
+        if self.credentials is None:
+            raise NoCredentialsError
         # Create a new timestamp for each signing event
         now = datetime.datetime.utcnow()
         self.timestamp = now.strftime('%Y%m%dT%H%M%SZ')
@@ -356,8 +356,6 @@ class HmacV1Auth(BaseSigner):
 
     def __init__(self, credentials, service_name=None, region_name=None):
         self.credentials = credentials
-        if self.credentials is None:
-            raise NoCredentialsError
         self.auth_path = None  # see comment in canonical_resource below
 
     def sign_string(self, string_to_sign):
@@ -450,6 +448,8 @@ class HmacV1Auth(BaseSigner):
         return self.sign_string(string_to_sign)
 
     def add_auth(self, request):
+        if self.credentials is None:
+            raise NoCredentialsError
         logger.debug("Calculating signature using hmacv1 auth.")
         split = urlsplit(request.url)
         logger.debug('HTTP request method: %s', request.method)
