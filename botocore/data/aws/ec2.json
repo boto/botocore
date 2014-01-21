@@ -13509,13 +13509,15 @@
                                     "xmlname": "createTime"
                                 },
                                 "ProductDescription": {
-                                    "shape_name": "RIProductDescription",
+                                    "shape_name": "SpotProductDescription",
                                     "type": "string",
                                     "enum": [
                                         "Linux/UNIX",
                                         "Linux/UNIX (Amazon VPC)",
                                         "Windows",
-                                        "Windows (Amazon VPC)"
+                                        "Windows (Amazon VPC)",
+                                        "SUSE Linux",
+                                        "SUSE Linux (Amazon VPC)"
                                     ],
                                     "documentation": null,
                                     "xmlname": "productDescription"
@@ -13881,13 +13883,15 @@
                                     "xmlname": "instanceType"
                                 },
                                 "ProductDescription": {
-                                    "shape_name": "RIProductDescription",
+                                    "shape_name": "SpotProductDescription",
                                     "type": "string",
                                     "enum": [
                                         "Linux/UNIX",
                                         "Linux/UNIX (Amazon VPC)",
                                         "Windows",
-                                        "Windows (Amazon VPC)"
+                                        "Windows (Amazon VPC)",
+                                        "SUSE Linux",
+                                        "SUSE Linux (Amazon VPC)"
                                     ],
                                     "documentation": null,
                                     "xmlname": "productDescription"
@@ -19307,13 +19311,15 @@
                                     "xmlname": "createTime"
                                 },
                                 "ProductDescription": {
-                                    "shape_name": "RIProductDescription",
+                                    "shape_name": "SpotProductDescription",
                                     "type": "string",
                                     "enum": [
                                         "Linux/UNIX",
                                         "Linux/UNIX (Amazon VPC)",
                                         "Windows",
-                                        "Windows (Amazon VPC)"
+                                        "Windows (Amazon VPC)",
+                                        "SUSE Linux",
+                                        "SUSE Linux (Amazon VPC)"
                                     ],
                                     "documentation": null,
                                     "xmlname": "productDescription"
