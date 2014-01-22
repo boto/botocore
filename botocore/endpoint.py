@@ -21,6 +21,7 @@
 # IN THE SOFTWARE.
 #
 
+import os
 import logging
 import time
 import threading
@@ -51,12 +52,13 @@ class Endpoint(object):
     :ivar session: The session object.
     """
 
-    def __init__(self, service, region_name, host, auth, proxies=None):
+    def __init__(self, service, region_name, host, auth, proxies=None,
+                 verify=True):
         self.service = service
         self.session = self.service.session
         self.region_name = region_name
         self.host = host
-        self.verify = True
+        self.verify = verify
         self.auth = auth
         if proxies is None:
             proxies = {}
@@ -70,15 +72,23 @@ class Endpoint(object):
     def make_request(self, operation, params):
         logger.debug("Making request for %s (verify_ssl=%s) with params: %s",
                      operation, self.verify, params)
+        # To decide if we need to do auth or not we check the
+        # signature_version attribute on both the service and
+        # the operation are not None and we make sure there is an
+        # auth class associated with the endpoint.
+        # If any of these are not true, we skip auth.
+        do_auth = (getattr(self.service, 'signature_version', None) and
+                   getattr(operation, 'signature_version', True) and
+                   self.auth)
         request = self._create_request_object(operation, params)
-        prepared_request = self.prepare_request(request)
+        prepared_request = self.prepare_request(request, do_auth)
         return self._send_request(prepared_request, operation)
 
     def _create_request_object(self, operation, params):
         raise NotImplementedError('_create_request_object')
 
-    def prepare_request(self, request):
-        if self.auth is not None:
+    def prepare_request(self, request, do_auth=True):
+        if do_auth:
             with self._lock:
                 # Parts of the auth signing code aren't thread safe (things
                 # that manipulate .auth_path), so we're using a lock here to
@@ -242,7 +252,7 @@ def _get_proxies(url):
     return get_environ_proxies(url)
 
 
-def get_endpoint(service, region_name, endpoint_url):
+def get_endpoint(service, region_name, endpoint_url, verify=None):
     cls = SERVICE_TO_ENDPOINT.get(service.type)
     if cls is None:
         raise botocore.exceptions.UnknownServiceStyle(
@@ -256,7 +266,23 @@ def get_endpoint(service, region_name, endpoint_url):
                          region_name=region_name,
                          service_object=service)
     proxies = _get_proxies(endpoint_url)
-    return cls(service, region_name, endpoint_url, auth=auth, proxies=proxies)
+    verify = _get_verify_value(verify)
+    return cls(service, region_name, endpoint_url, auth=auth, proxies=proxies,
+               verify=verify)
+
+
+def _get_verify_value(verify):
+    # This is to account for:
+    # https://github.com/kennethreitz/requests/issues/1436
+    # where we need to honor REQUESTS_CA_BUNDLE because we're creating our
+    # own request objects.
+    # First, if verify is not None, then the user explicitly specified
+    # a value so this automatically wins.
+    if verify is not None:
+        return verify
+    # Otherwise use the value from REQUESTS_CA_BUNDLE, or default to
+    # True if the env var does not exist.
+    return os.environ.get('REQUESTS_CA_BUNDLE', True)
 
 
 def _get_auth(signature_version, credentials, service_name, region_name,
@@ -268,7 +294,7 @@ def _get_auth(signature_version, credentials, service_name, region_name,
         kwargs = {'credentials': credentials}
         if cls.REQUIRES_REGION:
             if region_name is None:
-                envvar_name = service_object.session.env_vars['region'][1]
+                envvar_name = service_object.session.session_var_map['region'][1]
                 raise botocore.exceptions.NoRegionError(env_var=envvar_name)
             kwargs['region_name'] = region_name
             kwargs['service_name'] = service_name

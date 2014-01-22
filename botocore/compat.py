@@ -34,6 +34,15 @@ if six.PY3:
     from urllib.parse import parse_qsl
     from io import IOBase as _IOBase
     file_type = _IOBase
+
+    def set_socket_timeout(http_response, timeout):
+        """Set the timeout of the socket from an HTTPResponse.
+
+        :param http_response: An instance of ``httplib.HTTPResponse``
+
+        """
+        http_response._fp.fp.raw._sock.settimeout(timeout)
+
 else:
     from urllib import quote
     from urllib import unquote
@@ -50,6 +59,14 @@ else:
         def __iter__(self):
             for field, value in self._headers:
                 yield field
+
+    def set_socket_timeout(http_response, timeout):
+        """Set the timeout of the socket from an HTTPResponse.
+
+        :param http_response: An instance of ``httplib.HTTPResponse``
+
+        """
+        http_response._fp.fp._sock.settimeout(timeout)
 
 try:
     from collections import OrderedDict

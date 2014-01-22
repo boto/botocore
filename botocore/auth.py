@@ -60,8 +60,6 @@ class SigV2Auth(BaseSigner):
 
     def __init__(self, credentials):
         self.credentials = credentials
-        if self.credentials is None:
-            raise NoCredentialsError
 
     def calc_signature(self, request, params):
         logger.debug("Calculating signature using v2 auth.")
@@ -92,6 +90,8 @@ class SigV2Auth(BaseSigner):
         # Because of this we have to parse the query params
         # from the request body so we can update them with
         # the sigv2 auth params.
+        if self.credentials is None:
+            raise NoCredentialsError
         if request.data:
             # POST
             params = request.data
@@ -112,10 +112,10 @@ class SigV2Auth(BaseSigner):
 class SigV3Auth(BaseSigner):
     def __init__(self, credentials):
         self.credentials = credentials
-        if self.credentials is None:
-            raise NoCredentialsError
 
     def add_auth(self, request):
+        if self.credentials is None:
+            raise NoCredentialsError
         if 'Date' not in request.headers:
             request.headers['Date'] = formatdate(usegmt=True)
         if self.credentials.token:
@@ -138,8 +138,6 @@ class SigV4Auth(BaseSigner):
 
     def __init__(self, credentials, service_name, region_name):
         self.credentials = credentials
-        if self.credentials is None:
-            raise NoCredentialsError
         # We initialize these value here so the unit tests can have
         # valid values.  But these will get overriden in ``add_auth``
         # later for real requests.
@@ -171,16 +169,43 @@ class SigV4Auth(BaseSigner):
 
     def canonical_query_string(self, request):
         cqs = ''
+        # The query string can come from two parts.  One is the
+        # params attribute of the request.  The other is from the request
+        # url (in which case we have to re-split the url into its components
+        # and parse out the query string component).
         if request.params:
-            params = request.params
-            l = []
-            for param in params:
-                value = str(params[param])
-                l.append('%s=%s' % (quote(param, safe='-_.~'),
-                                    quote(value, safe='-_.~')))
-            l = sorted(l)
-            cqs = '&'.join(l)
+            return self._canonical_query_string_params(request.params)
+        else:
+            return self._canonical_query_string_url(urlsplit(request.url))
         return cqs
+
+    def _canonical_query_string_params(self, params):
+        l = []
+        for param in params:
+            value = str(params[param])
+            l.append('%s=%s' % (quote(param, safe='-_.~'),
+                                quote(value, safe='-_.~')))
+        l = sorted(l)
+        cqs = '&'.join(l)
+        return cqs
+
+    def _canonical_query_string_url(self, parts):
+        buf = ''
+        if parts.query:
+            qsa = parts.query.split('&')
+            qsa = [a.split('=', 1) for a in qsa]
+            quoted_qsa = []
+            for q in qsa:
+                if len(q) == 2:
+                    quoted_qsa.append(
+                        '%s=%s' % (quote(q[0], safe='-_.~'),
+                                   quote(unquote(q[1]), safe='-_.~')))
+                elif len(q) == 1:
+                    quoted_qsa.append('%s=' % quote(q[0], safe='-_.~'))
+            if len(quoted_qsa) > 0:
+                quoted_qsa.sort(key=itemgetter(0))
+                buf += '&'.join(quoted_qsa)
+        return buf
 
     def canonical_headers(self, headers_to_sign):
         """
@@ -274,6 +299,8 @@ class SigV4Auth(BaseSigner):
         return self._sign(k_signing, string_to_sign, hex=True)
 
     def add_auth(self, request):
+        if self.credentials is None:
+            raise NoCredentialsError
         # Create a new timestamp for each signing event
         now = datetime.datetime.utcnow()
         self.timestamp = now.strftime('%Y%m%dT%H%M%SZ')
@@ -306,25 +333,6 @@ class SigV4Auth(BaseSigner):
 
 class S3SigV4Auth(SigV4Auth):
 
-    def canonical_query_string(self, request):
-        split = urlsplit(request.url)
-        buf = ''
-        if split.query:
-            qsa = split.query.split('&')
-            qsa = [a.split('=', 1) for a in qsa]
-            quoted_qsa = []
-            for q in qsa:
-                if len(q) == 2:
-                    quoted_qsa.append(
-                        '%s=%s' % (quote(q[0], safe='-_.~'),
-                                   quote(unquote(q[1]), safe='-_.~')))
-                elif len(q) == 1:
-                    quoted_qsa.append('%s=' % quote(q[0], safe='-_.~'))
-            if len(quoted_qsa) > 0:
-                quoted_qsa.sort(key=itemgetter(0))
-                buf += '&'.join(quoted_qsa)
-        return buf
-
     def _add_headers_before_signing(self, request):
         super(S3SigV4Auth, self)._add_headers_before_signing(request)
         request.headers['X-Amz-Content-SHA256'] = self.payload(request)
@@ -348,8 +356,6 @@ class HmacV1Auth(BaseSigner):
 
     def __init__(self, credentials, service_name=None, region_name=None):
         self.credentials = credentials
-        if self.credentials is None:
-            raise NoCredentialsError
         self.auth_path = None  # see comment in canonical_resource below
 
     def sign_string(self, string_to_sign):
@@ -442,6 +448,8 @@ class HmacV1Auth(BaseSigner):
         return self.sign_string(string_to_sign)
 
     def add_auth(self, request):
+        if self.credentials is None:
+            raise NoCredentialsError
         logger.debug("Calculating signature using hmacv1 auth.")
         split = urlsplit(request.url)
         logger.debug('HTTP request method: %s', request.method)

@@ -41,7 +41,7 @@ def get_config(session):
     """
     config = {}
     path = None
-    path = session.get_variable('config_file')
+    path = session.get_config_variable('config_file')
     if path is not None:
         path = os.path.expandvars(path)
         path = os.path.expanduser(path)
