@@ -108,6 +108,16 @@ class TestParameters(unittest.TestCase):
     def test_utf8_string(self):
         p = botocore.parameters.StringParameter(None, name='foo')
         d = {}
+        value = u'\u65e5\u672c\u8a9e'.encode('utf-8')
+        p.build_parameter_query(value, d)
+        self.assertEqual(d['foo'], value)
+        with self.assertRaises(botocore.exceptions.ValidationError):
+            p.build_parameter_query(value=1,
+                                    built_params=d)
+
+    def test_unicode_string(self):
+        p = botocore.parameters.StringParameter(None, name='foo')
+        d = {}
         value = u'\u65e5\u672c\u8a9e'
         p.build_parameter_query(value, d)
         self.assertEqual(d['foo'], value)
