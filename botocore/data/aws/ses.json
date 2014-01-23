@@ -859,7 +859,8 @@
     },
     "metadata": {
         "regions": {
-            "us-east-1": null
+            "us-east-1": null,
+            "eu-west-1": null
         },
         "protocols": [
             "https",
