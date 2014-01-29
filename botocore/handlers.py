@@ -31,7 +31,7 @@ import re
 
 import six
 
-from botocore.compat import urlsplit, urlunsplit, unquote, json, quote
+from botocore.compat import urlsplit, urlunsplit, unquote, json
 from botocore import retryhandler
 import botocore.auth
 
@@ -75,13 +75,6 @@ def calculate_md5(event_name, params, **kwargs):
         md5.update(six.b(params['payload'].getvalue()))
         value = base64.b64encode(md5.digest()).decode('utf-8')
         params['headers']['Content-MD5'] = value
-
-
-def quote_source_header(event_name, params, **kwargs):
-    if params['headers'] and 'x-amz-copy-source' in params['headers']:
-        value = params['headers']['x-amz-copy-source']
-        value = quote(value.encode('utf-8'), safe='/~')
-        params['headers']['x-amz-copy-source'] = value
 
 
 def check_dns_name(bucket_name):
@@ -220,8 +213,6 @@ BUILTIN_HANDLERS = [
     ('before-call.s3.PutBucketLifecycle', calculate_md5),
     ('before-call.s3.PutBucketCors', calculate_md5),
     ('before-call.s3.DeleteObjects', calculate_md5),
-    ('before-call.s3.UploadPartCopy', quote_source_header),
-    ('before-call.s3.CopyObject', quote_source_header),
     ('before-auth.s3', fix_s3_host),
     ('service-created', register_retries_for_service),
     ('creating-endpoint.s3', maybe_switch_to_s3sigv4),
