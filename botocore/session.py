@@ -25,7 +25,6 @@ This module contains the main interface to the botocore package, the
 Session object.
 """
 
-import logging
 import platform
 import os
 import copy
@@ -40,9 +39,6 @@ from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.provider import get_provider
 from botocore import __version__
 from botocore import handlers
-
-
-
 
 
 class Session(object):
@@ -615,6 +611,15 @@ class Session(object):
     def emit_first_non_none_response(self, event_name, **kwargs):
         responses = self._events.emit(event_name, **kwargs)
         return first_non_none_response(responses)
+
+    def create_temporary_credentials(self, credential_fn, **kwargs):
+        self.tc = botocore.credentials.TemporaryCredentials(
+            self, credential_fn, **kwargs)
+
+    def delete_temporary_credentials(self, name):
+        cache_path = botocore.credentials.get_credential_cache_path(self)
+        if os.path.isfile(cache_path):
+            os.unlink(cache_path)
 
 
 def get_session(env_vars=None):

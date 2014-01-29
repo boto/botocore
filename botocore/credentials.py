@@ -21,12 +21,14 @@
 # IN THE SOFTWARE.
 #
 import os
-from botocore.vendored import requests
+import datetime
 import logging
 
 from six.moves import configparser
 
+from botocore.vendored import requests
 from botocore.compat import json
+from botocore.exceptions import TemporaryCredentialsError
 
 
 logger = logging.getLogger(__name__)
@@ -60,6 +62,99 @@ class Credentials(object):
         self.token = token
         self.method = None
         self.profiles = []
+
+
+def get_temporary_credential_path(session):
+    cred_path = None
+    config_path = session.get_variable('config_file')
+    if config_path:
+        cred_path = os.path.dirname(session.get_variable('config_file'))
+        cred_path = os.path.expanduser(cred_path)
+        cred_path = os.path.expandvars(cred_path)
+        cred_path = os.path.join(cred_path, '.session')
+    return cred_path
+
+
+def create_temporary_credentials(session, credential_fn=None, **kwargs):
+    return TemporaryCredentials(session, cred_op=credential_fn, **kwargs)
+
+
+class TemporaryCredentials(Credentials):
+
+    def __init__(self, session, path=None, cred_op=None, **cred_params):
+        self._session = session
+        self._cred_data = None
+        if not path:
+            self._path = get_temporary_credential_path(self._session)
+        else:
+            self._path = path
+        if cred_op:
+            self._fetch(cred_op, cred_params)
+        else:
+            self._load()
+        self.method = 'session-cache'
+
+    @property
+    def access_key(self):
+        self._check()
+        return self._cred_data['AccessKeyId']
+
+    @property
+    def secret_key(self):
+        self._check()
+        return self._cred_data['SecretAccessKey']
+
+    @property
+    def token(self):
+        self._check()
+        return self._cred_data['SessionToken']
+
+    def _load(self):
+        with open(self._path) as fp:
+            self._cred_data = json.load(fp)
+
+    def _check(self):
+        # Now we need to check to see if the cached credentials
+        # are still valid or if they have expired.
+        expiry_time = datetime.datetime.strptime(
+            self._cred_data['Expiration'], "%Y-%m-%dT%H:%M:%SZ")
+        now = datetime.datetime.utcnow()
+        # The credentials should be refreshed if they're going to expire
+        # in less than 15 minutes.
+        delta = expiry_time - now
+        # python2.6 does not have timedelta.total_seconds() so we have
+        # to calculate this ourselves.  This is straight from the
+        # datetime docs.
+        seconds_left = (
+            (delta.microseconds + (delta.seconds + delta.days * 24 * 3600)
+             * 10**6) / 10**6)
+        if seconds_left < (15 * 60):
+            logger.debug("Credentials need to be refreshed.")
+            os.unlink(self._path)
+            cred_op = self._cred_data['CredentialOp']
+            cred_params = self._cred_data['CredentialParams']
+            self._fetch(cred_op, cred_params)
+
+    def _fetch(self, cred_op, cred_params):
+        logger.debug('Refreshing temporary credentials (%s)', self._path)
+        self._session._credentials = None
+        sts = self._session.get_service('sts')
+        endpoint = sts.get_endpoint()
+        operation = sts.get_operation(cred_op)
+        http_response, data = operation.call(endpoint, **cred_params)
+        if http_response.status_code != 200:
+            logger.debug(data)
+            msg = 'Received code: %d' % http_response.status_code
+            if 'Errors' in data:
+                if 'Message' in data['Errors'][0]:
+                    msg = data['Errors'][0]['Message']
+            raise TemporaryCredentialsError(msg=msg)
+        with open(self._path, 'w') as fp:
+            self._cred_data = data['Credentials']
+            self._cred_data['CredentialOp'] = cred_op
+            self._cred_data['CredentialParams'] = cred_params
+            json.dump(self._cred_data, fp, indent=4)
+        self._session._credentials = None
 
 
 def retrieve_iam_role_credentials(url=METADATA_SECURITY_CREDENTIALS_URL,
@@ -206,13 +301,30 @@ def search_boto_config(**kwargs):
         logger.info('Found credentials in boto config file.')
     return credentials
 
-AllCredentialFunctions = [search_environment,
+def search_temporary_credentials(**kwargs):
+    """
+    If there are temporary credentials stored on the filesystem
+    use those.
+    """
+    credentials = None
+    session = kwargs.get('session')
+    cache_path = get_temporary_credential_path(session)
+    if cache_path is not None and os.path.isfile(cache_path):
+        credentials = TemporaryCredentials(session, cache_path)
+        credentials.method = 'temporary'
+        logger.info('Found credentials in temporary credential cache.')
+    return credentials
+
+
+AllCredentialFunctions = [search_temporary_credentials,
+                          search_environment,
                           search_credentials_file,
                           search_file,
                           search_boto_config,
                           search_iam_role]
 
-_credential_methods = (('env', search_environment),
+_credential_methods = (('session-cache', search_temporary_credentials),
+                       ('env', search_environment),
                        ('config', search_file),
                        ('credentials-file', search_credentials_file),
                        ('boto', search_boto_config),
@@ -226,3 +338,4 @@ def get_credentials(session):
         if credentials:
             break
     return credentials
+

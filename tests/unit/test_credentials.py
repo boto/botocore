@@ -24,13 +24,18 @@
 from tests import unittest, BaseEnvVar
 import json
 import os
+import datetime
+import logging
 
 import mock
 
 import botocore.session
 import botocore.exceptions
 from botocore import credentials
-from botocore.vendored.requests import ConnectionError
+from botocore.vendored.requests import ConnectionError, Response
+
+
+LOG = logging.getLogger(__name__)
 
 # Passed to session to keep it from finding default config file
 TESTENVVARS = {'config_file': (None, 'AWS_CONFIG_FILE', None)}
@@ -42,6 +47,43 @@ metadata = {'foobar': {'Code': 'Success', 'LastUpdated':
                        'Expiration': '2012-12-03T20:48:03Z', 'Type':
                        'AWS-HMAC'}}
 
+
+return1 = {
+    'AssumedRoleUser':
+        {
+        'AssumedRoleId': 'AAAA:foobar',
+        'Arn': 'arn:aws:sts::123456789012:assumed-role/FooBar/foobar'
+        },
+    'Credentials': {
+        'SecretAccessKey': 'secret_key',
+        'SessionToken': 'session_token',
+        'Expiration': '2014-01-23T17:00:00Z',
+        'AccessKeyId': 'access_key'},
+    'ResponseMetadata': {'RequestId': '962be6e2-844b-11e3-93e3-9fcaebaba3bb'}}
+
+return2 = {
+    'AssumedRoleUser':
+        {
+        'AssumedRoleId': 'AAAA:foobar',
+        'Arn': 'arn:aws:sts::123456789012:assumed-role/FooBar/foobar'
+        },
+    'Credentials': {
+        'SecretAccessKey': 'secret_key2',
+        'SessionToken': 'session_token2',
+        'Expiration': '2014-01-23T18:00:00Z',
+        'AccessKeyId': 'access_key2'},
+    'ResponseMetadata': {'RequestId': '962be6e2-844b-11e3-93e3-9fcaebaba3bb'}}
+
+json_body = ('{"AccessKeyId": "access_key3",'
+             '"SecretAccessKey": "secret_key3",'
+             '"Expiration": "2014-01-23T12:00:00Z",'
+             '"CredentialOp": "AssumeRole",'
+             '"SessionToken": "session_token3",'
+             '"CredentialParams": {'
+             '"role_session_name": "foobar",'
+             '"role_arn": "arn:aws:iam::123456789012:role/FooBar"'
+             '}}'
+             )
 
 def path(filename):
     return os.path.join(os.path.dirname(__file__), 'cfg', filename)
@@ -226,5 +268,102 @@ class IamRoleTest(BaseEnvVar):
         self.assertEqual(retrieved['foobar']['AccessKeyId'], 'foo')
 
 
+class TestTemporaryCredentials(BaseEnvVar):
+    
+    def setUp(self):
+        super(TestTemporaryCredentials, self).setUp()
+        self.session = botocore.session.get_session(env_vars=TESTENVVARS)
+        self.environ['AWS_CONFIG_FILE'] = path('aws_config')
+        self.http_response = Response()
+        self.http_response.status_code = 200
+        self.make_request_patch = mock.patch('botocore.endpoint.Endpoint.make_request')
+        self.make_request_is_patched = False
+        self.datetime_patch = mock.patch.object(
+            botocore.credentials.datetime, 'datetime',
+            mock.Mock(wraps=datetime.datetime))
+
+    def tearDown(self):
+        # This clears all the previous registrations.
+        self.stop_make_request_patch()
+        cache_path = credentials.get_temporary_credential_path(self.session)
+        if cache_path:
+            os.unlink(cache_path)
+        super(TestTemporaryCredentials, self).setUp()
+
+    def start_make_request_patch(self, parsed_data):
+        make_request_patch = self.make_request_patch.start()
+        make_request_patch.return_value = (self.http_response, parsed_data)
+        self.make_request_is_patched = True
+
+    def stop_make_request_patch(self):
+        if self.make_request_is_patched:
+            self.make_request_patch.stop()
+            self.make_request_is_patched = False
+
+    def test_create_and_refresh(self):
+        # First delete any existing .sessions directory
+        cache_path = credentials.get_temporary_credential_path(self.session)
+        LOG.debug('cache_path=%s', cache_path)
+        if os.path.exists(cache_path):
+            os.unlink(cache_path)
+        # Make sure there is no .sessions cache directory
+        self.assertFalse(os.path.exists(cache_path))
+        # Patch make_request
+        self.start_make_request_patch(return1)
+        # First try to check the credentials with a mocked datetime
+        # that is prior to the expiration of the credentials.
+        mocked_datetime = self.datetime_patch.start()
+        mocked_datetime.utcnow.return_value = datetime.datetime(2014, 1, 23, 16, 0)
+        # Create temporary credentials
+        tc = credentials.create_temporary_credentials(
+            self.session, 'AssumeRole',
+            role_arn='arn:aws:iam::123456789012:role/FooBar',
+            role_session_name='foobar')
+        self.stop_make_request_patch()
+        # Now make sure the session file does exist now
+        self.assertTrue(os.path.exists(cache_path))
+        # Make sure we have the right values in our credential object.
+        self.assertEqual(tc.access_key, return1['Credentials']['AccessKeyId'])
+        self.assertEqual(tc.secret_key, return1['Credentials']['SecretAccessKey'])
+        self.assertEqual(tc.token, return1['Credentials']['SessionToken'])
+        self.datetime_patch.stop()
+        self.start_make_request_patch(return2)
+        # Now try to check the credentials with a mocked datetime
+        # that is within 15 minutes of the expiration of the credentials.
+        mocked_datetime = self.datetime_patch.start()
+        mocked_datetime.utcnow.return_value = datetime.datetime(2014, 1, 23, 16, 46)
+        # These attribute accesses should cause the TemporaryCredentials
+        # object to check it's expiration date against the current time.
+        # This should cause it to refetch credentials.
+        self.assertEqual(tc.access_key, return2['Credentials']['AccessKeyId'])
+        self.assertEqual(tc.secret_key, return2['Credentials']['SecretAccessKey'])
+        self.assertEqual(tc.token, return2['Credentials']['SessionToken'])
+        self.datetime_patch.stop()
+        self.stop_make_request_patch()
+
+    def test_use_existing(self):
+        # Create a file containing credential data
+        cache_path = credentials.get_temporary_credential_path(self.session)
+        LOG.debug('cache_path=%s', cache_path)
+        with open(cache_path, 'w') as fp:
+            fp.write(json_body)
+        # Patch make_request
+        self.start_make_request_patch(return1)
+        # Try to check the credentials with a mocked datetime
+        # that is prior to the expiration of the credentials.
+        # This should not require a fetch of new credentials
+        # so we should end up with the data from the file we created.
+        mocked_datetime = self.datetime_patch.start()
+        mocked_datetime.utcnow.return_value = datetime.datetime(2014, 1, 23, 11, 30)
+        # Create temporary credentials
+        tc = credentials.create_temporary_credentials(self.session)
+        # Now make sure the session file does exist now
+        self.assertTrue(os.path.exists(cache_path))
+        # Make sure we have the right values in our credential object.
+        self.assertEqual(tc.access_key, 'access_key3')
+        self.assertEqual(tc.secret_key, 'secret_key3')
+        self.assertEqual(tc.token, 'session_token3')
+        self.datetime_patch.stop()
+        
 if __name__ == "__main__":
     unittest.main()
