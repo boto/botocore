@@ -57,5 +57,35 @@ def get_config(session):
             for section in cp.sections():
                 config[section] = {}
                 for option in cp.options(section):
-                    config[section][option] = cp.get(section, option)
+                    config_value = cp.get(section, option)
+                    if config_value.startswith('\n'):
+                        # Then we need to parse the inner contents as
+                        # hierarchical.  We support a single level
+                        # of nesting for now.
+                        try:
+                            config_value = _parse_nested(config_value)
+                        except ValueError:
+                            raise botocore.exceptions.ConfigParseError(
+                                path=path)
+                    config[section][option] = config_value
     return config
+
+
+def _parse_nested(config_value):
+    # Given a value like this:
+    # \n
+    # foo = bar
+    # bar = baz
+    # We need to parse this into
+    # {'foo': 'bar', 'bar': 'baz}
+    parsed = {}
+    for line in config_value.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        # The caller will catch ValueError
+        # and raise an appropriate error
+        # if this fails.
+        key, value = line.split('=', 1)
+        parsed[key.strip()] = value.strip()
+    return parsed
