@@ -104,6 +104,21 @@ class TestConfig(BaseEnvVar):
         # Both versions should be identical.
         self.assertEqual(config, cached_config)
 
+    def test_nested_hierarchy_parsing(self):
+        self.environ['FOO_CONFIG_FILE'] = path('aws_config_nested')
+        session = botocore.session.get_session(self.env_vars)
+        config = session.get_config()
+        self.assertEqual(config['aws_access_key_id'], 'foo')
+        self.assertEqual(config['region'], 'us-west-2')
+        self.assertEqual(config['s3']['signature_version'], 's3v4')
+        self.assertEqual(config['cloudwatch']['signature_version'], 'v4')
+
+    def test_nested_bad_config(self):
+        self.environ['FOO_CONFIG_FILE'] = path('aws_config_nested_bad')
+        session = botocore.session.get_session(self.env_vars)
+        with self.assertRaises(botocore.exceptions.ConfigParseError):
+            cfg = session.get_config()
+
 
 if __name__ == "__main__":
     unittest.main()
