@@ -193,6 +193,19 @@ def maybe_switch_to_sigv4(service, region_name, **kwargs):
         service.signature_version = 'v4'
 
 
+def signature_overrides(service_data, service_name, session, **kwargs):
+    config = session.get_config()
+    service_config = config.get(service_name)
+    if service_config is None or not isinstance(service_config, dict):
+        return
+    signature_version_override = service_config.get('signature_version')
+    if signature_version_override is not None:
+        logger.debug("Switching signature version for service %s "
+                     "to version %s based on config file override.",
+                     service_name, signature_version_override)
+        service_data['signature_version'] = signature_version_override
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -213,4 +226,5 @@ BUILTIN_HANDLERS = [
     ('service-created', register_retries_for_service),
     ('creating-endpoint.s3', maybe_switch_to_s3sigv4),
     ('creating-endpoint.ec2', maybe_switch_to_sigv4),
+    ('service-data-loaded', signature_overrides),
 ]
