@@ -64,6 +64,14 @@ class TestHandlers(unittest.TestCase):
         converted_value = first_non_none_response(rv)
         self.assertEqual(converted_value, {'foo':'bar'})
 
+    def test_quote_source_header(self):
+        for op in ('UploadPartCopy', 'CopyObject'):
+            event = self.session.create_event(
+                'before-call', 's3', op)
+            params = {'headers': {'x-amz-copy-source': 'foo++bar.txt'}}
+            self.session.emit(event, params=params)
+            self.assertEqual(
+                params['headers']['x-amz-copy-source'], 'foo%2B%2Bbar.txt')
 
 
 if __name__ == '__main__':
