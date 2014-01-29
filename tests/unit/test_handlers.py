@@ -26,6 +26,8 @@ from botocore.compat import quote
 import base64
 import six
 
+import mock
+
 
 class TestHandlers(unittest.TestCase):
 
@@ -72,6 +74,26 @@ class TestHandlers(unittest.TestCase):
             self.session.emit(event, params=params)
             self.assertEqual(
                 params['headers']['x-amz-copy-source'], 'foo%2B%2Bbar.txt')
+
+    def test_switch_to_sigv4(self):
+        event = self.session.create_event('service-data-loaded', 's3')
+        mock_session = mock.Mock()
+        mock_session.get_config.return_value = {
+            's3': {'signature_version': 's3v4'},
+        }
+        kwargs = {'service_data': {'signature_version': 's3'},
+                  'service_name': 's3', 'session': mock_session}
+        self.session.emit(event, **kwargs)
+        self.assertEqual(kwargs['service_data']['signature_version'], 's3v4')
+
+    def test_noswitch_to_sigv4(self):
+        event = self.session.create_event('service-data-loaded', 's3')
+        mock_session = mock.Mock()
+        mock_session.get_config.return_value = {}
+        kwargs = {'service_data': {'signature_version': 's3'},
+                  'service_name': 's3', 'session': mock_session}
+        self.session.emit(event, **kwargs)
+        self.assertEqual(kwargs['service_data']['signature_version'], 's3')
 
 
 if __name__ == '__main__':

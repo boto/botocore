@@ -42,9 +42,6 @@ from botocore import __version__
 from botocore import handlers
 
 
-
-
-
 class Session(object):
     """
     The Session object collects together useful functionality
@@ -62,6 +59,7 @@ class Session(object):
         'before-parameter-build': '.%s.%s',
         'before-call': '.%s.%s',
         'service-created': '',
+        'service-data-loaded': '.%s',
         'creating-endpoint': '.%s',
         'before-auth': '.%s',
         'needs-retry': '.%s.%s',
@@ -315,6 +313,12 @@ class Session(object):
         using the default ``profile`` session variable.  If it has already been
         loaded, the cached configuration will be returned.
 
+        The configuration data is loaded **only** from the config file.
+        It does not resolve variables based on different locations
+        (e.g. first from the session instance, then from environment
+        variables, then from the config file).  If you want this lookup
+        behavior, use the ``get_config_variable`` method instead.
+
         Note that this configuration is specific to a single profile (the
         ``profile`` session variable).
 
@@ -432,6 +436,9 @@ class Session(object):
         """
         data_path = '%s/%s' % (self.provider.name, service_name)
         service_data = self.get_data(data_path)
+        event_name = self.create_event('service-data-loaded', service_name)
+        self._events.emit(event_name, service_data=service_data,
+                          service_name=service_name, session=self)
         return service_data
 
     def get_available_services(self):
