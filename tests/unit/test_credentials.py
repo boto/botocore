@@ -25,7 +25,6 @@ from tests import unittest, BaseEnvVar
 import json
 import os
 import datetime
-import logging
 
 import mock
 
@@ -34,8 +33,6 @@ import botocore.exceptions
 from botocore import credentials
 from botocore.vendored.requests import ConnectionError, Response
 
-
-LOG = logging.getLogger(__name__)
 
 # Passed to session to keep it from finding default config file
 TESTENVVARS = {'config_file': (None, 'AWS_CONFIG_FILE', None)}
@@ -303,7 +300,6 @@ class TestTemporaryCredentials(BaseEnvVar):
     def test_create_and_refresh(self):
         # First delete any existing .sessions directory
         cache_path = credentials.get_temporary_credential_path(self.session)
-        LOG.debug('cache_path=%s', cache_path)
         if os.path.exists(cache_path):
             os.unlink(cache_path)
         # Make sure there is no .sessions cache directory
@@ -316,7 +312,7 @@ class TestTemporaryCredentials(BaseEnvVar):
         mocked_datetime.utcnow.return_value = datetime.datetime(2014, 1, 23, 16, 0)
         # Create temporary credentials
         tc = credentials.create_temporary_credentials(
-            self.session, 'AssumeRole',
+            self.session, 'sts', 'AssumeRole',
             role_arn='arn:aws:iam::123456789012:role/FooBar',
             role_session_name='foobar')
         self.stop_make_request_patch()
@@ -344,7 +340,6 @@ class TestTemporaryCredentials(BaseEnvVar):
     def test_use_existing(self):
         # Create a file containing credential data
         cache_path = credentials.get_temporary_credential_path(self.session)
-        LOG.debug('cache_path=%s', cache_path)
         with open(cache_path, 'w') as fp:
             fp.write(json_body)
         # Patch make_request

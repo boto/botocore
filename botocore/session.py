@@ -612,9 +612,33 @@ class Session(object):
         responses = self._events.emit(event_name, **kwargs)
         return first_non_none_response(responses)
 
-    def create_temporary_credentials(self, credential_fn, **kwargs):
+    def create_temporary_credentials(self, credential_service,
+                                     credential_fn, **kwargs):
+        """
+        Calls ``credential_fn``, passing ``kwargs``, to create
+        temporary credentials.  These credentials are cached locally
+        and will be automatically updated if they expire.  Cached
+        temporary credentials have the highest precedence in the
+        credential search process so as long as they exist in the
+        cache, the temporary credentials will be used for all
+        operations.
+
+        :type credential_fn: str
+        :param credential_fn: The name of the service that will be
+            called to retrieve temporary credentials.  Normally, this
+            would be ``sts``.
+        
+        :type credential_fn: str
+        :param credential_fn: The name of the operation that will be
+            called to retrieve temporary credentials.  Examples are
+            ``AssumeRole``, ``GetSessionCredentials``, etc.
+
+        :type kwargs: keyword arguments
+        :param kwargs: Any parameters that should be passed to the
+            ``credential_fn``.
+        """
         self.tc = botocore.credentials.TemporaryCredentials(
-            self, credential_fn, **kwargs)
+            self, credential_service, credential_fn, **kwargs)
 
     def delete_temporary_credentials(self, name):
         cache_path = botocore.credentials.get_credential_cache_path(self)

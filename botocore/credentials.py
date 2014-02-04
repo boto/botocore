@@ -75,21 +75,23 @@ def get_temporary_credential_path(session):
     return cred_path
 
 
-def create_temporary_credentials(session, credential_fn=None, **kwargs):
-    return TemporaryCredentials(session, cred_op=credential_fn, **kwargs)
+def create_temporary_credentials(
+    session, credential_service=None, credential_fn=None, **kwargs):
+    return TemporaryCredentials(
+        session, cred_service=credential_service, cred_op=credential_fn, **kwargs)
 
 
 class TemporaryCredentials(Credentials):
 
-    def __init__(self, session, path=None, cred_op=None, **cred_params):
+    def __init__(self, session, path=None, cred_service=None, cred_op=None, **cred_params):
         self._session = session
         self._cred_data = None
         if not path:
             self._path = get_temporary_credential_path(self._session)
         else:
             self._path = path
-        if cred_op:
-            self._fetch(cred_op, cred_params)
+        if cred_service and cred_op:
+            self._fetch(cred_service, cred_op, cred_params)
         else:
             self._load()
         self.method = 'session-cache'
@@ -129,18 +131,19 @@ class TemporaryCredentials(Credentials):
             (delta.microseconds + (delta.seconds + delta.days * 24 * 3600)
              * 10**6) / 10**6)
         if seconds_left < (15 * 60):
-            logger.debug("Credentials need to be refreshed.")
             os.unlink(self._path)
+            cred_service = self._cred_data['CredentialService']
             cred_op = self._cred_data['CredentialOp']
             cred_params = self._cred_data['CredentialParams']
-            self._fetch(cred_op, cred_params)
+            self._fetch(cred_service, cred_op, cred_params)
 
-    def _fetch(self, cred_op, cred_params):
-        logger.debug('Refreshing temporary credentials (%s)', self._path)
+    def _fetch(self, cred_service, cred_op, cred_params):
+        logger.debug('Calling %s.%s to refresh credentials',
+                     cred_service, cred_op)
         self._session._credentials = None
-        sts = self._session.get_service('sts')
-        endpoint = sts.get_endpoint()
-        operation = sts.get_operation(cred_op)
+        svc = self._session.get_service(cred_service)
+        endpoint = svc.get_endpoint()
+        operation = svc.get_operation(cred_op)
         http_response, data = operation.call(endpoint, **cred_params)
         if http_response.status_code != 200:
             logger.debug(data)
@@ -151,6 +154,7 @@ class TemporaryCredentials(Credentials):
             raise TemporaryCredentialsError(msg=msg)
         with open(self._path, 'w') as fp:
             self._cred_data = data['Credentials']
+            self._cred_data['CredentialService'] = cred_service
             self._cred_data['CredentialOp'] = cred_op
             self._cred_data['CredentialParams'] = cred_params
             json.dump(self._cred_data, fp, indent=4)
@@ -311,7 +315,7 @@ def search_temporary_credentials(**kwargs):
     cache_path = get_temporary_credential_path(session)
     if cache_path is not None and os.path.isfile(cache_path):
         credentials = TemporaryCredentials(session, cache_path)
-        credentials.method = 'temporary'
+        credentials.method = 'session-cache'
         logger.info('Found credentials in temporary credential cache.')
     return credentials
 
