@@ -253,12 +253,12 @@ class TimestampParameter(Parameter):
     def validate(self, value):
         try:
             return dateutil.parser.parse(value)
-        except:
+        except Exception:
             pass
         try:
             # Might be specified as an epoch time
             return datetime.datetime.utcfromtimestamp(value)
-        except:
+        except Exception:
             pass
         raise ValidationError(value=str(value), type_name='timestamp',
                               param=self)
