@@ -5816,7 +5816,7 @@
                                             "shape_name": "PlatformValues",
                                             "type": "string",
                                             "enum": [
-                                                "Windows"
+                                                "windows"
                                             ],
                                             "documentation": "\n    <p>The instance operating system.</p>\n   ",
                                             "xmlname": "platform"
@@ -6835,7 +6835,7 @@
                                     "shape_name": "PlatformValues",
                                     "type": "string",
                                     "enum": [
-                                        "Windows"
+                                        "windows"
                                     ],
                                     "documentation": "\n     <p>The value is <code>Windows</code> for Windows AMIs; otherwise blank.</p>\n   ",
                                     "xmlname": "platform"
@@ -7936,7 +7936,7 @@
                                                 "shape_name": "PlatformValues",
                                                 "type": "string",
                                                 "enum": [
-                                                    "Windows"
+                                                    "windows"
                                                 ],
                                                 "documentation": "\n     <p>The value is <code>Windows</code> for Windows instances; otherwise blank.</p>\n   ",
                                                 "xmlname": "platform"
@@ -14669,7 +14669,7 @@
                         "shape_name": "PlatformValues",
                         "type": "string",
                         "enum": [
-                            "Windows"
+                            "windows"
                         ],
                         "documentation": "\n    <p>The instance operating system.</p>\n   ",
                         "required": true
@@ -14823,7 +14823,7 @@
                                         "shape_name": "PlatformValues",
                                         "type": "string",
                                         "enum": [
-                                            "Windows"
+                                            "windows"
                                         ],
                                         "documentation": "\n    <p>The instance operating system.</p>\n   ",
                                         "xmlname": "platform"
@@ -15245,7 +15245,7 @@
                                         "shape_name": "PlatformValues",
                                         "type": "string",
                                         "enum": [
-                                            "Windows"
+                                            "windows"
                                         ],
                                         "documentation": "\n    <p>The instance operating system.</p>\n   ",
                                         "xmlname": "platform"
@@ -18684,7 +18684,7 @@
                                     "shape_name": "PlatformValues",
                                     "type": "string",
                                     "enum": [
-                                        "Windows"
+                                        "windows"
                                     ],
                                     "documentation": "\n     <p>The value is <code>Windows</code> for Windows instances; otherwise blank.</p>\n   ",
                                     "xmlname": "platform"
