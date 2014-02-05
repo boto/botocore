@@ -154,7 +154,7 @@ class XmlResponse(Response):
         if not children:
             try:
                 children = parent.findall('*/%s' % cn)
-            except:
+            except Exception:
                 pass
         return children
 

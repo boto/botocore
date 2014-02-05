@@ -96,7 +96,7 @@ def _load_data(session, data_path):
                     fn = os.path.splitext(fn)[0]
                     if not fn.startswith('_'):
                         data.append(fn)
-            except:
+            except Exception:
                 logger.error('Unable to load dir: %s', dir_path,
                              exc_info=True)
             break
@@ -111,7 +111,7 @@ def _load_data(session, data_path):
                 else:
                     data = new_data
                 break
-            except:
+            except Exception:
                 logger.error('Unable to load file: %s', file_path,
                              exc_info=True)
         else:
