@@ -115,7 +115,10 @@ class Parameter(BotoCoreObject):
     def to_xml(self, value, label=None):
         if not label:
             label = self.name
-        return '<%s>%s</%s>' % (label, value, label)
+        if value is None:
+            return '<%s></%s>' % (label, label)
+        else:
+            return '<%s>%s</%s>' % (label, value, label)
 
 
 class IntegerParameter(Parameter):
