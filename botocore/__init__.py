@@ -30,17 +30,27 @@ log.addHandler(NullHandler())
 _first_cap_regex = re.compile('(.)([A-Z][a-z]+)')
 _number_cap_regex = re.compile('([a-z])([0-9]+)')
 _end_cap_regex = re.compile('([a-z0-9])([A-Z])')
+# Prepopulate the cache with special cases that don't match
+# our regular transformation.
+_xform_cache = {
+    ('SwapEnvironmentCNAMEs', '_'): 'swap_environment_cnames',
+    ('SwapEnvironmentCNAMEs', '-'): 'swap-environment-cnames',
+}
 
 ScalarTypes = ('string', 'integer', 'boolean', 'timestamp', 'float', 'double')
 
 
-def xform_name(name, sep='_'):
+def xform_name(name, sep='_', _xform_cache=_xform_cache):
     """
     Convert camel case to a "pythonic" name.
     """
-    s1 = _first_cap_regex.sub(r'\1' + sep + r'\2', name)
-    s2 = _number_cap_regex.sub(r'\1' + sep + r'\2', s1)
-    return _end_cap_regex.sub(r'\1' + sep + r'\2', s2).lower()
+    key = (name, sep)
+    if key not in _xform_cache:
+        s1 = _first_cap_regex.sub(r'\1' + sep + r'\2', name)
+        s2 = _number_cap_regex.sub(r'\1' + sep + r'\2', s1)
+        transformed = _end_cap_regex.sub(r'\1' + sep + r'\2', s2).lower()
+        _xform_cache[key] = transformed
+    return _xform_cache[key]
 
 
 class BotoCoreObject(object):
