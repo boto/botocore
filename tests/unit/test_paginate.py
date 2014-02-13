@@ -104,7 +104,7 @@ class TestPagination(unittest.TestCase):
         # Some pagination configs have a 'more_token' key that
         # indicate whether or not the results are being paginated.
         self.paginate_config = {
-            'more_key': 'IsTruncated',
+            'more_results': 'IsTruncated',
             'output_token': 'NextToken',
             'py_input_token': 'NextToken',
             'result_key': 'Foo',
@@ -127,7 +127,7 @@ class TestPagination(unittest.TestCase):
 
     def test_more_tokens_is_path_expression(self):
         self.paginate_config = {
-            'more_key': 'Foo.IsTruncated',
+            'more_results': 'Foo.IsTruncated',
             'output_token': 'NextToken',
             'py_input_token': 'NextToken',
             'result_key': 'Bar',
