@@ -13,6 +13,7 @@
 
 import unittest
 
+from botocore import xform_name
 from botocore.utils import remove_dot_segments
 from botocore.utils import normalize_url_path
 
@@ -36,6 +37,36 @@ class TestURINormalization(unittest.TestCase):
 
     def test_empty_url_normalization(self):
         self.assertEqual(normalize_url_path(''), '/')
+
+
+class TestTransformName(unittest.TestCase):
+    def test_upper_camel_case(self):
+        self.assertEqual(xform_name('UpperCamelCase'), 'upper_camel_case')
+        self.assertEqual(xform_name('UpperCamelCase', '-'), 'upper-camel-case')
+
+    def test_lower_camel_case(self):
+        self.assertEqual(xform_name('lowerCamelCase'), 'lower_camel_case')
+        self.assertEqual(xform_name('lowerCamelCase', '-'), 'lower-camel-case')
+
+    def test_consecutive_upper_case(self):
+        self.assertEqual(xform_name('HTTPHeaders'), 'http_headers')
+        self.assertEqual(xform_name('HTTPHeaders', '-'), 'http-headers')
+
+    def test_consecutive_upper_case_middle_string(self):
+        self.assertEqual(xform_name('MainHTTPHeaders'), 'main_http_headers')
+        self.assertEqual(xform_name('MainHTTPHeaders', '-'), 'main-http-headers')
+
+    def test_already_snake_cased(self):
+        self.assertEqual(xform_name('leave_alone'), 'leave_alone')
+
+    def test_special_cases(self):
+        # Some patterns don't actually match the rules we expect.
+        self.assertEqual(xform_name('SwapEnvironmentCNAMEs'), 'swap_environment_cnames')
+        self.assertEqual(xform_name('SwapEnvironmentCNAMEs', '-'), 'swap-environment-cnames')
+        self.assertEqual(xform_name('CreateCachediSCSIVolume', '-'), 'create-cached-iscsi-volume')
+        self.assertEqual(xform_name('DescribeCachediSCSIVolumes', '-'), 'describe-cached-iscsi-volumes')
+        self.assertEqual(xform_name('DescribeStorediSCSIVolumes', '-'), 'describe-stored-iscsi-volumes')
+        self.assertEqual(xform_name('CreateStorediSCSIVolume', '-'), 'create-stored-iscsi-volume')
 
 
 if __name__ == '__main__':
