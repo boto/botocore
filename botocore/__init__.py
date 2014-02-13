@@ -35,8 +35,15 @@ _end_cap_regex = re.compile('([a-z0-9])([A-Z])')
 _xform_cache = {
     ('SwapEnvironmentCNAMEs', '_'): 'swap_environment_cnames',
     ('SwapEnvironmentCNAMEs', '-'): 'swap-environment-cnames',
+    ('CreateCachediSCSIVolume', '_'): 'create_cached_iscsi_volume',
+    ('CreateCachediSCSIVolume', '-'): 'create-cached-iscsi-volume',
+    ('DescribeCachediSCSIVolumes', '_'): 'describe_cached_iscsi_volumes',
+    ('DescribeCachediSCSIVolumes', '-'): 'describe-cached-iscsi-volumes',
+    ('DescribeStorediSCSIVolumes', '_'): 'describe_stored_iscsi_volumes',
+    ('DescribeStorediSCSIVolumes', '-'): 'describe-stored-iscsi-volumes',
+    ('CreateStorediSCSIVolume', '_'): 'create_stored_iscsi_volume',
+    ('CreateStorediSCSIVolume', '-'): 'create-stored-iscsi-volume',
 }
-
 ScalarTypes = ('string', 'integer', 'boolean', 'timestamp', 'float', 'double')
 
 

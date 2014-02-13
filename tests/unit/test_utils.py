@@ -63,6 +63,10 @@ class TestTransformName(unittest.TestCase):
         # Some patterns don't actually match the rules we expect.
         self.assertEqual(xform_name('SwapEnvironmentCNAMEs'), 'swap_environment_cnames')
         self.assertEqual(xform_name('SwapEnvironmentCNAMEs', '-'), 'swap-environment-cnames')
+        self.assertEqual(xform_name('CreateCachediSCSIVolume', '-'), 'create-cached-iscsi-volume')
+        self.assertEqual(xform_name('DescribeCachediSCSIVolumes', '-'), 'describe-cached-iscsi-volumes')
+        self.assertEqual(xform_name('DescribeStorediSCSIVolumes', '-'), 'describe-stored-iscsi-volumes')
+        self.assertEqual(xform_name('CreateStorediSCSIVolume', '-'), 'create-stored-iscsi-volume')
 
 
 if __name__ == '__main__':
