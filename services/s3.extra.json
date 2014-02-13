@@ -73,7 +73,7 @@
   "pagination": {
     "ListMultipartUploads": {
       "limit_key": "MaxUploads",
-      "more_key": "IsTruncated",
+      "more_results": "IsTruncated",
       "output_token": [
         "NextKeyMarker",
         "NextUploadIdMarker"
@@ -85,7 +85,7 @@
       "result_key": "Uploads"
     },
     "ListObjectVersions": {
-      "more_key": "IsTruncated",
+      "more_results": "IsTruncated",
       "limit_key": "MaxKeys",
       "output_token": [
         "NextKeyMarker",
@@ -99,7 +99,7 @@
                      "DeleteMarkers"]
     },
     "ListObjects": {
-      "more_key": "IsTruncated",
+      "more_results": "IsTruncated",
       "limit_key": "MaxKeys",
       "output_token": "NextMarker || Contents[-1].Key",
       "input_token": "Marker",
@@ -109,7 +109,7 @@
       ]
     },
     "ListParts": {
-      "more_key": "IsTruncated",
+      "more_results": "IsTruncated",
       "limit_key": "MaxParts",
       "output_token": "NextPartNumberMarker",
       "input_token": "PartNumberMarker",
