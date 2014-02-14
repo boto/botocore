@@ -2411,7 +2411,7 @@
             "documentation": "This operation lists in-progress multipart uploads.",
             "pagination": {
                 "limit_key": "MaxUploads",
-                "more_key": "IsTruncated",
+                "more_results": "IsTruncated",
                 "output_token": [
                     "NextKeyMarker",
                     "NextUploadIdMarker"
@@ -2623,7 +2623,7 @@
             "documentation_url": "http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketGETVersion.html",
             "documentation": "Returns metadata about all of the versions of objects in a bucket.",
             "pagination": {
-                "more_key": "IsTruncated",
+                "more_results": "IsTruncated",
                 "limit_key": "MaxKeys",
                 "output_token": [
                     "NextKeyMarker",
@@ -2783,7 +2783,7 @@
             "documentation_url": "http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketGET.html",
             "documentation": "Returns some or all (up to 1000) of the objects in a bucket. You can use the request parameters as selection criteria to return a subset of the objects in a bucket.",
             "pagination": {
-                "more_key": "IsTruncated",
+                "more_results": "IsTruncated",
                 "limit_key": "MaxKeys",
                 "output_token": "NextMarker || Contents[-1].Key",
                 "input_token": "Marker",
@@ -2929,7 +2929,7 @@
             "documentation_url": "http://docs.aws.amazon.com/AmazonS3/latest/API/mpUploadListParts.html",
             "documentation": "Lists the parts that have been uploaded for a specific multipart upload.",
             "pagination": {
-                "more_key": "IsTruncated",
+                "more_results": "IsTruncated",
                 "limit_key": "MaxParts",
                 "output_token": "NextPartNumberMarker",
                 "input_token": "PartNumberMarker",
@@ -4312,7 +4312,7 @@
     "pagination": {
         "ListMultipartUploads": {
             "limit_key": "MaxUploads",
-            "more_key": "IsTruncated",
+            "more_results": "IsTruncated",
             "output_token": [
                 "NextKeyMarker",
                 "NextUploadIdMarker"
@@ -4328,7 +4328,7 @@
             ]
         },
         "ListObjectVersions": {
-            "more_key": "IsTruncated",
+            "more_results": "IsTruncated",
             "limit_key": "MaxKeys",
             "output_token": [
                 "NextKeyMarker",
@@ -4348,7 +4348,7 @@
             ]
         },
         "ListObjects": {
-            "more_key": "IsTruncated",
+            "more_results": "IsTruncated",
             "limit_key": "MaxKeys",
             "output_token": "NextMarker || Contents[-1].Key",
             "input_token": "Marker",
@@ -4359,7 +4359,7 @@
             "py_input_token": "marker"
         },
         "ListParts": {
-            "more_key": "IsTruncated",
+            "more_results": "IsTruncated",
             "limit_key": "MaxParts",
             "output_token": "NextPartNumberMarker",
             "input_token": "PartNumberMarker",
