@@ -1,26 +1,18 @@
 #!/usr/bin/env
 # Copyright (c) 2012-2013 Mitch Garnaat http://garnaat.org/
-# Copyright 2012-2013 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright 2012-2014 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the
-# "Software"), to deal in the Software without restriction, including
-# without limitation the rights to use, copy, modify, merge, publish, dis-
-# tribute, sublicense, and/or sell copies of the Software, and to permit
-# persons to whom the Software is furnished to do so, subject to the fol-
-# lowing conditions:
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
 #
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
+# http://aws.amazon.com/apache2.0/
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABIL-
-# ITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
-# SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-# WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-# IN THE SOFTWARE.
-#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+
 from tests import unittest, BaseEnvVar
 import os
 import botocore.session
@@ -103,6 +95,21 @@ class TestConfig(BaseEnvVar):
         cached_config = session.get_config()
         # Both versions should be identical.
         self.assertEqual(config, cached_config)
+
+    def test_nested_hierarchy_parsing(self):
+        self.environ['FOO_CONFIG_FILE'] = path('aws_config_nested')
+        session = botocore.session.get_session(self.env_vars)
+        config = session.get_config()
+        self.assertEqual(config['aws_access_key_id'], 'foo')
+        self.assertEqual(config['region'], 'us-west-2')
+        self.assertEqual(config['s3']['signature_version'], 's3v4')
+        self.assertEqual(config['cloudwatch']['signature_version'], 'v4')
+
+    def test_nested_bad_config(self):
+        self.environ['FOO_CONFIG_FILE'] = path('aws_config_nested_bad')
+        session = botocore.session.get_session(self.env_vars)
+        with self.assertRaises(botocore.exceptions.ConfigParseError):
+            cfg = session.get_config()
 
 
 if __name__ == "__main__":

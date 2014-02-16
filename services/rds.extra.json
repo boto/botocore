@@ -20,52 +20,58 @@
   },
   "pagination": {
     "DescribeDBEngineVersions": {
-      "limit_key": "MaxRecords",
       "input_token": "Marker",
       "output_token": "Marker",
+      "limit_key": "MaxRecords",
       "result_key": "DBEngineVersions"
     },
     "DescribeDBInstances": {
-      "limit_key": "MaxRecords",
       "input_token": "Marker",
       "output_token": "Marker",
+      "limit_key": "MaxRecords",
       "result_key": "DBInstances"
     },
-    "DescribeDBParameterGroups": {
-      "limit_key": "MaxRecords",
+    "DescribeDBLogFiles": {
       "input_token": "Marker",
       "output_token": "Marker",
+      "limit_key": "MaxRecords",
+      "result_key": "DescribeDBLogFiles"
+    },
+    "DescribeDBParameterGroups": {
+      "input_token": "Marker",
+      "output_token": "Marker",
+      "limit_key": "MaxRecords",
       "result_key": "DBParameterGroups"
     },
     "DescribeDBParameters": {
-      "limit_key": "MaxRecords",
       "input_token": "Marker",
       "output_token": "Marker",
+      "limit_key": "MaxRecords",
       "result_key": "Parameters"
     },
     "DescribeDBSecurityGroups": {
-      "limit_key": "MaxRecords",
       "input_token": "Marker",
       "output_token": "Marker",
+      "limit_key": "MaxRecords",
       "result_key": "DBSecurityGroups"
     },
     "DescribeDBSnapshots": {
-      "limit_key": "MaxRecords",
       "input_token": "Marker",
       "output_token": "Marker",
+      "limit_key": "MaxRecords",
       "result_key": "DBSnapshots"
     },
     "DescribeDBSubnetGroups": {
-      "limit_key": "MaxRecords",
       "input_token": "Marker",
       "output_token": "Marker",
+      "limit_key": "MaxRecords",
       "result_key": "DBSubnetGroups"
     },
     "DescribeEngineDefaultParameters": {
-      "limit_key": "MaxRecords",
       "input_token": "Marker",
-      "output_token": "Marker",
-      "result_key": "EngineDefaults"
+      "output_token": "EngineDefaults.Marker",
+      "limit_key": "MaxRecords",
+      "result_key": "EngineDefaults.Parameters"
     },
     "DescribeEventSubscriptions": {
       "input_token": "Marker",
@@ -74,40 +80,47 @@
       "result_key": "EventSubscriptionsList"
     },
     "DescribeEvents": {
-      "limit_key": "MaxRecords",
       "input_token": "Marker",
       "output_token": "Marker",
+      "limit_key": "MaxRecords",
       "result_key": "Events"
     },
     "DescribeOptionGroupOptions": {
-      "limit_key": "MaxRecords",
       "input_token": "Marker",
       "output_token": "Marker",
+      "limit_key": "MaxRecords",
       "result_key": "OptionGroupOptions"
     },
     "DescribeOptionGroups": {
-      "limit_key": "MaxRecords",
       "input_token": "Marker",
       "output_token": "Marker",
+      "limit_key": "MaxRecords",
       "result_key": "OptionGroupsList"
     },
     "DescribeOrderableDBInstanceOptions": {
-      "limit_key": "MaxRecords",
       "input_token": "Marker",
       "output_token": "Marker",
+      "limit_key": "MaxRecords",
       "result_key": "OrderableDBInstanceOptions"
     },
     "DescribeReservedDBInstances": {
-      "limit_key": "MaxRecords",
       "input_token": "Marker",
       "output_token": "Marker",
+      "limit_key": "MaxRecords",
       "result_key": "ReservedDBInstances"
     },
     "DescribeReservedDBInstancesOfferings": {
-      "limit_key": "MaxRecords",
       "input_token": "Marker",
       "output_token": "Marker",
+      "limit_key": "MaxRecords",
       "result_key": "ReservedDBInstancesOfferings"
+    },
+    "DownloadDBLogFilePortion": {
+      "input_token": "Marker",
+      "output_token": "Marker",
+      "limit_key": "NumberOfLines",
+      "more_results": "AdditionalDataPending",
+      "result_key": "LogFileData"
     }
   },
   "waiters": {
@@ -148,5 +161,5 @@
     "remove-deprecated-params": {
       "deprecated_keyword": "not currently supported"
     }
-  }      
+  }
 }

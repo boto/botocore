@@ -1,24 +1,16 @@
-# Copyright 2013 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright 2012-2014 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the
-# "Software"), to deal in the Software without restriction, including
-# without limitation the rights to use, copy, modify, merge, publish, dis-
-# tribute, sublicense, and/or sell copies of the Software, and to permit
-# persons to whom the Software is furnished to do so, subject to the fol-
-# lowing conditions:
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
 #
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
+# http://aws.amazon.com/apache2.0/
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABIL-
-# ITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
-# SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-# WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-# IN THE SOFTWARE.
-#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+
 """Builtin event handlers.
 
 This module contains builtin handlers for events emitted by botocore.
@@ -186,6 +178,19 @@ def maybe_switch_to_sigv4(service, region_name, **kwargs):
         service.signature_version = 'v4'
 
 
+def signature_overrides(service_data, service_name, session, **kwargs):
+    config = session.get_config()
+    service_config = config.get(service_name)
+    if service_config is None or not isinstance(service_config, dict):
+        return
+    signature_version_override = service_config.get('signature_version')
+    if signature_version_override is not None:
+        logger.debug("Switching signature version for service %s "
+                     "to version %s based on config file override.",
+                     service_name, signature_version_override)
+        service_data['signature_version'] = signature_version_override
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -204,4 +209,5 @@ BUILTIN_HANDLERS = [
     ('service-created', register_retries_for_service),
     ('creating-endpoint.s3', maybe_switch_to_s3sigv4),
     ('creating-endpoint.ec2', maybe_switch_to_sigv4),
+    ('service-data-loaded', signature_overrides),
 ]

@@ -1,26 +1,19 @@
-# Copyright (c) 2013 Amazon.com, Inc. or its affiliates.  All Rights Reserved
+# Copyright 2012-2014 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the
-# "Software"), to deal in the Software without restriction, including
-# without limitation the rights to use, copy, modify, merge, publish, dis-
-# tribute, sublicense, and/or sell copies of the Software, and to permit
-# persons to whom the Software is furnished to do so, subject to the fol-
-# lowing conditions:
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
 #
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
+# http://aws.amazon.com/apache2.0/
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABIL-
-# ITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
-# SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-# WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-# IN THE SOFTWARE.
-#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+
 from tests import unittest
-from botocore.translate import ModelFiles, translate, merge_dicts
+from botocore.translate import ModelFiles, translate, merge_dicts, \
+                               resembles_jmespath_exp
 
 
 SERVICES = {
@@ -594,6 +587,21 @@ class TestTranslateModel(unittest.TestCase):
                             "existent operation: ThisOperationDoesNotExist"):
             translate(self.model)
 
+    def test_skip_jmespath_validation(self):
+        # This would fail previously.
+        extra = {
+            'pagination': {
+                'AssumeRole': {
+                    'input_token': ['NextToken'],
+                    'output_token': ['NextToken', 'NextTokenToken'],
+                    'result_key': 'Credentials.AssumedRoleUser',
+                }
+            }
+        }
+        self.model.enhancements = extra
+        new_model = translate(self.model)
+        self.assertEqual(new_model['pagination'], extra['pagination'])
+
     def test_result_key_validation_with_no_output(self):
         extra = {
             'pagination': {
@@ -1018,6 +1026,17 @@ class TestWaiterDenormalization(unittest.TestCase):
         self.model.enhancements = extra
         with self.assertRaises(ValueError):
             new_model = translate(self.model)
+
+
+class TestResemblesJMESPath(unittest.TestCase):
+    maxDiff = None
+
+    def test_is_jmespath(self):
+      self.assertTrue(resembles_jmespath_exp('Something.Else'))
+
+    def test_is_not_jmespath(self):
+      self.assertFalse(resembles_jmespath_exp('Something'))
+      self.assertFalse(resembles_jmespath_exp('Something[1]'))
 
 
 if __name__ == '__main__':
