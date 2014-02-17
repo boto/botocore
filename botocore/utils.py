@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from .exceptions import InvalidExpressionError
+
 
 def normalize_url_path(path):
     if not path:
@@ -57,3 +59,35 @@ def remove_dot_segments(url):
                 output.append(url[:next_slash])
                 url = url[next_slash:]
     return ''.join(output)
+
+
+def exp_set(source, expression, value, is_first=True):
+    # This takes a (limited) jmespath-like expression & can set a value based
+    # on it.
+    # Limitations:
+    # * Only handles dotted lookups
+    # * No offsets/wildcards/slices/etc.
+    if is_first:
+        for invalid in ['[', ']', '*']:
+            if invalid in expression:
+                raise InvalidExpressionError(expression=expression)
+
+    exp_bits = expression.split('.')
+    current_key = exp_bits[0]
+    remainder = '.'.join(exp_bits[1:])
+
+    if not current_key:
+        raise InvalidExpressionError(expression=expression)
+
+    if len(exp_bits) > 1:
+        if not current_key in source:
+            # We've got something in the expression that's not present in the
+            # source (new key). If there's any more bits, we'll set the key with
+            # an empty dictionary.
+            source[current_key] = {}
+
+        return exp_set(source[current_key], remainder, value, is_first=False)
+
+    # If we're down to a single key, set it.
+    source[current_key] = value
+    return True

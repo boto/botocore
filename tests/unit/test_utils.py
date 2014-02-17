@@ -14,8 +14,10 @@
 import unittest
 
 from botocore import xform_name
+from botocore.exceptions import InvalidExpressionError
 from botocore.utils import remove_dot_segments
 from botocore.utils import normalize_url_path
+from botocore.utils import exp_set
 
 
 class TestURINormalization(unittest.TestCase):
@@ -67,6 +69,51 @@ class TestTransformName(unittest.TestCase):
         self.assertEqual(xform_name('DescribeCachediSCSIVolumes', '-'), 'describe-cached-iscsi-volumes')
         self.assertEqual(xform_name('DescribeStorediSCSIVolumes', '-'), 'describe-stored-iscsi-volumes')
         self.assertEqual(xform_name('CreateStorediSCSIVolume', '-'), 'create-stored-iscsi-volume')
+
+
+class TestExpSet(unittest.TestCase):
+    def setUp(self):
+        super(TestExpSet, self).setUp()
+        self.data = {
+            'Response': {
+                'Thing': {
+                    'Id': 1,
+                    'Name': 'Thing #1',
+                }
+            },
+            'Marker': 'some-token'
+        }
+
+    def test_single_depth_existing(self):
+        self.assertTrue(exp_set(self.data, 'Marker', 'new-token'))
+        self.assertEqual(self.data['Marker'], 'new-token')
+
+    def test_single_depth_new(self):
+        self.assertFalse('Limit' in self.data)
+        self.assertTrue(exp_set(self.data, 'Limit', 100))
+        self.assertEqual(self.data['Limit'], 100)
+
+    def test_multiple_depth_existing(self):
+        self.assertTrue(exp_set(self.data, 'Response.Thing.Name', 'New Name'))
+        self.assertEqual(self.data['Response']['Thing']['Name'], 'New Name')
+
+    def test_multiple_depth_new(self):
+        self.assertFalse('Brand' in self.data)
+        self.assertTrue(exp_set(self.data, 'Brand.New', {'abc': 123}))
+        self.assertEqual(self.data['Brand']['New']['abc'], 123)
+
+    def test_invalid_exp(self):
+        with self.assertRaises(InvalidExpressionError):
+            exp_set(self.data, 'Response.*.Name', 'new-token')
+
+        with self.assertRaises(InvalidExpressionError):
+            exp_set(self.data, 'Response.Things[0]', 'new-token')
+
+        with self.assertRaises(InvalidExpressionError):
+            exp_set(self.data, '', 'new-token')
+
+        with self.assertRaises(InvalidExpressionError):
+            exp_set(self.data, '.', 'new-token')
 
 
 if __name__ == '__main__':

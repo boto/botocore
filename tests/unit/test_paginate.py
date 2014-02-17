@@ -31,7 +31,10 @@ class TestPagination(unittest.TestCase):
         self.paginator = Paginator(self.operation)
 
     def test_result_key_available(self):
-        self.assertEqual(self.paginator.result_keys, ['Foo'])
+        self.assertEqual(
+            [rk.expression for rk in self.paginator.result_keys],
+            ['Foo']
+        )
 
     def test_no_next_token(self):
         response = {'not_the_next_token': 'foobar'}
@@ -506,11 +509,17 @@ class TestMultipleInputKeys(unittest.TestCase):
             [mock.call(None, InMarker1='m1', InMarker2='m2'),])
 
     def test_result_key_exposed_on_paginator(self):
-        self.assertEqual(self.paginator.result_keys, ['Users', 'Groups'])
+        self.assertEqual(
+            [rk.expression for rk in self.paginator.result_keys],
+            ['Users', 'Groups']
+        )
 
     def test_result_key_exposed_on_page_iterator(self):
         pages = self.paginator.paginate(None, max_items=3)
-        self.assertEqual(pages.result_keys, ['Users', 'Groups'])
+        self.assertEqual(
+            [rk.expression for rk in pages.result_keys],
+            ['Users', 'Groups']
+        )
 
 
 if __name__ == '__main__':
