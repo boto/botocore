@@ -26,7 +26,7 @@ except NameError:
 
 import jmespath
 from botocore.exceptions import PaginationError
-from botocore.utils import exp_set
+from botocore.utils import set_value_from_jmespath
 
 
 class Paginator(object):
@@ -202,7 +202,7 @@ class PageIterator(object):
         # the truncated amount.
         starting_truncation = self._parse_starting_token()[1]
         all_data = primary_result_key.search(parsed)
-        exp_set(
+        set_value_from_jmespath(
             parsed,
             primary_result_key.expression,
             all_data[starting_truncation:]
@@ -213,7 +213,7 @@ class PageIterator(object):
         for token in self.result_keys:
             if token == primary_result_key:
                 continue
-            exp_set(parsed, token.expression, [])
+            set_value_from_jmespath(parsed, token.expression, [])
         return starting_truncation
 
     def _truncate_response(self, parsed, primary_result_key, truncate_amount,
@@ -223,7 +223,11 @@ class PageIterator(object):
             original = []
         amount_to_keep = len(original) - truncate_amount
         truncated = original[:amount_to_keep]
-        exp_set(parsed, primary_result_key.expression, truncated)
+        set_value_from_jmespath(
+            parsed,
+            primary_result_key.expression,
+            truncated
+        )
         # The issue here is that even though we know how much we've truncated
         # we need to account for this globally including any starting
         # left truncation. For example:
@@ -257,7 +261,7 @@ class PageIterator(object):
         response = {}
         key_names = [i.result_key for i in iterators]
         for key in key_names:
-            exp_set(response, key.expression, [])
+            set_value_from_jmespath(response, key.expression, [])
         for vals in zip_longest(*iterators):
             for k, val in zip(key_names, vals):
                 if val is not None:
