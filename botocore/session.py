@@ -20,6 +20,7 @@ import platform
 import os
 import copy
 import shlex
+import logging
 
 import botocore.config
 import botocore.credentials
@@ -638,13 +639,11 @@ class Session(object):
         :param kwargs: Any parameters that should be passed to the
             ``credential_fn``.
         """
-        self.tc = botocore.credentials.TemporaryCredentials(
+        self.tc = botocore.credentials.create_temporary_credentials(
             self, credential_service, credential_fn, **kwargs)
 
-    def delete_temporary_credentials(self, name):
-        cache_path = botocore.credentials.get_credential_cache_path(self)
-        if os.path.isfile(cache_path):
-            os.unlink(cache_path)
+    def delete_temporary_credentials(self):
+        botocore.credentials.delete_temporary_credentials(self)
 
 
 def get_session(env_vars=None):

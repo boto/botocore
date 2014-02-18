@@ -67,15 +67,22 @@ def get_temporary_credential_path(session):
     return cred_path
 
 
-def create_temporary_credentials(
-    session, credential_service=None, credential_fn=None, **kwargs):
-    return TemporaryCredentials(
-        session, cred_service=credential_service, cred_op=credential_fn, **kwargs)
+def create_temporary_credentials(session, credential_service=None,
+                                 credential_fn=None, **kwargs):
+    return TemporaryCredentials(session, cred_service=credential_service,
+                                cred_op=credential_fn, **kwargs)
+
+
+def delete_temporary_credentials(session):
+    path = get_temporary_credential_path(session)
+    if os.path.isfile(path):
+        os.unlink(path)
 
 
 class TemporaryCredentials(Credentials):
 
-    def __init__(self, session, path=None, cred_service=None, cred_op=None, **cred_params):
+    def __init__(self, session, path=None, cred_service=None,
+                 cred_op=None, **cred_params):
         self._session = session
         self._cred_data = None
         if not path:
@@ -191,7 +198,7 @@ def _get_request(url, timeout, num_attempts):
             response = requests.get(url, timeout=timeout)
         except (requests.Timeout, requests.ConnectionError) as e:
             logger.debug("Caught exception wil trying to retrieve credentials "
-                        "from metadata service: %s", e, exc_info=True)
+                         "from metadata service: %s", e, exc_info=True)
         else:
             if response.status_code == 200:
                 return response
