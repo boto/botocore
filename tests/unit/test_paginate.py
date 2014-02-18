@@ -522,5 +522,45 @@ class TestMultipleInputKeys(unittest.TestCase):
         )
 
 
+class TestExpressionKeyIterators(unittest.TestCase):
+    def setUp(self):
+        self.operation = mock.Mock()
+        # This is something like what we'd see in RDS.
+        self.paginate_config = {
+            "py_input_token": "Marker",
+            "output_token": "Marker",
+            "limit_key": "MaxRecords",
+            "result_key": "EngineDefaults.Parameters"
+        }
+        self.operation.pagination = self.paginate_config
+        self.paginator = Paginator(self.operation)
+        self.responses = [
+            (None, {
+                "EngineDefaults": {"Parameters": ["One", "Two"]
+            }, "Marker": "m1"}),
+            (None, {
+                "EngineDefaults": {"Parameters": ["Three", "Four"]
+            }, "Marker": "m2"}),
+            (None, {"EngineDefaults": {"Parameters": ["Five"]}}),
+        ]
+
+    def test_result_key_iters(self):
+        self.operation.call.side_effect = self.responses
+        pages = self.paginator.paginate(None)
+        iterators = pages.result_key_iters()
+        self.assertEqual(len(iterators), 1)
+        self.assertEqual(list(iterators[0]),
+                         ['One', 'Two', 'Three', 'Four', 'Five'])
+
+    def test_build_full_result_with_single_key(self):
+        self.operation.call.side_effect = self.responses
+        pages = self.paginator.paginate(None)
+        complete = pages.build_full_result()
+        self.assertEqual(complete, {
+            'EngineDefaults': {'Parameters': []},
+            'EngineDefaults.Parameters': ['One', 'Two', 'Three', 'Four', 'Five']
+        })
+
+
 if __name__ == '__main__':
     unittest.main()

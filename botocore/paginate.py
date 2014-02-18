@@ -265,6 +265,7 @@ class PageIterator(object):
         for vals in zip_longest(*iterators):
             for k, val in zip(key_names, vals):
                 if val is not None:
+                    response.setdefault(k.expression, [])
                     response[k.expression].append(val)
         if self.resume_token is not None:
             response['NextToken'] = self.resume_token
