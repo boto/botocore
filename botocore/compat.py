@@ -75,12 +75,6 @@ else:
     import json
 
 
-try:
-    raw_input = raw_input
-except NameError:
-    raw_input = input
-
-
 @classmethod
 def from_dict(cls, d):
     new_instance = cls()
