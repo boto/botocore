@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from .exceptions import InvalidExpressionError
+
 
 def normalize_url_path(path):
     if not path:
@@ -57,3 +59,47 @@ def remove_dot_segments(url):
                 output.append(url[:next_slash])
                 url = url[next_slash:]
     return ''.join(output)
+
+
+def validate_jmespath_for_set(expression):
+    # Validates a limited jmespath expression to determine if we can set a value
+    # based on it. Only works with dotted paths.
+    if not expression or expression == '.':
+        raise InvalidExpressionError(expression=expression)
+
+    for invalid in ['[', ']', '*']:
+        if invalid in expression:
+            raise InvalidExpressionError(expression=expression)
+
+
+def set_value_from_jmespath(source, expression, value, is_first=True):
+    # This takes a (limited) jmespath-like expression & can set a value based
+    # on it.
+    # Limitations:
+    # * Only handles dotted lookups
+    # * No offsets/wildcards/slices/etc.
+    if is_first:
+        validate_jmespath_for_set(expression)
+
+    bits = expression.split('.', 1)
+    current_key, remainder = bits[0], bits[1] if len(bits) > 1 else ''
+
+    if not current_key:
+        raise InvalidExpressionError(expression=expression)
+
+    if remainder:
+        if not current_key in source:
+            # We've got something in the expression that's not present in the
+            # source (new key). If there's any more bits, we'll set the key with
+            # an empty dictionary.
+            source[current_key] = {}
+
+        return set_value_from_jmespath(
+            source[current_key],
+            remainder,
+            value,
+            is_first=False
+        )
+
+    # If we're down to a single key, set it.
+    source[current_key] = value

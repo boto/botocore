@@ -26,6 +26,7 @@ except NameError:
 
 import jmespath
 from botocore.exceptions import PaginationError
+from botocore.utils import set_value_from_jmespath
 
 
 class Paginator(object):
@@ -66,6 +67,7 @@ class Paginator(object):
         if result_key is not None:
             if not isinstance(result_key, list):
                 result_key = [result_key]
+            result_key = [jmespath.compile(rk) for rk in result_key]
             return result_key
 
     def paginate(self, endpoint, **kwargs):
@@ -145,7 +147,10 @@ class PageIterator(object):
                     starting_truncation = self._handle_first_request(
                         parsed, primary_result_key, starting_truncation)
                 first_request = False
-            num_current_response = len(parsed.get(primary_result_key, []))
+            current_response = primary_result_key.search(parsed)
+            if current_response is None:
+                current_response = []
+            num_current_response = len(current_response)
             truncate_amount = 0
             if self._max_items is not None:
                 truncate_amount = (total_items + num_current_response) \
@@ -196,23 +201,33 @@ class PageIterator(object):
         # First we need to slice into the array and only return
         # the truncated amount.
         starting_truncation = self._parse_starting_token()[1]
-        parsed[primary_result_key] = parsed[
-            primary_result_key][starting_truncation:]
+        all_data = primary_result_key.search(parsed)
+        set_value_from_jmespath(
+            parsed,
+            primary_result_key.expression,
+            all_data[starting_truncation:]
+        )
         # We also need to truncate any secondary result keys
         # because they were not truncated in the previous last
         # response.
         for token in self.result_keys:
             if token == primary_result_key:
                 continue
-            parsed[token] = []
+            set_value_from_jmespath(parsed, token.expression, [])
         return starting_truncation
 
     def _truncate_response(self, parsed, primary_result_key, truncate_amount,
                            starting_truncation, next_token):
-        original = parsed.get(primary_result_key, [])
+        original = primary_result_key.search(parsed)
+        if original is None:
+            original = []
         amount_to_keep = len(original) - truncate_amount
         truncated = original[:amount_to_keep]
-        parsed[primary_result_key] = truncated
+        set_value_from_jmespath(
+            parsed,
+            primary_result_key.expression,
+            truncated
+        )
         # The issue here is that even though we know how much we've truncated
         # we need to account for this globally including any starting
         # left truncation. For example:
@@ -246,11 +261,12 @@ class PageIterator(object):
         response = {}
         key_names = [i.result_key for i in iterators]
         for key in key_names:
-            response[key] = []
+            set_value_from_jmespath(response, key.expression, [])
         for vals in zip_longest(*iterators):
             for k, val in zip(key_names, vals):
                 if val is not None:
-                    response[k].append(val)
+                    response.setdefault(k.expression, [])
+                    response[k.expression].append(val)
         if self.resume_token is not None:
             response['NextToken'] = self.resume_token
         return response
@@ -283,5 +299,8 @@ class ResultKeyIterator(object):
 
     def __iter__(self):
         for _, page in self._pages_iterator:
-            for result in page.get(self.result_key, []):
+            results = self.result_key.search(page)
+            if results is None:
+                results = []
+            for result in results:
                 yield result
