@@ -89,6 +89,13 @@ class TestElasticTranscoder(unittest.TestCase):
             role=role, name=pipeline_name,
             notifications={'Progressing': '', 'Completed': '',
                            'Warning': '', 'Error': ''})
+        if http.status_code == 429:
+            # It's possible that we have too many existing pipelines.
+            # We don't want to fail the test, but we need to indicate
+            # that it didn't pass.  A SkipTest is a reasonable compromise.
+            raise unittest.SkipTest(
+                "HTTP status 429, too many existing pipelines."
+            )
         self.assertEqual(http.status_code, 201)
         self.assertIn('Pipeline', parsed)
 
