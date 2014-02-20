@@ -82,9 +82,12 @@ class AWSPreparedRequest(models.PreparedRequest):
 
     def reset_stream_on_redirect(self, response, **kwargs):
         if response.status_code in REDIRECT_STATI and \
-                isinstance(self.body, file_type):
+                self._looks_like_file(self.body):
             logger.debug("Redirect received, rewinding stream: %s", self.body)
             self.reset_stream()
+
+    def _looks_like_file(self, body):
+        return hasattr(body, 'read') and hasattr(body, 'seek')
 
     def reset_stream(self):
         # Trying to reset a stream when there is a no stream will
