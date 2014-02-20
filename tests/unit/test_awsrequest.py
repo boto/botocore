@@ -79,13 +79,41 @@ class TestAWSRequest(unittest.TestCase):
             # This means that we read the body:
             body.read()
             # And create a response object that indicates
-            # a redirect.
+            # a redirect
             fake_response = Mock()
             fake_response.status_code = 307
 
             # Then requests calls our reset_stream hook.
             with self.assertRaises(UnseekableStreamError):
                 self.prepared_request.reset_stream_on_redirect(fake_response)
+
+    def test_duck_type_for_file_check(self):
+        # As part of determining whether or not we can rewind a stream
+        # we first need to determine if the thing is a file like object.
+        # We should not be using an isinstance check.  Instead, we should
+        # be using duck type checks.
+        class LooksLikeFile(object):
+            def __init__(self):
+                self.seek_called = False
+
+            def read(self, amount=None):
+                pass
+
+            def seek(self, where):
+                self.seek_called = True
+
+        looks_like_file = LooksLikeFile()
+        self.prepared_request.body = looks_like_file
+
+        fake_response = Mock()
+        fake_response.status_code = 307
+
+        # Then requests calls our reset_stream hook.
+        self.prepared_request.reset_stream_on_redirect(fake_response)
+
+        # The stream should now be reset.
+        self.assertTrue(looks_like_file.seek_called)
+
 
 
 if __name__ == "__main__":
