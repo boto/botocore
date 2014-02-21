@@ -17,6 +17,7 @@ from botocore.parameters import get_parameter
 from botocore.exceptions import MissingParametersError
 from botocore.exceptions import UnknownParameterError
 from botocore.paginate import Paginator
+from botocore.utils import pythonic
 from botocore.payload import Payload, XMLPayload, JSONPayload
 from botocore import BotoCoreObject
 
@@ -156,6 +157,7 @@ class Operation(BotoCoreObject):
         """
         built_params = self._get_built_params()
         missing = []
+        kwargs = self._camel_to_snake_case(kwargs)
         self._check_for_unknown_params(kwargs)
         for param in self.params:
             if param.required:
@@ -171,6 +173,15 @@ class Operation(BotoCoreObject):
             raise MissingParametersError(missing=missing_str,
                                          object_name=self)
         return built_params
+
+    def _camel_to_snake_case(self, kwargs):
+        """
+        Converts top level keys in `kwargs` from camel case to snake case
+        """
+        params = {}
+        for key, value in kwargs.items():
+            params[pythonic(key)] = value
+        return params
 
     def _check_for_unknown_params(self, kwargs):
         valid_names = [p.py_name for p in self.params]
