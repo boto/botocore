@@ -182,6 +182,14 @@ def handle_filter_documentation(new_model, enhancements):
                     _filter_param_doc(param, replacement, filter_regex)
 
 
+def resembles_jmespath_exp(value):
+    # For now, we'll do a naive check.
+    if '.' in value:
+        return True
+
+    return False
+
+
 def add_pagination_configs(new_model, pagination):
     # Adding in pagination configs means copying the config to a top level
     # 'pagination' key in the new model, and it also means adding the
@@ -219,6 +227,8 @@ def add_pagination_configs(new_model, pagination):
             raise ValueError("Trying to add pagination config for an "
                              "operation with no output members: %s" % name)
         for result_key in result_keys:
+            if resembles_jmespath_exp(result_key):
+                continue
             if result_key not in operation['output']['members']:
                 raise ValueError("result_key %r is not an output member: %s" %
                                 (result_key,
@@ -373,7 +383,7 @@ def _transform_waiter(new_waiter):
 def _check_known_pagination_keys(config):
     # Verify that the pagination config only has keys we expect to see.
     expected = set(['input_token', 'py_input_token', 'output_token',
-                    'result_key', 'limit_key', 'more_key'])
+                    'result_key', 'limit_key', 'more_results'])
     for key in config:
         if key not in expected:
             raise ValueError("Unknown key in pagination config: %s" % key)

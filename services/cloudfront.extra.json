@@ -11,28 +11,28 @@
     "ListCloudFrontOriginAccessIdentities": {
       "input_token": ["Marker"],
       "limit_key": "MaxItems",
-      "more_key": "IsTruncated",
+      "more_results": "IsTruncated",
       "output_token": ["NextMarker"],
       "result_key": "CloudFrontOriginAccessIdentityList"
     },
     "ListDistributions": {
       "input_token": ["Marker"],
       "limit_key": "MaxItems",
-      "more_key": "IsTruncated",
+      "more_results": "IsTruncated",
       "output_token": ["NextMarker"],
       "result_key": "DistributionList"
     },
     "ListInvalidations": {
       "input_token": ["Marker"],
       "limit_key": "MaxItems",
-      "more_key": "IsTruncated",
+      "more_results": "IsTruncated",
       "output_token": ["NextMarker"],
       "result_key": "InvalidationList"
     },
     "ListStreamingDistributions": {
       "input_token": ["Marker"],
       "limit_key": "MaxItems",
-      "more_key": "IsTruncated",
+      "more_results": "IsTruncated",
       "output_token": ["NextMarker"],
       "result_key": "StreamingDistributionList"
     }

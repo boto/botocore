@@ -115,7 +115,10 @@ class Parameter(BotoCoreObject):
     def to_xml(self, value, label=None):
         if not label:
             label = self.name
-        return '<%s>%s</%s>' % (label, value, label)
+        if value is None:
+            return '<%s></%s>' % (label, label)
+        else:
+            return '<%s>%s</%s>' % (label, value, label)
 
 
 class IntegerParameter(Parameter):
@@ -253,12 +256,12 @@ class TimestampParameter(Parameter):
     def validate(self, value):
         try:
             return dateutil.parser.parse(value)
-        except:
+        except Exception:
             pass
         try:
             # Might be specified as an epoch time
             return datetime.datetime.utcfromtimestamp(value)
-        except:
+        except Exception:
             pass
         raise ValidationError(value=str(value), type_name='timestamp',
                               param=self)

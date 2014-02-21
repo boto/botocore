@@ -168,7 +168,8 @@ class TestS3Objects(BaseS3Test):
         key_names = [i.result_key for i in iterators]
         for vals in zip_longest(*iterators):
             for k, val in zip(key_names, vals):
-                response[k].append(val)
+                response.setdefault(k.expression, [])
+                response[k.expression].append(val)
         self.assertIn('Contents', response)
         self.assertIn('CommonPrefixes', response)
 
@@ -209,7 +210,7 @@ class TestS3Objects(BaseS3Test):
         pages = operation.paginate(self.endpoint, bucket=self.bucket_name)
         iterators = pages.result_key_iters()
         self.assertEqual(len(iterators), 1)
-        self.assertEqual(iterators[0].result_key, 'Uploads')
+        self.assertEqual(iterators[0].result_key.expression, 'Uploads')
         self.assertEqual(len(list(iterators[0])), 8)
 
         # With a max items of 1.
@@ -218,7 +219,7 @@ class TestS3Objects(BaseS3Test):
                                    bucket=self.bucket_name)
         iterators = pages.result_key_iters()
         self.assertEqual(len(iterators), 1)
-        self.assertEqual(iterators[0].result_key, 'Uploads')
+        self.assertEqual(iterators[0].result_key.expression, 'Uploads')
         self.assertEqual(len(list(iterators[0])), 1)
 
         # Works similar with build_full_result()

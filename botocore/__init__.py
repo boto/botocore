@@ -15,7 +15,7 @@
 import re
 import logging
 
-__version__ = '0.32.0'
+__version__ = '0.33.0'
 
 
 class NullHandler(logging.Handler):
@@ -30,17 +30,34 @@ log.addHandler(NullHandler())
 _first_cap_regex = re.compile('(.)([A-Z][a-z]+)')
 _number_cap_regex = re.compile('([a-z])([0-9]+)')
 _end_cap_regex = re.compile('([a-z0-9])([A-Z])')
-
+# Prepopulate the cache with special cases that don't match
+# our regular transformation.
+_xform_cache = {
+    ('SwapEnvironmentCNAMEs', '_'): 'swap_environment_cnames',
+    ('SwapEnvironmentCNAMEs', '-'): 'swap-environment-cnames',
+    ('CreateCachediSCSIVolume', '_'): 'create_cached_iscsi_volume',
+    ('CreateCachediSCSIVolume', '-'): 'create-cached-iscsi-volume',
+    ('DescribeCachediSCSIVolumes', '_'): 'describe_cached_iscsi_volumes',
+    ('DescribeCachediSCSIVolumes', '-'): 'describe-cached-iscsi-volumes',
+    ('DescribeStorediSCSIVolumes', '_'): 'describe_stored_iscsi_volumes',
+    ('DescribeStorediSCSIVolumes', '-'): 'describe-stored-iscsi-volumes',
+    ('CreateStorediSCSIVolume', '_'): 'create_stored_iscsi_volume',
+    ('CreateStorediSCSIVolume', '-'): 'create-stored-iscsi-volume',
+}
 ScalarTypes = ('string', 'integer', 'boolean', 'timestamp', 'float', 'double')
 
 
-def xform_name(name, sep='_'):
+def xform_name(name, sep='_', _xform_cache=_xform_cache):
     """
     Convert camel case to a "pythonic" name.
     """
-    s1 = _first_cap_regex.sub(r'\1' + sep + r'\2', name)
-    s2 = _number_cap_regex.sub(r'\1' + sep + r'\2', s1)
-    return _end_cap_regex.sub(r'\1' + sep + r'\2', s2).lower()
+    key = (name, sep)
+    if key not in _xform_cache:
+        s1 = _first_cap_regex.sub(r'\1' + sep + r'\2', name)
+        s2 = _number_cap_regex.sub(r'\1' + sep + r'\2', s1)
+        transformed = _end_cap_regex.sub(r'\1' + sep + r'\2', s2).lower()
+        _xform_cache[key] = transformed
+    return _xform_cache[key]
 
 
 class BotoCoreObject(object):
