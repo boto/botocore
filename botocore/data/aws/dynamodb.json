@@ -3503,7 +3503,14 @@
                     "documentation": "\n    <p>An error occurred on the server side.</p>\n  "
                 }
             ],
-            "documentation": "\n    <p>Returns an array of all the tables associated with the current account and endpoint. </p>\n    <examples>\n      <example>\n        <name>List Tables</name>\n        <description>\n          <p>This example requests a list of tables, starting with a table named comp2 and ending\n            after three table names have been returned.</p>\n        </description>\n        <request>\n{\n    \"LastEvaluatedTableName\": \"Thread\",\n    \"TableNames\": [\"Forum\",\"Reply\",\"Thread\"]\n}\n        </response>\n      </example>\n    </examples>\n  "
+            "documentation": "\n    <p>Returns an array of all the tables associated with the current account and endpoint. </p>\n    <examples>\n      <example>\n        <name>List Tables</name>\n        <description>\n          <p>This example requests a list of tables, starting with a table named comp2 and ending\n            after three table names have been returned.</p>\n        </description>\n        <request>\n{\n    \"LastEvaluatedTableName\": \"Thread\",\n    \"TableNames\": [\"Forum\",\"Reply\",\"Thread\"]\n}\n        </response>\n      </example>\n    </examples>\n  ",
+            "pagination": {
+                "limit_key": "Limit",
+                "input_token": "ExclusiveStartTableName",
+                "output_token": "LastEvaluatedTableName",
+                "result_key": "TableNames",
+                "py_input_token": "exclusive_start_table_name"
+            }
         },
         "PutItem": {
             "name": "PutItem",
@@ -6070,6 +6077,15 @@
             "https",
             "http"
         ]
+    },
+    "pagination": {
+        "ListTables": {
+            "limit_key": "Limit",
+            "input_token": "ExclusiveStartTableName",
+            "output_token": "LastEvaluatedTableName",
+            "result_key": "TableNames",
+            "py_input_token": "exclusive_start_table_name"
+        }
     },
     "waiters": {
         "TableNotExists": {

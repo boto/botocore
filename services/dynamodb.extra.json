@@ -19,6 +19,14 @@
       ]
     }
   },
+  "pagination": {
+    "ListTables": {
+      "limit_key": "Limit",
+      "input_token": "ExclusiveStartTableName",
+      "output_token": "LastEvaluatedTableName",
+      "result_key": "TableNames"
+    }
+  },
   "transformations": {
     "filter-documentation": {
       "filter": {
