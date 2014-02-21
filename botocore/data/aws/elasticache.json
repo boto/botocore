@@ -3047,9 +3047,9 @@
             "documentation": "\n        <p>The <i>DescribeEngineDefaultParameters</i> operation returns the default engine and\n            system parameter information for the specified cache engine.</p>\n        <examples><example>\n        <description>Some of the output has been omitted for brevity. </description>\n            <queryrequest>\nhttps://elasticache.us-east-1.amazonaws.com/\n   ?Action=DescribeEngineDefaultParameters\n   &CacheParameterGroupFamily=memcached1.4\n   &MaxRecords=100\n   &Version=2013-06-15\n   &SignatureVersion=2\n   &SignatureMethod=HmacSHA256\n   &Timestamp=2011-07-27T01%3A34%3A31.045Z\n   &AWSAccessKeyId=YOUR-ACCESS-KEY\n   &Signature=YOUR-SIGNATURE</queryrequest>\n            <queryresponse>\n<DescribeEngineDefaultParametersResponse xmlns=\"http://elasticache.amazonaws.com/doc/2013-06-15/\">\n  <DescribeEngineDefaultParametersResult>\n    <EngineDefaults>\n      <CacheParameterGroupFamily>memcached1.4</CacheParameterGroupFamily>\n      <Parameters>\n        <Parameter>\n          <ParameterValue>1024</ParameterValue>\n          <DataType>integer</DataType>\n          <Source>system</Source>\n          <IsModifiable>false</IsModifiable>\n          <Description>The backlog queue limit.</Description>\n          <AllowedValues>1-10000</AllowedValues>\n          <ParameterName>backlog_queue_limit</ParameterName>\n          <MinimumEngineVersion>1.4.5</MinimumEngineVersion>\n        </Parameter>\n        <Parameter>\n                \n (...output omitted...)\n          \n        </Parameter>\n      </Parameters>\n      <CacheNodeTypeSpecificParameters>\n        <CacheNodeTypeSpecificParameter>\n          <CacheNodeTypeSpecificValues>\n            <CacheNodeTypeSpecificValue>\n              <CacheNodeType>cache.c1.xlarge</CacheNodeType>\n              <Value>6000</Value>\n            </CacheNodeTypeSpecificValue>\n               \n (...output omitted...)\n          \n          </CacheNodeTypeSpecificValues>\n          <DataType>integer</DataType>\n          <Source>system</Source>\n          <IsModifiable>false</IsModifiable>\n          <Description>The maximum configurable amount of memory to use to store\n items, in megabytes.</Description>\n          <AllowedValues>1-100000</AllowedValues>\n          <ParameterName>max_cache_memory</ParameterName>\n          <MinimumEngineVersion>1.4.5</MinimumEngineVersion>\n        </CacheNodeTypeSpecificParameter>\n               \n (...output omitted...)\n          \n      </CacheNodeTypeSpecificParameters>\n    </EngineDefaults>\n  </DescribeEngineDefaultParametersResult>\n  <ResponseMetadata>\n    <RequestId>061282fe-b7fd-11e0-9326-b7275b9d4a6c</RequestId>\n  </ResponseMetadata>\n</DescribeEngineDefaultParametersResponse></queryresponse>\n        </example></examples>\n    ",
             "pagination": {
                 "input_token": "Marker",
-                "output_token": "Marker",
+                "output_token": "EngineDefaults.Marker",
                 "limit_key": "MaxRecords",
-                "result_key": "EngineDefaults",
+                "result_key": "EngineDefaults.Parameters",
                 "py_input_token": "marker"
             }
         },
@@ -3399,7 +3399,14 @@
                     "documentation": "\n        <p>Two or more incompatible parameters were specified.</p>\n    "
                 }
             ],
-            "documentation": "\n        <p>The <i>DescribeReplicationGroups</i> operation returns information about a particular\n            replication group. If no identifier is specified, <i>DescribeReplicationGroups</i>\n            returns information about all replication groups.</p> \n    "
+            "documentation": "\n        <p>The <i>DescribeReplicationGroups</i> operation returns information about a particular\n            replication group. If no identifier is specified, <i>DescribeReplicationGroups</i>\n            returns information about all replication groups.</p> \n    ",
+            "pagination": {
+                "input_token": "Marker",
+                "output_token": "Marker",
+                "limit_key": "MaxRecords",
+                "result_key": "ReplicationGroups",
+                "py_input_token": "marker"
+            }
         },
         "DescribeReservedCacheNodes": {
             "name": "DescribeReservedCacheNodes",
@@ -5474,9 +5481,9 @@
         },
         "DescribeEngineDefaultParameters": {
             "input_token": "Marker",
-            "output_token": "Marker",
+            "output_token": "EngineDefaults.Marker",
             "limit_key": "MaxRecords",
-            "result_key": "EngineDefaults",
+            "result_key": "EngineDefaults.Parameters",
             "py_input_token": "marker"
         },
         "DescribeEvents": {
@@ -5498,6 +5505,13 @@
             "output_token": "Marker",
             "limit_key": "MaxRecords",
             "result_key": "ReservedCacheNodesOfferings",
+            "py_input_token": "marker"
+        },
+        "DescribeReplicationGroups": {
+            "input_token": "Marker",
+            "output_token": "Marker",
+            "limit_key": "MaxRecords",
+            "result_key": "ReplicationGroups",
             "py_input_token": "marker"
         }
     },

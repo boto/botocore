@@ -407,7 +407,14 @@
                     "documentation": "\n        <p>The specified pipeline has been deleted.</p>\n    "
                 }
             ],
-            "documentation": "\n        <p>\n           Returns the object definitions for a set of objects associated with the pipeline. Object definitions are composed of a set of fields that define the properties of the object. \n        </p>\n        \n        <examples>\n            \n            <request>\n\nPOST / HTTP/1.1\nContent-Type: application/x-amz-json-1.1\nX-Amz-Target: DataPipeline.DescribeObjects\nContent-Length: 98\nHost: datapipeline.us-east-1.amazonaws.com\nX-Amz-Date: Mon, 12 Nov 2012 17:49:52 GMT\nAuthorization: AuthParams\n\n{\"pipelineId\": \"df-06372391ZG65EXAMPLE\",\n \"objectIds\": \n  [\"Schedule\"],\n \"evaluateExpressions\": true}\n\n            </request>\n            \n            <response>\n\nx-amzn-RequestId: 4c18ea5d-0777-11e2-8a14-21bb8a1f50ef\nContent-Type: application/x-amz-json-1.1\nContent-Length: 1488\nDate: Mon, 12 Nov 2012 17:50:53 GMT\n\n{\"hasMoreResults\": false, \n \"pipelineObjects\": \n  [\n    {\"fields\": \n      [\n        {\"key\": \"startDateTime\", \n         \"stringValue\": \"2012-12-12T00:00:00\"}, \n        {\"key\": \"parent\", \n         \"refValue\": \"Default\"}, \n        {\"key\": \"@sphere\", \n         \"stringValue\": \"COMPONENT\"}, \n        {\"key\": \"type\", \n         \"stringValue\": \"Schedule\"}, \n        {\"key\": \"period\", \n         \"stringValue\": \"1 hour\"}, \n        {\"key\": \"endDateTime\", \n         \"stringValue\": \"2012-12-21T18:00:00\"}, \n        {\"key\": \"@version\", \n         \"stringValue\": \"1\"}, \n        {\"key\": \"@status\", \n         \"stringValue\": \"PENDING\"}, \n        {\"key\": \"@pipelineId\", \n         \"stringValue\": \"df-06372391ZG65EXAMPLE\"}\n      ], \n     \"id\": \"Schedule\", \n     \"name\": \"Schedule\"}\n  ]\n}\n         \n            </response>\n        </examples>\n        \n    "
+            "documentation": "\n        <p>\n           Returns the object definitions for a set of objects associated with the pipeline. Object definitions are composed of a set of fields that define the properties of the object. \n        </p>\n        \n        <examples>\n            \n            <request>\n\nPOST / HTTP/1.1\nContent-Type: application/x-amz-json-1.1\nX-Amz-Target: DataPipeline.DescribeObjects\nContent-Length: 98\nHost: datapipeline.us-east-1.amazonaws.com\nX-Amz-Date: Mon, 12 Nov 2012 17:49:52 GMT\nAuthorization: AuthParams\n\n{\"pipelineId\": \"df-06372391ZG65EXAMPLE\",\n \"objectIds\": \n  [\"Schedule\"],\n \"evaluateExpressions\": true}\n\n            </request>\n            \n            <response>\n\nx-amzn-RequestId: 4c18ea5d-0777-11e2-8a14-21bb8a1f50ef\nContent-Type: application/x-amz-json-1.1\nContent-Length: 1488\nDate: Mon, 12 Nov 2012 17:50:53 GMT\n\n{\"hasMoreResults\": false, \n \"pipelineObjects\": \n  [\n    {\"fields\": \n      [\n        {\"key\": \"startDateTime\", \n         \"stringValue\": \"2012-12-12T00:00:00\"}, \n        {\"key\": \"parent\", \n         \"refValue\": \"Default\"}, \n        {\"key\": \"@sphere\", \n         \"stringValue\": \"COMPONENT\"}, \n        {\"key\": \"type\", \n         \"stringValue\": \"Schedule\"}, \n        {\"key\": \"period\", \n         \"stringValue\": \"1 hour\"}, \n        {\"key\": \"endDateTime\", \n         \"stringValue\": \"2012-12-21T18:00:00\"}, \n        {\"key\": \"@version\", \n         \"stringValue\": \"1\"}, \n        {\"key\": \"@status\", \n         \"stringValue\": \"PENDING\"}, \n        {\"key\": \"@pipelineId\", \n         \"stringValue\": \"df-06372391ZG65EXAMPLE\"}\n      ], \n     \"id\": \"Schedule\", \n     \"name\": \"Schedule\"}\n  ]\n}\n         \n            </response>\n        </examples>\n        \n    ",
+            "pagination": {
+                "input_token": "marker",
+                "output_token": "marker",
+                "more_results": "hasMoreResults",
+                "result_key": "pipelineObjects",
+                "py_input_token": "marker"
+            }
         },
         "DescribePipelines": {
             "name": "DescribePipelines",
@@ -929,7 +936,14 @@
                     "documentation": "\n        <p>The request was not valid. Verify that your request was properly formatted, that the signature was generated with the correct credentials, and that you haven't exceeded any of the service limits for your account.</p>\n    "
                 }
             ],
-            "documentation": "\n        <p>Returns a list of pipeline identifiers for all active pipelines. Identifiers are returned only for pipelines you have permission to access. </p> \n        \n        <examples>\n            <request>\n\nPOST / HTTP/1.1\nContent-Type: application/x-amz-json-1.1\nX-Amz-Target: DataPipeline.ListPipelines\nContent-Length: 14\nHost: datapipeline.us-east-1.amazonaws.com\nX-Amz-Date: Mon, 12 Nov 2012 17:49:52 GMT\nAuthorization: AuthParams\n\n{}\n\n            </request>\n            \n            <response>\n                \nStatus:\nx-amzn-RequestId: b3104dc5-0734-11e2-af6f-6bc7a6be60d9\nContent-Type: application/x-amz-json-1.1\nContent-Length: 39\nDate: Mon, 12 Nov 2012 17:50:53 GMT\n\n{\"PipelineIdList\": \n  [\n    {\"id\": \"df-08785951KAKJEXAMPLE\",\n     \"name\": \"MyPipeline\"}, \n    {\"id\": \"df-08662578ISYEXAMPLE\", \n     \"name\": \"MySecondPipeline\"}\n  ]\n}         \n            </response>\n        </examples>\n        \n    "
+            "documentation": "\n        <p>Returns a list of pipeline identifiers for all active pipelines. Identifiers are returned only for pipelines you have permission to access. </p> \n        \n        <examples>\n            <request>\n\nPOST / HTTP/1.1\nContent-Type: application/x-amz-json-1.1\nX-Amz-Target: DataPipeline.ListPipelines\nContent-Length: 14\nHost: datapipeline.us-east-1.amazonaws.com\nX-Amz-Date: Mon, 12 Nov 2012 17:49:52 GMT\nAuthorization: AuthParams\n\n{}\n\n            </request>\n            \n            <response>\n                \nStatus:\nx-amzn-RequestId: b3104dc5-0734-11e2-af6f-6bc7a6be60d9\nContent-Type: application/x-amz-json-1.1\nContent-Length: 39\nDate: Mon, 12 Nov 2012 17:50:53 GMT\n\n{\"PipelineIdList\": \n  [\n    {\"id\": \"df-08785951KAKJEXAMPLE\",\n     \"name\": \"MyPipeline\"}, \n    {\"id\": \"df-08662578ISYEXAMPLE\", \n     \"name\": \"MySecondPipeline\"}\n  ]\n}         \n            </response>\n        </examples>\n        \n    ",
+            "pagination": {
+                "input_token": "marker",
+                "output_token": "marker",
+                "more_results": "hasMoreResults",
+                "result_key": "pipelineIdList",
+                "py_input_token": "marker"
+            }
         },
         "PollForTask": {
             "name": "PollForTask",
@@ -1534,7 +1548,15 @@
                     "documentation": "\n        <p>The request was not valid. Verify that your request was properly formatted, that the signature was generated with the correct credentials, and that you haven't exceeded any of the service limits for your account.</p>\n    "
                 }
             ],
-            "documentation": "\n        <p>Queries a pipeline for the names of objects that match a specified set of conditions.</p>\n        \n        <p>The objects returned by <a>QueryObjects</a> are paginated and then filtered by the value you set for query. This means the action may return an empty result set with a value set for marker. If <code>HasMoreResults</code> is set to <code>True</code>, you should continue to call <a>QueryObjects</a>, passing in the returned value for marker, until <code>HasMoreResults</code> returns <code>False</code>.</p>\n\n        <examples>\n            <request>\n\nPOST / HTTP/1.1\nContent-Type: application/x-amz-json-1.1\nX-Amz-Target: DataPipeline.QueryObjects\nContent-Length: 123\nHost: datapipeline.us-east-1.amazonaws.com\nX-Amz-Date: Mon, 12 Nov 2012 17:49:52 GMT\nAuthorization: AuthParams\n\n{\"pipelineId\": \"df-06372391ZG65EXAMPLE\",\n \"query\": \n  {\"selectors\": \n    [\n    ]\n  },\n \"sphere\": \"PO\",\n \"marker\": \"\",\n \"limit\": 10}\n\n            </request>\n            \n           \n            <response>\n\nx-amzn-RequestId: 14d704c1-0775-11e2-af6f-6bc7a6be60d9\nContent-Type: application/x-amz-json-1.1\nContent-Length: 72\nDate: Mon, 12 Nov 2012 17:50:53 GMT\n\n{\"hasMoreResults\": false, \n \"ids\": \n  [\"@SayHello_1_2012-09-25T17:00:00\"]\n}\n         </response>\n        </examples>\n        \n    "
+            "documentation": "\n        <p>Queries a pipeline for the names of objects that match a specified set of conditions.</p>\n        \n        <p>The objects returned by <a>QueryObjects</a> are paginated and then filtered by the value you set for query. This means the action may return an empty result set with a value set for marker. If <code>HasMoreResults</code> is set to <code>True</code>, you should continue to call <a>QueryObjects</a>, passing in the returned value for marker, until <code>HasMoreResults</code> returns <code>False</code>.</p>\n\n        <examples>\n            <request>\n\nPOST / HTTP/1.1\nContent-Type: application/x-amz-json-1.1\nX-Amz-Target: DataPipeline.QueryObjects\nContent-Length: 123\nHost: datapipeline.us-east-1.amazonaws.com\nX-Amz-Date: Mon, 12 Nov 2012 17:49:52 GMT\nAuthorization: AuthParams\n\n{\"pipelineId\": \"df-06372391ZG65EXAMPLE\",\n \"query\": \n  {\"selectors\": \n    [\n    ]\n  },\n \"sphere\": \"PO\",\n \"marker\": \"\",\n \"limit\": 10}\n\n            </request>\n            \n           \n            <response>\n\nx-amzn-RequestId: 14d704c1-0775-11e2-af6f-6bc7a6be60d9\nContent-Type: application/x-amz-json-1.1\nContent-Length: 72\nDate: Mon, 12 Nov 2012 17:50:53 GMT\n\n{\"hasMoreResults\": false, \n \"ids\": \n  [\"@SayHello_1_2012-09-25T17:00:00\"]\n}\n         </response>\n        </examples>\n        \n    ",
+            "pagination": {
+                "input_token": "marker",
+                "output_token": "marker",
+                "more_results": "hasMoreResults",
+                "limit_key": "limit",
+                "result_key": "ids",
+                "py_input_token": "marker"
+            }
         },
         "ReportTaskProgress": {
             "name": "ReportTaskProgress",
@@ -2146,6 +2168,30 @@
         "protocols": [
             "https"
         ]
+    },
+    "pagination": {
+        "ListPipelines": {
+            "input_token": "marker",
+            "output_token": "marker",
+            "more_results": "hasMoreResults",
+            "result_key": "pipelineIdList",
+            "py_input_token": "marker"
+        },
+        "DescribeObjects": {
+            "input_token": "marker",
+            "output_token": "marker",
+            "more_results": "hasMoreResults",
+            "result_key": "pipelineObjects",
+            "py_input_token": "marker"
+        },
+        "QueryObjects": {
+            "input_token": "marker",
+            "output_token": "marker",
+            "more_results": "hasMoreResults",
+            "limit_key": "limit",
+            "result_key": "ids",
+            "py_input_token": "marker"
+        }
     },
     "retry": {
         "__default__": {

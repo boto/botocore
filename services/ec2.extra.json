@@ -25,7 +25,10 @@
         "members": {
           "VirtualizationType": {
             "type": "string",
-            "enum": ["paravirtual", "hvm"],
+            "enum": [
+              "paravirtual",
+              "hvm"
+            ],
             "documentation": "The type of virtualization"
           }
         }
@@ -92,39 +95,44 @@
   "pagination": {
     "DescribeInstanceStatus": {
       "input_token": "NextToken",
-      "limit_key": "MaxResults",
       "output_token": "NextToken",
+      "limit_key": "MaxResults",
       "result_key": "InstanceStatuses"
+    },
+    "DescribeInstances": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "Reservations"
+    },
+    "DescribeReservedInstancesModifications": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "result_key": "ReservedInstancesModifications"
     },
     "DescribeReservedInstancesOfferings": {
       "input_token": "NextToken",
-      "limit_key": "MaxResults",
       "output_token": "NextToken",
+      "limit_key": "MaxResults",
       "result_key": "ReservedInstancesOfferings"
     },
     "DescribeSpotPriceHistory": {
       "input_token": "NextToken",
-      "limit_key": "MaxResults",
       "output_token": "NextToken",
+      "limit_key": "MaxResults",
       "result_key": "SpotPriceHistory"
-    },
-    "DescribeVolumeStatus": {
-      "input_token": "NextToken",
-      "limit_key": "MaxResults",
-      "output_token": "NextToken",
-      "result_key": "VolumeStatuses"
-    },
-    "DescribeInstances": {
-      "input_token": "NextToken",
-      "limit_key": "MaxResults",
-      "output_token": "NextToken",
-      "result_key": "Reservations"
     },
     "DescribeTags": {
       "input_token": "NextToken",
-      "limit_key": "MaxResults",
       "output_token": "NextToken",
+      "limit_key": "MaxResults",
       "result_key": "Tags"
+    },
+    "DescribeVolumeStatus": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "VolumeStatuses"
     }
   },
   "transformations": {
