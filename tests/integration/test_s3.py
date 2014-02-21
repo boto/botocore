@@ -209,7 +209,7 @@ class TestS3Objects(BaseS3Test):
         # With no max items.
         pages = operation.paginate(self.endpoint, bucket=self.bucket_name)
         iterators = pages.result_key_iters()
-        self.assertEqual(len(iterators), 1)
+        self.assertEqual(len(iterators), 2)
         self.assertEqual(iterators[0].result_key.expression, 'Uploads')
         self.assertEqual(len(list(iterators[0])), 8)
 
@@ -218,7 +218,7 @@ class TestS3Objects(BaseS3Test):
                                    max_items=1,
                                    bucket=self.bucket_name)
         iterators = pages.result_key_iters()
-        self.assertEqual(len(iterators), 1)
+        self.assertEqual(len(iterators), 2)
         self.assertEqual(iterators[0].result_key.expression, 'Uploads')
         self.assertEqual(len(list(iterators[0])), 1)
 

@@ -2420,7 +2420,10 @@
                     "KeyMarker",
                     "UploadIdMarker"
                 ],
-                "result_key": "Uploads",
+                "result_key": [
+                    "Uploads",
+                    "CommonPrefixes"
+                ],
                 "py_input_token": [
                     "key_marker",
                     "upload_id_marker"
@@ -2635,7 +2638,8 @@
                 ],
                 "result_key": [
                     "Versions",
-                    "DeleteMarkers"
+                    "DeleteMarkers",
+                    "CommonPrefixes"
                 ],
                 "py_input_token": [
                     "key_marker",
@@ -4321,7 +4325,10 @@
                 "KeyMarker",
                 "UploadIdMarker"
             ],
-            "result_key": "Uploads",
+            "result_key": [
+                "Uploads",
+                "CommonPrefixes"
+            ],
             "py_input_token": [
                 "key_marker",
                 "upload_id_marker"
@@ -4340,7 +4347,8 @@
             ],
             "result_key": [
                 "Versions",
-                "DeleteMarkers"
+                "DeleteMarkers",
+                "CommonPrefixes"
             ],
             "py_input_token": [
                 "key_marker",
@@ -4365,6 +4373,41 @@
             "input_token": "PartNumberMarker",
             "result_key": "Parts",
             "py_input_token": "part_number_marker"
+        }
+    },
+    "waiters": {
+        "ObjectExists": {
+            "success": {
+                "type": "output"
+            },
+            "interval": 5,
+            "ignore_errors": [
+                "NoSuchKey"
+            ],
+            "operation": "HeadObject",
+            "max_attempts": 20
+        },
+        "BucketNotExists": {
+            "success": {
+                "type": "error",
+                "value": [
+                    "NoSuchBucket"
+                ]
+            },
+            "interval": 5,
+            "operation": "HeadBucket",
+            "max_attempts": 20
+        },
+        "BucketExists": {
+            "success": {
+                "type": "output"
+            },
+            "interval": 5,
+            "ignore_errors": [
+                "NoSuchBucket"
+            ],
+            "operation": "HeadBucket",
+            "max_attempts": 20
         }
     },
     "retry": {
