@@ -30,46 +30,46 @@
           "CommonPrefixes": {
             "type": "list",
             "flattened": true,
+            "members": {
+              "type": "structure",
               "members": {
-                "type": "structure",
-                "members": {
-                  "Prefix": {
-                    "type": "string"
-                  }
+                "Prefix": {
+                  "type": "string"
                 }
               }
             }
           }
         }
-      },
-      "PutObject": {
-          "input": {
-              "members": {
-                  "WebsiteRedirectLocation": {
-                      "no_paramfile": true
-                  }
-              }
-          }
-      },
-      "CopyObject": {
-          "input": {
-              "members": {
-                  "WebsiteRedirectLocation": {
-                      "no_paramfile": true
-                  }
-              }
-          }
-      },
-      "CreateMultipartUpload": {
-          "input": {
-              "members": {
-                  "WebsiteRedirectLocation": {
-                      "no_paramfile": true
-                  }
-              }
-          }
       }
     },
+    "PutObject": {
+      "input": {
+        "members": {
+          "WebsiteRedirectLocation": {
+            "no_paramfile": true
+          }
+        }
+      }
+    },
+    "CopyObject": {
+      "input": {
+        "members": {
+          "WebsiteRedirectLocation": {
+            "no_paramfile": true
+          }
+        }
+      }
+    },
+    "CreateMultipartUpload": {
+      "input": {
+        "members": {
+          "WebsiteRedirectLocation": {
+            "no_paramfile": true
+          }
+        }
+      }
+    }
+  },
   "pagination": {
     "ListMultipartUploads": {
       "limit_key": "MaxUploads",
@@ -82,7 +82,10 @@
         "KeyMarker",
         "UploadIdMarker"
       ],
-      "result_key": "Uploads"
+      "result_key": [
+        "Uploads",
+        "CommonPrefixes"
+      ]
     },
     "ListObjectVersions": {
       "more_results": "IsTruncated",
@@ -95,8 +98,11 @@
         "KeyMarker",
         "VersionIdMarker"
       ],
-      "result_key": ["Versions",
-                     "DeleteMarkers"]
+      "result_key": [
+        "Versions",
+        "DeleteMarkers",
+        "CommonPrefixes"
+      ]
     },
     "ListObjects": {
       "more_results": "IsTruncated",
@@ -114,6 +120,31 @@
       "output_token": "NextPartNumberMarker",
       "input_token": "PartNumberMarker",
       "result_key": "Parts"
+    }
+  },
+  "waiters": {
+    "__default__": {
+      "interval": 5,
+      "max_attempts": 20
+    },
+    "BucketExists": {
+      "operation": "HeadBucket",
+      "ignore_errors": [
+        "NoSuchBucket"
+      ],
+      "success_type": "output"
+    },
+    "BucketNotExists": {
+      "operation": "HeadBucket",
+      "success_type": "error",
+      "success_value": "NoSuchBucket"
+    },
+    "ObjectExists": {
+      "operation": "HeadObject",
+      "ignore_errors": [
+        "NoSuchKey"
+      ],
+      "success_type": "output"
     }
   }
 }

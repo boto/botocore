@@ -33,51 +33,51 @@
   },
   "pagination": {
     "DescribeAutoScalingGroups": {
-      "limit_key": "MaxRecords",
       "input_token": "NextToken",
       "output_token": "NextToken",
+      "limit_key": "MaxRecords",
       "result_key": "AutoScalingGroups"
     },
     "DescribeAutoScalingInstances": {
-      "limit_key": "MaxRecords",
       "input_token": "NextToken",
       "output_token": "NextToken",
+      "limit_key": "MaxRecords",
       "result_key": "AutoScalingInstances"
     },
     "DescribeLaunchConfigurations": {
-      "limit_key": "MaxRecords",
       "input_token": "NextToken",
       "output_token": "NextToken",
+      "limit_key": "MaxRecords",
       "result_key": "LaunchConfigurations"
     },
     "DescribeNotificationConfigurations": {
-      "limit_key": "MaxRecords",
       "input_token": "NextToken",
       "output_token": "NextToken",
+      "limit_key": "MaxRecords",
       "result_key": "NotificationConfigurations"
     },
     "DescribePolicies": {
-      "limit_key": "MaxRecords",
       "input_token": "NextToken",
       "output_token": "NextToken",
+      "limit_key": "MaxRecords",
       "result_key": "ScalingPolicies"
     },
     "DescribeScalingActivities": {
-      "limit_key": "MaxRecords",
       "input_token": "NextToken",
       "output_token": "NextToken",
+      "limit_key": "MaxRecords",
       "result_key": "Activities"
     },
     "DescribeScheduledActions": {
-      "limit_key": "MaxRecords",
       "input_token": "NextToken",
       "output_token": "NextToken",
+      "limit_key": "MaxRecords",
       "result_key": "ScheduledUpdateGroupActions"
     },
     "DescribeTags": {
-      "limit_key": "MaxRecords",
       "input_token": "NextToken",
       "output_token": "NextToken",
+      "limit_key": "MaxRecords",
       "result_key": "Tags"
     }
   }

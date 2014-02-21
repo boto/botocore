@@ -1544,7 +1544,13 @@
                     "documentation": "\n      <p>This exception occurs when there is something wrong with user input.</p>      \n      \n   "
                 }
             ],
-            "documentation": "\n      <p>Provides information about the bootstrap actions associated with a cluster.</p>      \n      \n   "
+            "documentation": "\n      <p>Provides information about the bootstrap actions associated with a cluster.</p>      \n      \n   ",
+            "pagination": {
+                "input_token": "Marker",
+                "output_token": "Marker",
+                "result_key": "BootstrapActions",
+                "py_input_token": "marker"
+            }
         },
         "ListClusters": {
             "name": "ListClusters",
@@ -1725,7 +1731,13 @@
                     "documentation": "\n      <p>This exception occurs when there is something wrong with user input.</p>      \n      \n   "
                 }
             ],
-            "documentation": "\n      <p>Provides the status of all clusters visible to this AWS account. Allows you to filter the list of clusters based on certain criteria; for example, filtering by cluster creation date and time or by status.\n         This call returns a maximum of 50 clusters per call, but returns a marker to track the paging of the cluster list across multiple ListClusters calls.        \n      </p>      \n      \n   "
+            "documentation": "\n      <p>Provides the status of all clusters visible to this AWS account. Allows you to filter the list of clusters based on certain criteria; for example, filtering by cluster creation date and time or by status.\n         This call returns a maximum of 50 clusters per call, but returns a marker to track the paging of the cluster list across multiple ListClusters calls.        \n      </p>      \n      \n   ",
+            "pagination": {
+                "input_token": "Marker",
+                "output_token": "Marker",
+                "result_key": "Clusters",
+                "py_input_token": "marker"
+            }
         },
         "ListInstanceGroups": {
             "name": "ListInstanceGroups",
@@ -1924,7 +1936,13 @@
                     "documentation": "\n      <p>This exception occurs when there is something wrong with user input.</p>      \n      \n   "
                 }
             ],
-            "documentation": "\n      <p>Provides all available details about the instance groups in a cluster.</p>      \n      \n   "
+            "documentation": "\n      <p>Provides all available details about the instance groups in a cluster.</p>      \n      \n   ",
+            "pagination": {
+                "input_token": "Marker",
+                "output_token": "Marker",
+                "result_key": "InstanceGroups",
+                "py_input_token": "marker"
+            }
         },
         "ListInstances": {
             "name": "ListInstances",
@@ -2117,7 +2135,13 @@
                     "documentation": "\n      <p>This exception occurs when there is something wrong with user input.</p>      \n      \n   "
                 }
             ],
-            "documentation": "\n      <p>Provides information about the cluster instances that Amazon EMR provisions on behalf of a user when it creates the cluster. \n         For example, this operation indicates when the EC2 instances reach the Ready state, when instances become available to Amazon EMR to use for jobs, and the IP addresses for cluster instances, etc.\n      </p>           \n   "
+            "documentation": "\n      <p>Provides information about the cluster instances that Amazon EMR provisions on behalf of a user when it creates the cluster. \n         For example, this operation indicates when the EC2 instances reach the Ready state, when instances become available to Amazon EMR to use for jobs, and the IP addresses for cluster instances, etc.\n      </p>           \n   ",
+            "pagination": {
+                "input_token": "Marker",
+                "output_token": "Marker",
+                "result_key": "Instances",
+                "py_input_token": "marker"
+            }
         },
         "ListSteps": {
             "name": "ListSteps",
@@ -2285,7 +2309,13 @@
                     "documentation": "\n      <p>This exception occurs when there is something wrong with user input.</p>      \n      \n   "
                 }
             ],
-            "documentation": "\n      <p>Provides a list of steps for the cluster. \n      </p>      \n   "
+            "documentation": "\n      <p>Provides a list of steps for the cluster. \n      </p>      \n   ",
+            "pagination": {
+                "input_token": "Marker",
+                "output_token": "Marker",
+                "result_key": "Steps",
+                "py_input_token": "marker"
+            }
         },
         "ModifyInstanceGroups": {
             "name": "ModifyInstanceGroups",
@@ -2979,6 +3009,38 @@
         "protocols": [
             "https"
         ]
+    },
+    "pagination": {
+        "ListBootstrapActions": {
+            "input_token": "Marker",
+            "output_token": "Marker",
+            "result_key": "BootstrapActions",
+            "py_input_token": "marker"
+        },
+        "ListClusters": {
+            "input_token": "Marker",
+            "output_token": "Marker",
+            "result_key": "Clusters",
+            "py_input_token": "marker"
+        },
+        "ListInstanceGroups": {
+            "input_token": "Marker",
+            "output_token": "Marker",
+            "result_key": "InstanceGroups",
+            "py_input_token": "marker"
+        },
+        "ListInstances": {
+            "input_token": "Marker",
+            "output_token": "Marker",
+            "result_key": "Instances",
+            "py_input_token": "marker"
+        },
+        "ListSteps": {
+            "input_token": "Marker",
+            "output_token": "Marker",
+            "result_key": "Steps",
+            "py_input_token": "marker"
+        }
     },
     "retry": {
         "__default__": {

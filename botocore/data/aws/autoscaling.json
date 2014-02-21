@@ -1251,9 +1251,9 @@
             ],
             "documentation": "\n        <p>\n            Returns a full description of each Auto Scaling group in the given list. \n            This includes all Amazon EC2 instances that are members of the group. \n            If a list of names is not provided, the service returns the\n            full details of all Auto Scaling groups.\n        </p>\n        <p>\n            This action supports pagination by returning a token if there are more pages to retrieve.\n            To get the next page, call this action again with the returned token as the <code>NextToken</code> parameter.\n        </p>\n        <examples>      \n            <queryrequest>https://autoscaling.amazonaws.com/?AutoScalingGroupNames.member.1=my-test-asg-lbs\n&MaxRecords=20\n&Version=2011-01-01\n&Action=DescribeAutoScalingGroups\n&AUTHPARAMS </queryrequest>      \n            <queryresponse><DescribeAutoScalingGroupsResponse xmlns=\"http://autoscaling.amazonaws.com/doc/2011-01-01/\">\n<DescribeAutoScalingGroupsResult>\n    <AutoScalingGroups>\n      <member>\n        <Tags/>\n        <SuspendedProcesses/>\n        <AutoScalingGroupName>my-test-asg-lbs</AutoScalingGroupName>\n        <HealthCheckType>ELB</HealthCheckType>\n        <CreatedTime>2013-05-06T17:47:15.107Z</CreatedTime>\n        <EnabledMetrics/>\n        <LaunchConfigurationName>my-test-lc</LaunchConfigurationName>\n        <Instances/>\n        <DesiredCapacity>2</DesiredCapacity>\n        <AvailabilityZones>\n          <member>us-east-1b</member>\n          <member>us-east-1a</member>\n        </AvailabilityZones>\n        <LoadBalancerNames>\n          <member>my-test-asg-loadbalancer</member>\n        </LoadBalancerNames>\n        <MinSize>2</MinSize>\n        <VPCZoneIdentifier/>\n        <HealthCheckGracePeriod>120</HealthCheckGracePeriod>\n        <DefaultCooldown>300</DefaultCooldown>\n        <AutoScalingGroupARN>arn:aws:autoscaling:us-east-1:803981987763:autoScalingGroup:ca861182-c8f9-4ca7-b1eb-cd35505f5ebb\n        :autoScalingGroupName/my-test-asg-lbs</AutoScalingGroupARN>\n        <TerminationPolicies>\n          <member>Default</member>\n        </TerminationPolicies>\n        <MaxSize>10</MaxSize>\n      </member>\n    </AutoScalingGroups>\n  </DescribeAutoScalingGroupsResult>\n  <ResponseMetadata>\n    <RequestId>0f02a07d-b677-11e2-9eb0-dd50EXAMPLE</RequestId>\n  </ResponseMetadata>\n</DescribeAutoScalingGroupsResponse> </queryresponse>\n        </examples>       \n        \n    ",
             "pagination": {
-                "limit_key": "MaxRecords",
                 "input_token": "NextToken",
                 "output_token": "NextToken",
+                "limit_key": "MaxRecords",
                 "result_key": "AutoScalingGroups",
                 "py_input_token": "next_token"
             }
@@ -1391,9 +1391,9 @@
             ],
             "documentation": "\n        <p>\n            Returns a description of each Auto Scaling instance in the <code>InstanceIds</code> list.\n            If a list is not provided, the service returns the full details of all instances up to a maximum of 50. \n            By default, the service returns a list of 20 items.\n        </p>\n        <p>\n            This action supports pagination by returning a token if there are more pages to retrieve.\n            To get the next page, call this action again with the returned token as the <code>NextToken</code> parameter.\n        </p>\n        <examples>      \n            <queryrequest>https://autoscaling.amazonaws.com/?MaxRecords=20\n&InstanceIds.member.1=i-78e0d40b\n&Version=2011-01-01\n&Action=DescribeAutoScalingInstances\n&AUTHPARAMS </queryrequest>      \n            <queryresponse><DescribeAutoScalingInstancesResponse xmlns=\"http://autoscaling.amazonaws.com/doc/2011-01-01/\">\n  <DescribeAutoScalingInstancesResult>\n    <AutoScalingInstances>\n      <member>\n        <HealthStatus>HEALTHY</HealthStatus>\n        <AutoScalingGroupName>my-test-asg</AutoScalingGroupName>\n        <AvailabilityZone>us-east-1e</AvailabilityZone>\n        <InstanceId>i-78e0d40b</InstanceId>\n        <LaunchConfigurationName>my-test-lc</LaunchConfigurationName>\n        <LifecycleState>InService</LifecycleState>\n      </member>\n    </AutoScalingInstances>\n  </DescribeAutoScalingInstancesResult>\n  <ResponseMetadata>\n    <RequestId>df992dc3-b72f-11e2-81e1-750aa6EXAMPLE</RequestId>\n  </ResponseMetadata>\n</DescribeAutoScalingInstancesResponse>\n   </queryresponse>\n        </examples>       \n        \n    ",
             "pagination": {
-                "limit_key": "MaxRecords",
                 "input_token": "NextToken",
                 "output_token": "NextToken",
+                "limit_key": "MaxRecords",
                 "result_key": "AutoScalingInstances",
                 "py_input_token": "next_token"
             }
@@ -1699,9 +1699,9 @@
             ],
             "documentation": "\n        <p>\n        Returns a full description of the launch configurations, or the specified launch configurations,\n        if they exist.\n        </p>\n        <p>\n        If no name is specified, then the full details of\n        all launch configurations are returned.\n        </p>\n        <examples>      \n            <queryrequest>https://autoscaling.amazonaws.com/?LaunchConfigurationNames.member.1=my-test-lc\n&MaxRecords=20\n&Version=2011-01-01\n&Action=DescribeLaunchConfigurations\n&AUTHPARAMS </queryrequest>      \n            <queryresponse><DescribeLaunchConfigurationsResponse xmlns=\"http://autoscaling.amazonaws.com/doc/2011-01-01/\">\n  <DescribeLaunchConfigurationsResult>\n    <LaunchConfigurations>\n      <member>\n        <AssociatePublicIpAddress>true</AssociatePublicIpAddress>\n        <SecurityGroups/>\n        <CreatedTime>2013-01-21T23:04:42.200Z</CreatedTime>\n        <KernelId/>\n        <LaunchConfigurationName>my-test-lc</LaunchConfigurationName>\n        <UserData/>\n        <InstanceType>m1.small</InstanceType>\n        <LaunchConfigurationARN>arn:aws:autoscaling:us-east-1:803981987763:launchConfiguration:\n        9dbbbf87-6141-428a-a409-0752edbe6cad:launchConfigurationName/my-test-lc</LaunchConfigurationARN>\n        <BlockDeviceMappings/>\n        <ImageId>ami-514ac838</ImageId>\n        <KeyName/>\n        <RamdiskId/>\n        <InstanceMonitoring>\n          <Enabled>true</Enabled>\n        </InstanceMonitoring>\n        <EbsOptimized>false</EbsOptimized>\n      </member>\n    </LaunchConfigurations>\n  </DescribeLaunchConfigurationsResult>\n  <ResponseMetadata>\n    <RequestId>d05a22f8-b690-11e2-bf8e-2113fEXAMPLE</RequestId>\n  </ResponseMetadata>\n</DescribeLaunchConfigurationsResponse> </queryresponse>\n        </examples>       \n    ",
             "pagination": {
-                "limit_key": "MaxRecords",
                 "input_token": "NextToken",
                 "output_token": "NextToken",
+                "limit_key": "MaxRecords",
                 "result_key": "LaunchConfigurations",
                 "py_input_token": "next_token"
             }
@@ -1863,9 +1863,9 @@
             ],
             "documentation": "\n        <p>\n            Returns a list of notification actions associated with Auto Scaling groups \n            for specified events.\n        </p>\n    ",
             "pagination": {
-                "limit_key": "MaxRecords",
                 "input_token": "NextToken",
                 "output_token": "NextToken",
+                "limit_key": "MaxRecords",
                 "result_key": "NotificationConfigurations",
                 "py_input_token": "next_token"
             }
@@ -2032,9 +2032,9 @@
             ],
             "documentation": "\n        <p>\n            Returns descriptions of what each policy does.\n            This action supports pagination. If the response includes a token, \n            there are more records available. To get the additional records, repeat\n            the request with the response token as the <code>NextToken</code> parameter.\n        </p>\n        <examples>      \n            <queryrequest>https://autoscaling.amazonaws.com/?AutoScalingGroupName=my-test-asg\n&MaxRecords=20\n&Version=2011-01-01\n&Action=DescribePolicies\n&AUTHPARAMS </queryrequest>      \n            <queryresponse><DescribePoliciesResponse xmlns=\"http://autoscaling.amazonaws.com/doc/2011-01-01/\">\n  <DescribePoliciesResult>\n    <ScalingPolicies>\n      <member>\n        <PolicyARN>arn:aws:autoscaling:us-east-1:803981987763:scalingPolicy:c322\n761b-3172-4d56-9a21-0ed9d6161d67:autoScalingGroupName/my-test-asg:policyName/MyScaleDownPolicy</PolicyARN>\n        <AdjustmentType>ChangeInCapacity</AdjustmentType>\n        <ScalingAdjustment>-1</ScalingAdjustment>\n        <PolicyName>MyScaleDownPolicy</PolicyName>\n        <AutoScalingGroupName>my-test-asg</AutoScalingGroupName>\n        <Cooldown>60</Cooldown>\n        <Alarms>\n          <member>\n            <AlarmName>TestQueue</AlarmName>\n            <AlarmARN>arn:aws:cloudwatch:us-east-1:803981987763:alarm:TestQueue</AlarmARN>\n          </member>\n        </Alarms>\n      </member>\n      <member>\n        <PolicyARN>arn:aws:autoscaling:us-east-1:803981987763:scalingPolicy:c55a5cdd-9be0-435b-b60b-a8dd313159f5:autoScalingGroupName/my-test-asg:policyName/MyScaleUpPolicy</PolicyARN>\n        <AdjustmentType>ChangeInCapacity</AdjustmentType>\n        <ScalingAdjustment>1</ScalingAdjustment>\n        <PolicyName>MyScaleUpPolicy</PolicyName>\n        <AutoScalingGroupName>my-test-asg</AutoScalingGroupName>\n        <Cooldown>60</Cooldown>\n        <Alarms>\n          <member>\n            <AlarmName>TestQueue</AlarmName>\n            <AlarmARN>arn:aws:cloudwatch:us-east-1:803981987763:alarm:TestQueue</AlarmARN>\n          </member>\n        </Alarms>\n      </member>\n    </ScalingPolicies>\n  </DescribePoliciesResult>\n  <ResponseMetadata>\n    <RequestId>ec3bffad-b739-11e2-b38d-15fbEXAMPLE</RequestId>\n  </ResponseMetadata>\n</DescribePoliciesResponse> </queryresponse>\n        </examples>   \n        \n    ",
             "pagination": {
-                "limit_key": "MaxRecords",
                 "input_token": "NextToken",
                 "output_token": "NextToken",
+                "limit_key": "MaxRecords",
                 "result_key": "ScalingPolicies",
                 "py_input_token": "next_token"
             }
@@ -2202,9 +2202,9 @@
             ],
             "documentation": "\n        <p>\n            Returns the scaling activities for the specified Auto Scaling group.\n        </p>\n        <p>\n            If the specified <code>ActivityIds</code> list is empty,\n            all the activities from the past six weeks are returned.\n            Activities are sorted by the start time.\n            Activities still in progress appear first on the list.\n        </p>\n        <p>\n            This action supports pagination. If the response includes a token, \n            there are more records available. To get the additional records, repeat\n            the request with the response token as the <code>NextToken</code> parameter.            \n        </p>\n        <examples>      \n            <queryrequest>https://autoscaling.amazonaws.com/?AutoScalingGroupName=my-test-asg\n&MaxRecords=20\n&Version=2011-01-01\n&Action=DescribeScalingActivities\n&AUTHPARAMS </queryrequest>      \n            <queryresponse><DescribeScalingActivitiesResponse xmlns=\"http://ec2.amazonaws.com/doc/2011-01-01/\">\n<DescribeScalingActivitiesResult>\n<Activities>\n   <member>\n     <StatusCode>Failed</StatusCode>\n     <Progress>0</Progress>\n     <ActivityId>063308ae-aa22-4a9b-94f4-9faeEXAMPLE</ActivityId>\n     <StartTime>2012-04-12T17:32:07.882Z</StartTime>\n     <AutoScalingGroupName>my-test-asg</AutoScalingGroupName>\n     <Cause>At 2012-04-12T17:31:30Z a user request created an AutoScalingGroup changing the desired capacity from 0 to 1.  At 2012-04-12T17:32:07Z an instance was started in response to a difference between desired and actual capacity, increasing the capacity from 0 to 1.</Cause>\n     <Details>{}</Details>\n     <Description>Launching a new EC2 instance.  Status Reason: The image id 'ami-4edb0327' does not exist. Launching EC2 instance failed.</Description>\n     <EndTime>2012-04-12T17:32:08Z</EndTime>\n     <StatusMessage>The image id 'ami-4edb0327' does not exist. Launching EC2 instance failed.</StatusMessage>\n   </member>\n</Activities>\n  </DescribeScalingActivitiesResult>\n  <ResponseMetadata>\n   <RequestId>7a641adc-84c5-11e1-a8a5-217ebEXAMPLE</RequestId>\n  </ResponseMetadata>\n</DescribeScalingActivitiesResponse> </queryresponse>\n        </examples>   \n    ",
             "pagination": {
-                "limit_key": "MaxRecords",
                 "input_token": "NextToken",
                 "output_token": "NextToken",
+                "limit_key": "MaxRecords",
                 "result_key": "Activities",
                 "py_input_token": "next_token"
             }
@@ -2402,9 +2402,9 @@
             ],
             "documentation": "\n        <p>\n            Lists all the actions scheduled for your Auto Scaling group that haven't been executed. To see a list of\n            actions already executed, see the activity record returned in <a>DescribeScalingActivities</a>.  \n        </p>\n    ",
             "pagination": {
-                "limit_key": "MaxRecords",
                 "input_token": "NextToken",
                 "output_token": "NextToken",
+                "limit_key": "MaxRecords",
                 "result_key": "ScheduledUpdateGroupActions",
                 "py_input_token": "next_token"
             }
@@ -2537,9 +2537,9 @@
             ],
             "documentation": "\n        <p>\n            Lists the Auto Scaling group tags.  \n        </p>\n        <p>\n            You can use filters to limit results when describing tags. For example, you can query for \n            tags of a particular Auto Scaling group. You can specify multiple values for a filter. A \n            tag must match at least one of the specified values for it to be included in the results. \n        </p>\n        <p>\n            You can also specify multiple filters. The result includes information for a particular \n            tag only if it matches all your filters. If there's no match, no special message is returned.\n        </p>\n        <examples>      \n            <queryrequest>https://autoscaling.amazonaws.com/?Version=2011-01-01&Action=DescribeTags\n&AUTHPARAMS </queryrequest>      \n            <queryresponse><DescribeTagsResponse xmlns=\"http://autoscaling.amazonaws.com/doc/2011-01-01/\">\n  <DescribeTagsResult>\n    <Tags>      \n      <member>\n        <ResourceId>my-test-asg</ResourceId>\n        <PropagateAtLaunch>true</PropagateAtLaunch>\n        <Value>1.0</Value>\n        <Key>version</Key>\n        <ResourceType>auto-scaling-group</ResourceType>\n      </member>\n    </Tags>\n  </DescribeTagsResult>\n  <ResponseMetadata>\n    <RequestId>086265fd-bf3e-11e2-85fc-fbb1EXAMPLE</RequestId>\n  </ResponseMetadata>\n</DescribeTagsResponse> </queryresponse>\n        </examples>   \n    ",
             "pagination": {
-                "limit_key": "MaxRecords",
                 "input_token": "NextToken",
                 "output_token": "NextToken",
+                "limit_key": "MaxRecords",
                 "result_key": "Tags",
                 "py_input_token": "next_token"
             }
@@ -3379,58 +3379,58 @@
     },
     "pagination": {
         "DescribeAutoScalingGroups": {
-            "limit_key": "MaxRecords",
             "input_token": "NextToken",
             "output_token": "NextToken",
+            "limit_key": "MaxRecords",
             "result_key": "AutoScalingGroups",
             "py_input_token": "next_token"
         },
         "DescribeAutoScalingInstances": {
-            "limit_key": "MaxRecords",
             "input_token": "NextToken",
             "output_token": "NextToken",
+            "limit_key": "MaxRecords",
             "result_key": "AutoScalingInstances",
             "py_input_token": "next_token"
         },
         "DescribeLaunchConfigurations": {
-            "limit_key": "MaxRecords",
             "input_token": "NextToken",
             "output_token": "NextToken",
+            "limit_key": "MaxRecords",
             "result_key": "LaunchConfigurations",
             "py_input_token": "next_token"
         },
         "DescribeNotificationConfigurations": {
-            "limit_key": "MaxRecords",
             "input_token": "NextToken",
             "output_token": "NextToken",
+            "limit_key": "MaxRecords",
             "result_key": "NotificationConfigurations",
             "py_input_token": "next_token"
         },
         "DescribePolicies": {
-            "limit_key": "MaxRecords",
             "input_token": "NextToken",
             "output_token": "NextToken",
+            "limit_key": "MaxRecords",
             "result_key": "ScalingPolicies",
             "py_input_token": "next_token"
         },
         "DescribeScalingActivities": {
-            "limit_key": "MaxRecords",
             "input_token": "NextToken",
             "output_token": "NextToken",
+            "limit_key": "MaxRecords",
             "result_key": "Activities",
             "py_input_token": "next_token"
         },
         "DescribeScheduledActions": {
-            "limit_key": "MaxRecords",
             "input_token": "NextToken",
             "output_token": "NextToken",
+            "limit_key": "MaxRecords",
             "result_key": "ScheduledUpdateGroupActions",
             "py_input_token": "next_token"
         },
         "DescribeTags": {
-            "limit_key": "MaxRecords",
             "input_token": "NextToken",
             "output_token": "NextToken",
+            "limit_key": "MaxRecords",
             "result_key": "Tags",
             "py_input_token": "next_token"
         }

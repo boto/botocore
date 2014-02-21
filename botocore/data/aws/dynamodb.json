@@ -3503,7 +3503,14 @@
                     "documentation": "\n    <p>An error occurred on the server side.</p>\n  "
                 }
             ],
-            "documentation": "\n    <p>Returns an array of all the tables associated with the current account and endpoint. </p>\n    <examples>\n      <example>\n        <name>List Tables</name>\n        <description>\n          <p>This example requests a list of tables, starting with a table named comp2 and ending\n            after three table names have been returned.</p>\n        </description>\n        <request>\n{\n    \"LastEvaluatedTableName\": \"Thread\",\n    \"TableNames\": [\"Forum\",\"Reply\",\"Thread\"]\n}\n        </response>\n      </example>\n    </examples>\n  "
+            "documentation": "\n    <p>Returns an array of all the tables associated with the current account and endpoint. </p>\n    <examples>\n      <example>\n        <name>List Tables</name>\n        <description>\n          <p>This example requests a list of tables, starting with a table named comp2 and ending\n            after three table names have been returned.</p>\n        </description>\n        <request>\n{\n    \"LastEvaluatedTableName\": \"Thread\",\n    \"TableNames\": [\"Forum\",\"Reply\",\"Thread\"]\n}\n        </response>\n      </example>\n    </examples>\n  ",
+            "pagination": {
+                "input_token": "ExclusiveStartTableName",
+                "output_token": "LastEvaluatedTableName",
+                "limit_key": "Limit",
+                "result_key": "TableNames",
+                "py_input_token": "exclusive_start_table_name"
+            }
         },
         "PutItem": {
             "name": "PutItem",
@@ -4477,7 +4484,14 @@
                     "documentation": "\n    <p>An error occurred on the server side.</p>\n  "
                 }
             ],
-            "documentation": "\n    <p>A <i>Query</i> operation directly accesses items from a table using the table primary key, or\n      from an index using the index key. You must provide a specific hash key value. You can narrow\n      the scope of the query by using comparison operators on the range key value, or on the index\n      key. You can use the <i>ScanIndexForward</i> parameter to get results in forward or reverse\n      order, by range key or by index key. </p>\n    <p>Queries that do not return results consume the minimum read capacity units according to the\n      type of read.</p>\n      <p>If the total number of items meeting the query criteria exceeds the result set size limit of 1 MB, the query\n        stops and results are returned to the user with a <i>LastEvaluatedKey</i> to continue the\n        query in a subsequent operation. Unlike a <i>Scan</i> operation, a <i>Query</i> operation\n        never returns an empty result set <i>and</i> a <i>LastEvaluatedKey</i>. The\n          <i>LastEvaluatedKey</i> is only provided if the results exceed 1 MB, or if you have used\n          <i>Limit</i>. </p>\n    <p>You can query a table, a local secondary index (LSI), or a global secondary index (GSI). For a query on a table or on an LSI, you can set <i>ConsistentRead</i> to true and obtain a strongly consistent result. GSIs support eventually consistent reads only, so do not specify <i>ConsistentRead</i> when querying a GSI.</p>\n    <examples>\n      <example>\n        <name>Retrieving a Range of Items</name>\n        <description>\n          <p>This example queries the <i>Thread</i> table for postings between two dates. There is an index on\n            <i>LastPostDateTime</i> to facilitate fast lookups on this attribute.</p>\n          <p>All of the attributes will be returned. Any attributes that are not projected into the\n            index will cause Amazon DynamoDB to fetch those attributes from the <i>Thread</i> table;\n            this fetching occurs automatically.</p>\n        </description>\n        <request>\n{\n    \"Count\":`17\n}\n        </response>\n      </example>\n    </examples>\n  "
+            "documentation": "\n    <p>A <i>Query</i> operation directly accesses items from a table using the table primary key, or\n      from an index using the index key. You must provide a specific hash key value. You can narrow\n      the scope of the query by using comparison operators on the range key value, or on the index\n      key. You can use the <i>ScanIndexForward</i> parameter to get results in forward or reverse\n      order, by range key or by index key. </p>\n    <p>Queries that do not return results consume the minimum read capacity units according to the\n      type of read.</p>\n      <p>If the total number of items meeting the query criteria exceeds the result set size limit of 1 MB, the query\n        stops and results are returned to the user with a <i>LastEvaluatedKey</i> to continue the\n        query in a subsequent operation. Unlike a <i>Scan</i> operation, a <i>Query</i> operation\n        never returns an empty result set <i>and</i> a <i>LastEvaluatedKey</i>. The\n          <i>LastEvaluatedKey</i> is only provided if the results exceed 1 MB, or if you have used\n          <i>Limit</i>. </p>\n    <p>You can query a table, a local secondary index (LSI), or a global secondary index (GSI). For a query on a table or on an LSI, you can set <i>ConsistentRead</i> to true and obtain a strongly consistent result. GSIs support eventually consistent reads only, so do not specify <i>ConsistentRead</i> when querying a GSI.</p>\n    <examples>\n      <example>\n        <name>Retrieving a Range of Items</name>\n        <description>\n          <p>This example queries the <i>Thread</i> table for postings between two dates. There is an index on\n            <i>LastPostDateTime</i> to facilitate fast lookups on this attribute.</p>\n          <p>All of the attributes will be returned. Any attributes that are not projected into the\n            index will cause Amazon DynamoDB to fetch those attributes from the <i>Thread</i> table;\n            this fetching occurs automatically.</p>\n        </description>\n        <request>\n{\n    \"Count\":`17\n}\n        </response>\n      </example>\n    </examples>\n  ",
+            "pagination": {
+                "input_token": "ExclusiveStartKey",
+                "output_token": "LastEvaluatedKey",
+                "limit_key": "Limit",
+                "result_key": "Items",
+                "py_input_token": "exclusive_start_key"
+            }
         },
         "Scan": {
             "name": "Scan",
@@ -4972,7 +4986,14 @@
                     "documentation": "\n    <p>An error occurred on the server side.</p>\n  "
                 }
             ],
-            "documentation": "\n    <p>The <i>Scan</i> operation returns one or more items and item attributes by accessing every item in the table. To have Amazon DynamoDB return fewer items, you can provide a <i>ScanFilter</i>.</p>\n\n    <p>If the total number of scanned items exceeds the maximum data set size limit of 1 MB, the scan stops and results are\n      returned to the user with a <i>LastEvaluatedKey</i> to continue the scan in a subsequent\n      operation. The results also include the number of items exceeding the limit. A scan can result\n      in no table data meeting the filter criteria. </p>\n      <p>The result set is eventually consistent. </p>\n    <p>By default, <i>Scan</i> operations proceed sequentially; however, for faster performance on\n      large tables, applications can request a parallel <i>Scan</i> by specifying the <i>Segment</i>\n      and <i>TotalSegments</i> parameters. For more information, see <a href=\"http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/QueryAndScan.html#QueryAndScanParallelScan\">Parallel Scan</a> in the Amazon DynamoDB Developer Guide.</p>\n    <examples>\n      <example>\n        <name>Returning All Items</name>\n        <description>This example returns all of the items in a table. No scan filter is\n          applied.</description>\n        <request>\n{\n    \"ConsumedCapacity\": {\n        \"CapacityUnits\": 0.5,\n        \"TableName\": \"Reply\"\n    },\n    \"Count\": 2,\n    \"Items\": [\n        {\n            \"PostedBy\": {\n                \"S\": \"joe@example.com\"\n            },\n            \"ReplyDateTime\": {\n                \"S\": \"20130320115336\"\n            },\n            \"Id\": {\n                \"S\": \"Amazon DynamoDB#How do I update multiple items?\"\n            },\n            \"Message\": {\n                \"S\": \"Have you looked at the BatchWriteItem API?\"\n            }\n        },\n        {\n            \"PostedBy\": {\n                \"S\": \"joe@example.com\"\n            },\n            \"ReplyDateTime\": {\n                \"S\": \"20130320115347\"\n            },\n            \"Id\": {\n                \"S\": \"Amazon DynamoDB#How do I update multiple items?\"\n            },\n            \"Message\": {\n                \"S\": \"BatchWriteItem is documented in the Amazon DynamoDB API Reference.\"\n            }\n        }\n    ],\n    \"ScannedCount\": 4\n}\n        </response>\n      </example>\n    </examples>\n  "
+            "documentation": "\n    <p>The <i>Scan</i> operation returns one or more items and item attributes by accessing every item in the table. To have Amazon DynamoDB return fewer items, you can provide a <i>ScanFilter</i>.</p>\n\n    <p>If the total number of scanned items exceeds the maximum data set size limit of 1 MB, the scan stops and results are\n      returned to the user with a <i>LastEvaluatedKey</i> to continue the scan in a subsequent\n      operation. The results also include the number of items exceeding the limit. A scan can result\n      in no table data meeting the filter criteria. </p>\n      <p>The result set is eventually consistent. </p>\n    <p>By default, <i>Scan</i> operations proceed sequentially; however, for faster performance on\n      large tables, applications can request a parallel <i>Scan</i> by specifying the <i>Segment</i>\n      and <i>TotalSegments</i> parameters. For more information, see <a href=\"http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/QueryAndScan.html#QueryAndScanParallelScan\">Parallel Scan</a> in the Amazon DynamoDB Developer Guide.</p>\n    <examples>\n      <example>\n        <name>Returning All Items</name>\n        <description>This example returns all of the items in a table. No scan filter is\n          applied.</description>\n        <request>\n{\n    \"ConsumedCapacity\": {\n        \"CapacityUnits\": 0.5,\n        \"TableName\": \"Reply\"\n    },\n    \"Count\": 2,\n    \"Items\": [\n        {\n            \"PostedBy\": {\n                \"S\": \"joe@example.com\"\n            },\n            \"ReplyDateTime\": {\n                \"S\": \"20130320115336\"\n            },\n            \"Id\": {\n                \"S\": \"Amazon DynamoDB#How do I update multiple items?\"\n            },\n            \"Message\": {\n                \"S\": \"Have you looked at the BatchWriteItem API?\"\n            }\n        },\n        {\n            \"PostedBy\": {\n                \"S\": \"joe@example.com\"\n            },\n            \"ReplyDateTime\": {\n                \"S\": \"20130320115347\"\n            },\n            \"Id\": {\n                \"S\": \"Amazon DynamoDB#How do I update multiple items?\"\n            },\n            \"Message\": {\n                \"S\": \"BatchWriteItem is documented in the Amazon DynamoDB API Reference.\"\n            }\n        }\n    ],\n    \"ScannedCount\": 4\n}\n        </response>\n      </example>\n    </examples>\n  ",
+            "pagination": {
+                "input_token": "ExclusiveStartKey",
+                "output_token": "LastEvaluatedKey",
+                "limit_key": "Limit",
+                "result_key": "Items",
+                "py_input_token": "exclusive_start_key"
+            }
         },
         "UpdateItem": {
             "name": "UpdateItem",
@@ -6070,6 +6091,29 @@
             "https",
             "http"
         ]
+    },
+    "pagination": {
+        "ListTables": {
+            "input_token": "ExclusiveStartTableName",
+            "output_token": "LastEvaluatedTableName",
+            "limit_key": "Limit",
+            "result_key": "TableNames",
+            "py_input_token": "exclusive_start_table_name"
+        },
+        "Query": {
+            "input_token": "ExclusiveStartKey",
+            "output_token": "LastEvaluatedKey",
+            "limit_key": "Limit",
+            "result_key": "Items",
+            "py_input_token": "exclusive_start_key"
+        },
+        "Scan": {
+            "input_token": "ExclusiveStartKey",
+            "output_token": "LastEvaluatedKey",
+            "limit_key": "Limit",
+            "result_key": "Items",
+            "py_input_token": "exclusive_start_key"
+        }
     },
     "waiters": {
         "TableNotExists": {

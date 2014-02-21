@@ -13,99 +13,115 @@
   },
   "pagination": {
     "GetGroup": {
-      "more_results": "IsTruncated",
       "input_token": "Marker",
       "output_token": "Marker",
+      "more_results": "IsTruncated",
+      "limit_key": "MaxItems",
       "result_key": "Users"
     },
     "ListAccessKeys": {
-      "more_results": "IsTruncated",
       "input_token": "Marker",
       "output_token": "Marker",
+      "more_results": "IsTruncated",
+      "limit_key": "MaxItems",
       "result_key": "AccessKeyMetadata"
     },
     "ListAccountAliases": {
-      "more_results": "IsTruncated",
       "input_token": "Marker",
       "output_token": "Marker",
+      "more_results": "IsTruncated",
+      "limit_key": "MaxItems",
       "result_key": "AccountAliases"
     },
     "ListGroupPolicies": {
-      "more_results": "IsTruncated",
       "input_token": "Marker",
       "output_token": "Marker",
+      "more_results": "IsTruncated",
+      "limit_key": "MaxItems",
       "result_key": "PolicyNames"
     },
     "ListGroups": {
-      "more_results": "IsTruncated",
       "input_token": "Marker",
       "output_token": "Marker",
+      "more_results": "IsTruncated",
+      "limit_key": "MaxItems",
       "result_key": "Groups"
     },
     "ListGroupsForUser": {
-      "more_results": "IsTruncated",
       "input_token": "Marker",
       "output_token": "Marker",
+      "more_results": "IsTruncated",
+      "limit_key": "MaxItems",
       "result_key": "Groups"
     },
     "ListInstanceProfiles": {
-      "more_results": "IsTruncated",
       "input_token": "Marker",
       "output_token": "Marker",
+      "more_results": "IsTruncated",
+      "limit_key": "MaxItems",
       "result_key": "InstanceProfiles"
     },
     "ListInstanceProfilesForRole": {
-      "more_results": "IsTruncated",
       "input_token": "Marker",
       "output_token": "Marker",
+      "more_results": "IsTruncated",
+      "limit_key": "MaxItems",
       "result_key": "InstanceProfiles"
     },
     "ListMFADevices": {
-      "more_results": "IsTruncated",
       "input_token": "Marker",
       "output_token": "Marker",
+      "more_results": "IsTruncated",
+      "limit_key": "MaxItems",
       "result_key": "MFADevices"
     },
     "ListRolePolicies": {
-      "more_results": "IsTruncated",
       "input_token": "Marker",
       "output_token": "Marker",
+      "more_results": "IsTruncated",
+      "limit_key": "MaxItems",
       "result_key": "PolicyNames"
     },
     "ListRoles": {
-      "more_results": "IsTruncated",
       "input_token": "Marker",
       "output_token": "Marker",
+      "more_results": "IsTruncated",
+      "limit_key": "MaxItems",
       "result_key": "Roles"
     },
     "ListServerCertificates": {
-      "more_results": "IsTruncated",
       "input_token": "Marker",
       "output_token": "Marker",
+      "more_results": "IsTruncated",
+      "limit_key": "MaxItems",
       "result_key": "ServerCertificateMetadataList"
     },
     "ListSigningCertificates": {
-      "more_results": "IsTruncated",
       "input_token": "Marker",
       "output_token": "Marker",
+      "more_results": "IsTruncated",
+      "limit_key": "MaxItems",
       "result_key": "Certificates"
     },
     "ListUserPolicies": {
-      "more_results": "IsTruncated",
       "input_token": "Marker",
       "output_token": "Marker",
+      "more_results": "IsTruncated",
+      "limit_key": "MaxItems",
       "result_key": "PolicyNames"
     },
     "ListUsers": {
-      "more_results": "IsTruncated",
       "input_token": "Marker",
       "output_token": "Marker",
+      "more_results": "IsTruncated",
+      "limit_key": "MaxItems",
       "result_key": "Users"
     },
     "ListVirtualMFADevices": {
-      "more_results": "IsTruncated",
       "input_token": "Marker",
       "output_token": "Marker",
+      "more_results": "IsTruncated",
+      "limit_key": "MaxItems",
       "result_key": "VirtualMFADevices"
     }
   }
