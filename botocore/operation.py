@@ -17,9 +17,8 @@ from botocore.parameters import get_parameter
 from botocore.exceptions import MissingParametersError
 from botocore.exceptions import UnknownParameterError
 from botocore.paginate import Paginator
-from botocore.utils import pythonic
 from botocore.payload import Payload, XMLPayload, JSONPayload
-from botocore import BotoCoreObject
+from botocore import BotoCoreObject, xform_name
 
 logger = logging.getLogger(__name__)
 
@@ -180,7 +179,7 @@ class Operation(BotoCoreObject):
         """
         params = {}
         for key, value in kwargs.items():
-            params[pythonic(key)] = value
+            params[xform_name(key)] = value
         return params
 
     def _check_for_unknown_params(self, kwargs):
