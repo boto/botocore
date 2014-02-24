@@ -557,8 +557,9 @@ class TestExpressionKeyIterators(unittest.TestCase):
         pages = self.paginator.paginate(None)
         complete = pages.build_full_result()
         self.assertEqual(complete, {
-            'EngineDefaults': {'Parameters': []},
-            'EngineDefaults.Parameters': ['One', 'Two', 'Three', 'Four', 'Five']
+            'EngineDefaults': {
+                'Parameters': ['One', 'Two', 'Three', 'Four', 'Five']
+            },
         })
 
 
