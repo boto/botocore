@@ -265,8 +265,17 @@ class PageIterator(object):
         for vals in zip_longest(*iterators):
             for k, val in zip(key_names, vals):
                 if val is not None:
-                    response.setdefault(k.expression, [])
-                    response[k.expression].append(val)
+                    # We can't just do an append here, since we don't
+                    # necessarily have a reference (& the expression isn't as
+                    # easy as normal keys).
+                    # So we'll search for the value, create an empty list if
+                    # we don't find it, then append the ``val`` to the list &
+                    # set it via the expression.
+                    existing = k.search(response)
+                    if not existing:
+                        existing = []
+                    existing.append(val)
+                    set_value_from_jmespath(response, k.expression, existing)
         if self.resume_token is not None:
             response['NextToken'] = self.resume_token
         return response
