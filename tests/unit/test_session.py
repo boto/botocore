@@ -272,5 +272,19 @@ class TestSessionConfigurationVars(BaseSessionTest):
             'per-call-default')
 
 
+class TestSessionUserAgent(BaseSessionTest):
+    def test_can_change_user_agent_name(self):
+        self.session.user_agent_name = 'something-else'
+        self.assertTrue(self.session.user_agent().startswith('something-else'))
+
+    def test_can_change_user_agent_version(self):
+        self.session.user_agent_version = '24.0'
+        self.assertTrue(self.session.user_agent().startswith('Botocore/24.0'))
+
+    def test_can_append_to_user_agent(self):
+        self.session.user_agent_extra = 'custom-thing/other'
+        self.assertTrue(self.session.user_agent().endswith('custom-thing/other'))
+
+
 if __name__ == "__main__":
     unittest.main()
