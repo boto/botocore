@@ -147,6 +147,7 @@ class Session(object):
             self._register_builtin_handlers(self._events)
         self.user_agent_name = 'Botocore'
         self.user_agent_version = __version__
+        self.user_agent_extra = ''
         self._profile = None
         self._config = None
         self._credentials = None
@@ -405,12 +406,18 @@ class Session(object):
          - plat_name is the name of the platform (e.g. Darwin)
          - plat_ver is the version of the platform
 
+        If ``user_agent_extra`` is not empty, then this value will be
+        appended to the end of the user agent string.
+
         """
-        return '%s/%s Python/%s %s/%s' % (self.user_agent_name,
+        base = '%s/%s Python/%s %s/%s' % (self.user_agent_name,
                                           self.user_agent_version,
                                           platform.python_version(),
                                           platform.system(),
                                           platform.release())
+        if self.user_agent_extra:
+            base += ' %s' % self.user_agent_extra
+        return base
 
     def get_data(self, data_path):
         """
