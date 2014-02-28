@@ -223,7 +223,9 @@ class RestEndpoint(Endpoint):
         query_params = '&'.join(query_param_components)
         logger.debug('Rendered path: %s', path)
         logger.debug('Rendered query_params: %s', query_params)
-        return path + '?' + query_params
+        if query_params:
+            path += '?' + query_params
+        return path
 
     def _create_request_object(self, operation, params):
         user_agent = self.session.user_agent()

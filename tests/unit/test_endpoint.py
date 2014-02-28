@@ -403,7 +403,7 @@ class TestRestEndpoint(unittest.TestCase):
         params = {'uri_params': {'foo': u'\u2713', 'bar': 'bar'}}
         endpoint = RestEndpoint(Mock(), None, None, None)
         built_uri = endpoint.build_uri(operation, params)
-        self.assertEqual(built_uri, '/%E2%9C%93/bar?')
+        self.assertEqual(built_uri, '/%E2%9C%93/bar')
 
     def test_quote_uri_safe_key(self):
         uri = '/{foo}/{bar}'
@@ -412,7 +412,7 @@ class TestRestEndpoint(unittest.TestCase):
         params = {'uri_params': {'foo': 'foo', 'bar': 'bar~'}}
         endpoint = RestEndpoint(Mock(), None, None, None)
         built_uri = endpoint.build_uri(operation, params)
-        self.assertEqual(built_uri, '/foo/bar~?')
+        self.assertEqual(built_uri, '/foo/bar~')
 
     def test_missing_required_params(self):
         uri = '/{id}?optional={optional}'
@@ -431,7 +431,7 @@ class TestRestEndpoint(unittest.TestCase):
         params = {'uri_params': {}}
         endpoint = RestEndpoint(Mock(), None, None, None)
         built_uri = endpoint.build_uri(operation, params)
-        self.assertEqual(built_uri, '/?')
+        self.assertEqual(built_uri, '/')
 
 
 if __name__ == '__main__':
