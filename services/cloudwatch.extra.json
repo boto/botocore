@@ -20,21 +20,21 @@
   },
   "pagination": {
     "DescribeAlarmHistory": {
-      "limit_key": "MaxRecords",
       "input_token": "NextToken",
       "output_token": "NextToken",
+      "limit_key": "MaxRecords",
       "result_key": "AlarmHistoryItems"
     },
     "DescribeAlarms": {
-      "limit_key": "MaxRecords",
       "input_token": "NextToken",
       "output_token": "NextToken",
+      "limit_key": "MaxRecords",
       "result_key": "MetricAlarms"
     },
     "ListMetrics": {
       "input_token": "NextToken",
       "output_token": "NextToken",
       "result_key": "Metrics"
-     }
+    }
   }
 }

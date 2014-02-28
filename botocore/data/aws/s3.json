@@ -2411,7 +2411,7 @@
             "documentation": "This operation lists in-progress multipart uploads.",
             "pagination": {
                 "limit_key": "MaxUploads",
-                "more_key": "IsTruncated",
+                "more_results": "IsTruncated",
                 "output_token": [
                     "NextKeyMarker",
                     "NextUploadIdMarker"
@@ -2420,7 +2420,10 @@
                     "KeyMarker",
                     "UploadIdMarker"
                 ],
-                "result_key": "Uploads",
+                "result_key": [
+                    "Uploads",
+                    "CommonPrefixes"
+                ],
                 "py_input_token": [
                     "key_marker",
                     "upload_id_marker"
@@ -2623,7 +2626,7 @@
             "documentation_url": "http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketGETVersion.html",
             "documentation": "Returns metadata about all of the versions of objects in a bucket.",
             "pagination": {
-                "more_key": "IsTruncated",
+                "more_results": "IsTruncated",
                 "limit_key": "MaxKeys",
                 "output_token": [
                     "NextKeyMarker",
@@ -2635,7 +2638,8 @@
                 ],
                 "result_key": [
                     "Versions",
-                    "DeleteMarkers"
+                    "DeleteMarkers",
+                    "CommonPrefixes"
                 ],
                 "py_input_token": [
                     "key_marker",
@@ -2783,7 +2787,7 @@
             "documentation_url": "http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketGET.html",
             "documentation": "Returns some or all (up to 1000) of the objects in a bucket. You can use the request parameters as selection criteria to return a subset of the objects in a bucket.",
             "pagination": {
-                "more_key": "IsTruncated",
+                "more_results": "IsTruncated",
                 "limit_key": "MaxKeys",
                 "output_token": "NextMarker || Contents[-1].Key",
                 "input_token": "Marker",
@@ -2929,7 +2933,7 @@
             "documentation_url": "http://docs.aws.amazon.com/AmazonS3/latest/API/mpUploadListParts.html",
             "documentation": "Lists the parts that have been uploaded for a specific multipart upload.",
             "pagination": {
-                "more_key": "IsTruncated",
+                "more_results": "IsTruncated",
                 "limit_key": "MaxParts",
                 "output_token": "NextPartNumberMarker",
                 "input_token": "PartNumberMarker",
@@ -4312,7 +4316,7 @@
     "pagination": {
         "ListMultipartUploads": {
             "limit_key": "MaxUploads",
-            "more_key": "IsTruncated",
+            "more_results": "IsTruncated",
             "output_token": [
                 "NextKeyMarker",
                 "NextUploadIdMarker"
@@ -4321,14 +4325,17 @@
                 "KeyMarker",
                 "UploadIdMarker"
             ],
-            "result_key": "Uploads",
+            "result_key": [
+                "Uploads",
+                "CommonPrefixes"
+            ],
             "py_input_token": [
                 "key_marker",
                 "upload_id_marker"
             ]
         },
         "ListObjectVersions": {
-            "more_key": "IsTruncated",
+            "more_results": "IsTruncated",
             "limit_key": "MaxKeys",
             "output_token": [
                 "NextKeyMarker",
@@ -4340,7 +4347,8 @@
             ],
             "result_key": [
                 "Versions",
-                "DeleteMarkers"
+                "DeleteMarkers",
+                "CommonPrefixes"
             ],
             "py_input_token": [
                 "key_marker",
@@ -4348,7 +4356,7 @@
             ]
         },
         "ListObjects": {
-            "more_key": "IsTruncated",
+            "more_results": "IsTruncated",
             "limit_key": "MaxKeys",
             "output_token": "NextMarker || Contents[-1].Key",
             "input_token": "Marker",
@@ -4359,12 +4367,47 @@
             "py_input_token": "marker"
         },
         "ListParts": {
-            "more_key": "IsTruncated",
+            "more_results": "IsTruncated",
             "limit_key": "MaxParts",
             "output_token": "NextPartNumberMarker",
             "input_token": "PartNumberMarker",
             "result_key": "Parts",
             "py_input_token": "part_number_marker"
+        }
+    },
+    "waiters": {
+        "ObjectExists": {
+            "success": {
+                "type": "output"
+            },
+            "interval": 5,
+            "ignore_errors": [
+                "NoSuchKey"
+            ],
+            "operation": "HeadObject",
+            "max_attempts": 20
+        },
+        "BucketNotExists": {
+            "success": {
+                "type": "error",
+                "value": [
+                    "NoSuchBucket"
+                ]
+            },
+            "interval": 5,
+            "operation": "HeadBucket",
+            "max_attempts": 20
+        },
+        "BucketExists": {
+            "success": {
+                "type": "output"
+            },
+            "interval": 5,
+            "ignore_errors": [
+                "NoSuchBucket"
+            ],
+            "operation": "HeadBucket",
+            "max_attempts": 20
         }
     },
     "retry": {

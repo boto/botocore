@@ -2,11 +2,36 @@
   "extra": {
     "metadata": {
       "regions": {
-        "us-east-1": null
+        "us-east-1": null,
+        "us-west-2": null,
+        "eu-west-1": null,
+        "ap-northeast-1": null,
+        "ap-southeast-2": null
       },
       "protocols": [
         "https"
       ]
+    }
+  },
+  "pagination": {
+    "ListPipelines": {
+      "input_token": "marker",
+      "output_token": "marker",
+      "more_results": "hasMoreResults",
+      "result_key": "pipelineIdList"
+    },
+    "DescribeObjects": {
+      "input_token": "marker",
+      "output_token": "marker",
+      "more_results": "hasMoreResults",
+      "result_key": "pipelineObjects"
+    },
+    "QueryObjects": {
+      "input_token": "marker",
+      "output_token": "marker",
+      "more_results": "hasMoreResults",
+      "limit_key": "limit",
+      "result_key": "ids"
     }
   }
 }

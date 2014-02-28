@@ -219,3 +219,8 @@ class IncompleteReadError(BotoCoreError):
     """HTTP response did not return expected number of bytes."""
     fmt = ('{actual_bytes} read, but total bytes '
            'expected is {expected_bytes}.')
+
+
+class InvalidExpressionError(BotoCoreError):
+    """Expression is either invalid or too complex."""
+    fmt = 'Invalid expression {expression}: Only dotted lookups are supported.'

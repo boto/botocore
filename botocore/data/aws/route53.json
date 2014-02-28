@@ -428,6 +428,20 @@
                                 "type": "string",
                                 "max_length": 255,
                                 "documentation": "\n    <p>A string to search for in the body of a health check response. Required for HTTP_STR_MATCH and HTTPS_STR_MATCH health checks.</p>\n   "
+                            },
+                            "RequestInterval": {
+                                "shape_name": "RequestInterval",
+                                "type": "integer",
+                                "min_length": 10,
+                                "max_length": 30,
+                                "documentation": "\n    <p>The number of seconds between the time that Route 53 gets a response from your endpoint and the time that it sends the next health-check request.</p>\n    <p>Each Route 53 health checker makes requests at this interval. Valid values are 10 and 30. The default value is 30.</p>\n  "
+                            },
+                            "FailureThreshold": {
+                                "shape_name": "FailureThreshold",
+                                "type": "integer",
+                                "min_length": 1,
+                                "max_length": 10,
+                                "documentation": "\n    <p>The number of consecutive health checks that an endpoint must pass or fail for Route 53 to\n      change the current status of the endpoint from unhealthy to healthy or vice versa.</p>\n    <p>Valid values are integers between 1 and 10. For more information,\n      see \"How Amazon Route 53 Determines Whether an Endpoint Is Healthy\" in the\n      Amazon Route 53 Developer Guide.</p>\n  "
                             }
                         },
                         "member_order": [
@@ -436,7 +450,9 @@
                             "Type",
                             "ResourcePath",
                             "FullyQualifiedDomainName",
-                            "SearchString"
+                            "SearchString",
+                            "RequestInterval",
+                            "FailureThreshold"
                         ],
                         "documentation": "\n    <p>A complex type that contains health check configuration.</p>\n   ",
                         "required": true
@@ -520,6 +536,20 @@
                                         "type": "string",
                                         "max_length": 255,
                                         "documentation": "\n    <p>A string to search for in the body of a health check response. Required for HTTP_STR_MATCH and HTTPS_STR_MATCH health checks.</p>\n   "
+                                    },
+                                    "RequestInterval": {
+                                        "shape_name": "RequestInterval",
+                                        "type": "integer",
+                                        "min_length": 10,
+                                        "max_length": 30,
+                                        "documentation": "\n    <p>The number of seconds between the time that Route 53 gets a response from your endpoint and the time that it sends the next health-check request.</p>\n    <p>Each Route 53 health checker makes requests at this interval. Valid values are 10 and 30. The default value is 30.</p>\n  "
+                                    },
+                                    "FailureThreshold": {
+                                        "shape_name": "FailureThreshold",
+                                        "type": "integer",
+                                        "min_length": 1,
+                                        "max_length": 10,
+                                        "documentation": "\n    <p>The number of consecutive health checks that an endpoint must pass or fail for Route 53 to\n      change the current status of the endpoint from unhealthy to healthy or vice versa.</p>\n    <p>Valid values are integers between 1 and 10. For more information,\n      see \"How Amazon Route 53 Determines Whether an Endpoint Is Healthy\" in the\n      Amazon Route 53 Developer Guide.</p>\n  "
                                     }
                                 },
                                 "member_order": [
@@ -528,7 +558,9 @@
                                     "Type",
                                     "ResourcePath",
                                     "FullyQualifiedDomainName",
-                                    "SearchString"
+                                    "SearchString",
+                                    "RequestInterval",
+                                    "FailureThreshold"
                                 ],
                                 "documentation": "\n    <p>A complex type that contains the health check configuration.</p>\n   ",
                                 "required": true
@@ -1260,6 +1292,20 @@
                                         "type": "string",
                                         "max_length": 255,
                                         "documentation": "\n    <p>A string to search for in the body of a health check response. Required for HTTP_STR_MATCH and HTTPS_STR_MATCH health checks.</p>\n   "
+                                    },
+                                    "RequestInterval": {
+                                        "shape_name": "RequestInterval",
+                                        "type": "integer",
+                                        "min_length": 10,
+                                        "max_length": 30,
+                                        "documentation": "\n    <p>The number of seconds between the time that Route 53 gets a response from your endpoint and the time that it sends the next health-check request.</p>\n    <p>Each Route 53 health checker makes requests at this interval. Valid values are 10 and 30. The default value is 30.</p>\n  "
+                                    },
+                                    "FailureThreshold": {
+                                        "shape_name": "FailureThreshold",
+                                        "type": "integer",
+                                        "min_length": 1,
+                                        "max_length": 10,
+                                        "documentation": "\n    <p>The number of consecutive health checks that an endpoint must pass or fail for Route 53 to\n      change the current status of the endpoint from unhealthy to healthy or vice versa.</p>\n    <p>Valid values are integers between 1 and 10. For more information,\n      see \"How Amazon Route 53 Determines Whether an Endpoint Is Healthy\" in the\n      Amazon Route 53 Developer Guide.</p>\n  "
                                     }
                                 },
                                 "member_order": [
@@ -1268,7 +1314,9 @@
                                     "Type",
                                     "ResourcePath",
                                     "FullyQualifiedDomainName",
-                                    "SearchString"
+                                    "SearchString",
+                                    "RequestInterval",
+                                    "FailureThreshold"
                                 ],
                                 "documentation": "\n    <p>A complex type that contains the health check configuration.</p>\n   ",
                                 "required": true
@@ -1579,6 +1627,20 @@
                                             "type": "string",
                                             "max_length": 255,
                                             "documentation": "\n    <p>A string to search for in the body of a health check response. Required for HTTP_STR_MATCH and HTTPS_STR_MATCH health checks.</p>\n   "
+                                        },
+                                        "RequestInterval": {
+                                            "shape_name": "RequestInterval",
+                                            "type": "integer",
+                                            "min_length": 10,
+                                            "max_length": 30,
+                                            "documentation": "\n    <p>The number of seconds between the time that Route 53 gets a response from your endpoint and the time that it sends the next health-check request.</p>\n    <p>Each Route 53 health checker makes requests at this interval. Valid values are 10 and 30. The default value is 30.</p>\n  "
+                                        },
+                                        "FailureThreshold": {
+                                            "shape_name": "FailureThreshold",
+                                            "type": "integer",
+                                            "min_length": 1,
+                                            "max_length": 10,
+                                            "documentation": "\n    <p>The number of consecutive health checks that an endpoint must pass or fail for Route 53 to\n      change the current status of the endpoint from unhealthy to healthy or vice versa.</p>\n    <p>Valid values are integers between 1 and 10. For more information,\n      see \"How Amazon Route 53 Determines Whether an Endpoint Is Healthy\" in the\n      Amazon Route 53 Developer Guide.</p>\n  "
                                         }
                                     },
                                     "member_order": [
@@ -1587,7 +1649,9 @@
                                         "Type",
                                         "ResourcePath",
                                         "FullyQualifiedDomainName",
-                                        "SearchString"
+                                        "SearchString",
+                                        "RequestInterval",
+                                        "FailureThreshold"
                                     ],
                                     "documentation": "\n    <p>A complex type that contains the health check configuration.</p>\n   ",
                                     "required": true
@@ -1665,7 +1729,15 @@
                     "documentation": "\n    <p>The resource you are trying to access is unsupported on this Route 53 endpoint. Please consider using a newer endpoint or a tool that does so.</p>\n   "
                 }
             ],
-            "documentation": "\n    <p> To retrieve a list of your health checks, send a <code>GET</code> request to the <code>2013-04-01/healthcheck</code> resource. The response to this request includes a <code>HealthChecks</code> element with zero, one, or multiple <code>HealthCheck</code> child elements. By default, the list of health checks is displayed on a single page. You can control the length of the page that is displayed by using the <code>MaxItems</code> parameter. You can use the <code>Marker</code> parameter to control the health check that the list begins with. </p>\n    <note> Amazon Route 53 returns a maximum of 100 items. If you set MaxItems to a value greater than 100, Amazon Route 53 returns only the first 100.</note>\n   "
+            "documentation": "\n    <p> To retrieve a list of your health checks, send a <code>GET</code> request to the <code>2013-04-01/healthcheck</code> resource. The response to this request includes a <code>HealthChecks</code> element with zero, one, or multiple <code>HealthCheck</code> child elements. By default, the list of health checks is displayed on a single page. You can control the length of the page that is displayed by using the <code>MaxItems</code> parameter. You can use the <code>Marker</code> parameter to control the health check that the list begins with. </p>\n    <note> Amazon Route 53 returns a maximum of 100 items. If you set MaxItems to a value greater than 100, Amazon Route 53 returns only the first 100.</note>\n   ",
+            "pagination": {
+                "input_token": "Marker",
+                "output_token": "NextMarker",
+                "more_results": "IsTruncated",
+                "limit_key": "MaxItems",
+                "result_key": "HealthChecks",
+                "py_input_token": "marker"
+            }
         },
         "ListHostedZones": {
             "name": "ListHostedZones",
@@ -1814,7 +1886,15 @@
                     "documentation": "\n    <p>Some value specified in the request is invalid or the XML document is malformed.</p>\n   "
                 }
             ],
-            "documentation": "\n    <p> To retrieve a list of your hosted zones, send a <code>GET</code> request to the <code>2013-04-01/hostedzone</code> resource. The response to this request includes a <code>HostedZones</code> element with zero, one, or multiple <code>HostedZone</code> child elements. By default, the list of hosted zones is displayed on a single page. You can control the length of the page that is displayed by using the <code>MaxItems</code> parameter. You can use the <code>Marker</code> parameter to control the hosted zone that the list begins with. </p>\n    <note> Amazon Route 53 returns a maximum of 100 items. If you set MaxItems to a value greater than 100, Amazon Route 53 returns only the first 100.</note>\n   "
+            "documentation": "\n    <p> To retrieve a list of your hosted zones, send a <code>GET</code> request to the <code>2013-04-01/hostedzone</code> resource. The response to this request includes a <code>HostedZones</code> element with zero, one, or multiple <code>HostedZone</code> child elements. By default, the list of hosted zones is displayed on a single page. You can control the length of the page that is displayed by using the <code>MaxItems</code> parameter. You can use the <code>Marker</code> parameter to control the hosted zone that the list begins with. </p>\n    <note> Amazon Route 53 returns a maximum of 100 items. If you set MaxItems to a value greater than 100, Amazon Route 53 returns only the first 100.</note>\n   ",
+            "pagination": {
+                "input_token": "Marker",
+                "output_token": "NextMarker",
+                "more_results": "IsTruncated",
+                "limit_key": "MaxItems",
+                "result_key": "HostedZones",
+                "py_input_token": "marker"
+            }
         },
         "ListResourceRecordSets": {
             "name": "ListResourceRecordSets",
@@ -2127,7 +2207,27 @@
                     "documentation": "\n    <p>Some value specified in the request is invalid or the XML document is malformed.</p>\n   "
                 }
             ],
-            "documentation": "\n  <p>Imagine all the resource record sets in a zone listed out in front of you.\n  Imagine them sorted lexicographically first by DNS name (with the labels\n  reversed, like \"com.amazon.www\" for example), and secondarily,\n  lexicographically by record type. This operation retrieves at most MaxItems\n  resource record sets from this list, in order, starting at a position\n  specified by the Name and Type arguments:</p>\n  <ul>\n  <li>If both Name and Type are omitted, this means start the results at the\n  first RRSET in the HostedZone.</li>\n  <li>If Name is specified but Type is omitted, this means start the results\n  at the first RRSET in the list whose name is greater than or equal to Name.\n  </li>\n  <li>If both Name and Type are specified, this means start the results at the\n  first RRSET in the list whose name is greater than or equal to Name and\n  whose type is greater than or equal to Type.</li>\n  <li>It is an error to specify the Type but not the Name.</li>\n  </ul>\n  <p>Use ListResourceRecordSets to retrieve a single known record set by\n  specifying the record set's name and type, and setting MaxItems = 1</p>\n  <p>To retrieve all the records in a HostedZone, first pause any processes\n  making calls to ChangeResourceRecordSets. Initially call ListResourceRecordSets\n  without a Name and Type to get the first page of record sets. For subsequent\n  calls, set Name and Type to the NextName and NextType values returned by the\n  previous response.\n  </p>\n  <p>In the presence of concurrent ChangeResourceRecordSets calls, there is no\n  consistency of results across calls to ListResourceRecordSets. The only way\n  to get a consistent multi-page snapshot of all RRSETs in a zone is to stop\n  making changes while pagination is in progress.</p>\n  <p>However, the results from ListResourceRecordSets are consistent within a\n  page. If MakeChange calls are taking place concurrently, the result of each\n  one will either be completely visible in your results or not at all. You will\n  not see partial changes, or changes that do not ultimately succeed. (This\n  follows from the fact that MakeChange is atomic)\n  </p>\n  <p>The results from ListResourceRecordSets are strongly consistent with\n  ChangeResourceRecordSets. To be precise, if a single process makes a call to\n  ChangeResourceRecordSets and receives a successful response, the effects of that\n  change will be visible in a subsequent call to ListResourceRecordSets by\n  that process.</p>\n  "
+            "documentation": "\n  <p>Imagine all the resource record sets in a zone listed out in front of you.\n  Imagine them sorted lexicographically first by DNS name (with the labels\n  reversed, like \"com.amazon.www\" for example), and secondarily,\n  lexicographically by record type. This operation retrieves at most MaxItems\n  resource record sets from this list, in order, starting at a position\n  specified by the Name and Type arguments:</p>\n  <ul>\n  <li>If both Name and Type are omitted, this means start the results at the\n  first RRSET in the HostedZone.</li>\n  <li>If Name is specified but Type is omitted, this means start the results\n  at the first RRSET in the list whose name is greater than or equal to Name.\n  </li>\n  <li>If both Name and Type are specified, this means start the results at the\n  first RRSET in the list whose name is greater than or equal to Name and\n  whose type is greater than or equal to Type.</li>\n  <li>It is an error to specify the Type but not the Name.</li>\n  </ul>\n  <p>Use ListResourceRecordSets to retrieve a single known record set by\n  specifying the record set's name and type, and setting MaxItems = 1</p>\n  <p>To retrieve all the records in a HostedZone, first pause any processes\n  making calls to ChangeResourceRecordSets. Initially call ListResourceRecordSets\n  without a Name and Type to get the first page of record sets. For subsequent\n  calls, set Name and Type to the NextName and NextType values returned by the\n  previous response.\n  </p>\n  <p>In the presence of concurrent ChangeResourceRecordSets calls, there is no\n  consistency of results across calls to ListResourceRecordSets. The only way\n  to get a consistent multi-page snapshot of all RRSETs in a zone is to stop\n  making changes while pagination is in progress.</p>\n  <p>However, the results from ListResourceRecordSets are consistent within a\n  page. If MakeChange calls are taking place concurrently, the result of each\n  one will either be completely visible in your results or not at all. You will\n  not see partial changes, or changes that do not ultimately succeed. (This\n  follows from the fact that MakeChange is atomic)\n  </p>\n  <p>The results from ListResourceRecordSets are strongly consistent with\n  ChangeResourceRecordSets. To be precise, if a single process makes a call to\n  ChangeResourceRecordSets and receives a successful response, the effects of that\n  change will be visible in a subsequent call to ListResourceRecordSets by\n  that process.</p>\n  ",
+            "pagination": {
+                "more_results": "IsTruncated",
+                "limit_key": "MaxItems",
+                "result_key": "ResourceRecordSets",
+                "input_token": [
+                    "StartRecordName",
+                    "StartRecordType",
+                    "StartRecordIdentifier"
+                ],
+                "output_token": [
+                    "NextRecordName",
+                    "NextRecordType",
+                    "NextRecordIdentifier"
+                ],
+                "py_input_token": [
+                    "start_record_name",
+                    "start_record_type",
+                    "start_record_identifier"
+                ]
+            }
         }
     },
     "metadata": {
@@ -2137,6 +2237,44 @@
         "protocols": [
             "https"
         ]
+    },
+    "pagination": {
+        "ListHealthChecks": {
+            "input_token": "Marker",
+            "output_token": "NextMarker",
+            "more_results": "IsTruncated",
+            "limit_key": "MaxItems",
+            "result_key": "HealthChecks",
+            "py_input_token": "marker"
+        },
+        "ListHostedZones": {
+            "input_token": "Marker",
+            "output_token": "NextMarker",
+            "more_results": "IsTruncated",
+            "limit_key": "MaxItems",
+            "result_key": "HostedZones",
+            "py_input_token": "marker"
+        },
+        "ListResourceRecordSets": {
+            "more_results": "IsTruncated",
+            "limit_key": "MaxItems",
+            "result_key": "ResourceRecordSets",
+            "input_token": [
+                "StartRecordName",
+                "StartRecordType",
+                "StartRecordIdentifier"
+            ],
+            "output_token": [
+                "NextRecordName",
+                "NextRecordType",
+                "NextRecordIdentifier"
+            ],
+            "py_input_token": [
+                "start_record_name",
+                "start_record_type",
+                "start_record_identifier"
+            ]
+        }
     },
     "retry": {
         "__default__": {

@@ -7203,7 +7203,14 @@
                     "documentation": "\n      <p>An internal server error has occured during the request. See the error and message fields for more\n         information.</p>\n   "
                 }
             ],
-            "documentation": null
+            "documentation": null,
+            "pagination": {
+                "input_token": "Marker",
+                "limit_key": "Limit",
+                "output_token": "Marker",
+                "result_key": "TapeArchives",
+                "py_input_token": "marker"
+            }
         },
         "DescribeTapeRecoveryPoints": {
             "name": "DescribeTapeRecoveryPoints",
@@ -7493,7 +7500,14 @@
                     "documentation": "\n      <p>An internal server error has occured during the request. See the error and message fields for more\n         information.</p>\n   "
                 }
             ],
-            "documentation": null
+            "documentation": null,
+            "pagination": {
+                "input_token": "Marker",
+                "limit_key": "Limit",
+                "output_token": "Marker",
+                "result_key": "TapeRecoveryPointInfos",
+                "py_input_token": "marker"
+            }
         },
         "DescribeTapes": {
             "name": "DescribeTapes",
@@ -7808,7 +7822,14 @@
                     "documentation": "\n      <p>An internal server error has occured during the request. See the error and message fields for more\n         information.</p>\n   "
                 }
             ],
-            "documentation": null
+            "documentation": null,
+            "pagination": {
+                "input_token": "Marker",
+                "limit_key": "Limit",
+                "output_token": "Marker",
+                "result_key": "Tapes",
+                "py_input_token": "marker"
+            }
         },
         "DescribeUploadBuffer": {
             "name": "DescribeUploadBuffer",
@@ -8389,7 +8410,14 @@
                     "documentation": "\n      <p>An internal server error has occured during the request. See the error and message fields for more\n         information.</p>\n   "
                 }
             ],
-            "documentation": null
+            "documentation": null,
+            "pagination": {
+                "input_token": "Marker",
+                "limit_key": "Limit",
+                "output_token": "Marker",
+                "result_key": "VTLDevices",
+                "py_input_token": "marker"
+            }
         },
         "DescribeWorkingStorage": {
             "name": "DescribeWorkingStorage",
@@ -9159,7 +9187,14 @@
                     "documentation": "\n      <p>An internal server error has occured during the request. See the error and message fields for more\n         information.</p>\n   "
                 }
             ],
-            "documentation": "\n      <p>This operation lists gateways owned by an AWS account in a region specified in the request. The returned list\n         is ordered by gateway Amazon Resource Name (ARN).</p>\n      <p>By default, the operation returns a maximum of 100 gateways. This operation supports pagination that allows you\n         to optionally reduce the number of gateways returned in a response.</p>\n      <p>If you have more gateways than are returned in a response-that is, the response returns only a truncated list\n         of your gateways-the response contains a marker that you can specify in your next request to fetch the next\n         page of gateways.</p>\n      <examples>\n         <example>\n            <name>List Gateways</name>\n            <description>The following example does not specify any criteria for the returned list. Note that the\n               request body is \"{}\".  The response returns gateways (or up to the first 100) in the\n               specified region owned by the AWS account.</description>\n            <request>\nPOST / HTTP/1.1\nHost: storagegateway.us-east-1.amazonaws.com\nx-amz-Date: 20120425T120000Z\nAuthorization: CSOC7TJPLR0OOKIRLGOHVAICUFVV4KQNSO5AEMVJF66Q9ASUAAJG\nContent-type: application/x-amz-json-1.1\nx-amz-target: StorageGateway_20120630.ListGateways\n               </request>\n            <response>\nHTTP/1.1 200 OK\nx-amzn-RequestId: CSOC7TJPLR0OOKIRLGOHVAICUFVV4KQNSO5AEMVJF66Q9ASUAAJG\nDate: Wed, 25 Apr 2012 12:00:02 GMT\nContent-type: application/x-amz-json-1.1\nContent-length: 178\n{\n   \"GatewayList\": [\n      {\n         \"GatewayARN\": \"arn:aws:storagegateway:us-east-1:111122223333:gateway/mygateway\",\n         \"GatewayARN\": \"arn:aws:storagegateway:us-east-1:111122223333:gateway/mygateway2\"\n      }\n   ]\n}\n               </response>\n         </example>\n      </examples>\n   "
+            "documentation": "\n      <p>This operation lists gateways owned by an AWS account in a region specified in the request. The returned list\n         is ordered by gateway Amazon Resource Name (ARN).</p>\n      <p>By default, the operation returns a maximum of 100 gateways. This operation supports pagination that allows you\n         to optionally reduce the number of gateways returned in a response.</p>\n      <p>If you have more gateways than are returned in a response-that is, the response returns only a truncated list\n         of your gateways-the response contains a marker that you can specify in your next request to fetch the next\n         page of gateways.</p>\n      <examples>\n         <example>\n            <name>List Gateways</name>\n            <description>The following example does not specify any criteria for the returned list. Note that the\n               request body is \"{}\".  The response returns gateways (or up to the first 100) in the\n               specified region owned by the AWS account.</description>\n            <request>\nPOST / HTTP/1.1\nHost: storagegateway.us-east-1.amazonaws.com\nx-amz-Date: 20120425T120000Z\nAuthorization: CSOC7TJPLR0OOKIRLGOHVAICUFVV4KQNSO5AEMVJF66Q9ASUAAJG\nContent-type: application/x-amz-json-1.1\nx-amz-target: StorageGateway_20120630.ListGateways\n               </request>\n            <response>\nHTTP/1.1 200 OK\nx-amzn-RequestId: CSOC7TJPLR0OOKIRLGOHVAICUFVV4KQNSO5AEMVJF66Q9ASUAAJG\nDate: Wed, 25 Apr 2012 12:00:02 GMT\nContent-type: application/x-amz-json-1.1\nContent-length: 178\n{\n   \"GatewayList\": [\n      {\n         \"GatewayARN\": \"arn:aws:storagegateway:us-east-1:111122223333:gateway/mygateway\",\n         \"GatewayARN\": \"arn:aws:storagegateway:us-east-1:111122223333:gateway/mygateway2\"\n      }\n   ]\n}\n               </response>\n         </example>\n      </examples>\n   ",
+            "pagination": {
+                "input_token": "Marker",
+                "limit_key": "Limit",
+                "output_token": "Marker",
+                "result_key": "Gateways",
+                "py_input_token": "marker"
+            }
         },
         "ListLocalDisks": {
             "name": "ListLocalDisks",
@@ -10002,7 +10037,14 @@
                     "documentation": "\n      <p>An internal server error has occured during the request. See the error and message fields for more\n         information.</p>\n   "
                 }
             ],
-            "documentation": "\n      <p>This operation lists the iSCSI stored volumes of a gateway. Results are sorted by volume ARN. The response\n         includes only the volume ARNs. If you want additional volume information, use the\n            <a>DescribeStorediSCSIVolumes</a> API.</p>\n      <p>The operation supports pagination. By default, the operation returns a maximum of up to 100 volumes. You can\n         optionally specify the <code>Limit</code> field in the body to limit the number of volumes in the response. If\n         the number of volumes returned in the response is truncated, the response includes a Marker field. You can use\n         this Marker value in your subsequent request to retrieve the next set of volumes.</p>\n      <examples>\n         <example>\n            <name>Example Request</name>\n            <description>The List iSCSI Volumes request in this example does not specify a <code>limit</code> or\n               <code>marker</code> field in the response body. The response returns the volumes\n               (up to the first 100) of the gateway.</description>\n            <request>\nPOST / HTTP/1.1\nHost: storagegateway.us-east-1.amazonaws.com\nx-amz-Date: 20120425T120000Z\nAuthorization: CSOC7TJPLR0OOKIRLGOHVAICUFVV4KQNSO5AEMVJF66Q9ASUAAJG\nContent-type: application/x-amz-json-1.1\nx-amz-target: StorageGateway_20120630.ListVolumes\n{\n   \"GatewayARN\": \"arn:aws:storagegateway:us-east-1:111122223333:gateway/mygateway\"\n}\n               </request>\n            <response>\nHTTP/1.1 200 OK\nx-amzn-RequestId: CSOC7TJPLR0OOKIRLGOHVAICUFVV4KQNSO5AEMVJF66Q9ASUAAJG\nDate: Wed, 25 Apr 2012 12:00:02 GMT\nContent-type: application/x-amz-json-1.1\nContent-length: 346\n{\n   \"GatewayARN\": \"arn:aws:storagegateway:us-east-1:111122223333:gateway/mygateway\",\n   \"VolumeInfos\": [\n      {\n         \"VolumeARN\": \"arn:aws:storagegateway:us-east-1:111122223333:gateway/mygateway/volume/vol-1122AABB\",\n         \"VolumeType\": \"STORED\"\n      },\n      {\n         \"VolumeARN\": \"arn:aws:storagegateway:us-east-1:111122223333:gateway/mygateway/volume/vol-3344CCDD\",\n         \"VolumeType\": \"STORED\"\n      },\n   ]\n}\n               </response>\n         </example>\n      </examples>\n   "
+            "documentation": "\n      <p>This operation lists the iSCSI stored volumes of a gateway. Results are sorted by volume ARN. The response\n         includes only the volume ARNs. If you want additional volume information, use the\n            <a>DescribeStorediSCSIVolumes</a> API.</p>\n      <p>The operation supports pagination. By default, the operation returns a maximum of up to 100 volumes. You can\n         optionally specify the <code>Limit</code> field in the body to limit the number of volumes in the response. If\n         the number of volumes returned in the response is truncated, the response includes a Marker field. You can use\n         this Marker value in your subsequent request to retrieve the next set of volumes.</p>\n      <examples>\n         <example>\n            <name>Example Request</name>\n            <description>The List iSCSI Volumes request in this example does not specify a <code>limit</code> or\n               <code>marker</code> field in the response body. The response returns the volumes\n               (up to the first 100) of the gateway.</description>\n            <request>\nPOST / HTTP/1.1\nHost: storagegateway.us-east-1.amazonaws.com\nx-amz-Date: 20120425T120000Z\nAuthorization: CSOC7TJPLR0OOKIRLGOHVAICUFVV4KQNSO5AEMVJF66Q9ASUAAJG\nContent-type: application/x-amz-json-1.1\nx-amz-target: StorageGateway_20120630.ListVolumes\n{\n   \"GatewayARN\": \"arn:aws:storagegateway:us-east-1:111122223333:gateway/mygateway\"\n}\n               </request>\n            <response>\nHTTP/1.1 200 OK\nx-amzn-RequestId: CSOC7TJPLR0OOKIRLGOHVAICUFVV4KQNSO5AEMVJF66Q9ASUAAJG\nDate: Wed, 25 Apr 2012 12:00:02 GMT\nContent-type: application/x-amz-json-1.1\nContent-length: 346\n{\n   \"GatewayARN\": \"arn:aws:storagegateway:us-east-1:111122223333:gateway/mygateway\",\n   \"VolumeInfos\": [\n      {\n         \"VolumeARN\": \"arn:aws:storagegateway:us-east-1:111122223333:gateway/mygateway/volume/vol-1122AABB\",\n         \"VolumeType\": \"STORED\"\n      },\n      {\n         \"VolumeARN\": \"arn:aws:storagegateway:us-east-1:111122223333:gateway/mygateway/volume/vol-3344CCDD\",\n         \"VolumeType\": \"STORED\"\n      },\n   ]\n}\n               </response>\n         </example>\n      </examples>\n   ",
+            "pagination": {
+                "input_token": "Marker",
+                "limit_key": "Limit",
+                "output_token": "Marker",
+                "result_key": "VolumeInfos",
+                "py_input_token": "marker"
+            }
         },
         "RetrieveTapeArchive": {
             "name": "RetrieveTapeArchive",
@@ -12534,6 +12576,50 @@
         "protocols": [
             "https"
         ]
+    },
+    "pagination": {
+        "DescribeTapeArchives": {
+            "input_token": "Marker",
+            "limit_key": "Limit",
+            "output_token": "Marker",
+            "result_key": "TapeArchives",
+            "py_input_token": "marker"
+        },
+        "DescribeTapeRecoveryPoints": {
+            "input_token": "Marker",
+            "limit_key": "Limit",
+            "output_token": "Marker",
+            "result_key": "TapeRecoveryPointInfos",
+            "py_input_token": "marker"
+        },
+        "DescribeTapes": {
+            "input_token": "Marker",
+            "limit_key": "Limit",
+            "output_token": "Marker",
+            "result_key": "Tapes",
+            "py_input_token": "marker"
+        },
+        "DescribeVTLDevices": {
+            "input_token": "Marker",
+            "limit_key": "Limit",
+            "output_token": "Marker",
+            "result_key": "VTLDevices",
+            "py_input_token": "marker"
+        },
+        "ListGateways": {
+            "input_token": "Marker",
+            "limit_key": "Limit",
+            "output_token": "Marker",
+            "result_key": "Gateways",
+            "py_input_token": "marker"
+        },
+        "ListVolumes": {
+            "input_token": "Marker",
+            "limit_key": "Limit",
+            "output_token": "Marker",
+            "result_key": "VolumeInfos",
+            "py_input_token": "marker"
+        }
     },
     "retry": {
         "__default__": {

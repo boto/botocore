@@ -396,7 +396,14 @@
                     "documentation": "\n    <p>The requested <code>CaseId</code> could not be located.</p>\n  "
                 }
             ],
-            "documentation": "\n    <p>Returns a list of cases that you specify by passing one or more case IDs. In addition, you can filter the cases by date by setting values for the <code>AfterTime</code> and <code>BeforeTime</code> request parameters. </p>\n    \n    <p>The response returns the following in JSON format:</p> \n    <ol>\n      <li>One or more <a>CaseDetails</a> data types. </li>\n      <li>One or more <code>NextToken</code> values, which specify where to paginate the returned records represented by the <code>CaseDetails</code> objects.</li>\n    </ol>\n  "
+            "documentation": "\n    <p>Returns a list of cases that you specify by passing one or more case IDs. In addition, you can filter the cases by date by setting values for the <code>AfterTime</code> and <code>BeforeTime</code> request parameters. </p>\n    \n    <p>The response returns the following in JSON format:</p> \n    <ol>\n      <li>One or more <a>CaseDetails</a> data types. </li>\n      <li>One or more <code>NextToken</code> values, which specify where to paginate the returned records represented by the <code>CaseDetails</code> objects.</li>\n    </ol>\n  ",
+            "pagination": {
+                "input_token": "nextToken",
+                "output_token": "nextToken",
+                "limit_key": "maxResults",
+                "result_key": "cases",
+                "py_input_token": "next_token"
+            }
         },
         "DescribeCommunications": {
             "name": "DescribeCommunications",
@@ -505,7 +512,14 @@
                     "documentation": "\n    <p>The requested <code>CaseId</code> could not be located.</p>\n  "
                 }
             ],
-            "documentation": "\n    <p>Returns communications regarding the support case. You can use the <code>AfterTime</code> and <code>BeforeTime</code> parameters to filter by date. The <code>CaseId</code> parameter enables you to identify a specific case by its <code>CaseId</code> value.</p>\n    <p>The <code>MaxResults</code> and <code>NextToken</code> parameters enable you to control the pagination of the result set. Set <code>MaxResults</code> to the number of cases you want displayed on each page, and use  <code>NextToken</code> to specify the resumption of pagination.</p>\n  "
+            "documentation": "\n    <p>Returns communications regarding the support case. You can use the <code>AfterTime</code> and <code>BeforeTime</code> parameters to filter by date. The <code>CaseId</code> parameter enables you to identify a specific case by its <code>CaseId</code> value.</p>\n    <p>The <code>MaxResults</code> and <code>NextToken</code> parameters enable you to control the pagination of the result set. Set <code>MaxResults</code> to the number of cases you want displayed on each page, and use  <code>NextToken</code> to specify the resumption of pagination.</p>\n  ",
+            "pagination": {
+                "input_token": "nextToken",
+                "output_token": "nextToken",
+                "limit_key": "maxResults",
+                "result_key": "communications",
+                "py_input_token": "next_token"
+            }
         },
         "DescribeServices": {
             "name": "DescribeServices",
@@ -1264,6 +1278,22 @@
         "protocols": [
             "https"
         ]
+    },
+    "pagination": {
+        "DescribeCases": {
+            "input_token": "nextToken",
+            "output_token": "nextToken",
+            "limit_key": "maxResults",
+            "result_key": "cases",
+            "py_input_token": "next_token"
+        },
+        "DescribeCommunications": {
+            "input_token": "nextToken",
+            "output_token": "nextToken",
+            "limit_key": "maxResults",
+            "result_key": "communications",
+            "py_input_token": "next_token"
+        }
     },
     "retry": {
         "__default__": {

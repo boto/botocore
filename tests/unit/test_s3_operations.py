@@ -52,6 +52,11 @@ XMLBODY8 = ('<WebsiteConfiguration>'
             '<ErrorDocument><Key>SomeErrorDocument.html</Key></ErrorDocument>'
             '<IndexDocument><Suffix>index.html</Suffix></IndexDocument>'
             '</WebsiteConfiguration>')
+XMLBODY9 = ('<LifecycleConfiguration><Rule><ID>archive-objects-glacier-'
+            'immediately-upon-creation</ID><Prefix></Prefix>'
+            '<Status>Enabled</Status><Transition><Days>0</Days>'
+            '<StorageClass>GLACIER</StorageClass></Transition></Rule>'
+            '</LifecycleConfiguration>')
 
 POLICY = ('{"Version": "2008-10-17","Statement": [{"Sid": "AddPerm",'
           '"Effect": "Allow","Principal": {"AWS": "*"},'
@@ -106,6 +111,30 @@ class TestS3Operations(BaseEnvVar):
         headers = {'Content-MD5': '5bNG1b31rFf4z+aleBKqWw=='}
         self.assertEqual(params['uri_params'], uri_params)
         self.assertEqual(params['payload'].getvalue(), XMLBODY2)
+        self.assertEqual(params['headers'], headers)
+
+    def test_create_entire_bucket_lifecycle(self):
+        op = self.s3.get_operation('PutBucketLifecycle')
+        config = {'Rules': [
+                      {'ID': 'archive-objects-glacier-immediately-upon-creation',
+                       'Prefix': None,
+                       'Status': 'Enabled',
+                       'Transition': {'Days': 0,
+                                      'StorageClass': 'GLACIER'}
+                       }
+                    ]
+                  }
+        params = op.build_parameters(bucket=self.bucket_name,
+                                     lifecycle_configuration=config)
+        # There is a handler for the before-call event that will
+        # add the Content-MD5 header to the parameters if it is not
+        # already there.  We are going to fire the event here to
+        # simulate that and make sure the right header is added.
+        self.session.emit('before-call.s3.PutBucketLifecycle', params=params)
+        uri_params = {'Bucket': self.bucket_name}
+        headers = {'Content-MD5': 'RLlxIC2KsifRLSfsrCKkVg=='}
+        self.assertEqual(params['uri_params'], uri_params)
+        self.assertEqual(params['payload'].getvalue(), XMLBODY9)
         self.assertEqual(params['headers'], headers)
 
     def test_put_bucket_tagging(self):
