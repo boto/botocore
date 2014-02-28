@@ -394,7 +394,7 @@ class TestResetStreamOnRetry(unittest.TestCase):
         self.assertEqual(payload.literal_value.total_resets, 2)
 
 
-class TestRestEndpoint(unittest.TestCase):
+class TestRestEndpointParams(unittest.TestCase):
 
     def test_encode_uri_params_unicode(self):
         uri = '/{foo}/{bar}'
