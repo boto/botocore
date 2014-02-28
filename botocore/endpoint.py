@@ -23,6 +23,7 @@ import six
 
 import botocore.response
 import botocore.exceptions
+from botocore import xform_name
 from botocore.auth import AUTH_TYPE_MAPS
 from botocore.exceptions import UnknownSignatureVersionError
 from botocore.awsrequest import AWSRequest
@@ -193,7 +194,12 @@ class RestEndpoint(Endpoint):
         path_components = []
         for pc in path.split('/'):
             if pc:
-                pc = six.text_type(pc).format(**params['uri_params'])
+                try:
+                    pc = six.text_type(pc).format(**params['uri_params'])
+                except KeyError as e:
+                    missing = ', '.join([xform_name(name) for name in e.args])
+                    raise botocore.exceptions.MissingParametersError(
+                        object_name=operation, missing=missing)
             path_components.append(pc)
         path = quote('/'.join(path_components).encode('utf-8'), safe='/~')
         query_param_components = []

@@ -21,6 +21,7 @@ from botocore.endpoint import get_endpoint, QueryEndpoint, JSONEndpoint, \
     RestEndpoint
 from botocore.auth import SigV4Auth
 from botocore.session import Session
+from botocore.exceptions import MissingParametersError
 from botocore.exceptions import UnknownServiceStyle
 from botocore.exceptions import UnknownSignatureVersionError
 from botocore.payload import Payload
@@ -412,6 +413,25 @@ class TestRestEndpoint(unittest.TestCase):
         endpoint = RestEndpoint(Mock(), None, None, None)
         built_uri = endpoint.build_uri(operation, params)
         self.assertEqual(built_uri, '/foo/bar~?')
+
+    def test_missing_required_params(self):
+        uri = '/{id}?optional={optional}'
+        operation = Mock()
+        operation.http = {'uri': uri}
+        params = {'uri_params': {}}
+        endpoint = RestEndpoint(Mock(), None, None, None)
+
+        with self.assertRaises(MissingParametersError):
+            endpoint.build_uri(operation, params)
+
+    def test_missing_optional_params(self):
+        uri = '/?optional={optional}'
+        operation = Mock()
+        operation.http = {'uri': uri}
+        params = {'uri_params': {}}
+        endpoint = RestEndpoint(Mock(), None, None, None)
+        built_uri = endpoint.build_uri(operation, params)
+        self.assertEqual(built_uri, '/?')
 
 
 if __name__ == '__main__':
