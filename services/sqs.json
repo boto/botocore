@@ -686,7 +686,8 @@
             "shape_name": "String",
             "type": "string",
             "documentation": "\n    The queue URL of a dead letter queue.\n  ",
-            "required": true
+            "required": true,
+            "no_paramfile": true
           }
         },
         "documentation": "\n    \n  "
