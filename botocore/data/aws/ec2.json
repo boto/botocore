@@ -3501,32 +3501,6 @@
                         "type": "string",
                         "documentation": "\n    <p>The AWS account alias (for example, <code>amazon</code>, <code>self</code>) or AWS account ID\n      that owns the snapshot.</p>\n  ",
                         "xmlname": "ownerAlias"
-                    },
-                    "Tags": {
-                        "shape_name": "TagList",
-                        "type": "list",
-                        "members": {
-                            "shape_name": "Tag",
-                            "type": "structure",
-                            "members": {
-                                "Key": {
-                                    "shape_name": "String",
-                                    "type": "string",
-                                    "documentation": "\n    <p>The key of the tag. </p>\n    <p>Constraints: Tag keys are case-sensitive and accept a maximum of 127 Unicode\n     characters. May not begin with <code>aws:</code></p>\n   ",
-                                    "xmlname": "key"
-                                },
-                                "Value": {
-                                    "shape_name": "String",
-                                    "type": "string",
-                                    "documentation": "\n    <p>The value of the tag.</p>\n    <p>Constraints: Tag values are case-sensitive and accept a maximum of 255 Unicode\n     characters.</p>\n   ",
-                                    "xmlname": "value"
-                                }
-                            },
-                            "documentation": "\n    <p>Describes a tag.</p>\n   ",
-                            "xmlname": "item"
-                        },
-                        "documentation": "\n    <p>Any tags assigned to the snapshot.</p>\n  ",
-                        "xmlname": "tagSet"
                     }
                 },
                 "documentation": "\n   ",
@@ -11117,7 +11091,7 @@
                             "documentation": "\n   ",
                             "xmlname": "Filter"
                         },
-                        "documentation": "\n     <p>One or more filters.</p>\n     <ul>\n       <li>\n         <p><code>description</code> - The description of the security group.</p>\n       </li>\n       <li>\n         <p><code>group-id</code> - The ID of the security group.</p>\n       </li>\n       <li>\n         <p><code>group-name</code> - The name of the security group.</p>\n       </li>\n       <li>\n         <p><code>ip-permission.cidr</code> - A CIDR range that has been granted permission.</p>\n       </li>\n       <li>\n         <p><code>ip-permission.from-port</code> - The start of port range for the TCP and UDP protocols, or an ICMP type number.</p>\n       </li>\n       <li>\n         <p><code>ip-permission.group-name</code> - The name of a security group that has been granted permission.</p>\n       </li>\n       <li>\n         <p><code>ip-permission.protocol</code> - The IP protocol for the permission (<code>tcp</code> | <code>udp</code> |\n           <code>icmp</code> or a protocol number).</p>\n       </li>\n       <li>\n         <p><code>ip-permission.to-port</code> - The end of port range for the TCP and UDP protocols, or an ICMP code.</p>\n       </li>\n       <li>\n         <p><code>ip-permission.user-id</code> - The ID of an AWS account that has been granted permission.</p>\n       </li>\n       <li>\n         <p><code>owner-id</code> - The AWS account ID of the owner of the security group.</p>\n       </li>\n       <li>\n         <p><code>tag-key</code> - The key of a tag assigned to the security group.</p>\n       </li>\n       <li>\n         <p><code>tag-value</code> - The value of a tag assigned to the security group.</p>\n       </li>\n       <li>\n         <p><code>vpc-id</code> - The ID of the VPC specified when the security group was created.</p>\n       </li>\n     </ul>\n   ",
+                        "documentation": "\n     <p>One or more filters.</p>\n     <ul>\n       <li>\n         <p><code>description</code> - The description of the security group.</p>\n       </li>\n       <li>\n         <p><code>group-id</code> - The ID of the security group.</p>\n       </li>\n       <li>\n         <p><code>group-name</code> - The name of the security group.</p>\n       </li>\n       <li>\n         <p><code>ip-permission.cidr</code> - A CIDR range that has been granted permission.</p>\n       </li>\n       <li>\n         <p><code>ip-permission.from-port</code> - The start of port range for the TCP and UDP protocols, or an ICMP type number.</p>\n       </li>\n       <li>\n         <p><code>ip-permission.group-id</code> - The ID of a security group that has been granted permission.</p>\n       </li>\n       <li>\n         <p><code>ip-permission.group-name</code> - The name of a security group that has been granted permission.</p>\n       </li>\n       <li>\n         <p><code>ip-permission.protocol</code> - The IP protocol for the permission (<code>tcp</code> | <code>udp</code> |\n           <code>icmp</code> or a protocol number).</p>\n       </li>\n       <li>\n         <p><code>ip-permission.to-port</code> - The end of port range for the TCP and UDP protocols, or an ICMP code.</p>\n       </li>\n       <li>\n         <p><code>ip-permission.user-id</code> - The ID of an AWS account that has been granted permission.</p>\n       </li>\n       <li>\n         <p><code>owner-id</code> - The AWS account ID of the owner of the security group.</p>\n       </li>\n       <li>\n         <p><code>tag-key</code> - The key of a tag assigned to the security group.</p>\n       </li>\n       <li>\n         <p><code>tag-value</code> - The value of a tag assigned to the security group.</p>\n       </li>\n       <li>\n         <p><code>vpc-id</code> - The ID of the VPC specified when the security group was created.</p>\n       </li>\n     </ul>\n   ",
                         "flattened": true
                     }
                 },
@@ -14292,7 +14266,7 @@
             },
             "output": null,
             "errors": [],
-            "documentation": "\n     <p>Disassociates an Elastic IP address from the instance or network interface it's\n\t\t\t\tassociated with.</p>\n     <p>This is an idempotent operation. If you perform the operation more than once, Amazon EC2\n\t\t\t\tdoesn't return an error.</p>\n     <examples>\n      <example>\n       <name>Example for EC2-Classic</name>\n       <description>This example disassociates the specified Elastic IP address from\n\t\t\t\t\tthe instance in EC2-Classic to which it is associated.</description>\n       <queryrequest>https://ec2.amazonaws.com/?Action=DisassociateAddress\n&amp;PublicIp=192.0.2.1\n&amp;AUTHPARAMS</queryrequest>\n      </example>\n      <example>\n       <name>Example for EC2-VPC</name>\n       <description>This example disassociates the specified Elastic IP address from\n\t\t\t\t\t the instance in a VPC to which it is associated.</description>\n       <queryrequest>https://ec2.amazonaws.com/?Action=DisassociateAddress\n&amp;AssociationID=eipassoc-aa7486c3\n&amp;AUTHPARAMS</queryrequest>\n      </example>\n     </examples>\n   "
+            "documentation": "\n     <p>Disassociates an Elastic IP address from the instance or network interface it's\n\t\t\t\tassociated with.</p>\n     <p>This is an idempotent operation. If you perform the operation more than once, Amazon EC2\n\t\t\t\tdoesn't return an error.</p>\n     <examples>\n      <example>\n       <name>Example for EC2-Classic</name>\n       <description>This example disassociates the specified Elastic IP address from\n\t\t\t\t\tthe instance in EC2-Classic to which it is associated.</description>\n       <queryrequest>https://ec2.amazonaws.com/?Action=DisassociateAddress\n&amp;PublicIp=192.0.2.1\n&amp;AUTHPARAMS</queryrequest>\n      </example>\n      <example>\n       <name>Example for EC2-VPC</name>\n       <description>This example disassociates the specified Elastic IP address from\n\t\t\t\t\t the instance in a VPC to which it is associated.</description>\n       <queryrequest>https://ec2.amazonaws.com/?Action=DisassociateAddress\n&amp;AssociationId=eipassoc-aa7486c3\n&amp;AUTHPARAMS</queryrequest>\n      </example>\n     </examples>\n   "
         },
         "DisassociateRouteTable": {
             "name": "DisassociateRouteTable",
@@ -18094,13 +18068,13 @@
                     "MinCount": {
                         "shape_name": "Integer",
                         "type": "integer",
-                        "documentation": "\n    <p>The minimum number of instances to launch. If you specify a minimum that is more instances\n     than Amazon EC2 can launch in the target Availability Zone, Amazon EC2 launches no instances.</p>\n    <p>Constraints: Between 1 and the maximum number allowed for your\n     account (the default for each account is 20, but this limit can be\n     increased).</p>\n   ",
+                        "documentation": "\n    <p>The minimum number of instances to launch. If you specify a minimum that is more instances\n     than Amazon EC2 can launch in the target Availability Zone, Amazon EC2 launches no instances.</p>\n    <p>Constraints: Between 1 and the maximum number you're allowed for the specified instance type. \n     For more information about the default limits, and how to request an increase, see \n     <a href=\"http://aws.amazon.com/ec2/faqs/#How_many_instances_can_I_run_in_Amazon_EC2\">How\n     many instances can I run in Amazon EC2</a> in the Amazon EC2 General FAQ.</p>\n   ",
                         "required": true
                     },
                     "MaxCount": {
                         "shape_name": "Integer",
                         "type": "integer",
-                        "documentation": "\n    <p>The maximum number of instances to launch. If you specify more instances\n     than Amazon EC2 can launch in the target Availability Zone, Amazon EC2 launches the\n     largest possible number of instances above <code>MinCount</code>.</p>\n    <p>Constraints: Between 1 and the maximum number allowed for your\n     account (the default limit for each account is 20, but this limit can be\n     increased).</p>\n   ",
+                        "documentation": "\n    <p>The maximum number of instances to launch. If you specify more instances\n     than Amazon EC2 can launch in the target Availability Zone, Amazon EC2 launches the\n     largest possible number of instances above <code>MinCount</code>.</p>\n    <p>Constraints: Between 1 and the maximum number you're allowed for the specified instance type. \n     For more information about the default limits, and how to request an increase, see \n     <a href=\"http://aws.amazon.com/ec2/faqs/#How_many_instances_can_I_run_in_Amazon_EC2\">How\n     many instances can I run in Amazon EC2</a> in the Amazon EC2 General FAQ.</p>\n   ",
                         "required": true
                     },
                     "KeyName": {
