@@ -23,7 +23,8 @@
                         "type": "string",
                         "pattern": "^\\d{13}-\\w{6}$",
                         "documentation": "\n        <p>The identifier of the job that you want to cancel. </p>\n        <p>To get a list of the jobs (including their <code>jobId</code>) that have a status of\n                <code>Submitted</code>, use the <a>ListJobsByStatus</a> API action.</p>\n    ",
-                        "location": "uri"
+                        "location": "uri",
+                        "required": true
                     }
                 },
                 "documentation": " \n        <p>The <code>CancelJobRequest</code> structure.</p>\n    "
@@ -2196,7 +2197,8 @@
                         "type": "string",
                         "pattern": "^\\d{13}-\\w{6}$",
                         "documentation": "\n        <p>The identifier of the pipeline that you want to delete.</p>\n    ",
-                        "location": "uri"
+                        "location": "uri",
+                        "required": true
                     }
                 },
                 "documentation": "\n        <p>The <code>DeletePipelineRequest</code> structure.</p>\n    "
@@ -2263,7 +2265,8 @@
                         "type": "string",
                         "pattern": "^\\d{13}-\\w{6}$",
                         "documentation": "\n        <p>The identifier of the preset for which you want to get detailed information.</p>\n    ",
-                        "location": "uri"
+                        "location": "uri",
+                        "required": true
                     }
                 },
                 "documentation": "\n        <p>The <code>DeletePresetRequest</code> structure.</p>\n    "
@@ -2323,7 +2326,8 @@
                         "type": "string",
                         "pattern": "^\\d{13}-\\w{6}$",
                         "documentation": "\n        <p> The ID of the pipeline for which you want to get job information. </p>\n    ",
-                        "location": "uri"
+                        "location": "uri",
+                        "required": true
                     },
                     "Ascending": {
                         "shape_name": "Ascending",
@@ -2936,7 +2940,8 @@
                         "type": "string",
                         "pattern": "(^Submitted$)|(^Progressing$)|(^Complete$)|(^Canceled$)|(^Error$)",
                         "documentation": "\n        <p>To get information about all of the jobs associated with the current AWS account that\n            have a given status, specify the following status: <code>Submitted</code>,\n                <code>Progressing</code>, <code>Complete</code>, <code>Canceled</code>, or\n                <code>Error</code>.</p>\n    ",
-                        "location": "uri"
+                        "location": "uri",
+                        "required": true
                     },
                     "Ascending": {
                         "shape_name": "Ascending",
@@ -4222,7 +4227,8 @@
                         "type": "string",
                         "pattern": "^\\d{13}-\\w{6}$",
                         "documentation": "\n        <p>The identifier of the job for which you want to get detailed information.</p>\n    ",
-                        "location": "uri"
+                        "location": "uri",
+                        "required": true
                     }
                 },
                 "documentation": "\n        <p>The <code>ReadJobRequest</code> structure.</p>\n    "
@@ -4804,7 +4810,8 @@
                         "type": "string",
                         "pattern": "^\\d{13}-\\w{6}$",
                         "documentation": "\n        <p>The identifier of the pipeline to read.</p>\n    ",
-                        "location": "uri"
+                        "location": "uri",
+                        "required": true
                     }
                 },
                 "documentation": "\n        <p>The <code>ReadPipelineRequest</code> structure.</p>\n    "
@@ -5059,7 +5066,8 @@
                         "type": "string",
                         "pattern": "^\\d{13}-\\w{6}$",
                         "documentation": "\n        <p>The identifier of the preset for which you want to get detailed information.</p>\n    ",
-                        "location": "uri"
+                        "location": "uri",
+                        "required": true
                     }
                 },
                 "documentation": "\n        <p>The <code>ReadPresetRequest</code> structure.</p>\n    "
@@ -5970,7 +5978,8 @@
                         "type": "string",
                         "pattern": "^\\d{13}-\\w{6}$",
                         "documentation": "\n        <p> The identifier of the pipeline for which you want to change notification settings. </p>\n    ",
-                        "location": "uri"
+                        "location": "uri",
+                        "required": true
                     },
                     "Notifications": {
                         "shape_name": "Notifications",
@@ -6262,7 +6271,8 @@
                         "type": "string",
                         "pattern": "^\\d{13}-\\w{6}$",
                         "documentation": "\n        <p>The identifier of the pipeline to update.</p>\n    ",
-                        "location": "uri"
+                        "location": "uri",
+                        "required": true
                     },
                     "Status": {
                         "shape_name": "PipelineStatus",
