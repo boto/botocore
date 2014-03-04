@@ -361,5 +361,38 @@ class TestS3Regions(BaseS3Test):
         self.assertEqual(data['Body'].read(), b'foo' * 1024)
 
 
+class TestS3Copy(BaseS3Test):
+    def setUp(self):
+        super(TestS3Copy, self).setUp()
+        self.bucket_name = 'botocoretest%s-%s' % (
+            int(time.time()), random.randint(1, 1000))
+        self.bucket_location = 'us-west-2'
+
+        operation = self.service.get_operation('CreateBucket')
+        operation.call(self.endpoint, bucket=self.bucket_name,
+            create_bucket_configuration={'LocationConstraint': self.bucket_location})
+
+    def tearDown(self):
+        operation = self.service.get_operation('DeleteBucket')
+        operation.call(self.endpoint, bucket=self.bucket_name)
+
+    def test_copy_with_quoted_char(self):
+        key_name = 'a+b/foo'
+        self.create_object(key_name=key_name)
+
+        operation = self.service.get_operation('CopyObject')
+        http, parsed = operation.call(
+            self.endpoint, bucket=self.bucket_name, key=key_name + 'bar',
+            copy_source='%s/%s' % (self.bucket_name, key_name))
+        self.assertEqual(http.status_code, 200)
+
+        # Now verify we can retrieve the copied object.
+        operation = self.service.get_operation('GetObject')
+        response = operation.call(self.endpoint, bucket=self.bucket_name,
+                                  key=key_name + 'bar')
+        data = response[1]
+        self.assertEqual(data['Body'].read().decode('utf-8'), 'foo')
+
+
 if __name__ == '__main__':
     unittest.main()
