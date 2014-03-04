@@ -23,7 +23,7 @@ import re
 
 import six
 
-from botocore.compat import urlsplit, urlunsplit, unquote, json
+from botocore.compat import urlsplit, urlunsplit, unquote, json, quote
 from botocore import retryhandler
 import botocore.auth
 
@@ -191,6 +191,13 @@ def signature_overrides(service_data, service_name, session, **kwargs):
         service_data['signature_version'] = signature_version_override
 
 
+def quote_source_header(params, **kwargs):
+    if params['headers'] and 'x-amz-copy-source' in params['headers']:
+        value = params['headers']['x-amz-copy-source']
+        params['headers']['x-amz-copy-source'] = quote(
+            value.encode('utf-8'), '/~')
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -205,6 +212,8 @@ BUILTIN_HANDLERS = [
     ('before-call.s3.PutBucketLifecycle', calculate_md5),
     ('before-call.s3.PutBucketCors', calculate_md5),
     ('before-call.s3.DeleteObjects', calculate_md5),
+    ('before-call.s3.UploadPartCopy', quote_source_header),
+    ('before-call.s3.CopyObject', quote_source_header),
     ('before-auth.s3', fix_s3_host),
     ('service-created', register_retries_for_service),
     ('creating-endpoint.s3', maybe_switch_to_s3sigv4),
