@@ -24,8 +24,6 @@ try:
 except ImportError:
     from itertools import zip_longest
 
-import mock
-
 import botocore.session
 
 
@@ -59,6 +57,29 @@ class BaseS3Test(unittest.TestCase):
             self.create_object(key_name=key_name)
         except Exception as e:
             self.caught_exceptions.append(e)
+
+    def assert_num_uploads_found(self, operation, num_uploads,
+                                 max_items=None, num_attempts=5):
+        amount_seen = None
+        for _ in range(num_attempts):
+            pages = operation.paginate(self.endpoint, bucket=self.bucket_name,
+                                       max_items=max_items)
+            iterators = pages.result_key_iters()
+            self.assertEqual(len(iterators), 2)
+            self.assertEqual(iterators[0].result_key.expression, 'Uploads')
+            # It sometimes takes a while for all the uploads to show up,
+            # especially if the upload was just created.  If we don't
+            # see the expected amount, we retry up to num_attempts time
+            # before failing.
+            amount_seen = len(list(iterators[0]))
+            if amount_seen == num_uploads:
+                # Test passed.
+                return
+            else:
+                # Sleep and try again.
+                time.sleep(2)
+        self.fail("Expected to see %s uploads, instead saw: %s" % (
+            num_uploads, amount_seen))
 
 
 class TestS3Buckets(BaseS3Test):
@@ -206,21 +227,11 @@ class TestS3Objects(BaseS3Test):
 
         operation = self.service.get_operation('ListMultipartUploads')
 
-        # With no max items.
-        pages = operation.paginate(self.endpoint, bucket=self.bucket_name)
-        iterators = pages.result_key_iters()
-        self.assertEqual(len(iterators), 2)
-        self.assertEqual(iterators[0].result_key.expression, 'Uploads')
-        self.assertEqual(len(list(iterators[0])), 8)
+        # Verify when we have max_items=None, we get back all 8 uploads.
+        self.assert_num_uploads_found(operation, max_items=None, num_uploads=8)
 
-        # With a max items of 1.
-        pages = operation.paginate(self.endpoint,
-                                   max_items=1,
-                                   bucket=self.bucket_name)
-        iterators = pages.result_key_iters()
-        self.assertEqual(len(iterators), 2)
-        self.assertEqual(iterators[0].result_key.expression, 'Uploads')
-        self.assertEqual(len(list(iterators[0])), 1)
+        # Verify when we have max_items=1, we get back 1 upload.
+        self.assert_num_uploads_found(operation, max_items=1, num_uploads=1)
 
         # Works similar with build_full_result()
         pages = operation.paginate(self.endpoint,
