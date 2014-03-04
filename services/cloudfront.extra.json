@@ -41,5 +41,115 @@
     "operation-name": {
       "remove": "\\d{4}_\\d{2}_\\d{2}"
     }
+  },
+  "operations": {
+    "DeleteCloudFrontOriginAccessIdentity": {
+      "input": {
+        "members": {
+          "Id": {
+            "required": true
+          }
+        }
+      }
+    },
+    "DeleteDistribution": {
+      "input": {
+        "members": {
+          "Id": {
+            "required": true
+          }
+        }
+      }
+    },
+    "DeleteStreamingDistribution": {
+      "input": {
+        "members": {
+          "Id": {
+            "required": true
+          }
+        }
+      }
+    },
+    "GetCloudFrontOriginAccessIdentity": {
+      "input": {
+        "members": {
+          "Id": {
+            "required": true
+          }
+        }
+      }
+    },
+    "GetCloudFrontOriginAccessIdentityConfig": {
+      "input": {
+        "members": {
+          "Id": {
+            "required": true
+          }
+        }
+      }
+    },
+    "GetDistribution": {
+      "input": {
+        "members": {
+          "Id": {
+            "required": true
+          }
+        }
+      }
+    },
+    "GetDistributionConfig": {
+      "input": {
+        "members": {
+          "Id": {
+            "required": true
+          }
+        }
+      }
+    },
+    "GetStreamingDistribution": {
+      "input": {
+        "members": {
+          "Id": {
+            "required": true
+          }
+        }
+      }
+    },
+    "GetStreamingDistributionConfig": {
+      "input": {
+        "members": {
+          "Id": {
+            "required": true
+          }
+        }
+      }
+    },
+    "UpdateCloudFrontOriginAccessIdentity": {
+      "input": {
+        "members": {
+          "Id": {
+            "required": true
+          }
+        }
+      }
+    },
+    "UpdateDistribution": {
+      "input": {
+        "members": {
+          "Id": {
+            "required": true
+          }
+        }
+      }
+    },
+    "UpdateStreamingDistribution": {
+      "input": {
+        "members": {
+          "Id": {
+            "required": true
+          }
+        }
+      }
+    }
   }
 }
