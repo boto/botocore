@@ -220,5 +220,168 @@ class IamRoleTest(BaseEnvVar):
         self.assertEqual(retrieved['foobar']['AccessKeyId'], 'foo')
 
 
+class CredentialResolverTest(BaseEnvVar):
+    def setUp(self):
+        super(CredentialResolverTest, self).setUp()
+        self.environ['AWS_CONFIG_FILE'] = path('aws_config_nocreds')
+        self.environ['BOTO_CONFIG'] = ''
+        self.environ['AWS_ACCESS_KEY_ID'] = 'foo'
+        self.environ['AWS_SECRET_ACCESS_KEY'] = 'bar'
+        self.session = botocore.session.get_session(env_vars=TESTENVVARS)
+        self.default_resolver = credentials.CredentialResolver(
+            session=self.session
+        )
+        self.small_resolver = credentials.CredentialResolver(
+            session=self.session,
+            methods=[
+                credentials.BotoCredentials(),
+                credentials.ConfigCredentials()
+            ]
+        )
+
+    def test_default_init(self):
+        self.assertEqual(self.default_resolver.available_methods, [
+            'env',
+            'config',
+            'credentials-file',
+            'boto',
+            'iam-role',
+        ])
+        self.assertEqual(len(self.default_resolver.methods), 5)
+
+    def test_custom_init(self):
+        resolver = credentials.CredentialResolver(methods=[
+            credentials.BotoCredentials(),
+            credentials.ConfigCredentials()
+        ])
+        self.assertEqual(resolver.available_methods, [
+            'boto',
+            'config',
+        ])
+        self.assertEqual(len(resolver.methods), 2)
+
+    def test_insert_before(self):
+        # Sanity check.
+        self.assertEqual(self.small_resolver.available_methods, [
+            'boto',
+            'config',
+        ])
+
+        self.small_resolver.insert_before('boto', credentials.EnvCredentials())
+        self.assertEqual(self.small_resolver.available_methods, [
+            'env',
+            'boto',
+            'config',
+        ])
+
+        self.small_resolver.insert_before(
+            'config',
+            credentials.OriginalEC2Credentials()
+        )
+        self.assertEqual(self.small_resolver.available_methods, [
+            'env',
+            'boto',
+            'credentials-file',
+            'config',
+        ])
+
+        # Test a failed insert.
+        with self.assertRaises(botocore.exceptions.UnknownCredentialError):
+            self.small_resolver.insert_before(
+                'foobar',
+                credentials.IAMCredentials()
+            )
+
+    def test_insert_after(self):
+        # Sanity check.
+        self.assertEqual(self.small_resolver.available_methods, [
+            'boto',
+            'config',
+        ])
+
+        self.small_resolver.insert_after('boto', credentials.EnvCredentials())
+        self.assertEqual(self.small_resolver.available_methods, [
+            'boto',
+            'env',
+            'config',
+        ])
+
+        self.small_resolver.insert_after(
+            'config',
+            credentials.OriginalEC2Credentials()
+        )
+        self.assertEqual(self.small_resolver.available_methods, [
+            'boto',
+            'env',
+            'config',
+            'credentials-file',
+        ])
+
+        # Test a failed insert.
+        with self.assertRaises(botocore.exceptions.UnknownCredentialError):
+            self.small_resolver.insert_after(
+                'foobar',
+                credentials.IAMCredentials()
+            )
+
+    def test_remove(self):
+        # Sanity check.
+        self.assertEqual(self.small_resolver.available_methods, [
+            'boto',
+            'config',
+        ])
+
+        # Should work.
+        self.small_resolver.remove('boto')
+        self.assertEqual(self.small_resolver.available_methods, [
+            'config',
+        ])
+
+        # Should silently fail.
+        self.small_resolver.remove('boto')
+        self.assertEqual(self.small_resolver.available_methods, [
+            'config',
+        ])
+
+        # Should silently fail.
+        self.small_resolver.remove('foobar')
+        self.assertEqual(self.small_resolver.available_methods, [
+            'config',
+        ])
+
+    def test_get_credentials(self):
+        # Should return the environment ones (from the ``setUp``).
+        creds = self.default_resolver.get_credentials()
+        self.assertEqual(creds.method, 'env')
+        self.assertTrue(creds.is_populated)
+
+
+class AlternateCredentialResolverTest(BaseEnvVar):
+    def setUp(self):
+        super(AlternateCredentialResolverTest, self).setUp()
+        self.environ['AWS_CONFIG_FILE'] = path('aws_config')
+        self.environ['BOTO_CONFIG'] = ''
+        self.session = botocore.session.get_session(env_vars=TESTENVVARS)
+        self.small_resolver = credentials.CredentialResolver(
+            session=self.session,
+            methods=[
+                credentials.BotoCredentials(),
+                credentials.ConfigCredentials(session=self.session)
+            ]
+        )
+
+    def test_get_credentials(self):
+        # Sanity check.
+        self.assertEqual(self.small_resolver.available_methods, [
+            'boto',
+            'config',
+        ])
+
+        # Now with something custom.
+        creds = self.small_resolver.get_credentials()
+        self.assertEqual(creds.method, 'config')
+        self.assertTrue(creds.is_populated)
+
+
 if __name__ == "__main__":
     unittest.main()

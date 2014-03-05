@@ -339,7 +339,7 @@ class CredentialResolver(object):
             for method in self.default_methods:
                 self.methods.append(method(session=self.session))
 
-            self._rebuild_available_methods()
+        self._rebuild_available_methods()
 
     def _rebuild_available_methods(self):
         # We basically maintain a cache of names, so that we don't have to
