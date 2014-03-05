@@ -127,7 +127,7 @@ class IamRoleTest(BaseEnvVar):
         self.session = botocore.session.get_session(env_vars=TESTENVVARS)
         self.environ['BOTO_CONFIG'] = ''
 
-    @mock.patch('botocore.credentials.retrieve_iam_role_credentials')
+    @mock.patch('botocore.credentials.IAMCredentials.retrieve_iam_role_credentials')
     def test_iam_role(self, retriever):
         retriever.return_value = metadata
         credentials = self.session.get_credentials()
@@ -135,7 +135,7 @@ class IamRoleTest(BaseEnvVar):
         self.assertEqual(credentials.access_key, 'foo')
         self.assertEqual(credentials.secret_key, 'bar')
 
-    @mock.patch('botocore.credentials.retrieve_iam_role_credentials')
+    @mock.patch('botocore.credentials.IAMCredentials.retrieve_iam_role_credentials')
     def test_session_config_timeout_var(self, retriever):
         retriever.return_value = metadata
         self.session.set_config_variable('metadata_service_timeout', '20.0')
@@ -143,7 +143,7 @@ class IamRoleTest(BaseEnvVar):
         self.assertEqual(credentials.method, 'iam-role')
         self.assertEqual(retriever.call_args[1]['timeout'], 20.0)
 
-    @mock.patch('botocore.credentials.retrieve_iam_role_credentials')
+    @mock.patch('botocore.credentials.IAMCredentials.retrieve_iam_role_credentials')
     def test_session_config_num_attempts_var(self, retriever):
         retriever.return_value = metadata
         self.session.set_config_variable('metadata_service_num_attempts', '5')
@@ -151,7 +151,7 @@ class IamRoleTest(BaseEnvVar):
         self.assertEqual(credentials.method, 'iam-role')
         self.assertEqual(retriever.call_args[1]['num_attempts'], 5)
 
-    @mock.patch('botocore.credentials.retrieve_iam_role_credentials')
+    @mock.patch('botocore.credentials.IAMCredentials.retrieve_iam_role_credentials')
     def test_empty_boto_config_is_ignored(self, retriever):
         retriever.return_value = metadata
         self.environ['BOTO_CONFIG'] = path('boto_config_empty')
@@ -185,7 +185,8 @@ class IamRoleTest(BaseEnvVar):
         second.content = json.dumps(metadata['foobar']).encode('utf-8')
         get.side_effect = [first, second]
 
-        credentials.retrieve_iam_role_credentials(timeout=10)
+        iam_creds = credentials.IAMCredentials()
+        iam_creds.retrieve_iam_role_credentials(timeout=10)
         self.assertEqual(get.call_args[1]['timeout'], 10)
 
     @mock.patch('botocore.vendored.requests.get')
@@ -193,7 +194,8 @@ class IamRoleTest(BaseEnvVar):
         first = mock.Mock()
         first.side_effect = ConnectionError
 
-        d = credentials.retrieve_iam_role_credentials(timeout=10)
+        iam_creds = credentials.IAMCredentials()
+        d = iam_creds.retrieve_iam_role_credentials(timeout=10)
         self.assertEqual(d, {})
 
     @mock.patch('botocore.vendored.requests.get')
@@ -213,8 +215,8 @@ class IamRoleTest(BaseEnvVar):
         third.content = json.dumps(metadata['foobar']).encode('utf-8')
         get.side_effect = [first, second, third]
 
-        retrieved = credentials.retrieve_iam_role_credentials(
-            num_attempts=2)
+        iam_creds = credentials.IAMCredentials()
+        retrieved = iam_creds.retrieve_iam_role_credentials(num_attempts=2)
         self.assertEqual(retrieved['foobar']['AccessKeyId'], 'foo')
 
 
