@@ -78,6 +78,15 @@ class TestHandlers(unittest.TestCase):
         self.session.emit(event, **kwargs)
         self.assertEqual(kwargs['service_data']['signature_version'], 's3')
 
+    def test_quote_source_header(self):
+        for op in ('UploadPartCopy', 'CopyObject'):
+            event = self.session.create_event(
+                'before-call', 's3', op)
+            params = {'headers': {'x-amz-copy-source': 'foo++bar.txt'}}
+            self.session.emit(event, params=params)
+            self.assertEqual(
+                params['headers']['x-amz-copy-source'], 'foo%2B%2Bbar.txt')
+
 
 if __name__ == '__main__':
     unittest.main()
