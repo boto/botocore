@@ -13,16 +13,18 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import unittest, BaseEnvVar
+import datetime
 import json
+import mock
 import os
 
-import mock
-
-import botocore.session
-import botocore.exceptions
 from botocore import credentials
+import botocore.exceptions
+import botocore.session
 from botocore.vendored.requests import ConnectionError
+
+from tests import unittest, BaseEnvVar
+
 
 # Passed to session to keep it from finding default config file
 TESTENVVARS = {'config_file': (None, 'AWS_CONFIG_FILE', None)}
@@ -37,6 +39,46 @@ metadata = {'foobar': {'Code': 'Success', 'LastUpdated':
 
 def path(filename):
     return os.path.join(os.path.dirname(__file__), 'cfg', filename)
+
+
+class CredentialsTest(BaseEnvVar):
+    def setUp(self):
+        super(CredentialsTest, self).setUp()
+        self.creds = credentials.Credentials()
+
+    def test_is_populated(self):
+        # Without ``access_key/secret_key``.
+        self.assertFalse(self.creds.is_populated)
+
+        # With ``access_key`` but not ``secret_key``.
+        self.creds.access_key = 'foo'
+        self.assertFalse(self.creds.is_populated)
+
+        # With both.
+        self.creds.secret_key = 'bar'
+        self.assertTrue(self.creds.is_populated)
+
+    def test__seconds_remaining(self):
+        self.creds._expiry_time = datetime.datetime.utcnow() + \
+                                  datetime.timedelta(seconds=5)
+        remaining = self.creds._seconds_remaining()
+        # This shouldn't take a full second, so it should be in this range.
+        self.assertTrue(remaining >= 4, "{0} is less than 4".format(remaining))
+        self.assertTrue(remaining <= 5, "{0} is more than 5".format(remaining))
+
+    def test__refresh_needed(self):
+        self.creds._expiry_time = None
+        self.assertFalse(self.creds._refresh_needed())
+
+        # With a current expiry.
+        self.creds._expiry_time = datetime.datetime.utcnow() + \
+                                  datetime.timedelta(days=1)
+        self.assertFalse(self.creds._refresh_needed())
+
+        # With an outdated expiry.
+        self.creds._expiry_time = datetime.datetime.utcnow() + \
+                                  datetime.timedelta(seconds=30)
+        self.assertTrue(self.creds._refresh_needed())
 
 
 class EnvVarTest(BaseEnvVar):

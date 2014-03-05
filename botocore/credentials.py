@@ -52,7 +52,7 @@ class Credentials(object):
         subclasses.
     """
     refresh_timeout = 5 * 60
-    method = 'plain'
+    method = 'explicit'
 
     def __init__(self, access_key=None, secret_key=None, token=None,
                  session=None):
@@ -97,13 +97,7 @@ class Credentials(object):
 
     @property
     def is_populated(self):
-        if self.access_key and self.secret_key:
-            return True
-
-        if self.token:
-            return True
-
-        return False
+        return self.access_key and self.secret_key
 
     def _get_request(self, url, timeout, num_attempts=1):
         for i in range(num_attempts):
@@ -118,14 +112,12 @@ class Credentials(object):
         raise _RetriesExceededError()
 
     def _seconds_remaining(self):
-        # The credentials should be refreshed if they're going to expire
-        # in less than 5 minutes.
         delta = self._expiry_time - datetime.datetime.utcnow()
         # python2.6 does not have timedelta.total_seconds() so we have
         # to calculate this ourselves.  This is straight from the
         # datetime docs.
         day_in_seconds = delta.days * 24 * 3600
-        micro_in_seconds = delta.microseconds * 10**6
+        micro_in_seconds = delta.microseconds / 10**6
         return day_in_seconds + delta.seconds + micro_in_seconds
 
     def _refresh_needed(self):
@@ -133,6 +125,8 @@ class Credentials(object):
             # No expiration, so assume we don't need to refresh.
             return False
 
+        # The credentials should be refreshed if they're going to expire
+        # in less than 5 minutes.
         if self._seconds_remaining() >= self.refresh_timeout:
             # There's enough time left. Don't refresh.
             return False
@@ -146,7 +140,7 @@ class Credentials(object):
         Loads the credentials from their source & sets them on the object.
 
         Subclasses should implement this method (by reading from disk, the
-        environment, the network or wherever), returning ``True`` is they were
+        environment, the network or wherever), returning ``True`` if they were
         found & loaded.
 
         If not found, this method should return ``False``, indictating that the

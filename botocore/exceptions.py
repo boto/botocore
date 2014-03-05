@@ -227,5 +227,5 @@ class InvalidExpressionError(BotoCoreError):
 
 
 class UnknownCredentialError(BotoCoreError):
-    """Tried to insert before/after an unregister credential type."""
+    """Tried to insert before/after an unregistered credential type."""
     fmt = 'Credential named {name} not found.'
