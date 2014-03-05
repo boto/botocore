@@ -64,7 +64,7 @@ class Credentials(object):
 
     @property
     def access_key(self):
-        if not self._refresh_if_needed():
+        if self._refresh_needed():
             self.load()
 
         return self._access_key
@@ -75,7 +75,7 @@ class Credentials(object):
 
     @property
     def secret_key(self):
-        if not self._refresh_if_needed():
+        if self._refresh_needed():
             self.load()
 
         return self._secret_key
@@ -86,7 +86,7 @@ class Credentials(object):
 
     @property
     def token(self):
-        if not self._refresh_if_needed():
+        if self._refresh_needed():
             self.load()
 
         return self._token
@@ -106,13 +106,12 @@ class Credentials(object):
         return False
 
     def _get_request(self, url, timeout, num_attempts=1):
-        # TODO: This needs updating to reflect how it's abstracted now.
         for i in range(num_attempts):
             try:
                 response = requests.get(url, timeout=timeout)
             except (requests.Timeout, requests.ConnectionError) as e:
-                logger.debug("Caught exception wil trying to retrieve credentials "
-                            "from metadata service: %s", e, exc_info=True)
+                logger.debug("Caught exception while trying to retrieve "
+                             "credentials: %s", e, exc_info=True)
             else:
                 if response.status_code == 200:
                     return response
@@ -121,7 +120,7 @@ class Credentials(object):
     def _seconds_remaining(self):
         # The credentials should be refreshed if they're going to expire
         # in less than 5 minutes.
-        delta = self._expiry_time - datetime.utcnow()
+        delta = self._expiry_time - datetime.datetime.utcnow()
         # python2.6 does not have timedelta.total_seconds() so we have
         # to calculate this ourselves.  This is straight from the
         # datetime docs.
@@ -129,7 +128,7 @@ class Credentials(object):
         micro_in_seconds = delta.microseconds * 10**6
         return day_in_seconds + delta.seconds + micro_in_seconds
 
-    def _refresh_if_needed(self):
+    def _refresh_needed(self):
         if self._expiry_time is None:
             # No expiration, so assume we don't need to refresh.
             return False
@@ -164,6 +163,11 @@ class Credentials(object):
 
 class IAMCredentials(Credentials):
     method = 'iam-role'
+
+    def __init__(self, *args, **kwargs):
+        # We need to set an initial expiration, well in the past.
+        super(IAMCredentials, self).__init__(*args, **kwargs)
+        self._expiry_time = datetime.datetime(2000, 1, 1)
 
     def load(self):
         timeout = self.session.get_config_variable('metadata_service_timeout')
@@ -391,6 +395,7 @@ class CredentialResolver(object):
         Removes a given ``Credentials`` instance from the chain.
 
         :param name: The short name of the credentials instance to remove.
+        :type name: string
         """
         if not name in self.available_methods:
             # It's not present. Fail silently.
@@ -413,20 +418,6 @@ class CredentialResolver(object):
         # This feels like it should be an exception, but historically, ``None``
         # is returned.
         return None
-
-"""
-AllCredentialFunctions = [search_environment,
-                          search_credentials_file,
-                          search_file,
-                          search_boto_config,
-                          search_iam_role]
-
-_credential_methods = (('env', search_environment),
-                       ('config', search_file),
-                       ('credentials-file', search_credentials_file),
-                       ('boto', search_boto_config),
-                       ('iam-role', search_iam_role))
-"""
 
 
 def get_credentials(session):
