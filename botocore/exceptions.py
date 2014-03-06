@@ -43,6 +43,13 @@ class NoCredentialsError(BotoCoreError):
     fmt = 'Unable to locate credentials'
 
 
+class TemporaryCredentialsError(BotoCoreError):
+    """
+    Error retrieving temporary credentials from STS.
+    """
+    fmt = 'Unable to fetch temporary credentials: {msg}'
+
+
 class NoRegionError(BotoCoreError):
     """
     No region was specified
