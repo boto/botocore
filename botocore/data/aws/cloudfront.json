@@ -2650,7 +2650,8 @@
                         "shape_name": "string",
                         "type": "string",
                         "documentation": "\n    The origin access identity's id.\n  ",
-                        "location": "uri"
+                        "location": "uri",
+                        "required": true
                     },
                     "IfMatch": {
                         "shape_name": "string",
@@ -2742,7 +2743,8 @@
                         "shape_name": "string",
                         "type": "string",
                         "documentation": "\n    The distribution id.\n  ",
-                        "location": "uri"
+                        "location": "uri",
+                        "required": true
                     },
                     "IfMatch": {
                         "shape_name": "string",
@@ -2834,7 +2836,8 @@
                         "shape_name": "string",
                         "type": "string",
                         "documentation": "\n    The distribution id.\n  ",
-                        "location": "uri"
+                        "location": "uri",
+                        "required": true
                     },
                     "IfMatch": {
                         "shape_name": "string",
@@ -2925,7 +2928,8 @@
                         "shape_name": "string",
                         "type": "string",
                         "documentation": "\n    The identity's id.\n  ",
-                        "location": "uri"
+                        "location": "uri",
+                        "required": true
                     }
                 },
                 "documentation": "\n    The request to get an origin access identity's information.\n  "
@@ -3025,7 +3029,8 @@
                         "shape_name": "string",
                         "type": "string",
                         "documentation": "\n    The identity's id.\n  ",
-                        "location": "uri"
+                        "location": "uri",
+                        "required": true
                     }
                 },
                 "documentation": "\n    The request to get an origin access identity's configuration.\n  "
@@ -3106,7 +3111,8 @@
                         "shape_name": "string",
                         "type": "string",
                         "documentation": "\n    The distribution's id.\n  ",
-                        "location": "uri"
+                        "location": "uri",
+                        "required": true
                     }
                 },
                 "documentation": "\n    The request to get a distribution's information.\n  "
@@ -3883,7 +3889,8 @@
                         "shape_name": "string",
                         "type": "string",
                         "documentation": "\n    The distribution's id.\n  ",
-                        "location": "uri"
+                        "location": "uri",
+                        "required": true
                     }
                 },
                 "documentation": "\n    The request to get a distribution configuration.\n  "
@@ -4699,7 +4706,8 @@
                         "shape_name": "string",
                         "type": "string",
                         "documentation": "\n    The streaming distribution's id.\n  ",
-                        "location": "uri"
+                        "location": "uri",
+                        "required": true
                     }
                 },
                 "documentation": "\n    The request to get a streaming distribution's information.\n  "
@@ -4992,7 +5000,8 @@
                         "shape_name": "string",
                         "type": "string",
                         "documentation": "\n    The streaming distribution's id.\n  ",
-                        "location": "uri"
+                        "location": "uri",
+                        "required": true
                     }
                 },
                 "documentation": "\n    To request to get a streaming distribution configuration.\n  "
@@ -6442,7 +6451,8 @@
                         "shape_name": "string",
                         "type": "string",
                         "documentation": "\n    The identity's id.\n  ",
-                        "location": "uri"
+                        "location": "uri",
+                        "required": true
                     },
                     "IfMatch": {
                         "shape_name": "string",
@@ -7238,7 +7248,8 @@
                         "shape_name": "string",
                         "type": "string",
                         "documentation": "\n    The distribution's id.\n  ",
-                        "location": "uri"
+                        "location": "uri",
+                        "required": true
                     },
                     "IfMatch": {
                         "shape_name": "string",
@@ -8462,7 +8473,8 @@
                         "shape_name": "string",
                         "type": "string",
                         "documentation": "\n    The streaming distribution's id.\n  ",
-                        "location": "uri"
+                        "location": "uri",
+                        "required": true
                     },
                     "IfMatch": {
                         "shape_name": "string",
