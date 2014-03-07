@@ -10,8 +10,23 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import logging
 
 from .exceptions import InvalidExpressionError
+from .compat import json
+from .vendored import requests
+
+
+logger = logging.getLogger(__name__)
+DEFAULT_METADATA_SERVICE_TIMEOUT = 1
+METADATA_SECURITY_CREDENTIALS_URL = (
+    'http://169.254.169.254/latest/meta-data/iam/security-credentials/'
+)
+
+
+class _RetriesExceededError(Exception):
+    """Internal exception used when the number of retries are exceeded."""
+    pass
 
 
 def normalize_url_path(path):
@@ -103,3 +118,60 @@ def set_value_from_jmespath(source, expression, value, is_first=True):
 
     # If we're down to a single key, set it.
     source[current_key] = value
+
+
+class InstanceMetadataFetcher(object):
+    def _get_request(self, url, timeout, num_attempts=1):
+        for i in range(num_attempts):
+            try:
+                response = requests.get(url, timeout=timeout)
+            except (requests.Timeout, requests.ConnectionError) as e:
+                logger.debug("Caught exception while trying to retrieve "
+                             "credentials: %s", e, exc_info=True)
+            else:
+                if response.status_code == 200:
+                    return response
+        raise _RetriesExceededError()
+
+    def retrieve_iam_role_credentials(self,
+                                      url=METADATA_SECURITY_CREDENTIALS_URL,
+                                      timeout=None, num_attempts=1):
+        if timeout is None:
+            timeout = DEFAULT_METADATA_SERVICE_TIMEOUT
+        data = {}
+        try:
+            r = self._get_request(url, timeout, num_attempts)
+            if r.content:
+                fields = r.content.decode('utf-8').split('\n')
+                for field in fields:
+                    if field.endswith('/'):
+                        data[field[0:-1]] = self.retrieve_iam_role_credentials(
+                            url + field, timeout, num_attempts)
+                    else:
+                        val = self._get_request(
+                            url + field,
+                            timeout=timeout,
+                            num_attempts=num_attempts).content.decode('utf-8')
+                        if val[0] == '{':
+                            val = json.loads(val)
+                        data[field] = val
+            else:
+                logger.debug("Metadata service returned non 200 status code "
+                             "of %s for url: %s, content body: %s",
+                             r.status_code, url, r.content)
+        except _RetriesExceededError:
+            logger.debug("Max number of attempts exceeded (%s) when "
+                         "attempting to retrieve data from metadata service.",
+                         num_attempts)
+        # We sort for stable ordering. In practice, this should only consist
+        # of one role, but may need revisiting if this expands in the future.
+        final_data = {}
+        for role_name in sorted(data):
+            final_data = {
+                'role_name': role_name,
+                'access_key': data[role_name]['AccessKeyId'],
+                'secret_key': data[role_name]['SecretAccessKey'],
+                'token': data[role_name]['Token'],
+                'expiry_time': data[role_name]['Expiration'],
+            }
+        return final_data

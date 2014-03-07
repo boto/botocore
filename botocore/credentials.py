@@ -13,33 +13,46 @@
 # language governing permissions and limitations under the License.
 
 import datetime
+import functools
 import logging
 import os
 
 from six.moves import configparser
 
-from botocore.compat import json
 from botocore.exceptions import UnknownCredentialError
-from botocore.vendored import requests
+from botocore.utils import InstanceMetadataFetcher
 
 
 logger = logging.getLogger(__name__)
-DEFAULT_METADATA_SERVICE_TIMEOUT = 1
-METADATA_SECURITY_CREDENTIALS_URL = (
-    'http://169.254.169.254/latest/meta-data/iam/security-credentials/'
-)
-
-
-class _RetriesExceededError(Exception):
-    """Internal exception used when the number of retries are exceeded."""
-    pass
 
 
 class Credentials(object):
     """
-    Holds the credentials needed to authenticate requests.  In addition
-    the Credential object knows how to search for credentials and how
-    to choose the right credentials when multiple credentials are found.
+    Holds the credentials needed to authenticate requests.
+
+    :ivar access_key: The access key part of the credentials.
+    :ivar secret_key: The secret key part of the credentials.
+    :ivar token: The security token, valid only for session credentials.
+    :ivar method: A string which identifies where the credentials
+        were found.
+    """
+    method = 'explicit'
+
+    def __init__(self, access_key=None, secret_key=None, token=None,
+                 session=None, method=None):
+        self.session = session
+        self.access_key = access_key
+        self.secret_key = secret_key
+        self.token = token
+
+        if method:
+            self.method = method
+
+
+class RefreshableCredentials(Credentials):
+    """
+    Holds the credentials needed to authenticate requests. In addition, it
+    knows how to refresh itself.
 
     :ivar refresh_timeout: How long a given set of credentials are valid for.
         Useful for credentials fetched over the network.
@@ -52,21 +65,24 @@ class Credentials(object):
         subclasses.
     """
     refresh_timeout = 5 * 60
-    method = 'explicit'
+    method = 'temporary'
 
     def __init__(self, access_key=None, secret_key=None, token=None,
-                 session=None):
+                 session=None, method=None, refresh_using=None):
         self.session = session
+        self.refresh_using = refresh_using
         self._access_key = access_key
         self._secret_key = secret_key
         self._token = token
-        self._expiry_time = None
+        # Set an old, expired time by default.
+        self.expiry_time = datetime.datetime(2000, 1, 1)
+
+        if method:
+            self.method = method
 
     @property
     def access_key(self):
-        if self._refresh_needed():
-            self.load()
-
+        self._refresh()
         return self._access_key
 
     @access_key.setter
@@ -75,9 +91,7 @@ class Credentials(object):
 
     @property
     def secret_key(self):
-        if self._refresh_needed():
-            self.load()
-
+        self._refresh()
         return self._secret_key
 
     @secret_key.setter
@@ -86,33 +100,15 @@ class Credentials(object):
 
     @property
     def token(self):
-        if self._refresh_needed():
-            self.load()
-
+        self._refresh()
         return self._token
 
     @token.setter
     def token(self, value):
         self._token = value
 
-    @property
-    def is_populated(self):
-        return self.access_key and self.secret_key
-
-    def _get_request(self, url, timeout, num_attempts=1):
-        for i in range(num_attempts):
-            try:
-                response = requests.get(url, timeout=timeout)
-            except (requests.Timeout, requests.ConnectionError) as e:
-                logger.debug("Caught exception while trying to retrieve "
-                             "credentials: %s", e, exc_info=True)
-            else:
-                if response.status_code == 200:
-                    return response
-        raise _RetriesExceededError()
-
     def _seconds_remaining(self):
-        delta = self._expiry_time - datetime.datetime.utcnow()
+        delta = self.expiry_time - datetime.datetime.utcnow()
         # python2.6 does not have timedelta.total_seconds() so we have
         # to calculate this ourselves.  This is straight from the
         # datetime docs.
@@ -121,7 +117,7 @@ class Credentials(object):
         return day_in_seconds + delta.seconds + micro_in_seconds
 
     def _refresh_needed(self):
-        if self._expiry_time is None:
+        if self.expiry_time is None:
             # No expiration, so assume we don't need to refresh.
             return False
 
@@ -134,6 +130,33 @@ class Credentials(object):
         # Assume the worst & refresh.
         logger.debug("Credentials need to be refreshed.")
         return True
+
+    def _refresh(self):
+        if not self._refresh_needed():
+            return
+
+        data = self.refresh_using()
+        self._set_from_data(data)
+
+    def _set_from_data(self, data):
+        self.access_key = data['access_key']
+        self.secret_key = data['secret_key']
+        self.token = data.get('token', None)
+
+        if data['expiry_time']:
+            self.expiry_time = datetime.datetime.strptime(
+                data['expiry_time'],
+                "%Y-%m-%dT%H:%M:%SZ"
+            )
+            logger.debug(
+                "Retrieved credentials will expire at: %s",
+                self.expiry_time
+            )
+
+
+class CredentialProvider(object):
+    def __init__(self, session=None):
+        self.session = session
 
     def load(self):
         """
@@ -155,72 +178,44 @@ class Credentials(object):
         return True
 
 
-class IAMCredentials(Credentials):
+class InstanceMetadataProvider(CredentialProvider):
     method = 'iam-role'
-
-    def __init__(self, *args, **kwargs):
-        # We need to set an initial expiration, well in the past.
-        super(IAMCredentials, self).__init__(*args, **kwargs)
-        self._expiry_time = datetime.datetime(2000, 1, 1)
 
     def load(self):
         timeout = self.session.get_config_variable('metadata_service_timeout')
-        num_attempts = self.session.get_config_variable('metadata_service_num_attempts')
+        num_attempts = self.session.get_config_variable(
+            'metadata_service_num_attempts'
+        )
         retrieve_kwargs = {}
         if timeout is not None:
             retrieve_kwargs['timeout'] = float(timeout)
         if num_attempts is not None:
             retrieve_kwargs['num_attempts'] = int(num_attempts)
-        metadata = self.retrieve_iam_role_credentials(**retrieve_kwargs)
+        fetcher = InstanceMetadataFetcher()
+        # Partially apply the arguments for future calls.
+        refresh_using = functools.partial(
+            fetcher.retrieve_iam_role_credentials,
+            **retrieve_kwargs
+        )
+        # We do the first request, to see if we get useful data back.
+        # If not, we'll pass & move on to whatever's next in the credential
+        # chain.
+        metadata = refresh_using()
         if not metadata:
-            return False
-
-        for role_name in metadata:
-            # FIXME: This looks like it keeps overwriting, returning
-            #        only the last role/credentials loaded? This is
-            #        consistent with the pre-existing behavior, but seems
-            #        potentially wrong.
-            self.access_key = metadata[role_name]['AccessKeyId']
-            self.secret_key = metadata[role_name]['SecretAccessKey']
-            self.token = metadata[role_name]['Token']
-            logger.info('Found IAM Role: %s', role_name)
-
-        return True
-
-    def retrieve_iam_role_credentials(self,
-                                      url=METADATA_SECURITY_CREDENTIALS_URL,
-                                      timeout=None, num_attempts=1):
-        if timeout is None:
-            timeout = DEFAULT_METADATA_SERVICE_TIMEOUT
-        d = {}
-        try:
-            r = self._get_request(url, timeout, num_attempts)
-            if r.content:
-                fields = r.content.decode('utf-8').split('\n')
-                for field in fields:
-                    if field.endswith('/'):
-                        d[field[0:-1]] = self.retrieve_iam_role_credentials(
-                            url + field, timeout, num_attempts)
-                    else:
-                        val = self._get_request(
-                            url + field,
-                            timeout=timeout,
-                            num_attempts=num_attempts).content.decode('utf-8')
-                        if val[0] == '{':
-                            val = json.loads(val)
-                        d[field] = val
-            else:
-                logger.debug("Metadata service returned non 200 status code "
-                             "of %s for url: %s, content body: %s",
-                             r.status_code, url, r.content)
-        except _RetriesExceededError:
-            logger.debug("Max number of attempts exceeded (%s) when "
-                         "attempting to retrieve data from metadata service.",
-                         num_attempts)
-        return d
+            return None
+        logger.info('Found IAM Role: %s', metadata['role_name'])
+        creds = RefreshableCredentials(
+            method=self.method,
+            refresh_using=refresh_using
+        )
+        # We manually set the data here, since we already made the request &
+        # have it. When the expiry is hit, the credentials will auto-refresh
+        # themselves.
+        creds._set_from_data(metadata)
+        return creds
 
 
-class EnvCredentials(Credentials):
+class EnvProvider(CredentialProvider):
     method = 'env'
 
     def load(self):
@@ -231,15 +226,13 @@ class EnvCredentials(Credentials):
         secret_key = self.session.get_config_variable('secret_key', ('env',))
         token = self.session.get_config_variable('token', ('env',))
         if access_key and secret_key:
-            self.access_key = access_key
-            self.secret_key = secret_key
-            self.token = token
             logger.info('Found credentials in Environment variables.')
-            return True
-        return False
+            return Credentials(access_key, secret_key, token,
+                               method=self.method)
+        return None
 
 
-class OriginalEC2Credentials(Credentials):
+class OriginalEC2Provider(CredentialProvider):
     method = 'credentials-file'
 
     def load(self):
@@ -257,14 +250,13 @@ class OriginalEC2Credentials(Credentials):
                 access_key = config.get('AWSAccessKeyId')
                 secret_key = config.get('AWSSecretKey')
                 if access_key and secret_key:
-                    self.access_key = access_key
-                    self.secret_key = secret_key
                     logger.info('Found credentials in AWS_CREDENTIAL_FILE.')
-                    return True
-        return False
+                    return Credentials(access_key, secret_key,
+                                       method=self.method)
+        return None
 
 
-class ConfigCredentials(Credentials):
+class ConfigProvider(CredentialProvider):
     method = 'config'
 
     def load(self):
@@ -276,15 +268,13 @@ class ConfigCredentials(Credentials):
         secret_key = self.session.get_config_variable('secret_key', methods=('config',))
         token = self.session.get_config_variable('token', ('config',))
         if access_key and secret_key:
-            self.access_key = access_key
-            self.secret_key = secret_key
-            self.token = token
             logger.info('Found credentials in config file.')
-            return True
-        return False
+            return Credentials(access_key, secret_key, token,
+                               method=self.method)
+        return None
 
 
-class BotoCredentials(Credentials):
+class BotoProvider(CredentialProvider):
     method = 'boto'
 
     def load(self):
@@ -306,20 +296,18 @@ class BotoCredentials(Credentials):
             if cp.has_option('Credentials', 'aws_secret_access_key'):
                 secret_key = cp.get('Credentials', 'aws_secret_access_key')
         if access_key and secret_key:
-            self.access_key = access_key
-            self.secret_key = secret_key
             logger.info('Found credentials in boto config file.')
-            return True
-        return False
+            return Credentials(access_key, secret_key, method=self.method)
+        return None
 
 
 class CredentialResolver(object):
     default_methods = [
-        EnvCredentials,
-        ConfigCredentials,
-        OriginalEC2Credentials,
-        BotoCredentials,
-        IAMCredentials,
+        EnvProvider,
+        ConfigProvider,
+        OriginalEC2Provider,
+        BotoProvider,
+        InstanceMetadataProvider,
     ]
 
     def __init__(self, session=None, methods=None):
@@ -405,8 +393,10 @@ class CredentialResolver(object):
         that could be loaded.
         """
         for cred in self.methods:
-            if cred.is_populated or cred.load():
-                return cred
+            creds = cred.load()
+
+            if creds is not None:
+                return creds
 
         # If we got here, no credentials could be found.
         # This feels like it should be an exception, but historically, ``None``

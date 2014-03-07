@@ -30,36 +30,37 @@ from tests import unittest, BaseEnvVar
 TESTENVVARS = {'config_file': (None, 'AWS_CONFIG_FILE', None)}
 
 
-metadata = {'foobar': {'Code': 'Success', 'LastUpdated':
-                       '2012-12-03T14:38:21Z', 'AccessKeyId': 'foo',
-                       'SecretAccessKey': 'bar', 'Token': 'foobar',
-                       'Expiration': '2012-12-03T20:48:03Z', 'Type':
-                       'AWS-HMAC'}}
+raw_metadata = {
+    'foobar': {
+        'Code': 'Success',
+        'LastUpdated': '2012-12-03T14:38:21Z',
+        'AccessKeyId': 'foo',
+        'SecretAccessKey': 'bar',
+        'Token': 'foobar',
+        'Expiration': '2012-12-03T20:48:03Z',
+        'Type': 'AWS-HMAC'
+    }
+}
+post_processed_metadata = {
+    'role_name': 'foobar',
+    'access_key': raw_metadata['foobar']['AccessKeyId'],
+    'secret_key': raw_metadata['foobar']['SecretAccessKey'],
+    'token': raw_metadata['foobar']['Token'],
+    'expiry_time': raw_metadata['foobar']['Expiration'],
+}
 
 
 def path(filename):
     return os.path.join(os.path.dirname(__file__), 'cfg', filename)
 
 
-class CredentialsTest(BaseEnvVar):
+class RefreshableCredentialsTest(BaseEnvVar):
     def setUp(self):
-        super(CredentialsTest, self).setUp()
-        self.creds = credentials.Credentials()
-
-    def test_is_populated(self):
-        # Without ``access_key/secret_key``.
-        self.assertFalse(self.creds.is_populated)
-
-        # With ``access_key`` but not ``secret_key``.
-        self.creds.access_key = 'foo'
-        self.assertFalse(self.creds.is_populated)
-
-        # With both.
-        self.creds.secret_key = 'bar'
-        self.assertTrue(self.creds.is_populated)
+        super(RefreshableCredentialsTest, self).setUp()
+        self.creds = credentials.RefreshableCredentials()
 
     def test__seconds_remaining(self):
-        self.creds._expiry_time = datetime.datetime.utcnow() + \
+        self.creds.expiry_time = datetime.datetime.utcnow() + \
                                   datetime.timedelta(seconds=5)
         remaining = self.creds._seconds_remaining()
         # This shouldn't take a full second, so it should be in this range.
@@ -67,16 +68,16 @@ class CredentialsTest(BaseEnvVar):
         self.assertTrue(remaining <= 5, "{0} is more than 5".format(remaining))
 
     def test__refresh_needed(self):
-        self.creds._expiry_time = None
+        self.creds.expiry_time = None
         self.assertFalse(self.creds._refresh_needed())
 
         # With a current expiry.
-        self.creds._expiry_time = datetime.datetime.utcnow() + \
+        self.creds.expiry_time = datetime.datetime.utcnow() + \
                                   datetime.timedelta(days=1)
         self.assertFalse(self.creds._refresh_needed())
 
         # With an outdated expiry.
-        self.creds._expiry_time = datetime.datetime.utcnow() + \
+        self.creds.expiry_time = datetime.datetime.utcnow() + \
                                   datetime.timedelta(seconds=30)
         self.assertTrue(self.creds._refresh_needed())
 
@@ -169,33 +170,33 @@ class IamRoleTest(BaseEnvVar):
         self.session = botocore.session.get_session(env_vars=TESTENVVARS)
         self.environ['BOTO_CONFIG'] = ''
 
-    @mock.patch('botocore.credentials.IAMCredentials.retrieve_iam_role_credentials')
+    @mock.patch('botocore.utils.InstanceMetadataFetcher.retrieve_iam_role_credentials')
     def test_iam_role(self, retriever):
-        retriever.return_value = metadata
+        retriever.return_value = post_processed_metadata
         credentials = self.session.get_credentials()
         self.assertEqual(credentials.method, 'iam-role')
         self.assertEqual(credentials.access_key, 'foo')
         self.assertEqual(credentials.secret_key, 'bar')
 
-    @mock.patch('botocore.credentials.IAMCredentials.retrieve_iam_role_credentials')
+    @mock.patch('botocore.utils.InstanceMetadataFetcher.retrieve_iam_role_credentials')
     def test_session_config_timeout_var(self, retriever):
-        retriever.return_value = metadata
+        retriever.return_value = post_processed_metadata
         self.session.set_config_variable('metadata_service_timeout', '20.0')
         credentials = self.session.get_credentials()
         self.assertEqual(credentials.method, 'iam-role')
         self.assertEqual(retriever.call_args[1]['timeout'], 20.0)
 
-    @mock.patch('botocore.credentials.IAMCredentials.retrieve_iam_role_credentials')
+    @mock.patch('botocore.utils.InstanceMetadataFetcher.retrieve_iam_role_credentials')
     def test_session_config_num_attempts_var(self, retriever):
-        retriever.return_value = metadata
+        retriever.return_value = post_processed_metadata
         self.session.set_config_variable('metadata_service_num_attempts', '5')
         credentials = self.session.get_credentials()
         self.assertEqual(credentials.method, 'iam-role')
         self.assertEqual(retriever.call_args[1]['num_attempts'], 5)
 
-    @mock.patch('botocore.credentials.IAMCredentials.retrieve_iam_role_credentials')
+    @mock.patch('botocore.utils.InstanceMetadataFetcher.retrieve_iam_role_credentials')
     def test_empty_boto_config_is_ignored(self, retriever):
-        retriever.return_value = metadata
+        retriever.return_value = post_processed_metadata
         self.environ['BOTO_CONFIG'] = path('boto_config_empty')
         credentials = self.session.get_credentials()
         self.assertEqual(credentials.method, 'iam-role')
@@ -210,7 +211,7 @@ class IamRoleTest(BaseEnvVar):
 
         second = mock.Mock()
         second.status_code = 200
-        second.content = json.dumps(metadata['foobar']).encode('utf-8')
+        second.content = json.dumps(raw_metadata['foobar']).encode('utf-8')
         get.side_effect = [first, second]
 
         credentials = self.session.get_credentials()
@@ -224,11 +225,12 @@ class IamRoleTest(BaseEnvVar):
 
         second = mock.Mock()
         second.status_code = 200
-        second.content = json.dumps(metadata['foobar']).encode('utf-8')
+        second.content = json.dumps(raw_metadata['foobar']).encode('utf-8')
         get.side_effect = [first, second]
 
-        iam_creds = credentials.IAMCredentials()
-        iam_creds.retrieve_iam_role_credentials(timeout=10)
+        self.session.set_config_variable('metadata_service_timeout', 10)
+        iam_creds = credentials.InstanceMetadataProvider(session=self.session)
+        iam_creds.load()
         self.assertEqual(get.call_args[1]['timeout'], 10)
 
     @mock.patch('botocore.vendored.requests.get')
@@ -236,9 +238,10 @@ class IamRoleTest(BaseEnvVar):
         first = mock.Mock()
         first.side_effect = ConnectionError
 
-        iam_creds = credentials.IAMCredentials()
-        d = iam_creds.retrieve_iam_role_credentials(timeout=10)
-        self.assertEqual(d, {})
+        self.session.set_config_variable('metadata_service_timeout', 10)
+        iam_creds = credentials.InstanceMetadataProvider(session=self.session)
+        d = iam_creds.load()
+        self.assertEqual(d, None)
 
     @mock.patch('botocore.vendored.requests.get')
     def test_retry_errors(self, get):
@@ -254,12 +257,18 @@ class IamRoleTest(BaseEnvVar):
         # Next attempt we get a response with the foobar creds.
         third = mock.Mock()
         third.status_code = 200
-        third.content = json.dumps(metadata['foobar']).encode('utf-8')
+        third.content = json.dumps(raw_metadata['foobar']).encode('utf-8')
         get.side_effect = [first, second, third]
 
-        iam_creds = credentials.IAMCredentials()
-        retrieved = iam_creds.retrieve_iam_role_credentials(num_attempts=2)
-        self.assertEqual(retrieved['foobar']['AccessKeyId'], 'foo')
+        self.session.set_config_variable('metadata_service_num_attempts', 2)
+        iam_creds = credentials.InstanceMetadataProvider(session=self.session)
+        retrieved = iam_creds.load()
+        # Using the property would see an expired set of credentials (old
+        # hardcoded expiry in the response) & try to refresh again, which isn't
+        # what we're testing here.
+        # So we're going to check the private variable here instead of the
+        # public property.
+        self.assertEqual(retrieved._access_key, 'foo')
 
 
 class CredentialResolverTest(BaseEnvVar):
@@ -276,8 +285,8 @@ class CredentialResolverTest(BaseEnvVar):
         self.small_resolver = credentials.CredentialResolver(
             session=self.session,
             methods=[
-                credentials.BotoCredentials(),
-                credentials.ConfigCredentials()
+                credentials.BotoProvider(),
+                credentials.ConfigProvider()
             ]
         )
 
@@ -293,8 +302,8 @@ class CredentialResolverTest(BaseEnvVar):
 
     def test_custom_init(self):
         resolver = credentials.CredentialResolver(methods=[
-            credentials.BotoCredentials(),
-            credentials.ConfigCredentials()
+            credentials.BotoProvider(),
+            credentials.ConfigProvider()
         ])
         self.assertEqual(resolver.available_methods, [
             'boto',
@@ -309,7 +318,7 @@ class CredentialResolverTest(BaseEnvVar):
             'config',
         ])
 
-        self.small_resolver.insert_before('boto', credentials.EnvCredentials())
+        self.small_resolver.insert_before('boto', credentials.EnvProvider())
         self.assertEqual(self.small_resolver.available_methods, [
             'env',
             'boto',
@@ -318,7 +327,7 @@ class CredentialResolverTest(BaseEnvVar):
 
         self.small_resolver.insert_before(
             'config',
-            credentials.OriginalEC2Credentials()
+            credentials.OriginalEC2Provider()
         )
         self.assertEqual(self.small_resolver.available_methods, [
             'env',
@@ -331,7 +340,7 @@ class CredentialResolverTest(BaseEnvVar):
         with self.assertRaises(botocore.exceptions.UnknownCredentialError):
             self.small_resolver.insert_before(
                 'foobar',
-                credentials.IAMCredentials()
+                credentials.InstanceMetadataProvider()
             )
 
     def test_insert_after(self):
@@ -341,7 +350,7 @@ class CredentialResolverTest(BaseEnvVar):
             'config',
         ])
 
-        self.small_resolver.insert_after('boto', credentials.EnvCredentials())
+        self.small_resolver.insert_after('boto', credentials.EnvProvider())
         self.assertEqual(self.small_resolver.available_methods, [
             'boto',
             'env',
@@ -350,7 +359,7 @@ class CredentialResolverTest(BaseEnvVar):
 
         self.small_resolver.insert_after(
             'config',
-            credentials.OriginalEC2Credentials()
+            credentials.OriginalEC2Provider()
         )
         self.assertEqual(self.small_resolver.available_methods, [
             'boto',
@@ -363,7 +372,7 @@ class CredentialResolverTest(BaseEnvVar):
         with self.assertRaises(botocore.exceptions.UnknownCredentialError):
             self.small_resolver.insert_after(
                 'foobar',
-                credentials.IAMCredentials()
+                credentials.InstanceMetadataProvider()
             )
 
     def test_remove(self):
@@ -395,7 +404,7 @@ class CredentialResolverTest(BaseEnvVar):
         # Should return the environment ones (from the ``setUp``).
         creds = self.default_resolver.get_credentials()
         self.assertEqual(creds.method, 'env')
-        self.assertTrue(creds.is_populated)
+        self.assertEqual(creds.access_key, 'foo')
 
 
 class AlternateCredentialResolverTest(BaseEnvVar):
@@ -407,8 +416,8 @@ class AlternateCredentialResolverTest(BaseEnvVar):
         self.small_resolver = credentials.CredentialResolver(
             session=self.session,
             methods=[
-                credentials.BotoCredentials(),
-                credentials.ConfigCredentials(session=self.session)
+                credentials.BotoProvider(),
+                credentials.ConfigProvider(session=self.session)
             ]
         )
 
@@ -422,7 +431,7 @@ class AlternateCredentialResolverTest(BaseEnvVar):
         # Now with something custom.
         creds = self.small_resolver.get_credentials()
         self.assertEqual(creds.method, 'config')
-        self.assertTrue(creds.is_populated)
+        self.assertEqual(creds.access_key, 'foo')
 
 
 if __name__ == "__main__":
