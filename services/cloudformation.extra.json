@@ -63,6 +63,15 @@
           }
         }
       }
+    },
+    "DescribeStackEvents": {
+      "input": {
+        "members": {
+          "StackName": {
+            "required": true
+          }
+        }
+      }
     }
   },
   "pagination": {
