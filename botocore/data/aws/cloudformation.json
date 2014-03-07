@@ -222,7 +222,8 @@
                     "StackName": {
                         "shape_name": "StackName",
                         "type": "string",
-                        "documentation": "\n      <p>The name or the unique identifier associated with the stack.</p>\n      <p>Default: There is no default value.</p>\n   "
+                        "documentation": "\n      <p>The name or the unique identifier associated with the stack.</p>\n      <p>Default: There is no default value.</p>\n   ",
+                        "required": true
                     },
                     "NextToken": {
                         "shape_name": "NextToken",
