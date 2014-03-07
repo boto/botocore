@@ -59,27 +59,49 @@ class RefreshableCredentialsTest(BaseEnvVar):
         super(RefreshableCredentialsTest, self).setUp()
         self.creds = credentials.RefreshableCredentials()
 
-    def test__seconds_remaining(self):
-        self.creds.expiry_time = datetime.datetime.utcnow() + \
-                                  datetime.timedelta(seconds=5)
-        remaining = self.creds._seconds_remaining()
-        # This shouldn't take a full second, so it should be in this range.
-        self.assertTrue(remaining >= 4, "{0} is less than 4".format(remaining))
-        self.assertTrue(remaining <= 5, "{0} is more than 5".format(remaining))
-
-    def test__refresh_needed(self):
+    def test_refresh_needed(self):
         self.creds.expiry_time = None
-        self.assertFalse(self.creds._refresh_needed())
+        self.assertFalse(self.creds.refresh_needed())
 
         # With a current expiry.
         self.creds.expiry_time = datetime.datetime.utcnow() + \
                                   datetime.timedelta(days=1)
-        self.assertFalse(self.creds._refresh_needed())
+        self.assertFalse(self.creds.refresh_needed())
 
         # With an outdated expiry.
         self.creds.expiry_time = datetime.datetime.utcnow() + \
                                   datetime.timedelta(seconds=30)
-        self.assertTrue(self.creds._refresh_needed())
+        self.assertTrue(self.creds.refresh_needed())
+
+    def test_create_from_metadata(self):
+        new_metadata = {
+            'role_name': 'foobaz',
+            'access_key': 'abcdef123456',
+            'secret_key': '123456abcdef',
+            'expiry_time': '2014-03-07T15:24:46Z',
+        }
+        creds = credentials.RefreshableCredentials.create_from_metadata(
+            post_processed_metadata,
+            method='testing',
+            refresh_using=lambda: new_metadata
+        )
+        # Test the internals, so as not to kick off a refresh.
+        self.assertEqual(creds._access_key, 'foo')
+        self.assertEqual(creds._secret_key, 'bar')
+        self.assertEqual(creds._token, 'foobar')
+        self.assertEqual(
+            creds.expiry_time,
+            datetime.datetime(2012, 12, 3, 20, 48, 3)
+        )
+        self.assertEqual(creds.method, 'testing')
+        self.assertTrue(self.creds.refresh_needed())
+
+        # Kick a refresh.
+        self.assertEqual(creds.access_key, 'abcdef123456')
+        self.assertEqual(
+            creds.expiry_time,
+            datetime.datetime(2014, 3, 7, 15, 24, 46)
+        )
 
 
 class EnvVarTest(BaseEnvVar):

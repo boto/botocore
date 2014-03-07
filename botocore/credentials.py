@@ -19,6 +19,7 @@ import os
 
 from six.moves import configparser
 
+from botocore.compat import total_seconds
 from botocore.exceptions import UnknownCredentialError
 from botocore.utils import InstanceMetadataFetcher
 
@@ -68,17 +69,32 @@ class RefreshableCredentials(Credentials):
     method = 'temporary'
 
     def __init__(self, access_key=None, secret_key=None, token=None,
-                 session=None, method=None, refresh_using=None):
+                 session=None, method=None, expiry_time=None,
+                 refresh_using=None):
         self.session = session
         self.refresh_using = refresh_using
         self._access_key = access_key
         self._secret_key = secret_key
         self._token = token
-        # Set an old, expired time by default.
-        self.expiry_time = datetime.datetime(2000, 1, 1)
+        self.expiry_time = expiry_time
+
+        if self.expiry_time is None:
+            # Set an old, expired time by default.
+            self.expiry_time = datetime.datetime(2000, 1, 1)
 
         if method:
             self.method = method
+
+    @classmethod
+    def create_from_metadata(cls, metadata, session=None, method=None,
+                             refresh_using=None):
+        instance = cls(
+            session=session,
+            method=method,
+            refresh_using=refresh_using
+        )
+        instance._set_from_data(metadata)
+        return instance
 
     @property
     def access_key(self):
@@ -109,14 +125,9 @@ class RefreshableCredentials(Credentials):
 
     def _seconds_remaining(self):
         delta = self.expiry_time - datetime.datetime.utcnow()
-        # python2.6 does not have timedelta.total_seconds() so we have
-        # to calculate this ourselves.  This is straight from the
-        # datetime docs.
-        day_in_seconds = delta.days * 24 * 3600
-        micro_in_seconds = delta.microseconds / 10**6
-        return day_in_seconds + delta.seconds + micro_in_seconds
+        return total_seconds(delta)
 
-    def _refresh_needed(self):
+    def refresh_needed(self):
         if self.expiry_time is None:
             # No expiration, so assume we don't need to refresh.
             return False
@@ -132,7 +143,7 @@ class RefreshableCredentials(Credentials):
         return True
 
     def _refresh(self):
-        if not self._refresh_needed():
+        if not self.refresh_needed():
             return
 
         data = self.refresh_using()
@@ -204,14 +215,14 @@ class InstanceMetadataProvider(CredentialProvider):
         if not metadata:
             return None
         logger.info('Found IAM Role: %s', metadata['role_name'])
-        creds = RefreshableCredentials(
-            method=self.method,
-            refresh_using=refresh_using
-        )
         # We manually set the data here, since we already made the request &
         # have it. When the expiry is hit, the credentials will auto-refresh
         # themselves.
-        creds._set_from_data(metadata)
+        creds = RefreshableCredentials.create_from_metadata(
+            metadata,
+            method=self.method,
+            refresh_using=refresh_using
+        )
         return creds
 
 
