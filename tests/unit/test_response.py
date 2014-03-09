@@ -19,22 +19,22 @@ from botocore import response
 from botocore.exceptions import IncompleteReadError
 from botocore.vendored.requests.models import Response, Request
 
-XMLBODY1 = ('<?xml version="1.0" encoding="UTF-8"?><Error>'
-            '<Code>AccessDenied</Code>'
-            '<Message>Access Denied</Message>'
-            '<RequestId>XXXXXXXXXXXXXXXX</RequestId>'
-            '<HostId>AAAAAAAAAAAAAAAAAAA</HostId>'
-            '</Error>')
+XMLBODY1 = (b'<?xml version="1.0" encoding="UTF-8"?><Error>'
+            b'<Code>AccessDenied</Code>'
+            b'<Message>Access Denied</Message>'
+            b'<RequestId>XXXXXXXXXXXXXXXX</RequestId>'
+            b'<HostId>AAAAAAAAAAAAAAAAAAA</HostId>'
+            b'</Error>')
 
-XMLBODY2 = ('<?xml version="1.0" encoding="UTF-8"?>'
-            '<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">'
-            '<Name>mybucket</Name><Prefix></Prefix><Marker></Marker>'
-            '<MaxKeys>1000</MaxKeys><IsTruncated>false</IsTruncated>'
-            '<Contents><Key>test.png</Key><LastModified>2014-03-01T17:06:40.000Z</LastModified>'
-            '<ETag>&quot;00000000000000000000000000000000&quot;</ETag><Size>6702</Size>'
-            '<Owner><ID>AAAAAAAAAAAAAAAAAAA</ID>'
-            '<DisplayName>dummy</DisplayName></Owner>'
-            '<StorageClass>STANDARD</StorageClass></Contents></ListBucketResult>')
+XMLBODY2 = (b'<?xml version="1.0" encoding="UTF-8"?>'
+            b'<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">'
+            b'<Name>mybucket</Name><Prefix></Prefix><Marker></Marker>'
+            b'<MaxKeys>1000</MaxKeys><IsTruncated>false</IsTruncated>'
+            b'<Contents><Key>test.png</Key><LastModified>2014-03-01T17:06:40.000Z</LastModified>'
+            b'<ETag>&quot;00000000000000000000000000000000&quot;</ETag><Size>6702</Size>'
+            b'<Owner><ID>AAAAAAAAAAAAAAAAAAA</ID>'
+            b'<DisplayName>dummy</DisplayName></Owner>'
+            b'<StorageClass>STANDARD</StorageClass></Contents></ListBucketResult>')
 
 
 class TestStreamWrapper(unittest.TestCase):
