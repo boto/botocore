@@ -469,7 +469,14 @@ def get_response(session, operation, http_response):
             http_response.headers,
             StreamingBody(http_response.raw,
                           http_response.headers.get('content-length')))
-        return (http_response, streaming_response.get_value())
+        if http_response.ok:
+            return (http_response, streaming_response.get_value())
+        else:
+            xml_response = XmlResponse(session, operation)
+            body = streaming_response.get_value()['Body'].read()
+            if body:
+                xml_response.parse(body, encoding)
+            return (http_response, xml_response.get_value())
     body = http_response.content
     if not http_response.request.method == 'HEAD':
         _validate_content_length(
