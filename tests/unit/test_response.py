@@ -13,7 +13,6 @@
 
 from tests import unittest
 
-import mock
 import six
 import botocore
 from botocore import response
