@@ -224,3 +224,8 @@ class IncompleteReadError(BotoCoreError):
 class InvalidExpressionError(BotoCoreError):
     """Expression is either invalid or too complex."""
     fmt = 'Invalid expression {expression}: Only dotted lookups are supported.'
+
+
+class UnknownCredentialError(BotoCoreError):
+    """Tried to insert before/after an unregistered credential type."""
+    fmt = 'Credential named {name} not found.'
