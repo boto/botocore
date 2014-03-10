@@ -130,6 +130,6 @@ def total_seconds(delta):
     if sys.version_info[:2] != (2, 6):
         return delta.total_seconds()
 
-    day_in_seconds = delta.days * 24 * 3600
-    micro_in_seconds = delta.microseconds / 10**6
+    day_in_seconds = delta.days * 24 * 3600.0
+    micro_in_seconds = delta.microseconds / 10.0**6
     return day_in_seconds + delta.seconds + micro_in_seconds
