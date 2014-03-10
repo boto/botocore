@@ -11,9 +11,12 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import sys
 import copy
+import datetime
 import six
+import sys
+
+
 if six.PY3:
     from six.moves import http_client
     class HTTPHeaders(http_client.HTTPMessage):
@@ -108,3 +111,25 @@ def copy_kwargs(kwargs):
     else:
         copy_kwargs = copy.copy(kwargs)
     return copy_kwargs
+
+
+def total_seconds(delta):
+    """
+    Returns the total seconds in a ``datetime.timedelta``.
+
+    Python 2.6 does not have ``timedelta.total_seconds()``, so we have
+    to calculate this ourselves. On 2.7 or better, we'll take advantage of the
+    built-in method.
+
+    The math was pulled from the ``datetime`` docs
+    (http://docs.python.org/2.7/library/datetime.html#datetime.timedelta.total_seconds).
+
+    :param delta: The timedelta object
+    :type delta: ``datetime.timedelta``
+    """
+    if sys.version_info[:2] != (2, 6):
+        return delta.total_seconds()
+
+    day_in_seconds = delta.days * 24 * 3600.0
+    micro_in_seconds = delta.microseconds / 10.0**6
+    return day_in_seconds + delta.seconds + micro_in_seconds

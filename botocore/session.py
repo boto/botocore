@@ -373,7 +373,6 @@ class Session(object):
         self._credentials = botocore.credentials.Credentials(access_key,
                                                              secret_key,
                                                              token)
-        self._credentials.method = 'explicit'
 
     def get_credentials(self):
         """
