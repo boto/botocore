@@ -261,7 +261,26 @@ SERVICES = {
         }
       },
       "documentation": "This operation has been deprecated."
-    }
+    },
+    "RenameOperation": {
+      "input": {
+        "shape_name": "RenameOperation",
+        "type": "structure",
+        "members": {
+          "RenameMe": {
+            "shape_name": "RenameMe",
+            "type": "string",
+            "documentation": "blah blah blah blah",
+          },
+          "FieBaz": {
+            "shape_name": "fiebazType",
+            "type": "string",
+            "documentation": ""
+          }
+        }
+      },
+      "documentation": "This operation has been deprecated."
+    },
   }
 }
 
@@ -749,7 +768,7 @@ class TestReplacePartOfOperation(unittest.TestCase):
         self.assertEqual(list(sorted(new_model['operations'].keys())),
                          ['AssumeRole', 'DeprecatedOperation',
                           'DeprecatedOperation2', 'NoOutputOperation',
-                          'RealOperation'])
+                          'RealOperation', 'RenameOperation'])
         # But the name key attribute is left unchanged.
         self.assertEqual(new_model['operations']['RealOperation']['name'],
                          'RealOperation2013_02_04')
@@ -830,6 +849,23 @@ class TestFilteringOfDocumentation(unittest.TestCase):
         self.assertEqual(operation['documentation'], 'This is my  stuff')
         param = operation['input']['members']['FooBar']
         self.assertEqual(param['documentation'], 'blah blah blah blah')
+
+
+class TestRenameParams(unittest.TestCase):
+    def test_rename_param(self):
+        enhancements = {
+            'transformations': {
+                'renames': {
+                    'RenameOperation.input.members.RenameMe': 'BeenRenamed',
+                }
+            }
+        }
+        model = ModelFiles(SERVICES, regions={}, retry={},
+                           enhancements=enhancements)
+        new_model = translate(model)
+        arguments = new_model['operations']['RenameOperation']['input']['members']
+        self.assertNotIn('RenameMe', arguments)
+        self.assertIn('BeenRenamed', arguments)
 
 
 class TestWaiterDenormalization(unittest.TestCase):
