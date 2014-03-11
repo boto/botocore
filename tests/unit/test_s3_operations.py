@@ -42,8 +42,8 @@ XMLBODY5 = ('<BucketLoggingStatus><LoggingEnabled><TargetBucket>mybucketlogs'
             '</TargetGrants><TargetPrefix>mybucket-access_log-/</TargetPrefix>'
             '</LoggingEnabled></BucketLoggingStatus>')
 XMLBODY6 = ('<VersioningConfiguration>'
-            '<MfaDelete>Enabled</MfaDelete>'
             '<Status>Enabled</Status>'
+            '<MfaDelete>Enabled</MfaDelete>'
             '</VersioningConfiguration>')
 XMLBODY7 = ('<Delete><Object><Key>foobar</Key>'
            '</Object><Object><Key>fiebaz</Key></Object>'
