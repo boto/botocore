@@ -481,7 +481,11 @@ def get_response(session, operation, http_response):
             # so we log response body only when error happens.
             logger.debug("Response Body:\n%s", body)
             if body:
-                xml_response.parse(body, encoding)
+                try:
+                    xml_response.parse(body, encoding)
+                except xml.etree.cElementTree.ParseError as err:
+                    raise xml.etree.cElementTree.ParseError(
+                        "Error parsing XML response: %s\nXML received:\n%s" % (err, body))
             return (http_response, xml_response.get_value())
     body = http_response.content
     if not http_response.request.method == 'HEAD':
