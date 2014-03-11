@@ -17,7 +17,10 @@ import os
 import re
 from copy import deepcopy
 
+import jmespath
+
 from botocore.compat import OrderedDict, json
+from botocore.utils import set_value_from_jmespath
 from botocore import xform_name
 
 
@@ -73,6 +76,7 @@ def translate(model):
     handle_remove_deprecated_params(new_model, model.enhancements)
     handle_remove_deprecated_operations(new_model, model.enhancements)
     handle_filter_documentation(new_model, model.enhancements)
+    handle_rename_params(new_model, model.enhancements)
     add_pagination_configs(
         new_model,
         model.enhancements.get('pagination', {}))
@@ -180,6 +184,23 @@ def handle_filter_documentation(new_model, enhancements):
                 for param_name in params:
                     param = params[param_name]
                     _filter_param_doc(param, replacement, filter_regex)
+
+
+def handle_rename_params(new_model, enhancements):
+    renames = enhancements.get('transformations', {}).get(
+        'renames', {})
+    if not renames:
+        return
+    # This is *extremely* specific to botocore's translations, but
+    # we support a restricted set of argument renames based on a
+    # jmespath expression.
+    for expression, new_value in renames.items():
+        # First we take everything up until the last dot.
+        parent_expression, key = expression.rsplit('.', 1)
+        matched = jmespath.search(parent_expression, new_model['operations'])
+        current = matched[key]
+        del matched[key]
+        matched[new_value] = current
 
 
 def resembles_jmespath_exp(value):
