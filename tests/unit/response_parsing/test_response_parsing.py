@@ -115,9 +115,20 @@ def test_json_parsing():
             sn, opname = basename.split('-', 1)
             operation = service.get_operation(opname)
             r = JSONResponse(session, operation)
+            headers = {}
             with open(inputfile, 'rb') as fp:
                 jsondoc = fp.read()
-            r.parse(jsondoc, 'utf-8')
+                # Try to get any headers using a special key
+                try:
+                    parsed = json.loads(jsondoc)
+                except:
+                    # This will error later, let it go on
+                    parsed = {}
+                if '__headers' in parsed:
+                    headers = parsed['__headers']
+                    del parsed['__headers']
+                    jsondoc = json.dumps(parsed)
+            r.parse(headers, jsondoc, 'utf-8')
             save_jsonfile(outputfile, r)
             fp = open(outputfile)
             data = json.load(fp)

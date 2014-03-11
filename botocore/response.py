@@ -334,15 +334,15 @@ class XmlResponse(Response):
 
 class JSONResponse(Response):
 
-    def parse(self, s, encoding):
+    def parse(self, headers, body, encoding):
         try:
-            decoded = s.decode(encoding)
+            decoded = body.decode(encoding)
             self.value = json.loads(decoded)
-            self.get_response_errors()
+            self.get_response_errors(headers)
         except Exception as err:
             logger.debug('Error loading JSON response body, %r', err)
 
-    def get_response_errors(self):
+    def get_response_errors(self, headers):
         # Most JSON services return a __type in error response bodies.
         # Unfortunately, ElasticTranscoder does not.  It simply returns
         # a JSON body with a single key, "message".
@@ -357,7 +357,12 @@ class JSONResponse(Response):
             code = self._parse_code_from_type(error_type)
             error['Code'] = code
         elif 'message' in self.value and len(self.value.keys()) == 1:
-            error = {'Type': 'Unspecified', 'Code': 'Unspecified',
+            error_type = 'Unspecified'
+            if headers and 'x-amzn-errortype' in headers:
+                # ElasticTranscoder suffixes errors with `:`, so we strip
+                # them off when possible.
+                error_type = headers.get('x-amzn-errortype').strip(':')
+            error = {'Type': error_type, 'Code': error_type,
                      'Message': self.value['message']}
             del self.value['message']
         if error:
@@ -481,7 +486,7 @@ def get_response(session, operation, http_response):
     if operation.service.type in ('json', 'rest-json'):
         json_response = JSONResponse(session, operation)
         if body:
-            json_response.parse(body, encoding)
+            json_response.parse(http_response.headers, body, encoding)
         json_response.merge_header_values(http_response.headers)
         return (http_response, json_response.get_value())
     # We are defaulting to an XML response handler because many query
