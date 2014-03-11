@@ -464,6 +464,9 @@ def get_response(session, operation, http_response):
         content_type = content_type.split(';')[0]
         logger.debug('Content type from response: %s', content_type)
     if operation.is_streaming():
+        logger.debug(
+            "Response Headers:\n%s",
+            '\n'.join("%s: %s" % (k, v) for k, v in http_response.headers.items()))
         streaming_response = StreamingResponse(session, operation)
         streaming_response.parse(
             http_response.headers,
@@ -474,6 +477,9 @@ def get_response(session, operation, http_response):
         else:
             xml_response = XmlResponse(session, operation)
             body = streaming_response.get_value()['Body'].read()
+            # For streaming response, response body might be binary data,
+            # so we log response body only when error happens.
+            logger.debug("Response Body:\n%s", body)
             if body:
                 xml_response.parse(body, encoding)
             return (http_response, xml_response.get_value())
