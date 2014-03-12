@@ -18109,7 +18109,7 @@
                     "UserData": {
                         "shape_name": "String",
                         "type": "blob",
-                        "documentation": "\n    <p>The Base64-encoded MIME user data for the instances.</p>\n   "
+                        "documentation": "\n    <p>The user data for the instances.  You can specify the user data as a string, or if the user data contents are in a file, you can use file://filename.</p>\n   "
                     },
                     "InstanceType": {
                         "shape_name": "InstanceType",

@@ -75,7 +75,8 @@
       "input": {
         "members": {
           "UserData": {
-            "type": "blob"
+            "type": "blob",
+            "documentation": "\n    <p>The user data for the instances.  You can specify the user data as a string, or if the user data contents are in a file, you can use file://filename.</p>\n   "
           },
           "NetworkInterfaces": {
             "members": {
