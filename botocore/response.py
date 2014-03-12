@@ -464,12 +464,29 @@ def get_response(session, operation, http_response):
         content_type = content_type.split(';')[0]
         logger.debug('Content type from response: %s', content_type)
     if operation.is_streaming():
+        logger.debug(
+            "Response Headers:\n%s",
+            '\n'.join("%s: %s" % (k, v) for k, v in http_response.headers.items()))
         streaming_response = StreamingResponse(session, operation)
         streaming_response.parse(
             http_response.headers,
             StreamingBody(http_response.raw,
                           http_response.headers.get('content-length')))
-        return (http_response, streaming_response.get_value())
+        if http_response.ok:
+            return (http_response, streaming_response.get_value())
+        else:
+            xml_response = XmlResponse(session, operation)
+            body = streaming_response.get_value()['Body'].read()
+            # For streaming response, response body might be binary data,
+            # so we log response body only when error happens.
+            logger.debug("Response Body:\n%s", body)
+            if body:
+                try:
+                    xml_response.parse(body, encoding)
+                except xml.etree.cElementTree.ParseError as err:
+                    raise xml.etree.cElementTree.ParseError(
+                        "Error parsing XML response: %s\nXML received:\n%s" % (err, body))
+            return (http_response, xml_response.get_value())
     body = http_response.content
     if not http_response.request.method == 'HEAD':
         _validate_content_length(
