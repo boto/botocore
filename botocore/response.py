@@ -338,11 +338,10 @@ class JSONResponse(Response):
         try:
             decoded = s.decode(encoding)
             self.value = json.loads(decoded)
-            self.get_response_errors()
         except Exception as err:
             logger.debug('Error loading JSON response body, %r', err)
 
-    def get_response_errors(self):
+    def merge_header_values(self, headers):
         # Most JSON services return a __type in error response bodies.
         # Unfortunately, ElasticTranscoder does not.  It simply returns
         # a JSON body with a single key, "message".
@@ -357,7 +356,12 @@ class JSONResponse(Response):
             code = self._parse_code_from_type(error_type)
             error['Code'] = code
         elif 'message' in self.value and len(self.value.keys()) == 1:
-            error = {'Type': 'Unspecified', 'Code': 'Unspecified',
+            error_type = 'Unspecified'
+            if headers and 'x-amzn-errortype' in headers:
+                # ElasticTranscoder suffixes errors with `:`, so we strip
+                # them off when possible.
+                error_type = headers.get('x-amzn-errortype').strip(':')
+            error = {'Type': error_type, 'Code': error_type,
                      'Message': self.value['message']}
             del self.value['message']
         if error:

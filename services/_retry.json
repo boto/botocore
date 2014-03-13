@@ -281,6 +281,13 @@
           }
         }
       }
+    },
+    "elastictranscoder": {
+      "__default__": {
+        "policies": {
+          "throttling": {"$ref": "throttling_exception"}
+        }
+      }
     }
   }
 }
