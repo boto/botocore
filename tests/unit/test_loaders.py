@@ -23,7 +23,7 @@ import os
 
 import mock
 
-from botocore.exceptions import ApiVersionNotFound
+from botocore.exceptions import ApiVersionNotFoundError
 from botocore.exceptions import DataNotFoundError
 from botocore.loaders import Cache
 from botocore.loaders import cachable
@@ -131,11 +131,11 @@ class LoaderTestCase(BaseEnvVar):
         self.assertEqual(path, 'someservice/2012-10-01')
 
     def test_determine_latest_with_version_the_wrong_way(self):
-        with self.assertRaises(ApiVersionNotFound):
+        with self.assertRaises(ApiVersionNotFoundError):
             self.loader.determine_latest('someservice/2012-10-01')
 
     def test_determine_latest_with_version_not_found(self):
-        with self.assertRaises(ApiVersionNotFound):
+        with self.assertRaises(ApiVersionNotFoundError):
             path = self.loader.determine_latest(
                 'someservice',
                 api_version='2010-02-02'
@@ -161,7 +161,7 @@ class LoaderTestCase(BaseEnvVar):
         self.assertEqual(data['api_version'], '2012-10-01')
 
     def test_load_service_model_version_not_found(self):
-        with self.assertRaises(ApiVersionNotFound):
+        with self.assertRaises(ApiVersionNotFoundError):
             data = self.loader.load_service_model(
                 'someservice',
                 api_version='2010-02-02'

@@ -36,7 +36,7 @@ class DataNotFoundError(BotoCoreError):
     fmt = 'Unable to load data for: {data_path}'
 
 
-class ApiVersionNotFound(BotoCoreError):
+class ApiVersionNotFoundError(BotoCoreError):
     """
     The data associated with either that API version or a compatible one
     could not be loaded.

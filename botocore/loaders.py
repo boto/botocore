@@ -4,7 +4,7 @@ import os
 from botocore import BOTOCORE_ROOT
 from botocore.compat import json
 from botocore.compat import OrderedDict
-from botocore.exceptions import ApiVersionNotFound
+from botocore.exceptions import ApiVersionNotFoundError
 from botocore.exceptions import DataNotFoundError
 
 
@@ -368,7 +368,7 @@ class Loader(object):
         If the ``api_version`` desired can not be found, the loader will pick
         the next best match that is backward-compatible with the provided
         version. If a compatible version can not be found, an
-        ``ApiVersionNotFound`` exception will be thrown.
+        ``ApiVersionNotFoundError`` exception will be thrown.
 
         Usage::
 
@@ -389,7 +389,7 @@ class Loader(object):
             # Couldn't find a match.
             >>> loader.determine_latest('aws/rds', api_version='2010-05-16')
             # Traceback, then...
-            ApiVersionNotFound: Unable to load data aws/rds for: 2010-05-16
+            ApiVersionNotFoundError: Unable to load data aws/rds for: 2010-05-16
 
         """
         all_options = []
@@ -435,7 +435,7 @@ class Loader(object):
 
         if not len(all_options):
             # We don't have any matches. Error out.
-            raise ApiVersionNotFound(
+            raise ApiVersionNotFoundError(
                 data_path=data_path,
                 api_version=api_version
             )
@@ -465,7 +465,7 @@ class Loader(object):
 
         if not best_match:
             # We didn't find anything. Error out.
-            raise ApiVersionNotFound(
+            raise ApiVersionNotFoundError(
                 data_path=data_path,
                 api_version=api_version
             )

@@ -25,6 +25,12 @@ assert os.path.isdir(SERVICES_DIR)
 assert os.path.isfile(BUILD_MODELS)
 assert os.path.isdir(DEST_DIR)
 
+# Python 2/3 differences.
+try:
+    DirectoryExistsError = FileExistsError
+except NameError:
+    DirectoryExistsError = OSError
+
 
 def build_final_filename(filename):
     with open(filename, 'r') as json_file:
@@ -52,7 +58,7 @@ for filename in os.listdir(SERVICES_DIR):
         try:
             # Ensure the directory is there if the service is new.
             os.makedirs(os.path.dirname(final_filename))
-        except FileExistsError:
+        except DirectoryExistsError:
             pass
         with open(final_filename, 'w') as f:
             f.write(new_model)
