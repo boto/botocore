@@ -351,7 +351,7 @@ class Loader(object):
         For given desired data_path, searches all possible locations for the
         version of the data file that best matches.
 
-        This is used for primarily for the service models themselves, which
+        This is used primarily for the service models themselves, which
         typically have an API version attached to them.
 
         Requires a ``data_path`` parameter, which should be a string. This
