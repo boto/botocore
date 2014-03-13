@@ -334,15 +334,14 @@ class XmlResponse(Response):
 
 class JSONResponse(Response):
 
-    def parse(self, headers, body, encoding):
+    def parse(self, s, encoding):
         try:
-            decoded = body.decode(encoding)
+            decoded = s.decode(encoding)
             self.value = json.loads(decoded)
-            self.get_response_errors(headers)
         except Exception as err:
             logger.debug('Error loading JSON response body, %r', err)
 
-    def get_response_errors(self, headers):
+    def merge_header_values(self, headers):
         # Most JSON services return a __type in error response bodies.
         # Unfortunately, ElasticTranscoder does not.  It simply returns
         # a JSON body with a single key, "message".
@@ -486,7 +485,7 @@ def get_response(session, operation, http_response):
     if operation.service.type in ('json', 'rest-json'):
         json_response = JSONResponse(session, operation)
         if body:
-            json_response.parse(http_response.headers, body, encoding)
+            json_response.parse(body, encoding)
         json_response.merge_header_values(http_response.headers)
         return (http_response, json_response.get_value())
     # We are defaulting to an XML response handler because many query
