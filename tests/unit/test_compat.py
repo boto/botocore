@@ -13,9 +13,9 @@
 
 import datetime
 
-from botocore.compat import total_seconds
+from botocore.compat import total_seconds, unquote_str
 
-from tests import BaseEnvVar
+from tests import BaseEnvVar, unittest
 
 
 class TotalSecondsTest(BaseEnvVar):
@@ -27,3 +27,17 @@ class TotalSecondsTest(BaseEnvVar):
         delta = datetime.timedelta(seconds=33, microseconds=772)
         remaining = total_seconds(delta)
         self.assertEqual(remaining, 33.000772)
+
+
+class TestUnquoteStr(unittest.TestCase):
+    def test_unquote_str(self):
+        value = u'%E2%9C%93'
+        # Note: decoded to unicode and utf-8 decoded as well.
+        # This would work in python2 and python3.
+        self.assertEqual(unquote_str(value), u'\u2713')
+
+    def test_unquote_normal(self):
+        value = u'foo'
+        # Note: decoded to unicode and utf-8 decoded as well.
+        # This would work in python2 and python3.
+        self.assertEqual(unquote_str(value), u'foo')
