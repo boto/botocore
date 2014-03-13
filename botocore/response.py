@@ -350,9 +350,10 @@ class JSONResponse(Response):
             error_type = self.value['__type']
             error = {'Type': error_type}
             del self.value['__type']
-            if 'message' in self.value:
-                error['Message'] = self.value['message']
-                del self.value['message']
+            for key in ['message', 'Message']:
+                if key in self.value:
+                    error['Message'] = self.value[key]
+                    del self.value[key]
             code = self._parse_code_from_type(error_type)
             error['Code'] = code
         elif 'message' in self.value and len(self.value.keys()) == 1:
