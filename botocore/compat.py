@@ -30,6 +30,11 @@ if six.PY3:
     from io import IOBase as _IOBase
     file_type = _IOBase
 
+    # In python3, unquote takes a str() object, url decodes it,
+    # then takes the bytestring and decodes it to utf-8.
+    # Python2 we'll have to do this ourself (see below).
+    unquote_str = unquote
+
     def set_socket_timeout(http_response, timeout):
         """Set the timeout of the socket from an HTTPResponse.
 
@@ -54,6 +59,16 @@ else:
         def __iter__(self):
             for field, value in self._headers:
                 yield field
+
+    def unquote_str(value, encoding='utf-8'):
+        # In python2, unquote() gives us a string back that has the urldecoded
+        # bits, but not the unicode parts.  We need to decode this manually.
+        # unquote has special logic in which if it receives a unicode object it
+        # will decode it to latin1.  This is hard coded.  To avoid this, we'll
+        # encode the string with the passed in encoding before trying to
+        # unquote it.
+        byte_string = value.encode(encoding)
+        return unquote(byte_string).decode(encoding)
 
     def set_socket_timeout(http_response, timeout):
         """Set the timeout of the socket from an HTTPResponse.
