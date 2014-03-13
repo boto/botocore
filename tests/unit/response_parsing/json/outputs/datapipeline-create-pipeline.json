@@ -1,0 +1,9 @@
+{
+    "Errors": [
+        {
+            "Message": "Operation createPipeline is not allowed to be performed with role identity",
+            "Type": "AccessDeniedException",
+            "Code": "AccessDeniedException"
+        }
+    ]
+}
