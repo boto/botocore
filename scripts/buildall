@@ -48,5 +48,11 @@ for filename in os.listdir(SERVICES_DIR):
         full_cmd = '%s %s' % (BUILD_MODELS, service_filename)
         print("Running command: %s" % full_cmd)
         new_model = check_output(full_cmd, shell=True).decode('utf-8')
-        with open(build_final_filename(service_filename), 'w') as f:
+        final_filename = build_final_filename(service_filename)
+        try:
+            # Ensure the directory is there if the service is new.
+            os.makedirs(os.path.dirname(final_filename))
+        except FileExistsError:
+            pass
+        with open(final_filename, 'w') as f:
             f.write(new_model)
