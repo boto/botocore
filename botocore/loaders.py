@@ -8,65 +8,6 @@ from botocore.exceptions import ApiVersionNotFoundError
 from botocore.exceptions import DataNotFoundError
 
 
-class Cache(object):
-    """
-    A plain, relatively naive cache.
-
-    Caches & retains everything for the duration of the cache's life.
-
-    Usage::
-
-        >>> cache = Cache()
-        >>> 'test' in cache
-        False
-        >>> cache['test']
-        KeyError:...
-        >>> cache['test'] = 'abc'
-        >>> 'test' in cache
-        True
-        >>> cache['test']
-        'abc'
-        >>> len(cache)
-        1
-        >>> cache['whatever'] = 1
-        >>> len(cache)
-        2
-        >>> del cache['test']
-        >>> len(cache)
-        1
-        >>> cache.clear()
-        >>> len(cache)
-        0
-
-    """
-    def __init__(self):
-        super(Cache, self).__init__()
-        self._data = {}
-
-    def __len__(self):
-        return len(self._data.keys())
-
-    def __contains__(self, key):
-        return key in self._data
-
-    def __getitem__(self, key):
-        return self._data[key]
-
-    def __setitem__(self, key, value):
-        self._data[key] = value
-
-    def __delitem__(self, key):
-        try:
-            del self._data[key]
-        except KeyError:
-            # It's not worth the error. We're just trying to make sure the
-            # data isn't there, which it's not.
-            pass
-
-    def clear(self):
-        self._data = {}
-
-
 def cachable(func):
     """
     A convenient decorator for getting the data (either from the cache or
@@ -172,7 +113,7 @@ class Loader(object):
         """
         super(Loader, self).__init__()
         self.data_path = data_path
-        self._cache = Cache()
+        self._cache = {}
 
         if file_loader_class is not None:
             self.file_loader_class = file_loader_class

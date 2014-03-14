@@ -25,70 +25,12 @@ import mock
 
 from botocore.exceptions import ApiVersionNotFoundError
 from botocore.exceptions import DataNotFoundError
-from botocore.loaders import Cache
 from botocore.loaders import cachable
 from botocore.loaders import JSONFileLoader
 from botocore.loaders import Loader
 import botocore.session
 
 from tests import unittest, BaseEnvVar
-
-
-class CacheTestCase(BaseEnvVar):
-    def setUp(self):
-        super(CacheTestCase, self).setUp()
-        self.cache = Cache()
-
-    def test_len(self):
-        self.assertEqual(len(self.cache), 0)
-
-        self.cache['whatever'] = 'something'
-        self.assertEqual(len(self.cache), 1)
-
-        self.cache['whatever'] = 'something'
-        self.assertEqual(len(self.cache), 1)
-
-        self.cache['another'] = 'thing'
-        self.assertEqual(len(self.cache), 2)
-
-    def test_contains(self):
-        self.cache['whatever'] = 'something'
-        self.assertTrue('whatever' in self.cache)
-        self.assertFalse('another' in self.cache)
-
-    def test_get(self):
-        self.cache['abc'] = 123
-        self.assertEqual(self.cache['abc'], 123)
-
-        with self.assertRaises(KeyError):
-            self.cache['def']
-
-    def test_set(self):
-        with self.assertRaises(KeyError):
-            self.cache['a_thing']
-
-        self.cache['a_thing'] = 'that_lives'
-        self.assertEqual(self.cache['a_thing'], 'that_lives')
-
-    def test_del(self):
-        self.cache['a_thing'] = 'that_lives'
-        self.cache['whatever'] = 'something'
-        self.assertEqual(len(self.cache), 2)
-
-        del self.cache['a_thing']
-        self.assertEqual(len(self.cache), 1)
-
-        # Make sure no exceptions are thrown.
-        del self.cache['a_thing']
-        self.assertEqual(len(self.cache), 1)
-
-    def test_clear(self):
-        self.cache['a_thing'] = 'that_lives'
-        self.cache['whatever'] = 'something'
-        self.assertEqual(len(self.cache), 2)
-
-        self.cache.clear()
-        self.assertEqual(len(self.cache), 0)
 
 
 class JSONFileLoaderTestCase(BaseEnvVar):
