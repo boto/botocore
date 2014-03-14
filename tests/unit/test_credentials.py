@@ -23,7 +23,7 @@ import botocore.exceptions
 import botocore.session
 from botocore.vendored.requests import ConnectionError
 
-from tests import unittest, BaseEnvVar
+from tests import unittest, BaseEnvVar, patch_session
 
 
 # Passed to session to keep it from finding default config file
@@ -113,6 +113,7 @@ class EnvVarTest(BaseEnvVar):
         self.environ['AWS_ACCESS_KEY_ID'] = 'foo'
         self.environ['AWS_SECRET_ACCESS_KEY'] = 'bar'
         self.session = botocore.session.get_session(env_vars=TESTENVVARS)
+        patch_session(self.session)
 
     def test_envvar(self):
         credentials = self.session.get_credentials()
@@ -127,6 +128,7 @@ class CredentialsFileTest(BaseEnvVar):
         super(CredentialsFileTest, self).setUp()
         self.environ['BOTO_CONFIG'] = ''
         self.session = botocore.session.get_session(env_vars=TESTENVVARS)
+        patch_session(self.session)
 
     def test_credentials_file(self):
         self.environ['AWS_CREDENTIAL_FILE'] = path('aws_credentials')
@@ -149,6 +151,7 @@ class ConfigTest(BaseEnvVar):
         self.environ['AWS_CONFIG_FILE'] = path('aws_config')
         self.environ['BOTO_CONFIG'] = ''
         self.session = botocore.session.get_session(env_vars=TESTENVVARS)
+        patch_session(self.session)
 
     def test_config(self):
         credentials = self.session.get_credentials()
@@ -162,6 +165,7 @@ class ConfigTest(BaseEnvVar):
     def test_default_profile_is_obeyed(self):
         self.environ['BOTO_DEFAULT_PROFILE'] = 'personal'
         session = botocore.session.get_session()
+        patch_session(session)
         credentials = session.get_credentials()
         self.assertEqual(credentials.access_key, 'fie')
         self.assertEqual(credentials.secret_key, 'baz')
@@ -178,6 +182,7 @@ class BotoConfigTest(BaseEnvVar):
         super(BotoConfigTest, self).setUp()
         self.environ['BOTO_CONFIG'] = path('boto_config')
         self.session = botocore.session.get_session(env_vars=TESTENVVARS)
+        patch_session(self.session)
 
     def test_boto_config(self):
         credentials = self.session.get_credentials()
@@ -190,6 +195,7 @@ class IamRoleTest(BaseEnvVar):
     def setUp(self):
         super(IamRoleTest, self).setUp()
         self.session = botocore.session.get_session(env_vars=TESTENVVARS)
+        patch_session(self.session)
         self.environ['BOTO_CONFIG'] = ''
 
     @mock.patch('botocore.utils.InstanceMetadataFetcher.retrieve_iam_role_credentials')
@@ -301,6 +307,7 @@ class CredentialResolverTest(BaseEnvVar):
         self.environ['AWS_ACCESS_KEY_ID'] = 'foo'
         self.environ['AWS_SECRET_ACCESS_KEY'] = 'bar'
         self.session = botocore.session.get_session(env_vars=TESTENVVARS)
+        patch_session(self.session)
         self.default_resolver = credentials.CredentialResolver(
             session=self.session
         )
@@ -435,6 +442,7 @@ class AlternateCredentialResolverTest(BaseEnvVar):
         self.environ['AWS_CONFIG_FILE'] = path('aws_config')
         self.environ['BOTO_CONFIG'] = ''
         self.session = botocore.session.get_session(env_vars=TESTENVVARS)
+        patch_session(self.session)
         self.small_resolver = credentials.CredentialResolver(
             session=self.session,
             methods=[

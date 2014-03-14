@@ -13,7 +13,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import unittest
+from tests import unittest, patch_session
 import botocore.session
 
 
@@ -21,6 +21,7 @@ class TestSQSOperations(unittest.TestCase):
 
     def setUp(self):
         self.session = botocore.session.get_session()
+        patch_session(self.session)
         self.sqs = self.session.get_service('sqs')
         self.queue_url = 'https://queue.amazonaws.com/123456789012/testcli'
         self.receipt_handle = """MbZj6wDWli%2BJvwwJaBV%2B3dcjk2YW2vA3%2BSTFFljT

@@ -13,7 +13,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import BaseEnvVar
+from tests import BaseEnvVar, patch_session
 import botocore.session
 
 
@@ -30,6 +30,7 @@ class TestRoute53Operations(BaseEnvVar):
         self.environ['AWS_ACCESS_KEY_ID'] = 'foo'
         self.environ['AWS_SECRET_ACCESS_KEY'] = 'bar'
         self.session = botocore.session.get_session()
+        patch_session(self.session)
         self.route53 = self.session.get_service('route53')
         self.endpoint = self.route53.get_endpoint('us-east-1')
         self.hosted_zone_name = 'foobar.com'

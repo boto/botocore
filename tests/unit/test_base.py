@@ -13,7 +13,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import unittest, BaseEnvVar
+from tests import unittest, BaseEnvVar, patch_session
 import os
 
 import mock
@@ -29,6 +29,7 @@ class TestConfig(BaseEnvVar):
         data_path = os.path.join(os.path.dirname(__file__), 'data')
         self.environ['BOTO_DATA_PATH'] = data_path
         self.session = botocore.session.get_session()
+        patch_session(self.session)
 
     def test_data_not_found(self):
         self.assertRaises(botocore.exceptions.DataNotFoundError,

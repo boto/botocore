@@ -12,7 +12,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import BaseEnvVar
+from tests import BaseEnvVar, patch_session
 
 from mock import Mock, sentinel
 
@@ -29,6 +29,7 @@ class TestSESOperations(BaseEnvVar):
         self.environ['AWS_ACCESS_KEY_ID'] = 'foo'
         self.environ['AWS_SECRET_ACCESS_KEY'] = 'bar'
         self.session = botocore.session.get_session()
+        patch_session(self.session)
         self.ses = self.session.get_service('ses')
         self.op = self.ses.get_operation('SendEmail')
 

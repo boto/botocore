@@ -13,7 +13,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import unittest
+from tests import unittest, patch_session
 import os
 import logging
 import tempfile
@@ -46,6 +46,7 @@ class BaseSessionTest(unittest.TestCase):
                                    'foo_config')
         self.environ['FOO_CONFIG_FILE'] = config_path
         self.session = botocore.session.get_session(self.env_vars)
+        patch_session(self.session)
 
     def tearDown(self):
         self.environ_patch.stop()
