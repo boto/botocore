@@ -67,6 +67,7 @@ class BaseSessionTest(BaseEnvVar):
         super(BaseSessionTest, self).setUp()
         self.environ['AWS_ACCESS_KEY_ID'] = 'access_key'
         self.environ['AWS_SECRET_ACCESS_KEY'] = 'secret_key'
+        self.environ['AWS_CONFIG_FILE'] = 'no-exist-foo'
         self.session = botocore.session.get_session()
         patch_session(self.session)
 
