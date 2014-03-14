@@ -63,14 +63,14 @@ class LoaderTestCase(BaseEnvVar):
 
     def test_determine_latest_no_version(self):
         path = self.loader.determine_latest('someservice')
-        self.assertEqual(path, 'someservice/2013-08-21')
+        self.assertEqual(path, os.path.join('someservice', '2013-08-21'))
 
     def test_determine_latest_with_version(self):
         path = self.loader.determine_latest(
             'someservice',
             api_version='2012-10-01'
         )
-        self.assertEqual(path, 'someservice/2012-10-01')
+        self.assertEqual(path, os.path.join('someservice', '2012-10-01'))
 
     def test_determine_latest_with_version_the_wrong_way(self):
         with self.assertRaises(ApiVersionNotFoundError):
