@@ -83,6 +83,14 @@ SbkJ0="""
                   'Attribute.1.Value': '15'}
         self.assertEqual(params, result)
 
+    def test_list_dead_letter_source_queues(self):
+        op = self.sqs.get_operation('ListDeadLetterSourceQueues')
+        params = op.build_parameters(queue_url=self.queue_url)
+        result = {'QueueUrl': self.queue_url}
+        self.assertEqual(params, result)
+        for param in op.params:
+            if param.name == 'QueueUrl':
+                self.assertEqual(getattr(param, 'no_paramfile', None), True)
 
 if __name__ == "__main__":
     unittest.main()
