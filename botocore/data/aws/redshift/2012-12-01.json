@@ -9347,7 +9347,6 @@
                     "deleted"
                 ]
             },
-            "operation": "DescribeClusterSnapshots",
             "success": {
                 "path": "Snapshots[].Status",
                 "type": "output",
@@ -9355,6 +9354,7 @@
                     "available"
                 ]
             },
+            "operation": "DescribeClusterSnapshots",
             "interval": 15,
             "max_attempts": 20
         },

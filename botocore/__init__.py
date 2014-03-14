@@ -12,6 +12,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import os
 import re
 import logging
 
@@ -45,6 +46,8 @@ _xform_cache = {
     ('CreateStorediSCSIVolume', '-'): 'create-stored-iscsi-volume',
 }
 ScalarTypes = ('string', 'integer', 'boolean', 'timestamp', 'float', 'double')
+
+BOTOCORE_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
 def xform_name(name, sep='_', _xform_cache=_xform_cache):

@@ -12,7 +12,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import unittest
+from tests import unittest, patch_session
 
 from mock import Mock
 
@@ -24,6 +24,7 @@ class TestSNSOperations(unittest.TestCase):
 
     def setUp(self):
         self.session = botocore.session.get_session()
+        patch_session(self.session)
         self.sns = self.session.get_service('sns')
         self.http_response = Mock()
         self.http_response.status_code = 200
