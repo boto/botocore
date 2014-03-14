@@ -285,7 +285,7 @@ class Loader(object):
                 if os.path.isdir(possible_option):
                     options.append(os.path.basename(possible_option))
 
-        return options
+        return sorted(options)
 
     def determine_latest(self, data_path, api_version=None):
         """
