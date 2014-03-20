@@ -117,4 +117,11 @@ class TestParamSerialization(BaseSessionTest):
         service = self.session.get_service(service_name)
         operation = service.get_operation(operation_name)
         serialized = operation.build_parameters(**input_params)
-        self.assertDictEqual(serialized, serialized_params)
+        actual_body_params = serialized['body']
+        # For query, we can remove the Action and Version params.
+        if isinstance(actual_body_params, dict):
+            actual_body_params.pop('Version', None)
+            actual_body_params.pop('Action', None)
+            self.assertDictEqual(serialized_params, actual_body_params)
+        else:
+            self.assertEqual(serialized_params, actual_body_params)

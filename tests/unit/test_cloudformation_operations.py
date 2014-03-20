@@ -13,35 +13,33 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import BaseSessionTest
+from tests import TestParamSerialization
 import botocore.session
 
 
-class TestCloudformationOperations(BaseSessionTest):
-
-    def setUp(self):
-        super(TestCloudformationOperations, self).setUp()
-        self.cf = self.session.get_service('cloudformation')
+class TestCloudformationOperations(TestParamSerialization):
 
     def test_create_stack(self):
-        op = self.cf.get_operation('CreateStack')
-        params = op.build_parameters(stack_name='foobar',
-                                     template_url='http://foo.com/bar.json',
-                                     stack_policy_url='http://fie.com/baz.json')
         result = {'StackName': 'foobar',
                   'TemplateURL': 'http://foo.com/bar.json',
                   'StackPolicyURL': 'http://fie.com/baz.json'}
-        self.assertEqual(params, result)
+        self.assert_params_serialize_to(
+            'cloudformation.CreateStack',
+            input_params={'StackName': 'foobar',
+                          'TemplateURL': 'http://foo.com/bar.json',
+                          'StackPolicyURL': 'http://fie.com/baz.json'},
+            serialized_params=result)
 
     def test_update_stack(self):
-        op = self.cf.get_operation('UpdateStack')
-        params = op.build_parameters(stack_name='foobar',
-                                     template_url='http://foo.com/bar.json',
-                                     stack_policy_url='http://fie.com/baz.json')
         result = {'StackName': 'foobar',
                   'TemplateURL': 'http://foo.com/bar.json',
                   'StackPolicyURL': 'http://fie.com/baz.json'}
-        self.assertEqual(params, result)
+        self.assert_params_serialize_to(
+            'cloudformation.UpdateStack',
+            input_params={'StackName': 'foobar',
+                          'TemplateURL': 'http://foo.com/bar.json',
+                          'StackPolicyURL': 'http://fie.com/baz.json'},
+            serialized_params=result)
 
 
 if __name__ == "__main__":

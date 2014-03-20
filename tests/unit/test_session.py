@@ -24,6 +24,7 @@ import mock
 import botocore.session
 import botocore.exceptions
 from botocore.hooks import EventHooks
+from botocore.model import ServiceModel
 
 
 class BaseSessionTest(unittest.TestCase):
@@ -297,6 +298,15 @@ class TestConfigLoaderObject(BaseSessionTest):
             self.session.profile = 'credfile-profile'
             # Now trying to retrieve the scoped config should not fail.
             self.assertEqual(self.session.get_scoped_config(), {})
+
+
+class TestGetServiceModel(BaseSessionTest):
+    def test_get_service_model(self):
+        loader = mock.Mock()
+        loader.load_service_data.return_value = {}
+        self.session.register_component('data_loader', loader)
+        model = self.session.get_service_model('made_up')
+        self.assertIsInstance(model, ServiceModel)
 
 
 if __name__ == "__main__":

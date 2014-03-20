@@ -8,6 +8,7 @@
             "LaunchSpecification": {
                 "EbsOptimized": false, 
                 "BlockDeviceMappings": [], 
+                "Monitoring": {"Enabled":  false},
                 "SecurityGroups": [
                     {
                         "GroupName": null, 

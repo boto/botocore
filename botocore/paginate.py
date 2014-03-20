@@ -19,96 +19,12 @@ from botocore.compat import zip
 from botocore.utils import set_value_from_jmespath, merge_dicts
 
 
-class Paginator(object):
-    def __init__(self, operation):
-        self._operation = operation
-        self._pagination_cfg = operation.pagination
-        self._output_token = self._get_output_tokens(self._pagination_cfg)
-        self._input_token = self._get_input_tokens(self._pagination_cfg)
-        self._more_results = self._get_more_results_token(self._pagination_cfg)
-        self._non_aggregate_keys = self._get_non_aggregate_keys(
-            self._pagination_cfg)
-        self._result_keys = self._get_result_keys(self._pagination_cfg)
-
-    @property
-    def result_keys(self):
-        return self._result_keys
-
-    def _get_non_aggregate_keys(self, config):
-        keys = []
-        for key in config.get('non_aggregate_keys', []):
-            keys.append(jmespath.compile(key))
-        return keys
-
-    def _get_output_tokens(self, config):
-        output = []
-        output_token = config['output_token']
-        if not isinstance(output_token, list):
-            output_token = [output_token]
-        for config in output_token:
-            output.append(jmespath.compile(config))
-        return output
-
-    def _get_input_tokens(self, config):
-        input_token = self._pagination_cfg['py_input_token']
-        if not isinstance(input_token, list):
-            input_token = [input_token]
-        return input_token
-
-    def _get_more_results_token(self, config):
-        more_results = config.get('more_results')
-        if more_results is not None:
-            return jmespath.compile(more_results)
-
-    def _get_result_keys(self, config):
-        result_key = config.get('result_key')
-        if result_key is not None:
-            if not isinstance(result_key, list):
-                result_key = [result_key]
-            result_key = [jmespath.compile(rk) for rk in result_key]
-            return result_key
-
-    def paginate(self, endpoint, **kwargs):
-        """Paginate responses to an operation.
-
-        The responses to some operations are too large for a single response.
-        When this happens, the service will indicate that there are more
-        results in its response.  This method handles the details of how
-        to detect when this happens and how to retrieve more results.
-
-        This method returns an iterator.  Each element in the iterator
-        is the result of an ``Operation.call`` call, so each element is
-        a tuple of (``http_response``, ``parsed_result``).
-
-        """
-        page_params = self._extract_paging_params(kwargs)
-        return PageIterator(self._operation, self._input_token,
-                            self._output_token, self._more_results,
-                            self._result_keys, self._non_aggregate_keys,
-                            page_params['max_items'],
-                            page_params['starting_token'],
-                            page_params['page_size'],
-                            endpoint, kwargs)
-
-    def _extract_paging_params(self, kwargs):
-        max_items = kwargs.pop('max_items', None)
-        if max_items is not None:
-            max_items = int(max_items)
-        page_size = kwargs.pop('page_size', None)
-        if page_size is not None:
-            page_size = int(page_size)
-        return {
-            'max_items': max_items,
-            'starting_token': kwargs.pop('starting_token', None),
-            'page_size': page_size,
-        }
-
-
 class PageIterator(object):
-    def __init__(self, operation, input_token, output_token, more_results,
+    def __init__(self, method, input_token, output_token, more_results,
                  result_keys, non_aggregate_keys, max_items, starting_token,
-                 page_size, endpoint, op_kwargs):
-        self._operation = operation
+                 page_size, op_kwargs):
+        self._method = method
+        self._op_kwargs = op_kwargs
         self._input_token = input_token
         self._output_token = output_token
         self._more_results = more_results
@@ -116,7 +32,6 @@ class PageIterator(object):
         self._max_items = max_items
         self._starting_token = starting_token
         self._page_size = page_size
-        self._endpoint = endpoint
         self._op_kwargs = op_kwargs
         self._resume_token = None
         self._non_aggregate_key_exprs = non_aggregate_keys
@@ -142,7 +57,6 @@ class PageIterator(object):
 
     def __iter__(self):
         current_kwargs = self._op_kwargs
-        endpoint = self._endpoint
         previous_next_token = None
         next_token = [None for _ in range(len(self._input_token))]
         # The number of items from result_key we've seen so far.
@@ -152,8 +66,8 @@ class PageIterator(object):
         starting_truncation = 0
         self._inject_starting_params(current_kwargs)
         while True:
-            http_response, parsed = self._operation.call(endpoint,
-                                                         **current_kwargs)
+            response = self._make_request(current_kwargs)
+            parsed = self._extract_parsed_response(response)
             if first_request:
                 # The first request is handled differently.  We could
                 # possibly have a resume/starting token that tells us where
@@ -175,10 +89,10 @@ class PageIterator(object):
                 self._truncate_response(parsed, primary_result_key,
                                         truncate_amount, starting_truncation,
                                         next_token)
-                yield http_response, parsed
+                yield response
                 break
             else:
-                yield http_response, parsed
+                yield response
                 total_items += num_current_response
                 next_token = self._get_next_token(parsed)
                 if all(t is None for t in next_token):
@@ -196,6 +110,12 @@ class PageIterator(object):
                     raise PaginationError(message=message)
                 self._inject_token_into_kwargs(current_kwargs, next_token)
                 previous_next_token = next_token
+
+    def _make_request(self, current_kwargs):
+        return self._method(**current_kwargs)
+
+    def _extract_parsed_response(self, response):
+        return response
 
     def _record_non_aggregate_key_values(self, response):
         non_aggregate_keys = {}
@@ -334,6 +254,92 @@ class PageIterator(object):
         return next_token, index
 
 
+
+class Paginator(object):
+
+    PAGE_ITERATOR_CLS = PageIterator
+
+    def __init__(self, method, pagination_config):
+        self._method = method
+        self._pagination_cfg = pagination_config
+        self._output_token = self._get_output_tokens(self._pagination_cfg)
+        self._input_token = self._get_input_tokens(self._pagination_cfg)
+        self._more_results = self._get_more_results_token(self._pagination_cfg)
+        self._non_aggregate_keys = self._get_non_aggregate_keys(
+            self._pagination_cfg)
+        self._result_keys = self._get_result_keys(self._pagination_cfg)
+
+    @property
+    def result_keys(self):
+        return self._result_keys
+
+    def _get_non_aggregate_keys(self, config):
+        keys = []
+        for key in config.get('non_aggregate_keys', []):
+            keys.append(jmespath.compile(key))
+        return keys
+
+    def _get_output_tokens(self, config):
+        output = []
+        output_token = config['output_token']
+        if not isinstance(output_token, list):
+            output_token = [output_token]
+        for config in output_token:
+            output.append(jmespath.compile(config))
+        return output
+
+    def _get_input_tokens(self, config):
+        input_token = self._pagination_cfg['input_token']
+        if not isinstance(input_token, list):
+            input_token = [input_token]
+        return input_token
+
+    def _get_more_results_token(self, config):
+        more_results = config.get('more_results')
+        if more_results is not None:
+            return jmespath.compile(more_results)
+
+    def _get_result_keys(self, config):
+        result_key = config.get('result_key')
+        if result_key is not None:
+            if not isinstance(result_key, list):
+                result_key = [result_key]
+            result_key = [jmespath.compile(rk) for rk in result_key]
+            return result_key
+
+    def paginate(self, **kwargs):
+        """Create paginator object for an operation.
+
+        This returns an iterable object.  Iterating over
+        this object will yield a single page of a response
+        at a time.
+
+        """
+        page_params = self._extract_paging_params(kwargs)
+        return self.PAGE_ITERATOR_CLS(
+            self._method, self._input_token,
+            self._output_token, self._more_results,
+            self._result_keys, self._non_aggregate_keys,
+            page_params['max_items'],
+            page_params['starting_token'],
+            page_params['page_size'],
+            kwargs)
+
+    def _extract_paging_params(self, kwargs):
+        max_items = kwargs.pop('max_items', None)
+        if max_items is not None:
+            max_items = int(max_items)
+        page_size = kwargs.pop('page_size', None)
+        if page_size is not None:
+            page_size = int(page_size)
+        return {
+            'max_items': max_items,
+            'starting_token': kwargs.pop('starting_token', None),
+            'page_size': page_size,
+        }
+
+
+
 class ResultKeyIterator(object):
     """Iterates over the results of paginated responses.
 
@@ -358,3 +364,53 @@ class ResultKeyIterator(object):
                 results = []
             for result in results:
                 yield result
+
+
+# These two class use the Operation.call() interface that is
+# being deprecated.  This is here so that both interfaces can be
+# supported during a transition period.  Eventually these two
+# interfaces will be removed.
+class DeprecatedPageIterator(PageIterator):
+    def __init__(self, operation, endpoint, input_token,
+                 output_token, more_results,
+                 result_keys, non_aggregate_keys, max_items, starting_token,
+                 page_size, op_kwargs):
+        super(DeprecatedPageIterator, self).__init__(
+            None, input_token, output_token, more_results, result_keys,
+            non_aggregate_keys, max_items, starting_token, page_size,
+            op_kwargs)
+        self._operation = operation
+        self._endpoint = endpoint
+
+    def _make_request(self, current_kwargs):
+        return self._operation.call(self._endpoint, **current_kwargs)
+
+    def _extract_parsed_response(self, response):
+        return response[1]
+
+
+class DeprecatedPaginator(Paginator):
+    PAGE_ITERATOR_CLS = DeprecatedPageIterator
+
+    def __init__(self, operation, pagination_config):
+        super(DeprecatedPaginator, self).__init__(None, pagination_config)
+        self._operation = operation
+
+    def paginate(self, endpoint, **kwargs):
+        """Paginate responses to an operation.
+
+        The responses to some operations are too large for a single response.
+        When this happens, the service will indicate that there are more
+        results in its response.  This method handles the details of how
+        to detect when this happens and how to retrieve more results.
+
+        """
+        page_params = self._extract_paging_params(kwargs)
+        return self.PAGE_ITERATOR_CLS(
+            self._operation, endpoint, self._input_token,
+            self._output_token, self._more_results,
+            self._result_keys, self._non_aggregate_keys,
+            page_params['max_items'],
+            page_params['starting_token'],
+            page_params['page_size'],
+            kwargs)

@@ -12,6 +12,8 @@
 # language governing permissions and limitations under the License.
 
 from tests import unittest
+from dateutil.tz import tzutc
+import datetime
 
 import mock
 
@@ -23,6 +25,8 @@ from botocore.utils import validate_jmespath_for_set
 from botocore.utils import set_value_from_jmespath
 from botocore.utils import parse_key_val_file_contents
 from botocore.utils import parse_key_val_file
+from botocore.utils import parse_timestamp
+from botocore.utils import CachedProperty
 
 
 class TestURINormalization(unittest.TestCase):
@@ -176,6 +180,59 @@ class TestParseEC2CredentialsFile(unittest.TestCase):
         mock_open.side_effect = OSError()
         with self.assertRaises(ConfigNotFound):
             parse_key_val_file('badfile', _open=mock_open)
+
+
+class TestParseTimestamps(unittest.TestCase):
+    def test_parse_iso8601(self):
+        self.assertEqual(
+            parse_timestamp('1970-01-01T00:10:00.000Z'),
+            datetime.datetime(1970, 1, 1, 0, 10, tzinfo=tzutc()))
+
+    def test_parse_epoch(self):
+        self.assertEqual(
+            parse_timestamp(1222172800),
+            datetime.datetime(2008, 9, 23, 12, 26, 40, tzinfo=tzutc()))
+
+    def test_parse_rfc822(self):
+        self.assertEqual(
+            parse_timestamp('Wed, 02 Oct 2002 13:00:00 GMT'),
+            datetime.datetime(2002, 10, 2, 13, 0, tzinfo=tzutc()))
+
+    def test_parse_invalid_timestamp(self):
+        with self.assertRaises(ValueError):
+            parse_timestamp('invalid date')
+
+
+class TestCachedProperty(unittest.TestCase):
+    def test_cached_property_same_value(self):
+        class CacheMe(object):
+            @CachedProperty
+            def foo(self):
+                return 'foo'
+
+        c = CacheMe()
+        self.assertEqual(c.foo, 'foo')
+        self.assertEqual(c.foo, 'foo')
+
+    def test_cached_property_only_called_once(self):
+        # Note: you would normally never want to cache
+        # a property that returns a new value each time,
+        # but this is done to demonstrate the caching behavior.
+
+        class NoIncrement(object):
+            def __init__(self):
+                self.counter = 0
+
+            @CachedProperty
+            def current_value(self):
+                self.counter += 1
+                return self.counter
+
+        c = NoIncrement()
+        self.assertEqual(c.current_value, 1)
+        # If the property wasn't cached, the next value should be
+        # be 2, but because it's cached, we know the value will be 1.
+        self.assertEqual(c.current_value, 1)
 
 
 if __name__ == '__main__':

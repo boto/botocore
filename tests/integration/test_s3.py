@@ -455,7 +455,7 @@ class TestS3Presign(BaseS3Test):
             region_name='us-east-1', service_name='s3', expires=60)
         op = self.service.get_operation('GetObject')
         params = op.build_parameters(bucket=self.bucket_name, key=key_name)
-        request = self.endpoint.create_request(op, params, signer)
+        request = self.endpoint.create_request(params, signer)
         presigned_url = request.url
         # We should now be able to retrieve the contents of 'mykey' using
         # this presigned url.
@@ -472,7 +472,7 @@ class TestS3PresignFixHost(BaseS3Test):
             region_name='us-west-2', service_name='s3', expires=60)
         op = self.service.get_operation('GetObject')
         params = op.build_parameters(bucket=bucket_name, key=key_name)
-        request = endpoint.create_request(op, params, signer)
+        request = endpoint.create_request(params, signer)
         presigned_url = request.url
         # We should not have rewritten the host to be s3.amazonaws.com.
         self.assertTrue(presigned_url.startswith(

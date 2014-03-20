@@ -59,14 +59,6 @@ class TestConfig(BaseSessionTest):
         self.assertTrue('value' in sublist)
         self.assertEqual(sublist['value'], 'test_list_value_2')
 
-    def test_subdir(self):
-        data = self.session.get_data('sub/fie')
-        self.assertEqual(data['test_key_1'], 'test_value_1')
-
-    def test_subdir_not_found(self):
-        self.assertRaises(botocore.exceptions.DataNotFoundError,
-                          self.session.get_data, 'sub/foo')
-
 
 if __name__ == "__main__":
     unittest.main()

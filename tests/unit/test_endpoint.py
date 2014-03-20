@@ -17,13 +17,22 @@ from mock import Mock, patch, sentinel
 from botocore.vendored.requests import ConnectionError
 import six
 
-from botocore.endpoint import get_endpoint, QueryEndpoint, JSONEndpoint, \
-    RestEndpoint, DEFAULT_TIMEOUT
+from botocore.endpoint import get_endpoint, Endpoint, DEFAULT_TIMEOUT
+from botocore.endpoint import EndpointCreator
 from botocore.auth import SigV4Auth
 from botocore.session import Session
 from botocore.exceptions import UnknownServiceStyle
 from botocore.exceptions import UnknownSignatureVersionError
-from botocore.payload import Payload
+
+
+def request_dict():
+    return {
+        'headers': {},
+        'body': '',
+        'url_path': '/',
+        'query_string': '',
+        'method': 'POST',
+    }
 
 
 class RecordStreamResets(six.StringIO):
@@ -51,36 +60,6 @@ class TestGetEndpoint(unittest.TestCase):
         service.signature_version = signature_version
         return service
 
-    def test_get_query(self):
-        service = self.create_mock_service('query')
-        endpoint = get_endpoint(service, 'us-west-2',
-                                'https://service.region.amazonaws.com')
-        self.assertIsInstance(endpoint, QueryEndpoint)
-
-    def test_get_json(self):
-        service = self.create_mock_service('json')
-        endpoint = get_endpoint(service, 'us-west-2',
-                                'https://service.region.amazonaws.com')
-        self.assertIsInstance(endpoint, JSONEndpoint)
-
-    def test_get_rest_xml(self):
-        service = self.create_mock_service('rest-xml')
-        endpoint = get_endpoint(service, 'us-west-2',
-                                'https://service.region.amazonaws.com')
-        self.assertIsInstance(endpoint, RestEndpoint)
-
-    def test_get_rest_json(self):
-        service = self.create_mock_service('rest-json')
-        endpoint = get_endpoint(service, 'us-west-2',
-                                'https://service.region.amazonaws.com')
-        self.assertIsInstance(endpoint, RestEndpoint)
-
-    def test_unknown_service(self):
-        service = self.create_mock_service('rest-query-xml-json')
-        with self.assertRaises(UnknownServiceStyle):
-            endpoint = get_endpoint(service, 'us-west-2',
-                                    'https://service.region.amazonaws.com')
-
     def test_auth_is_properly_created_for_endpoint(self):
         service = self.create_mock_service('query', signature_version='v4')
         endpoint = get_endpoint(service, 'us-west-2',
@@ -92,13 +71,6 @@ class TestGetEndpoint(unittest.TestCase):
         with self.assertRaises(UnknownSignatureVersionError):
             endpoint = get_endpoint(service, 'us-west-2',
                                     'https://service.region.amazonaws.com')
-
-    def test_omitted_auth_handler(self):
-        service = self.create_mock_service('query', signature_version=None)
-        del service.signature_version
-        endpoint = get_endpoint(service, 'us-west-2',
-                                'https://service.region.amazonaws.com')
-        self.assertIsNone(endpoint.auth)
 
     def test_signature_version_is_none(self):
         # If signature_version is set to None, we don't assign any auth classes
@@ -155,12 +127,15 @@ class TestEndpointBase(unittest.TestCase):
         self.service.session.user_agent.return_value = 'botocore-test'
         self.service.session.emit_first_non_none_response.return_value = None
         self.op = Mock()
-        self.op.is_streaming.return_value = False
+        self.op.has_streaming_output = False
         self.signature_version = True
         self.auth = Mock()
-        self.endpoint = self.ENDPOINT_CLASS(
-            self.service, 'us-west-2', 'https://ec2.us-west-2.amazonaws.com/',
-            auth=self.auth)
+        self.event_emitter = Mock()
+        self.event_emitter.emit.return_value = []
+        self.endpoint = Endpoint(
+            'us-west-2', 'https://ec2.us-west-2.amazonaws.com/',
+            auth=self.auth, user_agent='botoore', signature_version='v4',
+            endpoint_prefix='ec2', event_emitter=self.event_emitter)
         self.http_session = Mock()
         self.http_session.send.return_value = sentinel.HTTP_RETURN_VALUE
         self.endpoint.http_session = self.http_session
@@ -171,42 +146,28 @@ class TestEndpointBase(unittest.TestCase):
         self.get_response_patch.stop()
 
 
-class TestQueryEndpoint(TestEndpointBase):
-    ENDPOINT_CLASS = QueryEndpoint
-
-    def test_make_request(self):
-        self.endpoint.make_request(self.op, {})
-        # Should have authenticated the request
-        self.assertTrue(self.auth.add_auth.called)
-        request = self.auth.add_auth.call_args[1]['request']
-        # http_session should be used to send the request.
-        self.assertTrue(self.http_session.send.called)
-        prepared_request = self.http_session.send.call_args[0][0]
-        self.http_session.send.assert_called_with(
-            prepared_request, verify=True, stream=False,
-            proxies={}, timeout=DEFAULT_TIMEOUT)
-        self.get_response.assert_called_with(self.service.session,
-            self.op, sentinel.HTTP_RETURN_VALUE)
+class TestEndpointFeatures(TestEndpointBase):
 
     def test_timeout_can_be_specified(self):
         timeout_override = 120
         self.endpoint.timeout = timeout_override
-        self.endpoint.make_request(self.op, {})
+        self.endpoint.make_request(self.op, request_dict())
         kwargs = self.http_session.send.call_args[1]
         self.assertEqual(kwargs['timeout'], timeout_override)
 
     def test_make_request_with_proxies(self):
         proxies = {'http': 'http://localhost:8888'}
         self.endpoint.proxies = proxies
-        self.endpoint.make_request(self.op, {})
+        self.endpoint.make_request(self.op, request_dict())
         prepared_request = self.http_session.send.call_args[0][0]
         self.http_session.send.assert_called_with(
             prepared_request, verify=True, stream=False,
             proxies=proxies, timeout=DEFAULT_TIMEOUT)
 
+
     def test_make_request_with_no_auth(self):
         self.endpoint.auth = None
-        self.endpoint.make_request(self.op, {})
+        self.endpoint.make_request(self.op, request_dict())
 
         # http_session should be used to send the request.
         self.assertTrue(self.http_session.send.called)
@@ -214,106 +175,10 @@ class TestQueryEndpoint(TestEndpointBase):
         self.assertNotIn('Authorization', prepared_request.headers)
 
 
-class TestQueryEndpointAnonymousOp(TestQueryEndpoint):
-
-    def setUp(self):
-        super(TestQueryEndpointAnonymousOp, self).setUp()
-        self.op.signature_version = None
-
-    def test_make_request(self):
-        self.endpoint.make_request(self.op, {})
-        # Should have authenticated the request
-        self.assertFalse(self.auth.add_auth.called)
-        # http_session should be used to send the request.
-        self.assertTrue(self.http_session.send.called)
-        prepared_request = self.http_session.send.call_args[0][0]
-        self.http_session.send.assert_called_with(
-            prepared_request, verify=True, stream=False,
-            proxies={}, timeout=DEFAULT_TIMEOUT)
-        self.get_response.assert_called_with(self.service.session,
-            self.op, sentinel.HTTP_RETURN_VALUE)
-
-
-class TestJSONEndpoint(TestEndpointBase):
-    ENDPOINT_CLASS = JSONEndpoint
-
-    def test_make_request(self):
-        self.endpoint.make_request(self.op, {})
-        self.assertTrue(self.auth.add_auth.called)
-        self.assertTrue(self.http_session.send.called)
-        prepared_request = self.http_session.send.call_args[0][0]
-        self.http_session.send.assert_called_with(
-            prepared_request, verify=True, stream=False,
-            proxies={}, timeout=DEFAULT_TIMEOUT)
-
-
-class TestJSONEndpointAnonymousOp(TestJSONEndpoint):
-
-    def setUp(self):
-        super(TestJSONEndpointAnonymousOp, self).setUp()
-        self.op.signature_version = None
-
-    def test_make_request(self):
-        self.endpoint.make_request(self.op, {})
-        self.assertFalse(self.auth.add_auth.called)
-        self.assertTrue(self.http_session.send.called)
-        prepared_request = self.http_session.send.call_args[0][0]
-        self.http_session.send.assert_called_with(
-            prepared_request, verify=True, stream=False,
-            proxies={}, timeout=DEFAULT_TIMEOUT)
-
-
-class TestRestEndpoint(TestEndpointBase):
-    ENDPOINT_CLASS = RestEndpoint
-
-    def test_make_request(self):
-        self.op.http = {'uri': '/foo', 'method': 'POST'}
-        self.endpoint.make_request(self.op, {
-            'headers': {}, 'uri_params': {}, 'payload': None})
-        self.assertTrue(self.auth.add_auth.called)
-        prepared_request = self.http_session.send.call_args[0][0]
-        self.http_session.send.assert_called_with(
-            prepared_request, verify=True, stream=False,
-            proxies={})
-
-
-class TestRestEndpointAnonymousOp(TestRestEndpoint):
-
-    def setUp(self):
-        super(TestRestEndpointAnonymousOp, self).setUp()
-        self.op.signature_version = None
-
-    def test_make_request(self):
-        self.op.http = {'uri': '/foo', 'method': 'POST'}
-        self.endpoint.make_request(self.op, {
-            'headers': {}, 'uri_params': {}, 'payload': None})
-        self.assertFalse(self.auth.add_auth.called)
-        prepared_request = self.http_session.send.call_args[0][0]
-        self.http_session.send.assert_called_with(
-            prepared_request, verify=True, stream=False,
-            proxies={}, timeout=DEFAULT_TIMEOUT)
-
-
-class TestRetryInterface(BaseSessionTest):
+class TestRetryInterface(TestEndpointBase):
     def setUp(self):
         super(TestRetryInterface, self).setUp()
-        self.total_calls = 0
-        self.auth = Mock()
-        self.session = create_session(include_builtin_handlers=False)
-        self.service = Mock()
-        self.service.endpoint_prefix = 'ec2'
-        self.service.session = self.session
-        self.endpoint = QueryEndpoint(
-            self.service, 'us-west-2', 'https://ec2.us-west-2.amazonaws.com/',
-            auth=self.auth)
-        self.http_session = Mock()
-        self.endpoint.http_session = self.http_session
-        self.get_response_patch = patch('botocore.response.get_response')
-        self.get_response = self.get_response_patch.start()
         self.retried_on_exception = None
-
-    def tearDown(self):
-        self.get_response_patch.stop()
 
     def max_attempts_retry_handler(self, attempts, **kwargs):
         # Simulate a max requests of 3.
@@ -337,54 +202,38 @@ class TestRetryInterface(BaseSessionTest):
             return None
 
     def test_retry_events_are_emitted(self):
-        emitted_events = []
-        self.session.register('needs-retry.ec2.DescribeInstances',
-                              lambda **kwargs: emitted_events.append(kwargs))
         op = Mock()
         op.name = 'DescribeInstances'
-        self.endpoint.make_request(op, {})
-        self.assertEqual(len(emitted_events), 1)
-        self.assertEqual(emitted_events[0]['event_name'],
+        self.endpoint.make_request(op, request_dict())
+        call_args = self.event_emitter.emit.call_args
+        self.assertEqual(call_args[0][0],
                          'needs-retry.ec2.DescribeInstances')
 
     def test_retry_events_can_alter_behavior(self):
-        self.session.register('needs-retry.ec2.DescribeInstances',
-                              self.max_attempts_retry_handler)
         op = Mock()
         op.name = 'DescribeInstances'
-        self.endpoint.make_request(op, {})
-        self.assertEqual(self.total_calls, 3)
+        self.event_emitter.emit.side_effect = [[], [(None, 0)], [(None, None)]]
+        self.endpoint.make_request(op, request_dict())
+        call_args = self.event_emitter.emit.call_args
+        self.assertEqual(self.event_emitter.emit.call_count, 3)
+        self.assertEqual(call_args[0][0],
+                         'needs-retry.ec2.DescribeInstances')
 
     def test_retry_on_socket_errors(self):
-        self.session.register('needs-retry.ec2.DescribeInstances',
-                              self.connection_error_handler)
         op = Mock()
         op.name = 'DescribeInstances'
+        self.event_emitter.emit.side_effect = [[], [(None, 0)], [(None, None)]]
         self.http_session.send.side_effect = ConnectionError()
-        self.endpoint.make_request(op, {})
-        self.assertEqual(self.total_calls, 3)
+        self.endpoint.make_request(op, request_dict())
+        call_args = self.event_emitter.emit.call_args
+        self.assertEqual(self.event_emitter.emit.call_count, 3)
+        self.assertEqual(call_args[0][0],
+                         'needs-retry.ec2.DescribeInstances')
 
 
-class TestS3ResetStreamOnRetry(unittest.TestCase):
+class TestS3ResetStreamOnRetry(TestEndpointBase):
     def setUp(self):
         super(TestS3ResetStreamOnRetry, self).setUp()
-        self.total_calls = 0
-        self.auth = Mock()
-        self.session = create_session(include_builtin_handlers=False)
-        self.service = Mock()
-        self.service.endpoint_prefix = 's3'
-        self.service.session = self.session
-        self.endpoint = RestEndpoint(
-            self.service, 'us-east-1', 'https://s3.amazonaws.com/',
-            auth=self.auth)
-        self.http_session = Mock()
-        self.endpoint.http_session = self.http_session
-        self.get_response_patch = patch('botocore.response.get_response')
-        self.get_response = self.get_response_patch.start()
-        self.retried_on_exception = None
-
-    def tearDown(self):
-        self.get_response_patch.stop()
 
     def max_attempts_retry_handler(self, attempts, **kwargs):
         # Simulate a max requests of 3.
@@ -397,76 +246,67 @@ class TestS3ResetStreamOnRetry(unittest.TestCase):
             return 0
 
     def test_reset_stream_on_retry(self):
-        # It doesn't really matter what the operation is, we will
-        # check in general if we're
-        self.session.register('needs-retry.s3.PutObject',
-                              self.max_attempts_retry_handler)
         op = Mock()
-        payload = Payload()
-        payload.literal_value = RecordStreamResets('foobar')
+        body = RecordStreamResets('foobar')
         op.name = 'PutObject'
-        op.http = {'uri': '', 'method': 'POST'}
-        self.endpoint.make_request(op, {'headers': {}, 'payload': payload})
-        self.assertEqual(self.total_calls, 3)
-        self.assertEqual(payload.literal_value.total_resets, 2)
+        op.has_streaming_output = True
+        request = request_dict()
+        request['body'] = body
+        self.event_emitter.emit.side_effect = [
+            [(None, 0)],
+            [(None, 0)],
+            [(None, 0)],
+            [(None, None)],
+        ]
+        self.endpoint.make_request(op, request)
+        self.assertEqual(body.total_resets, 2)
 
 
-class TestS3Retry200SpecialCases(unittest.TestCase):
+class TestEndpointCreator(unittest.TestCase):
     def setUp(self):
-        super(TestS3Retry200SpecialCases, self).setUp()
-        self.total_calls = 0
-        self.auth = Mock()
-        self.session = create_session(include_builtin_handlers=True)
-        self.service = Mock()
-        self.service.endpoint_prefix = 's3'
-        self.service.session = self.session
-        self.endpoint = RestEndpoint(
-            self.service, 'us-east-1', 'https://s3.amazonaws.com/',
-            auth=self.auth)
-        self.http_session = Mock()
-        self.endpoint.http_session = self.http_session
-        self.get_response_patch = patch('botocore.response.get_response')
-        self.get_response = self.get_response_patch.start()
-        self.retried_on_exception = None
+        self.service_model = Mock(
+            endpoint_prefix='ec2', signature_version='v2',
+            signing_name='ec2')
 
-    def tearDown(self):
-        self.get_response_patch.stop()
+    def test_endpoint_resolver_with_configured_region_name(self):
+        resolver = Mock()
+        resolver.construct_endpoint.return_value = {
+            'uri': 'https://endpoint.url', 'properties': {}
+        }
+        creator = EndpointCreator(resolver, 'us-west-2',
+                                  Mock(), Mock(), 'user-agent')
+        endpoint = creator.create_endpoint(self.service_model)
+        self.assertEqual(endpoint.host, 'https://endpoint.url')
 
-    def test_retry_special_case_s3_200_response(self):
-        # Test for:
-        # http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectCOPY.html
-        op = Mock()
-        op.name = 'CopyObject'
-        op.http = {'uri': '', 'method': 'PUT'}
-        http_response = Mock()
-        http_response.status_code = 200
-        parsed = {'Errors': [{'Code': 'InternalError', 'Message': 'foo'}]}
-        self.get_response.return_value = (http_response, parsed)
-        self.endpoint.make_request(op, {'headers': {}, 'payload': None})
-        # The response code should have been switched to 500.
-        self.assertEqual(http_response.status_code, 500)
+    def test_endpoint_resolver_uses_credential_scope(self):
+        resolver = Mock()
+        resolver_region_override = 'us-east-1'
+        resolver.construct_endpoint.return_value = {
+            'uri': 'https://endpoint.url',
+            'properties': {
+                'credentialScope': {
+                    'region': resolver_region_override,
+                }
+            }
+        }
+        original_region_name = 'us-west-2'
+        creator = EndpointCreator(resolver, original_region_name,
+                                  Mock(), Mock(), 'user-agent')
+        endpoint = creator.create_endpoint(self.service_model)
+        self.assertEqual(endpoint.region_name, 'us-east-1')
 
-
-class TestRestEndpoint(unittest.TestCase):
-
-    def test_encode_uri_params_unicode(self):
-        uri = '/{foo}/{bar}'
-        operation = Mock()
-        operation.http = {'uri': uri}
-        params = {'uri_params': {'foo': u'\u2713', 'bar': 'bar'}}
-        endpoint = RestEndpoint(Mock(), None, None, None)
-        built_uri = endpoint.build_uri(operation, params)
-        self.assertEqual(built_uri, '/%E2%9C%93/bar?')
-
-    def test_quote_uri_safe_key(self):
-        uri = '/{foo}/{bar}'
-        operation = Mock()
-        operation.http = {'uri': uri}
-        params = {'uri_params': {'foo': 'foo', 'bar': 'bar~'}}
-        endpoint = RestEndpoint(Mock(), None, None, None)
-        built_uri = endpoint.build_uri(operation, params)
-        self.assertEqual(built_uri, '/foo/bar~?')
-
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_endpoint_resolver_uses_signature_version(self):
+        resolver = Mock()
+        resolver.construct_endpoint.return_value = {
+            'uri': 'https://endpoint.url',
+            'properties': {
+                # Setting a signatureVersion in the properties
+                # back of an endpoint heuristic will override
+                # any other value when constructing an endpoint.
+                'signatureVersion': 'v4',
+            }
+        }
+        creator = EndpointCreator(resolver, 'us-west-2',
+                                  Mock(), Mock(), 'user-agent')
+        endpoint = creator.create_endpoint(self.service_model)
+        self.assertIsInstance(endpoint.auth, SigV4Auth)
