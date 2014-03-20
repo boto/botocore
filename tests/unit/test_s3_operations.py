@@ -14,7 +14,7 @@
 # language governing permissions and limitations under the License.
 
 import os
-from tests import BaseEnvVar
+from tests import unittest, BaseEnvVar, patch_session
 import botocore.session
 
 XMLBODY1 = ('<CreateBucketConfiguration><LocationConstraint>sa-east-1'
@@ -42,8 +42,8 @@ XMLBODY5 = ('<BucketLoggingStatus><LoggingEnabled><TargetBucket>mybucketlogs'
             '</TargetGrants><TargetPrefix>mybucket-access_log-/</TargetPrefix>'
             '</LoggingEnabled></BucketLoggingStatus>')
 XMLBODY6 = ('<VersioningConfiguration>'
-            '<MfaDelete>Enabled</MfaDelete>'
             '<Status>Enabled</Status>'
+            '<MfaDelete>Enabled</MfaDelete>'
             '</VersioningConfiguration>')
 XMLBODY7 = ('<Delete><Object><Key>foobar</Key>'
            '</Object><Object><Key>fiebaz</Key></Object>'
@@ -72,6 +72,7 @@ class TestS3Operations(BaseEnvVar):
         self.environ['AWS_ACCESS_KEY_ID'] = 'foo'
         self.environ['AWS_SECRET_ACCESS_KEY'] = 'bar'
         self.session = botocore.session.get_session()
+        patch_session(self.session)
         self.s3 = self.session.get_service('s3')
         self.endpoint = self.s3.get_endpoint('us-east-1')
         self.bucket_name = 'foo'

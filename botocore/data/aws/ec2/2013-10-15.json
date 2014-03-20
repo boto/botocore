@@ -18109,7 +18109,7 @@
                     "UserData": {
                         "shape_name": "String",
                         "type": "blob",
-                        "documentation": "\n    <p>The Base64-encoded MIME user data for the instances.</p>\n   "
+                        "documentation": "\n    <p>The user data for the instances.  You can specify the user data as a string, or if the user data contents are in a file, you can use file://filename.</p>\n   "
                     },
                     "InstanceType": {
                         "shape_name": "InstanceType",
@@ -19709,11 +19709,6 @@
     },
     "waiters": {
         "ConversionTaskCancelled": {
-            "failure": {
-                "path": "ConversionTasks[].State",
-                "type": "output"
-            },
-            "operation": "DescribeConversionTasks",
             "success": {
                 "path": "ConversionTasks[].State",
                 "type": "output",
@@ -19722,6 +19717,11 @@
                 ]
             },
             "interval": 15,
+            "failure": {
+                "path": "ConversionTasks[].State",
+                "type": "output"
+            },
+            "operation": "DescribeConversionTasks",
             "max_attempts": 40
         },
         "VolumeAvailable": {
@@ -19744,11 +19744,6 @@
             "max_attempts": 40
         },
         "ExportTaskCancelled": {
-            "failure": {
-                "path": "ExportTasks[].State",
-                "type": "output"
-            },
-            "operation": "DescribeExportTasks",
             "success": {
                 "path": "ExportTasks[].State",
                 "type": "output",
@@ -19757,6 +19752,11 @@
                 ]
             },
             "interval": 15,
+            "failure": {
+                "path": "ExportTasks[].State",
+                "type": "output"
+            },
+            "operation": "DescribeExportTasks",
             "max_attempts": 40
         },
         "CustomerGatewayAvailable": {
@@ -19826,7 +19826,6 @@
                     "failed"
                 ]
             },
-            "operation": "DescribeBundleTasks",
             "success": {
                 "path": "BundleTasks[].State",
                 "type": "output",
@@ -19834,26 +19833,8 @@
                     "complete"
                 ]
             },
+            "operation": "DescribeBundleTasks",
             "interval": 15,
-            "max_attempts": 40
-        },
-        "VolumeInUse": {
-            "success": {
-                "path": "VolumeStatuses[].VolumeStatus.Status",
-                "type": "output",
-                "value": [
-                    "in-use"
-                ]
-            },
-            "interval": 15,
-            "failure": {
-                "path": "VolumeStatuses[].VolumeStatus.Status",
-                "type": "output",
-                "value": [
-                    "deleted"
-                ]
-            },
-            "operation": "DescribeVolumes",
             "max_attempts": 40
         },
         "VpnConnectionAvailable": {
@@ -19874,6 +19855,22 @@
                 ]
             },
             "operation": "DescribeVpnConnections",
+            "max_attempts": 40
+        },
+        "ExportTaskCompleted": {
+            "success": {
+                "path": "ExportTasks[].State",
+                "type": "output",
+                "value": [
+                    "completed"
+                ]
+            },
+            "interval": 15,
+            "failure": {
+                "path": "ExportTasks[].State",
+                "type": "output"
+            },
+            "operation": "DescribeExportTasks",
             "max_attempts": 40
         },
         "InstanceRunning": {
@@ -19898,11 +19895,6 @@
             "max_attempts": 40
         },
         "ConversionTaskDeleted": {
-            "failure": {
-                "path": "CustomerGateways[].State",
-                "type": "output"
-            },
-            "operation": "DescribeCustomerGateways",
             "success": {
                 "path": "CustomerGateways[].State",
                 "type": "output",
@@ -19911,9 +19903,17 @@
                 ]
             },
             "interval": 15,
+            "failure": {
+                "path": "CustomerGateways[].State",
+                "type": "output"
+            },
+            "operation": "DescribeCustomerGateways",
             "max_attempts": 40
         },
         "VpcAvailable": {
+            "failure": {
+                "type": "output"
+            },
             "success": {
                 "path": "Vpcs[].State",
                 "type": "output",
@@ -19921,14 +19921,14 @@
                     "available"
                 ]
             },
-            "interval": 15,
-            "failure": {
-                "type": "output"
-            },
             "operation": "DescribeVpcs",
+            "interval": 15,
             "max_attempts": 40
         },
         "SubnetAvailable": {
+            "failure": {
+                "type": "output"
+            },
             "success": {
                 "path": "Subnets[].State",
                 "type": "output",
@@ -19936,11 +19936,8 @@
                     "available"
                 ]
             },
-            "interval": 15,
-            "failure": {
-                "type": "output"
-            },
             "operation": "DescribeSubnets",
+            "interval": 15,
             "max_attempts": 40
         },
         "InstanceTerminated": {
@@ -19964,11 +19961,6 @@
             "max_attempts": 40
         },
         "VolumeDeleted": {
-            "failure": {
-                "path": "VolumeStatuses[].VolumeStatus.Status",
-                "type": "output"
-            },
-            "operation": "DescribeVolumes",
             "success": {
                 "path": "VolumeStatuses[].VolumeStatus.Status",
                 "type": "output",
@@ -19977,6 +19969,11 @@
                 ]
             },
             "interval": 15,
+            "failure": {
+                "path": "VolumeStatuses[].VolumeStatus.Status",
+                "type": "output"
+            },
+            "operation": "DescribeVolumes",
             "max_attempts": 40
         },
         "InstanceStopped": {
@@ -20000,6 +19997,9 @@
             "max_attempts": 40
         },
         "SnapshotCompleted": {
+            "failure": {
+                "type": "output"
+            },
             "success": {
                 "path": "Snapshots[].State",
                 "type": "output",
@@ -20007,27 +20007,27 @@
                     "completed"
                 ]
             },
-            "interval": 15,
-            "failure": {
-                "type": "output"
-            },
             "operation": "DescribeSnapshots",
+            "interval": 15,
             "max_attempts": 40
         },
-        "ExportTaskCompleted": {
-            "failure": {
-                "path": "ExportTasks[].State",
-                "type": "output"
-            },
-            "operation": "DescribeExportTasks",
+        "VolumeInUse": {
             "success": {
-                "path": "ExportTasks[].State",
+                "path": "VolumeStatuses[].VolumeStatus.Status",
                 "type": "output",
                 "value": [
-                    "completed"
+                    "in-use"
                 ]
             },
             "interval": 15,
+            "failure": {
+                "path": "VolumeStatuses[].VolumeStatus.Status",
+                "type": "output",
+                "value": [
+                    "deleted"
+                ]
+            },
+            "operation": "DescribeVolumes",
             "max_attempts": 40
         }
     },

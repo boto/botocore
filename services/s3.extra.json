@@ -146,5 +146,11 @@
       ],
       "success_type": "output"
     }
+  },
+  "transformations": {
+    "renames": {
+        "PutBucketVersioning.input.members.VersioningConfiguration.members.MFADelete": "MfaDelete",
+        "GetBucketVersioning.output.members.MFADelete": "MfaDelete"
+    }
   }
 }

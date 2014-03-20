@@ -13,7 +13,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import unittest
+from tests import unittest, patch_session
 import base64
 import six
 import botocore.session
@@ -23,6 +23,7 @@ class TestEC2Operations(unittest.TestCase):
 
     def setUp(self):
         self.session = botocore.session.get_session()
+        patch_session(self.session)
         self.ec2 = self.session.get_service('ec2')
 
     def test_describe_instances_no_params(self):

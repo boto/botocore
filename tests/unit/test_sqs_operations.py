@@ -13,7 +13,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import unittest
+from tests import unittest, patch_session
 import botocore.session
 
 
@@ -21,6 +21,7 @@ class TestSQSOperations(unittest.TestCase):
 
     def setUp(self):
         self.session = botocore.session.get_session()
+        patch_session(self.session)
         self.sqs = self.session.get_service('sqs')
         self.queue_url = 'https://queue.amazonaws.com/123456789012/testcli'
         self.receipt_handle = """MbZj6wDWli%2BJvwwJaBV%2B3dcjk2YW2vA3%2BSTFFljT
@@ -83,6 +84,14 @@ SbkJ0="""
                   'Attribute.1.Value': '15'}
         self.assertEqual(params, result)
 
+    def test_list_dead_letter_source_queues(self):
+        op = self.sqs.get_operation('ListDeadLetterSourceQueues')
+        params = op.build_parameters(queue_url=self.queue_url)
+        result = {'QueueUrl': self.queue_url}
+        self.assertEqual(params, result)
+        for param in op.params:
+            if param.name == 'QueueUrl':
+                self.assertEqual(getattr(param, 'no_paramfile', None), True)
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,9 +1,9 @@
 {
     "Errors": [
         {
-            "Message": "1 validation error detected: Value 'foobar' at 'id' failed to satisfy constraint: Member must satisfy regular expression pattern: ^\\d{13}-\\w{6}$", 
-            "Type": "Unspecified",
-            "Code": "Unspecified"
+            "Message": "1 validation error detected: Value 'foobar' at 'id' failed to satisfy constraint: Member must satisfy regular expression pattern: ^\\d{13}-\\w{6}$",
+            "Type": "ValidationException",
+            "Code": "ValidationException"
         }
     ]
 }

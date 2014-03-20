@@ -13,7 +13,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import unittest
+from tests import unittest, patch_session
 import botocore.session
 from botocore.compat import json
 
@@ -24,6 +24,7 @@ class TestElasticTranscoderOperations(unittest.TestCase):
 
     def setUp(self):
         self.session = botocore.session.get_session()
+        patch_session(self.session)
         self.dc = self.session.get_service('elastictranscoder')
 
     def test_create_connection(self):

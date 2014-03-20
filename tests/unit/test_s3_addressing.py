@@ -15,7 +15,7 @@
 
 import os
 
-from tests import BaseEnvVar
+from tests import BaseEnvVar, patch_session
 from mock import patch, Mock
 
 import botocore.session
@@ -28,6 +28,7 @@ class TestS3Addressing(BaseEnvVar):
         self.environ['AWS_ACCESS_KEY_ID'] = 'foo'
         self.environ['AWS_SECRET_ACCESS_KEY'] = 'bar'
         self.session = botocore.session.get_session()
+        patch_session(self.session)
         self.s3 = self.session.get_service('s3')
 
     @patch('botocore.response.get_response', Mock())

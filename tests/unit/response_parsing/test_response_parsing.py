@@ -17,7 +17,7 @@ import json
 import pprint
 import logging
 import difflib
-from tests import unittest
+from tests import unittest, patch_session
 
 from mock import Mock
 from botocore.vendored.requests.structures import CaseInsensitiveDict
@@ -67,6 +67,7 @@ def test_xml_parsing():
         data_path = os.path.join(os.path.dirname(__file__), 'xml')
         data_path = os.path.join(data_path, dp)
         session = botocore.session.get_session()
+        patch_session(session)
         xml_files = glob.glob('%s/*.xml' % data_path)
         service_names = set()
         for fn in xml_files:
@@ -115,9 +116,21 @@ def test_json_parsing():
             sn, opname = basename.split('-', 1)
             operation = service.get_operation(opname)
             r = JSONResponse(session, operation)
-            with open(inputfile, 'rb') as fp:
+            headers = {}
+            with open(inputfile, 'r') as fp:
                 jsondoc = fp.read()
-            r.parse(jsondoc, 'utf-8')
+                # Try to get any headers using a special key
+                try:
+                    parsed = json.loads(jsondoc)
+                except ValueError:
+                    # This will error later, let it go on
+                    parsed = {}
+                if '__headers' in parsed:
+                    headers = parsed['__headers']
+                    del parsed['__headers']
+                    jsondoc = json.dumps(parsed)
+            r.parse(jsondoc.encode('utf-8'), 'utf-8')
+            r.merge_header_values(headers)
             save_jsonfile(outputfile, r)
             fp = open(outputfile)
             data = json.load(fp)

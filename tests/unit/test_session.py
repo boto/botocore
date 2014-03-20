@@ -13,7 +13,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import unittest
+from tests import unittest, patch_session
 import os
 import logging
 import tempfile
@@ -46,6 +46,7 @@ class BaseSessionTest(unittest.TestCase):
                                    'foo_config')
         self.environ['FOO_CONFIG_FILE'] = config_path
         self.session = botocore.session.get_session(self.env_vars)
+        patch_session(self.session)
 
     def tearDown(self):
         self.environ_patch.stop()
@@ -77,6 +78,7 @@ class SessionTest(BaseSessionTest):
         saved_profile = self.environ['FOO_PROFILE']
         del self.environ['FOO_PROFILE']
         session = botocore.session.get_session(self.env_vars)
+        patch_session(self.session)
         self.assertEqual(session.get_variable('profile'), None)
         self.assertEqual(session.get_variable('region'), 'us-west-1')
         self.environ['FOO_REGION'] = saved_region
@@ -86,20 +88,24 @@ class SessionTest(BaseSessionTest):
         # Given we have no profile:
         self.environ['FOO_PROFILE'] = 'profile_that_does_not_exist'
         session = botocore.session.get_session(self.env_vars)
+        patch_session(self.session)
         with self.assertRaises(botocore.exceptions.ProfileNotFound):
             session.get_config()
 
     def test_variable_does_not_exist(self):
         session = botocore.session.get_session(self.env_vars)
+        patch_session(self.session)
         self.assertIsNone(session.get_variable('foo/bar'))
 
     def test_get_aws_services_in_alphabetical_order(self):
         session = botocore.session.get_session(self.env_vars)
-        services = session.get_data('aws')
+        patch_session(self.session)
+        services = session.get_available_services()
         self.assertEqual(sorted(services), services)
 
     def test_profile_does_not_exist_with_default_profile(self):
         session = botocore.session.get_session(self.env_vars)
+        patch_session(self.session)
         config = session.get_config()
         # We should have loaded this properly, and we'll check
         # that foo_access_key which is defined in the config
@@ -114,6 +120,7 @@ class SessionTest(BaseSessionTest):
         self.environ['FOO_CONFIG_FILE'] = config_path
         self.environ['FOO_PROFILE'] = 'default'
         session = botocore.session.get_session(self.env_vars)
+        patch_session(self.session)
         # In this case, even though we specified default, because
         # the boto_config_empty config file does not have a default
         # profile, we should be raising an exception.
@@ -160,6 +167,7 @@ class SessionTest(BaseSessionTest):
     def test_emitter_can_be_passed_in(self):
         events = EventHooks()
         session = botocore.session.Session(self.env_vars, events)
+        patch_session(self.session)
         calls = []
         handler = lambda **kwargs: calls.append(kwargs)
         events.register('foo', handler)
@@ -169,6 +177,7 @@ class SessionTest(BaseSessionTest):
 
     def test_emit_first_non_none(self):
         session = botocore.session.Session(self.env_vars)
+        patch_session(self.session)
         session.register('foo', lambda **kwargs: None)
         session.register('foo', lambda **kwargs: 'first')
         session.register('foo', lambda **kwargs: 'second')
@@ -240,6 +249,7 @@ class TestBuiltinEventHandlers(BaseSessionTest):
     def test_registered_builtin_handlers(self):
         session = botocore.session.Session(self.env_vars, None,
                                            include_builtin_handlers=True)
+        patch_session(self.session)
         session.emit('foo')
         self.assertTrue(self.foo_called)
 

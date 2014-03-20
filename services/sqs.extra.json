@@ -83,6 +83,15 @@
         }
       }
     },
+    "ListDeadLetterSourceQueues": {
+      "input": {
+        "members": {
+          "QueueUrl": {
+            "no_paramfile": true
+          }
+        }
+      }
+    },
     "ReceiveMessage": {
       "input": {
         "members": {

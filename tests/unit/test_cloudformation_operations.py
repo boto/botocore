@@ -13,9 +13,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import unittest
-import base64
-import six
+from tests import unittest, patch_session
 import botocore.session
 
 
@@ -23,6 +21,7 @@ class TestCloudformationOperations(unittest.TestCase):
 
     def setUp(self):
         self.session = botocore.session.get_session()
+        patch_session(self.session)
         self.cf = self.session.get_service('cloudformation')
 
     def test_create_stack(self):

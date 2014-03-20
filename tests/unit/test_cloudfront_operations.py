@@ -13,7 +13,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import BaseEnvVar
+from tests import unittest, BaseEnvVar, patch_session
 import botocore.session
 
 CREATE_DISTRIBUTION_INPUT = {
@@ -247,6 +247,7 @@ class TestCloudFrontOperations(BaseEnvVar):
         self.environ['AWS_ACCESS_KEY_ID'] = 'foo'
         self.environ['AWS_SECRET_ACCESS_KEY'] = 'bar'
         self.session = botocore.session.get_session()
+        patch_session(self.session)
         self.cloudfront = self.session.get_service('cloudfront')
         self.endpoint = self.cloudfront.get_endpoint('us-east-1')
 
