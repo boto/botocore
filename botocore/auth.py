@@ -67,8 +67,8 @@ class SigV2Auth(BaseSigner):
         pairs = []
         for key in sorted(params):
             value = params[key]
-            pairs.append(quote(key, safe='') + '=' +
-                         quote(value, safe='-_~'))
+            pairs.append(quote(key.encode('utf-8'), safe='') + '=' +
+                         quote(value.encode('utf-8'), safe='-_~'))
         qs = '&'.join(pairs)
         string_to_sign += qs
         logger.debug('String to sign: %s', string_to_sign)
