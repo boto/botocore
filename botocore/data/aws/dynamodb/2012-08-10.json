@@ -6123,8 +6123,8 @@
                     "ResourceNotFoundException"
                 ]
             },
-            "operation": "DescribeTable",
             "interval": 20,
+            "operation": "DescribeTable",
             "max_attempts": 25
         },
         "TableExists": {
