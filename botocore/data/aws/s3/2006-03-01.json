@@ -5373,11 +5373,11 @@
             "success": {
                 "type": "output"
             },
+            "interval": 5,
             "ignore_errors": [
                 "NoSuchKey"
             ],
             "operation": "HeadObject",
-            "interval": 5,
             "max_attempts": 20
         },
         "BucketNotExists": {
@@ -5387,19 +5387,19 @@
                     "NoSuchBucket"
                 ]
             },
-            "operation": "HeadBucket",
             "interval": 5,
+            "operation": "HeadBucket",
             "max_attempts": 20
         },
         "BucketExists": {
             "success": {
                 "type": "output"
             },
+            "interval": 5,
             "ignore_errors": [
                 "NoSuchBucket"
             ],
             "operation": "HeadBucket",
-            "interval": 5,
             "max_attempts": 20
         }
     },
