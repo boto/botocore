@@ -13,8 +13,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import BaseEnvVar, patch_session
-import botocore.session
+from tests import BaseSessionTest
 
 
 CREATE_HOSTED_ZONE_PAYLOAD="""<CreateHostedZoneRequest xmlns="https://route53.amazonaws.com/doc/2013-04-01/"><Name>foobar.com</Name><CallerReference>foobar</CallerReference><HostedZoneConfig><Comment>blahblahblah</Comment></HostedZoneConfig></CreateHostedZoneRequest>"""
@@ -23,14 +22,12 @@ DELETE_RRSET_PAYLOAD="""<ChangeResourceRecordSetsRequest xmlns="https://route53.
 CREATE_HEALTH_CHECK_PAYLOAD="""<CreateHealthCheckRequest xmlns="https://route53.amazonaws.com/doc/2013-04-01/"><CallerReference>foobar</CallerReference><HealthCheckConfig><IPAddress>192.168.10.0</IPAddress><Port>8888</Port><Type>HTTP</Type><ResourcePath>foo/bar</ResourcePath><FullyQualifiedDomainName>foobar.com</FullyQualifiedDomainName></HealthCheckConfig></CreateHealthCheckRequest>"""
 
 
-class TestRoute53Operations(BaseEnvVar):
+class TestRoute53Operations(BaseSessionTest):
 
     def setUp(self):
         super(TestRoute53Operations, self).setUp()
         self.environ['AWS_ACCESS_KEY_ID'] = 'foo'
         self.environ['AWS_SECRET_ACCESS_KEY'] = 'bar'
-        self.session = botocore.session.get_session()
-        patch_session(self.session)
         self.route53 = self.session.get_service('route53')
         self.endpoint = self.route53.get_endpoint('us-east-1')
         self.hosted_zone_name = 'foobar.com'
@@ -89,7 +86,3 @@ class TestRoute53Operations(BaseEnvVar):
         self.maxDiff = None
         self.assertEqual(params['payload'].getvalue(),
                          CREATE_HEALTH_CHECK_PAYLOAD)
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -12,7 +12,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import BaseEnvVar, patch_session
+from tests import BaseSessionTest
 
 from mock import Mock, sentinel
 
@@ -22,14 +22,10 @@ from botocore.exceptions import UnknownParameterError
 from botocore.exceptions import UnknownKeyError
 
 
-class TestSESOperations(BaseEnvVar):
+class TestSESOperations(BaseSessionTest):
 
     def setUp(self):
         super(TestSESOperations, self).setUp()
-        self.environ['AWS_ACCESS_KEY_ID'] = 'foo'
-        self.environ['AWS_SECRET_ACCESS_KEY'] = 'bar'
-        self.session = botocore.session.get_session()
-        patch_session(self.session)
         self.ses = self.session.get_service('ses')
         self.op = self.ses.get_operation('SendEmail')
 
@@ -78,7 +74,3 @@ class TestSESOperations(BaseEnvVar):
                 destination={'ToAddresses': ['bar@examplecom']},
                 message={'Subject': {'Data': 'foo'},
                          'Body': {'Text': {'BADKEY': 'foo'}}})
-
-
-if __name__ == "__main__":
-    unittest.main()

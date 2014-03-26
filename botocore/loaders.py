@@ -93,7 +93,7 @@ class Loader(object):
     file_loader_class = JSONFileLoader
     extension = '.json'
 
-    def __init__(self, data_path, file_loader_class=None, extension=None,
+    def __init__(self, data_path='', file_loader_class=None, extension=None,
                  cache=None):
         """
         Sets up the Loader.
@@ -112,7 +112,7 @@ class Loader(object):
         Default is ``None`` (creates its own ``Cache()`` instance).
         """
         super(Loader, self).__init__()
-        self.data_path = data_path
+        self._data_path = data_path
         self._cache = {}
 
         if file_loader_class is not None:
@@ -125,6 +125,14 @@ class Loader(object):
             self._cache = cache
 
         self.file_loader = self.file_loader_class()
+
+    @property
+    def data_path(self):
+        return self._data_path
+
+    @data_path.setter
+    def data_path(self, value):
+        self._data_path = value
 
     def get_search_paths(self):
         """
