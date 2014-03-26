@@ -13,7 +13,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import unittest, BaseEnvVar, patch_session
+from tests import unittest, BaseSessionTest
 import botocore.session
 
 CREATE_DISTRIBUTION_INPUT = {
@@ -240,14 +240,10 @@ CREATE_INVALIDATION_PAYLOAD = """
 </InvalidationBatch>"""
 
 
-class TestCloudFrontOperations(BaseEnvVar):
+class TestCloudFrontOperations(BaseSessionTest):
 
     def setUp(self):
         super(TestCloudFrontOperations, self).setUp()
-        self.environ['AWS_ACCESS_KEY_ID'] = 'foo'
-        self.environ['AWS_SECRET_ACCESS_KEY'] = 'bar'
-        self.session = botocore.session.get_session()
-        patch_session(self.session)
         self.cloudfront = self.session.get_service('cloudfront')
         self.endpoint = self.cloudfront.get_endpoint('us-east-1')
 
@@ -292,7 +288,3 @@ class TestCloudFrontOperations(BaseEnvVar):
         self.assertEqual(params['payload'].getvalue(), payload)
         self.assertEqual(params['uri_params'],
                          {'DistributionId': 'IDFDVBD632BHDS5'})
-
-
-if __name__ == "__main__":
-    unittest.main()

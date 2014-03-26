@@ -13,17 +13,16 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import unittest, patch_session
+from tests import BaseSessionTest
 import base64
 import six
 import botocore.session
 
 
-class TestEC2Operations(unittest.TestCase):
+class TestEC2Operations(BaseSessionTest):
 
     def setUp(self):
-        self.session = botocore.session.get_session()
-        patch_session(self.session)
+        super(TestEC2Operations, self).setUp()
         self.ec2 = self.session.get_service('ec2')
 
     def test_describe_instances_no_params(self):
@@ -126,7 +125,3 @@ class TestEC2Operations(unittest.TestCase):
                   'IpPermissions.1.IpProtocol': 'tcp',
                   'IpPermissions.1.IpRanges.1.CidrIp': '0.0.0.0/0',}
         self.assertEqual(params, result)
-
-
-if __name__ == "__main__":
-    unittest.main()

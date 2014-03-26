@@ -15,20 +15,16 @@
 
 import os
 
-from tests import BaseEnvVar, patch_session
+from tests import BaseSessionTest
 from mock import patch, Mock
 
 import botocore.session
 
 
-class TestS3Addressing(BaseEnvVar):
+class TestS3Addressing(BaseSessionTest):
 
     def setUp(self):
         super(TestS3Addressing, self).setUp()
-        self.environ['AWS_ACCESS_KEY_ID'] = 'foo'
-        self.environ['AWS_SECRET_ACCESS_KEY'] = 'bar'
-        self.session = botocore.session.get_session()
-        patch_session(self.session)
         self.s3 = self.session.get_service('s3')
 
     @patch('botocore.response.get_response', Mock())
@@ -167,7 +163,3 @@ class TestS3Addressing(BaseEnvVar):
         prepared_request = self.get_prepared_request(op, params)
         self.assertEqual(prepared_request.url,
                          'https://s3.amazonaws.com/192.168.5.256/mykeyname')
-
-
-if __name__ == "__main__":
-    unittest.main()

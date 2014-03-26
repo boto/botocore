@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import unittest, BaseSessionTest, patch_session
+from tests import unittest, BaseSessionTest, create_session
 
 from mock import Mock, patch, sentinel
 from botocore.vendored.requests import ConnectionError
@@ -281,8 +281,7 @@ class TestRetryInterface(BaseSessionTest):
         super(TestRetryInterface, self).setUp()
         self.total_calls = 0
         self.auth = Mock()
-        self.session = Session(include_builtin_handlers=False)
-        patch_session(self.session)
+        self.session = create_session(include_builtin_handlers=False)
         self.service = Mock()
         self.service.endpoint_prefix = 'ec2'
         self.service.session = self.session
@@ -353,8 +352,7 @@ class TestResetStreamOnRetry(unittest.TestCase):
         super(TestResetStreamOnRetry, self).setUp()
         self.total_calls = 0
         self.auth = Mock()
-        self.session = Session(include_builtin_handlers=False)
-        patch_session(self.session)
+        self.session = create_session(include_builtin_handlers=False)
         self.service = Mock()
         self.service.endpoint_prefix = 's3'
         self.service.session = self.session

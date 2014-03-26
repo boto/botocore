@@ -13,15 +13,14 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import unittest, patch_session
+from tests import BaseSessionTest
 import botocore.session
 
 
-class TestELBOperations(unittest.TestCase):
+class TestELBOperations(BaseSessionTest):
 
     def setUp(self):
-        self.session = botocore.session.get_session()
-        patch_session(self.session)
+        super(TestELBOperations, self).setUp()
         self.elb = self.session.get_service('elb')
 
     def test_describe_load_balancers_no_params(self):

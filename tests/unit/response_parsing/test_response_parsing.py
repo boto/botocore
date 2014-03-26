@@ -17,7 +17,7 @@ import json
 import pprint
 import logging
 import difflib
-from tests import unittest, patch_session
+from tests import unittest, create_session
 
 from mock import Mock
 from botocore.vendored.requests.structures import CaseInsensitiveDict
@@ -66,8 +66,7 @@ def test_xml_parsing():
     for dp in ['responses', 'errors']:
         data_path = os.path.join(os.path.dirname(__file__), 'xml')
         data_path = os.path.join(data_path, dp)
-        session = botocore.session.get_session()
-        patch_session(session)
+        session = create_session()
         xml_files = glob.glob('%s/*.xml' % data_path)
         service_names = set()
         for fn in xml_files:

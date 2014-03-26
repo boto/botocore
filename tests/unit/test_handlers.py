@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import unittest, patch_session
+from tests import BaseSessionTest
 import botocore.session
 from botocore.hooks import first_non_none_response
 from botocore.compat import quote
@@ -21,14 +21,7 @@ import six
 import mock
 
 
-class TestHandlers(unittest.TestCase):
-
-    def setUp(self):
-        self.session = botocore.session.get_session()
-        patch_session(self.session)
-
-    def tearDown(self):
-        pass
+class TestHandlers(BaseSessionTest):
 
     def test_get_console_output(self):
         event = self.session.create_event('after-parsed', 'ec2',
