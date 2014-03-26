@@ -25,17 +25,18 @@ else:
     import unittest
 
 
+import botocore.loaders
 import botocore.session
-
-# For performance reasons, we'll retain this cache between all the test
-# cases. Otherwise, the per-loader-per-session caching slows the tests down
-# significantly (~4x).
-JSON_CACHE = {}
+_LOADER = botocore.loaders.Loader()
 
 
-def patch_session(session):
-    # Use the global test cache.
-    session.loader._cache = JSON_CACHE
+def create_session(**kwargs):
+    # Create a Session object.  By default,
+    # the _LOADER object is used as the loader
+    # so that we reused the same models across tests.
+    base_args = {'loader': _LOADER}
+    base_args.update(kwargs)
+    return botocore.session.Session(**base_args)
 
 
 class BaseEnvVar(unittest.TestCase):
@@ -63,20 +64,19 @@ class BaseSessionTest(BaseEnvVar):
     requests to services.
 
     """
+
     def setUp(self):
         super(BaseSessionTest, self).setUp()
         self.environ['AWS_ACCESS_KEY_ID'] = 'access_key'
         self.environ['AWS_SECRET_ACCESS_KEY'] = 'secret_key'
         self.environ['AWS_CONFIG_FILE'] = 'no-exist-foo'
-        self.session = botocore.session.get_session()
-        patch_session(self.session)
+        self.session = create_session()
 
 
 class TestParamSerialization(BaseSessionTest):
     def setUp(self):
         super(TestParamSerialization, self).setUp()
-        self.session = botocore.session.get_session()
-        patch_session(self.session)
+        self.session = create_session()
 
     def assert_params_serialize_to(self, dotted_name, input_params,
                                    serialized_params):

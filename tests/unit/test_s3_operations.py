@@ -14,7 +14,7 @@
 # language governing permissions and limitations under the License.
 
 import os
-from tests import unittest, BaseEnvVar, patch_session
+from tests import BaseSessionTest
 import botocore.session
 
 XMLBODY1 = ('<CreateBucketConfiguration><LocationConstraint>sa-east-1'
@@ -63,16 +63,13 @@ POLICY = ('{"Version": "2008-10-17","Statement": [{"Sid": "AddPerm",'
           '"Action": "s3:GetObject", "Resource": "arn:aws:s3:::BUCKET_NAME/*"'
           '}]}')
 
-class TestS3Operations(BaseEnvVar):
+
+class TestS3Operations(BaseSessionTest):
 
     maxDiff = None
 
     def setUp(self):
         super(TestS3Operations, self).setUp()
-        self.environ['AWS_ACCESS_KEY_ID'] = 'foo'
-        self.environ['AWS_SECRET_ACCESS_KEY'] = 'bar'
-        self.session = botocore.session.get_session()
-        patch_session(self.session)
         self.s3 = self.session.get_service('s3')
         self.endpoint = self.s3.get_endpoint('us-east-1')
         self.bucket_name = 'foo'
@@ -301,7 +298,3 @@ class TestS3Operations(BaseEnvVar):
         # Explicitly check that <Parts> is not in the payload anywhere.
         self.assertNotIn('<Parts>', xml_payload)
         self.assertNotIn('</Parts>', xml_payload)
-
-
-if __name__ == "__main__":
-    unittest.main()

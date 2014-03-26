@@ -117,7 +117,7 @@ class Session(object):
     FmtString = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
     def __init__(self, session_vars=None, event_hooks=None,
-                 include_builtin_handlers=True, loader_class=Loader):
+                 include_builtin_handlers=True, loader=None):
         """
         Create a new Session object.
 
@@ -156,16 +156,21 @@ class Session(object):
         # This is a dict that stores per session specific config variable
         # overrides via set_config_variable().
         self._session_instance_vars = {}
-        self.loader_class = loader_class
-        self._loader = None
+        if loader is None:
+            loader = Loader()
+        self._loader = loader
+        # _data_paths_added is used to track whether or not we added
+        # extra paths to the loader.  We will do this lazily
+        # only when we ask for the loader.
+        self._data_paths_added = False
 
     @property
     def loader(self):
-        # We lazy-load the loader (yo dawg), so that if the user has a bad
-        # config, we don't blow up too early.
-        if self._loader is None:
-            self._loader = self.loader_class(self.get_variable('data_path'))
-
+        if not self._data_paths_added:
+            extra_paths = self.get_variable('data_path')
+            if extra_paths is not None:
+                self._loader.data_path = extra_paths
+            self._data_paths_added = True
         return self._loader
 
     def _register_builtin_handlers(self, events):

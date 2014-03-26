@@ -12,19 +12,17 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import unittest, patch_session
+from tests import BaseSessionTest
 
 from mock import Mock
 
 from botocore.compat import OrderedDict
-import botocore.session
 
 
-class TestSNSOperations(unittest.TestCase):
+class TestSNSOperations(BaseSessionTest):
 
     def setUp(self):
-        self.session = botocore.session.get_session()
-        patch_session(self.session)
+        super(TestSNSOperations, self).setUp()
         self.sns = self.session.get_service('sns')
         self.http_response = Mock()
         self.http_response.status_code = 200
@@ -82,7 +80,3 @@ class TestSNSOperations(unittest.TestCase):
                   'Attributes.entry.2.key': 'PlatformPrincipal',
                   'Attributes.entry.2.value': 'bar'}
         self.assertEqual(params, result)
-
-
-if __name__ == "__main__":
-    unittest.main()
