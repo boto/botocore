@@ -6,7 +6,7 @@
     "service_full_name": "Amazon Elastic Compute Cloud",
     "service_abbreviation": "Amazon EC2",
     "endpoint_prefix": "ec2",
-    "xmlnamespace": "http://ec2.amazonaws.com/doc/2013-10-15/",
+    "xmlnamespace": "http://ec2.amazonaws.com/doc/2014-02-01/",
     "documentation": "\n\t\t<fullname>Amazon Elastic Compute Cloud</fullname>\n        <p>Amazon Elastic Compute Cloud (Amazon EC2) provides resizable computing\n        capacity in the Amazon Web Services (AWS) cloud. Using Amazon EC2 eliminates\n        your need to invest in hardware up front, so you can develop and deploy\n        applications faster.</p>\n    ",
     "operations": {
         "AcceptVpcPeeringConnection": {
