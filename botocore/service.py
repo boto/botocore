@@ -135,6 +135,12 @@ class Service(object):
                 # endpoint, we can just use the global_endpoint (which is a
                 # string of the hostname of the global endpoint) to construct
                 # the full endpoint_url.
+                # We have to be careful though.  The "region_name" should have
+                # been previously validated, otherwise it's possible
+                # that we may fail silently if the user provided a region
+                # we don't know about.  For example,
+                # s3.get_endpoint('bad region') would return the global
+                # s3 endpoint, which is probably not what we want.
                 endpoint_url = self._build_endpoint_url(self.global_endpoint,
                                                         is_secure)
                 region_name = 'us-east-1'
