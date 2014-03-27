@@ -11,7 +11,7 @@
         "us-west-1": "https://s3-us-west-1.amazonaws.com/",
         "eu-west-1": "https://s3-eu-west-1.amazonaws.com/",
         "us-gov-west-1": "https://s3-us-gov-west-1.amazonaws.com/",
-        "fips-gov-west-1": "https://s3-fips-us-gov-west-1.amazonaws.com/",
+        "fips-us-gov-west-1": "https://s3-fips-us-gov-west-1.amazonaws.com/",
         "cn-north-1": "https://s3.cn-north-1.amazonaws.com.cn"
       },
       "protocols": [
