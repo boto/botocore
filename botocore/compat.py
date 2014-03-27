@@ -23,6 +23,7 @@ if six.PY3:
         pass
     from urllib.parse import quote
     from urllib.parse import unquote
+    from urllib.parse import unquote_plus
     from urllib.parse import urlsplit
     from urllib.parse import urlunsplit
     from urllib.parse import urljoin
@@ -33,7 +34,7 @@ if six.PY3:
     # In python3, unquote takes a str() object, url decodes it,
     # then takes the bytestring and decodes it to utf-8.
     # Python2 we'll have to do this ourself (see below).
-    unquote_str = unquote
+    unquote_str = unquote_plus
 
     def set_socket_timeout(http_response, timeout):
         """Set the timeout of the socket from an HTTPResponse.
@@ -46,6 +47,7 @@ if six.PY3:
 else:
     from urllib import quote
     from urllib import unquote
+    from urllib import unquote_plus
     from urlparse import urlsplit
     from urlparse import urlunsplit
     from urlparse import urljoin
@@ -68,7 +70,7 @@ else:
         # encode the string with the passed in encoding before trying to
         # unquote it.
         byte_string = value.encode(encoding)
-        return unquote(byte_string).decode(encoding)
+        return unquote_plus(byte_string).decode(encoding)
 
     def set_socket_timeout(http_response, timeout):
         """Set the timeout of the socket from an HTTPResponse.
