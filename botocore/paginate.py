@@ -91,8 +91,11 @@ class Paginator(object):
                             endpoint, kwargs)
 
     def _extract_paging_params(self, kwargs):
+        max_items = kwargs.pop('max_items', None)
+        if max_items is not None:
+            max_items = int(max_items)
         return {
-            'max_items': kwargs.pop('max_items', None),
+            'max_items': max_items,
             'starting_token': kwargs.pop('starting_token', None),
         }
 
