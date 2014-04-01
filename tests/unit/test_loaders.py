@@ -1,4 +1,4 @@
-# Copyright (c) 2013 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#1 Copyright (c) 2013 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the
@@ -56,6 +56,12 @@ class LoaderTestCase(BaseEnvVar):
 
         # Make sure the cache is clear.
         self.loader._cache.clear()
+
+    def test_data_path_not_required(self):
+        loader = Loader()
+        self.assertEqual(loader.data_path, '')
+        loader.data_path = 'foo:bar'
+        self.assertEqual(loader.data_path, 'foo:bar')
 
     def test_get_search_paths(self):
         paths = self.loader.get_search_paths()

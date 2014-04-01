@@ -13,15 +13,14 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import unittest, patch_session
+from tests import unittest, BaseSessionTest
 import botocore.session
 
 
-class TestSQSOperations(unittest.TestCase):
+class TestSQSOperations(BaseSessionTest):
 
     def setUp(self):
-        self.session = botocore.session.get_session()
-        patch_session(self.session)
+        super(TestSQSOperations, self).setUp()
         self.sqs = self.session.get_service('sqs')
         self.queue_url = 'https://queue.amazonaws.com/123456789012/testcli'
         self.receipt_handle = """MbZj6wDWli%2BJvwwJaBV%2B3dcjk2YW2vA3%2BSTFFljT
@@ -92,6 +91,3 @@ SbkJ0="""
         for param in op.params:
             if param.name == 'QueueUrl':
                 self.assertEqual(getattr(param, 'no_paramfile', None), True)
-
-if __name__ == "__main__":
-    unittest.main()

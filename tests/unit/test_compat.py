@@ -41,3 +41,9 @@ class TestUnquoteStr(unittest.TestCase):
         # Note: decoded to unicode and utf-8 decoded as well.
         # This would work in python2 and python3.
         self.assertEqual(unquote_str(value), u'foo')
+
+    def test_unquote_with_spaces(self):
+        value = u'foo+bar'
+        # Note: decoded to unicode and utf-8 decoded as well.
+        # This would work in python2 and python3.
+        self.assertEqual(unquote_str(value), 'foo bar')

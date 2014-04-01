@@ -12,9 +12,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from tests import BaseSessionTest
 
-from tests import BaseEnvVar, patch_session
-import botocore.session
 
 attributes = {
     "MysqlRootPasswordUbiquitous": None,
@@ -38,13 +37,11 @@ attributes = {
     "HaproxyStatsUser": None
 }
 
-class TestOpsworksOperations(BaseEnvVar):
+class TestOpsworksOperations(BaseSessionTest):
 
     def setUp(self):
         super(TestOpsworksOperations, self).setUp()
         self.environ['BOTO_DATA_PATH'] = '~/.aws_data'
-        self.session = botocore.session.get_session()
-        patch_session(self.session)
         self.opsworks = self.session.get_service('opsworks')
         self.stack_id = '35959772-cd1e-4082-8346-79096d4179f2'
 
@@ -72,7 +69,3 @@ class TestOpsworksOperations(BaseEnvVar):
                   'Shortname': 'a'}
         self.maxDiff = None
         self.assertEqual(params, result)
-
-
-if __name__ == "__main__":
-    unittest.main()

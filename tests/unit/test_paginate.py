@@ -295,6 +295,21 @@ class TestKeyIterators(unittest.TestCase):
             paginator.paginate(None, max_items=1).build_full_result(),
             {'Users': ['User1'], 'NextToken': 'm1'})
 
+    def test_max_items_as_strings(self):
+        # Some services (route53) model MaxItems as a string type.
+        # We need to be able to handle this case.
+        paginator = Paginator(self.operation)
+        responses = [
+            (None, {"Users": ["User1"], "Marker": "m1"}),
+            (None, {"Users": ["User2"], "Marker": "m2"}),
+            (None, {"Users": ["User3"]}),
+        ]
+        self.operation.call.side_effect = responses
+        self.assertEqual(
+            # Note max_items is a string here.
+            paginator.paginate(None, max_items='1').build_full_result(),
+            {'Users': ['User1'], 'NextToken': 'm1'})
+
     def test_next_token_on_page_boundary(self):
         paginator = Paginator(self.operation)
         responses = [
