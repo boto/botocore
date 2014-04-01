@@ -59,8 +59,13 @@ class TestTransformName(unittest.TestCase):
         self.assertEqual(xform_name('MainHTTPHeaders'), 'main_http_headers')
         self.assertEqual(xform_name('MainHTTPHeaders', '-'), 'main-http-headers')
 
+    def test_s3_prefix(self):
+        self.assertEqual(xform_name('S3BucketName'), 's3_bucket_name')
+
     def test_already_snake_cased(self):
         self.assertEqual(xform_name('leave_alone'), 'leave_alone')
+        self.assertEqual(xform_name('s3_bucket_name'), 's3_bucket_name')
+        self.assertEqual(xform_name('bucket_s3_name'), 'bucket_s3_name')
 
     def test_special_cases(self):
         # Some patterns don't actually match the rules we expect.
