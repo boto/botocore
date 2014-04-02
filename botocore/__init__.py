@@ -51,9 +51,16 @@ BOTOCORE_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
 def xform_name(name, sep='_', _xform_cache=_xform_cache):
+    """Convert camel case to a "pythonic" name.
+
+    If the name contains the ``sep`` character, then it is
+    returned unchanged.
+
     """
-    Convert camel case to a "pythonic" name.
-    """
+    if sep in name:
+        # If the sep is in the name, assume that it's already
+        # transformed and return the string unchanged.
+        return name
     key = (name, sep)
     if key not in _xform_cache:
         s1 = _first_cap_regex.sub(r'\1' + sep + r'\2', name)
