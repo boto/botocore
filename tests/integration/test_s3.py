@@ -58,6 +58,17 @@ class BaseS3Test(unittest.TestCase):
         except Exception as e:
             self.caught_exceptions.append(e)
 
+    def delete_object(self, key, bucket_name):
+        operation = self.service.get_operation('DeleteObject')
+        response = operation.call(self.endpoint, bucket=bucket_name,
+                                  key=key)
+        self.assertEqual(response[0].status_code, 204)
+
+    def delete_bucket(self, bucket_name):
+        operation = self.service.get_operation('DeleteBucket')
+        response = operation.call(self.endpoint, bucket=bucket_name)
+        self.assertEqual(response[0].status_code, 204)
+
     def assert_num_uploads_found(self, operation, num_uploads,
                                  max_items=None, num_attempts=5):
         amount_seen = None
@@ -82,21 +93,23 @@ class BaseS3Test(unittest.TestCase):
             num_uploads, amount_seen))
 
 
-class TestS3Buckets(BaseS3Test):
-
+class TestS3BaseWithBucket(BaseS3Test):
     def setUp(self):
-        super(TestS3Buckets, self).setUp()
+        super(TestS3BaseWithBucket, self).setUp()
         self.bucket_name = 'botocoretest%s-%s' % (
             int(time.time()), random.randint(1, 1000))
         self.bucket_location = 'us-west-2'
 
         operation = self.service.get_operation('CreateBucket')
-        operation.call(self.endpoint, bucket=self.bucket_name,
+        response = operation.call(self.endpoint, bucket=self.bucket_name,
             create_bucket_configuration={'LocationConstraint': self.bucket_location})
+        self.assertEqual(response[0].status_code, 200)
 
     def tearDown(self):
-        operation = self.service.get_operation('DeleteBucket')
-        operation.call(self.endpoint, bucket=self.bucket_name)
+        self.delete_bucket(self.bucket_name)
+
+
+class TestS3Buckets(TestS3BaseWithBucket):
 
     def test_can_make_request(self):
         # Basic smoke test to ensure we can talk to s3.
@@ -117,22 +130,14 @@ class TestS3Buckets(BaseS3Test):
         self.assertEqual(result['LocationConstraint'], self.bucket_location)
 
 
-class TestS3Objects(BaseS3Test):
-
-    def setUp(self):
-        super(TestS3Objects, self).setUp()
-        self.bucket_name = 'botocoretest%s-%s' % (
-            int(time.time()), random.randint(1, 1000))
-        operation = self.service.get_operation('CreateBucket')
-        operation.call(self.endpoint, bucket=self.bucket_name)
+class TestS3Objects(TestS3BaseWithBucket):
 
     def tearDown(self):
         for key in self.keys:
             operation = self.service.get_operation('DeleteObject')
             operation.call(self.endpoint, bucket=self.bucket_name,
                            key=key)
-        operation = self.service.get_operation('DeleteBucket')
-        operation.call(self.endpoint, bucket=self.bucket_name)
+        super(TestS3Objects, self).tearDown()
 
     def increment_auth(self, request, auth, **kwargs):
         self.auth_paths.append(auth.auth_path)
@@ -335,8 +340,7 @@ class TestS3Regions(BaseS3Test):
             self.endpoint, bucket=bucket_name,
             create_bucket_configuration={'LocationConstraint': 'us-west-2'})
         self.assertEqual(response.status_code, 200)
-        self.addCleanup(self.service.get_operation('DeleteBucket').call,
-                        bucket=bucket_name, endpoint=self.endpoint)
+        self.addCleanup(self.delete_bucket, bucket_name=bucket_name)
         return bucket_name
 
     def test_reset_stream_on_redirects(self):
@@ -354,6 +358,8 @@ class TestS3Regions(BaseS3Test):
             response.status_code, 200,
             "Non 200 status code (%s) received: %s" % (
                 response.status_code, parsed))
+        self.addCleanup(self.delete_object, key='foo',
+                        bucket_name=bucket_name)
 
         operation = self.service.get_operation('GetObject')
         data = operation.call(self.endpoint, bucket=bucket_name,
@@ -361,30 +367,27 @@ class TestS3Regions(BaseS3Test):
         self.assertEqual(data['Body'].read(), b'foo' * 1024)
 
 
-class TestS3Copy(BaseS3Test):
-    def setUp(self):
-        super(TestS3Copy, self).setUp()
-        self.bucket_name = 'botocoretest%s-%s' % (
-            int(time.time()), random.randint(1, 1000))
-        self.bucket_location = 'us-west-2'
-
-        operation = self.service.get_operation('CreateBucket')
-        operation.call(self.endpoint, bucket=self.bucket_name,
-            create_bucket_configuration={'LocationConstraint': self.bucket_location})
+class TestS3Copy(TestS3BaseWithBucket):
 
     def tearDown(self):
-        operation = self.service.get_operation('DeleteBucket')
-        operation.call(self.endpoint, bucket=self.bucket_name)
+        for key in self.keys:
+            operation = self.service.get_operation('DeleteObject')
+            response = operation.call(
+                self.endpoint, bucket=self.bucket_name, key=key)
+            self.assertEqual(response[0].status_code, 204)
+        super(TestS3Copy, self).tearDown()
 
     def test_copy_with_quoted_char(self):
         key_name = 'a+b/foo'
         self.create_object(key_name=key_name)
 
         operation = self.service.get_operation('CopyObject')
+        key_name2 = key_name + 'bar'
         http, parsed = operation.call(
             self.endpoint, bucket=self.bucket_name, key=key_name + 'bar',
             copy_source='%s/%s' % (self.bucket_name, key_name))
         self.assertEqual(http.status_code, 200)
+        self.keys.append(key_name2)
 
         # Now verify we can retrieve the copied object.
         operation = self.service.get_operation('GetObject')
