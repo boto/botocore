@@ -30,6 +30,7 @@ if six.PY3:
     from urllib.parse import parse_qsl
     from io import IOBase as _IOBase
     file_type = _IOBase
+    zip = zip
 
     # In python3, unquote takes a str() object, url decodes it,
     # then takes the bytestring and decodes it to utf-8.
@@ -54,6 +55,8 @@ else:
     from urlparse import parse_qsl
     from email.message import Message
     file_type = file
+    from itertools import izip as zip
+
     class HTTPHeaders(Message):
 
         # The __iter__ method is not available in python2.x, so we have

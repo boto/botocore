@@ -17,7 +17,7 @@ import itertools
 import botocore.session
 
 
-class TestKinesis(unittest.TestCase):
+class TestKinesisListStreams(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.service = self.session.get_service('kinesis')
