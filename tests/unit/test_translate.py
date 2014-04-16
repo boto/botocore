@@ -418,6 +418,7 @@ class TestTranslateModel(unittest.TestCase):
                     'py_input_token': 'other_value',
                     'limit_key': 'MaxResults',
                     'result_key': 'Credentials',
+                    'non_aggregate_keys': ['foo'],
                 }
             }
         }
@@ -433,6 +434,7 @@ class TestTranslateModel(unittest.TestCase):
                 'output_token': 'NextToken',
                 'limit_key': 'MaxResults',
                 'result_key': 'Credentials',
+                    'non_aggregate_keys': ['foo'],
             })
 
     def test_paginators_are_validated(self):

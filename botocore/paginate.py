@@ -12,21 +12,11 @@
 # language governing permissions and limitations under the License.
 
 from itertools import tee
-try:
-    from itertools import zip_longest
-except ImportError:
-    # Python2.x is izip_longest.
-    from itertools import izip_longest as zip_longest
-
-try:
-    zip
-except NameError:
-    # Python2.x is izip.
-    from itertools import izip as zip
 
 import jmespath
 from botocore.exceptions import PaginationError
-from botocore.utils import set_value_from_jmespath
+from botocore.compat import zip
+from botocore.utils import set_value_from_jmespath, merge_dicts
 
 
 class Paginator(object):
@@ -36,11 +26,19 @@ class Paginator(object):
         self._output_token = self._get_output_tokens(self._pagination_cfg)
         self._input_token = self._get_input_tokens(self._pagination_cfg)
         self._more_results = self._get_more_results_token(self._pagination_cfg)
+        self._non_aggregate_keys = self._get_non_aggregate_keys(
+            self._pagination_cfg)
         self._result_keys = self._get_result_keys(self._pagination_cfg)
 
     @property
     def result_keys(self):
         return self._result_keys
+
+    def _get_non_aggregate_keys(self, config):
+        keys = []
+        for key in config.get('non_aggregate_keys', []):
+            keys.append(jmespath.compile(key))
+        return keys
 
     def _get_output_tokens(self, config):
         output = []
@@ -86,7 +84,8 @@ class Paginator(object):
         page_params = self._extract_paging_params(kwargs)
         return PageIterator(self._operation, self._input_token,
                             self._output_token, self._more_results,
-                            self._result_keys, page_params['max_items'],
+                            self._result_keys, self._non_aggregate_keys,
+                            page_params['max_items'],
                             page_params['starting_token'],
                             endpoint, kwargs)
 
@@ -102,7 +101,8 @@ class Paginator(object):
 
 class PageIterator(object):
     def __init__(self, operation, input_token, output_token, more_results,
-                 result_keys, max_items, starting_token, endpoint, op_kwargs):
+                 result_keys, non_aggregate_keys, max_items, starting_token,
+                 endpoint, op_kwargs):
         self._operation = operation
         self._input_token = input_token
         self._output_token = output_token
@@ -113,6 +113,8 @@ class PageIterator(object):
         self._endpoint = endpoint
         self._op_kwargs = op_kwargs
         self._resume_token = None
+        self._non_aggregate_key_exprs = non_aggregate_keys
+        self._non_aggregate_part = {}
 
     @property
     def result_keys(self):
@@ -127,6 +129,10 @@ class PageIterator(object):
     def resume_token(self, value):
         if isinstance(value, list):
             self._resume_token = '___'.join([str(v) for v in value])
+
+    @property
+    def non_aggregate_part(self):
+        return self._non_aggregate_part
 
     def __iter__(self):
         current_kwargs = self._op_kwargs
@@ -150,6 +156,7 @@ class PageIterator(object):
                     starting_truncation = self._handle_first_request(
                         parsed, primary_result_key, starting_truncation)
                 first_request = False
+                self._record_non_aggregate_key_values(parsed)
             current_response = primary_result_key.search(parsed)
             if current_response is None:
                 current_response = []
@@ -183,6 +190,15 @@ class PageIterator(object):
                     raise PaginationError(message=message)
                 self._inject_token_into_kwargs(current_kwargs, next_token)
                 previous_next_token = next_token
+
+    def _record_non_aggregate_key_values(self, response):
+        non_aggregate_keys = {}
+        for expression in self._non_aggregate_key_exprs:
+            result = expression.search(response)
+            set_value_from_jmespath(non_aggregate_keys,
+                                    expression.expression,
+                                    result)
+        self._non_aggregate_part = non_aggregate_keys
 
     def _inject_starting_token(self, op_kwargs):
         # If the user has specified a starting token we need to
@@ -260,28 +276,30 @@ class PageIterator(object):
                 in zip(teed_results, self.result_keys)]
 
     def build_full_result(self):
-        iterators = self.result_key_iters()
-        response = {}
-        key_names = [i.result_key for i in iterators]
-        for key in key_names:
-            set_value_from_jmespath(response, key.expression, [])
-        for vals in zip_longest(*iterators):
-            for k, val in zip(key_names, vals):
-                if val is not None:
-                    # We can't just do an append here, since we don't
-                    # necessarily have a reference (& the expression isn't as
-                    # easy as normal keys).
-                    # So we'll search for the value, create an empty list if
-                    # we don't find it, then append the ``val`` to the list &
-                    # set it via the expression.
-                    existing = k.search(response)
-                    if not existing:
-                        existing = []
-                    existing.append(val)
-                    set_value_from_jmespath(response, k.expression, existing)
+        complete_result = {}
+        # Prepopulate the result keys with an empty list.
+        for result_expression in self.result_keys:
+            set_value_from_jmespath(complete_result,
+                                    result_expression.expression, [])
+        for _, page in self:
+            # We're incrementally building the full response page
+            # by page.  For each page in the response we need to
+            # inject the necessary components from the page
+            # into the complete_result.
+            for result_expression in self.result_keys:
+                # In order to incrementally update a result key
+                # we need to search the existing value from complete_result,
+                # then we need to search the _current_ page for the
+                # current result key value.  Then we append the current
+                # value onto the existing value, and re-set that value
+                # as the new value.
+                existing_value = result_expression.search(complete_result)
+                result_value = result_expression.search(page)
+                existing_value.extend(result_value)
+        merge_dicts(complete_result, self.non_aggregate_part)
         if self.resume_token is not None:
-            response['NextToken'] = self.resume_token
-        return response
+            complete_result['NextToken'] = self.resume_token
+        return complete_result
 
     def _parse_starting_token(self):
         if self._starting_token is None:
@@ -304,7 +322,18 @@ class PageIterator(object):
 
 
 class ResultKeyIterator(object):
-    """Iterates over the results of paginated responses."""
+    """Iterates over the results of paginated responses.
+
+    Each iterator is associated with a single result key.
+    Iterating over this object will give you each element in
+    the result key list.
+
+    :param pages_iterator: An iterator that will give you
+        pages of results (a ``PageIterator`` class).
+    :param result_key: The JMESPath expression representing
+        the result key.
+
+    """
     def __init__(self, pages_iterator, result_key):
         self._pages_iterator = pages_iterator
         self.result_key = result_key

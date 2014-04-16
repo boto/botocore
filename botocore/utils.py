@@ -176,3 +176,22 @@ class InstanceMetadataFetcher(object):
                 'expiry_time': data[role_name]['Expiration'],
             }
         return final_data
+
+
+
+def merge_dicts(dict1, dict2):
+    """Given two dict, merge the second dict into the first.
+
+    The dicts can have arbitrary nesting.
+
+    """
+    for key in dict2:
+        if isinstance(dict2[key], dict):
+            if key in dict1 and key in dict2:
+                merge_dicts(dict1[key], dict2[key])
+            else:
+                dict1[key] = dict2[key]
+        else:
+            # At scalar types, we iterate and merge the
+            # current dict that we're on.
+            dict1[key] = dict2[key]
