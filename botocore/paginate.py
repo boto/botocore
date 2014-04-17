@@ -295,7 +295,8 @@ class PageIterator(object):
                 # as the new value.
                 existing_value = result_expression.search(complete_result)
                 result_value = result_expression.search(page)
-                existing_value.extend(result_value)
+                if result_value is not None:
+                    existing_value.extend(result_value)
         merge_dicts(complete_result, self.non_aggregate_part)
         if self.resume_token is not None:
             complete_result['NextToken'] = self.resume_token
