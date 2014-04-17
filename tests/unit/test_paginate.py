@@ -578,5 +578,92 @@ class TestExpressionKeyIterators(unittest.TestCase):
         })
 
 
+class TestIncludeNonResultKeys(unittest.TestCase):
+    maxDiff = None
+
+    def setUp(self):
+        self.operation = mock.Mock()
+        self.paginate_config = {
+            'output_token': 'NextToken',
+            'py_input_token': 'NextToken',
+            'result_key': 'ResultKey',
+            'non_aggregate_keys': ['NotResultKey'],
+        }
+        self.operation.pagination = self.paginate_config
+        self.paginator = Paginator(self.operation)
+
+    def set_responses(self, responses):
+        complete_responses = []
+        for response in responses:
+            complete_responses.append((None, response))
+        self.operation.call.side_effect = complete_responses
+
+    def test_include_non_aggregate_keys(self):
+        self.set_responses([
+            {'ResultKey': ['foo'], 'NotResultKey': 'a', 'NextToken': 't1'},
+            {'ResultKey': ['bar'], 'NotResultKey': 'a', 'NextToken': 't2'},
+            {'ResultKey': ['baz'], 'NotResultKey': 'a'},
+        ])
+        pages = self.paginator.paginate(None)
+        actual = pages.build_full_result()
+        self.assertEqual(pages.non_aggregate_part, {'NotResultKey': 'a'})
+        expected = {
+            'ResultKey': ['foo', 'bar', 'baz'],
+            'NotResultKey': 'a',
+        }
+        self.assertEqual(actual, expected)
+
+    def test_include_with_multiple_result_keys(self):
+        self.paginate_config['result_key'] = ['ResultKey1', 'ResultKey2']
+        self.operation.pagination = self.paginate_config
+        self.paginator = Paginator(self.operation)
+        self.set_responses([
+            {'ResultKey1': ['a', 'b'], 'ResultKey2': ['u', 'v'],
+             'NotResultKey': 'a', 'NextToken': 'token1'},
+            {'ResultKey1': ['c', 'd'], 'ResultKey2': ['w', 'x'],
+             'NotResultKey': 'a', 'NextToken': 'token2'},
+            {'ResultKey1': ['e', 'f'], 'ResultKey2': ['y', 'z'],
+             'NotResultKey': 'a',}
+        ])
+        pages = self.paginator.paginate(None)
+        actual = pages.build_full_result()
+        expected = {
+            'ResultKey1': ['a', 'b', 'c', 'd', 'e', 'f'],
+            'ResultKey2': ['u', 'v', 'w', 'x', 'y', 'z'],
+            'NotResultKey': 'a',
+        }
+        self.assertEqual(actual, expected)
+
+    def test_include_with_nested_result_keys(self):
+        self.paginate_config['result_key'] = 'Result.Key'
+        self.paginate_config['non_aggregate_keys'] = [
+            'Outer', 'Result.Inner',
+        ]
+        self.operation.pagination = self.paginate_config
+        self.paginator = Paginator(self.operation)
+        self.set_responses([
+            # The non result keys shows hypothetical
+            # example.  This doesn't actually happen,
+            # but in the case where the non result keys
+            # are different across pages, we use the values
+            # from the first page.
+            {'Result': {'Key': ['foo'], 'Inner': 'v1'},
+             'Outer': 'v2', 'NextToken': 't1'},
+            {'Result': {'Key': ['bar', 'baz'], 'Inner': 'v3'},
+             'Outer': 'v4', 'NextToken': 't2'},
+            {'Result': {'Key': ['qux'], 'Inner': 'v5'},
+             'Outer': 'v6', 'NextToken': 't3'},
+        ])
+        pages = self.paginator.paginate(None)
+        actual = pages.build_full_result()
+        self.assertEqual(pages.non_aggregate_part,
+                         {'Outer': 'v2', 'Result': {'Inner': 'v1'}})
+        expected = {
+            'Result': {'Key': ['foo', 'bar', 'baz', 'qux'], 'Inner': 'v1'},
+            'Outer': 'v2',
+        }
+        self.assertEqual(actual, expected)
+
+
 if __name__ == '__main__':
     unittest.main()

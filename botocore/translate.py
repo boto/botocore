@@ -20,7 +20,7 @@ from copy import deepcopy
 import jmespath
 
 from botocore.compat import OrderedDict, json
-from botocore.utils import set_value_from_jmespath
+from botocore.utils import set_value_from_jmespath, merge_dicts
 from botocore import xform_name
 
 
@@ -404,7 +404,8 @@ def _transform_waiter(new_waiter):
 def _check_known_pagination_keys(config):
     # Verify that the pagination config only has keys we expect to see.
     expected = set(['input_token', 'py_input_token', 'output_token',
-                    'result_key', 'limit_key', 'more_results'])
+                    'result_key', 'limit_key', 'more_results',
+                    'non_aggregate_keys'])
     for key in config:
         if key not in expected:
             raise ValueError("Unknown key in pagination config: %s" % key)
@@ -465,25 +466,3 @@ def resolve_references(config, definitions):
                 config[key] = definitions[list(value.values())[0]]
             else:
                 resolve_references(value, definitions)
-
-
-def merge_dicts(dict1, dict2):
-    """Given two dict, merge the second dict into the first.
-
-    The dicts can have arbitrary nesting.
-
-    """
-    for key in dict2:
-        if is_sequence(dict2[key]):
-            if key in dict1 and key in dict2:
-                merge_dicts(dict1[key], dict2[key])
-            else:
-                dict1[key] = dict2[key]
-        else:
-            # At scalar types, we iterate and merge the
-            # current dict that we're on.
-            dict1[key] = dict2[key]
-
-
-def is_sequence(x):
-    return isinstance(x, (list, dict))
