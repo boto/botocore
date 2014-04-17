@@ -364,7 +364,7 @@
             "location_name": "x-amz-server-side-encryption"
           },
           "StorageClass": {
-            "shape_name": "StorageClassOptions",
+            "shape_name": "StorageClass",
             "type": "string",
             "enum": [
               "STANDARD",
@@ -699,7 +699,7 @@
             "location_name": "x-amz-server-side-encryption"
           },
           "StorageClass": {
-            "shape_name": "StorageClassOptions",
+            "shape_name": "StorageClass",
             "type": "string",
             "enum": [
               "STANDARD",
@@ -1442,11 +1442,9 @@
                       "documentation": "Indicates the lifetime, in days, of the objects that are subject to the rule. The value must be a non-zero positive integer."
                     },
                     "StorageClass": {
-                      "shape_name": "StorageClass",
+                      "shape_name": "TransitionStorageClass",
                       "type": "string",
                       "enum": [
-                        "STANDARD",
-                        "REDUCED_REDUNDANCY",
                         "GLACIER"
                       ],
                       "documentation": "The class of storage used to store the object."
@@ -2927,8 +2925,7 @@
                   "type": "string",
                   "enum": [
                     "STANDARD",
-                    "REDUCED_REDUNDANCY",
-                    "GLACIER"
+                    "REDUCED_REDUNDANCY"
                   ],
                   "documentation": "The class of storage used to store the object."
                 },
@@ -3114,12 +3111,10 @@
                   "documentation": "Size in bytes of the object."
                 },
                 "StorageClass": {
-                  "shape_name": "StorageClass",
+                  "shape_name": "ObjectVersionStorageClass",
                   "type": "string",
                   "enum": [
-                    "STANDARD",
-                    "REDUCED_REDUNDANCY",
-                    "GLACIER"
+                    "STANDARD"
                   ],
                   "documentation": "The class of storage used to store the object."
                 },
@@ -3369,7 +3364,7 @@
                   "documentation": null
                 },
                 "StorageClass": {
-                  "shape_name": "StorageClass",
+                  "shape_name": "ObjectStorageClass",
                   "type": "string",
                   "enum": [
                     "STANDARD",
@@ -3616,8 +3611,7 @@
             "type": "string",
             "enum": [
               "STANDARD",
-              "REDUCED_REDUNDANCY",
-              "GLACIER"
+              "REDUCED_REDUNDANCY"
             ],
             "documentation": "The class of storage used to store the object."
           }
@@ -4006,11 +4000,9 @@
                           "documentation": "Indicates the lifetime, in days, of the objects that are subject to the rule. The value must be a non-zero positive integer."
                         },
                         "StorageClass": {
-                          "shape_name": "StorageClass",
+                          "shape_name": "TransitionStorageClass",
                           "type": "string",
                           "enum": [
-                            "STANDARD",
-                            "REDUCED_REDUNDANCY",
                             "GLACIER"
                           ],
                           "documentation": "The class of storage used to store the object."
@@ -4775,7 +4767,7 @@
             "location_name": "x-amz-server-side-encryption"
           },
           "StorageClass": {
-            "shape_name": "StorageClassOptions",
+            "shape_name": "StorageClass",
             "type": "string",
             "enum": [
               "STANDARD",
