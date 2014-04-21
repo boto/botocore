@@ -396,6 +396,19 @@ class TestS3Copy(TestS3BaseWithBucket):
         data = response[1]
         self.assertEqual(data['Body'].read().decode('utf-8'), 'foo')
 
+    def test_copy_with_s3_metadata(self):
+        key_name = 'foo.txt'
+        self.create_object(key_name=key_name)
+        copied_key = 'copied.txt'
+        operation = self.service.get_operation('CopyObject')
+        http, parsed = operation.call(
+            self.endpoint, bucket=self.bucket_name, key=copied_key,
+            copy_source='%s/%s' % (self.bucket_name, key_name),
+            metadata_directive='REPLACE',
+            metadata={"mykey": "myvalue", "mykey2": "myvalue2"})
+        self.keys.append(copied_key)
+        self.assertEqual(http.status_code, 200)
+
 
 if __name__ == '__main__':
     unittest.main()

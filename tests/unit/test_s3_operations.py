@@ -277,6 +277,23 @@ class TestS3Operations(BaseSessionTest):
         self.assertEqual(params['uri_params'], uri_params)
         self.assertEqual(params['payload'].getvalue(), fp)
 
+    def test_copy_object(self):
+        operation = self.s3.get_operation('CopyObject')
+        bucket_name = 'mybucket'
+        key_name = 'key1'
+        copied_key= 'copied'
+        params = operation.build_parameters(
+            bucket=self.bucket_name, key=copied_key,
+            copy_source='%s/%s' % (bucket_name, key_name),
+            metadata_directive='REPLACE',
+            metadata={"mykey": "myvalue", "mykey2": "myvalue2"})
+        self.assertEqual(params['headers'], {
+            'x-amz-copy-source': 'mybucket/key1',
+            'x-amz-metadata-directive': 'REPLACE',
+            'x-amz-meta-mykey': 'myvalue',
+            'x-amz-meta-mykey2': 'myvalue2',
+        })
+
     def test_complete_multipart_upload(self):
         op = self.s3.get_operation('CompleteMultipartUpload')
         parts = {
