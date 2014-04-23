@@ -193,22 +193,8 @@ class Session(object):
         # otherwise it will return the cached value.  The profile map
         # is a list of profile names, to the config values for the profile.
         if self._profile_map is None:
-            profile_map = {}
-            for key, values in self.full_config.items():
-                if key.startswith("profile"):
-                    try:
-                        parts = shlex.split(key)
-                    except ValueError:
-                        continue
-                    if len(parts) == 2:
-                        profile_map[parts[1]] = values
-                elif key == 'default':
-                    # default section is special and is considered a profile
-                    # name but we don't require you use 'profile "default"'
-                    # as a section.
-                    profile_map[key] = values
-            self._profile_map = profile_map
-        return self._profile_map
+            self._profile_map = botocore.config.build_profile_map(self.full_config)
+        return self._profile_map['profiles']
 
     @property
     def profile(self):
@@ -364,7 +350,8 @@ class Session(object):
         """
         if self._config is None:
             try:
-                self._config = botocore.config.get_config(self)
+                config_filename = self.get_config_variable('config_file')
+                self._config = botocore.config.get_config(config_filename)
             except ConfigNotFound:
                 self._config = {}
         return self._config

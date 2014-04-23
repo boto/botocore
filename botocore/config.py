@@ -11,18 +11,20 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import os
+import shlex
+import copy
 
 from six.moves import configparser
-import os
+
 import botocore.exceptions
 
 
-def get_config(session):
-    """
-    If the ``config_file`` session variable exists, parse that
-    file and return all of the data found within the file as a
-    dictionary of dictionaries, one for each profile section found
-    in the configuration file.
+def get_config(config_filename):
+    """Returns the parsed INI config contents.
+
+    Each section name is a top level key, and a _path key is inserted whose
+    value is the ``config_filename``.
 
     :returns: A dict with keys for each profile found in the config
         file and the value of each key being a dict containing name
@@ -31,8 +33,7 @@ def get_config(session):
     :raises: ConfigNotFound, ConfigParseError
     """
     config = {}
-    path = None
-    path = session.get_config_variable('config_file')
+    path = config_filename
     if path is not None:
         path = os.path.expandvars(path)
         path = os.path.expanduser(path)
@@ -80,3 +81,76 @@ def _parse_nested(config_value):
         key, value = line.split('=', 1)
         parsed[key.strip()] = value.strip()
     return parsed
+
+
+def build_profile_map(parsed_ini_config):
+    """Convert the parsed INI config into a profile map.
+
+    The config file format requires that every profile except the
+    default to be prepended with "profile", e.g.::
+
+        [profile test]
+        aws_... = foo
+        aws_... = bar
+
+        [profile bar]
+        aws_... = foo
+        aws_... = bar
+
+        # This is *not* a profile
+        [preview]
+        otherstuff = 1
+
+        # Neither is this
+        [foobar]
+        morestuff = 2
+
+    The build_profile_map will take a parsed INI config file where each top
+    level key represents a section name, and convert into a format where all
+    the profiles are under a single top level "profiles" key, and each key in
+    the sub dictionary is a profile name.  For example, the above config file
+    would be converted from::
+
+        {"profile test": {"aws_...": "foo", "aws...": "bar"},
+         "profile bar": {"aws...": "foo", "aws...": "bar"},
+         "preview": {"otherstuff": ...},
+         "foobar": {"morestuff": ...},
+         }
+
+    into::
+
+        {"profiles": {"test": {"aws_...": "foo", "aws...": "bar"},
+                      "bar": {"aws...": "foo", "aws...": "bar"},
+         "preview": {"otherstuff": ...},
+         "foobar": {"morestuff": ...},
+        }
+
+    If there are no profiles in the provided parsed INI contents, then
+    an empty dict will be the value associated with the ``profiles`` key.
+
+    .. note::
+
+        This will not mutate the passed in parsed_ini_config.  Instead it will
+        make a deepcopy and return that value.
+
+    """
+    parsed_config = copy.deepcopy(parsed_ini_config)
+    profiles = {}
+    final_config = {}
+    for key, values in parsed_config.items():
+        if key.startswith("profile"):
+            try:
+                parts = shlex.split(key)
+            except ValueError:
+                continue
+            if len(parts) == 2:
+                profiles[parts[1]] = values
+        elif key == 'default':
+            # default section is special and is considered a profile
+            # name but we don't require you use 'profile "default"'
+            # as a section.
+            profiles[key] = values
+        else:
+            final_config[key] = values
+    final_config['profiles'] = profiles
+    return final_config
