@@ -19,8 +19,11 @@ import os
 
 from six.moves import configparser
 
+import botocore.config
 from botocore.compat import total_seconds
 from botocore.exceptions import UnknownCredentialError
+from botocore.exceptions import PartialCredentialsError
+from botocore.exceptions import ConfigNotFound
 from botocore.utils import InstanceMetadataFetcher
 
 
@@ -267,6 +270,35 @@ class OriginalEC2Provider(CredentialProvider):
         return None
 
 
+class SharedCredentialProvider(CredentialProvider):
+    method = 'shared-credentials-file'
+
+    def load(self):
+        profile_name = self.session.profile
+        if profile_name is None:
+            profile_name = 'default'
+        credentials_filename = self.session.get_variable('credentials_file')
+        try:
+            loaded_config = botocore.config.get_config(credentials_filename)
+        except ConfigNotFound as e:
+            return None
+        if profile_name in loaded_config and \
+                'aws_access_key_id' in loaded_config[profile_name]:
+            # We require all the credential variables to come from a single
+            # file.  So if we see a single credential variable, we require
+            # they all exist, except for token, which is optional anyways.
+            logger.info("Found credentials in shared credentials file: %s",
+                        credentials_filename)
+            creds = loaded_config[profile_name]
+            try:
+                return Credentials(creds['aws_access_key_id'],
+                                   creds['aws_secret_access_key'],
+                                   creds.get('aws_security_token'),
+                                   method=self.method)
+            except KeyError as e:
+                raise PartialCredentialsError(cred_var=str(e))
+
+
 class ConfigProvider(CredentialProvider):
     method = 'config'
 
@@ -315,6 +347,7 @@ class BotoProvider(CredentialProvider):
 class CredentialResolver(object):
     default_methods = [
         EnvProvider,
+        SharedCredentialProvider,
         ConfigProvider,
         OriginalEC2Provider,
         BotoProvider,

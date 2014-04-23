@@ -71,6 +71,11 @@ class Session(object):
         'token': ('aws_security_token', 'AWS_SECURITY_TOKEN', None),
         'provider': ('provider', 'BOTO_PROVIDER_NAME', 'aws'),
 
+        # These variables are intended for internal use so don't have any
+        # user settable values.
+        # This is the shared credentials file amongst sdks.
+        'credentials_file': (None, None, '~/.aws/credentials'),
+
         # These variables only exist in the config file.
 
         # This is the number of seconds until we time out a request to
