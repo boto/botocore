@@ -227,7 +227,8 @@ class TestSharedCredentialsProvider(BaseEnvVar):
 
 class TestConfigFileProvider(BaseEnvVar):
 
-    def test_config_file_exists(self):
+    def setUp(self):
+        super(TestConfigFileProvider, self).setUp()
         profile_config = {
             'aws_access_key_id': 'a',
             'aws_secret_access_key': 'b',
@@ -236,7 +237,14 @@ class TestConfigFileProvider(BaseEnvVar):
             'region': 'us-west-2',
             'output': 'json',
         }
-        provider = credentials.ConfigProvider(config=profile_config)
+        parsed = {'profiles': {'default': profile_config}}
+        parser = mock.Mock()
+        parser.return_value = parsed
+        self.parser = parser
+
+    def test_config_file_exists(self):
+        provider = credentials.ConfigProvider('cli.cfg', 'default',
+                                              self.parser)
         creds = provider.load()
         self.assertIsNotNone(creds)
         self.assertEqual(creds.access_key, 'a')
@@ -247,7 +255,19 @@ class TestConfigFileProvider(BaseEnvVar):
     def test_config_file_missing_profile_config(self):
         # Referring to a profile that's not in the config file
         # will result in session.config returning an empty dict.
-        provider = credentials.ConfigProvider(config={})
+        profile_name = 'NOT-default'
+        provider = credentials.ConfigProvider('cli.cfg', profile_name,
+                                              self.parser)
+        creds = provider.load()
+        self.assertIsNone(creds)
+
+    def test_config_file_errors_ignored(self):
+        # We should move on to the next provider if the config file
+        # can't be found.
+        self.parser.side_effect = botocore.exceptions.ConfigNotFound(
+            path='cli.cfg')
+        provider = credentials.ConfigProvider('cli.cfg', 'default',
+                                              self.parser)
         creds = provider.load()
         self.assertIsNone(creds)
 
@@ -457,6 +477,20 @@ class CredentialResolverTest(BaseEnvVar):
         # provider.
         with self.assertRaises(botocore.exceptions.UnknownCredentialError):
             resolver.insert_after('providerFoo', None)
+
+
+class TestCreateCredentialResolver(BaseEnvVar):
+    def test_create_credential_resolver(self):
+        fake_session = mock.Mock()
+        config = {
+            'credential_file': 'a',
+            'legacy_config_file': 'b',
+            'config_file': 'c',
+            'metadata_service_timeout': 'd',
+            'metadata_service_num_attempts': 'e',
+        }
+        fake_session.get_config_variable = lambda x: config[x]
+        resolver = credentials.create_credential_resolver(fake_session)
 
 
 if __name__ == "__main__":

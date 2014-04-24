@@ -20,7 +20,21 @@ from six.moves import configparser
 import botocore.exceptions
 
 
-def get_config(config_filename):
+def load_config(config_filename):
+    """Parse a INI config with profiles.
+
+    This will parse an INI config file and map top level profiles
+    into a top level "profile" key.
+
+    If you want to parse an INI file and map all section names to
+    top level keys, use ``raw_config_parse`` instead.
+
+    """
+    parsed = raw_config_parse(config_filename)
+    return build_profile_map(parsed)
+
+
+def raw_config_parse(config_filename):
     """Returns the parsed INI config contents.
 
     Each section name is a top level key, and a _path key is inserted whose
@@ -61,6 +75,9 @@ def get_config(config_filename):
                                 path=path)
                     config[section][option] = config_value
     return config
+
+# XXX: Remove alias.
+get_config = raw_config_parse
 
 
 def _parse_nested(config_value):

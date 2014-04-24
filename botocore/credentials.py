@@ -40,21 +40,28 @@ def create_credential_resolver(session):
     """
     profile_name = session.profile
     scoped_config = session.get_config()
+    credential_file = session.get_config_variable('credential_file')
+    legacy_config = session.get_config_variable('legacy_config_file')
+    config_file = session.get_config_variable('config_file')
+    metadata_timeout = session.get_config_variable('metadata_service_timeout')
+    num_attempts = session.get_config_variable('metadata_service_num_attempts')
     providers = [
         EnvProvider(),
         SharedCredentialProvider(
-            creds_filename=session.get_config_variable('credentials_file'),
+            creds_filename=credential_file,
             profile_name=profile_name
         ),
-        ConfigProvider(config=scoped_config),
+        # The new config file has precedence over the legacy
+        # config file.
+        ConfigProvider(config_filename=config_file, profile_name=profile_name),
+        ConfigProvider(config_filename=legacy_config,
+                       profile_name=profile_name),
         OriginalEC2Provider(),
         BotoProvider(),
         InstanceMetadataProvider(
             iam_role_fetcher=InstanceMetadataFetcher(
-                timeout=session.get_config_variable(
-                    'metadata_service_timeout'),
-                num_attempts=session.get_config_variable(
-                    'metadata_service_num_attempts')),
+                timeout=metadata_timeout,
+                num_attempts=num_attempts)
         )
     ]
     resolver = CredentialResolver(providers=providers)
@@ -331,7 +338,7 @@ class SharedCredentialProvider(CredentialProvider):
             profile_name = 'default'
         self._profile_name = profile_name
         if ini_parser is None:
-            ini_parser = botocore.config.get_config
+            ini_parser = botocore.config.raw_config_parse
         self._ini_parser = ini_parser
 
     def load(self):
@@ -357,6 +364,7 @@ class SharedCredentialProvider(CredentialProvider):
 
 
 class ConfigProvider(CredentialProvider):
+    """INI based config provider with profile sections."""
     METHOD = 'config-file'
 
     ACCESS_KEY = 'aws_access_key_id'
@@ -366,34 +374,46 @@ class ConfigProvider(CredentialProvider):
     # so we support both.
     TOKENS = ['aws_security_token', 'aws_session_token']
 
-    def __init__(self, config):
+    def __init__(self, config_filename, profile_name, config_parser=None):
         """
 
-        :param config: The session configuration scoped to the current profile.
-            This is available via ``session.config``.
+        :param config_filename: The session configuration scoped to the current
+            profile.  This is available via ``session.config``.
+        :param profile_name: The name of the current profile.
+        :param config_parser: A config parser callable.
 
         """
-        self._config = config
+        self._config_filename = config_filename
+        self._profile_name = profile_name
+        if config_parser is None:
+            config_parser = botocore.config.load_config
+        self._config_parser = config_parser
 
     def load(self):
         """
         If there is are credentials in the configuration associated with
         the session, use those.
         """
-        if self.ACCESS_KEY in self._config:
-            logger.info("Credentials found in config file.")
-            access_key = self._config[self.ACCESS_KEY]
-            secret_key = self._config[self.SECRET_KEY]
-            token = self._get_session_token()
-            return Credentials(access_key, secret_key, token,
-                               method=self.METHOD)
+        try:
+            full_config = self._config_parser(self._config_filename)
+        except ConfigNotFound:
+            return None
+        if self._profile_name in full_config['profiles']:
+            profile_config = full_config['profiles'][self._profile_name]
+            if self.ACCESS_KEY in profile_config:
+                logger.info("Credentials found in config file.")
+                access_key = profile_config[self.ACCESS_KEY]
+                secret_key = profile_config[self.SECRET_KEY]
+                token = self._get_session_token(profile_config)
+                return Credentials(access_key, secret_key, token,
+                                method=self.METHOD)
         else:
             return None
 
-    def _get_session_token(self):
+    def _get_session_token(self, profile_config):
         for token_name in self.TOKENS:
-            if token_name in self._config:
-                return self._config[token_name]
+            if token_name in profile_config:
+                return profile_config[token_name]
 
 
 class BotoProvider(CredentialProvider):
@@ -408,7 +428,7 @@ class BotoProvider(CredentialProvider):
         if environ is None:
             environ = os.environ
         if ini_parser is None:
-            ini_parser = botocore.config.get_config
+            ini_parser = botocore.config.raw_config_parse
         self._environ = environ
         self._ini_parser = ini_parser
 

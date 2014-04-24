@@ -72,6 +72,7 @@ class Session(object):
         # user settable values.
         # This is the shared credentials file amongst sdks.
         'credentials_file': (None, None, '~/.aws/credentials'),
+        'legacy_config_file': (None, None, '~/.aws/config'),
 
         # These variables only exist in the config file.
 
