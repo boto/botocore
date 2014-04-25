@@ -20,12 +20,12 @@ import copy
 import logging
 import os
 import platform
-import shlex
 
 from botocore import __version__
 import botocore.config
 import botocore.credentials
-from botocore.exceptions import ConfigNotFound, EventNotFound, ProfileNotFound
+import botocore.variables
+from botocore.exceptions import EventNotFound
 from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.loaders import Loader
@@ -60,19 +60,27 @@ class Session(object):
     is the formatting string used to construct a new event.
     """
 
+    # Environment variables that can specify the
+    # current profile.  Most of these are for legacy/backcompat
+    # purposes.
+    PROFILE_ENV_VARS = ['BOTO_DEFAULT_PROFILE',
+                        'BOTO_PROFILE',
+                        'AWS_DEFAULT_PROFILE',
+                        'AWS_PROFILE']
+    CONFIG_FILE_ENV_VARS = ['AWS_CONFIG_FILE']
+    DEFAULT_PROFILE = 'default'
+    DEFAULT_CONFIG = os.path.expanduser('~/.aws/config')
+
     SessionVariables = {
         # logical:  config_file, env_var,        default_value
-        'profile': (None, 'BOTO_DEFAULT_PROFILE', None),
         'region': ('region', 'BOTO_DEFAULT_REGION', None),
         'data_path': ('data_path', 'BOTO_DATA_PATH', None),
-        'config_file': (None, 'AWS_CONFIG_FILE', '~/.aws/config'),
         'provider': ('provider', 'BOTO_PROVIDER_NAME', 'aws'),
 
         # These variables are intended for internal use so don't have any
         # user settable values.
         # This is the shared credentials file amongst sdks.
         'credentials_file': (None, None, '~/.aws/credentials'),
-        'legacy_config_file': (None, None, '~/.aws/config'),
 
         # These variables only exist in the config file.
 
@@ -120,7 +128,8 @@ class Session(object):
     FmtString = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
     def __init__(self, session_vars=None, event_hooks=None,
-                 include_builtin_handlers=True, loader=None):
+                 include_builtin_handlers=True, loader=None,
+                 default_configfile=None):
         """
         Create a new Session object.
 
@@ -152,13 +161,8 @@ class Session(object):
         self.user_agent_version = __version__
         self.user_agent_extra = ''
         self._profile = None
-        self._config = None
         self._credentials = None
-        self._profile_map = None
         self._provider = None
-        # This is a dict that stores per session specific config variable
-        # overrides via set_config_variable().
-        self._session_instance_vars = {}
         if loader is None:
             loader = Loader()
         self._loader = loader
@@ -166,11 +170,27 @@ class Session(object):
         # extra paths to the loader.  We will do this lazily
         # only when we ask for the loader.
         self._data_paths_added = False
+        self._default_configfile = self.DEFAULT_CONFIG
+        self._var_resolver = None
+        self._config_filename = None
+        self._components = ComponentLocator()
+        self._register_config_resolver()
+        self._register_credential_provider()
 
+    def _register_credential_provider(self):
+        self._components.lazy_register_component(
+            'credential_provider',
+            lambda:  botocore.credentials.create_credential_resolver(self))
+
+    def _register_config_resolver(self):
+        self._components.lazy_register_component(
+            'config_resolver', lambda: botocore.variables.create_resolver(
+                self.session_var_map, self.profile,
+                [self.config_filename]))
     @property
     def loader(self):
         if not self._data_paths_added:
-            extra_paths = self.get_variable('data_path')
+            extra_paths = self.get_config_variable('data_path')
             if extra_paths is not None:
                 self._loader.data_path = extra_paths
             self._data_paths_added = True
@@ -189,18 +209,18 @@ class Session(object):
 
     @property
     def available_profiles(self):
-        return list(self._build_profile_map().keys())
-
-    def _build_profile_map(self):
-        # This will build the profile map if it has not been created,
-        # otherwise it will return the cached value.  The profile map
-        # is a list of profile names, to the config values for the profile.
-        if self._profile_map is None:
-            self._profile_map = botocore.config.build_profile_map(self.full_config)
-        return self._profile_map['profiles']
+        raise NotImplementedError("available_profiles")
 
     @property
     def profile(self):
+        if self._profile is None:
+            for var in self.PROFILE_ENV_VARS:
+                profile_name = os.environ.get(var)
+                if profile_name is not None:
+                    self._profile = profile_name
+                    break
+            # If we can't find a profile name, use the 'default' profile.
+            self._profile = None
         return self._profile
 
     @profile.setter
@@ -210,139 +230,33 @@ class Session(object):
         self._provider = None
         self._profile = profile
 
-    def get_config_variable(self, logical_name,
-                            methods=('instance', 'env', 'config'),
-                            default=None):
-        """
-        Retrieve the value associated with the specified logical_name
-        from the environment or the config file.  Values found in the
-        environment variable take precedence of values found in the
-        config file.  If no value can be found, a None will be returned.
-
-        :type logical_name: str
-        :param logical_name: The logical name of the session variable
-            you want to retrieve.  This name will be mapped to the
-            appropriate environment variable name for this session as
-            well as the appropriate config file entry.
-
-        :type method: tuple
-        :param method: Defines which methods will be used to find
-            the variable value.  By default, all available methods
-            are tried but you can limit which methods are used
-            by supplying a different value to this parameter.
-            Valid choices are: instance|env|config
-
-        :param default: The default value to return if there is no
-            value associated with the config file.  This value will
-            override any default value specified in ``SessionVariables``.
-
-        :returns: str value of variable of None if not defined.
-
-        """
-        value = None
-        # There's two types of defaults here.  One if the
-        # default value specified in the SessionVariables.
-        # The second is an explicit default value passed into this
-        # function (the default parameter).
-        # config_default is tracking the default value specified
-        # in the SessionVariables.
-        config_default = None
-        if logical_name in self.session_var_map:
-            # Short circuit case, check if the var has been explicitly
-            # overriden via set_config_variable.
-            if 'instance' in methods and \
-                    logical_name in self._session_instance_vars:
-                return self._session_instance_vars[logical_name]
-            config_name, envvar_name, config_default = self.session_var_map[
-                logical_name]
-            if logical_name in ('config_file', 'profile'):
-                config_name = None
-            if logical_name == 'profile' and self._profile:
-                value = self._profile
-            elif 'env' in methods and envvar_name and envvar_name in os.environ:
-                value = os.environ[envvar_name]
-            elif 'config' in methods:
-                if config_name:
-                    config = self.get_config()
-                    value = config.get(config_name)
-        # If we don't have a value at this point, we need to try to assign
-        # a default value.  An explicit default argument will win over the
-        # default value from SessionVariables.
-        if value is None and default is not None:
-            value = default
-        if value is None and config_default is not None:
-            value = config_default
-        return value
-
-    # Alias to get_variable for backwards compatability.
-    get_variable = get_config_variable
-
-    def set_config_variable(self, logical_name, value):
-        """Set a configuration variable to a specific value.
-
-        By using this method, you can override the normal lookup
-        process used in ``get_config_variable`` by explicitly setting
-        a value.  Subsequent calls to ``get_config_variable`` will
-        use the ``value``.  This gives you per-session specific
-        configuration values.
-
-        ::
-            >>> # Assume logical name 'foo' maps to env var 'FOO'
-            >>> os.environ['FOO'] = 'myvalue'
-            >>> s.get_config_variable('foo')
-            'myvalue'
-            >>> s.set_config_variable('foo', 'othervalue')
-            >>> s.get_config_variable('foo')
-            'othervalue'
-
-        :type logical_name: str
-        :param logical_name: The logical name of the session variable
-            you want to set.  These are the keys in ``SessionVariables``.
-        :param value: The value to associate with the config variable.
-
-        """
-        self._session_instance_vars[logical_name] = value
-
-    def get_config(self):
-        """
-        Returns the configuration associated with this session.  If
-        the configuration has not yet been loaded, it will be loaded
-        using the default ``profile`` session variable.  If it has already been
-        loaded, the cached configuration will be returned.
-
-        The configuration data is loaded **only** from the config file.
-        It does not resolve variables based on different locations
-        (e.g. first from the session instance, then from environment
-        variables, then from the config file).  If you want this lookup
-        behavior, use the ``get_config_variable`` method instead.
-
-        Note that this configuration is specific to a single profile (the
-        ``profile`` session variable).
-
-        If the ``profile`` session variable is set and the profile does
-        not exist in the config file, a ``ProfileNotFound`` exception
-        will be raised.
-
-        :raises: ConfigNotFound, ConfigParseError, ProfileNotFound
-        :rtype: dict
-        """
-        profile_name = self.get_config_variable('profile')
-        profile_map = self._build_profile_map()
-        # If a profile is not explicitly set return the default
-        # profile config or an empty config dict if we don't have
-        # a default profile.
-        if profile_name is None:
-            return profile_map.get('default', {})
-        elif profile_name not in profile_map:
-            # Otherwise if they specified a profile, it has to
-            # exist (even if it's the default profile) otherwise
-            # we complain.
-            raise ProfileNotFound(profile=profile_name)
-        else:
-            return profile_map[profile_name]
-
     @property
-    def full_config(self):
+    def config_filename(self):
+        if self._config_filename is None:
+            for var in self.CONFIG_FILE_ENV_VARS:
+                config_filename = os.environ.get(var)
+                if config_filename is not None:
+                    self._config_filename = os.path.expanduser(config_filename)
+                    break
+            # If we can't find a profile name, use the 'default' profile.
+            self._config_filename = os.path.expanduser(
+                self._default_configfile)
+        return self._config_filename
+
+    @config_filename.setter
+    def config_filename(self, value):
+        self._config_filename = value
+        # When the config file name is changed, we need to reset
+        # anything that's affected by this.  This includes
+        # the config resolver and the credential provider.
+        self._register_config_resolver()
+        self._register_credential_provider()
+
+    def get_config_variable(self, name):
+        return self._components.get_component(
+            'config_resolver').resolve_variable(name)
+
+    def get_full_config(self):
         """Return the parsed config file.
 
         The ``get_config`` method returns the config associated with the
@@ -351,13 +265,8 @@ class Session(object):
 
         :rtype: dict
         """
-        if self._config is None:
-            try:
-                config_filename = self.get_config_variable('config_file')
-                self._config = botocore.config.get_config(config_filename)
-            except ConfigNotFound:
-                self._config = {}
-        return self._config
+        return self._components.get_component(
+            'config_resolver').get_resolver('configfile').get_full_config()
 
     def set_credentials(self, access_key, secret_key, token=None):
         """
@@ -390,7 +299,8 @@ class Session(object):
 
         """
         if self._credentials is None:
-            self._credentials = botocore.credentials.get_credentials(self)
+            self._credentials = self._components.get_component(
+                'credential_provider').load_credentials()
         return self._credentials
 
     def user_agent(self):
@@ -629,6 +539,42 @@ class Session(object):
     def emit_first_non_none_response(self, event_name, **kwargs):
         responses = self._events.emit(event_name, **kwargs)
         return first_non_none_response(responses)
+
+    def get_component(self, name):
+        return self._components.get_component(name)
+
+    def register_component(self, name, component):
+        self._components.register_component(name, component)
+
+
+class ComponentLocator(object):
+    """Service locator for session components."""
+    def __init__(self):
+        self._components = {}
+        self._deferred = {}
+
+    def get_component(self, name):
+        if name in self._deferred:
+            factory = self._deferred.pop(name)
+            self._components[name] = factory()
+        try:
+            return self._components[name]
+        except KeyError:
+            raise ValueError("Unknown component: %s" % name)
+
+    def register_component(self, name, component):
+        self._components[name] = component
+        try:
+            del self._deferred[name]
+        except KeyError:
+            pass
+
+    def lazy_register_component(self, name, no_arg_factory):
+        self._deferred[name] = no_arg_factory
+        try:
+            del self._components[name]
+        except KeyError:
+            pass
 
 
 def get_session(env_vars=None):

@@ -39,10 +39,8 @@ def create_credential_resolver(session):
 
     """
     profile_name = session.profile
-    scoped_config = session.get_config()
-    credential_file = session.get_config_variable('credential_file')
-    legacy_config = session.get_config_variable('legacy_config_file')
-    config_file = session.get_config_variable('config_file')
+    credential_file = session.get_config_variable('credentials_file')
+    config_file = session.config_filename
     metadata_timeout = session.get_config_variable('metadata_service_timeout')
     num_attempts = session.get_config_variable('metadata_service_num_attempts')
     providers = [
@@ -54,8 +52,6 @@ def create_credential_resolver(session):
         # The new config file has precedence over the legacy
         # config file.
         ConfigProvider(config_filename=config_file, profile_name=profile_name),
-        ConfigProvider(config_filename=legacy_config,
-                       profile_name=profile_name),
         OriginalEC2Provider(),
         BotoProvider(),
         InstanceMetadataProvider(
@@ -265,19 +261,49 @@ class EnvProvider(CredentialProvider):
     # AWS_SESSION_TOKEN is what other AWS SDKs have standardized on.
     TOKENS = ['AWS_SECURITY_TOKEN', 'AWS_SESSION_TOKEN']
 
-    def __init__(self, environ=None):
+    def __init__(self, environ=None, mapping=None):
+        """
+
+        :param environ: The environment variables (defaults to
+            ``os.environ`` if no value is provided).
+        :param mapping: An optional mapping of variable names to
+            environment variable names.  Use this if you want to
+            change the mapping of access_key->AWS_ACCESS_KEY_ID, etc.
+            The dict can have up to 3 keys: ``access_key``, ``secret_key``,
+            ``session_token``.
+        """
         if environ is None:
             environ = os.environ
         self.environ = environ
+        self._mapping = self._build_mapping(mapping)
+
+    def _build_mapping(self, mapping):
+        # Mapping of variable name to env var name.
+        var_mapping = {}
+        if mapping is None:
+            # Use the class var default.
+            var_mapping['access_key'] = self.ACCESS_KEY
+            var_mapping['secret_key'] = self.SECRET_KEY
+            var_mapping['token'] = self.TOKENS
+        else:
+            var_mapping['access_key'] = mapping.get(
+                'access_key', self.ACCESS_KEY)
+            var_mapping['secret_key'] = mapping.get(
+                'secret_key', self.SECRET_KEY)
+            var_mapping['token'] = mapping.get(
+                'token', self.TOKENS)
+            if not isinstance(var_mapping['token'], list):
+                var_mapping['token'] = [var_mapping['token']]
+        return var_mapping
 
     def load(self):
         """
         Search for credentials in explicit environment variables.
         """
-        if self.ACCESS_KEY in self.environ:
-            logger.info('Found credentials in Environment variables.')
-            access_key = self.environ[self.ACCESS_KEY]
-            secret_key = self.environ[self.SECRET_KEY]
+        if self._mapping['access_key'] in self.environ:
+            logger.info('Found credentials in environment variables.')
+            access_key = self.environ[self._mapping['access_key']]
+            secret_key = self.environ[self._mapping['secret_key']]
             token = self._get_session_token()
             return Credentials(access_key, secret_key, token,
                                method=self.METHOD)
@@ -285,7 +311,7 @@ class EnvProvider(CredentialProvider):
             return None
 
     def _get_session_token(self):
-        for token_envvar in self.TOKENS:
+        for token_envvar in self._mapping['token']:
             if token_envvar in self.environ:
                 return self.environ[token_envvar]
 
@@ -401,7 +427,8 @@ class ConfigProvider(CredentialProvider):
         if self._profile_name in full_config['profiles']:
             profile_config = full_config['profiles'][self._profile_name]
             if self.ACCESS_KEY in profile_config:
-                logger.info("Credentials found in config file.")
+                logger.info("Credentials found in config file: %s",
+                            self._config_filename)
                 access_key = profile_config[self.ACCESS_KEY]
                 secret_key = profile_config[self.SECRET_KEY]
                 token = self._get_session_token(profile_config)
@@ -457,7 +484,6 @@ class BotoProvider(CredentialProvider):
                                        method=self.METHOD)
 
 
-# TODO: cache?
 class CredentialResolver(object):
 
     def __init__(self, providers):
@@ -533,6 +559,7 @@ class CredentialResolver(object):
         """
         # First provider to return a non-None response wins.
         for provider in self.providers:
+            logger.debug("Looking for credentials via: %s", provider.METHOD)
             creds = provider.load()
             if creds is not None:
                 return creds

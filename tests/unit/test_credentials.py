@@ -147,6 +147,45 @@ class TestEnvVar(BaseEnvVar):
         creds = provider.load()
         self.assertIsNone(creds)
 
+    def test_can_override_env_var_mapping(self):
+        # We can change the env var provider to
+        # use our specified env var names.
+        environ = {
+            'FOO_ACCESS_KEY': 'foo',
+            'FOO_SECRET_KEY': 'bar',
+            'FOO_SESSION_TOKEN': 'baz',
+        }
+        mapping = {
+            'access_key': 'FOO_ACCESS_KEY',
+            'secret_key': 'FOO_SECRET_KEY',
+            'token': 'FOO_SESSION_TOKEN',
+        }
+        provider = credentials.EnvProvider(
+            environ, mapping
+        )
+        creds = provider.load()
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+
+    def test_can_override_partial_env_var_mapping(self):
+        # Only changing the access key mapping.
+        # The other 2 use the default values of
+        # AWS_SECRET_ACCESS_KEY and AWS_SESSION_TOKEN
+        # use our specified env var names.
+        environ = {
+            'FOO_ACCESS_KEY': 'foo',
+            'AWS_SECRET_ACCESS_KEY': 'bar',
+            'AWS_SESSION_TOKEN': 'baz',
+        }
+        provider = credentials.EnvProvider(
+            environ, {'access_key': 'FOO_ACCESS_KEY'}
+        )
+        creds = provider.load()
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+
 
 class TestSharedCredentialsProvider(BaseEnvVar):
     def setUp(self):
@@ -483,7 +522,7 @@ class TestCreateCredentialResolver(BaseEnvVar):
     def test_create_credential_resolver(self):
         fake_session = mock.Mock()
         config = {
-            'credential_file': 'a',
+            'credentials_file': 'a',
             'legacy_config_file': 'b',
             'config_file': 'c',
             'metadata_service_timeout': 'd',
