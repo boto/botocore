@@ -293,8 +293,7 @@
                                 "documentation": "\n       <p>You can create an output file that contains an excerpt from the input file. This excerpt, called a clip, can come from the beginning, middle, or end of the file. The Composition object contains settings for the clips that make up an output file. For the current release, you can only specify settings for a single clip per output file. The Composition object cannot be null.</p>\n   "
                             }
                         },
-                        "documentation": "\n        <p>The <code>CreateJobOutput</code> structure.</p>\n    ",
-                        "cli_name": "job-output"
+                        "documentation": "\n        <p>The <code>CreateJobOutput</code> structure.</p>\n    "
                     },
                     "Outputs": {
                         "shape_name": "CreateJobOutputs",

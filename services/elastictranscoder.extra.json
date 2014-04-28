@@ -24,15 +24,6 @@
         }
       }
     },
-    "CreateJob": {
-      "input": {
-        "members": {
-          "Output": {
-            "cli_name": "job-output"
-          }
-        }
-      }
-    },
     "DeletePipeline": {
       "input": {
         "members": {
