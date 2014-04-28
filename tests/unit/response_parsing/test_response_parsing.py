@@ -175,7 +175,9 @@ class TestHeaderParsing(unittest.TestCase):
              'Content-Type': 'binary/octet-stream',
              'accept-ranges': 'bytes',
              'Last-Modified': 'Tue, 20 Aug 2013 18:33:25 GMT',
-             'x-amz-server-side-encryption': 'AES256'
+             'x-amz-server-side-encryption': 'AES256',
+             'x-amz-meta-mykey1': 'value1',
+             'x-amz-meta-mykey2': 'value2',
              })
         http_response.content = ''
         http_response.request.method = 'HEAD'
@@ -185,8 +187,11 @@ class TestHeaderParsing(unittest.TestCase):
                     "LastModified": "Tue, 20 Aug 2013 18:33:25 GMT",
                     "ContentLength": "265",
                     "ETag": '"40d06eb6194712ac1c915783004ef730"',
-                    "ServerSideEncryption": "AES256"
-                    }
+                    "ServerSideEncryption": "AES256",
+                    "Metadata": {
+                        'mykey1': 'value1',
+                        'mykey2': 'value2',
+                    }}
         response_data = get_response(self.session, put_object,
                                      http_response)[1]
         self.assertEqual(response_data, expected)

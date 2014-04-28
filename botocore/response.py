@@ -328,8 +328,22 @@ class XmlResponse(Response):
                 location = member.get('location')
                 if location == 'header':
                     location_name = member.get('location_name')
-                    if location_name in headers:
+                    if member['type'] == 'map':
+                        self._merge_map_header_values(headers, location_name,
+                                                      member_name, member)
+                    elif location_name in headers:
                         self.value[member_name] = headers[location_name]
+
+    def _merge_map_header_values(self, headers, location_name,
+                                 member_name, member):
+        final_map_value = {}
+        for header_name in headers:
+            if header_name.startswith(location_name):
+                header_value = headers[header_name]
+                actual_name = header_name[len(location_name):]
+                final_map_value[actual_name] = header_value
+        if final_map_value:
+            self.value[member_name] = final_map_value
 
 
 class JSONResponse(Response):
