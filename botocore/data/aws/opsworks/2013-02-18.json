@@ -177,8 +177,7 @@
                     "Region": {
                         "shape_name": "String",
                         "type": "string",
-                        "documentation": "\n  <p>The cloned stack AWS region, such as \"us-east-1\". For more information about AWS regions, see\n  <a href=\"http://docs.aws.amazon.com/general/latest/gr/rande.html\">Regions and Endpoints</a>.</p>\n  ",
-                        "cli_name": "stack-region"
+                        "documentation": "\n  <p>The cloned stack AWS region, such as \"us-east-1\". For more information about AWS regions, see\n  <a href=\"http://docs.aws.amazon.com/general/latest/gr/rande.html\">Regions and Endpoints</a>.</p>\n  "
                     },
                     "VpcId": {
                         "shape_name": "String",
@@ -1158,8 +1157,7 @@
                         "shape_name": "String",
                         "type": "string",
                         "documentation": "\n  <p>The stack AWS region, such as \"us-east-1\". For more information about Amazon regions, see\n  <a href=\"http://docs.aws.amazon.com/general/latest/gr/rande.html\">Regions and Endpoints</a>.</p>\n  ",
-                        "required": true,
-                        "cli_name": "stack-region"
+                        "required": true
                     },
                     "VpcId": {
                         "shape_name": "String",

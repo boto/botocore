@@ -9,25 +9,5 @@
       ]
     }
   },
-  "operations": {
-    "CloneStack": {
-      "input": {
-        "members": {
-          "Region": {
-            "cli_name": "stack-region"
-          }
-        }
-      }
-    },
-    "CreateStack": {
-      "input": {
-        "members": {
-          "Region": {
-            "cli_name": "stack-region"
-          }
-        }
-      }
-    }
-  },
   "pagination": {}
 }
