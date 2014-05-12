@@ -369,13 +369,19 @@ class ListParameter(Parameter):
             else:
                 label = self.get_label()
             label = '%s.%s' % (label, 'member')
-        if len(value) == 0 and self.required:
-            # If the parameter is required and an empty list is
-            # provided as a value, we should insert a parameter
-            # into the dictionary with the base name of the
-            # parameter and a value of the empty string. See
+        if len(value) == 0:
+            # If an empty list is provided as a value, then we should
+            # insert a parameter into the dictionary with the base name
+            # of the parameter and a value of the empty string. See
             # ELB SetLoadBalancerPoliciesForBackendServer for example.
-            built_params[label.split('.')[0]] = ''
+            parts = label.split('.')
+            for pos in range(len(parts) - 1, -1, -1):
+                item = parts[pos]
+                if item != 'member' and not item.isnumeric():
+                    break
+            new_label = '.'.join(parts[:pos + 1])
+
+            built_params[new_label] = ''
         else:
             for i, v in enumerate(value, 1):
                 member_type.build_parameter_query(v, built_params,

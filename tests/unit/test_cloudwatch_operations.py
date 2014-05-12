@@ -40,6 +40,7 @@ class TestCloudwatchOperations(TestParamSerialization):
                 '2013-07-30T00:58:11.284000+00:00',
             'MetricData.member.1.Unit': 'Bytes',
             'MetricData.member.1.Value': str(value),
+            'MetricData.member.1.Dimensions': '',
             'Namespace': 'System/Linux'
         }
         self.assert_params_serialize_to(
