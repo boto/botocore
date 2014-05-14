@@ -321,7 +321,11 @@ class BlobParameter(Parameter):
                                       param=self)
             if not hasattr(self, 'payload') or self.payload is False:
                 # Blobs that are not in the payload should be base64-encoded
-                value = base64.b64encode(six.b(value)).decode('utf-8')
+                if isinstance(value, six.text_type):
+                    v = value.encode('utf-8')
+                else:
+                    v = value
+                value = base64.b64encode(v).decode('utf-8')
         return value
 
 
