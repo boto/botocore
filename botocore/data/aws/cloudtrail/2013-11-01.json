@@ -675,9 +675,15 @@
     },
     "metadata": {
         "regions": {
-            "us-east-1": "https://cloudtrail.us-east-1.amazonaws.com",
-            "us-west-2": "https://cloudtrail.us-west-2.amazonaws.com"
-        }
+            "us-east-1": null,
+            "us-west-1": null,
+            "us-west-2": null,
+            "eu-west-1": null,
+            "ap-southeast-2": null
+        },
+        "protocols": [
+            "https"
+        ]
     },
     "retry": {
         "__default__": {
