@@ -44,6 +44,8 @@ _xform_cache = {
     ('DescribeStorediSCSIVolumes', '-'): 'describe-stored-iscsi-volumes',
     ('CreateStorediSCSIVolume', '_'): 'create_stored_iscsi_volume',
     ('CreateStorediSCSIVolume', '-'): 'create-stored-iscsi-volume',
+    ('NotificationARNs', '_'): 'notification_arns',
+    ('NotificationARNs', '-'): 'notification-arns',
 }
 ScalarTypes = ('string', 'integer', 'boolean', 'timestamp', 'float', 'double')
 
