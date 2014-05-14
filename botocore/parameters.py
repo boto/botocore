@@ -321,7 +321,11 @@ class BlobParameter(Parameter):
                                       param=self)
             if not hasattr(self, 'payload') or self.payload is False:
                 # Blobs that are not in the payload should be base64-encoded
-                value = base64.b64encode(six.b(value)).decode('utf-8')
+                if isinstance(value, six.text_type):
+                    v = value.encode('utf-8')
+                else:
+                    v = value
+                value = base64.b64encode(v).decode('utf-8')
         return value
 
 
@@ -374,14 +378,11 @@ class ListParameter(Parameter):
             # insert a parameter into the dictionary with the base name
             # of the parameter and a value of the empty string. See
             # ELB SetLoadBalancerPoliciesForBackendServer for example.
-            parts = label.split('.')
-            for pos in range(len(parts) - 1, -1, -1):
-                item = parts[pos]
-                if item != 'member' and not item.isnumeric():
-                    break
-            new_label = '.'.join(parts[:pos + 1])
-
-            built_params[new_label] = ''
+            if not self.flattened and label.endswith('.member'):
+                # Strip off the last '.member' part of the string
+                # if we're serializing an empty non flattened list.
+                label = '.'.join(label.split('.')[:-1])
+            built_params[label] = ''
         else:
             for i, v in enumerate(value, 1):
                 member_type.build_parameter_query(v, built_params,

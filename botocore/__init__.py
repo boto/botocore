@@ -16,7 +16,7 @@ import os
 import re
 import logging
 
-__version__ = '0.44.0'
+__version__ = '0.45.0'
 
 
 class NullHandler(logging.Handler):
@@ -44,6 +44,8 @@ _xform_cache = {
     ('DescribeStorediSCSIVolumes', '-'): 'describe-stored-iscsi-volumes',
     ('CreateStorediSCSIVolume', '_'): 'create_stored_iscsi_volume',
     ('CreateStorediSCSIVolume', '-'): 'create-stored-iscsi-volume',
+    ('NotificationARNs', '_'): 'notification_arns',
+    ('NotificationARNs', '-'): 'notification-arns',
 }
 ScalarTypes = ('string', 'integer', 'boolean', 'timestamp', 'float', 'double')
 
