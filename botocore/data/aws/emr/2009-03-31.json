@@ -3078,6 +3078,14 @@
                             "http_status_code": 509
                         }
                     }
+                },
+                "throttling": {
+                    "applies_when": {
+                        "response": {
+                            "service_error_code": "ThrottlingException",
+                            "http_status_code": 400
+                        }
+                    }
                 }
             }
         }
