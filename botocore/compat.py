@@ -11,21 +11,31 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import sys
 import copy
+import datetime
 import six
+import sys
+
+
 if six.PY3:
     from six.moves import http_client
     class HTTPHeaders(http_client.HTTPMessage):
         pass
     from urllib.parse import quote
     from urllib.parse import unquote
+    from urllib.parse import unquote_plus
     from urllib.parse import urlsplit
     from urllib.parse import urlunsplit
     from urllib.parse import urljoin
     from urllib.parse import parse_qsl
     from io import IOBase as _IOBase
     file_type = _IOBase
+    zip = zip
+
+    # In python3, unquote takes a str() object, url decodes it,
+    # then takes the bytestring and decodes it to utf-8.
+    # Python2 we'll have to do this ourself (see below).
+    unquote_str = unquote_plus
 
     def set_socket_timeout(http_response, timeout):
         """Set the timeout of the socket from an HTTPResponse.
@@ -38,12 +48,15 @@ if six.PY3:
 else:
     from urllib import quote
     from urllib import unquote
+    from urllib import unquote_plus
     from urlparse import urlsplit
     from urlparse import urlunsplit
     from urlparse import urljoin
     from urlparse import parse_qsl
     from email.message import Message
     file_type = file
+    from itertools import izip as zip
+
     class HTTPHeaders(Message):
 
         # The __iter__ method is not available in python2.x, so we have
@@ -51,6 +64,16 @@ else:
         def __iter__(self):
             for field, value in self._headers:
                 yield field
+
+    def unquote_str(value, encoding='utf-8'):
+        # In python2, unquote() gives us a string back that has the urldecoded
+        # bits, but not the unicode parts.  We need to decode this manually.
+        # unquote has special logic in which if it receives a unicode object it
+        # will decode it to latin1.  This is hard coded.  To avoid this, we'll
+        # encode the string with the passed in encoding before trying to
+        # unquote it.
+        byte_string = value.encode(encoding)
+        return unquote_plus(byte_string).decode(encoding)
 
     def set_socket_timeout(http_response, timeout):
         """Set the timeout of the socket from an HTTPResponse.
@@ -108,3 +131,25 @@ def copy_kwargs(kwargs):
     else:
         copy_kwargs = copy.copy(kwargs)
     return copy_kwargs
+
+
+def total_seconds(delta):
+    """
+    Returns the total seconds in a ``datetime.timedelta``.
+
+    Python 2.6 does not have ``timedelta.total_seconds()``, so we have
+    to calculate this ourselves. On 2.7 or better, we'll take advantage of the
+    built-in method.
+
+    The math was pulled from the ``datetime`` docs
+    (http://docs.python.org/2.7/library/datetime.html#datetime.timedelta.total_seconds).
+
+    :param delta: The timedelta object
+    :type delta: ``datetime.timedelta``
+    """
+    if sys.version_info[:2] != (2, 6):
+        return delta.total_seconds()
+
+    day_in_seconds = delta.days * 24 * 3600.0
+    micro_in_seconds = delta.microseconds / 10.0**6
+    return day_in_seconds + delta.seconds + micro_in_seconds

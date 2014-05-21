@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import unittest
+from tests import BaseSessionTest
 import botocore.session
 from botocore.hooks import first_non_none_response
 from botocore.compat import quote
@@ -21,13 +21,7 @@ import six
 import mock
 
 
-class TestHandlers(unittest.TestCase):
-
-    def setUp(self):
-        self.session = botocore.session.get_session()
-
-    def tearDown(self):
-        pass
+class TestHandlers(BaseSessionTest):
 
     def test_get_console_output(self):
         event = self.session.create_event('after-parsed', 'ec2',
@@ -77,6 +71,15 @@ class TestHandlers(unittest.TestCase):
                   'service_name': 's3', 'session': mock_session}
         self.session.emit(event, **kwargs)
         self.assertEqual(kwargs['service_data']['signature_version'], 's3')
+
+    def test_quote_source_header(self):
+        for op in ('UploadPartCopy', 'CopyObject'):
+            event = self.session.create_event(
+                'before-call', 's3', op)
+            params = {'headers': {'x-amz-copy-source': 'foo++bar.txt'}}
+            self.session.emit(event, params=params)
+            self.assertEqual(
+                params['headers']['x-amz-copy-source'], 'foo%2B%2Bbar.txt')
 
 
 if __name__ == '__main__':

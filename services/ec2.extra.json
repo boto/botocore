@@ -1,6 +1,6 @@
 {
   "extra": {
-    "xmlnamespace": "http://ec2.amazonaws.com/doc/2013-10-15/",
+    "xmlnamespace": "http://ec2.amazonaws.com/doc/2014-02-01/",
     "metadata": {
       "regions": {
         "us-east-1": null,
@@ -25,7 +25,10 @@
         "members": {
           "VirtualizationType": {
             "type": "string",
-            "enum": ["paravirtual", "hvm"],
+            "enum": [
+              "paravirtual",
+              "hvm"
+            ],
             "documentation": "The type of virtualization"
           }
         }
@@ -72,7 +75,8 @@
       "input": {
         "members": {
           "UserData": {
-            "type": "blob"
+            "type": "blob",
+            "documentation": "\n    <p>The user data for the instances.  You can specify the user data as a string, or if the user data contents are in a file, you can use file://filename.</p>\n   "
           },
           "NetworkInterfaces": {
             "members": {
@@ -92,39 +96,44 @@
   "pagination": {
     "DescribeInstanceStatus": {
       "input_token": "NextToken",
-      "limit_key": "MaxResults",
       "output_token": "NextToken",
+      "limit_key": "MaxResults",
       "result_key": "InstanceStatuses"
+    },
+    "DescribeInstances": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "Reservations"
+    },
+    "DescribeReservedInstancesModifications": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "result_key": "ReservedInstancesModifications"
     },
     "DescribeReservedInstancesOfferings": {
       "input_token": "NextToken",
-      "limit_key": "MaxResults",
       "output_token": "NextToken",
+      "limit_key": "MaxResults",
       "result_key": "ReservedInstancesOfferings"
     },
     "DescribeSpotPriceHistory": {
       "input_token": "NextToken",
-      "limit_key": "MaxResults",
       "output_token": "NextToken",
+      "limit_key": "MaxResults",
       "result_key": "SpotPriceHistory"
-    },
-    "DescribeVolumeStatus": {
-      "input_token": "NextToken",
-      "limit_key": "MaxResults",
-      "output_token": "NextToken",
-      "result_key": "VolumeStatuses"
-    },
-    "DescribeInstances": {
-      "input_token": "NextToken",
-      "limit_key": "MaxResults",
-      "output_token": "NextToken",
-      "result_key": "Reservations"
     },
     "DescribeTags": {
       "input_token": "NextToken",
-      "limit_key": "MaxResults",
       "output_token": "NextToken",
+      "limit_key": "MaxResults",
       "result_key": "Tags"
+    },
+    "DescribeVolumeStatus": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "VolumeStatuses"
     }
   },
   "transformations": {

@@ -24,8 +24,6 @@ try:
 except ImportError:
     from itertools import zip_longest
 
-import mock
-
 import botocore.session
 
 
@@ -60,22 +58,58 @@ class BaseS3Test(unittest.TestCase):
         except Exception as e:
             self.caught_exceptions.append(e)
 
+    def delete_object(self, key, bucket_name):
+        operation = self.service.get_operation('DeleteObject')
+        response = operation.call(self.endpoint, bucket=bucket_name,
+                                  key=key)
+        self.assertEqual(response[0].status_code, 204)
 
-class TestS3Buckets(BaseS3Test):
+    def delete_bucket(self, bucket_name):
+        operation = self.service.get_operation('DeleteBucket')
+        response = operation.call(self.endpoint, bucket=bucket_name)
+        self.assertEqual(response[0].status_code, 204)
 
+    def assert_num_uploads_found(self, operation, num_uploads,
+                                 max_items=None, num_attempts=5):
+        amount_seen = None
+        for _ in range(num_attempts):
+            pages = operation.paginate(self.endpoint, bucket=self.bucket_name,
+                                       max_items=max_items)
+            iterators = pages.result_key_iters()
+            self.assertEqual(len(iterators), 2)
+            self.assertEqual(iterators[0].result_key.expression, 'Uploads')
+            # It sometimes takes a while for all the uploads to show up,
+            # especially if the upload was just created.  If we don't
+            # see the expected amount, we retry up to num_attempts time
+            # before failing.
+            amount_seen = len(list(iterators[0]))
+            if amount_seen == num_uploads:
+                # Test passed.
+                return
+            else:
+                # Sleep and try again.
+                time.sleep(2)
+        self.fail("Expected to see %s uploads, instead saw: %s" % (
+            num_uploads, amount_seen))
+
+
+class TestS3BaseWithBucket(BaseS3Test):
     def setUp(self):
-        super(TestS3Buckets, self).setUp()
+        super(TestS3BaseWithBucket, self).setUp()
         self.bucket_name = 'botocoretest%s-%s' % (
             int(time.time()), random.randint(1, 1000))
         self.bucket_location = 'us-west-2'
 
         operation = self.service.get_operation('CreateBucket')
-        operation.call(self.endpoint, bucket=self.bucket_name,
+        response = operation.call(self.endpoint, bucket=self.bucket_name,
             create_bucket_configuration={'LocationConstraint': self.bucket_location})
+        self.assertEqual(response[0].status_code, 200)
 
     def tearDown(self):
-        operation = self.service.get_operation('DeleteBucket')
-        operation.call(self.endpoint, bucket=self.bucket_name)
+        self.delete_bucket(self.bucket_name)
+
+
+class TestS3Buckets(TestS3BaseWithBucket):
 
     def test_can_make_request(self):
         # Basic smoke test to ensure we can talk to s3.
@@ -96,22 +130,14 @@ class TestS3Buckets(BaseS3Test):
         self.assertEqual(result['LocationConstraint'], self.bucket_location)
 
 
-class TestS3Objects(BaseS3Test):
-
-    def setUp(self):
-        super(TestS3Objects, self).setUp()
-        self.bucket_name = 'botocoretest%s-%s' % (
-            int(time.time()), random.randint(1, 1000))
-        operation = self.service.get_operation('CreateBucket')
-        operation.call(self.endpoint, bucket=self.bucket_name)
+class TestS3Objects(TestS3BaseWithBucket):
 
     def tearDown(self):
         for key in self.keys:
             operation = self.service.get_operation('DeleteObject')
             operation.call(self.endpoint, bucket=self.bucket_name,
                            key=key)
-        operation = self.service.get_operation('DeleteBucket')
-        operation.call(self.endpoint, bucket=self.bucket_name)
+        super(TestS3Objects, self).tearDown()
 
     def increment_auth(self, request, auth, **kwargs):
         self.auth_paths.append(auth.auth_path)
@@ -168,7 +194,8 @@ class TestS3Objects(BaseS3Test):
         key_names = [i.result_key for i in iterators]
         for vals in zip_longest(*iterators):
             for k, val in zip(key_names, vals):
-                response[k].append(val)
+                response.setdefault(k.expression, [])
+                response[k.expression].append(val)
         self.assertIn('Contents', response)
         self.assertIn('CommonPrefixes', response)
 
@@ -205,21 +232,11 @@ class TestS3Objects(BaseS3Test):
 
         operation = self.service.get_operation('ListMultipartUploads')
 
-        # With no max items.
-        pages = operation.paginate(self.endpoint, bucket=self.bucket_name)
-        iterators = pages.result_key_iters()
-        self.assertEqual(len(iterators), 1)
-        self.assertEqual(iterators[0].result_key, 'Uploads')
-        self.assertEqual(len(list(iterators[0])), 8)
+        # Verify when we have max_items=None, we get back all 8 uploads.
+        self.assert_num_uploads_found(operation, max_items=None, num_uploads=8)
 
-        # With a max items of 1.
-        pages = operation.paginate(self.endpoint,
-                                   max_items=1,
-                                   bucket=self.bucket_name)
-        iterators = pages.result_key_iters()
-        self.assertEqual(len(iterators), 1)
-        self.assertEqual(iterators[0].result_key, 'Uploads')
-        self.assertEqual(len(list(iterators[0])), 1)
+        # Verify when we have max_items=1, we get back 1 upload.
+        self.assert_num_uploads_found(operation, max_items=1, num_uploads=1)
 
         # Works similar with build_full_result()
         pages = operation.paginate(self.endpoint,
@@ -323,8 +340,7 @@ class TestS3Regions(BaseS3Test):
             self.endpoint, bucket=bucket_name,
             create_bucket_configuration={'LocationConstraint': 'us-west-2'})
         self.assertEqual(response.status_code, 200)
-        self.addCleanup(self.service.get_operation('DeleteBucket').call,
-                        bucket=bucket_name, endpoint=self.endpoint)
+        self.addCleanup(self.delete_bucket, bucket_name=bucket_name)
         return bucket_name
 
     def test_reset_stream_on_redirects(self):
@@ -342,11 +358,56 @@ class TestS3Regions(BaseS3Test):
             response.status_code, 200,
             "Non 200 status code (%s) received: %s" % (
                 response.status_code, parsed))
+        self.addCleanup(self.delete_object, key='foo',
+                        bucket_name=bucket_name)
 
         operation = self.service.get_operation('GetObject')
         data = operation.call(self.endpoint, bucket=bucket_name,
                               key='foo')[1]
         self.assertEqual(data['Body'].read(), b'foo' * 1024)
+
+
+class TestS3Copy(TestS3BaseWithBucket):
+
+    def tearDown(self):
+        for key in self.keys:
+            operation = self.service.get_operation('DeleteObject')
+            response = operation.call(
+                self.endpoint, bucket=self.bucket_name, key=key)
+            self.assertEqual(response[0].status_code, 204)
+        super(TestS3Copy, self).tearDown()
+
+    def test_copy_with_quoted_char(self):
+        key_name = 'a+b/foo'
+        self.create_object(key_name=key_name)
+
+        operation = self.service.get_operation('CopyObject')
+        key_name2 = key_name + 'bar'
+        http, parsed = operation.call(
+            self.endpoint, bucket=self.bucket_name, key=key_name + 'bar',
+            copy_source='%s/%s' % (self.bucket_name, key_name))
+        self.assertEqual(http.status_code, 200)
+        self.keys.append(key_name2)
+
+        # Now verify we can retrieve the copied object.
+        operation = self.service.get_operation('GetObject')
+        response = operation.call(self.endpoint, bucket=self.bucket_name,
+                                  key=key_name + 'bar')
+        data = response[1]
+        self.assertEqual(data['Body'].read().decode('utf-8'), 'foo')
+
+    def test_copy_with_s3_metadata(self):
+        key_name = 'foo.txt'
+        self.create_object(key_name=key_name)
+        copied_key = 'copied.txt'
+        operation = self.service.get_operation('CopyObject')
+        http, parsed = operation.call(
+            self.endpoint, bucket=self.bucket_name, key=copied_key,
+            copy_source='%s/%s' % (self.bucket_name, key_name),
+            metadata_directive='REPLACE',
+            metadata={"mykey": "myvalue", "mykey2": "myvalue2"})
+        self.keys.append(copied_key)
+        self.assertEqual(http.status_code, 200)
 
 
 if __name__ == '__main__':

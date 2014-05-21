@@ -31,7 +31,10 @@ class TestPagination(unittest.TestCase):
         self.paginator = Paginator(self.operation)
 
     def test_result_key_available(self):
-        self.assertEqual(self.paginator.result_keys, ['Foo'])
+        self.assertEqual(
+            [rk.expression for rk in self.paginator.result_keys],
+            ['Foo']
+        )
 
     def test_no_next_token(self):
         response = {'not_the_next_token': 'foobar'}
@@ -104,7 +107,7 @@ class TestPagination(unittest.TestCase):
         # Some pagination configs have a 'more_token' key that
         # indicate whether or not the results are being paginated.
         self.paginate_config = {
-            'more_key': 'IsTruncated',
+            'more_results': 'IsTruncated',
             'output_token': 'NextToken',
             'py_input_token': 'NextToken',
             'result_key': 'Foo',
@@ -127,7 +130,7 @@ class TestPagination(unittest.TestCase):
 
     def test_more_tokens_is_path_expression(self):
         self.paginate_config = {
-            'more_key': 'Foo.IsTruncated',
+            'more_results': 'Foo.IsTruncated',
             'output_token': 'NextToken',
             'py_input_token': 'NextToken',
             'result_key': 'Bar',
@@ -290,6 +293,21 @@ class TestKeyIterators(unittest.TestCase):
         self.operation.call.side_effect = responses
         self.assertEqual(
             paginator.paginate(None, max_items=1).build_full_result(),
+            {'Users': ['User1'], 'NextToken': 'm1'})
+
+    def test_max_items_as_strings(self):
+        # Some services (route53) model MaxItems as a string type.
+        # We need to be able to handle this case.
+        paginator = Paginator(self.operation)
+        responses = [
+            (None, {"Users": ["User1"], "Marker": "m1"}),
+            (None, {"Users": ["User2"], "Marker": "m2"}),
+            (None, {"Users": ["User3"]}),
+        ]
+        self.operation.call.side_effect = responses
+        self.assertEqual(
+            # Note max_items is a string here.
+            paginator.paginate(None, max_items='1').build_full_result(),
             {'Users': ['User1'], 'NextToken': 'm1'})
 
     def test_next_token_on_page_boundary(self):
@@ -506,11 +524,145 @@ class TestMultipleInputKeys(unittest.TestCase):
             [mock.call(None, InMarker1='m1', InMarker2='m2'),])
 
     def test_result_key_exposed_on_paginator(self):
-        self.assertEqual(self.paginator.result_keys, ['Users', 'Groups'])
+        self.assertEqual(
+            [rk.expression for rk in self.paginator.result_keys],
+            ['Users', 'Groups']
+        )
 
     def test_result_key_exposed_on_page_iterator(self):
         pages = self.paginator.paginate(None, max_items=3)
-        self.assertEqual(pages.result_keys, ['Users', 'Groups'])
+        self.assertEqual(
+            [rk.expression for rk in pages.result_keys],
+            ['Users', 'Groups']
+        )
+
+
+class TestExpressionKeyIterators(unittest.TestCase):
+    def setUp(self):
+        self.operation = mock.Mock()
+        # This is something like what we'd see in RDS.
+        self.paginate_config = {
+            "py_input_token": "Marker",
+            "output_token": "Marker",
+            "limit_key": "MaxRecords",
+            "result_key": "EngineDefaults.Parameters"
+        }
+        self.operation.pagination = self.paginate_config
+        self.paginator = Paginator(self.operation)
+        self.responses = [
+            (None, {
+                "EngineDefaults": {"Parameters": ["One", "Two"]
+            }, "Marker": "m1"}),
+            (None, {
+                "EngineDefaults": {"Parameters": ["Three", "Four"]
+            }, "Marker": "m2"}),
+            (None, {"EngineDefaults": {"Parameters": ["Five"]}}),
+        ]
+
+    def test_result_key_iters(self):
+        self.operation.call.side_effect = self.responses
+        pages = self.paginator.paginate(None)
+        iterators = pages.result_key_iters()
+        self.assertEqual(len(iterators), 1)
+        self.assertEqual(list(iterators[0]),
+                         ['One', 'Two', 'Three', 'Four', 'Five'])
+
+    def test_build_full_result_with_single_key(self):
+        self.operation.call.side_effect = self.responses
+        pages = self.paginator.paginate(None)
+        complete = pages.build_full_result()
+        self.assertEqual(complete, {
+            'EngineDefaults': {
+                'Parameters': ['One', 'Two', 'Three', 'Four', 'Five']
+            },
+        })
+
+
+class TestIncludeNonResultKeys(unittest.TestCase):
+    maxDiff = None
+
+    def setUp(self):
+        self.operation = mock.Mock()
+        self.paginate_config = {
+            'output_token': 'NextToken',
+            'py_input_token': 'NextToken',
+            'result_key': 'ResultKey',
+            'non_aggregate_keys': ['NotResultKey'],
+        }
+        self.operation.pagination = self.paginate_config
+        self.paginator = Paginator(self.operation)
+
+    def set_responses(self, responses):
+        complete_responses = []
+        for response in responses:
+            complete_responses.append((None, response))
+        self.operation.call.side_effect = complete_responses
+
+    def test_include_non_aggregate_keys(self):
+        self.set_responses([
+            {'ResultKey': ['foo'], 'NotResultKey': 'a', 'NextToken': 't1'},
+            {'ResultKey': ['bar'], 'NotResultKey': 'a', 'NextToken': 't2'},
+            {'ResultKey': ['baz'], 'NotResultKey': 'a'},
+        ])
+        pages = self.paginator.paginate(None)
+        actual = pages.build_full_result()
+        self.assertEqual(pages.non_aggregate_part, {'NotResultKey': 'a'})
+        expected = {
+            'ResultKey': ['foo', 'bar', 'baz'],
+            'NotResultKey': 'a',
+        }
+        self.assertEqual(actual, expected)
+
+    def test_include_with_multiple_result_keys(self):
+        self.paginate_config['result_key'] = ['ResultKey1', 'ResultKey2']
+        self.operation.pagination = self.paginate_config
+        self.paginator = Paginator(self.operation)
+        self.set_responses([
+            {'ResultKey1': ['a', 'b'], 'ResultKey2': ['u', 'v'],
+             'NotResultKey': 'a', 'NextToken': 'token1'},
+            {'ResultKey1': ['c', 'd'], 'ResultKey2': ['w', 'x'],
+             'NotResultKey': 'a', 'NextToken': 'token2'},
+            {'ResultKey1': ['e', 'f'], 'ResultKey2': ['y', 'z'],
+             'NotResultKey': 'a',}
+        ])
+        pages = self.paginator.paginate(None)
+        actual = pages.build_full_result()
+        expected = {
+            'ResultKey1': ['a', 'b', 'c', 'd', 'e', 'f'],
+            'ResultKey2': ['u', 'v', 'w', 'x', 'y', 'z'],
+            'NotResultKey': 'a',
+        }
+        self.assertEqual(actual, expected)
+
+    def test_include_with_nested_result_keys(self):
+        self.paginate_config['result_key'] = 'Result.Key'
+        self.paginate_config['non_aggregate_keys'] = [
+            'Outer', 'Result.Inner',
+        ]
+        self.operation.pagination = self.paginate_config
+        self.paginator = Paginator(self.operation)
+        self.set_responses([
+            # The non result keys shows hypothetical
+            # example.  This doesn't actually happen,
+            # but in the case where the non result keys
+            # are different across pages, we use the values
+            # from the first page.
+            {'Result': {'Key': ['foo'], 'Inner': 'v1'},
+             'Outer': 'v2', 'NextToken': 't1'},
+            {'Result': {'Key': ['bar', 'baz'], 'Inner': 'v3'},
+             'Outer': 'v4', 'NextToken': 't2'},
+            {'Result': {'Key': ['qux'], 'Inner': 'v5'},
+             'Outer': 'v6', 'NextToken': 't3'},
+        ])
+        pages = self.paginator.paginate(None)
+        actual = pages.build_full_result()
+        self.assertEqual(pages.non_aggregate_part,
+                         {'Outer': 'v2', 'Result': {'Inner': 'v1'}})
+        expected = {
+            'Result': {'Key': ['foo', 'bar', 'baz', 'qux'], 'Inner': 'v1'},
+            'Outer': 'v2',
+        }
+        self.assertEqual(actual, expected)
 
 
 if __name__ == '__main__':

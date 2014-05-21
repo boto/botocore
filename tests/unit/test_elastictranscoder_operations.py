@@ -13,17 +13,17 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import unittest
+from tests import BaseSessionTest
 import botocore.session
 from botocore.compat import json
 
 
-class TestElasticTranscoderOperations(unittest.TestCase):
+class TestElasticTranscoderOperations(BaseSessionTest):
 
     maxDiff = None
 
     def setUp(self):
-        self.session = botocore.session.get_session()
+        super(TestElasticTranscoderOperations, self).setUp()
         self.dc = self.session.get_service('elastictranscoder')
 
     def test_create_connection(self):
@@ -46,7 +46,3 @@ class TestElasticTranscoderOperations(unittest.TestCase):
                   "InputBucket": "etc-input"}
         json_body = json.loads(params['payload'].getvalue())
         self.assertEqual(json_body, result)
-
-
-if __name__ == "__main__":
-    unittest.main()

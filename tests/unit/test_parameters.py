@@ -332,6 +332,53 @@ class TestStructureParamaters(unittest.TestCase):
                              'group_name': 'unknown',
                              'Tenancy': 'baz'})
 
+    def test_snake_case_parameters(self):
+        """
+        Test support for snake case parameters
+        """
+        session = botocore.session.get_session()
+        service = session.get_service('dynamodb')
+        op = service.get_operation('UpdateTable')
+
+        # All CamelCase
+        params = {
+            'ProvisionedThroughput': {
+                'WriteCapacityUnits': 2,
+                'ReadCapacityUnits': 2
+            },
+            'TableName': 'test-table'
+        }
+        built_params = op.build_parameters(**params)
+        self.assertEqual(
+            built_params,
+            {
+                'ProvisionedThroughput': {
+                    'WriteCapacityUnits': 2,
+                    'ReadCapacityUnits': 2
+                },
+                'TableName': 'test-table'
+            }
+        )
+
+        # Mixed case
+        params = {
+            'provisioned_throughput': {
+                'WriteCapacityUnits': 2,
+                'ReadCapacityUnits': 2
+            },
+            'table_name': 'test-table'
+        }
+        built_params = op.build_parameters(**params)
+        self.assertEqual(
+            built_params,
+            {
+                'ProvisionedThroughput': {
+                    'WriteCapacityUnits': 2,
+                    'ReadCapacityUnits': 2
+                },
+                'TableName': 'test-table'
+            }
+        )
 
 
 if __name__ == "__main__":

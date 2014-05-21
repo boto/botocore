@@ -328,8 +328,22 @@ class XmlResponse(Response):
                 location = member.get('location')
                 if location == 'header':
                     location_name = member.get('location_name')
-                    if location_name in headers:
+                    if member['type'] == 'map':
+                        self._merge_map_header_values(headers, location_name,
+                                                      member_name, member)
+                    elif location_name in headers:
                         self.value[member_name] = headers[location_name]
+
+    def _merge_map_header_values(self, headers, location_name,
+                                 member_name, member):
+        final_map_value = {}
+        for header_name in headers:
+            if header_name.startswith(location_name):
+                header_value = headers[header_name]
+                actual_name = header_name[len(location_name):]
+                final_map_value[actual_name] = header_value
+        if final_map_value:
+            self.value[member_name] = final_map_value
 
 
 class JSONResponse(Response):
@@ -338,11 +352,10 @@ class JSONResponse(Response):
         try:
             decoded = s.decode(encoding)
             self.value = json.loads(decoded)
-            self.get_response_errors()
         except Exception as err:
             logger.debug('Error loading JSON response body, %r', err)
 
-    def get_response_errors(self):
+    def merge_header_values(self, headers):
         # Most JSON services return a __type in error response bodies.
         # Unfortunately, ElasticTranscoder does not.  It simply returns
         # a JSON body with a single key, "message".
@@ -351,13 +364,19 @@ class JSONResponse(Response):
             error_type = self.value['__type']
             error = {'Type': error_type}
             del self.value['__type']
-            if 'message' in self.value:
-                error['Message'] = self.value['message']
-                del self.value['message']
+            for key in ['message', 'Message']:
+                if key in self.value:
+                    error['Message'] = self.value[key]
+                    del self.value[key]
             code = self._parse_code_from_type(error_type)
             error['Code'] = code
         elif 'message' in self.value and len(self.value.keys()) == 1:
-            error = {'Type': 'Unspecified', 'Code': 'Unspecified',
+            error_type = 'Unspecified'
+            if headers and 'x-amzn-errortype' in headers:
+                # ElasticTranscoder suffixes errors with `:`, so we strip
+                # them off when possible.
+                error_type = headers.get('x-amzn-errortype').strip(':')
+            error = {'Type': error_type, 'Code': error_type,
                      'Message': self.value['message']}
             del self.value['message']
         if error:
@@ -464,12 +483,29 @@ def get_response(session, operation, http_response):
         content_type = content_type.split(';')[0]
         logger.debug('Content type from response: %s', content_type)
     if operation.is_streaming():
+        logger.debug(
+            "Response Headers:\n%s",
+            '\n'.join("%s: %s" % (k, v) for k, v in http_response.headers.items()))
         streaming_response = StreamingResponse(session, operation)
         streaming_response.parse(
             http_response.headers,
             StreamingBody(http_response.raw,
                           http_response.headers.get('content-length')))
-        return (http_response, streaming_response.get_value())
+        if http_response.ok:
+            return (http_response, streaming_response.get_value())
+        else:
+            xml_response = XmlResponse(session, operation)
+            body = streaming_response.get_value()['Body'].read()
+            # For streaming response, response body might be binary data,
+            # so we log response body only when error happens.
+            logger.debug("Response Body:\n%s", body)
+            if body:
+                try:
+                    xml_response.parse(body, encoding)
+                except xml.etree.cElementTree.ParseError as err:
+                    raise xml.etree.cElementTree.ParseError(
+                        "Error parsing XML response: %s\nXML received:\n%s" % (err, body))
+            return (http_response, xml_response.get_value())
     body = http_response.content
     if not http_response.request.method == 'HEAD':
         _validate_content_length(

@@ -9,8 +9,9 @@ into botocore/data/aws.
 This script can probably be folded into scripts/buildmodel.
 
 """
-import shutil
+import json
 import os
+import shutil
 from subprocess import check_output
 
 SERVICES_DIR = os.path.join(
@@ -24,21 +25,40 @@ assert os.path.isdir(SERVICES_DIR)
 assert os.path.isfile(BUILD_MODELS)
 assert os.path.isdir(DEST_DIR)
 
+# Python 2/3 differences.
+try:
+    DirectoryExistsError = FileExistsError
+except NameError:
+    DirectoryExistsError = OSError
+
+
+def build_final_filename(filename):
+    with open(filename, 'r') as json_file:
+        data = json.load(json_file)
+
+    service = os.path.basename(filename).replace('.json', '')
+    filename = os.path.join(service, data['api_version'] + '.json')
+    return os.path.join(DEST_DIR, filename)
 
 for filename in os.listdir(SERVICES_DIR):
-    if not os.path.isfile(os.path.join(SERVICES_DIR, filename)):
+    service_filename = os.path.join(SERVICES_DIR, filename)
+    if not os.path.isfile(service_filename):
         print("Skipping file: %s" % filename)
         continue
     if filename.startswith('_') and filename.endswith('.json'):
         # Copy it unchanged to the destination directory.
-        src = os.path.join(SERVICES_DIR, filename)
         dst = os.path.join(DEST_DIR, filename)
-        print("Copying '%s' to '%s'" % (src, dst))
-        shutil.copyfile(src=src, dst=dst)
+        print("Copying '%s' to '%s'" % (service_filename, dst))
+        shutil.copyfile(src=service_filename, dst=dst)
     elif filename.endswith('.json') and filename.count('.') == 1:
-        full_cmd = '%s %s' % (BUILD_MODELS,
-                                    os.path.join(SERVICES_DIR, filename))
+        full_cmd = '%s %s' % (BUILD_MODELS, service_filename)
         print("Running command: %s" % full_cmd)
         new_model = check_output(full_cmd, shell=True).decode('utf-8')
-        with open(os.path.join(DEST_DIR, filename), 'w') as f:
+        final_filename = build_final_filename(service_filename)
+        try:
+            # Ensure the directory is there if the service is new.
+            os.makedirs(os.path.dirname(final_filename))
+        except DirectoryExistsError:
+            pass
+        with open(final_filename, 'w') as f:
             f.write(new_model)

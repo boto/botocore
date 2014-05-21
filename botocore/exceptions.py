@@ -36,6 +36,17 @@ class DataNotFoundError(BotoCoreError):
     fmt = 'Unable to load data for: {data_path}'
 
 
+class ApiVersionNotFoundError(BotoCoreError):
+    """
+    The data associated with either that API version or a compatible one
+    could not be loaded.
+
+    :ivar path: The data path that the user attempted to load.
+    :ivar path: The API version that the user attempted to load.
+    """
+    fmt = 'Unable to load data {data_path} for: {api_version}'
+
+
 class NoCredentialsError(BotoCoreError):
     """
     No credentials could be found
@@ -219,3 +230,13 @@ class IncompleteReadError(BotoCoreError):
     """HTTP response did not return expected number of bytes."""
     fmt = ('{actual_bytes} read, but total bytes '
            'expected is {expected_bytes}.')
+
+
+class InvalidExpressionError(BotoCoreError):
+    """Expression is either invalid or too complex."""
+    fmt = 'Invalid expression {expression}: Only dotted lookups are supported.'
+
+
+class UnknownCredentialError(BotoCoreError):
+    """Tried to insert before/after an unregistered credential type."""
+    fmt = 'Credential named {name} not found.'

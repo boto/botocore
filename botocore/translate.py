@@ -17,7 +17,10 @@ import os
 import re
 from copy import deepcopy
 
+import jmespath
+
 from botocore.compat import OrderedDict, json
+from botocore.utils import set_value_from_jmespath, merge_dicts
 from botocore import xform_name
 
 
@@ -73,6 +76,7 @@ def translate(model):
     handle_remove_deprecated_params(new_model, model.enhancements)
     handle_remove_deprecated_operations(new_model, model.enhancements)
     handle_filter_documentation(new_model, model.enhancements)
+    handle_rename_params(new_model, model.enhancements)
     add_pagination_configs(
         new_model,
         model.enhancements.get('pagination', {}))
@@ -182,6 +186,31 @@ def handle_filter_documentation(new_model, enhancements):
                     _filter_param_doc(param, replacement, filter_regex)
 
 
+def handle_rename_params(new_model, enhancements):
+    renames = enhancements.get('transformations', {}).get(
+        'renames', {})
+    if not renames:
+        return
+    # This is *extremely* specific to botocore's translations, but
+    # we support a restricted set of argument renames based on a
+    # jmespath expression.
+    for expression, new_value in renames.items():
+        # First we take everything up until the last dot.
+        parent_expression, key = expression.rsplit('.', 1)
+        matched = jmespath.search(parent_expression, new_model['operations'])
+        current = matched[key]
+        del matched[key]
+        matched[new_value] = current
+
+
+def resembles_jmespath_exp(value):
+    # For now, we'll do a naive check.
+    if '.' in value:
+        return True
+
+    return False
+
+
 def add_pagination_configs(new_model, pagination):
     # Adding in pagination configs means copying the config to a top level
     # 'pagination' key in the new model, and it also means adding the
@@ -219,6 +248,8 @@ def add_pagination_configs(new_model, pagination):
             raise ValueError("Trying to add pagination config for an "
                              "operation with no output members: %s" % name)
         for result_key in result_keys:
+            if resembles_jmespath_exp(result_key):
+                continue
             if result_key not in operation['output']['members']:
                 raise ValueError("result_key %r is not an output member: %s" %
                                 (result_key,
@@ -373,7 +404,8 @@ def _transform_waiter(new_waiter):
 def _check_known_pagination_keys(config):
     # Verify that the pagination config only has keys we expect to see.
     expected = set(['input_token', 'py_input_token', 'output_token',
-                    'result_key', 'limit_key', 'more_key'])
+                    'result_key', 'limit_key', 'more_results',
+                    'non_aggregate_keys'])
     for key in config:
         if key not in expected:
             raise ValueError("Unknown key in pagination config: %s" % key)
@@ -434,25 +466,3 @@ def resolve_references(config, definitions):
                 config[key] = definitions[list(value.values())[0]]
             else:
                 resolve_references(value, definitions)
-
-
-def merge_dicts(dict1, dict2):
-    """Given two dict, merge the second dict into the first.
-
-    The dicts can have arbitrary nesting.
-
-    """
-    for key in dict2:
-        if is_sequence(dict2[key]):
-            if key in dict1 and key in dict2:
-                merge_dicts(dict1[key], dict2[key])
-            else:
-                dict1[key] = dict2[key]
-        else:
-            # At scalar types, we iterate and merge the
-            # current dict that we're on.
-            dict1[key] = dict2[key]
-
-
-def is_sequence(x):
-    return isinstance(x, (list, dict))

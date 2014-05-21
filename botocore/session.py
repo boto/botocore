@@ -16,21 +16,21 @@ This module contains the main interface to the botocore package, the
 Session object.
 """
 
-import logging
-import platform
-import os
 import copy
+import logging
+import os
+import platform
 import shlex
 
+from botocore import __version__
 import botocore.config
 import botocore.credentials
-import botocore.base
-import botocore.service
 from botocore.exceptions import ConfigNotFound, EventNotFound, ProfileNotFound
-from botocore.hooks import HierarchicalEmitter, first_non_none_response
-from botocore.provider import get_provider
-from botocore import __version__
 from botocore import handlers
+from botocore.hooks import HierarchicalEmitter, first_non_none_response
+from botocore.loaders import Loader
+from botocore.provider import get_provider
+import botocore.service
 
 
 class Session(object):
@@ -117,7 +117,7 @@ class Session(object):
     FmtString = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
     def __init__(self, session_vars=None, event_hooks=None,
-                 include_builtin_handlers=True):
+                 include_builtin_handlers=True, loader=None):
         """
         Create a new Session object.
 
@@ -147,6 +147,7 @@ class Session(object):
             self._register_builtin_handlers(self._events)
         self.user_agent_name = 'Botocore'
         self.user_agent_version = __version__
+        self.user_agent_extra = ''
         self._profile = None
         self._config = None
         self._credentials = None
@@ -155,6 +156,22 @@ class Session(object):
         # This is a dict that stores per session specific config variable
         # overrides via set_config_variable().
         self._session_instance_vars = {}
+        if loader is None:
+            loader = Loader()
+        self._loader = loader
+        # _data_paths_added is used to track whether or not we added
+        # extra paths to the loader.  We will do this lazily
+        # only when we ask for the loader.
+        self._data_paths_added = False
+
+    @property
+    def loader(self):
+        if not self._data_paths_added:
+            extra_paths = self.get_variable('data_path')
+            if extra_paths is not None:
+                self._loader.data_path = extra_paths
+            self._data_paths_added = True
+        return self._loader
 
     def _register_builtin_handlers(self, events):
         for event_name, handler in handlers.BUILTIN_HANDLERS:
@@ -372,7 +389,6 @@ class Session(object):
         self._credentials = botocore.credentials.Credentials(access_key,
                                                              secret_key,
                                                              token)
-        self._credentials.method = 'explicit'
 
     def get_credentials(self):
         """
@@ -405,12 +421,18 @@ class Session(object):
          - plat_name is the name of the platform (e.g. Darwin)
          - plat_ver is the version of the platform
 
+        If ``user_agent_extra`` is not empty, then this value will be
+        appended to the end of the user agent string.
+
         """
-        return '%s/%s Python/%s %s/%s' % (self.user_agent_name,
+        base = '%s/%s Python/%s %s/%s' % (self.user_agent_name,
                                           self.user_agent_version,
                                           platform.python_version(),
                                           platform.system(),
                                           platform.release())
+        if self.user_agent_extra:
+            base += ' %s' % self.user_agent_extra
+        return base
 
     def get_data(self, data_path):
         """
@@ -419,14 +441,17 @@ class Session(object):
         :type data_path: str
         :param data_path: The path to the data you wish to retrieve.
         """
-        return botocore.base.get_data(self, data_path)
+        return self.loader.load_data(data_path)
 
-    def get_service_data(self, service_name):
+    def get_service_data(self, service_name, api_version=None):
         """
         Retrieve the fully merged data associated with a service.
         """
         data_path = '%s/%s' % (self.provider.name, service_name)
-        service_data = self.get_data(data_path)
+        service_data = self.loader.load_service_model(
+            data_path,
+            api_version=api_version
+        )
         event_name = self.create_event('service-data-loaded', service_name)
         self._events.emit(event_name, service_data=service_data,
                           service_name=service_name, session=self)
@@ -437,9 +462,9 @@ class Session(object):
         Return a list of names of available services.
         """
         data_path = '%s' % self.provider.name
-        return self.get_data(data_path)
+        return self.loader.list_available_services(data_path)
 
-    def get_service(self, service_name):
+    def get_service(self, service_name, api_version=None):
         """
         Get information about a service.
 
@@ -449,7 +474,8 @@ class Session(object):
         :returns: :class:`botocore.service.Service`
         """
         service = botocore.service.get_service(self, service_name,
-                                               self.provider)
+                                               self.provider,
+                                               api_version=api_version)
         event = self.create_event('service-created')
         self._events.emit(event, service=service)
         return service

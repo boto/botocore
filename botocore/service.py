@@ -38,10 +38,14 @@ class Service(object):
     WAITER_CLASS = Waiter
 
     def __init__(self, session, provider, service_name,
-                 path='/', port=None):
+                 path='/', port=None, api_version=None):
         self.global_endpoint = None
         self.timestamp_format = 'iso8601'
-        sdata = session.get_service_data(service_name)
+        self.api_version = api_version
+        sdata = session.get_service_data(
+            service_name,
+            api_version=self.api_version
+        )
         self.__dict__.update(sdata)
         self._operations_data = self.__dict__.pop('operations')
         self._operations = None
@@ -131,6 +135,12 @@ class Service(object):
                 # endpoint, we can just use the global_endpoint (which is a
                 # string of the hostname of the global endpoint) to construct
                 # the full endpoint_url.
+                # We have to be careful though.  The "region_name" should have
+                # been previously validated, otherwise it's possible
+                # that we may fail silently if the user provided a region
+                # we don't know about.  For example,
+                # s3.get_endpoint('bad region') would return the global
+                # s3 endpoint, which is probably not what we want.
                 endpoint_url = self._build_endpoint_url(self.global_endpoint,
                                                         is_secure)
                 region_name = 'us-east-1'
@@ -187,7 +197,7 @@ class Service(object):
         return self.WAITER_CLASS(waiter_name, operation, config)
 
 
-def get_service(session, service_name, provider):
+def get_service(session, service_name, provider, api_version=None):
     """
     Return a Service object for a given provider name and service name.
 

@@ -13,7 +13,7 @@
                 "ID": "75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a"
             }, 
             "IsLatest": true, 
-            "Size": "434234"
+            "Size": 434234
         }, 
         {
             "LastModified": "2009-10-10T17:50:30.000Z", 
@@ -26,7 +26,7 @@
                 "ID": "75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a"
             }, 
             "IsLatest": false, 
-            "Size": "166434"
+            "Size": 166434
         }, 
         {
             "LastModified": "2009-10-11T12:50:30.000Z", 
@@ -39,7 +39,7 @@
                 "ID": "75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a"
             }, 
             "IsLatest": false, 
-            "Size": "64"
+            "Size": 64
         }
     ], 
     "MaxKeys": 5, 

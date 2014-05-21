@@ -51,7 +51,7 @@
           },
           "StackPolicyURL": {
             "no_paramfile": true
-          }	  
+          }
         }
       }
     },
@@ -60,6 +60,15 @@
         "members": {
           "TemplateURL": {
             "no_paramfile": true
+          }
+        }
+      }
+    },
+    "DescribeStackEvents": {
+      "input": {
+        "members": {
+          "StackName": {
+            "required": true
           }
         }
       }

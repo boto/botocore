@@ -13,14 +13,14 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import unittest
+from tests import BaseSessionTest
 import botocore.session
 
 
-class TestDirectconnectOperations(unittest.TestCase):
+class TestDirectconnectOperations(BaseSessionTest):
 
     def setUp(self):
-        self.session = botocore.session.get_session()
+        super(TestDirectconnectOperations, self).setUp()
         self.dc = self.session.get_service('directconnect')
 
     def test_create_connection(self):
@@ -55,8 +55,3 @@ class TestDirectconnectOperations(unittest.TestCase):
                                               {'cidr': '6.7.8.9/10'}]}}
         self.maxDiff = None
         self.assertEqual(params, result)
-
-
-
-if __name__ == "__main__":
-    unittest.main()

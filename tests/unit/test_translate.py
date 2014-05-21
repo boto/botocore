@@ -12,7 +12,8 @@
 # language governing permissions and limitations under the License.
 
 from tests import unittest
-from botocore.translate import ModelFiles, translate, merge_dicts
+from botocore.translate import ModelFiles, translate, merge_dicts, \
+                               resembles_jmespath_exp
 
 
 SERVICES = {
@@ -260,7 +261,26 @@ SERVICES = {
         }
       },
       "documentation": "This operation has been deprecated."
-    }
+    },
+    "RenameOperation": {
+      "input": {
+        "shape_name": "RenameOperation",
+        "type": "structure",
+        "members": {
+          "RenameMe": {
+            "shape_name": "RenameMe",
+            "type": "string",
+            "documentation": "blah blah blah blah",
+          },
+          "FieBaz": {
+            "shape_name": "fiebazType",
+            "type": "string",
+            "documentation": ""
+          }
+        }
+      },
+      "documentation": "This operation has been deprecated."
+    },
   }
 }
 
@@ -398,6 +418,7 @@ class TestTranslateModel(unittest.TestCase):
                     'py_input_token': 'other_value',
                     'limit_key': 'MaxResults',
                     'result_key': 'Credentials',
+                    'non_aggregate_keys': ['foo'],
                 }
             }
         }
@@ -413,6 +434,7 @@ class TestTranslateModel(unittest.TestCase):
                 'output_token': 'NextToken',
                 'limit_key': 'MaxResults',
                 'result_key': 'Credentials',
+                    'non_aggregate_keys': ['foo'],
             })
 
     def test_paginators_are_validated(self):
@@ -586,6 +608,21 @@ class TestTranslateModel(unittest.TestCase):
                             "existent operation: ThisOperationDoesNotExist"):
             translate(self.model)
 
+    def test_skip_jmespath_validation(self):
+        # This would fail previously.
+        extra = {
+            'pagination': {
+                'AssumeRole': {
+                    'input_token': ['NextToken'],
+                    'output_token': ['NextToken', 'NextTokenToken'],
+                    'result_key': 'Credentials.AssumedRoleUser',
+                }
+            }
+        }
+        self.model.enhancements = extra
+        new_model = translate(self.model)
+        self.assertEqual(new_model['pagination'], extra['pagination'])
+
     def test_result_key_validation_with_no_output(self):
         extra = {
             'pagination': {
@@ -733,7 +770,7 @@ class TestReplacePartOfOperation(unittest.TestCase):
         self.assertEqual(list(sorted(new_model['operations'].keys())),
                          ['AssumeRole', 'DeprecatedOperation',
                           'DeprecatedOperation2', 'NoOutputOperation',
-                          'RealOperation'])
+                          'RealOperation', 'RenameOperation'])
         # But the name key attribute is left unchanged.
         self.assertEqual(new_model['operations']['RealOperation']['name'],
                          'RealOperation2013_02_04')
@@ -814,6 +851,23 @@ class TestFilteringOfDocumentation(unittest.TestCase):
         self.assertEqual(operation['documentation'], 'This is my  stuff')
         param = operation['input']['members']['FooBar']
         self.assertEqual(param['documentation'], 'blah blah blah blah')
+
+
+class TestRenameParams(unittest.TestCase):
+    def test_rename_param(self):
+        enhancements = {
+            'transformations': {
+                'renames': {
+                    'RenameOperation.input.members.RenameMe': 'BeenRenamed',
+                }
+            }
+        }
+        model = ModelFiles(SERVICES, regions={}, retry={},
+                           enhancements=enhancements)
+        new_model = translate(model)
+        arguments = new_model['operations']['RenameOperation']['input']['members']
+        self.assertNotIn('RenameMe', arguments)
+        self.assertIn('BeenRenamed', arguments)
 
 
 class TestWaiterDenormalization(unittest.TestCase):
@@ -1010,6 +1064,17 @@ class TestWaiterDenormalization(unittest.TestCase):
         self.model.enhancements = extra
         with self.assertRaises(ValueError):
             new_model = translate(self.model)
+
+
+class TestResemblesJMESPath(unittest.TestCase):
+    maxDiff = None
+
+    def test_is_jmespath(self):
+      self.assertTrue(resembles_jmespath_exp('Something.Else'))
+
+    def test_is_not_jmespath(self):
+      self.assertFalse(resembles_jmespath_exp('Something'))
+      self.assertFalse(resembles_jmespath_exp('Something[1]'))
 
 
 if __name__ == '__main__':

@@ -14,7 +14,7 @@
 # language governing permissions and limitations under the License.
 
 import os
-from tests import BaseEnvVar
+from tests import BaseSessionTest
 import botocore.session
 
 XMLBODY1 = ('<CreateBucketConfiguration><LocationConstraint>sa-east-1'
@@ -42,8 +42,8 @@ XMLBODY5 = ('<BucketLoggingStatus><LoggingEnabled><TargetBucket>mybucketlogs'
             '</TargetGrants><TargetPrefix>mybucket-access_log-/</TargetPrefix>'
             '</LoggingEnabled></BucketLoggingStatus>')
 XMLBODY6 = ('<VersioningConfiguration>'
-            '<MfaDelete>Enabled</MfaDelete>'
             '<Status>Enabled</Status>'
+            '<MfaDelete>Enabled</MfaDelete>'
             '</VersioningConfiguration>')
 XMLBODY7 = ('<Delete><Object><Key>foobar</Key>'
            '</Object><Object><Key>fiebaz</Key></Object>'
@@ -63,15 +63,13 @@ POLICY = ('{"Version": "2008-10-17","Statement": [{"Sid": "AddPerm",'
           '"Action": "s3:GetObject", "Resource": "arn:aws:s3:::BUCKET_NAME/*"'
           '}]}')
 
-class TestS3Operations(BaseEnvVar):
+
+class TestS3Operations(BaseSessionTest):
 
     maxDiff = None
 
     def setUp(self):
         super(TestS3Operations, self).setUp()
-        self.environ['AWS_ACCESS_KEY_ID'] = 'foo'
-        self.environ['AWS_SECRET_ACCESS_KEY'] = 'bar'
-        self.session = botocore.session.get_session()
         self.s3 = self.session.get_service('s3')
         self.endpoint = self.s3.get_endpoint('us-east-1')
         self.bucket_name = 'foo'
@@ -279,6 +277,23 @@ class TestS3Operations(BaseEnvVar):
         self.assertEqual(params['uri_params'], uri_params)
         self.assertEqual(params['payload'].getvalue(), fp)
 
+    def test_copy_object(self):
+        operation = self.s3.get_operation('CopyObject')
+        bucket_name = 'mybucket'
+        key_name = 'key1'
+        copied_key= 'copied'
+        params = operation.build_parameters(
+            bucket=self.bucket_name, key=copied_key,
+            copy_source='%s/%s' % (bucket_name, key_name),
+            metadata_directive='REPLACE',
+            metadata={"mykey": "myvalue", "mykey2": "myvalue2"})
+        self.assertEqual(params['headers'], {
+            'x-amz-copy-source': 'mybucket/key1',
+            'x-amz-metadata-directive': 'REPLACE',
+            'x-amz-meta-mykey': 'myvalue',
+            'x-amz-meta-mykey2': 'myvalue2',
+        })
+
     def test_complete_multipart_upload(self):
         op = self.s3.get_operation('CompleteMultipartUpload')
         parts = {
@@ -300,7 +315,3 @@ class TestS3Operations(BaseEnvVar):
         # Explicitly check that <Parts> is not in the payload anywhere.
         self.assertNotIn('<Parts>', xml_payload)
         self.assertNotIn('</Parts>', xml_payload)
-
-
-if __name__ == "__main__":
-    unittest.main()

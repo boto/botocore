@@ -17,7 +17,7 @@ import json
 import pprint
 import logging
 import difflib
-from tests import unittest
+from tests import unittest, create_session
 
 from mock import Mock
 from botocore.vendored.requests.structures import CaseInsensitiveDict
@@ -66,7 +66,7 @@ def test_xml_parsing():
     for dp in ['responses', 'errors']:
         data_path = os.path.join(os.path.dirname(__file__), 'xml')
         data_path = os.path.join(data_path, dp)
-        session = botocore.session.get_session()
+        session = create_session()
         xml_files = glob.glob('%s/*.xml' % data_path)
         service_names = set()
         for fn in xml_files:
@@ -115,9 +115,21 @@ def test_json_parsing():
             sn, opname = basename.split('-', 1)
             operation = service.get_operation(opname)
             r = JSONResponse(session, operation)
-            with open(inputfile, 'rb') as fp:
+            headers = {}
+            with open(inputfile, 'r') as fp:
                 jsondoc = fp.read()
-            r.parse(jsondoc, 'utf-8')
+                # Try to get any headers using a special key
+                try:
+                    parsed = json.loads(jsondoc)
+                except ValueError:
+                    # This will error later, let it go on
+                    parsed = {}
+                if '__headers' in parsed:
+                    headers = parsed['__headers']
+                    del parsed['__headers']
+                    jsondoc = json.dumps(parsed)
+            r.parse(jsondoc.encode('utf-8'), 'utf-8')
+            r.merge_header_values(headers)
             save_jsonfile(outputfile, r)
             fp = open(outputfile)
             data = json.load(fp)
@@ -163,7 +175,9 @@ class TestHeaderParsing(unittest.TestCase):
              'Content-Type': 'binary/octet-stream',
              'accept-ranges': 'bytes',
              'Last-Modified': 'Tue, 20 Aug 2013 18:33:25 GMT',
-             'x-amz-server-side-encryption': 'AES256'
+             'x-amz-server-side-encryption': 'AES256',
+             'x-amz-meta-mykey1': 'value1',
+             'x-amz-meta-mykey2': 'value2',
              })
         http_response.content = ''
         http_response.request.method = 'HEAD'
@@ -173,8 +187,11 @@ class TestHeaderParsing(unittest.TestCase):
                     "LastModified": "Tue, 20 Aug 2013 18:33:25 GMT",
                     "ContentLength": "265",
                     "ETag": '"40d06eb6194712ac1c915783004ef730"',
-                    "ServerSideEncryption": "AES256"
-                    }
+                    "ServerSideEncryption": "AES256",
+                    "Metadata": {
+                        'mykey1': 'value1',
+                        'mykey2': 'value2',
+                    }}
         response_data = get_response(self.session, put_object,
                                      http_response)[1]
         self.assertEqual(response_data, expected)

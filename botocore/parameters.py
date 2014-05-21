@@ -321,7 +321,11 @@ class BlobParameter(Parameter):
                                       param=self)
             if not hasattr(self, 'payload') or self.payload is False:
                 # Blobs that are not in the payload should be base64-encoded
-                value = base64.b64encode(six.b(value)).decode('utf-8')
+                if isinstance(value, six.text_type):
+                    v = value.encode('utf-8')
+                else:
+                    v = value
+                value = base64.b64encode(v).decode('utf-8')
         return value
 
 
@@ -369,13 +373,16 @@ class ListParameter(Parameter):
             else:
                 label = self.get_label()
             label = '%s.%s' % (label, 'member')
-        if len(value) == 0 and self.required:
-            # If the parameter is required and an empty list is
-            # provided as a value, we should insert a parameter
-            # into the dictionary with the base name of the
-            # parameter and a value of the empty string. See
+        if len(value) == 0:
+            # If an empty list is provided as a value, then we should
+            # insert a parameter into the dictionary with the base name
+            # of the parameter and a value of the empty string. See
             # ELB SetLoadBalancerPoliciesForBackendServer for example.
-            built_params[label.split('.')[0]] = ''
+            if not self.flattened and label.endswith('.member'):
+                # Strip off the last '.member' part of the string
+                # if we're serializing an empty non flattened list.
+                label = '.'.join(label.split('.')[:-1])
+            built_params[label] = ''
         else:
             for i, v in enumerate(value, 1):
                 member_type.build_parameter_query(v, built_params,
@@ -443,6 +450,21 @@ class MapParameter(Parameter):
             built_params[label] = new_value
         for key in value:
             new_value[key] = value[key]
+
+    def build_parameter_rest(self, style, value, built_params, label=''):
+        # There's a special case for rest-xml with header locations
+        # that we we need to handle for maps.  If this is not the
+        # case we can defer to the base class's implementation of
+        # map parameters serialization.
+        if style == 'rest-xml' and getattr(self, 'location', '') == 'header':
+            prefix = getattr(self, 'location_name', '') or self.name
+            user_params = value
+            for key, value in user_params.items():
+                full_key_name = prefix + key
+                built_params['headers'][full_key_name] = value
+        else:
+            return super(MapParameter, self).build_parameter_rest(
+                style, value, build_params, label)
 
 
 class StructParameter(Parameter):

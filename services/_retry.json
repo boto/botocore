@@ -65,10 +65,10 @@
         }
       }
     },
-    "emr": {
+    "elasticmapreduce": {
       "__default__": {
         "policies": {
-          "throttling": {"$ref": "throttling"}
+          "throttling": {"$ref": "throttling_exception"}
         }
       }
     },
@@ -279,6 +279,13 @@
               }
             }
           }
+        }
+      }
+    },
+    "elastictranscoder": {
+      "__default__": {
+        "policies": {
+          "throttling": {"$ref": "throttling_exception"}
         }
       }
     }
