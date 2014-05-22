@@ -32,20 +32,18 @@ class BaseSessionTest(unittest.TestCase):
         self.env_vars = {'profile': (None, 'FOO_PROFILE', None),
                          'region': ('foo_region', 'FOO_REGION', None),
                          'data_path': ('data_path', 'FOO_DATA_PATH', None),
-                         'config_file': (None, 'FOO_CONFIG_FILE', None),
-                         'access_key': ('foo_access_key', None, None),
-                         'secret_key': ('foo_secret_key', None, None)}
+                         'config_file': (None, 'FOO_CONFIG_FILE', None)}
         self.environ = {}
         self.environ_patch = mock.patch('os.environ', self.environ)
         self.environ_patch.start()
+        self.environ['FOO_PROFILE'] = 'foo'
         self.environ['FOO_REGION'] = 'moon-west-1'
         data_path = os.path.join(os.path.dirname(__file__), 'data')
         self.environ['FOO_DATA_PATH'] = data_path
         config_path = os.path.join(os.path.dirname(__file__), 'cfg',
                                    'foo_config')
+        self.environ['FOO_CONFIG_FILE'] = config_path
         self.session = create_session(session_vars=self.env_vars)
-        self.session.config_filename = config_path
-        self.session.profile = 'foo'
 
     def tearDown(self):
         self.environ_patch.stop()
@@ -68,12 +66,27 @@ class SessionTest(BaseSessionTest):
                 logging.raiseExceptions = False
         shutil.rmtree(tempdir)
 
-    def test_profile_does_not_exist_raises_exception(self):
+    def test_profile(self):
+        self.assertEqual(self.session.get_config_variable('profile'), 'foo')
+        self.assertEqual(self.session.get_config_variable('region'),
+                         'moon-west-1')
+        self.session.get_config_variable('profile') == 'default'
+        saved_region = self.environ['FOO_REGION']
         del self.environ['FOO_REGION']
+        saved_profile = self.environ['FOO_PROFILE']
+        del self.environ['FOO_PROFILE']
         session = create_session(session_vars=self.env_vars)
-        session.profile = 'unknown-profile'
+        self.assertEqual(session.get_config_variable('profile'), None)
+        self.assertEqual(session.get_config_variable('region'), 'us-west-1')
+        self.environ['FOO_REGION'] = saved_region
+        self.environ['FOO_PROFILE'] = saved_profile
+
+    def test_profile_does_not_exist_raises_exception(self):
+        # Given we have no profile:
+        self.environ['FOO_PROFILE'] = 'profile_that_does_not_exist'
+        session = create_session(session_vars=self.env_vars)
         with self.assertRaises(botocore.exceptions.ProfileNotFound):
-            value = session.get_config_variable('region')
+            session.get_scoped_config()
 
     def test_variable_does_not_exist(self):
         session = create_session(session_vars=self.env_vars)
@@ -83,6 +96,28 @@ class SessionTest(BaseSessionTest):
         session = create_session(session_vars=self.env_vars)
         services = session.get_available_services()
         self.assertEqual(sorted(services), services)
+
+    def test_profile_does_not_exist_with_default_profile(self):
+        session = create_session(session_vars=self.env_vars)
+        config = session.get_scoped_config()
+        # We should have loaded this properly, and we'll check
+        # that foo_access_key which is defined in the config
+        # file should be present in the loaded config dict.
+        self.assertIn('aws_access_key_id', config)
+
+    def test_default_profile_specified_raises_exception(self):
+        # If you explicity set the default profile and you don't
+        # have that in your config file, an exception is raised.
+        config_path = os.path.join(os.path.dirname(__file__), 'cfg',
+                                   'boto_config_empty')
+        self.environ['FOO_CONFIG_FILE'] = config_path
+        self.environ['FOO_PROFILE'] = 'default'
+        session = create_session(session_vars=self.env_vars)
+        # In this case, even though we specified default, because
+        # the boto_config_empty config file does not have a default
+        # profile, we should be raising an exception.
+        with self.assertRaises(botocore.exceptions.ProfileNotFound):
+            session.get_scoped_config()
 
     def test_file_logger(self):
         tempdir = tempfile.mkdtemp()
@@ -94,6 +129,11 @@ class SessionTest(BaseSessionTest):
         with open(temp_file) as logfile:
             s = logfile.read()
         self.assertTrue('Looking for credentials' in s)
+
+    def test_full_config_property(self):
+        full_config = self.session.full_config
+        self.assertTrue('foo' in full_config['profiles'])
+        self.assertTrue('default' in full_config['profiles'])
 
     def test_register_unregister(self):
         calls = []
@@ -213,9 +253,24 @@ class TestSessionConfigurationVars(BaseSessionTest):
         self.environ['FOOBAR'] = 'fromenv'
         self.assertEqual(self.session.get_config_variable('foobar'), 'fromenv')
 
+        # Explicit override.
+        self.session.set_config_variable('foobar', 'session-instance')
+        self.assertEqual(self.session.get_config_variable('foobar'),
+                         'session-instance')
+
+        # Can disable this check via the ``methods`` arg.
+        del self.environ['FOOBAR']
+        self.assertEqual(self.session.get_config_variable(
+            'foobar', methods=('env', 'config')), 'default')
+
+
     def test_default_value_can_be_overriden(self):
         self.session.session_var_map['foobar'] = (None, 'FOOBAR', 'default')
+        # Default value.
         self.assertEqual(self.session.get_config_variable('foobar'), 'default')
+        self.assertEqual(
+            self.session.get_config_variable('foobar', default='per-call-default'),
+            'per-call-default')
 
 
 class TestSessionUserAgent(BaseSessionTest):

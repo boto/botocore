@@ -38,9 +38,9 @@ def create_credential_resolver(session):
     credentials.
 
     """
-    profile_name = session.profile
+    profile_name = session.profile or 'default'
     credential_file = session.get_config_variable('credentials_file')
-    config_file = session.config_filename
+    config_file = session.get_config_variable('config_file')
     metadata_timeout = session.get_config_variable('metadata_service_timeout')
     num_attempts = session.get_config_variable('metadata_service_num_attempts')
     providers = [
