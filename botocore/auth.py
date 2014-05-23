@@ -25,7 +25,8 @@ import functools
 from botocore.exceptions import NoCredentialsError
 from botocore.utils import normalize_url_path
 from botocore.compat import HTTPHeaders
-from botocore.compat import quote, unquote, urlsplit
+from botocore.compat import quote, unquote, urlsplit, parse_qs, urlencode
+from botocore.compat import urlunsplit
 
 logger = logging.getLogger(__name__)
 
@@ -195,7 +196,7 @@ class SigV4Auth(BaseSigner):
                 elif len(q) == 1:
                     quoted_qsa.append('%s=' % quote(q[0], safe='-_.~'))
             if len(quoted_qsa) > 0:
-                quoted_qsa.sort(key=itemgetter(0))
+                quoted_qsa.sort()
                 buf += '&'.join(quoted_qsa)
         return buf
 
@@ -298,7 +299,7 @@ class SigV4Auth(BaseSigner):
         self.timestamp = now.strftime('%Y%m%dT%H%M%SZ')
         # This could be a retry.  Make sure the previous
         # authorization header is removed first.
-        self._add_headers_before_signing(request)
+        self._modify_request_before_signing(request)
         canonical_request = self.canonical_request(request)
         logger.debug("Calculating signature using v4 auth.")
         logger.debug('CanonicalRequest:\n%s', canonical_request)
@@ -307,6 +308,9 @@ class SigV4Auth(BaseSigner):
         signature = self.signature(string_to_sign)
         logger.debug('Signature:\n%s', signature)
 
+        self._inject_signature_to_request(request, signature)
+
+    def _inject_signature_to_request(self, request, signature):
         l = ['AWS4-HMAC-SHA256 Credential=%s' % self.scope(request)]
         headers_to_sign = self.headers_to_sign(request)
         l.append('SignedHeaders=%s' % self.signed_headers(headers_to_sign))
@@ -314,7 +318,7 @@ class SigV4Auth(BaseSigner):
         request.headers['Authorization'] = ', '.join(l)
         return request
 
-    def _add_headers_before_signing(self, request):
+    def _modify_request_before_signing(self, request):
         if 'Authorization' in request.headers:
             del request.headers['Authorization']
         if 'Date' not in request.headers:
@@ -325,13 +329,79 @@ class SigV4Auth(BaseSigner):
 
 class S3SigV4Auth(SigV4Auth):
 
-    def _add_headers_before_signing(self, request):
+    def _modify_request_before_signing(self, request):
         super(S3SigV4Auth, self)._add_headers_before_signing(request)
         request.headers['X-Amz-Content-SHA256'] = self.payload(request)
 
     def _normalize_url_path(self, path):
         # For S3, we do not normalize the path.
         return path
+
+
+class S3SigV4QueryAuth(SigV4Auth):
+    """S3 SigV4 auth using query parameters.
+
+    This signer will sign a request using query parameters and signature
+    version 4, i.e a "presigned url" signer.
+
+    Based off of: http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html
+
+    """
+    def __init__(self, credentials, service_name, region_name, expires):
+        super(S3SigV4QueryAuth, self).__init__(credentials, service_name,
+                                               region_name)
+        self._expires = expires
+
+    def _normalize_url_path(self, path):
+        # For S3, we do not normalize the path.
+        return path
+
+    def payload(self, request):
+        # From the doc link above:
+        # "You don't include a payload hash in the Canonical Request, because
+        # when you create a presigned URL, you don't know anything about the
+        # payload. Instead, you use a constant string "UNSIGNED-PAYLOAD".
+        return "UNSIGNED-PAYLOAD"
+
+    def _modify_request_before_signing(self, request):
+        # This is our chance to add additional query params we need
+        # before we go about calculating the signature.
+        request.headers = {}
+        # Note that we're not including X-Amz-Signature.
+        # From the docs: "The Canonical Query String must include all the query
+        # parameters from the preceding table except for X-Amz-Signature.
+        extra_query_params = {
+            'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
+            'X-Amz-Credential': self.scope(request),
+            'X-Amz-Date': self.timestamp,
+            'X-Amz-Expires': self._expires,
+            'X-Amz-SignedHeaders': 'host',
+        }
+        # Now parse the original query string to a dict, inject our new query
+        # params, and serialize back to a query string.
+        url_parts = urlsplit(request.url)
+        query_dict = parse_qs(url_parts.query)
+        query_dict.update(extra_query_params)
+        new_query_string = urlencode(query_dict)
+        # url_parts is a tuple (and therefore immutable) so we need to create
+        # a new url_parts with the new query string.
+        # <part>   - <index>
+        # scheme   - 0
+        # netloc   - 1
+        # path     - 2
+        # query    - 3  <-- we're replacing this.
+        # fragment - 4
+        p = url_parts
+        new_url_parts = (p[0], p[1], p[2], new_query_string, p[4])
+        request.url = urlunsplit(new_url_parts)
+
+    def _inject_signature_to_request(self, request, signature):
+        # Rather than calculating an "Authorization" header, for the query
+        # param quth, we just append an 'X-Amz-Signature' param to the end
+        # of the query string.
+        signed_headers = self.signed_headers(self.headers_to_sign(request))
+        request.url += (
+            '&X-Amz-Signature=%s' % (signature,))
 
 
 class HmacV1Auth(BaseSigner):
@@ -460,4 +530,5 @@ AUTH_TYPE_MAPS = {
     'v3https': SigV3Auth,
     's3': HmacV1Auth,
     's3v4': S3SigV4Auth,
+    's3v4-query': S3SigV4QueryAuth,
 }

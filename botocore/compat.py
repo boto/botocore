@@ -28,6 +28,8 @@ if six.PY3:
     from urllib.parse import urlunsplit
     from urllib.parse import urljoin
     from urllib.parse import parse_qsl
+    from urllib.parse import parse_qs
+    from urllib.parse import urlencode
     from io import IOBase as _IOBase
     file_type = _IOBase
     zip = zip
@@ -49,10 +51,12 @@ else:
     from urllib import quote
     from urllib import unquote
     from urllib import unquote_plus
+    from urllib import urlencode
     from urlparse import urlsplit
     from urlparse import urlunsplit
     from urlparse import urljoin
     from urlparse import parse_qsl
+    from urlparse import parse_qs
     from email.message import Message
     file_type = file
     from itertools import izip as zip
