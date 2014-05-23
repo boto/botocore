@@ -53,15 +53,6 @@
         }
       }
     },
-    "ImportKeyPair": {
-      "input": {
-        "members": {
-          "PublicKeyMaterial": {
-            "type": "blob"
-          }
-        }
-      }
-    },
     "CopyImage": {
       "input": {
         "members": {
