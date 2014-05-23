@@ -54,6 +54,16 @@ class NoCredentialsError(BotoCoreError):
     fmt = 'Unable to locate credentials'
 
 
+class PartialCredentialsError(BotoCoreError):
+    """
+    Only partial credentials were found.
+
+    :ivar cred_var: The missing credential variable name.
+
+    """
+    fmt = 'Partial credentials found, missing: {cred_var}'
+
+
 class NoRegionError(BotoCoreError):
     """
     No region was specified

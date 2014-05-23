@@ -13,7 +13,7 @@
 import logging
 
 
-from .exceptions import InvalidExpressionError
+from .exceptions import InvalidExpressionError, ConfigNotFound
 from .compat import json
 from .vendored import requests
 
@@ -122,6 +122,12 @@ def set_value_from_jmespath(source, expression, value, is_first=True):
 
 
 class InstanceMetadataFetcher(object):
+    def __init__(self, timeout=DEFAULT_METADATA_SERVICE_TIMEOUT,
+                 num_attempts=1, url=METADATA_SECURITY_CREDENTIALS_URL):
+        self._timeout = timeout
+        self._num_attempts = num_attempts
+        self._url = url
+
     def _get_request(self, url, timeout, num_attempts=1):
         for i in range(num_attempts):
             try:
@@ -134,12 +140,11 @@ class InstanceMetadataFetcher(object):
                     return response
         raise _RetriesExceededError()
 
-    def retrieve_iam_role_credentials(self,
-                                      url=METADATA_SECURITY_CREDENTIALS_URL,
-                                      timeout=None, num_attempts=1):
-        if timeout is None:
-            timeout = DEFAULT_METADATA_SERVICE_TIMEOUT
+    def retrieve_iam_role_credentials(self):
         data = {}
+        url = self._url
+        timeout = self._timeout
+        num_attempts = self._num_attempts
         try:
             r = self._get_request(url, timeout, num_attempts)
             if r.content:
@@ -178,7 +183,6 @@ class InstanceMetadataFetcher(object):
         return final_data
 
 
-
 def merge_dicts(dict1, dict2):
     """Given two dict, merge the second dict into the first.
 
@@ -195,3 +199,22 @@ def merge_dicts(dict1, dict2):
             # At scalar types, we iterate and merge the
             # current dict that we're on.
             dict1[key] = dict2[key]
+
+
+def parse_key_val_file(filename, _open=open):
+    try:
+        with _open(filename) as f:
+            contents = f.read()
+            return parse_key_val_file_contents(contents)
+    except OSError as e:
+        raise ConfigNotFound(path=filename)
+
+
+def parse_key_val_file_contents(contents):
+    final = {}
+    for line in contents.splitlines():
+        key, val = line.split('=', 1)
+        key = key.strip()
+        val = val.strip()
+        final[key] = val
+    return final

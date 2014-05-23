@@ -71,6 +71,7 @@ class BaseSessionTest(BaseEnvVar):
         self.environ['AWS_SECRET_ACCESS_KEY'] = 'secret_key'
         self.environ['AWS_CONFIG_FILE'] = 'no-exist-foo'
         self.session = create_session()
+        self.session.config_filename = 'no-exist-foo'
 
 
 class TestParamSerialization(BaseSessionTest):

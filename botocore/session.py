@@ -25,7 +25,7 @@ import shlex
 from botocore import __version__
 import botocore.config
 import botocore.credentials
-from botocore.exceptions import ConfigNotFound, EventNotFound, ProfileNotFound
+from botocore.exceptions import EventNotFound, ConfigNotFound, ProfileNotFound
 from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.loaders import Loader
@@ -66,10 +66,12 @@ class Session(object):
         'region': ('region', 'BOTO_DEFAULT_REGION', None),
         'data_path': ('data_path', 'BOTO_DATA_PATH', None),
         'config_file': (None, 'AWS_CONFIG_FILE', '~/.aws/config'),
-        'access_key': ('aws_access_key_id', 'AWS_ACCESS_KEY_ID', None),
-        'secret_key': ('aws_secret_access_key', 'AWS_SECRET_ACCESS_KEY', None),
-        'token': ('aws_security_token', 'AWS_SECURITY_TOKEN', None),
         'provider': ('provider', 'BOTO_PROVIDER_NAME', 'aws'),
+
+        # These variables are intended for internal use so don't have any
+        # user settable values.
+        # This is the shared credentials file amongst sdks.
+        'credentials_file': (None, None, '~/.aws/credentials'),
 
         # These variables only exist in the config file.
 
@@ -96,9 +98,6 @@ class Session(object):
     * region - Default region name to use, if not otherwise specified.
     * data_path - Additional directories to search for data files.
     * config_file - Location of a Boto config file.
-    * access_key - The AWS access key part of your credentials.
-    * secret_key - The AWS secret key part of your credentials.
-    * token - The security token part of your credentials (session tokens only)
     * provider - The name of the service provider (e.g. aws)
 
     These form the keys of the dictionary.  The values in the dictionary
@@ -163,11 +162,22 @@ class Session(object):
         # extra paths to the loader.  We will do this lazily
         # only when we ask for the loader.
         self._data_paths_added = False
+        self._components = ComponentLocator()
+        self._register_credential_provider()
+
+    def _register_credential_provider(self):
+        self._components.lazy_register_component(
+            'credential_provider',
+            lambda:  botocore.credentials.create_credential_resolver(self))
+
+
+    def _reset_components(self):
+        self._register_credential_provider()
 
     @property
     def loader(self):
         if not self._data_paths_added:
-            extra_paths = self.get_variable('data_path')
+            extra_paths = self.get_config_variable('data_path')
             if extra_paths is not None:
                 self._loader.data_path = extra_paths
             self._data_paths_added = True
@@ -193,21 +203,7 @@ class Session(object):
         # otherwise it will return the cached value.  The profile map
         # is a list of profile names, to the config values for the profile.
         if self._profile_map is None:
-            profile_map = {}
-            for key, values in self.full_config.items():
-                if key.startswith("profile"):
-                    try:
-                        parts = shlex.split(key)
-                    except ValueError:
-                        continue
-                    if len(parts) == 2:
-                        profile_map[parts[1]] = values
-                elif key == 'default':
-                    # default section is special and is considered a profile
-                    # name but we don't require you use 'profile "default"'
-                    # as a section.
-                    profile_map[key] = values
-            self._profile_map = profile_map
+            self._profile_map = self.full_config['profiles']
         return self._profile_map
 
     @property
@@ -220,6 +216,8 @@ class Session(object):
         # profile should reset the provider.
         self._provider = None
         self._profile = profile
+        # Need to potentially reload the config file/creds.
+        self._reset_components()
 
     def get_config_variable(self, logical_name,
                             methods=('instance', 'env', 'config'),
@@ -274,7 +272,7 @@ class Session(object):
                 value = os.environ[envvar_name]
             elif 'config' in methods:
                 if config_name:
-                    config = self.get_config()
+                    config = self.get_scoped_config()
                     value = config.get(config_name)
         # If we don't have a value at this point, we need to try to assign
         # a default value.  An explicit default argument will win over the
@@ -284,9 +282,6 @@ class Session(object):
         if value is None and config_default is not None:
             value = config_default
         return value
-
-    # Alias to get_variable for backwards compatability.
-    get_variable = get_config_variable
 
     def set_config_variable(self, logical_name, value):
         """Set a configuration variable to a specific value.
@@ -314,12 +309,11 @@ class Session(object):
         """
         self._session_instance_vars[logical_name] = value
 
-    def get_config(self):
+
+    def get_scoped_config(self):
         """
-        Returns the configuration associated with this session.  If
-        the configuration has not yet been loaded, it will be loaded
-        using the default ``profile`` session variable.  If it has already been
-        loaded, the cached configuration will be returned.
+        Returns the config values from the config file scoped to the current
+        profile.
 
         The configuration data is loaded **only** from the config file.
         It does not resolve variables based on different locations
@@ -336,6 +330,7 @@ class Session(object):
 
         :raises: ConfigNotFound, ConfigParseError, ProfileNotFound
         :rtype: dict
+
         """
         profile_name = self.get_config_variable('profile')
         profile_map = self._build_profile_map()
@@ -364,9 +359,10 @@ class Session(object):
         """
         if self._config is None:
             try:
-                self._config = botocore.config.get_config(self)
+                self._config = botocore.config.load_config(
+                    self.get_config_variable('config_file'))
             except ConfigNotFound:
-                self._config = {}
+                self._config = {'profiles': {}}
         return self._config
 
     def set_credentials(self, access_key, secret_key, token=None):
@@ -400,7 +396,8 @@ class Session(object):
 
         """
         if self._credentials is None:
-            self._credentials = botocore.credentials.get_credentials(self)
+            self._credentials = self._components.get_component(
+                'credential_provider').load_credentials()
         return self._credentials
 
     def user_agent(self):
@@ -639,6 +636,42 @@ class Session(object):
     def emit_first_non_none_response(self, event_name, **kwargs):
         responses = self._events.emit(event_name, **kwargs)
         return first_non_none_response(responses)
+
+    def get_component(self, name):
+        return self._components.get_component(name)
+
+    def register_component(self, name, component):
+        self._components.register_component(name, component)
+
+
+class ComponentLocator(object):
+    """Service locator for session components."""
+    def __init__(self):
+        self._components = {}
+        self._deferred = {}
+
+    def get_component(self, name):
+        if name in self._deferred:
+            factory = self._deferred.pop(name)
+            self._components[name] = factory()
+        try:
+            return self._components[name]
+        except KeyError:
+            raise ValueError("Unknown component: %s" % name)
+
+    def register_component(self, name, component):
+        self._components[name] = component
+        try:
+            del self._deferred[name]
+        except KeyError:
+            pass
+
+    def lazy_register_component(self, name, no_arg_factory):
+        self._deferred[name] = no_arg_factory
+        try:
+            del self._components[name]
+        except KeyError:
+            pass
 
 
 def get_session(env_vars=None):
