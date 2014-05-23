@@ -1,6 +1,6 @@
 {
   "extra": {
-    "xmlnamespace": "http://ec2.amazonaws.com/doc/2014-02-01/",
+    "xmlnamespace": "http://ec2.amazonaws.com/doc/2014-05-01/",
     "metadata": {
       "regions": {
         "us-east-1": null,
