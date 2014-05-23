@@ -77,11 +77,11 @@ class Session(object):
 
         # This is the number of seconds until we time out a request to
         # the instance metadata service.
-        'metadata_service_timeout': ('metadata_service_timeout', None, None),
+        'metadata_service_timeout': ('metadata_service_timeout', None, 1),
         # This is the number of request attempts we make until we give
         # up trying to retrieve data from the instance metadata service.
         'metadata_service_num_attempts': ('metadata_service_num_attempts',
-                                          None, None),
+                                          None, 1),
         }
     """
     A default dictionary that maps the logical names for session variables
