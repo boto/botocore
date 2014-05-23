@@ -12,22 +12,15 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from tests import unittest
 
-import unittest
-import botocore.auth
-import botocore.credentials
-from botocore.compat import HTTPHeaders
+import mock
 import six
 
-try:
-    from urllib.parse import urlsplit
-except ImportError:
-    from urlparse import urlsplit
-
-CS1 = ("PUT\nc8fdb181845a4ca6b8fec737b3581d76\ntext/html\n"
-       "Thu, 17 Nov 2005 18:49:58 GMT\nx-amz-magic:abracadabra\n"
-       "x-amz-meta-author:foo@bar.com\n/quotes/nelson")
-SIG1 = 'jZNOcbfWmD/A/f3hSvVzXZjM2HU='
+import botocore.auth
+import botocore.credentials
+from botocore.compat import HTTPHeaders, urlsplit
+from botocore.awsrequest import AWSRequest
 
 
 class TestHMACV1(unittest.TestCase):
@@ -48,9 +41,14 @@ class TestHMACV1(unittest.TestCase):
         http_headers = HTTPHeaders.from_dict(headers)
         split = urlsplit('/quotes/nelson')
         cs = self.hmacv1.canonical_string('PUT', split, http_headers)
-        assert cs == CS1
+        expected_canonical = (
+            "PUT\nc8fdb181845a4ca6b8fec737b3581d76\ntext/html\n"
+            "Thu, 17 Nov 2005 18:49:58 GMT\nx-amz-magic:abracadabra\n"
+            "x-amz-meta-author:foo@bar.com\n/quotes/nelson")
+        expected_signature = 'jZNOcbfWmD/A/f3hSvVzXZjM2HU='
+        self.assertEqual(cs, expected_canonical)
         sig = self.hmacv1.get_signature('PUT', split, http_headers)
-        assert sig == SIG1
+        self.assertEqual(sig, expected_signature)
 
     def test_duplicate_headers(self):
         pairs = [('Date', 'Thu, 17 Nov 2005 18:49:58 GMT'),
@@ -84,3 +82,42 @@ class TestHMACV1(unittest.TestCase):
             cr = self.hmacv1.canonical_resource(split)
             self.assertEqual(cr, '/quotes?%s' % operation)
 
+
+class TestSigV2(unittest.TestCase):
+
+    def setUp(self):
+        access_key = 'foo'
+        secret_key = 'bar'
+        self.credentials = botocore.credentials.Credentials(access_key,
+                                                            secret_key)
+        self.signer = botocore.auth.SigV2Auth(self.credentials)
+
+    def test_put(self):
+        request = mock.Mock()
+        request.url = '/'
+        request.method = 'POST'
+        params = {'Foo': u'\u2713'}
+        result = self.signer.calc_signature(request, params)
+        self.assertEqual(
+            result, ('Foo=%E2%9C%93',
+                     u'VCtWuwaOL0yMffAT8W4y0AFW3W4KUykBqah9S40rB+Q='))
+
+
+class TestSigV3(unittest.TestCase):
+
+    def setUp(self):
+        self.access_key = 'access_key'
+        self.secret_key = 'secret_key'
+        self.credentials = botocore.credentials.Credentials(self.access_key,
+                                                            self.secret_key)
+        self.auth = botocore.auth.SigV3Auth(self.credentials)
+
+    def test_signature_with_date_headers(self):
+        request = AWSRequest()
+        request.headers = {'Date': 'Thu, 17 Nov 2005 18:49:58 GMT'}
+        request.url = 'https://route53.amazonaws.com'
+        self.auth.add_auth(request)
+        self.assertEqual(
+            request.headers['X-Amzn-Authorization'],
+            ('AWS3-HTTPS AWSAccessKeyId=access_key,Algorithm=HmacSHA256,'
+             'Signature=M245fo86nVKI8rLpH4HgWs841sBTUKuwciiTpjMDgPs='))
