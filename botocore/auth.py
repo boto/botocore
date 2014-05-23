@@ -338,39 +338,24 @@ class S3SigV4Auth(SigV4Auth):
         return path
 
 
-class S3SigV4QueryAuth(SigV4Auth):
-    """S3 SigV4 auth using query parameters.
+class SigV4QueryAuth(SigV4Auth):
+    DEFAULT_EXPIRES = 3600
 
-    This signer will sign a request using query parameters and signature
-    version 4, i.e a "presigned url" signer.
-
-    Based off of: http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html
-
-    """
-    def __init__(self, credentials, service_name, region_name, expires):
-        super(S3SigV4QueryAuth, self).__init__(credentials, service_name,
+    def __init__(self, credentials, service_name, region_name,
+                 expires=DEFAULT_EXPIRES):
+        super(SigV4QueryAuth, self).__init__(credentials, service_name,
                                                region_name)
         self._expires = expires
-
-    def _normalize_url_path(self, path):
-        # For S3, we do not normalize the path.
-        return path
-
-    def payload(self, request):
-        # From the doc link above:
-        # "You don't include a payload hash in the Canonical Request, because
-        # when you create a presigned URL, you don't know anything about the
-        # payload. Instead, you use a constant string "UNSIGNED-PAYLOAD".
-        return "UNSIGNED-PAYLOAD"
 
     def _modify_request_before_signing(self, request):
         # This is our chance to add additional query params we need
         # before we go about calculating the signature.
         request.headers = {}
+        request.method = 'GET'
         # Note that we're not including X-Amz-Signature.
         # From the docs: "The Canonical Query String must include all the query
         # parameters from the preceding table except for X-Amz-Signature.
-        extra_query_params = {
+        auth_params = {
             'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
             'X-Amz-Credential': self.scope(request),
             'X-Amz-Date': self.timestamp,
@@ -381,8 +366,20 @@ class S3SigV4QueryAuth(SigV4Auth):
         # params, and serialize back to a query string.
         url_parts = urlsplit(request.url)
         query_dict = parse_qs(url_parts.query)
-        query_dict.update(extra_query_params)
-        new_query_string = urlencode(query_dict)
+        # The spec is particular about this.  It *has* to be:
+        # https://<endpoint>?<operation params>&<auth params>
+        # You can't mix the two types of params together, i.e just keep doing
+        # new_query_params.update(op_params)
+        # new_query_params.update(auth_params)
+        # urlencode(new_query_params)
+        operation_params = ''
+        if request.data:
+            # We also need to move the body params into the query string.
+            query_dict.update(request.data)
+            request.data = ''
+        if query_dict:
+            operation_params = urlencode(query_dict) + '&'
+        new_query_string = operation_params + urlencode(auth_params)
         # url_parts is a tuple (and therefore immutable) so we need to create
         # a new url_parts with the new query string.
         # <part>   - <index>
@@ -403,6 +400,26 @@ class S3SigV4QueryAuth(SigV4Auth):
         request.url += (
             '&X-Amz-Signature=%s' % (signature,))
 
+
+class S3SigV4QueryAuth(SigV4QueryAuth):
+    """S3 SigV4 auth using query parameters.
+
+    This signer will sign a request using query parameters and signature
+    version 4, i.e a "presigned url" signer.
+
+    Based off of: http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html
+
+    """
+    def _normalize_url_path(self, path):
+        # For S3, we do not normalize the path.
+        return path
+
+    def payload(self, request):
+        # From the doc link above:
+        # "You don't include a payload hash in the Canonical Request, because
+        # when you create a presigned URL, you don't know anything about the
+        # payload. Instead, you use a constant string "UNSIGNED-PAYLOAD".
+        return "UNSIGNED-PAYLOAD"
 
 class HmacV1Auth(BaseSigner):
 
@@ -531,4 +548,5 @@ AUTH_TYPE_MAPS = {
     's3': HmacV1Auth,
     's3v4': S3SigV4Auth,
     's3v4-query': S3SigV4QueryAuth,
+    'v4-query': SigV4QueryAuth,
 }
