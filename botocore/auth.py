@@ -365,7 +365,10 @@ class SigV4QueryAuth(SigV4Auth):
         # Now parse the original query string to a dict, inject our new query
         # params, and serialize back to a query string.
         url_parts = urlsplit(request.url)
-        query_dict = parse_qs(url_parts.query)
+        # parse_qs makes each value a list, but in our case we know we won't
+        # have repeated keys so we know we have single element lists which we
+        # can convert back to scalar values.
+        query_dict = dict([(k, v[0]) for k, v in parse_qs(url_parts.query).items()])
         # The spec is particular about this.  It *has* to be:
         # https://<endpoint>?<operation params>&<auth params>
         # You can't mix the two types of params together, i.e just keep doing
@@ -375,6 +378,9 @@ class SigV4QueryAuth(SigV4Auth):
         operation_params = ''
         if request.data:
             # We also need to move the body params into the query string.
+            # request.data will be populated, for example, with query services
+            # which normally form encode the params into the body.
+            # This means that request.data is a dict() of the operation params.
             query_dict.update(request.data)
             request.data = ''
         if query_dict:
@@ -421,6 +427,7 @@ class S3SigV4QueryAuth(SigV4QueryAuth):
         # payload. Instead, you use a constant string "UNSIGNED-PAYLOAD".
         return "UNSIGNED-PAYLOAD"
 
+
 class HmacV1Auth(BaseSigner):
 
     # List of Query String Arguments of Interest
@@ -464,7 +471,6 @@ class HmacV1Auth(BaseSigner):
         for key in headers:
             lk = key.lower()
             if headers[key] is not  None:
-                # TODO: move hardcoded prefix to provider
                 if lk.startswith('x-amz-'):
                     custom_headers[lk] = ','.join(v.strip() for v in
                                                   headers.get_all(key))
@@ -518,7 +524,6 @@ class HmacV1Auth(BaseSigner):
 
     def get_signature(self, method, split, headers, expires=None):
         if self.credentials.token:
-            #TODO: remove hardcoded header name
             headers['x-amz-security-token'] = self.credentials.token
         string_to_sign = self.canonical_string(method,
                                                split,

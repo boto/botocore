@@ -13,13 +13,14 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from tests import unittest
+import datetime
 
 import mock
 import six
 
 import botocore.auth
 import botocore.credentials
-from botocore.compat import HTTPHeaders, urlsplit
+from botocore.compat import HTTPHeaders, urlsplit, parse_qs
 from botocore.awsrequest import AWSRequest
 
 
@@ -121,3 +122,88 @@ class TestSigV3(unittest.TestCase):
             request.headers['X-Amzn-Authorization'],
             ('AWS3-HTTPS AWSAccessKeyId=access_key,Algorithm=HmacSHA256,'
              'Signature=M245fo86nVKI8rLpH4HgWs841sBTUKuwciiTpjMDgPs='))
+
+
+class TestSigV4Presign(unittest.TestCase):
+    maxDiff = None
+
+    def setUp(self):
+        self.access_key = 'access_key'
+        self.secret_key = 'secret_key'
+        self.credentials = botocore.credentials.Credentials(self.access_key,
+                                                            self.secret_key)
+        self.service_name = 'myservice'
+        self.region_name = 'myregion'
+        self.auth = botocore.auth.SigV4QueryAuth(
+            self.credentials, self.service_name, self.region_name, expires=60)
+        self.datetime_patcher = mock.patch.object(
+            botocore.auth.datetime, 'datetime',
+            mock.Mock(wraps=datetime.datetime)
+        )
+        mocked_datetime = self.datetime_patcher.start()
+        mocked_datetime.utcnow.return_value = datetime.datetime(
+            2014, 1, 1, 0, 0)
+
+    def tearDown(self):
+        self.datetime_patcher.stop()
+
+    def get_parsed_query_string(self, request):
+        query_string_dict = parse_qs(urlsplit(request.url).query)
+        # Also, parse_qs sets each value in the dict to be a list, but
+        # because we know that we won't have repeated keys, we simplify
+        # the dict and convert it back to a single value.
+        for key in query_string_dict:
+            query_string_dict[key] = query_string_dict[key][0]
+        return query_string_dict
+
+    def test_presign_no_params(self):
+        request = AWSRequest()
+        request.url = 'https://ec2.us-east-1.amazonaws.com/'
+        self.auth.add_auth(request)
+        query_string = self.get_parsed_query_string(request)
+        self.assertEqual(
+            query_string,
+            {'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
+             'X-Amz-Credential': 'access_key/20140101/myregion/myservice/aws4_request',
+             'X-Amz-Date': '20140101T000000Z',
+             'X-Amz-Expires': '60',
+             'X-Amz-Signature': 'c70e0bcdb4cd3ee324f71c78195445b8788315af0800bbbdbbb6d05a616fb84c',
+             'X-Amz-SignedHeaders': 'host'})
+
+    def test_operation_params_before_auth_params(self):
+        # The spec is picky about this.
+        request = AWSRequest()
+        request.url = 'https://ec2.us-east-1.amazonaws.com/?Action=MyOperation'
+        self.auth.add_auth(request)
+        # Verify auth params come after the existing params.
+        self.assertIn(
+            '?Action=MyOperation&X-Amz', request.url)
+
+    def test_operation_params_before_auth_params_in_body(self):
+        request = AWSRequest()
+        request.url = 'https://ec2.us-east-1.amazonaws.com/'
+        request.data = {'Action': 'MyOperation'}
+        self.auth.add_auth(request)
+        # Same situation, the params from request.data come before the auth
+        # params in the query string.
+        self.assertIn(
+            '?Action=MyOperation&X-Amz', request.url)
+
+    def test_s3_sigv4_presign(self):
+        auth = botocore.auth.S3SigV4QueryAuth(
+            self.credentials, self.service_name, self.region_name, expires=60)
+        request = AWSRequest()
+        request.url = 'https://s3.us-west-2.amazonaws.com/mybucket/keyname/.bar'
+        auth.add_auth(request)
+        query_string = self.get_parsed_query_string(request)
+        # We use a different payload:
+        self.assertEqual(auth.payload(request), 'UNSIGNED-PAYLOAD')
+        # which will result in a different X-Amz-Signature:
+        self.assertEqual(
+            query_string,
+            {'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
+             'X-Amz-Credential': 'access_key/20140101/myregion/myservice/aws4_request',
+             'X-Amz-Date': '20140101T000000Z',
+             'X-Amz-Expires': '60',
+             'X-Amz-Signature': 'ac1b8b9e47e8685c5c963d75e35e8741d55251cd955239cc1efad4dc7201db66',
+             'X-Amz-SignedHeaders': 'host'})

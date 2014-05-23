@@ -25,6 +25,9 @@ except ImportError:
     from itertools import zip_longest
 
 import botocore.session
+import botocore.auth
+import botocore.credentials
+import botocore.vendored.requests as requests
 
 
 class BaseS3Test(unittest.TestCase):
@@ -408,6 +411,39 @@ class TestS3Copy(TestS3BaseWithBucket):
             metadata={"mykey": "myvalue", "mykey2": "myvalue2"})
         self.keys.append(copied_key)
         self.assertEqual(http.status_code, 200)
+
+
+class TestS3Presign(BaseS3Test):
+    def setUp(self):
+        super(TestS3Presign, self).setUp()
+        self.bucket_name = 'botocoretest%s-%s' % (
+            int(time.time()), random.randint(1, 1000))
+
+        operation = self.service.get_operation('CreateBucket')
+        response = operation.call(self.endpoint, bucket=self.bucket_name)
+        self.assertEqual(response[0].status_code, 200)
+
+    def tearDown(self):
+        for key in self.keys:
+            operation = self.service.get_operation('DeleteObject')
+            operation.call(self.endpoint, bucket=self.bucket_name,
+                           key=key)
+        self.delete_bucket(self.bucket_name)
+        super(TestS3Presign, self).tearDown()
+
+    def test_can_retrieve_presigned_object(self):
+        key_name = 'mykey'
+        self.create_object(key_name=key_name, body='foobar')
+        signer = botocore.auth.S3SigV4QueryAuth(
+            credentials=self.service.session.get_credentials(),
+            region_name='us-east-1', service_name='s3', expires=60)
+        op = self.service.get_operation('GetObject')
+        params = op.build_parameters(bucket=self.bucket_name, key=key_name)
+        request = self.endpoint.create_request(op, params, signer)
+        presigned_url = request.url
+        # We should now be able to retrieve the contents of 'mykey' using
+        # this presigned url.
+        self.assertEqual(requests.get(presigned_url).content, 'foobar')
 
 
 if __name__ == '__main__':
