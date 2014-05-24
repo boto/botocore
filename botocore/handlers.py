@@ -179,7 +179,8 @@ def maybe_switch_to_sigv4(service, region_name, **kwargs):
 
 
 def signature_overrides(service_data, service_name, session, **kwargs):
-    service_config = session.get_config_variable(service_name)
+    scoped_config = session.get_scoped_config()
+    service_config = scoped_config.get(service_name)
     if service_config is None or not isinstance(service_config, dict):
         return
     signature_version_override = service_config.get('signature_version')
