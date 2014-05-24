@@ -443,7 +443,7 @@ class TestS3Presign(BaseS3Test):
         presigned_url = request.url
         # We should now be able to retrieve the contents of 'mykey' using
         # this presigned url.
-        self.assertEqual(requests.get(presigned_url).content, 'foobar')
+        self.assertEqual(requests.get(presigned_url).content, b'foobar')
 
 
 if __name__ == '__main__':
