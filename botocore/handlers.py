@@ -179,8 +179,8 @@ def maybe_switch_to_sigv4(service, region_name, **kwargs):
 
 
 def signature_overrides(service_data, service_name, session, **kwargs):
-    config = session.get_config()
-    service_config = config.get(service_name)
+    scoped_config = session.get_scoped_config()
+    service_config = scoped_config.get(service_name)
     if service_config is None or not isinstance(service_config, dict):
         return
     signature_version_override = service_config.get('signature_version')
@@ -196,6 +196,29 @@ def quote_source_header(params, **kwargs):
         value = params['headers']['x-amz-copy-source']
         params['headers']['x-amz-copy-source'] = quote(
             value.encode('utf-8'), '/~')
+
+
+def copy_snapshot_encrypted(operation, params, **kwargs):
+    # The presigned URL that facilities copying an encrypted snapshot.
+    # If the user does not provide this value, we will automatically
+    # calculate on behalf of the user and inject the PresignedUrl
+    # into the requests.
+    if 'PresignedUrl' in params:
+        # If the customer provided this value, then there's nothing for
+        # us to do.
+        return
+    # The request will be sent to the destination region, so we need
+    # to create an endpoint to the source region and create a presigned
+    # url based on the source endpoint.
+    region = params['SourceRegion']
+    source_endpoint = operation.service.get_endpoint(region)
+    presigner = botocore.auth.SigV4QueryAuth(
+        credentials=source_endpoint.auth.credentials,
+        region_name=region,
+        service_name='ec2',
+        expires=60 * 60)
+    signed_request = source_endpoint.create_request(operation, params, presigner)
+    params['PresignedUrl'] = signed_request.url
 
 
 # This is a list of (event_name, handler).
@@ -214,6 +237,7 @@ BUILTIN_HANDLERS = [
     ('before-call.s3.DeleteObjects', calculate_md5),
     ('before-call.s3.UploadPartCopy', quote_source_header),
     ('before-call.s3.CopyObject', quote_source_header),
+    ('before-call.ec2.CopySnapshot', copy_snapshot_encrypted),
     ('before-auth.s3', fix_s3_host),
     ('service-created', register_retries_for_service),
     ('creating-endpoint.s3', maybe_switch_to_s3sigv4),

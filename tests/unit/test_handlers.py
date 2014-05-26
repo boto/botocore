@@ -12,13 +12,15 @@
 # language governing permissions and limitations under the License.
 
 from tests import BaseSessionTest
+
+import base64
+import six
+import mock
+
 import botocore.session
 from botocore.hooks import first_non_none_response
 from botocore.compat import quote
-import base64
-import six
-
-import mock
+from botocore.handlers import copy_snapshot_encrypted
 
 
 class TestHandlers(BaseSessionTest):
@@ -55,8 +57,8 @@ class TestHandlers(BaseSessionTest):
     def test_switch_to_sigv4(self):
         event = self.session.create_event('service-data-loaded', 's3')
         mock_session = mock.Mock()
-        mock_session.get_config.return_value = {
-            's3': {'signature_version': 's3v4'},
+        mock_session.get_scoped_config.return_value = {
+            's3': {'signature_version': 's3v4'}
         }
         kwargs = {'service_data': {'signature_version': 's3'},
                   'service_name': 's3', 'session': mock_session}
@@ -66,7 +68,7 @@ class TestHandlers(BaseSessionTest):
     def test_noswitch_to_sigv4(self):
         event = self.session.create_event('service-data-loaded', 's3')
         mock_session = mock.Mock()
-        mock_session.get_config.return_value = {}
+        mock_session.get_scoped_config.return_value = {}
         kwargs = {'service_data': {'signature_version': 's3'},
                   'service_name': 's3', 'session': mock_session}
         self.session.emit(event, **kwargs)
@@ -80,6 +82,21 @@ class TestHandlers(BaseSessionTest):
             self.session.emit(event, params=params)
             self.assertEqual(
                 params['headers']['x-amz-copy-source'], 'foo%2B%2Bbar.txt')
+
+    def test_copy_snapshot_encrypted(self):
+        operation = mock.Mock()
+        source_endpoint = mock.Mock()
+        signed_request = mock.Mock()
+        signed_request.url = 'SIGNED_REQUEST'
+        source_endpoint.auth.credentials = mock.sentinel.credentials
+        source_endpoint.create_request.return_value = signed_request
+        operation.service.get_endpoint.return_value = source_endpoint
+
+        params = {'SourceRegion': 'us-west-2'}
+        copy_snapshot_encrypted(operation, params)
+        self.assertEqual(params['PresignedUrl'], 'SIGNED_REQUEST')
+        # We created an endpoint in the source region.
+        operation.service.get_endpoint.assert_called_with('us-west-2')
 
 
 if __name__ == '__main__':
