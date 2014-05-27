@@ -362,6 +362,8 @@ class SigV4QueryAuth(SigV4Auth):
             'X-Amz-Expires': self._expires,
             'X-Amz-SignedHeaders': 'host',
         }
+        if self.credentials.token is not None:
+            auth_params['X-Amz-Security-Token'] = self.credentials.token
         # Now parse the original query string to a dict, inject our new query
         # params, and serialize back to a query string.
         url_parts = urlsplit(request.url)
