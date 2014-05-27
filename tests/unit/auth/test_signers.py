@@ -207,3 +207,14 @@ class TestSigV4Presign(unittest.TestCase):
              'X-Amz-Expires': '60',
              'X-Amz-Signature': 'ac1b8b9e47e8685c5c963d75e35e8741d55251cd955239cc1efad4dc7201db66',
              'X-Amz-SignedHeaders': 'host'})
+
+    def test_presign_with_security_token(self):
+        self.credentials.token = 'security-token'
+        auth = botocore.auth.S3SigV4QueryAuth(
+            self.credentials, self.service_name, self.region_name, expires=60)
+        request = AWSRequest()
+        request.url = 'https://ec2.us-east-1.amazonaws.com/'
+        self.auth.add_auth(request)
+        query_string = self.get_parsed_query_string(request)
+        self.assertEqual(
+            query_string['X-Amz-Security-Token'], 'security-token')
