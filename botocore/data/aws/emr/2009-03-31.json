@@ -3042,12 +3042,36 @@
             "py_input_token": "marker"
         }
     },
+    "waiters": {
+        "ClusterRunning": {
+            "success": {
+                "path": "Cluster.Status.State",
+                "type": "output",
+                "value": [
+                    "RUNNING",
+                    "WAITING"
+                ]
+            },
+            "interval": 30,
+            "failure": {
+                "path": "Cluster.Status.State",
+                "type": "output",
+                "value": [
+                    "TERMINATING",
+                    "TERMINATED",
+                    "TERMINATED_WITH_ERRORS"
+                ]
+            },
+            "operation": "DescribeCluster",
+            "max_attempts": 60
+        }
+    },
     "retry": {
         "__default__": {
             "max_attempts": 5,
             "delay": {
                 "type": "exponential",
-                "base": 2.1,
+                "base": "rand",
                 "growth_factor": 2
             },
             "policies": {
