@@ -3047,7 +3047,7 @@
             "max_attempts": 5,
             "delay": {
                 "type": "exponential",
-                "base": "rand",
+                "base": 2.1,
                 "growth_factor": 2
             },
             "policies": {

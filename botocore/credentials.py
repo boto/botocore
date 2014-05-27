@@ -19,12 +19,54 @@ import os
 
 from six.moves import configparser
 
+import botocore.config
 from botocore.compat import total_seconds
 from botocore.exceptions import UnknownCredentialError
-from botocore.utils import InstanceMetadataFetcher
+from botocore.exceptions import PartialCredentialsError
+from botocore.exceptions import ConfigNotFound
+from botocore.utils import InstanceMetadataFetcher, parse_key_val_file
 
 
 logger = logging.getLogger(__name__)
+
+
+def create_credential_resolver(session):
+    """Create a default credential resolver.
+
+    This creates a pre-configured credential resolver
+    that includes the default lookup chain for
+    credentials.
+
+    """
+    profile_name = session.profile or 'default'
+    credential_file = session.get_config_variable('credentials_file')
+    config_file = session.get_config_variable('config_file')
+    metadata_timeout = session.get_config_variable('metadata_service_timeout')
+    num_attempts = session.get_config_variable('metadata_service_num_attempts')
+    providers = [
+        EnvProvider(),
+        SharedCredentialProvider(
+            creds_filename=credential_file,
+            profile_name=profile_name
+        ),
+        # The new config file has precedence over the legacy
+        # config file.
+        ConfigProvider(config_filename=config_file, profile_name=profile_name),
+        OriginalEC2Provider(),
+        BotoProvider(),
+        InstanceMetadataProvider(
+            iam_role_fetcher=InstanceMetadataFetcher(
+                timeout=metadata_timeout,
+                num_attempts=num_attempts)
+        )
+    ]
+    resolver = CredentialResolver(providers=providers)
+    return resolver
+
+
+def get_credentials(session):
+    resolver = create_credential_resolver(session)
+    return resolver.load_credentials()
 
 
 class Credentials(object):
@@ -37,17 +79,16 @@ class Credentials(object):
     :ivar method: A string which identifies where the credentials
         were found.
     """
-    method = 'explicit'
 
-    def __init__(self, access_key=None, secret_key=None, token=None,
-                 session=None, method=None):
-        self.session = session
+    def __init__(self, access_key, secret_key, token=None,
+                 method=None):
         self.access_key = access_key
         self.secret_key = secret_key
         self.token = token
 
-        if method:
-            self.method = method
+        if method is None:
+            method = 'explicit'
+        self.method = method
 
 
 class RefreshableCredentials(Credentials):
@@ -65,35 +106,29 @@ class RefreshableCredentials(Credentials):
     :ivar session: The ``Session`` the credentials were created for. Useful for
         subclasses.
     """
-    refresh_timeout = 5 * 60
-    method = 'temporary'
+    refresh_timeout = 15 * 60
 
-    def __init__(self, access_key=None, secret_key=None, token=None,
-                 session=None, method=None, expiry_time=None,
-                 refresh_using=None):
-        self.session = session
-        self.refresh_using = refresh_using
+    def __init__(self, access_key, secret_key, token,
+                 expiry_time, refresh_using, method,
+                 time_fetcher=datetime.datetime.utcnow):
+        self._refresh_using = refresh_using
         self._access_key = access_key
         self._secret_key = secret_key
         self._token = token
-        self.expiry_time = expiry_time
-
-        if self.expiry_time is None:
-            # Set an old, expired time by default.
-            self.expiry_time = datetime.datetime(2000, 1, 1)
-
-        if method:
-            self.method = method
+        self._expiry_time = expiry_time
+        self._time_fetcher = time_fetcher
+        self.method = method
 
     @classmethod
-    def create_from_metadata(cls, metadata, session=None, method=None,
-                             refresh_using=None):
+    def create_from_metadata(cls, metadata, refresh_using, method):
         instance = cls(
-            session=session,
+            access_key=metadata['access_key'],
+            secret_key=metadata['secret_key'],
+            token=metadata['token'],
+            expiry_time=cls._expiry_datetime(metadata['expiry_time']),
             method=method,
             refresh_using=refresh_using
         )
-        instance._set_from_data(metadata)
         return instance
 
     @property
@@ -124,11 +159,11 @@ class RefreshableCredentials(Credentials):
         self._token = value
 
     def _seconds_remaining(self):
-        delta = self.expiry_time - datetime.datetime.utcnow()
+        delta = self._expiry_time - self._time_fetcher()
         return total_seconds(delta)
 
     def refresh_needed(self):
-        if self.expiry_time is None:
+        if self._expiry_time is None:
             # No expiration, so assume we don't need to refresh.
             return False
 
@@ -146,26 +181,29 @@ class RefreshableCredentials(Credentials):
         if not self.refresh_needed():
             return
 
-        data = self.refresh_using()
-        self._set_from_data(data)
+        metadata = self._refresh_using()
+        self._set_from_data(metadata)
+
+    @staticmethod
+    def _expiry_datetime(time_str):
+        return datetime.datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%SZ")
 
     def _set_from_data(self, data):
         self.access_key = data['access_key']
         self.secret_key = data['secret_key']
-        self.token = data.get('token', None)
-
-        if data['expiry_time']:
-            self.expiry_time = datetime.datetime.strptime(
-                data['expiry_time'],
-                "%Y-%m-%dT%H:%M:%SZ"
-            )
-            logger.debug(
-                "Retrieved credentials will expire at: %s",
-                self.expiry_time
-            )
+        self.token = data['token']
+        self._expiry_time = datetime.datetime.strptime(
+            data['expiry_time'],
+            "%Y-%m-%dT%H:%M:%SZ"
+        )
+        logger.debug("Retrieved credentials will expire at: %s", self._expiry_time)
 
 
 class CredentialProvider(object):
+
+    # Implementations must provide a method.
+    METHOD = None
+
     def __init__(self, session=None):
         self.session = session
 
@@ -190,158 +228,275 @@ class CredentialProvider(object):
 
 
 class InstanceMetadataProvider(CredentialProvider):
-    method = 'iam-role'
+    METHOD = 'iam-role'
+
+    def __init__(self, iam_role_fetcher):
+        self._role_fetcher = iam_role_fetcher
 
     def load(self):
-        timeout = self.session.get_config_variable('metadata_service_timeout')
-        num_attempts = self.session.get_config_variable(
-            'metadata_service_num_attempts'
-        )
-        retrieve_kwargs = {}
-        if timeout is not None:
-            retrieve_kwargs['timeout'] = float(timeout)
-        if num_attempts is not None:
-            retrieve_kwargs['num_attempts'] = int(num_attempts)
-        fetcher = InstanceMetadataFetcher()
-        # Partially apply the arguments for future calls.
-        refresh_using = functools.partial(
-            fetcher.retrieve_iam_role_credentials,
-            **retrieve_kwargs
-        )
+        fetcher = self._role_fetcher
         # We do the first request, to see if we get useful data back.
         # If not, we'll pass & move on to whatever's next in the credential
         # chain.
-        metadata = refresh_using()
+        metadata = fetcher.retrieve_iam_role_credentials()
         if not metadata:
             return None
-        logger.info('Found IAM Role: %s', metadata['role_name'])
+        logger.info('Found credentials from IAM Role: %s', metadata['role_name'])
         # We manually set the data here, since we already made the request &
         # have it. When the expiry is hit, the credentials will auto-refresh
         # themselves.
         creds = RefreshableCredentials.create_from_metadata(
             metadata,
-            method=self.method,
-            refresh_using=refresh_using
+            method=self.METHOD,
+            refresh_using=fetcher.retrieve_iam_role_credentials,
         )
         return creds
 
 
 class EnvProvider(CredentialProvider):
-    method = 'env'
+    METHOD = 'env'
+    ACCESS_KEY = 'AWS_ACCESS_KEY_ID'
+    SECRET_KEY = 'AWS_SECRET_ACCESS_KEY'
+    # The token can come from either of these env var.
+    # AWS_SESSION_TOKEN is what other AWS SDKs have standardized on.
+    TOKENS = ['AWS_SECURITY_TOKEN', 'AWS_SESSION_TOKEN']
+
+    def __init__(self, environ=None, mapping=None):
+        """
+
+        :param environ: The environment variables (defaults to
+            ``os.environ`` if no value is provided).
+        :param mapping: An optional mapping of variable names to
+            environment variable names.  Use this if you want to
+            change the mapping of access_key->AWS_ACCESS_KEY_ID, etc.
+            The dict can have up to 3 keys: ``access_key``, ``secret_key``,
+            ``session_token``.
+        """
+        if environ is None:
+            environ = os.environ
+        self.environ = environ
+        self._mapping = self._build_mapping(mapping)
+
+    def _build_mapping(self, mapping):
+        # Mapping of variable name to env var name.
+        var_mapping = {}
+        if mapping is None:
+            # Use the class var default.
+            var_mapping['access_key'] = self.ACCESS_KEY
+            var_mapping['secret_key'] = self.SECRET_KEY
+            var_mapping['token'] = self.TOKENS
+        else:
+            var_mapping['access_key'] = mapping.get(
+                'access_key', self.ACCESS_KEY)
+            var_mapping['secret_key'] = mapping.get(
+                'secret_key', self.SECRET_KEY)
+            var_mapping['token'] = mapping.get(
+                'token', self.TOKENS)
+            if not isinstance(var_mapping['token'], list):
+                var_mapping['token'] = [var_mapping['token']]
+        return var_mapping
 
     def load(self):
         """
         Search for credentials in explicit environment variables.
         """
-        access_key = self.session.get_config_variable('access_key', ('env',))
-        secret_key = self.session.get_config_variable('secret_key', ('env',))
-        token = self.session.get_config_variable('token', ('env',))
-        if access_key and secret_key:
-            logger.info('Found credentials in Environment variables.')
+        if self._mapping['access_key'] in self.environ:
+            logger.info('Found credentials in environment variables.')
+            access_key = self.environ[self._mapping['access_key']]
+            secret_key = self.environ[self._mapping['secret_key']]
+            token = self._get_session_token()
             return Credentials(access_key, secret_key, token,
-                               method=self.method)
-        return None
+                               method=self.METHOD)
+        else:
+            return None
+
+    def _get_session_token(self):
+        for token_envvar in self._mapping['token']:
+            if token_envvar in self.environ:
+                return self.environ[token_envvar]
 
 
 class OriginalEC2Provider(CredentialProvider):
-    method = 'credentials-file'
+    METHOD = 'ec2-credentials-file'
+
+    CRED_FILE_ENV = 'AWS_CREDENTIAL_FILE'
+    ACCESS_KEY = 'AWSAccessKeyId'
+    SECRET_KEY = 'AWSSecretKey'
+
+    def __init__(self, environ=None, parser=None):
+        if environ is None:
+            environ = os.environ
+        if parser is None:
+            parser = parse_key_val_file
+        self._environ = environ
+        self._parser = parser
 
     def load(self):
         """
         Search for a credential file used by original EC2 CLI tools.
         """
-        if 'AWS_CREDENTIAL_FILE' in os.environ:
-            full_path = os.path.expanduser(os.environ['AWS_CREDENTIAL_FILE'])
-            try:
-                lines = map(str.strip, open(full_path).readlines())
-            except IOError:
-                logger.warn('Unable to load AWS_CREDENTIAL_FILE (%s).', full_path)
-            else:
-                config = dict(line.split('=', 1) for line in lines if '=' in line)
-                access_key = config.get('AWSAccessKeyId')
-                secret_key = config.get('AWSSecretKey')
-                if access_key and secret_key:
-                    logger.info('Found credentials in AWS_CREDENTIAL_FILE.')
-                    return Credentials(access_key, secret_key,
-                                       method=self.method)
-        return None
+        if 'AWS_CREDENTIAL_FILE' in self._environ:
+            full_path = os.path.expanduser(self._environ['AWS_CREDENTIAL_FILE'])
+            creds = self._parser(full_path)
+            if self.ACCESS_KEY in creds:
+                logger.info('Found credentials in AWS_CREDENTIAL_FILE.')
+                access_key = creds[self.ACCESS_KEY]
+                secret_key = creds[self.SECRET_KEY]
+                # EC2 creds file doesn't support session tokens.
+                return Credentials(access_key, secret_key, method=self.METHOD)
+        else:
+            return None
+
+
+class SharedCredentialProvider(CredentialProvider):
+    METHOD = 'shared-credentials-file'
+
+    ACCESS_KEY = 'aws_access_key_id'
+    SECRET_KEY = 'aws_secret_access_key'
+    # Same deal as the EnvProvider above.  Botocore originally supported
+    # aws_security_token, but the SDKs are standardizing on aws_session_token
+    # so we support both.
+    TOKENS = ['aws_security_token', 'aws_session_token']
+
+    def __init__(self, creds_filename, profile_name=None, ini_parser=None):
+        self._creds_filename = creds_filename
+        if profile_name is None:
+            profile_name = 'default'
+        self._profile_name = profile_name
+        if ini_parser is None:
+            ini_parser = botocore.config.raw_config_parse
+        self._ini_parser = ini_parser
+
+    def load(self):
+        try:
+            available_creds = self._ini_parser(self._creds_filename)
+        except ConfigNotFound:
+            return None
+        if self._profile_name in available_creds:
+            config = available_creds[self._profile_name]
+            if self.ACCESS_KEY in config:
+                logger.info("Found credentials in shared credentials file: %s",
+                            self._creds_filename)
+                access_key = config[self.ACCESS_KEY]
+                secret_key = config[self.SECRET_KEY]
+                token =  self._get_session_token(config)
+                return Credentials(access_key, secret_key, token,
+                                   method=self.METHOD)
+
+    def _get_session_token(self, config):
+        for token_envvar in self.TOKENS:
+            if token_envvar in config:
+                return config[token_envvar]
 
 
 class ConfigProvider(CredentialProvider):
-    method = 'config'
+    """INI based config provider with profile sections."""
+    METHOD = 'config-file'
+
+    ACCESS_KEY = 'aws_access_key_id'
+    SECRET_KEY = 'aws_secret_access_key'
+    # Same deal as the EnvProvider above.  Botocore originally supported
+    # aws_security_token, but the SDKs are standardizing on aws_session_token
+    # so we support both.
+    TOKENS = ['aws_security_token', 'aws_session_token']
+
+    def __init__(self, config_filename, profile_name, config_parser=None):
+        """
+
+        :param config_filename: The session configuration scoped to the current
+            profile.  This is available via ``session.config``.
+        :param profile_name: The name of the current profile.
+        :param config_parser: A config parser callable.
+
+        """
+        self._config_filename = config_filename
+        self._profile_name = profile_name
+        if config_parser is None:
+            config_parser = botocore.config.load_config
+        self._config_parser = config_parser
 
     def load(self):
         """
         If there is are credentials in the configuration associated with
         the session, use those.
         """
-        access_key = self.session.get_config_variable('access_key', methods=('config',))
-        secret_key = self.session.get_config_variable('secret_key', methods=('config',))
-        token = self.session.get_config_variable('token', ('config',))
-        if access_key and secret_key:
-            logger.info('Found credentials in config file.')
-            return Credentials(access_key, secret_key, token,
-                               method=self.method)
-        return None
+        try:
+            full_config = self._config_parser(self._config_filename)
+        except ConfigNotFound:
+            return None
+        if self._profile_name in full_config['profiles']:
+            profile_config = full_config['profiles'][self._profile_name]
+            if self.ACCESS_KEY in profile_config:
+                logger.info("Credentials found in config file: %s",
+                            self._config_filename)
+                access_key = profile_config[self.ACCESS_KEY]
+                secret_key = profile_config[self.SECRET_KEY]
+                token = self._get_session_token(profile_config)
+                return Credentials(access_key, secret_key, token,
+                                method=self.METHOD)
+        else:
+            return None
+
+    def _get_session_token(self, profile_config):
+        for token_name in self.TOKENS:
+            if token_name in profile_config:
+                return profile_config[token_name]
 
 
 class BotoProvider(CredentialProvider):
-    method = 'boto'
+    METHOD = 'boto-config'
+
+    BOTO_CONFIG_ENV = 'BOTO_CONFIG'
+    DEFAULT_CONFIG_FILENAMES = ['/etc/boto.cfg', '~/.boto']
+    ACCESS_KEY = 'aws_access_key_id'
+    SECRET_KEY = 'aws_secret_access_key'
+
+    def __init__(self, environ=None, ini_parser=None):
+        if environ is None:
+            environ = os.environ
+        if ini_parser is None:
+            ini_parser = botocore.config.raw_config_parse
+        self._environ = environ
+        self._ini_parser = ini_parser
 
     def load(self):
         """
         Look for credentials in boto config file.
         """
-        access_key = secret_key = None
-        if 'BOTO_CONFIG' in os.environ:
-            paths = [os.environ['BOTO_CONFIG']]
+        if self.BOTO_CONFIG_ENV in self._environ:
+            potential_locations = [self._environ[self.BOTO_CONFIG_ENV]]
         else:
-            paths = ['/etc/boto.cfg', '~/.boto']
-        paths = [os.path.expandvars(p) for p in paths]
-        paths = [os.path.expanduser(p) for p in paths]
-        cp = configparser.RawConfigParser()
-        cp.read(paths)
-        if cp.has_section('Credentials'):
-            if cp.has_option('Credentials', 'aws_access_key_id'):
-                access_key = cp.get('Credentials', 'aws_access_key_id')
-            if cp.has_option('Credentials', 'aws_secret_access_key'):
-                secret_key = cp.get('Credentials', 'aws_secret_access_key')
-        if access_key and secret_key:
-            logger.info('Found credentials in boto config file.')
-            return Credentials(access_key, secret_key, method=self.method)
-        return None
+            potential_locations = self.DEFAULT_CONFIG_FILENAMES
+        for filename in potential_locations:
+            try:
+                config = self._ini_parser(filename)
+            except ConfigNotFound:
+                # Move on to the next potential config file name.
+                continue
+            if 'Credentials' in config:
+                credentials = config['Credentials']
+                if self.ACCESS_KEY in credentials:
+                    logger.info("Found credentials in boto config file: %s",
+                                filename)
+                    access_key = credentials[self.ACCESS_KEY]
+                    secret_key = credentials[self.SECRET_KEY]
+                    return Credentials(access_key, secret_key,
+                                       method=self.METHOD)
 
 
 class CredentialResolver(object):
-    default_methods = [
-        EnvProvider,
-        ConfigProvider,
-        OriginalEC2Provider,
-        BotoProvider,
-        InstanceMetadataProvider,
-    ]
 
-    def __init__(self, session=None, methods=None):
-        self.session = session
-        self.methods = methods
-        self.available_methods = []
-
-        if self.methods is None:
-            self.methods = []
-
-            for method in self.default_methods:
-                self.methods.append(method(session=self.session))
-
-        self._rebuild_available_methods()
-
-    def _rebuild_available_methods(self):
-        # We basically maintain a cache of names, so that we don't have to
-        # iterate over the all the ``self.methods`` all the time.
-        self.available_methods = [cred.method for cred in self.methods]
-
-    def insert_before(self, name, cred_instance):
+    def __init__(self, providers):
         """
-        Inserts a new type of ``Credentials`` instance into the chain that will
+
+        :param providers: A list of ``CredentialProvider`` instances.
+
+        """
+        self.providers = providers
+
+    def insert_before(self, name, credential_provider):
+        """
+        Inserts a new instance of ``CredentialProvider`` into the chain that will
         be tried before an existing one.
 
         :param name: The short name of the credentials you'd like to insert the
@@ -376,12 +531,11 @@ class CredentialResolver(object):
         :type cred_instance: A subclass of ``Credentials``
         """
         try:
-            offset = self.available_methods.index(name)
+            offset = [p.METHOD for p in self.providers].index(name)
         except ValueError:
             raise UnknownCredentialError(name=name)
 
-        self.methods.insert(offset + 1, cred_instance)
-        self._rebuild_available_methods()
+        self.providers.insert(offset + 1, cred_instance)
 
     def remove(self, name):
         """
@@ -390,31 +544,30 @@ class CredentialResolver(object):
         :param name: The short name of the credentials instance to remove.
         :type name: string
         """
-        if not name in self.available_methods:
+        available_methods = [p.METHOD for p in self.providers]
+        if not name in available_methods:
             # It's not present. Fail silently.
             return
 
-        offset = self.available_methods.index(name)
-        self.methods.pop(offset)
-        self.available_methods.pop(offset)
+        offset = available_methods.index(name)
+        self.providers.pop(offset)
 
-    def get_credentials(self):
+    def load_credentials(self):
         """
         Goes through the credentials chain, returning the first ``Credentials``
         that could be loaded.
         """
-        for cred in self.methods:
-            creds = cred.load()
-
+        # First provider to return a non-None response wins.
+        for provider in self.providers:
+            logger.debug("Looking for credentials via: %s", provider.METHOD)
+            creds = provider.load()
             if creds is not None:
                 return creds
 
         # If we got here, no credentials could be found.
         # This feels like it should be an exception, but historically, ``None``
         # is returned.
+        # 
+        # +1
+        # -js
         return None
-
-
-def get_credentials(session):
-    resolver = CredentialResolver(session=session)
-    return resolver.get_credentials()

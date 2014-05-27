@@ -70,37 +70,32 @@ class NoCredentialsTest(TestSTSOperationsWithCreds):
         # Automatically patches out get_credentials to always
         # return None.
         super(NoCredentialsTest, self).setUp()
-        self.get_credentials_patch = mock.patch(
-            'botocore.credentials.get_credentials',
-            self.mock_get_credentials)
-
-    def mock_get_credentials(self, session, metadata=None):
-        return None
+        resolver = mock.Mock()
+        resolver.load_credentials.return_value = None
+        self.session.register_component(
+            'credential_provider', resolver)
 
     def test_get_session_token(self):
-        with self.get_credentials_patch as mock_fn:
-            session = botocore.session.get_session()
-            sns = session.get_service('sts')
-            op = sns.get_operation('GetSessionToken')
-            params = {}
-            endpoint = self.get_mocked_endpoint()
-            self.assertRaises(NoCredentialsError,
-                              endpoint.make_request,
-                              op, params)
+        session = botocore.session.get_session()
+        sns = session.get_service('sts')
+        op = sns.get_operation('GetSessionToken')
+        params = {}
+        endpoint = self.get_mocked_endpoint()
+        with self.assertRaises(NoCredentialsError):
+            endpoint.make_request(op, params)
 
     def test_assume_role_with_saml(self):
-        with self.get_credentials_patch as mock_fn:
-            session = botocore.session.get_session()
-            sns = session.get_service('sts')
-            op = sns.get_operation('AssumeRoleWithSAML')
-            self.assertEqual(op.signature_version, None)
-            endpoint = self.get_mocked_endpoint()
-            params = op.build_parameters(principal_arn='principal_arn',
-                                         role_arn='role_arn',
-                                         saml_assertion='saml_assertion')
-            endpoint.make_request(op, params)
-            self.assertNotIn('auth', self.called_params)
-            self.reset_called_params()
+        session = botocore.session.get_session()
+        sns = session.get_service('sts')
+        op = sns.get_operation('AssumeRoleWithSAML')
+        self.assertEqual(op.signature_version, None)
+        endpoint = self.get_mocked_endpoint()
+        params = op.build_parameters(principal_arn='principal_arn',
+                                        role_arn='role_arn',
+                                        saml_assertion='saml_assertion')
+        endpoint.make_request(op, params)
+        self.assertNotIn('auth', self.called_params)
+        self.reset_called_params()
 
 
 if __name__ == "__main__":

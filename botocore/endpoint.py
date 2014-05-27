@@ -63,23 +63,38 @@ class Endpoint(object):
     def make_request(self, operation, params):
         logger.debug("Making request for %s (verify_ssl=%s) with params: %s",
                      operation, self.verify, params)
+        prepared_request = self.create_request(operation, params)
+        return self._send_request(prepared_request, operation)
+
+    def create_request(self, operation, params, signer=None):
         # To decide if we need to do auth or not we check the
         # signature_version attribute on both the service and
         # the operation are not None and we make sure there is an
         # auth class associated with the endpoint.
         # If any of these are not true, we skip auth.
-        do_auth = (getattr(self.service, 'signature_version', None) and
-                   getattr(operation, 'signature_version', True) and
-                   self.auth)
+        if signer is not None:
+            # If the user explicitly specifies a signer, then we will sign
+            # the request.
+            signer = signer
+        else:
+            do_auth = (getattr(self.service, 'signature_version', None) and
+                    getattr(operation, 'signature_version', True) and
+                    self.auth)
+            if do_auth:
+                signer = self.auth
+            else:
+                # If we're not suppose to sign the request, then we set the signer
+                # to None.
+                signer = None
         request = self._create_request_object(operation, params)
-        prepared_request = self.prepare_request(request, do_auth)
-        return self._send_request(prepared_request, operation)
+        prepared_request = self.prepare_request(request, signer)
+        return prepared_request
 
     def _create_request_object(self, operation, params):
         raise NotImplementedError('_create_request_object')
 
-    def prepare_request(self, request, do_auth=True):
-        if do_auth:
+    def prepare_request(self, request, signer):
+        if signer is not None:
             with self._lock:
                 # Parts of the auth signing code aren't thread safe (things
                 # that manipulate .auth_path), so we're using a lock here to
@@ -88,7 +103,7 @@ class Endpoint(object):
                     'before-auth', self.service.endpoint_prefix)
                 self.session.emit(event, endpoint=self,
                                 request=request, auth=self.auth)
-                self.auth.add_auth(request=request)
+                signer.add_auth(request=request)
         prepared_request = request.prepare()
         return prepared_request
 

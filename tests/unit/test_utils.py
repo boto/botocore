@@ -13,12 +13,16 @@
 
 from tests import unittest
 
+import mock
+
 from botocore import xform_name
-from botocore.exceptions import InvalidExpressionError
+from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.utils import remove_dot_segments
 from botocore.utils import normalize_url_path
 from botocore.utils import validate_jmespath_for_set
 from botocore.utils import set_value_from_jmespath
+from botocore.utils import parse_key_val_file_contents
+from botocore.utils import parse_key_val_file
 
 
 class TestURINormalization(unittest.TestCase):
@@ -134,6 +138,24 @@ class TestSetValueFromJMESPath(unittest.TestCase):
         self.assertFalse('Brand' in self.data)
         set_value_from_jmespath(self.data, 'Brand.New', {'abc': 123})
         self.assertEqual(self.data['Brand']['New']['abc'], 123)
+
+
+class TestParseEC2CredentialsFile(unittest.TestCase):
+    def test_parse_ec2_content(self):
+        contents = "AWSAccessKeyId=a\nAWSSecretKey=b\n"
+        self.assertEqual(parse_key_val_file_contents(contents),
+                         {'AWSAccessKeyId': 'a',
+                          'AWSSecretKey': 'b'})
+
+    def test_parse_ec2_content_empty(self):
+        contents = ""
+        self.assertEqual(parse_key_val_file_contents(contents), {})
+
+    def test_os_error_raises_config_not_found(self):
+        mock_open = mock.Mock()
+        mock_open.side_effect = OSError()
+        with self.assertRaises(ConfigNotFound):
+            parse_key_val_file('badfile', _open=mock_open)
 
 
 if __name__ == '__main__':

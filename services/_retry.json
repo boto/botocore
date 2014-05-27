@@ -67,6 +67,11 @@
     },
     "elasticmapreduce": {
       "__default__": {
+        "delay": {
+          "type": "exponential",
+          "base": 2.1,
+          "growth_factor": 2
+        },
         "policies": {
           "throttling": {"$ref": "throttling_exception"}
         }
