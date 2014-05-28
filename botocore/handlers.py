@@ -108,7 +108,7 @@ def fix_s3_host(event_name, endpoint, request, auth, **kwargs):
     parts = urlsplit(request.url)
     auth.auth_path = parts.path
     path_parts = parts.path.split('/')
-    if isinstance(auth, botocore.auth.S3SigV4Auth):
+    if isinstance(auth, botocore.auth.SigV4Auth):
         return
     if len(path_parts) > 1:
         bucket_name = path_parts[1]
