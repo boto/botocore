@@ -13,7 +13,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import unittest, create_session
+from tests import unittest, create_session, temporary_file
 import os
 import logging
 import tempfile
@@ -285,6 +285,18 @@ class TestSessionUserAgent(BaseSessionTest):
     def test_can_append_to_user_agent(self):
         self.session.user_agent_extra = 'custom-thing/other'
         self.assertTrue(self.session.user_agent().endswith('custom-thing/other'))
+
+
+class TestConfigLoaderObject(BaseSessionTest):
+    def test_config_loader_delegation(self):
+        with temporary_file('w') as f:
+            f.write('[credfile-profile]\naws_access_key_id=a\n')
+            f.write('aws_secret_access_key=b\n')
+            f.flush()
+            self.session.set_config_variable('credentials_file', f.name)
+            self.session.profile = 'credfile-profile'
+            # Now trying to retrieve the scoped config should not fail.
+            self.assertEqual(self.session.get_scoped_config(), {})
 
 
 if __name__ == "__main__":

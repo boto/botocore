@@ -14,6 +14,11 @@
 import os
 import sys
 import mock
+import time
+import random
+import shutil
+import contextlib
+import tempfile
 
 
 # The unittest module got a significant overhaul
@@ -36,7 +41,32 @@ def create_session(**kwargs):
     # so that we reused the same models across tests.
     base_args = {'loader': _LOADER}
     base_args.update(kwargs)
-    return botocore.session.Session(**base_args)
+    session = botocore.session.Session(**base_args)
+    session.set_config_variable('credentials_file', 'noexist/foo/botocore')
+    return session
+
+
+@contextlib.contextmanager
+def temporary_file(mode):
+    """This is a cross platform temporary file creation.
+
+    tempfile.NamedTemporary file on windows creates a secure temp file
+    that can't be read by other processes and can't be opened a second time.
+
+    For tests, we generally *want* them to be read multiple times.
+    The test fixture writes the temp file contents, the test reads the
+    temp file.
+
+    """
+    temporary_directory = tempfile.mkdtemp()
+    basename = 'tmpfile-%s-%s' % (int(time.time()), random.randint(1, 1000))
+    full_filename = os.path.join(temporary_directory, basename)
+    open(full_filename, 'w').close()
+    try:
+        with open(full_filename, mode) as f:
+            yield f
+    finally:
+        shutil.rmtree(temporary_directory)
 
 
 class BaseEnvVar(unittest.TestCase):
