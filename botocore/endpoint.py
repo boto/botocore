@@ -102,7 +102,7 @@ class Endpoint(object):
                 event = self.session.create_event(
                     'before-auth', self.service.endpoint_prefix)
                 self.session.emit(event, endpoint=self,
-                                request=request, auth=self.auth)
+                                  request=request, auth=signer)
                 signer.add_auth(request=request)
         prepared_request = request.prepare()
         return prepared_request
