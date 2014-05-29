@@ -18,7 +18,7 @@ import logging
 
 from botocore import ScalarTypes
 from botocore.hooks import first_non_none_response
-from botocore.compat import json, set_socket_timeout
+from botocore.compat import json, set_socket_timeout, XMLParseError
 from botocore.exceptions import IncompleteReadError
 
 
@@ -73,7 +73,7 @@ class XmlResponse(Response):
         self.value = {}
         try:
             parser.feed(s)
-        except xml.etree.cElementTree.ParseError as e:
+        except XMLParseError as e:
             # Check the case where we have a single output member
             # that has a single element that's a payload.
             if self.operation.output and len(self.operation.output['members']) == 1:
@@ -84,6 +84,8 @@ class XmlResponse(Response):
                     # whose value is the response body.
                     self.value = {member_name: s, 'ResponseMetadata': {}}
                 return
+            else:
+                raise
         else:
             self.tree = parser.close()
             self.start(self.tree)

@@ -96,7 +96,13 @@ except ImportError:
 
 if sys.version_info[:2] == (2, 6):
     import simplejson as json
+    # In py26, invalid xml parsed by element tree
+    # will raise a plain old SyntaxError instead of
+    # a real exception, so we need to abstract this change.
+    XMLParseError = SyntaxError
 else:
+    import xml.etree.cElementTree
+    XMLParseError = xml.etree.cElementTree.ParseError
     import json
 
 
