@@ -73,12 +73,12 @@ class XmlResponse(Response):
         self.value = {}
         try:
             parser.feed(s)
-        except Exception as e:
+        except xml.etree.cElementTree.ParseError as e:
             # Check the case where we have a single output member
             # that has a single element that's a payload.
             if self.operation.output and len(self.operation.output['members']) == 1:
                 members = self.operation.output['members']
-                member_name = members.keys()[0]
+                member_name = list(members.keys())[0]
                 if members[member_name].get('payload'):
                     # Then the final result is just a single key
                     # whose value is the response body.
