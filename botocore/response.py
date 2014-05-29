@@ -65,14 +65,28 @@ class XmlResponse(Response):
         return elem_tag
 
     def parse(self, s, encoding):
+        if self.operation.output:
+            self.build_element_map(self.operation.output, 'root')
         parser = xml.etree.cElementTree.XMLParser(
             target=xml.etree.cElementTree.TreeBuilder(),
             encoding=encoding)
-        parser.feed(s)
-        self.tree = parser.close()
-        if self.operation.output:
-            self.build_element_map(self.operation.output, 'root')
-        self.start(self.tree)
+        self.value = {}
+        try:
+            parser.feed(s)
+        except Exception as e:
+            # Check the case where we have a single output member
+            # that has a single element that's a payload.
+            if self.operation.output and len(self.operation.output['members']) == 1:
+                members = self.operation.output['members']
+                member_name = members.keys()[0]
+                if members[member_name].get('payload'):
+                    # Then the final result is just a single key
+                    # whose value is the response body.
+                    self.value = {member_name: s, 'ResponseMetadata': {}}
+                return
+        else:
+            self.tree = parser.close()
+            self.start(self.tree)
 
     def get_response_metadata(self):
         rmd = {}
@@ -299,7 +313,6 @@ class XmlResponse(Response):
         return shape
 
     def start(self, elem):
-        self.value = {}
         if self.operation.output:
             for member_name in self.operation.output['members']:
                 member = self.operation.output['members'][member_name]
