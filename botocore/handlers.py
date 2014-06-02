@@ -37,6 +37,31 @@ RESTRICTED_REGIONS = [
 
 
 
+def check_for_200_error(response, operation, **kwargs):
+    # From: http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectCOPY.html
+    # There are two opportunities for a copy request to return an error. One
+    # can occur when Amazon S3 receives the copy request and the other can
+    # occur while Amazon S3 is copying the files. If the error occurs before
+    # the copy operation starts, you receive a standard Amazon S3 error. If the
+    # error occurs during the copy operation, the error response is embedded in
+    # the 200 OK response. This means that a 200 OK response can contain either
+    # a success or an error. Make sure to design your application to parse the
+    # contents of the response and handle it appropriately.
+    #
+    # So this handler checks for this case.  Even though the server sends a
+    # 200 response, conceptually this should be handled exactly like a
+    # 500 response (with respect to raising exceptions, retries, etc.)
+    # We're connected *before* all the other retry logic handlers, so as long
+    # as we switch the error code to 500, we'll retry the error as expected.
+    http_response, parsed = response
+    if http_response.status_code == 200:
+        if 'Errors' in parsed:
+            logger.debug("Error found for response with 200 status code, "
+                         "operation: %s, errors: %s, changing status code to "
+                         "500.", operation, parsed)
+            http_response.status_code = 500
+
+
 def decode_console_output(event_name, shape, value, **kwargs):
     try:
         value = base64.b64decode(six.b(value)).decode('utf-8')
@@ -239,6 +264,9 @@ BUILTIN_HANDLERS = [
     ('before-call.s3.CopyObject', quote_source_header),
     ('before-call.ec2.CopySnapshot', copy_snapshot_encrypted),
     ('before-auth.s3', fix_s3_host),
+    ('needs-retry.s3.UploadPartCopy', check_for_200_error),
+    ('needs-retry.s3.CopyObject', check_for_200_error),
+    ('needs-retry.s3.CompleteMultipartUpload', check_for_200_error),
     ('service-created', register_retries_for_service),
     ('creating-endpoint.s3', maybe_switch_to_s3sigv4),
     ('creating-endpoint.ec2', maybe_switch_to_sigv4),
