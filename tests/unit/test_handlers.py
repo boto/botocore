@@ -126,5 +126,40 @@ class TestHandlers(BaseSessionTest):
         self.assertEqual(http_response.status_code, 200)
 
 
+class TestRetryHandlerOrder(BaseSessionTest):
+    def get_handler_names(self, responses):
+        names = []
+        for response in responses:
+            handler = response[0]
+            if hasattr(handler, '__name__'):
+                names.append(handler.__name__)
+            elif hasattr(handler, '__class__'):
+                names.append(handler.__class__.__name__)
+            else:
+                names.append(str(handler))
+        return names
+
+    def test_s3_special_case_is_before_other_retry(self):
+        service = self.session.get_service('s3')
+        operation = service.get_operation('CopyObject')
+        responses = self.session.emit(
+            'needs-retry.s3.CopyObject',
+            response=(mock.Mock(), mock.Mock()), endpoint=mock.Mock(), operation=operation,
+            attempts=1, caught_exception=None)
+        # This is implementation specific, but we're trying to verify that
+        # the check_for_200_error is before any of the retry logic in
+        # botocore.retryhandlers.
+        # Technically, as long as the relative order is preserved, we don't
+        # care about the absolute order.
+        names = self.get_handler_names(responses)
+        self.assertIn('check_for_200_error', names)
+        self.assertIn('RetryHandler', names)
+        s3_200_handler = names.index('check_for_200_error')
+        general_retry_handler = names.index('RetryHandler')
+        self.assertTrue(s3_200_handler < general_retry_handler,
+                        "S3 200 error handler was suppose to be before "
+                        "the general retry handler, but it was not.")
+
+
 if __name__ == '__main__':
     unittest.main()
