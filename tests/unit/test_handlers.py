@@ -157,7 +157,7 @@ class TestRetryHandlerOrder(BaseSessionTest):
         s3_200_handler = names.index('check_for_200_error')
         general_retry_handler = names.index('RetryHandler')
         self.assertTrue(s3_200_handler < general_retry_handler,
-                        "S3 200 error handler was suppose to be before "
+                        "S3 200 error handler was supposed to be before "
                         "the general retry handler, but it was not.")
 
 
