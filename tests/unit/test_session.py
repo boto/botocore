@@ -23,7 +23,7 @@ import mock
 
 import botocore.session
 import botocore.exceptions
-from botocore.hooks import EventHooks
+from botocore.hooks import HierarchicalEmitter
 
 
 class BaseSessionTest(unittest.TestCase):
@@ -157,7 +157,7 @@ class SessionTest(BaseSessionTest):
         self.assertEqual(calls[0]['event_name'], 'foo')
 
     def test_emitter_can_be_passed_in(self):
-        events = EventHooks()
+        events = HierarchicalEmitter()
         session = create_session(session_vars=self.env_vars,
                                  event_hooks=events)
         calls = []
