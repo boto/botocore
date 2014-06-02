@@ -15,6 +15,7 @@ import inspect
 import six
 from collections import defaultdict, deque
 import logging
+import sys
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +74,12 @@ class BaseEventHooks(object):
 
         """
         try:
-            argspec = inspect.getargspec(func)
+            # Check Python version to determine functions to execute
+            # getfullargspec() not present in Python 2.x
+            if sys.version_info < (3, 0):
+                argspec = inspect.getargspec(func)
+            else:
+                argspec = inspect.getfullargspec(func)
         except TypeError:
             return False
         else:
