@@ -80,7 +80,7 @@ class TestHandlers(BaseSessionTest):
             event = self.session.create_event(
                 'before-call', 's3', op)
             params = {'headers': {'x-amz-copy-source': 'foo++bar.txt'}}
-            self.session.emit(event, params=params)
+            self.session.emit(event, params=params, operation=mock.Mock())
             self.assertEqual(
                 params['headers']['x-amz-copy-source'], 'foo%2B%2Bbar.txt')
 

@@ -15,6 +15,7 @@
 
 import os
 from tests import BaseSessionTest
+import mock
 import botocore.session
 
 XMLBODY1 = ('<CreateBucketConfiguration><LocationConstraint>sa-east-1'
@@ -104,7 +105,8 @@ class TestS3Operations(BaseSessionTest):
         # add the Content-MD5 header to the parameters if it is not
         # already there.  We are going to fire the event here to
         # simulate that and make sure the right header is added.
-        self.session.emit('before-call.s3.PutBucketLifecycle', params=params)
+        self.session.emit('before-call.s3.PutBucketLifecycle',
+                          params=params, operation=mock.Mock())
         uri_params = {'Bucket': self.bucket_name}
         headers = {'Content-MD5': '5bNG1b31rFf4z+aleBKqWw=='}
         self.assertEqual(params['uri_params'], uri_params)
@@ -128,7 +130,9 @@ class TestS3Operations(BaseSessionTest):
         # add the Content-MD5 header to the parameters if it is not
         # already there.  We are going to fire the event here to
         # simulate that and make sure the right header is added.
-        self.session.emit('before-call.s3.PutBucketLifecycle', params=params)
+        self.session.emit(
+            'before-call.s3.PutBucketLifecycle', params=params,
+            operation=mock.Mock())
         uri_params = {'Bucket': self.bucket_name}
         headers = {'Content-MD5': 'RLlxIC2KsifRLSfsrCKkVg=='}
         self.assertEqual(params['uri_params'], uri_params)
@@ -150,7 +154,8 @@ class TestS3Operations(BaseSessionTest):
         # add the Content-MD5 header to the parameters if it is not
         # already there.  We are going to fire the event here to
         # simulate that and make sure the right header is added.
-        self.session.emit('before-call.s3.PutBucketTagging', params=params)
+        self.session.emit('before-call.s3.PutBucketTagging', params=params,
+                          operation=mock.Mock())
         uri_params = {'Bucket': self.bucket_name}
         headers = {'Content-MD5': '5s++BGwLE2moBAK9duxpFw=='}
         self.assertEqual(params['uri_params'], uri_params)
@@ -179,7 +184,8 @@ class TestS3Operations(BaseSessionTest):
         # add the Content-MD5 header to the parameters if it is not
         # already there.  We are going to fire the event here to
         # simulate that and make sure the right header is added.
-        self.session.emit('before-call.s3.PutBucketCors', params=params)
+        self.session.emit('before-call.s3.PutBucketCors', params=params,
+                          operation=mock.Mock())
         uri_params = {'Bucket': self.bucket_name}
         headers = {'Content-MD5': 'uj9D08gqRQUY0al4Po043w=='}
         self.assertEqual(params['uri_params'], uri_params)
@@ -213,7 +219,9 @@ class TestS3Operations(BaseSessionTest):
         # add the Content-MD5 header to the parameters if it is not
         # already there.  We are going to fire the event here to
         # simulate that and make sure the right header is added.
-        self.session.emit('before-call.s3.DeleteObjects', params=params)
+        self.session.emit('before-call.s3.DeleteObjects',
+                          params=params,
+                          operation=mock.Mock())
         uri_params = {'Bucket': self.bucket_name}
         headers = {'Content-MD5': '1qryost37c7QBmno21C08w=='}
         self.assertEqual(params['uri_params'], uri_params)
