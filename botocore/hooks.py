@@ -13,10 +13,16 @@
 
 import inspect
 import six
-from collections import defaultdict, deque
+from collections import defaultdict, deque, namedtuple
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+NodeList = namedtuple('NodeList', ['first', 'middle', 'last'])
+_FIRST = 0
+_MIDDLE = 1
+_LAST = 2
 
 
 def first_non_none_response(responses, default=None):
@@ -49,14 +55,74 @@ def first_non_none_response(responses, default=None):
 
 class BaseEventHooks(object):
     def emit(self, event_name, **kwargs):
+        """Call all handlers subscribed to an event.
+
+        :type event_name: str
+        :param event_name: The name of the event to emit.
+
+        :type **kwargs: dict
+        :param **kwargs: Arbitrary kwargs to pass through to the
+            subscribed handlers.  The ``event_name`` will be injected
+            into the kwargs so it's not necesary to add this to **kwargs.
+
+        :rtype: list of tuples
+        :return: A list of ``(handler_func, handler_func_return_value)``
+
+        """
         return []
 
     def register(self, event_name, handler, unique_id=None):
+        """Register an event handler for a given event.
+
+        If a ``unique_id`` is given, the handler will not be registered
+        if a handler with the ``unique_id`` has already been registered.
+
+        Handlers are called in the order they have been registered.
+        Note handlers can also be registered with ``register_first()``
+        and ``register_last()``.  All handlers registered with
+        ``register_first()`` are called before handlers registered
+        with ``register()`` which are called before handlers registered
+        with ``register_last()``.
+
+        """
+        self._verify_and_register(event_name, handler, unique_id,
+                                  register_method=self._register)
+
+    def register_first(self, event_name, handler, unique_id=None):
+        """Register an event handler to be called first for an event.
+
+        All event handlers registered with ``register_first()`` will
+        be called before handlers registered with ``register()`` and
+        ``register_last()``.
+
+        """
+        self._verify_and_register(event_name, handler, unique_id,
+                                  register_method=self._register_first)
+
+    def register_last(self, event_name, handler, unique_id=None):
+        """Register an event handler to be called last for an event.
+
+        All event handlers registered with ``register_last()`` will be called
+        after handlers registered with ``register_first()`` and ``register()``.
+
+        """
+        self._verify_and_register(event_name, handler, unique_id,
+                                  register_method=self._register_last)
+
+    def _verify_and_register(self, event_name, handler, unique_id,
+                             register_method):
         self._verify_is_callable(handler)
         self._verify_accept_kwargs(handler)
-        self._register(event_name, handler, unique_id)
+        register_method(event_name, handler, unique_id)
 
     def unregister(self, event_name, handler=None, unique_id=None):
+        """Unregister an event handler for a given event.
+
+        If no ``unique_id`` was given during registration, then the
+        first instance of the event handler is removed (if the event
+        handler has been registered multiple times).
+
+        """
         pass
 
     def _verify_is_callable(self, func):
@@ -80,43 +146,6 @@ class BaseEventHooks(object):
             if argspec[2] is None:
                 raise ValueError("Event handler %s must accept keyword "
                                  "arguments (**kwargs)" % func)
-
-
-class EventHooks(BaseEventHooks):
-    def __init__(self):
-        # event_name -> [handler, ...]
-        self._handlers = defaultdict(list)
-
-    def emit(self, event_name, **kwargs):
-        """Call all handlers subscribed to an event.
-
-        :type event_name: str
-        :param event_name: The name of the event to emit.
-
-        :type **kwargs: dict
-        :param **kwargs: Arbitrary kwargs to pass through to the
-            subscribed handlers.  The ``event_name`` will be injected
-            into the kwargs so it's not necesary to add this to **kwargs.
-
-        :rtype: list of tuples
-        :return: A list of ``(handler_func, handler_func_return_value)``
-
-        """
-        kwargs['event_name'] = event_name
-        responses = []
-        for handler in self._handlers[event_name]:
-            response = handler(**kwargs)
-            responses.append((handler, response))
-        return responses
-
-    def _register(self, event_name, handler, unique_id=None):
-        self._handlers[event_name].append(handler)
-
-    def unregister(self, event_name, handler, unique_id=None):
-        try:
-            self._handlers[event_name].remove(handler)
-        except ValueError:
-            pass
 
 
 class HierarchicalEmitter(BaseEventHooks):
@@ -152,6 +181,15 @@ class HierarchicalEmitter(BaseEventHooks):
         return responses
 
     def _register(self, event_name, handler, unique_id=None):
+        self._register_section(event_name, handler, unique_id, section=_MIDDLE)
+
+    def _register_first(self, event_name, handler, unique_id=None):
+        self._register_section(event_name, handler, unique_id, section=_FIRST)
+
+    def _register_last(self, event_name, handler, unique_id):
+        self._register_section(event_name, handler, unique_id, section=_LAST)
+
+    def _register_section(self, event_name, handler, unique_id, section):
         if unique_id is not None:
             if unique_id in self._unique_id_cache:
                 # We've already registered a handler using this unique_id
@@ -161,10 +199,11 @@ class HierarchicalEmitter(BaseEventHooks):
                 # Note that the trie knows nothing about the unique
                 # id.  We track uniqueness in this class via the
                 # _unique_id_cache.
-                self._handlers.append_item(event_name, handler)
+                self._handlers.append_item(event_name, handler,
+                                           section=section)
                 self._unique_id_cache[unique_id] = handler
         else:
-            self._handlers.append_item(event_name, handler)
+            self._handlers.append_item(event_name, handler, section=section)
         # Super simple caching strategy for now, if we change the registrations
         # clear the cache.  This has the opportunity for smarter invalidations.
         self._lookup_cache = {}
@@ -214,7 +253,7 @@ class _PrefixTrie(object):
         # {'foo': {'children': {'bar': {...}}}}.
         self._root = {'chunk': None, 'children': {}, 'values': None}
 
-    def append_item(self, key, value):
+    def append_item(self, key, value, section=_MIDDLE):
         """Add an item to a key.
 
         If a value is already associated with that key, the new
@@ -230,9 +269,8 @@ class _PrefixTrie(object):
             else:
                 current = current['children'][part]
         if current['values'] is None:
-            current['values'] = [value]
-        else:
-            current['values'].append(value)
+            current['values'] = NodeList([], [], [])
+        current['values'][section].append(value)
 
     def prefix_search(self, key):
         """Collect all items that are prefixes of key.
@@ -258,12 +296,17 @@ class _PrefixTrie(object):
         while stack:
             current_node, index = stack.pop()
             if current_node['values']:
-                seq = reversed(current_node['values'])
                 # We're using extendleft because we want
                 # the values associated with the node furthest
                 # from the root to come before nodes closer
-                # to the root.
-                collected.extendleft(seq)
+                # to the root.  extendleft() also adds its items
+                # in right-left order so .extendleft([1, 2, 3])
+                # will result in final_list = [3, 2, 1], which is
+                # why we reverse the lists.
+                node_list = current_node['values']
+                complete_order = (node_list.first + node_list.middle +
+                                  node_list.last)
+                collected.extendleft(reversed(complete_order))
             if not index == key_parts_len:
                 children = current_node['children']
                 directs = children.get(key_parts[index])
@@ -294,7 +337,13 @@ class _PrefixTrie(object):
             if next_node is not None:
                 self._remove_item(next_node, key_parts, value, index + 1)
                 if index == len(key_parts) - 1:
-                    next_node['values'].remove(value)
+                    node_list = next_node['values']
+                    if value in node_list.first:
+                        node_list.first.remove(value)
+                    elif value in node_list.middle:
+                        node_list.middle.remove(value)
+                    elif value in node_list.last:
+                        node_list.last.remove(value)
                 if not next_node['children'] and not next_node['values']:
                     # Then this is a leaf node with no values so
                     # we can just delete this link from the parent node.
