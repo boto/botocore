@@ -21,6 +21,7 @@ import botocore.session
 from botocore.hooks import first_non_none_response
 from botocore.compat import quote
 from botocore.handlers import copy_snapshot_encrypted
+from botocore.handlers import check_for_200_error
 
 
 class TestHandlers(BaseSessionTest):
@@ -97,6 +98,67 @@ class TestHandlers(BaseSessionTest):
         self.assertEqual(params['PresignedUrl'], 'SIGNED_REQUEST')
         # We created an endpoint in the source region.
         operation.service.get_endpoint.assert_called_with('us-west-2')
+
+    def test_500_status_code_set_for_200_response(self):
+        http_response = mock.Mock()
+        http_response.status_code = 200
+        parsed = {
+            'Errors': [{
+                "HostId": "hostid",
+                "Message": "An internal error occurred.",
+                "Code": "InternalError",
+                "RequestId": "123456789"
+            }]
+        }
+        check_for_200_error((http_response, parsed), 'MyOperationName')
+        self.assertEqual(http_response.status_code, 500)
+
+    def test_200_response_with_no_error_left_untouched(self):
+        http_response = mock.Mock()
+        http_response.status_code = 200
+        parsed = {
+            'NotAnError': [{
+                'foo': 'bar'
+            }]
+        }
+        check_for_200_error((http_response, parsed), 'MyOperationName')
+        # We don't touch the status code since there are no errors present.
+        self.assertEqual(http_response.status_code, 200)
+
+
+class TestRetryHandlerOrder(BaseSessionTest):
+    def get_handler_names(self, responses):
+        names = []
+        for response in responses:
+            handler = response[0]
+            if hasattr(handler, '__name__'):
+                names.append(handler.__name__)
+            elif hasattr(handler, '__class__'):
+                names.append(handler.__class__.__name__)
+            else:
+                names.append(str(handler))
+        return names
+
+    def test_s3_special_case_is_before_other_retry(self):
+        service = self.session.get_service('s3')
+        operation = service.get_operation('CopyObject')
+        responses = self.session.emit(
+            'needs-retry.s3.CopyObject',
+            response=(mock.Mock(), mock.Mock()), endpoint=mock.Mock(), operation=operation,
+            attempts=1, caught_exception=None)
+        # This is implementation specific, but we're trying to verify that
+        # the check_for_200_error is before any of the retry logic in
+        # botocore.retryhandlers.
+        # Technically, as long as the relative order is preserved, we don't
+        # care about the absolute order.
+        names = self.get_handler_names(responses)
+        self.assertIn('check_for_200_error', names)
+        self.assertIn('RetryHandler', names)
+        s3_200_handler = names.index('check_for_200_error')
+        general_retry_handler = names.index('RetryHandler')
+        self.assertTrue(s3_200_handler < general_retry_handler,
+                        "S3 200 error handler was supposed to be before "
+                        "the general retry handler, but it was not.")
 
 
 if __name__ == '__main__':

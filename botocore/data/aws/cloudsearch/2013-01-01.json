@@ -144,7 +144,7 @@
                                     "Endpoint": {
                                         "shape_name": "ServiceUrl",
                                         "type": "string",
-                                        "documentation": "\n    <p>The URL to which service requests can be submitted. Includes the API version and path prefix. For example,  \t<code>search-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com/2013-01-01/search</code> or <code>doc-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com/2013-01-01/documents/batch</code>.</p>\n  "
+                                        "documentation": "\n    <p>The endpoint to which service requests can be submitted. For example, <code>search-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com</code> or <code>doc-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com</code>.</p>\n  "
                                     }
                                 },
                                 "documentation": "\n  <p>The service endpoint for updating documents in a search domain.</p>\n  "
@@ -156,7 +156,7 @@
                                     "Endpoint": {
                                         "shape_name": "ServiceUrl",
                                         "type": "string",
-                                        "documentation": "\n    <p>The URL to which service requests can be submitted. Includes the API version and path prefix. For example,  \t<code>search-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com/2013-01-01/search</code> or <code>doc-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com/2013-01-01/documents/batch</code>.</p>\n  "
+                                        "documentation": "\n    <p>The endpoint to which service requests can be submitted. For example, <code>search-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com</code> or <code>doc-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com</code>.</p>\n  "
                                     }
                                 },
                                 "documentation": "\n  <p>The service endpoint for requesting search results from a search domain.</p>\n  "
@@ -275,6 +275,7 @@
                                     "fr",
                                     "ga",
                                     "gl",
+                                    "he",
                                     "hi",
                                     "hu",
                                     "hy",
@@ -326,7 +327,7 @@
                                             "light",
                                             "full"
                                         ],
-                                        "documentation": "\n      <p>The level of algorithmic stemming to perform: <code>none</code>, <code>minimal</code>, <code>light</code>, or <code>full</code>. The available levels vary depending on the language. For more information, see <a href=\"http://docs.aws.amazon.com/cloudsearch/latest/developerguide/text-processing-settings.html\" target=\"_blank\">Langage Specific Text Processing Settings</a> in the <i>Amazon CloudSearch Developer Guide</i> </p>\n    "
+                                        "documentation": "\n      <p>The level of algorithmic stemming to perform: <code>none</code>, <code>minimal</code>, <code>light</code>, or <code>full</code>. The available levels vary depending on the language. For more information, see <a href=\"http://docs.aws.amazon.com/cloudsearch/latest/developerguide/text-processing.html#text-processing-settings\" target=\"_blank\">Language Specific Text Processing Settings</a> in the <i>Amazon CloudSearch Developer Guide</i> </p>\n    "
                                     }
                                 },
                                 "documentation": "\n      <p>Synonyms, stopwords, and stemming options for an analysis scheme.</p>\n    "
@@ -378,6 +379,7 @@
                                             "fr",
                                             "ga",
                                             "gl",
+                                            "he",
                                             "hi",
                                             "hu",
                                             "hy",
@@ -429,7 +431,7 @@
                                                     "light",
                                                     "full"
                                                 ],
-                                                "documentation": "\n      <p>The level of algorithmic stemming to perform: <code>none</code>, <code>minimal</code>, <code>light</code>, or <code>full</code>. The available levels vary depending on the language. For more information, see <a href=\"http://docs.aws.amazon.com/cloudsearch/latest/developerguide/text-processing-settings.html\" target=\"_blank\">Langage Specific Text Processing Settings</a> in the <i>Amazon CloudSearch Developer Guide</i> </p>\n    "
+                                                "documentation": "\n      <p>The level of algorithmic stemming to perform: <code>none</code>, <code>minimal</code>, <code>light</code>, or <code>full</code>. The available levels vary depending on the language. For more information, see <a href=\"http://docs.aws.amazon.com/cloudsearch/latest/developerguide/text-processing.html#text-processing-settings\" target=\"_blank\">Language Specific Text Processing Settings</a> in the <i>Amazon CloudSearch Developer Guide</i> </p>\n    "
                                             }
                                         },
                                         "documentation": "\n      <p>Synonyms, stopwords, and stemming options for an analysis scheme.</p>\n    "
@@ -1956,7 +1958,7 @@
                     "documentation": "\n  <p>The request was rejected because it attempted to reference a resource that does not exist.</p>\n  "
                 }
             ],
-            "documentation": "\n    <p>Configures a suggester for a domain. A suggester enables you to display possible matches before users finish typing their queries. When you configure a suggester, you must specify the name of the text field you want to search for possible matches and a unique name for the suggester. For more information, see <a href=\"http://docs.aws.amazon.com/cloudsearch/latest/developerguide/getting-search-suggestions.html\" target=\"_blank\">Getting Search Suggestions</a> in the <i>Amazon CloudSearch Developer Guide</i>.</p>\n  "
+            "documentation": "\n    <p>Configures a suggester for a domain. A suggester enables you to display possible matches before users finish typing their queries. When you configure a suggester, you must specify the name of the text field you want to search for possible matches and a unique name for the suggester. For more information, see <a href=\"http://docs.aws.amazon.com/cloudsearch/latest/developerguide/getting-suggestions.html\" target=\"_blank\">Getting Search Suggestions</a> in the <i>Amazon CloudSearch Developer Guide</i>.</p>\n  "
         },
         "DeleteAnalysisScheme": {
             "name": "DeleteAnalysisScheme",
@@ -2025,6 +2027,7 @@
                                             "fr",
                                             "ga",
                                             "gl",
+                                            "he",
                                             "hi",
                                             "hu",
                                             "hy",
@@ -2076,7 +2079,7 @@
                                                     "light",
                                                     "full"
                                                 ],
-                                                "documentation": "\n      <p>The level of algorithmic stemming to perform: <code>none</code>, <code>minimal</code>, <code>light</code>, or <code>full</code>. The available levels vary depending on the language. For more information, see <a href=\"http://docs.aws.amazon.com/cloudsearch/latest/developerguide/text-processing-settings.html\" target=\"_blank\">Langage Specific Text Processing Settings</a> in the <i>Amazon CloudSearch Developer Guide</i> </p>\n    "
+                                                "documentation": "\n      <p>The level of algorithmic stemming to perform: <code>none</code>, <code>minimal</code>, <code>light</code>, or <code>full</code>. The available levels vary depending on the language. For more information, see <a href=\"http://docs.aws.amazon.com/cloudsearch/latest/developerguide/text-processing.html#text-processing-settings\" target=\"_blank\">Language Specific Text Processing Settings</a> in the <i>Amazon CloudSearch Developer Guide</i> </p>\n    "
                                             }
                                         },
                                         "documentation": "\n      <p>Synonyms, stopwords, and stemming options for an analysis scheme.</p>\n    "
@@ -2172,7 +2175,7 @@
                     "documentation": "\n  <p>The request was rejected because it attempted to reference a resource that does not exist.</p>\n  "
                 }
             ],
-            "documentation": "\n    <p>Deletes an analysis scheme. For more information, see <a href=\"http://docs.aws.amazon.com/cloudsearch/latest/developerguide/configuring-analysis-schemes.html.html\" target=\"_blank\">Configuring Analysis Schemes</a> in the <i>Amazon CloudSearch Developer Guide</i>. </p>\n  "
+            "documentation": "\n    <p>Deletes an analysis scheme. For more information, see <a href=\"http://docs.aws.amazon.com/cloudsearch/latest/developerguide/configuring-analysis-schemes.html\" target=\"_blank\">Configuring Analysis Schemes</a> in the <i>Amazon CloudSearch Developer Guide</i>. </p>\n  "
         },
         "DeleteDomain": {
             "name": "DeleteDomain",
@@ -2239,7 +2242,7 @@
                                     "Endpoint": {
                                         "shape_name": "ServiceUrl",
                                         "type": "string",
-                                        "documentation": "\n    <p>The URL to which service requests can be submitted. Includes the API version and path prefix. For example,  \t<code>search-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com/2013-01-01/search</code> or <code>doc-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com/2013-01-01/documents/batch</code>.</p>\n  "
+                                        "documentation": "\n    <p>The endpoint to which service requests can be submitted. For example, <code>search-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com</code> or <code>doc-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com</code>.</p>\n  "
                                     }
                                 },
                                 "documentation": "\n  <p>The service endpoint for updating documents in a search domain.</p>\n  "
@@ -2251,7 +2254,7 @@
                                     "Endpoint": {
                                         "shape_name": "ServiceUrl",
                                         "type": "string",
-                                        "documentation": "\n    <p>The URL to which service requests can be submitted. Includes the API version and path prefix. For example,  \t<code>search-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com/2013-01-01/search</code> or <code>doc-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com/2013-01-01/documents/batch</code>.</p>\n  "
+                                        "documentation": "\n    <p>The endpoint to which service requests can be submitted. For example, <code>search-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com</code> or <code>doc-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com</code>.</p>\n  "
                                     }
                                 },
                                 "documentation": "\n  <p>The service endpoint for requesting search results from a search domain.</p>\n  "
@@ -3218,7 +3221,7 @@
                     "documentation": "\n  <p>The request was rejected because it attempted to reference a resource that does not exist.</p>\n  "
                 }
             ],
-            "documentation": "\n    <p>Deletes a suggester. For more information, see <a href=\"http://docs.aws.amazon.com/cloudsearch/latest/developerguide/getting-search-suggestions.html\" target=\"_blank\">Getting Search Suggestions</a> in the <i>Amazon CloudSearch Developer Guide</i>.</p>\n  "
+            "documentation": "\n    <p>Deletes a suggester. For more information, see <a href=\"http://docs.aws.amazon.com/cloudsearch/latest/developerguide/getting-suggestions.html\" target=\"_blank\">Getting Search Suggestions</a> in the <i>Amazon CloudSearch Developer Guide</i>.</p>\n  "
         },
         "DescribeAnalysisSchemes": {
             "name": "DescribeAnalysisSchemes",
@@ -3299,6 +3302,7 @@
                                                 "fr",
                                                 "ga",
                                                 "gl",
+                                                "he",
                                                 "hi",
                                                 "hu",
                                                 "hy",
@@ -3350,7 +3354,7 @@
                                                         "light",
                                                         "full"
                                                     ],
-                                                    "documentation": "\n      <p>The level of algorithmic stemming to perform: <code>none</code>, <code>minimal</code>, <code>light</code>, or <code>full</code>. The available levels vary depending on the language. For more information, see <a href=\"http://docs.aws.amazon.com/cloudsearch/latest/developerguide/text-processing-settings.html\" target=\"_blank\">Langage Specific Text Processing Settings</a> in the <i>Amazon CloudSearch Developer Guide</i> </p>\n    "
+                                                    "documentation": "\n      <p>The level of algorithmic stemming to perform: <code>none</code>, <code>minimal</code>, <code>light</code>, or <code>full</code>. The available levels vary depending on the language. For more information, see <a href=\"http://docs.aws.amazon.com/cloudsearch/latest/developerguide/text-processing.html#text-processing-settings\" target=\"_blank\">Language Specific Text Processing Settings</a> in the <i>Amazon CloudSearch Developer Guide</i> </p>\n    "
                                                 }
                                             },
                                             "documentation": "\n      <p>Synonyms, stopwords, and stemming options for an analysis scheme.</p>\n    "
@@ -3653,7 +3657,7 @@
                                         "Endpoint": {
                                             "shape_name": "ServiceUrl",
                                             "type": "string",
-                                            "documentation": "\n    <p>The URL to which service requests can be submitted. Includes the API version and path prefix. For example,  \t<code>search-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com/2013-01-01/search</code> or <code>doc-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com/2013-01-01/documents/batch</code>.</p>\n  "
+                                            "documentation": "\n    <p>The endpoint to which service requests can be submitted. For example, <code>search-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com</code> or <code>doc-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com</code>.</p>\n  "
                                         }
                                     },
                                     "documentation": "\n  <p>The service endpoint for updating documents in a search domain.</p>\n  "
@@ -3665,7 +3669,7 @@
                                         "Endpoint": {
                                             "shape_name": "ServiceUrl",
                                             "type": "string",
-                                            "documentation": "\n    <p>The URL to which service requests can be submitted. Includes the API version and path prefix. For example,  \t<code>search-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com/2013-01-01/search</code> or <code>doc-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com/2013-01-01/documents/batch</code>.</p>\n  "
+                                            "documentation": "\n    <p>The endpoint to which service requests can be submitted. For example, <code>search-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com</code> or <code>doc-imdb-movies-oopcnjfn6ugofer3zx5iadxxca.eu-west-1.cloudsearch.amazonaws.com</code>.</p>\n  "
                                         }
                                     },
                                     "documentation": "\n  <p>The service endpoint for requesting search results from a search domain.</p>\n  "
@@ -3732,7 +3736,7 @@
                     "documentation": "\n    <p>An internal error occurred while processing the request. If this problem persists,\n      report an issue from the <a href=\"http://status.aws.amazon.com/\" target=\"_blank\">Service Health Dashboard</a>.</p>\n  "
                 }
             ],
-            "documentation": "\n    <p>Gets information about the search domains owned by this account. Can be limited to specific domains. Shows\n      all domains by default. For more information,\n      see <a href=\"http://docs.aws.amazon.com/cloudsearch/latest/developerguide/getdomainstatus.html\" target=\"_blank\">Getting Information about a Search  Domain</a> in the <i>Amazon CloudSearch Developer Guide</i>.</p>\n  "
+            "documentation": "\n    <p>Gets information about the search domains owned by this account. Can be limited to specific domains. Shows\n      all domains by default. To get the number of searchable documents in a domain, use the console or submit a <code>matchall</code> request to your domain's search endpoint: <code>q=matchall&amp;q.parser=structured&amp;size=0</code>. For more information,\n      see <a href=\"http://docs.aws.amazon.com/cloudsearch/latest/developerguide/getting-domain-info.html\" target=\"_blank\">Getting Information about a Search Domain</a> in the <i>Amazon CloudSearch Developer Guide</i>.</p>\n  "
         },
         "DescribeExpressions": {
             "name": "DescribeExpressions",
@@ -4478,7 +4482,7 @@
                     "documentation": "\n  <p>The request was rejected because it attempted to reference a resource that does not exist.</p>\n  "
                 }
             ],
-            "documentation": "\n    <p>Gets information about the index fields configured for the search domain.\n      Can be limited to specific fields by name.  By default, shows all fields and includes any pending changes to the configuration. Set the <code>Deployed</code> option to <code>true</code> to show the active configuration and exclude pending changes. For more information,\n      see <a href=\"http://docs.aws.amazon.com/cloudsearch/latest/developerguide/getdomainstatus.html\" target=\"_blank\">Getting Domain Information</a> in the <i>Amazon CloudSearch Developer Guide</i>.</p>\n  "
+            "documentation": "\n    <p>Gets information about the index fields configured for the search domain.\n      Can be limited to specific fields by name.  By default, shows all fields and includes any pending changes to the configuration. Set the <code>Deployed</code> option to <code>true</code> to show the active configuration and exclude pending changes. For more information,\n      see <a href=\"http://docs.aws.amazon.com/cloudsearch/latest/developerguide/getting-domain-info.html\" target=\"_blank\">Getting Domain Information</a> in the <i>Amazon CloudSearch Developer Guide</i>.</p>\n  "
         },
         "DescribeScalingParameters": {
             "name": "DescribeScalingParameters",
@@ -4526,6 +4530,12 @@
                                         "type": "integer",
                                         "min_length": 0,
                                         "documentation": "\n    <p>The number of replicas you want to preconfigure for each index partition.</p>\n  "
+                                    },
+                                    "DesiredPartitionCount": {
+                                        "shape_name": "UIntValue",
+                                        "type": "integer",
+                                        "min_length": 0,
+                                        "documentation": "\n    <p>The number of partitions you want to preconfigure for your domain. Only valid when\n    you select <code>m2.2xlarge</code> as the desired instance type.</p>\n  "
                                     }
                                 },
                                 "documentation": "\n    <p>The desired instance type and desired number of replicas of each index partition.</p>\n  ",
@@ -4913,7 +4923,7 @@
                     "documentation": "\n  <p>The request was rejected because it attempted to reference a resource that does not exist.</p>\n  "
                 }
             ],
-            "documentation": "\n    <p>Gets the suggesters configured for a domain. A suggester enables you to display possible matches before users finish typing their queries.  Can be limited to specific suggesters by name.  By default, shows all suggesters and includes any pending changes to the configuration. Set the <code>Deployed</code> option to <code>true</code> to show the active configuration and exclude pending changes.  For more information, see <a href=\"http://docs.aws.amazon.com/cloudsearch/latest/developerguide/getting-search-suggestions.html\" target=\"_blank\">Getting Search Suggestions</a> in the <i>Amazon CloudSearch Developer Guide</i>.</p>\n  "
+            "documentation": "\n    <p>Gets the suggesters configured for a domain. A suggester enables you to display possible matches before users finish typing their queries.  Can be limited to specific suggesters by name.  By default, shows all suggesters and includes any pending changes to the configuration. Set the <code>Deployed</code> option to <code>true</code> to show the active configuration and exclude pending changes.  For more information, see <a href=\"http://docs.aws.amazon.com/cloudsearch/latest/developerguide/getting-suggestions.html\" target=\"_blank\">Getting Search Suggestions</a> in the <i>Amazon CloudSearch Developer Guide</i>.</p>\n  "
         },
         "IndexDocuments": {
             "name": "IndexDocuments",
@@ -5208,6 +5218,12 @@
                                 "type": "integer",
                                 "min_length": 0,
                                 "documentation": "\n    <p>The number of replicas you want to preconfigure for each index partition.</p>\n  "
+                            },
+                            "DesiredPartitionCount": {
+                                "shape_name": "UIntValue",
+                                "type": "integer",
+                                "min_length": 0,
+                                "documentation": "\n    <p>The number of partitions you want to preconfigure for your domain. Only valid when\n    you select <code>m2.2xlarge</code> as the desired instance type.</p>\n  "
                             }
                         },
                         "documentation": "\n    <p>The desired instance type and desired number of replicas of each index partition.</p>\n  ",
@@ -5244,6 +5260,12 @@
                                         "type": "integer",
                                         "min_length": 0,
                                         "documentation": "\n    <p>The number of replicas you want to preconfigure for each index partition.</p>\n  "
+                                    },
+                                    "DesiredPartitionCount": {
+                                        "shape_name": "UIntValue",
+                                        "type": "integer",
+                                        "min_length": 0,
+                                        "documentation": "\n    <p>The number of partitions you want to preconfigure for your domain. Only valid when\n    you select <code>m2.2xlarge</code> as the desired instance type.</p>\n  "
                                     }
                                 },
                                 "documentation": "\n    <p>The desired instance type and desired number of replicas of each index partition.</p>\n  ",

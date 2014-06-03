@@ -446,5 +446,24 @@ class TestS3Presign(BaseS3Test):
         self.assertEqual(requests.get(presigned_url).content, b'foobar')
 
 
+class TestS3PresignFixHost(BaseS3Test):
+    def test_presign_does_not_change_host(self):
+        endpoint = self.service.get_endpoint('us-west-2')
+        key_name = 'mykey'
+        bucket_name = 'mybucket'
+        signer = botocore.auth.S3SigV4QueryAuth(
+            credentials=self.service.session.get_credentials(),
+            region_name='us-west-2', service_name='s3', expires=60)
+        op = self.service.get_operation('GetObject')
+        params = op.build_parameters(bucket=bucket_name, key=key_name)
+        request = endpoint.create_request(op, params, signer)
+        presigned_url = request.url
+        # We should not have rewritten the host to be s3.amazonaws.com.
+        self.assertTrue(presigned_url.startswith(
+            'https://s3-us-west-2.amazonaws.com/mybucket/mykey'),
+            "Host was suppose to be the us-west-2 endpoint, instead "
+            "got: %s" % presigned_url)
+
+
 if __name__ == '__main__':
     unittest.main()
