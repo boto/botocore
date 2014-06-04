@@ -15,6 +15,7 @@ import copy
 import datetime
 import six
 import sys
+import inspect
 
 
 if six.PY3:
@@ -46,6 +47,12 @@ if six.PY3:
 
         """
         http_response._fp.fp.raw._sock.settimeout(timeout)
+
+    def accepts_kwargs(func):
+        # In python3.4.1, there's backwards incompatible
+        # changes when using getargspec with functools.partials.
+        return inspect.getfullargspec(func)[2]
+
 
 else:
     from urllib import quote
@@ -86,6 +93,9 @@ else:
 
         """
         http_response._fp.fp._sock.settimeout(timeout)
+
+    def accepts_kwargs(func):
+        return inspect.getargspec(func)[2]
 
 try:
     from collections import OrderedDict
