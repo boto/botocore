@@ -139,11 +139,11 @@ class TestAWSHTTPConnection(unittest.TestCase):
         with patch('select.select') as select_mock:
             # Shows the server first sending a 100 continue response
             # then a 200 ok response.
-            s = FakeSocket('HTTP/1.1 100 Continue\r\n\r\nHTTP/1.1 200 OK\r\n')
+            s = FakeSocket(b'HTTP/1.1 100 Continue\r\n\r\nHTTP/1.1 200 OK\r\n')
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
             select_mock.return_value = ([s], [], [])
-            conn.request('GET', '/bucket/foo', 'body', {'Expect': '100-continue'})
+            conn.request('GET', '/bucket/foo', b'body', {'Expect': '100-continue'})
             response = conn.getresponse()
             # Now we should verify that our final response is the 200 OK
             self.assertEqual(response.status, 200)
@@ -154,11 +154,13 @@ class TestAWSHTTPConnection(unittest.TestCase):
         with patch('select.select') as select_mock:
             # Shows the server first sending a 100 continue response
             # then a 200 ok response.
-            s = FakeSocket('HTTP/1.1 307 Temporary Redirect\r\nLocation: http://example.org\r\n')
+            s = FakeSocket(
+                b'HTTP/1.1 307 Temporary Redirect\r\n'
+                'Location: http://example.org\r\n')
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
             select_mock.return_value = ([s], [], [])
-            conn.request('GET', '/bucket/foo', 'body', {'Expect': '100-continue'})
+            conn.request('GET', '/bucket/foo', b'body', {'Expect': '100-continue'})
             response = conn.getresponse()
             # Now we should verify that our final response is the 307.
             self.assertEqual(response.status, 307)
@@ -167,14 +169,16 @@ class TestAWSHTTPConnection(unittest.TestCase):
         with patch('select.select') as select_mock:
             # Shows the server first sending a 100 continue response
             # then a 200 ok response.
-            s = FakeSocket('HTTP/1.1 307 Temporary Redirect\r\nLocation: http://example.org\r\n')
+            s = FakeSocket(
+                b'HTTP/1.1 307 Temporary Redirect\r\n'
+                'Location: http://example.org\r\n')
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
             # By settings select_mock to return empty lists, this indicates
             # that the server did not send any response.  In this situation
             # we should just send the request anyways.
             select_mock.return_value = ([], [], [])
-            conn.request('GET', '/bucket/foo', 'body', {'Expect': '100-continue'})
+            conn.request('GET', '/bucket/foo', b'body', {'Expect': '100-continue'})
             response = conn.getresponse()
             self.assertEqual(response.status, 307)
 
@@ -183,7 +187,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
         # then a 200 ok response.
         body = six.BytesIO(b'body contents')
         body.__len__ = lambda self: len(b'body contents')
-        s = FakeSocket('HTTP/1.1 200 OK\r\n')
+        s = FakeSocket(b'HTTP/1.1 200 OK\r\n')
         conn = AWSHTTPConnection('s3.amazonaws.com', 443)
         conn.sock = s
         conn.request('GET', '/bucket/foo', body)
@@ -193,10 +197,10 @@ class TestAWSHTTPConnection(unittest.TestCase):
     def test_no_expect_header_set(self):
         # Shows the server first sending a 100 continue response
         # then a 200 ok response.
-        s = FakeSocket('HTTP/1.1 200 OK\r\n')
+        s = FakeSocket(b'HTTP/1.1 200 OK\r\n')
         conn = AWSHTTPConnection('s3.amazonaws.com', 443)
         conn.sock = s
-        conn.request('GET', '/bucket/foo', 'body')
+        conn.request('GET', '/bucket/foo', b'body')
         response = conn.getresponse()
         self.assertEqual(response.status, 200)
 

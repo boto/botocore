@@ -501,6 +501,20 @@ class TestCreateBucketInOtherRegion(BaseS3Test):
             self.assertEqual(response[0].status_code, 200)
             self.keys.append('foo.txt')
 
+    def test_bucket_in_other_region_using_http(self):
+        http_endpoint = self.service.get_endpoint(
+            endpoint_url='http://s3.amazonaws.com/')
+        with temporary_file('w') as f:
+            f.write('foobarbaz' * 1024 * 1024)
+            f.flush()
+            op = self.service.get_operation('PutObject')
+            response = op.call(http_endpoint,
+                               bucket=self.bucket_name,
+                               key='foo.txt',
+                               body=open(f.name, 'rb'))
+            self.assertEqual(response[0].status_code, 200)
+            self.keys.append('foo.txt')
+
 
 if __name__ == '__main__':
     unittest.main()

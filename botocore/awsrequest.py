@@ -14,6 +14,7 @@
 import logging
 import select
 import functools
+import inspect
 
 import six
 from botocore.vendored.requests import models
@@ -21,6 +22,7 @@ from botocore.vendored.requests.sessions import REDIRECT_STATI
 from botocore.compat import HTTPHeaders, file_type, HTTPResponse
 from botocore.exceptions import UnseekableStreamError
 from botocore.vendored.requests.packages.urllib3.connection import VerifiedHTTPSConnection
+from botocore.vendored.requests.packages.urllib3.connection import HTTPConnection
 from botocore.vendored.requests.packages.urllib3.connectionpool import HTTPConnectionPool
 from botocore.vendored.requests.packages.urllib3.connectionpool import HTTPSConnectionPool
 
@@ -44,7 +46,7 @@ class AWSHTTPResponse(HTTPResponse):
             return HTTPResponse._read_status(self)
 
 
-class AWSHTTPConnection(VerifiedHTTPSConnection):
+class AWSHTTPConnection(HTTPConnection):
     """HTTPConnection that supports Expect 100-continue.
 
     This is conceptually a subclass of httplib.HTTPConnection (though
@@ -57,20 +59,11 @@ class AWSHTTPConnection(VerifiedHTTPSConnection):
 
     """
     def _send_request(self, method, url, body, headers):
-        # We need to override _send_request to record
-        # whether or not we see an Expect: 100-continue
-        # header via the self._expect_header_set attribute.
-        self._extra = {
-            'method': method,
-            'url': url,
-            'body': body,
-            'headers': headers,
-        }
         if headers.get('Expect', '') == '100-continue':
             self._expect_header_set = True
         else:
             self._expect_header_set = False
-        return VerifiedHTTPSConnection._send_request(
+        return HTTPConnection._send_request(
             self, method, url, body, headers)
 
     def _send_output(self, message_body=None):
@@ -157,6 +150,18 @@ class AWSHTTPConnection(VerifiedHTTPSConnection):
             parts[1] == b'100' and parts[2].startswith(b'Continue'))
 
 
+class AWSHTTPSConnection(VerifiedHTTPSConnection):
+    pass
+
+
+# Now we need to set the methods we overrode from AWSHTTPConnection
+# onto AWSHTTPSConnection.  This is just a shortcut to avoid
+# copy/pasting the same code into AWSHTTPSConnection.
+for name, function in AWSHTTPConnection.__dict__.items():
+    if inspect.isfunction(function):
+        setattr(AWSHTTPSConnection, name, function)
+
+
 class AWSRequest(models.RequestEncodingMixin, models.Request):
     def __init__(self, *args, **kwargs):
         self.auth_path = None
@@ -239,4 +244,5 @@ class AWSPreparedRequest(models.PreparedRequest):
             raise UnseekableStreamError(stream_object=self.body)
 
 
-HTTPSConnectionPool.ConnectionCls = AWSHTTPConnection
+HTTPSConnectionPool.ConnectionCls = AWSHTTPSConnection
+HTTPConnectionPool.ConnectionCls = AWSHTTPConnection
