@@ -31,11 +31,11 @@ logger = logging.getLogger(__name__)
 
 
 class AWSHTTPResponse(HTTPResponse):
-    def __init__(self, sock, debuglevel=0, strict=0, method=None,
-                 buffering=False, status_tuple=None):
-        HTTPResponse.__init__(self, sock, debuglevel, strict,
-                                  method, buffering)
-        self._status_tuple = status_tuple
+    # The *args, **kwargs is used because the args are slightly
+    # different in py2.6 than in py2.7/py3.
+    def __init__(self, *args, **kwargs):
+        self._status_tuple = kwargs.pop('status_tuple')
+        HTTPResponse.__init__(self, *args, **kwargs)
 
     def _read_status(self):
         if self._status_tuple is not None:
@@ -109,33 +109,36 @@ class AWSHTTPConnection(HTTPConnection):
         # an Expect: 100-continue header and received a response.
         # We now need to figure out what to do.
         fp = self.sock.makefile('rb', 0)
-        maybe_status_line = fp.readline()
-        parts = maybe_status_line.split(None, 2)
-        if self._is_100_continue_status(maybe_status_line):
-            # Read an empty line as per the RFC.
-            fp.readline()
-            logger.debug("100 Continue response seen, now sending request body.")
-            self._send_message_body(message_body)
-        elif len(parts) == 3 and parts[0].startswith(b'HTTP/'):
-            # From the RFC:
-            # Requirements for HTTP/1.1 origin servers:
-            #
-            # - Upon receiving a request which includes an Expect
-            #   request-header field with the "100-continue"
-            #   expectation, an origin server MUST either respond with
-            #   100 (Continue) status and continue to read from the
-            #   input stream, or respond with a final status code.
-            #
-            # So if we don't get a 100 Continue response, then
-            # whatever the server has sent back is the final response
-            # and don't send the message_body.
-            logger.debug("Received a non 100 Continue response "
-                         "from the server, NOT sending request body.")
-            status_tuple = (parts[0].decode('ascii'),
-                            int(parts[1]), parts[2].decode('ascii'))
-            response_class = functools.partial(
-                AWSHTTPResponse, status_tuple=status_tuple)
-            self.response_class = response_class
+        try:
+            maybe_status_line = fp.readline()
+            parts = maybe_status_line.split(None, 2)
+            if self._is_100_continue_status(maybe_status_line):
+                # Read an empty line as per the RFC.
+                fp.readline()
+                logger.debug("100 Continue response seen, now sending request body.")
+                self._send_message_body(message_body)
+            elif len(parts) == 3 and parts[0].startswith(b'HTTP/'):
+                # From the RFC:
+                # Requirements for HTTP/1.1 origin servers:
+                #
+                # - Upon receiving a request which includes an Expect
+                #   request-header field with the "100-continue"
+                #   expectation, an origin server MUST either respond with
+                #   100 (Continue) status and continue to read from the
+                #   input stream, or respond with a final status code.
+                #
+                # So if we don't get a 100 Continue response, then
+                # whatever the server has sent back is the final response
+                # and don't send the message_body.
+                logger.debug("Received a non 100 Continue response "
+                            "from the server, NOT sending request body.")
+                status_tuple = (parts[0].decode('ascii'),
+                                int(parts[1]), parts[2].decode('ascii'))
+                response_class = functools.partial(
+                    AWSHTTPResponse, status_tuple=status_tuple)
+                self.response_class = response_class
+        finally:
+            fp.close()
 
     def _send_message_body(self, message_body):
         if message_body is not None:

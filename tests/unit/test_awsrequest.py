@@ -43,6 +43,11 @@ class FakeSocket(object):
         pass
 
 
+class BytesIOWithLen(six.BytesIO):
+    def __len__(self):
+        return len(self.getvalue())
+
+
 class Unseekable(file_type):
     def __init__(self, stream):
         self._stream = stream
@@ -156,7 +161,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
             # then a 200 ok response.
             s = FakeSocket(
                 b'HTTP/1.1 307 Temporary Redirect\r\n'
-                'Location: http://example.org\r\n')
+                b'Location: http://example.org\r\n')
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
             select_mock.return_value = ([s], [], [])
@@ -171,7 +176,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
             # then a 200 ok response.
             s = FakeSocket(
                 b'HTTP/1.1 307 Temporary Redirect\r\n'
-                'Location: http://example.org\r\n')
+                b'Location: http://example.org\r\n')
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
             # By settings select_mock to return empty lists, this indicates
@@ -185,8 +190,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
     def test_message_body_is_file_like_object(self):
         # Shows the server first sending a 100 continue response
         # then a 200 ok response.
-        body = six.BytesIO(b'body contents')
-        body.__len__ = lambda self: len(b'body contents')
+        body = BytesIOWithLen(b'body contents')
         s = FakeSocket(b'HTTP/1.1 200 OK\r\n')
         conn = AWSHTTPConnection('s3.amazonaws.com', 443)
         conn.sock = s
