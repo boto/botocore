@@ -58,11 +58,16 @@ class AWSHTTPConnection(HTTPConnection):
     this against AWS services.
 
     """
+    def __init__(self, *args, **kwargs):
+        HTTPConnection.__init__(self, *args, **kwargs)
+        self._original_response_cls = self.response_class
+
     def _send_request(self, method, url, body, headers):
         if headers.get('Expect', '') == '100-continue':
             self._expect_header_set = True
         else:
             self._expect_header_set = False
+            self.response_class = self._original_response_cls
         return HTTPConnection._send_request(
             self, method, url, body, headers)
 
