@@ -102,6 +102,7 @@ class AWSHTTPConnection(HTTPConnection):
             # message_body was not a string (i.e. it is a file), and
             # we must run the risk of Nagle.
             self.send(message_body)
+        self._expect_header_set = False
 
     def _handle_expect_response(self, message_body):
         # This is called when we sent the request headers containing
@@ -115,7 +116,6 @@ class AWSHTTPConnection(HTTPConnection):
             fp.readline()
             logger.debug("100 Continue response seen, now sending request body.")
             self._send_message_body(message_body)
-            self._expect_header_set = False
         elif len(parts) == 3 and parts[0].startswith(b'HTTP/'):
             # From the RFC:
             # Requirements for HTTP/1.1 origin servers:
@@ -136,7 +136,6 @@ class AWSHTTPConnection(HTTPConnection):
             response_class = functools.partial(
                 AWSHTTPResponse, status_tuple=status_tuple)
             self.response_class = response_class
-            self._expect_header_set = False
 
     def _send_message_body(self, message_body):
         if message_body is not None:
@@ -173,7 +172,6 @@ class AWSRequest(models.RequestEncodingMixin, models.Request):
         if self.headers is not None:
             for key, value in self.headers.items():
                 headers[key] = value
-        headers['Expect'] = '100-continue'
         self.headers = headers
 
     def prepare(self):
