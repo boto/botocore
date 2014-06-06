@@ -53,6 +53,10 @@ def check_for_200_error(response, operation, **kwargs):
     # 500 response (with respect to raising exceptions, retries, etc.)
     # We're connected *before* all the other retry logic handlers, so as long
     # as we switch the error code to 500, we'll retry the error as expected.
+    if response is None:
+        # A None response can happen if an exception is raised while
+        # trying to retrieve the response.  See Endpoint._get_response().
+        return
     http_response, parsed = response
     if http_response.status_code == 200:
         if 'Errors' in parsed:

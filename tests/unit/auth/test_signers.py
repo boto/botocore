@@ -124,6 +124,19 @@ class TestSigV3(unittest.TestCase):
              'Signature=M245fo86nVKI8rLpH4HgWs841sBTUKuwciiTpjMDgPs='))
 
 
+class TestS3SigV4Auth(unittest.TestCase):
+    def test_signature_is_not_normalized(self):
+        request = AWSRequest()
+        request.url = 'https://s3.amazonaws.com/bucket/foo/./bar/../bar'
+        request.method = 'GET'
+        credentials = botocore.credentials.Credentials('access_key',
+                                                       'secret_key')
+        auth = botocore.auth.S3SigV4Auth(credentials, 's3', 'us-east-1')
+        auth.add_auth(request)
+        self.assertTrue(
+            request.headers['Authorization'].startswith('AWS4-HMAC-SHA256'))
+
+
 class TestSigV4Presign(unittest.TestCase):
     maxDiff = None
 
