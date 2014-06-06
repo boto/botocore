@@ -125,6 +125,11 @@ class TestHandlers(BaseSessionTest):
         # We don't touch the status code since there are no errors present.
         self.assertEqual(http_response.status_code, 200)
 
+    def test_500_response_can_be_none(self):
+        # A 500 response can raise an exception, which means the response
+        # object is None.  We need to handle this case.
+        check_for_200_error(None, mock.Mock())
+
 
 class TestRetryHandlerOrder(BaseSessionTest):
     def get_handler_names(self, responses):
