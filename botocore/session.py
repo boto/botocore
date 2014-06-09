@@ -163,24 +163,24 @@ class Session(object):
         # only when we ask for the loader.
         self._data_paths_added = False
         self._components = ComponentLocator()
+        self._register_components()
+
+    def _register_components(self):
         self._register_credential_provider()
+        self._register_data_loader()
 
     def _register_credential_provider(self):
         self._components.lazy_register_component(
             'credential_provider',
             lambda:  botocore.credentials.create_credential_resolver(self))
 
-    def _reset_components(self):
-        self._register_credential_provider()
+    def _register_data_loader(self):
+        self._components.lazy_register_component(
+            'data_loader',
+            lambda:  Loader(self.get_config_variable('data_path') or ''))
 
-    @property
-    def loader(self):
-        if not self._data_paths_added:
-            extra_paths = self.get_config_variable('data_path')
-            if extra_paths is not None:
-                self._loader.data_path = extra_paths
-            self._data_paths_added = True
-        return self._loader
+    def _reset_components(self):
+        self._register_components()
 
     def _register_builtin_handlers(self, events):
         for event_name, handler in handlers.BUILTIN_HANDLERS:
@@ -450,14 +450,14 @@ class Session(object):
         :type data_path: str
         :param data_path: The path to the data you wish to retrieve.
         """
-        return self.loader.load_data(data_path)
+        return self.get_component('data_loader').load_data(data_path)
 
     def get_service_data(self, service_name, api_version=None):
         """
         Retrieve the fully merged data associated with a service.
         """
         data_path = '%s/%s' % (self.provider.name, service_name)
-        service_data = self.loader.load_service_model(
+        service_data = self.get_component('data_loader').load_service_model(
             data_path,
             api_version=api_version
         )
@@ -471,7 +471,8 @@ class Session(object):
         Return a list of names of available services.
         """
         data_path = '%s' % self.provider.name
-        return self.loader.list_available_services(data_path)
+        return self.get_component('data_loader')\
+                .list_available_services(data_path)
 
     def get_service(self, service_name, api_version=None):
         """
