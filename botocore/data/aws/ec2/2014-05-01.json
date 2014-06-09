@@ -16753,9 +16753,15 @@
                         "required": true
                     },
                     "AutoEnableIO": {
-                        "shape_name": "Boolean",
-                        "type": "boolean",
-                        "documentation": "\n    <p>Indicates whether the volume should be auto-enabled for I/O operations.</p>\n  "
+                        "shape_name": "AttributeBooleanValue",
+                        "type": "structure",
+                        "documentation": "\n    <p>Indicates whether the volume should be auto-enabled for I/O operations.</p>\n  ",
+                        "members": {
+                            "Value": {
+                                "shape_name": "Boolean",
+                                "type": "boolean"
+                            }
+                        }
                     }
                 },
                 "documentation": "\n   "

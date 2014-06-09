@@ -125,3 +125,14 @@ class TestEC2Operations(BaseSessionTest):
                   'IpPermissions.1.IpProtocol': 'tcp',
                   'IpPermissions.1.IpRanges.1.CidrIp': '0.0.0.0/0',}
         self.assertEqual(params, result)
+
+    def test_modify_volume_attribute(self):
+        op = self.ec2.get_operation('ModifyVolumeAttribute')
+        params = op.build_parameters(
+            volume_id='vol-12345678',
+            auto_enable_io={'Value': True})
+
+        result = {'VolumeId': 'vol-12345678',
+                  'AutoEnableIO.Value': 'true'}
+
+        self.assertEqual(params, result)
