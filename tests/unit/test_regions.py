@@ -69,6 +69,10 @@ class TestEndpointHeuristics(unittest.TestCase):
                  'constraints': [['region', 'startsWith', 'us-gov']]}
             ]
         })
+        self.assertEqual(
+            resolver.construct_endpoint(service_name='iam',
+                                        region_name='other-region')['uri'],
+            'https://iam.other-region.amazonaws.com')
 
     def test_matches_last_rule(self):
         resolver = self.create_endpoint_resolver({

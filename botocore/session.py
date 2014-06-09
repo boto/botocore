@@ -30,6 +30,7 @@ from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.loaders import Loader
 from botocore.provider import get_provider
+from botocore import regions
 import botocore.service
 
 
@@ -168,6 +169,7 @@ class Session(object):
     def _register_components(self):
         self._register_credential_provider()
         self._register_data_loader()
+        self._register_endpoint_resolver()
 
     def _register_credential_provider(self):
         self._components.lazy_register_component(
@@ -178,6 +180,11 @@ class Session(object):
         self._components.lazy_register_component(
             'data_loader',
             lambda:  Loader(self.get_config_variable('data_path') or ''))
+
+    def _register_endpoint_resolver(self):
+        self._components.lazy_register_component(
+            'endpoint_resolver',
+            lambda:  regions.EndpointResolver(self.get_data('aws/_endpoints')))
 
     def _reset_components(self):
         self._register_components()

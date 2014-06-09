@@ -25,9 +25,8 @@ import botocore.exceptions
 class TestConfig(BaseSessionTest):
 
     def setUp(self):
-        super(TestConfig, self).setUp()
         data_path = os.path.join(os.path.dirname(__file__), 'data')
-        self.environ['BOTO_DATA_PATH'] = data_path
+        super(TestConfig, self).setUp(BOTO_DATA_PATH=data_path)
 
     def test_data_not_found(self):
         self.assertRaises(botocore.exceptions.DataNotFoundError,

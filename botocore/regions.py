@@ -22,8 +22,8 @@ from botocore.exceptions import UnknownEndpointError
 
 class EndpointResolver(object):
     _CONSTRAINT_FUNCS = {
-        'startsWith': str.startswith,
-        'notStartsWith': lambda x, y: not x.startswith(y),
+        'startsWith': lambda x, y: str(x).startswith(y),
+        'notStartsWith': lambda x, y: not str(x).startswith(y),
         'equals': lambda x, y: x == y,
         'notEquals': lambda x, y: x != y,
         'oneOf': lambda x, y: x in y
@@ -32,22 +32,6 @@ class EndpointResolver(object):
 
     def __init__(self, rules):
         self._rules = rules
-
-    def construct_endpoint(self, service_name, region_name, **kwargs):
-        # We take **kwargs so that custom rules can be added that have
-        # additional constraint keys that we don't know about.
-        # We also need to fold the names used in the spec into **kwargs
-        # so we can format the URI later.
-        kwargs['service'] = service_name
-        kwargs['region'] = region_name
-        if 'scheme' not in kwargs:
-            kwargs['scheme'] = self.DEFAULT_SCHEME
-        service_rules = self._get_rules_for_service(service_name)
-        endpoint = self._match_rules(service_rules, region_name, **kwargs)
-        if endpoint is None:
-            raise UnknownEndpointError(service_name=service_name,
-                                       region_name=region_name)
-        return endpoint
 
     def get_rules_for_service(self, service_name):
         """Return the rules for a given service.
@@ -61,11 +45,35 @@ class EndpointResolver(object):
         """
         return self._rules.get(service_name)
 
+    def construct_endpoint(self, service_name, region_name, **kwargs):
+        # We take **kwargs so that custom rules can be added that have
+        # additional constraint keys that we don't know about.
+        # We also need to fold the names used in the spec into **kwargs
+        # so we can format the URI later.
+        kwargs['service'] = service_name
+        kwargs['region'] = region_name
+        if 'scheme' not in kwargs:
+            kwargs['scheme'] = self.DEFAULT_SCHEME
+        service_rules = self._rules.get(service_name, [])
+        endpoint = self._match_rules(service_rules, region_name, **kwargs)
+        if endpoint is None:
+            # If we didn't find any in the service section, try again
+            # with the default section.
+            endpoint = self._match_rules(self._rules.get('_default', []),
+                                         region_name, **kwargs)
+
+        if endpoint is None:
+            raise UnknownEndpointError(service_name=service_name,
+                                       region_name=region_name)
+        return endpoint
+
     def _match_rules(self, service_rules, region_name, **kwargs):
         for rule in service_rules:
             if self._matches_rule(rule, region_name, **kwargs):
                 return {'uri': rule['uri'].format(**kwargs),
                         'properties': rule.get('properties', {})}
+        # If we can't find any rules, then try again with the _default
+        # section.
 
     def _matches_rule(self, rule, region_name, **kwargs):
         for constraint in rule.get('constraints', []):
@@ -82,9 +90,3 @@ class EndpointResolver(object):
                       self._CONSTRAINT_FUNCS[constraint[1]],
                       constraint[2])
         return func(x, y)
-
-    def _get_rules_for_service(self, service_name):
-        service_rules = self._rules.get(service_name)
-        if service_rules is None:
-            service_rules = self._rules.get('_default', [])
-        return service_rules

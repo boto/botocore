@@ -26,7 +26,7 @@ class TestService(BaseSessionTest):
         # Test global endpoint service such as iam.
         service = self.session.get_service('iam')
         endpoint = service.get_endpoint()
-        self.assertEqual(endpoint.host, 'https://iam.amazonaws.com/')
+        self.assertEqual(endpoint.host, 'https://iam.amazonaws.com')
 
     def test_get_endpoint_forwards_verify_args(self):
         service = self.session.get_service('iam')
@@ -79,7 +79,7 @@ class TestService(BaseSessionTest):
         # If you don't provide an endpoint_url, than you need to
         # provide a region_name.
         service = self.session.get_service('ec2')
-        with self.assertRaises(botocore.exceptions.NoRegionError):
+        with self.assertRaises(botocore.exceptions.UnknownEndpointError):
             service.get_endpoint()
 
 
