@@ -1,24 +1,6 @@
 {
   "extra": {
-    "xmlnamespace": "http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/",
-    "metadata": {
-      "regions": {
-        "us-east-1": null,
-        "ap-northeast-1": null,
-        "sa-east-1": null,
-        "ap-southeast-1": null,
-        "ap-southeast-2": null,
-        "us-west-2": null,
-        "us-west-1": null,
-        "eu-west-1": null,
-        "us-gov-west-1": null,
-        "cn-north-1": "https://elasticloadbalancing.cn-north-1.amazonaws.com.cn"
-      },
-      "protocols": [
-        "https",
-        "http"
-      ]
-    }
+    "xmlnamespace": "http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/"
   },
   "pagination": {
     "DescribeLoadBalancers": {

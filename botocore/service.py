@@ -54,10 +54,6 @@ class Service(object):
         self.path = path
         self.port = port
         self.cli_name = service_name
-        if not hasattr(self, 'metadata'):
-            # metadata is an option thing that comes from .extra.json
-            # so if it's not there we just default to an empty dict.
-            self.metadata = {}
 
     def _create_operation_objects(self):
         logger.debug("Creating operation objects for: %s", self)
@@ -77,22 +73,6 @@ class Service(object):
         if self._operations is None:
             self._operations = self._create_operation_objects()
         return self._operations
-
-    @property
-    def region_names(self):
-        return self.metadata.get('regions', {}).keys()
-
-    def _build_endpoint_url(self, host, is_secure):
-        if is_secure:
-            scheme = 'https'
-        else:
-            scheme = 'http'
-        if scheme not in self.metadata['protocols']:
-            raise ValueError('Unsupported protocol: %s' % scheme)
-        endpoint_url = '%s://%s%s' % (scheme, host, self.path)
-        if self.port:
-            endpoint_url += ':%d' % self.port
-        return endpoint_url
 
     def get_endpoint(self, region_name=None, is_secure=True,
                      endpoint_url=None, verify=None):
@@ -124,50 +104,23 @@ class Service(object):
             # logic, if an endpoint_url is explicitly
             # provided, just use what's been explicitly passed in.
             return self._get_endpoint(region_name, endpoint_url, verify)
-        if region_name is None and not self.global_endpoint:
-            # The only time it's ok to *not* provide a region is
-            # if the service is a global_endpoint (e.g. IAM).
-            envvar_name = self.session.session_var_map['region'][1]
-            raise NoRegionError(env_var=envvar_name)
-        if region_name not in self.region_names:
-            if self.global_endpoint:
-                # If we haven't provided a region_name and this is a global
-                # endpoint, we can just use the global_endpoint (which is a
-                # string of the hostname of the global endpoint) to construct
-                # the full endpoint_url.
-                # We have to be careful though.  The "region_name" should have
-                # been previously validated, otherwise it's possible
-                # that we may fail silently if the user provided a region
-                # we don't know about.  For example,
-                # s3.get_endpoint('bad region') would return the global
-                # s3 endpoint, which is probably not what we want.
-                endpoint_url = self._build_endpoint_url(self.global_endpoint,
-                                                        is_secure)
-                region_name = 'us-east-1'
-            else:
-                # Otherwise we've specified a region name that is
-                # not supported by the service so we raise
-                # an exception.
-                raise ServiceNotInRegionError(service_name=self.endpoint_prefix,
-                                              region_name=region_name)
-        # The 'regions' dict can call out the specific hostname
-        # to use for a particular region.  If this is the case,
-        # this will have precedence.
-        # TODO: It looks like the region_name overrides shouldn't have the
-        # protocol prefix.  Otherwise, it doesn't seem possible to override
-        # the hostname for a region *and* support both http/https.  Should
-        # be an easy change but it will be backwards incompatible to anyone
-        # creating their own service descriptions with region overrides.
-        endpoint_url = endpoint_url or self.metadata['regions'][region_name]
-        if endpoint_url is None:
-            # If the entry in the 'regions' dict is None,
-            # then we fall back to the patter of
-            # endpoint_prefix.region.amazonaws.com.
-            host = '%s.%s.amazonaws.com' % (self.endpoint_prefix, region_name)
-            endpoint_url = self._build_endpoint_url(host, is_secure)
-        return self._get_endpoint(region_name, endpoint_url, verify)
+        # Use the endpoint resolver heuristics to build the endpoint url.
+        resolver = self.session.get_component('endpoint_resolver')
+        scheme = 'https' if is_secure else 'http'
+        endpoint = resolver.construct_endpoint(
+            self.endpoint_prefix, region_name, scheme=scheme)
+        # We only support the credentialScope.region in the properties
+        # bag right now, so if it's available, it will override the
+        # provided region name.
+        region_name_override = endpoint['properties'].get(
+            'credentialScope', {}).get('region')
+        if region_name_override is not None:
+            region_name = region_name_override
+        return self._get_endpoint(region_name, endpoint['uri'], verify)
 
     def _get_endpoint(self, region_name, endpoint_url, verify):
+        # This function is called once we know the region and endpoint url.
+        # region_name and endpoint_url are expected to be non-None.
         event = self.session.create_event('creating-endpoint',
                                           self.endpoint_prefix)
         self.session.emit(event, service=self, region_name=region_name,

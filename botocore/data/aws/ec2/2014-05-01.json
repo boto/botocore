@@ -20428,23 +20428,6 @@
             "documentation": "\n\t\t\t<p>Disables monitoring for a running instance. For more information about monitoring\n\t\t\t\tinstances, see <a href=\"http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-cloudwatch.html\">Monitoring Your\n\t\t\t\tInstances and Volumes</a> in the <i>Amazon Elastic Compute Cloud User Guide</i>.</p>\n    <examples>\n     <example>\n      <name>Example</name>\n      <description>This example disables monitoring for the specified instances.</description>\n      <queryrequest>https://ec2.amazonaws.com/?Action=UnmonitorInstances\n&amp;InstanceId.1=i-43a4412a\n&amp;InstanceId.2=i-23a3397d\n&amp;AUTHPARAMS</queryrequest>\n      <queryresponse>&lt;UnmonitorInstancesResponse xmlns=\"http://ec2.amazonaws.com/doc/2013-10-01/\"&gt;\n   &lt;requestId&gt;59dbff89-35bd-4eac-99ed-be587EXAMPLE&lt;/requestId&gt;\n   &lt;instancesSet&gt;\n      &lt;item&gt;\n         &lt;instanceId&gt;i-43a4412a&lt;/instanceId&gt;\n         &lt;monitoring&gt;\n            &lt;state&gt;disabled&lt;/state&gt;\n         &lt;/monitoring&gt;\n      &lt;/item&gt;\n      &lt;item&gt;\n         &lt;instanceId&gt;i-23a3397d&lt;/instanceId&gt;\n         &lt;monitoring&gt;\n            &lt;state&gt;disabled&lt;/state&gt;\n         &lt;/monitoring&gt;\n      &lt;/item&gt;\n   &lt;/instancesSet&gt;\n&lt;/UnmonitorInstancesResponse&gt;</queryresponse>\n     </example>\n    </examples>\n   "
         }
     },
-    "metadata": {
-        "regions": {
-            "us-east-1": null,
-            "ap-northeast-1": null,
-            "sa-east-1": null,
-            "ap-southeast-1": null,
-            "ap-southeast-2": null,
-            "us-west-2": null,
-            "us-west-1": null,
-            "eu-west-1": null,
-            "us-gov-west-1": null,
-            "cn-north-1": "https://ec2.cn-north-1.amazonaws.com.cn"
-        },
-        "protocols": [
-            "https"
-        ]
-    },
     "pagination": {
         "DescribeInstanceStatus": {
             "input_token": "NextToken",

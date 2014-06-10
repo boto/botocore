@@ -12560,23 +12560,6 @@
             "documentation": "\n      <p>This operation updates a snapshot schedule configured for a gateway volume.</p>\n      <p>The default snapshot schedule for volume is once every 24 hours, starting at the creation time of the volume.\n         You can use this API to change the shapshot schedule configured for the volume.</p>\n      <p>In the request you must identify the gateway volume whose snapshot schedule you want to update, and the\n         schedule information, including when you want the snapshot to begin on a day and the frequency (in hours) of\n         snapshots.</p>\n      <examples>\n         <example>\n            <name>Example Request</name>\n            <description>The following example shows a request that updates a snapshot schedule.</description>\n            <request>\nPOST / HTTP/1.1\nHost: storagegateway.us-east-1.amazonaws.com\nx-amz-Date: 20120425T120000Z\nAuthorization: CSOC7TJPLR0OOKIRLGOHVAICUFVV4KQNSO5AEMVJF66Q9ASUAAJG\nContent-type: application/x-amz-json-1.1\nx-amz-target: StorageGateway_20120630.UpdateSnapshotSchedule\n{\n   \"VolumeARN\": \"arn:aws:storagegateway:us-east-1:111122223333:gateway/mygateway/volume/vol-1122AABB\",\n   \"StartAt\": 0,\n   \"RecurrenceInHours\": 1,\n   \"Description\": \"hourly snapshot\"\n}\n               </request>\n            <response>\nHTTP/1.1 200 OK\nx-amzn-RequestId: CSOC7TJPLR0OOKIRLGOHVAICUFVV4KQNSO5AEMVJF66Q9ASUAAJG\nDate: Wed, 25 Apr 2012 12:00:02 GMT\nContent-type: application/x-amz-json-1.1\nContent-length: 99\n{\n   \"VolumeARN\": \"arn:aws:storagegateway:us-east-1:111122223333:gateway/mygateway/volume/vol-1122AABB\"\n}\n               </response>\n         </example>\n      </examples>\n   "
         }
     },
-    "metadata": {
-        "regions": {
-            "us-east-1": null,
-            "ap-northeast-1": null,
-            "sa-east-1": null,
-            "ap-southeast-1": null,
-            "ap-southeast-2": null,
-            "us-west-2": null,
-            "us-west-1": null,
-            "eu-west-1": null,
-            "us-gov-west-1": null,
-            "cn-north-1": "https://storagegateway.cn-north-1.amazonaws.com.cn"
-        },
-        "protocols": [
-            "https"
-        ]
-    },
     "pagination": {
         "DescribeTapeArchives": {
             "input_token": "Marker",

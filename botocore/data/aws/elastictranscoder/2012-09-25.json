@@ -6524,19 +6524,6 @@
             "documentation": "\n        <p>The UpdatePipelineStatus operation pauses or reactivates a pipeline, so that the pipeline\n            stops or restarts the processing of jobs.</p>\n        <p>Changing the pipeline status is useful if you want to cancel one or more jobs. You can't\n            cancel jobs after Elastic Transcoder has started processing them; if you pause the pipeline to which\n            you submitted the jobs, you have more time to get the job IDs for the jobs that you want\n            to cancel, and to send a <a>CancelJob</a> request. </p>\n        <examples>\n            <example>\n                <request>POST /2012-09-25/pipelines/1111111111111-abcde1/status HTTP/1.1\n                    Content-Type: application/json; charset=UTF-8\nAccept: */*\nHost: elastictranscoder.[Elastic Transcoder-endpoint].amazonaws.com:443\nx-amz-date: 20130114T174952Z\nAuthorization: AWS4-HMAC-SHA256 \n               Credential=[access-key-id]/[request-date]/[Elastic Transcoder-endpoint]/ets/aws4_request,\n               SignedHeaders=host;x-amz-date;x-amz-target,\n               Signature=[calculated-signature]\nContent-Length: [number-of-characters-in-JSON-string] { \"Id\":\"1111111111111-abcde1\", \"Status\":\"Active\" } </request>\n                <response>Status: 202 Accepted x-amzn-RequestId: c321ec43-378e-11e2-8e4c-4d5b971203e9\nContent-Type: application/json\nContent-Length: [number-of-characters-in-response]\nDate: Mon, 14 Jan 2013 06:01:47 GMT { \"Id\":\"1111111111111-abcde1\",\n                    \"Status\":\"Active\" } </response>\n            </example>\n        </examples>\n    "
         }
     },
-    "metadata": {
-        "regions": {
-            "us-east-1": null,
-            "us-west-1": null,
-            "us-west-2": null,
-            "ap-northeast-1": null,
-            "ap-southeast-1": null,
-            "eu-west-1": null
-        },
-        "protocols": [
-            "https"
-        ]
-    },
     "pagination": {
         "ListJobsByPipeline": {
             "input_token": "PageToken",

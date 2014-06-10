@@ -362,26 +362,6 @@ class TestTranslateModel(unittest.TestCase):
         new_model = translate(self.model)
         self.assertIn('AssumeRole', new_model['operations'])
 
-    def test_supported_regions_are_merged_into_service(self):
-        extra = {
-            "extra": {
-                "metadata": {
-                    "regions": {
-                        "us-east-1": "https://sts.amazonaws.com/",
-                        "us-gov-west-1": None,
-                        },
-                    "protocols": [
-                        "https"
-                        ]
-                    }
-                }
-            }
-        self.model.enhancements = extra
-        self.model.name = 'sts'
-        new_model = translate(self.model)
-        self.maxDiff = None
-        self.assertDictEqual(new_model['metadata'], extra['extra']['metadata'])
-
     def test_iterators_are_merged_into_operations(self):
         # This may or may not pan out, but if a pagination config is
         # specified, that info is merged into the specific operations.
@@ -726,7 +706,7 @@ class TestBuildRetryConfig(unittest.TestCase):
         }
 
     def test_inject_retry_config(self):
-        model = ModelFiles(SERVICES, {}, self.retry, {})
+        model = ModelFiles(SERVICES, self.retry, {})
         new_model = translate(model)
         self.assertIn('retry', new_model)
         retry = new_model['retry']
@@ -747,7 +727,7 @@ class TestBuildRetryConfig(unittest.TestCase):
         self.assertEqual(operation_config['policies']['name'], 'policy')
 
     def test_resolve_reference(self):
-        model = ModelFiles(SERVICES, {}, self.retry, {})
+        model = ModelFiles(SERVICES, self.retry, {})
         new_model = translate(model)
         operation_config = new_model['retry']['AssumeRole']
         # And we should resolve references.
@@ -762,7 +742,7 @@ class TestReplacePartOfOperation(unittest.TestCase):
                 'operation-name': {'remove': r'\d{4}_\d{2}_\d{2}'}
             }
         }
-        model = ModelFiles(SERVICES, regions={}, retry={},
+        model = ModelFiles(SERVICES, retry={},
                            enhancements=enhancements)
         new_model = translate(model)
         # But the key into the operation dict is stripped of the
@@ -788,8 +768,7 @@ class TestReplacePartOfOperation(unittest.TestCase):
                 },
             }
         }
-        model = ModelFiles(SERVICES, regions={}, retry={},
-                           enhancements=enhancements)
+        model = ModelFiles(SERVICES, retry={}, enhancements=enhancements)
         model.enhancements = enhancements
         new_model = translate(model)
         self.assertIn('RealOperation', new_model['operations'])
@@ -806,8 +785,7 @@ class TestRemovalOfDeprecatedParams(unittest.TestCase):
                 'remove-deprecated-params': {'deprecated_keyword': 'deprecated'}
                 }
             }
-        model = ModelFiles(SERVICES, regions={}, retry={},
-                           enhancements=enhancements)
+        model = ModelFiles(SERVICES, retry={}, enhancements=enhancements)
         new_model = translate(model)
         operation = new_model['operations']['DeprecatedOperation']
         # The deprecated param should be gone, the other should remain
@@ -823,8 +801,7 @@ class TestRemovalOfDeprecatedOps(unittest.TestCase):
                     {'deprecated_keyword': 'deprecated'}
                 }
             }
-        model = ModelFiles(SERVICES, regions={}, retry={},
-                           enhancements=enhancements)
+        model = ModelFiles(SERVICES, retry={}, enhancements=enhancements)
         new_model = translate(model)
         # The deprecated operation should be gone
         self.assertNotIn('DeprecatedOperation2', new_model['operations'])
@@ -843,8 +820,7 @@ class TestFilteringOfDocumentation(unittest.TestCase):
                     }
                 }
             }
-        model = ModelFiles(SERVICES, regions={}, retry={},
-                           enhancements=enhancements)
+        model = ModelFiles(SERVICES, retry={}, enhancements=enhancements)
         new_model = translate(model)
         operation = new_model['operations']['DeprecatedOperation']
         # The deprecated param should be gone, the other should remain
@@ -862,8 +838,7 @@ class TestRenameParams(unittest.TestCase):
                 }
             }
         }
-        model = ModelFiles(SERVICES, regions={}, retry={},
-                           enhancements=enhancements)
+        model = ModelFiles(SERVICES, retry={}, enhancements=enhancements)
         new_model = translate(model)
         arguments = new_model['operations']['RenameOperation']['input']['members']
         self.assertNotIn('RenameMe', arguments)
@@ -874,7 +849,7 @@ class TestWaiterDenormalization(unittest.TestCase):
     maxDiff = None
 
     def setUp(self):
-        self.model = ModelFiles(SERVICES, {}, {}, {})
+        self.model = ModelFiles(SERVICES, {}, {})
 
     def test_waiter_default_resolved(self):
         extra = {

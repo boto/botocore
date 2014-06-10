@@ -6329,14 +6329,6 @@
             "documentation": "\n    <p>Updates an Amazon EBS volume's name or mount point. For more information, see\n      <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/resources.html\">Resource Management</a>.</p>\n    <p><b>Required Permissions</b>: To use this action, an IAM user must have a Manage permissions level for the stack, or an attached\n       policy that explicitly grants permissions. For more information on user permissions, see\n      <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html\">Managing User Permissions</a>.</p>\n  "
         }
     },
-    "metadata": {
-        "regions": {
-            "us-east-1": null
-        },
-        "protocols": [
-            "https"
-        ]
-    },
     "retry": {
         "__default__": {
             "max_attempts": 5,

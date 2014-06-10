@@ -26,7 +26,7 @@ class TestService(BaseSessionTest):
         # Test global endpoint service such as iam.
         service = self.session.get_service('iam')
         endpoint = service.get_endpoint()
-        self.assertEqual(endpoint.host, 'https://iam.amazonaws.com/')
+        self.assertEqual(endpoint.host, 'https://iam.amazonaws.com')
 
     def test_get_endpoint_forwards_verify_args(self):
         service = self.session.get_service('iam')
@@ -43,12 +43,6 @@ class TestService(BaseSessionTest):
 
     def test_service_metadata_not_required_for_region(self):
         service = self.session.get_service('iam')
-        # Empty out the service metadata.  This contains info
-        # about supported protocools and region/endpoints.
-        # Even if this info is not present, if the user
-        # passes in an endpoint_url, we should be able to use
-        # this value.
-        service.metadata = {}
         endpoint = service.get_endpoint(
             region_name='us-east-1',
             endpoint_url='https://wherever.i.want.com')
@@ -61,7 +55,6 @@ class TestService(BaseSessionTest):
         # a service that doesn't need this info, there's no
         # reason to require this param in botocore.
         service = self.session.get_service('importexport')
-        service.metadata = {}
         endpoint = service.get_endpoint(
             endpoint_url='https://wherever.i.want.com')
         self.assertEqual(endpoint.host, 'https://wherever.i.want.com')
@@ -71,7 +64,6 @@ class TestService(BaseSessionTest):
         # However, if the service uses siv4 auth, then an exception
         # is raised if we call get_endpoint without a region name.
         service = self.session.get_service('cloudformation')
-        service.metadata = {}
         with self.assertRaises(botocore.exceptions.NoRegionError):
             service.get_endpoint(endpoint_url='https://wherever.i.want.com')
 
@@ -79,7 +71,7 @@ class TestService(BaseSessionTest):
         # If you don't provide an endpoint_url, than you need to
         # provide a region_name.
         service = self.session.get_service('ec2')
-        with self.assertRaises(botocore.exceptions.NoRegionError):
+        with self.assertRaises(botocore.exceptions.UnknownEndpointError):
             service.get_endpoint()
 
 
