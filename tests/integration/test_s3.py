@@ -14,7 +14,7 @@
 import os
 import time
 import random
-from tests import unittest
+from tests import unittest, temporary_file
 from collections import defaultdict
 import tempfile
 import shutil
@@ -444,6 +444,76 @@ class TestS3Presign(BaseS3Test):
         # We should now be able to retrieve the contents of 'mykey' using
         # this presigned url.
         self.assertEqual(requests.get(presigned_url).content, b'foobar')
+
+
+class TestS3PresignFixHost(BaseS3Test):
+    def test_presign_does_not_change_host(self):
+        endpoint = self.service.get_endpoint('us-west-2')
+        key_name = 'mykey'
+        bucket_name = 'mybucket'
+        signer = botocore.auth.S3SigV4QueryAuth(
+            credentials=self.service.session.get_credentials(),
+            region_name='us-west-2', service_name='s3', expires=60)
+        op = self.service.get_operation('GetObject')
+        params = op.build_parameters(bucket=bucket_name, key=key_name)
+        request = endpoint.create_request(op, params, signer)
+        presigned_url = request.url
+        # We should not have rewritten the host to be s3.amazonaws.com.
+        self.assertTrue(presigned_url.startswith(
+            'https://s3-us-west-2.amazonaws.com/mybucket/mykey'),
+            "Host was suppose to be the us-west-2 endpoint, instead "
+            "got: %s" % presigned_url)
+
+
+class TestCreateBucketInOtherRegion(BaseS3Test):
+    def setUp(self):
+        super(TestCreateBucketInOtherRegion, self).setUp()
+        self.bucket_name = 'botocoretest%s-%s' % (
+            int(time.time()), random.randint(1, 1000))
+        self.bucket_location = 'us-west-2'
+
+        operation = self.service.get_operation('CreateBucket')
+        response = operation.call(self.endpoint, bucket=self.bucket_name,
+            create_bucket_configuration={'LocationConstraint': self.bucket_location})
+        self.assertEqual(response[0].status_code, 200)
+        self.keys = []
+
+    def tearDown(self):
+        for key in self.keys:
+            op = self.service.get_operation('DeleteObject')
+            response = op.call(self.endpoint, bucket=self.bucket_name, key=key)
+            self.assertEqual(response[0].status_code, 204)
+        self.delete_bucket(self.bucket_name)
+
+    def test_bucket_in_other_region(self):
+        # This verifies expect 100-continue behavior.  We previously
+        # had a bug where we did not support this behavior and trying to
+        # create a bucket and immediately PutObject with a file like object
+        # would actually cause errors.
+        with temporary_file('w') as f:
+            f.write('foobarbaz' * 1024 * 1024)
+            f.flush()
+            op = self.service.get_operation('PutObject')
+            response = op.call(self.endpoint,
+                               bucket=self.bucket_name,
+                               key='foo.txt',
+                               body=open(f.name, 'rb'))
+            self.assertEqual(response[0].status_code, 200)
+            self.keys.append('foo.txt')
+
+    def test_bucket_in_other_region_using_http(self):
+        http_endpoint = self.service.get_endpoint(
+            endpoint_url='http://s3.amazonaws.com/')
+        with temporary_file('w') as f:
+            f.write('foobarbaz' * 1024 * 1024)
+            f.flush()
+            op = self.service.get_operation('PutObject')
+            response = op.call(http_endpoint,
+                               bucket=self.bucket_name,
+                               key='foo.txt',
+                               body=open(f.name, 'rb'))
+            self.assertEqual(response[0].status_code, 200)
+            self.keys.append('foo.txt')
 
 
 if __name__ == '__main__':

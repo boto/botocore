@@ -347,9 +347,9 @@ class TestRetryInterface(BaseSessionTest):
         self.assertEqual(self.total_calls, 3)
 
 
-class TestResetStreamOnRetry(unittest.TestCase):
+class TestS3ResetStreamOnRetry(unittest.TestCase):
     def setUp(self):
-        super(TestResetStreamOnRetry, self).setUp()
+        super(TestS3ResetStreamOnRetry, self).setUp()
         self.total_calls = 0
         self.auth = Mock()
         self.session = create_session(include_builtin_handlers=False)
@@ -391,6 +391,42 @@ class TestResetStreamOnRetry(unittest.TestCase):
         self.endpoint.make_request(op, {'headers': {}, 'payload': payload})
         self.assertEqual(self.total_calls, 3)
         self.assertEqual(payload.literal_value.total_resets, 2)
+
+
+class TestS3Retry200SpecialCases(unittest.TestCase):
+    def setUp(self):
+        super(TestS3Retry200SpecialCases, self).setUp()
+        self.total_calls = 0
+        self.auth = Mock()
+        self.session = create_session(include_builtin_handlers=True)
+        self.service = Mock()
+        self.service.endpoint_prefix = 's3'
+        self.service.session = self.session
+        self.endpoint = RestEndpoint(
+            self.service, 'us-east-1', 'https://s3.amazonaws.com/',
+            auth=self.auth)
+        self.http_session = Mock()
+        self.endpoint.http_session = self.http_session
+        self.get_response_patch = patch('botocore.response.get_response')
+        self.get_response = self.get_response_patch.start()
+        self.retried_on_exception = None
+
+    def tearDown(self):
+        self.get_response_patch.stop()
+
+    def test_retry_special_case_s3_200_response(self):
+        # Test for:
+        # http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectCOPY.html
+        op = Mock()
+        op.name = 'CopyObject'
+        op.http = {'uri': '', 'method': 'PUT'}
+        http_response = Mock()
+        http_response.status_code = 200
+        parsed = {'Errors': [{'Code': 'InternalError', 'Message': 'foo'}]}
+        self.get_response.return_value = (http_response, parsed)
+        self.endpoint.make_request(op, {'headers': {}, 'payload': None})
+        # The response code should have been switched to 500.
+        self.assertEqual(http_response.status_code, 500)
 
 
 class TestRestEndpoint(unittest.TestCase):

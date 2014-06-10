@@ -11,10 +11,10 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import inspect
 import six
-from collections import defaultdict, deque
 import logging
+from collections import defaultdict, deque
+from botocore.compat import accepts_kwargs
 
 logger = logging.getLogger(__name__)
 
@@ -73,13 +73,11 @@ class BaseEventHooks(object):
 
         """
         try:
-            argspec = inspect.getargspec(func)
-        except TypeError:
-            return False
-        else:
-            if argspec[2] is None:
+            if not accepts_kwargs(func):
                 raise ValueError("Event handler %s must accept keyword "
                                  "arguments (**kwargs)" % func)
+        except TypeError:
+            return False
 
 
 class EventHooks(BaseEventHooks):

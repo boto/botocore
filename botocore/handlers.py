@@ -25,6 +25,7 @@ import six
 
 from botocore.compat import urlsplit, urlunsplit, unquote, json, quote
 from botocore import retryhandler
+from botocore.payload import Payload
 import botocore.auth
 
 
@@ -35,6 +36,35 @@ RESTRICTED_REGIONS = [
     'fips-us-gov-west-1',
 ]
 
+
+
+def check_for_200_error(response, operation, **kwargs):
+    # From: http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectCOPY.html
+    # There are two opportunities for a copy request to return an error. One
+    # can occur when Amazon S3 receives the copy request and the other can
+    # occur while Amazon S3 is copying the files. If the error occurs before
+    # the copy operation starts, you receive a standard Amazon S3 error. If the
+    # error occurs during the copy operation, the error response is embedded in
+    # the 200 OK response. This means that a 200 OK response can contain either
+    # a success or an error. Make sure to design your application to parse the
+    # contents of the response and handle it appropriately.
+    #
+    # So this handler checks for this case.  Even though the server sends a
+    # 200 response, conceptually this should be handled exactly like a
+    # 500 response (with respect to raising exceptions, retries, etc.)
+    # We're connected *before* all the other retry logic handlers, so as long
+    # as we switch the error code to 500, we'll retry the error as expected.
+    if response is None:
+        # A None response can happen if an exception is raised while
+        # trying to retrieve the response.  See Endpoint._get_response().
+        return
+    http_response, parsed = response
+    if http_response.status_code == 200:
+        if 'Errors' in parsed:
+            logger.debug("Error found for response with 200 status code, "
+                         "operation: %s, errors: %s, changing status code to "
+                         "500.", operation, parsed)
+            http_response.status_code = 500
 
 
 def decode_console_output(event_name, shape, value, **kwargs):
@@ -108,7 +138,7 @@ def fix_s3_host(event_name, endpoint, request, auth, **kwargs):
     parts = urlsplit(request.url)
     auth.auth_path = parts.path
     path_parts = parts.path.split('/')
-    if isinstance(auth, botocore.auth.S3SigV4Auth):
+    if isinstance(auth, botocore.auth.SigV4Auth):
         return
     if len(path_parts) > 1:
         bucket_name = path_parts[1]
@@ -191,6 +221,18 @@ def signature_overrides(service_data, service_name, session, **kwargs):
         service_data['signature_version'] = signature_version_override
 
 
+def add_expect_header(operation, params, **kwargs):
+    if operation.http.get('method', '') not in ['PUT', 'POST']:
+        return
+    if params['payload'].__class__ == Payload:
+        payload = params['payload'].getvalue()
+        if hasattr(payload, 'read'):
+            # Any file like object will use an expect 100-continue
+            # header regardless of size.
+            logger.debug("Adding expect 100 continue header to request.")
+            params['headers']['Expect'] = '100-continue'
+
+
 def quote_source_header(params, **kwargs):
     if params['headers'] and 'x-amz-copy-source' in params['headers']:
         value = params['headers']['x-amz-copy-source']
@@ -237,8 +279,12 @@ BUILTIN_HANDLERS = [
     ('before-call.s3.DeleteObjects', calculate_md5),
     ('before-call.s3.UploadPartCopy', quote_source_header),
     ('before-call.s3.CopyObject', quote_source_header),
+    ('before-call.s3', add_expect_header),
     ('before-call.ec2.CopySnapshot', copy_snapshot_encrypted),
     ('before-auth.s3', fix_s3_host),
+    ('needs-retry.s3.UploadPartCopy', check_for_200_error),
+    ('needs-retry.s3.CopyObject', check_for_200_error),
+    ('needs-retry.s3.CompleteMultipartUpload', check_for_200_error),
     ('service-created', register_retries_for_service),
     ('creating-endpoint.s3', maybe_switch_to_s3sigv4),
     ('creating-endpoint.ec2', maybe_switch_to_sigv4),

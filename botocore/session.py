@@ -170,7 +170,6 @@ class Session(object):
             'credential_provider',
             lambda:  botocore.credentials.create_credential_resolver(self))
 
-
     def _reset_components(self):
         self._register_credential_provider()
 
@@ -359,10 +358,23 @@ class Session(object):
         """
         if self._config is None:
             try:
-                self._config = botocore.config.load_config(
-                    self.get_config_variable('config_file'))
+                config_file = self.get_config_variable('config_file')
+                self._config = botocore.config.load_config(config_file)
             except ConfigNotFound:
                 self._config = {'profiles': {}}
+            try:
+                # Now we need to inject the profiles from the
+                # credentials file.  We don't actually need the values
+                # in the creds file, only the profile names so that we
+                # can validate the user is not referring to a nonexistent  
+                # profile.
+                cred_file = self.get_config_variable('credentials_file')
+                cred_profiles = botocore.config.raw_config_parse(cred_file)
+                for profile in cred_profiles:
+                    if profile not in self._config['profiles']:
+                        self._config['profiles'][profile] = {}
+            except ConfigNotFound:
+                pass
         return self._config
 
     def set_credentials(self, access_key, secret_key, token=None):
@@ -642,6 +654,9 @@ class Session(object):
 
     def register_component(self, name, component):
         self._components.register_component(name, component)
+
+    def lazy_register_component(self, name, component):
+        self._components.lazy_register_component(name, component)
 
 
 class ComponentLocator(object):

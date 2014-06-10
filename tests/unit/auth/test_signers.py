@@ -124,6 +124,19 @@ class TestSigV3(unittest.TestCase):
              'Signature=M245fo86nVKI8rLpH4HgWs841sBTUKuwciiTpjMDgPs='))
 
 
+class TestS3SigV4Auth(unittest.TestCase):
+    def test_signature_is_not_normalized(self):
+        request = AWSRequest()
+        request.url = 'https://s3.amazonaws.com/bucket/foo/./bar/../bar'
+        request.method = 'GET'
+        credentials = botocore.credentials.Credentials('access_key',
+                                                       'secret_key')
+        auth = botocore.auth.S3SigV4Auth(credentials, 's3', 'us-east-1')
+        auth.add_auth(request)
+        self.assertTrue(
+            request.headers['Authorization'].startswith('AWS4-HMAC-SHA256'))
+
+
 class TestSigV4Presign(unittest.TestCase):
     maxDiff = None
 
@@ -207,3 +220,14 @@ class TestSigV4Presign(unittest.TestCase):
              'X-Amz-Expires': '60',
              'X-Amz-Signature': 'ac1b8b9e47e8685c5c963d75e35e8741d55251cd955239cc1efad4dc7201db66',
              'X-Amz-SignedHeaders': 'host'})
+
+    def test_presign_with_security_token(self):
+        self.credentials.token = 'security-token'
+        auth = botocore.auth.S3SigV4QueryAuth(
+            self.credentials, self.service_name, self.region_name, expires=60)
+        request = AWSRequest()
+        request.url = 'https://ec2.us-east-1.amazonaws.com/'
+        self.auth.add_auth(request)
+        query_string = self.get_parsed_query_string(request)
+        self.assertEqual(
+            query_string['X-Amz-Security-Token'], 'security-token')

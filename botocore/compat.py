@@ -15,6 +15,7 @@ import copy
 import datetime
 import six
 import sys
+import inspect
 
 
 if six.PY3:
@@ -30,6 +31,7 @@ if six.PY3:
     from urllib.parse import parse_qsl
     from urllib.parse import parse_qs
     from urllib.parse import urlencode
+    from http.client import HTTPResponse
     from io import IOBase as _IOBase
     file_type = _IOBase
     zip = zip
@@ -47,6 +49,12 @@ if six.PY3:
         """
         http_response._fp.fp.raw._sock.settimeout(timeout)
 
+    def accepts_kwargs(func):
+        # In python3.4.1, there's backwards incompatible
+        # changes when using getargspec with functools.partials.
+        return inspect.getfullargspec(func)[2]
+
+
 else:
     from urllib import quote
     from urllib import unquote
@@ -60,6 +68,7 @@ else:
     from email.message import Message
     file_type = file
     from itertools import izip as zip
+    from httplib import HTTPResponse
 
     class HTTPHeaders(Message):
 
@@ -87,6 +96,9 @@ else:
         """
         http_response._fp.fp._sock.settimeout(timeout)
 
+    def accepts_kwargs(func):
+        return inspect.getargspec(func)[2]
+
 try:
     from collections import OrderedDict
 except ImportError:
@@ -96,7 +108,13 @@ except ImportError:
 
 if sys.version_info[:2] == (2, 6):
     import simplejson as json
+    # In py26, invalid xml parsed by element tree
+    # will raise a plain old SyntaxError instead of
+    # a real exception, so we need to abstract this change.
+    XMLParseError = SyntaxError
 else:
+    import xml.etree.cElementTree
+    XMLParseError = xml.etree.cElementTree.ParseError
     import json
 
 

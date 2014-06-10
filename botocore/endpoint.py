@@ -102,7 +102,7 @@ class Endpoint(object):
                 event = self.session.create_event(
                     'before-auth', self.service.endpoint_prefix)
                 self.session.emit(event, endpoint=self,
-                                request=request, auth=self.auth)
+                                  request=request, auth=signer)
                 signer.add_auth(request=request)
         prepared_request = request.prepare()
         return prepared_request
@@ -129,6 +129,8 @@ class Endpoint(object):
                 stream=operation.is_streaming(),
                 proxies=self.proxies)
         except Exception as e:
+            logger.debug("Exception received when sending HTTP request.",
+                         exc_info=True)
             return (None, e)
         # This returns the http_response and the parsed_data.
         return (botocore.response.get_response(self.session, operation,
