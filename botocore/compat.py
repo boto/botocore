@@ -31,7 +31,6 @@ if six.PY3:
     from urllib.parse import parse_qsl
     from urllib.parse import parse_qs
     from urllib.parse import urlencode
-    from http.client import HTTPResponse
     from io import IOBase as _IOBase
     file_type = _IOBase
     zip = zip
@@ -68,7 +67,6 @@ else:
     from email.message import Message
     file_type = file
     from itertools import izip as zip
-    from httplib import HTTPResponse
 
     class HTTPHeaders(Message):
 
