@@ -21,6 +21,7 @@ import logging
 from email.utils import formatdate
 from operator import itemgetter
 import functools
+import time
 
 from botocore.exceptions import NoCredentialsError
 from botocore.utils import normalize_url_path
@@ -37,6 +38,7 @@ EMPTY_SHA256_HASH = (
 # Experimenting with various buffer sizes showed that this value generally
 # gave the best result (in terms of performance).
 PAYLOAD_BUFFER = 1024 * 1024
+ISO8601 = '%Y-%m-%dT%H:%M:%SZ'
 
 
 class BaseSigner(object):
@@ -94,7 +96,7 @@ class SigV2Auth(BaseSigner):
         params['AWSAccessKeyId'] = self.credentials.access_key
         params['SignatureVersion'] = '2'
         params['SignatureMethod'] = 'HmacSHA256'
-        params['Timestamp'] = datetime.datetime.utcnow().isoformat()
+        params['Timestamp'] = time.strftime(ISO8601, time.gmtime())
         if self.credentials.token:
             params['SecurityToken'] = self.credentials.token
         qs, signature = self.calc_signature(request, params)
