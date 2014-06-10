@@ -220,13 +220,11 @@ def signature_overrides(service_data, service_name, session, **kwargs):
 def add_expect_header(operation, params, **kwargs):
     if operation.http.get('method', '') not in ['PUT', 'POST']:
         return
-    if operation.service.endpoint_prefix != 's3':
-        return
     if params['payload'].__class__ == Payload:
         payload = params['payload'].getvalue()
         if hasattr(payload, 'read'):
             # Any file like object will use an expect 100-continue
-            # header REGARDLESS OF SIZE.
+            # header regardless of size.
             logger.debug("Adding expect 100 continue header to request.")
             params['headers']['Expect'] = '100-continue'
 
