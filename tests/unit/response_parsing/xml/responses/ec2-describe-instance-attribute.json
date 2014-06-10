@@ -15,5 +15,6 @@
     "RamdiskId": {}, 
     "DisableApiTermination": {}, 
     "InstanceType": {},
-    "SriovNetSupport": {}
+    "SriovNetSupport": {},
+    "SourceDestCheck": {}
 }
