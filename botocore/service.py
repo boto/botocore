@@ -54,10 +54,6 @@ class Service(object):
         self.path = path
         self.port = port
         self.cli_name = service_name
-        if not hasattr(self, 'metadata'):
-            # metadata is an option thing that comes from .extra.json
-            # so if it's not there we just default to an empty dict.
-            self.metadata = {}
 
     def _create_operation_objects(self):
         logger.debug("Creating operation objects for: %s", self)
@@ -77,22 +73,6 @@ class Service(object):
         if self._operations is None:
             self._operations = self._create_operation_objects()
         return self._operations
-
-    @property
-    def region_names(self):
-        return self.metadata.get('regions', {}).keys()
-
-    def _build_endpoint_url(self, host, is_secure):
-        if is_secure:
-            scheme = 'https'
-        else:
-            scheme = 'http'
-        if scheme not in self.metadata['protocols']:
-            raise ValueError('Unsupported protocol: %s' % scheme)
-        endpoint_url = '%s://%s%s' % (scheme, host, self.path)
-        if self.port:
-            endpoint_url += ':%d' % self.port
-        return endpoint_url
 
     def get_endpoint(self, region_name=None, is_secure=True,
                      endpoint_url=None, verify=None):

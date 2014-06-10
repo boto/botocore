@@ -673,18 +673,6 @@
             "documentation": "\n      <p>From the command line, use <code>update-subscription</code>.</p> \n      <p>Updates the settings that specify delivery of log files. Changes to a trail do not require\n         stopping the CloudTrail service. Use this action to designate an existing bucket for log\n         delivery. If the existing bucket has previously been a target for CloudTrail log files,\n         an IAM policy exists for the bucket. </p>\n      \n      <note>\n         Support for passing <a>Trail</a> as a parameter ends as early as February 25, 2014. The request and response examples in this topic show the use of parameters as well as a Trail object. Until Trail is removed, you can use either Trail or the parameter list. \n         \n      </note>\n                  \n   "
         }
     },
-    "metadata": {
-        "regions": {
-            "us-east-1": null,
-            "us-west-1": null,
-            "us-west-2": null,
-            "eu-west-1": null,
-            "ap-southeast-2": null
-        },
-        "protocols": [
-            "https"
-        ]
-    },
     "retry": {
         "__default__": {
             "max_attempts": 5,

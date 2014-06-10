@@ -1,15 +1,5 @@
 {
   "extra": {
-    "metadata": {
-      "regions": {
-        "us-east-1": "https://sts.amazonaws.com/",
-        "us-gov-west-1": null,
-        "cn-north-1": "https://sts.cn-north-1.amazonaws.com.cn"
-      },
-      "protocols": [
-        "https"
-      ]
-    }
   },
   "operations": {
     "AssumeRoleWithSAML": {
