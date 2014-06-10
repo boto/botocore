@@ -99,11 +99,6 @@ class Service(object):
         """
         if region_name is None:
             region_name = self.session.get_config_variable('region')
-        if endpoint_url is not None:
-            # Before getting into any of the region/endpoint
-            # logic, if an endpoint_url is explicitly
-            # provided, just use what's been explicitly passed in.
-            return self._get_endpoint(region_name, endpoint_url, verify)
         # Use the endpoint resolver heuristics to build the endpoint url.
         resolver = self.session.get_component('endpoint_resolver')
         scheme = 'https' if is_secure else 'http'
@@ -115,8 +110,17 @@ class Service(object):
         region_name_override = endpoint['properties'].get(
             'credentialScope', {}).get('region')
         if region_name_override is not None:
+            # Letting the heuristics rule override the region_name
+            # allows for having a default region of something like us-west-2
+            # for IAM, but we still will know to use us-east-1 for sigv4.
             region_name = region_name_override
-        return self._get_endpoint(region_name, endpoint['uri'], verify)
+        if endpoint_url is not None:
+            # If the user provides an endpoint url, we'll use that
+            # instead of what the heuristics rule gives us.
+            final_endpoint_url = endpoint_url
+        else:
+            final_endpoint_url = endpoint['uri']
+        return self._get_endpoint(region_name, final_endpoint_url, verify)
 
     def _get_endpoint(self, region_name, endpoint_url, verify):
         # This function is called once we know the region and endpoint url.
