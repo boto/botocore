@@ -7831,6 +7831,20 @@
             },
             "documentation": "   \n   ",
             "xmlname": "sriovNetSupport"
+          },
+          "SourceDestCheck": {
+            "shape_name": "AttributeBooleanValue",
+            "type": "structure",
+            "members": {
+              "Value": {
+                "shape_name": "Boolean",
+                "type": "boolean",
+                "documentation": "   \n   ",
+                "xmlname": "value"
+              }
+            },
+            "documentation": "   \n   ",
+            "xmlname": "sourceDestCheck"
           }
         },
         "documentation": "\n   "
@@ -16958,8 +16972,15 @@
             "required": true
           },
           "AutoEnableIO": {
-            "shape_name": "Boolean",
-            "type": "boolean",
+            "shape_name": "AttributeBooleanValue",
+            "type": "structure",
+            "members": {
+              "Value": {
+                "shape_name": "Boolean",
+                "type": "boolean",
+                "documentation": "   \n   "
+              }
+            },
             "documentation": "\n    <p>Indicates whether the volume should be auto-enabled for I/O operations.</p>\n  "
           }
         },

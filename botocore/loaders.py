@@ -192,9 +192,9 @@ class Loader(object):
             {
                 # ...EC2 service data...
             }
-            >>> loader.load_data('_regions')
+            >>> loader.load_data('_endpoints')
             {
-                # ...Region data...
+                # ...Endpoint data...
             }
 
         """

@@ -93,6 +93,18 @@ class ServiceNotInRegionError(BotoCoreError):
     fmt = 'Service {service_name} not available in region {region_name}'
 
 
+class UnknownEndpointError(BotoCoreError):
+    """
+    Could not construct an endpoint.
+
+    :ivar service_name: The name of the service.
+    :ivar region_name: The name of the region.
+    """
+    fmt = (
+        'Unable to construct an endpoint for '
+        '{service_name} in region {region_name}')
+
+
 class ProfileNotFound(BotoCoreError):
     """
     The specified configuration profile was not found in the

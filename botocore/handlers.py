@@ -98,6 +98,25 @@ def calculate_md5(event_name, params, **kwargs):
         params['headers']['Content-MD5'] = value
 
 
+def sse_md5(event_name, params, **kwargs):
+    """
+    S3 server-side encryption requires the encryption key to be sent to the
+    server base64 encoded, as well as a base64-encoded MD5 hash of the
+    encryption key. This handler does both if the MD5 has not been set by
+    the caller.
+    """
+    prefix = 'x-amz-server-side-encryption-customer-'
+    key = prefix + 'key'
+    key_md5 = prefix + 'key-MD5'
+    if key in params['headers'] and not key_md5 in params['headers']:
+        original = six.b(params['headers'][key])
+        md5 = hashlib.md5()
+        md5.update(original)
+        value = base64.b64encode(md5.digest()).decode('utf-8')
+        params['headers'][key] = base64.b64encode(original).decode('utf-8')
+        params['headers'][key_md5] = value
+
+
 def check_dns_name(bucket_name):
     """
     Check to see if the ``bucket_name`` complies with the
@@ -275,4 +294,11 @@ BUILTIN_HANDLERS = [
     ('creating-endpoint.s3', maybe_switch_to_s3sigv4),
     ('creating-endpoint.ec2', maybe_switch_to_sigv4),
     ('service-data-loaded', signature_overrides),
+    ('before-call.s3.HeadObject', sse_md5),
+    ('before-call.s3.GetObject', sse_md5),
+    ('before-call.s3.PutObject', sse_md5),
+    ('before-call.s3.CopyObject', sse_md5),
+    ('before-call.s3.CreateMultipartUpload', sse_md5),
+    ('before-call.s3.UploadPart', sse_md5),
+    ('before-call.s3.UploadPartCopy', sse_md5),
 ]

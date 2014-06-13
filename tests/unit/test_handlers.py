@@ -130,6 +130,23 @@ class TestHandlers(BaseSessionTest):
         # object is None.  We need to handle this case.
         check_for_200_error(None, mock.Mock())
 
+    def test_sse_headers(self):
+        prefix = 'x-amz-server-side-encryption-customer-'
+        for op in ('HeadObject', 'GetObject', 'PutObject', 'CopyObject',
+                   'CreateMultipartUpload', 'UploadPart', 'UploadPartCopy'):
+            event = self.session.create_event(
+                'before-call', 's3', op)
+            params = {'headers': {
+                prefix + 'algorithm': 'foo',
+                prefix + 'key': 'bar'
+                }}
+            self.session.emit(event, params=params)
+            self.assertEqual(
+                params['headers'][prefix + 'key'], 'YmFy')
+            self.assertEqual(
+                params['headers'][prefix + 'key-MD5'],
+                'N7UdGUp1E+RbVvZSTy1R8g==')
+
 
 class TestRetryHandlerOrder(BaseSessionTest):
     def get_handler_names(self, responses):

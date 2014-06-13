@@ -2207,20 +2207,6 @@
             "documentation": "\n    <p>Displays all virtual interfaces for an AWS account. Virtual interfaces deleted fewer than 15 minutes before DescribeVirtualInterfaces is called are also returned.  If a connection ID is included then only virtual interfaces associated with this connection will be returned. If a virtual interface ID is included then only a single virtual interface will be returned.</p>\n    <p>A virtual interface (VLAN) transmits the traffic between the AWS Direct Connect location and the customer.</p>\n    <p>If a connection ID is provided, only virtual interfaces provisioned on the specified connection will be returned. If a virtual interface ID is provided, only this particular virtual interface will be returned.</p>\n  "
         }
     },
-    "metadata": {
-        "regions": {
-            "us-east-1": null,
-            "eu-west-1": null,
-            "us-west-1": null,
-            "sa-east-1": null,
-            "ap-northeast-1": null,
-            "ap-southeast-1": null,
-            "ap-southeast-2": null
-        },
-        "protocols": [
-            "https"
-        ]
-    },
     "retry": {
         "__default__": {
             "max_attempts": 5,

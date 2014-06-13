@@ -6440,23 +6440,6 @@
             "documentation": "\n        <p>The <i>RevokeCacheSecurityGroupIngress</i> operation revokes ingress from a cache\n            security group. Use this operation to disallow access from an Amazon EC2 security group\n            that had been previously authorized.</p>\n        <examples>\n            <queryrequest>\nhttps://elasticache.us-east-1.amazonaws.com/\n   ?Action=RevokeCacheSecurityGroupIngress\n   &EC2SecurityGroupName=default\n   &CacheSecurityGroupName=mygroup\n   &EC2SecurityGroupOwnerId=1234-5678-1234\n   &Version=2014-03-24\n   &SignatureVersion=2\n   &SignatureMethod=HmacSHA256\n   &Timestamp=2014-03-27T02%3A30%3A08.444Z\n   &AWSAccessKeyId=YOUR-ACCESS-KEY\n   &Signature=YOUR-SIGNATURE</queryrequest>\n            <queryresponse>\n<RevokeCacheSecurityGroupIngressResponse xmlns=\"http://elasticache.amazonaws.com/doc/2014-03-24/\">\n    <RevokeCacheSecurityGroupIngressResult>\n        <CacheSecurityGroup>\n            <EC2SecurityGroups>\n                <EC2SecurityGroup>\n                    <Status>revoking</Status>\n                    <EC2SecurityGroupName>default</EC2SecurityGroupName>\n                    <EC2SecurityGroupOwnerId>123456781234</EC2SecurityGroupOwnerId>\n                </EC2SecurityGroup>\n            </EC2SecurityGroups>\n            <CacheSecurityGroupName>mygroup</CacheSecurityGroupName>\n            <OwnerId>123456789012</OwnerId>\n            <Description>My security group</Description>\n        </CacheSecurityGroup>\n    </RevokeCacheSecurityGroupIngressResult>\n    <ResponseMetadata>\n        <RequestId>02ae3699-3650-11e0-a564-8f11342c56b0</RequestId>\n    </ResponseMetadata>\n</RevokeCacheSecurityGroupIngressResponse>\n            </queryresponse>\n        </examples>\n    "
         }
     },
-    "metadata": {
-        "regions": {
-            "us-east-1": null,
-            "ap-northeast-1": null,
-            "sa-east-1": null,
-            "ap-southeast-1": null,
-            "ap-southeast-2": null,
-            "us-west-2": null,
-            "us-west-1": null,
-            "eu-west-1": null,
-            "us-gov-west-1": null,
-            "cn-north-1": "https://elasticache.cn-north-1.amazonaws.com.cn"
-        },
-        "protocols": [
-            "https"
-        ]
-    },
     "pagination": {
         "DescribeCacheClusters": {
             "input_token": "Marker",

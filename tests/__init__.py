@@ -39,9 +39,10 @@ def create_session(**kwargs):
     # Create a Session object.  By default,
     # the _LOADER object is used as the loader
     # so that we reused the same models across tests.
-    base_args = {'loader': _LOADER}
-    base_args.update(kwargs)
-    session = botocore.session.Session(**base_args)
+    session = botocore.session.Session(**kwargs)
+    data_path = session.get_config_variable('data_path')
+    _LOADER.data_path = data_path or ''
+    session.register_component('data_loader', _LOADER)
     session.set_config_variable('credentials_file', 'noexist/foo/botocore')
     return session
 
@@ -95,11 +96,12 @@ class BaseSessionTest(BaseEnvVar):
 
     """
 
-    def setUp(self):
+    def setUp(self, **environ):
         super(BaseSessionTest, self).setUp()
         self.environ['AWS_ACCESS_KEY_ID'] = 'access_key'
         self.environ['AWS_SECRET_ACCESS_KEY'] = 'secret_key'
         self.environ['AWS_CONFIG_FILE'] = 'no-exist-foo'
+        self.environ.update(environ)
         self.session = create_session()
         self.session.config_filename = 'no-exist-foo'
 

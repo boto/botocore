@@ -8893,14 +8893,6 @@
             "documentation": "\n    Update a streaming distribution.\n  "
         }
     },
-    "metadata": {
-        "protocols": [
-            "https"
-        ],
-        "regions": {
-            "us-east-1": "https://cloudfront.amazonaws.com/"
-        }
-    },
     "pagination": {
         "ListCloudFrontOriginAccessIdentities": {
             "input_token": [
