@@ -160,5 +160,19 @@
         }
       }
     }
+  ],
+  "dynamodb": [
+    {
+      "uri": "http://localhost:8080",
+      "constraints": [
+        ["region", "equals", "local"]
+      ],
+      "properties": {
+        "credentialScope": {
+            "region": "us-east-1",
+            "service": "dynamodb"
+        }
+      }
+    }
   ]
 }
