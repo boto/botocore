@@ -30,15 +30,13 @@ class ModelFiles(object):
     Includes:
 
         * The json service description.
-        * The _regions.json file.
         * The _retry.json file.
         * The <service>.extra.json enhancements file.
         * The name of the service.
 
     """
-    def __init__(self, model, regions, retry, enhancements, name=''):
+    def __init__(self, model, retry, enhancements, name=''):
         self.model = model
-        self.regions = regions
         self.retry = retry
         self.enhancements = enhancements
         self.name = name
@@ -47,14 +45,11 @@ class ModelFiles(object):
 def load_model_files(args):
     model = json.load(open(args.modelfile),
                       object_pairs_hook=OrderedDict)
-    regions = json.load(open(args.regions_file),
-                        object_pairs_hook=OrderedDict)
     retry = json.load(open(args.retry_file),
                       object_pairs_hook=OrderedDict)
     enhancements = _load_enhancements_file(args.enhancements_file)
     service_name = os.path.splitext(os.path.basename(args.modelfile))[0]
-    return ModelFiles(model, regions, retry, enhancements,
-                      name=service_name)
+    return ModelFiles(model, retry, enhancements, name=service_name)
 
 
 def _load_enhancements_file(file_path):

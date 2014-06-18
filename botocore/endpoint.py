@@ -129,8 +129,6 @@ class Endpoint(object):
                 stream=operation.is_streaming(),
                 proxies=self.proxies)
         except Exception as e:
-            logger.debug("Exception received when sending HTTP request.",
-                         exc_info=True)
             return (None, e)
         # This returns the http_response and the parsed_data.
         return (botocore.response.get_response(self.session, operation,

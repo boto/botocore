@@ -1,15 +1,5 @@
 {
   "extra": {
-    "metadata": {
-      "regions": {
-        "us-east-1": "https://iam.amazonaws.com/",
-        "us-gov-west-1": "https://iam.us-gov.amazonaws.com/",
-        "cn-north-1": "https://iam.cn-north-1.amazonaws.com.cn"
-      },
-      "protocols": [
-        "https"
-      ]
-    }
   },
   "pagination": {
     "GetGroup": {

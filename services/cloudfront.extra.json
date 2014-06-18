@@ -1,11 +1,5 @@
 {
   "extra": {
-    "metadata": {
-      "protocols": ["https"],
-      "regions": {
-        "us-east-1": "https://cloudfront.amazonaws.com/"
-      }
-    }
   },
   "pagination": {
     "ListCloudFrontOriginAccessIdentities": {

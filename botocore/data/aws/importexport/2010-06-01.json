@@ -881,14 +881,6 @@
             "documentation": "\n    You use this operation to change the parameters specified in the original\n    manifest file by supplying a new manifest file. The manifest file attached\n    to this request replaces the original manifest file. You can only use the\n    operation after a CreateJob request but before the data transfer starts and\n    you can only use it on jobs you own.\n  "
         }
     },
-    "metadata": {
-        "regions": {
-            "us-east-1": "https://importexport.amazonaws.com"
-        },
-        "protocols": [
-            "https"
-        ]
-    },
     "pagination": {
         "ListJobs": {
             "input_token": "Marker",

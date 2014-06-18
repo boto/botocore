@@ -6487,24 +6487,6 @@
             "documentation": "\n    <p>Updates the provisioned throughput for the given table. Setting the throughput for a table\n      helps you manage performance and is part of the provisioned throughput feature of DynamoDB.</p>\n    <p>The provisioned throughput values can be upgraded or downgraded based on the maximums and\n      minimums listed in the <a href=\"http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Limits.html\">Limits</a> section in the Amazon DynamoDB Developer Guide.</p>\n    <p>The table must be in the <code>ACTIVE</code> state for this operation to succeed.\n        <i>UpdateTable</i> is an asynchronous operation; while executing the operation, the table is\n      in the <code>UPDATING</code> state. While the table is in the <code>UPDATING</code> state, the\n      table still has the provisioned throughput from before the call. The new provisioned\n      throughput setting is in effect only when the table returns to the <code>ACTIVE</code> state\n      after the <i>UpdateTable</i> operation. </p>\n    <p>You cannot add, modify or delete indexes using <i>UpdateTable</i>. Indexes can only be defined at table creation time.</p>\n\n    <examples>\n      <example>\n        <name>Modify Provisioned Write Throughput</name>\n        <description>\n          <p> This example changes both the provisioned read and write throughput of the Thread table to\n            10 capacity units.</p>\n        </description>\n        <request>\n{          \n    \"TableDescription\": {\n        \"AttributeDefinitions\": [\n            {\n                \"AttributeName\": \"ForumName\",\n                \"AttributeType\": \"S\"\n            },\n            {\n                \"AttributeName\": \"LastPostDateTime\",\n                \"AttributeType\": \"S\"\n            },\n            {\n                \"AttributeName\": \"Subject\",\n                \"AttributeType\": \"S\"\n            }\n        ],\n        \"CreationDateTime\": 1.363801528686E9,\n        \"ItemCount\": 0,\n        \"KeySchema\": [\n            {\n                \"AttributeName\": \"ForumName\",\n                \"KeyType\": \"HASH\"\n            },\n            {\n                \"AttributeName\": \"Subject\",\n                \"KeyType\": \"RANGE\"\n            }\n        ],\n        \"LocalSecondaryIndexes\": [\n            {\n                \"IndexName\": \"LastPostIndex\",\n                \"IndexSizeBytes\": 0,\n                \"ItemCount\": 0,\n                \"KeySchema\": [\n                    {\n                        \"AttributeName\": \"ForumName\",\n                        \"KeyType\": \"HASH\"\n                    },\n                    {\n                        \"AttributeName\": \"LastPostDateTime\",\n                        \"KeyType\": \"RANGE\"\n                    }\n                ],\n                \"Projection\": {\n                    \"ProjectionType\": \"KEYS_ONLY\"\n                }\n            }\n        ],\n        \"ProvisionedThroughput\": {\n            \"LastIncreaseDateTime\": 1.363801701282E9,\n            \"NumberOfDecreasesToday\": 0,\n            \"ReadCapacityUnits\": 5,\n            \"WriteCapacityUnits\": 5\n        },\n        \"TableName\": \"Thread\",\n        \"TableSizeBytes\": 0,\n        \"TableStatus\": \"UPDATING\"\n    }\n}\n        </response>\n      </example>\n    </examples>\n  "
         }
     },
-    "metadata": {
-        "regions": {
-            "us-east-1": null,
-            "ap-northeast-1": null,
-            "sa-east-1": null,
-            "ap-southeast-1": null,
-            "ap-southeast-2": null,
-            "us-west-2": null,
-            "us-west-1": null,
-            "eu-west-1": null,
-            "us-gov-west-1": null,
-            "cn-north-1": "https://dynamodb.cn-north-1.amazonaws.com.cn"
-        },
-        "protocols": [
-            "https",
-            "http"
-        ]
-    },
     "pagination": {
         "ListTables": {
             "input_token": "ExclusiveStartTableName",

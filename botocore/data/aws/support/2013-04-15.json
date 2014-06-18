@@ -1270,15 +1270,6 @@
             "documentation": "\n       \n    <p>Takes a <code>CaseId</code> and returns the initial state of the case along with the state of the case after the call to <a>ResolveCase</a> completed.</p>\n  "
         }
     },
-    "global_endpoint": "support.us-east-1.amazonaws.com",
-    "metadata": {
-        "regions": {
-            "us-east-1": "https://support.us-east-1.amazonaws.com"
-        },
-        "protocols": [
-            "https"
-        ]
-    },
     "pagination": {
         "DescribeCases": {
             "input_token": "nextToken",

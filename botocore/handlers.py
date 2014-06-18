@@ -25,7 +25,6 @@ import six
 
 from botocore.compat import urlsplit, urlunsplit, unquote, json, quote
 from botocore import retryhandler
-from botocore.payload import Payload
 import botocore.auth
 
 
@@ -97,6 +96,25 @@ def calculate_md5(event_name, params, **kwargs):
         md5.update(six.b(params['payload'].getvalue()))
         value = base64.b64encode(md5.digest()).decode('utf-8')
         params['headers']['Content-MD5'] = value
+
+
+def sse_md5(event_name, params, **kwargs):
+    """
+    S3 server-side encryption requires the encryption key to be sent to the
+    server base64 encoded, as well as a base64-encoded MD5 hash of the
+    encryption key. This handler does both if the MD5 has not been set by
+    the caller.
+    """
+    prefix = 'x-amz-server-side-encryption-customer-'
+    key = prefix + 'key'
+    key_md5 = prefix + 'key-MD5'
+    if key in params['headers'] and not key_md5 in params['headers']:
+        original = six.b(params['headers'][key])
+        md5 = hashlib.md5()
+        md5.update(original)
+        value = base64.b64encode(md5.digest()).decode('utf-8')
+        params['headers'][key] = base64.b64encode(original).decode('utf-8')
+        params['headers'][key_md5] = value
 
 
 def check_dns_name(bucket_name):
@@ -221,18 +239,6 @@ def signature_overrides(service_data, service_name, session, **kwargs):
         service_data['signature_version'] = signature_version_override
 
 
-def add_expect_header(operation, params, **kwargs):
-    if operation.http.get('method', '') not in ['PUT', 'POST']:
-        return
-    if params['payload'].__class__ == Payload:
-        payload = params['payload'].getvalue()
-        if hasattr(payload, 'read'):
-            # Any file like object will use an expect 100-continue
-            # header regardless of size.
-            logger.debug("Adding expect 100 continue header to request.")
-            params['headers']['Expect'] = '100-continue'
-
-
 def quote_source_header(params, **kwargs):
     if params['headers'] and 'x-amz-copy-source' in params['headers']:
         value = params['headers']['x-amz-copy-source']
@@ -279,7 +285,6 @@ BUILTIN_HANDLERS = [
     ('before-call.s3.DeleteObjects', calculate_md5),
     ('before-call.s3.UploadPartCopy', quote_source_header),
     ('before-call.s3.CopyObject', quote_source_header),
-    ('before-call.s3', add_expect_header),
     ('before-call.ec2.CopySnapshot', copy_snapshot_encrypted),
     ('before-auth.s3', fix_s3_host),
     ('needs-retry.s3.UploadPartCopy', check_for_200_error),
@@ -289,4 +294,11 @@ BUILTIN_HANDLERS = [
     ('creating-endpoint.s3', maybe_switch_to_s3sigv4),
     ('creating-endpoint.ec2', maybe_switch_to_sigv4),
     ('service-data-loaded', signature_overrides),
+    ('before-call.s3.HeadObject', sse_md5),
+    ('before-call.s3.GetObject', sse_md5),
+    ('before-call.s3.PutObject', sse_md5),
+    ('before-call.s3.CopyObject', sse_md5),
+    ('before-call.s3.CreateMultipartUpload', sse_md5),
+    ('before-call.s3.UploadPart', sse_md5),
+    ('before-call.s3.UploadPartCopy', sse_md5),
 ]
