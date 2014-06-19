@@ -61,15 +61,27 @@ class AWSHTTPConnection(HTTPConnection):
     def __init__(self, *args, **kwargs):
         HTTPConnection.__init__(self, *args, **kwargs)
         self._original_response_cls = self.response_class
+        # We'd ideally hook into httplib's states, but they're all
+        # __mangled_vars so we use our own state var.  This variable is set
+        # when we receive an early response from the server.  If this value is
+        # set to True, any calls to send() are noops.  This value is reset to
+        # false every time _send_request is called.  This is to workaround the
+        # fact that py2.6 (and only py2.6) has a separate send() call for the
+        # body in _send_request, as opposed to endheaders(), which is where the
+        # body is sent in all versions > 2.6.
+        self._response_received = False
 
     def _send_request(self, method, url, body, headers):
+        self._response_received = False
         if headers.get('Expect', '') == '100-continue':
             self._expect_header_set = True
         else:
             self._expect_header_set = False
             self.response_class = self._original_response_cls
-        return HTTPConnection._send_request(
+        rval = HTTPConnection._send_request(
             self, method, url, body, headers)
+        self._expect_header_set = False
+        return rval
 
     def _send_output(self, message_body=None):
         self._buffer.extend((b"", b""))
@@ -107,7 +119,6 @@ class AWSHTTPConnection(HTTPConnection):
             # message_body was not a string (i.e. it is a file), and
             # we must run the risk of Nagle.
             self.send(message_body)
-        self._expect_header_set = False
 
     def _handle_expect_response(self, message_body):
         # This is called when we sent the request headers containing
@@ -142,12 +153,20 @@ class AWSHTTPConnection(HTTPConnection):
                 response_class = functools.partial(
                     AWSHTTPResponse, status_tuple=status_tuple)
                 self.response_class = response_class
+                self._response_received = True
         finally:
             fp.close()
 
     def _send_message_body(self, message_body):
         if message_body is not None:
             self.send(message_body)
+
+    def send(self, str):
+        if self._response_received:
+            logger.debug("send() called, but reseponse already received. "
+                         "Not sending data.")
+            return
+        return HTTPConnection.send(self, str)
 
     def _is_100_continue_status(self, maybe_status_line):
         parts = maybe_status_line.split(None, 2)
