@@ -140,7 +140,7 @@ class TestHandlers(BaseSessionTest):
                 prefix + 'algorithm': 'foo',
                 prefix + 'key': 'bar'
                 }}
-            self.session.emit(event, params=params)
+            self.session.emit(event, params=params, operation=mock.Mock())
             self.assertEqual(
                 params['headers'][prefix + 'key'], 'YmFy')
             self.assertEqual(
