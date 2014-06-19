@@ -23,6 +23,7 @@
             "type": "string",
             "pattern": "^\\d{13}-\\w{6}$",
             "documentation": "\n        <p>The identifier of the job that you want to cancel. </p>\n        <p>To get a list of the jobs (including their <code>jobId</code>) that have a status of\n                <code>Submitted</code>, use the <a>ListJobsByStatus</a> API action.</p>\n    ",
+            "required": true,
             "location": "uri"
           }
         },
@@ -96,7 +97,8 @@
             "shape_name": "Id",
             "type": "string",
             "pattern": "^\\d{13}-\\w{6}$",
-            "documentation": "\n        <p>The <code>Id</code> of the pipeline that you want Elastic Transcoder to use for\n            transcoding. The pipeline determines several settings, including the Amazon S3 bucket\n            from which Elastic Transcoder gets the files to transcode and the bucket into which\n            Elastic Transcoder puts the transcoded files.</p>\n    "
+            "documentation": "\n        <p>The <code>Id</code> of the pipeline that you want Elastic Transcoder to use for\n            transcoding. The pipeline determines several settings, including the Amazon S3 bucket\n            from which Elastic Transcoder gets the files to transcode and the bucket into which\n            Elastic Transcoder puts the transcoded files.</p>\n    ",
+            "required": true
           },
           "Input": {
             "shape_name": "JobInput",
@@ -140,7 +142,8 @@
                 "documentation": "\n        <p>The container type for the input file. If you want Elastic Transcoder to automatically detect the\n            container type of the input file, specify <code>auto</code>. If you want to specify the\n            container type for the input file, enter one of the following values: </p>\n        <p>\n            <code>3gp</code>, <code>aac</code>, <code>asf</code>, <code>avi</code>, \n                <code>divx</code>, <code>flv</code>, <code>m4a</code>, <code>mkv</code>, \n                <code>mov</code>, <code>mp3</code>, <code>mp4</code>, <code>mpeg</code>, \n                <code>mpeg-ps</code>, <code>mpeg-ts</code>, <code>mxf</code>, <code>ogg</code>, \n                <code>vob</code>, <code>wav</code>, <code>webm</code>\n        </p>\n    "
               }
             },
-            "documentation": "\n        <p>A section of the request body that provides information about the file that is being\n            transcoded.</p>\n    "
+            "documentation": "\n        <p>A section of the request body that provides information about the file that is being\n            transcoded.</p>\n    ",
+            "required": true
           },
           "Output": {
             "shape_name": "CreateJobOutput",
@@ -288,7 +291,7 @@
                           "shape_name": "Time",
                           "type": "string",
                           "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
-                          "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file , Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
+                          "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file, Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
                         }
                       },
                       "documentation": "\n       <p>Settings that determine when a clip begins and how long it lasts.</p>\n   "
@@ -296,7 +299,85 @@
                   },
                   "documentation": "\n       <p>Settings for one clip in a composition. All jobs in a playlist must have the same clip settings.</p>\n   "
                 },
-                "documentation": "\n       <p>You can create an output file that contains an excerpt from the input file. This excerpt, called a clip, can come from the beginning, middle, or end of the file. The Composition object contains settings for the clips that make up an output file. For the current release, you can only specify settings for a single clip per output file. The Composition object cannot be null.</p>\n   "
+                "documentation": "\n       <p>You can create an output file that contains an excerpt from the input file. This \n           excerpt, called a clip, can come from the beginning, middle, or end of the file. \n           The Composition object contains settings for the clips that make up an output file. \n           For the current release, you can only specify settings for a single clip per output \n           file. The Composition object cannot be null.</p>\n   "
+              },
+              "Captions": {
+                "shape_name": "Captions",
+                "type": "structure",
+                "members": {
+                  "MergePolicy": {
+                    "shape_name": "CaptionMergePolicy",
+                    "type": "string",
+                    "pattern": "(^MergeOverride$)|(^MergeRetain$)|(^Override$)",
+                    "documentation": "\n      <p>A policy that determines how Elastic Transcoder handles the existence of multiple captions.</p>\n      <ul>\n         <li><p><b>MergeOverride:</b> Elastic Transcoder transcodes both embedded\n            and sidecar captions into outputs. If captions for a language are embedded in the input\n            file and also appear in a sidecar file, Elastic Transcoder uses the sidecar captions and ignores the\n            embedded captions for that language.</p></li>\n         <li><p><b>MergeRetain:</b>  Elastic Transcoder transcodes both embedded\n            and sidecar captions into outputs. If captions for a language are embedded in the input\n            file and also appear in a sidecar file, Elastic Transcoder uses the embedded captions and ignores the\n            sidecar captions for that language. If <guilabel>CaptionSources</guilabel> is empty,\n            Elastic Transcoder omits all sidecar captions from the output files.</p></li>\n         <li><p><b>Override:</b> Elastic Transcoder transcodes only the\n            sidecar captions that you specify in <code>CaptionSources</code>.</p></li>\n      </ul>\n      <p><code>MergePolicy</code> cannot be null.</p>\n   "
+                  },
+                  "CaptionSources": {
+                    "shape_name": "CaptionSources",
+                    "type": "list",
+                    "members": {
+                      "shape_name": "CaptionSource",
+                      "type": "structure",
+                      "members": {
+                        "Key": {
+                          "shape_name": "Key",
+                          "type": "string",
+                          "min_length": 1,
+                          "max_length": 255,
+                          "documentation": "\n      <p>The name of the sidecar caption file that you want Elastic Transcoder to include in the\n         output file.</p>\n   "
+                        },
+                        "Language": {
+                          "shape_name": "Key",
+                          "type": "string",
+                          "min_length": 1,
+                          "max_length": 255,
+                          "documentation": "\n      <p>A string that specifies the language of the caption. Specify this as one of:</p>\n      <ul>\n         <li><p>2-character ISO 639-1 code</p></li>\n         <li><p>3-character ISO 639-2 code</p></li>\n      </ul>\n      <p>For more information on ISO language codes and language names, see the List of ISO \n         639-1 codes.</p>\n   "
+                        },
+                        "TimeOffset": {
+                          "shape_name": "TimeOffset",
+                          "type": "string",
+                          "pattern": "(^[+-]?\\d{1,5}(\\.\\d{0,3})?$)|(^[+-]?([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
+                          "documentation": "\n      <p>For clip generation or captions that do not start at the same time\n         as the associated video file, the <code>TimeOffset</code> tells Elastic Transcoder how much of the video to encode\n         before including captions.</p>\n      <p>Specify the TimeOffset in the form [+-]SS.sss or [+-]HH:mm:SS.ss.</p>\n   "
+                        },
+                        "Label": {
+                          "shape_name": "Name",
+                          "type": "string",
+                          "min_length": 1,
+                          "max_length": 40,
+                          "documentation": "\n      <p>The label of the caption shown in the player when choosing\n         a language. We recommend that you put the caption language name here, \n         in the language of the captions.</p>\n   "
+                        }
+                      },
+                      "documentation": "\n      <p>A source file for the input sidecar captions used during the transcoding\n         process.</p>\n   "
+                    },
+                    "max_length": 20,
+                    "documentation": "\n      <p>Source files for the input sidecar captions used during the transcoding\n         process. To omit all sidecar captions, leave <code>CaptionSources</code> blank.</p>\n   "
+                  },
+                  "CaptionFormats": {
+                    "shape_name": "CaptionFormats",
+                    "type": "list",
+                    "members": {
+                      "shape_name": "CaptionFormat",
+                      "type": "structure",
+                      "members": {
+                        "Format": {
+                          "shape_name": "CaptionFormatFormat",
+                          "type": "string",
+                          "pattern": "(^mov-text$)|(^cea-608$)|(^cea-708$)|(^srt$)|(^scc$)|(^webvtt$)|(^dfxp$)",
+                          "documentation": "\n      <p>The format you specify determines whether Elastic Transcoder generates an\n         embedded or sidecar caption for this output.</p>\n      <ul>\n         <li>\n<p><b>Valid Embedded Caption Formats:</b></p>\n            <ul>\n               <li><p><b>For MP3</b>: None</p></li>\n               <li><p><b>For MP4</b>: mov-text</p></li>\n               <li><p><b>For MPEG-TS</b>: None</p></li>\n               <li><p><b>For ogg</b>: None</p></li>\n               <li><p><b>For webm</b>: None</p></li>\n            </ul>\n         </li>\n         <li>\n<p><b>Valid Sidecar Caption Formats:</b> Elastic Transcoder\n            supports dfxp (first div element only), scc, srt, and webvtt. There are\n            no container restrictions on sidecar captions. If you want ttml or smpte-tt\n            compatible captions, specify dfxp as your output format.</p>\n         </li>\n      </ul>\n   "
+                        },
+                        "Pattern": {
+                          "shape_name": "CaptionFormatPattern",
+                          "type": "string",
+                          "pattern": "(^$)|(^.*\\{language\\}.*$)",
+                          "documentation": "\n      <p>The prefix for caption filenames, in the form <i>description</i>-<code>{language}</code>, where:</p>\n      <ul>\n         <li>\n<i>description</i> is a description of the video.</li>\n         <li>\n<code>{language}</code> is a literal value that Elastic Transcoder replaces with the two- or three-letter\n            code for the language of the caption in the output file names.</li>\n      </ul>\n      <p>If you don't include <code>{language}</code> in the file name pattern, Elastic Transcoder automatically\n         appends \"<code>{language}</code>\" to the value that you specify for the description.  In addition,\n         Elastic Transcoder automatically appends the count to the end of the segment files.</p>\n      <p>For example, suppose you're transcoding into srt format. When you enter\n         \"Sydney-{language}-sunrise\", and the language of the captions is English\n         (en), the name of the first caption file will be Sydney-en-sunrise00000.srt.</p>\n   "
+                        }
+                      },
+                      "documentation": "\n      <p>The file format of the output captions. If you leave this value blank,\n         Elastic Transcoder returns an error.</p>\n   "
+                    },
+                    "max_length": 4,
+                    "documentation": "\n      <p>The array of file formats for the output captions. If you leave this value blank,\n         Elastic Transcoder returns an error.</p>\n   "
+                  }
+                },
+                "documentation": "\n      <p>You can configure Elastic Transcoder to transcode captions, or subtitles, from one format to another.\n         All captions must be in UTF-8. Elastic Transcoder supports two types of captions:</p>\n      <ul>\n         <li>\n<p><b>Embedded:</b> Embedded captions\n            are included in the same file as the audio and video. Elastic Transcoder supports\n            only one embedded caption per language, to a maximum of 300 embedded captions per file.</p>\n            <p>Valid input values include: <code>CEA-608 (EIA-608</code>, first non-empty channel only),\n            \t<code>CEA-708 (EIA-708</code>, first non-empty channel only), and <code>mov-text</code></p>\n            <p>Valid outputs include: <code>mov-text</code></p>\n            <p>Elastic Transcoder supports a maximum of one embedded format per output.</p>\n</li>\n         <li>\n<p><b>Sidecar:</b> Sidecar captions are kept in a\n            separate metadata file from the audio and video data.  Sidecar captions require a player\n            that is capable of understanding the relationship between the video file and the sidecar\n            file. Elastic Transcoder supports only one sidecar caption per language, to a maximum of 20 sidecar\n            captions per file.</p>\n            <p>Valid input values include: <code>dfxp</code> (first div element only),\n               <code>ebu-tt</code>, <code>scc</code>, <code>smpt</code>, <code>srt</code>,\n               <code>ttml</code> (first div element only), and <code>webvtt</code></p>\n            <p>Valid outputs include: <code>dfxp</code> (first div element only), <code>scc</code>,\n               <code>srt</code>, and <code>webvtt</code>.</p>\n</li>\n         </ul>\n         <p> If you want ttml or smpte-tt compatible captions, specify dfxp as your output format.</p>\n         <p>Elastic Transcoder does not support OCR (Optical Character Recognition), does not accept pictures\n            as a valid input for captions, and is not available for audio-only transcoding. Elastic Transcoder does\n            not preserve text formatting (for example, italics) during the transcoding process.</p>\n            <p>To remove captions or leave the captions empty, set <code>Captions</code> to null. To pass through\n            existing captions unchanged, set the <code>MergePolicy</code> to <code>MergeRetain</code>,\n            and pass in a null <code>CaptionSources</code> array.</p>\n      <p>For more information on embedded files, see the Subtitles Wikipedia page.</p>\n      <p>For more information on sidecar files, see the Extensible Metadata Platform and Sidecar file\n         Wikipedia pages.</p>\n   "
               }
             },
             "documentation": "\n        <p>The <code>CreateJobOutput</code> structure.</p>\n    "
@@ -450,7 +531,7 @@
                             "shape_name": "Time",
                             "type": "string",
                             "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
-                            "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file , Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
+                            "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file, Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
                           }
                         },
                         "documentation": "\n       <p>Settings that determine when a clip begins and how long it lasts.</p>\n   "
@@ -458,7 +539,85 @@
                     },
                     "documentation": "\n       <p>Settings for one clip in a composition. All jobs in a playlist must have the same clip settings.</p>\n   "
                   },
-                  "documentation": "\n       <p>You can create an output file that contains an excerpt from the input file. This excerpt, called a clip, can come from the beginning, middle, or end of the file. The Composition object contains settings for the clips that make up an output file. For the current release, you can only specify settings for a single clip per output file. The Composition object cannot be null.</p>\n   "
+                  "documentation": "\n       <p>You can create an output file that contains an excerpt from the input file. This \n           excerpt, called a clip, can come from the beginning, middle, or end of the file. \n           The Composition object contains settings for the clips that make up an output file. \n           For the current release, you can only specify settings for a single clip per output \n           file. The Composition object cannot be null.</p>\n   "
+                },
+                "Captions": {
+                  "shape_name": "Captions",
+                  "type": "structure",
+                  "members": {
+                    "MergePolicy": {
+                      "shape_name": "CaptionMergePolicy",
+                      "type": "string",
+                      "pattern": "(^MergeOverride$)|(^MergeRetain$)|(^Override$)",
+                      "documentation": "\n      <p>A policy that determines how Elastic Transcoder handles the existence of multiple captions.</p>\n      <ul>\n         <li><p><b>MergeOverride:</b> Elastic Transcoder transcodes both embedded\n            and sidecar captions into outputs. If captions for a language are embedded in the input\n            file and also appear in a sidecar file, Elastic Transcoder uses the sidecar captions and ignores the\n            embedded captions for that language.</p></li>\n         <li><p><b>MergeRetain:</b>  Elastic Transcoder transcodes both embedded\n            and sidecar captions into outputs. If captions for a language are embedded in the input\n            file and also appear in a sidecar file, Elastic Transcoder uses the embedded captions and ignores the\n            sidecar captions for that language. If <guilabel>CaptionSources</guilabel> is empty,\n            Elastic Transcoder omits all sidecar captions from the output files.</p></li>\n         <li><p><b>Override:</b> Elastic Transcoder transcodes only the\n            sidecar captions that you specify in <code>CaptionSources</code>.</p></li>\n      </ul>\n      <p><code>MergePolicy</code> cannot be null.</p>\n   "
+                    },
+                    "CaptionSources": {
+                      "shape_name": "CaptionSources",
+                      "type": "list",
+                      "members": {
+                        "shape_name": "CaptionSource",
+                        "type": "structure",
+                        "members": {
+                          "Key": {
+                            "shape_name": "Key",
+                            "type": "string",
+                            "min_length": 1,
+                            "max_length": 255,
+                            "documentation": "\n      <p>The name of the sidecar caption file that you want Elastic Transcoder to include in the\n         output file.</p>\n   "
+                          },
+                          "Language": {
+                            "shape_name": "Key",
+                            "type": "string",
+                            "min_length": 1,
+                            "max_length": 255,
+                            "documentation": "\n      <p>A string that specifies the language of the caption. Specify this as one of:</p>\n      <ul>\n         <li><p>2-character ISO 639-1 code</p></li>\n         <li><p>3-character ISO 639-2 code</p></li>\n      </ul>\n      <p>For more information on ISO language codes and language names, see the List of ISO \n         639-1 codes.</p>\n   "
+                          },
+                          "TimeOffset": {
+                            "shape_name": "TimeOffset",
+                            "type": "string",
+                            "pattern": "(^[+-]?\\d{1,5}(\\.\\d{0,3})?$)|(^[+-]?([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
+                            "documentation": "\n      <p>For clip generation or captions that do not start at the same time\n         as the associated video file, the <code>TimeOffset</code> tells Elastic Transcoder how much of the video to encode\n         before including captions.</p>\n      <p>Specify the TimeOffset in the form [+-]SS.sss or [+-]HH:mm:SS.ss.</p>\n   "
+                          },
+                          "Label": {
+                            "shape_name": "Name",
+                            "type": "string",
+                            "min_length": 1,
+                            "max_length": 40,
+                            "documentation": "\n      <p>The label of the caption shown in the player when choosing\n         a language. We recommend that you put the caption language name here, \n         in the language of the captions.</p>\n   "
+                          }
+                        },
+                        "documentation": "\n      <p>A source file for the input sidecar captions used during the transcoding\n         process.</p>\n   "
+                      },
+                      "max_length": 20,
+                      "documentation": "\n      <p>Source files for the input sidecar captions used during the transcoding\n         process. To omit all sidecar captions, leave <code>CaptionSources</code> blank.</p>\n   "
+                    },
+                    "CaptionFormats": {
+                      "shape_name": "CaptionFormats",
+                      "type": "list",
+                      "members": {
+                        "shape_name": "CaptionFormat",
+                        "type": "structure",
+                        "members": {
+                          "Format": {
+                            "shape_name": "CaptionFormatFormat",
+                            "type": "string",
+                            "pattern": "(^mov-text$)|(^cea-608$)|(^cea-708$)|(^srt$)|(^scc$)|(^webvtt$)|(^dfxp$)",
+                            "documentation": "\n      <p>The format you specify determines whether Elastic Transcoder generates an\n         embedded or sidecar caption for this output.</p>\n      <ul>\n         <li>\n<p><b>Valid Embedded Caption Formats:</b></p>\n            <ul>\n               <li><p><b>For MP3</b>: None</p></li>\n               <li><p><b>For MP4</b>: mov-text</p></li>\n               <li><p><b>For MPEG-TS</b>: None</p></li>\n               <li><p><b>For ogg</b>: None</p></li>\n               <li><p><b>For webm</b>: None</p></li>\n            </ul>\n         </li>\n         <li>\n<p><b>Valid Sidecar Caption Formats:</b> Elastic Transcoder\n            supports dfxp (first div element only), scc, srt, and webvtt. There are\n            no container restrictions on sidecar captions. If you want ttml or smpte-tt\n            compatible captions, specify dfxp as your output format.</p>\n         </li>\n      </ul>\n   "
+                          },
+                          "Pattern": {
+                            "shape_name": "CaptionFormatPattern",
+                            "type": "string",
+                            "pattern": "(^$)|(^.*\\{language\\}.*$)",
+                            "documentation": "\n      <p>The prefix for caption filenames, in the form <i>description</i>-<code>{language}</code>, where:</p>\n      <ul>\n         <li>\n<i>description</i> is a description of the video.</li>\n         <li>\n<code>{language}</code> is a literal value that Elastic Transcoder replaces with the two- or three-letter\n            code for the language of the caption in the output file names.</li>\n      </ul>\n      <p>If you don't include <code>{language}</code> in the file name pattern, Elastic Transcoder automatically\n         appends \"<code>{language}</code>\" to the value that you specify for the description.  In addition,\n         Elastic Transcoder automatically appends the count to the end of the segment files.</p>\n      <p>For example, suppose you're transcoding into srt format. When you enter\n         \"Sydney-{language}-sunrise\", and the language of the captions is English\n         (en), the name of the first caption file will be Sydney-en-sunrise00000.srt.</p>\n   "
+                          }
+                        },
+                        "documentation": "\n      <p>The file format of the output captions. If you leave this value blank,\n         Elastic Transcoder returns an error.</p>\n   "
+                      },
+                      "max_length": 4,
+                      "documentation": "\n      <p>The array of file formats for the output captions. If you leave this value blank,\n         Elastic Transcoder returns an error.</p>\n   "
+                    }
+                  },
+                  "documentation": "\n      <p>You can configure Elastic Transcoder to transcode captions, or subtitles, from one format to another.\n         All captions must be in UTF-8. Elastic Transcoder supports two types of captions:</p>\n      <ul>\n         <li>\n<p><b>Embedded:</b> Embedded captions\n            are included in the same file as the audio and video. Elastic Transcoder supports\n            only one embedded caption per language, to a maximum of 300 embedded captions per file.</p>\n            <p>Valid input values include: <code>CEA-608 (EIA-608</code>, first non-empty channel only),\n            \t<code>CEA-708 (EIA-708</code>, first non-empty channel only), and <code>mov-text</code></p>\n            <p>Valid outputs include: <code>mov-text</code></p>\n            <p>Elastic Transcoder supports a maximum of one embedded format per output.</p>\n</li>\n         <li>\n<p><b>Sidecar:</b> Sidecar captions are kept in a\n            separate metadata file from the audio and video data.  Sidecar captions require a player\n            that is capable of understanding the relationship between the video file and the sidecar\n            file. Elastic Transcoder supports only one sidecar caption per language, to a maximum of 20 sidecar\n            captions per file.</p>\n            <p>Valid input values include: <code>dfxp</code> (first div element only),\n               <code>ebu-tt</code>, <code>scc</code>, <code>smpt</code>, <code>srt</code>,\n               <code>ttml</code> (first div element only), and <code>webvtt</code></p>\n            <p>Valid outputs include: <code>dfxp</code> (first div element only), <code>scc</code>,\n               <code>srt</code>, and <code>webvtt</code>.</p>\n</li>\n         </ul>\n         <p> If you want ttml or smpte-tt compatible captions, specify dfxp as your output format.</p>\n         <p>Elastic Transcoder does not support OCR (Optical Character Recognition), does not accept pictures\n            as a valid input for captions, and is not available for audio-only transcoding. Elastic Transcoder does\n            not preserve text formatting (for example, italics) during the transcoding process.</p>\n            <p>To remove captions or leave the captions empty, set <code>Captions</code> to null. To pass through\n            existing captions unchanged, set the <code>MergePolicy</code> to <code>MergeRetain</code>,\n            and pass in a null <code>CaptionSources</code> array.</p>\n      <p>For more information on embedded files, see the Subtitles Wikipedia page.</p>\n      <p>For more information on sidecar files, see the Extensible Metadata Platform and Sidecar file\n         Wikipedia pages.</p>\n   "
                 }
               },
               "documentation": "\n        <p>The <code>CreateJobOutput</code> structure.</p>\n    "
@@ -763,7 +922,7 @@
                               "shape_name": "Time",
                               "type": "string",
                               "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
-                              "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file , Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
+                              "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file, Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
                             }
                           },
                           "documentation": "\n       <p>Settings that determine when a clip begins and how long it lasts.</p>\n   "
@@ -771,7 +930,85 @@
                       },
                       "documentation": "\n       <p>Settings for one clip in a composition. All jobs in a playlist must have the same clip settings.</p>\n   "
                     },
-                    "documentation": "\n       <p>You can create an output file that contains an excerpt from the input file. This excerpt, called a clip, can come from the beginning, middle, or end of the file. The Composition object contains settings for the clips that make up an output file. For the current release, you can only specify settings for a single clip per output file. The Composition object cannot be null.</p>\n   "
+                    "documentation": "\n       <p>You can create an output file that contains an excerpt from the input file. This \n           excerpt, called a clip, can come from the beginning, middle, or end of the file. \n           The Composition object contains settings for the clips that make up an output \n           file. For the current release, you can only specify settings for a single clip \n           per output file. The Composition object cannot be null.</p>\n   "
+                  },
+                  "Captions": {
+                    "shape_name": "Captions",
+                    "type": "structure",
+                    "members": {
+                      "MergePolicy": {
+                        "shape_name": "CaptionMergePolicy",
+                        "type": "string",
+                        "pattern": "(^MergeOverride$)|(^MergeRetain$)|(^Override$)",
+                        "documentation": "\n      <p>A policy that determines how Elastic Transcoder handles the existence of multiple captions.</p>\n      <ul>\n         <li><p><b>MergeOverride:</b> Elastic Transcoder transcodes both embedded\n            and sidecar captions into outputs. If captions for a language are embedded in the input\n            file and also appear in a sidecar file, Elastic Transcoder uses the sidecar captions and ignores the\n            embedded captions for that language.</p></li>\n         <li><p><b>MergeRetain:</b>  Elastic Transcoder transcodes both embedded\n            and sidecar captions into outputs. If captions for a language are embedded in the input\n            file and also appear in a sidecar file, Elastic Transcoder uses the embedded captions and ignores the\n            sidecar captions for that language. If <guilabel>CaptionSources</guilabel> is empty,\n            Elastic Transcoder omits all sidecar captions from the output files.</p></li>\n         <li><p><b>Override:</b> Elastic Transcoder transcodes only the\n            sidecar captions that you specify in <code>CaptionSources</code>.</p></li>\n      </ul>\n      <p><code>MergePolicy</code> cannot be null.</p>\n   "
+                      },
+                      "CaptionSources": {
+                        "shape_name": "CaptionSources",
+                        "type": "list",
+                        "members": {
+                          "shape_name": "CaptionSource",
+                          "type": "structure",
+                          "members": {
+                            "Key": {
+                              "shape_name": "Key",
+                              "type": "string",
+                              "min_length": 1,
+                              "max_length": 255,
+                              "documentation": "\n      <p>The name of the sidecar caption file that you want Elastic Transcoder to include in the\n         output file.</p>\n   "
+                            },
+                            "Language": {
+                              "shape_name": "Key",
+                              "type": "string",
+                              "min_length": 1,
+                              "max_length": 255,
+                              "documentation": "\n      <p>A string that specifies the language of the caption. Specify this as one of:</p>\n      <ul>\n         <li><p>2-character ISO 639-1 code</p></li>\n         <li><p>3-character ISO 639-2 code</p></li>\n      </ul>\n      <p>For more information on ISO language codes and language names, see the List of ISO \n         639-1 codes.</p>\n   "
+                            },
+                            "TimeOffset": {
+                              "shape_name": "TimeOffset",
+                              "type": "string",
+                              "pattern": "(^[+-]?\\d{1,5}(\\.\\d{0,3})?$)|(^[+-]?([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
+                              "documentation": "\n      <p>For clip generation or captions that do not start at the same time\n         as the associated video file, the <code>TimeOffset</code> tells Elastic Transcoder how much of the video to encode\n         before including captions.</p>\n      <p>Specify the TimeOffset in the form [+-]SS.sss or [+-]HH:mm:SS.ss.</p>\n   "
+                            },
+                            "Label": {
+                              "shape_name": "Name",
+                              "type": "string",
+                              "min_length": 1,
+                              "max_length": 40,
+                              "documentation": "\n      <p>The label of the caption shown in the player when choosing\n         a language. We recommend that you put the caption language name here, \n         in the language of the captions.</p>\n   "
+                            }
+                          },
+                          "documentation": "\n      <p>A source file for the input sidecar captions used during the transcoding\n         process.</p>\n   "
+                        },
+                        "max_length": 20,
+                        "documentation": "\n      <p>Source files for the input sidecar captions used during the transcoding\n         process. To omit all sidecar captions, leave <code>CaptionSources</code> blank.</p>\n   "
+                      },
+                      "CaptionFormats": {
+                        "shape_name": "CaptionFormats",
+                        "type": "list",
+                        "members": {
+                          "shape_name": "CaptionFormat",
+                          "type": "structure",
+                          "members": {
+                            "Format": {
+                              "shape_name": "CaptionFormatFormat",
+                              "type": "string",
+                              "pattern": "(^mov-text$)|(^cea-608$)|(^cea-708$)|(^srt$)|(^scc$)|(^webvtt$)|(^dfxp$)",
+                              "documentation": "\n      <p>The format you specify determines whether Elastic Transcoder generates an\n         embedded or sidecar caption for this output.</p>\n      <ul>\n         <li>\n<p><b>Valid Embedded Caption Formats:</b></p>\n            <ul>\n               <li><p><b>For MP3</b>: None</p></li>\n               <li><p><b>For MP4</b>: mov-text</p></li>\n               <li><p><b>For MPEG-TS</b>: None</p></li>\n               <li><p><b>For ogg</b>: None</p></li>\n               <li><p><b>For webm</b>: None</p></li>\n            </ul>\n         </li>\n         <li>\n<p><b>Valid Sidecar Caption Formats:</b> Elastic Transcoder\n            supports dfxp (first div element only), scc, srt, and webvtt. There are\n            no container restrictions on sidecar captions. If you want ttml or smpte-tt\n            compatible captions, specify dfxp as your output format.</p>\n         </li>\n      </ul>\n   "
+                            },
+                            "Pattern": {
+                              "shape_name": "CaptionFormatPattern",
+                              "type": "string",
+                              "pattern": "(^$)|(^.*\\{language\\}.*$)",
+                              "documentation": "\n      <p>The prefix for caption filenames, in the form <i>description</i>-<code>{language}</code>, where:</p>\n      <ul>\n         <li>\n<i>description</i> is a description of the video.</li>\n         <li>\n<code>{language}</code> is a literal value that Elastic Transcoder replaces with the two- or three-letter\n            code for the language of the caption in the output file names.</li>\n      </ul>\n      <p>If you don't include <code>{language}</code> in the file name pattern, Elastic Transcoder automatically\n         appends \"<code>{language}</code>\" to the value that you specify for the description.  In addition,\n         Elastic Transcoder automatically appends the count to the end of the segment files.</p>\n      <p>For example, suppose you're transcoding into srt format. When you enter\n         \"Sydney-{language}-sunrise\", and the language of the captions is English\n         (en), the name of the first caption file will be Sydney-en-sunrise00000.srt.</p>\n   "
+                            }
+                          },
+                          "documentation": "\n      <p>The file format of the output captions. If you leave this value blank,\n         Elastic Transcoder returns an error.</p>\n   "
+                        },
+                        "max_length": 4,
+                        "documentation": "\n      <p>The array of file formats for the output captions. If you leave this value blank,\n         Elastic Transcoder returns an error.</p>\n   "
+                      }
+                    },
+                    "documentation": "\n      <p>You can configure Elastic Transcoder to transcode captions, or subtitles, from one format to another.\n         All captions must be in UTF-8. Elastic Transcoder supports two types of captions:</p>\n      <ul>\n         <li>\n<p><b>Embedded:</b> Embedded captions\n            are included in the same file as the audio and video. Elastic Transcoder supports\n            only one embedded caption per language, to a maximum of 300 embedded captions per file.</p>\n            <p>Valid input values include: <code>CEA-608 (EIA-608</code>, first non-empty channel only),\n               <code>CEA-708 (EIA-708</code>, first non-empty channel only), and <code>mov-text</code></p>\n            <p>Valid outputs include: <code>mov-text</code></p>\n            <p>Elastic Transcoder supports a maximum of one embedded format per output.</p>\n</li>\n         <li>\n<p><b>Sidecar:</b> Sidecar captions are kept in a\n            separate metadata file from the audio and video data.  Sidecar captions require a player\n            that is capable of understanding the relationship between the video file and the sidecar\n            file. Elastic Transcoder supports only one sidecar caption per language, to a maximum of 20 sidecar\n            captions per file.</p>\n            <p>Valid input values include: <code>dfxp</code> (first div element only),\n               <code>ebu-tt</code>, <code>scc</code>, <code>smpt</code>, <code>srt</code>,\n               <code>ttml</code> (first div element only), and <code>webvtt</code></p>\n            <p>Valid outputs include: <code>dfxp</code> (first div element only), <code>scc</code>,\n               <code>srt</code>, and <code>webvtt</code>.</p>\n</li>\n         </ul>\n         <p> If you want ttml or smpte-tt compatible captions, specify dfxp as your output format.</p>\n         <p>Elastic Transcoder does not support OCR (Optical Character Recognition), does not accept pictures\n            as a valid input for captions, and is not available for audio-only transcoding. Elastic Transcoder does\n            not preserve text formatting (for example, italics) during the transcoding process.</p>\n            <p>To remove captions or leave the captions empty, set <code>Captions</code> to null. To pass through\n            existing captions unchanged, set the <code>MergePolicy</code> to <code>MergeRetain</code>,\n            and pass in a null <code>CaptionSources</code> array.</p>\n      <p>For more information on embedded files, see the Subtitles Wikipedia page.</p>\n      <p>For more information on sidecar files, see the Extensible Metadata Platform and Sidecar file\n         Wikipedia pages.</p> \n   "
                   }
                 },
                 "documentation": "\n        <p>If you specified one output for a job, information about that output. If you specified\n            multiple outputs for a job, the Output object lists information about the first output.\n            This duplicates the information that is listed for the first output in the Outputs\n            object.</p>\n        <p><important>Outputs recommended instead.</important> A section of the request or response\n            body that provides information about the transcoded (target) file. </p>\n    "
@@ -958,7 +1195,7 @@
                                 "shape_name": "Time",
                                 "type": "string",
                                 "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
-                                "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file , Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
+                                "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file, Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
                               }
                             },
                             "documentation": "\n       <p>Settings that determine when a clip begins and how long it lasts.</p>\n   "
@@ -966,7 +1203,85 @@
                         },
                         "documentation": "\n       <p>Settings for one clip in a composition. All jobs in a playlist must have the same clip settings.</p>\n   "
                       },
-                      "documentation": "\n       <p>You can create an output file that contains an excerpt from the input file. This excerpt, called a clip, can come from the beginning, middle, or end of the file. The Composition object contains settings for the clips that make up an output file. For the current release, you can only specify settings for a single clip per output file. The Composition object cannot be null.</p>\n   "
+                      "documentation": "\n       <p>You can create an output file that contains an excerpt from the input file. This \n           excerpt, called a clip, can come from the beginning, middle, or end of the file. \n           The Composition object contains settings for the clips that make up an output \n           file. For the current release, you can only specify settings for a single clip \n           per output file. The Composition object cannot be null.</p>\n   "
+                    },
+                    "Captions": {
+                      "shape_name": "Captions",
+                      "type": "structure",
+                      "members": {
+                        "MergePolicy": {
+                          "shape_name": "CaptionMergePolicy",
+                          "type": "string",
+                          "pattern": "(^MergeOverride$)|(^MergeRetain$)|(^Override$)",
+                          "documentation": "\n      <p>A policy that determines how Elastic Transcoder handles the existence of multiple captions.</p>\n      <ul>\n         <li><p><b>MergeOverride:</b> Elastic Transcoder transcodes both embedded\n            and sidecar captions into outputs. If captions for a language are embedded in the input\n            file and also appear in a sidecar file, Elastic Transcoder uses the sidecar captions and ignores the\n            embedded captions for that language.</p></li>\n         <li><p><b>MergeRetain:</b>  Elastic Transcoder transcodes both embedded\n            and sidecar captions into outputs. If captions for a language are embedded in the input\n            file and also appear in a sidecar file, Elastic Transcoder uses the embedded captions and ignores the\n            sidecar captions for that language. If <guilabel>CaptionSources</guilabel> is empty,\n            Elastic Transcoder omits all sidecar captions from the output files.</p></li>\n         <li><p><b>Override:</b> Elastic Transcoder transcodes only the\n            sidecar captions that you specify in <code>CaptionSources</code>.</p></li>\n      </ul>\n      <p><code>MergePolicy</code> cannot be null.</p>\n   "
+                        },
+                        "CaptionSources": {
+                          "shape_name": "CaptionSources",
+                          "type": "list",
+                          "members": {
+                            "shape_name": "CaptionSource",
+                            "type": "structure",
+                            "members": {
+                              "Key": {
+                                "shape_name": "Key",
+                                "type": "string",
+                                "min_length": 1,
+                                "max_length": 255,
+                                "documentation": "\n      <p>The name of the sidecar caption file that you want Elastic Transcoder to include in the\n         output file.</p>\n   "
+                              },
+                              "Language": {
+                                "shape_name": "Key",
+                                "type": "string",
+                                "min_length": 1,
+                                "max_length": 255,
+                                "documentation": "\n      <p>A string that specifies the language of the caption. Specify this as one of:</p>\n      <ul>\n         <li><p>2-character ISO 639-1 code</p></li>\n         <li><p>3-character ISO 639-2 code</p></li>\n      </ul>\n      <p>For more information on ISO language codes and language names, see the List of ISO \n         639-1 codes.</p>\n   "
+                              },
+                              "TimeOffset": {
+                                "shape_name": "TimeOffset",
+                                "type": "string",
+                                "pattern": "(^[+-]?\\d{1,5}(\\.\\d{0,3})?$)|(^[+-]?([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
+                                "documentation": "\n      <p>For clip generation or captions that do not start at the same time\n         as the associated video file, the <code>TimeOffset</code> tells Elastic Transcoder how much of the video to encode\n         before including captions.</p>\n      <p>Specify the TimeOffset in the form [+-]SS.sss or [+-]HH:mm:SS.ss.</p>\n   "
+                              },
+                              "Label": {
+                                "shape_name": "Name",
+                                "type": "string",
+                                "min_length": 1,
+                                "max_length": 40,
+                                "documentation": "\n      <p>The label of the caption shown in the player when choosing\n         a language. We recommend that you put the caption language name here, \n         in the language of the captions.</p>\n   "
+                              }
+                            },
+                            "documentation": "\n      <p>A source file for the input sidecar captions used during the transcoding\n         process.</p>\n   "
+                          },
+                          "max_length": 20,
+                          "documentation": "\n      <p>Source files for the input sidecar captions used during the transcoding\n         process. To omit all sidecar captions, leave <code>CaptionSources</code> blank.</p>\n   "
+                        },
+                        "CaptionFormats": {
+                          "shape_name": "CaptionFormats",
+                          "type": "list",
+                          "members": {
+                            "shape_name": "CaptionFormat",
+                            "type": "structure",
+                            "members": {
+                              "Format": {
+                                "shape_name": "CaptionFormatFormat",
+                                "type": "string",
+                                "pattern": "(^mov-text$)|(^cea-608$)|(^cea-708$)|(^srt$)|(^scc$)|(^webvtt$)|(^dfxp$)",
+                                "documentation": "\n      <p>The format you specify determines whether Elastic Transcoder generates an\n         embedded or sidecar caption for this output.</p>\n      <ul>\n         <li>\n<p><b>Valid Embedded Caption Formats:</b></p>\n            <ul>\n               <li><p><b>For MP3</b>: None</p></li>\n               <li><p><b>For MP4</b>: mov-text</p></li>\n               <li><p><b>For MPEG-TS</b>: None</p></li>\n               <li><p><b>For ogg</b>: None</p></li>\n               <li><p><b>For webm</b>: None</p></li>\n            </ul>\n         </li>\n         <li>\n<p><b>Valid Sidecar Caption Formats:</b> Elastic Transcoder\n            supports dfxp (first div element only), scc, srt, and webvtt. There are\n            no container restrictions on sidecar captions. If you want ttml or smpte-tt\n            compatible captions, specify dfxp as your output format.</p>\n         </li>\n      </ul>\n   "
+                              },
+                              "Pattern": {
+                                "shape_name": "CaptionFormatPattern",
+                                "type": "string",
+                                "pattern": "(^$)|(^.*\\{language\\}.*$)",
+                                "documentation": "\n      <p>The prefix for caption filenames, in the form <i>description</i>-<code>{language}</code>, where:</p>\n      <ul>\n         <li>\n<i>description</i> is a description of the video.</li>\n         <li>\n<code>{language}</code> is a literal value that Elastic Transcoder replaces with the two- or three-letter\n            code for the language of the caption in the output file names.</li>\n      </ul>\n      <p>If you don't include <code>{language}</code> in the file name pattern, Elastic Transcoder automatically\n         appends \"<code>{language}</code>\" to the value that you specify for the description.  In addition,\n         Elastic Transcoder automatically appends the count to the end of the segment files.</p>\n      <p>For example, suppose you're transcoding into srt format. When you enter\n         \"Sydney-{language}-sunrise\", and the language of the captions is English\n         (en), the name of the first caption file will be Sydney-en-sunrise00000.srt.</p>\n   "
+                              }
+                            },
+                            "documentation": "\n      <p>The file format of the output captions. If you leave this value blank,\n         Elastic Transcoder returns an error.</p>\n   "
+                          },
+                          "max_length": 4,
+                          "documentation": "\n      <p>The array of file formats for the output captions. If you leave this value blank,\n         Elastic Transcoder returns an error.</p>\n   "
+                        }
+                      },
+                      "documentation": "\n      <p>You can configure Elastic Transcoder to transcode captions, or subtitles, from one format to another.\n         All captions must be in UTF-8. Elastic Transcoder supports two types of captions:</p>\n      <ul>\n         <li>\n<p><b>Embedded:</b> Embedded captions\n            are included in the same file as the audio and video. Elastic Transcoder supports\n            only one embedded caption per language, to a maximum of 300 embedded captions per file.</p>\n            <p>Valid input values include: <code>CEA-608 (EIA-608</code>, first non-empty channel only),\n               <code>CEA-708 (EIA-708</code>, first non-empty channel only), and <code>mov-text</code></p>\n            <p>Valid outputs include: <code>mov-text</code></p>\n            <p>Elastic Transcoder supports a maximum of one embedded format per output.</p>\n</li>\n         <li>\n<p><b>Sidecar:</b> Sidecar captions are kept in a\n            separate metadata file from the audio and video data.  Sidecar captions require a player\n            that is capable of understanding the relationship between the video file and the sidecar\n            file. Elastic Transcoder supports only one sidecar caption per language, to a maximum of 20 sidecar\n            captions per file.</p>\n            <p>Valid input values include: <code>dfxp</code> (first div element only),\n               <code>ebu-tt</code>, <code>scc</code>, <code>smpt</code>, <code>srt</code>,\n               <code>ttml</code> (first div element only), and <code>webvtt</code></p>\n            <p>Valid outputs include: <code>dfxp</code> (first div element only), <code>scc</code>,\n               <code>srt</code>, and <code>webvtt</code>.</p>\n</li>\n         </ul>\n         <p> If you want ttml or smpte-tt compatible captions, specify dfxp as your output format.</p>\n         <p>Elastic Transcoder does not support OCR (Optical Character Recognition), does not accept pictures\n            as a valid input for captions, and is not available for audio-only transcoding. Elastic Transcoder does\n            not preserve text formatting (for example, italics) during the transcoding process.</p>\n            <p>To remove captions or leave the captions empty, set <code>Captions</code> to null. To pass through\n            existing captions unchanged, set the <code>MergePolicy</code> to <code>MergeRetain</code>,\n            and pass in a null <code>CaptionSources</code> array.</p>\n      <p>For more information on embedded files, see the Subtitles Wikipedia page.</p>\n      <p>For more information on sidecar files, see the Extensible Metadata Platform and Sidecar file\n         Wikipedia pages.</p> \n   "
                     }
                   },
                   "documentation": "\n        <p><important>Outputs recommended instead.</important>If you specified one output for a job,\n            information about that output. If you specified multiple outputs for a job, the\n                <code>Output</code> object lists information about the first output. This duplicates\n            the information that is listed for the first output in the <code>Outputs</code>\n            object.</p>\n    "
@@ -1105,13 +1420,15 @@
             "type": "string",
             "min_length": 1,
             "max_length": 40,
-            "documentation": "\n        <p>The name of the pipeline. We recommend that the name be unique within the AWS account,\n            but uniqueness is not enforced.</p>\n        <p>Constraints: Maximum 40 characters.</p>\n    "
+            "documentation": "\n        <p>The name of the pipeline. We recommend that the name be unique within the AWS account,\n            but uniqueness is not enforced.</p>\n        <p>Constraints: Maximum 40 characters.</p>\n    ",
+            "required": true
           },
           "InputBucket": {
             "shape_name": "BucketName",
             "type": "string",
             "pattern": "^(\\w|\\.|-){1,255}$",
-            "documentation": "\n        <p>The Amazon S3 bucket in which you saved the media files that you want to transcode.</p>\n    "
+            "documentation": "\n        <p>The Amazon S3 bucket in which you saved the media files that you want to transcode.</p>\n    ",
+            "required": true
           },
           "OutputBucket": {
             "shape_name": "BucketName",
@@ -1123,7 +1440,8 @@
             "shape_name": "Role",
             "type": "string",
             "pattern": "^arn:aws:iam::\\w{12}:role/.+$",
-            "documentation": "\n        <p>The IAM Amazon Resource Name (ARN) for the role that you want Elastic Transcoder to use to create the\n            pipeline.</p>\n    "
+            "documentation": "\n        <p>The IAM Amazon Resource Name (ARN) for the role that you want Elastic Transcoder to use to create the\n            pipeline.</p>\n    ",
+            "required": true
           },
           "Notifications": {
             "shape_name": "Notifications",
@@ -1536,7 +1854,8 @@
             "type": "string",
             "min_length": 1,
             "max_length": 40,
-            "documentation": "\n        <p>The name of the preset. We recommend that the name be unique within the AWS account, but\n            uniqueness is not enforced.</p>\n    "
+            "documentation": "\n        <p>The name of the preset. We recommend that the name be unique within the AWS account, but\n            uniqueness is not enforced.</p>\n    ",
+            "required": true
           },
           "Description": {
             "shape_name": "Description",
@@ -1549,7 +1868,8 @@
             "shape_name": "PresetContainer",
             "type": "string",
             "pattern": "(^mp4$)|(^ts$)|(^webm$)|(^mp3$)|(^ogg$)",
-            "documentation": "\n        <p>The container type for the output file. Valid values include <code>mp3</code>, \n            <code>mp4</code>, <code>ogg</code>, <code>ts</code>, and <code>webm</code>.</p>\n    "
+            "documentation": "\n        <p>The container type for the output file. Valid values include <code>mp3</code>, \n            <code>mp4</code>, <code>ogg</code>, <code>ts</code>, and <code>webm</code>.</p>\n    ",
+            "required": true
           },
           "Video": {
             "shape_name": "VideoParameters",
@@ -1670,13 +1990,13 @@
                     "MaxWidth": {
                       "shape_name": "PixelsOrPercent",
                       "type": "string",
-                      "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                      "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{1,4}?px$)",
                       "documentation": "\n        <p>The maximum width of the watermark in one of the following formats: <ul>\n                <li>number of pixels (px): The minimum value is 16 pixels, and the maximum value is\n                    the value of <code>MaxWidth</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100. Use the value of\n                        <code>Target</code> to specify whether you want Elastic Transcoder to include the black\n                    bars that are added by Elastic Transcoder, if any, in the calculation.</li> If\n                you specify the value in pixels, it must be less than or equal to the value of\n                    <code>MaxWidth</code>.</ul></p>\n    "
                     },
                     "MaxHeight": {
                       "shape_name": "PixelsOrPercent",
                       "type": "string",
-                      "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                      "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{1,4}?px$)",
                       "documentation": "\n        <p>The maximum height of the watermark in one of the following formats: <ul>\n                <li>number of pixels (px): The minimum value is 16 pixels, and the maximum value is\n                    the value of <code>MaxHeight</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100. Use the value of\n                        <code>Target</code> to specify whether you want Elastic Transcoder to include the black\n                    bars that are added by Elastic Transcoder, if any, in the calculation.</li>\n            </ul> If you specify the value in pixels, it must be less than or equal to the value of\n                <code>MaxHeight</code>.</p>\n    "
                     },
                     "SizingPolicy": {
@@ -1694,7 +2014,7 @@
                     "HorizontalOffset": {
                       "shape_name": "PixelsOrPercent",
                       "type": "string",
-                      "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                      "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{1,4}?px$)",
                       "documentation": "\n        <p>The amount by which you want the horizontal position of the watermark to be offset from\n            the position specified by HorizontalAlign: <ul>\n                <li>number of pixels (px): The minimum value is 0 pixels, and the maximum value is\n                    the value of MaxWidth.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100.</li>\n            </ul>For example, if you specify Left for <code>HorizontalAlign</code> and 5px for\n                <code>HorizontalOffset</code>, the left side of the watermark appears 5 pixels from\n            the left border of the output video.</p>\n        <p><code>HorizontalOffset</code> is only valid when the value of\n                <code>HorizontalAlign</code> is <code>Left</code> or <code>Right</code>. If you\n            specify an offset that causes the watermark to extend beyond the left or right border\n            and Elastic Transcoder has not added black bars, the watermark is cropped. If Elastic\n            Transcoder has added black bars, the watermark extends into the black bars. If the\n            watermark extends beyond the black bars, it is cropped.</p>\n        <p>Use the value of <code>Target</code> to specify whether you want to include the black\n            bars that are added by Elastic Transcoder, if any, in the offset calculation.</p>\n    "
                     },
                     "VerticalAlign": {
@@ -1706,7 +2026,7 @@
                     "VerticalOffset": {
                       "shape_name": "PixelsOrPercent",
                       "type": "string",
-                      "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                      "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{1,4}?px$)",
                       "documentation": "\n        <code>VerticalOffset</code>\n        <p>The amount by which you want the vertical position of the watermark to be offset from the\n            position specified by VerticalAlign:<ul>\n                <li>number of pixels (px): The minimum value is 0 pixels, and the maximum value is\n                    the value of <code>MaxHeight</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100.</li>\n            </ul> For example, if you specify <code>Top</code> for <code>VerticalAlign</code> and\n                <code>5px</code> for <code>VerticalOffset</code>, the top of the watermark appears 5\n            pixels from the top border of the output video.</p>\n        <p><code>VerticalOffset</code> is only valid when the value of VerticalAlign is Top or\n            Bottom.</p>\n        <p>If you specify an offset that causes the watermark to extend beyond the top or bottom\n            border and Elastic Transcoder has not added black bars, the watermark is cropped. If\n            Elastic Transcoder has added black bars, the watermark extends into the black bars. If\n            the watermark extends beyond the black bars, it is cropped.</p>\n\n        <p>Use the value of <code>Target</code> to specify whether you want Elastic Transcoder to\n            include the black bars that are added by Elastic Transcoder, if any, in the offset\n            calculation.</p>\n    "
                     },
                     "Opacity": {
@@ -1765,7 +2085,7 @@
                     "shape_name": "AudioCodecProfile",
                     "type": "string",
                     "pattern": "(^auto$)|(^AAC-LC$)|(^HE-AAC$)|(^HE-AACv2$)",
-                    "documentation": "\n        <p>If you specified <code>AAC</code> for <code>Audio:Codec</code>, choose the AAC profile for the output file.\n            Elastic Transcoder supports the following profiles:</p>\n        <ul>\n            <li>\n<code>auto</code>: If you specify <code>auto</code>, Elastic Transcoder will select\n                the profile based on the bit rate selected for the output file.</li>\n            <li>\n<code>AAC-LC</code>: The most common AAC profile. Use for bitrates larger than\n                64 kbps.</li>\n            <li>\n<code>HE-AAC</code>: Not supported on some older players and devices.\n                Use for bitrates between 40 and 80 kbps.</li>\n            <li>\n<code>HE-AACv2</code>: Not supported on some players and devices.\n                Use for bitrates less than 48 kbps.</li>\n        </ul>\n        <note><p>If you created any presets before AAC profiles were added, Elastic Transcoder automatically updated\n            your presets to use AAC-LC. You can change the value as required.</p></note>  \n    "
+                    "documentation": "\n        <p>You can only choose an audio profile when you specify AAC for the value of Audio:Codec.</p>\n        <p>Specify the AAC profile for the output file. Elastic Transcoder supports the following profiles:</p>\n        <ul>\n            <li>\n<code>auto</code>: If you specify <code>auto</code>, Elastic Transcoder will select\n                the profile based on the bit rate selected for the output file.</li>\n            <li>\n<code>AAC-LC</code>: The most common AAC profile. Use for bitrates larger than\n                64 kbps.</li>\n            <li>\n<code>HE-AAC</code>: Not supported on some older players and devices.\n                Use for bitrates between 40 and 80 kbps.</li>\n            <li>\n<code>HE-AACv2</code>: Not supported on some players and devices.\n                Use for bitrates less than 48 kbps.</li>\n        </ul>\n        <note><p>If you created any presets before AAC profiles were added, Elastic Transcoder automatically updated\n            your presets to use AAC-LC. You can change the value as required.</p></note>  \n    "
                   }
                 },
                 "documentation": "\n        <p>If you specified <code>AAC</code> for <code>Audio:Codec</code>, this is the <code>AAC</code> \n            compression profile to use. Valid values include:</p>\n        <p><code>auto</code>, <code>AAC-LC</code>, <code>HE-AAC</code>, <code>HE-AACv2</code></p>\n        <p>If you specify <code>auto</code>, Elastic Transcoder chooses a profile based on the bit rate of the output file.</p>\n    "
@@ -1906,7 +2226,7 @@
                         "shape_name": "AudioCodecProfile",
                         "type": "string",
                         "pattern": "(^auto$)|(^AAC-LC$)|(^HE-AAC$)|(^HE-AACv2$)",
-                        "documentation": "\n        <p>If you specified <code>AAC</code> for <code>Audio:Codec</code>, choose the AAC profile for the output file.\n            Elastic Transcoder supports the following profiles:</p>\n        <ul>\n            <li>\n<code>auto</code>: If you specify <code>auto</code>, Elastic Transcoder will select\n                the profile based on the bit rate selected for the output file.</li>\n            <li>\n<code>AAC-LC</code>: The most common AAC profile. Use for bitrates larger than\n                64 kbps.</li>\n            <li>\n<code>HE-AAC</code>: Not supported on some older players and devices.\n                Use for bitrates between 40 and 80 kbps.</li>\n            <li>\n<code>HE-AACv2</code>: Not supported on some players and devices.\n                Use for bitrates less than 48 kbps.</li>\n        </ul>\n        <note><p>If you created any presets before AAC profiles were added, Elastic Transcoder automatically updated\n            your presets to use AAC-LC. You can change the value as required.</p></note>  \n    "
+                        "documentation": "\n        <p>You can only choose an audio profile when you specify AAC for the value of Audio:Codec.</p>\n        <p>Specify the AAC profile for the output file. Elastic Transcoder supports the following profiles:</p>\n        <ul>\n            <li>\n<code>auto</code>: If you specify <code>auto</code>, Elastic Transcoder will select\n                the profile based on the bit rate selected for the output file.</li>\n            <li>\n<code>AAC-LC</code>: The most common AAC profile. Use for bitrates larger than\n                64 kbps.</li>\n            <li>\n<code>HE-AAC</code>: Not supported on some older players and devices.\n                Use for bitrates between 40 and 80 kbps.</li>\n            <li>\n<code>HE-AACv2</code>: Not supported on some players and devices.\n                Use for bitrates less than 48 kbps.</li>\n        </ul>\n        <note><p>If you created any presets before AAC profiles were added, Elastic Transcoder automatically updated\n            your presets to use AAC-LC. You can change the value as required.</p></note>  \n    "
                       }
                     },
                     "documentation": "\n        <p>If you specified <code>AAC</code> for <code>Audio:Codec</code>, this is the <code>AAC</code> \n            compression profile to use. Valid values include:</p>\n        <p><code>auto</code>, <code>AAC-LC</code>, <code>HE-AAC</code>, <code>HE-AACv2</code></p>\n        <p>If you specify <code>auto</code>, Elastic Transcoder chooses a profile based on the bit rate of the output file.</p>\n    "
@@ -2033,13 +2353,13 @@
                         "MaxWidth": {
                           "shape_name": "PixelsOrPercent",
                           "type": "string",
-                          "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                          "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{1,4}?px$)",
                           "documentation": "\n        <p>The maximum width of the watermark in one of the following formats: <ul>\n                <li>number of pixels (px): The minimum value is 16 pixels, and the maximum value is\n                    the value of <code>MaxWidth</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100. Use the value of\n                        <code>Target</code> to specify whether you want Elastic Transcoder to include the black\n                    bars that are added by Elastic Transcoder, if any, in the calculation.</li> If\n                you specify the value in pixels, it must be less than or equal to the value of\n                    <code>MaxWidth</code>.</ul></p>\n    "
                         },
                         "MaxHeight": {
                           "shape_name": "PixelsOrPercent",
                           "type": "string",
-                          "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                          "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{1,4}?px$)",
                           "documentation": "\n        <p>The maximum height of the watermark in one of the following formats: <ul>\n                <li>number of pixels (px): The minimum value is 16 pixels, and the maximum value is\n                    the value of <code>MaxHeight</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100. Use the value of\n                        <code>Target</code> to specify whether you want Elastic Transcoder to include the black\n                    bars that are added by Elastic Transcoder, if any, in the calculation.</li>\n            </ul> If you specify the value in pixels, it must be less than or equal to the value of\n                <code>MaxHeight</code>.</p>\n    "
                         },
                         "SizingPolicy": {
@@ -2057,7 +2377,7 @@
                         "HorizontalOffset": {
                           "shape_name": "PixelsOrPercent",
                           "type": "string",
-                          "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                          "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{1,4}?px$)",
                           "documentation": "\n        <p>The amount by which you want the horizontal position of the watermark to be offset from\n            the position specified by HorizontalAlign: <ul>\n                <li>number of pixels (px): The minimum value is 0 pixels, and the maximum value is\n                    the value of MaxWidth.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100.</li>\n            </ul>For example, if you specify Left for <code>HorizontalAlign</code> and 5px for\n                <code>HorizontalOffset</code>, the left side of the watermark appears 5 pixels from\n            the left border of the output video.</p>\n        <p><code>HorizontalOffset</code> is only valid when the value of\n                <code>HorizontalAlign</code> is <code>Left</code> or <code>Right</code>. If you\n            specify an offset that causes the watermark to extend beyond the left or right border\n            and Elastic Transcoder has not added black bars, the watermark is cropped. If Elastic\n            Transcoder has added black bars, the watermark extends into the black bars. If the\n            watermark extends beyond the black bars, it is cropped.</p>\n        <p>Use the value of <code>Target</code> to specify whether you want to include the black\n            bars that are added by Elastic Transcoder, if any, in the offset calculation.</p>\n    "
                         },
                         "VerticalAlign": {
@@ -2069,7 +2389,7 @@
                         "VerticalOffset": {
                           "shape_name": "PixelsOrPercent",
                           "type": "string",
-                          "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                          "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{1,4}?px$)",
                           "documentation": "\n        <code>VerticalOffset</code>\n        <p>The amount by which you want the vertical position of the watermark to be offset from the\n            position specified by VerticalAlign:<ul>\n                <li>number of pixels (px): The minimum value is 0 pixels, and the maximum value is\n                    the value of <code>MaxHeight</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100.</li>\n            </ul> For example, if you specify <code>Top</code> for <code>VerticalAlign</code> and\n                <code>5px</code> for <code>VerticalOffset</code>, the top of the watermark appears 5\n            pixels from the top border of the output video.</p>\n        <p><code>VerticalOffset</code> is only valid when the value of VerticalAlign is Top or\n            Bottom.</p>\n        <p>If you specify an offset that causes the watermark to extend beyond the top or bottom\n            border and Elastic Transcoder has not added black bars, the watermark is cropped. If\n            Elastic Transcoder has added black bars, the watermark extends into the black bars. If\n            the watermark extends beyond the black bars, it is cropped.</p>\n\n        <p>Use the value of <code>Target</code> to specify whether you want Elastic Transcoder to\n            include the black bars that are added by Elastic Transcoder, if any, in the offset\n            calculation.</p>\n    "
                         },
                         "Opacity": {
@@ -2219,6 +2539,7 @@
             "type": "string",
             "pattern": "^\\d{13}-\\w{6}$",
             "documentation": "\n        <p>The identifier of the pipeline that you want to delete.</p>\n    ",
+            "required": true,
             "location": "uri"
           }
         },
@@ -2293,6 +2614,7 @@
             "type": "string",
             "pattern": "^\\d{13}-\\w{6}$",
             "documentation": "\n        <p>The identifier of the preset for which you want to get detailed information.</p>\n    ",
+            "required": true,
             "location": "uri"
           }
         },
@@ -2359,6 +2681,7 @@
             "type": "string",
             "pattern": "^\\d{13}-\\w{6}$",
             "documentation": "\n        <p> The ID of the pipeline for which you want to get job information. </p>\n    ",
+            "required": true,
             "location": "uri"
           },
           "Ascending": {
@@ -2629,7 +2952,7 @@
                                 "shape_name": "Time",
                                 "type": "string",
                                 "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
-                                "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file , Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
+                                "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file, Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
                               }
                             },
                             "documentation": "\n       <p>Settings that determine when a clip begins and how long it lasts.</p>\n   "
@@ -2637,7 +2960,85 @@
                         },
                         "documentation": "\n       <p>Settings for one clip in a composition. All jobs in a playlist must have the same clip settings.</p>\n   "
                       },
-                      "documentation": "\n       <p>You can create an output file that contains an excerpt from the input file. This excerpt, called a clip, can come from the beginning, middle, or end of the file. The Composition object contains settings for the clips that make up an output file. For the current release, you can only specify settings for a single clip per output file. The Composition object cannot be null.</p>\n   "
+                      "documentation": "\n       <p>You can create an output file that contains an excerpt from the input file. This \n           excerpt, called a clip, can come from the beginning, middle, or end of the file. \n           The Composition object contains settings for the clips that make up an output \n           file. For the current release, you can only specify settings for a single clip \n           per output file. The Composition object cannot be null.</p>\n   "
+                    },
+                    "Captions": {
+                      "shape_name": "Captions",
+                      "type": "structure",
+                      "members": {
+                        "MergePolicy": {
+                          "shape_name": "CaptionMergePolicy",
+                          "type": "string",
+                          "pattern": "(^MergeOverride$)|(^MergeRetain$)|(^Override$)",
+                          "documentation": "\n      <p>A policy that determines how Elastic Transcoder handles the existence of multiple captions.</p>\n      <ul>\n         <li><p><b>MergeOverride:</b> Elastic Transcoder transcodes both embedded\n            and sidecar captions into outputs. If captions for a language are embedded in the input\n            file and also appear in a sidecar file, Elastic Transcoder uses the sidecar captions and ignores the\n            embedded captions for that language.</p></li>\n         <li><p><b>MergeRetain:</b>  Elastic Transcoder transcodes both embedded\n            and sidecar captions into outputs. If captions for a language are embedded in the input\n            file and also appear in a sidecar file, Elastic Transcoder uses the embedded captions and ignores the\n            sidecar captions for that language. If <guilabel>CaptionSources</guilabel> is empty,\n            Elastic Transcoder omits all sidecar captions from the output files.</p></li>\n         <li><p><b>Override:</b> Elastic Transcoder transcodes only the\n            sidecar captions that you specify in <code>CaptionSources</code>.</p></li>\n      </ul>\n      <p><code>MergePolicy</code> cannot be null.</p>\n   "
+                        },
+                        "CaptionSources": {
+                          "shape_name": "CaptionSources",
+                          "type": "list",
+                          "members": {
+                            "shape_name": "CaptionSource",
+                            "type": "structure",
+                            "members": {
+                              "Key": {
+                                "shape_name": "Key",
+                                "type": "string",
+                                "min_length": 1,
+                                "max_length": 255,
+                                "documentation": "\n      <p>The name of the sidecar caption file that you want Elastic Transcoder to include in the\n         output file.</p>\n   "
+                              },
+                              "Language": {
+                                "shape_name": "Key",
+                                "type": "string",
+                                "min_length": 1,
+                                "max_length": 255,
+                                "documentation": "\n      <p>A string that specifies the language of the caption. Specify this as one of:</p>\n      <ul>\n         <li><p>2-character ISO 639-1 code</p></li>\n         <li><p>3-character ISO 639-2 code</p></li>\n      </ul>\n      <p>For more information on ISO language codes and language names, see the List of ISO \n         639-1 codes.</p>\n   "
+                              },
+                              "TimeOffset": {
+                                "shape_name": "TimeOffset",
+                                "type": "string",
+                                "pattern": "(^[+-]?\\d{1,5}(\\.\\d{0,3})?$)|(^[+-]?([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
+                                "documentation": "\n      <p>For clip generation or captions that do not start at the same time\n         as the associated video file, the <code>TimeOffset</code> tells Elastic Transcoder how much of the video to encode\n         before including captions.</p>\n      <p>Specify the TimeOffset in the form [+-]SS.sss or [+-]HH:mm:SS.ss.</p>\n   "
+                              },
+                              "Label": {
+                                "shape_name": "Name",
+                                "type": "string",
+                                "min_length": 1,
+                                "max_length": 40,
+                                "documentation": "\n      <p>The label of the caption shown in the player when choosing\n         a language. We recommend that you put the caption language name here, \n         in the language of the captions.</p>\n   "
+                              }
+                            },
+                            "documentation": "\n      <p>A source file for the input sidecar captions used during the transcoding\n         process.</p>\n   "
+                          },
+                          "max_length": 20,
+                          "documentation": "\n      <p>Source files for the input sidecar captions used during the transcoding\n         process. To omit all sidecar captions, leave <code>CaptionSources</code> blank.</p>\n   "
+                        },
+                        "CaptionFormats": {
+                          "shape_name": "CaptionFormats",
+                          "type": "list",
+                          "members": {
+                            "shape_name": "CaptionFormat",
+                            "type": "structure",
+                            "members": {
+                              "Format": {
+                                "shape_name": "CaptionFormatFormat",
+                                "type": "string",
+                                "pattern": "(^mov-text$)|(^cea-608$)|(^cea-708$)|(^srt$)|(^scc$)|(^webvtt$)|(^dfxp$)",
+                                "documentation": "\n      <p>The format you specify determines whether Elastic Transcoder generates an\n         embedded or sidecar caption for this output.</p>\n      <ul>\n         <li>\n<p><b>Valid Embedded Caption Formats:</b></p>\n            <ul>\n               <li><p><b>For MP3</b>: None</p></li>\n               <li><p><b>For MP4</b>: mov-text</p></li>\n               <li><p><b>For MPEG-TS</b>: None</p></li>\n               <li><p><b>For ogg</b>: None</p></li>\n               <li><p><b>For webm</b>: None</p></li>\n            </ul>\n         </li>\n         <li>\n<p><b>Valid Sidecar Caption Formats:</b> Elastic Transcoder\n            supports dfxp (first div element only), scc, srt, and webvtt. There are\n            no container restrictions on sidecar captions. If you want ttml or smpte-tt\n            compatible captions, specify dfxp as your output format.</p>\n         </li>\n      </ul>\n   "
+                              },
+                              "Pattern": {
+                                "shape_name": "CaptionFormatPattern",
+                                "type": "string",
+                                "pattern": "(^$)|(^.*\\{language\\}.*$)",
+                                "documentation": "\n      <p>The prefix for caption filenames, in the form <i>description</i>-<code>{language}</code>, where:</p>\n      <ul>\n         <li>\n<i>description</i> is a description of the video.</li>\n         <li>\n<code>{language}</code> is a literal value that Elastic Transcoder replaces with the two- or three-letter\n            code for the language of the caption in the output file names.</li>\n      </ul>\n      <p>If you don't include <code>{language}</code> in the file name pattern, Elastic Transcoder automatically\n         appends \"<code>{language}</code>\" to the value that you specify for the description.  In addition,\n         Elastic Transcoder automatically appends the count to the end of the segment files.</p>\n      <p>For example, suppose you're transcoding into srt format. When you enter\n         \"Sydney-{language}-sunrise\", and the language of the captions is English\n         (en), the name of the first caption file will be Sydney-en-sunrise00000.srt.</p>\n   "
+                              }
+                            },
+                            "documentation": "\n      <p>The file format of the output captions. If you leave this value blank,\n         Elastic Transcoder returns an error.</p>\n   "
+                          },
+                          "max_length": 4,
+                          "documentation": "\n      <p>The array of file formats for the output captions. If you leave this value blank,\n         Elastic Transcoder returns an error.</p>\n   "
+                        }
+                      },
+                      "documentation": "\n      <p>You can configure Elastic Transcoder to transcode captions, or subtitles, from one format to another.\n         All captions must be in UTF-8. Elastic Transcoder supports two types of captions:</p>\n      <ul>\n         <li>\n<p><b>Embedded:</b> Embedded captions\n            are included in the same file as the audio and video. Elastic Transcoder supports\n            only one embedded caption per language, to a maximum of 300 embedded captions per file.</p>\n            <p>Valid input values include: <code>CEA-608 (EIA-608</code>, first non-empty channel only),\n               <code>CEA-708 (EIA-708</code>, first non-empty channel only), and <code>mov-text</code></p>\n            <p>Valid outputs include: <code>mov-text</code></p>\n            <p>Elastic Transcoder supports a maximum of one embedded format per output.</p>\n</li>\n         <li>\n<p><b>Sidecar:</b> Sidecar captions are kept in a\n            separate metadata file from the audio and video data.  Sidecar captions require a player\n            that is capable of understanding the relationship between the video file and the sidecar\n            file. Elastic Transcoder supports only one sidecar caption per language, to a maximum of 20 sidecar\n            captions per file.</p>\n            <p>Valid input values include: <code>dfxp</code> (first div element only),\n               <code>ebu-tt</code>, <code>scc</code>, <code>smpt</code>, <code>srt</code>,\n               <code>ttml</code> (first div element only), and <code>webvtt</code></p>\n            <p>Valid outputs include: <code>dfxp</code> (first div element only), <code>scc</code>,\n               <code>srt</code>, and <code>webvtt</code>.</p>\n</li>\n         </ul>\n         <p> If you want ttml or smpte-tt compatible captions, specify dfxp as your output format.</p>\n         <p>Elastic Transcoder does not support OCR (Optical Character Recognition), does not accept pictures\n            as a valid input for captions, and is not available for audio-only transcoding. Elastic Transcoder does\n            not preserve text formatting (for example, italics) during the transcoding process.</p>\n            <p>To remove captions or leave the captions empty, set <code>Captions</code> to null. To pass through\n            existing captions unchanged, set the <code>MergePolicy</code> to <code>MergeRetain</code>,\n            and pass in a null <code>CaptionSources</code> array.</p>\n      <p>For more information on embedded files, see the Subtitles Wikipedia page.</p>\n      <p>For more information on sidecar files, see the Extensible Metadata Platform and Sidecar file\n         Wikipedia pages.</p> \n   "
                     }
                   },
                   "documentation": "\n        <p>If you specified one output for a job, information about that output. If you specified\n            multiple outputs for a job, the Output object lists information about the first output.\n            This duplicates the information that is listed for the first output in the Outputs\n            object.</p>\n        <p><important>Outputs recommended instead.</important> A section of the request or response\n            body that provides information about the transcoded (target) file. </p>\n    "
@@ -2824,7 +3225,7 @@
                                   "shape_name": "Time",
                                   "type": "string",
                                   "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
-                                  "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file , Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
+                                  "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file, Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
                                 }
                               },
                               "documentation": "\n       <p>Settings that determine when a clip begins and how long it lasts.</p>\n   "
@@ -2832,7 +3233,85 @@
                           },
                           "documentation": "\n       <p>Settings for one clip in a composition. All jobs in a playlist must have the same clip settings.</p>\n   "
                         },
-                        "documentation": "\n       <p>You can create an output file that contains an excerpt from the input file. This excerpt, called a clip, can come from the beginning, middle, or end of the file. The Composition object contains settings for the clips that make up an output file. For the current release, you can only specify settings for a single clip per output file. The Composition object cannot be null.</p>\n   "
+                        "documentation": "\n       <p>You can create an output file that contains an excerpt from the input file. This \n           excerpt, called a clip, can come from the beginning, middle, or end of the file. \n           The Composition object contains settings for the clips that make up an output \n           file. For the current release, you can only specify settings for a single clip \n           per output file. The Composition object cannot be null.</p>\n   "
+                      },
+                      "Captions": {
+                        "shape_name": "Captions",
+                        "type": "structure",
+                        "members": {
+                          "MergePolicy": {
+                            "shape_name": "CaptionMergePolicy",
+                            "type": "string",
+                            "pattern": "(^MergeOverride$)|(^MergeRetain$)|(^Override$)",
+                            "documentation": "\n      <p>A policy that determines how Elastic Transcoder handles the existence of multiple captions.</p>\n      <ul>\n         <li><p><b>MergeOverride:</b> Elastic Transcoder transcodes both embedded\n            and sidecar captions into outputs. If captions for a language are embedded in the input\n            file and also appear in a sidecar file, Elastic Transcoder uses the sidecar captions and ignores the\n            embedded captions for that language.</p></li>\n         <li><p><b>MergeRetain:</b>  Elastic Transcoder transcodes both embedded\n            and sidecar captions into outputs. If captions for a language are embedded in the input\n            file and also appear in a sidecar file, Elastic Transcoder uses the embedded captions and ignores the\n            sidecar captions for that language. If <guilabel>CaptionSources</guilabel> is empty,\n            Elastic Transcoder omits all sidecar captions from the output files.</p></li>\n         <li><p><b>Override:</b> Elastic Transcoder transcodes only the\n            sidecar captions that you specify in <code>CaptionSources</code>.</p></li>\n      </ul>\n      <p><code>MergePolicy</code> cannot be null.</p>\n   "
+                          },
+                          "CaptionSources": {
+                            "shape_name": "CaptionSources",
+                            "type": "list",
+                            "members": {
+                              "shape_name": "CaptionSource",
+                              "type": "structure",
+                              "members": {
+                                "Key": {
+                                  "shape_name": "Key",
+                                  "type": "string",
+                                  "min_length": 1,
+                                  "max_length": 255,
+                                  "documentation": "\n      <p>The name of the sidecar caption file that you want Elastic Transcoder to include in the\n         output file.</p>\n   "
+                                },
+                                "Language": {
+                                  "shape_name": "Key",
+                                  "type": "string",
+                                  "min_length": 1,
+                                  "max_length": 255,
+                                  "documentation": "\n      <p>A string that specifies the language of the caption. Specify this as one of:</p>\n      <ul>\n         <li><p>2-character ISO 639-1 code</p></li>\n         <li><p>3-character ISO 639-2 code</p></li>\n      </ul>\n      <p>For more information on ISO language codes and language names, see the List of ISO \n         639-1 codes.</p>\n   "
+                                },
+                                "TimeOffset": {
+                                  "shape_name": "TimeOffset",
+                                  "type": "string",
+                                  "pattern": "(^[+-]?\\d{1,5}(\\.\\d{0,3})?$)|(^[+-]?([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
+                                  "documentation": "\n      <p>For clip generation or captions that do not start at the same time\n         as the associated video file, the <code>TimeOffset</code> tells Elastic Transcoder how much of the video to encode\n         before including captions.</p>\n      <p>Specify the TimeOffset in the form [+-]SS.sss or [+-]HH:mm:SS.ss.</p>\n   "
+                                },
+                                "Label": {
+                                  "shape_name": "Name",
+                                  "type": "string",
+                                  "min_length": 1,
+                                  "max_length": 40,
+                                  "documentation": "\n      <p>The label of the caption shown in the player when choosing\n         a language. We recommend that you put the caption language name here, \n         in the language of the captions.</p>\n   "
+                                }
+                              },
+                              "documentation": "\n      <p>A source file for the input sidecar captions used during the transcoding\n         process.</p>\n   "
+                            },
+                            "max_length": 20,
+                            "documentation": "\n      <p>Source files for the input sidecar captions used during the transcoding\n         process. To omit all sidecar captions, leave <code>CaptionSources</code> blank.</p>\n   "
+                          },
+                          "CaptionFormats": {
+                            "shape_name": "CaptionFormats",
+                            "type": "list",
+                            "members": {
+                              "shape_name": "CaptionFormat",
+                              "type": "structure",
+                              "members": {
+                                "Format": {
+                                  "shape_name": "CaptionFormatFormat",
+                                  "type": "string",
+                                  "pattern": "(^mov-text$)|(^cea-608$)|(^cea-708$)|(^srt$)|(^scc$)|(^webvtt$)|(^dfxp$)",
+                                  "documentation": "\n      <p>The format you specify determines whether Elastic Transcoder generates an\n         embedded or sidecar caption for this output.</p>\n      <ul>\n         <li>\n<p><b>Valid Embedded Caption Formats:</b></p>\n            <ul>\n               <li><p><b>For MP3</b>: None</p></li>\n               <li><p><b>For MP4</b>: mov-text</p></li>\n               <li><p><b>For MPEG-TS</b>: None</p></li>\n               <li><p><b>For ogg</b>: None</p></li>\n               <li><p><b>For webm</b>: None</p></li>\n            </ul>\n         </li>\n         <li>\n<p><b>Valid Sidecar Caption Formats:</b> Elastic Transcoder\n            supports dfxp (first div element only), scc, srt, and webvtt. There are\n            no container restrictions on sidecar captions. If you want ttml or smpte-tt\n            compatible captions, specify dfxp as your output format.</p>\n         </li>\n      </ul>\n   "
+                                },
+                                "Pattern": {
+                                  "shape_name": "CaptionFormatPattern",
+                                  "type": "string",
+                                  "pattern": "(^$)|(^.*\\{language\\}.*$)",
+                                  "documentation": "\n      <p>The prefix for caption filenames, in the form <i>description</i>-<code>{language}</code>, where:</p>\n      <ul>\n         <li>\n<i>description</i> is a description of the video.</li>\n         <li>\n<code>{language}</code> is a literal value that Elastic Transcoder replaces with the two- or three-letter\n            code for the language of the caption in the output file names.</li>\n      </ul>\n      <p>If you don't include <code>{language}</code> in the file name pattern, Elastic Transcoder automatically\n         appends \"<code>{language}</code>\" to the value that you specify for the description.  In addition,\n         Elastic Transcoder automatically appends the count to the end of the segment files.</p>\n      <p>For example, suppose you're transcoding into srt format. When you enter\n         \"Sydney-{language}-sunrise\", and the language of the captions is English\n         (en), the name of the first caption file will be Sydney-en-sunrise00000.srt.</p>\n   "
+                                }
+                              },
+                              "documentation": "\n      <p>The file format of the output captions. If you leave this value blank,\n         Elastic Transcoder returns an error.</p>\n   "
+                            },
+                            "max_length": 4,
+                            "documentation": "\n      <p>The array of file formats for the output captions. If you leave this value blank,\n         Elastic Transcoder returns an error.</p>\n   "
+                          }
+                        },
+                        "documentation": "\n      <p>You can configure Elastic Transcoder to transcode captions, or subtitles, from one format to another.\n         All captions must be in UTF-8. Elastic Transcoder supports two types of captions:</p>\n      <ul>\n         <li>\n<p><b>Embedded:</b> Embedded captions\n            are included in the same file as the audio and video. Elastic Transcoder supports\n            only one embedded caption per language, to a maximum of 300 embedded captions per file.</p>\n            <p>Valid input values include: <code>CEA-608 (EIA-608</code>, first non-empty channel only),\n               <code>CEA-708 (EIA-708</code>, first non-empty channel only), and <code>mov-text</code></p>\n            <p>Valid outputs include: <code>mov-text</code></p>\n            <p>Elastic Transcoder supports a maximum of one embedded format per output.</p>\n</li>\n         <li>\n<p><b>Sidecar:</b> Sidecar captions are kept in a\n            separate metadata file from the audio and video data.  Sidecar captions require a player\n            that is capable of understanding the relationship between the video file and the sidecar\n            file. Elastic Transcoder supports only one sidecar caption per language, to a maximum of 20 sidecar\n            captions per file.</p>\n            <p>Valid input values include: <code>dfxp</code> (first div element only),\n               <code>ebu-tt</code>, <code>scc</code>, <code>smpt</code>, <code>srt</code>,\n               <code>ttml</code> (first div element only), and <code>webvtt</code></p>\n            <p>Valid outputs include: <code>dfxp</code> (first div element only), <code>scc</code>,\n               <code>srt</code>, and <code>webvtt</code>.</p>\n</li>\n         </ul>\n         <p> If you want ttml or smpte-tt compatible captions, specify dfxp as your output format.</p>\n         <p>Elastic Transcoder does not support OCR (Optical Character Recognition), does not accept pictures\n            as a valid input for captions, and is not available for audio-only transcoding. Elastic Transcoder does\n            not preserve text formatting (for example, italics) during the transcoding process.</p>\n            <p>To remove captions or leave the captions empty, set <code>Captions</code> to null. To pass through\n            existing captions unchanged, set the <code>MergePolicy</code> to <code>MergeRetain</code>,\n            and pass in a null <code>CaptionSources</code> array.</p>\n      <p>For more information on embedded files, see the Subtitles Wikipedia page.</p>\n      <p>For more information on sidecar files, see the Extensible Metadata Platform and Sidecar file\n         Wikipedia pages.</p> \n   "
                       }
                     },
                     "documentation": "\n        <p><important>Outputs recommended instead.</important>If you specified one output for a job,\n            information about that output. If you specified multiple outputs for a job, the\n                <code>Output</code> object lists information about the first output. This duplicates\n            the information that is listed for the first output in the <code>Outputs</code>\n            object.</p>\n    "
@@ -2971,6 +3450,7 @@
             "type": "string",
             "pattern": "(^Submitted$)|(^Progressing$)|(^Complete$)|(^Canceled$)|(^Error$)",
             "documentation": "\n        <p>To get information about all of the jobs associated with the current AWS account that\n            have a given status, specify the following status: <code>Submitted</code>,\n                <code>Progressing</code>, <code>Complete</code>, <code>Canceled</code>, or\n                <code>Error</code>.</p>\n    ",
+            "required": true,
             "location": "uri"
           },
           "Ascending": {
@@ -3241,7 +3721,7 @@
                                 "shape_name": "Time",
                                 "type": "string",
                                 "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
-                                "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file , Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
+                                "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file, Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
                               }
                             },
                             "documentation": "\n       <p>Settings that determine when a clip begins and how long it lasts.</p>\n   "
@@ -3249,7 +3729,85 @@
                         },
                         "documentation": "\n       <p>Settings for one clip in a composition. All jobs in a playlist must have the same clip settings.</p>\n   "
                       },
-                      "documentation": "\n       <p>You can create an output file that contains an excerpt from the input file. This excerpt, called a clip, can come from the beginning, middle, or end of the file. The Composition object contains settings for the clips that make up an output file. For the current release, you can only specify settings for a single clip per output file. The Composition object cannot be null.</p>\n   "
+                      "documentation": "\n       <p>You can create an output file that contains an excerpt from the input file. This \n           excerpt, called a clip, can come from the beginning, middle, or end of the file. \n           The Composition object contains settings for the clips that make up an output \n           file. For the current release, you can only specify settings for a single clip \n           per output file. The Composition object cannot be null.</p>\n   "
+                    },
+                    "Captions": {
+                      "shape_name": "Captions",
+                      "type": "structure",
+                      "members": {
+                        "MergePolicy": {
+                          "shape_name": "CaptionMergePolicy",
+                          "type": "string",
+                          "pattern": "(^MergeOverride$)|(^MergeRetain$)|(^Override$)",
+                          "documentation": "\n      <p>A policy that determines how Elastic Transcoder handles the existence of multiple captions.</p>\n      <ul>\n         <li><p><b>MergeOverride:</b> Elastic Transcoder transcodes both embedded\n            and sidecar captions into outputs. If captions for a language are embedded in the input\n            file and also appear in a sidecar file, Elastic Transcoder uses the sidecar captions and ignores the\n            embedded captions for that language.</p></li>\n         <li><p><b>MergeRetain:</b>  Elastic Transcoder transcodes both embedded\n            and sidecar captions into outputs. If captions for a language are embedded in the input\n            file and also appear in a sidecar file, Elastic Transcoder uses the embedded captions and ignores the\n            sidecar captions for that language. If <guilabel>CaptionSources</guilabel> is empty,\n            Elastic Transcoder omits all sidecar captions from the output files.</p></li>\n         <li><p><b>Override:</b> Elastic Transcoder transcodes only the\n            sidecar captions that you specify in <code>CaptionSources</code>.</p></li>\n      </ul>\n      <p><code>MergePolicy</code> cannot be null.</p>\n   "
+                        },
+                        "CaptionSources": {
+                          "shape_name": "CaptionSources",
+                          "type": "list",
+                          "members": {
+                            "shape_name": "CaptionSource",
+                            "type": "structure",
+                            "members": {
+                              "Key": {
+                                "shape_name": "Key",
+                                "type": "string",
+                                "min_length": 1,
+                                "max_length": 255,
+                                "documentation": "\n      <p>The name of the sidecar caption file that you want Elastic Transcoder to include in the\n         output file.</p>\n   "
+                              },
+                              "Language": {
+                                "shape_name": "Key",
+                                "type": "string",
+                                "min_length": 1,
+                                "max_length": 255,
+                                "documentation": "\n      <p>A string that specifies the language of the caption. Specify this as one of:</p>\n      <ul>\n         <li><p>2-character ISO 639-1 code</p></li>\n         <li><p>3-character ISO 639-2 code</p></li>\n      </ul>\n      <p>For more information on ISO language codes and language names, see the List of ISO \n         639-1 codes.</p>\n   "
+                              },
+                              "TimeOffset": {
+                                "shape_name": "TimeOffset",
+                                "type": "string",
+                                "pattern": "(^[+-]?\\d{1,5}(\\.\\d{0,3})?$)|(^[+-]?([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
+                                "documentation": "\n      <p>For clip generation or captions that do not start at the same time\n         as the associated video file, the <code>TimeOffset</code> tells Elastic Transcoder how much of the video to encode\n         before including captions.</p>\n      <p>Specify the TimeOffset in the form [+-]SS.sss or [+-]HH:mm:SS.ss.</p>\n   "
+                              },
+                              "Label": {
+                                "shape_name": "Name",
+                                "type": "string",
+                                "min_length": 1,
+                                "max_length": 40,
+                                "documentation": "\n      <p>The label of the caption shown in the player when choosing\n         a language. We recommend that you put the caption language name here, \n         in the language of the captions.</p>\n   "
+                              }
+                            },
+                            "documentation": "\n      <p>A source file for the input sidecar captions used during the transcoding\n         process.</p>\n   "
+                          },
+                          "max_length": 20,
+                          "documentation": "\n      <p>Source files for the input sidecar captions used during the transcoding\n         process. To omit all sidecar captions, leave <code>CaptionSources</code> blank.</p>\n   "
+                        },
+                        "CaptionFormats": {
+                          "shape_name": "CaptionFormats",
+                          "type": "list",
+                          "members": {
+                            "shape_name": "CaptionFormat",
+                            "type": "structure",
+                            "members": {
+                              "Format": {
+                                "shape_name": "CaptionFormatFormat",
+                                "type": "string",
+                                "pattern": "(^mov-text$)|(^cea-608$)|(^cea-708$)|(^srt$)|(^scc$)|(^webvtt$)|(^dfxp$)",
+                                "documentation": "\n      <p>The format you specify determines whether Elastic Transcoder generates an\n         embedded or sidecar caption for this output.</p>\n      <ul>\n         <li>\n<p><b>Valid Embedded Caption Formats:</b></p>\n            <ul>\n               <li><p><b>For MP3</b>: None</p></li>\n               <li><p><b>For MP4</b>: mov-text</p></li>\n               <li><p><b>For MPEG-TS</b>: None</p></li>\n               <li><p><b>For ogg</b>: None</p></li>\n               <li><p><b>For webm</b>: None</p></li>\n            </ul>\n         </li>\n         <li>\n<p><b>Valid Sidecar Caption Formats:</b> Elastic Transcoder\n            supports dfxp (first div element only), scc, srt, and webvtt. There are\n            no container restrictions on sidecar captions. If you want ttml or smpte-tt\n            compatible captions, specify dfxp as your output format.</p>\n         </li>\n      </ul>\n   "
+                              },
+                              "Pattern": {
+                                "shape_name": "CaptionFormatPattern",
+                                "type": "string",
+                                "pattern": "(^$)|(^.*\\{language\\}.*$)",
+                                "documentation": "\n      <p>The prefix for caption filenames, in the form <i>description</i>-<code>{language}</code>, where:</p>\n      <ul>\n         <li>\n<i>description</i> is a description of the video.</li>\n         <li>\n<code>{language}</code> is a literal value that Elastic Transcoder replaces with the two- or three-letter\n            code for the language of the caption in the output file names.</li>\n      </ul>\n      <p>If you don't include <code>{language}</code> in the file name pattern, Elastic Transcoder automatically\n         appends \"<code>{language}</code>\" to the value that you specify for the description.  In addition,\n         Elastic Transcoder automatically appends the count to the end of the segment files.</p>\n      <p>For example, suppose you're transcoding into srt format. When you enter\n         \"Sydney-{language}-sunrise\", and the language of the captions is English\n         (en), the name of the first caption file will be Sydney-en-sunrise00000.srt.</p>\n   "
+                              }
+                            },
+                            "documentation": "\n      <p>The file format of the output captions. If you leave this value blank,\n         Elastic Transcoder returns an error.</p>\n   "
+                          },
+                          "max_length": 4,
+                          "documentation": "\n      <p>The array of file formats for the output captions. If you leave this value blank,\n         Elastic Transcoder returns an error.</p>\n   "
+                        }
+                      },
+                      "documentation": "\n      <p>You can configure Elastic Transcoder to transcode captions, or subtitles, from one format to another.\n         All captions must be in UTF-8. Elastic Transcoder supports two types of captions:</p>\n      <ul>\n         <li>\n<p><b>Embedded:</b> Embedded captions\n            are included in the same file as the audio and video. Elastic Transcoder supports\n            only one embedded caption per language, to a maximum of 300 embedded captions per file.</p>\n            <p>Valid input values include: <code>CEA-608 (EIA-608</code>, first non-empty channel only),\n               <code>CEA-708 (EIA-708</code>, first non-empty channel only), and <code>mov-text</code></p>\n            <p>Valid outputs include: <code>mov-text</code></p>\n            <p>Elastic Transcoder supports a maximum of one embedded format per output.</p>\n</li>\n         <li>\n<p><b>Sidecar:</b> Sidecar captions are kept in a\n            separate metadata file from the audio and video data.  Sidecar captions require a player\n            that is capable of understanding the relationship between the video file and the sidecar\n            file. Elastic Transcoder supports only one sidecar caption per language, to a maximum of 20 sidecar\n            captions per file.</p>\n            <p>Valid input values include: <code>dfxp</code> (first div element only),\n               <code>ebu-tt</code>, <code>scc</code>, <code>smpt</code>, <code>srt</code>,\n               <code>ttml</code> (first div element only), and <code>webvtt</code></p>\n            <p>Valid outputs include: <code>dfxp</code> (first div element only), <code>scc</code>,\n               <code>srt</code>, and <code>webvtt</code>.</p>\n</li>\n         </ul>\n         <p> If you want ttml or smpte-tt compatible captions, specify dfxp as your output format.</p>\n         <p>Elastic Transcoder does not support OCR (Optical Character Recognition), does not accept pictures\n            as a valid input for captions, and is not available for audio-only transcoding. Elastic Transcoder does\n            not preserve text formatting (for example, italics) during the transcoding process.</p>\n            <p>To remove captions or leave the captions empty, set <code>Captions</code> to null. To pass through\n            existing captions unchanged, set the <code>MergePolicy</code> to <code>MergeRetain</code>,\n            and pass in a null <code>CaptionSources</code> array.</p>\n      <p>For more information on embedded files, see the Subtitles Wikipedia page.</p>\n      <p>For more information on sidecar files, see the Extensible Metadata Platform and Sidecar file\n         Wikipedia pages.</p> \n   "
                     }
                   },
                   "documentation": "\n        <p>If you specified one output for a job, information about that output. If you specified\n            multiple outputs for a job, the Output object lists information about the first output.\n            This duplicates the information that is listed for the first output in the Outputs\n            object.</p>\n        <p><important>Outputs recommended instead.</important> A section of the request or response\n            body that provides information about the transcoded (target) file. </p>\n    "
@@ -3436,7 +3994,7 @@
                                   "shape_name": "Time",
                                   "type": "string",
                                   "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
-                                  "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file , Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
+                                  "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file, Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
                                 }
                               },
                               "documentation": "\n       <p>Settings that determine when a clip begins and how long it lasts.</p>\n   "
@@ -3444,7 +4002,85 @@
                           },
                           "documentation": "\n       <p>Settings for one clip in a composition. All jobs in a playlist must have the same clip settings.</p>\n   "
                         },
-                        "documentation": "\n       <p>You can create an output file that contains an excerpt from the input file. This excerpt, called a clip, can come from the beginning, middle, or end of the file. The Composition object contains settings for the clips that make up an output file. For the current release, you can only specify settings for a single clip per output file. The Composition object cannot be null.</p>\n   "
+                        "documentation": "\n       <p>You can create an output file that contains an excerpt from the input file. This \n           excerpt, called a clip, can come from the beginning, middle, or end of the file. \n           The Composition object contains settings for the clips that make up an output \n           file. For the current release, you can only specify settings for a single clip \n           per output file. The Composition object cannot be null.</p>\n   "
+                      },
+                      "Captions": {
+                        "shape_name": "Captions",
+                        "type": "structure",
+                        "members": {
+                          "MergePolicy": {
+                            "shape_name": "CaptionMergePolicy",
+                            "type": "string",
+                            "pattern": "(^MergeOverride$)|(^MergeRetain$)|(^Override$)",
+                            "documentation": "\n      <p>A policy that determines how Elastic Transcoder handles the existence of multiple captions.</p>\n      <ul>\n         <li><p><b>MergeOverride:</b> Elastic Transcoder transcodes both embedded\n            and sidecar captions into outputs. If captions for a language are embedded in the input\n            file and also appear in a sidecar file, Elastic Transcoder uses the sidecar captions and ignores the\n            embedded captions for that language.</p></li>\n         <li><p><b>MergeRetain:</b>  Elastic Transcoder transcodes both embedded\n            and sidecar captions into outputs. If captions for a language are embedded in the input\n            file and also appear in a sidecar file, Elastic Transcoder uses the embedded captions and ignores the\n            sidecar captions for that language. If <guilabel>CaptionSources</guilabel> is empty,\n            Elastic Transcoder omits all sidecar captions from the output files.</p></li>\n         <li><p><b>Override:</b> Elastic Transcoder transcodes only the\n            sidecar captions that you specify in <code>CaptionSources</code>.</p></li>\n      </ul>\n      <p><code>MergePolicy</code> cannot be null.</p>\n   "
+                          },
+                          "CaptionSources": {
+                            "shape_name": "CaptionSources",
+                            "type": "list",
+                            "members": {
+                              "shape_name": "CaptionSource",
+                              "type": "structure",
+                              "members": {
+                                "Key": {
+                                  "shape_name": "Key",
+                                  "type": "string",
+                                  "min_length": 1,
+                                  "max_length": 255,
+                                  "documentation": "\n      <p>The name of the sidecar caption file that you want Elastic Transcoder to include in the\n         output file.</p>\n   "
+                                },
+                                "Language": {
+                                  "shape_name": "Key",
+                                  "type": "string",
+                                  "min_length": 1,
+                                  "max_length": 255,
+                                  "documentation": "\n      <p>A string that specifies the language of the caption. Specify this as one of:</p>\n      <ul>\n         <li><p>2-character ISO 639-1 code</p></li>\n         <li><p>3-character ISO 639-2 code</p></li>\n      </ul>\n      <p>For more information on ISO language codes and language names, see the List of ISO \n         639-1 codes.</p>\n   "
+                                },
+                                "TimeOffset": {
+                                  "shape_name": "TimeOffset",
+                                  "type": "string",
+                                  "pattern": "(^[+-]?\\d{1,5}(\\.\\d{0,3})?$)|(^[+-]?([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
+                                  "documentation": "\n      <p>For clip generation or captions that do not start at the same time\n         as the associated video file, the <code>TimeOffset</code> tells Elastic Transcoder how much of the video to encode\n         before including captions.</p>\n      <p>Specify the TimeOffset in the form [+-]SS.sss or [+-]HH:mm:SS.ss.</p>\n   "
+                                },
+                                "Label": {
+                                  "shape_name": "Name",
+                                  "type": "string",
+                                  "min_length": 1,
+                                  "max_length": 40,
+                                  "documentation": "\n      <p>The label of the caption shown in the player when choosing\n         a language. We recommend that you put the caption language name here, \n         in the language of the captions.</p>\n   "
+                                }
+                              },
+                              "documentation": "\n      <p>A source file for the input sidecar captions used during the transcoding\n         process.</p>\n   "
+                            },
+                            "max_length": 20,
+                            "documentation": "\n      <p>Source files for the input sidecar captions used during the transcoding\n         process. To omit all sidecar captions, leave <code>CaptionSources</code> blank.</p>\n   "
+                          },
+                          "CaptionFormats": {
+                            "shape_name": "CaptionFormats",
+                            "type": "list",
+                            "members": {
+                              "shape_name": "CaptionFormat",
+                              "type": "structure",
+                              "members": {
+                                "Format": {
+                                  "shape_name": "CaptionFormatFormat",
+                                  "type": "string",
+                                  "pattern": "(^mov-text$)|(^cea-608$)|(^cea-708$)|(^srt$)|(^scc$)|(^webvtt$)|(^dfxp$)",
+                                  "documentation": "\n      <p>The format you specify determines whether Elastic Transcoder generates an\n         embedded or sidecar caption for this output.</p>\n      <ul>\n         <li>\n<p><b>Valid Embedded Caption Formats:</b></p>\n            <ul>\n               <li><p><b>For MP3</b>: None</p></li>\n               <li><p><b>For MP4</b>: mov-text</p></li>\n               <li><p><b>For MPEG-TS</b>: None</p></li>\n               <li><p><b>For ogg</b>: None</p></li>\n               <li><p><b>For webm</b>: None</p></li>\n            </ul>\n         </li>\n         <li>\n<p><b>Valid Sidecar Caption Formats:</b> Elastic Transcoder\n            supports dfxp (first div element only), scc, srt, and webvtt. There are\n            no container restrictions on sidecar captions. If you want ttml or smpte-tt\n            compatible captions, specify dfxp as your output format.</p>\n         </li>\n      </ul>\n   "
+                                },
+                                "Pattern": {
+                                  "shape_name": "CaptionFormatPattern",
+                                  "type": "string",
+                                  "pattern": "(^$)|(^.*\\{language\\}.*$)",
+                                  "documentation": "\n      <p>The prefix for caption filenames, in the form <i>description</i>-<code>{language}</code>, where:</p>\n      <ul>\n         <li>\n<i>description</i> is a description of the video.</li>\n         <li>\n<code>{language}</code> is a literal value that Elastic Transcoder replaces with the two- or three-letter\n            code for the language of the caption in the output file names.</li>\n      </ul>\n      <p>If you don't include <code>{language}</code> in the file name pattern, Elastic Transcoder automatically\n         appends \"<code>{language}</code>\" to the value that you specify for the description.  In addition,\n         Elastic Transcoder automatically appends the count to the end of the segment files.</p>\n      <p>For example, suppose you're transcoding into srt format. When you enter\n         \"Sydney-{language}-sunrise\", and the language of the captions is English\n         (en), the name of the first caption file will be Sydney-en-sunrise00000.srt.</p>\n   "
+                                }
+                              },
+                              "documentation": "\n      <p>The file format of the output captions. If you leave this value blank,\n         Elastic Transcoder returns an error.</p>\n   "
+                            },
+                            "max_length": 4,
+                            "documentation": "\n      <p>The array of file formats for the output captions. If you leave this value blank,\n         Elastic Transcoder returns an error.</p>\n   "
+                          }
+                        },
+                        "documentation": "\n      <p>You can configure Elastic Transcoder to transcode captions, or subtitles, from one format to another.\n         All captions must be in UTF-8. Elastic Transcoder supports two types of captions:</p>\n      <ul>\n         <li>\n<p><b>Embedded:</b> Embedded captions\n            are included in the same file as the audio and video. Elastic Transcoder supports\n            only one embedded caption per language, to a maximum of 300 embedded captions per file.</p>\n            <p>Valid input values include: <code>CEA-608 (EIA-608</code>, first non-empty channel only),\n               <code>CEA-708 (EIA-708</code>, first non-empty channel only), and <code>mov-text</code></p>\n            <p>Valid outputs include: <code>mov-text</code></p>\n            <p>Elastic Transcoder supports a maximum of one embedded format per output.</p>\n</li>\n         <li>\n<p><b>Sidecar:</b> Sidecar captions are kept in a\n            separate metadata file from the audio and video data.  Sidecar captions require a player\n            that is capable of understanding the relationship between the video file and the sidecar\n            file. Elastic Transcoder supports only one sidecar caption per language, to a maximum of 20 sidecar\n            captions per file.</p>\n            <p>Valid input values include: <code>dfxp</code> (first div element only),\n               <code>ebu-tt</code>, <code>scc</code>, <code>smpt</code>, <code>srt</code>,\n               <code>ttml</code> (first div element only), and <code>webvtt</code></p>\n            <p>Valid outputs include: <code>dfxp</code> (first div element only), <code>scc</code>,\n               <code>srt</code>, and <code>webvtt</code>.</p>\n</li>\n         </ul>\n         <p> If you want ttml or smpte-tt compatible captions, specify dfxp as your output format.</p>\n         <p>Elastic Transcoder does not support OCR (Optical Character Recognition), does not accept pictures\n            as a valid input for captions, and is not available for audio-only transcoding. Elastic Transcoder does\n            not preserve text formatting (for example, italics) during the transcoding process.</p>\n            <p>To remove captions or leave the captions empty, set <code>Captions</code> to null. To pass through\n            existing captions unchanged, set the <code>MergePolicy</code> to <code>MergeRetain</code>,\n            and pass in a null <code>CaptionSources</code> array.</p>\n      <p>For more information on embedded files, see the Subtitles Wikipedia page.</p>\n      <p>For more information on sidecar files, see the Extensible Metadata Platform and Sidecar file\n         Wikipedia pages.</p> \n   "
                       }
                     },
                     "documentation": "\n        <p><important>Outputs recommended instead.</important>If you specified one output for a job,\n            information about that output. If you specified multiple outputs for a job, the\n                <code>Output</code> object lists information about the first output. This duplicates\n            the information that is listed for the first output in the <code>Outputs</code>\n            object.</p>\n    "
@@ -3944,7 +4580,7 @@
                           "shape_name": "AudioCodecProfile",
                           "type": "string",
                           "pattern": "(^auto$)|(^AAC-LC$)|(^HE-AAC$)|(^HE-AACv2$)",
-                          "documentation": "\n        <p>If you specified <code>AAC</code> for <code>Audio:Codec</code>, choose the AAC profile for the output file.\n            Elastic Transcoder supports the following profiles:</p>\n        <ul>\n            <li>\n<code>auto</code>: If you specify <code>auto</code>, Elastic Transcoder will select\n                the profile based on the bit rate selected for the output file.</li>\n            <li>\n<code>AAC-LC</code>: The most common AAC profile. Use for bitrates larger than\n                64 kbps.</li>\n            <li>\n<code>HE-AAC</code>: Not supported on some older players and devices.\n                Use for bitrates between 40 and 80 kbps.</li>\n            <li>\n<code>HE-AACv2</code>: Not supported on some players and devices.\n                Use for bitrates less than 48 kbps.</li>\n        </ul>\n        <note><p>If you created any presets before AAC profiles were added, Elastic Transcoder automatically updated\n            your presets to use AAC-LC. You can change the value as required.</p></note>  \n    "
+                          "documentation": "\n        <p>You can only choose an audio profile when you specify AAC for the value of Audio:Codec.</p>\n        <p>Specify the AAC profile for the output file. Elastic Transcoder supports the following profiles:</p>\n        <ul>\n            <li>\n<code>auto</code>: If you specify <code>auto</code>, Elastic Transcoder will select\n                the profile based on the bit rate selected for the output file.</li>\n            <li>\n<code>AAC-LC</code>: The most common AAC profile. Use for bitrates larger than\n                64 kbps.</li>\n            <li>\n<code>HE-AAC</code>: Not supported on some older players and devices.\n                Use for bitrates between 40 and 80 kbps.</li>\n            <li>\n<code>HE-AACv2</code>: Not supported on some players and devices.\n                Use for bitrates less than 48 kbps.</li>\n        </ul>\n        <note><p>If you created any presets before AAC profiles were added, Elastic Transcoder automatically updated\n            your presets to use AAC-LC. You can change the value as required.</p></note>  \n    "
                         }
                       },
                       "documentation": "\n        <p>If you specified <code>AAC</code> for <code>Audio:Codec</code>, this is the <code>AAC</code> \n            compression profile to use. Valid values include:</p>\n        <p><code>auto</code>, <code>AAC-LC</code>, <code>HE-AAC</code>, <code>HE-AACv2</code></p>\n        <p>If you specify <code>auto</code>, Elastic Transcoder chooses a profile based on the bit rate of the output file.</p>\n    "
@@ -4071,13 +4707,13 @@
                           "MaxWidth": {
                             "shape_name": "PixelsOrPercent",
                             "type": "string",
-                            "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                            "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{1,4}?px$)",
                             "documentation": "\n        <p>The maximum width of the watermark in one of the following formats: <ul>\n                <li>number of pixels (px): The minimum value is 16 pixels, and the maximum value is\n                    the value of <code>MaxWidth</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100. Use the value of\n                        <code>Target</code> to specify whether you want Elastic Transcoder to include the black\n                    bars that are added by Elastic Transcoder, if any, in the calculation.</li> If\n                you specify the value in pixels, it must be less than or equal to the value of\n                    <code>MaxWidth</code>.</ul></p>\n    "
                           },
                           "MaxHeight": {
                             "shape_name": "PixelsOrPercent",
                             "type": "string",
-                            "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                            "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{1,4}?px$)",
                             "documentation": "\n        <p>The maximum height of the watermark in one of the following formats: <ul>\n                <li>number of pixels (px): The minimum value is 16 pixels, and the maximum value is\n                    the value of <code>MaxHeight</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100. Use the value of\n                        <code>Target</code> to specify whether you want Elastic Transcoder to include the black\n                    bars that are added by Elastic Transcoder, if any, in the calculation.</li>\n            </ul> If you specify the value in pixels, it must be less than or equal to the value of\n                <code>MaxHeight</code>.</p>\n    "
                           },
                           "SizingPolicy": {
@@ -4095,7 +4731,7 @@
                           "HorizontalOffset": {
                             "shape_name": "PixelsOrPercent",
                             "type": "string",
-                            "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                            "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{1,4}?px$)",
                             "documentation": "\n        <p>The amount by which you want the horizontal position of the watermark to be offset from\n            the position specified by HorizontalAlign: <ul>\n                <li>number of pixels (px): The minimum value is 0 pixels, and the maximum value is\n                    the value of MaxWidth.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100.</li>\n            </ul>For example, if you specify Left for <code>HorizontalAlign</code> and 5px for\n                <code>HorizontalOffset</code>, the left side of the watermark appears 5 pixels from\n            the left border of the output video.</p>\n        <p><code>HorizontalOffset</code> is only valid when the value of\n                <code>HorizontalAlign</code> is <code>Left</code> or <code>Right</code>. If you\n            specify an offset that causes the watermark to extend beyond the left or right border\n            and Elastic Transcoder has not added black bars, the watermark is cropped. If Elastic\n            Transcoder has added black bars, the watermark extends into the black bars. If the\n            watermark extends beyond the black bars, it is cropped.</p>\n        <p>Use the value of <code>Target</code> to specify whether you want to include the black\n            bars that are added by Elastic Transcoder, if any, in the offset calculation.</p>\n    "
                           },
                           "VerticalAlign": {
@@ -4107,7 +4743,7 @@
                           "VerticalOffset": {
                             "shape_name": "PixelsOrPercent",
                             "type": "string",
-                            "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                            "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{1,4}?px$)",
                             "documentation": "\n        <code>VerticalOffset</code>\n        <p>The amount by which you want the vertical position of the watermark to be offset from the\n            position specified by VerticalAlign:<ul>\n                <li>number of pixels (px): The minimum value is 0 pixels, and the maximum value is\n                    the value of <code>MaxHeight</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100.</li>\n            </ul> For example, if you specify <code>Top</code> for <code>VerticalAlign</code> and\n                <code>5px</code> for <code>VerticalOffset</code>, the top of the watermark appears 5\n            pixels from the top border of the output video.</p>\n        <p><code>VerticalOffset</code> is only valid when the value of VerticalAlign is Top or\n            Bottom.</p>\n        <p>If you specify an offset that causes the watermark to extend beyond the top or bottom\n            border and Elastic Transcoder has not added black bars, the watermark is cropped. If\n            Elastic Transcoder has added black bars, the watermark extends into the black bars. If\n            the watermark extends beyond the black bars, it is cropped.</p>\n\n        <p>Use the value of <code>Target</code> to specify whether you want Elastic Transcoder to\n            include the black bars that are added by Elastic Transcoder, if any, in the offset\n            calculation.</p>\n    "
                           },
                           "Opacity": {
@@ -4252,6 +4888,7 @@
             "type": "string",
             "pattern": "^\\d{13}-\\w{6}$",
             "documentation": "\n        <p>The identifier of the job for which you want to get detailed information.</p>\n    ",
+            "required": true,
             "location": "uri"
           }
         },
@@ -4505,7 +5142,7 @@
                               "shape_name": "Time",
                               "type": "string",
                               "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
-                              "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file , Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
+                              "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file, Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
                             }
                           },
                           "documentation": "\n       <p>Settings that determine when a clip begins and how long it lasts.</p>\n   "
@@ -4513,7 +5150,85 @@
                       },
                       "documentation": "\n       <p>Settings for one clip in a composition. All jobs in a playlist must have the same clip settings.</p>\n   "
                     },
-                    "documentation": "\n       <p>You can create an output file that contains an excerpt from the input file. This excerpt, called a clip, can come from the beginning, middle, or end of the file. The Composition object contains settings for the clips that make up an output file. For the current release, you can only specify settings for a single clip per output file. The Composition object cannot be null.</p>\n   "
+                    "documentation": "\n       <p>You can create an output file that contains an excerpt from the input file. This \n           excerpt, called a clip, can come from the beginning, middle, or end of the file. \n           The Composition object contains settings for the clips that make up an output \n           file. For the current release, you can only specify settings for a single clip \n           per output file. The Composition object cannot be null.</p>\n   "
+                  },
+                  "Captions": {
+                    "shape_name": "Captions",
+                    "type": "structure",
+                    "members": {
+                      "MergePolicy": {
+                        "shape_name": "CaptionMergePolicy",
+                        "type": "string",
+                        "pattern": "(^MergeOverride$)|(^MergeRetain$)|(^Override$)",
+                        "documentation": "\n      <p>A policy that determines how Elastic Transcoder handles the existence of multiple captions.</p>\n      <ul>\n         <li><p><b>MergeOverride:</b> Elastic Transcoder transcodes both embedded\n            and sidecar captions into outputs. If captions for a language are embedded in the input\n            file and also appear in a sidecar file, Elastic Transcoder uses the sidecar captions and ignores the\n            embedded captions for that language.</p></li>\n         <li><p><b>MergeRetain:</b>  Elastic Transcoder transcodes both embedded\n            and sidecar captions into outputs. If captions for a language are embedded in the input\n            file and also appear in a sidecar file, Elastic Transcoder uses the embedded captions and ignores the\n            sidecar captions for that language. If <guilabel>CaptionSources</guilabel> is empty,\n            Elastic Transcoder omits all sidecar captions from the output files.</p></li>\n         <li><p><b>Override:</b> Elastic Transcoder transcodes only the\n            sidecar captions that you specify in <code>CaptionSources</code>.</p></li>\n      </ul>\n      <p><code>MergePolicy</code> cannot be null.</p>\n   "
+                      },
+                      "CaptionSources": {
+                        "shape_name": "CaptionSources",
+                        "type": "list",
+                        "members": {
+                          "shape_name": "CaptionSource",
+                          "type": "structure",
+                          "members": {
+                            "Key": {
+                              "shape_name": "Key",
+                              "type": "string",
+                              "min_length": 1,
+                              "max_length": 255,
+                              "documentation": "\n      <p>The name of the sidecar caption file that you want Elastic Transcoder to include in the\n         output file.</p>\n   "
+                            },
+                            "Language": {
+                              "shape_name": "Key",
+                              "type": "string",
+                              "min_length": 1,
+                              "max_length": 255,
+                              "documentation": "\n      <p>A string that specifies the language of the caption. Specify this as one of:</p>\n      <ul>\n         <li><p>2-character ISO 639-1 code</p></li>\n         <li><p>3-character ISO 639-2 code</p></li>\n      </ul>\n      <p>For more information on ISO language codes and language names, see the List of ISO \n         639-1 codes.</p>\n   "
+                            },
+                            "TimeOffset": {
+                              "shape_name": "TimeOffset",
+                              "type": "string",
+                              "pattern": "(^[+-]?\\d{1,5}(\\.\\d{0,3})?$)|(^[+-]?([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
+                              "documentation": "\n      <p>For clip generation or captions that do not start at the same time\n         as the associated video file, the <code>TimeOffset</code> tells Elastic Transcoder how much of the video to encode\n         before including captions.</p>\n      <p>Specify the TimeOffset in the form [+-]SS.sss or [+-]HH:mm:SS.ss.</p>\n   "
+                            },
+                            "Label": {
+                              "shape_name": "Name",
+                              "type": "string",
+                              "min_length": 1,
+                              "max_length": 40,
+                              "documentation": "\n      <p>The label of the caption shown in the player when choosing\n         a language. We recommend that you put the caption language name here, \n         in the language of the captions.</p>\n   "
+                            }
+                          },
+                          "documentation": "\n      <p>A source file for the input sidecar captions used during the transcoding\n         process.</p>\n   "
+                        },
+                        "max_length": 20,
+                        "documentation": "\n      <p>Source files for the input sidecar captions used during the transcoding\n         process. To omit all sidecar captions, leave <code>CaptionSources</code> blank.</p>\n   "
+                      },
+                      "CaptionFormats": {
+                        "shape_name": "CaptionFormats",
+                        "type": "list",
+                        "members": {
+                          "shape_name": "CaptionFormat",
+                          "type": "structure",
+                          "members": {
+                            "Format": {
+                              "shape_name": "CaptionFormatFormat",
+                              "type": "string",
+                              "pattern": "(^mov-text$)|(^cea-608$)|(^cea-708$)|(^srt$)|(^scc$)|(^webvtt$)|(^dfxp$)",
+                              "documentation": "\n      <p>The format you specify determines whether Elastic Transcoder generates an\n         embedded or sidecar caption for this output.</p>\n      <ul>\n         <li>\n<p><b>Valid Embedded Caption Formats:</b></p>\n            <ul>\n               <li><p><b>For MP3</b>: None</p></li>\n               <li><p><b>For MP4</b>: mov-text</p></li>\n               <li><p><b>For MPEG-TS</b>: None</p></li>\n               <li><p><b>For ogg</b>: None</p></li>\n               <li><p><b>For webm</b>: None</p></li>\n            </ul>\n         </li>\n         <li>\n<p><b>Valid Sidecar Caption Formats:</b> Elastic Transcoder\n            supports dfxp (first div element only), scc, srt, and webvtt. There are\n            no container restrictions on sidecar captions. If you want ttml or smpte-tt\n            compatible captions, specify dfxp as your output format.</p>\n         </li>\n      </ul>\n   "
+                            },
+                            "Pattern": {
+                              "shape_name": "CaptionFormatPattern",
+                              "type": "string",
+                              "pattern": "(^$)|(^.*\\{language\\}.*$)",
+                              "documentation": "\n      <p>The prefix for caption filenames, in the form <i>description</i>-<code>{language}</code>, where:</p>\n      <ul>\n         <li>\n<i>description</i> is a description of the video.</li>\n         <li>\n<code>{language}</code> is a literal value that Elastic Transcoder replaces with the two- or three-letter\n            code for the language of the caption in the output file names.</li>\n      </ul>\n      <p>If you don't include <code>{language}</code> in the file name pattern, Elastic Transcoder automatically\n         appends \"<code>{language}</code>\" to the value that you specify for the description.  In addition,\n         Elastic Transcoder automatically appends the count to the end of the segment files.</p>\n      <p>For example, suppose you're transcoding into srt format. When you enter\n         \"Sydney-{language}-sunrise\", and the language of the captions is English\n         (en), the name of the first caption file will be Sydney-en-sunrise00000.srt.</p>\n   "
+                            }
+                          },
+                          "documentation": "\n      <p>The file format of the output captions. If you leave this value blank,\n         Elastic Transcoder returns an error.</p>\n   "
+                        },
+                        "max_length": 4,
+                        "documentation": "\n      <p>The array of file formats for the output captions. If you leave this value blank,\n         Elastic Transcoder returns an error.</p>\n   "
+                      }
+                    },
+                    "documentation": "\n      <p>You can configure Elastic Transcoder to transcode captions, or subtitles, from one format to another.\n         All captions must be in UTF-8. Elastic Transcoder supports two types of captions:</p>\n      <ul>\n         <li>\n<p><b>Embedded:</b> Embedded captions\n            are included in the same file as the audio and video. Elastic Transcoder supports\n            only one embedded caption per language, to a maximum of 300 embedded captions per file.</p>\n            <p>Valid input values include: <code>CEA-608 (EIA-608</code>, first non-empty channel only),\n               <code>CEA-708 (EIA-708</code>, first non-empty channel only), and <code>mov-text</code></p>\n            <p>Valid outputs include: <code>mov-text</code></p>\n            <p>Elastic Transcoder supports a maximum of one embedded format per output.</p>\n</li>\n         <li>\n<p><b>Sidecar:</b> Sidecar captions are kept in a\n            separate metadata file from the audio and video data.  Sidecar captions require a player\n            that is capable of understanding the relationship between the video file and the sidecar\n            file. Elastic Transcoder supports only one sidecar caption per language, to a maximum of 20 sidecar\n            captions per file.</p>\n            <p>Valid input values include: <code>dfxp</code> (first div element only),\n               <code>ebu-tt</code>, <code>scc</code>, <code>smpt</code>, <code>srt</code>,\n               <code>ttml</code> (first div element only), and <code>webvtt</code></p>\n            <p>Valid outputs include: <code>dfxp</code> (first div element only), <code>scc</code>,\n               <code>srt</code>, and <code>webvtt</code>.</p>\n</li>\n         </ul>\n         <p> If you want ttml or smpte-tt compatible captions, specify dfxp as your output format.</p>\n         <p>Elastic Transcoder does not support OCR (Optical Character Recognition), does not accept pictures\n            as a valid input for captions, and is not available for audio-only transcoding. Elastic Transcoder does\n            not preserve text formatting (for example, italics) during the transcoding process.</p>\n            <p>To remove captions or leave the captions empty, set <code>Captions</code> to null. To pass through\n            existing captions unchanged, set the <code>MergePolicy</code> to <code>MergeRetain</code>,\n            and pass in a null <code>CaptionSources</code> array.</p>\n      <p>For more information on embedded files, see the Subtitles Wikipedia page.</p>\n      <p>For more information on sidecar files, see the Extensible Metadata Platform and Sidecar file\n         Wikipedia pages.</p> \n   "
                   }
                 },
                 "documentation": "\n        <p>If you specified one output for a job, information about that output. If you specified\n            multiple outputs for a job, the Output object lists information about the first output.\n            This duplicates the information that is listed for the first output in the Outputs\n            object.</p>\n        <p><important>Outputs recommended instead.</important> A section of the request or response\n            body that provides information about the transcoded (target) file. </p>\n    "
@@ -4700,7 +5415,7 @@
                                 "shape_name": "Time",
                                 "type": "string",
                                 "pattern": "(^\\d{1,5}(\\.\\d{0,3})?$)|(^([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
-                                "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file , Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
+                                "documentation": "\n       <p>The duration of the clip. The format can be either HH:mm:ss.SSS (maximum value: 23:59:59.999; SSS \n       is thousandths of a second) or sssss.SSS (maximum value: 86399.999). If you don't specify a value, \n       Elastic Transcoder creates an output file from StartTime to the end of the file.</p>\n       <p>If you specify a value longer than the duration of the input file, Elastic Transcoder transcodes \n       the file and returns a warning message.</p>\n   "
                               }
                             },
                             "documentation": "\n       <p>Settings that determine when a clip begins and how long it lasts.</p>\n   "
@@ -4708,7 +5423,85 @@
                         },
                         "documentation": "\n       <p>Settings for one clip in a composition. All jobs in a playlist must have the same clip settings.</p>\n   "
                       },
-                      "documentation": "\n       <p>You can create an output file that contains an excerpt from the input file. This excerpt, called a clip, can come from the beginning, middle, or end of the file. The Composition object contains settings for the clips that make up an output file. For the current release, you can only specify settings for a single clip per output file. The Composition object cannot be null.</p>\n   "
+                      "documentation": "\n       <p>You can create an output file that contains an excerpt from the input file. This \n           excerpt, called a clip, can come from the beginning, middle, or end of the file. \n           The Composition object contains settings for the clips that make up an output \n           file. For the current release, you can only specify settings for a single clip \n           per output file. The Composition object cannot be null.</p>\n   "
+                    },
+                    "Captions": {
+                      "shape_name": "Captions",
+                      "type": "structure",
+                      "members": {
+                        "MergePolicy": {
+                          "shape_name": "CaptionMergePolicy",
+                          "type": "string",
+                          "pattern": "(^MergeOverride$)|(^MergeRetain$)|(^Override$)",
+                          "documentation": "\n      <p>A policy that determines how Elastic Transcoder handles the existence of multiple captions.</p>\n      <ul>\n         <li><p><b>MergeOverride:</b> Elastic Transcoder transcodes both embedded\n            and sidecar captions into outputs. If captions for a language are embedded in the input\n            file and also appear in a sidecar file, Elastic Transcoder uses the sidecar captions and ignores the\n            embedded captions for that language.</p></li>\n         <li><p><b>MergeRetain:</b>  Elastic Transcoder transcodes both embedded\n            and sidecar captions into outputs. If captions for a language are embedded in the input\n            file and also appear in a sidecar file, Elastic Transcoder uses the embedded captions and ignores the\n            sidecar captions for that language. If <guilabel>CaptionSources</guilabel> is empty,\n            Elastic Transcoder omits all sidecar captions from the output files.</p></li>\n         <li><p><b>Override:</b> Elastic Transcoder transcodes only the\n            sidecar captions that you specify in <code>CaptionSources</code>.</p></li>\n      </ul>\n      <p><code>MergePolicy</code> cannot be null.</p>\n   "
+                        },
+                        "CaptionSources": {
+                          "shape_name": "CaptionSources",
+                          "type": "list",
+                          "members": {
+                            "shape_name": "CaptionSource",
+                            "type": "structure",
+                            "members": {
+                              "Key": {
+                                "shape_name": "Key",
+                                "type": "string",
+                                "min_length": 1,
+                                "max_length": 255,
+                                "documentation": "\n      <p>The name of the sidecar caption file that you want Elastic Transcoder to include in the\n         output file.</p>\n   "
+                              },
+                              "Language": {
+                                "shape_name": "Key",
+                                "type": "string",
+                                "min_length": 1,
+                                "max_length": 255,
+                                "documentation": "\n      <p>A string that specifies the language of the caption. Specify this as one of:</p>\n      <ul>\n         <li><p>2-character ISO 639-1 code</p></li>\n         <li><p>3-character ISO 639-2 code</p></li>\n      </ul>\n      <p>For more information on ISO language codes and language names, see the List of ISO \n         639-1 codes.</p>\n   "
+                              },
+                              "TimeOffset": {
+                                "shape_name": "TimeOffset",
+                                "type": "string",
+                                "pattern": "(^[+-]?\\d{1,5}(\\.\\d{0,3})?$)|(^[+-]?([0-1]?[0-9]:|2[0-3]:)?([0-5]?[0-9]:)?[0-5]?[0-9](\\.\\d{0,3})?$)",
+                                "documentation": "\n      <p>For clip generation or captions that do not start at the same time\n         as the associated video file, the <code>TimeOffset</code> tells Elastic Transcoder how much of the video to encode\n         before including captions.</p>\n      <p>Specify the TimeOffset in the form [+-]SS.sss or [+-]HH:mm:SS.ss.</p>\n   "
+                              },
+                              "Label": {
+                                "shape_name": "Name",
+                                "type": "string",
+                                "min_length": 1,
+                                "max_length": 40,
+                                "documentation": "\n      <p>The label of the caption shown in the player when choosing\n         a language. We recommend that you put the caption language name here, \n         in the language of the captions.</p>\n   "
+                              }
+                            },
+                            "documentation": "\n      <p>A source file for the input sidecar captions used during the transcoding\n         process.</p>\n   "
+                          },
+                          "max_length": 20,
+                          "documentation": "\n      <p>Source files for the input sidecar captions used during the transcoding\n         process. To omit all sidecar captions, leave <code>CaptionSources</code> blank.</p>\n   "
+                        },
+                        "CaptionFormats": {
+                          "shape_name": "CaptionFormats",
+                          "type": "list",
+                          "members": {
+                            "shape_name": "CaptionFormat",
+                            "type": "structure",
+                            "members": {
+                              "Format": {
+                                "shape_name": "CaptionFormatFormat",
+                                "type": "string",
+                                "pattern": "(^mov-text$)|(^cea-608$)|(^cea-708$)|(^srt$)|(^scc$)|(^webvtt$)|(^dfxp$)",
+                                "documentation": "\n      <p>The format you specify determines whether Elastic Transcoder generates an\n         embedded or sidecar caption for this output.</p>\n      <ul>\n         <li>\n<p><b>Valid Embedded Caption Formats:</b></p>\n            <ul>\n               <li><p><b>For MP3</b>: None</p></li>\n               <li><p><b>For MP4</b>: mov-text</p></li>\n               <li><p><b>For MPEG-TS</b>: None</p></li>\n               <li><p><b>For ogg</b>: None</p></li>\n               <li><p><b>For webm</b>: None</p></li>\n            </ul>\n         </li>\n         <li>\n<p><b>Valid Sidecar Caption Formats:</b> Elastic Transcoder\n            supports dfxp (first div element only), scc, srt, and webvtt. There are\n            no container restrictions on sidecar captions. If you want ttml or smpte-tt\n            compatible captions, specify dfxp as your output format.</p>\n         </li>\n      </ul>\n   "
+                              },
+                              "Pattern": {
+                                "shape_name": "CaptionFormatPattern",
+                                "type": "string",
+                                "pattern": "(^$)|(^.*\\{language\\}.*$)",
+                                "documentation": "\n      <p>The prefix for caption filenames, in the form <i>description</i>-<code>{language}</code>, where:</p>\n      <ul>\n         <li>\n<i>description</i> is a description of the video.</li>\n         <li>\n<code>{language}</code> is a literal value that Elastic Transcoder replaces with the two- or three-letter\n            code for the language of the caption in the output file names.</li>\n      </ul>\n      <p>If you don't include <code>{language}</code> in the file name pattern, Elastic Transcoder automatically\n         appends \"<code>{language}</code>\" to the value that you specify for the description.  In addition,\n         Elastic Transcoder automatically appends the count to the end of the segment files.</p>\n      <p>For example, suppose you're transcoding into srt format. When you enter\n         \"Sydney-{language}-sunrise\", and the language of the captions is English\n         (en), the name of the first caption file will be Sydney-en-sunrise00000.srt.</p>\n   "
+                              }
+                            },
+                            "documentation": "\n      <p>The file format of the output captions. If you leave this value blank,\n         Elastic Transcoder returns an error.</p>\n   "
+                          },
+                          "max_length": 4,
+                          "documentation": "\n      <p>The array of file formats for the output captions. If you leave this value blank,\n         Elastic Transcoder returns an error.</p>\n   "
+                        }
+                      },
+                      "documentation": "\n      <p>You can configure Elastic Transcoder to transcode captions, or subtitles, from one format to another.\n         All captions must be in UTF-8. Elastic Transcoder supports two types of captions:</p>\n      <ul>\n         <li>\n<p><b>Embedded:</b> Embedded captions\n            are included in the same file as the audio and video. Elastic Transcoder supports\n            only one embedded caption per language, to a maximum of 300 embedded captions per file.</p>\n            <p>Valid input values include: <code>CEA-608 (EIA-608</code>, first non-empty channel only),\n               <code>CEA-708 (EIA-708</code>, first non-empty channel only), and <code>mov-text</code></p>\n            <p>Valid outputs include: <code>mov-text</code></p>\n            <p>Elastic Transcoder supports a maximum of one embedded format per output.</p>\n</li>\n         <li>\n<p><b>Sidecar:</b> Sidecar captions are kept in a\n            separate metadata file from the audio and video data.  Sidecar captions require a player\n            that is capable of understanding the relationship between the video file and the sidecar\n            file. Elastic Transcoder supports only one sidecar caption per language, to a maximum of 20 sidecar\n            captions per file.</p>\n            <p>Valid input values include: <code>dfxp</code> (first div element only),\n               <code>ebu-tt</code>, <code>scc</code>, <code>smpt</code>, <code>srt</code>,\n               <code>ttml</code> (first div element only), and <code>webvtt</code></p>\n            <p>Valid outputs include: <code>dfxp</code> (first div element only), <code>scc</code>,\n               <code>srt</code>, and <code>webvtt</code>.</p>\n</li>\n         </ul>\n         <p> If you want ttml or smpte-tt compatible captions, specify dfxp as your output format.</p>\n         <p>Elastic Transcoder does not support OCR (Optical Character Recognition), does not accept pictures\n            as a valid input for captions, and is not available for audio-only transcoding. Elastic Transcoder does\n            not preserve text formatting (for example, italics) during the transcoding process.</p>\n            <p>To remove captions or leave the captions empty, set <code>Captions</code> to null. To pass through\n            existing captions unchanged, set the <code>MergePolicy</code> to <code>MergeRetain</code>,\n            and pass in a null <code>CaptionSources</code> array.</p>\n      <p>For more information on embedded files, see the Subtitles Wikipedia page.</p>\n      <p>For more information on sidecar files, see the Extensible Metadata Platform and Sidecar file\n         Wikipedia pages.</p> \n   "
                     }
                   },
                   "documentation": "\n        <p><important>Outputs recommended instead.</important>If you specified one output for a job,\n            information about that output. If you specified multiple outputs for a job, the\n                <code>Output</code> object lists information about the first output. This duplicates\n            the information that is listed for the first output in the <code>Outputs</code>\n            object.</p>\n    "
@@ -4839,6 +5632,7 @@
             "type": "string",
             "pattern": "^\\d{13}-\\w{6}$",
             "documentation": "\n        <p>The identifier of the pipeline to read.</p>\n    ",
+            "required": true,
             "location": "uri"
           }
         },
@@ -5099,6 +5893,7 @@
             "type": "string",
             "pattern": "^\\d{13}-\\w{6}$",
             "documentation": "\n        <p>The identifier of the preset for which you want to get detailed information.</p>\n    ",
+            "required": true,
             "location": "uri"
           }
         },
@@ -5179,7 +5974,7 @@
                         "shape_name": "AudioCodecProfile",
                         "type": "string",
                         "pattern": "(^auto$)|(^AAC-LC$)|(^HE-AAC$)|(^HE-AACv2$)",
-                        "documentation": "\n        <p>If you specified <code>AAC</code> for <code>Audio:Codec</code>, choose the AAC profile for the output file.\n            Elastic Transcoder supports the following profiles:</p>\n        <ul>\n            <li>\n<code>auto</code>: If you specify <code>auto</code>, Elastic Transcoder will select\n                the profile based on the bit rate selected for the output file.</li>\n            <li>\n<code>AAC-LC</code>: The most common AAC profile. Use for bitrates larger than\n                64 kbps.</li>\n            <li>\n<code>HE-AAC</code>: Not supported on some older players and devices.\n                Use for bitrates between 40 and 80 kbps.</li>\n            <li>\n<code>HE-AACv2</code>: Not supported on some players and devices.\n                Use for bitrates less than 48 kbps.</li>\n        </ul>\n        <note><p>If you created any presets before AAC profiles were added, Elastic Transcoder automatically updated\n            your presets to use AAC-LC. You can change the value as required.</p></note>  \n    "
+                        "documentation": "\n        <p>You can only choose an audio profile when you specify AAC for the value of Audio:Codec.</p>\n        <p>Specify the AAC profile for the output file. Elastic Transcoder supports the following profiles:</p>\n        <ul>\n            <li>\n<code>auto</code>: If you specify <code>auto</code>, Elastic Transcoder will select\n                the profile based on the bit rate selected for the output file.</li>\n            <li>\n<code>AAC-LC</code>: The most common AAC profile. Use for bitrates larger than\n                64 kbps.</li>\n            <li>\n<code>HE-AAC</code>: Not supported on some older players and devices.\n                Use for bitrates between 40 and 80 kbps.</li>\n            <li>\n<code>HE-AACv2</code>: Not supported on some players and devices.\n                Use for bitrates less than 48 kbps.</li>\n        </ul>\n        <note><p>If you created any presets before AAC profiles were added, Elastic Transcoder automatically updated\n            your presets to use AAC-LC. You can change the value as required.</p></note>  \n    "
                       }
                     },
                     "documentation": "\n        <p>If you specified <code>AAC</code> for <code>Audio:Codec</code>, this is the <code>AAC</code> \n            compression profile to use. Valid values include:</p>\n        <p><code>auto</code>, <code>AAC-LC</code>, <code>HE-AAC</code>, <code>HE-AACv2</code></p>\n        <p>If you specify <code>auto</code>, Elastic Transcoder chooses a profile based on the bit rate of the output file.</p>\n    "
@@ -5306,13 +6101,13 @@
                         "MaxWidth": {
                           "shape_name": "PixelsOrPercent",
                           "type": "string",
-                          "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                          "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{1,4}?px$)",
                           "documentation": "\n        <p>The maximum width of the watermark in one of the following formats: <ul>\n                <li>number of pixels (px): The minimum value is 16 pixels, and the maximum value is\n                    the value of <code>MaxWidth</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100. Use the value of\n                        <code>Target</code> to specify whether you want Elastic Transcoder to include the black\n                    bars that are added by Elastic Transcoder, if any, in the calculation.</li> If\n                you specify the value in pixels, it must be less than or equal to the value of\n                    <code>MaxWidth</code>.</ul></p>\n    "
                         },
                         "MaxHeight": {
                           "shape_name": "PixelsOrPercent",
                           "type": "string",
-                          "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                          "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{1,4}?px$)",
                           "documentation": "\n        <p>The maximum height of the watermark in one of the following formats: <ul>\n                <li>number of pixels (px): The minimum value is 16 pixels, and the maximum value is\n                    the value of <code>MaxHeight</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100. Use the value of\n                        <code>Target</code> to specify whether you want Elastic Transcoder to include the black\n                    bars that are added by Elastic Transcoder, if any, in the calculation.</li>\n            </ul> If you specify the value in pixels, it must be less than or equal to the value of\n                <code>MaxHeight</code>.</p>\n    "
                         },
                         "SizingPolicy": {
@@ -5330,7 +6125,7 @@
                         "HorizontalOffset": {
                           "shape_name": "PixelsOrPercent",
                           "type": "string",
-                          "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                          "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{1,4}?px$)",
                           "documentation": "\n        <p>The amount by which you want the horizontal position of the watermark to be offset from\n            the position specified by HorizontalAlign: <ul>\n                <li>number of pixels (px): The minimum value is 0 pixels, and the maximum value is\n                    the value of MaxWidth.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100.</li>\n            </ul>For example, if you specify Left for <code>HorizontalAlign</code> and 5px for\n                <code>HorizontalOffset</code>, the left side of the watermark appears 5 pixels from\n            the left border of the output video.</p>\n        <p><code>HorizontalOffset</code> is only valid when the value of\n                <code>HorizontalAlign</code> is <code>Left</code> or <code>Right</code>. If you\n            specify an offset that causes the watermark to extend beyond the left or right border\n            and Elastic Transcoder has not added black bars, the watermark is cropped. If Elastic\n            Transcoder has added black bars, the watermark extends into the black bars. If the\n            watermark extends beyond the black bars, it is cropped.</p>\n        <p>Use the value of <code>Target</code> to specify whether you want to include the black\n            bars that are added by Elastic Transcoder, if any, in the offset calculation.</p>\n    "
                         },
                         "VerticalAlign": {
@@ -5342,7 +6137,7 @@
                         "VerticalOffset": {
                           "shape_name": "PixelsOrPercent",
                           "type": "string",
-                          "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{2,4}?px$)",
+                          "pattern": "(^\\d{1,3}(\\.\\d{0,5})?%$)|(^\\d{1,4}?px$)",
                           "documentation": "\n        <code>VerticalOffset</code>\n        <p>The amount by which you want the vertical position of the watermark to be offset from the\n            position specified by VerticalAlign:<ul>\n                <li>number of pixels (px): The minimum value is 0 pixels, and the maximum value is\n                    the value of <code>MaxHeight</code>.</li>\n                <li>integer percentage (%): The range of valid values is 0 to 100.</li>\n            </ul> For example, if you specify <code>Top</code> for <code>VerticalAlign</code> and\n                <code>5px</code> for <code>VerticalOffset</code>, the top of the watermark appears 5\n            pixels from the top border of the output video.</p>\n        <p><code>VerticalOffset</code> is only valid when the value of VerticalAlign is Top or\n            Bottom.</p>\n        <p>If you specify an offset that causes the watermark to extend beyond the top or bottom\n            border and Elastic Transcoder has not added black bars, the watermark is cropped. If\n            Elastic Transcoder has added black bars, the watermark extends into the black bars. If\n            the watermark extends beyond the black bars, it is cropped.</p>\n\n        <p>Use the value of <code>Target</code> to specify whether you want Elastic Transcoder to\n            include the black bars that are added by Elastic Transcoder, if any, in the offset\n            calculation.</p>\n    "
                         },
                         "Opacity": {
@@ -5486,19 +6281,22 @@
             "shape_name": "Role",
             "type": "string",
             "pattern": "^arn:aws:iam::\\w{12}:role/.+$",
-            "documentation": "\n        <p>The IAM Amazon Resource Name (ARN) for the role that you want Elastic Transcoder to\n            test.</p>\n    "
+            "documentation": "\n        <p>The IAM Amazon Resource Name (ARN) for the role that you want Elastic Transcoder to\n            test.</p>\n    ",
+            "required": true
           },
           "InputBucket": {
             "shape_name": "BucketName",
             "type": "string",
             "pattern": "^(\\w|\\.|-){1,255}$",
-            "documentation": "\n        <p>The Amazon S3 bucket that contains media files to be transcoded. The action attempts to read\n            from this bucket.</p>\n    "
+            "documentation": "\n        <p>The Amazon S3 bucket that contains media files to be transcoded. The action attempts to read\n            from this bucket.</p>\n    ",
+            "required": true
           },
           "OutputBucket": {
             "shape_name": "BucketName",
             "type": "string",
             "pattern": "^(\\w|\\.|-){1,255}$",
-            "documentation": "\n        <p>The Amazon S3 bucket that Elastic Transcoder will write transcoded media files to. The action attempts to\n            read from this bucket.</p>\n    "
+            "documentation": "\n        <p>The Amazon S3 bucket that Elastic Transcoder will write transcoded media files to. The action attempts to\n            read from this bucket.</p>\n    ",
+            "required": true
           },
           "Topics": {
             "shape_name": "SnsTopics",
@@ -5510,7 +6308,8 @@
               "documentation": null
             },
             "max_length": 30,
-            "documentation": "\n        <p>The ARNs of one or more Amazon Simple Notification Service (Amazon SNS) topics that you want the action to send a test\n            notification to.</p>\n    "
+            "documentation": "\n        <p>The ARNs of one or more Amazon Simple Notification Service (Amazon SNS) topics that you want the action to send a test\n            notification to.</p>\n    ",
+            "required": true
           }
         },
         "documentation": "\n        <p> The <code>TestRoleRequest</code> structure. </p>\n    "
@@ -6026,6 +6825,7 @@
             "type": "string",
             "pattern": "^\\d{13}-\\w{6}$",
             "documentation": "\n        <p> The identifier of the pipeline for which you want to change notification settings. </p>\n    ",
+            "required": true,
             "location": "uri"
           },
           "Notifications": {
@@ -6057,7 +6857,8 @@
                 "documentation": "\n        <p>The Amazon SNS topic that you want to notify when Elastic Transcoder encounters an error condition.</p>\n    "
               }
             },
-            "documentation": "\n        <p>The topic ARN for the Amazon Simple Notification Service (Amazon SNS) topic that you want to notify to report job\n            status.</p>\n        <important>To receive notifications, you must also subscribe to the new topic in the Amazon SNS\n            console.</important>\n        <ul>\n            <li>\n<b>Progressing</b>: The topic ARN for the Amazon Simple Notification Service (Amazon SNS) topic that you want to\n                notify when Elastic Transcoder has started to process jobs that are added to this pipeline. This\n                is the ARN that Amazon SNS returned when you created the topic.</li>\n            <li>\n<b>Completed</b>: The topic ARN for the Amazon SNS topic that you want to notify when\n                Elastic Transcoder has finished processing a job. This is the ARN that Amazon SNS returned when\n                you created the topic.</li>\n            <li>\n<b>Warning</b>: The topic ARN for the Amazon SNS topic that you want to notify when Elastic Transcoder\n                encounters a warning condition. This is the ARN that Amazon SNS returned when you\n                created the topic.</li>\n            <li>\n<b>Error</b>: The topic ARN for the Amazon SNS topic that you want to notify when Elastic Transcoder\n                encounters an error condition. This is the ARN that Amazon SNS returned when you\n                created the topic.</li>\n        </ul>\n    "
+            "documentation": "\n        <p>The topic ARN for the Amazon Simple Notification Service (Amazon SNS) topic that you want to notify to report job\n            status.</p>\n        <important>To receive notifications, you must also subscribe to the new topic in the Amazon SNS\n            console.</important>\n        <ul>\n            <li>\n<b>Progressing</b>: The topic ARN for the Amazon Simple Notification Service (Amazon SNS) topic that you want to\n                notify when Elastic Transcoder has started to process jobs that are added to this pipeline. This\n                is the ARN that Amazon SNS returned when you created the topic.</li>\n            <li>\n<b>Completed</b>: The topic ARN for the Amazon SNS topic that you want to notify when\n                Elastic Transcoder has finished processing a job. This is the ARN that Amazon SNS returned when\n                you created the topic.</li>\n            <li>\n<b>Warning</b>: The topic ARN for the Amazon SNS topic that you want to notify when Elastic Transcoder\n                encounters a warning condition. This is the ARN that Amazon SNS returned when you\n                created the topic.</li>\n            <li>\n<b>Error</b>: The topic ARN for the Amazon SNS topic that you want to notify when Elastic Transcoder\n                encounters an error condition. This is the ARN that Amazon SNS returned when you\n                created the topic.</li>\n        </ul>\n    ",
+            "required": true
           }
         },
         "documentation": "\n        <p>The <code>UpdatePipelineNotificationsRequest</code> structure.</p>\n    "
@@ -6324,13 +7125,15 @@
             "type": "string",
             "pattern": "^\\d{13}-\\w{6}$",
             "documentation": "\n        <p>The identifier of the pipeline to update.</p>\n    ",
+            "required": true,
             "location": "uri"
           },
           "Status": {
             "shape_name": "PipelineStatus",
             "type": "string",
             "pattern": "(^Active$)|(^Paused$)",
-            "documentation": "\n        <p>The desired status of the pipeline:</p>\n        <ul>\n            <li>\n                <code>Active</code>: The pipeline is processing jobs.</li>\n            <li>\n                <code>Paused</code>: The pipeline is not currently processing jobs.</li>\n        </ul>\n    "
+            "documentation": "\n        <p>The desired status of the pipeline:</p>\n        <ul>\n            <li>\n                <code>Active</code>: The pipeline is processing jobs.</li>\n            <li>\n                <code>Paused</code>: The pipeline is not currently processing jobs.</li>\n        </ul>\n    ",
+            "required": true
           }
         },
         "documentation": "\n        <p>The <code>UpdatePipelineStatusRequest</code> structure.</p>\n    "
