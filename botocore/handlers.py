@@ -25,6 +25,7 @@ import six
 
 from botocore.compat import urlsplit, urlunsplit, unquote, json, quote
 from botocore import retryhandler
+from botocore.payload import Payload
 import botocore.auth
 
 
@@ -239,6 +240,18 @@ def signature_overrides(service_data, service_name, session, **kwargs):
         service_data['signature_version'] = signature_version_override
 
 
+def add_expect_header(operation, params, **kwargs):
+    if operation.http.get('method', '') not in ['PUT', 'POST']:
+        return
+    if params['payload'].__class__ == Payload:
+        payload = params['payload'].getvalue()
+        if hasattr(payload, 'read'):
+            # Any file like object will use an expect 100-continue
+            # header regardless of size.
+            logger.debug("Adding expect 100 continue header to request.")
+            params['headers']['Expect'] = '100-continue'
+
+
 def quote_source_header(params, **kwargs):
     if params['headers'] and 'x-amz-copy-source' in params['headers']:
         value = params['headers']['x-amz-copy-source']
@@ -285,6 +298,7 @@ BUILTIN_HANDLERS = [
     ('before-call.s3.DeleteObjects', calculate_md5),
     ('before-call.s3.UploadPartCopy', quote_source_header),
     ('before-call.s3.CopyObject', quote_source_header),
+    ('before-call.s3', add_expect_header),
     ('before-call.ec2.CopySnapshot', copy_snapshot_encrypted),
     ('before-auth.s3', fix_s3_host),
     ('needs-retry.s3.UploadPartCopy', check_for_200_error),
