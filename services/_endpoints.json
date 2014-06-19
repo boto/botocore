@@ -163,7 +163,7 @@
   ],
   "dynamodb": [
     {
-      "uri": "http://localhost:8080",
+      "uri": "http://localhost:8000",
       "constraints": [
         ["region", "equals", "local"]
       ],
