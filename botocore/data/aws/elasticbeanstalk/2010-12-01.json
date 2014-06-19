@@ -7,7 +7,7 @@
     "service_abbreviation": "Elastic Beanstalk",
     "endpoint_prefix": "elasticbeanstalk",
     "xmlnamespace": "http://elasticbeanstalk.amazonaws.com/docs/2010-12-01/",
-    "documentation": "\n      <fullname>AWS Elastic Beanstalk</fullname>\n\n      <p>\n         This is the AWS Elastic Beanstalk API Reference. This guide provides detailed information \n         about AWS Elastic Beanstalk actions, data types, parameters, and errors.\n      </p>\n\n      <p>AWS Elastic Beanstalk\n         is a tool that makes it easy for you to create,\n         deploy, and manage scalable, fault-tolerant applications running on\n         Amazon Web Services cloud resources.\n      </p>\n\n      <p>\n         For more information about this product, go to the <a href=\"http://aws.amazon.com/elasticbeanstalk/\">AWS Elastic Beanstalk</a> details page.  \n         The location of the lastest AWS Elastic Beanstalk WSDL is \n         <a href=\"http://elasticbeanstalk.s3.amazonaws.com/doc/2010-12-01/AWSElasticBeanstalk.wsdl\">http://elasticbeanstalk.s3.amazonaws.com/doc/2010-12-01/AWSElasticBeanstalk.wsdl</a>.\n      </p>\n       <p><b>Endpoints</b></p>\n       <p>For a list of region-specific endpoints that AWS Elastic Beanstalk supports, go to <a href=\"http://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region\">Regions and Endpoints</a> in the \n<i>Amazon Web Services Glossary</i>.</p>\n   ",
+    "documentation": "\n      <fullname>AWS Elastic Beanstalk</fullname>\n\n      <p>\n         This is the AWS Elastic Beanstalk API Reference. This guide provides detailed information \n         about AWS Elastic Beanstalk actions, data types, parameters, and errors.\n      </p>\n\n      <p>AWS Elastic Beanstalk\n         is a tool that makes it easy for you to create,\n         deploy, and manage scalable, fault-tolerant applications running on\n         Amazon Web Services cloud resources.\n      </p>\n\n      <p>\n         For more information about this product, go to the <a href=\"http://aws.amazon.com/elasticbeanstalk/\">AWS Elastic Beanstalk</a> details page.  \n         The location of the latest AWS Elastic Beanstalk WSDL is \n         <a href=\"http://elasticbeanstalk.s3.amazonaws.com/doc/2010-12-01/AWSElasticBeanstalk.wsdl\">http://elasticbeanstalk.s3.amazonaws.com/doc/2010-12-01/AWSElasticBeanstalk.wsdl</a>.\n      </p>\n       <p><b>Endpoints</b></p>\n       <p>For a list of region-specific endpoints that AWS Elastic Beanstalk supports, go to <a href=\"http://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region\">Regions and Endpoints</a> in the \n<i>Amazon Web Services Glossary</i>.</p>\n   ",
     "operations": {
         "CheckDNSAvailability": {
             "name": "CheckDNSAvailability",
@@ -140,7 +140,7 @@
                     "documentation": "\n    <p>The caller has exceeded the limit on the number of applications associated with their account.</p>\n  "
                 }
             ],
-            "documentation": "\n      <p>\n         Creates an application that has one configuration\n         template named\n         <code>default</code>\n         and no application versions.\n      </p>\n      <note>\n         The\n         <code>default</code>\n         configuration template is for a 32-bit version of the\n         Amazon Linux\n         operating system running the Tomcat 6 application container.\n      </note>\n      <examples>\n         <queryrequest>https://elasticbeanstalk.us-east-1.amazon.com/?ApplicationName=SampleApp\n&Description=Sample%20Description\n&Operation=CreateApplication\n&AuthParams         </queryrequest>\n\n         <queryresponse><CreateApplicationResponse xmlns=\"https://elasticbeanstalk.amazonaws.com/docs/2010-12-01/\">\n  <CreateApplicationResult>\n    <Application>\n      <Versions/>\n      <Description>Sample Description</Description>\n      <ApplicationName>SampleApp</ApplicationName>\n      <DateCreated>2010-11-16T23:09:20.256Z</DateCreated>\n      <DateUpdated>2010-11-16T23:09:20.256Z</DateUpdated>\n      <ConfigurationTemplates>\n        <member>Default</member>\n      </ConfigurationTemplates>\n    </Application>\n  </CreateApplicationResult>\n  <ResponseMetadata>\n    <RequestId>8b00e053-f1d6-11df-8a78-9f77047e0d0c</RequestId>\n  </ResponseMetadata>\n</CreateApplicationResponse>      </queryresponse>\n      </examples>\n   "
+            "documentation": "\n      <p>\n         Creates an application that has one configuration\n         template named\n         <code>default</code>\n         and no application versions.\n      </p>\n      <?oxy_delete author=\"brussard\" timestamp=\"20131024T142047-0700\" content=\"&lt;note&gt;\n         The\n         &lt;code&gt;default&lt;/code&gt;\n         configuration template is for a 32-bit version of the\n         Amazon Linux\n         operating system running the Tomcat 6 application container.\n      &lt;/note&gt;\">\n      <examples>\n         <queryrequest>https://elasticbeanstalk.us-east-1.amazon.com/?ApplicationName=SampleApp\n&Description=Sample%20Description\n&Operation=CreateApplication\n&AuthParams         </queryrequest>\n\n         <queryresponse><CreateApplicationResponse xmlns=\"https://elasticbeanstalk.amazonaws.com/docs/2010-12-01/\">\n  <CreateApplicationResult>\n    <Application>\n      <Versions/>\n      <Description>Sample Description</Description>\n      <ApplicationName>SampleApp</ApplicationName>\n      <DateCreated>2010-11-16T23:09:20.256Z</DateCreated>\n      <DateUpdated>2010-11-16T23:09:20.256Z</DateUpdated>\n      <ConfigurationTemplates>\n        <member>Default</member>\n      </ConfigurationTemplates>\n    </Application>\n  </CreateApplicationResult>\n  <ResponseMetadata>\n    <RequestId>8b00e053-f1d6-11df-8a78-9f77047e0d0c</RequestId>\n  </ResponseMetadata>\n</CreateApplicationResponse>      </queryresponse>\n      </examples>\n   "
         },
         "CreateApplicationVersion": {
             "name": "CreateApplicationVersion",
@@ -523,27 +523,53 @@
                             "Name": {
                                 "shape_name": "String",
                                 "type": "string",
-                                "documentation": null
+                                "documentation": "\n      <p>The name of this environment tier.</p>\n   "
                             },
                             "Type": {
                                 "shape_name": "String",
                                 "type": "string",
-                                "documentation": null
+                                "documentation": "\n      <p>The type of this environment tier.</p>\n   "
                             },
                             "Version": {
                                 "shape_name": "String",
                                 "type": "string",
-                                "documentation": null
+                                "documentation": "\n      <p>The version of this environment tier.</p>\n   "
                             }
                         },
-                        "documentation": null
+                        "documentation": "\n      <p>\n         This specifies the tier to use for creating this environment.\n      </p>\n   "
+                    },
+                    "Tags": {
+                        "shape_name": "Tags",
+                        "type": "list",
+                        "members": {
+                            "shape_name": "Tag",
+                            "type": "structure",
+                            "members": {
+                                "Key": {
+                                    "shape_name": "TagKey",
+                                    "type": "string",
+                                    "min_length": 1,
+                                    "max_length": 128,
+                                    "documentation": "\n      <p>The key of the tag.</p>\n   "
+                                },
+                                "Value": {
+                                    "shape_name": "TagValue",
+                                    "type": "string",
+                                    "min_length": 1,
+                                    "max_length": 256,
+                                    "documentation": "\n      <p>The value of the tag.</p>\n   "
+                                }
+                            },
+                            "documentation": "\n      <p>Describes a tag applied to a resource in an environment.</p>\n   "
+                        },
+                        "documentation": "\n      <p>\n         This specifies the tags applied to resources in the environment.\n      </p>\n   "
                     },
                     "VersionLabel": {
                         "shape_name": "VersionLabel",
                         "type": "string",
                         "min_length": 1,
                         "max_length": 100,
-                        "documentation": "\n      <p>The name of the application version to deploy.</p>\n      <p>\n         If the specified application has no associated application versions, AWS Elastic Beanstalk\n         <code>UpdateEnvironment</code> returns an\n         <code>InvalidParameterValue</code>\n         error.\n      </p>\n      <p>\n         Default: If not specified, AWS Elastic Beanstalk\n         attempts to launch the most recently created\n         application version.\n      </p>\n   "
+                        "documentation": "\n      <p>The name of the application version to deploy.</p>\n      <p>\n         If the specified application has no associated application versions, AWS Elastic Beanstalk\n         <code>UpdateEnvironment</code> returns an\n         <code>InvalidParameterValue</code>\n         error.\n      </p>\n      <p>\n         Default: If not specified, AWS Elastic Beanstalk\n         attempts to launch the <?oxy_delete author=\"brussard\" timestamp=\"20131030T145730-0700\" content=\"most recently created\n         application version\"><?oxy_insert_start author=\"brussard\" timestamp=\"20131030T145730-0700\">sample application in the container<?oxy_insert_end>.\n      </p>\n   "
                     },
                     "TemplateName": {
                         "shape_name": "ConfigurationTemplateName",
@@ -662,7 +688,7 @@
                     "EndpointURL": {
                         "shape_name": "EndpointURL",
                         "type": "string",
-                        "documentation": "\n      <p>The URL to the LoadBalancer for this environment.</p>\n   "
+                        "documentation": "\n      <p>For load-balanced, autoscaling environments, the URL to the LoadBalancer. For single-instance environments, the IP address of the instance.</p>\n   "
                     },
                     "CNAME": {
                         "shape_name": "DNSCname",
@@ -757,20 +783,20 @@
                             "Name": {
                                 "shape_name": "String",
                                 "type": "string",
-                                "documentation": null
+                                "documentation": "\n      <p>The name of this environment tier.</p>\n   "
                             },
                             "Type": {
                                 "shape_name": "String",
                                 "type": "string",
-                                "documentation": null
+                                "documentation": "\n      <p>The type of this environment tier.</p>\n   "
                             },
                             "Version": {
                                 "shape_name": "String",
                                 "type": "string",
-                                "documentation": null
+                                "documentation": "\n      <p>The version of this environment tier.</p>\n   "
                             }
                         },
-                        "documentation": null
+                        "documentation": "\n      <p>Describes the current tier of this environment.</p>\n   "
                     }
                 },
                 "documentation": "\n      <p>Describes the properties of an environment.</p>\n\n\n   "
@@ -1601,17 +1627,17 @@
                                         "Name": {
                                             "shape_name": "String",
                                             "type": "string",
-                                            "documentation": null
+                                            "documentation": "\n      <p>The name of the queue.</p>\n   "
                                         },
                                         "URL": {
                                             "shape_name": "String",
                                             "type": "string",
-                                            "documentation": null
+                                            "documentation": "\n      <p>The URL of the queue.</p>\n   "
                                         }
                                     },
-                                    "documentation": null
+                                    "documentation": "\n      <p>Describes a queue.</p>\n   "
                                 },
-                                "documentation": null
+                                "documentation": "\n      <p>\n         The queues used by this environment.\n      </p>\n   "
                             }
                         },
                         "documentation": "\n      <p>\n         A list of\n         <a>EnvironmentResourceDescription</a>.\n      </p>\n   "
@@ -1743,7 +1769,7 @@
                                 "EndpointURL": {
                                     "shape_name": "EndpointURL",
                                     "type": "string",
-                                    "documentation": "\n      <p>The URL to the LoadBalancer for this environment.</p>\n   "
+                                    "documentation": "\n      <p>For load-balanced, autoscaling environments, the URL to the LoadBalancer. For single-instance environments, the IP address of the instance.</p>\n   "
                                 },
                                 "CNAME": {
                                     "shape_name": "DNSCname",
@@ -1838,20 +1864,20 @@
                                         "Name": {
                                             "shape_name": "String",
                                             "type": "string",
-                                            "documentation": null
+                                            "documentation": "\n      <p>The name of this environment tier.</p>\n   "
                                         },
                                         "Type": {
                                             "shape_name": "String",
                                             "type": "string",
-                                            "documentation": null
+                                            "documentation": "\n      <p>The type of this environment tier.</p>\n   "
                                         },
                                         "Version": {
                                             "shape_name": "String",
                                             "type": "string",
-                                            "documentation": null
+                                            "documentation": "\n      <p>The version of this environment tier.</p>\n   "
                                         }
                                     },
-                                    "documentation": null
+                                    "documentation": "\n      <p>Describes the current tier of this environment.</p>\n   "
                                 }
                             },
                             "documentation": "\n      <p>Describes the properties of an environment.</p>\n\n\n   "
@@ -2371,7 +2397,7 @@
                     "EndpointURL": {
                         "shape_name": "EndpointURL",
                         "type": "string",
-                        "documentation": "\n      <p>The URL to the LoadBalancer for this environment.</p>\n   "
+                        "documentation": "\n      <p>For load-balanced, autoscaling environments, the URL to the LoadBalancer. For single-instance environments, the IP address of the instance.</p>\n   "
                     },
                     "CNAME": {
                         "shape_name": "DNSCname",
@@ -2466,20 +2492,20 @@
                             "Name": {
                                 "shape_name": "String",
                                 "type": "string",
-                                "documentation": null
+                                "documentation": "\n      <p>The name of this environment tier.</p>\n   "
                             },
                             "Type": {
                                 "shape_name": "String",
                                 "type": "string",
-                                "documentation": null
+                                "documentation": "\n      <p>The type of this environment tier.</p>\n   "
                             },
                             "Version": {
                                 "shape_name": "String",
                                 "type": "string",
-                                "documentation": null
+                                "documentation": "\n      <p>The version of this environment tier.</p>\n   "
                             }
                         },
-                        "documentation": null
+                        "documentation": "\n      <p>Describes the current tier of this environment.</p>\n   "
                     }
                 },
                 "documentation": "\n      <p>Describes the properties of an environment.</p>\n\n\n   "
@@ -2886,20 +2912,20 @@
                             "Name": {
                                 "shape_name": "String",
                                 "type": "string",
-                                "documentation": null
+                                "documentation": "\n      <p>The name of this environment tier.</p>\n   "
                             },
                             "Type": {
                                 "shape_name": "String",
                                 "type": "string",
-                                "documentation": null
+                                "documentation": "\n      <p>The type of this environment tier.</p>\n   "
                             },
                             "Version": {
                                 "shape_name": "String",
                                 "type": "string",
-                                "documentation": null
+                                "documentation": "\n      <p>The version of this environment tier.</p>\n   "
                             }
                         },
-                        "documentation": null
+                        "documentation": "\n      <p>\n         This specifies the tier to use to update the environment.\n      </p>\n      <p>\n         Condition: You can only update the tier version for an environment. If you change the name of the type, \n         AWS Elastic Beanstalk returns <code>InvalidParameterValue</code> error.\n      </p>\n   "
                     },
                     "VersionLabel": {
                         "shape_name": "VersionLabel",
@@ -3019,7 +3045,7 @@
                     "EndpointURL": {
                         "shape_name": "EndpointURL",
                         "type": "string",
-                        "documentation": "\n      <p>The URL to the LoadBalancer for this environment.</p>\n   "
+                        "documentation": "\n      <p>For load-balanced, autoscaling environments, the URL to the LoadBalancer. For single-instance environments, the IP address of the instance.</p>\n   "
                     },
                     "CNAME": {
                         "shape_name": "DNSCname",
@@ -3114,20 +3140,20 @@
                             "Name": {
                                 "shape_name": "String",
                                 "type": "string",
-                                "documentation": null
+                                "documentation": "\n      <p>The name of this environment tier.</p>\n   "
                             },
                             "Type": {
                                 "shape_name": "String",
                                 "type": "string",
-                                "documentation": null
+                                "documentation": "\n      <p>The type of this environment tier.</p>\n   "
                             },
                             "Version": {
                                 "shape_name": "String",
                                 "type": "string",
-                                "documentation": null
+                                "documentation": "\n      <p>The version of this environment tier.</p>\n   "
                             }
                         },
-                        "documentation": null
+                        "documentation": "\n      <p>Describes the current tier of this environment.</p>\n   "
                     }
                 },
                 "documentation": "\n      <p>Describes the properties of an environment.</p>\n\n\n   "
