@@ -78,7 +78,7 @@
       }
     },
     {
-      "uri":"{scheme}://{service}-{region}.amazonaws.com.cn",
+      "uri":"{scheme}://{service}.{region}.amazonaws.com.cn",
       "constraints":[
         ["region", "startsWith", "cn-"]
       ]
@@ -157,6 +157,20 @@
       "properties": {
         "credentialScope": {
             "region": "us-east-1"
+        }
+      }
+    }
+  ],
+  "dynamodb": [
+    {
+      "uri": "http://localhost:8000",
+      "constraints": [
+        ["region", "equals", "local"]
+      ],
+      "properties": {
+        "credentialScope": {
+            "region": "us-east-1",
+            "service": "dynamodb"
         }
       }
     }
