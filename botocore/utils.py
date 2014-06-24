@@ -211,8 +211,13 @@ def parse_key_val_file(filename, _open=open):
 
 
 def parse_key_val_file_contents(contents):
+    # This was originally extracted from the EC2 credential provider, which was
+    # fairly lenient in its parsing.  We only try to parse key/val pairs if
+    # there's a '=' in the line.
     final = {}
     for line in contents.splitlines():
+        if '=' not in line:
+            continue
         key, val = line.split('=', 1)
         key = key.strip()
         val = val.strip()
