@@ -14,6 +14,7 @@
 # language governing permissions and limitations under the License.
 from tests import unittest
 import datetime
+import time
 
 import mock
 import six
@@ -22,6 +23,7 @@ import botocore.auth
 import botocore.credentials
 from botocore.compat import HTTPHeaders, urlsplit, parse_qs
 from botocore.awsrequest import AWSRequest
+from botocore.vendored.requests.models import Request
 
 
 class TestHMACV1(unittest.TestCase):
@@ -92,6 +94,16 @@ class TestSigV2(unittest.TestCase):
         self.credentials = botocore.credentials.Credentials(access_key,
                                                             secret_key)
         self.signer = botocore.auth.SigV2Auth(self.credentials)
+        self.time_patcher = mock.patch.object(
+            botocore.auth.time, 'gmtime',
+            mock.Mock(wraps=time.gmtime)
+        )
+        mocked_time = self.time_patcher.start()
+        mocked_time.return_value = time.struct_time(
+            [2014, 6, 20, 8, 40, 23, 4, 171, 0])
+
+    def tearDown(self):
+        self.time_patcher.stop()
 
     def test_put(self):
         request = mock.Mock()
@@ -102,6 +114,20 @@ class TestSigV2(unittest.TestCase):
         self.assertEqual(
             result, ('Foo=%E2%9C%93',
                      u'VCtWuwaOL0yMffAT8W4y0AFW3W4KUykBqah9S40rB+Q='))
+
+    def test_fields(self):
+        request = Request()
+        request.url = '/'
+        request.method = 'POST'
+        request.data = {'Foo': u'\u2713'}
+        self.signer.add_auth(request)
+        self.assertEqual(request.data['AWSAccessKeyId'], 'foo')
+        self.assertEqual(request.data['Foo'], u'\u2713')
+        self.assertEqual(request.data['Timestamp'], '2014-06-20T08:40:23Z')
+        self.assertEqual(request.data['Signature'],
+                         u'Tiecw+t51tok4dTT8B4bg47zxHEM/KcD55f2/x6K22o=')
+        self.assertEqual(request.data['SignatureMethod'], 'HmacSHA256')
+        self.assertEqual(request.data['SignatureVersion'], '2')
 
 
 class TestSigV3(unittest.TestCase):
