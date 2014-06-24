@@ -1978,7 +1978,8 @@
                                             "type": "string",
                                             "enum": [
                                                 "standard",
-                                                "io1"
+                                                "io1",
+                                                "gp2"
                                             ],
                                             "documentation": "\n    <p>The volume type.</p>\n    <p>Default: <code>standard</code></p>\n   "
                                         },
@@ -4006,7 +4007,8 @@
                         "type": "string",
                         "enum": [
                             "standard",
-                            "io1"
+                            "io1",
+                            "gp2"
                         ],
                         "documentation": "\n  <p>The volume type. This can be <code>standard</code> for standard EBS volumes or <code>io1</code>\n      for Provisioned IOPS volumes.</p>\n  <p>Default: <code>standard</code></p>\n "
                     },
@@ -4158,7 +4160,8 @@
                         "type": "string",
                         "enum": [
                             "standard",
-                            "io1"
+                            "io1",
+                            "gp2"
                         ],
                         "documentation": "\n  <p>The volume type. This can be <code>standard</code> for standard EBS volumes or <code>io1</code>\n      for Provisioned IOPS volumes.</p>\n ",
                         "xmlname": "volumeType"
@@ -6975,7 +6978,8 @@
                                             "type": "string",
                                             "enum": [
                                                 "standard",
-                                                "io1"
+                                                "io1",
+                                                "gp2"
                                             ],
                                             "documentation": "\n    <p>The volume type.</p>\n    <p>Default: <code>standard</code></p>\n   ",
                                             "xmlname": "volumeType"
@@ -7320,7 +7324,8 @@
                                                         "type": "string",
                                                         "enum": [
                                                             "standard",
-                                                            "io1"
+                                                            "io1",
+                                                            "gp2"
                                                         ],
                                                         "documentation": "\n    <p>The volume type.</p>\n    <p>Default: <code>standard</code></p>\n   ",
                                                         "xmlname": "volumeType"
@@ -12538,7 +12543,8 @@
                                                                 "type": "string",
                                                                 "enum": [
                                                                     "standard",
-                                                                    "io1"
+                                                                    "io1",
+                                                                    "gp2"
                                                                 ],
                                                                 "documentation": "\n    <p>The volume type.</p>\n    <p>Default: <code>standard</code></p>\n   ",
                                                                 "xmlname": "volumeType"
@@ -13858,7 +13864,8 @@
                                     "type": "string",
                                     "enum": [
                                         "standard",
-                                        "io1"
+                                        "io1",
+                                        "gp2"
                                     ],
                                     "documentation": "\n  <p>The volume type. This can be <code>standard</code> for standard EBS volumes or <code>io1</code>\n      for Provisioned IOPS volumes.</p>\n ",
                                     "xmlname": "volumeType"
@@ -17092,7 +17099,8 @@
                                             "type": "string",
                                             "enum": [
                                                 "standard",
-                                                "io1"
+                                                "io1",
+                                                "gp2"
                                             ],
                                             "documentation": "\n    <p>The volume type.</p>\n    <p>Default: <code>standard</code></p>\n   "
                                         },
@@ -17706,7 +17714,8 @@
                                                     "type": "string",
                                                     "enum": [
                                                         "standard",
-                                                        "io1"
+                                                        "io1",
+                                                        "gp2"
                                                     ],
                                                     "documentation": "\n    <p>The volume type.</p>\n    <p>Default: <code>standard</code></p>\n   "
                                                 },
@@ -18177,7 +18186,8 @@
                                                                 "type": "string",
                                                                 "enum": [
                                                                     "standard",
-                                                                    "io1"
+                                                                    "io1",
+                                                                    "gp2"
                                                                 ],
                                                                 "documentation": "\n    <p>The volume type.</p>\n    <p>Default: <code>standard</code></p>\n   ",
                                                                 "xmlname": "volumeType"
@@ -19010,7 +19020,8 @@
                                             "type": "string",
                                             "enum": [
                                                 "standard",
-                                                "io1"
+                                                "io1",
+                                                "gp2"
                                             ],
                                             "documentation": "\n    <p>The volume type.</p>\n    <p>Default: <code>standard</code></p>\n   "
                                         },
