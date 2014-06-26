@@ -18,6 +18,7 @@ from .endpoint import get_endpoint
 from .operation import Operation
 from .waiter import Waiter
 from .exceptions import ServiceNotInRegionError, NoRegionError
+from .exceptions import UnknownEndpointError
 
 
 logger = logging.getLogger(__name__)
@@ -102,8 +103,17 @@ class Service(object):
         # Use the endpoint resolver heuristics to build the endpoint url.
         resolver = self.session.get_component('endpoint_resolver')
         scheme = 'https' if is_secure else 'http'
-        endpoint = resolver.construct_endpoint(
-            self.endpoint_prefix, region_name, scheme=scheme)
+        try:
+            endpoint = resolver.construct_endpoint(
+                self.endpoint_prefix, region_name, scheme=scheme)
+        except UnknownEndpointError:
+            if endpoint_url is not None:
+                # If the user provides an endpoint_url, it's ok
+                # if the heuristics didn't find anything.  We use the
+                # user provided endpoint_url.
+                endpoint = {'uri': endpoint_url, 'properties': {}}
+            else:
+                raise
         # We only support the credentialScope.region in the properties
         # bag right now, so if it's available, it will override the
         # provided region name.
