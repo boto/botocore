@@ -64,7 +64,7 @@ class TestService(BaseSessionTest):
         # However, if the service uses siv4 auth, then an exception
         # is raised if we call get_endpoint without a region name.
         service = self.session.get_service('cloudformation')
-        with self.assertRaises(botocore.exceptions.UnknownEndpointError):
+        with self.assertRaises(botocore.exceptions.NoRegionError):
             service.get_endpoint(endpoint_url='https://wherever.i.want.com')
 
     def test_region_required_for_non_global_endpoint(self):
@@ -73,6 +73,15 @@ class TestService(BaseSessionTest):
         service = self.session.get_service('ec2')
         with self.assertRaises(botocore.exceptions.UnknownEndpointError):
             service.get_endpoint()
+
+    def test_region_not_required_if_endpoint_url_given(self):
+        # Even if we're not a global service, if an endpoint_url is given
+        # then we still construct an endpoint even if the heuristics fail.
+        service = self.session.get_service('cloudsearchdomain')
+        endpoint = service.get_endpoint(
+            region_name=None,
+            endpoint_url='http://custom-endpoint/')
+        self.assertEqual(endpoint.host, 'http://custom-endpoint/')
 
 
 if __name__ == "__main__":
