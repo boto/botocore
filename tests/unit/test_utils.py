@@ -151,6 +151,26 @@ class TestParseEC2CredentialsFile(unittest.TestCase):
         contents = ""
         self.assertEqual(parse_key_val_file_contents(contents), {})
 
+    def test_key_val_pair_with_blank_lines(self):
+        # The \n\n has an extra blank between the access/secret keys.
+        contents = "AWSAccessKeyId=a\n\nAWSSecretKey=b\n"
+        self.assertEqual(parse_key_val_file_contents(contents),
+                         {'AWSAccessKeyId': 'a',
+                          'AWSSecretKey': 'b'})
+
+    def test_key_val_parser_lenient(self):
+        # Ignore any line that does not have a '=' char in it.
+        contents = "AWSAccessKeyId=a\nNOTKEYVALLINE\nAWSSecretKey=b\n"
+        self.assertEqual(parse_key_val_file_contents(contents),
+                         {'AWSAccessKeyId': 'a',
+                          'AWSSecretKey': 'b'})
+
+    def test_multiple_equals_on_line(self):
+        contents = "AWSAccessKeyId=a\nAWSSecretKey=secret_key_with_equals=b\n"
+        self.assertEqual(parse_key_val_file_contents(contents),
+                         {'AWSAccessKeyId': 'a',
+                          'AWSSecretKey': 'secret_key_with_equals=b'})
+
     def test_os_error_raises_config_not_found(self):
         mock_open = mock.Mock()
         mock_open.side_effect = OSError()

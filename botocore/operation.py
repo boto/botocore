@@ -145,7 +145,12 @@ class Operation(BotoCoreObject):
                     d['payload'] = XMLPayload(root_element_name=root_element_name,
                                               namespace=namespace)
             else:
-                d['payload'] = JSONPayload()
+                # rest-json.
+                payload = self._find_payload()
+                if payload and payload.type in ('blob', 'string'):
+                    d['payload'] = Payload()
+                else:
+                    d['payload'] = JSONPayload()
         return d
 
     def build_parameters(self, **kwargs):
