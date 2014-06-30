@@ -92,12 +92,39 @@ class TestHandlers(BaseSessionTest):
         source_endpoint.auth.credentials = mock.sentinel.credentials
         source_endpoint.create_request.return_value = signed_request
         operation.service.get_endpoint.return_value = source_endpoint
+        endpoint = mock.Mock()
+        endpoint.region_name = 'us-east-1'
 
         params = {'SourceRegion': 'us-west-2'}
-        copy_snapshot_encrypted(operation, params)
+        copy_snapshot_encrypted(operation, params, endpoint)
         self.assertEqual(params['PresignedUrl'], 'SIGNED_REQUEST')
         # We created an endpoint in the source region.
         operation.service.get_endpoint.assert_called_with('us-west-2')
+        # We should also populate the DestinationRegion with the
+        # region_name of the endpoint object.
+        self.assertEqual(params['DestinationRegion'], 'us-east-1')
+
+    def test_destination_region_left_untouched(self):
+        # If the user provides a destination region, we will still
+        # override the DesinationRegion with the region_name from
+        # the endpoint object.
+        operation = mock.Mock()
+        source_endpoint = mock.Mock()
+        signed_request = mock.Mock()
+        signed_request.url = 'SIGNED_REQUEST'
+        source_endpoint.auth.credentials = mock.sentinel.credentials
+        source_endpoint.create_request.return_value = signed_request
+        operation.service.get_endpoint.return_value = source_endpoint
+        endpoint = mock.Mock()
+        endpoint.region_name = 'us-west-1'
+
+        # The user provides us-east-1, but we will override this to
+        # endpoint.region_name, of 'us-west-1' in this case.
+        params = {'SourceRegion': 'us-west-2', 'DestinationRegion': 'us-east-1'}
+        copy_snapshot_encrypted(operation, params, endpoint)
+        # Always use the DestinationRegion from the endpoint, regardless of
+        # whatever value the user provides.
+        self.assertEqual(params['DestinationRegion'], 'us-west-1')
 
     def test_500_status_code_set_for_200_response(self):
         http_response = mock.Mock()
