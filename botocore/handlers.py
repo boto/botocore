@@ -259,7 +259,7 @@ def quote_source_header(params, **kwargs):
             value.encode('utf-8'), '/~')
 
 
-def copy_snapshot_encrypted(operation, params, **kwargs):
+def copy_snapshot_encrypted(operation, params, endpoint, **kwargs):
     # The presigned URL that facilities copying an encrypted snapshot.
     # If the user does not provide this value, we will automatically
     # calculate on behalf of the user and inject the PresignedUrl
@@ -268,6 +268,7 @@ def copy_snapshot_encrypted(operation, params, **kwargs):
         # If the customer provided this value, then there's nothing for
         # us to do.
         return
+    params['DestinationRegion'] = endpoint.region_name
     # The request will be sent to the destination region, so we need
     # to create an endpoint to the source region and create a presigned
     # url based on the source endpoint.
