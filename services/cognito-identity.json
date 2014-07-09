@@ -1,0 +1,1274 @@
+{
+  "api_version": "2014-06-30",
+  "type": "json",
+  "json_version": "1.1",
+  "signature_version": "v4",
+  "service_full_name": "Amazon Cognito Identity Service",
+  "endpoint_prefix": "cognito-identity",
+  "target_prefix": "AWSCognitoIdentityService",
+  "xmlnamespace": "http://cognito-identity.amazonaws.com/doc/2014-06-30/",
+  "documentation": null,
+  "operations": {
+    "CreateIdentityPool": {
+      "name": "CreateIdentityPool",
+      "input": {
+        "shape_name": "CreateIdentityPoolInput",
+        "type": "structure",
+        "members": {
+          "IdentityPoolName": {
+            "shape_name": "IdentityPoolName",
+            "type": "string",
+            "min_length": 1,
+            "max_length": 128,
+            "pattern": "[\\w ]+",
+            "documentation": null,
+            "required": true
+          },
+          "AllowUnauthenticatedIdentities": {
+            "shape_name": "IdentityPoolUnauthenticated",
+            "type": "boolean",
+            "documentation": null,
+            "required": true
+          },
+          "SupportedLoginProviders": {
+            "shape_name": "IdentityProviders",
+            "type": "map",
+            "keys": {
+              "shape_name": "IdentityProviderName",
+              "type": "string",
+              "min_length": 1,
+              "max_length": 128,
+              "pattern": "[\\w._-]+",
+              "documentation": null
+            },
+            "members": {
+              "shape_name": "IdentityProviderId",
+              "type": "string",
+              "min_length": 1,
+              "max_length": 128,
+              "pattern": "[\\w._-]+",
+              "documentation": null
+            },
+            "max_length": 3,
+            "documentation": null
+          }
+        },
+        "documentation": null
+      },
+      "output": {
+        "shape_name": "IdentityPool",
+        "type": "structure",
+        "members": {
+          "IdentityPoolId": {
+            "shape_name": "IdentityPoolId",
+            "type": "string",
+            "pattern": "[\\w-]+:[0-9a-f-]+",
+            "min_length": 1,
+            "max_length": 50,
+            "documentation": null,
+            "required": true
+          },
+          "IdentityPoolName": {
+            "shape_name": "IdentityPoolName",
+            "type": "string",
+            "min_length": 1,
+            "max_length": 128,
+            "pattern": "[\\w ]+",
+            "documentation": null,
+            "required": true
+          },
+          "AllowUnauthenticatedIdentities": {
+            "shape_name": "IdentityPoolUnauthenticated",
+            "type": "boolean",
+            "documentation": null,
+            "required": true
+          },
+          "SupportedLoginProviders": {
+            "shape_name": "IdentityProviders",
+            "type": "map",
+            "keys": {
+              "shape_name": "IdentityProviderName",
+              "type": "string",
+              "min_length": 1,
+              "max_length": 128,
+              "pattern": "[\\w._-]+",
+              "documentation": null
+            },
+            "members": {
+              "shape_name": "IdentityProviderId",
+              "type": "string",
+              "min_length": 1,
+              "max_length": 128,
+              "pattern": "[\\w._-]+",
+              "documentation": null
+            },
+            "max_length": 3,
+            "documentation": null
+          }
+        },
+        "documentation": null
+      },
+      "errors": [
+        {
+          "shape_name": "InvalidParameterException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "NotAuthorizedException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "ResourceConflictException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "TooManyRequestsException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InternalErrorException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "LimitExceededException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        }
+      ],
+      "documentation": null
+    },
+    "DeleteIdentityPool": {
+      "name": "DeleteIdentityPool",
+      "input": {
+        "shape_name": "DeleteIdentityPoolInput",
+        "type": "structure",
+        "members": {
+          "IdentityPoolId": {
+            "shape_name": "IdentityPoolId",
+            "type": "string",
+            "pattern": "[\\w-]+:[0-9a-f-]+",
+            "min_length": 1,
+            "max_length": 50,
+            "documentation": null,
+            "required": true
+          }
+        },
+        "documentation": null
+      },
+      "output": null,
+      "errors": [
+        {
+          "shape_name": "InvalidParameterException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "ResourceNotFoundException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "NotAuthorizedException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "TooManyRequestsException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InternalErrorException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        }
+      ],
+      "documentation": null
+    },
+    "DescribeIdentityPool": {
+      "name": "DescribeIdentityPool",
+      "input": {
+        "shape_name": "DescribeIdentityPoolInput",
+        "type": "structure",
+        "members": {
+          "IdentityPoolId": {
+            "shape_name": "IdentityPoolId",
+            "type": "string",
+            "pattern": "[\\w-]+:[0-9a-f-]+",
+            "min_length": 1,
+            "max_length": 50,
+            "documentation": null,
+            "required": true
+          }
+        },
+        "documentation": null
+      },
+      "output": {
+        "shape_name": "IdentityPool",
+        "type": "structure",
+        "members": {
+          "IdentityPoolId": {
+            "shape_name": "IdentityPoolId",
+            "type": "string",
+            "pattern": "[\\w-]+:[0-9a-f-]+",
+            "min_length": 1,
+            "max_length": 50,
+            "documentation": null,
+            "required": true
+          },
+          "IdentityPoolName": {
+            "shape_name": "IdentityPoolName",
+            "type": "string",
+            "min_length": 1,
+            "max_length": 128,
+            "pattern": "[\\w ]+",
+            "documentation": null,
+            "required": true
+          },
+          "AllowUnauthenticatedIdentities": {
+            "shape_name": "IdentityPoolUnauthenticated",
+            "type": "boolean",
+            "documentation": null,
+            "required": true
+          },
+          "SupportedLoginProviders": {
+            "shape_name": "IdentityProviders",
+            "type": "map",
+            "keys": {
+              "shape_name": "IdentityProviderName",
+              "type": "string",
+              "min_length": 1,
+              "max_length": 128,
+              "pattern": "[\\w._-]+",
+              "documentation": null
+            },
+            "members": {
+              "shape_name": "IdentityProviderId",
+              "type": "string",
+              "min_length": 1,
+              "max_length": 128,
+              "pattern": "[\\w._-]+",
+              "documentation": null
+            },
+            "max_length": 3,
+            "documentation": null
+          }
+        },
+        "documentation": null
+      },
+      "errors": [
+        {
+          "shape_name": "InvalidParameterException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "ResourceNotFoundException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "NotAuthorizedException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "TooManyRequestsException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InternalErrorException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        }
+      ],
+      "documentation": null
+    },
+    "GetId": {
+      "name": "GetId",
+      "input": {
+        "shape_name": "GetIdInput",
+        "type": "structure",
+        "members": {
+          "AccountId": {
+            "shape_name": "AccountId",
+            "type": "string",
+            "pattern": "\\d+",
+            "min_length": 1,
+            "max_length": 15,
+            "documentation": null,
+            "required": true
+          },
+          "IdentityPoolId": {
+            "shape_name": "IdentityPoolId",
+            "type": "string",
+            "pattern": "[\\w-]+:[0-9a-f-]+",
+            "min_length": 1,
+            "max_length": 50,
+            "documentation": null,
+            "required": true
+          },
+          "Logins": {
+            "shape_name": "LoginsMap",
+            "type": "map",
+            "keys": {
+              "shape_name": "IdentityProviderName",
+              "type": "string",
+              "min_length": 1,
+              "max_length": 128,
+              "pattern": "[\\w._-]+",
+              "documentation": null
+            },
+            "members": {
+              "shape_name": "IdentityProviderToken",
+              "type": "string",
+              "min_length": 1,
+              "max_length": 1024,
+              "pattern": "[\\S]+",
+              "documentation": null
+            },
+            "max_length": 3,
+            "documentation": null
+          }
+        },
+        "documentation": null
+      },
+      "output": {
+        "shape_name": "GetIdResponse",
+        "type": "structure",
+        "members": {
+          "IdentityId": {
+            "shape_name": "IdentityId",
+            "type": "string",
+            "pattern": "[\\w-]+:[0-9a-f-]+",
+            "min_length": 1,
+            "max_length": 50,
+            "documentation": null
+          }
+        },
+        "documentation": null
+      },
+      "errors": [
+        {
+          "shape_name": "InvalidParameterException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "ResourceNotFoundException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "NotAuthorizedException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "ResourceConflictException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "TooManyRequestsException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InternalErrorException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "LimitExceededException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        }
+      ],
+      "documentation": null
+    },
+    "GetOpenIdToken": {
+      "name": "GetOpenIdToken",
+      "input": {
+        "shape_name": "GetOpenIdTokenInput",
+        "type": "structure",
+        "members": {
+          "IdentityId": {
+            "shape_name": "IdentityId",
+            "type": "string",
+            "pattern": "[\\w-]+:[0-9a-f-]+",
+            "min_length": 1,
+            "max_length": 50,
+            "documentation": null,
+            "required": true
+          },
+          "Logins": {
+            "shape_name": "LoginsMap",
+            "type": "map",
+            "keys": {
+              "shape_name": "IdentityProviderName",
+              "type": "string",
+              "min_length": 1,
+              "max_length": 128,
+              "pattern": "[\\w._-]+",
+              "documentation": null
+            },
+            "members": {
+              "shape_name": "IdentityProviderToken",
+              "type": "string",
+              "min_length": 1,
+              "max_length": 1024,
+              "pattern": "[\\S]+",
+              "documentation": null
+            },
+            "max_length": 3,
+            "documentation": null
+          }
+        },
+        "documentation": null
+      },
+      "output": {
+        "shape_name": "GetOpenIdTokenResponse",
+        "type": "structure",
+        "members": {
+          "IdentityId": {
+            "shape_name": "IdentityId",
+            "type": "string",
+            "pattern": "[\\w-]+:[0-9a-f-]+",
+            "min_length": 1,
+            "max_length": 50,
+            "documentation": null
+          },
+          "Token": {
+            "shape_name": "OIDCToken",
+            "type": "string",
+            "documentation": null
+          }
+        },
+        "documentation": null
+      },
+      "errors": [
+        {
+          "shape_name": "InvalidParameterException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "ResourceNotFoundException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "NotAuthorizedException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "ResourceConflictException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "TooManyRequestsException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InternalErrorException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        }
+      ],
+      "documentation": null
+    },
+    "ListIdentities": {
+      "name": "ListIdentities",
+      "input": {
+        "shape_name": "ListIdentitiesInput",
+        "type": "structure",
+        "members": {
+          "IdentityPoolId": {
+            "shape_name": "IdentityPoolId",
+            "type": "string",
+            "pattern": "[\\w-]+:[0-9a-f-]+",
+            "min_length": 1,
+            "max_length": 50,
+            "documentation": null,
+            "required": true
+          },
+          "MaxResults": {
+            "shape_name": "QueryLimit",
+            "type": "integer",
+            "min_length": 1,
+            "max_length": 60,
+            "documentation": null
+          },
+          "NextToken": {
+            "shape_name": "PaginationKey",
+            "type": "string",
+            "min_length": 1,
+            "documentation": null
+          }
+        },
+        "documentation": null
+      },
+      "output": {
+        "shape_name": "ListIdentitiesResponse",
+        "type": "structure",
+        "members": {
+          "IdentityPoolId": {
+            "shape_name": "IdentityPoolId",
+            "type": "string",
+            "pattern": "[\\w-]+:[0-9a-f-]+",
+            "min_length": 1,
+            "max_length": 50,
+            "documentation": null
+          },
+          "Identities": {
+            "shape_name": "IdentitiesList",
+            "type": "list",
+            "members": {
+              "shape_name": "IdentityDescription",
+              "type": "structure",
+              "members": {
+                "IdentityId": {
+                  "shape_name": "IdentityId",
+                  "type": "string",
+                  "pattern": "[\\w-]+:[0-9a-f-]+",
+                  "min_length": 1,
+                  "max_length": 50,
+                  "documentation": null
+                },
+                "Logins": {
+                  "shape_name": "LoginsList",
+                  "type": "list",
+                  "members": {
+                    "shape_name": "IdentityProviderName",
+                    "type": "string",
+                    "min_length": 1,
+                    "max_length": 128,
+                    "pattern": "[\\w._-]+",
+                    "documentation": null
+                  },
+                  "documentation": null
+                }
+              },
+              "documentation": null
+            },
+            "documentation": null
+          },
+          "NextToken": {
+            "shape_name": "PaginationKey",
+            "type": "string",
+            "min_length": 1,
+            "documentation": null
+          }
+        },
+        "documentation": null
+      },
+      "errors": [
+        {
+          "shape_name": "InvalidParameterException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "ResourceNotFoundException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "NotAuthorizedException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "TooManyRequestsException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InternalErrorException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        }
+      ],
+      "documentation": null
+    },
+    "ListIdentityPools": {
+      "name": "ListIdentityPools",
+      "input": {
+        "shape_name": "ListIdentityPoolsInput",
+        "type": "structure",
+        "members": {
+          "MaxResults": {
+            "shape_name": "QueryLimit",
+            "type": "integer",
+            "min_length": 1,
+            "max_length": 60,
+            "documentation": null
+          },
+          "NextToken": {
+            "shape_name": "PaginationKey",
+            "type": "string",
+            "min_length": 1,
+            "documentation": null
+          }
+        },
+        "documentation": null
+      },
+      "output": {
+        "shape_name": "ListIdentityPoolsResponse",
+        "type": "structure",
+        "members": {
+          "IdentityPools": {
+            "shape_name": "IdentityPoolsList",
+            "type": "list",
+            "members": {
+              "shape_name": "IdentityPoolShortDescription",
+              "type": "structure",
+              "members": {
+                "IdentityPoolId": {
+                  "shape_name": "IdentityPoolId",
+                  "type": "string",
+                  "pattern": "[\\w-]+:[0-9a-f-]+",
+                  "min_length": 1,
+                  "max_length": 50,
+                  "documentation": null
+                },
+                "IdentityPoolName": {
+                  "shape_name": "IdentityPoolName",
+                  "type": "string",
+                  "min_length": 1,
+                  "max_length": 128,
+                  "pattern": "[\\w ]+",
+                  "documentation": null
+                }
+              },
+              "documentation": null
+            },
+            "documentation": null
+          },
+          "NextToken": {
+            "shape_name": "PaginationKey",
+            "type": "string",
+            "min_length": 1,
+            "documentation": null
+          }
+        },
+        "documentation": null
+      },
+      "errors": [
+        {
+          "shape_name": "InvalidParameterException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "NotAuthorizedException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "TooManyRequestsException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InternalErrorException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        }
+      ],
+      "documentation": null
+    },
+    "UnlinkIdentity": {
+      "name": "UnlinkIdentity",
+      "input": {
+        "shape_name": "UnlinkIdentityInput",
+        "type": "structure",
+        "members": {
+          "IdentityId": {
+            "shape_name": "IdentityId",
+            "type": "string",
+            "pattern": "[\\w-]+:[0-9a-f-]+",
+            "min_length": 1,
+            "max_length": 50,
+            "documentation": null,
+            "required": true
+          },
+          "Logins": {
+            "shape_name": "LoginsMap",
+            "type": "map",
+            "keys": {
+              "shape_name": "IdentityProviderName",
+              "type": "string",
+              "min_length": 1,
+              "max_length": 128,
+              "pattern": "[\\w._-]+",
+              "documentation": null
+            },
+            "members": {
+              "shape_name": "IdentityProviderToken",
+              "type": "string",
+              "min_length": 1,
+              "max_length": 1024,
+              "pattern": "[\\S]+",
+              "documentation": null
+            },
+            "max_length": 3,
+            "documentation": null,
+            "required": true
+          },
+          "LoginsToRemove": {
+            "shape_name": "LoginsList",
+            "type": "list",
+            "members": {
+              "shape_name": "IdentityProviderName",
+              "type": "string",
+              "min_length": 1,
+              "max_length": 128,
+              "pattern": "[\\w._-]+",
+              "documentation": null
+            },
+            "documentation": null,
+            "required": true
+          }
+        },
+        "documentation": null
+      },
+      "output": null,
+      "errors": [
+        {
+          "shape_name": "InvalidParameterException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "ResourceNotFoundException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "NotAuthorizedException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "ResourceConflictException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "TooManyRequestsException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InternalErrorException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        }
+      ],
+      "documentation": null
+    },
+    "UpdateIdentityPool": {
+      "name": "UpdateIdentityPool",
+      "input": {
+        "shape_name": "IdentityPool",
+        "type": "structure",
+        "members": {
+          "IdentityPoolId": {
+            "shape_name": "IdentityPoolId",
+            "type": "string",
+            "pattern": "[\\w-]+:[0-9a-f-]+",
+            "min_length": 1,
+            "max_length": 50,
+            "documentation": null,
+            "required": true
+          },
+          "IdentityPoolName": {
+            "shape_name": "IdentityPoolName",
+            "type": "string",
+            "min_length": 1,
+            "max_length": 128,
+            "pattern": "[\\w ]+",
+            "documentation": null,
+            "required": true
+          },
+          "AllowUnauthenticatedIdentities": {
+            "shape_name": "IdentityPoolUnauthenticated",
+            "type": "boolean",
+            "documentation": null,
+            "required": true
+          },
+          "SupportedLoginProviders": {
+            "shape_name": "IdentityProviders",
+            "type": "map",
+            "keys": {
+              "shape_name": "IdentityProviderName",
+              "type": "string",
+              "min_length": 1,
+              "max_length": 128,
+              "pattern": "[\\w._-]+",
+              "documentation": null
+            },
+            "members": {
+              "shape_name": "IdentityProviderId",
+              "type": "string",
+              "min_length": 1,
+              "max_length": 128,
+              "pattern": "[\\w._-]+",
+              "documentation": null
+            },
+            "max_length": 3,
+            "documentation": null
+          }
+        },
+        "documentation": null
+      },
+      "output": {
+        "shape_name": "IdentityPool",
+        "type": "structure",
+        "members": {
+          "IdentityPoolId": {
+            "shape_name": "IdentityPoolId",
+            "type": "string",
+            "pattern": "[\\w-]+:[0-9a-f-]+",
+            "min_length": 1,
+            "max_length": 50,
+            "documentation": null,
+            "required": true
+          },
+          "IdentityPoolName": {
+            "shape_name": "IdentityPoolName",
+            "type": "string",
+            "min_length": 1,
+            "max_length": 128,
+            "pattern": "[\\w ]+",
+            "documentation": null,
+            "required": true
+          },
+          "AllowUnauthenticatedIdentities": {
+            "shape_name": "IdentityPoolUnauthenticated",
+            "type": "boolean",
+            "documentation": null,
+            "required": true
+          },
+          "SupportedLoginProviders": {
+            "shape_name": "IdentityProviders",
+            "type": "map",
+            "keys": {
+              "shape_name": "IdentityProviderName",
+              "type": "string",
+              "min_length": 1,
+              "max_length": 128,
+              "pattern": "[\\w._-]+",
+              "documentation": null
+            },
+            "members": {
+              "shape_name": "IdentityProviderId",
+              "type": "string",
+              "min_length": 1,
+              "max_length": 128,
+              "pattern": "[\\w._-]+",
+              "documentation": null
+            },
+            "max_length": 3,
+            "documentation": null
+          }
+        },
+        "documentation": null
+      },
+      "errors": [
+        {
+          "shape_name": "InvalidParameterException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "ResourceNotFoundException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "NotAuthorizedException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "ResourceConflictException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "TooManyRequestsException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        },
+        {
+          "shape_name": "InternalErrorException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "String",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        }
+      ],
+      "documentation": null
+    }
+  }
+}

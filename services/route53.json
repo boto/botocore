@@ -147,9 +147,6 @@
                                 "required": true
                               }
                             },
-                            "member_order": [
-                              "Value"
-                            ],
                             "documentation": "\n    <p>A complex type that contains the value of the <code>Value</code> element for the current resource record set.</p>\n   ",
                             "xmlname": "ResourceRecord"
                           },
@@ -181,11 +178,6 @@
                               "required": true
                             }
                           },
-                          "member_order": [
-                            "HostedZoneId",
-                            "DNSName",
-                            "EvaluateTargetHealth"
-                          ],
                           "documentation": "\n    <p><i>Alias resource record sets only:</i> Information about the AWS resource to which you are redirecting traffic.</p>\n   "
                         },
                         "HealthCheckId": {
@@ -195,26 +187,10 @@
                           "documentation": "\n    <p><i>Health Check resource record sets only, not required for alias resource record sets:</i> An identifier that is used to identify health check associated with the resource record set.</p>\n   "
                         }
                       },
-                      "member_order": [
-                        "Name",
-                        "Type",
-                        "SetIdentifier",
-                        "Weight",
-                        "Region",
-                        "Failover",
-                        "TTL",
-                        "ResourceRecords",
-                        "AliasTarget",
-                        "HealthCheckId"
-                      ],
                       "documentation": "\n    <p>Information about the resource record set to create or delete.</p>\n   ",
                       "required": true
                     }
                   },
-                  "member_order": [
-                    "Action",
-                    "ResourceRecordSet"
-                  ],
                   "documentation": "\n    <p>A complex type that contains the information for each change in a change batch request.</p>\n   ",
                   "xmlname": "Change"
                 },
@@ -223,18 +199,10 @@
                 "required": true
               }
             },
-            "member_order": [
-              "Comment",
-              "Changes"
-            ],
             "documentation": "\n    <p>A complex type that contains an optional comment and the <code>Changes</code> element.</p>\n   ",
             "required": true
           }
         },
-        "member_order": [
-          "HostedZoneId",
-          "ChangeBatch"
-        ],
         "documentation": "\n    <p>A complex type that contains a change batch.</p>\n   "
       },
       "output": {
@@ -275,19 +243,10 @@
                 "documentation": "\n    <p>A complex type that describes change information about changes made to your hosted zone.</p>\n    <p>This element contains an ID that you use when performing a <a>GetChange</a> action to get detailed information about the change.</p>\n   "
               }
             },
-            "member_order": [
-              "Id",
-              "Status",
-              "SubmittedAt",
-              "Comment"
-            ],
             "documentation": "\n    <p>A complex type that contains information about changes made to your hosted zone.</p>\n    <p>This element contains an ID that you use when performing a <a>GetChange</a> action to get detailed information about the change.</p>\n   ",
             "required": true
           }
         },
-        "member_order": [
-          "ChangeInfo"
-        ],
         "documentation": "\n    <p>A complex type containing the response for the request.</p>\n   "
       },
       "errors": [
@@ -359,6 +318,137 @@
         }
       ],
       "documentation": "\n    <p>Use this action to create or change your authoritative DNS information. To use this action, send a <code>POST</code> request to the <code>2013-04-01/hostedzone/<i>hosted Zone ID</i>/rrset</code> resource. The request body must include an XML document with a <code>ChangeResourceRecordSetsRequest</code> element.</p>\n    <p>Changes are a list of change items and are considered transactional. For more information on transactional changes, also known as change batches, see <a href=\"http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/RRSchanges.html#RRSchanges_API\">Creating, Changing, and Deleting Resource Record Sets Using the Route 53 API</a> in the <i>Amazon Route 53 Developer Guide</i>.</p>\n    <important>Due to the nature of transactional changes, you cannot delete the same resource record set more than once in a single change batch. If you attempt to delete the same change batch more than once, Route 53 returns an <code>InvalidChangeBatch</code> error.</important>\n    <p>In response to a <code>ChangeResourceRecordSets</code> request, your DNS data is changed on all Route 53 DNS servers. Initially, the status of a change is <code>PENDING</code>. This means the change has not yet propagated to all the authoritative Route 53 DNS servers. When the change is propagated to all hosts, the change returns a status of <code>INSYNC</code>.</p>\n    <p>Note the following limitations on a <code>ChangeResourceRecordSets</code> request:</p>\n    <p>- A request cannot contain more than 100 Change elements.</p>\n    <p>- A request cannot contain more than 1000 ResourceRecord elements.</p>\n    <p>The sum of the number of characters (including spaces) in all <code>Value</code> elements in a request cannot exceed 32,000 characters.</p>\n   "
+    },
+    "ChangeTagsForResource": {
+      "name": "ChangeTagsForResource",
+      "http": {
+        "method": "POST",
+        "uri": "/2013-04-01/tags/{ResourceType}/{ResourceId}"
+      },
+      "input": {
+        "shape_name": "ChangeTagsForResourceRequest",
+        "type": "structure",
+        "members": {
+          "ResourceType": {
+            "shape_name": "TagResourceType",
+            "type": "string",
+            "enum": [
+              "healthcheck"
+            ],
+            "documentation": "\n    <p>The type of the resource. The resource type for health checks is <code>healthcheck</code>.</p>\n   ",
+            "required": true,
+            "location": "uri"
+          },
+          "ResourceId": {
+            "shape_name": "TagResourceId",
+            "type": "string",
+            "max_length": 64,
+            "documentation": "\n    <p>The ID of the resource for which you want to add, change, or delete tags.</p>\n   ",
+            "required": true,
+            "location": "uri"
+          },
+          "AddTags": {
+            "shape_name": "TagList",
+            "type": "list",
+            "members": {
+              "shape_name": "Tag",
+              "type": "structure",
+              "members": {
+                "Key": {
+                  "shape_name": "TagKey",
+                  "type": "string",
+                  "max_length": 128,
+                  "documentation": "\n    <p>The key for a <code>Tag</code>.</p>\n   "
+                },
+                "Value": {
+                  "shape_name": "TagValue",
+                  "type": "string",
+                  "max_length": 256,
+                  "documentation": "\n    <p>The value for a <code>Tag</code>.</p>\n   "
+                }
+              },
+              "documentation": "\n    <p>A single tag containing a key and value.</p>\n   ",
+              "xmlname": "Tag"
+            },
+            "min_length": 1,
+            "max_length": 10,
+            "documentation": "\n    <p>A complex type that contains a list of <code>Tag</code> elements. Each <code>Tag</code> element identifies a tag that you want to add or update for the specified resource.</p>\n   "
+          },
+          "RemoveTagKeys": {
+            "shape_name": "TagKeyList",
+            "type": "list",
+            "members": {
+              "shape_name": "TagKey",
+              "type": "string",
+              "max_length": 128,
+              "documentation": null,
+              "xmlname": "Key"
+            },
+            "min_length": 1,
+            "max_length": 10,
+            "documentation": "\n    <p>A list of <code>Tag</code> keys that you want to remove from the specified resource.</p>\n   "
+          }
+        },
+        "documentation": "\n    <p>A complex type containing information about a request to add, change, or delete the tags that are associated with a resource.</p>\n   "
+      },
+      "output": {
+        "shape_name": "ChangeTagsForResourceResponse",
+        "type": "structure",
+        "members": {
+        },
+        "documentation": "\n    <p>Empty response for the request.</p>\n   "
+      },
+      "errors": [
+        {
+          "shape_name": "InvalidInput",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "ErrorMessage",
+              "type": "string",
+              "documentation": "\n    <p>Descriptive message for the error response.</p>\n   "
+            }
+          },
+          "documentation": "\n    <p>Some value specified in the request is invalid or the XML document is malformed.</p>\n   "
+        },
+        {
+          "shape_name": "NoSuchHealthCheck",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "ErrorMessage",
+              "type": "string",
+              "documentation": "\n    <p>Descriptive message for the error response.</p>\n   "
+            }
+          },
+          "documentation": "\n    <p>The health check you are trying to get or delete does not exist.</p>\n   "
+        },
+        {
+          "shape_name": "PriorRequestNotComplete",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "ErrorMessage",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": "\n    <p>The request was rejected because Route 53 was still processing a prior request.</p>\n   "
+        },
+        {
+          "shape_name": "ThrottlingException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "ErrorMessage",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        }
+      ],
+      "documentation": null
     },
     "CreateHealthCheck": {
       "name": "CreateHealthCheck",
@@ -443,24 +533,10 @@
                 "documentation": "\n    <p>The number of consecutive health checks that an endpoint must pass or fail for Route 53 to\n      change the current status of the endpoint from unhealthy to healthy or vice versa.</p>\n    <p>Valid values are integers between 1 and 10. For more information,\n      see \"How Amazon Route 53 Determines Whether an Endpoint Is Healthy\" in the\n      Amazon Route 53 Developer Guide.</p>\n  "
               }
             },
-            "member_order": [
-              "IPAddress",
-              "Port",
-              "Type",
-              "ResourcePath",
-              "FullyQualifiedDomainName",
-              "SearchString",
-              "RequestInterval",
-              "FailureThreshold"
-            ],
             "documentation": "\n    <p>A complex type that contains health check configuration.</p>\n   ",
             "required": true
           }
         },
-        "member_order": [
-          "CallerReference",
-          "HealthCheckConfig"
-        ],
         "documentation": "\n    <p>&gt;A complex type that contains information about the request to create a health check.</p>\n   "
       },
       "output": {
@@ -550,25 +626,17 @@
                     "documentation": "\n    <p>The number of consecutive health checks that an endpoint must pass or fail for Route 53 to\n      change the current status of the endpoint from unhealthy to healthy or vice versa.</p>\n    <p>Valid values are integers between 1 and 10. For more information,\n      see \"How Amazon Route 53 Determines Whether an Endpoint Is Healthy\" in the\n      Amazon Route 53 Developer Guide.</p>\n  "
                   }
                 },
-                "member_order": [
-                  "IPAddress",
-                  "Port",
-                  "Type",
-                  "ResourcePath",
-                  "FullyQualifiedDomainName",
-                  "SearchString",
-                  "RequestInterval",
-                  "FailureThreshold"
-                ],
                 "documentation": "\n    <p>A complex type that contains the health check configuration.</p>\n   ",
+                "required": true
+              },
+              "HealthCheckVersion": {
+                "shape_name": "HealthCheckVersion",
+                "type": "long",
+                "min_length": 1,
+                "documentation": "\n     <p>The version of the health check. You can optionally pass this value in a call to <code>UpdateHealthCheck</code> to\n       prevent overwriting another change to the health check.</p>\n   ",
                 "required": true
               }
             },
-            "member_order": [
-              "Id",
-              "CallerReference",
-              "HealthCheckConfig"
-            ],
             "documentation": "\n    <p>A complex type that contains identifying information about the health check.</p>\n   ",
             "required": true
           },
@@ -582,10 +650,6 @@
             "location_name": "Location"
           }
         },
-        "member_order": [
-          "HealthCheck",
-          "Location"
-        ],
         "documentation": "\n    <p>A complex type containing the response information for the new health check.</p>\n   "
       },
       "errors": [
@@ -665,17 +729,9 @@
                 "documentation": "\n    <p>An optional comment about your hosted zone. If you don't want to specify a comment, you can omit the <code>HostedZoneConfig</code> and <code>Comment</code> elements from the XML document.</p>\n   "
               }
             },
-            "member_order": [
-              "Comment"
-            ],
             "documentation": "\n    <p>A complex type that contains an optional comment about your hosted zone.</p>\n   "
           }
         },
-        "member_order": [
-          "Name",
-          "CallerReference",
-          "HostedZoneConfig"
-        ],
         "documentation": "\n    <p>A complex type that contains information about the request to create a hosted zone.</p>\n   "
       },
       "output": {
@@ -719,9 +775,6 @@
                     "documentation": "\n    <p>An optional comment about your hosted zone. If you don't want to specify a comment, you can omit the <code>HostedZoneConfig</code> and <code>Comment</code> elements from the XML document.</p>\n   "
                   }
                 },
-                "member_order": [
-                  "Comment"
-                ],
                 "documentation": "\n    <p>A complex type that contains the <code>Comment</code> element.</p>\n   "
               },
               "ResourceRecordSetCount": {
@@ -730,13 +783,6 @@
                 "documentation": "\n    <p>Total number of resource record sets in the hosted zone.</p>\n   "
               }
             },
-            "member_order": [
-              "Id",
-              "Name",
-              "CallerReference",
-              "Config",
-              "ResourceRecordSetCount"
-            ],
             "documentation": "\n    <p>A complex type that contains identifying information about the hosted zone.</p>\n   ",
             "required": true
           },
@@ -774,12 +820,6 @@
                 "documentation": "\n    <p>A complex type that describes change information about changes made to your hosted zone.</p>\n    <p>This element contains an ID that you use when performing a <a>GetChange</a> action to get detailed information about the change.</p>\n   "
               }
             },
-            "member_order": [
-              "Id",
-              "Status",
-              "SubmittedAt",
-              "Comment"
-            ],
             "documentation": "\n    <p>A complex type that contains information about the request to create a hosted zone. This includes an ID that you use when you call the <a>GetChange</a> action to get the current status of the change request.</p>\n   ",
             "required": true
           },
@@ -802,9 +842,6 @@
                 "required": true
               }
             },
-            "member_order": [
-              "NameServers"
-            ],
             "documentation": "\n    <p>A complex type that contains name server information.</p>\n   ",
             "required": true
           },
@@ -818,12 +855,6 @@
             "location_name": "Location"
           }
         },
-        "member_order": [
-          "HostedZone",
-          "ChangeInfo",
-          "DelegationSet",
-          "Location"
-        ],
         "documentation": "\n    <p>A complex type containing the response information for the new hosted zone.</p>\n   "
       },
       "errors": [
@@ -909,9 +940,6 @@
             "location": "uri"
           }
         },
-        "member_order": [
-          "HealthCheckId"
-        ],
         "documentation": "\n    <p>A complex type containing the request information for delete health check.</p>\n   "
       },
       "output": {
@@ -980,9 +1008,6 @@
             "location": "uri"
           }
         },
-        "member_order": [
-          "Id"
-        ],
         "documentation": "\n    <p>A complex type containing the response information for the delete request.</p>\n   "
       },
       "output": {
@@ -1023,19 +1048,10 @@
                 "documentation": "\n    <p>A complex type that describes change information about changes made to your hosted zone.</p>\n    <p>This element contains an ID that you use when performing a <a>GetChange</a> action to get detailed information about the change.</p>\n   "
               }
             },
-            "member_order": [
-              "Id",
-              "Status",
-              "SubmittedAt",
-              "Comment"
-            ],
             "documentation": "\n    <p>A complex type that contains the ID, the status, and the date and time of your delete request.</p>\n   ",
             "required": true
           }
         },
-        "member_order": [
-          "ChangeInfo"
-        ],
         "documentation": "\n    <p>A complex type containing the response information for the request.</p>\n   "
       },
       "errors": [
@@ -1109,9 +1125,6 @@
             "location": "uri"
           }
         },
-        "member_order": [
-          "Id"
-        ],
         "documentation": "\n    <p>The input for a GetChange request.</p>\n   "
       },
       "output": {
@@ -1152,19 +1165,10 @@
                 "documentation": "\n    <p>A complex type that describes change information about changes made to your hosted zone.</p>\n    <p>This element contains an ID that you use when performing a <a>GetChange</a> action to get detailed information about the change.</p>\n   "
               }
             },
-            "member_order": [
-              "Id",
-              "Status",
-              "SubmittedAt",
-              "Comment"
-            ],
             "documentation": "\n    <p>A complex type that contains information about the specified change batch, including the change batch ID, the status of the change, and the date and time of the request.</p>\n   ",
             "required": true
           }
         },
-        "member_order": [
-          "ChangeInfo"
-        ],
         "documentation": "\n    <p>A complex type that contains the <code>ChangeInfo</code> element.</p>\n   "
       },
       "errors": [
@@ -1195,6 +1199,42 @@
       ],
       "documentation": "\n    <p> This action returns the current status of a change batch request. The status is one of the following values:</p>\n    <p>- <code>PENDING</code> indicates that the changes in this request have not replicated to all Route 53 DNS servers. This is the initial status of all change batch requests.</p>\n    <p>- <code>INSYNC</code> indicates that the changes have replicated to all Amazon Route 53 DNS servers. </p>\n   "
     },
+    "GetCheckerIpRanges": {
+      "name": "GetCheckerIpRanges",
+      "http": {
+        "method": "GET",
+        "uri": "/2013-04-01/checkeripranges"
+      },
+      "input": {
+        "shape_name": "GetCheckerIpRangesRequest",
+        "type": "structure",
+        "members": {
+        },
+        "documentation": "\n    <p>Empty request.</p>\n   "
+      },
+      "output": {
+        "shape_name": "GetCheckerIpRangesResponse",
+        "type": "structure",
+        "members": {
+          "CheckerIpRanges": {
+            "shape_name": "CheckerIpRanges",
+            "type": "list",
+            "members": {
+              "shape_name": "IPAddressCidr",
+              "type": "string",
+              "documentation": null
+            },
+            "documentation": "\n    <p>A complex type that contains sorted list of IP ranges in CIDR format for Amazon Route 53 health checkers.</p>\n   ",
+            "required": true
+          }
+        },
+        "documentation": "\n    <p>A complex type that contains the <code>CheckerIpRanges</code> element.</p>\n   "
+      },
+      "errors": [
+
+      ],
+      "documentation": "\n    <p> To retrieve a list of the IP ranges used by Amazon Route 53 health checkers to check the health of your resources, send a <code>GET</code> request to the <code>2013-04-01/checkeripranges</code> resource. You can use these IP addresses to configure router and firewall rules to allow health checkers to check the health of your resources.</p>\n   "
+    },
     "GetHealthCheck": {
       "name": "GetHealthCheck",
       "http": {
@@ -1214,9 +1254,6 @@
             "location": "uri"
           }
         },
-        "member_order": [
-          "HealthCheckId"
-        ],
         "documentation": "\n    <p>A complex type that contains information about the request to get a health check.</p>\n   "
       },
       "output": {
@@ -1306,32 +1343,21 @@
                     "documentation": "\n    <p>The number of consecutive health checks that an endpoint must pass or fail for Route 53 to\n      change the current status of the endpoint from unhealthy to healthy or vice versa.</p>\n    <p>Valid values are integers between 1 and 10. For more information,\n      see \"How Amazon Route 53 Determines Whether an Endpoint Is Healthy\" in the\n      Amazon Route 53 Developer Guide.</p>\n  "
                   }
                 },
-                "member_order": [
-                  "IPAddress",
-                  "Port",
-                  "Type",
-                  "ResourcePath",
-                  "FullyQualifiedDomainName",
-                  "SearchString",
-                  "RequestInterval",
-                  "FailureThreshold"
-                ],
                 "documentation": "\n    <p>A complex type that contains the health check configuration.</p>\n   ",
+                "required": true
+              },
+              "HealthCheckVersion": {
+                "shape_name": "HealthCheckVersion",
+                "type": "long",
+                "min_length": 1,
+                "documentation": "\n     <p>The version of the health check. You can optionally pass this value in a call to <code>UpdateHealthCheck</code> to\n       prevent overwriting another change to the health check.</p>\n   ",
                 "required": true
               }
             },
-            "member_order": [
-              "Id",
-              "CallerReference",
-              "HealthCheckConfig"
-            ],
             "documentation": "\n    <p>A complex type that contains the information about the specified health check.</p>\n   ",
             "required": true
           }
         },
-        "member_order": [
-          "HealthCheck"
-        ],
         "documentation": "\n    <p>A complex type containing information about the specified health check.</p>\n   "
       },
       "errors": [
@@ -1374,6 +1400,37 @@
       ],
       "documentation": "\n    <p> To retrieve the health check, send a <code>GET</code> request to the <code>2013-04-01/healthcheck/<i>health check ID</i></code> resource. </p>\n   "
     },
+    "GetHealthCheckCount": {
+      "name": "GetHealthCheckCount",
+      "http": {
+        "method": "GET",
+        "uri": "/2013-04-01/healthcheckcount"
+      },
+      "input": {
+        "shape_name": "GetHealthCheckCountRequest",
+        "type": "structure",
+        "members": {
+        },
+        "documentation": "\n    <p> To retrieve a count of all your health checks, send a <code>GET</code> request to the <code>2013-04-01/healthcheckcount</code> resource.</p>\n   "
+      },
+      "output": {
+        "shape_name": "GetHealthCheckCountResponse",
+        "type": "structure",
+        "members": {
+          "HealthCheckCount": {
+            "shape_name": "HealthCheckCount",
+            "type": "long",
+            "documentation": "\n    <p> The number of health checks associated with the current AWS account.</p>\n   ",
+            "required": true
+          }
+        },
+        "documentation": "\n    <p> A complex type that contains the count of health checks associated with the current AWS account.</p>\n   "
+      },
+      "errors": [
+
+      ],
+      "documentation": "\n    <p> To retrieve a count of all your health checks, send a <code>GET</code> request to the <code>2013-04-01/healthcheckcount</code> resource.</p>\n   "
+    },
     "GetHostedZone": {
       "name": "GetHostedZone",
       "http": {
@@ -1393,9 +1450,6 @@
             "location": "uri"
           }
         },
-        "member_order": [
-          "Id"
-        ],
         "documentation": "\n    <p> The input for a GetHostedZone request.</p>\n   "
       },
       "output": {
@@ -1439,9 +1493,6 @@
                     "documentation": "\n    <p>An optional comment about your hosted zone. If you don't want to specify a comment, you can omit the <code>HostedZoneConfig</code> and <code>Comment</code> elements from the XML document.</p>\n   "
                   }
                 },
-                "member_order": [
-                  "Comment"
-                ],
                 "documentation": "\n    <p>A complex type that contains the <code>Comment</code> element.</p>\n   "
               },
               "ResourceRecordSetCount": {
@@ -1450,13 +1501,6 @@
                 "documentation": "\n    <p>Total number of resource record sets in the hosted zone.</p>\n   "
               }
             },
-            "member_order": [
-              "Id",
-              "Name",
-              "CallerReference",
-              "Config",
-              "ResourceRecordSetCount"
-            ],
             "documentation": "\n    <p>A complex type that contains the information about the specified hosted zone.</p>\n   ",
             "required": true
           },
@@ -1479,17 +1523,10 @@
                 "required": true
               }
             },
-            "member_order": [
-              "NameServers"
-            ],
             "documentation": "\n    <p>A complex type that contains information about the name servers for the specified hosted zone.</p>\n   ",
             "required": true
           }
         },
-        "member_order": [
-          "HostedZone",
-          "DelegationSet"
-        ],
         "documentation": "\n    <p>A complex type containing information about the specified hosted zone.</p>\n   "
       },
       "errors": [
@@ -1544,10 +1581,6 @@
             "location": "uri"
           }
         },
-        "member_order": [
-          "Marker",
-          "MaxItems"
-        ],
         "documentation": "\n    <p> To retrieve a list of your health checks, send a <code>GET</code> request to the <code>2013-04-01/healthcheck</code> resource. The response to this request includes a <code>HealthChecks</code> element with zero or more <code>HealthCheck</code> child elements. By default, the list of health checks is displayed on a single page. You can control the length of the page that is displayed by using the <code>MaxItems</code> parameter. You can use the <code>Marker</code> parameter to control the health check that the list begins with.</p>\n    <note> Route 53 returns a maximum of 100 items. If you set <code>MaxItems</code> to a value greater than 100, Route 53 returns only the first 100.</note>\n   "
       },
       "output": {
@@ -1640,25 +1673,17 @@
                       "documentation": "\n    <p>The number of consecutive health checks that an endpoint must pass or fail for Route 53 to\n      change the current status of the endpoint from unhealthy to healthy or vice versa.</p>\n    <p>Valid values are integers between 1 and 10. For more information,\n      see \"How Amazon Route 53 Determines Whether an Endpoint Is Healthy\" in the\n      Amazon Route 53 Developer Guide.</p>\n  "
                     }
                   },
-                  "member_order": [
-                    "IPAddress",
-                    "Port",
-                    "Type",
-                    "ResourcePath",
-                    "FullyQualifiedDomainName",
-                    "SearchString",
-                    "RequestInterval",
-                    "FailureThreshold"
-                  ],
                   "documentation": "\n    <p>A complex type that contains the health check configuration.</p>\n   ",
+                  "required": true
+                },
+                "HealthCheckVersion": {
+                  "shape_name": "HealthCheckVersion",
+                  "type": "long",
+                  "min_length": 1,
+                  "documentation": "\n     <p>The version of the health check. You can optionally pass this value in a call to <code>UpdateHealthCheck</code> to\n       prevent overwriting another change to the health check.</p>\n   ",
                   "required": true
                 }
               },
-              "member_order": [
-                "Id",
-                "CallerReference",
-                "HealthCheckConfig"
-              ],
               "documentation": "\n    <p>A complex type that contains identifying information about the health check.</p>\n   ",
               "xmlname": "HealthCheck"
             },
@@ -1691,13 +1716,6 @@
             "required": true
           }
         },
-        "member_order": [
-          "HealthChecks",
-          "Marker",
-          "IsTruncated",
-          "NextMarker",
-          "MaxItems"
-        ],
         "documentation": "\n    <p> A complex type that contains the response for the request.</p>\n   "
       },
       "errors": [
@@ -1752,10 +1770,6 @@
             "location": "uri"
           }
         },
-        "member_order": [
-          "Marker",
-          "MaxItems"
-        ],
         "documentation": "\n    <p> To retrieve a list of your hosted zones, send a <code>GET</code> request to the <code>2013-04-01/hostedzone</code> resource. The response to this request includes a <code>HostedZones</code> element with zero or more <code>HostedZone</code> child elements. By default, the list of hosted zones is displayed on a single page. You can control the length of the page that is displayed by using the <code>MaxItems</code> parameter. You can use the <code>Marker</code> parameter to control the hosted zone that the list begins with. For more information about listing hosted zones, see <a href=\"http://docs.amazonwebservices.com/Route53/latest/DeveloperGuide/ListInfoOnHostedZone.html\">Listing the Hosted Zones for an AWS Account</a> in the <i>Amazon Route 53 Developer Guide</i>.</p>\n    <note> Route 53 returns a maximum of 100 items. If you set <code>MaxItems</code> to a value greater than 100, Route 53 returns only the first 100.</note>\n   "
       },
       "output": {
@@ -1802,9 +1816,6 @@
                       "documentation": "\n    <p>An optional comment about your hosted zone. If you don't want to specify a comment, you can omit the <code>HostedZoneConfig</code> and <code>Comment</code> elements from the XML document.</p>\n   "
                     }
                   },
-                  "member_order": [
-                    "Comment"
-                  ],
                   "documentation": "\n    <p>A complex type that contains the <code>Comment</code> element.</p>\n   "
                 },
                 "ResourceRecordSetCount": {
@@ -1813,13 +1824,6 @@
                   "documentation": "\n    <p>Total number of resource record sets in the hosted zone.</p>\n   "
                 }
               },
-              "member_order": [
-                "Id",
-                "Name",
-                "CallerReference",
-                "Config",
-                "ResourceRecordSetCount"
-              ],
               "documentation": "\n    <p>A complex type that contain information about the specified hosted zone.</p>\n   ",
               "xmlname": "HostedZone"
             },
@@ -1852,13 +1856,6 @@
             "required": true
           }
         },
-        "member_order": [
-          "HostedZones",
-          "Marker",
-          "IsTruncated",
-          "NextMarker",
-          "MaxItems"
-        ],
         "documentation": "\n    <p> A complex type that contains the response for the request.</p>\n   "
       },
       "errors": [
@@ -1935,13 +1932,6 @@
             "location": "uri"
           }
         },
-        "member_order": [
-          "HostedZoneId",
-          "StartRecordName",
-          "StartRecordType",
-          "StartRecordIdentifier",
-          "MaxItems"
-        ],
         "documentation": "\n    <p> The input for a ListResourceRecordSets request.</p>\n   "
       },
       "output": {
@@ -2043,9 +2033,6 @@
                         "required": true
                       }
                     },
-                    "member_order": [
-                      "Value"
-                    ],
                     "documentation": "\n    <p>A complex type that contains the value of the <code>Value</code> element for the current resource record set.</p>\n   ",
                     "xmlname": "ResourceRecord"
                   },
@@ -2077,11 +2064,6 @@
                       "required": true
                     }
                   },
-                  "member_order": [
-                    "HostedZoneId",
-                    "DNSName",
-                    "EvaluateTargetHealth"
-                  ],
                   "documentation": "\n    <p><i>Alias resource record sets only:</i> Information about the AWS resource to which you are redirecting traffic.</p>\n   "
                 },
                 "HealthCheckId": {
@@ -2091,18 +2073,6 @@
                   "documentation": "\n    <p><i>Health Check resource record sets only, not required for alias resource record sets:</i> An identifier that is used to identify health check associated with the resource record set.</p>\n   "
                 }
               },
-              "member_order": [
-                "Name",
-                "Type",
-                "SetIdentifier",
-                "Weight",
-                "Region",
-                "Failover",
-                "TTL",
-                "ResourceRecords",
-                "AliasTarget",
-                "HealthCheckId"
-              ],
               "documentation": "\n    <p>A complex type that contains information about the current resource record set.</p>\n   ",
               "xmlname": "ResourceRecordSet"
             },
@@ -2152,14 +2122,6 @@
             "required": true
           }
         },
-        "member_order": [
-          "ResourceRecordSets",
-          "IsTruncated",
-          "NextRecordName",
-          "NextRecordType",
-          "NextRecordIdentifier",
-          "MaxItems"
-        ],
         "documentation": "\n    <p>A complex type that contains information about the resource record sets that are returned by the request and information about the response.</p>\n   "
       },
       "errors": [
@@ -2189,6 +2151,507 @@
         }
       ],
       "documentation": "\n  <p>Imagine all the resource record sets in a zone listed out in front of you.\n  Imagine them sorted lexicographically first by DNS name (with the labels\n  reversed, like \"com.amazon.www\" for example), and secondarily,\n  lexicographically by record type. This operation retrieves at most MaxItems\n  resource record sets from this list, in order, starting at a position\n  specified by the Name and Type arguments:</p>\n  <ul>\n  <li>If both Name and Type are omitted, this means start the results at the\n  first RRSET in the HostedZone.</li>\n  <li>If Name is specified but Type is omitted, this means start the results\n  at the first RRSET in the list whose name is greater than or equal to Name.\n  </li>\n  <li>If both Name and Type are specified, this means start the results at the\n  first RRSET in the list whose name is greater than or equal to Name and\n  whose type is greater than or equal to Type.</li>\n  <li>It is an error to specify the Type but not the Name.</li>\n  </ul>\n  <p>Use ListResourceRecordSets to retrieve a single known record set by\n  specifying the record set's name and type, and setting MaxItems = 1</p>\n  <p>To retrieve all the records in a HostedZone, first pause any processes\n  making calls to ChangeResourceRecordSets. Initially call ListResourceRecordSets\n  without a Name and Type to get the first page of record sets. For subsequent\n  calls, set Name and Type to the NextName and NextType values returned by the\n  previous response.\n  </p>\n  <p>In the presence of concurrent ChangeResourceRecordSets calls, there is no\n  consistency of results across calls to ListResourceRecordSets. The only way\n  to get a consistent multi-page snapshot of all RRSETs in a zone is to stop\n  making changes while pagination is in progress.</p>\n  <p>However, the results from ListResourceRecordSets are consistent within a\n  page. If MakeChange calls are taking place concurrently, the result of each\n  one will either be completely visible in your results or not at all. You will\n  not see partial changes, or changes that do not ultimately succeed. (This\n  follows from the fact that MakeChange is atomic)\n  </p>\n  <p>The results from ListResourceRecordSets are strongly consistent with\n  ChangeResourceRecordSets. To be precise, if a single process makes a call to\n  ChangeResourceRecordSets and receives a successful response, the effects of that\n  change will be visible in a subsequent call to ListResourceRecordSets by\n  that process.</p>\n  "
+    },
+    "ListTagsForResource": {
+      "name": "ListTagsForResource",
+      "http": {
+        "method": "GET",
+        "uri": "/2013-04-01/tags/{ResourceType}/{ResourceId}"
+      },
+      "input": {
+        "shape_name": "ListTagsForResourceRequest",
+        "type": "structure",
+        "members": {
+          "ResourceType": {
+            "shape_name": "TagResourceType",
+            "type": "string",
+            "enum": [
+              "healthcheck"
+            ],
+            "documentation": "\n    <p>The type of the resource. The resource type for health checks is <code>healthcheck</code>.</p>\n   ",
+            "required": true,
+            "location": "uri"
+          },
+          "ResourceId": {
+            "shape_name": "TagResourceId",
+            "type": "string",
+            "max_length": 64,
+            "documentation": "\n    <p>The ID of the resource for which you want to retrieve tags.</p>\n   ",
+            "required": true,
+            "location": "uri"
+          }
+        },
+        "documentation": "\n    <p>A complex type containing information about a request for a list of the tags that are associated with an individual resource.</p>\n   "
+      },
+      "output": {
+        "shape_name": "ListTagsForResourceResponse",
+        "type": "structure",
+        "members": {
+          "ResourceTagSet": {
+            "shape_name": "ResourceTagSet",
+            "type": "structure",
+            "members": {
+              "ResourceType": {
+                "shape_name": "TagResourceType",
+                "type": "string",
+                "enum": [
+                  "healthcheck"
+                ],
+                "documentation": "\n    <p>The type of the resource. The resource type for health checks is <code>healthcheck</code>.</p>\n   "
+              },
+              "ResourceId": {
+                "shape_name": "TagResourceId",
+                "type": "string",
+                "max_length": 64,
+                "documentation": "\n    <p>The ID for the specified resource.</p>\n   "
+              },
+              "Tags": {
+                "shape_name": "TagList",
+                "type": "list",
+                "members": {
+                  "shape_name": "Tag",
+                  "type": "structure",
+                  "members": {
+                    "Key": {
+                      "shape_name": "TagKey",
+                      "type": "string",
+                      "max_length": 128,
+                      "documentation": "\n    <p>The key for a <code>Tag</code>.</p>\n   "
+                    },
+                    "Value": {
+                      "shape_name": "TagValue",
+                      "type": "string",
+                      "max_length": 256,
+                      "documentation": "\n    <p>The value for a <code>Tag</code>.</p>\n   "
+                    }
+                  },
+                  "documentation": "\n    <p>A single tag containing a key and value.</p>\n   ",
+                  "xmlname": "Tag"
+                },
+                "min_length": 1,
+                "max_length": 10,
+                "documentation": "\n    <p>The tags associated with the specified resource.</p>\n   "
+              }
+            },
+            "documentation": "\n    <p>A <code>ResourceTagSet</code> containing tags associated with the specified resource.</p>\n   ",
+            "required": true
+          }
+        },
+        "documentation": "\n    <p>A complex type containing tags for the specified resource.</p>\n   "
+      },
+      "errors": [
+        {
+          "shape_name": "InvalidInput",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "ErrorMessage",
+              "type": "string",
+              "documentation": "\n    <p>Descriptive message for the error response.</p>\n   "
+            }
+          },
+          "documentation": "\n    <p>Some value specified in the request is invalid or the XML document is malformed.</p>\n   "
+        },
+        {
+          "shape_name": "NoSuchHealthCheck",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "ErrorMessage",
+              "type": "string",
+              "documentation": "\n    <p>Descriptive message for the error response.</p>\n   "
+            }
+          },
+          "documentation": "\n    <p>The health check you are trying to get or delete does not exist.</p>\n   "
+        },
+        {
+          "shape_name": "PriorRequestNotComplete",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "ErrorMessage",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": "\n    <p>The request was rejected because Route 53 was still processing a prior request.</p>\n   "
+        },
+        {
+          "shape_name": "ThrottlingException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "ErrorMessage",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        }
+      ],
+      "documentation": null
+    },
+    "ListTagsForResources": {
+      "name": "ListTagsForResources",
+      "http": {
+        "method": "POST",
+        "uri": "/2013-04-01/tags/{ResourceType}"
+      },
+      "input": {
+        "shape_name": "ListTagsForResourcesRequest",
+        "type": "structure",
+        "members": {
+          "ResourceType": {
+            "shape_name": "TagResourceType",
+            "type": "string",
+            "enum": [
+              "healthcheck"
+            ],
+            "documentation": "\n    <p>The type of the resources. The resource type for health checks is <code>healthcheck</code>.</p>\n   ",
+            "required": true,
+            "location": "uri"
+          },
+          "ResourceIds": {
+            "shape_name": "TagResourceIdList",
+            "type": "list",
+            "members": {
+              "shape_name": "TagResourceId",
+              "type": "string",
+              "max_length": 64,
+              "documentation": null,
+              "xmlname": "ResourceId"
+            },
+            "min_length": 1,
+            "max_length": 10,
+            "documentation": "\n    <p>A complex type that contains the ResourceId element for each resource for which you want to get a list of tags.</p>\n   ",
+            "required": true
+          }
+        },
+        "documentation": "\n    <p>A complex type containing information about a request for a list of the tags that are associated with up to 10 specified resources.</p>\n   "
+      },
+      "output": {
+        "shape_name": "ListTagsForResourcesResponse",
+        "type": "structure",
+        "members": {
+          "ResourceTagSets": {
+            "shape_name": "ResourceTagSetList",
+            "type": "list",
+            "members": {
+              "shape_name": "ResourceTagSet",
+              "type": "structure",
+              "members": {
+                "ResourceType": {
+                  "shape_name": "TagResourceType",
+                  "type": "string",
+                  "enum": [
+                    "healthcheck"
+                  ],
+                  "documentation": "\n    <p>The type of the resource. The resource type for health checks is <code>healthcheck</code>.</p>\n   "
+                },
+                "ResourceId": {
+                  "shape_name": "TagResourceId",
+                  "type": "string",
+                  "max_length": 64,
+                  "documentation": "\n    <p>The ID for the specified resource.</p>\n   "
+                },
+                "Tags": {
+                  "shape_name": "TagList",
+                  "type": "list",
+                  "members": {
+                    "shape_name": "Tag",
+                    "type": "structure",
+                    "members": {
+                      "Key": {
+                        "shape_name": "TagKey",
+                        "type": "string",
+                        "max_length": 128,
+                        "documentation": "\n    <p>The key for a <code>Tag</code>.</p>\n   "
+                      },
+                      "Value": {
+                        "shape_name": "TagValue",
+                        "type": "string",
+                        "max_length": 256,
+                        "documentation": "\n    <p>The value for a <code>Tag</code>.</p>\n   "
+                      }
+                    },
+                    "documentation": "\n    <p>A single tag containing a key and value.</p>\n   ",
+                    "xmlname": "Tag"
+                  },
+                  "min_length": 1,
+                  "max_length": 10,
+                  "documentation": "\n    <p>The tags associated with the specified resource.</p>\n   "
+                }
+              },
+              "documentation": "\n    <p>A complex type containing a resource and its associated tags.</p>\n   ",
+              "xmlname": "ResourceTagSet"
+            },
+            "documentation": "\n    <p>A list of <code>ResourceTagSet</code>s containing tags associated with the specified resources.</p>\n   ",
+            "required": true
+          }
+        },
+        "documentation": "\n    <p>A complex type containing tags for the specified resources.</p>\n   "
+      },
+      "errors": [
+        {
+          "shape_name": "InvalidInput",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "ErrorMessage",
+              "type": "string",
+              "documentation": "\n    <p>Descriptive message for the error response.</p>\n   "
+            }
+          },
+          "documentation": "\n    <p>Some value specified in the request is invalid or the XML document is malformed.</p>\n   "
+        },
+        {
+          "shape_name": "NoSuchHealthCheck",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "ErrorMessage",
+              "type": "string",
+              "documentation": "\n    <p>Descriptive message for the error response.</p>\n   "
+            }
+          },
+          "documentation": "\n    <p>The health check you are trying to get or delete does not exist.</p>\n   "
+        },
+        {
+          "shape_name": "PriorRequestNotComplete",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "ErrorMessage",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": "\n    <p>The request was rejected because Route 53 was still processing a prior request.</p>\n   "
+        },
+        {
+          "shape_name": "ThrottlingException",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "ErrorMessage",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        }
+      ],
+      "documentation": null
+    },
+    "UpdateHealthCheck": {
+      "name": "UpdateHealthCheck",
+      "http": {
+        "method": "POST",
+        "uri": "/2013-04-01/healthcheck/{HealthCheckId}"
+      },
+      "input": {
+        "shape_name": "UpdateHealthCheckRequest",
+        "type": "structure",
+        "members": {
+          "HealthCheckId": {
+            "shape_name": "HealthCheckId",
+            "type": "string",
+            "max_length": 64,
+            "documentation": "\n    <p>The ID of the health check to update.</p>\n  ",
+            "required": true,
+            "location": "uri"
+          },
+          "HealthCheckVersion": {
+            "shape_name": "HealthCheckVersion",
+            "type": "long",
+            "min_length": 1,
+            "documentation": "\n    <p>Optional. When you specify a health check version, Route 53 compares this value with the current value in the health check,\n      which prevents you from updating the health check when the versions don't match. Using <code>HealthCheckVersion</code> lets you\n      prevent overwriting another change to the health check.</p>\n  "
+          },
+          "IPAddress": {
+            "shape_name": "IPAddress",
+            "type": "string",
+            "max_length": 15,
+            "pattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$",
+            "documentation": "\n    <p>The IP address of the resource that you want to check.</p>\n    <p>Specify this value only if you want to change it.</p>\n  "
+          },
+          "Port": {
+            "shape_name": "Port",
+            "type": "integer",
+            "min_length": 1,
+            "max_length": 65535,
+            "documentation": "\n    <p>The port on which you want Route 53 to open a connection to perform health checks.</p>\n    <p>Specify this value only if you want to change it.</p>\n  "
+          },
+          "ResourcePath": {
+            "shape_name": "ResourcePath",
+            "type": "string",
+            "max_length": 255,
+            "documentation": "\n    <p>The path that you want Amazon Route 53 to request when performing health checks. The path can be any value for\n      which your endpoint will return an HTTP status code of 2xx or 3xx when the endpoint is healthy, for example the\n      file /docs/route53-health-check.html. </p>\n    <p>Specify this value only if you want to change it.</p>\n  "
+          },
+          "FullyQualifiedDomainName": {
+            "shape_name": "FullyQualifiedDomainName",
+            "type": "string",
+            "max_length": 255,
+            "documentation": "\n    <p>Fully qualified domain name of the instance to be health checked.</p>\n    <p>Specify this value only if you want to change it.</p>\n  "
+          },
+          "SearchString": {
+            "shape_name": "SearchString",
+            "type": "string",
+            "max_length": 255,
+            "documentation": "\n    <p>If the value of <code>Type</code> is <code>HTTP_STR_MATCH</code> or <code>HTTP_STR_MATCH</code>, the string\n      that you want Route 53 to search for in the response body from the specified resource. If the string appears\n      in the response body, Route 53 considers the resource healthy. </p>\n    <p>Specify this value only if you want to change it.</p>\n  "
+          },
+          "FailureThreshold": {
+            "shape_name": "FailureThreshold",
+            "type": "integer",
+            "min_length": 1,
+            "max_length": 10,
+            "documentation": "\n    <p>The number of consecutive health checks that an endpoint must pass or fail for Route 53 to\n      change the current status of the endpoint from unhealthy to healthy or vice versa.</p>\n    <p>Valid values are integers between 1 and 10. For more information,\n      see \"How Amazon Route 53 Determines Whether an Endpoint Is Healthy\" in the\n      Amazon Route 53 Developer Guide.</p>\n    <p>Specify this value only if you want to change it.</p>\n  "
+          }
+        },
+        "documentation": "\n    <p>&gt;A complex type that contains information about the request to update a health check.</p>\n  "
+      },
+      "output": {
+        "shape_name": "UpdateHealthCheckResponse",
+        "type": "structure",
+        "members": {
+          "HealthCheck": {
+            "shape_name": "HealthCheck",
+            "type": "structure",
+            "members": {
+              "Id": {
+                "shape_name": "HealthCheckId",
+                "type": "string",
+                "max_length": 64,
+                "documentation": "\n    <p>The ID of the specified health check.</p>\n   ",
+                "required": true
+              },
+              "CallerReference": {
+                "shape_name": "HealthCheckNonce",
+                "type": "string",
+                "min_length": 1,
+                "max_length": 64,
+                "documentation": "\n    <p>A unique string that identifies the request to create the health check.</p>\n   ",
+                "required": true
+              },
+              "HealthCheckConfig": {
+                "shape_name": "HealthCheckConfig",
+                "type": "structure",
+                "members": {
+                  "IPAddress": {
+                    "shape_name": "IPAddress",
+                    "type": "string",
+                    "max_length": 15,
+                    "pattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$",
+                    "documentation": "\n    <p>IP Address of the instance being checked. </p>\n   "
+                  },
+                  "Port": {
+                    "shape_name": "Port",
+                    "type": "integer",
+                    "min_length": 1,
+                    "max_length": 65535,
+                    "documentation": "\n    <p>Port on which connection will be opened to the instance to health check. For HTTP and HTTP_STR_MATCH this defaults to 80 if the port is not specified. For HTTPS and HTTPS_STR_MATCH this defaults to 443 if the port is not specified.</p>\n   "
+                  },
+                  "Type": {
+                    "shape_name": "HealthCheckType",
+                    "type": "string",
+                    "enum": [
+                      "HTTP",
+                      "HTTPS",
+                      "HTTP_STR_MATCH",
+                      "HTTPS_STR_MATCH",
+                      "TCP"
+                    ],
+                    "documentation": "\n    <p>The type of health check to be performed. Currently supported types are TCP, HTTP, HTTPS, HTTP_STR_MATCH, and HTTPS_STR_MATCH.</p>\n   ",
+                    "required": true
+                  },
+                  "ResourcePath": {
+                    "shape_name": "ResourcePath",
+                    "type": "string",
+                    "max_length": 255,
+                    "documentation": "\n    <p>Path to ping on the instance to check the health. Required for HTTP, HTTPS, HTTP_STR_MATCH, and HTTPS_STR_MATCH health checks, HTTP request is issued to the instance on the given port and path.</p>\n   "
+                  },
+                  "FullyQualifiedDomainName": {
+                    "shape_name": "FullyQualifiedDomainName",
+                    "type": "string",
+                    "max_length": 255,
+                    "documentation": "\n    <p>Fully qualified domain name of the instance to be health checked.</p>\n   "
+                  },
+                  "SearchString": {
+                    "shape_name": "SearchString",
+                    "type": "string",
+                    "max_length": 255,
+                    "documentation": "\n    <p>A string to search for in the body of a health check response. Required for HTTP_STR_MATCH and HTTPS_STR_MATCH health checks.</p>\n   "
+                  },
+                  "RequestInterval": {
+                    "shape_name": "RequestInterval",
+                    "type": "integer",
+                    "min_length": 10,
+                    "max_length": 30,
+                    "documentation": "\n    <p>The number of seconds between the time that Route 53 gets a response from your endpoint and the time that it sends the next health-check request.</p>\n    <p>Each Route 53 health checker makes requests at this interval. Valid values are 10 and 30. The default value is 30.</p>\n  "
+                  },
+                  "FailureThreshold": {
+                    "shape_name": "FailureThreshold",
+                    "type": "integer",
+                    "min_length": 1,
+                    "max_length": 10,
+                    "documentation": "\n    <p>The number of consecutive health checks that an endpoint must pass or fail for Route 53 to\n      change the current status of the endpoint from unhealthy to healthy or vice versa.</p>\n    <p>Valid values are integers between 1 and 10. For more information,\n      see \"How Amazon Route 53 Determines Whether an Endpoint Is Healthy\" in the\n      Amazon Route 53 Developer Guide.</p>\n  "
+                  }
+                },
+                "documentation": "\n    <p>A complex type that contains the health check configuration.</p>\n   ",
+                "required": true
+              },
+              "HealthCheckVersion": {
+                "shape_name": "HealthCheckVersion",
+                "type": "long",
+                "min_length": 1,
+                "documentation": "\n     <p>The version of the health check. You can optionally pass this value in a call to <code>UpdateHealthCheck</code> to\n       prevent overwriting another change to the health check.</p>\n   ",
+                "required": true
+              }
+            },
+            "documentation": "\n    <p>A complex type that contains identifying information about the health check.</p>\n   ",
+            "required": true
+          }
+        },
+        "documentation": null
+      },
+      "errors": [
+        {
+          "shape_name": "NoSuchHealthCheck",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "ErrorMessage",
+              "type": "string",
+              "documentation": "\n    <p>Descriptive message for the error response.</p>\n   "
+            }
+          },
+          "documentation": "\n    <p>The health check you are trying to get or delete does not exist.</p>\n   "
+        },
+        {
+          "shape_name": "InvalidInput",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "ErrorMessage",
+              "type": "string",
+              "documentation": "\n    <p>Descriptive message for the error response.</p>\n   "
+            }
+          },
+          "documentation": "\n    <p>Some value specified in the request is invalid or the XML document is malformed.</p>\n   "
+        },
+        {
+          "shape_name": "HealthCheckVersionMismatch",
+          "type": "structure",
+          "members": {
+            "message": {
+              "shape_name": "ErrorMessage",
+              "type": "string",
+              "documentation": null
+            }
+          },
+          "documentation": null
+        }
+      ],
+      "documentation": "\n    <p> This action updates an existing health check.</p>\n    <p> To update a health check, send a <code>POST</code> request to the <code>2013-05-27/healthcheck/<i>health check ID</i></code> resource. The request body must include an XML document with an <code>UpdateHealthCheckRequest</code> element. The response returns an <code>UpdateHealthCheckResponse</code> element, which contains metadata about the health check.</p>\n  "
     }
   }
 }
