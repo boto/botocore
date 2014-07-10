@@ -1,0 +1,22 @@
+{
+  "pagination": {
+    "DescribeLogGroups": {
+      "input_token": "nextToken",
+      "limit_key": "limit",
+      "output_token": "nextToken",
+      "result_key": "logGroups"
+    },
+    "DescribeLogStreams": {
+      "input_token": "nextToken",
+      "limit_key": "limit",
+      "output_token": "nextToken",
+      "result_key": "logStreams"
+    },
+    "DescribeMetricFilters": {
+      "input_token": "nextToken",
+      "limit_key": "limit",
+      "output_token": "nextToken",
+      "result_key": "metricFilters"
+    }
+  }
+}
