@@ -254,7 +254,8 @@ class SigV4Auth(BaseSigner):
         return '\n'.join(cr)
 
     def _normalize_url_path(self, path):
-        return normalize_url_path(path)
+        normalized_path = quote(normalize_url_path(path), safe='/~')
+        return normalized_path
 
     def scope(self, args):
         scope = [self.credentials.access_key]
