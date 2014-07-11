@@ -33,6 +33,7 @@ if six.PY3:
     from urllib.parse import urlencode
     from http.client import HTTPResponse
     from io import IOBase as _IOBase
+    from base64 import encodebytes
     file_type = _IOBase
     zip = zip
 
@@ -69,6 +70,7 @@ else:
     file_type = file
     from itertools import izip as zip
     from httplib import HTTPResponse
+    from base64 import encodestring as encodebytes
 
     class HTTPHeaders(Message):
 
