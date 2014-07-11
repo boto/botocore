@@ -1,0 +1,1302 @@
+{
+    "api_version": "2014-03-28",
+    "service_full_name": "Amazon CloudWatch Logs",
+    "type": "json",
+    "json_version": "1.1",
+    "signature_version": "v4",
+    "endpoint_prefix": "logs",
+    "target_prefix": "Logs_20140328",
+    "xmlnamespace": "http://monitoring.amazonaws.com/doc/2014-03-28/",
+    "documentation": "\n    <fullname>Amazon CloudWatch Logs Service API Reference</fullname>\n\n    <p>This is the <i>Amazon CloudWatch Logs API Reference</i>. Amazon CloudWatch Logs is a managed service for real time monitoring\n      and archival of application logs. This guide provides detailed\n      information about Amazon CloudWatch Logs actions, data types, parameters, and\n      errors. For detailed information about Amazon CloudWatch Logs features and their associated API calls,\n      go to the <a href=\"http://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/DeveloperGuide\">Amazon CloudWatch Logs Developer Guide</a>.\n    </p>\n    \n    <p>Use the following links to get started using the <i>Amazon CloudWatch Logs API Reference</i>:</p>\n    <ul>\n      <li>\n<a href=\"http://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_Operations.html\">Actions</a>: An alphabetical list of all Amazon CloudWatch Logs actions.</li>\n      <li>\n<a href=\"http://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_Types.html\">Data Types</a>: An alphabetical list of all Amazon CloudWatch Logs data types.</li>\n      <li>\n<a href=\"http://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/CommonParameters.html\">Common Parameters</a>: Parameters that all Query actions can use.</li>\n      <li>\n<a href=\"http://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/CommonErrors.html\">Common Errors</a>: Client and server errors that all actions can return.</li>\n      <li>\n<a href=\"http://docs.aws.amazon.com/general/latest/gr/index.html?rande.html\">Regions and Endpoints</a>: Itemized regions and endpoints for all AWS products.</li>\n    </ul>\n        \n    <p>In addition to using the Amazon CloudWatch Logs API, you can also use the following SDKs and third-party libraries to\n      access Amazon CloudWatch Logs programmatically.</p>\n    \n    <ul>\n      <li><a href=\"http://aws.amazon.com/documentation/sdkforjava/\">AWS SDK for Java Documentation</a></li>\n      <li><a href=\"http://aws.amazon.com/documentation/sdkfornet/\">AWS SDK for .NET Documentation</a></li>\n      <li><a href=\"http://aws.amazon.com/documentation/sdkforphp/\">AWS SDK for PHP Documentation</a></li>\n      <li><a href=\"http://aws.amazon.com/documentation/sdkforruby/\">AWS SDK for Ruby Documentation</a></li>\n    </ul>\n    \n    <p>Developers in the AWS developer community also provide their\town libraries, which you can find at the following AWS developer\n      centers:</p>\n    <ul>\n      <li><a href=\"http://aws.amazon.com/java/\">AWS Java Developer Center</a></li>\n      <li><a href=\"http://aws.amazon.com/php/\">AWS PHP Developer Center</a></li>\n      <li><a href=\"http://aws.amazon.com/python/\">AWS Python Developer Center</a></li>\n      <li><a href=\"http://aws.amazon.com/ruby/\">AWS Ruby Developer Center</a></li>\n      <li><a href=\"http://aws.amazon.com/net/\">AWS Windows and .NET Developer Center</a></li>\n    </ul>\n  ",
+    "operations": {
+        "CreateLogGroup": {
+            "name": "CreateLogGroup",
+            "input": {
+                "shape_name": "CreateLogGroupRequest",
+                "type": "structure",
+                "members": {
+                    "logGroupName": {
+                        "shape_name": "LogGroupName",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 512,
+                        "pattern": "[\\.\\-_/#A-Za-z0-9]+",
+                        "documentation": null,
+                        "required": true
+                    }
+                },
+                "documentation": null
+            },
+            "output": null,
+            "errors": [
+                {
+                    "shape_name": "InvalidParameterException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if a parameter of the request is incorrectly specified.</p>\n  "
+                },
+                {
+                    "shape_name": "ResourceAlreadyExistsException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the specified resource already exists.</p>\n  "
+                },
+                {
+                    "shape_name": "LimitExceededException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if you have reached the maximum number of resources that can be created.</p>\n  "
+                },
+                {
+                    "shape_name": "OperationAbortedException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if multiple requests to update the same resource were in conflict.</p>\n  "
+                },
+                {
+                    "shape_name": "ServiceUnavailableException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the service cannot complete the request.</p>\n  "
+                }
+            ],
+            "documentation": "\n    <p>\n      Creates a new log group with the specified name. The name of the log group must be unique within a \n      region for an AWS account. You can create up to 500 log groups per account.\n    </p>\n    <p>\n      You must use the following guidelines when naming a log group:\n      <ul>\n        <li>Log group names can be between 1 and 512 characters long.</li>\n        <li>Allowed characters are a\u2013z, A\u2013Z, 0\u20139, '_' (underscore), '-' (hyphen), '/' (forward slash), and '.' (period).</li>\n      </ul>\n    </p>\n    <examples>\n      <example>\n        <name>Create a new Log Group</name>\n        <description>The following is an example of a <code>CreateLogGroup</code> request and response.</description>\n        <request><![CDATA[\nPOST / HTTP/1.1\nHost: logs.<region>.<domain>\nX-Amz-Date: <DATE>\nAuthorization: AWS4-HMAC-SHA256 Credential=<Credential>, SignedHeaders=content-type;date;host;user-agent;x-amz-date;x-amz-target;x-amzn-requestid, Signature=<Signature>\nUser-Agent: <UserAgentString>\nAccept: application/json\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nConnection: Keep-Alive]]>\nX-Amz-Target: Logs_20140328.CreateLogGroup\n{\n  \"logGroupName\": \"exampleLogGroupName\"\n}\n        </request>\n        <response><![CDATA[\nHTTP/1.1 200 OK\nx-amzn-RequestId: <RequestId>\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nDate: <Date>]]>\n        </response>\n      </example>\n    </examples>\n  "
+        },
+        "CreateLogStream": {
+            "name": "CreateLogStream",
+            "input": {
+                "shape_name": "CreateLogStreamRequest",
+                "type": "structure",
+                "members": {
+                    "logGroupName": {
+                        "shape_name": "LogGroupName",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 512,
+                        "pattern": "[\\.\\-_/#A-Za-z0-9]+",
+                        "documentation": null,
+                        "required": true
+                    },
+                    "logStreamName": {
+                        "shape_name": "LogStreamName",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 512,
+                        "pattern": "[^:*]*",
+                        "documentation": null,
+                        "required": true
+                    }
+                },
+                "documentation": null
+            },
+            "output": null,
+            "errors": [
+                {
+                    "shape_name": "InvalidParameterException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if a parameter of the request is incorrectly specified.</p>\n  "
+                },
+                {
+                    "shape_name": "ResourceAlreadyExistsException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the specified resource already exists.</p>\n  "
+                },
+                {
+                    "shape_name": "ResourceNotFoundException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the specified resource does not exist.</p>\n  "
+                },
+                {
+                    "shape_name": "ServiceUnavailableException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the service cannot complete the request.</p>\n  "
+                }
+            ],
+            "documentation": "\n    <p>\n      Creates a new log stream in the specified log group. The name of the log stream must be unique within the log\n      group. There is no limit on the number of log streams that can exist in a log group.\n    </p>\n    <p>\n      You must use the following guidelines when naming a log stream:\n      <ul>\n        <li>Log stream names can be between 1 and 512 characters long.</li>\n        <li>The ':' colon character is not allowed.</li>\n      </ul>\n    </p>\n    <examples>\n      <example>\n        <name>Create a new Log Stream</name>\n        <description>The following is an example of a <code>CreateLogStream</code> request and response.</description>\n        <request><![CDATA[\nPOST / HTTP/1.1\nHost: logs.<region>.<domain>\nX-Amz-Date: <DATE>\nAuthorization: AWS4-HMAC-SHA256 Credential=<Credential>, SignedHeaders=content-type;date;host;user-agent;x-amz-date;x-amz-target;x-amzn-requestid, Signature=<Signature>\nUser-Agent: <UserAgentString>\nAccept: application/json\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nConnection: Keep-Alive]]>\nX-Amz-Target: Logs_20140328.CreateLogStream\n{\n  \"logGroupName\": \"exampleLogGroupName\",\n  \"logStreamName\": \"exampleLogStreamName\"\n}\n        </request>\n        <response><![CDATA[\nHTTP/1.1 200 OK\nx-amzn-RequestId: <RequestId>\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nDate: <Date>]]>\n        </response>\n      </example>\n    </examples>\n  "
+        },
+        "DeleteLogGroup": {
+            "name": "DeleteLogGroup",
+            "input": {
+                "shape_name": "DeleteLogGroupRequest",
+                "type": "structure",
+                "members": {
+                    "logGroupName": {
+                        "shape_name": "LogGroupName",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 512,
+                        "pattern": "[\\.\\-_/#A-Za-z0-9]+",
+                        "documentation": null,
+                        "required": true
+                    }
+                },
+                "documentation": null
+            },
+            "output": null,
+            "errors": [
+                {
+                    "shape_name": "InvalidParameterException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if a parameter of the request is incorrectly specified.</p>\n  "
+                },
+                {
+                    "shape_name": "ResourceNotFoundException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the specified resource does not exist.</p>\n  "
+                },
+                {
+                    "shape_name": "OperationAbortedException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if multiple requests to update the same resource were in conflict.</p>\n  "
+                },
+                {
+                    "shape_name": "ServiceUnavailableException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the service cannot complete the request.</p>\n  "
+                }
+            ],
+            "documentation": "\n    <p>\n      Deletes the log group with the specified name and permanently deletes all the archived log events associated with it.\n    </p>\n    <examples>\n        <example>\n            <name>Delete a Log Group</name>\n            <description>The following is an example of a <code>DeleteLogGroup</code> request and response.</description>\n            <request><![CDATA[\nPOST / HTTP/1.1\nHost: logs.<region>.<domain>\nX-Amz-Date: <DATE>\nAuthorization: AWS4-HMAC-SHA256 Credential=<Credential>, SignedHeaders=content-type;date;host;user-agent;x-amz-date;x-amz-target;x-amzn-requestid, Signature=<Signature>\nUser-Agent: <UserAgentString>\nAccept: application/json\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nConnection: Keep-Alive]]>\nX-Amz-Target: Logs_20140328.DeleteLogGroup\n{\n  \"logGroupName\": \"exampleLogGroupName\"\n}\n            </request>\n            <response><![CDATA[\nHTTP/1.1 200 OK\nx-amzn-RequestId: <RequestId>\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nDate: <Date>]]>\n            </response>\n        </example>\n    </examples>\n  "
+        },
+        "DeleteLogStream": {
+            "name": "DeleteLogStream",
+            "input": {
+                "shape_name": "DeleteLogStreamRequest",
+                "type": "structure",
+                "members": {
+                    "logGroupName": {
+                        "shape_name": "LogGroupName",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 512,
+                        "pattern": "[\\.\\-_/#A-Za-z0-9]+",
+                        "documentation": null,
+                        "required": true
+                    },
+                    "logStreamName": {
+                        "shape_name": "LogStreamName",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 512,
+                        "pattern": "[^:*]*",
+                        "documentation": null,
+                        "required": true
+                    }
+                },
+                "documentation": null
+            },
+            "output": null,
+            "errors": [
+                {
+                    "shape_name": "InvalidParameterException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if a parameter of the request is incorrectly specified.</p>\n  "
+                },
+                {
+                    "shape_name": "ResourceNotFoundException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the specified resource does not exist.</p>\n  "
+                },
+                {
+                    "shape_name": "OperationAbortedException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if multiple requests to update the same resource were in conflict.</p>\n  "
+                },
+                {
+                    "shape_name": "ServiceUnavailableException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the service cannot complete the request.</p>\n  "
+                }
+            ],
+            "documentation": "\n    <p>\n      Deletes a log stream and permanently deletes all the archived log events associated with it.\n    </p>\n    <examples>\n      <example>\n        <name>Delete a Log Stream</name>\n          <description>The following is an example of a <code>DeleteLogStream</code> request and response.</description>\n          <request><![CDATA[\nPOST / HTTP/1.1\nHost: logs.<region>.<domain>\nX-Amz-Date: <DATE>\nAuthorization: AWS4-HMAC-SHA256 Credential=<Credential>, SignedHeaders=content-type;date;host;user-agent;x-amz-date;x-amz-target;x-amzn-requestid, Signature=<Signature>\nUser-Agent: <UserAgentString>\nAccept: application/json\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nConnection: Keep-Alive]]>\nX-Amz-Target: Logs_20140328.DeleteLogStream\n{\n  \"logGroupName\": \"exampleLogGroupName\",\n  \"logStreamName\": \"exampleLogStreamName\"\n}\n          </request>\n          <response><![CDATA[\nHTTP/1.1 200 OK\nx-amzn-RequestId: <RequestId>\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nDate: <Date>]]>\n          </response>\n      </example>\n    </examples>\n  "
+        },
+        "DeleteMetricFilter": {
+            "name": "DeleteMetricFilter",
+            "input": {
+                "shape_name": "DeleteMetricFilterRequest",
+                "type": "structure",
+                "members": {
+                    "logGroupName": {
+                        "shape_name": "LogGroupName",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 512,
+                        "pattern": "[\\.\\-_/#A-Za-z0-9]+",
+                        "documentation": null,
+                        "required": true
+                    },
+                    "filterName": {
+                        "shape_name": "FilterName",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 512,
+                        "pattern": "[^:*]*",
+                        "documentation": "\n    The name of the metric filter.\n  ",
+                        "required": true
+                    }
+                },
+                "documentation": null
+            },
+            "output": null,
+            "errors": [
+                {
+                    "shape_name": "InvalidParameterException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if a parameter of the request is incorrectly specified.</p>\n  "
+                },
+                {
+                    "shape_name": "ResourceNotFoundException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the specified resource does not exist.</p>\n  "
+                },
+                {
+                    "shape_name": "OperationAbortedException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if multiple requests to update the same resource were in conflict.</p>\n  "
+                },
+                {
+                    "shape_name": "ServiceUnavailableException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the service cannot complete the request.</p>\n  "
+                }
+            ],
+            "documentation": "\n    <p>\n      Deletes a metric filter associated with the specified log group.\n    </p>\n    <examples>\n      <example>\n        <name>Delete a metric filter</name>\n        <description>The following is an example of a <code>DeleteMetricFilter</code> request and response.</description>\n        <request><![CDATA[\nPOST / HTTP/1.1\nHost: logs.<region>.<domain>\nX-Amz-Date: <DATE>\nAuthorization: AWS4-HMAC-SHA256 Credential=<Credential>, SignedHeaders=content-type;date;host;user-agent;x-amz-date;x-amz-target;x-amzn-requestid, Signature=<Signature>\nUser-Agent: <UserAgentString>\nAccept: application/json\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nConnection: Keep-Alive]]>\nX-Amz-Target: Logs_20140328.DeleteMetricFilter\n{\n  \"logGroupName\": \"exampleLogGroupName\",\n  \"filterName\": \"exampleMetricFilterName\"\n}\n        </request>\n        <response><![CDATA[\nHTTP/1.1 200 OK\nx-amzn-RequestId: <RequestId>\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nDate: <Date>]]>\n        </response>\n      </example>\n    </examples>\n  "
+        },
+        "DeleteRetentionPolicy": {
+            "name": "DeleteRetentionPolicy",
+            "input": {
+                "shape_name": "DeleteRetentionPolicyRequest",
+                "type": "structure",
+                "members": {
+                    "logGroupName": {
+                        "shape_name": "LogGroupName",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 512,
+                        "pattern": "[\\.\\-_/#A-Za-z0-9]+",
+                        "documentation": null,
+                        "required": true
+                    }
+                },
+                "documentation": null
+            },
+            "output": null,
+            "errors": [
+                {
+                    "shape_name": "InvalidParameterException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if a parameter of the request is incorrectly specified.</p>\n  "
+                },
+                {
+                    "shape_name": "ResourceNotFoundException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the specified resource does not exist.</p>\n  "
+                },
+                {
+                    "shape_name": "OperationAbortedException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if multiple requests to update the same resource were in conflict.</p>\n  "
+                },
+                {
+                    "shape_name": "ServiceUnavailableException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the service cannot complete the request.</p>\n  "
+                }
+            ],
+            "documentation": "\n    <p>\n      Deletes the retention policy of the specified log group. Log events would not expire if they belong to log groups without a retention policy.\n    </p>\n    <examples>\n      <example>\n        <name>Deletes the retention policy of a log group</name>\n        <description>The following is an example of a <code>DeleteRetentionPolicy</code> request and response.</description>\n        <request><![CDATA[\nPOST / HTTP/1.1\nHost: logs.<region>.<domain>\nX-Amz-Date: <DATE>\nAuthorization: AWS4-HMAC-SHA256 Credential=<Credential>, SignedHeaders=content-type;date;host;user-agent;x-amz-date;x-amz-target;x-amzn-requestid, Signature=<Signature>\nUser-Agent: <UserAgentString>\nAccept: application/json\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nConnection: Keep-Alive]]>\nX-Amz-Target: Logs_20140328.DeleteRetentionPolicy\n{\n  \"logGroupName\": \"exampleLogGroupName\"\n}\n        </request>\n        <response><![CDATA[\nHTTP/1.1 200 OK\nx-amzn-RequestId: <RequestId>\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nDate: <Date>]]>\n        </response>\n      </example>\n    </examples>\n  "
+        },
+        "DescribeLogGroups": {
+            "name": "DescribeLogGroups",
+            "input": {
+                "shape_name": "DescribeLogGroupsRequest",
+                "type": "structure",
+                "members": {
+                    "logGroupNamePrefix": {
+                        "shape_name": "LogGroupName",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 512,
+                        "pattern": "[\\.\\-_/#A-Za-z0-9]+",
+                        "documentation": null
+                    },
+                    "nextToken": {
+                        "shape_name": "NextToken",
+                        "type": "string",
+                        "documentation": "\n    <p>\n      A string token used for pagination that points to the next page of results. It must be a value obtained from the\n      response of the previous <code class=\"code\">DescribeLogGroups</code> request.\n    </p>\n  "
+                    },
+                    "limit": {
+                        "shape_name": "DescribeLimit",
+                        "type": "integer",
+                        "min_length": 1,
+                        "max_length": 50,
+                        "documentation": "\n    <p>\n      The maximum number of items returned in the response. If you don't specify a value, the request would return up to 50 items.\n    </p>\n  "
+                    }
+                },
+                "documentation": null
+            },
+            "output": {
+                "shape_name": "DescribeLogGroupsResponse",
+                "type": "structure",
+                "members": {
+                    "logGroups": {
+                        "shape_name": "LogGroups",
+                        "type": "list",
+                        "members": {
+                            "shape_name": "LogGroup",
+                            "type": "structure",
+                            "members": {
+                                "logGroupName": {
+                                    "shape_name": "LogGroupName",
+                                    "type": "string",
+                                    "min_length": 1,
+                                    "max_length": 512,
+                                    "pattern": "[\\.\\-_/#A-Za-z0-9]+",
+                                    "documentation": null
+                                },
+                                "creationTime": {
+                                    "shape_name": "Timestamp",
+                                    "type": "long",
+                                    "min_length": 0,
+                                    "documentation": "\n    A point in time expressed as the number milliseconds since Jan 1, 1970 00:00:00 UTC.\n  "
+                                },
+                                "retentionInDays": {
+                                    "shape_name": "Days",
+                                    "type": "integer",
+                                    "documentation": "\n    Specifies the number of days you want to retain log events in the specified log group. Possible values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 547, 730.\n  "
+                                },
+                                "metricFilterCount": {
+                                    "shape_name": "FilterCount",
+                                    "type": "integer",
+                                    "documentation": "\n    The number of metric filters associated with the log group.\n  "
+                                },
+                                "arn": {
+                                    "shape_name": "Arn",
+                                    "type": "string",
+                                    "documentation": null
+                                },
+                                "storedBytes": {
+                                    "shape_name": "StoredBytes",
+                                    "type": "long",
+                                    "min_length": 0,
+                                    "documentation": null
+                                }
+                            },
+                            "documentation": null
+                        },
+                        "documentation": "\n    A list of log groups.\n  "
+                    },
+                    "nextToken": {
+                        "shape_name": "NextToken",
+                        "type": "string",
+                        "documentation": "\n    A string token used for pagination that points to the next page of results. It must be a value obtained from the\n    response of the previous request. The token expires after 24 hours.\n  "
+                    }
+                },
+                "documentation": null
+            },
+            "errors": [
+                {
+                    "shape_name": "InvalidParameterException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if a parameter of the request is incorrectly specified.</p>\n  "
+                },
+                {
+                    "shape_name": "ServiceUnavailableException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the service cannot complete the request.</p>\n  "
+                }
+            ],
+            "documentation": "\n    <p>\n      Returns all the log groups that are associated with the AWS account making the request. The list returned in \n      the response is ASCII-sorted by log group name.\n    </p>\n    <p>\n      By default, this operation returns up to 50 log groups. If there are more log groups to list, the response would contain a \n      <code class=\"code\">nextToken</code> value in the response body. You can also limit the number of log groups returned in \n      the response by specifying the <code class=\"code\">limit</code> parameter in the request.\n    </p>\n    <examples>\n      <example>\n        <name>List the log groups for an AWS Account</name>\n        <description>The following is an example of a <code>DescribeLogGroups</code> request and response.</description>\n        <request><![CDATA[\nPOST / HTTP/1.1\nHost: logs.<region>.<domain>\nX-Amz-Date: <DATE>\nAuthorization: AWS4-HMAC-SHA256 Credential=<Credential>, SignedHeaders=content-type;date;host;user-agent;x-amz-date;x-amz-target;x-amzn-requestid, Signature=<Signature>\nUser-Agent: <UserAgentString>\nAccept: application/json\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nConnection: Keep-Alive]]>\nX-Amz-Target: Logs_20140328.DescribeLogGroups\n\n        </request>\n        <response><![CDATA[\nHTTP/1.1 200 OK\nx-amzn-RequestId: <RequestId>\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nDate: <Date>]]>\n\n\n{\n  \"logGroups\": [\n    {\n      \"storageBytes\": 1048576,\n      \"arn\": \"arn:aws:logs:us-east-1:123456789:log-group:exampleLogGroupName1:*\",\n      \"creationTime\": 1393545600000,\n      \"logGroupName\": \"exampleLogGroupName1\",\n      \"metricFilterCount\": 0,\n      \"retentionInDays\": 14\n    },\n    {\n      \"storageBytes\": 5242880,\n      \"arn\": \"arn:aws:logs:us-east-1:123456789:log-group:exampleLogGroupName2:*\",\n      \"creationTime\": 1396224000000,\n      \"logGroupName\": \"exampleLogGroupName2\",\n      \"metricFilterCount\": 0,\n      \"retentionInDays\": 30\n    }\n  ]\n}\n        </response>\n      </example>\n    </examples>\n  ",
+            "pagination": {
+                "input_token": "nextToken",
+                "limit_key": "limit",
+                "output_token": "nextToken",
+                "result_key": "logGroups",
+                "py_input_token": "next_token"
+            }
+        },
+        "DescribeLogStreams": {
+            "name": "DescribeLogStreams",
+            "input": {
+                "shape_name": "DescribeLogStreamsRequest",
+                "type": "structure",
+                "members": {
+                    "logGroupName": {
+                        "shape_name": "LogGroupName",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 512,
+                        "pattern": "[\\.\\-_/#A-Za-z0-9]+",
+                        "documentation": null,
+                        "required": true
+                    },
+                    "logStreamNamePrefix": {
+                        "shape_name": "LogStreamName",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 512,
+                        "pattern": "[^:*]*",
+                        "documentation": null
+                    },
+                    "nextToken": {
+                        "shape_name": "NextToken",
+                        "type": "string",
+                        "documentation": "\n    <p>\n      A string token used for pagination that points to the next page of results. It must be a value obtained from the\n      response of the previous <code class=\"code\">DescribeLogStreams</code> request.\n    </p>\n  "
+                    },
+                    "limit": {
+                        "shape_name": "DescribeLimit",
+                        "type": "integer",
+                        "min_length": 1,
+                        "max_length": 50,
+                        "documentation": "\n    <p>\n      The maximum number of items returned in the response. If you don't specify a value, the request would return up to 50 items.\n    </p>\n  "
+                    }
+                },
+                "documentation": null
+            },
+            "output": {
+                "shape_name": "DescribeLogStreamsResponse",
+                "type": "structure",
+                "members": {
+                    "logStreams": {
+                        "shape_name": "LogStreams",
+                        "type": "list",
+                        "members": {
+                            "shape_name": "LogStream",
+                            "type": "structure",
+                            "members": {
+                                "logStreamName": {
+                                    "shape_name": "LogStreamName",
+                                    "type": "string",
+                                    "min_length": 1,
+                                    "max_length": 512,
+                                    "pattern": "[^:*]*",
+                                    "documentation": null
+                                },
+                                "creationTime": {
+                                    "shape_name": "Timestamp",
+                                    "type": "long",
+                                    "min_length": 0,
+                                    "documentation": "\n    A point in time expressed as the number milliseconds since Jan 1, 1970 00:00:00 UTC.\n  "
+                                },
+                                "firstEventTimestamp": {
+                                    "shape_name": "Timestamp",
+                                    "type": "long",
+                                    "min_length": 0,
+                                    "documentation": "\n    A point in time expressed as the number milliseconds since Jan 1, 1970 00:00:00 UTC.\n  "
+                                },
+                                "lastEventTimestamp": {
+                                    "shape_name": "Timestamp",
+                                    "type": "long",
+                                    "min_length": 0,
+                                    "documentation": "\n    A point in time expressed as the number milliseconds since Jan 1, 1970 00:00:00 UTC.\n  "
+                                },
+                                "lastIngestionTime": {
+                                    "shape_name": "Timestamp",
+                                    "type": "long",
+                                    "min_length": 0,
+                                    "documentation": "\n    A point in time expressed as the number milliseconds since Jan 1, 1970 00:00:00 UTC.\n  "
+                                },
+                                "uploadSequenceToken": {
+                                    "shape_name": "SequenceToken",
+                                    "type": "string",
+                                    "min_length": 1,
+                                    "documentation": "\n    A string token used for making PutLogEvents requests. A <code class=\"code\">sequenceToken</code>  can only be used \n    once, and PutLogEvents requests must include the <code class=\"code\">sequenceToken</code> obtained from the response\n    of the previous request.\n  "
+                                },
+                                "arn": {
+                                    "shape_name": "Arn",
+                                    "type": "string",
+                                    "documentation": null
+                                },
+                                "storedBytes": {
+                                    "shape_name": "StoredBytes",
+                                    "type": "long",
+                                    "min_length": 0,
+                                    "documentation": null
+                                }
+                            },
+                            "documentation": "\n    A log stream is sequence of log events that share the same emitter.\n  "
+                        },
+                        "documentation": "\n    A list of log streams.\n  "
+                    },
+                    "nextToken": {
+                        "shape_name": "NextToken",
+                        "type": "string",
+                        "documentation": "\n    A string token used for pagination that points to the next page of results. It must be a value obtained from the\n    response of the previous request. The token expires after 24 hours.\n  "
+                    }
+                },
+                "documentation": null
+            },
+            "errors": [
+                {
+                    "shape_name": "InvalidParameterException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if a parameter of the request is incorrectly specified.</p>\n  "
+                },
+                {
+                    "shape_name": "ResourceNotFoundException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the specified resource does not exist.</p>\n  "
+                },
+                {
+                    "shape_name": "ServiceUnavailableException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the service cannot complete the request.</p>\n  "
+                }
+            ],
+            "documentation": "\n    <p>\n      Returns all the log streams that are associated with the specified log group. The list returned in \n      the response is ASCII-sorted by log stream name.\n    </p>\n    <p>\n      By default, this operation returns up to 50 log streams. If there are more log streams to list, the response would contain a \n      <code class=\"code\">nextToken</code> value in the response body. You can also limit the number of log streams returned in \n      the response by specifying the <code class=\"code\">limit</code> parameter in the request.\n    </p>\n    <examples>\n      <example>\n        <name>List the log streams associated with a log group</name>\n          <description>The following is an example of a  <code>DescribeLogStreams</code> request and response.</description>\n          <request><![CDATA[\nPOST / HTTP/1.1\nHost: logs.<region>.<domain>\nX-Amz-Date: <DATE>\nAuthorization: AWS4-HMAC-SHA256 Credential=<Credential>, SignedHeaders=content-type;date;host;user-agent;x-amz-date;x-amz-target;x-amzn-requestid, Signature=<Signature>\nUser-Agent: <UserAgentString>\nAccept: application/json\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nConnection: Keep-Alive]]>\nX-Amz-Target: Logs_20140328.DescribeLogStreams\n{\n  \"logGroupName\": \"exampleLogGroupName\"\n}\n          </request>\n          <response><![CDATA[\nHTTP/1.1 200 OK\nx-amzn-RequestId: <RequestId>\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nDate: <Date>]]>\n\n\n{\n  \"logStreams\": [\n    {\n      \"storageBytes\": 1048576,\n      \"arn\": \"arn:aws:logs:us-east-1:123456789:log-group:exampleLogGroupName1:log-stream:exampleLogStreamName1\",\n      \"creationTime\": 1393545600000,\n      \"firstEventTimestamp\": 1393545600000,\n      \"lastEventTimestamp\": 1393567800000,\n      \"lastIngestionTime\": 1393589200000,\n      \"logStreamName\": \"exampleLogStreamName1\",\n      \"uploadSequenceToken\": \"88602967394531410094953670125156212707622379445839968487\"\n    },\n    {\n      \"storageBytes\": 5242880,\n      \"arn\": \"arn:aws:logs:us-east-1:123456789:log-group:exampleLogGroupName2:log-stream:exampleLogStreamName2\",\n      \"creationTime\": 1396224000000,\n      \"firstEventTimestamp\": 1396224000000,\n      \"lastEventTimestamp\": 1396235500000,\n      \"lastIngestionTime\": 1396225560000,\n      \"logStreamName\": \"exampleLogStreamName2\",\n      \"uploadSequenceToken\": \"07622379445839968487886029673945314100949536701251562127\"\n    }\n  ]\n}\n          </response>\n      </example>\n    </examples>\n  ",
+            "pagination": {
+                "input_token": "nextToken",
+                "limit_key": "limit",
+                "output_token": "nextToken",
+                "result_key": "logStreams",
+                "py_input_token": "next_token"
+            }
+        },
+        "DescribeMetricFilters": {
+            "name": "DescribeMetricFilters",
+            "input": {
+                "shape_name": "DescribeMetricFiltersRequest",
+                "type": "structure",
+                "members": {
+                    "logGroupName": {
+                        "shape_name": "LogGroupName",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 512,
+                        "pattern": "[\\.\\-_/#A-Za-z0-9]+",
+                        "documentation": null,
+                        "required": true
+                    },
+                    "filterNamePrefix": {
+                        "shape_name": "FilterName",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 512,
+                        "pattern": "[^:*]*",
+                        "documentation": "\n    The name of the metric filter.\n  "
+                    },
+                    "nextToken": {
+                        "shape_name": "NextToken",
+                        "type": "string",
+                        "documentation": "\n    <p>\n      A string token used for pagination that points to the next page of results. It must be a value obtained from the\n      response of the previous <code class=\"code\">DescribeMetricFilters</code> request.\n    </p>\n  "
+                    },
+                    "limit": {
+                        "shape_name": "DescribeLimit",
+                        "type": "integer",
+                        "min_length": 1,
+                        "max_length": 50,
+                        "documentation": "\n    <p>\n      The maximum number of items returned in the response. If you don't specify a value, the request would return up to 50 items.\n    </p>\n  "
+                    }
+                },
+                "documentation": null
+            },
+            "output": {
+                "shape_name": "DescribeMetricFiltersResponse",
+                "type": "structure",
+                "members": {
+                    "metricFilters": {
+                        "shape_name": "MetricFilters",
+                        "type": "list",
+                        "members": {
+                            "shape_name": "MetricFilter",
+                            "type": "structure",
+                            "members": {
+                                "filterName": {
+                                    "shape_name": "FilterName",
+                                    "type": "string",
+                                    "min_length": 1,
+                                    "max_length": 512,
+                                    "pattern": "[^:*]*",
+                                    "documentation": "\n    The name of the metric filter.\n  "
+                                },
+                                "filterPattern": {
+                                    "shape_name": "FilterPattern",
+                                    "type": "string",
+                                    "min_length": 0,
+                                    "max_length": 512,
+                                    "documentation": null
+                                },
+                                "metricTransformations": {
+                                    "shape_name": "MetricTransformations",
+                                    "type": "list",
+                                    "members": {
+                                        "shape_name": "MetricTransformation",
+                                        "type": "structure",
+                                        "members": {
+                                            "metricName": {
+                                                "shape_name": "MetricName",
+                                                "type": "string",
+                                                "max_length": 255,
+                                                "pattern": "[^:*$]*",
+                                                "documentation": null,
+                                                "required": true
+                                            },
+                                            "metricNamespace": {
+                                                "shape_name": "MetricNamespace",
+                                                "type": "string",
+                                                "max_length": 255,
+                                                "pattern": "[^:*$]*",
+                                                "documentation": null,
+                                                "required": true
+                                            },
+                                            "metricValue": {
+                                                "shape_name": "MetricValue",
+                                                "type": "string",
+                                                "max_length": 100,
+                                                "documentation": null,
+                                                "required": true
+                                            }
+                                        },
+                                        "documentation": null
+                                    },
+                                    "min_length": 1,
+                                    "max_length": 1,
+                                    "documentation": null
+                                },
+                                "creationTime": {
+                                    "shape_name": "Timestamp",
+                                    "type": "long",
+                                    "min_length": 0,
+                                    "documentation": "\n    A point in time expressed as the number milliseconds since Jan 1, 1970 00:00:00 UTC.\n  "
+                                }
+                            },
+                            "documentation": "\n    Metric filters can be used to express how Amazon CloudWatch Logs would extract metric observations from ingested log events and \n    transform them to metric data in a CloudWatch metric.\n  "
+                        },
+                        "documentation": null
+                    },
+                    "nextToken": {
+                        "shape_name": "NextToken",
+                        "type": "string",
+                        "documentation": "\n    A string token used for pagination that points to the next page of results. It must be a value obtained from the\n    response of the previous request. The token expires after 24 hours.\n  "
+                    }
+                },
+                "documentation": null
+            },
+            "errors": [
+                {
+                    "shape_name": "InvalidParameterException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if a parameter of the request is incorrectly specified.</p>\n  "
+                },
+                {
+                    "shape_name": "ResourceNotFoundException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the specified resource does not exist.</p>\n  "
+                },
+                {
+                    "shape_name": "ServiceUnavailableException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the service cannot complete the request.</p>\n  "
+                }
+            ],
+            "documentation": "\n    <p>\n      Returns all the metrics filters associated with the specified log group. The list returned in \n      the response is ASCII-sorted by filter name.\n    </p>\n    <p>\n      By default, this operation returns up to 50 metric filters. If there are more metric filters to list, the response would contain a \n      <code class=\"code\">nextToken</code> value in the response body. You can also limit the number of metric filters returned in \n      the response by specifying the <code class=\"code\">limit</code> parameter in the request.\n    </p>\n    <examples>\n      <example>\n        <name>List the metric filters associated with a log group</name>\n        <description>The following is an example of a <code>DescribeMetricFilters</code> request and response.</description>\n        <request><![CDATA[\nPOST / HTTP/1.1\nHost: logs.<region>.<domain>\nX-Amz-Date: <DATE>\nAuthorization: AWS4-HMAC-SHA256 Credential=<Credential>, SignedHeaders=content-type;date;host;user-agent;x-amz-date;x-amz-target;x-amzn-requestid, Signature=<Signature>\nUser-Agent: <UserAgentString>\nAccept: application/json\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nConnection: Keep-Alive]]>\nX-Amz-Target: Logs_20140328.DescribeMetricFilters\n{\n  \"logGroupName\": \"exampleLogGroupName\"\n}\n        </request>\n        <response><![CDATA[\nHTTP/1.1 200 OK\nx-amzn-RequestId: <RequestId>\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nDate: <Date>]]>\n\n\n{\n  \"metricFilters\": [\n    {\n      \"creationTime\": 1396224000000,\n      \"filterName\": \"exampleFilterName\", \n      \"filterPattern\": \"[ip, identity, user_id, timestamp, request, status_code, size]\",\n      \"metricTransformations\": [\n        {\n          \"metricValue\": \"$size\", \n          \"metricNamespace\": \"MyApp\", \n          \"metricName\": \"Volume\"\n        }, \n        {\n          \"metricValue\": \"1\", \n          \"metricNamespace\": \"MyApp\", \n          \"metricName\": \"RequestCount\"\n        }\n      ]\n    }\n  ]\n}\n\n        </response>\n      </example>\n    </examples>\n  ",
+            "pagination": {
+                "input_token": "nextToken",
+                "limit_key": "limit",
+                "output_token": "nextToken",
+                "result_key": "metricFilters",
+                "py_input_token": "next_token"
+            }
+        },
+        "GetLogEvents": {
+            "name": "GetLogEvents",
+            "input": {
+                "shape_name": "GetLogEventsRequest",
+                "type": "structure",
+                "members": {
+                    "logGroupName": {
+                        "shape_name": "LogGroupName",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 512,
+                        "pattern": "[\\.\\-_/#A-Za-z0-9]+",
+                        "documentation": null,
+                        "required": true
+                    },
+                    "logStreamName": {
+                        "shape_name": "LogStreamName",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 512,
+                        "pattern": "[^:*]*",
+                        "documentation": null,
+                        "required": true
+                    },
+                    "startTime": {
+                        "shape_name": "Timestamp",
+                        "type": "long",
+                        "min_length": 0,
+                        "documentation": "\n    A point in time expressed as the number milliseconds since Jan 1, 1970 00:00:00 UTC.\n  "
+                    },
+                    "endTime": {
+                        "shape_name": "Timestamp",
+                        "type": "long",
+                        "min_length": 0,
+                        "documentation": "\n    A point in time expressed as the number milliseconds since Jan 1, 1970 00:00:00 UTC.\n  "
+                    },
+                    "nextToken": {
+                        "shape_name": "NextToken",
+                        "type": "string",
+                        "documentation": "\n    <p>\n      A string token used for pagination that points to the next page of results. It must be a value obtained from the \n      <code class=\"code\">nextForwardToken</code> or <code class=\"code\">nextBackwardToken</code> fields in the\n      response of the previous <code class=\"code\">GetLogEvents</code> request.\n    </p>\n  "
+                    },
+                    "limit": {
+                        "shape_name": "EventsLimit",
+                        "type": "integer",
+                        "min_length": 1,
+                        "max_length": 10000,
+                        "documentation": "\n    <p>\n      The maximum number of log events returned in the response. If you don't specify a value, the request would return as much log events\n      as can fit in a response size of 1MB, up to 10,000 log events.\n    </p>\n  "
+                    },
+                    "startFromHead": {
+                        "shape_name": "StartFromHead",
+                        "type": "boolean",
+                        "documentation": null
+                    }
+                },
+                "documentation": null
+            },
+            "output": {
+                "shape_name": "GetLogEventsResponse",
+                "type": "structure",
+                "members": {
+                    "events": {
+                        "shape_name": "OutputLogEvents",
+                        "type": "list",
+                        "members": {
+                            "shape_name": "OutputLogEvent",
+                            "type": "structure",
+                            "members": {
+                                "timestamp": {
+                                    "shape_name": "Timestamp",
+                                    "type": "long",
+                                    "min_length": 0,
+                                    "documentation": "\n    A point in time expressed as the number milliseconds since Jan 1, 1970 00:00:00 UTC.\n  "
+                                },
+                                "message": {
+                                    "shape_name": "EventMessage",
+                                    "type": "string",
+                                    "min_length": 1,
+                                    "max_length": 32768,
+                                    "documentation": null
+                                },
+                                "ingestionTime": {
+                                    "shape_name": "Timestamp",
+                                    "type": "long",
+                                    "min_length": 0,
+                                    "documentation": "\n    A point in time expressed as the number milliseconds since Jan 1, 1970 00:00:00 UTC.\n  "
+                                }
+                            },
+                            "documentation": null
+                        },
+                        "documentation": null
+                    },
+                    "nextForwardToken": {
+                        "shape_name": "NextToken",
+                        "type": "string",
+                        "documentation": "\n    A string token used for pagination that points to the next page of results. It must be a value obtained from the\n    response of the previous request. The token expires after 24 hours.\n  "
+                    },
+                    "nextBackwardToken": {
+                        "shape_name": "NextToken",
+                        "type": "string",
+                        "documentation": "\n    A string token used for pagination that points to the next page of results. It must be a value obtained from the\n    response of the previous request. The token expires after 24 hours.\n  "
+                    }
+                },
+                "documentation": null
+            },
+            "errors": [
+                {
+                    "shape_name": "InvalidParameterException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if a parameter of the request is incorrectly specified.</p>\n  "
+                },
+                {
+                    "shape_name": "ResourceNotFoundException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the specified resource does not exist.</p>\n  "
+                },
+                {
+                    "shape_name": "ServiceUnavailableException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the service cannot complete the request.</p>\n  "
+                }
+            ],
+            "documentation": "\n    <p>\n      Retrieves log events from the specified log stream. You can provide an optional time range to filter the results on the event\n      <code class=\"code\">timestamp</code>.\n    </p>\n    <p>\n      By default, this operation returns as much log events as can fit in a response size of 1MB, up to 10,000 log events. The response \n      will always include a <code class=\"code\">nextForwardToken</code> and a <code class=\"code\">nextBackwardToken</code> in the response body. You can use\n      any of these tokens in subsequent <code class=\"code\">GetLogEvents</code> requests to paginate through events in either forward or backward direction.\n      You can also limit the number of log events returned in the response by specifying the <code class=\"code\">limit</code> parameter in the request.\n    </p>\n    <examples>\n      <example>\n        <name>Retrieves all the events from a log stream</name>\n        <description>The following is an example of a <code>GetLogEvents</code> request and response.</description>\n        <request><![CDATA[\nPOST / HTTP/1.1\nHost: logs.<region>.<domain>\nX-Amz-Date: <DATE>\nAuthorization: AWS4-HMAC-SHA256 Credential=<Credential>, SignedHeaders=content-type;date;host;user-agent;x-amz-date;x-amz-target;x-amzn-requestid, Signature=<Signature>\nUser-Agent: <UserAgentString>\nAccept: application/json\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nConnection: Keep-Alive]]>\nX-Amz-Target: Logs_20140328.GetLogEvents\n{\n  \"logGroupName\": \"exampleLogGroupName\",\n  \"logStreamName\": \"exampleLogStreamName\"\n}\n        </request>\n        <response><![CDATA[\nHTTP/1.1 200 OK\nx-amzn-RequestId: <RequestId>\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nDate: <Date>]]>\n\n\n{\n  \"events\": [\n    {\n      \"ingestionTime\": 1396035394997, \n      \"timestamp\": 1396035378988, \n      \"message\": \"Example Event 1\"\n    }, \n    {\n      \"ingestionTime\": 1396035394997, \n      \"timestamp\": 1396035378988, \n      \"message\": \"Example Event 2\"\n    }, \n    {\n      \"ingestionTime\": 1396035394997, \n      \"timestamp\": 1396035378989, \n      \"message\": \"Example Event 3\"\n    }\n  ], \n  \"nextBackwardToken\": \"b/31132629274945519779805322857203735586714454643391594505\",\n  \"nextForwardToken\": \"f/31132629323784151764587387538205132201699397759403884544\"\n}\n\n        </response>\n      </example>\n    </examples>\n  "
+        },
+        "PutLogEvents": {
+            "name": "PutLogEvents",
+            "input": {
+                "shape_name": "PutLogEventsRequest",
+                "type": "structure",
+                "members": {
+                    "logGroupName": {
+                        "shape_name": "LogGroupName",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 512,
+                        "pattern": "[\\.\\-_/#A-Za-z0-9]+",
+                        "documentation": null,
+                        "required": true
+                    },
+                    "logStreamName": {
+                        "shape_name": "LogStreamName",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 512,
+                        "pattern": "[^:*]*",
+                        "documentation": null,
+                        "required": true
+                    },
+                    "logEvents": {
+                        "shape_name": "InputLogEvents",
+                        "type": "list",
+                        "members": {
+                            "shape_name": "InputLogEvent",
+                            "type": "structure",
+                            "members": {
+                                "timestamp": {
+                                    "shape_name": "Timestamp",
+                                    "type": "long",
+                                    "min_length": 0,
+                                    "documentation": "\n    A point in time expressed as the number milliseconds since Jan 1, 1970 00:00:00 UTC.\n  ",
+                                    "required": true
+                                },
+                                "message": {
+                                    "shape_name": "EventMessage",
+                                    "type": "string",
+                                    "min_length": 1,
+                                    "max_length": 32768,
+                                    "documentation": null,
+                                    "required": true
+                                }
+                            },
+                            "documentation": "\n    A log event is a record of some activity that was recorded by the application or resource being monitored. The log event record \n    that Amazon CloudWatch Logs understands contains two properties: the timestamp of when the event occurred, and the raw event message.\n  "
+                        },
+                        "min_length": 1,
+                        "max_length": 1000,
+                        "documentation": "\n    A list of events belonging to a log stream.\n  ",
+                        "required": true
+                    },
+                    "sequenceToken": {
+                        "shape_name": "SequenceToken",
+                        "type": "string",
+                        "min_length": 1,
+                        "documentation": "\n    <p>\n      A string token that must be obtained from the response of the previous <code class=\"code\">PutLogEvents</code> request.\n    </p>\n  "
+                    }
+                },
+                "documentation": null
+            },
+            "output": {
+                "shape_name": "PutLogEventsResponse",
+                "type": "structure",
+                "members": {
+                    "nextSequenceToken": {
+                        "shape_name": "SequenceToken",
+                        "type": "string",
+                        "min_length": 1,
+                        "documentation": "\n    A string token used for making PutLogEvents requests. A <code class=\"code\">sequenceToken</code>  can only be used \n    once, and PutLogEvents requests must include the <code class=\"code\">sequenceToken</code> obtained from the response\n    of the previous request.\n  "
+                    }
+                },
+                "documentation": null
+            },
+            "errors": [
+                {
+                    "shape_name": "InvalidParameterException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if a parameter of the request is incorrectly specified.</p>\n  "
+                },
+                {
+                    "shape_name": "InvalidSequenceTokenException",
+                    "type": "structure",
+                    "members": {
+                        "expectedSequenceToken": {
+                            "shape_name": "SequenceToken",
+                            "type": "string",
+                            "min_length": 1,
+                            "documentation": "\n    A string token used for making PutLogEvents requests. A <code class=\"code\">sequenceToken</code>  can only be used \n    once, and PutLogEvents requests must include the <code class=\"code\">sequenceToken</code> obtained from the response\n    of the previous request.\n  "
+                        }
+                    },
+                    "documentation": null
+                },
+                {
+                    "shape_name": "DataAlreadyAcceptedException",
+                    "type": "structure",
+                    "members": {
+                        "expectedSequenceToken": {
+                            "shape_name": "SequenceToken",
+                            "type": "string",
+                            "min_length": 1,
+                            "documentation": "\n    A string token used for making PutLogEvents requests. A <code class=\"code\">sequenceToken</code>  can only be used \n    once, and PutLogEvents requests must include the <code class=\"code\">sequenceToken</code> obtained from the response\n    of the previous request.\n  "
+                        }
+                    },
+                    "documentation": null
+                },
+                {
+                    "shape_name": "ResourceNotFoundException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the specified resource does not exist.</p>\n  "
+                },
+                {
+                    "shape_name": "OperationAbortedException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if multiple requests to update the same resource were in conflict.</p>\n  "
+                },
+                {
+                    "shape_name": "ServiceUnavailableException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the service cannot complete the request.</p>\n  "
+                }
+            ],
+            "documentation": "\n    <p>\n      Uploads a batch of log events to the specified log stream.\n    </p>\n    <p>\n      Every PutLogEvents request must include the <code class=\"code\">sequenceToken</code> obtained from the response of the previous request.\n      An upload in a newly created log stream does not require a <code class=\"code\">sequenceToken</code>.\n    </p>\n    <p>\n      The batch of events must satisfy the following constraints:\n      <ul>\n        <li>The maximum batch size is 32,768 bytes, and this size is calculated as the sum of all event messages in UTF-8, plus 26 \n          bytes for each log event.</li>\n        <li>None of the log events in the batch can be more than 2 hours in the future.</li>\n        <li>None of the log events in the batch can be older than 14 days or the retention period of the log group.</li>\n        <li>The log events in the batch must be in chronological ordered by their <code class=\"code\">timestamp</code>.</li>\n        <li>The maximum number of log events in a batch is 1,000.</li>\n      </ul>\n    </p>\n    <examples>\n      <example>\n        <name>Upload a batch of log events into a log stream</name>\n        <description>The following is an example of a <code>PutLogEvents</code> request and response.</description>\n        <request><![CDATA[\nPOST / HTTP/1.1\nHost: logs.<region>.<domain>\nX-Amz-Date: <DATE>\nAuthorization: AWS4-HMAC-SHA256 Credential=<Credential>, SignedHeaders=content-type;date;host;user-agent;x-amz-date;x-amz-target;x-amzn-requestid, Signature=<Signature>\nUser-Agent: <UserAgentString>\nAccept: application/json\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nConnection: Keep-Alive]]>\nX-Amz-Target: Logs_20140328.PutLogEvents\n{\n  \"logGroupName\": \"exampleLogGroupName\",\n  \"logStreamName\": \"exampleLogStreamName\",\n  \"logEvents\": [\n    {\n      \"timestamp\": 1396035378988, \n      \"message\": \"Example Event 1\"\n    }, \n    {\n      \"timestamp\": 1396035378988, \n      \"message\": \"Example Event 2\"\n    }, \n    {\n      \"timestamp\": 1396035378989, \n      \"message\": \"Example Event 3\"\n    }\n  ]\n}\n        </request>\n        <response><![CDATA[\nHTTP/1.1 200 OK\nx-amzn-RequestId: <RequestId>\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nDate: <Date>]]>\n\n\n{\n  \"nextSequenceToken\": \"49536701251539826331025683274032969384950891766572122113\"\n}\n\n        </response>\n      </example>\n    </examples>\n  "
+        },
+        "PutMetricFilter": {
+            "name": "PutMetricFilter",
+            "input": {
+                "shape_name": "PutMetricFilterRequest",
+                "type": "structure",
+                "members": {
+                    "logGroupName": {
+                        "shape_name": "LogGroupName",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 512,
+                        "pattern": "[\\.\\-_/#A-Za-z0-9]+",
+                        "documentation": null,
+                        "required": true
+                    },
+                    "filterName": {
+                        "shape_name": "FilterName",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 512,
+                        "pattern": "[^:*]*",
+                        "documentation": "\n    The name of the metric filter.\n  ",
+                        "required": true
+                    },
+                    "filterPattern": {
+                        "shape_name": "FilterPattern",
+                        "type": "string",
+                        "min_length": 0,
+                        "max_length": 512,
+                        "documentation": null,
+                        "required": true
+                    },
+                    "metricTransformations": {
+                        "shape_name": "MetricTransformations",
+                        "type": "list",
+                        "members": {
+                            "shape_name": "MetricTransformation",
+                            "type": "structure",
+                            "members": {
+                                "metricName": {
+                                    "shape_name": "MetricName",
+                                    "type": "string",
+                                    "max_length": 255,
+                                    "pattern": "[^:*$]*",
+                                    "documentation": null,
+                                    "required": true
+                                },
+                                "metricNamespace": {
+                                    "shape_name": "MetricNamespace",
+                                    "type": "string",
+                                    "max_length": 255,
+                                    "pattern": "[^:*$]*",
+                                    "documentation": null,
+                                    "required": true
+                                },
+                                "metricValue": {
+                                    "shape_name": "MetricValue",
+                                    "type": "string",
+                                    "max_length": 100,
+                                    "documentation": null,
+                                    "required": true
+                                }
+                            },
+                            "documentation": null
+                        },
+                        "min_length": 1,
+                        "max_length": 1,
+                        "documentation": null,
+                        "required": true
+                    }
+                },
+                "documentation": null
+            },
+            "output": null,
+            "errors": [
+                {
+                    "shape_name": "InvalidParameterException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if a parameter of the request is incorrectly specified.</p>\n  "
+                },
+                {
+                    "shape_name": "ResourceNotFoundException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the specified resource does not exist.</p>\n  "
+                },
+                {
+                    "shape_name": "OperationAbortedException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if multiple requests to update the same resource were in conflict.</p>\n  "
+                },
+                {
+                    "shape_name": "LimitExceededException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if you have reached the maximum number of resources that can be created.</p>\n  "
+                },
+                {
+                    "shape_name": "ServiceUnavailableException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the service cannot complete the request.</p>\n  "
+                }
+            ],
+            "documentation": "\n    <p>\n      Creates or updates a metric filter and associates it with the specified log group. Metric filters allow you to configure rules \n      to extract metric data from log events ingested through <code class=\"code\">PutLogEvents</code> requests.\n    </p>\n    <examples>\n      <example>\n        <name>Create or update a metric filter</name>\n        <description>The following is an example of a <code>PutMetricFilter</code> request and response.</description>\n        <request><![CDATA[\nPOST / HTTP/1.1\nHost: logs.<region>.<domain>\nX-Amz-Date: <DATE>\nAuthorization: AWS4-HMAC-SHA256 Credential=<Credential>, SignedHeaders=content-type;date;host;user-agent;x-amz-date;x-amz-target;x-amzn-requestid, Signature=<Signature>\nUser-Agent: <UserAgentString>\nAccept: application/json\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nConnection: Keep-Alive]]>\nX-Amz-Target: Logs_20140328.PutMetricFilter\n{\n  \"logGroupName\": \"exampleLogGroupName\",\n  \"filterName\": \"exampleMetricFilterName\",\n  \"filterPattern\": \"[ip, identity, user_id, timestamp, request, status_code, size]\",\n  \"metricTransformations\": [\n    {\n      \"metricValue\": \"$size\", \n      \"metricNamespace\": \"MyApp\", \n      \"metricName\": \"Volume\"\n    }, \n    {\n      \"metricValue\": \"1\", \n      \"metricNamespace\": \"MyApp\", \n      \"metricName\": \"RequestCount\"\n    }\n  ]\n}\n        </request>\n        <response><![CDATA[\nHTTP/1.1 200 OK\nx-amzn-RequestId: <RequestId>\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nDate: <Date>]]>\n        </response>\n      </example>\n    </examples>\n  "
+        },
+        "PutRetentionPolicy": {
+            "name": "PutRetentionPolicy",
+            "input": {
+                "shape_name": "PutRetentionPolicyRequest",
+                "type": "structure",
+                "members": {
+                    "logGroupName": {
+                        "shape_name": "LogGroupName",
+                        "type": "string",
+                        "min_length": 1,
+                        "max_length": 512,
+                        "pattern": "[\\.\\-_/#A-Za-z0-9]+",
+                        "documentation": null,
+                        "required": true
+                    },
+                    "retentionInDays": {
+                        "shape_name": "Days",
+                        "type": "integer",
+                        "documentation": "\n    Specifies the number of days you want to retain log events in the specified log group. Possible values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 547, 730.\n  ",
+                        "required": true
+                    }
+                },
+                "documentation": null
+            },
+            "output": null,
+            "errors": [
+                {
+                    "shape_name": "InvalidParameterException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if a parameter of the request is incorrectly specified.</p>\n  "
+                },
+                {
+                    "shape_name": "ResourceNotFoundException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the specified resource does not exist.</p>\n  "
+                },
+                {
+                    "shape_name": "OperationAbortedException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if multiple requests to update the same resource were in conflict.</p>\n  "
+                },
+                {
+                    "shape_name": "ServiceUnavailableException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the service cannot complete the request.</p>\n  "
+                }
+            ],
+            "documentation": "\n    <p>\n      Sets the retention of the specified log group. A retention policy allows you to configure the\n      number of days you want to retain log events in the specified log group.\n    </p>\n    <examples>\n      <example>\n        <name>Creates or updates a 30 day retention policy for a log group</name>\n        <description>The following is an example of a <code>PutRetentionPolicy</code> request and response.</description>\n        <request><![CDATA[\nPOST / HTTP/1.1\nHost: logs.<region>.<domain>\nX-Amz-Date: <DATE>\nAuthorization: AWS4-HMAC-SHA256 Credential=<Credential>, SignedHeaders=content-type;date;host;user-agent;x-amz-date;x-amz-target;x-amzn-requestid, Signature=<Signature>\nUser-Agent: <UserAgentString>\nAccept: application/json\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nConnection: Keep-Alive]]>\nX-Amz-Target: Logs_20140328.PutRetentionPolicy\n{\n  \"logGroupName\": \"exampleLogGroupName\",\n  \"retentionInDays\": 30\n}\n        </request>\n        <response><![CDATA[\nHTTP/1.1 200 OK\nx-amzn-RequestId: <RequestId>\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nDate: <Date>]]>\n        </response>\n      </example>\n    </examples>\n  "
+        },
+        "TestMetricFilter": {
+            "name": "TestMetricFilter",
+            "input": {
+                "shape_name": "TestMetricFilterRequest",
+                "type": "structure",
+                "members": {
+                    "filterPattern": {
+                        "shape_name": "FilterPattern",
+                        "type": "string",
+                        "min_length": 0,
+                        "max_length": 512,
+                        "documentation": null,
+                        "required": true
+                    },
+                    "logEventMessages": {
+                        "shape_name": "TestEventMessages",
+                        "type": "list",
+                        "members": {
+                            "shape_name": "EventMessage",
+                            "type": "string",
+                            "min_length": 1,
+                            "max_length": 32768,
+                            "documentation": null
+                        },
+                        "min_length": 1,
+                        "max_length": 50,
+                        "documentation": null,
+                        "required": true
+                    }
+                },
+                "documentation": null
+            },
+            "output": {
+                "shape_name": "TestMetricFilterResponse",
+                "type": "structure",
+                "members": {
+                    "matches": {
+                        "shape_name": "MetricFilterMatches",
+                        "type": "list",
+                        "members": {
+                            "shape_name": "MetricFilterMatchRecord",
+                            "type": "structure",
+                            "members": {
+                                "eventNumber": {
+                                    "shape_name": "EventNumber",
+                                    "type": "long",
+                                    "documentation": null
+                                },
+                                "eventMessage": {
+                                    "shape_name": "EventMessage",
+                                    "type": "string",
+                                    "min_length": 1,
+                                    "max_length": 32768,
+                                    "documentation": null
+                                },
+                                "extractedValues": {
+                                    "shape_name": "ExtractedValues",
+                                    "type": "map",
+                                    "keys": {
+                                        "shape_name": "Token",
+                                        "type": "string",
+                                        "documentation": null
+                                    },
+                                    "members": {
+                                        "shape_name": "Value",
+                                        "type": "string",
+                                        "documentation": null
+                                    },
+                                    "documentation": null
+                                }
+                            },
+                            "documentation": null
+                        },
+                        "documentation": null
+                    }
+                },
+                "documentation": null
+            },
+            "errors": [
+                {
+                    "shape_name": "InvalidParameterException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if a parameter of the request is incorrectly specified.</p>\n  "
+                },
+                {
+                    "shape_name": "ServiceUnavailableException",
+                    "type": "structure",
+                    "members": {},
+                    "documentation": "\n    <p>Returned if the service cannot complete the request.</p>\n  "
+                }
+            ],
+            "documentation": "\n    <p>\n      Tests the filter pattern of a metric filter against a sample of log event messages. You can use this\n      operation to validate the correctness of a metric filter pattern.\n    </p>\n    <examples>\n      <example>\n        <name>Test a metric filter pattern on Apache access.log events</name>\n        <description>The following is an example of a <code>TestMetricFilter</code> request and response.</description>\n        <request><![CDATA[\nPOST / HTTP/1.1\nHost: logs.<region>.<domain>\nX-Amz-Date: <DATE>\nAuthorization: AWS4-HMAC-SHA256 Credential=<Credential>, SignedHeaders=content-type;date;host;user-agent;x-amz-date;x-amz-target;x-amzn-requestid, Signature=<Signature>\nUser-Agent: <UserAgentString>\nAccept: application/json\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nConnection: Keep-Alive]]>\nX-Amz-Target: Logs_20140328.TestMetricFilter\n{\n  \"filterPattern\": \"[ip, identity, user_id, timestamp, request, status_code, size]\",\n  \"logEventMessages\": [\n    \"127.0.0.1 - frank [10/Oct/2000:13:25:15 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 200 1534\",\n    \"127.0.0.1 - frank [10/Oct/2000:13:35:22 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 500 5324\",\n    \"127.0.0.1 - frank [10/Oct/2000:13:50:35 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 200 4355\"\n  ]\n}\n\n        </request>\n        <response><![CDATA[\nHTTP/1.1 200 OK\nx-amzn-RequestId: <RequestId>\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nDate: <Date>]]>\n\n\n{\n  \"matches\": [\n    {\n      \"eventNumber\": 0, \n      \"eventMessage\": \"127.0.0.1 - frank [10/Oct/2000:13:25:15 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 200 1534\", \n      \"extractedValues\": {\n        \"$status_code\": \"200\", \n        \"$identity\": \"-\", \n        \"$request\": \"GET /apache_pb.gif HTTP/1.0\", \n        \"$size\": \"1534,\", \n        \"$user_id\": \"frank\", \n        \"$ip\": \"127.0.0.1\", \n        \"$timestamp\": \"10/Oct/2000:13:25:15 -0700\"\n      }\n    }, \n    {\n      \"eventNumber\": 1, \n      \"eventMessage\": \"127.0.0.1 - frank [10/Oct/2000:13:35:22 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 500 5324\", \n      \"extractedValues\": {\n        \"$status_code\": \"500\", \n        \"$identity\": \"-\", \n        \"$request\": \"GET /apache_pb.gif HTTP/1.0\", \n        \"$size\": \"5324,\", \n        \"$user_id\": \"frank\", \n        \"$ip\": \"127.0.0.1\", \n        \"$timestamp\": \"10/Oct/2000:13:35:22 -0700\"\n      }\n    }, \n    {\n      \"eventNumber\": 2, \n      \"eventMessage\": \"127.0.0.1 - frank [10/Oct/2000:13:50:35 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 200 4355\", \n      \"extractedValues\": {\n        \"$status_code\": \"200\", \n        \"$identity\": \"-\", \n        \"$request\": \"GET /apache_pb.gif HTTP/1.0\", \n        \"$size\": \"4355\", \n        \"$user_id\": \"frank\", \n        \"$ip\": \"127.0.0.1\", \n        \"$timestamp\": \"10/Oct/2000:13:50:35 -0700\"\n      }\n    }\n  ]\n}\n\n        </response>\n      </example>\n      <example>\n        <name>Test a metric filter pattern on Apache access.log events without specifying all the fields</name>\n        <description>The following is an example of a <code>TestMetricFilter</code> request and response.</description>\n        <request><![CDATA[\nPOST / HTTP/1.1\nHost: logs.<region>.<domain>\nX-Amz-Date: <DATE>\nAuthorization: AWS4-HMAC-SHA256 Credential=<Credential>, SignedHeaders=content-type;date;host;user-agent;x-amz-date;x-amz-target;x-amzn-requestid, Signature=<Signature>\nUser-Agent: <UserAgentString>\nAccept: application/json\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nConnection: Keep-Alive]]>\nX-Amz-Target: Logs_20140328.TestMetricFilter\n{\n  \"filterPattern\": \"[..., size]\",\n  \"logEventMessages\": [\n    \"127.0.0.1 - frank [10/Oct/2000:13:25:15 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 200 1534\",\n    \"127.0.0.1 - frank [10/Oct/2000:13:35:22 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 500 5324\",\n    \"127.0.0.1 - frank [10/Oct/2000:13:50:35 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 200 4355\"\n  ]\n}\n\n        </request>\n        <response><![CDATA[\nHTTP/1.1 200 OK\nx-amzn-RequestId: <RequestId>\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nDate: <Date>]]>\n\n\n{\n  \"matches\": [\n    {\n      \"eventNumber\": 0, \n      \"eventMessage\": \"127.0.0.1 - frank [10/Oct/2000:13:25:15 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 200 1534\", \n      \"extractedValues\": {\n        \"$size\": \"1534\", \n        \"$6\": \"200\", \n        \"$4\": \"10/Oct/2000:13:25:15 -0700\", \n        \"$5\": \"GET /apache_pb.gif HTTP/1.0\", \n        \"$2\": \"-\", \n        \"$3\": \"frank\", \n        \"$1\": \"127.0.0.1\"\n      }\n    }, \n    {\n      \"eventNumber\": 1, \n      \"eventMessage\": \"127.0.0.1 - frank [10/Oct/2000:13:35:22 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 500 5324\", \n      \"extractedValues\": {\n        \"$size\": \"5324\", \n        \"$6\": \"500\", \n        \"$4\": \"10/Oct/2000:13:35:22 -0700\", \n        \"$5\": \"GET /apache_pb.gif HTTP/1.0\", \n        \"$2\": \"-\", \n        \"$3\": \"frank\", \n        \"$1\": \"127.0.0.1\"\n      }\n    }, \n    {\n      \"eventNumber\": 2, \n      \"eventMessage\": \"127.0.0.1 - frank [10/Oct/2000:13:50:35 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 200 4355\", \n      \"extractedValues\": {\n        \"$size\": \"4355\", \n        \"$6\": \"200\", \n        \"$4\": \"10/Oct/2000:13:50:35 -0700\", \n        \"$5\": \"GET /apache_pb.gif HTTP/1.0\", \n        \"$2\": \"-\", \n        \"$3\": \"frank\", \n        \"$1\": \"127.0.0.1\"\n      }\n    }\n  ]\n}\n\n        </response>\n      </example>\n      <example>\n        <name>Test a metric filter pattern on Apache access.log events without specifying any fields</name>\n        <description>The following is an example of a <code>TestMetricFilter</code> request and response.</description>\n        <request><![CDATA[\nPOST / HTTP/1.1\nHost: logs.<region>.<domain>\nX-Amz-Date: <DATE>\nAuthorization: AWS4-HMAC-SHA256 Credential=<Credential>, SignedHeaders=content-type;date;host;user-agent;x-amz-date;x-amz-target;x-amzn-requestid, Signature=<Signature>\nUser-Agent: <UserAgentString>\nAccept: application/json\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nConnection: Keep-Alive]]>\nX-Amz-Target: Logs_20140328.TestMetricFilter\n{\n  \"filterPattern\": \"[]\",\n  \"logEventMessages\": [\n    \"127.0.0.1 - frank [10/Oct/2000:13:25:15 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 200 1534\",\n    \"127.0.0.1 - frank [10/Oct/2000:13:35:22 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 500 5324\",\n    \"127.0.0.1 - frank [10/Oct/2000:13:50:35 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 200 4355\"\n  ]\n}\n\n        </request>\n        <response><![CDATA[\nHTTP/1.1 200 OK\nx-amzn-RequestId: <RequestId>\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nDate: <Date>]]>\n\n\n{\n  \"matches\": [\n    {\n      \"eventNumber\": 0, \n      \"eventMessage\": \"127.0.0.1 - frank [10/Oct/2000:13:25:15 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 200 1534\", \n      \"extractedValues\": {\n        \"$7\": \"1534\", \n        \"$6\": \"200\", \n        \"$4\": \"10/Oct/2000:13:25:15 -0700\", \n        \"$5\": \"GET /apache_pb.gif HTTP/1.0\", \n        \"$2\": \"-\", \n        \"$3\": \"frank\", \n        \"$1\": \"127.0.0.1\"\n      }\n    }, \n    {\n      \"eventNumber\": 1, \n      \"eventMessage\": \"127.0.0.1 - frank [10/Oct/2000:13:35:22 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 500 5324\", \n      \"extractedValues\": {\n        \"$7\": \"5324\", \n        \"$6\": \"500\", \n        \"$4\": \"10/Oct/2000:13:35:22 -0700\", \n        \"$5\": \"GET /apache_pb.gif HTTP/1.0\", \n        \"$2\": \"-\", \n        \"$3\": \"frank\", \n        \"$1\": \"127.0.0.1\"\n      }\n    }, \n    {\n      \"eventNumber\": 2, \n      \"eventMessage\": \"127.0.0.1 - frank [10/Oct/2000:13:50:35 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 200 4355\", \n      \"extractedValues\": {\n        \"$7\": \"4355\", \n        \"$6\": \"200\", \n        \"$4\": \"10/Oct/2000:13:50:35 -0700\", \n        \"$5\": \"GET /apache_pb.gif HTTP/1.0\", \n        \"$2\": \"-\", \n        \"$3\": \"frank\", \n        \"$1\": \"127.0.0.1\"\n      }\n    }\n  ]\n}\n\n        </response>\n      </example>\n      <example>\n        <name>Test a metric filter pattern that matches successful requests in Apache access.log events</name>\n        <description>The following is an example of a <code>TestMetricFilter</code> request and response.</description>\n        <request><![CDATA[\nPOST / HTTP/1.1\nHost: logs.<region>.<domain>\nX-Amz-Date: <DATE>\nAuthorization: AWS4-HMAC-SHA256 Credential=<Credential>, SignedHeaders=content-type;date;host;user-agent;x-amz-date;x-amz-target;x-amzn-requestid, Signature=<Signature>\nUser-Agent: <UserAgentString>\nAccept: application/json\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nConnection: Keep-Alive]]>\nX-Amz-Target: Logs_20140328.TestMetricFilter\n{\n  \"filterPattern\": \"[..., status_code=200, size]\",\n  \"logEventMessages\": [\n    \"127.0.0.1 - frank [10/Oct/2000:13:25:15 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 200 1534\",\n    \"127.0.0.1 - frank [10/Oct/2000:13:35:22 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 500 5324\",\n    \"127.0.0.1 - frank [10/Oct/2000:13:50:35 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 200 4355\"\n  ]\n}\n\n        </request>\n        <response><![CDATA[\nHTTP/1.1 200 OK\nx-amzn-RequestId: <RequestId>\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nDate: <Date>]]>\n\n\n{\n  \"matches\": [\n    {\n      \"eventNumber\": 0, \n      \"eventMessage\": \"127.0.0.1 - frank [10/Oct/2000:13:25:15 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 200 1534\", \n      \"extractedValues\": {\n        \"$status_code\": \"200\", \n        \"$size\": \"1534\", \n        \"$4\": \"10/Oct/2000:13:25:15 -0700\", \n        \"$5\": \"GET /apache_pb.gif HTTP/1.0\", \n        \"$2\": \"-\", \n        \"$3\": \"frank\", \n        \"$1\": \"127.0.0.1\"\n      }\n    }, \n    {\n      \"eventNumber\": 2, \n      \"eventMessage\": \"127.0.0.1 - frank [10/Oct/2000:13:50:35 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 200 4355\", \n      \"extractedValues\": {\n        \"$status_code\": \"200\", \n        \"$size\": \"4355\", \n        \"$4\": \"10/Oct/2000:13:50:35 -0700\", \n        \"$5\": \"GET /apache_pb.gif HTTP/1.0\", \n        \"$2\": \"-\", \n        \"$3\": \"frank\", \n        \"$1\": \"127.0.0.1\"\n      }\n    }\n  ]\n}\n\n        </response>\n      </example>\n      <example>\n        <name>Test a metric filter pattern that matches 4XX response codes for html pages in Apache access.log events</name>\n        <description>The following is an example of a <code>TestMetricFilter</code> request and response.</description>\n        <request><![CDATA[\nPOST / HTTP/1.1\nHost: logs.<region>.<domain>\nX-Amz-Date: <DATE>\nAuthorization: AWS4-HMAC-SHA256 Credential=<Credential>, SignedHeaders=content-type;date;host;user-agent;x-amz-date;x-amz-target;x-amzn-requestid, Signature=<Signature>\nUser-Agent: <UserAgentString>\nAccept: application/json\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nConnection: Keep-Alive]]>\nX-Amz-Target: Logs_20140328.TestMetricFilter\n{\n  \"filterPattern\": \"[..., request=*.html*, status_code=4*,]\",\n  \"logEventMessages\": [\n    \"127.0.0.1 - frank [10/Oct/2000:13:25:15 -0700] \\\"GET /index.html HTTP/1.0\\\" 404 1534\",\n    \"127.0.0.1 - frank [10/Oct/2000:13:35:22 -0700] \\\"GET /about-us/index.html HTTP/1.0\\\" 200 5324\",\n    \"127.0.0.1 - frank [10/Oct/2000:13:50:35 -0700] \\\"GET /apache_pb.gif HTTP/1.0\\\" 404 4355\",\n    \"127.0.0.1 - frank [10/Oct/2000:13:25:15 -0700] \\\"GET /products/index.html HTTP/1.0\\\" 400 1534\",\n  ]\n}\n\n        </request>\n        <response><![CDATA[\nHTTP/1.1 200 OK\nx-amzn-RequestId: <RequestId>\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nDate: <Date>]]>\n\n\n{\n  \"matches\": [\n    {\n      \"eventNumber\": 0, \n      \"eventMessage\": \"127.0.0.1 - frank [10/Oct/2000:13:25:15 -0700] \\\"GET /index.html HTTP/1.0\\\" 404 1534\", \n      \"extractedValues\": {\n        \"$status_code\": \"404\", \n        \"$request\": \"GET /index.html HTTP/1.0\", \n        \"$7\": \"1534\", \n        \"$4\": \"10/Oct/2000:13:25:15 -0700\", \n        \"$2\": \"-\", \n        \"$3\": \"frank\", \n        \"$1\": \"127.0.0.1\"\n      }\n    }, \n    {\n      \"eventNumber\": 3, \n      \"eventMessage\": \"127.0.0.1 - frank [10/Oct/2000:13:25:15 -0700] \\\"GET /products/index.html HTTP/1.0\\\" 400 1534\", \n      \"extractedValues\": {\n        \"$status_code\": \"400\", \n        \"$request\": \"GET /products/index.html HTTP/1.0\", \n        \"$7\": \"1534\", \n        \"$4\": \"10/Oct/2000:13:25:15 -0700\", \n        \"$2\": \"-\", \n        \"$3\": \"frank\", \n        \"$1\": \"127.0.0.1\"\n      }\n    }\n  ]\n}\n\n        </response>\n      </example>\n      <example>\n        <name>Test a metric filter pattern that matches occurrences of \"[ERROR]\" in log events</name>\n        <description>The following is an example of a <code>TestMetricFilter</code> request and response.</description>\n        <request><![CDATA[\nPOST / HTTP/1.1\nHost: logs.<region>.<domain>\nX-Amz-Date: <DATE>\nAuthorization: AWS4-HMAC-SHA256 Credential=<Credential>, SignedHeaders=content-type;date;host;user-agent;x-amz-date;x-amz-target;x-amzn-requestid, Signature=<Signature>\nUser-Agent: <UserAgentString>\nAccept: application/json\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nConnection: Keep-Alive]]>\nX-Amz-Target: Logs_20140328.TestMetricFilter\n{\n  \"filterPattern\": \"\\\"[ERROR]\\\"\",\n  \"logEventMessages\": [\n    \"02 May 2014 00:34:12,525 [INFO] Starting the application\",\n    \"02 May 2014 00:35:14,245 [DEBUG] Database connection established\",\n    \"02 May 2014 00:34:14,663 [INFO] Executing SQL Query\",\n    \"02 May 2014 00:34:16,142 [ERROR] Unhanded exception: InvalidQueryException\",\n    \"02 May 2014 00:34:16,224 [ERROR] Terminating the application\"\n  ]\n}\n\n        </request>\n        <response><![CDATA[\nHTTP/1.1 200 OK\nx-amzn-RequestId: <RequestId>\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nDate: <Date>]]>\n\n\n{\n  \"matches\": [\n    {\n      \"eventNumber\": 3, \n      \"eventMessage\": \"02 May 2014 00:34:16,142 [ERROR] Unhanded exception: InvalidQueryException\", \n      \"extractedValues\": {}\n    }, \n    {\n      \"eventNumber\": 4, \n      \"eventMessage\": \"02 May 2014 00:34:16,224 [ERROR] Terminating the application\", \n      \"extractedValues\": {}\n    }\n  ]\n}\n\n        </response>\n      </example>\n      <example>\n        <name>Test a metric filter pattern that matches occurrences of \"[ERROR]\" and \"Exception\" in log events</name>\n        <description>The following is an example of a <code>TestMetricFilter</code> request and response.</description>\n        <request><![CDATA[\nPOST / HTTP/1.1\nHost: logs.<region>.<domain>\nX-Amz-Date: <DATE>\nAuthorization: AWS4-HMAC-SHA256 Credential=<Credential>, SignedHeaders=content-type;date;host;user-agent;x-amz-date;x-amz-target;x-amzn-requestid, Signature=<Signature>\nUser-Agent: <UserAgentString>\nAccept: application/json\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nConnection: Keep-Alive]]>\nX-Amz-Target: Logs_20140328.TestMetricFilter\n{\n  \"filterPattern\": \"\\\"[ERROR]\\\" Exception\",\n  \"logEventMessages\": [\n    \"02 May 2014 00:34:12,525 [INFO] Starting the application\",\n    \"02 May 2014 00:35:14,245 [DEBUG] Database connection established\",\n    \"02 May 2014 00:34:14,663 [INFO] Executing SQL Query\",\n    \"02 May 2014 00:34:16,142 [ERROR] Unhanded exception: InvalidQueryException\",\n    \"02 May 2014 00:34:16,224 [ERROR] Terminating the application\"\n  ]\n}\n\n        </request>\n        <response><![CDATA[\nHTTP/1.1 200 OK\nx-amzn-RequestId: <RequestId>\nContent-Type: application/x-amz-json-1.1\nContent-Length: <PayloadSizeBytes>\nDate: <Date>]]>\n\n\n{\n  \"matches\": [\n    {\n      \"eventNumber\": 3, \n      \"eventMessage\": \"02 May 2014 00:34:16,142 [ERROR] Unhanded exception: InvalidQueryException\", \n      \"extractedValues\": {}\n    }\n  ]\n}\n\n        </response>\n      </example>\n    </examples>\n  "
+        }
+    },
+    "pagination": {
+        "DescribeLogGroups": {
+            "input_token": "nextToken",
+            "limit_key": "limit",
+            "output_token": "nextToken",
+            "result_key": "logGroups",
+            "py_input_token": "next_token"
+        },
+        "DescribeLogStreams": {
+            "input_token": "nextToken",
+            "limit_key": "limit",
+            "output_token": "nextToken",
+            "result_key": "logStreams",
+            "py_input_token": "next_token"
+        },
+        "DescribeMetricFilters": {
+            "input_token": "nextToken",
+            "limit_key": "limit",
+            "output_token": "nextToken",
+            "result_key": "metricFilters",
+            "py_input_token": "next_token"
+        }
+    },
+    "retry": {
+        "__default__": {
+            "max_attempts": 5,
+            "delay": {
+                "type": "exponential",
+                "base": "rand",
+                "growth_factor": 2
+            },
+            "policies": {
+                "general_socket_errors": {
+                    "applies_when": {
+                        "socket_errors": [
+                            "GENERAL_CONNECTION_ERROR"
+                        ]
+                    }
+                },
+                "general_server_error": {
+                    "applies_when": {
+                        "response": {
+                            "http_status_code": 500
+                        }
+                    }
+                },
+                "service_unavailable": {
+                    "applies_when": {
+                        "response": {
+                            "http_status_code": 503
+                        }
+                    }
+                },
+                "limit_exceeded": {
+                    "applies_when": {
+                        "response": {
+                            "http_status_code": 509
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
