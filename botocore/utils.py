@@ -12,10 +12,11 @@
 # language governing permissions and limitations under the License.
 import logging
 
+from six import string_types, text_type
 
-from .exceptions import InvalidExpressionError, ConfigNotFound
-from .compat import json
-from .vendored import requests
+from botocore.exceptions import InvalidExpressionError, ConfigNotFound
+from botocore.compat import json, quote
+from botocore.vendored import requests
 
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,9 @@ DEFAULT_METADATA_SERVICE_TIMEOUT = 1
 METADATA_SECURITY_CREDENTIALS_URL = (
     'http://169.254.169.254/latest/meta-data/iam/security-credentials/'
 )
+# These are chars that do not need to be urlencoded.
+# Based on rfc2986, section 2.3
+SAFE_CHARS = '-._~'
 
 
 class _RetriesExceededError(Exception):
@@ -223,3 +227,43 @@ def parse_key_val_file_contents(contents):
         val = val.strip()
         final[key] = val
     return final
+
+
+def percent_encode_sequence(mapping, safe=SAFE_CHARS):
+    """Urlencode a dict or list into a string.
+
+    This is similar to urllib.urlencode except that:
+
+    * It uses quote, and not quote_plus
+    * It has a default list of safe chars that don't need
+      to be encoded, which matches what AWS services expect.
+
+    This function should be preferred over the stdlib
+    ``urlencode()`` function.
+
+    :param mapping: Either a dict to urlencode or a list of
+        ``(key, value)`` pairs.
+
+    """
+    encoded_pairs = []
+    if hasattr(mapping, 'items'):
+        pairs = mapping.items()
+    else:
+        pairs = mapping
+    for key, value in pairs:
+        encoded_pairs.append('%s=%s' % (percent_encode(key),
+                                        percent_encode(value)))
+    return '&'.join(encoded_pairs)
+
+
+def percent_encode(input_str, safe=SAFE_CHARS):
+    """Urlencodes a string.
+
+    Whereas percent_encode_sequence handles taking a dict/sequence and
+    producing a percent encoded string, this function deals only with
+    taking a string (not a dict/sequence) and percent encoding it.
+
+    """
+    if not isinstance(input_str, string_types):
+        input_str = text_type(input_str)
+    return quote(text_type(input_str), safe=safe)
