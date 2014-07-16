@@ -24,9 +24,10 @@ import functools
 import time
 
 from botocore.exceptions import NoCredentialsError
-from botocore.utils import normalize_url_path
+from botocore.utils import normalize_url_path, percent_encode_sequence
+from botocore.utils import percent_encode
 from botocore.compat import HTTPHeaders
-from botocore.compat import quote, unquote, urlsplit, parse_qs, urlencode
+from botocore.compat import quote, unquote, urlsplit, parse_qs
 from botocore.compat import urlunsplit
 
 logger = logging.getLogger(__name__)
@@ -379,7 +380,7 @@ class SigV4QueryAuth(SigV4Auth):
         # You can't mix the two types of params together, i.e just keep doing
         # new_query_params.update(op_params)
         # new_query_params.update(auth_params)
-        # urlencode(new_query_params)
+        # percent_encode_sequence(new_query_params)
         operation_params = ''
         if request.data:
             # We also need to move the body params into the query string.
@@ -389,8 +390,9 @@ class SigV4QueryAuth(SigV4Auth):
             query_dict.update(request.data)
             request.data = ''
         if query_dict:
-            operation_params = urlencode(query_dict) + '&'
-        new_query_string = operation_params + urlencode(auth_params)
+            operation_params = percent_encode_sequence(query_dict) + '&'
+        new_query_string = operation_params + \
+                percent_encode_sequence(auth_params)
         # url_parts is a tuple (and therefore immutable) so we need to create
         # a new url_parts with the new query string.
         # <part>   - <index>
