@@ -7278,6 +7278,13 @@
                 "input_token": "nextPageToken",
                 "output_token": "nextPageToken",
                 "result_key": "events",
+                "non_aggregate_keys": [
+                    "taskToken",
+                    "startedEventId",
+                    "workflowExecution",
+                    "workflowType",
+                    "previousStartedEventId"
+                ],
                 "py_input_token": "next_page_token"
             }
         },
@@ -8837,6 +8844,13 @@
             "input_token": "nextPageToken",
             "output_token": "nextPageToken",
             "result_key": "events",
+            "non_aggregate_keys": [
+                "taskToken",
+                "startedEventId",
+                "workflowExecution",
+                "workflowType",
+                "previousStartedEventId"
+            ],
             "py_input_token": "next_page_token"
         }
     },
