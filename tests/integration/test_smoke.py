@@ -29,7 +29,10 @@ SMOKE_TESTS = {
  'elb': {'DescribeLoadBalancers': {}},
  'emr': {'ListClusters': {}},
  'iam': {'ListUsers': {}},
- 'importexport': {'ListJobs': {}},
+ # Does not work with session credentials so
+ # importexport tests are not run.
+ #'importexport': {'ListJobs': {}},
+ 'importexport': {},
  'kinesis': {'ListStreams': {}},
  'logs': {'DescribeLogGroups': {}},
  'opsworks': {'DescribeStacks': {}},
@@ -42,7 +45,12 @@ SMOKE_TESTS = {
  'sns': {'ListTopics': {}},
  'sqs': {'ListQueues': {}},
  'storagegateway': {'ListGateways': {}},
- 'sts': {'GetSessionToken': {}},
+ # sts tests would normally go here, but
+ # there aren't any calls you can make when
+ # using session credentials so we don't run any
+ # sts tests.
+ 'sts': {},
+ #'sts': {'GetSessionToken': {}},
  # Subscription needed for support API calls.
  'support': {},
  'swf': {'ListDomains': {'RegistrationStatus': 'REGISTERED'}},
