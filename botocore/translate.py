@@ -20,7 +20,7 @@ from copy import deepcopy
 import jmespath
 
 from botocore.compat import OrderedDict, json
-from botocore.utils import set_value_from_jmespath, merge_dicts
+from botocore.utils import merge_dicts
 from botocore import xform_name
 
 
@@ -79,9 +79,11 @@ def translate(model):
         new_model,
         model.enhancements.get('waiters', {}))
     # Merge in any per operation overrides defined in the .extras.json file.
-    merge_dicts(new_model['operations'], model.enhancements.get('operations', {}))
+    merge_dicts(new_model['operations'],
+                model.enhancements.get('operations', {}))
     add_retry_configs(
-        new_model, model.retry.get('retry', {}), definitions=model.retry.get('definitions', {}))
+        new_model, model.retry.get('retry', {}),
+        definitions=model.retry.get('definitions', {}))
     return new_model
 
 
@@ -160,13 +162,13 @@ def _filter_param_doc(param, replacement, regex):
 
 
 def handle_filter_documentation(new_model, enhancements):
-    #This provides a way to filter undesireable content (e.g. CDATA)
-    #from documentation strings
-    filter = enhancements.get('transformations', {}).get(
+    # This provides a way to filter undesireable content (e.g. CDATA)
+    # from documentation strings.
+    doc_filter = enhancements.get('transformations', {}).get(
         'filter-documentation', {}).get('filter')
-    if filter is not None:
-        filter_regex = re.compile(filter.get('regex', ''), re.DOTALL)
-        replacement = filter.get('replacement')
+    if doc_filter is not None:
+        filter_regex = re.compile(doc_filter.get('regex', ''), re.DOTALL)
+        replacement = doc_filter.get('replacement')
         operations = new_model['operations']
         for op_name in operations:
             operation = operations[op_name]
@@ -218,42 +220,44 @@ def add_pagination_configs(new_model, pagination):
         config = pagination[name]
         _check_known_pagination_keys(config)
         if 'py_input_token' not in config:
-            input_token = config['input_token']
-            if isinstance(input_token, list):
-                py_input_token = []
-                for token in input_token:
-                    py_input_token.append(xform_name(token))
-                config['py_input_token'] = py_input_token
-            else:
-                config['py_input_token'] = xform_name(input_token)
-        # result_key must be defined
-        if 'result_key' not in config:
-            raise ValueError("Required key 'result_key' is missing from "
-                             "from pagination config: %s" % config)
-        if name not in new_model['operations']:
-            raise ValueError("Trying to add pagination config for non "
-                             "existent operation: %s" % name)
-        operation = new_model['operations'].get(name)
-        # result_key must match a key in the output.
-        if not isinstance(config['result_key'], list):
-            result_keys = [config['result_key']]
-        else:
-            result_keys = config['result_key']
-        if result_keys and not operation['output']:
-            raise ValueError("Trying to add pagination config for an "
-                             "operation with no output members: %s" % name)
-        for result_key in result_keys:
-            if resembles_jmespath_exp(result_key):
-                continue
-            if result_key not in operation['output']['members']:
-                raise ValueError("result_key %r is not an output member: %s" %
-                                (result_key,
-                                 operation['output']['members'].keys()))
+            _add_py_input_token(config)
+        _validate_result_key_exists(config)
+        _validate_referenced_operation_exists(new_model, name)
+        operation = new_model['operations'][name]
+        _validate_operation_has_output(operation, name)
         _check_input_keys_match(config, operation)
-        if operation is None:
-            raise ValueError("Tried to add a pagination config for non "
-                             "existent operation '%s'" % name)
+        _check_output_keys_match(config, operation)
         operation['pagination'] = config.copy()
+
+
+def _validate_operation_has_output(operation, name):
+    if not operation['output']:
+        raise ValueError("Trying to add pagination config for an "
+                         "operation with no output members: %s" % name)
+
+
+def _validate_referenced_operation_exists(new_model, name):
+    if name not in new_model['operations']:
+        raise ValueError("Trying to add pagination config for non "
+                         "existent operation: %s" % name)
+
+
+def _validate_result_key_exists(config):
+    # result_key must be defined.
+    if 'result_key' not in config:
+        raise ValueError("Required key 'result_key' is missing from "
+                         "from pagination config: %s" % config)
+
+
+def _add_py_input_token(config):
+    input_token = config['input_token']
+    if isinstance(input_token, list):
+        py_input_token = []
+        for token in input_token:
+            py_input_token.append(xform_name(token))
+        config['py_input_token'] = py_input_token
+    else:
+        config['py_input_token'] = xform_name(input_token)
 
 
 def add_waiter_configs(new_model, waiters):
@@ -335,18 +339,18 @@ def denormalize_single_waiter(value, default, waiters):
     # want to completely remove the acceptor types.
     # The logic here is that if there is no success/failure_* variable
     # defined, it inherits this value from the matching acceptor_* variable.
-    new_waiter['success_type'] = new_waiter.get('success_type',
-                                                new_waiter.get('acceptor_type'))
-    new_waiter['success_path'] = new_waiter.get('success_path',
-                                                new_waiter.get('acceptor_path'))
-    new_waiter['success_value'] = new_waiter.get('success_value',
-                                                 new_waiter.get('acceptor_value'))
-    new_waiter['failure_type'] = new_waiter.get('failure_type',
-                                                new_waiter.get('acceptor_type'))
-    new_waiter['failure_path'] = new_waiter.get('failure_path',
-                                                new_waiter.get('acceptor_path'))
-    new_waiter['failure_value'] = new_waiter.get('failure_value',
-                                                 new_waiter.get('acceptor_value'))
+    new_waiter['success_type'] = new_waiter.get(
+        'success_type', new_waiter.get('acceptor_type'))
+    new_waiter['success_path'] = new_waiter.get(
+        'success_path', new_waiter.get('acceptor_path'))
+    new_waiter['success_value'] = new_waiter.get(
+        'success_value', new_waiter.get('acceptor_value'))
+    new_waiter['failure_type'] = new_waiter.get(
+        'failure_type', new_waiter.get('acceptor_type'))
+    new_waiter['failure_path'] = new_waiter.get(
+        'failure_path', new_waiter.get('acceptor_path'))
+    new_waiter['failure_value'] = new_waiter.get(
+        'failure_value', new_waiter.get('acceptor_value'))
     # We can remove acceptor_* vars because they're only used for lookups
     # and we've already performed this step in the lines above.
     new_waiter.pop('acceptor_type', '')
@@ -360,11 +364,11 @@ def denormalize_single_waiter(value, default, waiters):
     for required in ['operation', 'success_type']:
         if required not in new_waiter:
             raise ValueError('Missing required waiter configuration '
-                                'value "%s": %s' % (required, new_waiter))
+                             'value "%s": %s' % (required, new_waiter))
         if new_waiter.get(required) is None:
             raise ValueError('Required waiter configuration '
-                                'value cannot be None "%s": %s'
-                                % (required, new_waiter))
+                             'value cannot be None "%s": %s' %
+                             (required, new_waiter))
     # Finally, success/failure values can be a scalar or a list.  We're going
     # to just always make them a list.
     if 'success_value' in new_waiter and not \
@@ -404,6 +408,36 @@ def _check_known_pagination_keys(config):
     for key in config:
         if key not in expected:
             raise ValueError("Unknown key in pagination config: %s" % key)
+
+
+def _check_output_keys_match(config, operation):
+    output_members = list(operation['output']['members'])
+    for output_key in _get_all_page_output_keys(config):
+        if resembles_jmespath_exp(output_key):
+            # We don't validate jmespath expressions for now.
+            continue
+        if output_key not in output_members:
+            raise ValueError("Key %r is not an output member: %s" %
+                             (output_key,
+                              output_members))
+        output_members.remove(output_key)
+
+
+def _get_all_page_output_keys(config):
+    if not isinstance(config['result_key'], list):
+        yield config['result_key']
+    else:
+        for result_key in config['result_key']:
+            yield result_key
+    if not isinstance(config['output_token'], list):
+        yield config['output_token']
+    else:
+        for result_key in config['output_token']:
+            yield result_key
+    if 'more_results' in config:
+        yield config['more_results']
+    for key in config.get('non_aggregate_keys', []):
+        yield key
 
 
 def _check_input_keys_match(config, operation):

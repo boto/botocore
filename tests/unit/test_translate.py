@@ -398,7 +398,7 @@ class TestTranslateModel(unittest.TestCase):
                     'py_input_token': 'other_value',
                     'limit_key': 'MaxResults',
                     'result_key': 'Credentials',
-                    'non_aggregate_keys': ['foo'],
+                    'non_aggregate_keys': ['PackedPolicySize'],
                 }
             }
         }
@@ -414,7 +414,7 @@ class TestTranslateModel(unittest.TestCase):
                 'output_token': 'NextToken',
                 'limit_key': 'MaxResults',
                 'result_key': 'Credentials',
-                    'non_aggregate_keys': ['foo'],
+                    'non_aggregate_keys': ['PackedPolicySize'],
             })
 
     def test_paginators_are_validated(self):
@@ -464,7 +464,7 @@ class TestTranslateModel(unittest.TestCase):
             'pagination': {
                 'AssumeRole': {
                     'input_token': ['NextToken', 'TokenToken'],
-                    'output_token': ['NextToken', 'NextTokenToken'],
+                    'output_token': ['NextToken'],
                     'result_key': 'Credentials'
                 }
             }
@@ -476,7 +476,7 @@ class TestTranslateModel(unittest.TestCase):
             op['pagination'], {
                 'input_token': ['NextToken', 'TokenToken'],
                 'py_input_token': ['next_token', 'token_token'],
-                'output_token': ['NextToken', 'NextTokenToken'],
+                'output_token': ['NextToken'],
                 'result_key': 'Credentials',
             })
 
@@ -486,7 +486,7 @@ class TestTranslateModel(unittest.TestCase):
             'pagination': {
                 'AssumeRole': {
                     'input_token': ['Token', 'TokenToken'],
-                    'output_token': ['NextToken', 'NextTokenToken']
+                    'output_token': ['NextToken']
                 }
             }
         }
@@ -513,7 +513,7 @@ class TestTranslateModel(unittest.TestCase):
             'pagination': {
                 'AssumeRole': {
                     'input_token': ['NextToken'],
-                    'output_token': ['NextToken', 'NextTokenToken'],
+                    'output_token': ['NextToken'],
                     'result_key': ['Credentials', 'AssumedRoleUser'],
                 }
             }
@@ -594,7 +594,7 @@ class TestTranslateModel(unittest.TestCase):
             'pagination': {
                 'AssumeRole': {
                     'input_token': ['NextToken'],
-                    'output_token': ['NextToken', 'NextTokenToken'],
+                    'output_token': ['NextToken'],
                     'result_key': 'Credentials.AssumedRoleUser',
                 }
             }
