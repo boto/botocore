@@ -281,6 +281,42 @@ SERVICES = {
       },
       "documentation": "This operation has been deprecated."
     },
+    "EchoedOutputParams": {
+      "name": "EchoedOutputParams",
+      "input": {
+        "shape_name": "EchoedOutputParams",
+        "type": "structure",
+        "members": {
+          "Marker": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": "blah blah blah blah",
+          },
+        }
+      },
+      "documentation": "",
+      "output": {
+        "shape_name": "EchoedOutputParamsResponse",
+        "type": "structure",
+        "members": {
+          "Marker": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": "",
+          },
+          "NextMarker": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": "",
+          },
+          "ResultKey": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": "",
+          },
+        }
+      },
+    }
   }
 }
 
@@ -372,6 +408,8 @@ class TestTranslateModel(unittest.TestCase):
                     'output_token': 'NextToken',
                     'limit_key': 'MaxResults',
                     'result_key': 'Credentials',
+                    'non_aggregate_keys': ['PackedPolicySize',
+                                           'AssumedRoleUser'],
                 }
             }
         }
@@ -385,6 +423,8 @@ class TestTranslateModel(unittest.TestCase):
                 'output_token': 'NextToken',
                 'limit_key': 'MaxResults',
                 'result_key': 'Credentials',
+                'non_aggregate_keys': ['PackedPolicySize',
+                                        'AssumedRoleUser'],
             })
 
     def test_py_input_name_is_not_added_if_it_exists(self):
@@ -398,7 +438,8 @@ class TestTranslateModel(unittest.TestCase):
                     'py_input_token': 'other_value',
                     'limit_key': 'MaxResults',
                     'result_key': 'Credentials',
-                    'non_aggregate_keys': ['PackedPolicySize'],
+                    'non_aggregate_keys': ['PackedPolicySize',
+                                           'AssumedRoleUser'],
                 }
             }
         }
@@ -414,7 +455,8 @@ class TestTranslateModel(unittest.TestCase):
                 'output_token': 'NextToken',
                 'limit_key': 'MaxResults',
                 'result_key': 'Credentials',
-                    'non_aggregate_keys': ['PackedPolicySize'],
+                    'non_aggregate_keys': ['PackedPolicySize',
+                                           'AssumedRoleUser'],
             })
 
     def test_paginators_are_validated(self):
@@ -440,6 +482,8 @@ class TestTranslateModel(unittest.TestCase):
                     'input_token': 'NextToken',
                     'output_token': 'NextToken',
                     'result_key': 'Credentials',
+                    'non_aggregate_keys': ['PackedPolicySize',
+                                           'AssumedRoleUser'],
                 }
             }
         }
@@ -465,7 +509,9 @@ class TestTranslateModel(unittest.TestCase):
                 'AssumeRole': {
                     'input_token': ['NextToken', 'TokenToken'],
                     'output_token': ['NextToken'],
-                    'result_key': 'Credentials'
+                    'result_key': 'Credentials',
+                    'non_aggregate_keys': ['PackedPolicySize',
+                                           'AssumedRoleUser'],
                 }
             }
         }
@@ -478,6 +524,8 @@ class TestTranslateModel(unittest.TestCase):
                 'py_input_token': ['next_token', 'token_token'],
                 'output_token': ['NextToken'],
                 'result_key': 'Credentials',
+                'non_aggregate_keys': ['PackedPolicySize',
+                                        'AssumedRoleUser'],
             })
 
     def test_result_key_validation(self):
@@ -515,6 +563,7 @@ class TestTranslateModel(unittest.TestCase):
                     'input_token': ['NextToken'],
                     'output_token': ['NextToken'],
                     'result_key': ['Credentials', 'AssumedRoleUser'],
+                    'non_aggregate_keys': ['PackedPolicySize'],
                 }
             }
         }
@@ -622,6 +671,20 @@ class TestTranslateModel(unittest.TestCase):
                             "operation with no output members: "
                             "NoOutputOperation"):
             translate(self.model)
+
+    def test_echoed_input_params_ignored(self):
+        extra = {
+            'pagination': {
+                'EchoedOutputParams': {
+                    'input_token': ['Marker'],
+                    'output_token': ['NextMarker'],
+                    'result_key': 'ResultKey',
+                }
+            }
+        }
+        self.model.enhancements = extra
+        new_model = translate(self.model)
+        self.assertEqual(new_model['pagination'], extra['pagination'])
 
 
 class TestDictMerge(unittest.TestCase):
@@ -749,8 +812,9 @@ class TestReplacePartOfOperation(unittest.TestCase):
         # matched regex.
         self.assertEqual(list(sorted(new_model['operations'].keys())),
                          ['AssumeRole', 'DeprecatedOperation',
-                          'DeprecatedOperation2', 'NoOutputOperation',
-                          'RealOperation', 'RenameOperation'])
+                          'DeprecatedOperation2', 'EchoedOutputParams',
+                          'NoOutputOperation','RealOperation',
+                          'RenameOperation'])
         # But the name key attribute is left unchanged.
         self.assertEqual(new_model['operations']['RealOperation']['name'],
                          'RealOperation2013_02_04')
@@ -1046,10 +1110,10 @@ class TestResemblesJMESPath(unittest.TestCase):
 
     def test_is_jmespath(self):
       self.assertTrue(resembles_jmespath_exp('Something.Else'))
+      self.assertTrue(resembles_jmespath_exp('Something[1]'))
 
     def test_is_not_jmespath(self):
       self.assertFalse(resembles_jmespath_exp('Something'))
-      self.assertFalse(resembles_jmespath_exp('Something[1]'))
 
 
 if __name__ == '__main__':

@@ -202,9 +202,8 @@ def handle_rename_params(new_model, enhancements):
 
 def resembles_jmespath_exp(value):
     # For now, we'll do a naive check.
-    if '.' in value:
+    if '.' in value or '[' in value:
         return True
-
     return False
 
 
@@ -226,7 +225,8 @@ def add_pagination_configs(new_model, pagination):
         operation = new_model['operations'][name]
         _validate_operation_has_output(operation, name)
         _check_input_keys_match(config, operation)
-        _check_output_keys_match(config, operation)
+        _check_output_keys_match(config, operation,
+                                 new_model.get('endpoint_prefix', ''))
         operation['pagination'] = config.copy()
 
 
@@ -410,17 +410,38 @@ def _check_known_pagination_keys(config):
             raise ValueError("Unknown key in pagination config: %s" % key)
 
 
-def _check_output_keys_match(config, operation):
+def _check_output_keys_match(config, operation, service_name):
     output_members = list(operation['output']['members'])
+    jmespath_seen = False
     for output_key in _get_all_page_output_keys(config):
         if resembles_jmespath_exp(output_key):
             # We don't validate jmespath expressions for now.
+            jmespath_seen = True
             continue
         if output_key not in output_members:
             raise ValueError("Key %r is not an output member: %s" %
                              (output_key,
                               output_members))
         output_members.remove(output_key)
+    # Some services echo the input parameters in the response
+    # output.  We should not trigger a validation error
+    # if those params are still not accounted for.
+    for input_name in operation['input']['members']:
+        if input_name in output_members:
+            output_members.remove(input_name)
+    if not jmespath_seen and output_members:
+        # Because we can't validate jmespath expressions yet,
+        # we can't say for user if output_members actually has
+        # remaining keys or not.
+        if service_name == 's3' and output_members == ['Name']:
+            # The S3 model uses 'Name' for the output key, which
+            # actually maps to the 'Bucket' input param so we don't
+            # need to validate this output member.  This is the only
+            # model that has this, so we can just special case this
+            # for now.
+            return
+        raise ValueError("Output members still exist for operation %s: %s" % (
+            operation['name'], output_members))
 
 
 def _get_all_page_output_keys(config):
