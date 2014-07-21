@@ -23,12 +23,14 @@ from operator import itemgetter
 import functools
 import time
 
+
 from botocore.exceptions import NoCredentialsError
 from botocore.utils import normalize_url_path, percent_encode_sequence
 from botocore.utils import percent_encode
 from botocore.compat import HTTPHeaders
 from botocore.compat import quote, unquote, urlsplit, parse_qs
 from botocore.compat import urlunsplit
+from botocore.compat import encodebytes
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +121,7 @@ class SigV3Auth(BaseSigner):
         new_hmac = hmac.new(self.credentials.secret_key.encode('utf-8'),
                             digestmod=sha256)
         new_hmac.update(request.headers['Date'].encode('utf-8'))
-        encoded_signature = base64.encodestring(new_hmac.digest()).strip()
+        encoded_signature = encodebytes(new_hmac.digest()).strip()
         signature = ('AWS3-HTTPS AWSAccessKeyId=%s,Algorithm=%s,Signature=%s' %
                      (self.credentials.access_key, 'HmacSHA256',
                       encoded_signature.decode('utf-8')))
@@ -455,7 +457,7 @@ class HmacV1Auth(BaseSigner):
         new_hmac = hmac.new(self.credentials.secret_key.encode('utf-8'),
                             digestmod=sha1)
         new_hmac.update(string_to_sign.encode('utf-8'))
-        return base64.encodestring(new_hmac.digest()).strip().decode('utf-8')
+        return encodebytes(new_hmac.digest()).strip().decode('utf-8')
 
     def canonical_standard_headers(self, headers):
         interesting_headers = ['content-md5', 'content-type', 'date']
