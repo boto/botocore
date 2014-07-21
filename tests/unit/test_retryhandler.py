@@ -16,7 +16,7 @@
 from tests import unittest
 
 import mock
-from botocore.vendored.requests import ConnectionError
+from botocore.vendored.requests import ConnectionError, Timeout
 from botocore.vendored.requests.packages.urllib3.exceptions import ClosedPoolError
 
 from botocore import retryhandler
@@ -212,6 +212,15 @@ class TestCreateRetryConfiguration(unittest.TestCase):
         with self.assertRaises(ValueError):
             sleep_time = handler(response=None, attempts=1,
                                 caught_exception=ValueError())
+
+    def test_connection_timeouts_are_retried(self):
+        # If a connection times out, we get a Timout exception
+        # from requests.  We should be retrying those.
+        handler = retryhandler.create_retry_handler(
+            self.retry_config, operation_name='OperationBar')
+        sleep_time = handler(response=None, attempts=1,
+                             caught_exception=Timeout())
+        self.assertEqual(sleep_time, 1)
 
     def test_retry_pool_closed_errors(self):
         # A ClosedPoolError is retried (this is a workaround for a urllib3
