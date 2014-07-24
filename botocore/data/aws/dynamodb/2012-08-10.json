@@ -4798,6 +4798,11 @@
                 "output_token": "LastEvaluatedKey",
                 "limit_key": "Limit",
                 "result_key": "Items",
+                "non_aggregate_keys": [
+                    "Count",
+                    "ScannedCount",
+                    "ConsumedCapacity"
+                ],
                 "py_input_token": "exclusive_start_key"
             }
         },
@@ -5314,6 +5319,11 @@
                 "output_token": "LastEvaluatedKey",
                 "limit_key": "Limit",
                 "result_key": "Items",
+                "non_aggregate_keys": [
+                    "Count",
+                    "ScannedCount",
+                    "ConsumedCapacity"
+                ],
                 "py_input_token": "exclusive_start_key"
             }
         },
@@ -6500,6 +6510,11 @@
             "output_token": "LastEvaluatedKey",
             "limit_key": "Limit",
             "result_key": "Items",
+            "non_aggregate_keys": [
+                "Count",
+                "ScannedCount",
+                "ConsumedCapacity"
+            ],
             "py_input_token": "exclusive_start_key"
         },
         "Scan": {
@@ -6507,6 +6522,11 @@
             "output_token": "LastEvaluatedKey",
             "limit_key": "Limit",
             "result_key": "Items",
+            "non_aggregate_keys": [
+                "Count",
+                "ScannedCount",
+                "ConsumedCapacity"
+            ],
             "py_input_token": "exclusive_start_key"
         }
     },

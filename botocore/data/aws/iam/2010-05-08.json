@@ -2700,6 +2700,9 @@
                 "more_results": "IsTruncated",
                 "limit_key": "MaxItems",
                 "result_key": "Users",
+                "non_aggregate_keys": [
+                    "Group"
+                ],
                 "py_input_token": "marker"
             }
         },
@@ -6881,6 +6884,9 @@
             "more_results": "IsTruncated",
             "limit_key": "MaxItems",
             "result_key": "Users",
+            "non_aggregate_keys": [
+                "Group"
+            ],
             "py_input_token": "marker"
         },
         "ListAccessKeys": {

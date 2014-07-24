@@ -128,7 +128,7 @@
       ]
     },
     {
-      "uri":"https://queue.{region}.amazonaws.com.cn",
+      "uri":"https://{region}.queue.amazonaws.com.cn",
       "constraints":[
         ["region", "startsWith", "cn-"]
       ]
