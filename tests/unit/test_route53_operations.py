@@ -20,9 +20,12 @@ CREATE_HOSTED_ZONE_PAYLOAD="""<CreateHostedZoneRequest xmlns="https://route53.am
 CREATE_RRSET_PAYLOAD="""<ChangeResourceRecordSetsRequest xmlns="https://route53.amazonaws.com/doc/2013-04-01/"><ChangeBatch><Comment>Adding TXT record</Comment><Changes><Change><Action>CREATE</Action><ResourceRecordSet><Name>midocs.com</Name><Type>TXT</Type><TTL>600</TTL><ResourceRecords><ResourceRecord><Value>"v=foobar"</Value></ResourceRecord></ResourceRecords></ResourceRecordSet></Change></Changes></ChangeBatch></ChangeResourceRecordSetsRequest>"""
 DELETE_RRSET_PAYLOAD="""<ChangeResourceRecordSetsRequest xmlns="https://route53.amazonaws.com/doc/2013-04-01/"><ChangeBatch><Comment>Adding TXT record</Comment><Changes><Change><Action>DELETE</Action><ResourceRecordSet><Name>midocs.com</Name><Type>TXT</Type><TTL>600</TTL><ResourceRecords><ResourceRecord><Value>"v=foobar"</Value></ResourceRecord></ResourceRecords></ResourceRecordSet></Change></Changes></ChangeBatch></ChangeResourceRecordSetsRequest>"""
 CREATE_HEALTH_CHECK_PAYLOAD="""<CreateHealthCheckRequest xmlns="https://route53.amazonaws.com/doc/2013-04-01/"><CallerReference>foobar</CallerReference><HealthCheckConfig><IPAddress>192.168.10.0</IPAddress><Port>8888</Port><Type>HTTP</Type><ResourcePath>foo/bar</ResourcePath><FullyQualifiedDomainName>foobar.com</FullyQualifiedDomainName></HealthCheckConfig></CreateHealthCheckRequest>"""
+CHANGE_TAGS_FOR_RESOURCE_PAYLOAD = """<ChangeTagsForResourceRequest xmlns="https://route53.amazonaws.com/doc/2013-04-01/"><AddTags><Tag><Key>keyname</Key><Value>valuename</Value></Tag></AddTags></ChangeTagsForResourceRequest>"""
 
 
 class TestRoute53Operations(BaseSessionTest):
+
+    maxDiff = None
 
     def setUp(self):
         super(TestRoute53Operations, self).setUp()
@@ -38,7 +41,6 @@ class TestRoute53Operations(BaseSessionTest):
         params = op.build_parameters(name=self.hosted_zone_name,
                                      caller_reference='foobar',
                                      hosted_zone_config=hzc)
-        self.maxDiff = None
         self.assertEqual(params['payload'].getvalue(),
                          CREATE_HOSTED_ZONE_PAYLOAD)
 
@@ -54,7 +56,6 @@ class TestRoute53Operations(BaseSessionTest):
                                   {"Value":"\"v=foobar\""}]}}]}
         params = op.build_parameters(hosted_zone_id='1111',
                                      change_batch=batch)
-        self.maxDiff = None
         self.assertEqual(params['payload'].getvalue(),
                          CREATE_RRSET_PAYLOAD)
 
@@ -70,7 +71,6 @@ class TestRoute53Operations(BaseSessionTest):
                                   {"Value":"\"v=foobar\""}]}}]}
         params = op.build_parameters(hosted_zone_id='1111',
                                      change_batch=batch)
-        self.maxDiff = None
         self.assertEqual(params['payload'].getvalue(),
                          DELETE_RRSET_PAYLOAD)
 
@@ -83,6 +83,16 @@ class TestRoute53Operations(BaseSessionTest):
                      'FullyQualifiedDomainName': 'foobar.com'}
         params = op.build_parameters(caller_reference='foobar',
                                      health_check_config=hc_config)
-        self.maxDiff = None
         self.assertEqual(params['payload'].getvalue(),
                          CREATE_HEALTH_CHECK_PAYLOAD)
+
+    def test_change_tags_for_resource(self):
+        op = self.route53.get_operation('ChangeTagsForResource')
+        arguments = {
+            'ResourceType': 'healthcheck',
+            'ResourceId': 'foo',
+            'AddTags': [{'Key': 'keyname', 'Value': 'valuename'}]
+        }
+        params = op.build_parameters(**arguments)
+        self.assertEqual(params['payload'].getvalue(),
+                         CHANGE_TAGS_FOR_RESOURCE_PAYLOAD)

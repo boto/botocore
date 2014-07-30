@@ -406,7 +406,7 @@ class ListParameter(Parameter):
             return inner_xml
         else:
             if not label:
-                label = self.xmlname
+                label = self.xmlname or self.name
             return '<%s>' % label + inner_xml + '</%s>' % label
 
 
