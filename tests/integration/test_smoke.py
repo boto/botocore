@@ -39,6 +39,7 @@ SMOKE_TESTS = {
  'rds': {'DescribeDBInstances': {}},
  'redshift': {'DescribeClusters': {}},
  'route53': {'ListHostedZones': {}},
+ 'route53domains': {'ListDomains': {}},
  's3': {'ListBuckets': {}},
  'sdb': {'ListDomains': {}},
  'ses': {'ListIdentities': {}},
