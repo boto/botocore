@@ -9,7 +9,7 @@
   "timestamp_format": "unixTimestamp",
   "endpoint_prefix": "elasticmapreduce",
   "xmlnamespace": "http://elasticmapreduce.amazonaws.com/doc/2009-03-31",
-  "documentation": "\n      <p> This is the <i>Amazon Elastic MapReduce API Reference</i>. This guide provides descriptions and\n         samples of the Amazon Elastic MapReduce APIs.</p>\n\n      <p>Amazon Elastic MapReduce (Amazon EMR) is a web service that makes it easy to process large amounts of\n         data efficiently. Amazon EMR uses Hadoop processing combined with several AWS\n         products to do tasks such as web indexing, data mining, log file analysis, machine\n         learning, scientific simulation, and data warehousing.</p>\n\n   ",
+  "documentation": "\n\n      <p>Amazon Elastic MapReduce (Amazon EMR) is a web service that makes it easy to process large amounts of\n         data efficiently. Amazon EMR uses Hadoop processing combined with several AWS\n         products to do tasks such as web indexing, data mining, log file analysis, machine\n         learning, scientific simulation, and data warehousing.</p>\n\n   ",
   "operations": {
     "AddInstanceGroups": {
       "name": "AddInstanceGroups",
@@ -591,7 +591,7 @@
               "ServiceRole": {
                 "shape_name": "String",
                 "type": "string",
-                "documentation": "\n      <p>The IAM role that was specified when the job flow was launched. Amazon ElasticMapReduce will assume this role to work with AWS resources on your behalf.</p>\n   "
+                "documentation": "\n      <p>The IAM role that will be assumed by the Amazon EMR service to access AWS resources on your behalf.</p>\n   "
               }
             },
             "documentation": "\n      <p>This output contains the details for the requested cluster.</p>\n   "
@@ -1255,7 +1255,7 @@
                   "pattern": "[\\u0020-\\uD7FF\\uE000-\\uFFFD\\uD800\\uDC00-\\uDBFF\\uDFFF\\r\\n\\t]*",
                   "min_length": 0,
                   "max_length": 10280,
-                  "documentation": "\n      <p>The IAM role that was specified when the job flow was launched. Amazon ElasticMapReduce will assume this role to work with AWS resources on your behalf.</p>\n   "
+                  "documentation": "\n      <p>The IAM role that will be assumed by the Amazon EMR service to access AWS resources on your behalf.</p>\n   "
                 }
               },
               "documentation": "\n      <p> A description of a job flow.</p>\n   "
@@ -2834,7 +2834,7 @@
             "pattern": "[\\u0020-\\uD7FF\\uE000-\\uFFFD\\uD800\\uDC00-\\uDBFF\\uDFFF\\r\\n\\t]*",
             "min_length": 0,
             "max_length": 10280,
-            "documentation": "\n      <p>IAM role that Amazon ElasticMapReduce will assume to work with AWS resources on your behalf. You may set this parameter to the name of an existing IAM role.</p>\n   "
+            "documentation": "\n      <p>The IAM role that will be assumed by the Amazon EMR service to access AWS resources on your behalf.</p>\n   "
           },
           "Tags": {
             "shape_name": "TagList",
