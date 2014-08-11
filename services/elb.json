@@ -6,8 +6,91 @@
   "service_full_name": "Elastic Load Balancing",
   "endpoint_prefix": "elasticloadbalancing",
   "xmlnamespace": "http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/",
-  "documentation": "\n    \t<fullname>Elastic Load Balancing</fullname>\n        \n        <p>\n        Elastic Load Balancing is a cost-effective and easy\n        to use web service to help you improve the availability and\n        scalability of your application running on Amazon Elastic Cloud Compute (Amazon EC2). It makes it easy for\n        you to distribute application loads between two or more\n        EC2 instances. Elastic Load Balancing supports the growth in traffic of your application by enabling availability through redundancy.\n        </p>\n        \n        <p>This guide provides detailed information about Elastic Load Balancing \n            actions, data types, and parameters that can be used for sending a \n            query request. Query requests are HTTP or HTTPS requests that use the \n            HTTP verb GET or POST and a query parameter named Action or Operation. \n            Action is used throughout this documentation, although Operation is \n            supported for backward compatibility with other AWS Query APIs.</p>\n                \n        <p>For detailed information on constructing a query request using the actions, data types, and parameters mentioned in this guide,\n            go to <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/using-query-api.html\">Using the Query API</a>\n            in the <i>Elastic Load Balancing Developer Guide</i>.</p>\n                   \n        <p>For detailed information about Elastic Load Balancing features and their associated actions, go to \n            <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/UserScenarios.html\">Using Elastic Load Balancing</a>\n            in the <i>Elastic Load Balancing Developer Guide</i>.</p>\n        \n        <p>This reference guide is based on the current WSDL, which is available at:\n            <a href=\"http://ec2-downloads.s3.amazonaws.com/ElasticLoadBalancing.wsdl\"></a>   \n        </p>\n        <p><b>Endpoints</b></p>\n        <p>The examples in this guide assume that your load balancers are created in the US East (Northern Virginia) region and use us-east-1 as the endpoint.</p>\n        <p>You can create your load balancers in other AWS regions. For information about regions and endpoints supported by Elastic Load Balancing, see \n            <a href=\"http://docs.aws.amazon.com/general/latest/gr/index.html?rande.html\">Regions and Endpoints</a> \n            in the Amazon Web Services General Reference.\n        </p>\n            \n    ",
+  "documentation": "\n    \t<fullname>Elastic Load Balancing</fullname>\n        \n        <p>Elastic Load Balancing is a way to automatically distribute incoming web traffic across \n            applications that run on multiple Amazon Elastic Compute Cloud (Amazon EC2) instances. \n         </p>\n        \n        <p>You can create, access, and manage Elastic Load Balancing \n            using the AWS Management Console or the Elastic Load Balancing API. \n            For more information about Elastic Load Balancing interfaces, see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/SvcIntro_Interfaces.html\">Accessing Elastic Load Balancing</a>.</p>\n        \n        <p>This reference guide contains documentation for the Query API and the AWS command line interface commands, to manage Elastic Load Balancing. </p>\n        \n        <p>For detailed information about Elastic Load Balancing features and their associated actions or commands, go to \n            <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/UserScenarios.html\">Managing Load Balancers</a>\n            in the <i>Elastic Load Balancing Developer Guide</i>.</p>\n        \n        <p>This reference guide is based on the current WSDL, which is available at:\n            <a href=\"http://ec2-downloads.s3.amazonaws.com/ElasticLoadBalancing.wsdl\"></a>. </p>\n        <p><b>Endpoints</b></p>\n        <p>The examples in this guide assume that your load balancers are created in the US East (Northern Virginia) region and use us-east-1 as the endpoint.</p>\n        <p>You can create your load balancers in other AWS regions. For information about regions and endpoints supported by Elastic Load Balancing, see \n            <a href=\"http://docs.aws.amazon.com/general/latest/gr/index.html?rande.html\">Regions and Endpoints</a> \n            in the Amazon Web Services General Reference.\n        </p>\n            \n    ",
   "operations": {
+    "AddTags": {
+      "name": "AddTags",
+      "input": {
+        "shape_name": "AddTagsInput",
+        "type": "structure",
+        "members": {
+          "LoadBalancerNames": {
+            "shape_name": "LoadBalancerNames",
+            "type": "list",
+            "members": {
+              "shape_name": "AccessPointName",
+              "type": "string",
+              "documentation": null
+            },
+            "documentation": "\n        <p>The name of the load balancer to tag. You can specify a maximum of one load balancer name.</p>\n    ",
+            "required": true
+          },
+          "Tags": {
+            "shape_name": "TagList",
+            "type": "list",
+            "members": {
+              "shape_name": "Tag",
+              "type": "structure",
+              "members": {
+                "Key": {
+                  "shape_name": "TagKey",
+                  "type": "string",
+                  "pattern": "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$",
+                  "min_length": 1,
+                  "max_length": 128,
+                  "documentation": "\n        <p>The key of the tag.</p>       \n    ",
+                  "required": true
+                },
+                "Value": {
+                  "shape_name": "TagValue",
+                  "type": "string",
+                  "pattern": "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$",
+                  "min_length": 0,
+                  "max_length": 256,
+                  "documentation": "       \n        <p>The value of the tag.</p>\n    "
+                }
+              },
+              "documentation": "\n        <p>Metadata assigned to a load balancer consisting of key-value pair.</p>\n        <p>For more information, see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/TerminologyandKeyConcepts.html#tagging-elb\">Tagging</a>\n            in the <i>Elastic Load Balancing Developer Guide</i>.</p>\n        \n    "
+            },
+            "min_length": 1,
+            "documentation": "\n        <p>A list of tags for each load balancer.</p>\n        \n    ",
+            "required": true
+          }
+        },
+        "documentation": "\n        The input for the <a>AddTags</a> action \n    "
+      },
+      "output": {
+        "shape_name": "AddTagsOutput",
+        "type": "structure",
+        "members": {
+        },
+        "documentation": "\n        The output for the <a>AddTags</a> action. \n    "
+      },
+      "errors": [
+        {
+          "shape_name": "AccessPointNotFoundException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": "\n        <p>\n            The specified load balancer could not be found.\n        </p>\n    "
+        },
+        {
+          "shape_name": "TooManyTagsException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": "\n        <p>The quota for the number of tags that can be assigned to a load balancer has been reached.</p>\n    "
+        },
+        {
+          "shape_name": "DuplicateTagKeysException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": "\n       <p>The same tag key specified multiple times.</p> \n    "
+        }
+      ],
+      "documentation": "\n        <p>Adds one or more tags for the specified load balancer. Each load balancer can have a maximum of 10 tags. \n        Each tag consists of a key and an optional value.</p>\n        \n        <p>Tag keys must be unique for each load balancer. If a tag with the same key is already associated with the load balancer, \n        this action will update the value of the key.</p> \n        \n        <p>For more information, see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/TerminologyandKeyConcepts.html#tagging-elb\">Tagging</a>\n             in the <i>Elastic Load Balancing Developer Guide</i>.</p>\n        <examples>      \n            <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerNames.member.1=my-test-loadbalancer\n&Action=AddTags\n&Tags.member.1.Key=project\n&Tags.member.1.Value=my-test-project\n&Version=2012-06-01\n&AUTHPARAMS </queryrequest>      \n            <queryresponse><AddTagsResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n  <AddTagsResult/>\n  <ResponseMetadata>\n    <RequestId>360e81f7-1100-11e4-b6ed-0f30EXAMPLE</RequestId>\n  </ResponseMetadata>\n</AddTagsResponse>  \n </queryresponse>\n        </examples>               \n    "
+    },
     "ApplySecurityGroupsToLoadBalancer": {
       "name": "ApplySecurityGroupsToLoadBalancer",
       "input": {
@@ -415,7 +498,7 @@
           "LoadBalancerName": {
             "shape_name": "AccessPointName",
             "type": "string",
-            "documentation": "\n        <p>\n            The name associated with the load balancer.\n            The name must be unique within your set of load balancers.\n        </p>\n    ",
+            "documentation": "\n        <p>\n            The name associated with the load balancer.\n            The name must be unique within your set of load balancers, \n            must have a maximum of 32 characters, and must only contain alphanumeric characters or hyphens.\n        </p>\n    ",
             "required": true
           },
           "Listeners": {
@@ -494,7 +577,37 @@
           "Scheme": {
             "shape_name": "LoadBalancerScheme",
             "type": "string",
-            "documentation": "\n        <p>The type of a load balancer. </p>          \n        \n        <p>By default, Elastic Load Balancing creates an Internet-facing load balancer\n            with a publicly resolvable DNS name, which resolves to public IP addresses.\n            For more informationabout Internet-facing and Internal load balancers, \n            see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/vpc-loadbalancer-types.html\">Internet-facing and Internal Load Balancers</a>.</p>\n        \n        <p>Specify the value <code>internal</code> for this option to create an internal load balancer\n            with a DNS name that resolves to private IP addresses.</p>\n        <note>\n            <p>This option is only available for load balancers created within EC2-VPC.</p>\n        </note>   \n        \n    "
+            "documentation": "\n        <p>The type of a load balancer. </p>          \n        \n        <p>By default, Elastic Load Balancing creates an Internet-facing load balancer\n            with a publicly resolvable DNS name, which resolves to public IP addresses.\n            For more information about Internet-facing and Internal load balancers, \n            see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/vpc-loadbalancer-types.html\">Internet-facing and Internal Load Balancers</a>.</p>\n        \n        <p>Specify the value <code>internal</code> for this option to create an internal load balancer\n            with a DNS name that resolves to private IP addresses.</p>\n        <note>\n            <p>This option is only available for load balancers created within EC2-VPC.</p>\n        </note>        \n    "
+          },
+          "Tags": {
+            "shape_name": "TagList",
+            "type": "list",
+            "members": {
+              "shape_name": "Tag",
+              "type": "structure",
+              "members": {
+                "Key": {
+                  "shape_name": "TagKey",
+                  "type": "string",
+                  "pattern": "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$",
+                  "min_length": 1,
+                  "max_length": 128,
+                  "documentation": "\n        <p>The key of the tag.</p>       \n    ",
+                  "required": true
+                },
+                "Value": {
+                  "shape_name": "TagValue",
+                  "type": "string",
+                  "pattern": "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$",
+                  "min_length": 0,
+                  "max_length": 256,
+                  "documentation": "       \n        <p>The value of the tag.</p>\n    "
+                }
+              },
+              "documentation": "\n        <p>Metadata assigned to a load balancer consisting of key-value pair.</p>\n        <p>For more information, see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/TerminologyandKeyConcepts.html#tagging-elb\">Tagging</a>\n            in the <i>Elastic Load Balancing Developer Guide</i>.</p>\n        \n    "
+            },
+            "min_length": 1,
+            "documentation": "\n        <p>A list of tags to assign to the load balancer.</p>\n        <p>For more information about setting tags for your load balancer, see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/TerminologyandKeyConcepts.html#tagging-elb\">Tagging</a>.</p>\n    "
           }
         },
         "documentation": "\n        <p>\n            The input for the <a>CreateLoadBalancer</a> action.\n        </p>\n    "
@@ -517,7 +630,7 @@
           "type": "structure",
           "members": {
           },
-          "documentation": "\n        <p>\n            Load balancer name already exists for this account.\n            Please choose another name.\n        </p>\n    "
+          "documentation": "\n        <p>\n            The load balancer name already exists for this account.\n            Please choose another name.\n        </p>\n    "
         },
         {
           "shape_name": "TooManyAccessPointsException",
@@ -567,9 +680,23 @@
           "members": {
           },
           "documentation": "\n        <p>\n            Invalid value for scheme. Scheme can only be specified for load balancers in VPC.         \n        </p>\n    "
+        },
+        {
+          "shape_name": "TooManyTagsException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": "\n        <p>The quota for the number of tags that can be assigned to a load balancer has been reached.</p>\n    "
+        },
+        {
+          "shape_name": "DuplicateTagKeysException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": "\n       <p>The same tag key specified multiple times.</p> \n    "
         }
       ],
-      "documentation": "\n        <p>\n            Creates a new load balancer.\n        </p>\n        <p>\n            After the call has completed successfully, a new load balancer\n            is created with a unique Domain Name Service (DNS) name. The DNS \n            name includes the name of the AWS region in which the load balance \n            was created. For example, if your load balancer was created in the\n            United States, the DNS name might end with either of the following:</p>        \n        <ul>\n            <li>\n                <i>us-east-1.elb.amazonaws.com</i> (for the Northern Virginia Region)\n            </li>\n            <li>\n                <i>us-west-1.elb.amazonaws.com</i> (for the Northern California Region)\n            </li>\n        </ul>\n        <p>For information about the AWS regions supported by Elastic Load Balancing, \n            see <a href=\"http://docs.aws.amazon.com/general/latest/gr/rande.html#elb_region\">Regions and Endpoints</a>.</p>        \n        \n        <p>You can create up to 20 load balancers per region per account.</p>\n        \n        <p>Elastic Load Balancing supports load balancing your Amazon EC2 instances launched\n            within any one of the following platforms:</p>\n        <ul>\n            <li>\n                <i>EC2-Classic</i>\n                <p>For information on creating and managing your load balancers in EC2-Classic, \n                    see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/UserScenariosForEC2.html\">Deploy Elastic Load Balancing in Amazon EC2-Classic</a>.</p>\n            </li>\n            <li>\n                <i>EC2-VPC</i>\n                <p>For information on creating and managing your load balancers in EC2-VPC, \n                    see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/UserScenariosForVPC.html\">Deploy Elastic Load Balancing in Amazon VPC</a>.</p>\n            </li>\n        </ul> \n        \n        <examples> \n            <example>\n                <name>Create a TCP load balancer in EC2-Classic</name>                \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=MyLoadBalancer\n&AvailabilityZones.member.1=us-east-1c\n&Listeners.member.1.LoadBalancerPort=80\n&Listeners.member.1.InstancePort=80\n&Listeners.member.1.Protocol=http\n&Listeners.member.1.InstanceProtocol=http\n&Version=2012-06-01\n&Action=CreateLoadBalancer\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><CreateLoadBalancerResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n<CreateLoadBalancerResult>\n    <DNSName>MyLoadBalancer-1234567890.us-east-1.elb.amazonaws.com</DNSName>\n  </CreateLoadBalancerResult>\n  <ResponseMetadata>\n    <RequestId>1549581b-12b7-11e3-895e-1334aEXAMPLE</RequestId>\n  </ResponseMetadata>\n</CreateLoadBalancerResponse>\n </queryresponse>\n            </example> \n            <example>\n                <name>Create HTTPS load balancer in EC2-Classic</name>                \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=MyHTTPSLoadBalancer\n&AvailabilityZones.member.1=us-east-1c\n&Listeners.member.1.LoadBalancerPort=443\n&Listeners.member.1.InstancePort=443\n&Listeners.member.1.Protocol=https\n&Listeners.member.1.InstanceProtocol=https\n&Listeners.member.1.SSLCertificateId=arn:aws:iam::123456789012:server-certificate/servercert\n&Version=2012-06-01\n&Action=CreateLoadBalancer\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><CreateLoadBalancerResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n<CreateLoadBalancerResult>\n    <DNSName>MyHTTPSLoadBalancer-1234567890.us-east-1.elb.amazonaws.com</DNSName>\n  </CreateLoadBalancerResult>\n  <ResponseMetadata>\n    <RequestId>1549581b-12b7-11e3-895e-1334aEXAMPLE</RequestId>\n  </ResponseMetadata>\n</CreateLoadBalancerResponse>\n </queryresponse>\n            </example> \n            <example>\n                <name>Create a TCP load balancer in EC2-VPC</name>                \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?SecurityGroups.member.1=sg-6801da07\n&LoadBalancerName=MyVPCLoadBalancer\n&Listeners.member.1.LoadBalancerPort=80\n&Listeners.member.1.InstancePort=80\n&Listeners.member.1.Protocol=http\n&Listeners.member.1.InstanceProtocol=http\n&Subnets.member.1=subnet-6dec9f03\n&Version=2012-06-01\n&Action=CreateLoadBalancer\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><CreateLoadBalancerResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n<CreateLoadBalancerResult>\n    <DNSName>MyVPCLoadBalancer-1234567890.us-east-1.elb.amazonaws.com</DNSName>\n  </CreateLoadBalancerResult>\n  <ResponseMetadata>\n    <RequestId>1549581b-12b7-11e3-895e-1334aEXAMPLE</RequestId>\n  </ResponseMetadata>\n</CreateLoadBalancerResponse>\n </queryresponse>\n            </example> \n            <example>\n                <name>Create an internal TCP load balancer in EC2-VPC</name>                \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?Scheme=internal\n&SecurityGroups.member.1=sg-706cb61f\n&LoadBalancerName=MyInternalLoadBalancer\n&Listeners.member.1.LoadBalancerPort=80\n&Listeners.member.1.InstancePort=80\n&Listeners.member.1.Protocol=http\n&Listeners.member.1.InstanceProtocol=http\n&Subnets.member.1=subnet-9edc97f0\n&Version=2012-06-01\n&Action=CreateLoadBalancer\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><CreateLoadBalancerResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n<CreateLoadBalancerResult>\n    <DNSName>internal-MyInternalLoadBalancer-1234567890.us-east-1.elb.amazonaws.com</DNSName>\n  </CreateLoadBalancerResult>\n  <ResponseMetadata>\n    <RequestId>1549581b-12b7-11e3-895e-1334aEXAMPLE</RequestId>\n  </ResponseMetadata>\n</CreateLoadBalancerResponse>\n </queryresponse>\n            </example>           \n            <example>\n                <name>Create a TCP load balancer in default VPC</name>                \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=MyDefaultVPCLoadBalancer\n&AvailabilityZones.member.1=sa-east-1b\n&Listeners.member.1.LoadBalancerPort=80\n&Listeners.member.1.InstancePort=80\n&Listeners.member.1.Protocol=http\n&Listeners.member.1.InstanceProtocol=http\n&Version=2012-06-01\n&Action=CreateLoadBalancer\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><CreateLoadBalancerResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n<CreateLoadBalancerResult>\n    <DNSName>MyDefaultVPCLoadBalancer-1234567890.sa.east-1.elb.amazonaws.com</DNSName>\n  </CreateLoadBalancerResult>\n  <ResponseMetadata>\n    <RequestId>1549581b-12b7-11e3-895e-1334aEXAMPLE</RequestId>\n  </ResponseMetadata>\n</CreateLoadBalancerResponse>\n </queryresponse>\n            </example>           \n        </examples>        \n    "
+      "documentation": "\n        <p>\n            Creates a new load balancer.\n        </p>\n        <p>\n            After the call has completed successfully, a new load balancer\n            is created with a unique Domain Name Service (DNS) name. The DNS \n            name includes the name of the AWS region in which the load balance \n            was created. For example, if your load balancer was created in the\n            United States, the DNS name might end with either of the following:</p>        \n        <ul>\n            <li>\n                <i>us-east-1.elb.amazonaws.com</i> (for the Northern Virginia region)\n            </li>\n            <li>\n                <i>us-west-1.elb.amazonaws.com</i> (for the Northern California region)\n            </li>\n        </ul>\n        <p>For information about the AWS regions supported by Elastic Load Balancing, \n            see <a href=\"http://docs.aws.amazon.com/general/latest/gr/rande.html#elb_region\">Regions and Endpoints</a>.</p>        \n        \n        <p>You can create up to 20 load balancers per region per account.</p>\n        \n        <p>Elastic Load Balancing supports load balancing your Amazon EC2 instances launched\n            within any one of the following platforms:</p>\n        <ul>\n            <li>\n                <i>EC2-Classic</i>\n                <p>For information on creating and managing your load balancers in EC2-Classic, \n                    see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/UserScenariosForEC2.html\">Deploy Elastic Load Balancing in Amazon EC2-Classic</a>.</p>\n            </li>\n            <li>\n                <i>EC2-VPC</i>\n                <p>For information on creating and managing your load balancers in EC2-VPC, \n                    see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/UserScenariosForVPC.html\">Deploy Elastic Load Balancing in Amazon VPC</a>.</p>\n            </li>\n        </ul> \n        \n        <examples> \n            <example>\n                <name>Create a TCP Load Balancer in EC2-Classic</name>                \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=my-test-loadbalancer\n&AvailabilityZones.member.1=us-east-1c\n&Listeners.member.1.LoadBalancerPort=80\n&Listeners.member.1.InstancePort=80\n&Listeners.member.1.Protocol=http\n&Listeners.member.1.InstanceProtocol=http\n&Version=2012-06-01\n&Action=CreateLoadBalancer\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><CreateLoadBalancerResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n<CreateLoadBalancerResult>\n    <DNSName>my-test-loadbalancer-1234567890.us-east-1.elb.amazonaws.com</DNSName>\n  </CreateLoadBalancerResult>\n  <ResponseMetadata>\n    <RequestId>1549581b-12b7-11e3-895e-1334aEXAMPLE</RequestId>\n  </ResponseMetadata>\n</CreateLoadBalancerResponse>\n </queryresponse>\n            </example> \n            <example>\n                <name>Create an HTTPS Load Balancer in EC2-Classic</name>                \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=MyHTTPSLoadBalancer\n&AvailabilityZones.member.1=us-east-1c\n&Listeners.member.1.LoadBalancerPort=443\n&Listeners.member.1.InstancePort=443\n&Listeners.member.1.Protocol=https\n&Listeners.member.1.InstanceProtocol=https\n&Listeners.member.1.SSLCertificateId=arn:aws:iam::123456789012:server-certificate/servercert\n&Version=2012-06-01\n&Action=CreateLoadBalancer\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><CreateLoadBalancerResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n<CreateLoadBalancerResult>\n    <DNSName>MyHTTPSLoadBalancer-1234567890.us-east-1.elb.amazonaws.com</DNSName>\n  </CreateLoadBalancerResult>\n  <ResponseMetadata>\n    <RequestId>1549581b-12b7-11e3-895e-1334aEXAMPLE</RequestId>\n  </ResponseMetadata>\n</CreateLoadBalancerResponse>\n </queryresponse>\n            </example> \n            <example>\n                <name>Create a TCP Load Balancer in EC2-VPC</name>                \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?SecurityGroups.member.1=sg-6801da07\n&LoadBalancerName=MyVPCLoadBalancer\n&Listeners.member.1.LoadBalancerPort=80\n&Listeners.member.1.InstancePort=80\n&Listeners.member.1.Protocol=http\n&Listeners.member.1.InstanceProtocol=http\n&Subnets.member.1=subnet-6dec9f03\n&Version=2012-06-01\n&Action=CreateLoadBalancer\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><CreateLoadBalancerResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n<CreateLoadBalancerResult>\n    <DNSName>MyVPCLoadBalancer-1234567890.us-east-1.elb.amazonaws.com</DNSName>\n  </CreateLoadBalancerResult>\n  <ResponseMetadata>\n    <RequestId>1549581b-12b7-11e3-895e-1334aEXAMPLE</RequestId>\n  </ResponseMetadata>\n</CreateLoadBalancerResponse>\n </queryresponse>\n            </example> \n            <example>\n                <name>Create an Internal TCP Load Balancer in EC2-VPC</name>                \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?Scheme=internal\n&SecurityGroups.member.1=sg-706cb61f\n&LoadBalancerName=MyInternalLoadBalancer\n&Listeners.member.1.LoadBalancerPort=80\n&Listeners.member.1.InstancePort=80\n&Listeners.member.1.Protocol=http\n&Listeners.member.1.InstanceProtocol=http\n&Subnets.member.1=subnet-9edc97f0\n&Version=2012-06-01\n&Action=CreateLoadBalancer\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><CreateLoadBalancerResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n<CreateLoadBalancerResult>\n    <DNSName>internal-MyInternalLoadBalancer-1234567890.us-east-1.elb.amazonaws.com</DNSName>\n  </CreateLoadBalancerResult>\n  <ResponseMetadata>\n    <RequestId>1549581b-12b7-11e3-895e-1334aEXAMPLE</RequestId>\n  </ResponseMetadata>\n</CreateLoadBalancerResponse>\n </queryresponse>\n            </example>           \n            <example>\n                <name>Create a TCP Load Balancer in a Default VPC</name>                \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=MyDefaultVPCLoadBalancer\n&AvailabilityZones.member.1=sa-east-1b\n&Listeners.member.1.LoadBalancerPort=80\n&Listeners.member.1.InstancePort=80\n&Listeners.member.1.Protocol=http\n&Listeners.member.1.InstanceProtocol=http\n&Version=2012-06-01\n&Action=CreateLoadBalancer\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><CreateLoadBalancerResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n<CreateLoadBalancerResult>\n    <DNSName>MyDefaultVPCLoadBalancer-1234567890.sa.east-1.elb.amazonaws.com</DNSName>\n  </CreateLoadBalancerResult>\n  <ResponseMetadata>\n    <RequestId>1549581b-12b7-11e3-895e-1334aEXAMPLE</RequestId>\n  </ResponseMetadata>\n</CreateLoadBalancerResponse>\n </queryresponse>\n            </example> \n            <example>\n                <name>Create a TCP Load Balancer in EC2-Classic and Assign a Tag</name>                \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=my-test-loadbalancer\n&AvailabilityZones.member.1=us-east-1c\n&Listeners.member.1.LoadBalancerPort=80\n&Listeners.member.1.InstancePort=80\n&Listeners.member.1.Protocol=http\n&Listeners.member.1.InstanceProtocol=http\n&Tags.member.1.Value=test\n&Tags.member.1.Key=environment\n&Version=2012-06-01\n&Action=CreateLoadBalancer\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><CreateLoadBalancerResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n<CreateLoadBalancerResult>\n    <DNSName>my-test-loadbalancer-1234567890.us-east-1.elb.amazonaws.com</DNSName>\n  </CreateLoadBalancerResult>\n  <ResponseMetadata>\n    <RequestId>1549581b-12b7-11e3-895e-1334aEXAMPLE</RequestId>\n  </ResponseMetadata>\n</CreateLoadBalancerResponse>\n </queryresponse>\n            </example>             \n        </examples>        \n    "
     },
     "CreateLoadBalancerListeners": {
       "name": "CreateLoadBalancerListeners",
@@ -666,7 +793,7 @@
           "documentation": "\n        <p>\n        Requested configuration change is invalid.\n        </p>\n    "
         }
       ],
-      "documentation": "\n        <p>\n            Creates one or more listeners on a load balancer for the specified port. \n            If a listener with the given port does not already exist, it will be created; \n            otherwise, the properties of the new listener must match the properties \n            of the existing listener. \n        </p>\n        <p>For more information, see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/us-add-listener.html\">Add a Listener to Your Load Balancer</a> \n            in the <i>Elastic Load Balancing Developer Guide</i>.</p>\n        \n        <examples>\n            <name>Create HTTPS load balancer listener in EC2-Classic</name>                \n            <queryrequest>https://elasticloadbalancing.amazonaws.com/?Listeners.member.1.Protocol=https\n&Listeners.member.1.LoadBalancerPort=443\n&Listeners.member.1.InstancePort=443\n&Listeners.member.1.InstanceProtocol=https\n&Listeners.member.1.SSLCertificateId=arn:aws:iam::123456789012:server-certificate/servercert\n&LoadBalancerName=MyHTTPSLoadBalancer\n&Version=2012-06-01\n&Action=CreateLoadBalancerListeners\n&AUTHPARAMS </queryrequest>      \n            <queryresponse><CreateLoadBalancerListenersResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n  <CreateLoadBalancerListenersResult/>\n  <ResponseMetadata>\n    <RequestId>1549581b-12b7-11e3-895e-1334aEXAMPLE</RequestId>\n  </ResponseMetadata>\n</CreateLoadBalancerListenersResponse>\n </queryresponse>\n        </examples>         \n    "
+      "documentation": "\n        <p>\n            Creates one or more listeners on a load balancer for the specified port. \n            If a listener with the given port does not already exist, it will be created; \n            otherwise, the properties of the new listener must match the properties \n            of the existing listener. \n        </p>\n        <p>For more information, see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/us-add-listener.html\">Add a Listener to Your Load Balancer</a> \n            in the <i>Elastic Load Balancing Developer Guide</i>.</p>\n        \n        <examples>\n            <name>Create an HTTPS Load Balancer listener in EC2-Classic</name>                \n            <queryrequest>https://elasticloadbalancing.amazonaws.com/?Listeners.member.1.Protocol=https\n&Listeners.member.1.LoadBalancerPort=443\n&Listeners.member.1.InstancePort=443\n&Listeners.member.1.InstanceProtocol=https\n&Listeners.member.1.SSLCertificateId=arn:aws:iam::123456789012:server-certificate/servercert\n&LoadBalancerName=MyHTTPSLoadBalancer\n&Version=2012-06-01\n&Action=CreateLoadBalancerListeners\n&AUTHPARAMS </queryrequest>      \n            <queryresponse><CreateLoadBalancerListenersResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n  <CreateLoadBalancerListenersResult/>\n  <ResponseMetadata>\n    <RequestId>1549581b-12b7-11e3-895e-1334aEXAMPLE</RequestId>\n  </ResponseMetadata>\n</CreateLoadBalancerListenersResponse>\n </queryresponse>\n        </examples>         \n    "
     },
     "CreateLoadBalancerPolicy": {
       "name": "CreateLoadBalancerPolicy",
@@ -964,7 +1091,7 @@
           "LoadBalancerName": {
             "shape_name": "AccessPointName",
             "type": "string",
-            "documentation": "\n        <p>\n        The name of the load balancer.       \n        </p>\n    ",
+            "documentation": "\n        <p>\n            The name of the load balancer.       \n        </p>\n    ",
             "required": true
           },
           "Instances": {
@@ -982,10 +1109,10 @@
               },
               "documentation": "\n        <p>\n        The Instance data type.\n        </p>\n    "
             },
-            "documentation": "\n        <p>\n        A list of instance IDs whose states are being queried.\n        </p>\n    "
+            "documentation": "\n        <p>\n            A list of instance IDs whose states are being queried.\n        </p>\n    "
           }
         },
-        "documentation": "\n        <p>\n        The input for the <a>DescribeEndPointState</a> action.\n        </p>\n    "
+        "documentation": "\n        <p>\n            The input for the <a>DescribeEndPointState</a> action.\n        </p>\n    "
       },
       "output": {
         "shape_name": "DescribeEndPointStateOutput",
@@ -1021,10 +1148,10 @@
               },
               "documentation": "\n        <p>\n        The InstanceState data type.\n        </p>\n    "
             },
-            "documentation": "\n        <p>\n        A list containing health information\n        for the specified instances.\n        </p>\n    "
+            "documentation": "\n        <p>\n            A list containing health information\n            for the specified instances.\n        </p>\n    "
           }
         },
-        "documentation": "\n\t\t<p>\n\t\tThe output for the <a>DescribeInstanceHealth</a> action.\n\t\t</p>\n    "
+        "documentation": "\n        <p>\n            The output for the <a>DescribeInstanceHealth</a> action.\n        </p>\n    "
       },
       "errors": [
         {
@@ -1042,7 +1169,7 @@
           "documentation": "\n        <p>\n            The specified EndPoint is not valid.\n        </p>\n    "
         }
       ],
-      "documentation": "\n        <p>\n        Returns the current state of the specified instances registered with the specified load balancer.\n        If no instances are specified, the state of all the instances registered with the load balancer is returned.\n        </p>\n        <note>\n       You must provide the same account credentials\n        as those that were used to create the load balancer.\n        </note>\n        <examples>\n            <example>\n                <name>Description of a healthy (InService) instance</name>                \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=my-test-loadbalancer\n&Version=2012-06-01\n&Action=DescribeInstanceHealth\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><DescribeInstanceHealthResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n  <DescribeInstanceHealthResult>\n    <InstanceStates>\n      <member>\n        <Description>N/A</Description>\n        <InstanceId>i-90d8c2a5</InstanceId>\n        <State>InService</State>\n        <ReasonCode>N/A</ReasonCode>\n      </member>\n    </InstanceStates>\n  </DescribeInstanceHealthResult>\n  <ResponseMetadata>\n    <RequestId>1549581b-12b7-11e3-895e-1334aEXAMPLE</RequestId>\n  </ResponseMetadata>\n</DescribeInstanceHealthResponse>  \n </queryresponse>\n            </example> \n            <example>\n                <name>Description of an instance with registration in progress</name>                \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=my-test-loadbalancer\n&Version=2012-06-01\n&Action=DescribeInstanceHealth\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><DescribeInstanceHealthResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n  <DescribeInstanceHealthResult>\n    <InstanceStates>\n      <member>\n        <Description>Instance registration is still in progress.</Description>\n        <InstanceId>i-315b7e51</InstanceId>\n        <State>OutOfService</State>\n        <ReasonCode>ELB</ReasonCode>\n      </member>\n    </InstanceStates>\n  </DescribeInstanceHealthResult>\n  <ResponseMetadata>\n    <RequestId>1549581b-12b7-11e3-895e-1334aEXAMPLE</RequestId>\n  </ResponseMetadata>\n</DescribeInstanceHealthResponse>  \n </queryresponse>\n            </example> \n            <example>\n                <name>Description of an unhealthy (OutOfService) instance</name>              \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=my-test-loadbalancer\n&Version=2012-06-01\n&Action=DescribeInstanceHealth\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><DescribeInstanceHealthResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n  <DescribeInstanceHealthResult>\n    <InstanceStates>\n      <member>\n        <Description>Instance has failed at least the UnhealthyThreshold number of health checks consecutively.</Description>\n        <InstanceId>i-fda142c9</InstanceId>\n        <State>OutOfService</State>\n        <ReasonCode>Instance</ReasonCode>\n      </member>\n    </InstanceStates>\n  </DescribeInstanceHealthResult>\n  <ResponseMetadata>\n    <RequestId>83c88b9d-12b7-11e3-8b82-87b12EXAMPLE</RequestId>\n</ResponseMetadata>\n</DescribeInstanceHealthResponse>\n </queryresponse>\n            </example> \n            <example>\n                <name>Description of an instance in an unknown state</name>              \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=my-test-loadbalancer\n&Version=2012-06-01\n&Action=DescribeInstanceHealth\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><DescribeInstanceHealthResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n  <DescribeInstanceHealthResult>\n    <InstanceStates>\n      <member>\n        <Description>A transient error occurred. Please try again later.</Description>\n        <InstanceId>i-7f12e649</InstanceId>\n        <State>Unknown</State>\n        <ReasonCode>ELB</ReasonCode>\n      </member>\n    </InstanceStates>\n  </DescribeInstanceHealthResult>\n  <ResponseMetadata>\n    <RequestId>83c88b9d-12b7-11e3-8b82-87b12EXAMPLE</RequestId>\n</ResponseMetadata>\n</DescribeInstanceHealthResponse>\n </queryresponse>\n            </example>                \n        </examples>   \n    "
+      "documentation": "\n        <p>\n            Returns the current state of the specified instances registered with the specified load balancer.\n            If no instances are specified, the state of all the instances registered with the load balancer is returned.\n        </p>\n        <note>\n            You must provide the same account credentials\n            as those that were used to create the load balancer.\n        </note>\n        <examples>\n            <example>\n                <name>Description of a healthy (InService) instance</name>                \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=my-test-loadbalancer\n&Version=2012-06-01\n&Action=DescribeInstanceHealth\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><DescribeInstanceHealthResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n  <DescribeInstanceHealthResult>\n    <InstanceStates>\n      <member>\n        <Description>N/A</Description>\n        <InstanceId>i-90d8c2a5</InstanceId>\n        <State>InService</State>\n        <ReasonCode>N/A</ReasonCode>\n      </member>\n    </InstanceStates>\n  </DescribeInstanceHealthResult>\n  <ResponseMetadata>\n    <RequestId>1549581b-12b7-11e3-895e-1334aEXAMPLE</RequestId>\n  </ResponseMetadata>\n</DescribeInstanceHealthResponse>  \n </queryresponse>\n            </example> \n            <example>\n                <name>Description of an instance with registration in progress</name>                \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=my-test-loadbalancer\n&Version=2012-06-01\n&Action=DescribeInstanceHealth\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><DescribeInstanceHealthResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n  <DescribeInstanceHealthResult>\n    <InstanceStates>\n      <member>\n        <Description>Instance registration is still in progress.</Description>\n        <InstanceId>i-315b7e51</InstanceId>\n        <State>OutOfService</State>\n        <ReasonCode>ELB</ReasonCode>\n      </member>\n    </InstanceStates>\n  </DescribeInstanceHealthResult>\n  <ResponseMetadata>\n    <RequestId>1549581b-12b7-11e3-895e-1334aEXAMPLE</RequestId>\n  </ResponseMetadata>\n</DescribeInstanceHealthResponse>  \n </queryresponse>\n            </example> \n            <example>\n                <name>Description of an unhealthy (OutOfService) instance</name>              \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=my-test-loadbalancer\n&Version=2012-06-01\n&Action=DescribeInstanceHealth\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><DescribeInstanceHealthResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n  <DescribeInstanceHealthResult>\n    <InstanceStates>\n      <member>\n        <Description>Instance has failed at least the UnhealthyThreshold number of health checks consecutively.</Description>\n        <InstanceId>i-fda142c9</InstanceId>\n        <State>OutOfService</State>\n        <ReasonCode>Instance</ReasonCode>\n      </member>\n    </InstanceStates>\n  </DescribeInstanceHealthResult>\n  <ResponseMetadata>\n    <RequestId>83c88b9d-12b7-11e3-8b82-87b12EXAMPLE</RequestId>\n</ResponseMetadata>\n</DescribeInstanceHealthResponse>\n </queryresponse>\n            </example> \n            <example>\n                <name>Description of an instance in an unknown state</name>              \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=my-test-loadbalancer\n&Version=2012-06-01\n&Action=DescribeInstanceHealth\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><DescribeInstanceHealthResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n  <DescribeInstanceHealthResult>\n    <InstanceStates>\n      <member>\n        <Description>A transient error occurred. Please try again later.</Description>\n        <InstanceId>i-7f12e649</InstanceId>\n        <State>Unknown</State>\n        <ReasonCode>ELB</ReasonCode>\n      </member>\n    </InstanceStates>\n  </DescribeInstanceHealthResult>\n  <ResponseMetadata>\n    <RequestId>83c88b9d-12b7-11e3-8b82-87b12EXAMPLE</RequestId>\n</ResponseMetadata>\n</DescribeInstanceHealthResponse>\n </queryresponse>\n            </example>                \n        </examples>   \n    "
     },
     "DescribeLoadBalancerAttributes": {
       "name": "DescribeLoadBalancerAttributes",
@@ -1053,7 +1180,7 @@
           "LoadBalancerName": {
             "shape_name": "AccessPointName",
             "type": "string",
-            "documentation": "\n      <p>The name of the load balancer.</p>  \n    ",
+            "documentation": "\n        <p>The name of the load balancer.</p>  \n    ",
             "required": true
           }
         },
@@ -1106,7 +1233,7 @@
                     "documentation": "\n        <p>The logical hierarchy you created for your Amazon S3 bucket, for example <code>my-bucket-prefix/prod</code>.  \n            If the prefix is not provided, the log is placed at the root level of the bucket.</p>\n    "
                   }
                 },
-                "documentation": "\n        <p>The name of the load balancer attribute.\n        If enabled, the load balancer captures detailed information of all the requests and delivers the information to the Amazon S3 bucket you specify.</p>\n        <p>For more information, see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/enable-access-logs.html\">Enable Access Logs</a>.</p>\n    "
+                "documentation": "\n        <p>The name of the load balancer attribute.\n        If enabled, the load balancer captures detailed information of all the requests and delivers the information to the Amazon S3 bucket that you specify.</p>\n        <p>For more information, see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/enable-access-logs.html\">Enable Access Logs</a>.</p>\n    "
               },
               "ConnectionDraining": {
                 "shape_name": "ConnectionDraining",
@@ -1135,14 +1262,14 @@
                     "type": "integer",
                     "min_length": 1,
                     "max_length": 3600,
-                    "documentation": "\n       <p>Specifies the maximum time the connection is allowed to be idle (no data has been sent over the connection)\n           before it is closed by the load balancer.</p> \n    ",
+                    "documentation": "\n       <p>Specifies the time (in seconds) the connection is allowed to be idle (no data has been sent over the connection)\n           before it is closed by the load balancer.</p> \n    ",
                     "required": true
                   }
                 },
-                "documentation": "\n      <p>The name of the load balancer attribute. </p>\n        <p>By default, Elastic Load Balancing maintains a 60-second idle connection timeout for both front-end and back-end connections of your load balancer.       \n       If <code>ConnectionSettings</code> attribute is set, Elastic Load Balancing will allow the connections to \n      remain idle (no data is sent over the connection) for the specified duration.</p>  \n        <p>For more information, see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/config-idle-timeout.html\">Configure Idle Connection Timeout</a>.</p>\n    "
+                "documentation": "\n      <p>The name of the load balancer attribute. </p>\n        <p>By default, Elastic Load Balancing maintains a 60-second idle connection timeout for both front-end and back-end connections of your load balancer.       \n       If the <code>ConnectionSettings</code> attribute is set, Elastic Load Balancing will allow the connections to \n      remain idle (no data is sent over the connection) for the specified duration.</p>  \n        <p>For more information, see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/config-idle-timeout.html\">Configure Idle Connection Timeout</a>.</p>\n    "
               }
             },
-            "documentation": "\n      <p>The load balancer attributes structure.</p>  \n    "
+            "documentation": "\n        <p>The load balancer attributes structure.</p>  \n    "
           }
         },
         "documentation": "\n        <p>The following element is returned in a structure named <code>DescribeLoadBalancerAttributesResult</code>.</p>   \n    "
@@ -1163,7 +1290,7 @@
           "documentation": "\n        <p>The specified load balancer attribute could not be found.</p>  \n    "
         }
       ],
-      "documentation": "\n        <p>Returns detailed information about all of the attributes associated with the specified load balancer.</p>  \n        <examples>\n            <example>                           \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=my-test-loadbalancer\n&Version=2012-06-01\n&Action=DescribeLoadBalancerAttributes\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><DescribeLoadBalancerAttributesResponse  xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n <DescribeLoadBalancerAttributesResult>\n    <LoadBalancerAttributes>\n    <AccessLog>\n        <Enabled>true</Enabled>\n        <S3BucketName>my-loadbalancer-logs</S3BucketName>\n        <S3BucketPrefix>testprefix</S3BucketPrefix>\n        <EmitInterval>5</EmitInterval>\n      </AccessLog>\n      <ConnectionSettings>\n        <IdleTimeout>60</IdleTimeout>\n      </ConnectionSettings>\n      <CrossZoneLoadBalancing>\n        <Enabled>true</Enabled>\n      </CrossZoneLoadBalancing>\n      <ConnectionDraining>\n        <Enabled>true</Enabled>\n        <Timeout>60</Timeout>\n     </ConnectionDraining> \n    </LoadBalancerAttributes>\n  </DescribeLoadBalancerAttributesResult>\n<ResponseMetadata>\n    <RequestId>83c88b9d-12b7-11e3-8b82-87b12EXAMPLE</RequestId>\n</ResponseMetadata>\n</DescribeLoadBalancerAttributesResponse>\n </queryresponse>\n            </example>\n        </examples>             \n    "
+      "documentation": "\n        <p>Returns detailed information about all of the attributes associated with the specified load balancer.</p>  \n        <examples>\n            <example>                           \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=my-test-loadbalancer\n&Version=2012-06-01\n&Action=DescribeLoadBalancerAttributes\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><DescribeLoadBalancerAttributesResponse  xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n <DescribeLoadBalancerAttributesResult>\n    <LoadBalancerAttributes>\n    <AccessLog>\n        <Enabled>true</Enabled>\n        <S3BucketName>my-loadbalancer-logs</S3BucketName>\n        <S3BucketPrefix>testprefix</S3BucketPrefix>\n        <EmitInterval>5</EmitInterval>\n      </AccessLog>\n      <ConnectionSettings>\n        <IdleTimeout>30</IdleTimeout>\n      </ConnectionSettings>\n      <CrossZoneLoadBalancing>\n        <Enabled>true</Enabled>\n      </CrossZoneLoadBalancing>\n      <ConnectionDraining>\n        <Enabled>true</Enabled>\n        <Timeout>60</Timeout>\n     </ConnectionDraining> \n    </LoadBalancerAttributes>\n  </DescribeLoadBalancerAttributesResult>\n<ResponseMetadata>\n    <RequestId>83c88b9d-12b7-11e3-8b82-87b12EXAMPLE</RequestId>\n</ResponseMetadata>\n</DescribeLoadBalancerAttributesResponse>\n </queryresponse>\n            </example>\n        </examples>             \n    "
     },
     "DescribeLoadBalancerPolicies": {
       "name": "DescribeLoadBalancerPolicies",
@@ -1373,17 +1500,17 @@
           "Marker": {
             "shape_name": "Marker",
             "type": "string",
-            "documentation": "\n        <p>\n            An optional parameter reserved for future use.\n        </p>\n    "
+            "documentation": "\n        <p>\n            An optional parameter used for pagination of results from this call. If specified, the response includes only records beyond the marker. \n        </p>\n    "
           },
           "PageSize": {
             "shape_name": "PageSize",
             "type": "integer",
             "min_length": 1,
             "max_length": 400,
-            "documentation": "        \n        <p>\n            The size of the page returned by this call.  \n        </p>           \n    "
+            "documentation": "        \n        <p>\n            The number of results returned in each page. The default is 400. You cannot specify a page size greater than 400 or less than 1.  \n        </p>           \n    "
           }
         },
-        "documentation": "\n\t\t<p>\n\t\tThe input for the <a>DescribeLoadBalancers</a> action.\n\t\t</p>\n    "
+        "documentation": "\n        <p>\n            The input for the <a>DescribeLoadBalancers</a> action.\n        </p>\n    "
       },
       "output": {
         "shape_name": "DescribeAccessPointsOutput",
@@ -1697,10 +1824,10 @@
           "NextMarker": {
             "shape_name": "Marker",
             "type": "string",
-            "documentation": "\n        <p>\n            An optional parameter reserved for future use.\n        </p>\n    "
+            "documentation": "\n        <p>\n            Specifies the value of next marker if the request returned more than one page of results.  \n        </p>\n    "
           }
         },
-        "documentation": "\n\t\t<p>\n\t\tThe output for the <a>DescribeLoadBalancers</a> action.\n\t\t</p>\n    "
+        "documentation": "\n        <p>\n            The output for the <a>DescribeLoadBalancers</a> action.\n        </p>\n    "
       },
       "errors": [
         {
@@ -1711,7 +1838,94 @@
           "documentation": "\n        <p>\n            The specified load balancer could not be found.\n        </p>\n    "
         }
       ],
-      "documentation": "\n        <p>\n        Returns detailed configuration information for all the load balancers created for the account.\n        If you specify load balancer names, the action returns configuration information of the specified\n        load balancers. </p>\n        <note>\n            In order to retrieve this information, you must provide the same account credentials \n            that was used to create the load balancer.</note>\n        <examples>\n            <example>\n                <name>Description of a specified load balancer</name>              \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerNames.member.1=MyLoadBalancer\n&Version=2012-06-01\n&Action=DescribeLoadBalancers\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><DescribeLoadBalancersResult>\n    <LoadBalancerDescriptions>\n      <member>\n        <SecurityGroups/>\n        <LoadBalancerName>MyLoadBalancer</LoadBalancerName>\n        <CreatedTime>2013-05-24T21:15:31.280Z</CreatedTime>\n        <HealthCheck>\n          <Interval>90</Interval>\n          <Target>HTTP:80/</Target>\n          <HealthyThreshold>2</HealthyThreshold>\n          <Timeout>60</Timeout>\n          <UnhealthyThreshold>10</UnhealthyThreshold>\n        </HealthCheck>\n        <ListenerDescriptions>\n          <member>\n            <PolicyNames/>\n            <Listener>\n              <Protocol>HTTP</Protocol>\n              <LoadBalancerPort>80</LoadBalancerPort>\n              <InstanceProtocol>HTTP</InstanceProtocol>\n              <InstancePort>80</InstancePort>\n            </Listener>\n          </member>\n        </ListenerDescriptions>\n        <Instances>\n          <member>\n            <InstanceId>i-e4cbe38d</InstanceId>\n          </member>\n        </Instances>\n        <Policies>\n          <AppCookieStickinessPolicies/>\n          <OtherPolicies/>\n          <LBCookieStickinessPolicies/>\n        </Policies>\n        <AvailabilityZones>\n          <member>us-east-1a</member>\n        </AvailabilityZones>\n        <CanonicalHostedZoneNameID>ZZZZZZZZZZZ123X</CanonicalHostedZoneNameID>\n        <CanonicalHostedZoneName>MyLoadBalancer-123456789.us-east-1.elb.amazonaws.com</CanonicalHostedZoneName>\n        <Scheme>internet-facing</Scheme>\n        <SourceSecurityGroup>\n          <OwnerAlias>amazon-elb</OwnerAlias>\n          <GroupName>amazon-elb-sg</GroupName>\n        </SourceSecurityGroup>\n        <DNSName>MyLoadBalancer-123456789.us-east-1.elb.amazonaws.com</DNSName>\n        <BackendServerDescriptions/>\n        <Subnets/>\n      </member>\n    </LoadBalancerDescriptions>\n  </DescribeLoadBalancersResult>\n<ResponseMetadata>\n    <RequestId>83c88b9d-12b7-11e3-8b82-87b12EXAMPLE</RequestId>\n</ResponseMetadata>\n</ DescribeLoadBalancerPolicyTypesResponse >\t\n </queryresponse>\n            </example>\n     </examples>            \n    "
+      "documentation": "\n        <p>\n            Returns detailed configuration information for all the load balancers created for the account.\n            If you specify load balancer names, the action returns configuration information of the specified\n            load balancers. </p>\n        <note>\n            In order to retrieve this information, you must provide the same account credentials \n            that was used to create the load balancer.</note>\n        <examples>\n            <example>\n                <name>Description of a specified load balancer</name>              \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerNames.member.1=MyLoadBalancer\n&Version=2012-06-01\n&Action=DescribeLoadBalancers\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><DescribeLoadBalancersResult>\n    <LoadBalancerDescriptions>\n      <member>\n        <SecurityGroups/>\n        <LoadBalancerName>MyLoadBalancer</LoadBalancerName>\n        <CreatedTime>2013-05-24T21:15:31.280Z</CreatedTime>\n        <HealthCheck>\n          <Interval>90</Interval>\n          <Target>HTTP:80/</Target>\n          <HealthyThreshold>2</HealthyThreshold>\n          <Timeout>60</Timeout>\n          <UnhealthyThreshold>10</UnhealthyThreshold>\n        </HealthCheck>\n        <ListenerDescriptions>\n          <member>\n            <PolicyNames/>\n            <Listener>\n              <Protocol>HTTP</Protocol>\n              <LoadBalancerPort>80</LoadBalancerPort>\n              <InstanceProtocol>HTTP</InstanceProtocol>\n              <InstancePort>80</InstancePort>\n            </Listener>\n          </member>\n        </ListenerDescriptions>\n        <Instances>\n          <member>\n            <InstanceId>i-e4cbe38d</InstanceId>\n          </member>\n        </Instances>\n        <Policies>\n          <AppCookieStickinessPolicies/>\n          <OtherPolicies/>\n          <LBCookieStickinessPolicies/>\n        </Policies>\n        <AvailabilityZones>\n          <member>us-east-1a</member>\n        </AvailabilityZones>\n        <CanonicalHostedZoneNameID>ZZZZZZZZZZZ123X</CanonicalHostedZoneNameID>\n        <CanonicalHostedZoneName>MyLoadBalancer-123456789.us-east-1.elb.amazonaws.com</CanonicalHostedZoneName>\n        <Scheme>internet-facing</Scheme>\n        <SourceSecurityGroup>\n          <OwnerAlias>amazon-elb</OwnerAlias>\n          <GroupName>amazon-elb-sg</GroupName>\n        </SourceSecurityGroup>\n        <DNSName>MyLoadBalancer-123456789.us-east-1.elb.amazonaws.com</DNSName>\n        <BackendServerDescriptions/>\n        <Subnets/>\n      </member>\n    </LoadBalancerDescriptions>\n  </DescribeLoadBalancersResult>\n<ResponseMetadata>\n    <RequestId>83c88b9d-12b7-11e3-8b82-87b12EXAMPLE</RequestId>\n</ResponseMetadata>\n</ DescribeLoadBalancerPolicyTypesResponse >\t\n </queryresponse>\n            </example>\n        </examples>            \n    "
+    },
+    "DescribeTags": {
+      "name": "DescribeTags",
+      "input": {
+        "shape_name": "DescribeTagsInput",
+        "type": "structure",
+        "members": {
+          "LoadBalancerNames": {
+            "shape_name": "LoadBalancerNamesMax20",
+            "type": "list",
+            "members": {
+              "shape_name": "AccessPointName",
+              "type": "string",
+              "documentation": null
+            },
+            "min_length": 1,
+            "max_length": 20,
+            "documentation": "\n        <p>\n            The names of the load balancers.      \n        </p> \n    ",
+            "required": true
+          }
+        },
+        "documentation": "\n        <p>\n            The input for the <a>DescribeTags</a> action.\n        </p>  \n    "
+      },
+      "output": {
+        "shape_name": "DescribeTagsOutput",
+        "type": "structure",
+        "members": {
+          "TagDescriptions": {
+            "shape_name": "TagDescriptions",
+            "type": "list",
+            "members": {
+              "shape_name": "TagDescription",
+              "type": "structure",
+              "members": {
+                "LoadBalancerName": {
+                  "shape_name": "AccessPointName",
+                  "type": "string",
+                  "documentation": "\n        <p>The name of the load balancer.</p>\n    "
+                },
+                "Tags": {
+                  "shape_name": "TagList",
+                  "type": "list",
+                  "members": {
+                    "shape_name": "Tag",
+                    "type": "structure",
+                    "members": {
+                      "Key": {
+                        "shape_name": "TagKey",
+                        "type": "string",
+                        "pattern": "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$",
+                        "min_length": 1,
+                        "max_length": 128,
+                        "documentation": "\n        <p>The key of the tag.</p>       \n    ",
+                        "required": true
+                      },
+                      "Value": {
+                        "shape_name": "TagValue",
+                        "type": "string",
+                        "pattern": "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$",
+                        "min_length": 0,
+                        "max_length": 256,
+                        "documentation": "       \n        <p>The value of the tag.</p>\n    "
+                      }
+                    },
+                    "documentation": "\n        <p>Metadata assigned to a load balancer consisting of key-value pair.</p>\n        <p>For more information, see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/TerminologyandKeyConcepts.html#tagging-elb\">Tagging</a>\n            in the <i>Elastic Load Balancing Developer Guide</i>.</p>\n        \n    "
+                  },
+                  "min_length": 1,
+                  "documentation": "\n        <p>List of tags associated with the load balancer.</p>\n    "
+                }
+              },
+              "documentation": "\n        <p>The descriptions of all the tags associated with load balancer.</p>\n    "
+            },
+            "documentation": "\n        <p>\n            A list of tag description structures.\n        </p>\n    "
+          }
+        },
+        "documentation": "\n        <p>\n            The output for the <a>DescribeTags</a> action.\n        </p>  \n    "
+      },
+      "errors": [
+        {
+          "shape_name": "AccessPointNotFoundException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": "\n        <p>\n            The specified load balancer could not be found.\n        </p>\n    "
+        }
+      ],
+      "documentation": "\n        <p>Describes the tags associated with one or more load balancers.</p>\n        <examples>      \n            <queryrequest>https://elasticloadbalancing.amazonaws.com//?Action=DescribeTags\n&LoadBalancerNames.member.1=my-test-loadbalancer\n&Version=2012-06-01\n&AUTHPARAMS </queryrequest>      \n            <queryresponse><DescribeTagsResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n  <DescribeTagsResult>\n    <TagDescriptions>\n      <member>\n        <Tags>\n            <Value>my-test-project</Value>\n            <Key>project</Key>\n          </member>\n          <member>\n            <Value>test</Value>\n            <Key>environment</Key>\n          </member>\n        </Tags>\n        <LoadBalancerName>my-test-loadbalancer</LoadBalancerName>\n      </member>\n    </TagDescriptions>\n  <ResponseMetadata>\n    <RequestId>07b1ecbc-1100-11e3-acaf-dd7edEXAMPLE</RequestId>\n  </ResponseMetadata>\n</DescribeTagsResponse>\n </queryresponse>\n        </examples>   \n        \n    "
     },
     "DetachLoadBalancerFromSubnets": {
       "name": "DetachLoadBalancerFromSubnets",
@@ -1944,7 +2158,7 @@
                     "documentation": "\n        <p>The logical hierarchy you created for your Amazon S3 bucket, for example <code>my-bucket-prefix/prod</code>.  \n            If the prefix is not provided, the log is placed at the root level of the bucket.</p>\n    "
                   }
                 },
-                "documentation": "\n        <p>The name of the load balancer attribute.\n        If enabled, the load balancer captures detailed information of all the requests and delivers the information to the Amazon S3 bucket you specify.</p>\n        <p>For more information, see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/enable-access-logs.html\">Enable Access Logs</a>.</p>\n    "
+                "documentation": "\n        <p>The name of the load balancer attribute.\n        If enabled, the load balancer captures detailed information of all the requests and delivers the information to the Amazon S3 bucket that you specify.</p>\n        <p>For more information, see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/enable-access-logs.html\">Enable Access Logs</a>.</p>\n    "
               },
               "ConnectionDraining": {
                 "shape_name": "ConnectionDraining",
@@ -1973,14 +2187,14 @@
                     "type": "integer",
                     "min_length": 1,
                     "max_length": 3600,
-                    "documentation": "\n       <p>Specifies the maximum time the connection is allowed to be idle (no data has been sent over the connection)\n           before it is closed by the load balancer.</p> \n    ",
+                    "documentation": "\n       <p>Specifies the time (in seconds) the connection is allowed to be idle (no data has been sent over the connection)\n           before it is closed by the load balancer.</p> \n    ",
                     "required": true
                   }
                 },
-                "documentation": "\n      <p>The name of the load balancer attribute. </p>\n        <p>By default, Elastic Load Balancing maintains a 60-second idle connection timeout for both front-end and back-end connections of your load balancer.       \n       If <code>ConnectionSettings</code> attribute is set, Elastic Load Balancing will allow the connections to \n      remain idle (no data is sent over the connection) for the specified duration.</p>  \n        <p>For more information, see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/config-idle-timeout.html\">Configure Idle Connection Timeout</a>.</p>\n    "
+                "documentation": "\n      <p>The name of the load balancer attribute. </p>\n        <p>By default, Elastic Load Balancing maintains a 60-second idle connection timeout for both front-end and back-end connections of your load balancer.       \n       If the <code>ConnectionSettings</code> attribute is set, Elastic Load Balancing will allow the connections to \n      remain idle (no data is sent over the connection) for the specified duration.</p>  \n        <p>For more information, see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/config-idle-timeout.html\">Configure Idle Connection Timeout</a>.</p>\n    "
               }
             },
-            "documentation": "\n      <p>Attributes of the load balancer.</p>  \n    ",
+            "documentation": "\n        <p>Attributes of the load balancer.</p>  \n    ",
             "required": true
           }
         },
@@ -2038,7 +2252,7 @@
                     "documentation": "\n        <p>The logical hierarchy you created for your Amazon S3 bucket, for example <code>my-bucket-prefix/prod</code>.  \n            If the prefix is not provided, the log is placed at the root level of the bucket.</p>\n    "
                   }
                 },
-                "documentation": "\n        <p>The name of the load balancer attribute.\n        If enabled, the load balancer captures detailed information of all the requests and delivers the information to the Amazon S3 bucket you specify.</p>\n        <p>For more information, see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/enable-access-logs.html\">Enable Access Logs</a>.</p>\n    "
+                "documentation": "\n        <p>The name of the load balancer attribute.\n        If enabled, the load balancer captures detailed information of all the requests and delivers the information to the Amazon S3 bucket that you specify.</p>\n        <p>For more information, see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/enable-access-logs.html\">Enable Access Logs</a>.</p>\n    "
               },
               "ConnectionDraining": {
                 "shape_name": "ConnectionDraining",
@@ -2067,11 +2281,11 @@
                     "type": "integer",
                     "min_length": 1,
                     "max_length": 3600,
-                    "documentation": "\n       <p>Specifies the maximum time the connection is allowed to be idle (no data has been sent over the connection)\n           before it is closed by the load balancer.</p> \n    ",
+                    "documentation": "\n       <p>Specifies the time (in seconds) the connection is allowed to be idle (no data has been sent over the connection)\n           before it is closed by the load balancer.</p> \n    ",
                     "required": true
                   }
                 },
-                "documentation": "\n      <p>The name of the load balancer attribute. </p>\n        <p>By default, Elastic Load Balancing maintains a 60-second idle connection timeout for both front-end and back-end connections of your load balancer.       \n       If <code>ConnectionSettings</code> attribute is set, Elastic Load Balancing will allow the connections to \n      remain idle (no data is sent over the connection) for the specified duration.</p>  \n        <p>For more information, see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/config-idle-timeout.html\">Configure Idle Connection Timeout</a>.</p>\n    "
+                "documentation": "\n      <p>The name of the load balancer attribute. </p>\n        <p>By default, Elastic Load Balancing maintains a 60-second idle connection timeout for both front-end and back-end connections of your load balancer.       \n       If the <code>ConnectionSettings</code> attribute is set, Elastic Load Balancing will allow the connections to \n      remain idle (no data is sent over the connection) for the specified duration.</p>  \n        <p>For more information, see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/config-idle-timeout.html\">Configure Idle Connection Timeout</a>.</p>\n    "
               }
             },
             "documentation": "\n        <p>The <code>LoadBalancerAttributes</code> data type.</p>\n    "
@@ -2102,7 +2316,7 @@
           "documentation": "\n        <p>\n        Requested configuration change is invalid.\n        </p>\n    "
         }
       ],
-      "documentation": "\n        <p>Modifies the attributes of a specified load balancer.</p> \n        <p>You can modify the load balancer attributes, such as <code>AccessLogs</code>, <code>ConnectionDraining</code>, and \n            <code>CrossZoneLoadBalancing</code> by either enabling or disabling them. Or, you can modify the load balancer attribute \n            <code>ConnectionSettings</code>, by specifying an idle connection timeout value for your load balancer.</p> \n         <p>For more information, see the following:</p>   \n               \n        <ul>\n            <li><a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/TerminologyandKeyConcepts.htmll#request-routing\">Cross-Zone Load Balancing</a></li>\n            <li><a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/TerminologyandKeyConcepts.htmll##conn-drain\">Connection Draining</a></li>\n            <li>\n<a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/access-log-collection.html\">Access Logs</a>.</li> \n            <li>\n<a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/TerminologyandKeyConcepts.html#idle-timeout\">Connection Settings</a>.</li>\n        </ul>\n        \n            \n        <examples>\n            <example>\n                  <name>Enable Cross-Zone Load Balancing</name>                \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=my-test-loadbalancer\n&LoadBalancerAttributes.CrossZoneLoadBalancing.Enabled=true                    \n&Version=2012-06-01\n&Action=ModifyLoadBalancerAttributes\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><<ModifyLoadBalancerAttributesResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n<ModifyLoadBalancerAttributesResult> \n<LoadBalancerName>my-test-loadbalancer</LoadBalancerName>\n    <LoadBalancerAttributes>\n      <CrossZoneLoadBalancing>\n        <Enabled>true</Enabled>\n      </CrossZoneLoadBalancing>\n    </LoadBalancerAttributes>\n  </ModifyLoadBalancerAttributesResult>\n<ResponseMetadata>\n    <RequestId>83c88b9d-12b7-11e3-8b82-87b12EXAMPLE</RequestId>\n</ResponseMetadata>\n</ModifyLoadBalancerAttributesResponse>\n </queryresponse>\n            </example>\n            <example>\n                <name>Enable Access Log</name>\n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=my-test-loadbalancer\n&LoadBalancerAttributes.AccessLog.Enabled=true \n&LoadBalancerAttributes.AccessLog.S3BucketName=my-loadbalancer-logs\n&LoadBalancerAttributes.AccessLog.S3BucketPrefix=my-bucket-prefix/prod\n&LoadBalancerAttributes.AccessLog.EmitInterval=60\n&Version=2012-06-01\n&Action=ModifyLoadBalancerAttributes\n&AUTHPARAMS </queryrequest>\n                \n                <queryresponse><<ModifyLoadBalancerAttributesResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n<ModifyLoadBalancerAttributesResult>\n    <LoadBalancerName>my-test-loadbalancer</LoadBalancerName>\n    <LoadBalancerAttributes>\n      <AccessLog>\n        <Enabled>true</Enabled>\n        <S3BucketName>my-loadbalancer-logs</S3BucketName>\n        <S3BucketPrefix>my-bucket-prefix/prod</S3BucketPrefix>\n        <EmitInterval>60</EmitInterval>\n      </AccessLog>\n    </LoadBalancerAttributes>\n  </ModifyLoadBalancerAttributesResult> \n<ResponseMetadata>\n    <RequestId>83c88b9d-12b7-11e3-8b82-87b12EXAMPLE</RequestId>\n</ResponseMetadata>\n</ModifyLoadBalancerAttributesResponse>\n </queryresponse>\n                \n            </example>\n            <example>\n                <name>Enable Connection Draining</name>\n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=my-test-loadbalancer\n&LoadBalancerAttributes.ConnectionDraining.Enabled=true \n&LoadBalancerAttributes.ConnectionDraining.Timeout=60\n&Version=2012-06-01\n&Action=ModifyLoadBalancerAttributes\n&AUTHPARAMS </queryrequest>\n                \n                <queryresponse><<ModifyLoadBalancerAttributesResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n<ModifyLoadBalancerAttributesResult>\n    <LoadBalancerName>my-test-loadbalancer</LoadBalancerName>\n    <LoadBalancerAttributes>\n      <ConnectionDraining>\n        <Enabled>true</Enabled>\n        <Timeout>60</Timeout>        \n      </ConnectionDraining>\n    </LoadBalancerAttributes>\n  </ModifyLoadBalancerAttributesResult> \n<ResponseMetadata>\n    <RequestId>83c88b9d-12b7-11e3-8b82-87b12EXAMPLE</RequestId>\n</ResponseMetadata>\n</ModifyLoadBalancerAttributesResponse>\n </queryresponse>\n                \n            </example>\n            \n            <example>\n                <name>Configure Connection Settings</name>\n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=my-test-loadbalancer\n&LoadBalancerAttributes.ConnectionSettings.IdleTimeout=30\n&Version=2012-06-01\n&Action=ModifyLoadBalancerAttributes\n&AUTHPARAMS </queryrequest>\n                \n                <queryresponse><<ModifyLoadBalancerAttributesResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n<ModifyLoadBalancerAttributesResult>\n    <LoadBalancerName>my-test-loadbalancer</LoadBalancerName>\n    <LoadBalancerAttributes>\n       <ConnectionSettings>\n          <IdleTimeout>30</IdleTimeout>\n       </ConnectionSettings>\n    </LoadBalancerAttributes>\n  </ModifyLoadBalancerAttributesResult> \n<ResponseMetadata>\n    <RequestId>83c88b9d-12b7-11e3-8b82-87b12EXAMPLE</RequestId>\n</ResponseMetadata>\n</ModifyLoadBalancerAttributesResponse>\n </queryresponse>\n                \n            </example>\n        </examples>             \n    "
+      "documentation": "\n        <p>Modifies the attributes of a specified load balancer.</p> \n        <p>You can modify the load balancer attributes, such as <code>AccessLogs</code>, <code>ConnectionDraining</code>, and \n            <code>CrossZoneLoadBalancing</code> by either enabling or disabling them. Or, you can modify the load balancer attribute \n            <code>ConnectionSettings</code> by specifying an idle connection timeout value for your load balancer.</p> \n        <p>For more information, see the following:</p>   \n        \n        <ul>\n            <li><a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/TerminologyandKeyConcepts.html#request-routing\">Cross-Zone Load Balancing</a></li>\n            <li><a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/TerminologyandKeyConcepts.html#conn-drain\">Connection Draining</a></li>\n            <li><a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/access-log-collection.html\">Access Logs</a></li> \n            <li><a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/TerminologyandKeyConcepts.html#idle-timeout\">Idle Connection Timeout</a></li>\n        </ul>\n        \n        \n        <examples>\n            <example>\n                <name>Enable Cross-Zone Load Balancing</name>                \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=my-test-loadbalancer\n&LoadBalancerAttributes.CrossZoneLoadBalancing.Enabled=true                    \n&Version=2012-06-01\n&Action=ModifyLoadBalancerAttributes\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><<ModifyLoadBalancerAttributesResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n<ModifyLoadBalancerAttributesResult> \n<LoadBalancerName>my-test-loadbalancer</LoadBalancerName>\n    <LoadBalancerAttributes>\n      <CrossZoneLoadBalancing>\n        <Enabled>true</Enabled>\n      </CrossZoneLoadBalancing>\n    </LoadBalancerAttributes>\n  </ModifyLoadBalancerAttributesResult>\n<ResponseMetadata>\n    <RequestId>83c88b9d-12b7-11e3-8b82-87b12EXAMPLE</RequestId>\n</ResponseMetadata>\n</ModifyLoadBalancerAttributesResponse>\n </queryresponse>\n            </example>\n            <example>\n                <name>Enable Access Log</name>\n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=my-test-loadbalancer\n&LoadBalancerAttributes.AccessLog.Enabled=true \n&LoadBalancerAttributes.AccessLog.S3BucketName=my-loadbalancer-logs\n&LoadBalancerAttributes.AccessLog.S3BucketPrefix=my-bucket-prefix/prod\n&LoadBalancerAttributes.AccessLog.EmitInterval=60\n&Version=2012-06-01\n&Action=ModifyLoadBalancerAttributes\n&AUTHPARAMS </queryrequest>\n                \n                <queryresponse><<ModifyLoadBalancerAttributesResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n<ModifyLoadBalancerAttributesResult>\n    <LoadBalancerName>my-test-loadbalancer</LoadBalancerName>\n    <LoadBalancerAttributes>\n      <AccessLog>\n        <Enabled>true</Enabled>\n        <S3BucketName>my-loadbalancer-logs</S3BucketName>\n        <S3BucketPrefix>my-bucket-prefix/prod</S3BucketPrefix>\n        <EmitInterval>60</EmitInterval>\n      </AccessLog>\n    </LoadBalancerAttributes>\n  </ModifyLoadBalancerAttributesResult> \n<ResponseMetadata>\n    <RequestId>83c88b9d-12b7-11e3-8b82-87b12EXAMPLE</RequestId>\n</ResponseMetadata>\n</ModifyLoadBalancerAttributesResponse>\n </queryresponse>\n                \n            </example>\n            <example>\n                <name>Enable Connection Draining</name>\n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=my-test-loadbalancer\n&LoadBalancerAttributes.ConnectionDraining.Enabled=true \n&LoadBalancerAttributes.ConnectionDraining.Timeout=60\n&Version=2012-06-01\n&Action=ModifyLoadBalancerAttributes\n&AUTHPARAMS </queryrequest>\n                \n                <queryresponse><<ModifyLoadBalancerAttributesResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n<ModifyLoadBalancerAttributesResult>\n    <LoadBalancerName>my-test-loadbalancer</LoadBalancerName>\n    <LoadBalancerAttributes>\n      <ConnectionDraining>\n        <Enabled>true</Enabled>\n        <Timeout>60</Timeout>        \n      </ConnectionDraining>\n    </LoadBalancerAttributes>\n  </ModifyLoadBalancerAttributesResult> \n<ResponseMetadata>\n    <RequestId>83c88b9d-12b7-11e3-8b82-87b12EXAMPLE</RequestId>\n</ResponseMetadata>\n</ModifyLoadBalancerAttributesResponse>\n </queryresponse>\n                \n            </example>\n            \n            <example>\n                <name>Configure Connection Settings</name>\n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=my-test-loadbalancer\n&LoadBalancerAttributes.ConnectionSettings.IdleTimeout=30\n&Version=2012-06-01\n&Action=ModifyLoadBalancerAttributes\n&AUTHPARAMS </queryrequest>\n                \n                <queryresponse><<ModifyLoadBalancerAttributesResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n<ModifyLoadBalancerAttributesResult>\n    <LoadBalancerName>my-test-loadbalancer</LoadBalancerName>\n    <LoadBalancerAttributes>\n       <ConnectionSettings>\n          <IdleTimeout>30</IdleTimeout>\n       </ConnectionSettings>\n    </LoadBalancerAttributes>\n  </ModifyLoadBalancerAttributesResult> \n<ResponseMetadata>\n    <RequestId>83c88b9d-12b7-11e3-8b82-87b12EXAMPLE</RequestId>\n</ResponseMetadata>\n</ModifyLoadBalancerAttributesResponse>\n </queryresponse>\n                \n            </example>\n        </examples>             \n    "
     },
     "RegisterInstancesWithLoadBalancer": {
       "name": "RegisterInstancesWithLoadBalancer",
@@ -2178,6 +2392,66 @@
         }
       ],
       "documentation": "\n        <p>\n        Adds new instances to the load balancer.\n        </p>\n        <p>\n        Once the instance is registered, it starts receiving traffic\n        and requests from the load balancer. Any instance that is not\n        in any of the Availability Zones registered for the load balancer\n        will be moved to the <i>OutOfService</i> state. It will move to the\n        <i>InService</i> state when the Availability Zone is added to the load balancer.\n        </p>\n        <p>When an instance registered with a load balancer is stopped and then restarted, \n            the IP addresses associated with the instance changes. Elastic Load Balancing \n            cannot recognize the new IP address, which prevents it from routing traffic to\n            the instances. We recommend that you de-register your Amazon EC2 instances from\n            your load balancer after you stop your instance, and then register the load \n            balancer with your instance after you've restarted. To de-register your instances \n            from load balancer, use <a>DeregisterInstancesFromLoadBalancer</a> action.</p>\n        <p>For more information, see <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/US_DeReg_Reg_Instances.html\">De-register and Register Amazon EC2 Instances</a> \n            in the <i>Elastic Load Balancing Developer Guide</i>.</p>\n        <note>\n        In order for this call to be successful, you must provide the same \n        account credentials as those that were used to create the load balancer.\n        </note>\n        <note>\n        Completion of this API does not guarantee that operation has completed.\n        Rather, it means that the request has been registered and the\n        changes will happen shortly.\n        </note>\n        <p>You can use <a>DescribeLoadBalancers</a> or <a>DescribeInstanceHealth</a> action to check the state of the newly registered instances.</p>  \n        <examples>\n            <example>            \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?Instances.member.1.InstanceId=i-315b7e51\n&LoadBalancerName=my-test-loadbalancer\n&Version=2012-06-01\n&Action=RegisterInstancesWithLoadBalancer\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><RegisterInstancesWithLoadBalancerResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n  <RegisterInstancesWithLoadBalancerResult>\n    <Instances>\n      <member>\n        <InstanceId>i-315b7e51</InstanceId>\n      </member>\n    </Instances>\n  </RegisterInstancesWithLoadBalancerResult>\n<ResponseMetadata>\n    <RequestId>83c88b9d-12b7-11e3-8b82-87b12EXAMPLE</RequestId>\n</ResponseMetadata>\n</RegisterInstancesWithLoadBalancerResponse>\n </queryresponse>\n            </example>\n        </examples>  \n        \n    "
+    },
+    "RemoveTags": {
+      "name": "RemoveTags",
+      "input": {
+        "shape_name": "RemoveTagsInput",
+        "type": "structure",
+        "members": {
+          "LoadBalancerNames": {
+            "shape_name": "LoadBalancerNames",
+            "type": "list",
+            "members": {
+              "shape_name": "AccessPointName",
+              "type": "string",
+              "documentation": null
+            },
+            "documentation": "\n        <p>The name of the load balancer. You can specify a maximum of one load balancer name.</p>\n    ",
+            "required": true
+          },
+          "Tags": {
+            "shape_name": "TagKeyList",
+            "type": "list",
+            "members": {
+              "shape_name": "TagKeyOnly",
+              "type": "structure",
+              "members": {
+                "Key": {
+                  "shape_name": "TagKey",
+                  "type": "string",
+                  "pattern": "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$",
+                  "min_length": 1,
+                  "max_length": 128,
+                  "documentation": "\n        <p>The name of the key.</p>\n    "
+                }
+              },
+              "documentation": "\n      <p>The key of a tag to be removed.</p>  \n    "
+            },
+            "min_length": 1,
+            "documentation": "\n        <p>A list of tag keys to remove.</p>        \n    ",
+            "required": true
+          }
+        },
+        "documentation": "\n        <p>\n            The input for the <a>RemoveTags</a> action.\n        </p>\n    "
+      },
+      "output": {
+        "shape_name": "RemoveTagsOutput",
+        "type": "structure",
+        "members": {
+        },
+        "documentation": "\n        <p>\n            The output for the <a>RemoveTags</a> action.\n        </p>\n    "
+      },
+      "errors": [
+        {
+          "shape_name": "AccessPointNotFoundException",
+          "type": "structure",
+          "members": {
+          },
+          "documentation": "\n        <p>\n            The specified load balancer could not be found.\n        </p>\n    "
+        }
+      ],
+      "documentation": "\n        <p>Removes one or more tags from the specified load balancer.</p>\n        <examples>\n            <example>\n                <name>Remove Two Tag Keys from the Load Balancer</name>                    \n                <queryrequest>https://elasticloadbalancing.amazonaws.com/?LoadBalancerName=my-test-loadbalancer\n&Tags.member.1.Key=owner\n&Tags.member.2.Key=project\n&Action=RemoveTags\n&Version=2012-06-01\n&AUTHPARAMS </queryrequest>      \n                <queryresponse><RemoveTagsResponse xmlns=\"http://elasticloadbalancing.amazonaws.com/doc/2012-06-01/\">\n  <RemoveTagsResult/>\n<ResponseMetadata>\n    <RequestId>83c88b9d-12b7-11e3-8b82-87b12EXAMPLE</RequestId>\n</ResponseMetadata>\n</RemoveTagsResponse>\n </queryresponse>\n            </example>\n        </examples>  \n        \n    "
     },
     "SetLoadBalancerListenerSSLCertificate": {
       "name": "SetLoadBalancerListenerSSLCertificate",
@@ -2275,7 +2549,7 @@
             "required": true
           }
         },
-        "documentation": "\n    "
+        "documentation": "\n        <p>The input for the <a>SetLoadBalancerPoliciesForBackendServer</a> action.</p>\n    "
       },
       "output": {
         "shape_name": "SetLoadBalancerPoliciesForBackendServerOutput",
