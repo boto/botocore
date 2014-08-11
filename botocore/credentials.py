@@ -226,6 +226,16 @@ class CredentialProvider(object):
         """
         return True
 
+    def _extract_creds_from_mapping(self, mapping, *key_names):
+        found = []
+        for key_name in key_names:
+            try:
+                found.append(mapping[key_name])
+            except KeyError:
+                raise PartialCredentialsError(provider=self.METHOD,
+                                              cred_var=key_name)
+        return found
+
 
 class InstanceMetadataProvider(CredentialProvider):
     METHOD = 'iam-role'
@@ -302,8 +312,9 @@ class EnvProvider(CredentialProvider):
         """
         if self._mapping['access_key'] in self.environ:
             logger.info('Found credentials in environment variables.')
-            access_key = self.environ[self._mapping['access_key']]
-            secret_key = self.environ[self._mapping['secret_key']]
+            access_key, secret_key = self._extract_creds_from_mapping(
+                self.environ, self._mapping['access_key'],
+                self._mapping['secret_key'])
             token = self._get_session_token()
             return Credentials(access_key, secret_key, token,
                                method=self.METHOD)
@@ -377,8 +388,8 @@ class SharedCredentialProvider(CredentialProvider):
             if self.ACCESS_KEY in config:
                 logger.info("Found credentials in shared credentials file: %s",
                             self._creds_filename)
-                access_key = config[self.ACCESS_KEY]
-                secret_key = config[self.SECRET_KEY]
+                access_key, secret_key = self._extract_creds_from_mapping(
+                    config, self.ACCESS_KEY, self.SECRET_KEY)
                 token =  self._get_session_token(config)
                 return Credentials(access_key, secret_key, token,
                                    method=self.METHOD)
@@ -429,8 +440,8 @@ class ConfigProvider(CredentialProvider):
             if self.ACCESS_KEY in profile_config:
                 logger.info("Credentials found in config file: %s",
                             self._config_filename)
-                access_key = profile_config[self.ACCESS_KEY]
-                secret_key = profile_config[self.SECRET_KEY]
+                access_key, secret_key = self._extract_creds_from_mapping(
+                    profile_config, self.ACCESS_KEY, self.SECRET_KEY)
                 token = self._get_session_token(profile_config)
                 return Credentials(access_key, secret_key, token,
                                 method=self.METHOD)
@@ -478,8 +489,8 @@ class BotoProvider(CredentialProvider):
                 if self.ACCESS_KEY in credentials:
                     logger.info("Found credentials in boto config file: %s",
                                 filename)
-                    access_key = credentials[self.ACCESS_KEY]
-                    secret_key = credentials[self.SECRET_KEY]
+                    access_key, secret_key = self._extract_creds_from_mapping(
+                        credentials, self.ACCESS_KEY, self.SECRET_KEY)
                     return Credentials(access_key, secret_key,
                                        method=self.METHOD)
 

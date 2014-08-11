@@ -186,6 +186,18 @@ class TestEnvVar(BaseEnvVar):
         self.assertEqual(creds.secret_key, 'bar')
         self.assertEqual(creds.token, 'baz')
 
+    def test_partial_creds_is_an_error(self):
+        # If the user provides an access key, they must also
+        # provide a secret key.  Not doing so will generate an
+        # error.
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'foo',
+            # Missing the AWS_SECRET_ACCESS_KEY
+        }
+        provider = credentials.EnvProvider(environ)
+        with self.assertRaises(botocore.exceptions.PartialCredentialsError):
+            creds = provider.load()
+
 
 class TestSharedCredentialsProvider(BaseEnvVar):
     def setUp(self):
@@ -208,6 +220,19 @@ class TestSharedCredentialsProvider(BaseEnvVar):
         self.assertEqual(creds.secret_key, 'bar')
         self.assertIsNone(creds.token)
         self.assertEqual(creds.method, 'shared-credentials-file')
+
+    def test_partial_creds_raise_error(self):
+        self.ini_parser.return_value = {
+            'default': {
+                'aws_access_key_id': 'foo',
+                # Missing 'aws_secret_access_key'.
+            }
+        }
+        provider = credentials.SharedCredentialProvider(
+            creds_filename='~/.aws/creds', profile_name='default',
+            ini_parser=self.ini_parser)
+        with self.assertRaises(botocore.exceptions.PartialCredentialsError):
+            provider.load()
 
     def test_credentials_file_exists_with_session_token(self):
         self.ini_parser.return_value = {
@@ -310,6 +335,18 @@ class TestConfigFileProvider(BaseEnvVar):
         creds = provider.load()
         self.assertIsNone(creds)
 
+    def test_partial_creds_is_error(self):
+        profile_config = {
+            'aws_access_key_id': 'a',
+            # Missing aws_secret_access_key
+        }
+        parsed = {'profiles': {'default': profile_config}}
+        parser = mock.Mock()
+        parser.return_value = parsed
+        provider = credentials.ConfigProvider('cli.cfg', 'default', parser)
+        with self.assertRaises(botocore.exceptions.PartialCredentialsError):
+            provider.load()
+
 
 class TestBotoProvider(BaseEnvVar):
     def setUp(self):
@@ -368,6 +405,18 @@ class TestBotoProvider(BaseEnvVar):
         creds = provider.load()
         self.assertIsNone(creds)
 
+    def test_partial_creds_is_error(self):
+        ini_parser = mock.Mock()
+        ini_parser.return_value = {
+            'Credentials': {
+                'aws_access_key_id': 'a',
+                # Missing aws_secret_access_key.
+            }
+        }
+        provider = credentials.BotoProvider(environ={},
+                                            ini_parser=ini_parser)
+        with self.assertRaises(botocore.exceptions.PartialCredentialsError):
+            creds = provider.load()
 
 
 class TestOriginalEC2Provider(BaseEnvVar):

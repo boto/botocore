@@ -61,7 +61,7 @@ class PartialCredentialsError(BotoCoreError):
     :ivar cred_var: The missing credential variable name.
 
     """
-    fmt = 'Partial credentials found, missing: {cred_var}'
+    fmt = 'Partial credentials found in {provider}, missing: {cred_var}'
 
 
 class NoRegionError(BotoCoreError):
