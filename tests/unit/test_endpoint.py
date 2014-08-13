@@ -100,6 +100,17 @@ class TestGetEndpoint(unittest.TestCase):
                                 'https://service.region.amazonaws.com')
         self.assertIsNone(endpoint.auth)
 
+    def test_signature_version_is_none(self):
+        # If signature_version is set to None, we don't assign any auth classes
+        # to the endpoint.
+        service = self.create_mock_service('query', signature_version=None)
+        # Verify we have a signature_version attr and that it's None.  This is
+        # a different case from not having the 'signature_version' at all.
+        self.assertIsNone(service.signature_version)
+        endpoint = get_endpoint(service, 'us-west-2',
+                                'https://service.region.amazonaws.com')
+        self.assertIsNone(endpoint.auth)
+
     def test_get_endpoint_default_verify_ssl(self):
         service = self.create_mock_service('query')
         endpoint = get_endpoint(service, 'us-west-2',
