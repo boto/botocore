@@ -33,6 +33,7 @@ class TestCloudsearchOperations(BaseSessionTest):
     def test_region_not_required(self):
         stream = six.StringIO('{"fakejson": true}')
         service = self.session.get_service('cloudsearchdomain')
+        service.signature_version = None        
         operation = service.get_operation('UploadDocuments')
         built = operation.build_parameters(
             contentType='application/json', documents=stream)
