@@ -32,6 +32,7 @@ from botocore.compat import urljoin, json, quote
 logger = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 60
 
+
 class Endpoint(object):
     """
     Represents an endpoint for a particular service in a specific
@@ -268,7 +269,8 @@ def get_endpoint(service, region_name, endpoint_url, verify=None):
             service_style=service.type)
     service_name = getattr(service, 'signing_name', service.endpoint_prefix)
     auth = None
-    if hasattr(service, 'signature_version'):
+    if hasattr(service, 'signature_version') and \
+            service.signature_version is not None:
         auth = _get_auth(service.signature_version,
                          credentials=service.session.get_credentials(),
                          service_name=service_name,

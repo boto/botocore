@@ -1,7 +1,9 @@
 {
     "api_version": "2013-01-01",
     "type": "rest-json",
-    "service_full_name": "Amazon CloudSearchDomain",
+    "signature_version": "v4",
+    "signing_name": "cloudsearch",
+    "service_full_name": "Amazon CloudSearch Domain",
     "jsonVersion": "1.1",
     "endpoint_prefix": "cloudsearchdomain",
     "xmlnamespace": "http://cloudsearch.amazonaws.com/doc/2013-01-01/",
