@@ -20,7 +20,7 @@ import six
 class TestCloudsearchOperations(BaseSessionTest):
 
     def test_streaming_json_upload(self):
-        stream = six.StringIO('{"fakejson": true}')
+        stream = six.BytesIO(b'{"fakejson": true}')
         service = self.session.get_service('cloudsearchdomain')
         operation = service.get_operation('UploadDocuments')
         built = operation.build_parameters(
