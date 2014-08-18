@@ -87,22 +87,27 @@ class Paginator(object):
                             self._result_keys, self._non_aggregate_keys,
                             page_params['max_items'],
                             page_params['starting_token'],
+                            page_params['page_size'],
                             endpoint, kwargs)
 
     def _extract_paging_params(self, kwargs):
         max_items = kwargs.pop('max_items', None)
         if max_items is not None:
             max_items = int(max_items)
+        page_size = kwargs.pop('page_size', None)
+        if page_size is not None:
+            page_size = int(page_size)
         return {
             'max_items': max_items,
             'starting_token': kwargs.pop('starting_token', None),
+            'page_size': page_size,
         }
 
 
 class PageIterator(object):
     def __init__(self, operation, input_token, output_token, more_results,
                  result_keys, non_aggregate_keys, max_items, starting_token,
-                 endpoint, op_kwargs):
+                 page_size, endpoint, op_kwargs):
         self._operation = operation
         self._input_token = input_token
         self._output_token = output_token
@@ -110,6 +115,7 @@ class PageIterator(object):
         self._result_keys = result_keys
         self._max_items = max_items
         self._starting_token = starting_token
+        self._page_size = page_size
         self._endpoint = endpoint
         self._op_kwargs = op_kwargs
         self._resume_token = None
@@ -144,7 +150,7 @@ class PageIterator(object):
         first_request = True
         primary_result_key = self.result_keys[0]
         starting_truncation = 0
-        self._inject_starting_token(current_kwargs)
+        self._inject_starting_params(current_kwargs)
         while True:
             http_response, parsed = self._operation.call(endpoint,
                                                          **current_kwargs)
@@ -200,7 +206,7 @@ class PageIterator(object):
                                     result)
         self._non_aggregate_part = non_aggregate_keys
 
-    def _inject_starting_token(self, op_kwargs):
+    def _inject_starting_params(self, op_kwargs):
         # If the user has specified a starting token we need to
         # inject that into the operation's kwargs.
         if self._starting_token is not None:
@@ -208,6 +214,12 @@ class PageIterator(object):
             # token specified.
             next_token = self._parse_starting_token()[0]
             self._inject_token_into_kwargs(op_kwargs, next_token)
+        if self._page_size is not None:
+            # Determine the proper parameter name for limiting
+            # page size.
+            page_size_name = self._operation.pagination['limit_key']
+            # Pass the page size as the determined parameter name.
+            op_kwargs[page_size_name] = self._page_size
 
     def _inject_token_into_kwargs(self, op_kwargs, next_token):
         for name, token in zip(self._input_token, next_token):
