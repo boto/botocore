@@ -6,7 +6,8 @@
     "DescribeLoadBalancers": {
       "input_token": "Marker",
       "output_token": "NextMarker",
-      "result_key": "LoadBalancerDescriptions"
+      "result_key": "LoadBalancerDescriptions",
+      "limit_key": "PageSize"
     }
   }
 }
