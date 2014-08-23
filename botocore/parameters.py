@@ -399,14 +399,14 @@ class ListParameter(Parameter):
         inner_xml = ''
         for item in value:
             xmlname = self.xmlname
-            if not xmlname:
+            if self.members.xmlname:
                 xmlname = self.members.xmlname
             inner_xml += self.members.to_xml(item, xmlname)
         if self.flattened:
             return inner_xml
         else:
             if not label:
-                label = self.xmlname
+                label = self.xmlname or self.name
             return '<%s>' % label + inner_xml + '</%s>' % label
 
 
@@ -565,7 +565,7 @@ class StructParameter(Parameter):
         xml += '>'
         for member in self.members:
             if member.name in value and not hasattr(member, 'xmlattribute'):
-                xml += member.to_xml(value[member.name], member.name)
+                xml += member.to_xml(value[member.name], member.get_label())
         xml += '</%s>' % label
         return xml
 

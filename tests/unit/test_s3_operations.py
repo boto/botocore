@@ -58,6 +58,14 @@ XMLBODY9 = ('<LifecycleConfiguration><Rule><ID>archive-objects-glacier-'
             '<Status>Enabled</Status><Transition><Days>0</Days>'
             '<StorageClass>GLACIER</StorageClass></Transition></Rule>'
             '</LifecycleConfiguration>')
+PUT_OBJECT_ACL = (
+    '<AccessControlPolicy><AccessControlList>'
+    '<Grant><Grantee xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
+    'xsi:type="CanonicalUser"><DisplayName>name</DisplayName><ID>myid</ID>'
+    '</Grantee><Permission>FULL_CONTROL</Permission></Grant></AccessControlList>'
+    '<Owner><DisplayName>name</DisplayName><ID>myid</ID>'
+    '</Owner></AccessControlPolicy>')
+
 
 POLICY = ('{"Version": "2008-10-17","Statement": [{"Sid": "AddPerm",'
           '"Effect": "Allow","Principal": {"AWS": "*"},'
@@ -323,3 +331,26 @@ class TestS3Operations(BaseSessionTest):
         # Explicitly check that <Parts> is not in the payload anywhere.
         self.assertNotIn('<Parts>', xml_payload)
         self.assertNotIn('</Parts>', xml_payload)
+
+    def test_put_object_acl(self):
+        op = self.s3.get_operation('PutObjectAcl')
+        params = op.build_parameters(
+            bucket=self.bucket_name, key=self.key_name,
+            access_control_policy={
+                "Owner": {
+                    "DisplayName": "name",
+                    "ID": "myid"
+                },
+                "Grants": [
+                    {
+                        "Grantee": {
+                            "DisplayName": "name",
+                            "Type": "CanonicalUser",
+                            "ID": "myid"
+                        },
+                        "Permission": "FULL_CONTROL"
+                    }
+                ]
+        })
+        xml_payload = params['payload'].getvalue()
+        self.assertEqual(xml_payload, PUT_OBJECT_ACL)

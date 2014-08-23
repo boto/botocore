@@ -30,6 +30,7 @@ from botocore.compat import urljoin, json, quote
 
 
 logger = logging.getLogger(__name__)
+DEFAULT_TIMEOUT = 60
 
 
 class Endpoint(object):
@@ -44,7 +45,7 @@ class Endpoint(object):
     """
 
     def __init__(self, service, region_name, host, auth, proxies=None,
-                 verify=True):
+                 verify=True, timeout=DEFAULT_TIMEOUT):
         self.service = service
         self.session = self.service.session
         self.region_name = region_name
@@ -55,6 +56,7 @@ class Endpoint(object):
             proxies = {}
         self.proxies = proxies
         self.http_session = Session()
+        self.timeout = timeout
         self._lock = threading.Lock()
 
     def __repr__(self):
@@ -127,7 +129,7 @@ class Endpoint(object):
             http_response = self.http_session.send(
                 request, verify=self.verify,
                 stream=operation.is_streaming(),
-                proxies=self.proxies)
+                proxies=self.proxies, timeout=self.timeout)
         except Exception as e:
             logger.debug("Exception received when sending HTTP request.",
                          exc_info=True)
@@ -267,7 +269,8 @@ def get_endpoint(service, region_name, endpoint_url, verify=None):
             service_style=service.type)
     service_name = getattr(service, 'signing_name', service.endpoint_prefix)
     auth = None
-    if hasattr(service, 'signature_version'):
+    if hasattr(service, 'signature_version') and \
+            service.signature_version is not None:
         auth = _get_auth(service.signature_version,
                          credentials=service.session.get_credentials(),
                          service_name=service_name,

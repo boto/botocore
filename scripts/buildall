@@ -53,7 +53,10 @@ for filename in os.listdir(SERVICES_DIR):
     elif filename.endswith('.json') and filename.count('.') == 1:
         full_cmd = '%s %s' % (BUILD_MODELS, service_filename)
         print("Running command: %s" % full_cmd)
-        new_model = check_output(full_cmd, shell=True).decode('utf-8')
+        try:
+            new_model = check_output(full_cmd, shell=True).decode('utf-8')
+        except Exception:
+            continue
         final_filename = build_final_filename(service_filename)
         try:
             # Ensure the directory is there if the service is new.

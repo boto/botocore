@@ -3817,6 +3817,11 @@
                 "output_token": "NextPartNumberMarker",
                 "input_token": "PartNumberMarker",
                 "result_key": "Parts",
+                "non_aggregate_keys": [
+                    "Initiator",
+                    "Owner",
+                    "StorageClass"
+                ],
                 "py_input_token": "part_number_marker"
             }
         },
@@ -5697,6 +5702,11 @@
             "output_token": "NextPartNumberMarker",
             "input_token": "PartNumberMarker",
             "result_key": "Parts",
+            "non_aggregate_keys": [
+                "Initiator",
+                "Owner",
+                "StorageClass"
+            ],
             "py_input_token": "part_number_marker"
         }
     },

@@ -18,7 +18,7 @@ from botocore.vendored.requests import ConnectionError
 import six
 
 from botocore.endpoint import get_endpoint, QueryEndpoint, JSONEndpoint, \
-    RestEndpoint
+    RestEndpoint, DEFAULT_TIMEOUT
 from botocore.auth import SigV4Auth
 from botocore.session import Session
 from botocore.exceptions import UnknownServiceStyle
@@ -100,6 +100,17 @@ class TestGetEndpoint(unittest.TestCase):
                                 'https://service.region.amazonaws.com')
         self.assertIsNone(endpoint.auth)
 
+    def test_signature_version_is_none(self):
+        # If signature_version is set to None, we don't assign any auth classes
+        # to the endpoint.
+        service = self.create_mock_service('query', signature_version=None)
+        # Verify we have a signature_version attr and that it's None.  This is
+        # a different case from not having the 'signature_version' at all.
+        self.assertIsNone(service.signature_version)
+        endpoint = get_endpoint(service, 'us-west-2',
+                                'https://service.region.amazonaws.com')
+        self.assertIsNone(endpoint.auth)
+
     def test_get_endpoint_default_verify_ssl(self):
         service = self.create_mock_service('query')
         endpoint = get_endpoint(service, 'us-west-2',
@@ -173,9 +184,16 @@ class TestQueryEndpoint(TestEndpointBase):
         prepared_request = self.http_session.send.call_args[0][0]
         self.http_session.send.assert_called_with(
             prepared_request, verify=True, stream=False,
-            proxies={})
+            proxies={}, timeout=DEFAULT_TIMEOUT)
         self.get_response.assert_called_with(self.service.session,
             self.op, sentinel.HTTP_RETURN_VALUE)
+
+    def test_timeout_can_be_specified(self):
+        timeout_override = 120
+        self.endpoint.timeout = timeout_override
+        self.endpoint.make_request(self.op, {})
+        kwargs = self.http_session.send.call_args[1]
+        self.assertEqual(kwargs['timeout'], timeout_override)
 
     def test_make_request_with_proxies(self):
         proxies = {'http': 'http://localhost:8888'}
@@ -184,7 +202,7 @@ class TestQueryEndpoint(TestEndpointBase):
         prepared_request = self.http_session.send.call_args[0][0]
         self.http_session.send.assert_called_with(
             prepared_request, verify=True, stream=False,
-            proxies=proxies)
+            proxies=proxies, timeout=DEFAULT_TIMEOUT)
 
     def test_make_request_with_no_auth(self):
         self.endpoint.auth = None
@@ -211,7 +229,7 @@ class TestQueryEndpointAnonymousOp(TestQueryEndpoint):
         prepared_request = self.http_session.send.call_args[0][0]
         self.http_session.send.assert_called_with(
             prepared_request, verify=True, stream=False,
-            proxies={})
+            proxies={}, timeout=DEFAULT_TIMEOUT)
         self.get_response.assert_called_with(self.service.session,
             self.op, sentinel.HTTP_RETURN_VALUE)
 
@@ -226,7 +244,7 @@ class TestJSONEndpoint(TestEndpointBase):
         prepared_request = self.http_session.send.call_args[0][0]
         self.http_session.send.assert_called_with(
             prepared_request, verify=True, stream=False,
-            proxies={})
+            proxies={}, timeout=DEFAULT_TIMEOUT)
 
 
 class TestJSONEndpointAnonymousOp(TestJSONEndpoint):
@@ -242,7 +260,7 @@ class TestJSONEndpointAnonymousOp(TestJSONEndpoint):
         prepared_request = self.http_session.send.call_args[0][0]
         self.http_session.send.assert_called_with(
             prepared_request, verify=True, stream=False,
-            proxies={})
+            proxies={}, timeout=DEFAULT_TIMEOUT)
 
 
 class TestRestEndpoint(TestEndpointBase):
@@ -273,7 +291,7 @@ class TestRestEndpointAnonymousOp(TestRestEndpoint):
         prepared_request = self.http_session.send.call_args[0][0]
         self.http_session.send.assert_called_with(
             prepared_request, verify=True, stream=False,
-            proxies={})
+            proxies={}, timeout=DEFAULT_TIMEOUT)
 
 
 class TestRetryInterface(BaseSessionTest):

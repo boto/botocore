@@ -45,6 +45,19 @@ class TestEC2Pagination(unittest.TestCase):
         self.assertEqual(len(results), 3)
         self.assertTrue(results[0][1]['NextToken'] != results[1][1]['NextToken'])
 
+    def test_can_paginate_with_page_size(self):
+        # Using an operation that we know will paginate.
+        operation = self.service.get_operation('DescribeReservedInstancesOfferings')
+        generator = operation.paginate(self.endpoint, page_size=1)
+        results = list(itertools.islice(generator, 0, 3))
+        self.assertEqual(len(results), 3)
+        for result in results:
+            parsed = result[1]
+            reserved_inst_offer = parsed['ReservedInstancesOfferings']
+            # There should only be one reserved instance offering on each
+            # page.
+            self.assertEqual(len(reserved_inst_offer), 1)
+
 
 if __name__ == '__main__':
     unittest.main()

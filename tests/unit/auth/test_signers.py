@@ -228,6 +228,14 @@ class TestSigV4Presign(unittest.TestCase):
         self.assertIn(
             '?Action=MyOperation&X-Amz', request.url)
 
+    def test_presign_with_spaces_in_param(self):
+        request = AWSRequest()
+        request.url = 'https://ec2.us-east-1.amazonaws.com/'
+        request.data = {'Action': 'MyOperation', 'Description': 'With Spaces'}
+        self.auth.add_auth(request)
+        # Verify we encode spaces as '%20, and we don't use '+'.
+        self.assertIn('Description=With%20Spaces', request.url)
+
     def test_s3_sigv4_presign(self):
         auth = botocore.auth.S3SigV4QueryAuth(
             self.credentials, self.service_name, self.region_name, expires=60)

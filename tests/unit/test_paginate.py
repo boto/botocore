@@ -172,6 +172,37 @@ class TestPaginatorObjectConstruction(unittest.TestCase):
             op.paginate(None)
 
 
+class TestPaginatorPageSize(unittest.TestCase):
+    def setUp(self):
+        self.operation = mock.Mock()
+        self.paginate_config = {
+            "output_token": "Marker",
+            "py_input_token": "Marker",
+            "result_key": ["Users", "Groups"],
+            'limit_key': 'MaxKeys',
+        }
+        self.operation.pagination = self.paginate_config
+        self.paginator = Paginator(self.operation)
+        self.endpoint = mock.Mock()
+
+    def test_no_page_size(self):
+        kwargs = {'arg1': 'foo', 'arg2': 'bar'}
+        ref_kwargs = {'arg1': 'foo', 'arg2': 'bar'}
+        pages = self.paginator.paginate(self.endpoint, **kwargs)
+        pages._inject_starting_params(kwargs)
+        self.assertEqual(kwargs, ref_kwargs)
+
+    def test_page_size(self):
+        kwargs =  {'arg1': 'foo', 'arg2': 'bar', 'page_size': 5}
+        extracted_kwargs = {'arg1': 'foo', 'arg2': 'bar'}
+        # Note that ``MaxKeys`` in ``setUp()`` is the parameter used for
+        # the page size for pagination.
+        ref_kwargs = {'arg1': 'foo', 'arg2': 'bar', 'MaxKeys': 5}
+        pages = self.paginator.paginate(self.endpoint, **kwargs)
+        pages._inject_starting_params(extracted_kwargs)
+        self.assertEqual(extracted_kwargs, ref_kwargs)
+
+
 class TestPaginatorWithPathExpressions(unittest.TestCase):
     def setUp(self):
         self.operation = mock.Mock()
