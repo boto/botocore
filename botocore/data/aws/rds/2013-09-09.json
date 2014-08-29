@@ -3720,7 +3720,7 @@
                                 }
                             },
                             "documentation": "\n        <p>\n            This data type is used as a response element in the action <a>DescribeDBEngineVersions</a>.\n        </p>\n    ",
-                            "xmlname": "DBEngineVersion"
+                            "xmlname": "DBEngineVersions"
                         },
                         "documentation": "\n        <p>\n            A list of <code>DBEngineVersion</code> elements.\n        </p>\n    "
                     }
@@ -4343,7 +4343,7 @@
                             },
                             "wrapper": true,
                             "documentation": "\n        <p>\n            Contains the result of a successful invocation of the <a>CreateDBParameterGroup</a> action.\n        </p>\n        <p>\n            This data type is used as a request parameter in the <a>DeleteDBParameterGroup</a> action,\n            and as a response element in the <a>DescribeDBParameterGroups</a> action.\n        </p>\n    ",
-                            "xmlname": "DBParameterGroup"
+                            "xmlname": "DBParameterGroups"
                         },
                         "documentation": "\n        <p>\n        A list of <a>DBParameterGroup</a> instances.\n        </p>\n    "
                     }
@@ -4612,7 +4612,7 @@
                             },
                             "wrapper": true,
                             "documentation": "\n        <p>\n            Contains the result of a successful invocation of the following actions:\n        </p>\n        <ul>\n            <li><a>DescribeDBSecurityGroups</a></li>\n            <li><a>AuthorizeDBSecurityGroupIngress</a></li>\n            <li><a>CreateDBSecurityGroup</a></li>\n            <li><a>RevokeDBSecurityGroupIngress</a></li>\n        </ul>\n        <p>This data type is used as a response element in the <a>DescribeDBSecurityGroups</a> action.</p>\n        \n    ",
-                            "xmlname": "DBSecurityGroup"
+                            "xmlname": "DBSecurityGroups"
                         },
                         "documentation": "\n        <p>\n        A list of <a>DBSecurityGroup</a> instances.\n        </p>\n    "
                     }
@@ -4779,7 +4779,7 @@
                             },
                             "wrapper": true,
                             "documentation": "\n        <p>\n            Contains the result of a successful invocation of the following actions:\n        </p>\n        <ul>\n            <li><a>CreateDBSnapshot</a></li>\n            <li><a>DeleteDBSnapshot</a></li>\n        </ul>\n        <p>This data type is used as a response element in the <a>DescribeDBSnapshots</a> action.</p>\n    ",
-                            "xmlname": "DBSnapshot"
+                            "xmlname": "DBSnapshots"
                         },
                         "documentation": "\n        <p>\n        A list of <a>DBSnapshot</a> instances.\n        </p>\n    "
                     }
@@ -4907,7 +4907,7 @@
                             },
                             "wrapper": true,
                             "documentation": "\n        <p>\n            Contains the result of a successful invocation of the following actions:\n        </p>\n        <ul>\n            <li><a>CreateDBSubnetGroup</a></li>\n            <li><a>ModifyDBSubnetGroup</a></li>\n            <li><a>DescribeDBSubnetGroups</a></li>\n            <li><a>DeleteDBSubnetGroup</a></li>\n        </ul>\n        <p>This data type is used as a response element in the <a>DescribeDBSubnetGroups</a> action.</p>\n    ",
-                            "xmlname": "DBSubnetGroup"
+                            "xmlname": "DBSubnetGroups"
                         },
                         "documentation": "\n        <p>\n        A list of <a>DBSubnetGroup</a> instances.\n        </p>\n    "
                     }
@@ -5101,7 +5101,7 @@
                             },
                             "wrapper": true,
                             "documentation": " \n        <p>Contains the results of a successful invocation of the <a>DescribeEventCategories</a> action.</p>\n    ",
-                            "xmlname": "EventCategoriesMap"
+                            "xmlname": "EventCategoriesMapList"
                         },
                         "documentation": "\n        <p>A list of EventCategoriesMap data types.</p>\n    "
                     }
@@ -5351,7 +5351,7 @@
                                 }
                             },
                             "documentation": "\n        <p>\n        This data type is used as a response element in the <a>DescribeEvents</a> action.\n        </p>\n    ",
-                            "xmlname": "Event"
+                            "xmlname": "Events"
                         },
                         "documentation": "\n        <p>\n        A list of <a>Event</a> instances.\n        </p>\n    "
                     }
@@ -5752,7 +5752,7 @@
                             },
                             "wrapper": true,
                             "documentation": "\n        <p>\n        </p>\n    ",
-                            "xmlname": "OptionGroup"
+                            "xmlname": "OptionGroupsList"
                         },
                         "documentation": "\n        <p>\n            List of option groups.\n        </p>\n    "
                     },
@@ -6083,7 +6083,7 @@
                             },
                             "wrapper": true,
                             "documentation": "\n        <p>\n            This data type is used as a response element in the \n            <a>DescribeReservedDBInstances</a> and \n            <a>PurchaseReservedDBInstancesOffering</a> actions.\n        </p>\n   ",
-                            "xmlname": "ReservedDBInstance"
+                            "xmlname": "ReservedDBInstances"
                         },
                         "documentation": "\n    <p>\n    A list of reserved DB instances.\n    </p>\n   "
                     }
@@ -6244,7 +6244,7 @@
                             },
                             "wrapper": true,
                             "documentation": "\n        <p>\n            This data type is used as a response element in the <a>DescribeReservedDBInstancesOfferings</a> action.\n        </p>\n\n    ",
-                            "xmlname": "ReservedDBInstancesOffering"
+                            "xmlname": "ReservedDBInstancesOfferings"
                         },
                         "documentation": "\n    <p>\n    A list of reserved DB instance offerings.\n    </p>\n   "
                     }
