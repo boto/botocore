@@ -51,12 +51,14 @@ class BaseEventHooks(object):
     def emit(self, event_name, **kwargs):
         return []
 
-    def register(self, event_name, handler, unique_id=None):
+    def register(self, event_name, handler, unique_id=None,
+                 unique_id_uses_count=False):
         self._verify_is_callable(handler)
         self._verify_accept_kwargs(handler)
-        self._register(event_name, handler, unique_id)
+        self._register(event_name, handler, unique_id, unique_id_uses_count)
 
-    def unregister(self, event_name, handler=None, unique_id=None):
+    def unregister(self, event_name, handler=None, unique_id=None,
+                   unique_id_uses_count=False):
         pass
 
     def _verify_is_callable(self, func):
@@ -107,10 +109,12 @@ class EventHooks(BaseEventHooks):
             responses.append((handler, response))
         return responses
 
-    def _register(self, event_name, handler, unique_id=None):
+    def _register(self, event_name, handler, unique_id=None,
+                  unique_id_uses_count=False):
         self._handlers[event_name].append(handler)
 
-    def unregister(self, event_name, handler, unique_id=None):
+    def unregister(self, event_name, handler, unique_id=None,
+                   unique_id_uses_count=False):
         try:
             self._handlers[event_name].remove(handler)
         except ValueError:
@@ -149,32 +153,72 @@ class HierarchicalEmitter(BaseEventHooks):
             responses.append((handler, response))
         return responses
 
-    def _register(self, event_name, handler, unique_id=None):
+    def _register(self, event_name, handler, unique_id=None,
+                  unique_id_uses_count=False):
         if unique_id is not None:
             if unique_id in self._unique_id_cache:
                 # We've already registered a handler using this unique_id
                 # so we don't need to register it again.
+                count = self._unique_id_cache[unique_id].get('count', None)
+                if unique_id_uses_count:
+                    if not count:
+                        raise ValueError("Initial registration of"
+                            " unique id %s was specified to use a counter."
+                            " Subsequent register calls to unique id must"
+                            " specify use of a counter as well." % unique_id)
+                    else:
+                        self._unique_id_cache[unique_id]['count'] += 1
+                else:
+                    if count:
+                        raise ValueError("Initial registration of"
+                            " unique id %s was specified to not use a counter."
+                            " Subsequent register calls to unique id must"
+                            " specify not to use a counter as well." % 
+                            unique_id)
                 return
             else:
                 # Note that the trie knows nothing about the unique
                 # id.  We track uniqueness in this class via the
                 # _unique_id_cache.
                 self._handlers.append_item(event_name, handler)
-                self._unique_id_cache[unique_id] = handler
+                unique_id_cache_item = {'handler': handler}
+                if unique_id_uses_count:
+                    unique_id_cache_item['count'] = 1
+                self._unique_id_cache[unique_id] = unique_id_cache_item
         else:
             self._handlers.append_item(event_name, handler)
         # Super simple caching strategy for now, if we change the registrations
         # clear the cache.  This has the opportunity for smarter invalidations.
         self._lookup_cache = {}
 
-    def unregister(self, event_name, handler=None, unique_id=None):
+    def unregister(self, event_name, handler=None, unique_id=None,
+                   unique_id_uses_count=False):
         if unique_id is not None:
             try:
-                handler = self._unique_id_cache.pop(unique_id)
+                count = self._unique_id_cache[unique_id].get('count', None)
             except KeyError:
                 # There's no handler matching that unique_id so we have
                 # nothing to unregister.
                 return
+            if unique_id_uses_count:
+                if count == None:
+                    raise ValueError("Initial registration of"
+                        " unique id %s was specified to use a counter."
+                        " Subsequent unregister calls to unique id must"
+                        " specify use of a counter as well." % unique_id)
+                elif count == 1:
+                    handler = self._unique_id_cache.pop(unique_id)['handler']
+                else:
+                    self._unique_id_cache[unique_id]['count'] -= 1
+                    return
+            else:
+                if count:
+                    raise ValueError("Initial registration of"
+                        " unique id %s was specified to not use a counter."
+                        " Subsequent unregister calls to unique id must"
+                        " specify not to use a counter as well." % 
+                        unique_id)
+                handler = self._unique_id_cache.pop(unique_id)['handler']
         try:
             self._handlers.remove_item(event_name, handler)
             self._lookup_cache = {}
