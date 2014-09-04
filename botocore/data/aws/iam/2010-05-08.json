@@ -1049,7 +1049,7 @@
                                 "max_length": 512,
                                 "pattern": "(\\u002F)|(\\u002F[\\u0021-\\u007F]+\\u002F)",
                                 "documentation": "\n\t\t<p>Path to the user. For more information about paths, see <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html\">Identifiers for IAM Entities</a> in the <i>Using IAM</i> guide.</p>\n\t",
-                                "required": true
+                                "required": false
                             },
                             "UserName": {
                                 "shape_name": "userNameType",
@@ -1058,7 +1058,7 @@
                                 "max_length": 64,
                                 "pattern": "[\\w+=,.@-]*",
                                 "documentation": "\n\t\t<p>The name identifying the user.</p>\n\t",
-                                "required": true
+                                "required": false
                             },
                             "UserId": {
                                 "shape_name": "idType",
@@ -1194,7 +1194,7 @@
                                         "max_length": 512,
                                         "pattern": "(\\u002F)|(\\u002F[\\u0021-\\u007F]+\\u002F)",
                                         "documentation": "\n\t\t<p>Path to the user. For more information about paths, see <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html\">Identifiers for IAM Entities</a> in the <i>Using IAM</i> guide.</p>\n\t",
-                                        "required": true
+                                        "required": false
                                     },
                                     "UserName": {
                                         "shape_name": "userNameType",
@@ -1203,7 +1203,7 @@
                                         "max_length": 64,
                                         "pattern": "[\\w+=,.@-]*",
                                         "documentation": "\n\t\t<p>The name identifying the user.</p>\n\t",
-                                        "required": true
+                                        "required": false
                                     },
                                     "UserId": {
                                         "shape_name": "idType",
@@ -2629,7 +2629,7 @@
                                     "max_length": 512,
                                     "pattern": "(\\u002F)|(\\u002F[\\u0021-\\u007F]+\\u002F)",
                                     "documentation": "\n\t\t<p>Path to the user. For more information about paths, see <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html\">Identifiers for IAM Entities</a> in the <i>Using IAM</i> guide.</p>\n\t",
-                                    "required": true
+                                    "required": false
                                 },
                                 "UserName": {
                                     "shape_name": "userNameType",
@@ -2638,7 +2638,7 @@
                                     "max_length": 64,
                                     "pattern": "[\\w+=,.@-]*",
                                     "documentation": "\n\t\t<p>The name identifying the user.</p>\n\t",
-                                    "required": true
+                                    "required": false
                                 },
                                 "UserId": {
                                     "shape_name": "idType",
@@ -3405,7 +3405,7 @@
                                 "max_length": 512,
                                 "pattern": "(\\u002F)|(\\u002F[\\u0021-\\u007F]+\\u002F)",
                                 "documentation": "\n\t\t<p>Path to the user. For more information about paths, see <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html\">Identifiers for IAM Entities</a> in the <i>Using IAM</i> guide.</p>\n\t",
-                                "required": true
+                                "required": false
                             },
                             "UserName": {
                                 "shape_name": "userNameType",
@@ -3414,7 +3414,7 @@
                                 "max_length": 64,
                                 "pattern": "[\\w+=,.@-]*",
                                 "documentation": "\n\t\t<p>The name identifying the user.</p>\n\t",
-                                "required": true
+                                "required": false
                             },
                             "UserId": {
                                 "shape_name": "idType",
@@ -5207,7 +5207,7 @@
                                     "max_length": 512,
                                     "pattern": "(\\u002F)|(\\u002F[\\u0021-\\u007F]+\\u002F)",
                                     "documentation": "\n\t\t<p>Path to the user. For more information about paths, see <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html\">Identifiers for IAM Entities</a> in the <i>Using IAM</i> guide.</p>\n\t",
-                                    "required": true
+                                    "required": false
                                 },
                                 "UserName": {
                                     "shape_name": "userNameType",
@@ -5216,7 +5216,7 @@
                                     "max_length": 64,
                                     "pattern": "[\\w+=,.@-]*",
                                     "documentation": "\n\t\t<p>The name identifying the user.</p>\n\t",
-                                    "required": true
+                                    "required": false
                                 },
                                 "UserId": {
                                     "shape_name": "idType",
@@ -5351,7 +5351,7 @@
                                             "max_length": 512,
                                             "pattern": "(\\u002F)|(\\u002F[\\u0021-\\u007F]+\\u002F)",
                                             "documentation": "\n\t\t<p>Path to the user. For more information about paths, see <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html\">Identifiers for IAM Entities</a> in the <i>Using IAM</i> guide.</p>\n\t",
-                                            "required": true
+                                            "required": false
                                         },
                                         "UserName": {
                                             "shape_name": "userNameType",
@@ -5360,7 +5360,7 @@
                                             "max_length": 64,
                                             "pattern": "[\\w+=,.@-]*",
                                             "documentation": "\n\t\t<p>The name identifying the user.</p>\n\t",
-                                            "required": true
+                                            "required": false
                                         },
                                         "UserId": {
                                             "shape_name": "idType",
