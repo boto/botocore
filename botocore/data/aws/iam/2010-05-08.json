@@ -2438,7 +2438,13 @@
                                 "AccessKeysPerUserQuota",
                                 "MFADevices",
                                 "MFADevicesInUse",
-                                "AccountMFAEnabled"
+                                "AccountMFAEnabled",
+                                "AssumeRolePolicySizeQuota",
+                                "InstanceProfiles",
+                                "InstanceProfilesQuota",
+                                "RolePolicySizeQuota",
+                                "Roles",
+                                "RolesQuota"
                             ],
                             "documentation": null
                         },
