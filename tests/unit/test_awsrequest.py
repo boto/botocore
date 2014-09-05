@@ -17,6 +17,8 @@ import os
 import tempfile
 import shutil
 import io
+import socket
+import sys
 
 from mock import Mock, patch
 import six
@@ -207,6 +209,86 @@ class TestAWSHTTPConnection(unittest.TestCase):
         conn.request('GET', '/bucket/foo', b'body')
         response = conn.getresponse()
         self.assertEqual(response.status, 200)
+
+    @unittest.skipIf(sys.version_info[:2] != (2, 6),
+                     ("``_tunnel()`` function only deviates from standard "
+                      "library if py26."))
+    def test_tunnel_readline_none_bugfix(self):
+        # Tests whether ``_tunnel`` function is able to work around the
+        # py26 bug of avoiding infinite while loop if nothing is returned.
+        s = FakeSocket(b'HTTP/1.1 200 OK\r\n')
+        conn = AWSHTTPConnection('s3.amazonaws.com', 443)
+        conn.sock = s
+        # Mock some functions out that do not need to be tested.
+        conn._set_hostport = Mock()
+        conn._tunnel_headers = {'key': 'value'}
+        conn.send = Mock()
+
+        # Create a mock response
+        mock_response = Mock()
+        # A None response that causes the bug.
+        mock_response.fp = six.BytesIO()
+        mock_response._read_status.return_value = (b'HTTP/1.1', 200, b'OK')
+        conn.response_class = Mock()
+        conn.response_class.return_value = mock_response
+
+        # Test succeeds if it does not hang.
+        conn._tunnel()
+
+    @unittest.skipIf(sys.version_info[:2] != (2, 6),
+                     ("``_tunnel()`` function only deviates from standard "
+                      "library if py26."))
+    def test_tunnel_readline_normal(self):
+        # Tests that ``_tunnel`` function behaves normally when it comes
+        # across the usual http ending
+        s = FakeSocket(b'HTTP/1.1 200 OK\r\n')
+        conn = AWSHTTPConnection('s3.amazonaws.com', 443)
+        conn.sock = s
+        # Mock some functions out that do not need to be tested.
+        conn._set_hostport = Mock()
+        conn._tunnel_headers = {'key': 'value'}
+        conn.send = Mock()
+
+        # Create a mock response
+        mock_response = Mock()
+        # A usual expected response ending.
+        mock_response.fp = six.BytesIO(b'\r\n')
+        mock_response._read_status.return_value = (b'HTTP/1.1', 200, b'OK')
+        conn.response_class = Mock()
+        conn.response_class.return_value = mock_response
+
+        # Test succeeds if it does not hang.
+        conn._tunnel()
+
+    @unittest.skipIf(sys.version_info[:2] != (2, 6),
+                     ("``_tunnel()`` function only deviates from standard "
+                      "library if py26."))
+    def test_tunnel_raises_socket_error(self):
+        # Tests that ``_tunnel`` function throws appropriate error when
+        # not 200 status.
+        s = FakeSocket(b'HTTP/1.1 404 Not Found\r\n')
+        conn = AWSHTTPConnection('s3.amazonaws.com', 443)
+        conn.sock = s
+        # Mock some functions out that do not need to be tested.
+        conn._set_hostport = Mock()
+        conn._tunnel_headers = {'key': 'value'}
+        conn.send = Mock()
+        with self.assertRaises(socket.error):
+            conn._tunnel()
+
+    @unittest.skipIf(sys.version_info[:2] == (2, 6),
+                     ("``_tunnel()`` function defaults to standard "
+                      "http library function when not py26."))
+    def test_tunnel_uses_std_lib(self):
+        s = FakeSocket(b'HTTP/1.1 200 OK\r\n')
+        conn = AWSHTTPConnection('s3.amazonaws.com', 443)
+        conn.sock = s
+        # Test that the standard library method was used by patching out
+        # the ``_tunnel`` method and seeing if the std lib method was called.
+        with patch('botocore.vendored.requests.packages.urllib3.connection.'
+                   'HTTPConnection._tunnel') as mock_tunnel:
+            conn._tunnel()
+            self.assertTrue(mock_tunnel.called)
 
 
 if __name__ == "__main__":
