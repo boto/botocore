@@ -31,7 +31,8 @@ class TestS3Addressing(BaseSessionTest):
     @patch('botocore.response.get_response', Mock())
     def get_prepared_request(self, op, param):
         request = []
-        self.endpoint._send_request = lambda prepared_request, operation: \
+        self.endpoint._send_request = \
+                lambda prepared_request, operation, params, signer: \
                 request.append(prepared_request)
         self.endpoint.make_request(op, param)
         return request[0]
