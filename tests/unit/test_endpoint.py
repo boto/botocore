@@ -354,6 +354,15 @@ class TestRetryInterface(BaseSessionTest):
         self.endpoint.make_request(op, {})
         self.assertEqual(self.total_calls, 3)
 
+    def test_retry_events_recreate_requests(self):
+        self.session.register('needs-retry.ec2.DescribeInstances',
+                              self.max_attempts_retry_handler)
+        op = Mock()
+        op.name = 'DescribeInstances'
+        self.endpoint.make_request(op, {})
+        self.assertEqual(self.total_calls, 3)
+        self.assertEqual(self.auth.add_auth.call_count, 3)
+
 
 class TestS3Retry200SpecialCases(unittest.TestCase):
     def setUp(self):
