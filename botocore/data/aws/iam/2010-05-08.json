@@ -448,7 +448,7 @@
                                 "shape_name": "dateType",
                                 "type": "timestamp",
                                 "documentation": "\n\t\t<p>The date when the group was created.</p>\n\t",
-                                "required": true
+                                "required": false
                             }
                         },
                         "documentation": "\n\t\t<p>Information about the group.</p>\n\t",
@@ -2609,7 +2609,7 @@
                                 "shape_name": "dateType",
                                 "type": "timestamp",
                                 "documentation": "\n\t\t<p>The date when the group was created.</p>\n\t",
-                                "required": true
+                                "required": false
                             }
                         },
                         "documentation": "\n\t\t<p>Information about the group.</p>\n\t",
@@ -3900,7 +3900,7 @@
                                     "shape_name": "dateType",
                                     "type": "timestamp",
                                     "documentation": "\n\t\t<p>The date when the group was created.</p>\n\t",
-                                    "required": true
+                                    "required": false
                                 }
                             },
                             "documentation": "\n\t\t<p>The Group data type contains information about a group.</p>\n\t\t<p> This data type is used as a response element in the following actions:</p>\n\t\t<ul>\n\t\t\t<li><a>CreateGroup</a></li>\n\t\t\t<li><a>GetGroup</a></li>\n\t\t\t<li><a>ListGroups</a></li>\n\t\t</ul>\n\t"
@@ -4018,7 +4018,7 @@
                                     "shape_name": "dateType",
                                     "type": "timestamp",
                                     "documentation": "\n\t\t<p>The date when the group was created.</p>\n\t",
-                                    "required": true
+                                    "required": false
                                 }
                             },
                             "documentation": "\n\t\t<p>The Group data type contains information about a group.</p>\n\t\t<p> This data type is used as a response element in the following actions:</p>\n\t\t<ul>\n\t\t\t<li><a>CreateGroup</a></li>\n\t\t\t<li><a>GetGroup</a></li>\n\t\t\t<li><a>ListGroups</a></li>\n\t\t</ul>\n\t"
