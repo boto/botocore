@@ -142,6 +142,43 @@ class TestAWSRequest(unittest.TestCase):
 
 
 class TestAWSHTTPConnection(unittest.TestCase):
+    def create_tunneled_connection(self, url, port, response):
+        s = FakeSocket(response)
+        conn = AWSHTTPConnection(url, port)
+        conn.sock = s
+        conn._tunnel_host = url
+        conn._tunnel_port = port
+        conn._tunnel_headers = {'key': 'value'}
+
+        # Create a mock response.
+        self.mock_response = Mock()
+        self.mock_response.fp = Mock()
+
+        # Imitate readline function by creating a list to be sent as
+        # a side effect of the mocked readline to be able to track how the
+        # response is processed in ``_tunnel()``.
+        delimeter = b'\r\n'
+        side_effect = []
+        response_components = response.split(delimeter)
+        for i in range(len(response_components)):
+            new_component = response_components[i]
+            # Only add the delimeter on if it is not the last component
+            # which should be an empty string.
+            if i != len(response_components) - 1:
+                new_component += delimeter
+            side_effect.append(new_component)
+
+        self.mock_response.fp.readline.side_effect = side_effect
+
+        response_components = response.split(b' ')
+        self.mock_response._read_status.return_value = (
+            response_components[0], int(response_components[1]),
+            response_components[2]
+        )
+        conn.response_class = Mock()
+        conn.response_class.return_value = self.mock_response
+        return conn
+
     def test_expect_100_continue_returned(self):
         with patch('select.select') as select_mock:
             # Shows the server first sending a 100 continue response
@@ -210,69 +247,38 @@ class TestAWSHTTPConnection(unittest.TestCase):
         response = conn.getresponse()
         self.assertEqual(response.status, 200)
 
-    @unittest.skipIf(sys.version_info[:2] != (2, 6),
-                     ("``_tunnel()`` function only deviates from standard "
-                      "library if py26."))
     def test_tunnel_readline_none_bugfix(self):
         # Tests whether ``_tunnel`` function is able to work around the
         # py26 bug of avoiding infinite while loop if nothing is returned.
-        s = FakeSocket(b'HTTP/1.1 200 OK\r\n')
-        conn = AWSHTTPConnection('s3.amazonaws.com', 443)
-        conn.sock = s
-        # Mock some functions out that do not need to be tested.
-        conn._set_hostport = Mock()
-        conn._tunnel_headers = {'key': 'value'}
-        conn.send = Mock()
-
-        # Create a mock response
-        mock_response = Mock()
-        # A None response that causes the bug.
-        mock_response.fp = six.BytesIO()
-        mock_response._read_status.return_value = (b'HTTP/1.1', 200, b'OK')
-        conn.response_class = Mock()
-        conn.response_class.return_value = mock_response
-
-        # Test succeeds if it does not hang.
+        conn = self.create_tunneled_connection(
+            url='s3.amazonaws.com',
+            port=443,
+            response=b'HTTP/1.1 200 OK\r\n',
+        )
         conn._tunnel()
+        # Ensure proper amount of readline calls were made.
+        self.assertEqual(self.mock_response.fp.readline.call_count, 2)
 
-    @unittest.skipIf(sys.version_info[:2] != (2, 6),
-                     ("``_tunnel()`` function only deviates from standard "
-                      "library if py26."))
     def test_tunnel_readline_normal(self):
         # Tests that ``_tunnel`` function behaves normally when it comes
-        # across the usual http ending
-        s = FakeSocket(b'HTTP/1.1 200 OK\r\n')
-        conn = AWSHTTPConnection('s3.amazonaws.com', 443)
-        conn.sock = s
-        # Mock some functions out that do not need to be tested.
-        conn._set_hostport = Mock()
-        conn._tunnel_headers = {'key': 'value'}
-        conn.send = Mock()
-
-        # Create a mock response
-        mock_response = Mock()
-        # A usual expected response ending.
-        mock_response.fp = six.BytesIO(b'\r\n')
-        mock_response._read_status.return_value = (b'HTTP/1.1', 200, b'OK')
-        conn.response_class = Mock()
-        conn.response_class.return_value = mock_response
-
-        # Test succeeds if it does not hang.
+        # across the usual http ending.
+        conn = self.create_tunneled_connection(
+            url='s3.amazonaws.com',
+            port=443,
+            response=b'HTTP/1.1 200 OK\r\n\r\n',
+        )
         conn._tunnel()
+        # Ensure proper amount of readline calls were made.
+        self.assertEqual(self.mock_response.fp.readline.call_count, 2)
 
-    @unittest.skipIf(sys.version_info[:2] != (2, 6),
-                     ("``_tunnel()`` function only deviates from standard "
-                      "library if py26."))
     def test_tunnel_raises_socket_error(self):
         # Tests that ``_tunnel`` function throws appropriate error when
         # not 200 status.
-        s = FakeSocket(b'HTTP/1.1 404 Not Found\r\n')
-        conn = AWSHTTPConnection('s3.amazonaws.com', 443)
-        conn.sock = s
-        # Mock some functions out that do not need to be tested.
-        conn._set_hostport = Mock()
-        conn._tunnel_headers = {'key': 'value'}
-        conn.send = Mock()
+        conn = self.create_tunneled_connection(
+            url='s3.amazonaws.com',
+            port=443,
+            response=b'HTTP/1.1 404 Not Found\r\n\r\n',
+        )
         with self.assertRaises(socket.error):
             conn._tunnel()
 
