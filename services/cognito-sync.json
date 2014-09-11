@@ -1,11 +1,12 @@
 {
   "api_version": "2014-06-30",
   "type": "rest-json",
+  "json_version": "1.1",
   "signature_version": "v4",
-  "service_full_name": "Amazon Cognito Service",
+  "service_full_name": "Amazon Cognito Sync",
   "endpoint_prefix": "cognito-sync",
-  "target_prefix": "AWSCognitoSyncService",
-  "documentation": "\n      <fullname>Amazon Cognito Sync</fullname>\n      <p>Amazon Cognito Sync provides an AWS service and client library that enable cross-device syncing of\n         application-related user data. High-level client libraries are available for both iOS and\n         Android. You can use these libraries to persist data locally so that it's available even if\n         the device is offline. Developer credentials don't need to be stored on the mobile device\n         to access the service. You can use Amazon Cognito to obtain a normalized user ID and\n         credentials. User data is persisted in a dataset that can store up to 1 MB of key-value\n         pairs, and you can have up to 20 datasets per user identity.</p>\n   ",
+  "xmlnamespace": "http://cognito-sync.amazonaws.com/doc/2014-06-30/",
+  "documentation": "\n      <fullname>Amazon Cognito Sync</fullname>\n      <p>Amazon Cognito Sync provides an AWS service and client library that enable cross-device syncing of\n         application-related user data. High-level client libraries are available for both iOS and\n         Android. You can use these libraries to persist data locally so that it's available even if\n         the device is offline. Developer credentials don't need to be stored on the mobile device\n         to access the service. You can use Amazon Cognito to obtain a normalized user ID and\n         credentials. User data is persisted in a dataset that can store up to 1 MB of key-value\n         pairs, and you can have up to 20 datasets per user identity.</p>\n      <p>With Amazon Cognito Sync, the data stored for each identity is accessible only to\n         credentials assigned to that identity. In order to use the Cognito Sync service, you need\n         to make API calls using credentials retrieved with <a href=\"http://docs.aws.amazon.com/cognitoidentity/latest/APIReference/Welcome.html\">Amazon Cognito Identity service</a>.</p>\n   ",
   "operations": {
     "DeleteDataset": {
       "name": "DeleteDataset",
@@ -78,7 +79,7 @@
               "CreationDate": {
                 "shape_name": "Date",
                 "type": "timestamp",
-                "documentation": "Date."
+                "documentation": "Date on which the dataset was\n      created."
               },
               "LastModifiedDate": {
                 "shape_name": "Date",
@@ -233,7 +234,7 @@
               "CreationDate": {
                 "shape_name": "Date",
                 "type": "timestamp",
-                "documentation": "Date."
+                "documentation": "Date on which the dataset was\n      created."
               },
               "LastModifiedDate": {
                 "shape_name": "Date",
@@ -315,7 +316,7 @@
           "documentation": "Indicates an internal service\n      error."
         }
       ],
-      "documentation": "Gets metadata about a dataset by identity and dataset\n      name. "
+      "documentation": "Gets metadata about a dataset by identity and dataset\n      name. The credentials used to make\n      this API call need to have access to the identity data. With Amazon Cognito Sync, each\n      identity has access only to its own data. You should use Amazon\n         Cognito Identity service to retrieve the credentials necessary to make this API\n      call."
     },
     "DescribeIdentityPoolUsage": {
       "name": "DescribeIdentityPoolUsage",
@@ -432,7 +433,7 @@
           "documentation": "Indicates an internal service\n      error."
         }
       ],
-      "documentation": "Gets usage details (for example, data storage) about\n      a particular identity pool."
+      "documentation": "Gets usage details (for example, data storage)\n      about a particular identity pool."
     },
     "DescribeIdentityUsage": {
       "name": "DescribeIdentityUsage",
@@ -644,7 +645,7 @@
                 "CreationDate": {
                   "shape_name": "Date",
                   "type": "timestamp",
-                  "documentation": "Date."
+                  "documentation": "Date on which the dataset was\n      created."
                 },
                 "LastModifiedDate": {
                   "shape_name": "Date",
@@ -725,7 +726,7 @@
           "documentation": "Indicates an internal service\n      error."
         }
       ],
-      "documentation": "Lists datasets for an identity."
+      "documentation": "Lists datasets for an identity. The credentials used to make\n      this API call need to have access to the identity data. With Amazon Cognito Sync, each\n      identity has access only to its own data. You should use Amazon\n         Cognito Identity service to retrieve the credentials necessary to make this API\n      call."
     },
     "ListIdentityPoolUsage": {
       "name": "ListIdentityPoolUsage",
@@ -897,7 +898,7 @@
           "LastSyncCount": {
             "shape_name": "IntegerString",
             "type": "long",
-            "documentation": "The last server sync count for this record.",
+            "documentation": "The last server sync count for this\n      record.",
             "location": "uri"
           },
           "NextToken": {
@@ -915,7 +916,7 @@
           "SyncSessionToken": {
             "shape_name": "SyncSessionToken",
             "type": "string",
-            "documentation": "A token containing a session ID, identity ID, and expiration.",
+            "documentation": "A token containing a session ID,\n      identity ID, and expiration.",
             "location": "uri"
           }
         },
@@ -963,7 +964,7 @@
                 "DeviceLastModifiedDate": {
                   "shape_name": "Date",
                   "type": "timestamp",
-                  "documentation": "The last modified date of the client device."
+                  "documentation": "The last modified date of the client\n      device."
                 }
               },
               "documentation": "The basic data structure of a dataset."
@@ -983,12 +984,12 @@
           "DatasetSyncCount": {
             "shape_name": "Long",
             "type": "long",
-            "documentation": "Server sync count for this dataset."
+            "documentation": "Server sync count for this\n      dataset."
           },
           "LastModifiedBy": {
             "shape_name": "String",
             "type": "string",
-            "documentation": null
+            "documentation": " The user/device that made the last\n      change to this record. "
           },
           "MergedDatasetNames": {
             "shape_name": "MergedDatasetNameList",
@@ -1013,7 +1014,7 @@
           "SyncSessionToken": {
             "shape_name": "String",
             "type": "string",
-            "documentation": "A token containing a session ID, identity ID, and expiration."
+            "documentation": "A token containing a session ID,\n      identity ID, and expiration."
           }
         },
         "documentation": "Returned for a successful\n      ListRecordsRequest."
@@ -1072,7 +1073,7 @@
           "documentation": "Indicates an internal service\n      error."
         }
       ],
-      "documentation": "Gets paginated records, optionally changed after a particular\n      sync count for a dataset and identity."
+      "documentation": "Gets paginated records, optionally changed after a particular\n      sync count for a dataset and identity. The credentials used to make\n      this API call need to have access to the identity data. With Amazon Cognito Sync, each\n      identity has access only to its own data. You should use Amazon\n         Cognito Identity service to retrieve the credentials necessary to make this API\n      call."
     },
     "UpdateRecords": {
       "name": "UpdateRecords",
@@ -1149,18 +1150,18 @@
                 "SyncCount": {
                   "shape_name": "Long",
                   "type": "long",
-                  "documentation": "Last known server sync count for this record. Set to 0 if unknown.",
+                  "documentation": "Last known server sync count for this record. Set\n      to 0 if unknown.",
                   "required": true
                 },
                 "DeviceLastModifiedDate": {
                   "shape_name": "Date",
                   "type": "timestamp",
-                  "documentation": "The last modified date of the client device."
+                  "documentation": "The last modified date of the client\n      device."
                 }
               },
               "documentation": "An update operation for a record."
             },
-            "documentation": " "
+            "documentation": "A list of patch\n      operations."
           },
           "SyncSessionToken": {
             "shape_name": "SyncSessionToken",
@@ -1171,7 +1172,7 @@
           "ClientContext": {
             "shape_name": "ClientContext",
             "type": "string",
-            "documentation": null,
+            "documentation": " Intended to supply a device ID that\n      will populate the <code>lastModifiedBy</code> field referenced in other methods. The\n         <code>ClientContext</code> field is not yet implemented. ",
             "location": "header",
             "location_name": "x-amz-Client-Context"
           }
@@ -1220,7 +1221,7 @@
                 "DeviceLastModifiedDate": {
                   "shape_name": "Date",
                   "type": "timestamp",
-                  "documentation": "The last modified date of the client device."
+                  "documentation": "The last modified date of the client\n      device."
                 }
               },
               "documentation": "The basic data structure of a dataset."
@@ -1323,7 +1324,7 @@
           "documentation": "Indicates an internal service\n      error."
         }
       ],
-      "documentation": "Posts updates to records and add and delete records for a\n      dataset and user."
+      "documentation": "Posts updates to records and add and delete records for a\n      dataset and user. The credentials used to make\n      this API call need to have access to the identity data. With Amazon Cognito Sync, each\n      identity has access only to its own data. You should use Amazon\n         Cognito Identity service to retrieve the credentials necessary to make this API\n      call."
     }
   }
 }

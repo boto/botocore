@@ -180,6 +180,22 @@ class TestS3Objects(TestS3BaseWithBucket):
                      for el in data]
         self.assertEqual(key_names, ['key0', 'key1', 'key2', 'key3', 'key4'])
 
+    def test_can_paginate_with_page_size(self):
+        for i in range(5):
+            key_name = 'key%s' % i
+            self.create_object(key_name)
+        # Eventual consistency.
+        time.sleep(3)
+        operation = self.service.get_operation('ListObjects')
+        generator = operation.paginate(self.endpoint, page_size=1,
+                                       bucket=self.bucket_name)
+        responses = list(generator)
+        self.assertEqual(len(responses), 5, responses)
+        data = [r[1] for r in responses]
+        key_names = [el['Contents'][0]['Key']
+                     for el in data]
+        self.assertEqual(key_names, ['key0', 'key1', 'key2', 'key3', 'key4'])
+
     def test_result_key_iters(self):
         for i in range(5):
             key_name = 'key/%s/%s' % (i, i)
