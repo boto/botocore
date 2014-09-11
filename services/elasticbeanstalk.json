@@ -2201,7 +2201,8 @@
             "shape_name": "EnvironmentInfoType",
             "type": "string",
             "enum": [
-              "tail"
+              "tail",
+              "bundle"
             ],
             "documentation": "\n      <p>\n         The type of information to request. \n      </p>\n   ",
             "required": true
@@ -2213,7 +2214,7 @@
       "errors": [
 
       ],
-      "documentation": "\n      <p>\n         Initiates a request to compile the specified type of\n         information of the deployed environment.\n      </p>\n\n      <p>\n         Setting the <code>InfoType</code> to <code>tail</code>\n         compiles the last lines from the application server log files of every\n         Amazon EC2 instance in your environment. Use <a>RetrieveEnvironmentInfo</a>\n         to access the compiled information.\n      </p>\n       <p>Related Topics</p>\n      <ul>\n       \n         <li>\n            <a>RetrieveEnvironmentInfo</a>\n         </li>\n      </ul>\n\n      <examples>\n         <queryrequest>https://elasticbeanstalk.us-east-1.amazon.com/?EnvironmentId=e-hc8mvnayrx\n&EnvironmentName=SampleAppVersion\n&InfoType=tail\n&Operation=RequestEnvironmentInfo\n&AuthParams                    </queryrequest>\n\n         <queryresponse><RequestEnvironmentInfoResponse xmlns=\"https://elasticbeanstalk.amazonaws.com/docs/2010-12-01/\">\n  <ResponseMetadata>\n    <RequestId>126a4ff3-f28a-11df-8a78-9f77047e0d0c</RequestId>\n  </ResponseMetadata>\n</RequestEnvironmentInfoResponse>         </queryresponse>\n      </examples>\n\n   "
+      "documentation": "\n      <p>\n         Initiates a request to compile the specified type of\n         information of the deployed environment.\n      </p>\n\n\n      <p>\n         Setting the <code>InfoType</code> to <code>tail</code>\n         compiles the last lines from the application server log files of every\n         Amazon EC2 instance in your environment. \n      </p>\n\n      <p>\n         Setting the <code>InfoType</code> to <code>bundle</code> \n         compresses the application server log files for every Amazon EC2 instance\n         into a <code>.zip</code> file. Legacy and .NET\n         containers do not support bundle logs.\n      </p>\n    \n      <p>\n         Use <a>RetrieveEnvironmentInfo</a> to obtain the set of logs.  \n      </p>\n\n      <p>Related Topics</p>\n      <ul>\n       \n         <li>\n            <a>RetrieveEnvironmentInfo</a>\n         </li>\n      </ul>\n\n      <examples>\n         <queryrequest>https://elasticbeanstalk.us-east-1.amazon.com/?EnvironmentId=e-hc8mvnayrx\n&EnvironmentName=SampleAppVersion\n&InfoType=tail\n&Operation=RequestEnvironmentInfo\n&AuthParams                    </queryrequest>\n\n         <queryresponse><RequestEnvironmentInfoResponse xmlns=\"https://elasticbeanstalk.amazonaws.com/docs/2010-12-01/\">\n  <ResponseMetadata>\n    <RequestId>126a4ff3-f28a-11df-8a78-9f77047e0d0c</RequestId>\n  </ResponseMetadata>\n</RequestEnvironmentInfoResponse>         </queryresponse>\n      </examples>\n\n   "
     },
     "RestartAppServer": {
       "name": "RestartAppServer",
@@ -2264,7 +2265,8 @@
             "shape_name": "EnvironmentInfoType",
             "type": "string",
             "enum": [
-              "tail"
+              "tail",
+              "bundle"
             ],
             "documentation": "\n      <p>\n         The type of information to retrieve. \n      </p>\n   ",
             "required": true
@@ -2287,7 +2289,8 @@
                   "shape_name": "EnvironmentInfoType",
                   "type": "string",
                   "enum": [
-                    "tail"
+                    "tail",
+                    "bundle"
                   ],
                   "documentation": "\n      <p>The type of information retrieved.</p>\n   "
                 },
