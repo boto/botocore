@@ -7,7 +7,7 @@
   "service_full_name": "AWS OpsWorks",
   "endpoint_prefix": "opsworks",
   "xmlnamespace": "http://opsworks.amazonaws.com/doc/2013-02-18/",
-  "documentation": "\n  <fullname>AWS OpsWorks</fullname> \n  <p>Welcome to the  <i>AWS OpsWorks API Reference</i>. This guide provides descriptions, syntax, and usage examples about AWS OpsWorks\n         actions and data types, including common parameters and error codes. </p>\n  <p>AWS OpsWorks is an application management service that provides an integrated experience for overseeing the\n         complete application lifecycle. For information about this product, go to the\n  <a href=\"http://aws.amazon.com/opsworks/\">AWS OpsWorks</a> details page. </p>\n\n  <p><b>SDKs and CLI</b> </p>\n  <p>The most common way to use the AWS OpsWorks API is by using the AWS Command Line Interface (CLI) or\n   by using one of the AWS SDKs to implement applications in your preferred language. For more information, see:</p>\n  <ul>\n    <li><a href=\"http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html\">AWS CLI</a></li>\n    <li><a href=\"http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/opsworks/AWSOpsWorksClient.html\">AWS SDK for Java</a></li>\n    <li><a href=\"http://docs.aws.amazon.com/sdkfornet/latest/apidocs/html/N_Amazon_OpsWorks.htm\">AWS SDK for .NET</a></li>\n    <li><a href=\"http://docs.aws.amazon.com/aws-sdk-php-2/latest/class-Aws.OpsWorks.OpsWorksClient.html\">AWS SDK for PHP 2</a></li>\n    <li><a href=\"http://docs.aws.amazon.com/AWSRubySDK/latest/AWS/OpsWorks/Client.html\">AWS SDK for Ruby</a></li>\n    <li><a href=\"http://aws.amazon.com/documentation/sdkforjavascript/\">AWS SDK for Node.js</a></li>\n    <li><a href=\"http://docs.pythonboto.org/en/latest/ref/opsworks.html\">AWS SDK for Python(Boto)</a></li>\n  </ul>\n    \n  <p><b>Endpoints</b></p>\n  <p>AWS OpsWorks supports only one endpoint, opsworks.us-east-1.amazonaws.com (HTTPS), so you must connect to that endpoint. You can then use the API\n         to direct AWS OpsWorks to create stacks in any AWS Region.</p>\n  <p><b>Chef Version</b></p>\n  <p>When you call <a>CreateStack</a>, <a>CloneStack</a>, or <a>UpdateStack</a> we recommend you use\n         the <code>ConfigurationManager</code> parameter to specify the Chef version, 0.9, 11.4, or 11.10.\n         The default value is currently 11.4.\n         For more information, see <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook-chef11.html\">Chef Versions</a>.</p>     \n  ",
+  "documentation": "\n  <fullname>AWS OpsWorks</fullname> \n  <p>Welcome to the  <i>AWS OpsWorks API Reference</i>. This guide provides descriptions, syntax, and usage examples about AWS OpsWorks\n         actions and data types, including common parameters and error codes. </p>\n  <p>AWS OpsWorks is an application management service that provides an integrated experience for overseeing the\n         complete application lifecycle. For information about this product, go to the\n  <a href=\"http://aws.amazon.com/opsworks/\">AWS OpsWorks</a> details page. </p>\n\n  <p><b>SDKs and CLI</b> </p>\n  <p>The most common way to use the AWS OpsWorks API is by using the AWS Command Line Interface (CLI) or\n   by using one of the AWS SDKs to implement applications in your preferred language. For more information, see:</p>\n  <ul>\n    <li><a href=\"http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html\">AWS CLI</a></li>\n    <li><a href=\"http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/opsworks/AWSOpsWorksClient.html\">AWS SDK for Java</a></li>\n    <li><a href=\"http://docs.aws.amazon.com/sdkfornet/latest/apidocs/html/N_Amazon_OpsWorks.htm\">AWS SDK for .NET</a></li>\n    <li><a href=\"http://docs.aws.amazon.com/aws-sdk-php-2/latest/class-Aws.OpsWorks.OpsWorksClient.html\">AWS SDK for PHP 2</a></li>\n    <li><a href=\"http://docs.aws.amazon.com/AWSRubySDK/latest/AWS/OpsWorks/Client.html\">AWS SDK for Ruby</a></li>\n    <li><a href=\"http://aws.amazon.com/documentation/sdkforjavascript/\">AWS SDK for Node.js</a></li>\n    <li><a href=\"http://docs.pythonboto.org/en/latest/ref/opsworks.html\">AWS SDK for Python(Boto)</a></li>\n  </ul>\n    \n  <p><b>Endpoints</b></p>\n  <p>AWS OpsWorks supports only one endpoint, opsworks.us-east-1.amazonaws.com (HTTPS), so you must connect to that endpoint. You can then use the API\n         to direct AWS OpsWorks to create stacks in any AWS Region.</p>\n  <p><b>Chef Versions</b></p>\n  <p>When you call <a>CreateStack</a>, <a>CloneStack</a>, or <a>UpdateStack</a> we recommend you use\n     the <code>ConfigurationManager</code> parameter to specify the Chef version, 0.9, 11.4, or 11.10.\n     The default value is currently 11.10. \n     For more information, see <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook-chef11.html\">Chef Versions</a>.</p>\n    <note>You can still specify Chef 0.9 for your stack, but new\n      features are not available for Chef 0.9 stacks, and support is scheduled to end on July 24, 2014.\n      We do not recommend using Chef 0.9 for new stacks, and we recommend migrating your\n      existing Chef 0.9 stacks to Chef 11.10 as soon as possible.</note>\n  ",
   "operations": {
     "AssignVolume": {
       "name": "AssignVolume",
@@ -182,7 +182,7 @@
           "VpcId": {
             "shape_name": "String",
             "type": "string",
-            "documentation": "\n  <p>The ID of the VPC that the cloned stack is to be launched into. It must be in the specified region.\n         All instances will be launched into this VPC, and you cannot change the ID later.</p>\n  <ul>\n  <li>If your account supports EC2 Classic, the default value is no VPC.</li>\n  <li>If your account does not support EC2 Classic, the default value is\n            the default VPC for the specified region.</li>\n  </ul>   \n  <p>If the VPC ID corresponds to a default VPC and you have specified either the <code>DefaultAvailabilityZone</code> or \n         the <code>DefaultSubnetId</code> parameter only, AWS OpsWorks infers the value of the other parameter.\n         If you specify neither parameter, AWS OpsWorks sets these parameters to the first valid Availability Zone for the specified\n         region and the corresponding default VPC subnet ID, respectively. </p>\n  <p>If you specify a nondefault VPC ID, note the following:</p>\n  <ul>\n  <li>It must belong to a VPC in your account that is in the specified region.</li>\n  <li>You must specify a value for <code>DefaultSubnetId</code>.</li>\n  </ul>\n  <p>For more information on how to use AWS OpsWorks with a VPC, see\n  <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-vpc.html\">Running a Stack in a VPC</a>. For more information on\n         default VPC and EC2 Classic, see <a href=\"http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-supported-platforms.html\">Supported Platforms</a>.\n  </p>\n  "
+            "documentation": "\n  <p>The ID of the VPC that the cloned stack is to be launched into. It must be in the specified region.\n         All instances are launched into this VPC, and you cannot change the ID later.</p>\n  <ul>\n  <li>If your account supports EC2 Classic, the default value is no VPC.</li>\n  <li>If your account does not support EC2 Classic, the default value is\n            the default VPC for the specified region.</li>\n  </ul>   \n  <p>If the VPC ID corresponds to a default VPC and you have specified either the <code>DefaultAvailabilityZone</code> or \n         the <code>DefaultSubnetId</code> parameter only, AWS OpsWorks infers the value of the other parameter.\n         If you specify neither parameter, AWS OpsWorks sets these parameters to the first valid Availability Zone for the specified\n         region and the corresponding default VPC subnet ID, respectively. </p>\n  <p>If you specify a nondefault VPC ID, note the following:</p>\n  <ul>\n  <li>It must belong to a VPC in your account that is in the specified region.</li>\n  <li>You must specify a value for <code>DefaultSubnetId</code>.</li>\n  </ul>\n  <p>For more information on how to use AWS OpsWorks with a VPC, see\n  <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-vpc.html\">Running a Stack in a VPC</a>. For more information on\n         default VPC and EC2 Classic, see <a href=\"http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-supported-platforms.html\">Supported Platforms</a>.\n  </p>\n  "
           },
           "Attributes": {
             "shape_name": "StackAttributes",
@@ -216,7 +216,7 @@
           "DefaultOs": {
             "shape_name": "String",
             "type": "string",
-            "documentation": "\n  <p>The cloned stack's default operating system, which must be set to <code>Amazon Linux</code> or <code>Ubuntu 12.04 LTS</code>.\n         The default option is <code>Amazon Linux</code>.\n  </p>\n   "
+            "documentation": "\n    <p>The cloned stack's default operating system, which must be set to <code>Amazon Linux</code>, <code>Ubuntu 12.04 LTS</code>,\n      or <code>Ubuntu 14.04 LTS</code>. The default option is <code>Amazon Linux</code>.\n  </p>\n   "
           },
           "HostnameTheme": {
             "shape_name": "String",
@@ -231,7 +231,7 @@
           "DefaultSubnetId": {
             "shape_name": "String",
             "type": "string",
-            "documentation": "\n  <p>The stack's default subnet ID.\n         All instances will be launched into this subnet unless you specify otherwise when you create the instance.\n         If you also specify a value for <code>DefaultAvailabilityZone</code>, the subnet must be in the same zone.\n         For information on default values and when this parameter is required, see the <code>VpcId</code> parameter description.\n  </p>\n  "
+            "documentation": "\n    <p>The stack's default VPC subnet ID. This parameter is required if you specify a value for the <code>VpcId</code> parameter.\n      All instances are launched into this subnet unless you specify otherwise when you create the instance.\n      If you also specify a value for <code>DefaultAvailabilityZone</code>, the subnet must be in that zone.\n      For information on default values and when this parameter is required, see the <code>VpcId</code> parameter description.\n    </p>\n  "
           },
           "CustomJson": {
             "shape_name": "String",
@@ -460,6 +460,7 @@
             "shape_name": "AppType",
             "type": "string",
             "enum": [
+              "java",
               "rails",
               "php",
               "nodejs",
@@ -571,6 +572,36 @@
               "documentation": null
             },
             "documentation": "\n  <p>One or more user-defined key/value pairs to be added to the stack attributes.</p> \n  "
+          },
+          "Environment": {
+            "shape_name": "EnvironmentVariables",
+            "type": "list",
+            "members": {
+              "shape_name": "EnvironmentVariable",
+              "type": "structure",
+              "members": {
+                "Key": {
+                  "shape_name": "String",
+                  "type": "string",
+                  "documentation": "\n    <p>(Required) The environment variable's name, which can consist of up to 64 characters and must be specified. The name can contain\n      upper- and lowercase letters, numbers, and underscores (_), but it must start with a letter or underscore.</p>\n  ",
+                  "required": true
+                },
+                "Value": {
+                  "shape_name": "String",
+                  "type": "string",
+                  "documentation": "\n    <p>(Optional) The environment variable's value, which can be left empty. If you specify a value, it can\n      contain up to 256 characters, which must all be printable.</p>\n  ",
+                  "required": true
+                },
+                "Secure": {
+                  "shape_name": "Boolean",
+                  "type": "boolean",
+                  "box": true,
+                  "documentation": "\n    <p>(Optional) Whether the variable's value will be returned by the <a>DescribeApps</a> action.\n      To conceal an environment variable's value, set <code>Secure</code> to <code>true</code>. \n      <code>DescribeApps</code> then returns <code>**Filtered**</code> instead of the actual value.\n      The default value for <code>Secure</code> is <code>false</code>.\n    </p>\n  "
+                }
+              },
+              "documentation": "\n    <p>Represents an app's environment variable.</p>\n  "
+            },
+            "documentation": "\n    <p>An array of <code>EnvironmentVariable</code> objects that specify environment variables to be associated with the app.\n      You can specify up to ten environment variables. After you deploy the app, these variables are defined on the\n      associated app server instance.</p>\n    <note>This parameter is supported only by Chef 11.10 stacks. If you have specified one or more environment variables, you cannot\n      modify the stack's Chef version.</note>\n  "
           }
         },
         "documentation": null
@@ -777,7 +808,7 @@
               "load",
               "timer"
             ],
-            "documentation": "\n  <p>The instance auto scaling type, which has three possible values:</p>\n  <ul>\n  <li>\n<b>AlwaysRunning</b>:  A 24/7 instance, which is not affected by auto scaling.</li>\n  <li>\n<b>TimeBasedAutoScaling</b>: A time-based auto scaling instance, which is started and stopped based on a specified schedule.\n            To specify the schedule, call <a>SetTimeBasedAutoScaling</a>.</li>\n  <li>\n<b>LoadBasedAutoScaling</b>: A load-based auto scaling instance, which is started and stopped based on load metrics.\n            To use load-based auto scaling, you must enable it for the instance layer and configure the thresholds by calling\n  <a>SetLoadBasedAutoScaling</a>.</li>\n  </ul>\n  "
+            "documentation": "\n    <p>For load-based or time-based instances, the type.</p>\n  "
           },
           "Hostname": {
             "shape_name": "String",
@@ -787,12 +818,12 @@
           "Os": {
             "shape_name": "String",
             "type": "string",
-            "documentation": "\n  <p>The instance operating system, which must be set to one of the following.</p>\n  <ul>\n  <li>Standard operating systems: <code>Amazon Linux</code> or <code>Ubuntu 12.04 LTS</code>\n</li>\n  <li>Custom AMIs: <code>Custom</code>\n</li>\n  </ul>\n  <p>The default option is <code>Amazon Linux</code>. If you set this parameter to <code>Custom</code>, you must use the\n  <a>CreateInstance</a> action's AmiId parameter to specify\n         the custom AMI that you want to use. For more information on the standard operating systems, see\n  <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-os.html\">Operating Systems</a>For more information\n         on how to use custom AMIs with OpsWorks, see\n  <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-custom-ami.html\">Using Custom AMIs</a>.</p>\n  "
+            "documentation": "\n  <p>The instance operating system, which must be set to one of the following.</p>\n  <ul>\n    <li>Standard operating systems: <code>Amazon Linux</code>, <code>Ubuntu 12.04 LTS</code>, or <code>Ubuntu 14.04 LTS</code>.</li>\n  <li>Custom AMIs: <code>Custom</code>\n</li>\n  </ul>\n  <p>The default option is <code>Amazon Linux</code>. If you set this parameter to <code>Custom</code>, you must use the\n  <a>CreateInstance</a> action's AmiId parameter to specify\n         the custom AMI that you want to use. For more information on the standard operating systems, see\n  <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-os.html\">Operating Systems</a>For more information\n         on how to use custom AMIs with OpsWorks, see\n  <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-custom-ami.html\">Using Custom AMIs</a>.</p>\n  "
           },
           "AmiId": {
             "shape_name": "String",
             "type": "string",
-            "documentation": "\n  <p>A custom AMI ID to be used to create the instance. The AMI should be based on one of the standard AWS OpsWorks APIs:\n         Amazon Linux or Ubuntu 12.04 LTS. For more information, see\n  <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances.html\">Instances</a></p>  "
+            "documentation": "\n  <p>A custom AMI ID to be used to create the instance. The AMI should be based on one of the standard AWS OpsWorks AMIs:\n    Amazon Linux, Ubuntu 12.04 LTS, or Ubuntu 14.04 LTS. For more information, see\n  <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances.html\">Instances</a></p>  "
           },
           "SshKeyName": {
             "shape_name": "String",
@@ -903,6 +934,7 @@
             "shape_name": "LayerType",
             "type": "string",
             "enum": [
+              "java-app",
               "lb",
               "web",
               "php-app",
@@ -1030,7 +1062,7 @@
                 "VolumeType": {
                   "shape_name": "String",
                   "type": "string",
-                  "documentation": "\n    <p>The volume type, standard or PIOPS.</p>\n  "
+                  "documentation": "\n    <p>The volume type: <code>standard</code>, <code>PIOPS</code>, or <code>gp2</code>.</p>\n  "
                 },
                 "Iops": {
                   "shape_name": "Integer",
@@ -1194,7 +1226,7 @@
           "VpcId": {
             "shape_name": "String",
             "type": "string",
-            "documentation": "\n  <p>The ID of the VPC that the stack is to be launched into. It must be in the specified region.\n         All instances will be launched into this VPC, and you cannot change the ID later.</p>\n  <ul>\n  <li>If your account supports EC2 Classic, the default value is no VPC.</li>\n  <li>If your account does not support EC2 Classic, the default value is\n            the default VPC for the specified region.</li>\n  </ul>   \n  <p>If the VPC ID corresponds to a default VPC and you have specified either the <code>DefaultAvailabilityZone</code> or \n         the <code>DefaultSubnetId</code> parameter only, AWS OpsWorks infers the value of the other parameter.\n         If you specify neither parameter, AWS OpsWorks sets these parameters to the first valid Availability Zone for the specified\n         region and the corresponding default VPC subnet ID, respectively.</p>\n  <p>If you specify a nondefault VPC ID, note the following:</p>\n  <ul>\n  <li>It must belong to a VPC in your account that is in the specified region.</li>\n  <li>You must specify a value for <code>DefaultSubnetId</code>.</li>\n  </ul>\n  <p>For more information on how to use AWS OpsWorks with a VPC, see\n  <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-vpc.html\">Running a Stack in a VPC</a>. For more information on\n         default VPC and EC2 Classic, see <a href=\"http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-supported-platforms.html\">Supported Platforms</a>.\n  </p>\n  "
+            "documentation": "\n  <p>The ID of the VPC that the stack is to be launched into. It must be in the specified region.\n         All instances are launched into this VPC, and you cannot change the ID later.</p>\n  <ul>\n  <li>If your account supports EC2 Classic, the default value is no VPC.</li>\n  <li>If your account does not support EC2 Classic, the default value is\n            the default VPC for the specified region.</li>\n  </ul>   \n  <p>If the VPC ID corresponds to a default VPC and you have specified either the <code>DefaultAvailabilityZone</code> or \n         the <code>DefaultSubnetId</code> parameter only, AWS OpsWorks infers the value of the other parameter.\n         If you specify neither parameter, AWS OpsWorks sets these parameters to the first valid Availability Zone for the specified\n         region and the corresponding default VPC subnet ID, respectively.</p>\n  <p>If you specify a nondefault VPC ID, note the following:</p>\n  <ul>\n  <li>It must belong to a VPC in your account that is in the specified region.</li>\n  <li>You must specify a value for <code>DefaultSubnetId</code>.</li>\n  </ul>\n  <p>For more information on how to use AWS OpsWorks with a VPC, see\n  <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-vpc.html\">Running a Stack in a VPC</a>. For more information on\n         default VPC and EC2 Classic, see <a href=\"http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-supported-platforms.html\">Supported Platforms</a>.\n  </p>\n  "
           },
           "Attributes": {
             "shape_name": "StackAttributes",
@@ -1229,7 +1261,7 @@
           "DefaultOs": {
             "shape_name": "String",
             "type": "string",
-            "documentation": "\n  <p>The stack's default operating system, which must be set to <code>Amazon Linux</code> or <code>Ubuntu 12.04 LTS</code>.\n         The default option is <code>Amazon Linux</code>.\n  </p>\n  "
+            "documentation": "\n    <p>The stack's default operating system, which must be set to <code>Amazon Linux</code>, <code>Ubuntu 12.04 LTS</code>,\n      or <code>Ubuntu 14.04 LTS</code>. The default option is <code>Amazon Linux</code>.\n  </p>\n  "
           },
           "HostnameTheme": {
             "shape_name": "String",
@@ -1244,7 +1276,7 @@
           "DefaultSubnetId": {
             "shape_name": "String",
             "type": "string",
-            "documentation": "\n  <p>The stack's default subnet ID.\n         All instances will be launched into this subnet unless you specify otherwise when you create the instance.\n         If you also specify a value for <code>DefaultAvailabilityZone</code>, the subnet must be in that zone.\n         For information on default values and when this parameter is required, see the <code>VpcId</code> parameter description.\n  </p>\n  "
+            "documentation": "\n    <p>The stack's default VPC subnet ID. This parameter is required if you specify a value for the <code>VpcId</code> parameter.\n         All instances are launched into this subnet unless you specify otherwise when you create the instance.\n         If you also specify a value for <code>DefaultAvailabilityZone</code>, the subnet must be in that zone.\n         For information on default values and when this parameter is required, see the <code>VpcId</code> parameter description.\n    </p>\n  "
           },
           "CustomJson": {
             "shape_name": "String",
@@ -1763,7 +1795,7 @@
           "documentation": "\n  <p>Indicates that a resource was not found.</p>\n  "
         }
       ],
-      "documentation": "\n    <p>Deregisters an Amazon RDS instance.</p>\n  "
+      "documentation": "\n    <p>Deregisters an Amazon RDS instance.</p>\n    <p><b>Required Permissions</b>: To use this action, an IAM user must have a Manage permissions level for the stack, or an attached\n      policy that explicitly grants permissions. For more information on user permissions, see\n      <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html\">Managing User Permissions</a>.</p>\n  "
     },
     "DeregisterVolume": {
       "name": "DeregisterVolume",
@@ -1900,6 +1932,7 @@
                   "shape_name": "AppType",
                   "type": "string",
                   "enum": [
+                    "java",
                     "rails",
                     "php",
                     "nodejs",
@@ -2015,6 +2048,36 @@
                   "shape_name": "String",
                   "type": "string",
                   "documentation": "\n  <p>When the app was created.</p>\n  "
+                },
+                "Environment": {
+                  "shape_name": "EnvironmentVariables",
+                  "type": "list",
+                  "members": {
+                    "shape_name": "EnvironmentVariable",
+                    "type": "structure",
+                    "members": {
+                      "Key": {
+                        "shape_name": "String",
+                        "type": "string",
+                        "documentation": "\n    <p>(Required) The environment variable's name, which can consist of up to 64 characters and must be specified. The name can contain\n      upper- and lowercase letters, numbers, and underscores (_), but it must start with a letter or underscore.</p>\n  ",
+                        "required": true
+                      },
+                      "Value": {
+                        "shape_name": "String",
+                        "type": "string",
+                        "documentation": "\n    <p>(Optional) The environment variable's value, which can be left empty. If you specify a value, it can\n      contain up to 256 characters, which must all be printable.</p>\n  ",
+                        "required": true
+                      },
+                      "Secure": {
+                        "shape_name": "Boolean",
+                        "type": "boolean",
+                        "box": true,
+                        "documentation": "\n    <p>(Optional) Whether the variable's value will be returned by the <a>DescribeApps</a> action.\n      To conceal an environment variable's value, set <code>Secure</code> to <code>true</code>. \n      <code>DescribeApps</code> then returns <code>**Filtered**</code> instead of the actual value.\n      The default value for <code>Secure</code> is <code>false</code>.\n    </p>\n  "
+                      }
+                    },
+                    "documentation": "\n    <p>Represents an app's environment variable.</p>\n  "
+                  },
+                  "documentation": "\n    <p>An array of <code>EnvironmentVariable</code> objects that specify environment variables to be associated with the app.\n      You can specify up to ten environment variables. After you deploy the app, these variables are defined on the\n      associated app server instances.</p>\n  "
                 }
               },
               "documentation": "\n  <p>A description of the app.</p>\n  "
@@ -2644,8 +2707,12 @@
                   "documentation": "\n  <p>The ID of the associated Amazon EC2 instance.</p>\n  "
                 },
                 "VirtualizationType": {
-                  "shape_name": "String",
+                  "shape_name": "VirtualizationType",
                   "type": "string",
+                  "enum": [
+                    "paravirtual",
+                    "hvm"
+                  ],
                   "documentation": "\n    <p>The instance's virtualization type, <code>paravirtual</code> or <code>hvm</code>.</p>\n  "
                 },
                 "Hostname": {
@@ -2691,7 +2758,7 @@
                 "Status": {
                   "shape_name": "String",
                   "type": "string",
-                  "documentation": "\n    <p>The instance status:</p>\n  <ul>\n  <li><code>requested</code></li>\n  <li><code>booting</code></li>\n  <li><code>running_setup</code></li>\n  <li><code>online</code></li>\n  <li><code>setup_failed</code></li>\n  <li><code>start_failed</code></li>\n  <li><code>terminating</code></li>\n  <li><code>terminated</code></li>\n  <li><code>stopped</code></li>\n  <li><code>connection_lost</code></li>\n  </ul>\n  "
+                  "documentation": "\n    <p>The instance status:</p>\n  <ul>\n    <li><code>booting</code></li>\n    <li><code>connection_lost</code></li>\n    <li><code>online</code></li>\n    <li><code>pending</code></li>\n    <li><code>rebooting</code></li>\n    <li><code>requested</code></li>\n    <li><code>running_setup</code></li>\n    <li><code>setup_failed</code></li>\n    <li><code>shutting_down</code></li>\n    <li><code>start_failed</code></li>\n    <li><code>stopped</code></li>\n    <li><code>stopping</code></li>\n    <li><code>terminated</code></li>\n    <li><code>terminating</code></li>\n  </ul>\n  "
                 },
                 "Os": {
                   "shape_name": "String",
@@ -2701,7 +2768,7 @@
                 "AmiId": {
                   "shape_name": "String",
                   "type": "string",
-                  "documentation": "\n  <p>A custom AMI ID to be used to create the instance. The AMI should be based on one of the standard AWS OpsWorks APIs:\n         Amazon Linux or Ubuntu 12.04 LTS. For more information, see\n  <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances.html\">Instances</a></p>\n  "
+                  "documentation": "\n  <p>A custom AMI ID to be used to create the instance. The AMI should be based on one of the standard AWS OpsWorks APIs:\n    Amazon Linux, Ubuntu 12.04 LTS, or Ubuntu 14.04 LTS. For more information, see\n  <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances.html\">Instances</a></p>\n  "
                 },
                 "AvailabilityZone": {
                   "shape_name": "String",
@@ -2745,7 +2812,7 @@
                     "load",
                     "timer"
                   ],
-                  "documentation": "\n  <p>The instance's auto scaling type, which has three possible values:</p>\n  <ul>\n  <li>\n<b>AlwaysRunning</b>: A 24/7 instance, which is not affected by auto scaling.</li>\n  <li>\n<b>TimeBasedAutoScaling</b>: A time-based auto scaling instance, which is started and stopped based on a specified schedule.</li>\n  <li>\n<b>LoadBasedAutoScaling</b>: A load-based auto scaling instance, which is started and stopped based on load metrics.</li>\n  </ul>  "
+                  "documentation": "\n    <p>For load-based or time-based instances, the type.</p>\n  "
                 },
                 "SshKeyName": {
                   "shape_name": "String",
@@ -2892,6 +2959,7 @@
                   "shape_name": "LayerType",
                   "type": "string",
                   "enum": [
+                    "java-app",
                     "lb",
                     "web",
                     "php-app",
@@ -3026,7 +3094,7 @@
                       "VolumeType": {
                         "shape_name": "String",
                         "type": "string",
-                        "documentation": "\n    <p>The volume type, standard or PIOPS.</p>\n  "
+                        "documentation": "\n    <p>The volume type: <code>standard</code>, <code>PIOPS</code>, or <code>gp2</code>.</p>\n  "
                       },
                       "Iops": {
                         "shape_name": "Integer",
@@ -3281,6 +3349,7 @@
                       "type": "integer",
                       "min_length": 1,
                       "max_length": 100,
+                      "box": true,
                       "documentation": "\n  <p>The amount of time, in minutes, that the load must exceed a threshold before more instances are added or removed.</p>\n  "
                     },
                     "IgnoreMetricsTime": {
@@ -3288,6 +3357,7 @@
                       "type": "integer",
                       "min_length": 1,
                       "max_length": 100,
+                      "box": true,
                       "documentation": "\n  <p>The amount of time (in minutes) after a scaling event occurs that AWS OpsWorks should ignore metrics\n         and not raise any additional scaling events.\n         For example, AWS OpsWorks adds new instances following an upscaling event but the instances\n         won't start reducing the load until they have been booted and configured.\n         There is no point in raising additional scaling events during that operation, which typically takes several minutes.\n  <code>IgnoreMetricsTime</code> allows you to direct AWS OpsWorks to not raise any scaling events long enough\n         to get the new instances online.</p>\n  "
                     },
                     "CpuThreshold": {
@@ -3326,6 +3396,7 @@
                       "type": "integer",
                       "min_length": 1,
                       "max_length": 100,
+                      "box": true,
                       "documentation": "\n  <p>The amount of time, in minutes, that the load must exceed a threshold before more instances are added or removed.</p>\n  "
                     },
                     "IgnoreMetricsTime": {
@@ -3333,6 +3404,7 @@
                       "type": "integer",
                       "min_length": 1,
                       "max_length": 100,
+                      "box": true,
                       "documentation": "\n  <p>The amount of time (in minutes) after a scaling event occurs that AWS OpsWorks should ignore metrics\n         and not raise any additional scaling events.\n         For example, AWS OpsWorks adds new instances following an upscaling event but the instances\n         won't start reducing the load until they have been booted and configured.\n         There is no point in raising additional scaling events during that operation, which typically takes several minutes.\n  <code>IgnoreMetricsTime</code> allows you to direct AWS OpsWorks to not raise any scaling events long enough\n         to get the new instances online.</p>\n  "
                     },
                     "CpuThreshold": {
@@ -3538,6 +3610,11 @@
             "type": "string",
             "documentation": "\n  <p>The instance ID. If you use this parameter, <code>DescribeRaidArrays</code> returns\n         descriptions of the RAID arrays associated with the specified instance. </p>\n  "
           },
+          "StackId": {
+            "shape_name": "String",
+            "type": "string",
+            "documentation": "\n    <p>The stack ID.</p>\n  "
+          },
           "RaidArrayIds": {
             "shape_name": "Strings",
             "type": "list",
@@ -3570,12 +3647,12 @@
                 "InstanceId": {
                   "shape_name": "String",
                   "type": "string",
-                  "documentation": "\n  <p>The instance ID.</p>\n  "
+                  "documentation": "\n    <p>The instance ID.</p>\n  "
                 },
                 "Name": {
                   "shape_name": "String",
                   "type": "string",
-                  "documentation": "\n  <p>The array name.</p>\n  "
+                  "documentation": "\n    <p>The array name.</p>\n  "
                 },
                 "RaidLevel": {
                   "shape_name": "Integer",
@@ -3587,7 +3664,7 @@
                   "shape_name": "Integer",
                   "type": "integer",
                   "box": true,
-                  "documentation": "\n  <p>The number of disks in the array.</p>\n  "
+                  "documentation": "\n    <p>The number of disks in the array.</p>\n  "
                 },
                 "Size": {
                   "shape_name": "Integer",
@@ -3598,22 +3675,27 @@
                 "Device": {
                   "shape_name": "String",
                   "type": "string",
-                  "documentation": "\n  <p>The array's Linux device. For example /dev/mdadm0.</p>\n  "
+                  "documentation": "\n    <p>The array's Linux device. For example /dev/mdadm0.</p>\n  "
                 },
                 "MountPoint": {
                   "shape_name": "String",
                   "type": "string",
-                  "documentation": "\n  <p>The array's mount point.</p>\n  "
+                  "documentation": "\n    <p>The array's mount point.</p>\n  "
                 },
                 "AvailabilityZone": {
                   "shape_name": "String",
                   "type": "string",
-                  "documentation": "\n  <p>The array's Availability Zone. For more information, see\n  <a href=\"http://docs.aws.amazon.com/general/latest/gr/rande.html\">Regions and Endpoints</a>.</p>\n  "
+                  "documentation": "\n    <p>The array's Availability Zone. For more information, see\n      <a href=\"http://docs.aws.amazon.com/general/latest/gr/rande.html\">Regions and Endpoints</a>.</p>\n  "
                 },
                 "CreatedAt": {
                   "shape_name": "DateTime",
                   "type": "string",
                   "documentation": "\n  <p>When the RAID array was created.</p>\n  "
+                },
+                "StackId": {
+                  "shape_name": "String",
+                  "type": "string",
+                  "documentation": "\n    <p>The stack ID.</p>\n  "
                 },
                 "VolumeType": {
                   "shape_name": "String",
@@ -3778,7 +3860,7 @@
           "documentation": "\n  <p>Indicates that a resource was not found.</p>\n  "
         }
       ],
-      "documentation": "\n    <p>Describes Amazon RDS instances.</p>\n  "
+      "documentation": "\n    <p>Describes Amazon RDS instances.</p>\n    <p><b>Required Permissions</b>: To use this action, an IAM user must have a Show, Deploy, or Manage\n      permissions level for the stack, or an attached policy that explicitly grants permissions. For more information on user permissions, see\n      <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html\">Managing User Permissions</a>.</p>\n  "
     },
     "DescribeServiceErrors": {
       "name": "DescribeServiceErrors",
@@ -4147,7 +4229,7 @@
                 "DefaultOs": {
                   "shape_name": "String",
                   "type": "string",
-                  "documentation": "\n  <p>The stack's default operating system, which must be set to <code>Amazon Linux</code> or <code>Ubuntu 12.04 LTS</code>.\n         The default option is <code>Amazon Linux</code>.\n  </p>\n  "
+                  "documentation": "\n    <p>The stack's default operating system, which must be set to <code>Amazon Linux</code>, <code>Ubuntu 12.04 LTS</code>,\n      or <code>Ubuntu 14.04 LTS</code>. The default option is <code>Amazon Linux</code>.\n  </p>\n  "
                 },
                 "HostnameTheme": {
                   "shape_name": "String",
@@ -5045,7 +5127,7 @@
           "documentation": "\n  <p>Indicates that a resource was not found.</p>\n  "
         }
       ],
-      "documentation": "\n    <p>Registers an Amazon RDS instance with a stack.</p>\n  "
+      "documentation": "\n    <p>Registers an Amazon RDS instance with a stack.</p>\n    <p><b>Required Permissions</b>: To use this action, an IAM user must have a Manage permissions level for the stack, or an attached\n      policy that explicitly grants permissions. For more information on user permissions, see\n      <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html\">Managing User Permissions</a>.</p>\n  "
     },
     "RegisterVolume": {
       "name": "RegisterVolume",
@@ -5140,6 +5222,7 @@
                 "type": "integer",
                 "min_length": 1,
                 "max_length": 100,
+                "box": true,
                 "documentation": "\n  <p>The amount of time, in minutes, that the load must exceed a threshold before more instances are added or removed.</p>\n  "
               },
               "IgnoreMetricsTime": {
@@ -5147,6 +5230,7 @@
                 "type": "integer",
                 "min_length": 1,
                 "max_length": 100,
+                "box": true,
                 "documentation": "\n  <p>The amount of time (in minutes) after a scaling event occurs that AWS OpsWorks should ignore metrics\n         and not raise any additional scaling events.\n         For example, AWS OpsWorks adds new instances following an upscaling event but the instances\n         won't start reducing the load until they have been booted and configured.\n         There is no point in raising additional scaling events during that operation, which typically takes several minutes.\n  <code>IgnoreMetricsTime</code> allows you to direct AWS OpsWorks to not raise any scaling events long enough\n         to get the new instances online.</p>\n  "
               },
               "CpuThreshold": {
@@ -5185,6 +5269,7 @@
                 "type": "integer",
                 "min_length": 1,
                 "max_length": 100,
+                "box": true,
                 "documentation": "\n  <p>The amount of time, in minutes, that the load must exceed a threshold before more instances are added or removed.</p>\n  "
               },
               "IgnoreMetricsTime": {
@@ -5192,6 +5277,7 @@
                 "type": "integer",
                 "min_length": 1,
                 "max_length": 100,
+                "box": true,
                 "documentation": "\n  <p>The amount of time (in minutes) after a scaling event occurs that AWS OpsWorks should ignore metrics\n         and not raise any additional scaling events.\n         For example, AWS OpsWorks adds new instances following an upscaling event but the instances\n         won't start reducing the load until they have been booted and configured.\n         There is no point in raising additional scaling events during that operation, which typically takes several minutes.\n  <code>IgnoreMetricsTime</code> allows you to direct AWS OpsWorks to not raise any scaling events long enough\n         to get the new instances online.</p>\n  "
               },
               "CpuThreshold": {
@@ -5743,6 +5829,7 @@
             "shape_name": "AppType",
             "type": "string",
             "enum": [
+              "java",
               "rails",
               "php",
               "nodejs",
@@ -5853,6 +5940,36 @@
               "documentation": null
             },
             "documentation": "\n  <p>One or more user-defined key/value pairs to be added to the stack attributes.</p>\n  "
+          },
+          "Environment": {
+            "shape_name": "EnvironmentVariables",
+            "type": "list",
+            "members": {
+              "shape_name": "EnvironmentVariable",
+              "type": "structure",
+              "members": {
+                "Key": {
+                  "shape_name": "String",
+                  "type": "string",
+                  "documentation": "\n    <p>(Required) The environment variable's name, which can consist of up to 64 characters and must be specified. The name can contain\n      upper- and lowercase letters, numbers, and underscores (_), but it must start with a letter or underscore.</p>\n  ",
+                  "required": true
+                },
+                "Value": {
+                  "shape_name": "String",
+                  "type": "string",
+                  "documentation": "\n    <p>(Optional) The environment variable's value, which can be left empty. If you specify a value, it can\n      contain up to 256 characters, which must all be printable.</p>\n  ",
+                  "required": true
+                },
+                "Secure": {
+                  "shape_name": "Boolean",
+                  "type": "boolean",
+                  "box": true,
+                  "documentation": "\n    <p>(Optional) Whether the variable's value will be returned by the <a>DescribeApps</a> action.\n      To conceal an environment variable's value, set <code>Secure</code> to <code>true</code>. \n      <code>DescribeApps</code> then returns <code>**Filtered**</code> instead of the actual value.\n      The default value for <code>Secure</code> is <code>false</code>.\n    </p>\n  "
+                }
+              },
+              "documentation": "\n    <p>Represents an app's environment variable.</p>\n  "
+            },
+            "documentation": "\n    <p>An array of <code>EnvironmentVariable</code> objects that specify environment variables to be associated with the app.\n      You can specify up to ten environment variables. After you deploy the app, these variables are defined on the\n      associated app server instances.</p>\n    <note>This parameter is supported only by Chef 11.10 stacks. If you have specified one or more environment variables, you cannot\n    modify the stack's Chef version.</note>\n  "
           }
         },
         "documentation": null
@@ -5969,7 +6086,7 @@
               "load",
               "timer"
             ],
-            "documentation": "\n  <p>The instance's auto scaling type, which has three possible values:</p>\n  <ul>\n  <li>\n<b>AlwaysRunning</b>: A 24/7 instance, which is not affected by auto scaling.</li>\n  <li>\n<b>TimeBasedAutoScaling</b>: A time-based auto scaling instance, which is started and stopped based on a specified schedule.</li>\n  <li>\n<b>LoadBasedAutoScaling</b>: A load-based auto scaling instance, which is started and stopped based on load metrics.</li>\n  </ul>\n  "
+            "documentation": "\n    <p>For load-based or time-based instances, the type.</p>\n  "
           },
           "Hostname": {
             "shape_name": "String",
@@ -5979,12 +6096,12 @@
           "Os": {
             "shape_name": "String",
             "type": "string",
-            "documentation": "\n  <p>The instance operating system, which must be set to one of the following.</p>\n  <ul>\n  <li>Standard operating systems: <code>Amazon Linux</code> or <code>Ubuntu 12.04 LTS</code>\n</li>\n  <li>Custom AMIs: <code>Custom</code>\n</li>\n  </ul>\n  <p>The default option is <code>Amazon Linux</code>. If you set this parameter to <code>Custom</code>, you must use the\n  <a>CreateInstance</a> action's AmiId parameter to specify\n         the custom AMI that you want to use. For more information on the standard operating systems, see\n  <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-os.html\">Operating Systems</a>For more information\n         on how to use custom AMIs with OpsWorks, see\n  <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-custom-ami.html\">Using Custom AMIs</a>.</p>\n  "
+            "documentation": "\n  <p>The instance operating system, which must be set to one of the following.</p>\n  <ul>\n    <li>Standard operating systems: <code>Amazon Linux</code>, <code>Ubuntu 12.04 LTS</code>, or <code>Ubuntu 14.04 LTS</code>.</li>\n  <li>Custom AMIs: <code>Custom</code>\n</li>\n  </ul>\n  <p>The default option is <code>Amazon Linux</code>. If you set this parameter to <code>Custom</code>, you must use the\n  <a>CreateInstance</a> action's AmiId parameter to specify\n         the custom AMI that you want to use. For more information on the standard operating systems, see\n  <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-os.html\">Operating Systems</a>For more information\n         on how to use custom AMIs with OpsWorks, see\n  <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-custom-ami.html\">Using Custom AMIs</a>.</p>\n  "
           },
           "AmiId": {
             "shape_name": "String",
             "type": "string",
-            "documentation": "\n  <p>A custom AMI ID to be used to create the instance. The AMI should be based on one of the standard AWS OpsWorks APIs:\n         Amazon Linux or Ubuntu 12.04 LTS. For more information, see\n  <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances.html\">Instances</a></p>\n  "
+            "documentation": "\n  <p>A custom AMI ID to be used to create the instance. The AMI should be based on one of the standard AWS OpsWorks AMIs:\n    Amazon Linux, Ubuntu 12.04 LTS, or Ubuntu 14.04 LTS. For more information, see\n  <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances.html\">Instances</a></p>\n  "
           },
           "SshKeyName": {
             "shape_name": "String",
@@ -6168,7 +6285,7 @@
                 "VolumeType": {
                   "shape_name": "String",
                   "type": "string",
-                  "documentation": "\n    <p>The volume type, standard or PIOPS.</p>\n  "
+                  "documentation": "\n    <p>The volume type: <code>standard</code>, <code>PIOPS</code>, or <code>gp2</code>.</p>\n  "
                 },
                 "Iops": {
                   "shape_name": "Integer",
@@ -6383,7 +6500,7 @@
           "documentation": "\n  <p>Indicates that a resource was not found.</p>\n  "
         }
       ],
-      "documentation": "\n    <p>Updates an Amazon RDS instance.</p>\n  "
+      "documentation": "\n    <p>Updates an Amazon RDS instance.</p>\n    <p><b>Required Permissions</b>: To use this action, an IAM user must have a Manage permissions level for the stack, or an attached\n      policy that explicitly grants permissions. For more information on user permissions, see\n      <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html\">Managing User Permissions</a>.</p>\n  "
     },
     "UpdateStack": {
       "name": "UpdateStack",
@@ -6433,7 +6550,7 @@
           "DefaultOs": {
             "shape_name": "String",
             "type": "string",
-            "documentation": "\n  <p>The stack's default operating system, which must be set to <code>Amazon Linux</code> or <code>Ubuntu 12.04 LTS</code>.\n         The default option is <code>Amazon Linux</code>.\n  </p>\n  "
+            "documentation": "\n    <p>The stack's default operating system, which must be set to <code>Amazon Linux</code>, <code>Ubuntu 12.04 LTS</code>,\n      or <code>Ubuntu 14.04 LTS</code>. The default option is <code>Amazon Linux</code>.\n  </p>\n  "
           },
           "HostnameTheme": {
             "shape_name": "String",
@@ -6448,7 +6565,7 @@
           "DefaultSubnetId": {
             "shape_name": "String",
             "type": "string",
-            "documentation": "\n  <p>The stack's default subnet ID.\n         All instances will be launched into this subnet unless you specify otherwise when you create the instance.\n         If you also specify a value for <code>DefaultAvailabilityZone</code>, the subnet must be in that zone.\n         For more information, see <a>CreateStack</a>.\n  </p>\n  "
+            "documentation": "\n    <p>The stack's default VPC subnet ID. This parameter is required if you specify a value for the <code>VpcId</code> parameter.\n      All instances are launched into this subnet unless you specify otherwise when you create the instance.\n      If you also specify a value for <code>DefaultAvailabilityZone</code>, the subnet must be in that zone.\n      For information on default values and when this parameter is required, see the <code>VpcId</code> parameter description.\n    </p>\n  "
           },
           "CustomJson": {
             "shape_name": "String",
