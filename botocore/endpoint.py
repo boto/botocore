@@ -65,29 +65,13 @@ class Endpoint(object):
     def make_request(self, operation, params):
         logger.debug("Making request for %s (verify_ssl=%s) with params: %s",
                      operation, self.verify, params)
+        signer = self._request_signer(operation)
         prepared_request = self.create_request(operation, params)
-        return self._send_request(prepared_request, operation)
+        return self._send_request(prepared_request, operation, params, signer)
 
     def create_request(self, operation, params, signer=None):
-        # To decide if we need to do auth or not we check the
-        # signature_version attribute on both the service and
-        # the operation are not None and we make sure there is an
-        # auth class associated with the endpoint.
-        # If any of these are not true, we skip auth.
-        if signer is not None:
-            # If the user explicitly specifies a signer, then we will sign
-            # the request.
-            signer = signer
-        else:
-            do_auth = (getattr(self.service, 'signature_version', None) and
-                    getattr(operation, 'signature_version', True) and
-                    self.auth)
-            if do_auth:
-                signer = self.auth
-            else:
-                # If we're not suppose to sign the request, then we set the signer
-                # to None.
-                signer = None
+        if signer is None:
+            signer = self._request_signer(operation)
         request = self._create_request_object(operation, params)
         prepared_request = self.prepare_request(request, signer)
         return prepared_request
@@ -109,17 +93,36 @@ class Endpoint(object):
         prepared_request = request.prepare()
         return prepared_request
 
-    def _send_request(self, request, operation):
+    def _request_signer(self, operation):
+        # To decide if we need to do auth or not we check the
+        # signature_version attribute on both the service and the
+        # operation are not None and we make sure there is an auth
+        # class associated with the endpoint. If any of these are
+        # not true, we skip auth.
+        do_auth = (getattr(self.service, 'signature_version', None) and
+                getattr(operation, 'signature_version', True) and
+                self.auth)
+        if do_auth:
+            return self.auth
+        else:
+            # If we're not suppose to sign the request, then we
+            # set the signer to None.
+            return None
+
+    def _send_request(self, request, operation, params, signer):
         attempts = 1
         response, exception = self._get_response(request, operation, attempts)
         while self._needs_retry(attempts, operation, response, exception):
             attempts += 1
-            # If there is a stream associated with the request, we need
-            # to reset it before attempting to send the request again.
-            # This will ensure that we resend the entire contents of the
-            # body.
-            request.reset_stream()
-            response, exception = self._get_response(request, operation,
+            # Close the current response and create a new request so that
+            # the authorization timestamp gets updated and the stream is
+            # reset.
+            logger.debug("Recreating request for %s (verify_ssl=%s) with "
+                         "params: %s", operation, self.verify, params)
+            if response is not None:
+                response.close()
+            new_request = self.create_request(operation, params, signer)
+            response, exception = self._get_response(new_request, operation,
                                                      attempts)
         return response
 
