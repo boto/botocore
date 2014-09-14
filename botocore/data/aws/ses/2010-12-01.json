@@ -170,19 +170,19 @@
                                     "shape_name": "NotificationTopic",
                                     "type": "string",
                                     "documentation": "\n        <p>The Amazon Resource Name (ARN) of the Amazon SNS topic\n        where Amazon SES will publish bounce notifications.</p>\n    ",
-                                    "required": true
+                                    "required": false
                                 },
                                 "ComplaintTopic": {
                                     "shape_name": "NotificationTopic",
                                     "type": "string",
                                     "documentation": "\n        <p>The Amazon Resource Name (ARN) of the Amazon SNS topic\n        where Amazon SES will publish complaint notifications.</p>\n    ",
-                                    "required": true
+                                    "required": false
                                 },
                                 "DeliveryTopic": {
                                     "shape_name": "NotificationTopic",
                                     "type": "string",
                                     "documentation": "\n        <p>The Amazon Resource Name (ARN) of the Amazon SNS topic\n        where Amazon SES will publish delivery notifications.</p>\n    ",
-                                    "required": true
+                                    "required": false
                                 },
                                 "ForwardingEnabled": {
                                     "shape_name": "Enabled",
