@@ -278,6 +278,21 @@
                         "type": "timestamp",
                         "documentation": "\n      <p>Specifies the date and time that CloudTrail last delivered log files to an account's Amazon S3 bucket.</p>\n   "
                     },
+                    "LatestDeliveryAttemptSucceeded": {
+                        "shape_name": "Date",
+                        "type": "timestamp",
+                        "documentation": ""
+                    },
+                    "LatestDeliveryAttemptTime": {
+                        "shape_name": "Date",
+                        "type": "timestamp",
+                        "documentation": ""
+                    },
+                    "LatestNotificationAttemptSucceeded": {
+                        "shape_name": "Date",
+                        "type": "timestamp",
+                        "documentation": ""
+                    },
                     "LatestNotificationTime": {
                         "shape_name": "Date",
                         "type": "timestamp",

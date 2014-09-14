@@ -2851,7 +2851,7 @@
                             },
                             "wrapper": true,
                             "documentation": "\n        <p>Describes a parameter group.</p>\n    ",
-                            "xmlname": "ClusterParameterGroup"
+                            "xmlname": "ParameterGroups"
                         },
                         "documentation": "\n        <p>\n            A list of <a>ClusterParameterGroup</a> instances. Each instance describes one cluster parameter\n            group.\n        </p>\n    "
                     }
@@ -2958,7 +2958,7 @@
                                 }
                             },
                             "documentation": "\n        <p>\n            Describes a parameter in a cluster parameter group.\n        </p>\n    ",
-                            "xmlname": "Parameter"
+                            "xmlname": "Parameters"
                         },
                         "documentation": "\n        <p>\n        A list of <a>Parameter</a> instances. Each instance lists the parameters of one cluster parameter\n            group.\n        </p>\n    "
                     },
@@ -3091,7 +3091,7 @@
                             },
                             "wrapper": true,
                             "documentation": "\n        <p>Describes a security group.</p>\n    ",
-                            "xmlname": "ClusterSecurityGroup"
+                            "xmlname": "ClusterSecurityGroups"
                         },
                         "documentation": "\n        <p>\n        A list of <a>ClusterSecurityGroup</a> instances.\n        </p>\n    "
                     }
@@ -3321,7 +3321,7 @@
                             },
                             "wrapper": true,
                             "documentation": "\n        <p>Describes a snapshot.</p>\n    ",
-                            "xmlname": "Snapshot"
+                            "xmlname": "Snapshots"
                         },
                         "documentation": "\n        <p>\n            A list of <a>Snapshot</a> instances.\n        </p>\n    "
                     }
@@ -3444,7 +3444,7 @@
                             },
                             "wrapper": true,
                             "documentation": "\n        <p>Describes a subnet group.</p>\n    ",
-                            "xmlname": "ClusterSubnetGroup"
+                            "xmlname": "ClusterSubnetGroups"
                         },
                         "documentation": "\n        <p>\n        A list of <a>ClusterSubnetGroup</a> instances.\n        </p>\n    "
                     }
@@ -3530,7 +3530,7 @@
                                 }
                             },
                             "documentation": "\n        <p>Describes a cluster version, including the parameter group family and description of\n        the version.</p>\n    ",
-                            "xmlname": "ClusterVersion"
+                            "xmlname": "ClusterVersions"
                         },
                         "documentation": "\n    <p>\n    A list of <code>Version</code> elements.\n    </p>\n   "
                     }
@@ -3933,7 +3933,7 @@
                             },
                             "wrapper": true,
                             "documentation": "\n        <p>Describes a cluster.</p>\n    ",
-                            "xmlname": "Cluster"
+                            "xmlname": "Clusters"
                         },
                         "documentation": "\n        <p>\n            A list of <a>Cluster</a> objects, where each object describes one cluster.  \n        </p>\n    "
                     }
@@ -4396,7 +4396,7 @@
                                 }
                             },
                             "documentation": "\n        <p>\n        Describes an event.\n        </p>\n    ",
-                            "xmlname": "Event"
+                            "xmlname": "Events"
                         },
                         "documentation": "\n        <p>\n        A list of <a>Event</a> instances.\n        </p>\n    "
                     }
@@ -4716,7 +4716,7 @@
                             },
                             "wrapper": true,
                             "documentation": "\n        <p>\n          Describes an orderable cluster option. \n        </p>\n    ",
-                            "xmlname": "OrderableClusterOption"
+                            "xmlname": "OrderableClusterOptions"
                         },
                         "documentation": "\n        <p>An <a>OrderableClusterOption</a> structure containing information about orderable options for the Cluster.</p>\n    "
                     },
@@ -4840,7 +4840,7 @@
                             },
                             "wrapper": true,
                             "documentation": "\n        <p>Describes a reserved node offering.</p>\n    ",
-                            "xmlname": "ReservedNodeOffering"
+                            "xmlname": "ReservedNodeOfferings"
                         },
                         "documentation": "\n       <p>A list of reserved node offerings.</p>\n   "
                     }
@@ -4986,7 +4986,7 @@
                             },
                             "wrapper": true,
                             "documentation": "\n        <p>\n            Describes a reserved node.\n        </p>\n   ",
-                            "xmlname": "ReservedNode"
+                            "xmlname": "ReservedNodes"
                         },
                         "documentation": "\n       <p>The list of reserved nodes.</p>\n   "
                     }

@@ -1305,6 +1305,7 @@
                                     "shape_name": "ConfigurationOptionValueType",
                                     "type": "string",
                                     "enum": [
+                                        "Boolean",
                                         "Scalar",
                                         "List"
                                     ],

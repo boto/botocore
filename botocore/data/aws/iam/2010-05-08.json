@@ -448,7 +448,7 @@
                                 "shape_name": "dateType",
                                 "type": "timestamp",
                                 "documentation": "\n\t\t<p>The date when the group was created.</p>\n\t",
-                                "required": true
+                                "required": false
                             }
                         },
                         "documentation": "\n\t\t<p>Information about the group.</p>\n\t",
@@ -1049,7 +1049,7 @@
                                 "max_length": 512,
                                 "pattern": "(\\u002F)|(\\u002F[\\u0021-\\u007F]+\\u002F)",
                                 "documentation": "\n\t\t<p>Path to the user. For more information about paths, see <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html\">Identifiers for IAM Entities</a> in the <i>Using IAM</i> guide.</p>\n\t",
-                                "required": true
+                                "required": false
                             },
                             "UserName": {
                                 "shape_name": "userNameType",
@@ -1058,7 +1058,7 @@
                                 "max_length": 64,
                                 "pattern": "[\\w+=,.@-]*",
                                 "documentation": "\n\t\t<p>The name identifying the user.</p>\n\t",
-                                "required": true
+                                "required": false
                             },
                             "UserId": {
                                 "shape_name": "idType",
@@ -1194,7 +1194,7 @@
                                         "max_length": 512,
                                         "pattern": "(\\u002F)|(\\u002F[\\u0021-\\u007F]+\\u002F)",
                                         "documentation": "\n\t\t<p>Path to the user. For more information about paths, see <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html\">Identifiers for IAM Entities</a> in the <i>Using IAM</i> guide.</p>\n\t",
-                                        "required": true
+                                        "required": false
                                     },
                                     "UserName": {
                                         "shape_name": "userNameType",
@@ -1203,7 +1203,7 @@
                                         "max_length": 64,
                                         "pattern": "[\\w+=,.@-]*",
                                         "documentation": "\n\t\t<p>The name identifying the user.</p>\n\t",
-                                        "required": true
+                                        "required": false
                                     },
                                     "UserId": {
                                         "shape_name": "idType",
@@ -2438,7 +2438,13 @@
                                 "AccessKeysPerUserQuota",
                                 "MFADevices",
                                 "MFADevicesInUse",
-                                "AccountMFAEnabled"
+                                "AccountMFAEnabled",
+                                "AssumeRolePolicySizeQuota",
+                                "InstanceProfiles",
+                                "InstanceProfilesQuota",
+                                "RolePolicySizeQuota",
+                                "Roles",
+                                "RolesQuota"
                             ],
                             "documentation": null
                         },
@@ -2603,7 +2609,7 @@
                                 "shape_name": "dateType",
                                 "type": "timestamp",
                                 "documentation": "\n\t\t<p>The date when the group was created.</p>\n\t",
-                                "required": true
+                                "required": false
                             }
                         },
                         "documentation": "\n\t\t<p>Information about the group.</p>\n\t",
@@ -2623,7 +2629,7 @@
                                     "max_length": 512,
                                     "pattern": "(\\u002F)|(\\u002F[\\u0021-\\u007F]+\\u002F)",
                                     "documentation": "\n\t\t<p>Path to the user. For more information about paths, see <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html\">Identifiers for IAM Entities</a> in the <i>Using IAM</i> guide.</p>\n\t",
-                                    "required": true
+                                    "required": false
                                 },
                                 "UserName": {
                                     "shape_name": "userNameType",
@@ -2632,7 +2638,7 @@
                                     "max_length": 64,
                                     "pattern": "[\\w+=,.@-]*",
                                     "documentation": "\n\t\t<p>The name identifying the user.</p>\n\t",
-                                    "required": true
+                                    "required": false
                                 },
                                 "UserId": {
                                     "shape_name": "idType",
@@ -3399,7 +3405,7 @@
                                 "max_length": 512,
                                 "pattern": "(\\u002F)|(\\u002F[\\u0021-\\u007F]+\\u002F)",
                                 "documentation": "\n\t\t<p>Path to the user. For more information about paths, see <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html\">Identifiers for IAM Entities</a> in the <i>Using IAM</i> guide.</p>\n\t",
-                                "required": true
+                                "required": false
                             },
                             "UserName": {
                                 "shape_name": "userNameType",
@@ -3408,7 +3414,7 @@
                                 "max_length": 64,
                                 "pattern": "[\\w+=,.@-]*",
                                 "documentation": "\n\t\t<p>The name identifying the user.</p>\n\t",
-                                "required": true
+                                "required": false
                             },
                             "UserId": {
                                 "shape_name": "idType",
@@ -3894,7 +3900,7 @@
                                     "shape_name": "dateType",
                                     "type": "timestamp",
                                     "documentation": "\n\t\t<p>The date when the group was created.</p>\n\t",
-                                    "required": true
+                                    "required": false
                                 }
                             },
                             "documentation": "\n\t\t<p>The Group data type contains information about a group.</p>\n\t\t<p> This data type is used as a response element in the following actions:</p>\n\t\t<ul>\n\t\t\t<li><a>CreateGroup</a></li>\n\t\t\t<li><a>GetGroup</a></li>\n\t\t\t<li><a>ListGroups</a></li>\n\t\t</ul>\n\t"
@@ -4012,7 +4018,7 @@
                                     "shape_name": "dateType",
                                     "type": "timestamp",
                                     "documentation": "\n\t\t<p>The date when the group was created.</p>\n\t",
-                                    "required": true
+                                    "required": false
                                 }
                             },
                             "documentation": "\n\t\t<p>The Group data type contains information about a group.</p>\n\t\t<p> This data type is used as a response element in the following actions:</p>\n\t\t<ul>\n\t\t\t<li><a>CreateGroup</a></li>\n\t\t\t<li><a>GetGroup</a></li>\n\t\t\t<li><a>ListGroups</a></li>\n\t\t</ul>\n\t"
@@ -5201,7 +5207,7 @@
                                     "max_length": 512,
                                     "pattern": "(\\u002F)|(\\u002F[\\u0021-\\u007F]+\\u002F)",
                                     "documentation": "\n\t\t<p>Path to the user. For more information about paths, see <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html\">Identifiers for IAM Entities</a> in the <i>Using IAM</i> guide.</p>\n\t",
-                                    "required": true
+                                    "required": false
                                 },
                                 "UserName": {
                                     "shape_name": "userNameType",
@@ -5210,7 +5216,7 @@
                                     "max_length": 64,
                                     "pattern": "[\\w+=,.@-]*",
                                     "documentation": "\n\t\t<p>The name identifying the user.</p>\n\t",
-                                    "required": true
+                                    "required": false
                                 },
                                 "UserId": {
                                     "shape_name": "idType",
@@ -5345,7 +5351,7 @@
                                             "max_length": 512,
                                             "pattern": "(\\u002F)|(\\u002F[\\u0021-\\u007F]+\\u002F)",
                                             "documentation": "\n\t\t<p>Path to the user. For more information about paths, see <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html\">Identifiers for IAM Entities</a> in the <i>Using IAM</i> guide.</p>\n\t",
-                                            "required": true
+                                            "required": false
                                         },
                                         "UserName": {
                                             "shape_name": "userNameType",
@@ -5354,7 +5360,7 @@
                                             "max_length": 64,
                                             "pattern": "[\\w+=,.@-]*",
                                             "documentation": "\n\t\t<p>The name identifying the user.</p>\n\t",
-                                            "required": true
+                                            "required": false
                                         },
                                         "UserId": {
                                             "shape_name": "idType",

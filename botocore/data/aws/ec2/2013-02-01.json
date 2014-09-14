@@ -5790,7 +5790,7 @@
                                             "shape_name": "PlatformValues",
                                             "type": "string",
                                             "enum": [
-                                                "Windows"
+                                                "windows"
                                             ],
                                             "documentation": "\n    <p>The instance operating system.</p>\n   ",
                                             "xmlname": "platform"
@@ -6809,7 +6809,7 @@
                                     "shape_name": "PlatformValues",
                                     "type": "string",
                                     "enum": [
-                                        "Windows"
+                                        "windows"
                                     ],
                                     "documentation": "\n     <p>The value is <code>Windows</code> for Windows AMIs; otherwise blank.</p>\n   ",
                                     "xmlname": "platform"
@@ -7910,7 +7910,7 @@
                                                 "shape_name": "PlatformValues",
                                                 "type": "string",
                                                 "enum": [
-                                                    "Windows"
+                                                    "windows"
                                                 ],
                                                 "documentation": "\n     <p>The value is <code>Windows</code> for Windows instances; otherwise blank.</p>\n   ",
                                                 "xmlname": "platform"
@@ -12247,13 +12247,15 @@
                                     "xmlname": "createTime"
                                 },
                                 "ProductDescription": {
-                                    "shape_name": "RIProductDescription",
+                                    "shape_name": "SpotProductDescription",
                                     "type": "string",
                                     "enum": [
                                         "Linux/UNIX",
                                         "Linux/UNIX (Amazon VPC)",
                                         "Windows",
-                                        "Windows (Amazon VPC)"
+                                        "Windows (Amazon VPC)",
+                                        "SUSE Linux",
+                                        "SUSE Linux (Amazon VPC)"
                                     ],
                                     "documentation": "\n     <p>The product description associated with the Spot Instance.</p>\n   ",
                                     "xmlname": "productDescription"
@@ -12479,13 +12481,15 @@
                                     "xmlname": "instanceType"
                                 },
                                 "ProductDescription": {
-                                    "shape_name": "RIProductDescription",
+                                    "shape_name": "SpotProductDescription",
                                     "type": "string",
                                     "enum": [
                                         "Linux/UNIX",
                                         "Linux/UNIX (Amazon VPC)",
                                         "Windows",
-                                        "Windows (Amazon VPC)"
+                                        "Windows (Amazon VPC)",
+                                        "SUSE Linux",
+                                        "SUSE Linux (Amazon VPC)"
                                     ],
                                     "documentation": "\n     <p>A general description of the AMI.</p>\n   ",
                                     "xmlname": "productDescription"
@@ -14645,7 +14649,7 @@
                         "shape_name": "PlatformValues",
                         "type": "string",
                         "enum": [
-                            "Windows"
+                            "windows"
                         ],
                         "documentation": "\n    <p>The instance operating system.</p>\n   ",
                         "required": true
@@ -14799,7 +14803,7 @@
                                         "shape_name": "PlatformValues",
                                         "type": "string",
                                         "enum": [
-                                            "Windows"
+                                            "windows"
                                         ],
                                         "documentation": "\n    <p>The instance operating system.</p>\n   ",
                                         "xmlname": "platform"
@@ -15221,7 +15225,7 @@
                                         "shape_name": "PlatformValues",
                                         "type": "string",
                                         "enum": [
-                                            "Windows"
+                                            "windows"
                                         ],
                                         "documentation": "\n    <p>The instance operating system.</p>\n   ",
                                         "xmlname": "platform"
@@ -16818,7 +16822,7 @@
                         "documentation": "\n     <p>The user-specified name for a logical grouping of bids.</p>\n     <p>When you specify an Availability Zone group in a Spot\n\t\t\t\tInstance request, all Spot Instances in the request are launched in the\n\t\t\t\tsame Availability Zone. Instance proximity is maintained with this\n\t\t\t\tparameter, but the choice of Availability Zone is not.\n\t\t\t\tThe group applies only to bids for Spot\tInstances of the same instance type. \n\t\t\t\tAny additional Spot Instance requests that are specified with the same\n\t\t\t\tAvailability Zone group name are launched in that\n\t\t\t\tsame Availability Zone, as long as at least one instance from the group\n\t\t\t\tis still active.</p>\n     <p>If there is no active instance running in the Availability Zone\n\t\t\t\tgroup that you specify for a new Spot Instance request (all\n\t\t\t\tinstances are terminated, the bid is expired, or the bid falls below\n\t\t\t\tcurrent market), then Amazon EC2 launches the instance in any\n\t\t\t\tAvailability Zone where the constraint can be met. Consequently, the\n\t\t\t\tsubsequent set of Spot Instances could be placed in a different zone\n\t\t\t\tfrom the original request, even if you specified the same\n\t\t\t\tAvailability Zone group.</p>\n     <p>Default: Instances are launched in any available Availability Zone.</p>\n   "
                     },
                     "LaunchSpecification": {
-                        "shape_name": "LaunchSpecification",
+                        "shape_name": "SpotLaunchSpecification",
                         "type": "structure",
                         "members": {
                             "ImageId": {
@@ -16979,7 +16983,8 @@
                                         "required": true,
                                         "documentation": "\n     <p>Enables monitoring for the instance.</p>\n     <p>Default: Disabled</p>\n   "
                                     }
-                                }
+                                },
+                                "shape_name": "SpotInstanceMonitoring"
                             },
                             "SubnetId": {
                                 "shape_name": "String",
@@ -17590,13 +17595,15 @@
                                     "xmlname": "createTime"
                                 },
                                 "ProductDescription": {
-                                    "shape_name": "RIProductDescription",
+                                    "shape_name": "SpotProductDescription",
                                     "type": "string",
                                     "enum": [
                                         "Linux/UNIX",
                                         "Linux/UNIX (Amazon VPC)",
                                         "Windows",
-                                        "Windows (Amazon VPC)"
+                                        "Windows (Amazon VPC)",
+                                        "SUSE Linux",
+                                        "SUSE Linux (Amazon VPC)"
                                     ],
                                     "documentation": "\n     <p>The product description associated with the Spot Instance.</p>\n   ",
                                     "xmlname": "productDescription"
@@ -18657,7 +18664,7 @@
                                     "shape_name": "PlatformValues",
                                     "type": "string",
                                     "enum": [
-                                        "Windows"
+                                        "windows"
                                     ],
                                     "documentation": "\n     <p>The value is <code>Windows</code> for Windows instances; otherwise blank.</p>\n   ",
                                     "xmlname": "platform"
