@@ -572,7 +572,8 @@ class Session(object):
         # add ch to logger
         log.addHandler(ch)
 
-    def register(self, event_name, handler, unique_id=None):
+    def register(self, event_name, handler, unique_id=None,
+                 unique_id_uses_count=False):
         """Register a handler with an event.
 
         :type event_name: str
@@ -591,10 +592,25 @@ class Session(object):
             This can be used to prevent an event handler from being
             registered twice.
 
-        """
-        self._events.register(event_name, handler, unique_id)
+        :param unique_id_uses_count: boolean
+        :param unique_id_uses_count: Specifies if the event should maintain
+            a count when a ``unique_id`` is registered and unregisted. The
+            event can only be completely unregistered once every register call
+            using the unique id has been matched by an ``unregister`` call.
+            If ``unique_id`` is specified, subsequent ``register``
+            calls must use the same value for  ``unique_id_uses_count``
+            as the ``register`` call that first registered the event.
 
-    def unregister(self, event_name, handler=None, unique_id=None):
+        :raises ValueError: If the call to ``register`` uses ``unique_id``
+            but the value for ``unique_id_uses_count`` differs from the
+            ``unique_id_uses_count`` value declared by the very first
+            ``register`` call for that ``unique_id``. 
+        """
+        self._events.register(event_name, handler, unique_id,
+                              unique_id_uses_count=unique_id_uses_count)
+
+    def unregister(self, event_name, handler=None, unique_id=None,
+                   unique_id_uses_count=False):
         """Unregister a handler with an event.
 
         :type event_name: str
@@ -608,9 +624,24 @@ class Session(object):
             to unregister.  You can provide either the handler or the
             unique_id, you do not have to provide both.
 
+        :param unique_id_uses_count: boolean
+        :param unique_id_uses_count: Specifies if the event should maintain
+            a count when a ``unique_id`` is registered and unregisted. The
+            event can only be completely unregistered once every ``register``
+            call using the ``unique_id`` has been matched by an ``unregister``
+            call. If the ``unique_id`` is specified, subsequent
+            ``unregister`` calls must use the same value for 
+            ``unique_id_uses_count`` as the ``register`` call that first
+            registered the event.
+
+        :raises ValueError: If the call to ``unregister`` uses ``unique_id``
+            but the value for ``unique_id_uses_count`` differs from the
+            ``unique_id_uses_count`` value declared by the very first
+            ``register`` call for that ``unique_id``. 
         """
         self._events.unregister(event_name, handler=handler,
-                                unique_id=unique_id)
+                                unique_id=unique_id,
+                                unique_id_uses_count=unique_id_uses_count)
 
     def register_event(self, event_name, fmtstr):
         """

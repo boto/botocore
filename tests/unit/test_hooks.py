@@ -329,6 +329,52 @@ class TestWildcardHandlers(unittest.TestCase):
         self.emitter.emit('foo.bar.baz')
         self.assertEqual(len(self.hook_calls), 0)
 
+    def test_register_with_uses_count_initially(self):
+        self.emitter.register('foo', self.hook, unique_id='foo',
+                              unique_id_uses_count=True)
+        # Subsequent calls must set ``unique_id_uses_count`` to True.
+        with self.assertRaises(ValueError):
+            self.emitter.register('foo', self.hook, unique_id='foo')
+
+    def test_register_with_uses_count_not_initially(self):
+        self.emitter.register('foo', self.hook, unique_id='foo')
+        # Subsequent calls must set ``unique_id_uses_count`` to False.
+        with self.assertRaises(ValueError):
+            self.emitter.register('foo', self.hook, unique_id='foo',
+                                  unique_id_uses_count=True)
+
+    def test_register_with_uses_count_unregister(self):
+        self.emitter.register('foo', self.hook, unique_id='foo',
+                              unique_id_uses_count=True)
+        self.emitter.register('foo', self.hook, unique_id='foo',
+                              unique_id_uses_count=True)
+        # Event was registered to use a count so it must be specified
+        # that a count is used when unregistering
+        with self.assertRaises(ValueError):
+            self.emitter.unregister('foo', self.hook, unique_id='foo')
+        # Event should not have been unregistered.
+        self.emitter.emit('foo')
+        self.assertEqual(len(self.hook_calls), 1)
+        self.emitter.unregister('foo', self.hook, unique_id='foo',
+                                unique_id_uses_count=True)
+        # Event still should not be unregistered.
+        self.hook_calls = []
+        self.emitter.emit('foo')
+        self.assertEqual(len(self.hook_calls), 1)
+        self.emitter.unregister('foo', self.hook, unique_id='foo',
+                                unique_id_uses_count=True)
+        # Now the event should be unregistered.
+        self.hook_calls = []
+        self.emitter.emit('foo')
+        self.assertEqual(len(self.hook_calls), 0)
+
+    def test_register_with_no_uses_count_unregister(self):
+        self.emitter.register('foo', self.hook, unique_id='foo')
+        # The event was not registered to use a count initially
+        with self.assertRaises(ValueError):
+            self.emitter.unregister('foo', self.hook, unique_id='foo',
+                                    unique_id_uses_count=True)
+
 
 if __name__ == '__main__':
     unittest.main()
