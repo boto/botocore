@@ -229,7 +229,7 @@ class ParamValidator(object):
     def _validate_boolean(self, param, shape, errors, name):
         pass
 
-    @type_check(valid_types=(float, int, decimal.Decimal))
+    @type_check(valid_types=(float, decimal.Decimal) + six.integer_types)
     def _validate_double(self, param, shape, errors, name):
         range_check(name, param, shape, 'invalid range', errors)
 
