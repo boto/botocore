@@ -12,8 +12,11 @@
 # language governing permissions and limitations under the License.
 
 from tests import unittest
+import datetime
 
 import six
+from dateutil.tz import tzutc
+
 import botocore
 from botocore import response
 from botocore.exceptions import IncompleteReadError
@@ -59,6 +62,8 @@ class TestStreamWrapper(unittest.TestCase):
             stream.read()
 
 class TestGetResponse(unittest.TestCase):
+    maxDiff = None
+
     def test_get_response_streaming_ok(self):
         http_response = Response()
         http_response.headers = {
@@ -77,7 +82,7 @@ class TestGetResponse(unittest.TestCase):
         s3 = session.get_service('s3')
         operation = s3.get_operation('GetObject')
 
-        res = response.get_response(session, operation, http_response)
+        res = response.get_response(operation.model, http_response)
         self.assertTrue(isinstance(res[1]['Body'], response.StreamingBody))
         self.assertEqual(res[1]['ETag'],
                          '"00000000000000000000000000000000"')
@@ -100,14 +105,12 @@ class TestGetResponse(unittest.TestCase):
         operation = s3.get_operation('GetObject') # streaming operation
 
         self.assertEqual(
-            response.get_response(session, operation, http_response)[1], 
-            {u'Body': None,
-              'Errors': [{'HostId': 'AAAAAAAAAAAAAAAAAAA',
-                          'Message': 'Access Denied',
-                          'Code': 'AccessDenied',
-                          'RequestId': 'XXXXXXXXXXXXXXXX'}],
-              'ResponseMetadata': {},
-             u'Metadata': {}}
+            response.get_response(operation.model, http_response)[1],
+            {'Error': {'Message': 'Access Denied',
+                       'Code': 'AccessDenied',},
+             'ResponseMetadata': {'HostId': 'AAAAAAAAAAAAAAAAAAA',
+                                  'RequestId': 'XXXXXXXXXXXXXXXX'},
+             }
             )
 
     def test_get_response_nonstreaming_ok(self):
@@ -129,15 +132,11 @@ class TestGetResponse(unittest.TestCase):
         operation = s3.get_operation('ListObjects') # non-streaming operation
 
         self.assertEqual(
-            response.get_response(session, operation, http_response)[1], 
-            { 'ResponseMetadata': {},
-              'Errors': [{'HostId': 'AAAAAAAAAAAAAAAAAAA',
-                          'Message': 'Access Denied',
-                          'Code': 'AccessDenied',
-                          'RequestId': 'XXXXXXXXXXXXXXXX'}],
-              'ResponseMetadata': {},
-              u'CommonPrefixes': [],
-              u'Contents': [],
+            response.get_response(operation.model, http_response)[1],
+            { 'ResponseMetadata': {'RequestId': 'XXXXXXXXXXXXXXXX',
+                                   'HostId': 'AAAAAAAAAAAAAAAAAAA'},
+              'Error': {'Message': 'Access Denied',
+                        'Code': 'AccessDenied',}
               }
             )
     def test_get_response_nonstreaming_ng(self):
@@ -159,11 +158,10 @@ class TestGetResponse(unittest.TestCase):
         operation = s3.get_operation('ListObjects') # non-streaming operation
 
         self.assertEqual(
-            response.get_response(session, operation, http_response)[1], 
-            {u'CommonPrefixes': [],
-             u'Contents': [{u'ETag': '"00000000000000000000000000000000"',
+            response.get_response(operation.model, http_response)[1],
+            {u'Contents': [{u'ETag': '"00000000000000000000000000000000"',
                             u'Key': 'test.png',
-                            u'LastModified': '2014-03-01T17:06:40.000Z',
+                            u'LastModified': datetime.datetime(2014, 3, 1, 17, 6, 40, tzinfo=tzutc()),
                             u'Owner': {u'DisplayName': 'dummy',
                                        u'ID': 'AAAAAAAAAAAAAAAAAAA'},
                             u'Size': 6702,
@@ -173,6 +171,9 @@ class TestGetResponse(unittest.TestCase):
              u'MaxKeys': 1000,
              u'Name': 'mybucket',
              u'Prefix': None,
-             'ResponseMetadata': {}}
-            )
+             'ResponseMetadata': {
+                 'RequestId': 'XXXXXXXXXXXXXXXX',
+                 'HostId': 'AAAAAAAAAAAAAAAAAAA',
+             }}
+        )
 

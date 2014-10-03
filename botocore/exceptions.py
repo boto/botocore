@@ -163,6 +163,11 @@ class ValidationError(BotoCoreError):
            "of type {type_name} ")
 
 
+class ParamValidationError(BotoCoreError):
+    fmt = 'Parameter validation failed:\n{report}'
+
+
+
 # These exceptions subclass from ValidationError so that code
 # can just 'except ValidationError' to catch any possibly validation
 # error.
@@ -215,6 +220,10 @@ class UnknownServiceStyle(BotoCoreError):
 
 class PaginationError(BotoCoreError):
     fmt = 'Error during pagination: {message}'
+
+
+class OperationNotPageableError(BotoCoreError):
+    fmt = 'Operation cannot be paginated: {operation_name}'
 
 
 class EventNotFound(BotoCoreError):

@@ -1,0 +1,436 @@
+from tests import unittest
+
+from botocore.model import ServiceModel, NoShapeFoundError, InvalidShapeError
+from botocore.model import OperationNotFoundError, ShapeResolver
+from botocore.model import InvalidShapeReferenceError
+
+
+class TestServiceModel(unittest.TestCase):
+
+    def setUp(self):
+        self.model = {
+            'metadata': {'protocol': 'query'},
+            'documentation': '',
+            'operations': {},
+            'shapes': {}
+        }
+        self.service_model = ServiceModel(self.model)
+
+    def test_metadata_available(self):
+        # You should be able to access the metadata in a service description
+        # through the service model object.
+        self.assertEqual(self.service_model.metadata.get('protocol'), 'query')
+
+    def test_operation_does_not_exist(self):
+        with self.assertRaises(OperationNotFoundError):
+            self.service_model.operation_model('NoExistOperation')
+
+
+class TestOperationModelFromService(unittest.TestCase):
+    def setUp(self):
+        self.model = {
+            'metadata': {'protocol': 'query'},
+            'documentation': '',
+            'operations': {
+                'OperationName': {
+                    'http': {
+                        'method': 'POST',
+                        'requestUri': '/',
+                    },
+                    'name': 'OperationName',
+                    'input': {
+                        'shape': 'OperationNameRequest'
+                    },
+                    'output': {
+                        'shape': 'OperationNameResponse',
+                    },
+                    'errors': [{'shape': 'NoSuchResourceException'}],
+                }
+            },
+            'shapes': {
+                'OperationNameRequest': {
+                    'type': 'structure',
+                    'members': {
+                        'Arg1': {'shape': 'stringType'},
+                        'Arg2': {'shape': 'stringType'},
+                    }
+                },
+                'OperationNameResponse': {
+                    'type': 'structure',
+                    'members': {
+                        'String': {
+                            'shape': 'stringType',
+                        }
+                    }
+                },
+                'NoSuchResourceException': {
+                    'type': 'structure',
+                    'members': {}
+                },
+                'stringType': {
+                    'type': 'string',
+                }
+            }
+        }
+        self.service_model = ServiceModel(self.model)
+
+    def test_operation_input_model(self):
+        service_model = ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertEqual(operation.name, 'OperationName')
+        # Operations should also have a reference to the top level metadata.
+        self.assertEqual(operation.metadata['protocol'], 'query')
+        self.assertEqual(operation.http['method'], 'POST')
+        self.assertEqual(operation.http['requestUri'], '/')
+        shape = operation.input_shape
+        self.assertEqual(shape.name, 'OperationNameRequest')
+        self.assertEqual(list(sorted(shape.members)), ['Arg1', 'Arg2'])
+
+    def test_operation_output_model(self):
+        service_model = ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        output = operation.output_shape
+        self.assertEqual(list(output.members), ['String'])
+        self.assertFalse(operation.has_streaming_output)
+
+    def test_operation_shape_not_required(self):
+        # It's ok if there's no output shape. We'll just get a return value of
+        # None.
+        del self.model['operations']['OperationName']['output']
+        service_model = ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        output_shape = operation.output_shape
+        self.assertIsNone(output_shape)
+
+    def test_streaming_output_for_operation(self):
+        self.model = {
+            'metadata': {'protocol': 'query'},
+            'documentation': '',
+            'operations': {
+                'OperationName': {
+                    'name': 'OperationName',
+                    'output': {
+                        'shape': 'OperationNameResponse',
+                    },
+                }
+            },
+            'shapes': {
+                'OperationNameResponse': {
+                    'type': 'structure',
+                    'members': {
+                        'String': {
+                            'shape': 'stringType',
+                        },
+                        "Body": {
+                            'shape': 'blobType',
+                        }
+                    },
+                    'payload': 'Body'
+                },
+                'stringType': {
+                    'type': 'string',
+                },
+                'blobType': {
+                    'type': 'blob'
+                }
+            }
+        }
+        service_model = ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertTrue(operation.has_streaming_output)
+
+    def test_payload_thats_not_streaming(self):
+        self.model = {
+            'metadata': {'protocol': 'query'},
+            'operations': {
+                'OperationName': {
+                    'name': 'OperationName',
+                    'output': {
+                        'shape': 'OperationNameResponse',
+                    },
+                }
+            },
+            'shapes': {
+                'OperationNameResponse': {
+                    'type': 'structure',
+                    'members': {
+                        'String': {
+                            'shape': 'stringType',
+                        },
+                    },
+                    'payload': 'String'
+                },
+                'stringType': {
+                    'type': 'string',
+                },
+            }
+        }
+        service_model = ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertFalse(operation.has_streaming_output)
+
+
+class TestDeepMerge(unittest.TestCase):
+    def setUp(self):
+        self.shapes = {
+            'SetQueueAttributes': {
+                'type': 'structure',
+                'members': {
+                    'MapExample': {'shape': 'StrToStrMap',
+                                   'locationName': 'Attribute'},
+                }
+            },
+            'SetQueueAttributes2': {
+                'type': 'structure',
+                'members': {
+                    'MapExample': {'shape': 'StrToStrMap',
+                                   'locationName': 'Attribute2'},
+                }
+            },
+            'StrToStrMap': {
+                'type': 'map',
+                'key': {'shape': 'StringType', 'locationName': 'Name'},
+                'value': {'shape': 'StringType', 'locationName': 'Value'},
+                'flattened': True,
+                'name': 'NotAttribute',
+            },
+            'StringType': {'type': 'string'}
+        }
+        self.shape_resolver = ShapeResolver(self.shapes)
+
+    def test_deep_merge(self):
+        shape = self.shape_resolver.get_shape_by_name('SetQueueAttributes')
+        map_merged = shape.members['MapExample']
+        # map_merged has a serialization as a member trait as well as
+        # in the StrToStrMap.
+        # The member trait should have precedence.
+        self.assertEqual(map_merged.serialization,
+                          # member beats the definition.
+                         {'name': 'Attribute',
+                          # From the definition.
+                          'flattened': True,})
+        # Ensure we don't merge/mutate the original dicts.
+        self.assertEqual(map_merged.key.serialization['name'], 'Name')
+        self.assertEqual(map_merged.value.serialization['name'], 'Value')
+        self.assertEqual(map_merged.key.serialization['name'], 'Name')
+
+    def test_merges_copy_dict(self):
+        shape = self.shape_resolver.get_shape_by_name('SetQueueAttributes')
+        map_merged = shape.members['MapExample']
+        self.assertEqual(map_merged.serialization.get('name'), 'Attribute')
+
+        shape2 = self.shape_resolver.get_shape_by_name('SetQueueAttributes2')
+        map_merged2 = shape2.members['MapExample']
+        self.assertEqual(map_merged2.serialization.get('name'), 'Attribute2')
+
+
+class TestShapeResolver(unittest.TestCase):
+    def test_get_shape_by_name(self):
+        shape_map = {
+            'Foo': {
+                'type': 'structure',
+                'members': {
+                    'Bar': {'shape': 'StringType'},
+                    'Baz': {'shape': 'StringType'},
+                }
+            },
+            "StringType": {
+                "type": "string"
+            }
+        }
+        resolver = ShapeResolver(shape_map)
+        shape = resolver.get_shape_by_name('Foo')
+        self.assertEqual(shape.name, 'Foo')
+        self.assertEqual(shape.type_name, 'structure')
+
+    def test_resolve_shape_reference(self):
+        shape_map = {
+            'Foo': {
+                'type': 'structure',
+                'members': {
+                    'Bar': {'shape': 'StringType'},
+                    'Baz': {'shape': 'StringType'},
+                }
+            },
+            "StringType": {
+                "type": "string"
+            }
+        }
+        resolver = ShapeResolver(shape_map)
+        shape = resolver.resolve_shape_ref({'shape': 'StringType'})
+        self.assertEqual(shape.name, 'StringType')
+        self.assertEqual(shape.type_name, 'string')
+
+    def test_resolve_shape_references_with_member_traits(self):
+        shape_map = {
+            'Foo': {
+                'type': 'structure',
+                'members': {
+                    'Bar': {'shape': 'StringType'},
+                    'Baz': {'shape': 'StringType', 'locationName': 'other'},
+                }
+            },
+            "StringType": {
+                "type": "string"
+            }
+        }
+        resolver = ShapeResolver(shape_map)
+        shape = resolver.resolve_shape_ref({'shape': 'StringType',
+                                            'locationName': 'other'})
+        self.assertEqual(shape.serialization['name'], 'other')
+        self.assertEqual(shape.name, 'StringType')
+
+    def test_serialization_cache(self):
+        shape_map = {
+            'Foo': {
+                'type': 'structure',
+                'members': {
+                    'Baz': {'shape': 'StringType', 'locationName': 'other'},
+                }
+            },
+            "StringType": {
+                "type": "string"
+            }
+        }
+        resolver = ShapeResolver(shape_map)
+        shape = resolver.resolve_shape_ref({'shape': 'StringType',
+                                            'locationName': 'other'})
+        self.assertEqual(shape.serialization['name'], 'other')
+        # serialization is computed on demand, and a cache is kept.
+        # This is just verifying that trying to access serialization again
+        # gives the same result.  We don't actually care that it's cached,
+        # we just care that the cache doesn't mess with correctness.
+        self.assertEqual(shape.serialization['name'], 'other')
+
+    def test_shape_overrides(self):
+        shape_map = {
+            "StringType": {
+                "type": "string",
+                "documentation": "Original documentation"
+            }
+        }
+        resolver = ShapeResolver(shape_map)
+        shape = resolver.get_shape_by_name('StringType')
+        self.assertEqual(shape.documentation, 'Original documentation')
+
+        shape = resolver.resolve_shape_ref({'shape': 'StringType',
+                                            'documentation': 'override'})
+        self.assertEqual(shape.documentation, 'override')
+
+    def test_shape_type_structure(self):
+        shapes = {
+            'ChangePasswordRequest': {
+                'type': 'structure',
+                'members': {
+                    'OldPassword': {'shape': 'passwordType'},
+                    'NewPassword': {'shape': 'passwordType'},
+                }
+            },
+            'passwordType': {
+                "type":"string",
+            }
+        }
+        resolver = ShapeResolver(shapes)
+        shape = resolver.get_shape_by_name('ChangePasswordRequest')
+        self.assertEqual(shape.type_name, 'structure')
+        self.assertEqual(shape.name, 'ChangePasswordRequest')
+        self.assertEqual(list(sorted(shape.members)),
+                         ['NewPassword', 'OldPassword'])
+        self.assertEqual(shape.members['OldPassword'].name, 'passwordType')
+        self.assertEqual(shape.members['OldPassword'].type_name, 'string')
+
+    def test_shape_metadata(self):
+        shapes = {
+            'ChangePasswordRequest': {
+                'type': 'structure',
+                'required': ['OldPassword', 'NewPassword'],
+                'members': {
+                    'OldPassword': {'shape': 'passwordType'},
+                    'NewPassword': {'shape': 'passwordType'},
+                }
+            },
+            'passwordType': {
+                "type":"string",
+                "min":1,
+                "max":128,
+                "sensitive":True
+            }
+        }
+        resolver = ShapeResolver(shapes)
+        shape = resolver.get_shape_by_name('ChangePasswordRequest')
+        self.assertEqual(shape.metadata['required'],
+                         ['OldPassword', 'NewPassword'])
+        member = shape.members['OldPassword']
+        self.assertEqual(member.metadata['min'], 1)
+        self.assertEqual(member.metadata['max'], 128)
+        self.assertEqual(member.metadata['sensitive'], True)
+
+    def test_shape_list(self):
+        shapes = {
+            'mfaDeviceListType': {
+                "type":"list",
+                "member": {"shape": "MFADevice"},
+            },
+            'MFADevice': {
+                'type': 'structure',
+                'members': {
+                    'UserName': {'shape': 'userNameType'}
+                }
+            },
+            'userNameType': {
+                'type': 'string'
+            }
+        }
+        resolver = ShapeResolver(shapes)
+        shape = resolver.get_shape_by_name('mfaDeviceListType')
+        self.assertEqual(shape.member.type_name, 'structure')
+        self.assertEqual(shape.member.name, 'MFADevice')
+        self.assertEqual(list(shape.member.members), ['UserName'])
+
+    def test_shape_does_not_exist(self):
+        resolver = ShapeResolver({})
+        with self.assertRaises(NoShapeFoundError):
+            resolver.get_shape_by_name('NoExistShape')
+
+    def test_missing_type_key(self):
+        shapes = {
+            'UnknownType': {
+                'NotTheTypeKey': 'someUnknownType'
+            }
+        }
+        resolver = ShapeResolver(shapes)
+        with self.assertRaises(InvalidShapeError):
+            resolver.get_shape_by_name('UnknownType')
+
+    def test_bad_shape_ref(self):
+        # This is an example of a denormalized model,
+        # which should raise an exception.
+        shapes = {
+            'Struct': {
+                'type': 'structure',
+                'members': {
+                    'A': {'type': 'string'},
+                    'B': {'type': 'string'},
+                }
+            }
+        }
+        resolver = ShapeResolver(shapes)
+        with self.assertRaises(InvalidShapeReferenceError):
+            struct = resolver.get_shape_by_name('Struct')
+            # Resolving the members will fail because
+            # the 'A' and 'B' members are not shape refs.
+            struct.members
+
+    def test_shape_name_in_repr(self):
+        shapes = {
+            'StringType': {
+                'type': 'string',
+            }
+        }
+        resolver = ShapeResolver(shapes)
+        self.assertIn('StringType',
+                      repr(resolver.get_shape_by_name('StringType')))
+
+
+if __name__ == '__main__':
+    unittest.main()

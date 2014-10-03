@@ -446,6 +446,7 @@ class TestEndpointHeuristics(unittest.TestCase):
                 {'uri': 'https://{service}.us-gov.amazonaws.com',
                  'constraints': [['region', 'startsWith', 'us-gov']],
                  'properties': {
+                     'signatureVersion': 'v4',
                      'credentialScope': {
                          'region': 'us-east-1'
                      }
@@ -455,4 +456,5 @@ class TestEndpointHeuristics(unittest.TestCase):
         endpoint = resolver.construct_endpoint(
             service_name='iam', region_name='us-gov-1')
         self.assertEqual(endpoint['properties'],
-                         {'credentialScope': {'region': 'us-east-1'}})
+                         {'credentialScope': {'region': 'us-east-1'},
+                          'signatureVersion': 'v4'})

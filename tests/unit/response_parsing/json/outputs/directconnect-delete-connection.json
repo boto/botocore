@@ -1,9 +1,0 @@
-{
-    "Errors": [
-        {
-            "Message": "Connection ID foobar has an invalid format.",
-            "Type": "DirectConnectClientException",
-            "Code": "DirectConnectClientException"
-        }
-    ]
-}

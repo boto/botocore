@@ -486,6 +486,12 @@ def add_retry_configs(new_model, retry_model, definitions):
     # The service specific retry config is keyed off of the endpoint
     # prefix as defined in the JSON model.
     endpoint_prefix = new_model.get('endpoint_prefix', '')
+    final_retry_config = build_retry_config(endpoint_prefix, retry_model,
+                                            definitions)
+    new_model['retry'] = final_retry_config
+
+
+def build_retry_config(endpoint_prefix, retry_model, definitions):
     service_config = retry_model.get(endpoint_prefix, {})
     resolve_references(service_config, definitions)
     # We want to merge the global defaults with the service specific
@@ -495,7 +501,7 @@ def add_retry_configs(new_model, retry_model, definitions):
     resolve_references(final_retry_config, definitions)
     # The merge the service specific config on top.
     merge_dicts(final_retry_config, service_config)
-    new_model['retry'] = final_retry_config
+    return final_retry_config
 
 
 def resolve_references(config, definitions):

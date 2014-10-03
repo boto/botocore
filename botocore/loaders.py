@@ -92,6 +92,7 @@ class Loader(object):
     """
     file_loader_class = JSONFileLoader
     extension = '.json'
+    service_extension = 'api.json'
 
     def __init__(self, data_path='', file_loader_class=None, extension=None,
                  cache=None):
@@ -358,7 +359,7 @@ class Loader(object):
                 continue
 
             # If it's a directory, look inside for the right version.
-            glob_exp = os.path.join(path, '*' + self.extension)
+            glob_exp = os.path.join(path, '*' + self.service_extension)
             options = glob.glob(glob_exp)
 
             # No options == no dice. Move along.

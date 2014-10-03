@@ -20,12 +20,13 @@ import base64
 import hashlib
 import logging
 import re
+import xml.etree.cElementTree
 
 import six
 
 from botocore.compat import urlsplit, urlunsplit, unquote, json, quote
 from botocore import retryhandler
-from botocore.payload import Payload
+from botocore import translate
 import botocore.auth
 
 
@@ -67,15 +68,15 @@ def check_for_200_error(response, operation, **kwargs):
             http_response.status_code = 500
 
 
-def decode_console_output(event_name, shape, value, **kwargs):
+def decode_console_output(parsed, **kwargs):
     try:
-        value = base64.b64decode(six.b(value)).decode('utf-8')
-    except TypeError:
+        value = base64.b64decode(six.b(parsed['Output'])).decode('utf-8')
+        parsed['Output'] = value
+    except (ValueError, TypeError, AttributeError):
         logger.debug('Error decoding base64', exc_info=True)
-    return value
 
 
-def decode_quoted_jsondoc(event_name, shape, value, **kwargs):
+def decode_quoted_jsondoc(value):
     try:
         value = json.loads(unquote(value))
     except (ValueError, TypeError):
@@ -83,18 +84,19 @@ def decode_quoted_jsondoc(event_name, shape, value, **kwargs):
     return value
 
 
-def decode_jsondoc(event_name, shape, value, **kwargs):
+def json_decode_template_body(parsed, **kwargs):
     try:
-        value = json.loads(value)
+        value = json.loads(parsed['TemplateBody'])
+        parsed['TemplateBody'] = value
     except (ValueError, TypeError):
         logger.debug('error loading JSON', exc_info=True)
-    return value
 
 
 def calculate_md5(event_name, params, **kwargs):
-    if params['payload'] and not 'Content-MD5' in params['headers']:
+    request_dict = params
+    if request_dict['body'] and not 'Content-MD5' in params['headers']:
         md5 = hashlib.md5()
-        md5.update(six.b(params['payload'].getvalue()))
+        md5.update(six.b(params['body']))
         value = base64.b64encode(md5.digest()).decode('utf-8')
         params['headers']['Content-MD5'] = value
 
@@ -170,7 +172,8 @@ def fix_s3_host(event_name, endpoint, request, auth, **kwargs):
                 if auth.auth_path[-1] != '/':
                     auth.auth_path += '/'
             path_parts.remove(bucket_name)
-            host = bucket_name + '.' + endpoint.service.global_endpoint
+            global_endpoint = 's3.amazonaws.com'
+            host = bucket_name + '.' + global_endpoint
             new_tuple = (parts.scheme, host, '/'.join(path_parts),
                          parts.query, '')
             new_uri = urlunsplit(new_tuple)
@@ -186,17 +189,28 @@ def _allowed_region(region_name):
 
 
 def register_retries_for_service(service, **kwargs):
-    if not hasattr(service, 'retry'):
+    loader = service.session.get_component('data_loader')
+    config = _load_retry_config(loader, service.endpoint_prefix)
+    if not config:
         return
     logger.debug("Registering retry handlers for service: %s", service)
-    config = service.retry
     session = service.session
-    handler = retryhandler.create_retry_handler(config)
+    handler = retryhandler.create_retry_handler(
+        config, service.endpoint_prefix)
     unique_id = 'retry-config-%s' % service.endpoint_prefix
     session.register('needs-retry.%s' % service.endpoint_prefix,
                      handler, unique_id=unique_id)
     _register_for_operations(config, session,
                              service_name=service.endpoint_prefix)
+
+
+def _load_retry_config(loader, endpoint_prefix):
+    original_config = loader.load_data('aws/_retry')
+    retry_config = translate.build_retry_config(
+        endpoint_prefix, original_config['retry'],
+        original_config['definitions'])
+    # TODO: I think I'm missing error conditions here.
+    return retry_config
 
 
 def _register_for_operations(config, session, service_name):
@@ -211,20 +225,6 @@ def _register_for_operations(config, session, service_name):
         unique_id = 'retry-config-%s-%s' % (service_name, key)
         session.register('needs-retry.%s.%s' % (service_name, key),
                          handler, unique_id=unique_id)
-
-
-def maybe_switch_to_s3sigv4(service, region_name, **kwargs):
-    if region_name.startswith('cn-'):
-        # This region only supports signature version 4 for
-        # s3, so we need to change the service's signature version.
-        service.signature_version = 's3v4'
-
-
-def maybe_switch_to_sigv4(service, region_name, **kwargs):
-    if region_name.startswith('cn-'):
-        # This region only supports signature version 4 for
-        # s3, so we need to change the service's signature version.
-        service.signature_version = 'v4'
 
 
 def signature_overrides(service_data, service_name, session, **kwargs):
@@ -243,9 +243,9 @@ def signature_overrides(service_data, service_name, session, **kwargs):
 def add_expect_header(operation, params, **kwargs):
     if operation.http.get('method', '') not in ['PUT', 'POST']:
         return
-    if params['payload'].__class__ == Payload:
-        payload = params['payload'].getvalue()
-        if hasattr(payload, 'read'):
+    if 'body' in params:
+        body = params['body']
+        if hasattr(body, 'read'):
             # Any file like object will use an expect 100-continue
             # header regardless of size.
             logger.debug("Adding expect 100 continue header to request.")
@@ -264,6 +264,10 @@ def copy_snapshot_encrypted(operation, params, endpoint, **kwargs):
     # If the user does not provide this value, we will automatically
     # calculate on behalf of the user and inject the PresignedUrl
     # into the requests.
+    # The params sent in the event don't quite sync up 100% so we're
+    # renaming them here until they can be updated in the event.
+    request_dict = params
+    params = request_dict['body']
     if 'PresignedUrl' in params:
         # If the customer provided this value, then there's nothing for
         # us to do.
@@ -279,20 +283,72 @@ def copy_snapshot_encrypted(operation, params, endpoint, **kwargs):
         region_name=region,
         service_name='ec2',
         expires=60 * 60)
-    signed_request = source_endpoint.create_request(operation, params, presigner)
+    signed_request = source_endpoint.create_request(request_dict, presigner)
     params['PresignedUrl'] = signed_request.url
+
+
+def json_decode_policies(parsed, model, **kwargs):
+    # Any time an IAM operation returns a policy document
+    # it is a string that is json that has been urlencoded,
+    # i.e urlencode(json.dumps(policy_document)).
+    # To give users something more useful, we will urldecode
+    # this value and json.loads() the result so that they have
+    # the policy document as a dictionary.
+    output_shape = model.output_shape
+    if output_shape is not None:
+        _decode_policy_types(parsed, model.output_shape)
+
+
+def _decode_policy_types(parsed, shape):
+    # IAM consistently uses the policyDocumentType shape to indicate
+    # strings that have policy documents.
+    shape_name = 'policyDocumentType'
+    if shape.type_name == 'structure':
+        for member_name, member_shape in shape.members.items():
+            if member_shape.type_name == 'string' and \
+                    member_shape.name == shape_name:
+                parsed[member_name] = decode_quoted_jsondoc(parsed[member_name])
+            elif member_name in parsed:
+                _decode_policy_types(parsed[member_name], member_shape)
+    if shape.type_name == 'list':
+        shape_member = shape.member
+        for item in parsed:
+            _decode_policy_types(item, shape_member)
+
+
+def parse_get_bucket_location(parsed, http_response, **kwargs):
+    # s3.GetBucketLocation cannot be modeled properly.  To
+    # account for this we just manually parse the XML document.
+    # The "parsed" passed in only has the ResponseMetadata
+    # filled out.  This handler will fill in the LocationConstraint
+    # value.
+    response_body = http_response.content
+    parser = xml.etree.cElementTree.XMLParser(
+        target=xml.etree.cElementTree.TreeBuilder(),
+        encoding='utf-8')
+    parser.feed(response_body)
+    root = parser.close()
+    region = root.text
+    parsed['LocationConstraint'] = region
+
+
+def base64_encode_user_data(params, **kwargs):
+    if 'UserData' in params:
+        params['UserData'] = base64.b64encode(
+            params['UserData'].encode('utf-8')).decode('utf-8')
 
 
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
+
 BUILTIN_HANDLERS = [
-    ('after-parsed.ec2.GetConsoleOutput.String.Output',
-     decode_console_output),
-    ('after-parsed.iam.*.policyDocumentType.*',
-     decode_quoted_jsondoc),
-    ('after-parsed.cloudformation.*.TemplateBody.TemplateBody',
-     decode_jsondoc),
+    ('after-call.iam', json_decode_policies),
+
+    ('after-call.ec2.GetConsoleOutput', decode_console_output),
+    ('after-call.cloudformation.GetTemplate', json_decode_template_body),
+    ('after-call.s3.GetBucketLocation', parse_get_bucket_location),
+
     ('before-call.s3.PutBucketTagging', calculate_md5),
     ('before-call.s3.PutBucketLifecycle', calculate_md5),
     ('before-call.s3.PutBucketCors', calculate_md5),
@@ -306,8 +362,6 @@ BUILTIN_HANDLERS = [
     ('needs-retry.s3.CopyObject', check_for_200_error),
     ('needs-retry.s3.CompleteMultipartUpload', check_for_200_error),
     ('service-created', register_retries_for_service),
-    ('creating-endpoint.s3', maybe_switch_to_s3sigv4),
-    ('creating-endpoint.ec2', maybe_switch_to_sigv4),
     ('service-data-loaded', signature_overrides),
     ('before-call.s3.HeadObject', sse_md5),
     ('before-call.s3.GetObject', sse_md5),
@@ -316,4 +370,7 @@ BUILTIN_HANDLERS = [
     ('before-call.s3.CreateMultipartUpload', sse_md5),
     ('before-call.s3.UploadPart', sse_md5),
     ('before-call.s3.UploadPartCopy', sse_md5),
+    ('before-parameter-build.ec2.RunInstances', base64_encode_user_data),
+    ('before-parameter-build.autoscaling.CreateLaunchConfiguration',
+     base64_encode_user_data),
 ]

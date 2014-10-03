@@ -23,6 +23,7 @@ from operator import itemgetter
 import functools
 import time
 
+import six
 
 from botocore.exceptions import NoCredentialsError
 from botocore.utils import normalize_url_path, percent_encode_sequence
@@ -72,7 +73,7 @@ class SigV2Auth(BaseSigner):
                          digestmod=sha256)
         pairs = []
         for key in sorted(params):
-            value = params[key]
+            value = six.text_type(params[key])
             pairs.append(quote(key.encode('utf-8'), safe='') + '=' +
                          quote(value.encode('utf-8'), safe='-_~'))
         qs = '&'.join(pairs)

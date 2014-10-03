@@ -4,14 +4,14 @@
         "DhcpConfigurations": [
             {
                 "Values": [
-                    "example.com"
+                    {"Value": "example.com"}
                 ], 
                 "Key": "domain-name"
             }, 
             {
                 "Values": [
-                    "10.2.5.1", 
-                    "10.2.5.2"
+                    {"Value": "10.2.5.1"},
+                    {"Value": "10.2.5.2"}
                 ], 
                 "Key": "domain-name-servers"
             }

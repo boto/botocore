@@ -3,14 +3,10 @@
     <IsTruncated>false</IsTruncated>
     <VirtualMFADevices>
       <member>
-        <SerialNumber>
-        arn:aws:iam::123456789012:mfa/MFAdeviceName
-        </SerialNumber>
+        <SerialNumber>arn:aws:iam::123456789012:mfa/MFAdeviceName</SerialNumber>
       </member>
       <member>
-        <SerialNumber>
-        arn:aws:iam::123456789012:mfa/RootMFAdeviceName
-        </SerialNumber>
+        <SerialNumber>arn:aws:iam::123456789012:mfa/RootMFAdeviceName</SerialNumber>
         <EnableDate>2011-10-20T20:49:03Z</EnableDate>
         <User>
           <UserId>123456789012</UserId>
@@ -19,9 +15,7 @@
         </User>
       </member>
       <member>
-        <SerialNumber>
-        arn:aws:iam:::mfa/ExampleUserMFAdeviceName
-        </SerialNumber>
+        <SerialNumber>arn:aws:iam:::mfa/ExampleUserMFAdeviceName</SerialNumber>
         <EnableDate>2011-10-31T20:45:02Z</EnableDate>
         <User>
           <UserId>AIDEXAMPLE4EXAMPLEXYZ</UserId>

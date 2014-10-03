@@ -11,8 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import logging
+import datetime
 
 from six import string_types, text_type
+import dateutil.parser
+from dateutil.tz import tzlocal
 
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.compat import json, quote
@@ -266,4 +269,45 @@ def percent_encode(input_str, safe=SAFE_CHARS):
     """
     if not isinstance(input_str, string_types):
         input_str = text_type(input_str)
-    return quote(text_type(input_str), safe=safe)
+    return quote(text_type(input_str).encode('utf-8'), safe=safe)
+
+
+def parse_timestamp(value):
+    """Parse a timestamp into a datetime object.
+
+    Supported formats:
+
+        * iso8601
+        * rfc822
+        * epoch (value is an integer)
+
+    This will return a ``datetime.datetime`` object.
+
+    """
+    if isinstance(value, (int, float)):
+        # Possibly an epoch time.
+        return datetime.datetime.fromtimestamp(value, tzlocal())
+    try:
+        return dateutil.parser.parse(value)
+    except (TypeError, ValueError) as e:
+        raise ValueError('Invalid timestamp "%s": %s' % (value, e))
+
+
+class CachedProperty(object):
+    """A read only property that caches the initially computed value.
+
+    This descriptor will only call the provided ``fget`` function once.
+    Subsequent access to this property will return the cached value.
+
+    """
+
+    def __init__(self, fget):
+        self._fget = fget
+
+    def __get__(self, obj, cls):
+        if obj is None:
+            return self
+        else:
+            computed_value = self._fget(obj)
+            obj.__dict__[self._fget.__name__] = computed_value
+            return computed_value
