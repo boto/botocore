@@ -33,7 +33,7 @@ class TestS3Addressing(BaseSessionTest):
         request = []
         self.endpoint._send_request = lambda prepared_request, operation: \
                 request.append(prepared_request)
-        self.endpoint.make_request(op, param)
+        self.endpoint.make_request(op.model, param)
         return request[0]
 
     def test_list_objects_dns_name(self):

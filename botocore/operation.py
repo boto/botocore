@@ -13,23 +13,27 @@
 # language governing permissions and limitations under the License.
 
 import logging
-from botocore.parameters import get_parameter
 from botocore.exceptions import MissingParametersError
 from botocore.exceptions import UnknownParameterError
-from botocore.paginate import Paginator
-from botocore.payload import Payload, XMLPayload, JSONPayload
+from botocore.paginate import DeprecatedPaginator
+from botocore import serialize
 from botocore import BotoCoreObject, xform_name
+
+from botocore.validate import ParamValidator
+from botocore.exceptions import ParamValidationError
+
 
 logger = logging.getLogger(__name__)
 
 
 class Operation(BotoCoreObject):
 
-    _DEFAULT_PAGINATOR_CLS = Paginator
+    _DEFAULT_PAGINATOR_CLS = DeprecatedPaginator
 
-    def __init__(self, service, op_data, paginator_cls=None):
+    def __init__(self, service, op_data, model, paginator_cls=None):
         self.input = {}
         self.output = {}
+        self._model = model
         BotoCoreObject.__init__(self, **op_data)
         self.service = service
         if self.service:
@@ -45,6 +49,18 @@ class Operation(BotoCoreObject):
     def __repr__(self):
         return 'Operation:%s' % self.name
 
+    @property
+    def model(self):
+        return self._model
+
+    @property
+    def output_shape(self):
+        return self._model.output_shape
+
+    @property
+    def signature_version(self):
+        return self.service.signature_version
+
     def call(self, endpoint, **kwargs):
         logger.debug("%s called with kwargs: %s", self, kwargs)
         # It probably seems a little weird to be firing two different
@@ -59,24 +75,36 @@ class Operation(BotoCoreObject):
                                           self.name)
         self.session.emit(event, operation=self, endpoint=endpoint,
                           params=kwargs)
-        params = self.build_parameters(**kwargs)
+        request_dict = self.build_parameters(**kwargs)
         event = self.session.create_event('before-call',
                                           self.service.endpoint_prefix,
                                           self.name)
         self.session.emit(event, operation=self, endpoint=endpoint,
-                          params=params)
-        response = endpoint.make_request(self, params)
+                          params=request_dict)
+        response = endpoint.make_request(self.model, request_dict)
         event = self.session.create_event('after-call',
                                           self.service.endpoint_prefix,
                                           self.name)
         self.session.emit(event, operation=self,
                           http_response=response[0],
+                          model=self.model,
                           parsed=response[1])
         return response
 
     @property
+    def pagination(self):
+        try:
+            return self._load_pagination_config()
+        except Exception as e:
+            return {}
+
+    @property
     def can_paginate(self):
-        return hasattr(self, 'pagination')
+        try:
+            self._load_pagination_config()
+        except Exception as e:
+            return False
+        return True
 
     def paginate(self, endpoint, **kwargs):
         """Iterate over the responses of an operation.
@@ -89,11 +117,21 @@ class Operation(BotoCoreObject):
         """
         if not self.can_paginate:
             raise TypeError("Operation cannot be paginated: %s" % self)
-        paginator = self._paginator_cls(self)
+        config = self._load_pagination_config()
+        paginator = self._paginator_cls(self, config)
         return paginator.paginate(endpoint, **kwargs)
+
+    def _load_pagination_config(self):
+        loader = self.session.get_component('data_loader')
+        api_version = self.service.api_version
+        config = loader.load_data('aws/%s/%s.paginators' %
+                                  (self.service.service_name, api_version))
+        return config['pagination'][self.name]
 
     @property
     def params(self):
+        raise RuntimeError(
+            "Attempted to access removed parameter objects in botocore.")
         if self._params is None:
             self._params = self._create_parameter_objects()
         return self._params
@@ -104,10 +142,6 @@ class Operation(BotoCoreObject):
         """
         logger.debug("Creating parameter objects for: %s", self)
         params = []
-        if self.input and 'members' in self.input:
-            for name, data in self.input['members'].items():
-                param = get_parameter(self, name, data)
-                params.append(param)
         return params
 
     def _find_payload(self):
@@ -122,70 +156,42 @@ class Operation(BotoCoreObject):
                 break
         return payload
 
-    def _get_built_params(self):
-        d = {}
-        if self.service.type in ('rest-xml', 'rest-json'):
-            d['uri_params'] = {}
-            d['headers'] = {}
-            if self.service.type == 'rest-xml':
-                payload = self._find_payload()
-                if payload and payload.type in ('blob', 'string'):
-                    # If we have a payload parameter which is a scalar
-                    # type (either string or blob) it means we need a
-                    # simple payload object rather than an XMLPayload.
-                    d['payload'] = Payload()
-                else:
-                    # Otherwise, use an XMLPayload.  Since Route53
-                    # doesn't actually use the payload attribute, we
-                    # have to err on the safe side.
-                    namespace = self.service.xmlnamespace
-                    root_element_name = None
-                    if self.input and 'shape_name' in self.input:
-                        root_element_name = self.input['shape_name']
-                    d['payload'] = XMLPayload(root_element_name=root_element_name,
-                                              namespace=namespace)
-            else:
-                # rest-json.
-                payload = self._find_payload()
-                if payload and payload.type in ('blob', 'string'):
-                    d['payload'] = Payload()
-                else:
-                    d['payload'] = JSONPayload()
-        return d
-
     def build_parameters(self, **kwargs):
         """
         Returns a dictionary containing the kwargs for the
         given operation formatted as required to pass to the service
         in a request.
         """
-        built_params = self._get_built_params()
-        missing = []
-        kwargs = self._camel_to_snake_case(kwargs)
-        self._check_for_unknown_params(kwargs)
-        for param in self.params:
-            if param.required:
-                missing.append(param)
-            if param.py_name in kwargs:
-                if missing:
-                    missing.pop()
-                param.build_parameter(self.service.type,
-                                      kwargs[param.py_name],
-                                      built_params)
-        if missing:
-            missing_str = ', '.join([p.py_name for p in missing])
-            raise MissingParametersError(missing=missing_str,
-                                         object_name=self)
-        return built_params
+        protocol = self._model.metadata['protocol']
+        input_shape = self._model.input_shape
+        if input_shape is not None:
+            self._convert_kwargs_to_correct_casing(kwargs)
+            validator = ParamValidator()
+            errors = validator.validate(kwargs, self._model.input_shape)
+            if errors.has_errors():
+                raise ParamValidationError(report=errors.generate_report())
+        serializer = serialize.create_serializer(protocol)
+        request_dict = serializer.serialize_to_request(kwargs, self._model)
+        return request_dict
 
-    def _camel_to_snake_case(self, kwargs):
-        """
-        Converts top level keys in `kwargs` from camel case to snake case
-        """
-        params = {}
-        for key, value in kwargs.items():
-            params[xform_name(key)] = value
-        return params
+    def _convert_kwargs_to_correct_casing(self, kwargs):
+        # XXX: This will be removed in botocore 1.0, but we should
+        # support snake casing for now.
+        # First we're going to build a map of snake_casing -> service casing
+        actual_casing = list(self._model.input_shape.members)
+        mapping = {}
+        for key in actual_casing:
+            transformed = xform_name(key)
+            if key != transformed:
+                mapping[xform_name(key)] = key
+        # Look for anything in the user provided kwargs that is in the mapping
+        # dict and convert appropriately.
+        for key in list(kwargs):
+            if key in mapping:
+                # TODO: add a pending deprecation warning.
+                value = kwargs[key]
+                kwargs[mapping[key]] = value
+                del kwargs[key]
 
     def _check_for_unknown_params(self, kwargs):
         valid_names = [p.py_name for p in self.params]
@@ -195,13 +201,9 @@ class Operation(BotoCoreObject):
                                             choices=', '.join(valid_names))
 
     def is_streaming(self):
-        is_streaming = False
-        if self.output:
-            for member_name in self.output['members']:
-                member_dict = self.output['members'][member_name]
-                if member_dict['type'] == 'blob':
-                    if member_dict.get('payload', False):
-                        if member_dict.get('streaming', False):
-                            is_streaming = member_dict.get('xmlname',
-                                                           member_name)
-        return is_streaming
+        # TODO: add deprecation warning
+        return self._model.has_streaming_output
+
+    @property
+    def has_streaming_output(self):
+        return self._model.has_streaming_output

@@ -25,12 +25,15 @@ import shlex
 from botocore import __version__
 import botocore.config
 import botocore.credentials
+import botocore.client
+from botocore.endpoint import EndpointCreator
 from botocore.exceptions import EventNotFound, ConfigNotFound, ProfileNotFound
 from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.loaders import Loader
 from botocore.provider import get_provider
 from botocore import regions
+from botocore.model import ServiceModel
 import botocore.service
 
 
@@ -170,6 +173,10 @@ class Session(object):
         self._register_credential_provider()
         self._register_data_loader()
         self._register_endpoint_resolver()
+        self._register_event_emitter()
+
+    def _register_event_emitter(self):
+        self._components.register_component('event_emitter', self._events)
 
     def _register_credential_provider(self):
         self._components.lazy_register_component(
@@ -459,6 +466,23 @@ class Session(object):
         """
         return self.get_component('data_loader').load_data(data_path)
 
+    def get_service_model(self, service_name, api_version=None):
+        """Get the service model object.
+
+        :type service_name: string
+        :param service_name: The service name
+
+        :type api_version: string
+        :param api_version: The API version of the service.  If none is
+            provided, then the latest API version will be used.
+
+        :rtype: L{botocore.model.ServiceModel}
+        :return: The botocore service model for the service.
+
+        """
+        service_description = self.get_service_data(service_name, api_version)
+        return ServiceModel(service_description)
+
     def get_service_data(self, service_name, api_version=None):
         """
         Retrieve the fully merged data associated with a service.
@@ -696,6 +720,68 @@ class Session(object):
 
     def lazy_register_component(self, name, component):
         self._components.lazy_register_component(name, component)
+
+    def create_client(self, service_name, region_name=None, api_version=None,
+                      use_ssl=True, verify=None, endpoint_url=None):
+        """Create a botocore client.
+
+        :type service_name: string
+        :param service_name: The name of the service for which a client will
+            be created.  You can use the ``Sesssion.get_available_services()``
+            method to get a list of all available service names.
+
+        :type region_name: string
+        :param region_name: The name of the region associated with the client.
+            A client is associated with a single region.
+
+        :type api_version: string
+        :param api_version: The API version to use.  By default, botocore will
+            use the latest API version when creating a client.  You only need
+            to specify this parameter if you want to use a previous API version
+            of the client.
+
+        :type use_ssl: boolean
+        :param use_ssl: Whether or not to use SSL.  By default, SSL is used.  Note that
+            not all services support non-ssl connections.
+
+        :type verify: boolean/string
+        :param verify: Whether or not to verify SSL certificates.  By default SSL certificates
+            are verified.  You can provide the following values:
+
+            * False - do not validate SSL certificates.  SSL will still be
+              used (unless use_ssl is False), but SSL certificates
+              will not be verified.
+            * path/to/cert/bundle.pem - A filename of the CA cert bundle to
+              uses.  You can specify this argument if you want to use a different
+              CA cert bundle than the one used by botocore.
+
+        :type endpoint_url: string
+        :param endpoint_url: The complete URL to use for the constructed client.
+            Normally, botocore will automatically construct the appropriate URL
+            to use when communicating with a service.  You can specify a
+            complete URL (including the "http/https" scheme) to override this
+            behavior.  If this value is provided, then ``use_ssl`` is ignored.
+
+        :rtype: botocore.client.BaseClient
+        :return: A botocore client instance
+
+        """
+        loader = self.get_component('data_loader')
+        endpoint_creator = self._create_endpoint_creator()
+        client_creator = botocore.client.ClientCreator(loader, endpoint_creator)
+        client = client_creator.create_client(service_name, region_name, use_ssl,
+                                              endpoint_url, verify)
+        return client
+
+    def _create_endpoint_creator(self):
+        resolver = self.get_component('endpoint_resolver')
+        region = self.get_config_variable('region')
+        event_emitter = self.get_component('event_emitter')
+        credentials = self.get_credentials()
+        user_agent= self.user_agent()
+        endpoint_creator = EndpointCreator(resolver, region, event_emitter,
+                                           credentials, user_agent)
+        return endpoint_creator
 
 
 class ComponentLocator(object):

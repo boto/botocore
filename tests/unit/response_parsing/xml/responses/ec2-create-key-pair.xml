@@ -1,9 +1,7 @@
 <CreateKeyPairResponse xmlns="http://ec2.amazonaws.com/doc/2014-06-15/">
   <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId>
   <keyName>gsg-keypair</keyName>
-  <keyFingerprint>
-     00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
-  </keyFingerprint>
+  <keyFingerprint>00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00</keyFingerprint>
   <keyMaterial>---- BEGIN RSA PRIVATE KEY ----
 MIICiTCCAfICCQD6m7oRw0uXOjANBgkqhkiG9w0BAQUFADCBiDELMAkGA1UEBhMC
 VVMxCzAJBgNVBAgTAldBMRAwDgYDVQQHEwdTZWF0dGxlMQ8wDQYDVQQKEwZBbWF6
@@ -19,6 +17,5 @@ Ibb3OhjZnzcvQAaRHhdlQWIMm2nrAgMBAAEwDQYJKoZIhvcNAQEFBQADgYEAtCu4
 nUhVVxYUntneD9+h8Mg9q6q+auNKyExzyLwaxlAoo7TJHidbtS4J5iNmZgXL0Fkb
 FFBjvSfpJIlJ00zbhNYS5f6GuoEDmFJl0ZxBHjJnyp378OD8uTs7fLvjx79LjSTb
 NYiytVbZPQUQ5Yaxu2jXnimvw3rrszlaEXAMPLE=
------END RSA PRIVATE KEY-----
-</keyMaterial>
+-----END RSA PRIVATE KEY-----</keyMaterial>
 </CreateKeyPairResponse>

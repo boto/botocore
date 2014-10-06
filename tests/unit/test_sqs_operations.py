@@ -19,6 +19,8 @@ import botocore.session
 
 class TestSQSOperations(BaseSessionTest):
 
+    maxDiff = None
+
     def setUp(self):
         super(TestSQSOperations, self).setUp()
         self.sqs = self.session.get_service('sqs')
@@ -36,6 +38,9 @@ SbkJ0="""
                                                       '125074342642'],
                                      actions=['SendMessage',
                                               'ReceiveMessage'])
+        params = params['body']
+        del params['Action']
+        del params['Version']
         result = {'QueueUrl': self.queue_url,
                   'Label': 'testLabel',
                   'AWSAccountId.1': '125074342641',
@@ -49,8 +54,11 @@ SbkJ0="""
         params = op.build_parameters(queue_url=self.queue_url,
                                      visibility_timeout=60,
                                      receipt_handle=self.receipt_handle)
+        params = params['body']
+        del params['Action']
+        del params['Version']
         result = {'QueueUrl': self.queue_url,
-                  'VisibilityTimeout': '60',
+                  'VisibilityTimeout': 60,
                   'ReceiptHandle': self.receipt_handle}
         self.assertEqual(params, result)
 
@@ -59,25 +67,31 @@ SbkJ0="""
         prefix = 'ChangeMessageVisibilityBatchRequestEntry'
         op = self.sqs.get_operation('ChangeMessageVisibilityBatch')
         params = op.build_parameters(queue_url=self.queue_url,
-                                     entries=[{'ReceiptHandle':self.receipt_handle,
-                                               'VisibilityTimeout':45,
-                                               'Id':'change_visibility_msg_2'},
-                                              {'ReceiptHandle':self.receipt_handle,
-                                               'VisibilityTimeout':45,
-                                               'Id':'change_visibility_msg_3'}])
+                                     entries=[{'ReceiptHandle': self.receipt_handle,
+                                               'VisibilityTimeout': 45,
+                                               'Id': 'change_visibility_msg_2'},
+                                              {'ReceiptHandle': self.receipt_handle,
+                                               'VisibilityTimeout': 45,
+                                               'Id': 'change_visibility_msg_3'}])
+        params = params['body']
+        del params['Action']
+        del params['Version']
         result = {'QueueUrl': self.queue_url,
                   '%s.1.Id' % prefix: 'change_visibility_msg_2',
                   '%s.1.ReceiptHandle' % prefix: self.receipt_handle,
-                  '%s.1.VisibilityTimeout' % prefix: '45',
+                  '%s.1.VisibilityTimeout' % prefix: 45,
                   '%s.2.Id' % prefix: 'change_visibility_msg_3',
                   '%s.2.ReceiptHandle' % prefix: self.receipt_handle,
-                  '%s.2.VisibilityTimeout' % prefix: '45'}
+                  '%s.2.VisibilityTimeout' % prefix: 45}
         self.assertEqual(params, result)
 
     def test_set_queue_attribute(self):
         op = self.sqs.get_operation('SetQueueAttributes')
         params = op.build_parameters(queue_url=self.queue_url,
                                      attributes={'VisibilityTimeout': '15'})
+        params = params['body']
+        del params['Action']
+        del params['Version']
         result = {'QueueUrl': self.queue_url,
                   'Attribute.1.Name': 'VisibilityTimeout',
                   'Attribute.1.Value': '15'}
@@ -86,8 +100,8 @@ SbkJ0="""
     def test_list_dead_letter_source_queues(self):
         op = self.sqs.get_operation('ListDeadLetterSourceQueues')
         params = op.build_parameters(queue_url=self.queue_url)
+        params = params['body']
+        del params['Action']
+        del params['Version']
         result = {'QueueUrl': self.queue_url}
         self.assertEqual(params, result)
-        for param in op.params:
-            if param.name == 'QueueUrl':
-                self.assertEqual(getattr(param, 'no_paramfile', None), True)

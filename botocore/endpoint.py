@@ -24,9 +24,11 @@ import six
 import botocore.response
 import botocore.exceptions
 from botocore.auth import AUTH_TYPE_MAPS
-from botocore.exceptions import UnknownSignatureVersionError
+from botocore.exceptions import UnknownSignatureVersionError, UnknownEndpointError
 from botocore.awsrequest import AWSRequest
 from botocore.compat import urljoin, json, quote
+from botocore.utils import percent_encode_sequence
+from botocore.hooks import first_non_none_response
 
 
 logger = logging.getLogger(__name__)
@@ -44,10 +46,13 @@ class Endpoint(object):
     :ivar session: The session object.
     """
 
-    def __init__(self, service, region_name, host, auth, proxies=None,
-                 verify=True, timeout=DEFAULT_TIMEOUT):
-        self.service = service
-        self.session = self.service.session
+    def __init__(self, region_name, host, auth, user_agent, signature_version,
+                 endpoint_prefix, event_emitter, proxies=None, verify=True,
+                 timeout=DEFAULT_TIMEOUT):
+        self._endpoint_prefix = endpoint_prefix
+        self._signature_version = signature_version
+        self._event_emitter = event_emitter
+        self._user_agent = user_agent
         self.region_name = region_name
         self.host = host
         self.verify = verify
@@ -60,15 +65,15 @@ class Endpoint(object):
         self._lock = threading.Lock()
 
     def __repr__(self):
-        return '%s(%s)' % (self.service.endpoint_prefix, self.host)
+        return '%s(%s)' % (self._endpoint_prefix, self.host)
 
-    def make_request(self, operation, params):
+    def make_request(self, operation_model, request_dict):
         logger.debug("Making request for %s (verify_ssl=%s) with params: %s",
-                     operation, self.verify, params)
-        prepared_request = self.create_request(operation, params)
-        return self._send_request(prepared_request, operation)
+                     operation_model, self.verify, request_dict)
+        prepared_request = self.create_request(request_dict)
+        return self._send_request(prepared_request, operation_model)
 
-    def create_request(self, operation, params, signer=None):
+    def create_request(self, params, signer=None):
         # To decide if we need to do auth or not we check the
         # signature_version attribute on both the service and
         # the operation are not None and we make sure there is an
@@ -79,21 +84,33 @@ class Endpoint(object):
             # the request.
             signer = signer
         else:
-            do_auth = (getattr(self.service, 'signature_version', None) and
-                    getattr(operation, 'signature_version', True) and
-                    self.auth)
+            do_auth = self._signature_version and self.auth
             if do_auth:
                 signer = self.auth
             else:
                 # If we're not suppose to sign the request, then we set the signer
                 # to None.
                 signer = None
-        request = self._create_request_object(operation, params)
+        request = self._create_request_object(params)
         prepared_request = self.prepare_request(request, signer)
         return prepared_request
 
-    def _create_request_object(self, operation, params):
-        raise NotImplementedError('_create_request_object')
+    def _create_request_object(self, request_dict):
+        r = request_dict
+        user_agent = self._user_agent
+        headers = r['headers']
+        headers['User-Agent'] = user_agent
+        url = urljoin(self.host, r['url_path'])
+        if r['query_string']:
+            encoded_query_string = percent_encode_sequence(r['query_string'])
+            if '?' not in url:
+                url += '?%s' % encoded_query_string
+            else:
+                url += '&%s' % encoded_query_string
+        request = AWSRequest(method=r['method'], url=url,
+                             data=r['body'],
+                             headers=headers)
+        return request
 
     def prepare_request(self, request, signer):
         if signer is not None:
@@ -101,51 +118,51 @@ class Endpoint(object):
                 # Parts of the auth signing code aren't thread safe (things
                 # that manipulate .auth_path), so we're using a lock here to
                 # prevent race conditions.
-                event = self.session.create_event(
-                    'before-auth', self.service.endpoint_prefix)
-                self.session.emit(event, endpoint=self,
-                                  request=request, auth=signer)
+                event_name = 'before-auth.%s' % self._endpoint_prefix
+                self._event_emitter.emit(
+                    event_name, endpoint=self, request=request, auth=signer)
                 signer.add_auth(request=request)
         prepared_request = request.prepare()
         return prepared_request
 
-    def _send_request(self, request, operation):
+    def _send_request(self, request, operation_model):
         attempts = 1
-        response, exception = self._get_response(request, operation, attempts)
-        while self._needs_retry(attempts, operation, response, exception):
+        response, exception = self._get_response(request, operation_model, attempts)
+        while self._needs_retry(attempts, operation_model, response, exception):
             attempts += 1
             # If there is a stream associated with the request, we need
             # to reset it before attempting to send the request again.
             # This will ensure that we resend the entire contents of the
             # body.
             request.reset_stream()
-            response, exception = self._get_response(request, operation,
+            response, exception = self._get_response(request, operation_model,
                                                      attempts)
         return response
 
-    def _get_response(self, request, operation, attempts):
+    def _get_response(self, request, operation_model, attempts):
         try:
             logger.debug("Sending http request: %s", request)
             http_response = self.http_session.send(
                 request, verify=self.verify,
-                stream=operation.is_streaming(),
+                stream=operation_model.has_streaming_output,
                 proxies=self.proxies, timeout=self.timeout)
         except Exception as e:
             logger.debug("Exception received when sending HTTP request.",
                          exc_info=True)
             return (None, e)
         # This returns the http_response and the parsed_data.
-        return (botocore.response.get_response(self.session, operation,
+        return (botocore.response.get_response(operation_model,
                                                http_response), None)
 
-    def _needs_retry(self, attempts, operation, response=None,
+    def _needs_retry(self, attempts, operation_model, response=None,
                      caught_exception=None):
-        event = self.session.create_event(
-            'needs-retry', self.service.endpoint_prefix, operation.name)
-        handler_response = self.session.emit_first_non_none_response(
-            event, response=response, endpoint=self,
-            operation=operation, attempts=attempts,
+        event_name = 'needs-retry.%s.%s' % (self._endpoint_prefix,
+                                            operation_model.name)
+        responses = self._event_emitter.emit(
+            event_name, response=response, endpoint=self,
+            operation=operation_model, attempts=attempts,
             caught_exception=caught_exception)
+        handler_response = first_non_none_response(responses)
         if handler_response is None:
             return False
         else:
@@ -157,105 +174,6 @@ class Endpoint(object):
             return True
 
 
-class QueryEndpoint(Endpoint):
-    """
-    This class handles only AWS/Query style services.
-    """
-
-    def _create_request_object(self, operation, params):
-        params['Action'] = operation.name
-        params['Version'] = self.service.api_version
-        user_agent = self.session.user_agent()
-        request = AWSRequest(method='POST', url=self.host,
-                             data=params, headers={'User-Agent': user_agent})
-        return request
-
-
-class JSONEndpoint(Endpoint):
-    """
-    This class handles only AWS/JSON style services.
-    """
-
-    ResponseContentTypes = ['application/x-amz-json-1.1',
-                            'application/json']
-
-    def _create_request_object(self, operation, params):
-        user_agent = self.session.user_agent()
-        target = '%s.%s' % (self.service.target_prefix, operation.name)
-        json_version = '1.0'
-        if hasattr(self.service, 'json_version'):
-            json_version = str(self.service.json_version)
-        content_type = 'application/x-amz-json-%s' % json_version
-        content_encoding = 'amz-1.0'
-        data = json.dumps(params)
-        request = AWSRequest(method='POST', url=self.host,
-                             data=data,
-                             headers={'User-Agent': user_agent,
-                                      'X-Amz-Target': target,
-                                      'Content-Type': content_type,
-                                      'Content-Encoding': content_encoding})
-        return request
-
-
-class RestEndpoint(Endpoint):
-
-    def build_uri(self, operation, params):
-        logger.debug('Building URI for rest endpoint.')
-        uri = operation.http['uri']
-        if '?' in uri:
-            path, query_params = uri.split('?')
-        else:
-            path = uri
-            query_params = ''
-        logger.debug('Templated URI path: %s', path)
-        logger.debug('Templated URI query_params: %s', query_params)
-        path_components = []
-        for pc in path.split('/'):
-            if pc:
-                pc = six.text_type(pc).format(**params['uri_params'])
-            path_components.append(pc)
-        path = quote('/'.join(path_components).encode('utf-8'), safe='/~')
-        query_param_components = []
-        for qpc in query_params.split('&'):
-            if qpc:
-                if '=' in qpc:
-                    key_name, value_name = qpc.split('=')
-                else:
-                    key_name = qpc
-                    value_name = None
-                if value_name:
-                    value_name = value_name.strip('{}')
-                    if value_name in params['uri_params']:
-                        value = params['uri_params'][value_name]
-                        if isinstance(value, six.string_types):
-                            value = quote(value.encode('utf-8'), safe='/~')
-                        query_param_components.append('%s=%s' % (
-                            key_name, value))
-                else:
-                    query_param_components.append(key_name)
-        query_params = '&'.join(query_param_components)
-        logger.debug('Rendered path: %s', path)
-        logger.debug('Rendered query_params: %s', query_params)
-        return path + '?' + query_params
-
-    def _create_request_object(self, operation, params):
-        user_agent = self.session.user_agent()
-        params['headers']['User-Agent'] = user_agent
-        uri = self.build_uri(operation, params)
-        uri = urljoin(self.host, uri)
-        payload = None
-        if params['payload']:
-            payload = params['payload'].getvalue()
-        if payload is None:
-            request = AWSRequest(method=operation.http['method'],
-                                 url=uri, headers=params['headers'])
-        else:
-            request = AWSRequest(method=operation.http['method'],
-                                 url=uri, headers=params['headers'],
-                                 data=payload)
-        return request
-
-
 def _get_proxies(url):
     # We could also support getting proxies from a config file,
     # but for now proxy support is taken from the environment.
@@ -263,22 +181,37 @@ def _get_proxies(url):
 
 
 def get_endpoint(service, region_name, endpoint_url, verify=None):
-    cls = SERVICE_TO_ENDPOINT.get(service.type)
-    if cls is None:
-        raise botocore.exceptions.UnknownServiceStyle(
-            service_style=service.type)
     service_name = getattr(service, 'signing_name', service.endpoint_prefix)
+    endpoint_prefix = service.endpoint_prefix
+    signature_version = getattr(service, 'signature_version', None)
+    session = service.session
+    credentials = session.get_credentials()
+    event_emitter = session.get_component('event_emitter')
+    user_agent = session.user_agent()
     auth = None
-    if hasattr(service, 'signature_version') and \
-            service.signature_version is not None:
-        auth = _get_auth(service.signature_version,
-                         credentials=service.session.get_credentials(),
+    return get_endpoint_complex(service_name, endpoint_prefix,
+                                signature_version, credentials,
+                                region_name, endpoint_url, verify, user_agent,
+                                event_emitter)
+
+
+def get_endpoint_complex(service_name, endpoint_prefix, signature_version,
+                         credentials, region_name, endpoint_url, verify,
+                         user_agent, event_emitter):
+    auth = None
+    if signature_version is not None:
+        auth = _get_auth(signature_version,
+                         credentials=credentials,
                          service_name=service_name,
-                         region_name=region_name,
-                         service_object=service)
+                         region_name=region_name)
     proxies = _get_proxies(endpoint_url)
     verify = _get_verify_value(verify)
-    return cls(service, region_name, endpoint_url, auth=auth, proxies=proxies,
+    return Endpoint(region_name, endpoint_url, auth=auth,
+               user_agent=user_agent,
+               endpoint_prefix=endpoint_prefix,
+               event_emitter=event_emitter,
+               signature_version=signature_version,
+               proxies=proxies,
                verify=verify)
 
 
@@ -296,8 +229,7 @@ def _get_verify_value(verify):
     return os.environ.get('REQUESTS_CA_BUNDLE', True)
 
 
-def _get_auth(signature_version, credentials, service_name, region_name,
-              service_object):
+def _get_auth(signature_version, credentials, service_name, region_name):
     cls = AUTH_TYPE_MAPS.get(signature_version)
     if cls is None:
         raise UnknownSignatureVersionError(signature_version=signature_version)
@@ -305,16 +237,72 @@ def _get_auth(signature_version, credentials, service_name, region_name,
         kwargs = {'credentials': credentials}
         if cls.REQUIRES_REGION:
             if region_name is None:
-                envvar_name = service_object.session.session_var_map['region'][1]
-                raise botocore.exceptions.NoRegionError(env_var=envvar_name)
+                raise botocore.exceptions.NoRegionError(
+                    env_var='AWS_DEFAULT_REGION')
             kwargs['region_name'] = region_name
             kwargs['service_name'] = service_name
         return cls(**kwargs)
 
 
-SERVICE_TO_ENDPOINT = {
-    'query': QueryEndpoint,
-    'json': JSONEndpoint,
-    'rest-xml': RestEndpoint,
-    'rest-json': RestEndpoint,
-}
+class EndpointCreator(object):
+    def __init__(self, endpoint_resolver, configured_region, event_emitter,
+                 credentials, user_agent):
+        self._endpoint_resolver = endpoint_resolver
+        self._configured_region = configured_region
+        self._event_emitter = event_emitter
+        self._credentials = credentials
+        self._user_agent = user_agent
+
+    def create_endpoint(self, service_model, region_name=None, is_secure=True,
+                        endpoint_url=None, verify=None):
+        if region_name is None:
+            region_name = self._configured_region
+        # Use the endpoint resolver heuristics to build the endpoint url.
+        scheme = 'https' if is_secure else 'http'
+        try:
+            endpoint = self._endpoint_resolver.construct_endpoint(
+                service_model.endpoint_prefix,
+                region_name, scheme=scheme)
+        except UnknownEndpointError:
+            if endpoint_url is not None:
+                # If the user provides an endpoint_url, it's ok
+                # if the heuristics didn't find anything.  We use the
+                # user provided endpoint_url.
+                endpoint = {'uri': endpoint_url, 'properties': {}}
+            else:
+                raise
+        # We only support the credentialScope.region in the properties
+        # bag right now, so if it's available, it will override the
+        # provided region name.
+        region_name_override = endpoint['properties'].get(
+            'credentialScope', {}).get('region')
+        signature_version = service_model.signature_version
+        if 'signatureVersion' in endpoint['properties']:
+            signature_version = endpoint['properties']['signatureVersion']
+        if region_name_override is not None:
+            # Letting the heuristics rule override the region_name
+            # allows for having a default region of something like us-west-2
+            # for IAM, but we still will know to use us-east-1 for sigv4.
+            region_name = region_name_override
+        if endpoint_url is not None:
+            # If the user provides an endpoint url, we'll use that
+            # instead of what the heuristics rule gives us.
+            final_endpoint_url = endpoint_url
+        else:
+            final_endpoint_url = endpoint['uri']
+        return self._get_endpoint(service_model, region_name,
+                                  signature_version, final_endpoint_url,
+                                  verify)
+
+    def _get_endpoint(self, service_model, region_name, signature_version,
+                      endpoint_url, verify):
+        service_name = service_model.signing_name
+        endpoint_prefix = service_model.endpoint_prefix
+        credentials = self._credentials
+        user_agent = self._user_agent
+        event_emitter = self._event_emitter
+        user_agent = self._user_agent
+        return get_endpoint_complex(service_name, endpoint_prefix,
+                                    signature_version, credentials,
+                                    region_name, endpoint_url,
+                                    verify, user_agent, event_emitter)
