@@ -392,6 +392,35 @@ class UnresolvableShapeMap(object):
 
 
 class DenormalizedStructureBuilder(object):
+    """Build a StructureShape from a denormalized model.
+
+    This is a convenience builder class that makes it easy to construct
+    ``StructureShape``s based on a denormalized model.
+
+    It will handle the details of creating unique shape names and creating
+    the appropriate shape map needed by the ``StructureShape`` class.
+
+    Example usage::
+
+        builder = DenormalizedStructureBuilder()
+        shape = builder.with_members({
+            'A': {
+                'type': 'structure',
+                'members': {
+                    'B': {
+                        'type': 'structure',
+                        'members': {
+                            'C': {
+                                'type': 'string',
+                            }
+                        }
+                    }
+                }
+            }
+        }).build_model()
+        # ``shape`` is now an instance of botocore.model.StructureShape
+
+    """
     def __init__(self, name=None):
         self.members = {}
         self._name_generator = ShapeNameGenerator()
@@ -399,10 +428,24 @@ class DenormalizedStructureBuilder(object):
             self.name = self._name_generator.new_shape_name('structure')
 
     def with_members(self, members):
+        """
+
+        :type members: dict
+        :param members: The denormalized members.
+
+        :return: self
+
+        """
         self._members = members
         return self
 
     def build_model(self):
+        """Build the model based on the provided members.
+
+        :rtype: botocore.model.StructureShape
+        :return: The built StructureShape object.
+
+        """
         shapes = {}
         denormalized = {
             'type': 'structure',
@@ -476,10 +519,41 @@ class DenormalizedStructureBuilder(object):
 
 
 class ShapeNameGenerator(object):
+    """Generate unique shape names for a type.
+
+    This class can be used in conjunction with the DenormalizedStructureBuilder
+    to generate unique shape names for a given type.
+
+    """
     def __init__(self):
         self._name_cache = defaultdict(int)
 
     def new_shape_name(self, type_name):
+        """Generate a unique shape name.
+
+        This method will guarantee a unique shape name each time it is
+        called with the same type.
+
+        ::
+
+            >>> s = ShapeNameGenerator()
+            >>> s.new_shape_name('structure')
+            'StructureType1'
+            >>> s.new_shape_name('structure')
+            'StructureType2'
+            >>> s.new_shape_name('list')
+            'ListType1'
+            >>> s.new_shape_name('list')
+            'ListType2'
+
+
+        :type type_name: string
+        :param type_name: The type name (structure, list, map, string, etc.)
+
+        :rtype: string
+        :return: A unique shape name for the given type
+
+        """
         self._name_cache[type_name] += 1
         current_index = self._name_cache[type_name]
         return '%sType%s' % (type_name.capitalize(),

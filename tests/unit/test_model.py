@@ -6,7 +6,12 @@ from botocore import model
 
 
 def test_missing_model_attribute_raises_exception():
+    # We're using a nose test generator here to cut down
+    # on the duplication.  The property names below
+    # all have the same test logic.
     service_model = model.ServiceModel({'metadata': {}})
+    property_names = ['endpoint_prefix', 'signing_name', 'api_version',
+                      'protocol']
 
     def _test_attribute_raise_exception(attr_name):
         try:
@@ -22,7 +27,7 @@ def test_missing_model_attribute_raises_exception():
             raise AssertionError("Expected UndefinedModelAttributeError to "
                                  "be raised, but no exception was raised.")
 
-    for name in ['endpoint_prefix', 'signing_name', 'api_version', 'protocol']:
+    for name in property_names:
         yield _test_attribute_raise_exception, name
 
 
