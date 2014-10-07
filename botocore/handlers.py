@@ -39,7 +39,7 @@ RESTRICTED_REGIONS = [
 
 
 
-def check_for_200_error(response, operation, **kwargs):
+def check_for_200_error(response, **kwargs):
     # From: http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectCOPY.html
     # There are two opportunities for a copy request to return an error. One
     # can occur when Amazon S3 receives the copy request and the other can
@@ -60,12 +60,23 @@ def check_for_200_error(response, operation, **kwargs):
         # trying to retrieve the response.  See Endpoint._get_response().
         return
     http_response, parsed = response
+    if _looks_like_special_case_error(http_response):
+        logger.debug("Error found for response with 200 status code, "
+                        "errors: %s, changing status code to "
+                        "500.", parsed)
+        http_response.status_code = 500
+
+
+def _looks_like_special_case_error(http_response):
     if http_response.status_code == 200:
-        if 'Errors' in parsed:
-            logger.debug("Error found for response with 200 status code, "
-                         "operation: %s, errors: %s, changing status code to "
-                         "500.", operation, parsed)
-            http_response.status_code = 500
+        parser = xml.etree.cElementTree.XMLParser(
+            target=xml.etree.cElementTree.TreeBuilder(),
+            encoding='utf-8')
+        parser.feed(http_response.content)
+        root = parser.close()
+        if root.tag == 'Error':
+            return True
+    return False
 
 
 def decode_console_output(parsed, **kwargs):
