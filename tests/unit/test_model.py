@@ -1,8 +1,34 @@
 from tests import unittest
 
-from botocore.model import ServiceModel, NoShapeFoundError, InvalidShapeError
-from botocore.model import OperationNotFoundError, ShapeResolver
-from botocore.model import InvalidShapeReferenceError
+from nose.tools import assert_raises
+
+from botocore import model
+
+
+def test_missing_model_attribute_raises_exception():
+    # We're using a nose test generator here to cut down
+    # on the duplication.  The property names below
+    # all have the same test logic.
+    service_model = model.ServiceModel({'metadata': {}})
+    property_names = ['endpoint_prefix', 'signing_name', 'api_version',
+                      'protocol']
+
+    def _test_attribute_raise_exception(attr_name):
+        try:
+            getattr(service_model, attr_name)
+        except model.UndefinedModelAttributeError:
+            # This is what we expect, so the test passes.
+            pass
+        except Exception as e:
+            raise AssertionError("Expected UndefinedModelAttributeError to "
+                                 "be raised, but %s was raised instead" %
+                                 (e.__class__))
+        else:
+            raise AssertionError("Expected UndefinedModelAttributeError to "
+                                 "be raised, but no exception was raised.")
+
+    for name in property_names:
+        yield _test_attribute_raise_exception, name
 
 
 class TestServiceModel(unittest.TestCase):
@@ -14,7 +40,7 @@ class TestServiceModel(unittest.TestCase):
             'operations': {},
             'shapes': {}
         }
-        self.service_model = ServiceModel(self.model)
+        self.service_model = model.ServiceModel(self.model)
 
     def test_metadata_available(self):
         # You should be able to access the metadata in a service description
@@ -22,7 +48,7 @@ class TestServiceModel(unittest.TestCase):
         self.assertEqual(self.service_model.metadata.get('protocol'), 'query')
 
     def test_operation_does_not_exist(self):
-        with self.assertRaises(OperationNotFoundError):
+        with self.assertRaises(model.OperationNotFoundError):
             self.service_model.operation_model('NoExistOperation')
 
 
@@ -72,10 +98,10 @@ class TestOperationModelFromService(unittest.TestCase):
                 }
             }
         }
-        self.service_model = ServiceModel(self.model)
+        self.service_model = model.ServiceModel(self.model)
 
     def test_operation_input_model(self):
-        service_model = ServiceModel(self.model)
+        service_model = model.ServiceModel(self.model)
         operation = service_model.operation_model('OperationName')
         self.assertEqual(operation.name, 'OperationName')
         # Operations should also have a reference to the top level metadata.
@@ -87,7 +113,7 @@ class TestOperationModelFromService(unittest.TestCase):
         self.assertEqual(list(sorted(shape.members)), ['Arg1', 'Arg2'])
 
     def test_operation_output_model(self):
-        service_model = ServiceModel(self.model)
+        service_model = model.ServiceModel(self.model)
         operation = service_model.operation_model('OperationName')
         output = operation.output_shape
         self.assertEqual(list(output.members), ['String'])
@@ -97,7 +123,7 @@ class TestOperationModelFromService(unittest.TestCase):
         # It's ok if there's no output shape. We'll just get a return value of
         # None.
         del self.model['operations']['OperationName']['output']
-        service_model = ServiceModel(self.model)
+        service_model = model.ServiceModel(self.model)
         operation = service_model.operation_model('OperationName')
         output_shape = operation.output_shape
         self.assertIsNone(output_shape)
@@ -135,7 +161,7 @@ class TestOperationModelFromService(unittest.TestCase):
                 }
             }
         }
-        service_model = ServiceModel(self.model)
+        service_model = model.ServiceModel(self.model)
         operation = service_model.operation_model('OperationName')
         self.assertTrue(operation.has_streaming_output)
 
@@ -165,7 +191,7 @@ class TestOperationModelFromService(unittest.TestCase):
                 },
             }
         }
-        service_model = ServiceModel(self.model)
+        service_model = model.ServiceModel(self.model)
         operation = service_model.operation_model('OperationName')
         self.assertFalse(operation.has_streaming_output)
 
@@ -196,7 +222,7 @@ class TestDeepMerge(unittest.TestCase):
             },
             'StringType': {'type': 'string'}
         }
-        self.shape_resolver = ShapeResolver(self.shapes)
+        self.shape_resolver = model.ShapeResolver(self.shapes)
 
     def test_deep_merge(self):
         shape = self.shape_resolver.get_shape_by_name('SetQueueAttributes')
@@ -238,7 +264,7 @@ class TestShapeResolver(unittest.TestCase):
                 "type": "string"
             }
         }
-        resolver = ShapeResolver(shape_map)
+        resolver = model.ShapeResolver(shape_map)
         shape = resolver.get_shape_by_name('Foo')
         self.assertEqual(shape.name, 'Foo')
         self.assertEqual(shape.type_name, 'structure')
@@ -256,7 +282,7 @@ class TestShapeResolver(unittest.TestCase):
                 "type": "string"
             }
         }
-        resolver = ShapeResolver(shape_map)
+        resolver = model.ShapeResolver(shape_map)
         shape = resolver.resolve_shape_ref({'shape': 'StringType'})
         self.assertEqual(shape.name, 'StringType')
         self.assertEqual(shape.type_name, 'string')
@@ -274,7 +300,7 @@ class TestShapeResolver(unittest.TestCase):
                 "type": "string"
             }
         }
-        resolver = ShapeResolver(shape_map)
+        resolver = model.ShapeResolver(shape_map)
         shape = resolver.resolve_shape_ref({'shape': 'StringType',
                                             'locationName': 'other'})
         self.assertEqual(shape.serialization['name'], 'other')
@@ -292,7 +318,7 @@ class TestShapeResolver(unittest.TestCase):
                 "type": "string"
             }
         }
-        resolver = ShapeResolver(shape_map)
+        resolver = model.ShapeResolver(shape_map)
         shape = resolver.resolve_shape_ref({'shape': 'StringType',
                                             'locationName': 'other'})
         self.assertEqual(shape.serialization['name'], 'other')
@@ -309,7 +335,7 @@ class TestShapeResolver(unittest.TestCase):
                 "documentation": "Original documentation"
             }
         }
-        resolver = ShapeResolver(shape_map)
+        resolver = model.ShapeResolver(shape_map)
         shape = resolver.get_shape_by_name('StringType')
         self.assertEqual(shape.documentation, 'Original documentation')
 
@@ -330,7 +356,7 @@ class TestShapeResolver(unittest.TestCase):
                 "type":"string",
             }
         }
-        resolver = ShapeResolver(shapes)
+        resolver = model.ShapeResolver(shapes)
         shape = resolver.get_shape_by_name('ChangePasswordRequest')
         self.assertEqual(shape.type_name, 'structure')
         self.assertEqual(shape.name, 'ChangePasswordRequest')
@@ -356,7 +382,7 @@ class TestShapeResolver(unittest.TestCase):
                 "sensitive":True
             }
         }
-        resolver = ShapeResolver(shapes)
+        resolver = model.ShapeResolver(shapes)
         shape = resolver.get_shape_by_name('ChangePasswordRequest')
         self.assertEqual(shape.metadata['required'],
                          ['OldPassword', 'NewPassword'])
@@ -381,15 +407,15 @@ class TestShapeResolver(unittest.TestCase):
                 'type': 'string'
             }
         }
-        resolver = ShapeResolver(shapes)
+        resolver = model.ShapeResolver(shapes)
         shape = resolver.get_shape_by_name('mfaDeviceListType')
         self.assertEqual(shape.member.type_name, 'structure')
         self.assertEqual(shape.member.name, 'MFADevice')
         self.assertEqual(list(shape.member.members), ['UserName'])
 
     def test_shape_does_not_exist(self):
-        resolver = ShapeResolver({})
-        with self.assertRaises(NoShapeFoundError):
+        resolver = model.ShapeResolver({})
+        with self.assertRaises(model.NoShapeFoundError):
             resolver.get_shape_by_name('NoExistShape')
 
     def test_missing_type_key(self):
@@ -398,8 +424,8 @@ class TestShapeResolver(unittest.TestCase):
                 'NotTheTypeKey': 'someUnknownType'
             }
         }
-        resolver = ShapeResolver(shapes)
-        with self.assertRaises(InvalidShapeError):
+        resolver = model.ShapeResolver(shapes)
+        with self.assertRaises(model.InvalidShapeError):
             resolver.get_shape_by_name('UnknownType')
 
     def test_bad_shape_ref(self):
@@ -414,8 +440,8 @@ class TestShapeResolver(unittest.TestCase):
                 }
             }
         }
-        resolver = ShapeResolver(shapes)
-        with self.assertRaises(InvalidShapeReferenceError):
+        resolver = model.ShapeResolver(shapes)
+        with self.assertRaises(model.InvalidShapeReferenceError):
             struct = resolver.get_shape_by_name('Struct')
             # Resolving the members will fail because
             # the 'A' and 'B' members are not shape refs.
@@ -427,9 +453,127 @@ class TestShapeResolver(unittest.TestCase):
                 'type': 'string',
             }
         }
-        resolver = ShapeResolver(shapes)
+        resolver = model.ShapeResolver(shapes)
         self.assertIn('StringType',
                       repr(resolver.get_shape_by_name('StringType')))
+
+
+class TestBuilders(unittest.TestCase):
+
+    def test_structure_shape_builder_with_scalar_types(self):
+        b = model.DenormalizedStructureBuilder()
+        shape = b.with_members({
+            'A': {'type': 'string'},
+            'B': {'type': 'integer'},
+        }).build_model()
+        self.assertIsInstance(shape, model.StructureShape)
+        self.assertEqual(sorted(list(shape.members)), ['A', 'B'])
+        self.assertEqual(shape.members['A'].type_name, 'string')
+        self.assertEqual(shape.members['B'].type_name, 'integer')
+
+    def test_structure_shape_with_structure_type(self):
+        b = model.DenormalizedStructureBuilder()
+        shape = b.with_members({
+            'A': {
+                'type': 'structure',
+                'members': {
+                    'A-1': {'type': 'string'},
+                }
+            },
+        }).build_model()
+        self.assertIsInstance(shape, model.StructureShape)
+        self.assertEqual(list(shape.members), ['A'])
+        self.assertEqual(shape.members['A'].type_name, 'structure')
+        self.assertEqual(list(shape.members['A'].members), ['A-1'])
+
+    def test_structure_shape_with_list(self):
+        b = model.DenormalizedStructureBuilder()
+        shape = b.with_members({
+            'A': {
+                'type': 'list',
+                'member': {
+                    'type': 'string'
+                }
+            },
+        }).build_model()
+        self.assertIsInstance(shape.members['A'], model.ListShape)
+        self.assertEqual(shape.members['A'].member.type_name, 'string')
+
+    def test_structure_shape_with_map_type(self):
+        b = model.DenormalizedStructureBuilder()
+        shape = b.with_members({
+            'A': {
+                'type': 'map',
+                'key': {'type': 'string'},
+                'value': {'type': 'string'},
+            }
+        }).build_model()
+        self.assertIsInstance(shape.members['A'], model.MapShape)
+        map_shape = shape.members['A']
+        self.assertEqual(map_shape.key.type_name, 'string')
+        self.assertEqual(map_shape.value.type_name, 'string')
+
+    def test_nested_structure(self):
+        b = model.DenormalizedStructureBuilder()
+        shape = b.with_members({
+            'A': {
+                'type': 'structure',
+                'members': {
+                    'B': {
+                        'type': 'structure',
+                        'members': {
+                            'C': {
+                                'type': 'string',
+                            }
+                        }
+                    }
+                }
+            }
+        }).build_model()
+        self.assertEqual(
+            shape.members['A'].members['B'].members['C'].type_name, 'string')
+
+    def test_enum_values_on_scalar_used(self):
+        b = model.DenormalizedStructureBuilder()
+        shape = b.with_members({
+            'A': {
+                'type': 'string',
+                'enum': ['foo', 'bar', 'baz'],
+            },
+        }).build_model()
+        self.assertIsInstance(shape, model.StructureShape)
+        self.assertEqual(shape.members['A'].metadata['enum'],
+                         ['foo', 'bar', 'baz'])
+
+    def test_documentation_on_shape_used(self):
+        b = model.DenormalizedStructureBuilder()
+        shape = b.with_members({
+            'A': {
+                'type': 'string',
+                'documentation': 'MyDocs',
+            },
+        }).build_model()
+        self.assertEqual(shape.members['A'].documentation,
+                         'MyDocs')
+
+    def test_use_shape_name_when_provided(self):
+        b = model.DenormalizedStructureBuilder()
+        shape = b.with_members({
+            'A': {
+                'type': 'string',
+                'shape_name': 'MyStringShape',
+            },
+        }).build_model()
+        self.assertEqual(shape.members['A'].name, 'MyStringShape')
+
+    def test_unknown_shape_type(self):
+        b = model.DenormalizedStructureBuilder()
+        with self.assertRaises(model.InvalidShapeError):
+            b.with_members({
+                'A': {
+                    'type': 'brand-new-shape-type',
+                },
+            }).build_model()
 
 
 if __name__ == '__main__':

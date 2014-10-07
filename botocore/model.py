@@ -1,4 +1,6 @@
 """Abstractions to interact with service models."""
+from collections import defaultdict
+
 from botocore.utils import CachedProperty
 from botocore.compat import OrderedDict
 
@@ -22,6 +24,10 @@ class InvalidShapeReferenceError(Exception):
     pass
 
 
+class UndefinedModelAttributeError(Exception):
+    pass
+
+
 class Shape(object):
     """Object representing a shape from the service model."""
     # To simplify serialization logic, all shape params that are
@@ -35,6 +41,25 @@ class Shape(object):
     MAP_TYPE = OrderedDict
 
     def __init__(self, shape_name, shape_model, shape_resolver=None):
+        """
+
+        :type shape_name: string
+        :param shape_name: The name of the shape.
+
+        :type shape_model: dict
+        :param shape_model: The shape model.  This would be the value
+            associated with the key in the "shapes" dict of the
+            service model (i.e ``model['shapes'][shape_name]``)
+
+        :type shape_resolver: botocore.model.ShapeResolver
+        :param shape_resolver: A shape resolver object.  This is used to
+            resolve references to other shapes.  For scalar shape types
+            (string, integer, boolean, etc.), this argument is not
+            required.  If a shape_resolver is not provided for a complex
+            type, then a ``ValueError`` will be raised when an attempt
+            to resolve a shape is made.
+
+        """
         self.name = shape_name
         self.type_name = shape_model['type']
         self.documentation = shape_model.get('documentation', '')
@@ -51,6 +76,25 @@ class Shape(object):
 
     @CachedProperty
     def serialization(self):
+        """Serialization information about the shape.
+
+        This contains information that may be needed for input serialization
+        or response parsing.  This can include:
+
+            * name
+            * queryName
+            * flattened
+            * location
+            * payload
+            * streaming
+            * xmlNamespace
+            * resultWrapper
+            * xmlAttribute
+
+        :rtype: dict
+        :return: Serialization information about the shape.
+
+        """
         model = self._shape_model
         serialization = {}
         for attr in self.SERIALIZED_ATTRS:
@@ -63,6 +107,20 @@ class Shape(object):
 
     @CachedProperty
     def metadata(self):
+        """Metadata about the shape.
+
+        This requires optional information about the shape, including:
+
+            * min
+            * max
+            * enum
+            * sensitive
+            * required
+
+        :rtype: dict
+        :return: Metadata about the shape.
+
+        """
         model = self._shape_model
         metadata = {}
         for attr in self.METADATA_ATTRS:
@@ -72,6 +130,13 @@ class Shape(object):
 
     @CachedProperty
     def required_members(self):
+        """A list of members that are required.
+
+        A structure shape can define members that are required.
+        This value will return a list of required members.  If there
+        are no required members an empty list is returned.
+
+        """
         return self.metadata.get('required', [])
 
     def _resolve_shape_ref(self, shape_ref):
@@ -127,6 +192,18 @@ class ServiceModel(object):
         'map': MapShape,
     }
     def __init__(self, service_description):
+        """
+
+        :type service_description: dict
+        :param service_description: The service description model.  This value
+            is obtained from a botocore.loader.Loader, or from directly loading
+            the file yourself::
+
+                service_description = json.load(
+                    open('/path/to/service-description-model.json'))
+                model = ServiceModel(service_description)
+
+        """
         self._service_description = service_description
         # We want clients to be able to access metadata directly.
         self.metadata = service_description.get('metadata', {})
@@ -150,11 +227,7 @@ class ServiceModel(object):
 
     @CachedProperty
     def operation_names(self):
-        return list(self._service_description['operations'])
-
-    @CachedProperty
-    def endpoint_prefix(self):
-        return self.metadata['endpointPrefix']
+        return list(self._service_description.get('operations', []))
 
     @CachedProperty
     def signing_name(self):
@@ -170,11 +243,23 @@ class ServiceModel(object):
 
     @CachedProperty
     def api_version(self):
-        return self.metadata['apiVersion']
+        return self._get_metadata_property('apiVersion')
 
     @CachedProperty
     def protocol(self):
-        return self.metadata['protocol']
+        return self._get_metadata_property('protocol')
+
+    @CachedProperty
+    def endpoint_prefix(self):
+        return self._get_metadata_property('endpointPrefix')
+
+    def _get_metadata_property(self, name):
+        try:
+            return self.metadata[name]
+        except KeyError:
+            raise UndefinedModelAttributeError(
+                '"%s" not defined in the metadata of the the model: %s' %
+                (name, self))
 
     # Signature version is one of the rare properties
     # than can be modified so a CachedProperty is not used here.
@@ -193,6 +278,17 @@ class ServiceModel(object):
 
 class OperationModel(object):
     def __init__(self, operation_model, service_model):
+        """
+
+        :type operation_model: dict
+        :param operation_model: The operation model.  This comes from the
+            service model, and is the value associated with the operation
+            name in the service model (i.e ``model['operations'][op_name]``).
+
+        :type service_model: botocore.model.ServiceModel
+        :param service_model: The service model associated with the operation.
+
+        """
         self._operation_model = operation_model
         self._service_model = service_model
         # Clients can access '.name' to get the operation name
@@ -293,3 +389,172 @@ class UnresolvableShapeMap(object):
     def resolve_shape_ref(self, shape_ref):
         raise ValueError("Attempted to resolve shape '%s', but no shape "
                          "map was provided.")
+
+
+class DenormalizedStructureBuilder(object):
+    """Build a StructureShape from a denormalized model.
+
+    This is a convenience builder class that makes it easy to construct
+    ``StructureShape``s based on a denormalized model.
+
+    It will handle the details of creating unique shape names and creating
+    the appropriate shape map needed by the ``StructureShape`` class.
+
+    Example usage::
+
+        builder = DenormalizedStructureBuilder()
+        shape = builder.with_members({
+            'A': {
+                'type': 'structure',
+                'members': {
+                    'B': {
+                        'type': 'structure',
+                        'members': {
+                            'C': {
+                                'type': 'string',
+                            }
+                        }
+                    }
+                }
+            }
+        }).build_model()
+        # ``shape`` is now an instance of botocore.model.StructureShape
+
+    """
+    def __init__(self, name=None):
+        self.members = {}
+        self._name_generator = ShapeNameGenerator()
+        if name is None:
+            self.name = self._name_generator.new_shape_name('structure')
+
+    def with_members(self, members):
+        """
+
+        :type members: dict
+        :param members: The denormalized members.
+
+        :return: self
+
+        """
+        self._members = members
+        return self
+
+    def build_model(self):
+        """Build the model based on the provided members.
+
+        :rtype: botocore.model.StructureShape
+        :return: The built StructureShape object.
+
+        """
+        shapes = {}
+        denormalized = {
+            'type': 'structure',
+            'members': self._members,
+        }
+        self._build_model(denormalized, shapes, self.name)
+        resolver = ShapeResolver(shape_map=shapes)
+        return StructureShape(shape_name=self.name,
+                              shape_model=shapes[self.name],
+                              shape_resolver=resolver)
+
+    def _build_model(self, model, shapes, shape_name):
+        if model['type'] == 'structure':
+            shapes[shape_name] = self._build_structure(model, shapes)
+        elif model['type'] == 'list':
+            shapes[shape_name] = self._build_list(model, shapes)
+        elif model['type'] == 'map':
+            shapes[shape_name] = self._build_map(model, shapes)
+        elif model['type'] in ['string', 'integer', 'boolean', 'blob',
+                               'timestamp', 'long', 'double', 'char']:
+            shapes[shape_name] = self._build_scalar(model)
+        else:
+            raise InvalidShapeError("Unknown shape type: %s" % model['type'])
+
+    def _build_structure(self, model, shapes):
+        members = {}
+        shape = self._build_initial_shape(model)
+        shape['members'] = members
+
+        for name, member_model in model['members'].items():
+            member_shape_name = self._get_shape_name(member_model)
+            members[name] = {'shape': member_shape_name}
+            self._build_model(member_model, shapes, member_shape_name)
+        return shape
+
+    def _build_list(self, model, shapes):
+        member_shape_name = self._get_shape_name(model)
+        shape = self._build_initial_shape(model)
+        shape['member'] = {'shape': member_shape_name}
+        self._build_model(model['member'], shapes, member_shape_name)
+        return shape
+
+    def _build_map(self, model, shapes):
+        key_shape_name = self._get_shape_name(model['key'])
+        value_shape_name = self._get_shape_name(model['value'])
+        shape = self._build_initial_shape(model)
+        shape['key'] = {'shape': key_shape_name}
+        shape['value'] = {'shape': value_shape_name}
+        self._build_model(model['key'], shapes, key_shape_name)
+        self._build_model(model['value'], shapes, value_shape_name)
+        return shape
+
+    def _build_initial_shape(self, model):
+        shape = {
+            'type': model['type'],
+        }
+        if 'documentation' in model:
+            shape['documentation'] = model['documentation']
+        if 'enum' in model:
+            shape['enum'] = model['enum']
+        return shape
+
+    def _build_scalar(self, model):
+        return self._build_initial_shape(model)
+
+    def _get_shape_name(self, model):
+        if 'shape_name' in model:
+            return model['shape_name']
+        else:
+            return self._name_generator.new_shape_name(model['type'])
+
+
+class ShapeNameGenerator(object):
+    """Generate unique shape names for a type.
+
+    This class can be used in conjunction with the DenormalizedStructureBuilder
+    to generate unique shape names for a given type.
+
+    """
+    def __init__(self):
+        self._name_cache = defaultdict(int)
+
+    def new_shape_name(self, type_name):
+        """Generate a unique shape name.
+
+        This method will guarantee a unique shape name each time it is
+        called with the same type.
+
+        ::
+
+            >>> s = ShapeNameGenerator()
+            >>> s.new_shape_name('structure')
+            'StructureType1'
+            >>> s.new_shape_name('structure')
+            'StructureType2'
+            >>> s.new_shape_name('list')
+            'ListType1'
+            >>> s.new_shape_name('list')
+            'ListType2'
+
+
+        :type type_name: string
+        :param type_name: The type name (structure, list, map, string, etc.)
+
+        :rtype: string
+        :return: A unique shape name for the given type
+
+        """
+        self._name_cache[type_name] += 1
+        current_index = self._name_cache[type_name]
+        return '%sType%s' % (type_name.capitalize(),
+                             current_index)
