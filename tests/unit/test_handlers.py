@@ -119,33 +119,29 @@ class TestHandlers(BaseSessionTest):
     def test_500_status_code_set_for_200_response(self):
         http_response = mock.Mock()
         http_response.status_code = 200
-        parsed = {
-            'Errors': [{
-                "HostId": "hostid",
-                "Message": "An internal error occurred.",
-                "Code": "InternalError",
-                "RequestId": "123456789"
-            }]
-        }
-        handlers.check_for_200_error((http_response, parsed), 'MyOperationName')
+        http_response.content = """
+            <Error>
+              <Code>AccessDenied</Code>
+              <Message>Access Denied</Message>
+              <RequestId>id</RequestId>
+              <HostId>hostid</HostId>
+            </Error>
+        """
+        handlers.check_for_200_error((http_response, {}))
         self.assertEqual(http_response.status_code, 500)
 
     def test_200_response_with_no_error_left_untouched(self):
         http_response = mock.Mock()
         http_response.status_code = 200
-        parsed = {
-            'NotAnError': [{
-                'foo': 'bar'
-            }]
-        }
-        handlers.check_for_200_error((http_response, parsed), 'MyOperationName')
+        http_response.content = "<NotAnError></NotAnError>"
+        handlers.check_for_200_error((http_response, {}))
         # We don't touch the status code since there are no errors present.
         self.assertEqual(http_response.status_code, 200)
 
     def test_500_response_can_be_none(self):
         # A 500 response can raise an exception, which means the response
         # object is None.  We need to handle this case.
-        handlers.check_for_200_error(None, mock.Mock())
+        handlers.check_for_200_error(None)
 
     def test_sse_headers(self):
         prefix = 'x-amz-server-side-encryption-customer-'
