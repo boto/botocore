@@ -94,11 +94,13 @@ import re
 import base64
 import json
 import xml.etree.cElementTree
+import logging
 
 from six.moves import http_client
 
 from botocore.utils import parse_timestamp
 
+LOG = logging.getLogger(__name__)
 
 DEFAULT_TIMESTAMP_PARSER = parse_timestamp
 
@@ -148,6 +150,7 @@ class ResponseParser(object):
             ``RequestId`` will always be present.
 
         """
+        LOG.debug('Response body:\n%s', response['body'])
         if response['status_code'] >= 301:
             return self._do_error_parse(response, shape)
         else:
