@@ -4,7 +4,7 @@
     "endpointPrefix":"ec2",
     "serviceAbbreviation":"Amazon EC2",
     "serviceFullName":"Amazon Elastic Compute Cloud",
-    "signatureVersion":"v2",
+    "signatureVersion":"v4",
     "xmlNamespace":"http://ec2.amazonaws.com/doc/2014-06-15",
     "protocol":"ec2"
   },
@@ -75,7 +75,7 @@
         "requestUri":"/"
       },
       "input":{"shape":"AttachInternetGatewayRequest"},
-      "documentation":"<p>Attaches an Internet gateway to a VPC, enabling connectivity between the Internet and the VPC. For more information about your VPC and Internet gateway, see the <a href=\"http://docs.&awsdomain;/AmazonVPC/latest/UserGuide/\">Amazon Virtual Private Cloud User Guide</a>.</p>"
+      "documentation":"<p>Attaches an Internet gateway to a VPC, enabling connectivity between the Internet and the VPC. For more information about your VPC and Internet gateway, see the <a href=\"http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/\">Amazon Virtual Private Cloud User Guide</a>.</p>"
     },
     "AttachNetworkInterface":{
       "name":"AttachNetworkInterface",
@@ -264,7 +264,7 @@
       },
       "input":{"shape":"CreateInternetGatewayRequest"},
       "output":{"shape":"CreateInternetGatewayResult"},
-      "documentation":"<p>Creates an Internet gateway for use with a VPC. After creating the Internet gateway, you attach it to a VPC using <a>AttachInternetGateway</a>.</p> <p>For more information about your VPC and Internet gateway, see the <a href=\"http://docs.&awsdomain;/AmazonVPC/latest/UserGuide/\">Amazon Virtual Private Cloud User Guide</a>.</p>"
+      "documentation":"<p>Creates an Internet gateway for use with a VPC. After creating the Internet gateway, you attach it to a VPC using <a>AttachInternetGateway</a>.</p> <p>For more information about your VPC and Internet gateway, see the <a href=\"http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/\">Amazon Virtual Private Cloud User Guide</a>.</p>"
     },
     "CreateKeyPair":{
       "name":"CreateKeyPair",
@@ -932,7 +932,7 @@
       },
       "input":{"shape":"DescribeSnapshotAttributeRequest"},
       "output":{"shape":"DescribeSnapshotAttributeResult"},
-      "documentation":"<p>Describes the specified attribute of the specified snapshot. You can specify only one attribute at a time.</p> <p>For more information about Amazon EBS snapshots, see <a href='http://docs.&awsdomain;/AWSEC2/latest/UserGuide/EBSSnapshots.html'>Amazon EBS Snapshots</a> in the <i>Amazon Elastic Compute Cloud User Guide</i>.</p>"
+      "documentation":"<p>Describes the specified attribute of the specified snapshot. You can specify only one attribute at a time.</p> <p>For more information about Amazon EBS snapshots, see <a href='http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSSnapshots.html'>Amazon EBS Snapshots</a> in the <i>Amazon Elastic Compute Cloud User Guide</i>.</p>"
     },
     "DescribeSnapshots":{
       "name":"DescribeSnapshots",
@@ -942,7 +942,7 @@
       },
       "input":{"shape":"DescribeSnapshotsRequest"},
       "output":{"shape":"DescribeSnapshotsResult"},
-      "documentation":"<p>Describes one or more of the Amazon EBS snapshots available to you. Available snapshots include public snapshots available for any AWS account to launch, private snapshots that you own, and private snapshots owned by another AWS account but for which you've been given explicit create volume permissions.</p> <p>The create volume permissions fall into the following categories:</p> <ul> <li> <i>public</i>: The owner of the snapshot granted create volume permissions for the snapshot to the <code>all</code> group. All AWS accounts have create volume permissions for these snapshots.</li> <li> <i>explicit</i>: The owner of the snapshot granted create volume permissions to a specific AWS account.</li> <li> <i>implicit</i>: An AWS account has implicit create volume permissions for all snapshots it owns.</li> </ul> <p>The list of snapshots returned can be modified by specifying snapshot IDs, snapshot owners, or AWS accounts with create volume permissions. If no options are specified, Amazon EC2 returns all snapshots for which you have create volume permissions.</p> <p>If you specify one or more snapshot IDs, only snapshots that have the specified IDs are returned. If you specify an invalid snapshot ID, an error is returned. If you specify a snapshot ID for which you do not have access, it is not included in the returned results.</p> <p>If you specify one or more snapshot owners, only snapshots from the specified owners and for which you have access are returned. The results can include the AWS account IDs of the specified owners, <code>amazon</code> for snapshots owned by Amazon, or <code>self</code> for snapshots that you own.</p> <p>If you specify a list of restorable users, only snapshots with create snapshot permissions for those users are returned. You can specify AWS account IDs (if you own the snapshots), <code>self</code> for snapshots for which you own or have explicit permissions, or <code>all</code> for public snapshots.</p> <p>For more information about Amazon EBS snapshots, see <a href='http://docs.&awsdomain;/AWSEC2/latest/UserGuide/EBSSnapshots.html'>Amazon EBS Snapshots</a> in the <i>Amazon Elastic Compute Cloud User Guide</i>.</p>"
+      "documentation":"<p>Describes one or more of the Amazon EBS snapshots available to you. Available snapshots include public snapshots available for any AWS account to launch, private snapshots that you own, and private snapshots owned by another AWS account but for which you've been given explicit create volume permissions.</p> <p>The create volume permissions fall into the following categories:</p> <ul> <li> <i>public</i>: The owner of the snapshot granted create volume permissions for the snapshot to the <code>all</code> group. All AWS accounts have create volume permissions for these snapshots.</li> <li> <i>explicit</i>: The owner of the snapshot granted create volume permissions to a specific AWS account.</li> <li> <i>implicit</i>: An AWS account has implicit create volume permissions for all snapshots it owns.</li> </ul> <p>The list of snapshots returned can be modified by specifying snapshot IDs, snapshot owners, or AWS accounts with create volume permissions. If no options are specified, Amazon EC2 returns all snapshots for which you have create volume permissions.</p> <p>If you specify one or more snapshot IDs, only snapshots that have the specified IDs are returned. If you specify an invalid snapshot ID, an error is returned. If you specify a snapshot ID for which you do not have access, it is not included in the returned results.</p> <p>If you specify one or more snapshot owners, only snapshots from the specified owners and for which you have access are returned. The results can include the AWS account IDs of the specified owners, <code>amazon</code> for snapshots owned by Amazon, or <code>self</code> for snapshots that you own.</p> <p>If you specify a list of restorable users, only snapshots with create snapshot permissions for those users are returned. You can specify AWS account IDs (if you own the snapshots), <code>self</code> for snapshots for which you own or have explicit permissions, or <code>all</code> for public snapshots.</p> <p>For more information about Amazon EBS snapshots, see <a href='http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSSnapshots.html'>Amazon EBS Snapshots</a> in the <i>Amazon Elastic Compute Cloud User Guide</i>.</p>"
     },
     "DescribeSpotDatafeedSubscription":{
       "name":"DescribeSpotDatafeedSubscription",
@@ -1002,7 +1002,7 @@
       },
       "input":{"shape":"DescribeVolumeAttributeRequest"},
       "output":{"shape":"DescribeVolumeAttributeResult"},
-      "documentation":"<p>Describes the specified attribute of the specified volume. You can specify only one attribute at a time.</p> <p>For more information about Amazon EBS volumes, see <a href='http://docs.&awsdomain;/AWSEC2/latest/UserGuide/EBSVolumes.html'>Amazon EBS Volumes</a> in the <i>Amazon Elastic Compute Cloud User Guide</i>.</p>"
+      "documentation":"<p>Describes the specified attribute of the specified volume. You can specify only one attribute at a time.</p> <p>For more information about Amazon EBS volumes, see <a href='http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumes.html'>Amazon EBS Volumes</a> in the <i>Amazon Elastic Compute Cloud User Guide</i>.</p>"
     },
     "DescribeVolumeStatus":{
       "name":"DescribeVolumeStatus",
@@ -1022,7 +1022,7 @@
       },
       "input":{"shape":"DescribeVolumesRequest"},
       "output":{"shape":"DescribeVolumesResult"},
-      "documentation":"<p>Describes the specified Amazon EBS volumes.</p> <p>For more information about Amazon EBS volumes, see <a href='http://docs.&awsdomain;/AWSEC2/latest/UserGuide/EBSVolumes.html'>Amazon EBS Volumes</a> in the <i>Amazon Elastic Compute Cloud User Guide</i>.</p>"
+      "documentation":"<p>Describes the specified Amazon EBS volumes.</p> <p>For more information about Amazon EBS volumes, see <a href='http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumes.html'>Amazon EBS Volumes</a> in the <i>Amazon Elastic Compute Cloud User Guide</i>.</p>"
     },
     "DescribeVpcAttribute":{
       "name":"DescribeVpcAttribute",
