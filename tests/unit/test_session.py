@@ -30,10 +30,13 @@ from botocore.model import ServiceModel
 class BaseSessionTest(unittest.TestCase):
 
     def setUp(self):
-        self.env_vars = {'profile': (None, 'FOO_PROFILE', None),
-                         'region': ('foo_region', 'FOO_REGION', None),
-                         'data_path': ('data_path', 'FOO_DATA_PATH', None),
-                         'config_file': (None, 'FOO_CONFIG_FILE', None)}
+        self.env_vars = {
+            'profile': (None, 'FOO_PROFILE', None),
+            'region': ('foo_region', 'FOO_REGION', None),
+            'data_path': ('data_path', 'FOO_DATA_PATH', None),
+            'config_file': (None, 'FOO_CONFIG_FILE', None),
+            'credentials_file': (None, None, '/tmp/nowhere'),
+        }
         self.environ = {}
         self.environ_patch = mock.patch('os.environ', self.environ)
         self.environ_patch.start()
@@ -135,6 +138,20 @@ class SessionTest(BaseSessionTest):
         full_config = self.session.full_config
         self.assertTrue('foo' in full_config['profiles'])
         self.assertTrue('default' in full_config['profiles'])
+
+    def test_full_config_merges_creds_file_data(self):
+        with temporary_file('w') as f:
+            self.session.set_config_variable('credentials_file', f.name)
+            f.write('[newprofile]\n')
+            f.write('aws_access_key_id=FROM_CREDS_FILE_1\n')
+            f.write('aws_secret_access_key=FROM_CREDS_FILE_2\n')
+            f.flush()
+
+            self.session.profile = 'newprofile'
+            full_config = self.session.full_config
+            self.assertEqual(full_config['profiles']['newprofile'],
+                             {'aws_access_key_id': 'FROM_CREDS_FILE_1',
+                              'aws_secret_access_key': 'FROM_CREDS_FILE_2'})
 
     def test_register_unregister(self):
         calls = []
@@ -296,8 +313,11 @@ class TestConfigLoaderObject(BaseSessionTest):
             f.flush()
             self.session.set_config_variable('credentials_file', f.name)
             self.session.profile = 'credfile-profile'
-            # Now trying to retrieve the scoped config should not fail.
-            self.assertEqual(self.session.get_scoped_config(), {})
+            # Now trying to retrieve the scoped config should pull in
+            # values from the shared credentials file.
+            self.assertEqual(self.session.get_scoped_config(),
+                             {'aws_access_key_id': 'a',
+                              'aws_secret_access_key': 'b'})
 
 
 class TestGetServiceModel(BaseSessionTest):
