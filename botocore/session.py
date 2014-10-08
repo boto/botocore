@@ -380,13 +380,16 @@ class Session(object):
                 # Now we need to inject the profiles from the
                 # credentials file.  We don't actually need the values
                 # in the creds file, only the profile names so that we
-                # can validate the user is not referring to a nonexistent  
+                # can validate the user is not referring to a nonexistent
                 # profile.
                 cred_file = self.get_config_variable('credentials_file')
                 cred_profiles = botocore.config.raw_config_parse(cred_file)
                 for profile in cred_profiles:
+                    cred_vars = cred_profiles[profile]
                     if profile not in self._config['profiles']:
-                        self._config['profiles'][profile] = {}
+                        self._config['profiles'][profile] = cred_vars
+                    else:
+                        self._config['profiles'][profile].update(cred_vars)
             except ConfigNotFound:
                 pass
         return self._config
@@ -628,7 +631,7 @@ class Session(object):
         :raises ValueError: If the call to ``register`` uses ``unique_id``
             but the value for ``unique_id_uses_count`` differs from the
             ``unique_id_uses_count`` value declared by the very first
-            ``register`` call for that ``unique_id``. 
+            ``register`` call for that ``unique_id``.
         """
         self._events.register(event_name, handler, unique_id,
                               unique_id_uses_count=unique_id_uses_count)
@@ -654,14 +657,14 @@ class Session(object):
             event can only be completely unregistered once every ``register``
             call using the ``unique_id`` has been matched by an ``unregister``
             call. If the ``unique_id`` is specified, subsequent
-            ``unregister`` calls must use the same value for 
+            ``unregister`` calls must use the same value for
             ``unique_id_uses_count`` as the ``register`` call that first
             registered the event.
 
         :raises ValueError: If the call to ``unregister`` uses ``unique_id``
             but the value for ``unique_id_uses_count`` differs from the
             ``unique_id_uses_count`` value declared by the very first
-            ``register`` call for that ``unique_id``. 
+            ``register`` call for that ``unique_id``.
         """
         self._events.unregister(event_name, handler=handler,
                                 unique_id=unique_id,
