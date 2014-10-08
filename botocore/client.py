@@ -6,6 +6,7 @@ from botocore import xform_name
 from botocore.paginate import Paginator
 import botocore.validate
 import botocore.serialize
+from botocore import credentials
 
 
 class ClientError(Exception):
@@ -29,11 +30,15 @@ class ClientCreator(object):
         self._endpoint_creator = endpoint_creator
 
     def create_client(self, service_name, region_name, is_secure=True,
-                      endpoint_url=None, verify=None):
+                      endpoint_url=None, verify=None,
+                      aws_access_key_id=None, aws_secret_access_key=None,
+                      aws_session_token=None):
         service_model = self._load_service_model(service_name)
         cls = self.create_client_class(service_name)
-        client_args = self._get_client_args(service_model, region_name, is_secure,
-                                            endpoint_url, verify)
+        client_args = self._get_client_args(
+            service_model, region_name, is_secure, endpoint_url,
+            verify, aws_access_key_id, aws_secret_access_key,
+            aws_session_token)
         return cls(**client_args)
 
     def create_client_class(self, service_name):
@@ -113,7 +118,8 @@ class ClientCreator(object):
         return service_model
 
     def _get_client_args(self, service_model, region_name, is_secure,
-                         endpoint_url, verify):
+                         endpoint_url, verify, aws_access_key_id,
+                         aws_secret_access_key, aws_session_token):
         # A client needs:
         #
         # * serializer
@@ -122,9 +128,16 @@ class ClientCreator(object):
         protocol = service_model.metadata['protocol']
         serializer = botocore.serialize.create_serializer(
             protocol, include_validation=True)
+        creds = None
+        if aws_secret_access_key is not None:
+            creds = credentials.Credentials(
+                access_key=aws_access_key_id,
+                secret_key=aws_secret_access_key,
+                token=aws_session_token)
         endpoint = self._endpoint_creator.create_endpoint(
             service_model, region_name, is_secure=is_secure,
-            endpoint_url=endpoint_url, verify=verify)
+            endpoint_url=endpoint_url, verify=verify,
+            credentials=creds)
         response_parser = botocore.parsers.create_parser(protocol)
         return {
             'serializer': serializer,
@@ -168,6 +181,7 @@ class ClientCreator(object):
 
 
 class BaseClient(object):
+
     def __init__(self, serializer, endpoint, response_parser):
         self._serializer = serializer
         self._endpoint = endpoint

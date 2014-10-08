@@ -725,7 +725,9 @@ class Session(object):
         self._components.lazy_register_component(name, component)
 
     def create_client(self, service_name, region_name=None, api_version=None,
-                      use_ssl=True, verify=None, endpoint_url=None):
+                      use_ssl=True, verify=None, endpoint_url=None,
+                      aws_access_key_id=None, aws_secret_access_key=None,
+                      aws_session_token=None):
         """Create a botocore client.
 
         :type service_name: string
@@ -765,6 +767,21 @@ class Session(object):
             complete URL (including the "http/https" scheme) to override this
             behavior.  If this value is provided, then ``use_ssl`` is ignored.
 
+        :type aws_access_key_id: string
+        :param aws_access_key_id: The access key to use when creating
+            the client.  This is entirely optional, and if not provided,
+            the credentials configured for the session will automatically
+            be used.  You only need to provide this argument if you want
+            to override the credentials used for this specific client.
+
+        :type aws_secret_access_key: string
+        :param aws_secret_access_key: The secret key to use when creating
+            the client.  Same semantics as aws_access_key_id above.
+
+        :type aws_session_token: string
+        :param aws_session_token: The session token to use when creating
+            the client.  Same semantics as aws_access_key_id above.
+
         :rtype: botocore.client.BaseClient
         :return: A botocore client instance
 
@@ -773,7 +790,10 @@ class Session(object):
         endpoint_creator = self._create_endpoint_creator()
         client_creator = botocore.client.ClientCreator(loader, endpoint_creator)
         client = client_creator.create_client(service_name, region_name, use_ssl,
-                                              endpoint_url, verify)
+                                              endpoint_url, verify,
+                                              aws_access_key_id,
+                                              aws_secret_access_key,
+                                              aws_session_token)
         return client
 
     def _create_endpoint_creator(self):
