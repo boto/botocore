@@ -1,0 +1,22 @@
+{
+  "waiters": {
+    "__default__": {
+      "interval": 30,
+      "max_attempts": 60,
+      "acceptor_type": "output"
+    },
+    "__ClusterState": {
+      "operation": "DescribeCluster",
+      "acceptor_path": "Cluster.Status.State"
+    },
+    "ClusterRunning": {
+      "extends": "__ClusterState",
+      "success_value": ["RUNNING", "WAITING"],
+      "failure_value": [
+        "TERMINATING",
+        "TERMINATED",
+        "TERMINATED_WITH_ERRORS"
+      ]
+    }
+  }
+}
