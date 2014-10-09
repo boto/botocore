@@ -110,6 +110,21 @@ def create_parser(protocol_name):
     return parser_cls()
 
 
+def _text_content(func):
+    # This decorator hides the difference between
+    # an XML node with text or a plain string.  It's used
+    # to ensure that scalar processing operates only on text
+    # strings, which allows the same scalar handlers to be used
+    # for XML nodes from the body and HTTP headers.
+    def _get_text_content(self, shape, node_or_string):
+        if hasattr(node_or_string, 'text'):
+            text = node_or_string.text
+        else:
+            text = node_or_string
+        return func(self, shape, text)
+    return _get_text_content
+
+
 class ResponseParserError(Exception):
     pass
 
@@ -284,25 +299,30 @@ class BaseXMLResponseParser(ResponseParser):
                 parsed[key] = value.text
         return parsed
 
-    def _handle_boolean(self, shape, node):
-        if node.text == 'true':
+    @_text_content
+    def _handle_boolean(self, shape, text):
+        if text == 'true':
             return True
         else:
             return False
 
-    def _handle_float(self, shape, node):
-        return float(node.text)
+    @_text_content
+    def _handle_float(self, shape, text):
+        return float(text)
 
-    def _handle_timestamp(self, shape, node):
-        if hasattr(node, 'text'):
-            value = node.text
-        else:
-            value = node
-        return self._timestamp_parser(value)
+    @_text_content
+    def _handle_timestamp(self, shape, text):
+        return self._timestamp_parser(text)
 
-    def _handle_integer(self, shape, node):
-        return int(node.text)
+    @_text_content
+    def _handle_integer(self, shape, text):
+        return int(text)
 
+    @_text_content
+    def _handle_string(self, shape, text):
+        return text
+
+    _handle_character = _handle_string
     _handle_double = _handle_float
     _handle_long = _handle_integer
 
@@ -638,32 +658,8 @@ class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
             parsed['ResponseMetadata'] = {'RequestId': parsed.pop('RequestId')}
         return parsed
 
-    def _handle_float(self, shape, node):
-        if hasattr(node, 'text'):
-            return float(node.text)
-        else:
-            return float(node)
-
-    def _handle_integer(self, shape, node):
-        if hasattr(node, 'text'):
-            return int(node.text)
-        else:
-            return int(node)
-
     def _handle_blob(self, shape, node):
         return base64.b64decode(node.text)
-
-    def _default_handle(self, shape, node):
-        if hasattr(node, 'text'):
-            # If it's an xml node, return the text of the
-            # xml node.
-            return node.text
-        else:
-            # Otherwise, return the passed in string/int/scalar type.
-            return node
-
-    _handle_double = _handle_float
-    _handle_long = _handle_integer
 
 
 PROTOCOL_PARSERS = {
