@@ -14,8 +14,10 @@ from botocore.model import ServiceModel
 from botocore.exceptions import ParamValidationError
 from botocore.exceptions import DataNotFoundError
 from botocore.exceptions import OperationNotPageableError
+from botocore import waiter
 from botocore import xform_name
 from botocore.paginate import Paginator
+from botocore import translate
 import botocore.validate
 import botocore.serialize
 from botocore import credentials
@@ -60,6 +62,8 @@ class ClientCreator(object):
         py_name_to_operation_name = self._create_name_mapping(service_model)
         self._add_pagination_methods(service_model, methods,
                                      py_name_to_operation_name)
+        self._add_waiter_methods(service_model, methods,
+                                 py_name_to_operation_name)
         cls = type(service_name, (BaseClient,), methods)
         return cls
 
@@ -125,6 +129,47 @@ class ClientCreator(object):
         methods['get_paginator'] = get_paginator
         methods['can_paginate'] = can_paginate
 
+    def _add_waiter_methods(self, service_model, methods_dict,
+                            method_name_map):
+
+        loader = self._loader
+
+        def _get_waiter_config(self):
+            if 'waiter_config' not in self._cache:
+                try:
+                    waiter_config = loader.load_data('aws/%s/%s.waiters' % (
+                        service_model.endpoint_prefix,
+                        service_model.api_version))['waiters']
+                    self._cache['waiter_config'] = translate.denormalize_waiters(
+                        waiter_config)
+                except DataNotFoundError:
+                    self._cache['waiter_config'] = {}
+            return self._cache['waiter_config']
+
+        def get_waiter(self, waiter_name):
+            config = self._get_waiter_config()
+            mapping = {}
+            for name in config:
+                mapping[xform_name(name)] = name
+            if waiter_name not in mapping:
+                raise ValueError("Waiter does not exist: %s" % waiter_name)
+            single_waiter_config = config[mapping[waiter_name]]
+            return waiter.Waiter(
+                waiter_name,
+                getattr(self, xform_name(single_waiter_config['operation'])),
+                single_waiter_config)
+
+        def all_waiters(self):
+            """Returns a list of all available waiters."""
+            all_waiters = self._get_waiter_config()
+            # Waiter configs is a dict, we just want the waiter names
+            # which are the keys in the dict.
+            return [xform_name(name) for name in all_waiters]
+
+        methods_dict['_get_waiter_config'] = _get_waiter_config
+        methods_dict['get_waiter'] = get_waiter
+        methods_dict['all_waiters'] = all_waiters
+
     def _load_service_model(self, service_name):
         json_model = self._loader.load_service_model('aws/%s' % service_name)
         service_model = ServiceModel(json_model)
@@ -168,7 +213,8 @@ class ClientCreator(object):
         return op_dict
 
     def _create_name_mapping(self, service_model):
-        # py_name -> OperationName
+        # py_name -> OperationName, for every operation available
+        # for a service.
         mapping = {}
         for operation_name in service_model.operation_names:
             py_operation_name = xform_name(operation_name)

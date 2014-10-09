@@ -16,7 +16,7 @@ import logging
 
 from .endpoint import EndpointCreator
 from .operation import Operation
-from .waiter import Waiter
+from .waiter import LegacyWaiter
 from .exceptions import ServiceNotInRegionError, NoRegionError
 from .exceptions import UnknownEndpointError
 from .model import ServiceModel, OperationModel
@@ -39,7 +39,7 @@ class Service(object):
         optional value is an endpoint for that region.
     :ivar protocols: A list of protocols supported by the service.
     """
-    WAITER_CLASS = Waiter
+    WAITER_CLASS = LegacyWaiter
 
     def __init__(self, session, provider, service_name,
                  path='/', port=None, api_version=None):
@@ -175,13 +175,13 @@ class Service(object):
                 return operation
         return None
 
-    def get_waiter(self, waiter_name):
+    def get_waiter(self, waiter_name, endpoint):
         try:
             config = self._load_waiter_config()[waiter_name]
         except Exception as e:
             raise ValueError("Waiter does not exist: %s" % waiter_name)
         operation = self.get_operation(config['operation'])
-        return self.WAITER_CLASS(waiter_name, operation, config)
+        return self.WAITER_CLASS(waiter_name, operation, endpoint, config)
 
     def _load_waiter_config(self):
         loader = self.session.get_component('data_loader')
