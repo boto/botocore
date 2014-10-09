@@ -37,9 +37,10 @@ class ClientError(Exception):
 
 class ClientCreator(object):
     """Creates client objects for a service."""
-    def __init__(self, loader, endpoint_creator):
+    def __init__(self, loader, endpoint_creator, event_emitter):
         self._loader = loader
         self._endpoint_creator = endpoint_creator
+        self._event_emitter = event_emitter
 
     def create_client(self, service_name, region_name, is_secure=True,
                       endpoint_url=None, verify=None,
@@ -154,7 +155,8 @@ class ClientCreator(object):
         return {
             'serializer': serializer,
             'endpoint': endpoint,
-            'response_parser': response_parser
+            'response_parser': response_parser,
+            'event_emitter': self._event_emitter,
         }
 
     def _create_methods(self, service_model):
@@ -177,11 +179,33 @@ class ClientCreator(object):
                            service_model):
         def _api_call(self, **kwargs):
             operation_model = service_model.operation_model(operation_name)
+            self._event_emitter.emit(
+                'before-parameter-build.{endpoint_prefix}.{operation_name}'\
+                    .format(endpoint_prefix=service_model.endpoint_prefix,
+                            operation_name=operation_name),
+                params=kwargs, model=operation_model)
+
             request_dict = self._serializer.serialize_to_request(
                 kwargs, operation_model)
 
+            self._event_emitter.emit(
+                'before-call.{endpoint_prefix}.{operation_name}'.format(
+                    endpoint_prefix=service_model.endpoint_prefix,
+                    operation_name=operation_name),
+                model=operation_model, params=request_dict
+            )
+
             http, parsed_response = self._endpoint.make_request(
                 operation_model, request_dict)
+
+            self._event_emitter.emit(
+                'after-call.{endpoint_prefix}.{operation_name}'.format(
+                    endpoint_prefix=service_model.endpoint_prefix,
+                    operation_name=operation_name),
+                http_response=http, parsed=parsed_response,
+                model=operation_model
+            )
+
             if http.status_code >= 300:
                 raise ClientError(parsed_response, operation_name)
             else:
@@ -194,8 +218,10 @@ class ClientCreator(object):
 
 class BaseClient(object):
 
-    def __init__(self, serializer, endpoint, response_parser):
+    def __init__(self, serializer, endpoint, response_parser,
+                 event_emitter):
         self._serializer = serializer
         self._endpoint = endpoint
         self._response_parser = response_parser
+        self._event_emitter = event_emitter
         self._cache = {}

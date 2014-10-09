@@ -788,7 +788,9 @@ class Session(object):
         """
         loader = self.get_component('data_loader')
         endpoint_creator = self._create_endpoint_creator()
-        client_creator = botocore.client.ClientCreator(loader, endpoint_creator)
+        event_emitter = self.get_component('event_emitter')
+        client_creator = botocore.client.ClientCreator(loader, endpoint_creator,
+                                                       event_emitter)
         client = client_creator.create_client(service_name, region_name, use_ssl,
                                               endpoint_url, verify,
                                               aws_access_key_id,
