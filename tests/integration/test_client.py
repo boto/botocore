@@ -38,32 +38,33 @@ class TestBucketWithVersions(unittest.TestCase):
         # 1. Create a bucket
         # 2. Enable versioning
         # 3. Put an Object
-        # 4. Delete the object
-        # 5. Delete all the versions
-        # 6. Delete the bucket
         self.client.create_bucket(Bucket=self.bucket_name)
+        self.addCleanup(self.client.delete_bucket, Bucket=self.bucket_name)
+
         self.client.put_bucket_versioning(
             Bucket=self.bucket_name,
             VersioningConfiguration={"Status": "Enabled"})
-        self.client.put_object(Bucket=self.bucket_name,
-                               Key='testkey',
-                               Body=b'bytes body')
+        response = self.client.put_object(
+            Bucket=self.bucket_name, Key='testkey', Body=b'bytes body')
+        self.addCleanup(self.client.delete_object,
+                        Bucket=self.bucket_name,
+                        Key='testkey',
+                        VersionId=response['VersionId'])
+
         response = self.client.get_object(
             Bucket=self.bucket_name, Key='testkey')
         self.assertEqual(response['Body'].read(), b'bytes body')
-        self.client.delete_object(Bucket=self.bucket_name, Key='testkey')
+
+        response = self.client.delete_object(Bucket=self.bucket_name, Key='testkey')
+        # This cleanup step removes the DeleteMarker that's created
+        # from the delete_object call above.
+        self.addCleanup(self.client.delete_object,
+                        Bucket=self.bucket_name,
+                        Key='testkey',
+                        VersionId=response['VersionId'])
         # Object does not exist anymore.
         with self.assertRaises(ClientError):
             self.client.get_object(Bucket=self.bucket_name, Key='testkey')
         versions = self.client.list_object_versions(Bucket=self.bucket_name)
         version_ids = self.extract_version_ids(versions)
         self.assertEqual(len(version_ids), 2)
-        for version_id in version_ids:
-            self.client.delete_object(
-                Bucket=self.bucket_name,
-                Key='testkey',
-                VersionId=version_id)
-        self.client.delete_bucket(Bucket=self.bucket_name)
-        # The bucket should no longer exist:
-        with self.assertRaises(ClientError):
-            self.client.head_bucket(Bucket=self.bucket_name)
