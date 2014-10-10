@@ -45,7 +45,7 @@ class TestBucketWithVersions(unittest.TestCase):
             Bucket=self.bucket_name,
             VersioningConfiguration={"Status": "Enabled"})
         response = self.client.put_object(
-            Bucket=self.bucket_name, Key='testkey', Body=b'bytes body')
+            Bucket=self.bucket_name, Key='testkey', Body='bytes body')
         self.addCleanup(self.client.delete_object,
                         Bucket=self.bucket_name,
                         Key='testkey',
