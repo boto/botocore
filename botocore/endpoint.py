@@ -254,7 +254,7 @@ class EndpointCreator(object):
         self._user_agent = user_agent
 
     def create_endpoint(self, service_model, region_name=None, is_secure=True,
-                        endpoint_url=None, verify=None):
+                        endpoint_url=None, verify=None, credentials=None):
         if region_name is None:
             region_name = self._configured_region
         # Use the endpoint resolver heuristics to build the endpoint url.
@@ -292,13 +292,17 @@ class EndpointCreator(object):
             final_endpoint_url = endpoint['uri']
         return self._get_endpoint(service_model, region_name,
                                   signature_version, final_endpoint_url,
-                                  verify)
+                                  verify, credentials)
 
     def _get_endpoint(self, service_model, region_name, signature_version,
-                      endpoint_url, verify):
+                      endpoint_url, verify, user_provided_creds):
         service_name = service_model.signing_name
         endpoint_prefix = service_model.endpoint_prefix
         credentials = self._credentials
+        if user_provided_creds is not None:
+            # Credentials provided via create_endpoint() override the
+            # credentials provided when the EndpointCreator was created.
+            credentials = user_provided_creds
         user_agent = self._user_agent
         event_emitter = self._event_emitter
         user_agent = self._user_agent

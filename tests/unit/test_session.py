@@ -25,6 +25,7 @@ import botocore.session
 import botocore.exceptions
 from botocore.hooks import EventHooks
 from botocore.model import ServiceModel
+from botocore import client
 
 
 class BaseSessionTest(unittest.TestCase):
@@ -327,6 +328,12 @@ class TestGetServiceModel(BaseSessionTest):
         self.session.register_component('data_loader', loader)
         model = self.session.get_service_model('made_up')
         self.assertIsInstance(model, ServiceModel)
+
+
+class TestCreateClient(BaseSessionTest):
+    def test_can_create_client(self):
+        sts_client = self.session.create_client('sts', 'us-west-2')
+        self.assertIsInstance(sts_client, client.BaseClient)
 
 
 if __name__ == "__main__":

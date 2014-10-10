@@ -103,7 +103,7 @@ def json_decode_template_body(parsed, **kwargs):
         logger.debug('error loading JSON', exc_info=True)
 
 
-def calculate_md5(event_name, params, **kwargs):
+def calculate_md5(params, **kwargs):
     request_dict = params
     if request_dict['body'] and not 'Content-MD5' in params['headers']:
         md5 = hashlib.md5()
@@ -112,7 +112,7 @@ def calculate_md5(event_name, params, **kwargs):
         params['headers']['Content-MD5'] = value
 
 
-def sse_md5(event_name, params, **kwargs):
+def sse_md5(params, **kwargs):
     """
     S3 server-side encryption requires the encryption key to be sent to the
     server base64 encoded, as well as a base64-encoded MD5 hash of the
@@ -251,8 +251,8 @@ def signature_overrides(service_data, service_name, session, **kwargs):
         service_data['signature_version'] = signature_version_override
 
 
-def add_expect_header(operation, params, **kwargs):
-    if operation.http.get('method', '') not in ['PUT', 'POST']:
+def add_expect_header(model, params, **kwargs):
+    if model.http.get('method', '') not in ['PUT', 'POST']:
         return
     if 'body' in params:
         body = params['body']

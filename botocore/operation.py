@@ -73,19 +73,21 @@ class Operation(BotoCoreObject):
         event = self.session.create_event('before-parameter-build',
                                           self.service.endpoint_prefix,
                                           self.name)
-        self.session.emit(event, operation=self, endpoint=endpoint,
+        self.session.emit(event, endpoint=endpoint,
+                          model=self.model,
                           params=kwargs)
         request_dict = self.build_parameters(**kwargs)
         event = self.session.create_event('before-call',
                                           self.service.endpoint_prefix,
                                           self.name)
-        self.session.emit(event, operation=self, endpoint=endpoint,
+        self.session.emit(event, endpoint=endpoint,
+                          model=self.model,
                           params=request_dict)
         response = endpoint.make_request(self.model, request_dict)
         event = self.session.create_event('after-call',
                                           self.service.endpoint_prefix,
                                           self.name)
-        self.session.emit(event, operation=self,
+        self.session.emit(event,
                           http_response=response[0],
                           model=self.model,
                           parsed=response[1])

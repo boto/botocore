@@ -1,3 +1,15 @@
+# Copyright 2014 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
+#
+# http://aws.amazon.com/apache2.0/
+#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
 from botocore.model import ServiceModel
 from botocore.exceptions import ParamValidationError
 from botocore.exceptions import DataNotFoundError
@@ -6,6 +18,7 @@ from botocore import xform_name
 from botocore.paginate import Paginator
 import botocore.validate
 import botocore.serialize
+from botocore import credentials
 
 
 class ClientError(Exception):
@@ -24,16 +37,21 @@ class ClientError(Exception):
 
 class ClientCreator(object):
     """Creates client objects for a service."""
-    def __init__(self, loader, endpoint_creator):
+    def __init__(self, loader, endpoint_creator, event_emitter):
         self._loader = loader
         self._endpoint_creator = endpoint_creator
+        self._event_emitter = event_emitter
 
     def create_client(self, service_name, region_name, is_secure=True,
-                      endpoint_url=None, verify=None):
+                      endpoint_url=None, verify=None,
+                      aws_access_key_id=None, aws_secret_access_key=None,
+                      aws_session_token=None):
         service_model = self._load_service_model(service_name)
         cls = self.create_client_class(service_name)
-        client_args = self._get_client_args(service_model, region_name, is_secure,
-                                            endpoint_url, verify)
+        client_args = self._get_client_args(
+            service_model, region_name, is_secure, endpoint_url,
+            verify, aws_access_key_id, aws_secret_access_key,
+            aws_session_token)
         return cls(**client_args)
 
     def create_client_class(self, service_name):
@@ -113,7 +131,8 @@ class ClientCreator(object):
         return service_model
 
     def _get_client_args(self, service_model, region_name, is_secure,
-                         endpoint_url, verify):
+                         endpoint_url, verify, aws_access_key_id,
+                         aws_secret_access_key, aws_session_token):
         # A client needs:
         #
         # * serializer
@@ -122,14 +141,22 @@ class ClientCreator(object):
         protocol = service_model.metadata['protocol']
         serializer = botocore.serialize.create_serializer(
             protocol, include_validation=True)
+        creds = None
+        if aws_secret_access_key is not None:
+            creds = credentials.Credentials(
+                access_key=aws_access_key_id,
+                secret_key=aws_secret_access_key,
+                token=aws_session_token)
         endpoint = self._endpoint_creator.create_endpoint(
             service_model, region_name, is_secure=is_secure,
-            endpoint_url=endpoint_url, verify=verify)
+            endpoint_url=endpoint_url, verify=verify,
+            credentials=creds)
         response_parser = botocore.parsers.create_parser(protocol)
         return {
             'serializer': serializer,
             'endpoint': endpoint,
-            'response_parser': response_parser
+            'response_parser': response_parser,
+            'event_emitter': self._event_emitter,
         }
 
     def _create_methods(self, service_model):
@@ -152,11 +179,33 @@ class ClientCreator(object):
                            service_model):
         def _api_call(self, **kwargs):
             operation_model = service_model.operation_model(operation_name)
+            self._event_emitter.emit(
+                'before-parameter-build.{endpoint_prefix}.{operation_name}'\
+                    .format(endpoint_prefix=service_model.endpoint_prefix,
+                            operation_name=operation_name),
+                params=kwargs, model=operation_model)
+
             request_dict = self._serializer.serialize_to_request(
                 kwargs, operation_model)
 
+            self._event_emitter.emit(
+                'before-call.{endpoint_prefix}.{operation_name}'.format(
+                    endpoint_prefix=service_model.endpoint_prefix,
+                    operation_name=operation_name),
+                model=operation_model, params=request_dict
+            )
+
             http, parsed_response = self._endpoint.make_request(
                 operation_model, request_dict)
+
+            self._event_emitter.emit(
+                'after-call.{endpoint_prefix}.{operation_name}'.format(
+                    endpoint_prefix=service_model.endpoint_prefix,
+                    operation_name=operation_name),
+                http_response=http, parsed=parsed_response,
+                model=operation_model
+            )
+
             if http.status_code >= 300:
                 raise ClientError(parsed_response, operation_name)
             else:
@@ -168,8 +217,11 @@ class ClientCreator(object):
 
 
 class BaseClient(object):
-    def __init__(self, serializer, endpoint, response_parser):
+
+    def __init__(self, serializer, endpoint, response_parser,
+                 event_emitter):
         self._serializer = serializer
         self._endpoint = endpoint
         self._response_parser = response_parser
+        self._event_emitter = event_emitter
         self._cache = {}
