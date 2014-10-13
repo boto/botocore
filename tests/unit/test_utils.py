@@ -27,6 +27,9 @@ from botocore.utils import parse_key_val_file_contents
 from botocore.utils import parse_key_val_file
 from botocore.utils import parse_timestamp
 from botocore.utils import CachedProperty
+from botocore.utils import ArgumentGenerator
+from botocore.model import DenormalizedStructureBuilder
+from botocore.model import ShapeResolver
 
 
 class TestURINormalization(unittest.TestCase):
@@ -233,6 +236,127 @@ class TestCachedProperty(unittest.TestCase):
         # If the property wasn't cached, the next value should be
         # be 2, but because it's cached, we know the value will be 1.
         self.assertEqual(c.current_value, 1)
+
+
+class TestArgumentGenerator(unittest.TestCase):
+    def setUp(self):
+        self.arg_generator = ArgumentGenerator()
+
+    def assert_skeleton_from_model_is(self, model, generated_skeleton):
+        shape = DenormalizedStructureBuilder().with_members(
+            model).build_model()
+        actual = self.arg_generator.generate_skeleton(shape)
+        self.assertEqual(actual, generated_skeleton)
+
+    def test_generate_string(self):
+        self.assert_skeleton_from_model_is(
+            model={
+                'A': {'type': 'string'}
+            },
+            generated_skeleton={
+                'A': ''
+            }
+        )
+
+    def test_generate_scalars(self):
+        self.assert_skeleton_from_model_is(
+            model={
+                'A': {'type': 'string'},
+                'B': {'type': 'integer'},
+                'C': {'type': 'float'},
+                'D': {'type': 'boolean'},
+            },
+            generated_skeleton={
+                'A': '',
+                'B': 0,
+                'C': 0.0,
+                'D': True,
+            }
+        )
+
+    def test_generate_nested_structure(self):
+        self.assert_skeleton_from_model_is(
+            model={
+                'A': {
+                    'type': 'structure',
+                    'members': {
+                        'B': {'type': 'string'},
+                    }
+                }
+            },
+            generated_skeleton={
+                'A': {'B': ''}
+            }
+        )
+
+    def test_generate_scalar_list(self):
+        self.assert_skeleton_from_model_is(
+            model={
+                'A': {
+                    'type': 'list',
+                    'member': {
+                        'type': 'string'
+                    }
+                },
+            },
+            generated_skeleton={
+                'A': [''],
+            }
+        )
+
+    def test_generate_scalar_map(self):
+        self.assert_skeleton_from_model_is(
+            model={
+                'A': {
+                    'type': 'map',
+                    'key': {'type': 'string'},
+                    'value':  {'type': 'string'},
+                }
+            },
+            generated_skeleton={
+                'A': {
+                    'KeyName': '',
+                }
+            }
+        )
+
+    def test_handles_recursive_shapes(self):
+        # We're not using assert_skeleton_from_model_is
+        # because we can't use a DenormalizedStructureBuilder,
+        # we need a normalized model to represent recursive
+        # shapes.
+        shape_map = ShapeResolver({
+            'InputShape': {
+                'type': 'structure',
+                'members': {
+                    'A': {'shape': 'RecursiveStruct'},
+                    'B': {'shape': 'StringType'},
+                }
+            },
+            'RecursiveStruct': {
+                'type': 'structure',
+                'members': {
+                    'C': {'shape': 'RecursiveStruct'},
+                    'D': {'shape': 'StringType'},
+                }
+            },
+            'StringType': {
+                'type': 'string',
+            }
+        })
+        shape = shape_map.get_shape_by_name('InputShape')
+        actual = self.arg_generator.generate_skeleton(shape)
+        expected = {
+            'A': {
+                'C': {
+                    # For recurisve shapes, we'll just show
+                    # an empty dict.
+                },
+                'D': ''
+            },
+            'B': ''
+        }
+        self.assertEqual(actual, expected)
 
 
 if __name__ == '__main__':

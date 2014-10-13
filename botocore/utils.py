@@ -20,6 +20,7 @@ from dateutil.tz import tzlocal
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.compat import json, quote
 from botocore.vendored import requests
+from botocore.compat import OrderedDict
 
 
 logger = logging.getLogger(__name__)
@@ -311,3 +312,57 @@ class CachedProperty(object):
             computed_value = self._fget(obj)
             obj.__dict__[self._fget.__name__] = computed_value
             return computed_value
+
+
+class ArgumentGenerator(object):
+    def __init__(self):
+        pass
+
+    def generate_skeleton(self, shape):
+        """Generate a sample input."""
+        stack = []
+        return self._generate_skeleton(shape, stack)
+
+    def _generate_skeleton(self, shape, stack):
+        stack.append(shape.name)
+        try:
+            if shape.type_name == 'structure':
+                return self._generate_type_structure(shape, stack)
+            elif shape.type_name == 'list':
+                return self._generate_type_list(shape, stack)
+            elif shape.type_name == 'map':
+                return self._generate_type_map(shape, stack)
+            elif shape.type_name == 'string':
+                return ''
+            elif shape.type_name in ['integer', 'long']:
+                return 0
+            elif shape.type_name == 'float':
+                return 0.0
+            elif shape.type_name == 'boolean':
+                return True
+        finally:
+            stack.pop()
+
+    def _generate_type_structure(self, shape, stack):
+        if stack.count(shape.name) > 1:
+            return {}
+        skeleton = OrderedDict()
+        for member_name, member_shape in shape.members.items():
+            skeleton[member_name] = self._generate_skeleton(member_shape,
+                                                            stack)
+        return skeleton
+
+    def _generate_type_list(self, shape, stack):
+        # For list elements we've arbitrarily decided to
+        # return two elements for the skeleton list.
+        return [
+            self._generate_skeleton(shape.member, stack),
+        ]
+
+    def _generate_type_map(self, shape, stack):
+        key_shape = shape.key
+        value_shape = shape.value
+        assert key_shape.type_name == 'string'
+        return OrderedDict([
+            ('KeyName', self._generate_skeleton(value_shape, stack)),
+        ])
