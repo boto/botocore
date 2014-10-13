@@ -37,12 +37,12 @@ class TestEMRGetExtraResources(unittest.TestCase):
             operation.paginate(self.endpoint)
 
     def test_can_get_waiters(self):
-        waiter = self.service.get_waiter('ClusterRunning')
+        waiter = self.service.get_waiter('ClusterRunning', self.endpoint)
         self.assertTrue(hasattr(waiter, 'wait'))
 
     def test_waiter_does_not_exist(self):
         with self.assertRaises(ValueError):
-            self.service.get_waiter('DoesNotExist')
+            self.service.get_waiter('DoesNotExist', self.endpoint)
 
 
 if __name__ == '__main__':
