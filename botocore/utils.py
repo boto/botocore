@@ -315,11 +315,43 @@ class CachedProperty(object):
 
 
 class ArgumentGenerator(object):
+    """Generate sample input based on a shape model.
+
+    This class contains a ``generate_skeleton`` method that will take
+    an input shape (created from ``botocore.model``) and generate
+    a sample dictionary corresponding to the input shape.
+
+    The specific values used are place holder values. For strings an
+    empty string is used, for numbers 0 or 0.0 is used.  The intended
+    usage of this class is to generate the *shape* of the input structure.
+
+    This can be useful for operations that have complex input shapes.
+    This allows a user to just fill in the necessary data instead of
+    worrying about the specific structure of the input arguments.
+
+    Example usage::
+
+        s = botocore.session.get_session()
+        ddb = s.get_service_model('dynamodb')
+        arg_gen = ArgumentGenerator()
+        sample_input = arg_gen.generate_skeleton(
+            ddb.operation_model('CreateTable').input_shape)
+        print("Sample input for dynamodb.CreateTable: %s" % sample_input)
+
+    """
     def __init__(self):
         pass
 
     def generate_skeleton(self, shape):
-        """Generate a sample input."""
+        """Generate a sample input.
+
+        :type shape: ``botocore.model.Shape``
+        :param shape: The input shape.
+
+        :return: The generated skeleton input corresponding to the
+            provided input shape.
+
+        """
         stack = []
         return self._generate_skeleton(shape, stack)
 
