@@ -154,15 +154,6 @@ class TestResponseMetadataParsed(unittest.TestCase):
             parsed, {'Str': 'mystring',
                      'ResponseMetadata': {'RequestId': 'request-id'}})
 
-    def test_response_metadata_on_empty_rest_response(self):
-        headers = {'x-amzn-requestid': 'request-id'}
-        parser = parsers.RestJSONParser()
-        parsed = parser.parse(
-            {'body': b'', 'headers': headers, 'status_code': 200}, None)
-        self.assertEqual(
-            parsed,
-            {'ResponseMetadata': {'RequestId': 'request-id'}})
-
     def test_response_metadata_on_rest_response(self):
         parser = parsers.RestJSONParser()
         response = b'{"Str": "mystring"}'
@@ -186,16 +177,6 @@ class TestResponseMetadataParsed(unittest.TestCase):
         self.assertEqual(
             parsed, {'Str': 'mystring',
                      'ResponseMetadata': {'RequestId': 'request-id'}})
-
-    def test_response_metadata_on_empty_rest_xml_response(self):
-        # This is the format used by cloudfront, route53.
-        headers = {'x-amzn-requestid': 'request-id'}
-        parser = parsers.RestXMLParser()
-        parsed = parser.parse(
-            {'body': b'', 'headers': headers, 'status_code': 200}, None)
-        self.assertEqual(
-            parsed,
-            {'ResponseMetadata': {'RequestId': 'request-id'}})
 
     def test_response_metadata_from_s3_response(self):
         # Even though s3 is a rest-xml service, it's response metadata
@@ -284,3 +265,59 @@ class TestResponseParsingDatetimes(unittest.TestCase):
              'headers': [],
              'status_code': 200}, output_shape)
         self.assertEqual(parsed, expected_parsed)
+
+
+class TestHandlesNoOutputShape(unittest.TestCase):
+    """Verify that each protocol handles no output shape properly."""
+
+    def test_empty_rest_json_response(self):
+        headers = {'x-amzn-requestid': 'request-id'}
+        parser = parsers.RestJSONParser()
+        output_shape = None
+        parsed = parser.parse(
+            {'body': b'', 'headers': headers, 'status_code': 200},
+            output_shape)
+        self.assertEqual(
+            parsed,
+            {'ResponseMetadata': {'RequestId': 'request-id'}})
+
+    def test_empty_rest_xml_response(self):
+        # This is the format used by cloudfront, route53.
+        headers = {'x-amzn-requestid': 'request-id'}
+        parser = parsers.RestXMLParser()
+        output_shape = None
+        parsed = parser.parse(
+            {'body': b'', 'headers': headers, 'status_code': 200},
+            None)
+        self.assertEqual(
+            parsed,
+            {'ResponseMetadata': {'RequestId': 'request-id'}})
+
+    def test_empty_query_response(self):
+        body = (
+            b'<DeleteTagsResponse xmlns="http://autoscaling.amazonaws.com/">'
+            b'  <ResponseMetadata>'
+            b'    <RequestId>request-id</RequestId>'
+            b'  </ResponseMetadata>'
+            b'</DeleteTagsResponse>'
+        )
+        parser = parsers.QueryParser()
+        output_shape = None
+        parsed = parser.parse(
+            {'body': body, 'headers': {}, 'status_code': 200},
+            None)
+        self.assertEqual(
+            parsed,
+            {'ResponseMetadata': {'RequestId': 'request-id'}})
+
+    def test_empty_json_response(self):
+        headers = {'x-amzn-requestid': 'request-id'}
+        # Output shape of None represents no output shape in the model.
+        output_shape = None
+        parser = parsers.JSONParser()
+        parsed = parser.parse(
+            {'body': b'', 'headers': headers, 'status_code': 200},
+            output_shape)
+        self.assertEqual(
+            parsed,
+            {'ResponseMetadata': {'RequestId': 'request-id'}})
