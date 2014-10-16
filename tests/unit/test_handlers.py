@@ -70,7 +70,8 @@ class TestHandlers(BaseSessionTest):
             event = self.session.create_event(
                 'before-call', 's3', op)
             params = {'headers': {'x-amz-copy-source': 'foo++bar.txt'}}
-            self.session.emit(event, params=params, operation=mock.Mock())
+            m = mock.Mock()
+            self.session.emit(event, params=params, model=m)
             self.assertEqual(
                 params['headers']['x-amz-copy-source'], 'foo%2B%2Bbar.txt')
 
@@ -153,7 +154,7 @@ class TestHandlers(BaseSessionTest):
                 prefix + 'algorithm': 'foo',
                 prefix + 'key': 'bar'
                 }}
-            self.session.emit(event, params=params, operation=mock.Mock())
+            self.session.emit(event, params=params, model=mock.Mock())
             self.assertEqual(
                 params['headers'][prefix + 'key'], 'YmFy')
             self.assertEqual(

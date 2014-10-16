@@ -464,7 +464,7 @@ class DenormalizedStructureBuilder(object):
             shapes[shape_name] = self._build_list(model, shapes)
         elif model['type'] == 'map':
             shapes[shape_name] = self._build_map(model, shapes)
-        elif model['type'] in ['string', 'integer', 'boolean', 'blob',
+        elif model['type'] in ['string', 'integer', 'boolean', 'blob', 'float',
                                'timestamp', 'long', 'double', 'char']:
             shapes[shape_name] = self._build_scalar(model)
         else:

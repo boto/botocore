@@ -22,7 +22,7 @@ from .exceptions import WaiterError
 logger = logging.getLogger(__name__)
 
 
-class Waiter(object):
+class BaseWaiter(object):
     """Wait for a resource to reach a certain state.
 
     In addition to creating this class manually, you can
@@ -40,28 +40,6 @@ class Waiter(object):
         instance_running.wait(instance_ids=[instance_id])
 
     """
-    def __init__(self, name, operation, config):
-        """
-
-        :type name: str
-        :param name: The name of the waiter.
-
-        :type operation: ``botocore.operation.Operation``
-        :param operation:  The operation associated with the waiter.
-            This is specified in the waiter configuration as the
-            ``operation`` key.
-
-        :type config: dict
-        :param config: The waiter configuration.
-
-        """
-        self.name = name
-        self.operation = operation
-        self.sleep_time = config['interval']
-        self.max_attempts = config['max_attempts']
-        self.success = self._process_config(config.get('success'))
-        self.failure = self._process_config(config.get('failure'))
-
     def _process_config(self, acceptor_config):
         if acceptor_config is None:
             return {}
@@ -71,7 +49,7 @@ class Waiter(object):
             new_config['path'] = jmespath.compile(acceptor_config['path'])
         return new_config
 
-    def wait(self, endpoint, **kwargs):
+    def wait(self, **kwargs):
         """Wait until a resource reaches its success state.
 
         Calling this method will block until the waiter reaches its
@@ -87,16 +65,14 @@ class Waiter(object):
         logger.debug("Waiter %s waiting.", self.name)
         num_attempts = 0
         while num_attempts < self.max_attempts:
-            http_response, parsed = self.operation.call(endpoint, **kwargs)
+            parsed = self._make_api_call(**kwargs)
             if self.success:
-                if self._matches_acceptor_state(self.success,
-                                                http_response, parsed):
+                if self._matches_acceptor_state(self.success, parsed):
                     # For the success state, if the acceptor matches then we
                     # break the loop.
                     break
             if self.failure:
-                if self._matches_acceptor_state(self.failure,
-                                                http_response, parsed):
+                if self._matches_acceptor_state(self.failure, parsed):
                     # For the failure state, if the acceptor matches then we
                     # raise an exception.
                     raise WaiterError(
@@ -116,15 +92,13 @@ class Waiter(object):
             logger.debug(error_msg)
             raise WaiterError(name=self.name, reason=error_msg)
 
-    def _matches_acceptor_state(self, acceptor, http_response, parsed):
+    def _matches_acceptor_state(self, acceptor, parsed):
         if acceptor['type'] == 'output':
-            return self._matches_acceptor_output_type(acceptor, http_response,
-                                                      parsed)
+            return self._matches_acceptor_output_type(acceptor, parsed)
         elif acceptor['type'] == 'error':
-            return self._matches_acceptor_error_type(acceptor, http_response,
-                                                     parsed)
+            return self._matches_acceptor_error_type(acceptor, parsed)
 
-    def _matches_acceptor_output_type(self, acceptor, http_response, parsed):
+    def _matches_acceptor_output_type(self, acceptor, parsed):
         if 'path' not in acceptor and not self._get_error_codes_from_response(parsed):
             # If there's no path specified, then a successful response means
             # that we've matched the acceptor.
@@ -155,17 +129,52 @@ class Waiter(object):
         else:
             return False
 
-    def _matches_acceptor_error_type(self, acceptor, http_response, parsed):
-        if http_response.status_code >= 400 and 'Errors' in parsed:
-            error_codes = self._get_error_codes_from_response(parsed)
+    def _matches_acceptor_error_type(self, acceptor, parsed):
+        if 'Error' in parsed:
+            error_code = parsed['Error']['Code']
             for v in acceptor['value']:
-                if v in error_codes:
+                if v == error_code:
                     return True
         return False
 
-    def _get_error_codes_from_response(self, parsed):
-        errors = set()
-        for error in parsed.get('Errors', []):
-            if 'Code' in error:
-                errors.add(error['Code'])
-        return errors
+
+class LegacyWaiter(BaseWaiter):
+    def __init__(self, name, operation, endpoint, config):
+        """
+
+        :type name: str
+        :param name: The name of the waiter.
+
+        :type operation: ``botocore.operation.Operation``
+        :param operation:  The operation associated with the waiter.
+            This is specified in the waiter configuration as the
+            ``operation`` key.
+
+        :type config: dict
+        :param config: The waiter configuration.
+
+        """
+        self.name = name
+        self.operation = operation
+        self.endpoint = endpoint
+        self.sleep_time = config['interval']
+        self.max_attempts = config['max_attempts']
+        self.success = self._process_config(config.get('success'))
+        self.failure = self._process_config(config.get('failure'))
+
+    def _make_api_call(self, **kwargs):
+        parsed = self.operation.call(self.endpoint, **kwargs)[1]
+        return parsed
+
+
+class Waiter(BaseWaiter):
+    def __init__(self, name, operation_method, config):
+        self.name = name
+        self.operation_method = operation_method
+        self.sleep_time = config['interval']
+        self.max_attempts = config['max_attempts']
+        self.success = self._process_config(config.get('success'))
+        self.failure = self._process_config(config.get('failure'))
+
+    def _make_api_call(self, **kwargs):
+        return self.operation_method(**kwargs)
