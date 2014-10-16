@@ -77,8 +77,7 @@ class TestService(BaseSessionTest):
     def test_region_not_required_if_endpoint_url_given(self):
         # Even if we're not a global service, if an endpoint_url is given
         # then we still construct an endpoint even if the heuristics fail.
-        service = self.session.get_service('cloudsearchdomain')
-        service.signature_version = None
+        service = self.session.get_service('sdb')
         endpoint = service.get_endpoint(
             region_name=None,
             endpoint_url='http://custom-endpoint/')
