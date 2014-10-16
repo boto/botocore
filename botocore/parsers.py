@@ -206,6 +206,8 @@ class BaseXMLResponseParser(ResponseParser):
         value_shape = shape.value
         key_location_name = key_shape.serialization.get('name') or 'key'
         value_location_name = value_shape.serialization.get('name') or 'value'
+        if shape.serialization.get('flattened') and not isinstance(node, list):
+            node = [node]
         for keyval_node in node:
             for single_pair in keyval_node:
                 # Within each <entry> there's a <key> and a <value>
