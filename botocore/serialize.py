@@ -41,7 +41,6 @@ import re
 import time
 import base64
 import datetime
-import time
 from xml.etree import ElementTree
 
 from dateutil.tz import tzutc
@@ -363,7 +362,7 @@ class BaseRestSerializer(Serializer):
         # /{Key+}/bar
         # A label ending with '+' is greedy.  There can only
         # be one greedy key.
-        greedy_param = None
+        greedy_param = None   # assigned but never used
         encoded_params = {}
         for template_param in re.findall(r'{(.*?)}', uri_template):
             if template_param.endswith('+'):
@@ -373,7 +372,6 @@ class BaseRestSerializer(Serializer):
                 encoded_params[template_param] = percent_encode(
                     params[template_param])
         return uri_template.format(**encoded_params)
-
 
     def _serialize_payload(self, partitioned, parameters,
                            serialized, shape, shape_members):
@@ -416,7 +414,7 @@ class BaseRestSerializer(Serializer):
         elif location == 'header':
             shape = shape_members[param_name]
             value = self._convert_header_value(shape, param_value)
-            partitioned['headers'][key_name] =  value
+            partitioned['headers'][key_name] = value
         elif location == 'headers':
             # 'headers' is a bit of an oddball.  The ``key_name``
             # is actually really a prefix for the header names:
@@ -434,7 +432,7 @@ class BaseRestSerializer(Serializer):
     def _do_serialize_header_map(self, header_prefix, headers, user_input):
         for key, val in user_input.items():
             full_key = header_prefix + key
-            headers[full_key] =  val
+            headers[full_key] = val
 
     def _serialize_body_params(self, params, shape):
         raise NotImplementedError('_serialize_body_params')
@@ -548,7 +546,8 @@ class RestXMLSerializer(BaseRestSerializer):
 
     def _serialize_type_timestamp(self, xmlnode, params, shape, name):
         datetime_obj = parse_timestamp(params)
-        converter = getattr(self, '_timestamp_%s' % self.TIMESTAMP_FORMAT.lower())
+        converter = getattr(self,
+                            '_timestamp_%s' % self.TIMESTAMP_FORMAT.lower())
 
         final_value = converter(datetime_obj)
         node = ElementTree.SubElement(xmlnode, name)
@@ -557,8 +556,6 @@ class RestXMLSerializer(BaseRestSerializer):
     def _default_serialize(self, xmlnode, params, shape, name):
         node = ElementTree.SubElement(xmlnode, name)
         node.text = str(params)
-
-
 
 SERIALIZERS = {
     'ec2': EC2Serializer,
