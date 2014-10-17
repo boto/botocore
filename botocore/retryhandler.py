@@ -125,7 +125,7 @@ def _create_single_checker(config):
         return ExceptionRaiser()
 
 
-def _create_single_response_checker(response):
+def _create_single_response_checker(response, config):
     if 'service_error_code' in response:
         checker = ServiceErrorCodeChecker(
             status_code=response['http_status_code'],
