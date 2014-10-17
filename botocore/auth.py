@@ -27,7 +27,6 @@ import six
 
 from botocore.exceptions import NoCredentialsError
 from botocore.utils import normalize_url_path, percent_encode_sequence
-from botocore.utils import percent_encode
 from botocore.compat import HTTPHeaders
 from botocore.compat import quote, unquote, urlsplit, parse_qs
 from botocore.compat import urlunsplit
@@ -351,7 +350,7 @@ class SigV4QueryAuth(SigV4Auth):
     def __init__(self, credentials, service_name, region_name,
                  expires=DEFAULT_EXPIRES):
         super(SigV4QueryAuth, self).__init__(credentials, service_name,
-                                               region_name)
+                                             region_name)
         self._expires = expires
 
     def _modify_request_before_signing(self, request):
@@ -394,8 +393,8 @@ class SigV4QueryAuth(SigV4Auth):
             request.data = ''
         if query_dict:
             operation_params = percent_encode_sequence(query_dict) + '&'
-        new_query_string = operation_params + \
-                percent_encode_sequence(auth_params)
+        new_query_string = (operation_params +
+                            percent_encode_sequence(auth_params))
         # url_parts is a tuple (and therefore immutable) so we need to create
         # a new url_parts with the new query string.
         # <part>   - <index>
@@ -412,7 +411,7 @@ class SigV4QueryAuth(SigV4Auth):
         # Rather than calculating an "Authorization" header, for the query
         # param quth, we just append an 'X-Amz-Signature' param to the end
         # of the query string.
-        signed_headers = self.signed_headers(self.headers_to_sign(request))
+        signed_headers = self.signed_headers(self.headers_to_sign(request))     # unused
         request.url += (
             '&X-Amz-Signature=%s' % (signature,))
 
@@ -423,7 +422,8 @@ class S3SigV4QueryAuth(SigV4QueryAuth):
     This signer will sign a request using query parameters and signature
     version 4, i.e a "presigned url" signer.
 
-    Based off of: http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html
+    Based off of: 
+    http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html
 
     """
     def _normalize_url_path(self, path):
@@ -469,7 +469,7 @@ class HmacV1Auth(BaseSigner):
             found = False
             for key in headers:
                 lk = key.lower()
-                if headers[key] is not  None and lk == ih:
+                if headers[key] is not None and lk == ih:
                     hoi.append(headers[key].strip())
                     found = True
             if not found:
@@ -480,7 +480,7 @@ class HmacV1Auth(BaseSigner):
         custom_headers = {}
         for key in headers:
             lk = key.lower()
-            if headers[key] is not  None:
+            if headers[key] is not None:
                 if lk.startswith('x-amz-'):
                     custom_headers[lk] = ','.join(v.strip() for v in
                                                   headers.get_all(key))
@@ -549,8 +549,8 @@ class HmacV1Auth(BaseSigner):
         logger.debug('HTTP request method: %s', request.method)
         signature = self.get_signature(request.method, split,
                                        request.headers)
-        request.headers['Authorization'] = ("AWS %s:%s" % (self.credentials.access_key,
-                                                           signature))
+        request.headers['Authorization'] = (
+            "AWS %s:%s" % (self.credentials.access_key, signature))
 
 
 # Defined at the bottom instead of the top of the module because the Auth
