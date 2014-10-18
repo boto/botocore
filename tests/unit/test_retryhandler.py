@@ -86,14 +86,14 @@ class TestRetryCheckers(unittest.TestCase):
         self.checker = retryhandler.ServiceErrorCodeChecker(
             status_code=400, error_code='Throttled')
         response = (HTTP_400_RESPONSE,
-                    {'Errors': [{'Code': 'Throttled'}]})
+                    {'Error': {'Code': 'Throttled'}})
         self.assert_should_be_retried(response)
 
     def test_error_code_checker_does_not_match(self):
         self.checker = retryhandler.ServiceErrorCodeChecker(
             status_code=400, error_code='Throttled')
         response = (HTTP_400_RESPONSE,
-                    {'Errors': [{'Code': 'NotThrottled'}]})
+                    {'Error': {'Code': 'NotThrottled'}})
         self.assert_should_not_be_retried(response)
 
     def test_error_code_checker_ignore_caught_exception(self):
@@ -109,7 +109,7 @@ class TestRetryCheckers(unittest.TestCase):
         self.checker = retryhandler.MultiChecker([checker, checker2])
         self.assert_should_be_retried((HTTP_500_RESPONSE, {}))
         self.assert_should_be_retried(
-            response=(HTTP_400_RESPONSE, {'Errors': [{'Code': 'Throttled'}]}))
+            response=(HTTP_400_RESPONSE, {'Error': {'Code': 'Throttled'}}))
         self.assert_should_not_be_retried(
             response=(HTTP_200_RESPONSE, {}))
 
