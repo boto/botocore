@@ -59,5 +59,70 @@ class TestEC2Pagination(unittest.TestCase):
             self.assertEqual(len(reserved_inst_offer), 1)
 
 
+class TestCopySnapshotCustomization(unittest.TestCase):
+    def setUp(self):
+        self.session = botocore.session.get_session()
+        # Note, the EBS copy snapshot customization is not ported
+        # over to the client interface so we have to use the
+        # Service/Operation objects for the actual CopySnapshot
+        # operation being tested.
+        self.service = self.session.get_service('ec2')
+        self.copy_snapshot = self.service.get_operation('CopySnapshot')
+        # However, all the test fixture setup/cleanup can use
+        # the client interface.
+        self.client = self.session.create_client('ec2', 'us-west-2')
+        self.us_east_1 = self.service.get_endpoint('us-east-1')
+        self.us_west_2 = self.service.get_endpoint('us-west-2')
+
+    def create_volume(self, encrypted=False):
+        available_zones = self.client.describe_availability_zones()
+        first_zone = available_zones['AvailabilityZones'][0]['ZoneName']
+        response = self.client.create_volume(
+            Size=1, AvailabilityZone=first_zone, Encrypted=encrypted)
+        volume_id = response['VolumeId']
+        self.addCleanup(self.client.delete_volume, VolumeId=volume_id)
+        self.client.get_waiter('volume_available').wait(VolumeIds=[volume_id])
+        return volume_id
+
+    def create_snapshot(self, volume_id):
+        response = self.client.create_snapshot(VolumeId=volume_id)
+        snapshot_id = response['SnapshotId']
+        self.client.get_waiter('snapshot_completed').wait(
+            SnapshotIds=[snapshot_id])
+        self.addCleanup(self.client.delete_snapshot, SnapshotId=snapshot_id)
+        return snapshot_id
+
+    def cleanup_copied_snapshot(self, snapshot_id):
+        dest_client = self.session.create_client('ec2', 'us-east-1')
+        self.addCleanup(dest_client.delete_snapshot,
+                        SnapshotId=snapshot_id)
+        dest_client.get_waiter('snapshot_completed').wait(
+            SnapshotIds=[snapshot_id])
+
+    def test_can_copy_snapshot(self):
+        volume_id = self.create_volume()
+        snapshot_id = self.create_snapshot(volume_id)
+
+        http, parsed = self.copy_snapshot.call(
+            self.us_east_1, SourceRegion='us-west-2',
+            SourceSnapshotId=snapshot_id)
+        self.assertEqual(http.status_code, 200)
+
+        # Cleanup code.  We can wait for the snapshot to be complete
+        # and then we can delete the snapshot.
+        self.cleanup_copied_snapshot(parsed['SnapshotId'])
+
+    def test_can_copy_encrypted_snapshot(self):
+        # Note that we're creating an encrypted volume here.
+        volume_id = self.create_volume(encrypted=True)
+        snapshot_id = self.create_snapshot(volume_id)
+
+        http, parsed = self.copy_snapshot.call(
+            self.us_east_1, SourceRegion='us-west-2',
+            SourceSnapshotId=snapshot_id)
+        self.assertEqual(http.status_code, 200)
+        self.cleanup_copied_snapshot(parsed['SnapshotId'])
+
+
 if __name__ == '__main__':
     unittest.main()
