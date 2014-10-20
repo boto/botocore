@@ -47,6 +47,14 @@ class BaseWaiter(object):
         if new_config['type'] == 'output' and \
                 new_config.get('path') is not None:
             new_config['path'] = jmespath.compile(acceptor_config['path'])
+        elif new_config['type'] == 'output' and len(new_config) == 1:
+            # There are some cases where a waiter config erroneously defines
+            # an acceptor type of "output" which cascades to the failure type,
+            # but there is no path or value specified for failures.  While
+            # the model is eventually going to be corrected, for now, we
+            # need to ignore this case and just return an empty dict
+            # indicating that this particular acceptor state should be ignored.
+            return {}
         return new_config
 
     def wait(self, **kwargs):
