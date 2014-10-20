@@ -520,14 +520,12 @@ class CredentialResolver(object):
         :type cred_instance: A subclass of ``Credentials``
         """
         try:
-            offset = self.available_methods.index(name)
+            offset = [p.METHOD for p in self.providers].index(name)
         except ValueError:
             raise UnknownCredentialError(name=name)
+        self.providers.insert(offset, credential_provider)
 
-        self.methods.insert(offset, cred_instance)
-        self._rebuild_available_methods()
-
-    def insert_after(self, name, cred_instance):
+    def insert_after(self, name, credential_provider):
         """
         Inserts a new type of ``Credentials`` instance into the chain that will
         be tried after an existing one.
@@ -546,7 +544,7 @@ class CredentialResolver(object):
         except ValueError:
             raise UnknownCredentialError(name=name)
 
-        self.providers.insert(offset + 1, cred_instance)
+        self.providers.insert(offset + 1, credential_provider)
 
     def remove(self, name):
         """
