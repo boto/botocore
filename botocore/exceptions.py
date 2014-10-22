@@ -71,7 +71,9 @@ class NoRegionError(BotoCoreError):
     :ivar env_var: The name of the environment variable to use to
         specify the default region.
     """
-    fmt = 'You must specify a region or set the {env_var} environment variable.'
+    fmt = (
+        'You must specify a region or set the {env_var} environment variable.'
+    )
 
 
 class UnknownSignatureVersionError(BotoCoreError):
@@ -167,11 +169,9 @@ class ParamValidationError(BotoCoreError):
     fmt = 'Parameter validation failed:\n{report}'
 
 
-
 # These exceptions subclass from ValidationError so that code
 # can just 'except ValidationError' to catch any possibly validation
 # error.
-
 class UnknownKeyError(ValidationError):
     """
     Unknown key in a struct paramster.
@@ -205,8 +205,10 @@ class UnknownParameterError(ValidationError):
     :ivar operation: The name of the operation.
     :ivar choices: The valid choices the parameter name can be.
     """
-    fmt = ("Unknown parameter '{name}' for operation {operation}.  Must be one "
-           "of: {choices}")
+    fmt = (
+        "Unknown parameter '{name}' for operation {operation}.  Must be one "
+        "of: {choices}"
+    )
 
 
 class UnknownServiceStyle(BotoCoreError):
@@ -271,3 +273,22 @@ class InvalidExpressionError(BotoCoreError):
 class UnknownCredentialError(BotoCoreError):
     """Tried to insert before/after an unregistered credential type."""
     fmt = 'Credential named {name} not found.'
+
+
+class WaiterConfigError(BotoCoreError):
+    """Error when processing waiter configuration."""
+    fmt = 'Error processing waiter config: {error_msg}'
+
+
+class ClientError(Exception):
+    MSG_TEMPLATE = (
+        'An error occurred ({error_code}) when calling the {operation_name} '
+        'operation: {error_message}')
+
+    def __init__(self, error_response, operation_name):
+        msg = self.MSG_TEMPLATE.format(
+            error_code=error_response['Error']['Code'],
+            error_message=error_response['Error']['Message'],
+            operation_name=operation_name)
+        super(ClientError, self).__init__(msg)
+        self.response = error_response
