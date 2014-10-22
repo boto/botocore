@@ -1,21 +1,35 @@
 {
+  "version": 2,
   "waiters": {
-    "__default__": {
-      "interval": 30,
-      "max_attempts": 60,
-      "acceptor_type": "output"
-    },
-    "__ClusterState": {
-      "operation": "DescribeCluster",
-      "acceptor_path": "Cluster.Status.State"
-    },
     "ClusterRunning": {
-      "extends": "__ClusterState",
-      "success_value": ["RUNNING", "WAITING"],
-      "failure_value": [
-        "TERMINATING",
-        "TERMINATED",
-        "TERMINATED_WITH_ERRORS"
+      "delay": 30,
+      "operation": "DescribeCluster",
+      "maxAttempts": 60,
+      "acceptors": [
+        {
+          "state": "success",
+          "matcher": "path",
+          "argument": "Cluster.Status.State",
+          "expected": "RUNNING"
+        },
+        {
+          "state": "failure",
+          "matcher": "path",
+          "argument": "Cluster.Status.State",
+          "expected": "TERMINATING"
+        },
+        {
+          "state": "failure",
+          "matcher": "path",
+          "argument": "Cluster.Status.State",
+          "expected": "TERMINATED"
+        },
+        {
+          "state": "failure",
+          "matcher": "path",
+          "argument": "Cluster.Status.State",
+          "expected": "TERMINATED_WITH_ERRORS"
+        }
       ]
     }
   }
