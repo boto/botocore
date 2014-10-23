@@ -212,22 +212,46 @@ class TestRetryInterface(TestEndpointBase):
     def test_retry_events_can_alter_behavior(self):
         op = Mock()
         op.name = 'DescribeInstances'
-        self.event_emitter.emit.side_effect = [[], [(None, 0)], [(None, None)]]
+        self.event_emitter.emit.side_effect = [
+            [], # For initially preparing request
+            [(None, 0)],  # Check if retry needed. Retry needed.
+            [],  # For preparing the request again
+            [(None, None)]  # Check if retry needed. Retry not needed.
+        ]
         self.endpoint.make_request(op, request_dict())
-        call_args = self.event_emitter.emit.call_args
-        self.assertEqual(self.event_emitter.emit.call_count, 3)
-        self.assertEqual(call_args[0][0],
+        call_args = self.event_emitter.emit.call_args_list
+        self.assertEqual(self.event_emitter.emit.call_count, 4)
+        # Check that all of the events are as expected.
+        self.assertEqual(call_args[0][0][0],
+                         'before-auth.ec2')
+        self.assertEqual(call_args[1][0][0],
+                         'needs-retry.ec2.DescribeInstances')
+        self.assertEqual(call_args[2][0][0],
+                         'before-auth.ec2')
+        self.assertEqual(call_args[3][0][0],
                          'needs-retry.ec2.DescribeInstances')
 
     def test_retry_on_socket_errors(self):
         op = Mock()
         op.name = 'DescribeInstances'
-        self.event_emitter.emit.side_effect = [[], [(None, 0)], [(None, None)]]
+        self.event_emitter.emit.side_effect = [
+            [], # For initially preparing request
+            [(None, 0)],  # Check if retry needed. Retry needed.
+            [],  # For preparing the request again
+            [(None, None)]  # Check if retry needed. Retry not needed.
+        ]
         self.http_session.send.side_effect = ConnectionError()
         self.endpoint.make_request(op, request_dict())
-        call_args = self.event_emitter.emit.call_args
-        self.assertEqual(self.event_emitter.emit.call_count, 3)
-        self.assertEqual(call_args[0][0],
+        call_args = self.event_emitter.emit.call_args_list
+        self.assertEqual(self.event_emitter.emit.call_count, 4)
+        # Check that all of the events are as expected.
+        self.assertEqual(call_args[0][0][0],
+                         'before-auth.ec2')
+        self.assertEqual(call_args[1][0][0],
+                         'needs-retry.ec2.DescribeInstances')
+        self.assertEqual(call_args[2][0][0],
+                         'before-auth.ec2')
+        self.assertEqual(call_args[3][0][0],
                          'needs-retry.ec2.DescribeInstances')
 
 
@@ -253,10 +277,12 @@ class TestS3ResetStreamOnRetry(TestEndpointBase):
         request = request_dict()
         request['body'] = body
         self.event_emitter.emit.side_effect = [
-            [(None, 0)],
-            [(None, 0)],
-            [(None, 0)],
-            [(None, None)],
+            [(None, 0)],  # Prepare initial request.
+            [(None, 0)],  # Check if retry needed. Needs Retry.
+            [(None, 0)],  # Prepare request again.
+            [(None, 0)],  # Check if retry needed again. Needs Retry.
+            [(None, 0)],  # Prepare request again.
+            [(None, None)], # Finally emit no rety is needed.
         ]
         self.endpoint.make_request(op, request)
         self.assertEqual(body.total_resets, 2)

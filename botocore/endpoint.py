@@ -73,7 +73,7 @@ class Endpoint(object):
         prepared_request = self.create_request(request_dict)
         return self._send_request(prepared_request, operation_model)
 
-    def create_request(self, params, signer=None):
+    def _choose_signer(self, signer=None):
         # To decide if we need to do auth or not we check the
         # signature_version attribute on both the service and
         # the operation are not None and we make sure there is an
@@ -88,9 +88,13 @@ class Endpoint(object):
             if do_auth:
                 signer = self.auth
             else:
-                # If we're not suppose to sign the request, then we set the signer
-                # to None.
+                # If we're not suppose to sign the request, then we set the
+                # signer to None.
                 signer = None
+        return signer
+
+    def create_request(self, params, signer=None):
+        signer = self._choose_signer(signer)
         request = self._create_request_object(params)
         prepared_request = self.prepare_request(request, signer)
         return prepared_request
@@ -135,6 +139,9 @@ class Endpoint(object):
             # This will ensure that we resend the entire contents of the
             # body.
             request.reset_stream()
+            # Resign the request when retried.
+            signer = self._choose_signer()
+            request = self.prepare_request(request.original, signer)
             response, exception = self._get_response(request, operation_model,
                                                      attempts)
         return response
