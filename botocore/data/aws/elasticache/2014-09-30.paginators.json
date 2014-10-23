@@ -22,10 +22,7 @@
       "input_token": "Marker",
       "output_token": "Marker",
       "limit_key": "MaxRecords",
-      "result_key": "Parameters",
-      "non_aggregate_keys": [
-        "CacheNodeTypeSpecificParameters"
-      ]
+      "result_key": "Parameters"
     },
     "DescribeCacheSecurityGroups": {
       "input_token": "Marker",
@@ -68,6 +65,12 @@
       "output_token": "Marker",
       "limit_key": "MaxRecords",
       "result_key": "ReplicationGroups"
+    },
+    "DescribeSnapshots": {
+      "input_token": "Marker",
+      "output_token": "Marker",
+      "limit_key": "MaxRecords",
+      "result_key": "Snapshots"
     }
   }
 }
