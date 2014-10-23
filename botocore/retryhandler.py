@@ -291,8 +291,8 @@ class ServiceErrorCodeChecker(BaseChecker):
 
     def _check_response(self, attempt_number, response):
         if response[0].status_code == self._status_code:
-            if any([e.get('Code') == self._error_code
-                    for e in response[1].get('Errors', [])]):
+            actual_error_code = response[1].get('Error', {}).get('Code')
+            if actual_error_code == self._error_code:
                 logger.debug(
                     "retry needed: matching HTTP status and error code seen: "
                     "%s, %s", self._status_code, self._error_code)

@@ -204,18 +204,17 @@ class Loader(object):
 
     def _load_data(self, data_path):
         # This is the uncached version for use with ``load_service_model``.
-        # We go in-order, returning the first matching path we find.
-        for possible_path in reversed(self.get_search_paths()):
+        # We go in-order, returning the first matching path we find
+        # based on the search paths.
+        for possible_path in self.get_search_paths():
             full_path = os.path.join(
                 possible_path,
                 data_path + self.extension
             )
 
             try:
-                # Attempt loading it.
                 return self.file_loader.load_file(full_path)
             except IOError:
-                # It wasn't there. Try the next path & hope for the best.
                 continue
 
         # We didn't find anything that matched on any path.
@@ -402,8 +401,9 @@ class Loader(object):
             # We need to look for an API version that either matches or is
             # the first to come before that (and hence, backward-compatible).
             for opt in all_options:
-                if opt == api_version:
-                    # Exact match. We win!
+                # ``opt`` will be something like "2014-01-01.api" so we need
+                # to strip off the ".api" part.
+                if opt.split('.')[0] == api_version:
                     best_match = opt
                     break
                 elif opt < api_version:

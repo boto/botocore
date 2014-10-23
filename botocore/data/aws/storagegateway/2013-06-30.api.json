@@ -18,7 +18,7 @@
       },
       "input":{
         "shape":"ActivateGatewayInput",
-        "documentation":"<p>A JSON object containing one or more of the following fields:</p> <ul> <li> <a>ActivateGatewayInput$ActivationKey</a> </li> <li> <a>GatewayName</a> </li> <li> <a>ActivateGatewayInput$GatewayRegion</a> </li> <li> <a>ActivateGatewayInput$GatewayTimezone</a> </li> <li> <a>ActivateGatewayInput$GatewayType</a> </li> </ul>"
+        "documentation":"<p>A JSON object containing one or more of the following fields:</p> <ul> <li> <a>ActivateGatewayInput$ActivationKey</a> </li> <li> <a>GatewayName</a> </li> <li> <a>ActivateGatewayInput$GatewayRegion</a> </li> <li> <a>ActivateGatewayInput$GatewayTimezone</a> </li> <li> <a>ActivateGatewayInput$GatewayType</a> </li> <li> <a>ActivateGatewayInput$TapeDriveType</a> </li> <li> <a>ActivateGatewayInput$MediumChangerType</a> </li> </ul>"
       },
       "output":{
         "shape":"ActivateGatewayOutput",
@@ -38,7 +38,7 @@
           "documentation":"<p>An internal server error has occurred during the request. See the error and message fields for more information.</p>"
         }
       ],
-      "documentation":"<p>This operation activates the gateway you previously deployed on your host. For more information, see <a href=\"http://docs.aws.amazon.com/storagegateway/latest/userguide/DownloadAndDeploy.html\">Downloading and Deploying AWS Storage Gateway VM</a>. In the activation process you specify information such as the region you want to use for storing snapshots, the time zone for scheduled snapshots and the gateway schedule window, an activation key, and a name for your gateway. The activation process also associates your gateway with your account (see <a>UpdateGatewayInformation</a>).</p>"
+      "documentation":"<p>This operation activates the gateway you previously deployed on your host. For more information, see <a href=\"http://docs.aws.amazon.com/storagegateway/latest/userguide/GettingStartedActivateGateway-common.html\"> Activate the AWS Storage Gateway</a>. In the activation process, you specify information such as the region you want to use for storing snapshots, the time zone for scheduled snapshots the gateway snapshot schedule window, an activation key, and a name for your gateway. The activation process also associates your gateway with your account; for more information, see <a>UpdateGatewayInformation</a>.</p>"
     },
     "AddCache":{
       "name":"AddCache",
@@ -230,7 +230,7 @@
           "documentation":"<p>An internal server error has occurred during the request. See the error and message fields for more information.</p>"
         }
       ],
-      "documentation":"<p>This operation initiates a snapshot of a volume.</p> <p>AWS Storage Gateway provides the ability to back up point-in-time snapshots of your data to Amazon Simple Storage (S3) for durable off-site recovery, as well as import the data to an Amazon Elastic Block Store (EBS) volume in Amazon Elastic Compute Cloud (EC2). You can take snapshots of your gateway volume on a scheduled or ad-hoc basis. This API enables you to take ad-hoc snapshot. For more information, see <a href=\"TBD\">Working With Snapshots in the AWS Storage Gateway Console</a>.</p> <p>In the CreateSnapshot request you identify the volume by providing its Amazon Resource Name (ARN). You must also provide description for the snapshot. When AWS Storage Gateway takes the snapshot of specified volume, the snapshot and description appears in the AWS Storage Gateway Console. In response, AWS Storage Gateway returns you a snapshot ID. You can use this snapshot ID to check the snapshot progress or later use it when you want to create a volume from a snapshot.</p>"
+      "documentation":"<p>This operation initiates a snapshot of a volume.</p> <p>AWS Storage Gateway provides the ability to back up point-in-time snapshots of your data to Amazon Simple Storage (S3) for durable off-site recovery, as well as import the data to an Amazon Elastic Block Store (EBS) volume in Amazon Elastic Compute Cloud (EC2). You can take snapshots of your gateway volume on a scheduled or ad-hoc basis. This API enables you to take ad-hoc snapshot. For more information, see <a href=\"http://docs.aws.amazon.com/storagegateway/latest/userguide/WorkingWithSnapshots.html\">Working With Snapshots in the AWS Storage Gateway Console</a>.</p> <p>In the CreateSnapshot request you identify the volume by providing its Amazon Resource Name (ARN). You must also provide description for the snapshot. When AWS Storage Gateway takes the snapshot of specified volume, the snapshot and description appears in the AWS Storage Gateway Console. In response, AWS Storage Gateway returns you a snapshot ID. You can use this snapshot ID to check the snapshot progress or later use it when you want to create a volume from a snapshot.</p>"
     },
     "CreateSnapshotFromVolumeRecoveryPoint":{
       "name":"CreateSnapshotFromVolumeRecoveryPoint",
@@ -911,7 +911,7 @@
           "documentation":"<p>An internal server error has occurred during the request. See the error and message fields for more information.</p>"
         }
       ],
-      "documentation":"<p>This operation returns information about the working storage of a gateway. This operation is supported only for the gateway-stored volume architecture. This operation is deprecated in cached-volumes API version (20120630). Use <a>DescribeUploadBuffer </a>instead.</p> <p>The response includes disk IDs that are configured as working storage, and it includes the amount of working storage allocated and used.</p>"
+      "documentation":"<p>This operation returns information about the working storage of a gateway. This operation is supported only for the gateway-stored volume architecture. This operation is deprecated in cached-volumes API version (20120630). Use DescribeUploadBuffer instead.</p> <p>The response includes disk IDs that are configured as working storage, and it includes the amount of working storage allocated and used.</p>"
     },
     "DisableGateway":{
       "name":"DisableGateway",
@@ -1367,16 +1367,22 @@
         },
         "GatewayRegion":{
           "shape":"RegionId",
-          "documentation":"<p>One of the values that indicates the region where you want to store the snapshot backups. The gateway region specified must be the same region as the region in your <code>Host</code> header in the request. For more information about available regions and endpoints for AWS Storage Gateway, see <a href=\"http://docs.aws.amazon.com/general/latest/gr/rande.html#sg_region\">Regions and Endpoints</a> in the <b>Amazon Web Services Glossary</b>.</p> <p><i>Valid Values</i>: \"us-east-1\", \"us-west-1\", \"us-west-2\", \"eu-west-1\", \"ap-northeast-1\", \"ap-southest-1\", \"sa-east-1\"</p>"
+          "documentation":"<p>One of the values that indicates the region where you want to store the snapshot backups. The gateway region specified must be the same region as the region in your <code>Host</code> header in the request. For more information about available regions and endpoints for AWS Storage Gateway, see <a href=\"http://docs.aws.amazon.com/general/latest/gr/rande.html#sg_region\">Regions and Endpoints</a> in the <i>Amazon Web Services Glossary</i>.</p> <p><i>Valid Values</i>: \"us-east-1\", \"us-west-1\", \"us-west-2\", \"eu-west-1\", \"eu-central-1\", \"ap-northeast-1\", \"ap-southeast-1\", \"ap-southeast-2\", \"sa-east-1\"</p>"
         },
         "GatewayType":{
           "shape":"GatewayType",
           "documentation":"<p>One of the values that defines the type of gateway to activate. The type specified is critical to all later functions of the gateway and cannot be changed after activation. The default value is <code>STORED</code>. </p>"
         },
-        "TapeDriveType":{"shape":"TapeDriveType"},
-        "MediumChangerType":{"shape":"MediumChangerType"}
+        "TapeDriveType":{
+          "shape":"TapeDriveType",
+          "documentation":"<p>The value that indicates the type of tape drive to use for gateway-VTL. This field is optional. </p> <p><i>Valid Values</i>: \"IBM-ULT3580-TD5\" </p>"
+        },
+        "MediumChangerType":{
+          "shape":"MediumChangerType",
+          "documentation":"<p>The value that indicates the type of medium changer to use for gateway-VTL. This field is optional.</p> <p><i>Valid Values</i>: \"STK-L700\" </p>"
+        }
       },
-      "documentation":"<p>A JSON object containing one or more of the following fields:</p> <ul> <li> <a>ActivateGatewayInput$ActivationKey</a> </li> <li> <a>GatewayName</a> </li> <li> <a>ActivateGatewayInput$GatewayRegion</a> </li> <li> <a>ActivateGatewayInput$GatewayTimezone</a> </li> <li> <a>ActivateGatewayInput$GatewayType</a> </li> </ul>"
+      "documentation":"<p>A JSON object containing one or more of the following fields:</p> <ul> <li> <a>ActivateGatewayInput$ActivationKey</a> </li> <li> <a>GatewayName</a> </li> <li> <a>ActivateGatewayInput$GatewayRegion</a> </li> <li> <a>ActivateGatewayInput$GatewayTimezone</a> </li> <li> <a>ActivateGatewayInput$GatewayType</a> </li> <li> <a>ActivateGatewayInput$TapeDriveType</a> </li> <li> <a>ActivateGatewayInput$MediumChangerType</a> </li> </ul>"
     },
     "ActivateGatewayOutput":{
       "type":"structure",

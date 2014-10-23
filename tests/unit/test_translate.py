@@ -1104,6 +1104,43 @@ class TestWaiterDenormalization(unittest.TestCase):
         with self.assertRaises(ValueError):
             new_model = translate(self.model)
 
+    def test_only_success_defined(self):
+        extra = {
+            'waiters': {
+                '__default__': {
+                    "interval": 15,
+                    "max_attempts": 40,
+                    "acceptor_type": "output"
+                },
+                'AssumeRole': {
+                    "operation": "AssumeRole",
+                    "success_path": "Snapshots[].State",
+                    "success_value": "completed"
+                }
+            }
+        }
+        self.model.enhancements = extra
+        new_model = translate(self.model)
+        denormalized = {
+            'AssumeRole': {
+                'interval': 15,
+                'max_attempts': 40,
+                'operation': 'AssumeRole',
+                'success': {
+                    'type': 'output',
+                    'path': 'Snapshots[].State',
+                    'value': ['completed'],
+                },
+                # This is technically "incorrect", in the sense that this is
+                # not a valid waiter config, but the waiter module has tests
+                # to verify that it handles this "incorrect" case.
+                'failure': {
+                    'type': 'output',
+                }
+            }
+        }
+        self.assertEqual(new_model['waiters'], denormalized)
+
 
 class TestResemblesJMESPath(unittest.TestCase):
     maxDiff = None

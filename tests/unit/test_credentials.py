@@ -512,7 +512,7 @@ class CredentialResolverTest(BaseEnvVar):
         creds = resolver.load_credentials()
         self.assertIsNone(creds)
 
-    def test_inject_additional_providers(self):
+    def test_inject_additional_providers_after_existing(self):
         self.provider1.load.return_value = None
         self.provider2.load.return_value = self.fake_creds
         resolver = credentials.CredentialResolver(providers=[self.provider1,
@@ -539,6 +539,19 @@ class CredentialResolverTest(BaseEnvVar):
         # a non-None response.
         self.provider1.load.assert_called_with()
         self.assertTrue(not self.provider2.called)
+
+    def test_inject_provider_before_existing(self):
+        new_provider = mock.Mock()
+        new_provider.METHOD = 'override'
+        new_provider.load.return_value = credentials.Credentials('x', 'y', 'z')
+
+        resolver = credentials.CredentialResolver(providers=[self.provider1,
+                                                             self.provider2])
+        resolver.insert_before(self.provider1.METHOD, new_provider)
+        creds = resolver.load_credentials()
+        self.assertEqual(creds.access_key, 'x')
+        self.assertEqual(creds.secret_key, 'y')
+        self.assertEqual(creds.token, 'z')
 
     def test_can_remove_providers(self):
         self.provider1.load.return_value = credentials.Credentials(
