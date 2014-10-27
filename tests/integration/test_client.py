@@ -12,7 +12,10 @@
 # language governing permissions and limitations under the License.
 import time
 import random
+import logging
 from tests import unittest
+
+from six import StringIO
 
 import botocore.session
 from botocore.client import ClientError
@@ -68,3 +71,25 @@ class TestBucketWithVersions(unittest.TestCase):
         versions = self.client.list_object_versions(Bucket=self.bucket_name)
         version_ids = self.extract_version_ids(versions)
         self.assertEqual(len(version_ids), 2)
+
+
+# This is really a combination of testing the debug logging mechanism
+# as well as the response wire log, which theoretically could be
+# implemented in any number of modules, which makes it hard to pick
+# which integration test module this code should live in, so I picked
+# the client module.
+class TestResponseLog(unittest.TestCase):
+
+    def test_debug_log_contains_headers_and_body(self):
+        # This test just verifies that the response headers/body
+        # are in the debug log.  It's an integration test so that
+        # we can refactor the code however we want, as long as we don't
+        # lose this feature.
+        session = botocore.session.get_session()
+        client = session.create_client('s3', region_name='us-west-2')
+        debug_log = StringIO()
+        session.set_stream_logger('', logging.DEBUG, debug_log)
+        client.list_buckets()
+        debug_log_contents = debug_log.getvalue()
+        self.assertIn('Response headers', debug_log_contents)
+        self.assertIn('Response body', debug_log_contents)

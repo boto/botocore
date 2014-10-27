@@ -57,7 +57,10 @@ class TestResponseMetadataParsed(unittest.TestCase):
                 }
             })
         )
-        parsed = parser.parse({'body': response, 'status_code': 200}, output_shape)
+        parsed = parser.parse(
+            {'body': response,
+             'headers': {},
+             'status_code': 200}, output_shape)
         self.assertEqual(
             parsed, {'Str': 'myname',
                      'ResponseMetadata': {'RequestId': 'request-id'}})
@@ -82,7 +85,9 @@ class TestResponseMetadataParsed(unittest.TestCase):
             },
             model.ShapeResolver({'StringType': {'type': 'string'}})
         )
-        parsed = parser.parse({'body': response, 'status_code': 200}, output_shape)
+        parsed = parser.parse({'headers': {},
+                               'body': response,
+                               'status_code': 200}, output_shape)
         # Note that the response metadata is normalized to match the query
         # protocol, even though this is not how it appears in the output.
         self.assertEqual(
