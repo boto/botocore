@@ -153,31 +153,39 @@ class ResponseParser(object):
     def parse(self, response, shape):
         """Parse the HTTP response given a shape.
 
-        :param response: The HTTP response dictionary.  This is a dictionary that
-            represents the HTTP request.  The dictionary must have the
+        :param response: The HTTP response dictionary.  This is a dictionary
+            that represents the HTTP request.  The dictionary must have the
             following keys, ``body``, ``headers``, and ``status_code``.
 
         :param shape: The model shape describing the expected output.
-        :return: Returns a dictionary representing the parsed response described
-            by the model.  In addition to the shape described from the model,
-            each response will also have a ``ResponseMetadata`` which contains
-            metadata about the response, which contains at least one key containing
-            ``RequestId``.  Some responses may populate additional keys, but
-            ``RequestId`` will always be present.
+        :return: Returns a dictionary representing the parsed response
+            described by the model.  In addition to the shape described from
+            the model, each response will also have a ``ResponseMetadata``
+            which contains metadata about the response, which contains at least
+            two keys containing ``RequestId`` and ``HTTPStatusCode``.  Some
+            responses may populate additional keys, but ``RequestId`` will
+            always be present.
 
         """
         LOG.debug('Response headers:\n%s', pformat(dict(response['headers'])))
         LOG.debug('Response body:\n%s', response['body'])
         if response['status_code'] >= 301:
-            return self._do_error_parse(response, shape)
+            parsed = self._do_error_parse(response, shape)
         else:
-            return self._do_parse(response, shape)
+            parsed = self._do_parse(response, shape)
+        # Inject HTTPStatusCode key in the response metadata if the
+        # response metadata exists.
+        if isinstance(parsed, dict) and 'ResponseMetadata' in parsed:
+            parsed['ResponseMetadata']['HTTPStatusCode'] = (
+                response['status_code'])
+        return parsed
 
     def _do_parse(self, response, shape):
         raise NotImplementedError("%s._do_parse" % self.__class__.__name__)
 
     def _do_error_parse(self, response, shape):
-        raise NotImplementedError("%s._do_error_parse" % self.__class__.__name__)
+        raise NotImplementedError(
+            "%s._do_error_parse" % self.__class__.__name__)
 
     def _parse_shape(self, shape, node):
         handler = getattr(self, '_handle_%s' % shape.type_name,
@@ -488,8 +496,8 @@ class JSONParser(BaseJSONParser):
 
     def _inject_response_metadata(self, parsed, headers):
         if 'x-amzn-requestid' in headers:
-            parsed.setdefault('ResponseMetadata', {})['RequestId'] = \
-                    headers['x-amzn-requestid']
+            parsed.setdefault('ResponseMetadata', {})['RequestId'] = (
+                headers['x-amzn-requestid'])
 
 
 class BaseRestParser(ResponseParser):
@@ -539,7 +547,6 @@ class BaseRestParser(ResponseParser):
             original_parsed = self._initial_body_parse(response['body'])
             body_parsed = self._parse_shape(shape, original_parsed)
             final_parsed.update(body_parsed)
-
 
     def _parse_non_payload_attrs(self, response, shape,
                                  member_shapes, final_parsed):
