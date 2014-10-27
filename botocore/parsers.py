@@ -95,6 +95,7 @@ import base64
 import json
 import xml.etree.cElementTree
 import logging
+from pprint import pformat
 
 from six.moves import http_client
 
@@ -165,6 +166,7 @@ class ResponseParser(object):
             ``RequestId`` will always be present.
 
         """
+        LOG.debug('Response headers:\n%s', pformat(dict(response['headers'])))
         LOG.debug('Response body:\n%s', response['body'])
         if response['status_code'] >= 301:
             return self._do_error_parse(response, shape)
