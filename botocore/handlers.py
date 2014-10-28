@@ -36,6 +36,8 @@ RESTRICTED_REGIONS = [
     'us-gov-west-1',
     'fips-us-gov-west-1',
 ]
+REGISTER_FIRST = object()
+REGISTER_LAST = object()
 
 
 
@@ -369,9 +371,10 @@ BUILTIN_HANDLERS = [
     ('before-call.s3', add_expect_header),
     ('before-call.ec2.CopySnapshot', copy_snapshot_encrypted),
     ('before-auth.s3', fix_s3_host),
-    ('needs-retry.s3.UploadPartCopy', check_for_200_error),
-    ('needs-retry.s3.CopyObject', check_for_200_error),
-    ('needs-retry.s3.CompleteMultipartUpload', check_for_200_error),
+    ('needs-retry.s3.UploadPartCopy', check_for_200_error, REGISTER_FIRST),
+    ('needs-retry.s3.CopyObject', check_for_200_error, REGISTER_FIRST),
+    ('needs-retry.s3.CompleteMultipartUpload', check_for_200_error,
+     REGISTER_FIRST),
     ('service-created', register_retries_for_service),
     ('service-data-loaded', signature_overrides),
     ('before-call.s3.HeadObject', sse_md5),

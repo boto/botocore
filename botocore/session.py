@@ -197,8 +197,16 @@ class Session(object):
         self._register_components()
 
     def _register_builtin_handlers(self, events):
-        for event_name, handler in handlers.BUILTIN_HANDLERS:
-            self.register(event_name, handler)
+        for spec in handlers.BUILTIN_HANDLERS:
+            if len(spec) == 2:
+                event_name, handler = spec
+                self.register(event_name, handler)
+            else:
+                event_name, handler, register_type = spec
+                if register_type is handlers.REGISTER_FIRST:
+                    self._events.register_first(event_name, handler)
+                elif register_first is handlers.REGISTER_LAST:
+                    self._events.register_last(event_name, handler)
 
     @property
     def provider(self):
