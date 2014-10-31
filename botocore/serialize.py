@@ -40,7 +40,6 @@ and if a str/unicode type is passed in, it will be encoded as utf-8.
 import re
 import time
 import base64
-import datetime
 from xml.etree import ElementTree
 
 from dateutil.tz import tzutc
@@ -235,7 +234,8 @@ class QuerySerializer(Serializer):
 
     def _serialize_type_timestamp(self, serialized, value, shape, prefix=''):
         datetime_obj = parse_timestamp(value)
-        converter = getattr(self, '_timestamp_%s' % self.TIMESTAMP_FORMAT.lower())
+        converter = getattr(
+            self, '_timestamp_%s' % self.TIMESTAMP_FORMAT.lower())
         final_value = converter(datetime_obj)
         serialized[prefix] = final_value
 
@@ -362,7 +362,6 @@ class BaseRestSerializer(Serializer):
         # /{Key+}/bar
         # A label ending with '+' is greedy.  There can only
         # be one greedy key.
-        greedy_param = None   # assigned but never used
         encoded_params = {}
         for template_param in re.findall(r'{(.*?)}', uri_template):
             if template_param.endswith('+'):
@@ -546,8 +545,8 @@ class RestXMLSerializer(BaseRestSerializer):
 
     def _serialize_type_timestamp(self, xmlnode, params, shape, name):
         datetime_obj = parse_timestamp(params)
-        converter = getattr(self,
-                            '_timestamp_%s' % self.TIMESTAMP_FORMAT.lower())
+        converter = getattr(
+            self, '_timestamp_%s' % self.TIMESTAMP_FORMAT.lower())
 
         final_value = converter(datetime_obj)
         node = ElementTree.SubElement(xmlnode, name)
@@ -556,6 +555,7 @@ class RestXMLSerializer(BaseRestSerializer):
     def _default_serialize(self, xmlnode, params, shape, name):
         node = ElementTree.SubElement(xmlnode, name)
         node.text = str(params)
+
 
 SERIALIZERS = {
     'ec2': EC2Serializer,
