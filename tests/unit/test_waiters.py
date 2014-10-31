@@ -193,18 +193,27 @@ class TestWaiterModel(unittest.TestCase):
         with self.assertRaises(WaiterConfigError):
             config.acceptors
 
-    def test_single_waiter_supports_path_list(self):
+    def test_single_waiter_supports_path_all(self):
         matches = self.create_acceptor_function(
-            for_config={'state': 'success', 'matcher': 'pathList',
+            for_config={'state': 'success', 'matcher': 'pathAll',
                         'argument': 'Tables[].State', 'expected': 'GOOD'})
         self.assertTrue(
             matches({'Tables': [{"State": "GOOD"}]}))
         self.assertTrue(
             matches({'Tables': [{"State": "GOOD"}, {"State": "GOOD"}]}))
 
-    def test_single_waiter_does_not_match_path_list(self):
+    def test_single_waiter_supports_path_any(self):
         matches = self.create_acceptor_function(
-            for_config={'state': 'success', 'matcher': 'pathList',
+            for_config={'state': 'failure', 'matcher': 'pathAny',
+                        'argument': 'Tables[].State', 'expected': 'FAIL'})
+        self.assertTrue(
+            matches({'Tables': [{"State": "FAIL"}]}))
+        self.assertTrue(
+            matches({'Tables': [{"State": "GOOD"}, {"State": "FAIL"}]}))
+
+    def test_single_waiter_does_not_match_path_all(self):
+        matches = self.create_acceptor_function(
+            for_config={'state': 'success', 'matcher': 'pathAll',
                         'argument': 'Tables[].State', 'expected': 'GOOD'})
         self.assertFalse(
             matches({'Tables': [{"State": "GOOD"}, {"State": "BAD"}]}))
@@ -220,16 +229,16 @@ class TestWaiterModel(unittest.TestCase):
                                 {"State": "BAD"},
                                 {"State": "BAD"}]}))
 
-    def test_path_list_missing_field(self):
+    def test_path_all_missing_field(self):
         matches = self.create_acceptor_function(
-            for_config={'state': 'success', 'matcher': 'pathList',
+            for_config={'state': 'success', 'matcher': 'pathAll',
                         'argument': 'Tables[].State', 'expected': 'GOOD'})
         self.assertFalse(
             matches({'Tables': [{"NotState": "GOOD"}, {"NotState": "BAD"}]}))
 
-    def test_path_list_matcher_does_not_receive_list(self):
+    def test_path_all_matcher_does_not_receive_list(self):
         matches = self.create_acceptor_function(
-            for_config={'state': 'success', 'matcher': 'pathList',
+            for_config={'state': 'success', 'matcher': 'pathAll',
                         'argument': 'Tables[].State', 'expected': 'GOOD'})
         self.assertFalse(
             matches({"NotTables": []}))

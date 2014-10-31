@@ -189,8 +189,10 @@ class AcceptorConfig(object):
 
         if self.matcher == 'path':
             return self._create_path_matcher()
-        elif self.matcher == 'pathList':
-            return self._create_path_list_matcher()
+        elif self.matcher == 'pathAll':
+            return self._create_path_all_matcher()
+        elif self.matcher == 'pathAny':
+            return self._create_path_any_matcher()
         elif self.matcher == 'status':
             return self._create_status_matcher()
         elif self.matcher == 'error':
@@ -207,14 +209,14 @@ class AcceptorConfig(object):
             return expression.search(response) == expected
         return acceptor_matches
 
-    def _create_path_list_matcher(self):
+    def _create_path_all_matcher(self):
         expression = jmespath.compile(self.argument)
         expected = self.expected
 
         def acceptor_matches(response):
             result = expression.search(response)
             if not isinstance(result, list) or not result:
-                # pathList matcher must result in a list.
+                # pathAll matcher must result in a list.
                 # Also we require at least one element in the list,
                 # that is, an empty list should not result in this
                 # acceptor match.
@@ -223,6 +225,24 @@ class AcceptorConfig(object):
                 if element != expected:
                     return False
             return True
+        return acceptor_matches
+
+    def _create_path_any_matcher(self):
+        expression = jmespath.compile(self.argument)
+        expected = self.expected
+
+        def acceptor_matches(response):
+            result = expression.search(response)
+            if not isinstance(result, list) or not result:
+                # pathAny matcher must result in a list.
+                # Also we require at least one element in the list,
+                # that is, an empty list should not result in this
+                # acceptor match.
+                return False
+            for element in result:
+                if element == expected:
+                    return True
+            return False
         return acceptor_matches
 
     def _create_status_matcher(self):
