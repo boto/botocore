@@ -376,7 +376,8 @@ class SigV4QueryAuth(SigV4Auth):
         # parse_qs makes each value a list, but in our case we know we won't
         # have repeated keys so we know we have single element lists which we
         # can convert back to scalar values.
-        query_dict = dict([(k, v[0]) for k, v in parse_qs(url_parts.query).items()])
+        query_dict = dict(
+            [(k, v[0]) for k, v in parse_qs(url_parts.query).items()])
         # The spec is particular about this.  It *has* to be:
         # https://<endpoint>?<operation params>&<auth params>
         # You can't mix the two types of params together, i.e just keep doing
@@ -411,9 +412,7 @@ class SigV4QueryAuth(SigV4Auth):
         # Rather than calculating an "Authorization" header, for the query
         # param quth, we just append an 'X-Amz-Signature' param to the end
         # of the query string.
-        signed_headers = self.signed_headers(self.headers_to_sign(request))     # unused
-        request.url += (
-            '&X-Amz-Signature=%s' % (signature,))
+        request.url += '&X-Amz-Signature=%s' % signature
 
 
 class S3SigV4QueryAuth(SigV4QueryAuth):
@@ -422,7 +421,8 @@ class S3SigV4QueryAuth(SigV4QueryAuth):
     This signer will sign a request using query parameters and signature
     version 4, i.e a "presigned url" signer.
 
-    Based off of: 
+    Based off of:
+
     http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html
 
     """
@@ -515,7 +515,8 @@ class HmacV1Auth(BaseSigner):
         if split.query:
             qsa = split.query.split('&')
             qsa = [a.split('=', 1) for a in qsa]
-            qsa = [self.unquote_v(a) for a in qsa if a[0] in self.QSAOfInterest]
+            qsa = [self.unquote_v(a) for a in qsa
+                   if a[0] in self.QSAOfInterest]
             if len(qsa) > 0:
                 qsa.sort(key=itemgetter(0))
                 qsa = ['='.join(a) for a in qsa]
