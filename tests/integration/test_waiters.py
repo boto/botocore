@@ -76,4 +76,4 @@ class TestCanGetWaitersThroughClientInterface(unittest.TestCase):
         client = session.create_client('ses', 'us-east-1')
         # If we have at least one waiter in the list, we know that we have
         # actually loaded the waiters and this test has passed.
-        self.assertTrue(len(client.all_waiters()) > 0)
+        self.assertTrue(len(client.waiter_names) > 0)

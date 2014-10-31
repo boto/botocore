@@ -19,6 +19,7 @@ from botocore import waiter
 from botocore import xform_name
 from botocore.paginate import Paginator
 from botocore import translate
+from botocore.utils import CachedProperty
 import botocore.validate
 import botocore.serialize
 from botocore import credentials
@@ -146,7 +147,8 @@ class ClientCreator(object):
             return waiter.create_waiter_with_client(
                 mapping[waiter_name], model, self)
 
-        def all_waiters(self):
+        @CachedProperty
+        def waiter_names(self):
             """Returns a list of all available waiters."""
             config = self._get_waiter_config()
             if not config:
@@ -158,7 +160,7 @@ class ClientCreator(object):
 
         methods_dict['_get_waiter_config'] = _get_waiter_config
         methods_dict['get_waiter'] = get_waiter
-        methods_dict['all_waiters'] = all_waiters
+        methods_dict['waiter_names'] = waiter_names
 
     def _load_service_model(self, service_name):
         json_model = self._loader.load_service_model('aws/%s' % service_name)
