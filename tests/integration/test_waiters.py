@@ -65,3 +65,15 @@ class TestWaiterForDynamoDB(unittest.TestCase):
         waiter.wait(TableName=table_name)
         parsed = self.client.describe_table(TableName=table_name)
         self.assertEqual(parsed['Table']['TableStatus'], 'ACTIVE')
+
+
+class TestCanGetWaitersThroughClientInterface(unittest.TestCase):
+    def test_get_ses_waiter(self):
+        # We're checking this because ses is not the endpoint prefix
+        # for the service, it's email.  We want to make sure this does
+        # not affect the lookup process.
+        session = botocore.session.get_session()
+        client = session.create_client('ses', 'us-east-1')
+        # If we have at least one waiter in the list, we know that we have
+        # actually loaded the waiters and this test has passed.
+        self.assertTrue(len(client.all_waiters()) > 0)

@@ -105,7 +105,7 @@ class ClientCreator(object):
             if 'page_config' not in self._cache:
                 try:
                     page_config = loader.load_data('aws/%s/%s.paginators' % (
-                        service_model.endpoint_prefix,
+                        service_model.service_name,
                         service_model.api_version))['pagination']
                     self._cache['page_config'] = page_config
                 except DataNotFoundError:
@@ -125,7 +125,7 @@ class ClientCreator(object):
             if 'waiter_config' not in self._cache:
                 try:
                     waiter_config = loader.load_data('aws/%s/%s.waiters' % (
-                        service_model.endpoint_prefix,
+                        service_model.service_name,
                         service_model.api_version))
                     self._cache['waiter_config'] = waiter_config
                 except DataNotFoundError:
@@ -162,7 +162,7 @@ class ClientCreator(object):
 
     def _load_service_model(self, service_name):
         json_model = self._loader.load_service_model('aws/%s' % service_name)
-        service_model = ServiceModel(json_model)
+        service_model = ServiceModel(json_model, service_name=service_name)
         return service_model
 
     def _get_client_args(self, service_model, region_name, is_secure,
