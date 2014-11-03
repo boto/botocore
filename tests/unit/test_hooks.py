@@ -14,65 +14,7 @@
 from tests import unittest
 from functools import partial
 
-from botocore.hooks import EventHooks, HierarchicalEmitter, \
-        first_non_none_response
-
-
-class TestEventHooks(unittest.TestCase):
-
-    def setUp(self):
-        self.dispatch = EventHooks()
-        self.called = False
-        self.kwargs = {}
-
-    def tearDown(self):
-        pass
-
-    def hook(self, **kwargs):
-        self.called = True
-        self.kwargs = kwargs
-        return 'hook_response'
-
-    def no_kwarg_hook(self):
-        pass
-
-    def test_register_then_emit_event(self):
-        self.dispatch.register('before_send', self.hook)
-        responses = self.dispatch.emit('before_send')
-
-        self.assertEqual(len(responses), 1)
-        self.assertEqual(responses[0][0], self.hook)
-        self.assertEqual(responses[0][1], 'hook_response')
-        self.assertTrue(self.called)
-
-    def test_kwargs_passed_through_to_handlers(self):
-        self.dispatch.register('before_send', self.hook)
-        responses = self.dispatch.emit('before_send', foo='bar')
-        self.assertEqual(self.kwargs, {'event_name': 'before_send',
-                                       'foo': 'bar'})
-
-    def test_register_must_accept_kwargs(self):
-        with self.assertRaisesRegexp(ValueError,
-                                     "must accept keyword arguments"):
-            self.dispatch.register('before_send', self.no_kwarg_hook)
-
-    def test_handler_must_be_callable(self):
-        with self.assertRaisesRegexp(ValueError,
-                                     "must be callable"):
-            self.dispatch.register('before_send', "foo")
-
-    def test_unregister_hook(self):
-        self.dispatch.register('before_send', self.hook)
-        self.dispatch.unregister('before_send', self.hook)
-        self.dispatch.emit('before_send')
-
-        self.assertFalse(self.called)
-
-    def test_unregister_hook_that_does_not_exist(self):
-        # should not raise an exception
-        self.dispatch.unregister('before_send', self.hook)
-        self.dispatch.emit('before_send')
-        self.assertFalse(self.called)
+from botocore.hooks import HierarchicalEmitter, first_non_none_response
 
 
 class TestHierarchicalEventEmitter(unittest.TestCase):
@@ -374,6 +316,95 @@ class TestWildcardHandlers(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.emitter.unregister('foo', self.hook, unique_id='foo',
                                     unique_id_uses_count=True)
+    
+    def test_handlers_called_in_order(self):
+        def handler(call_number, **kwargs):
+            kwargs['call_number'] = call_number
+            self.hook_calls.append(kwargs)
+
+        self.emitter.register('foo', partial(handler, call_number=1))
+        self.emitter.register('foo', partial(handler, call_number=2))
+        self.emitter.emit('foo')
+        self.assertEqual([k['call_number'] for k in self.hook_calls],
+                         [1, 2])
+
+    def test_handler_call_order_with_hierarchy(self):
+        def handler(call_number, **kwargs):
+            kwargs['call_number'] = call_number
+            self.hook_calls.append(kwargs)
+
+        # We go from most specific to least specific, and each level is called
+        # in the order they were registered for that particular hierarchy
+        # level.
+        self.emitter.register('foo.bar.baz', partial(handler, call_number=1))
+        self.emitter.register('foo.bar', partial(handler, call_number=3))
+        self.emitter.register('foo', partial(handler, call_number=5))
+        self.emitter.register('foo.bar.baz', partial(handler, call_number=2))
+        self.emitter.register('foo.bar', partial(handler, call_number=4))
+        self.emitter.register('foo', partial(handler, call_number=6))
+
+        self.emitter.emit('foo.bar.baz')
+        self.assertEqual([k['call_number'] for k in self.hook_calls],
+                         [1, 2, 3, 4, 5, 6])
+
+    def test_register_first_single_level(self):
+        def handler(call_number, **kwargs):
+            kwargs['call_number'] = call_number
+            self.hook_calls.append(kwargs)
+
+        # Handlers registered through register_first() are always called
+        # before handlers registered with register().
+        self.emitter.register('foo', partial(handler, call_number=3))
+        self.emitter.register('foo', partial(handler, call_number=4))
+        self.emitter.register_first('foo', partial(handler, call_number=1))
+        self.emitter.register_first('foo', partial(handler, call_number=2))
+        self.emitter.register('foo', partial(handler, call_number=5))
+
+        self.emitter.emit('foo')
+        self.assertEqual([k['call_number'] for k in self.hook_calls],
+                         [1, 2, 3, 4, 5])
+
+    def test_register_first_hierarchy(self):
+        def handler(call_number, **kwargs):
+            kwargs['call_number'] = call_number
+            self.hook_calls.append(kwargs)
+
+        self.emitter.register('foo', partial(handler, call_number=5))
+        self.emitter.register('foo.bar', partial(handler, call_number=2))
+
+        self.emitter.register_first('foo', partial(handler, call_number=4))
+        self.emitter.register_first('foo.bar', partial(handler, call_number=1))
+
+        self.emitter.register('foo', partial(handler, call_number=6))
+        self.emitter.register('foo.bar', partial(handler, call_number=3))
+
+        self.emitter.emit('foo.bar')
+        self.assertEqual([k['call_number'] for k in self.hook_calls],
+                         [1, 2, 3, 4, 5, 6])
+
+    def test_register_last_hierarchy(self):
+        def handler(call_number, **kwargs):
+            kwargs['call_number'] = call_number
+            self.hook_calls.append(kwargs)
+
+        self.emitter.register_last('foo', partial(handler, call_number=3))
+        self.emitter.register('foo', partial(handler, call_number=2))
+        self.emitter.register_first('foo', partial(handler, call_number=1))
+        self.emitter.emit('foo')
+        self.assertEqual([k['call_number'] for k in self.hook_calls],
+                         [1, 2, 3])
+
+    def test_register_unregister_first_last(self):
+        self.emitter.register('foo', self.hook)
+        self.emitter.register_last('foo.bar', self.hook)
+        self.emitter.register_first('foo.bar.baz', self.hook)
+
+        self.emitter.unregister('foo.bar.baz', self.hook)
+        self.emitter.unregister('foo.bar', self.hook)
+        self.emitter.unregister('foo', self.hook)
+
+        self.emitter.emit('foo')
+        self.assertEqual(self.hook_calls, [])
 
 
 if __name__ == '__main__':
