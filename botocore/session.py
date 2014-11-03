@@ -795,7 +795,9 @@ class Session(object):
 
         """
         loader = self.get_component('data_loader')
-        endpoint_creator = self._create_endpoint_creator()
+        endpoint_creator = self._create_endpoint_creator(aws_access_key_id,
+                                                         aws_secret_access_key,
+                                                         aws_session_token)
         event_emitter = self.get_component('event_emitter')
         client_creator = botocore.client.ClientCreator(loader, endpoint_creator,
                                                        event_emitter)
@@ -806,11 +808,15 @@ class Session(object):
                                               aws_session_token)
         return client
 
-    def _create_endpoint_creator(self):
+    def _create_endpoint_creator(self, aws_access_key_id, aws_secret_access_key,
+                                 aws_session_token):
         resolver = self.get_component('endpoint_resolver')
         region = self.get_config_variable('region')
         event_emitter = self.get_component('event_emitter')
-        credentials = self.get_credentials()
+        if aws_secret_access_key is None:
+            credentials = self.get_credentials()
+        else:
+            credentials = None
         user_agent= self.user_agent()
         endpoint_creator = EndpointCreator(resolver, region, event_emitter,
                                            credentials, user_agent)
