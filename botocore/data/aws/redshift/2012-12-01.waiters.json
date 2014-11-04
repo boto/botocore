@@ -1,42 +1,77 @@
 {
+  "version": 2,
   "waiters": {
-    "__default__": {
-      "acceptor_type": "output"
-    },
-    "__ClusterState": {
-      "interval": 60,
-      "max_attempts": 30,
-      "operation": "DescribeClusters",
-      "acceptor_path": "Clusters[].ClusterStatus"
-    },
     "ClusterAvailable": {
-      "extends": "__ClusterState",
-      "ignore_errors": [
-        "ClusterNotFound"
-      ],
-      "success_value": "available",
-      "failure_value": [
-        "deleting"
+      "delay": 60,
+      "operation": "DescribeClusters",
+      "maxAttempts": 30,
+      "acceptors": [
+        {
+          "expected": "available",
+          "matcher": "pathAll",
+          "state": "success",
+          "argument": "Clusters[].ClusterStatus"
+        },
+        {
+          "expected": "deleting",
+          "matcher": "pathAny",
+          "state": "failure",
+          "argument": "Clusters[].ClusterStatus"
+        },
+        {
+          "expected": "ClusterNotFound",
+          "matcher": "error",
+          "state": "retry"
+        }
       ]
     },
     "ClusterDeleted": {
-      "extends": "__ClusterState",
-      "success_type": "error",
-      "success_value": "ClusterNotFound",
-      "failure_value": [
-        "creating",
-        "rebooting"
+      "delay": 60,
+      "operation": "DescribeClusters",
+      "maxAttempts": 30,
+      "acceptors": [
+        {
+          "expected": "ClusterNotFound",
+          "matcher": "error",
+          "state": "success"
+        },
+        {
+          "expected": "creating",
+          "matcher": "pathAny",
+          "state": "failure",
+          "argument": "Clusters[].ClusterStatus"
+        },
+        {
+          "expected": "rebooting",
+          "matcher": "pathAny",
+          "state": "failure",
+          "argument": "Clusters[].ClusterStatus"
+        }
       ]
     },
     "SnapshotAvailable": {
-      "interval": 15,
-      "max_attempts": 20,
+      "delay": 15,
       "operation": "DescribeClusterSnapshots",
-      "acceptor_path": "Snapshots[].Status",
-      "success_value": "available",
-      "failure_value": [
-        "failed",
-        "deleted"
+      "maxAttempts": 20,
+      "acceptors": [
+        {
+          "expected": "available",
+          "matcher": "pathAll",
+          "state": "success",
+          "argument": "Snapshots[].Status"
+        },
+        {
+          "expected": "failed",
+          "matcher": "pathAny",
+          "state": "failure",
+          "argument": "Snapshots[].Status"
+        },
+        {
+          "expected": "deleted",
+          "matcher": "pathAny",
+          "state": "failure",
+          "argument": "Snapshots[].Status"
+        }
       ]
     }
   }

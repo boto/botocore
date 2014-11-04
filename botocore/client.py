@@ -14,27 +14,15 @@ from botocore.model import ServiceModel
 from botocore.exceptions import ParamValidationError
 from botocore.exceptions import DataNotFoundError
 from botocore.exceptions import OperationNotPageableError
+from botocore.exceptions import ClientError
 from botocore import waiter
 from botocore import xform_name
 from botocore.paginate import Paginator
 from botocore import translate
+from botocore.utils import CachedProperty
 import botocore.validate
 import botocore.serialize
 from botocore import credentials
-
-
-class ClientError(Exception):
-    MSG_TEMPLATE = (
-        'An error occurred ({error_code}) when calling the {operation_name} '
-        'operation: {error_message}')
-
-    def __init__(self, error_response, operation_name):
-        msg = self.MSG_TEMPLATE.format(
-            error_code=error_response['Error']['Code'],
-            error_message=error_response['Error']['Message'],
-            operation_name=operation_name)
-        super(ClientError, self).__init__(msg)
-        self.response = error_response
 
 
 class ClientCreator(object):
@@ -118,7 +106,7 @@ class ClientCreator(object):
             if 'page_config' not in self._cache:
                 try:
                     page_config = loader.load_data('aws/%s/%s.paginators' % (
-                        service_model.endpoint_prefix,
+                        service_model.service_name,
                         service_model.api_version))['pagination']
                     self._cache['page_config'] = page_config
                 except DataNotFoundError:
@@ -138,41 +126,45 @@ class ClientCreator(object):
             if 'waiter_config' not in self._cache:
                 try:
                     waiter_config = loader.load_data('aws/%s/%s.waiters' % (
-                        service_model.endpoint_prefix,
-                        service_model.api_version))['waiters']
-                    self._cache['waiter_config'] = translate.denormalize_waiters(
-                        waiter_config)
+                        service_model.service_name,
+                        service_model.api_version))
+                    self._cache['waiter_config'] = waiter_config
                 except DataNotFoundError:
                     self._cache['waiter_config'] = {}
             return self._cache['waiter_config']
 
         def get_waiter(self, waiter_name):
             config = self._get_waiter_config()
+            if not config:
+                raise ValueError("Waiter does not exist: %s" % waiter_name)
+            model = waiter.WaiterModel(config)
             mapping = {}
-            for name in config:
+            for name in model.waiter_names:
                 mapping[xform_name(name)] = name
             if waiter_name not in mapping:
                 raise ValueError("Waiter does not exist: %s" % waiter_name)
-            single_waiter_config = config[mapping[waiter_name]]
-            return waiter.Waiter(
-                waiter_name,
-                getattr(self, xform_name(single_waiter_config['operation'])),
-                single_waiter_config)
 
-        def all_waiters(self):
+            return waiter.create_waiter_with_client(
+                mapping[waiter_name], model, self)
+
+        @CachedProperty
+        def waiter_names(self):
             """Returns a list of all available waiters."""
-            all_waiters = self._get_waiter_config()
+            config = self._get_waiter_config()
+            if not config:
+                return[]
+            model = waiter.WaiterModel(config)
             # Waiter configs is a dict, we just want the waiter names
             # which are the keys in the dict.
-            return [xform_name(name) for name in all_waiters]
+            return [xform_name(name) for name in model.waiter_names]
 
         methods_dict['_get_waiter_config'] = _get_waiter_config
         methods_dict['get_waiter'] = get_waiter
-        methods_dict['all_waiters'] = all_waiters
+        methods_dict['waiter_names'] = waiter_names
 
     def _load_service_model(self, service_name):
         json_model = self._loader.load_service_model('aws/%s' % service_name)
-        service_model = ServiceModel(json_model)
+        service_model = ServiceModel(json_model, service_name=service_name)
         return service_model
 
     def _get_client_args(self, service_model, region_name, is_secure,
