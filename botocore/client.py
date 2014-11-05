@@ -11,14 +11,12 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from botocore.model import ServiceModel
-from botocore.exceptions import ParamValidationError
 from botocore.exceptions import DataNotFoundError
 from botocore.exceptions import OperationNotPageableError
 from botocore.exceptions import ClientError
 from botocore import waiter
 from botocore import xform_name
 from botocore.paginate import Paginator
-from botocore import translate
 from botocore.utils import CachedProperty
 import botocore.validate
 import botocore.serialize
@@ -218,7 +216,7 @@ class ClientCreator(object):
         def _api_call(self, **kwargs):
             operation_model = service_model.operation_model(operation_name)
             self._event_emitter.emit(
-                'before-parameter-build.{endpoint_prefix}.{operation_name}'\
+                'before-parameter-build.{endpoint_prefix}.{operation_name}'
                     .format(endpoint_prefix=service_model.endpoint_prefix,
                             operation_name=operation_name),
                 params=kwargs, model=operation_model)
