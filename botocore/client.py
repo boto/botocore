@@ -261,3 +261,29 @@ class BaseClient(object):
         self._response_parser = response_parser
         self._event_emitter = event_emitter
         self._cache = {}
+
+    def clone_client(self, serializer=None, endpoint=None,
+                     response_parser=None, event_emitter=None):
+        """Create a copy of the client object.
+
+        All the parameters mirror the same arguments accepted by the
+        ``__init__`` of the client object.  Any argument not provided
+        will default to the value associated with the current client
+        object.  For example, if no ``endpoint`` argument is not provided,
+        then ``self._endpoint`` will be used.  This allows you to
+        either create an exact clone of the client, or create a clone with
+        certain objects modified.
+
+        :return: A new copy of the botocore client.
+
+        """
+        kwargs = {
+            'serializer': serializer,
+            'endpoint': endpoint,
+            'response_parser': response_parser,
+            'event_emitter': event_emitter,
+        }
+        for key, value in kwargs.items():
+            if value is None:
+                kwargs[key] = getattr(self, '_%s' % key)
+        return self.__class__(**kwargs)
