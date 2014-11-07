@@ -12,18 +12,19 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
 import datetime
 import json
 import mock
 import os
 
+from dateutil.tz import tzlocal
+
 from botocore import credentials
 import botocore.exceptions
 import botocore.session
 from botocore.vendored.requests import ConnectionError
-
 from tests import unittest, BaseEnvVar, create_session
+
 
 
 # Passed to session to keep it from finding default config file
@@ -67,7 +68,7 @@ class TestRefreshableCredentials(BaseEnvVar):
         }
         self.refresher.return_value = self.metadata
         self.expiry_time = \
-            datetime.datetime.utcnow() - datetime.timedelta(minutes=30)
+            datetime.datetime.now(tzlocal()) - datetime.timedelta(minutes=30)
         self.mock_time = mock.Mock()
         self.creds = credentials.RefreshableCredentials(
             'ORIGINAL-ACCESS', 'ORIGINAL-SECRET', 'ORIGINAL-TOKEN',
@@ -79,7 +80,7 @@ class TestRefreshableCredentials(BaseEnvVar):
         # The expiry time was set for 30 minutes ago, so if we
         # say the current time is utcnow(), then we should need
         # a refresh.
-        self.mock_time.return_value = datetime.datetime.utcnow()
+        self.mock_time.return_value = datetime.datetime.now(tzlocal())
         self.assertTrue(self.creds.refresh_needed())
         # We should refresh creds, if we try to access "access_key"
         # or any of the cred vars.
@@ -91,7 +92,7 @@ class TestRefreshableCredentials(BaseEnvVar):
         # The expiry time was 30 minutes ago, let's say it's an hour
         # ago currently.  That would mean we don't need a refresh.
         self.mock_time.return_value = (
-            datetime.datetime.utcnow() - datetime.timedelta(minutes=60))
+            datetime.datetime.now(tzlocal()) - datetime.timedelta(minutes=60))
         self.assertTrue(not self.creds.refresh_needed())
 
         self.assertEqual(self.creds.access_key, 'ORIGINAL-ACCESS')
