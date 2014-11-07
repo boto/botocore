@@ -19,6 +19,7 @@ import mock
 
 import botocore.session
 from botocore.hooks import first_non_none_response
+from botocore.awsrequest import AWSRequest
 from botocore.compat import quote
 from botocore import handlers
 
@@ -160,6 +161,33 @@ class TestHandlers(BaseSessionTest):
             self.assertEqual(
                 params['headers'][prefix + 'key-MD5'],
                 'N7UdGUp1E+RbVvZSTy1R8g==')
+
+    def test_fix_s3_host_initial(self):
+        endpoint = mock.Mock(region_name='us-west-2')
+        request = AWSRequest(
+            method='PUT',headers={},
+            url='https://s3-us-west-2.amazonaws.com/bucket/key.txt'
+        )
+        auth = mock.Mock()
+        handlers.fix_s3_host('foo', endpoint, request, auth)
+        self.assertEqual(request.url, 'https://bucket.s3.amazonaws.com/key.txt')
+        self.assertEqual(request.auth_path, '/bucket/key.txt')
+
+    def test_fix_s3_host_only_applied_once(self):
+        endpoint = mock.Mock(region_name='us-west-2')
+        request = AWSRequest(
+            method='PUT',headers={},
+            url='https://s3-us-west-2.amazonaws.com/bucket/key.txt'
+        )
+        auth = mock.Mock()
+        handlers.fix_s3_host('foo', endpoint, request, auth)
+        # Calling the handler again should not affect the end result:
+        handlers.fix_s3_host('foo', endpoint, request, auth)
+        self.assertEqual(request.url, 'https://bucket.s3.amazonaws.com/key.txt')
+        # This was a bug previously.  We want to make sure that
+        # calling fix_s3_host() again does not alter the auth_path.
+        # Otherwise we'll get signature errors.
+        self.assertEqual(request.auth_path, '/bucket/key.txt')
 
 
 class TestRetryHandlerOrder(BaseSessionTest):
