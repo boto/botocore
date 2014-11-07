@@ -10,179 +10,319 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
 import jmespath
 import logging
 import time
 
-
-from .exceptions import WaiterError
+from .exceptions import WaiterError, ClientError, WaiterConfigError
+from . import xform_name
 
 
 logger = logging.getLogger(__name__)
 
 
-class BaseWaiter(object):
-    """Wait for a resource to reach a certain state.
+def create_waiter_with_client(waiter_name, waiter_model, client):
+    """
 
-    In addition to creating this class manually, you can
-    also use ``botocore.service.Service.get_waiter`` to
-    create an instance of ``Waiter```.
+    :type waiter_name: str
+    :param waiter_name: The name of the waiter.  The name should match
+        the name (including the casing) of the key name in the waiter
+        model file (typically this is CamelCasing).
 
-    The typical usage pattern is from a ``Service`` object::
+    :type waiter_model: botocore.waiter.WaiterModel
+    :param waiter_model: The model for the waiter configuration.
 
-        ec2 = session.get_service('ec2')
-        p = ec2.get_operation('RunInstances').call(endpoint, **kwargs)[1]
-        instance_running = ec2.get_waiter('InstanceRunning')
-        instance_id = p['Reservations'][0]['Instances'][0]['InstanceId']
+    :type client: botocore.client.BaseClient
+    :param client: The botocore client associated with the service.
 
-        # This will block until the instance reaches a 'running' state.
-        instance_running.wait(instance_ids=[instance_id])
+    :rtype: botocore.waiter.Waiter
+    :return: The waiter object.
 
     """
-    def _process_config(self, acceptor_config):
-        if acceptor_config is None:
-            return {}
-        new_config = acceptor_config.copy()
-        if new_config['type'] == 'output' and \
-                new_config.get('path') is not None:
-            new_config['path'] = jmespath.compile(acceptor_config['path'])
-        elif new_config['type'] == 'output' and len(new_config) == 1:
-            # There are some cases where a waiter config erroneously defines
-            # an acceptor type of "output" which cascades to the failure type,
-            # but there is no path or value specified for failures.  While
-            # the model is eventually going to be corrected, for now, we
-            # need to ignore this case and just return an empty dict
-            # indicating that this particular acceptor state should be ignored.
-            return {}
-        return new_config
-
-    def wait(self, **kwargs):
-        """Wait until a resource reaches its success state.
-
-        Calling this method will block until the waiter reaches its
-        desired state. If the failure state is reached, a ``WaiterError``
-        is raised.
-
-        The ``**kwargs`` passed to this method will be forwarded to the
-        operation associated with the waiter.
-
-        :param endpoint:  An instance of ``botocore.endpoint.Endpoint``.
-
-        """
-        logger.debug("Waiter %s waiting.", self.name)
-        num_attempts = 0
-        while num_attempts < self.max_attempts:
-            parsed = self._make_api_call(**kwargs)
-            if self.success:
-                if self._matches_acceptor_state(self.success, parsed):
-                    # For the success state, if the acceptor matches then we
-                    # break the loop.
-                    break
-            if self.failure:
-                if self._matches_acceptor_state(self.failure, parsed):
-                    # For the failure state, if the acceptor matches then we
-                    # raise an exception.
-                    raise WaiterError(
-                        name=self.name,
-                        reason='Failure state matched one of: %s' %
-                        ', '.join(self.failure['value']))
-            logger.debug("No acceptor state reached for waiter %s, "
-                         "attempt %s/%s, sleeping for: %s",
-                         self.name, num_attempts, self.max_attempts,
-                         self.sleep_time)
-            num_attempts += 1
-            time.sleep(self.sleep_time)
-        else:
-            error_msg = ("Max attempts (%s) exceeded for waiter %s without "
-                         "reaching a terminal state."
-                         % (self.max_attempts, self.name))
-            logger.debug(error_msg)
-            raise WaiterError(name=self.name, reason=error_msg)
-
-    def _matches_acceptor_state(self, acceptor, parsed):
-        if acceptor['type'] == 'output':
-            return self._matches_acceptor_output_type(acceptor, parsed)
-        elif acceptor['type'] == 'error':
-            return self._matches_acceptor_error_type(acceptor, parsed)
-
-    def _matches_acceptor_output_type(self, acceptor, parsed):
-        if 'path' not in acceptor and not self._get_error_codes_from_response(parsed):
-            # If there's no path specified, then a successful response means
-            # that we've matched the acceptor.
-            return True
-        match = acceptor['path'].search(parsed)
-        return self._path_matches_value(match, acceptor['value'])
-
-    def _path_matches_value(self, match, value):
-        # Determine if the matched data matches the config value.
-        if match is None:
-            return False
-        elif not isinstance(match, list):
-            # If match is not a list, then we need to perform an exact match,
-            # this is something like Table.TableStatus == 'CREATING'
-            return self._single_value_match(match, value)
-        elif isinstance(match, list):
-            # If ``match`` is a list, then we need to ensure that every element
-            # in ``match`` matches something in the ``value`` list.
-            return all(self._single_value_match(element, value)
-                       for element in match)
-        else:
-            return False
-
-    def _single_value_match(self, match, value):
-        for v in value:
-            if match == v:
-                return True
-        else:
-            return False
-
-    def _matches_acceptor_error_type(self, acceptor, parsed):
-        if 'Error' in parsed:
-            error_code = parsed['Error']['Code']
-            for v in acceptor['value']:
-                if v == error_code:
-                    return True
-        return False
+    single_waiter_config = waiter_model.get_waiter(waiter_name)
+    operation_name = xform_name(single_waiter_config.operation)
+    operation_method = NormalizedOperationMethod(
+        getattr(client, operation_name))
+    return Waiter(
+        waiter_name, single_waiter_config, operation_method
+    )
 
 
-class LegacyWaiter(BaseWaiter):
-    def __init__(self, name, operation, endpoint, config):
-        """
+def create_waiter_from_legacy(waiter_name, waiter_config,
+                              service_object, endpoint):
+    """
 
-        :type name: str
-        :param name: The name of the waiter.
+    :type waiter_name: str
+    :param waiter_name: The name of the waiter.
 
-        :type operation: ``botocore.operation.Operation``
-        :param operation:  The operation associated with the waiter.
-            This is specified in the waiter configuration as the
-            ``operation`` key.
+    :type waiter_config: dict
+    :param waiter_config: The loaded waiter model file.
 
-        :type config: dict
-        :param config: The waiter configuration.
+    :type service_object: botocore.service.Service
+    :param service_object: The service object associated with the waiter.
 
-        """
-        self.name = name
-        self.operation = operation
-        self.endpoint = endpoint
-        self.sleep_time = config['interval']
-        self.max_attempts = config['max_attempts']
-        self.success = self._process_config(config.get('success'))
-        self.failure = self._process_config(config.get('failure'))
+    :rtype: botocore.waiter.Waiter
+    :return: The waiter object.
 
-    def _make_api_call(self, **kwargs):
-        parsed = self.operation.call(self.endpoint, **kwargs)[1]
+    """
+    model = WaiterModel(waiter_config)
+    single_waiter_config = model.get_waiter(waiter_name)
+    operation_object = service_object.get_operation(
+        single_waiter_config.operation)
+    operation_method = LegacyOperationMethod(operation_object,
+                                             endpoint)
+    return Waiter(waiter_name, single_waiter_config,
+                  operation_method)
+
+
+# The NormalizedOperationMethod and the LegacyOperationMethod
+# below will normalize the differences between the client interface
+# and the Service/Operation object interface.  This allows for a single
+# Waiter class to be used for both clients and Service/Operation.
+class NormalizedOperationMethod(object):
+    def __init__(self, client_method):
+        self._client_method = client_method
+
+    def __call__(self, **kwargs):
+        try:
+            return self._client_method(**kwargs)
+        except ClientError as e:
+            return e.response
+
+
+class LegacyOperationMethod(object):
+    def __init__(self, operation_object, endpoint):
+        self._operation_object = operation_object
+        self._endpoint = endpoint
+
+    def __call__(self, **kwargs):
+        http, parsed = self._operation_object.call(
+            self._endpoint, **kwargs)
         return parsed
 
 
-class Waiter(BaseWaiter):
-    def __init__(self, name, operation_method, config):
-        self.name = name
-        self.operation_method = operation_method
-        self.sleep_time = config['interval']
-        self.max_attempts = config['max_attempts']
-        self.success = self._process_config(config.get('success'))
-        self.failure = self._process_config(config.get('failure'))
+class WaiterModel(object):
+    SUPPORTED_VERSION = 2
 
-    def _make_api_call(self, **kwargs):
-        return self.operation_method(**kwargs)
+    def __init__(self, waiter_config):
+        """
+
+        Note that the WaiterModel takes ownership of the waiter_config.
+        It may or may not mutate the waiter_config.  If this is a concern,
+        it is best to make a copy of the waiter config before passing it to
+        the WaiterModel.
+
+        :type waiter_config: dict
+        :param waiter_config: The loaded waiter config
+            from the <service>*.waiters.json file.  This can be
+            obtained from a botocore Loader object as well.
+
+        """
+        self._waiter_config = waiter_config['waiters']
+
+        # These are part of the public API.  Changing these
+        # will result in having to update the consuming code,
+        # so don't change unless you really need to.
+        version = waiter_config.get('version', 'unknown')
+        self._verify_supported_version(version)
+        self.version = version
+        self.waiter_names = list(sorted(waiter_config['waiters'].keys()))
+
+    def _verify_supported_version(self, version):
+        if version != self.SUPPORTED_VERSION:
+            raise WaiterConfigError(
+                error_msg=("Unsupported waiter version, supported version "
+                           "must be: %s, but version of waiter config "
+                           "is: %s" % (self.SUPPORTED_VERSION,
+                                       version)))
+
+    def get_waiter(self, waiter_name):
+        try:
+            single_waiter_config = self._waiter_config[waiter_name]
+        except KeyError:
+            raise ValueError("Waiter does not exist: %s" % waiter_name)
+        return SingleWaiterConfig(single_waiter_config)
+
+
+class SingleWaiterConfig(object):
+    """Represents the waiter configuration for a single waiter.
+
+    A single waiter is considered the configuration for a single
+    value associated with a named waiter (i.e TableExists).
+
+    """
+    def __init__(self, single_waiter_config):
+        self._config = single_waiter_config
+
+        # These attributes are part of the public API.
+        self.description = single_waiter_config.get('description', '')
+        # Per the spec, these three fields are required.
+        self.operation = single_waiter_config['operation']
+        self.delay = single_waiter_config['delay']
+        self.max_attempts = single_waiter_config['maxAttempts']
+
+    @property
+    def acceptors(self):
+        acceptors = []
+        for acceptor_config in self._config['acceptors']:
+            acceptor = AcceptorConfig(acceptor_config)
+            acceptors.append(acceptor)
+        return acceptors
+
+
+class AcceptorConfig(object):
+    def __init__(self, config):
+        self.state = config['state']
+        self.matcher = config['matcher']
+        self.expected = config['expected']
+        self.argument = config.get('argument')
+        self.matcher_func = self._create_matcher_func()
+
+    def _create_matcher_func(self):
+        # An acceptor function is a callable that takes a single value.  The
+        # parsed AWS response.  Note that the parsed error response is also
+        # provided in the case of errors, so it's entirely possible to
+        # handle all the available matcher capabilities in the future.
+        # There's only three supported matchers, so for now, this is all
+        # contained to a single method.  If this grows, we can expand this
+        # out to separate methods or even objects.
+
+        if self.matcher == 'path':
+            return self._create_path_matcher()
+        elif self.matcher == 'pathAll':
+            return self._create_path_all_matcher()
+        elif self.matcher == 'pathAny':
+            return self._create_path_any_matcher()
+        elif self.matcher == 'status':
+            return self._create_status_matcher()
+        elif self.matcher == 'error':
+            return self._create_error_matcher()
+        else:
+            raise WaiterConfigError(
+                error_msg="Unknown acceptor: %s" % self.matcher)
+
+    def _create_path_matcher(self):
+        expression = jmespath.compile(self.argument)
+        expected = self.expected
+
+        def acceptor_matches(response):
+            return expression.search(response) == expected
+        return acceptor_matches
+
+    def _create_path_all_matcher(self):
+        expression = jmespath.compile(self.argument)
+        expected = self.expected
+
+        def acceptor_matches(response):
+            result = expression.search(response)
+            if not isinstance(result, list) or not result:
+                # pathAll matcher must result in a list.
+                # Also we require at least one element in the list,
+                # that is, an empty list should not result in this
+                # acceptor match.
+                return False
+            for element in result:
+                if element != expected:
+                    return False
+            return True
+        return acceptor_matches
+
+    def _create_path_any_matcher(self):
+        expression = jmespath.compile(self.argument)
+        expected = self.expected
+
+        def acceptor_matches(response):
+            result = expression.search(response)
+            if not isinstance(result, list) or not result:
+                # pathAny matcher must result in a list.
+                # Also we require at least one element in the list,
+                # that is, an empty list should not result in this
+                # acceptor match.
+                return False
+            for element in result:
+                if element == expected:
+                    return True
+            return False
+        return acceptor_matches
+
+    def _create_status_matcher(self):
+        expected = self.expected
+
+        def acceptor_matches(response):
+            # We don't have any requirements on the expected incoming data
+            # other than it is a dict, so we don't assume there's
+            # a ResponseMetadata.HTTPStatusCode.
+            status_code = response.get('ResponseMetadata', {}).get(
+                'HTTPStatusCode')
+            return status_code == expected
+        return acceptor_matches
+
+    def _create_error_matcher(self):
+        expected = self.expected
+
+        def acceptor_matches(response):
+            # When the client encounters an error, it will normally raise
+            # an exception.  However, the waiter implementation will catch
+            # this exception, and instead send us the parsed error
+            # response.  So response is still a dictionary, and in the case
+            # of an error response will contain the "Error" and
+            # "ResponseMetadata" key.
+            return response.get("Error", {}).get("Code", "") == expected
+        return acceptor_matches
+
+
+class Waiter(object):
+    def __init__(self, name, config, operation_method):
+        """
+
+        :type name: string
+        :param name: The name of the waiter
+
+        :type config: botocore.waiter.SingleWaiterConfig
+        :param config: The configuration for the waiter.
+
+        :type operation_method: callable
+        :param operation_method: A callable that accepts **kwargs
+            and returns a response.  For example, this can be
+            a method from a botocore client.
+
+        """
+        self._operation_method = operation_method
+        # The two attributes are exposed to allow for introspection
+        # and documentation.
+        self.name = name
+        self.config = config
+
+    def wait(self, **kwargs):
+        acceptors = list(self.config.acceptors)
+        current_state = 'waiting'
+        sleep_amount = self.config.delay
+        num_attempts = 0
+        max_attempts = self.config.max_attempts
+
+        while True:
+            response = self._operation_method(**kwargs)
+            num_attempts += 1
+            for acceptor in acceptors:
+                if acceptor.matcher_func(response):
+                    current_state = acceptor.state
+                    break
+            else:
+                # If none of the acceptors matched, we should
+                # transition to the failure state if an error
+                # response was received.
+                if 'Error' in response:
+                    # Transition to the failure state, which we can
+                    # just handle here by raising an exception.
+                    raise WaiterError(name=self.name,
+                                      reason='Unexpected error encountered.')
+            if current_state == 'success':
+                return
+            if current_state == 'failure':
+                raise WaiterError(
+                    name=self.name,
+                    reason='Waiter encountered a terminal failure state')
+            if num_attempts >= max_attempts:
+                raise WaiterError(name=self.name,
+                                  reason='Max attempts exceeded')
+            time.sleep(sleep_amount)

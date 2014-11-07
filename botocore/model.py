@@ -9,7 +9,7 @@ NOT_SET = object()
 
 
 class NoShapeFoundError(Exception):
-     pass
+    pass
 
 
 class InvalidShapeError(Exception):
@@ -191,7 +191,8 @@ class ServiceModel(object):
         'list': ListShape,
         'map': MapShape,
     }
-    def __init__(self, service_description):
+
+    def __init__(self, service_description, service_name=None):
         """
 
         :type service_description: dict
@@ -203,6 +204,14 @@ class ServiceModel(object):
                     open('/path/to/service-description-model.json'))
                 model = ServiceModel(service_description)
 
+        :type service_name: str
+        :param service_name: The name of the service.  Normally this is
+            the endpoint prefix defined in the service_description.  However,
+            you can override this value to provide a more convenient name.
+            This is done in a few places in botocore (ses instead of email,
+            emr instead of elasticmapreduce).  If this value is not provided,
+            it will default to the endpointPrefix defined in the model.
+
         """
         self._service_description = service_description
         # We want clients to be able to access metadata directly.
@@ -210,6 +219,7 @@ class ServiceModel(object):
         self._shape_resolver = ShapeResolver(
             service_description.get('shapes', {}))
         self._signature_version = NOT_SET
+        self._service_name = service_name
 
     def shape_for(self, shape_name, member_traits=None):
         return self._shape_resolver.get_shape_by_name(
@@ -228,6 +238,23 @@ class ServiceModel(object):
     @CachedProperty
     def operation_names(self):
         return list(self._service_description.get('operations', []))
+
+    @CachedProperty
+    def service_name(self):
+        """The name of the service.
+
+        This defaults to the endpointPrefix defined in the service model.
+        However, this value can be overriden when a ``ServiceModel`` is
+        created.  If a service_name was not provided when the ``ServiceModel``
+        was created and if there is no endpointPrefix defined in the
+        service model, then an ``UndefinedModelAttributeError`` exception
+        will be raised.
+
+        """
+        if self._service_name is not None:
+            return self._service_name
+        else:
+            return self.endpoint_prefix
 
     @CachedProperty
     def signing_name(self):

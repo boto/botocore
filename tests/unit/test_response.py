@@ -109,7 +109,8 @@ class TestGetResponse(unittest.TestCase):
             {'Error': {'Message': 'Access Denied',
                        'Code': 'AccessDenied',},
              'ResponseMetadata': {'HostId': 'AAAAAAAAAAAAAAAAAAA',
-                                  'RequestId': 'XXXXXXXXXXXXXXXX'},
+                                  'RequestId': 'XXXXXXXXXXXXXXXX',
+                                  'HTTPStatusCode': 403},
              }
             )
 
@@ -134,7 +135,8 @@ class TestGetResponse(unittest.TestCase):
         self.assertEqual(
             response.get_response(operation.model, http_response)[1],
             { 'ResponseMetadata': {'RequestId': 'XXXXXXXXXXXXXXXX',
-                                   'HostId': 'AAAAAAAAAAAAAAAAAAA'},
+                                   'HostId': 'AAAAAAAAAAAAAAAAAAA',
+                                   'HTTPStatusCode': 403},
               'Error': {'Message': 'Access Denied',
                         'Code': 'AccessDenied',}
               }
@@ -174,6 +176,7 @@ class TestGetResponse(unittest.TestCase):
              'ResponseMetadata': {
                  'RequestId': 'XXXXXXXXXXXXXXXX',
                  'HostId': 'AAAAAAAAAAAAAAAAAAA',
+                 'HTTPStatusCode': 200,
              }}
         )
 
