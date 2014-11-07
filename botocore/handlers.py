@@ -169,6 +169,11 @@ def fix_s3_host(event_name, endpoint, request, auth, **kwargs):
     addressing.  This allows us to avoid 301 redirects for all
     bucket names that can be CNAME'd.
     """
+    if auth.auth_path is not None:
+        # The auth_path has already been applied (this may be a
+        # retried request).  We don't need to perform this
+        # customization again.
+        return
     parts = urlsplit(request.url)
     auth.auth_path = parts.path
     path_parts = parts.path.split('/')
