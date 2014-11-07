@@ -20,7 +20,6 @@ import mock
 import botocore.session
 from botocore.awsrequest import AWSRequest
 from botocore.hooks import first_non_none_response
-from botocore.auth import BaseSigner
 from botocore.compat import quote
 from botocore import handlers
 
