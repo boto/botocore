@@ -13,7 +13,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import datetime
-import json
 import mock
 import os
 
@@ -22,9 +21,7 @@ from dateutil.tz import tzlocal
 from botocore import credentials
 import botocore.exceptions
 import botocore.session
-from botocore.vendored.requests import ConnectionError
-from tests import unittest, BaseEnvVar, create_session
-
+from tests import unittest, BaseEnvVar
 
 
 # Passed to session to keep it from finding default config file
@@ -101,7 +98,6 @@ class TestRefreshableCredentials(BaseEnvVar):
 
 
 class TestEnvVar(BaseEnvVar):
-
 
     def test_envvars_are_found_no_token(self):
         environ = {
@@ -197,7 +193,7 @@ class TestEnvVar(BaseEnvVar):
         }
         provider = credentials.EnvProvider(environ)
         with self.assertRaises(botocore.exceptions.PartialCredentialsError):
-            creds = provider.load()
+            provider.load()
 
 
 class TestSharedCredentialsProvider(BaseEnvVar):
@@ -417,13 +413,12 @@ class TestBotoProvider(BaseEnvVar):
         provider = credentials.BotoProvider(environ={},
                                             ini_parser=ini_parser)
         with self.assertRaises(botocore.exceptions.PartialCredentialsError):
-            creds = provider.load()
+            provider.load()
 
 
 class TestOriginalEC2Provider(BaseEnvVar):
 
     def test_load_ec2_credentials_file_not_exist(self):
-        environ = {}
         provider = credentials.OriginalEC2Provider(environ={})
         creds = provider.load()
         self.assertIsNone(creds)
@@ -594,6 +589,7 @@ class TestCreateCredentialResolver(BaseEnvVar):
         }
         fake_session.get_config_variable = lambda x: config[x]
         resolver = credentials.create_credential_resolver(fake_session)
+        self.assertIsInstance(resolver, credentials.CredentialResolver)
 
 
 if __name__ == "__main__":
