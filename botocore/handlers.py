@@ -169,8 +169,13 @@ def fix_s3_host(event_name, endpoint, request, auth, **kwargs):
     addressing.  This allows us to avoid 301 redirects for all
     bucket names that can be CNAME'd.
     """
+    if request.auth_path is not None:
+        # The auth_path has already been applied (this may be a
+        # retried request).  We don't need to perform this
+        # customization again.
+        return
     parts = urlsplit(request.url)
-    auth.auth_path = parts.path
+    request.auth_path = parts.path
     path_parts = parts.path.split('/')
     if isinstance(auth, botocore.auth.SigV4Auth):
         return
@@ -182,8 +187,8 @@ def fix_s3_host(event_name, endpoint, request, auth, **kwargs):
             # If the operation is on a bucket, the auth_path must be
             # terminated with a '/' character.
             if len(path_parts) == 2:
-                if auth.auth_path[-1] != '/':
-                    auth.auth_path += '/'
+                if request.auth_path[-1] != '/':
+                    request.auth_path += '/'
             path_parts.remove(bucket_name)
             global_endpoint = 's3.amazonaws.com'
             host = bucket_name + '.' + global_endpoint

@@ -452,7 +452,6 @@ class HmacV1Auth(BaseSigner):
 
     def __init__(self, credentials, service_name=None, region_name=None):
         self.credentials = credentials
-        self.auth_path = None  # see comment in canonical_resource below
 
     def sign_string(self, string_to_sign):
         new_hmac = hmac.new(self.credentials.secret_key.encode('utf-8'),
@@ -499,7 +498,7 @@ class HmacV1Auth(BaseSigner):
         else:
             return (nv[0], unquote(nv[1]))
 
-    def canonical_resource(self, split):
+    def canonical_resource(self, split, auth_path=None):
         # don't include anything after the first ? in the resource...
         # unless it is one of the QSA of interest, defined above
         # NOTE:
@@ -508,8 +507,8 @@ class HmacV1Auth(BaseSigner):
         # style addressing.  The ``auth_path`` keeps track of the full
         # path for the canonical resource and would be passed in if
         # the client was using virtual-hosting style.
-        if self.auth_path:
-            buf = self.auth_path
+        if auth_path is not None:
+            buf = auth_path
         else:
             buf = split.path
         if split.query:
@@ -524,21 +523,24 @@ class HmacV1Auth(BaseSigner):
                 buf += '&'.join(qsa)
         return buf
 
-    def canonical_string(self, method, split, headers, expires=None):
+    def canonical_string(self, method, split, headers, expires=None,
+                         auth_path=None):
         cs = method.upper() + '\n'
         cs += self.canonical_standard_headers(headers) + '\n'
         custom_headers = self.canonical_custom_headers(headers)
         if custom_headers:
             cs += custom_headers + '\n'
-        cs += self.canonical_resource(split)
+        cs += self.canonical_resource(split, auth_path=auth_path)
         return cs
 
-    def get_signature(self, method, split, headers, expires=None):
+    def get_signature(self, method, split, headers, expires=None,
+                      auth_path=None):
         if self.credentials.token:
             headers['x-amz-security-token'] = self.credentials.token
         string_to_sign = self.canonical_string(method,
                                                split,
-                                               headers)
+                                               headers,
+                                               auth_path=auth_path)
         logger.debug('StringToSign:\n%s', string_to_sign)
         return self.sign_string(string_to_sign)
 
@@ -549,7 +551,8 @@ class HmacV1Auth(BaseSigner):
         split = urlsplit(request.url)
         logger.debug('HTTP request method: %s', request.method)
         signature = self.get_signature(request.method, split,
-                                       request.headers)
+                                       request.headers,
+                                       auth_path=request.auth_path)
         request.headers['Authorization'] = (
             "AWS %s:%s" % (self.credentials.access_key, signature))
 
