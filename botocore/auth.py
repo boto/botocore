@@ -535,7 +535,7 @@ class HmacV1Auth(BaseSigner):
 
     def get_signature(self, method, split, headers, expires=None,
                       auth_path=None):
-        if self.credentials.token:
+        if self.credentials.token and 'x-amz-security-token' not in headers:
             headers['x-amz-security-token'] = self.credentials.token
         string_to_sign = self.canonical_string(method,
                                                split,
@@ -553,6 +553,14 @@ class HmacV1Auth(BaseSigner):
         signature = self.get_signature(request.method, split,
                                        request.headers,
                                        auth_path=request.auth_path)
+        if 'Authorization' in request.headers:
+            # We have to do this because request.headers is not
+            # normal dictionary.  It has the (unintuitive) behavior
+            # of aggregating repeated setattr calls for the same
+            # key value.  For example:
+            # headers['foo'] = 'a'; headers['foo'] = 'b'
+            # list(headers) will print ['foo', 'foo'].
+            del request.headers['Authorization']
         request.headers['Authorization'] = (
             "AWS %s:%s" % (self.credentials.access_key, signature))
 

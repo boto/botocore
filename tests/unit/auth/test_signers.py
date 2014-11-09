@@ -85,6 +85,39 @@ class TestHMACV1(unittest.TestCase):
             cr = self.hmacv1.canonical_resource(split)
             self.assertEqual(cr, '/quotes?%s' % operation)
 
+    def test_sign_with_token(self):
+        credentials = botocore.credentials.Credentials(
+            access_key='foo', secret_key='bar', token='baz')
+        auth = botocore.auth.HmacV1Auth(credentials)
+        request = AWSRequest()
+        request.headers['Date'] = 'Thu, 17 Nov 2005 18:49:58 GMT'
+        request.headers['Content-Type'] = 'text/html'
+        request.method = 'PUT'
+        request.url = 'https://s3.amazonaws.com/bucket/key'
+        auth.add_auth(request)
+        self.assertIn('Authorization', request.headers)
+        # We're not actually checking the signature here, we're
+        # just making sure the auth header has the right format.
+        self.assertTrue(request.headers['Authorization'].startswith('AWS '))
+
+    def test_resign_with_token(self):
+        credentials = botocore.credentials.Credentials(
+            access_key='foo', secret_key='bar', token='baz')
+        auth = botocore.auth.HmacV1Auth(credentials)
+        request = AWSRequest()
+        request.headers['Date'] = 'Thu, 17 Nov 2005 18:49:58 GMT'
+        request.headers['Content-Type'] = 'text/html'
+        request.method = 'PUT'
+        request.url = 'https://s3.amazonaws.com/bucket/key'
+
+        auth.add_auth(request)
+        original_auth = request.headers['Authorization']
+        # Resigning the request shouldn't change the authorization
+        # header.
+        auth.add_auth(request)
+        self.assertEqual(request.headers.get_all('Authorization'),
+                         [original_auth])
+
 
 class TestSigV2(unittest.TestCase):
 
