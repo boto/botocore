@@ -18,6 +18,8 @@ import logging
 import os
 
 from six.moves import configparser
+from dateutil.parser import parse
+from dateutil.tz import tzlocal
 
 import botocore.config
 from botocore.compat import total_seconds
@@ -69,6 +71,10 @@ def get_credentials(session):
     return resolver.load_credentials()
 
 
+def _local_now():
+    return datetime.datetime.now(tzlocal())
+
+
 class Credentials(object):
     """
     Holds the credentials needed to authenticate requests.
@@ -110,7 +116,7 @@ class RefreshableCredentials(Credentials):
 
     def __init__(self, access_key, secret_key, token,
                  expiry_time, refresh_using, method,
-                 time_fetcher=datetime.datetime.utcnow):
+                 time_fetcher=_local_now):
         self._refresh_using = refresh_using
         self._access_key = access_key
         self._secret_key = secret_key
@@ -186,16 +192,13 @@ class RefreshableCredentials(Credentials):
 
     @staticmethod
     def _expiry_datetime(time_str):
-        return datetime.datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%SZ")
+        return parse(time_str)
 
     def _set_from_data(self, data):
         self.access_key = data['access_key']
         self.secret_key = data['secret_key']
         self.token = data['token']
-        self._expiry_time = datetime.datetime.strptime(
-            data['expiry_time'],
-            "%Y-%m-%dT%H:%M:%SZ"
-        )
+        self._expiry_time = parse(data['expiry_time'])
         logger.debug("Retrieved credentials will expire at: %s", self._expiry_time)
 
 

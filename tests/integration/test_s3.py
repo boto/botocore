@@ -143,7 +143,7 @@ class TestS3Objects(TestS3BaseWithBucket):
         super(TestS3Objects, self).tearDown()
 
     def increment_auth(self, request, auth, **kwargs):
-        self.auth_paths.append(auth.auth_path)
+        self.auth_paths.append(request.auth_path)
 
     def test_can_delete_urlencoded_object(self):
         key_name = 'a+b/foo'
