@@ -35,6 +35,7 @@ from botocore.provider import get_provider
 from botocore import regions
 from botocore.model import ServiceModel
 import botocore.service
+from botocore import waiter
 
 
 class Session(object):
@@ -493,6 +494,14 @@ class Session(object):
         """
         service_description = self.get_service_data(service_name, api_version)
         return ServiceModel(service_description)
+
+    def get_waiter_model(self, service_name, api_version=None):
+        loader = self.get_component('data_loader')
+        latest = loader.determine_latest('%s/%s' % (
+            self.provider.name, service_name), api_version)
+        waiter_path = latest.replace('.api', '.waiters')
+        waiter_config = loader.load_data(waiter_path)
+        return waiter.WaiterModel(waiter_config)
 
     def get_service_data(self, service_name, api_version=None):
         """

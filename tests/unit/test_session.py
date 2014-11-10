@@ -26,6 +26,7 @@ import botocore.exceptions
 from botocore.model import ServiceModel
 from botocore import client
 from botocore.hooks import HierarchicalEmitter
+from botocore.waiter import WaiterModel
 
 
 class BaseSessionTest(unittest.TestCase):
@@ -329,6 +330,22 @@ class TestGetServiceModel(BaseSessionTest):
         self.session.register_component('data_loader', loader)
         model = self.session.get_service_model('made_up')
         self.assertIsInstance(model, ServiceModel)
+
+
+class TestGetWaiterModel(BaseSessionTest):
+    def test_get_waiter_model(self):
+        loader = mock.Mock()
+        loader.determine_latest.return_value = 'aws/foo/2014-01-01.api.json'
+        loader.load_data.return_value = {"version": 2, "waiters": {}}
+        self.session.register_component('data_loader', loader)
+
+        model = self.session.get_waiter_model('foo')
+
+        # Verify we (1) get the expected return data,
+        self.assertIsInstance(model, WaiterModel)
+        self.assertEqual(model.waiter_names, [])
+        # and (2) call the loader correctly.
+        loader.load_data.assert_called_with('aws/foo/2014-01-01.waiters.json')
 
 
 class TestCreateClient(BaseSessionTest):
