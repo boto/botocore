@@ -17,7 +17,6 @@ import datetime
 import time
 
 import mock
-import six
 
 import botocore.auth
 import botocore.credentials
@@ -182,6 +181,22 @@ class TestSigV3(unittest.TestCase):
             ('AWS3-HTTPS AWSAccessKeyId=access_key,Algorithm=HmacSHA256,'
              'Signature=M245fo86nVKI8rLpH4HgWs841sBTUKuwciiTpjMDgPs='))
 
+    def test_resign_with_token(self):
+        credentials = botocore.credentials.Credentials(
+            access_key='foo', secret_key='bar', token='baz')
+        auth = botocore.auth.SigV3Auth(credentials)
+        request = AWSRequest()
+        request.headers['Date'] = 'Thu, 17 Nov 2005 18:49:58 GMT'
+        request.method = 'PUT'
+        request.url = 'https://route53.amazonaws.com/'
+        auth.add_auth(request)
+        original_auth = request.headers['X-Amzn-Authorization']
+        # Resigning the request shouldn't change the authorization
+        # header.
+        auth.add_auth(request)
+        self.assertEqual(request.headers.get_all('X-Amzn-Authorization'),
+                         [original_auth])
+
 
 class TestS3SigV4Auth(unittest.TestCase):
     def test_signature_is_not_normalized(self):
@@ -194,6 +209,33 @@ class TestS3SigV4Auth(unittest.TestCase):
         auth.add_auth(request)
         self.assertTrue(
             request.headers['Authorization'].startswith('AWS4-HMAC-SHA256'))
+
+
+class TestSigV4Resign(unittest.TestCase):
+    def setUp(self):
+        self.credentials = botocore.credentials.Credentials(
+            access_key='foo', secret_key='bar', token='baz')
+        self.auth = botocore.auth.SigV4Auth(self.credentials, 'ec2', 'us-west-2')
+        self.request = AWSRequest()
+        self.request.method = 'PUT'
+        self.request.url = 'https://ec2.amazonaws.com/'
+
+    def test_resign_request_with_date(self):
+        self.request.headers['Date'] = 'Thu, 17 Nov 2005 18:49:58 GMT'
+        self.auth.add_auth(self.request)
+        original_auth = self.request.headers['Authorization']
+
+        self.auth.add_auth(self.request)
+        self.assertEqual(self.request.headers.get_all('Authorization'),
+                         [original_auth])
+
+    def test_sigv4_without_date(self):
+        self.auth.add_auth(self.request)
+        original_auth = self.request.headers['Authorization']
+
+        self.auth.add_auth(self.request)
+        self.assertEqual(self.request.headers.get_all('Authorization'),
+                         [original_auth])
 
 
 class TestSigV4Presign(unittest.TestCase):

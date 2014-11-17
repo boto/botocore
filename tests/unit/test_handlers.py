@@ -189,6 +189,39 @@ class TestHandlers(BaseSessionTest):
         # Otherwise we'll get signature errors.
         self.assertEqual(request.auth_path, '/bucket/key.txt')
 
+    def test_register_retry_for_handlers_with_no_endpoint_prefix(self):
+        no_endpoint_prefix = {'metadata': {}}
+        session = mock.Mock()
+        handlers.register_retries_for_service(service_data=no_endpoint_prefix,
+                                              session=mock.Mock(),
+                                              service_name='foo')
+        self.assertFalse(session.register.called)
+
+    def test_register_retry_handlers(self):
+        service_data = {
+            'metadata': {'endpointPrefix': 'foo'},
+        }
+        session = mock.Mock()
+        loader = mock.Mock()
+        session.get_component.return_value = loader
+        loader.load_data.return_value = {
+            'retry': {
+                '__default__': {
+                    'max_attempts': 10,
+                    'delay': {
+                        'type': 'exponential',
+                        'base': 2,
+                        'growth_factor': 5,
+                    },
+                },
+            },
+        }
+        handlers.register_retries_for_service(service_data=service_data,
+                                              session=session,
+                                              service_name='foo')
+        session.register.assert_called_with('needs-retry.foo', mock.ANY,
+                                            unique_id='retry-config-foo')
+
 
 class TestRetryHandlerOrder(BaseSessionTest):
     def get_handler_names(self, responses):
