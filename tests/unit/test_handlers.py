@@ -189,6 +189,19 @@ class TestHandlers(BaseSessionTest):
         # Otherwise we'll get signature errors.
         self.assertEqual(request.auth_path, '/bucket/key.txt')
 
+    def test_dns_style_not_used_for_get_bucket_location(self):
+        endpoint = mock.Mock(region_name='us-west-2')
+        original_url = 'https://s3-us-west-2.amazonaws.com/bucket?location'
+        request = AWSRequest(
+            method='GET',headers={},
+            url=original_url,
+        )
+        auth = mock.Mock()
+        handlers.fix_s3_host('foo', endpoint, request, auth)
+        # The request url should not have been modified because this is
+        # a request for GetBucketLocation.
+        self.assertEqual(request.url, original_url)
+
 
 class TestRetryHandlerOrder(BaseSessionTest):
     def get_handler_names(self, responses):

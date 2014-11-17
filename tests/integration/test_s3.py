@@ -532,5 +532,34 @@ class TestCreateBucketInOtherRegion(BaseS3Test):
             self.keys.append('foo.txt')
 
 
+class TestGetBucketLocationForEUCentral1(BaseS3Test):
+    def setUp(self):
+        super(TestGetBucketLocationForEUCentral1, self).setUp()
+        self.bucket_name = 'botocoretest%s-%s' % (
+            int(time.time()), random.randint(1, 1000))
+        endpoint = self.service.get_endpoint('eu-central-1')
+        operation = self.service.get_operation('CreateBucket')
+        response = operation.call(endpoint, bucket=self.bucket_name,
+            create_bucket_configuration={'LocationConstraint': 'eu-central-1'})
+        self.assertEqual(response[0].status_code, 200)
+
+    def tearDown(self):
+        super(TestGetBucketLocationForEUCentral1, self).tearDown()
+        endpoint = self.service.get_endpoint('eu-central-1')
+        operation = self.service.get_operation('DeleteBucket')
+        response = operation.call(endpoint, bucket=self.bucket_name)
+        self.assertEqual(response[0].status_code, 204)
+
+    def test_can_get_bucket_location(self):
+        # Even though the bucket is in eu-central-1, we should still be able to
+        # use the us-east-1 endpoint class to get the bucket location.
+        operation = self.service.get_operation('GetBucketLocation')
+        # Also keep in mind that while this test is useful, it doesn't test
+        # what happens once DNS propogates which is arguably more interesting,
+        # as DNS will point us to the eu-central-1 endpoint.
+        response = operation.call(self.endpoint, Bucket=self.bucket_name)
+        self.assertEqual(response[1]['LocationConstraint'], 'eu-central-1')
+
+
 if __name__ == '__main__':
     unittest.main()
