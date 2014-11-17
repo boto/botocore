@@ -47,7 +47,7 @@ class Service(object):
             service_name,
             api_version=None
         )
-        self._model = ServiceModel(sdata)
+        self._model = session.get_service_model(service_name)
         self.__dict__.update(sdata)
         self._operations_data = self.__dict__.pop('operations')
         self._operations = None

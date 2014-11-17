@@ -206,28 +206,32 @@ def _allowed_region(region_name):
     return region_name not in RESTRICTED_REGIONS
 
 
-def register_retries_for_service(service, **kwargs):
-    loader = service.session.get_component('data_loader')
-    config = _load_retry_config(loader, service.endpoint_prefix)
+def register_retries_for_service(service_data, session,
+                                 service_name, **kwargs):
+    loader = session.get_component('data_loader')
+    endpoint_prefix = service_data.get('metadata', {}).get('endpointPrefix')
+    if endpoint_prefix is None:
+        logger.debug("Not registering retry handlers, could not endpoint "
+                     "prefix from model for service %s", service_name)
+        return
+    config = _load_retry_config(loader, endpoint_prefix)
     if not config:
         return
-    logger.debug("Registering retry handlers for service: %s", service)
-    session = service.session
+    logger.debug("Registering retry handlers for service: %s", service_name)
     handler = retryhandler.create_retry_handler(
-        config, service.endpoint_prefix)
-    unique_id = 'retry-config-%s' % service.endpoint_prefix
-    session.register('needs-retry.%s' % service.endpoint_prefix,
+        config, endpoint_prefix)
+    unique_id = 'retry-config-%s' % endpoint_prefix
+    session.register('needs-retry.%s' % endpoint_prefix,
                      handler, unique_id=unique_id)
     _register_for_operations(config, session,
-                             service_name=service.endpoint_prefix)
+                             service_name=endpoint_prefix)
 
 
 def _load_retry_config(loader, endpoint_prefix):
     original_config = loader.load_data('aws/_retry')
     retry_config = translate.build_retry_config(
         endpoint_prefix, original_config['retry'],
-        original_config['definitions'])
-    # TODO: I think I'm missing error conditions here.
+        original_config.get('definitions', {}))
     return retry_config
 
 
@@ -380,7 +384,7 @@ BUILTIN_HANDLERS = [
     ('needs-retry.s3.CopyObject', check_for_200_error, REGISTER_FIRST),
     ('needs-retry.s3.CompleteMultipartUpload', check_for_200_error,
      REGISTER_FIRST),
-    ('service-created', register_retries_for_service),
+    ('service-data-loaded', register_retries_for_service),
     ('service-data-loaded', signature_overrides),
     ('before-call.s3.HeadObject', sse_md5),
     ('before-call.s3.GetObject', sse_md5),
