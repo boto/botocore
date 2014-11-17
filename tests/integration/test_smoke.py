@@ -1,9 +1,13 @@
 """Smoke tests to verify basic communication to all AWS services."""
+import mock
+from pprint import pformat
+from nose.tools import assert_equals, assert_true
+
 from botocore import xform_name
 import botocore.session
 from botocore.client import ClientError
-
-from nose.tools import assert_equals, assert_true
+from botocore.vendored.requests import adapters
+from botocore.vendored.requests.exceptions import ConnectionError
 
 
 REGION = 'us-east-1'
@@ -126,3 +130,33 @@ def _make_error_client_call(client, operation_name, kwargs):
     else:
         raise AssertionError("Expected client error was not raised "
                              "for %s.%s" % (client, operation_name))
+
+
+def test_can_retry_request_properly():
+    session = botocore.session.get_session()
+    for service_name in SMOKE_TESTS:
+        client = session.create_client(service_name, region_name=REGION)
+        for operation_name in SMOKE_TESTS[service_name]:
+            kwargs = SMOKE_TESTS[service_name][operation_name]
+            yield (_make_call_with_errors, session, service_name,
+                   REGION, operation_name, kwargs)
+
+
+def _make_call_with_errors(session, service_name,
+                           region_name, operation_name, kwargs):
+    service = session.get_service(service_name)
+    endpoint = service.get_endpoint(region_name)
+    operation = service.get_operation(operation_name)
+    original_send = adapters.HTTPAdapter.send
+    def mock_http_adapter_send(self, *args, **kwargs):
+        if not getattr(self, '_integ_test_error_raised', False):
+            self._integ_test_error_raised = True
+            raise ConnectionError("Simulated ConnectionError raised.")
+        else:
+            return original_send(self, *args, **kwargs)
+    with mock.patch('botocore.vendored.requests.adapters.HTTPAdapter.send',
+                    mock_http_adapter_send):
+        response = operation.call(endpoint, **kwargs)[1]
+        assert_true('Error' not in response,
+                    "Request was not retried properly, "
+                    "received error:\n%s" % pformat(response))
