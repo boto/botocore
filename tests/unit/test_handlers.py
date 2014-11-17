@@ -219,6 +219,8 @@ class TestHandlers(BaseSessionTest):
         handlers.register_retries_for_service(service_data=service_data,
                                               session=session,
                                               service_name='foo')
+        session.register.assert_called_with('needs-retry.foo', mock.ANY,
+                                            unique_id='retry-config-foo')
 
 
 class TestRetryHandlerOrder(BaseSessionTest):
