@@ -174,6 +174,13 @@ def fix_s3_host(event_name, endpoint, request, auth, **kwargs):
         # retried request).  We don't need to perform this
         # customization again.
         return
+    elif _is_get_bucket_location_request(request):
+        # For the GetBucketLocation response, we should not be using
+        # the virtual host style addressing so we can avoid any sigv4
+        # issues.
+        logger.debug("Request is GetBucketLocation operation, not checking "
+                     "for DNS compatibility.")
+        return
     parts = urlsplit(request.url)
     request.auth_path = parts.path
     path_parts = parts.path.split('/')
@@ -200,6 +207,10 @@ def fix_s3_host(event_name, endpoint, request, auth, **kwargs):
         else:
             logger.debug('Not changing URI, bucket is not DNS compatible: %s',
                          bucket_name)
+
+
+def _is_get_bucket_location_request(request):
+    return request.url.endswith('?location')
 
 
 def _allowed_region(region_name):
