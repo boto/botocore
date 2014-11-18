@@ -29,10 +29,42 @@ from botocore.awsrequest import AWSRequest
 from botocore.compat import urljoin, json, quote
 from botocore.utils import percent_encode_sequence
 from botocore.hooks import first_non_none_response
+from botocore.response import StreamingBody
+from botocore import parsers
 
 
 logger = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 60
+
+
+def convert_to_response_dict(http_response, operation_model):
+    """Convert an HTTP response object to a request dict.
+
+    This converts the requests libraries HTTP response object to
+    a dictionary.
+
+    :type http_response: botocore.vendored.requests.model.Response
+    :param http_response: The HTTP response from an AWS service request.
+
+    :rtype: dict
+    :return: A response dictionary which will contain the following keys:
+        * headers (dict)
+        * status_code (int)
+        * body (string of file-like object)
+
+    """
+    response_dict = {
+        'headers': http_response.headers,
+        'status_code': http_response.status_code,
+    }
+    if response_dict['status_code'] >= 300:
+        response_dict['body'] = http_response.content
+    elif operation_model.has_streaming_output:
+        response_dict['body'] = StreamingBody(
+            http_response.raw, response_dict['headers'].get('content-length'))
+    else:
+        response_dict['body'] = http_response.content
+    return response_dict
 
 
 class Endpoint(object):
@@ -48,7 +80,7 @@ class Endpoint(object):
 
     def __init__(self, region_name, host, auth, user_agent, signature_version,
                  endpoint_prefix, event_emitter, proxies=None, verify=True,
-                 timeout=DEFAULT_TIMEOUT):
+                 timeout=DEFAULT_TIMEOUT, response_parser_factory=None):
         self._endpoint_prefix = endpoint_prefix
         self._signature_version = signature_version
         self._event_emitter = event_emitter
@@ -63,6 +95,9 @@ class Endpoint(object):
         self.http_session = Session()
         self.timeout = timeout
         self._lock = threading.Lock()
+        if response_parser_factory is None:
+            response_parser_factory = parsers.ResponseParserFactory()
+        self._response_parser_factory = response_parser_factory
 
     def __repr__(self):
         return '%s(%s)' % (self._endpoint_prefix, self.host)
@@ -158,8 +193,13 @@ class Endpoint(object):
                          exc_info=True)
             return (None, e)
         # This returns the http_response and the parsed_data.
-        return (botocore.response.get_response(operation_model,
-                                               http_response), None)
+        response_dict = convert_to_response_dict(http_response,
+                                                 operation_model)
+        parser = self._response_parser_factory.create_parser(
+            operation_model.metadata['protocol'])
+        return ((http_response, parser.parse(response_dict,
+                                            operation_model.output_shape)),
+                None)
 
     def _needs_retry(self, attempts, operation_model, response=None,
                      caught_exception=None):
