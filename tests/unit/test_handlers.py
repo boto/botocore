@@ -52,19 +52,23 @@ class TestHandlers(BaseSessionTest):
         mock_session.get_scoped_config.return_value = {
             's3': {'signature_version': 's3v4'}
         }
-        kwargs = {'service_data': {'signature_version': 's3'},
+        kwargs = {'service_data': {'metadata': {'signatureVersion': 's3'}},
                   'service_name': 's3', 'session': mock_session}
         self.session.emit(event, **kwargs)
-        self.assertEqual(kwargs['service_data']['signature_version'], 's3v4')
+        self.assertEqual(
+            kwargs['service_data']['metadata']['signatureVersion'],
+            's3v4')
 
     def test_noswitch_to_sigv4(self):
         event = self.session.create_event('service-data-loaded', 's3')
         mock_session = mock.Mock()
         mock_session.get_scoped_config.return_value = {}
-        kwargs = {'service_data': {'signature_version': 's3'},
+        kwargs = {'service_data': {'metadata': {'signatureVersion': 's3'}},
                   'service_name': 's3', 'session': mock_session}
         self.session.emit(event, **kwargs)
-        self.assertEqual(kwargs['service_data']['signature_version'], 's3')
+        self.assertEqual(
+            kwargs['service_data']['metadata']['signatureVersion'],
+            's3')
 
     def test_quote_source_header(self):
         for op in ('UploadPartCopy', 'CopyObject'):
