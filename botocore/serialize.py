@@ -42,6 +42,7 @@ import time
 import base64
 from xml.etree import ElementTree
 
+import datetime
 from dateutil.tz import tzutc
 import six
 
@@ -131,13 +132,38 @@ class Serializer(object):
             timestamp_format = ISO8601_MICRO
         else:
             timestamp_format = ISO8601
-        return value.astimezone(tzutc()).strftime(timestamp_format)
+        if value.tzinfo is None:
+            # I think a case would be made that if no time zone is provided,
+            # we should use the local time.  However, to restore backwards
+            # compat, the previous behavior was to assume UTC, which is
+            # what we're going to do here.
+            datetime_obj = value.replace(tzinfo=tzutc())
+        else:
+            datetime_obj = value.astimezone(tzutc())
+        return datetime_obj.strftime(timestamp_format)
 
     def _timestamp_unixtimestamp(self, value):
         return int(time.mktime(value.timetuple()))
 
     def _timestamp_rfc822(self, value):
         return formatdate(value)
+
+    def _convert_timestamp_to_str(self, value):
+        # This is a general purpose method that handles several cases of
+        # converting the provided value to a string timestamp suitable to be
+        # serialized to an http request. It can handle:
+        # 1) A datetime.datetime object.
+        if isinstance(value, datetime.datetime):
+            datetime_obj = value
+        else:
+            # 2) A string object that's formatted as a timestamp.
+            #    We document this as being an iso8601 timestamp, although
+            #    parse_timestamp is a bit more flexible.
+            datetime_obj = parse_timestamp(value)
+        converter = getattr(
+            self, '_timestamp_%s' % self.TIMESTAMP_FORMAT.lower())
+        final_value = converter(datetime_obj)
+        return final_value
 
     def _get_serialized_name(self, shape, default_name):
         # Returns the serialized name for the shape if it exists.
@@ -233,11 +259,7 @@ class QuerySerializer(Serializer):
         serialized[prefix] = b64_encoded
 
     def _serialize_type_timestamp(self, serialized, value, shape, prefix=''):
-        datetime_obj = parse_timestamp(value)
-        converter = getattr(
-            self, '_timestamp_%s' % self.TIMESTAMP_FORMAT.lower())
-        final_value = converter(datetime_obj)
-        serialized[prefix] = final_value
+        serialized[prefix] = self._convert_timestamp_to_str(value)
 
     def _serialize_type_boolean(self, serialized, value, shape, prefix=''):
         if value:
@@ -544,13 +566,8 @@ class RestXMLSerializer(BaseRestSerializer):
         node.text = encoded_value
 
     def _serialize_type_timestamp(self, xmlnode, params, shape, name):
-        datetime_obj = parse_timestamp(params)
-        converter = getattr(
-            self, '_timestamp_%s' % self.TIMESTAMP_FORMAT.lower())
-
-        final_value = converter(datetime_obj)
         node = ElementTree.SubElement(xmlnode, name)
-        node.text = final_value
+        node.text = self._convert_timestamp_to_str(params)
 
     def _default_serialize(self, xmlnode, params, shape, name):
         node = ElementTree.SubElement(xmlnode, name)
