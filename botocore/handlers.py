@@ -270,7 +270,8 @@ def signature_overrides(service_data, service_name, session, **kwargs):
         logger.debug("Switching signature version for service %s "
                      "to version %s based on config file override.",
                      service_name, signature_version_override)
-        service_data['signature_version'] = signature_version_override
+        service_metadata = service_data['metadata']
+        service_metadata['signatureVersion'] = signature_version_override
 
 
 def add_expect_header(model, params, **kwargs):

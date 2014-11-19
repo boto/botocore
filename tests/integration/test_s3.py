@@ -560,5 +560,26 @@ class TestGetBucketLocationForEUCentral1(BaseS3Test):
         self.assertEqual(response[1]['LocationConstraint'], 'eu-central-1')
 
 
+class TestCanSwitchToSigV4(unittest.TestCase):
+    def setUp(self):
+        self.session = botocore.session.get_session()
+
+    def test_verify_can_switch_sigv4(self):
+        self.session.set_config_variable('s3', {'signature_version': 's3v4'})
+        # We need to verify this option for service/operation objects so we're
+        # not using client objects now (though we should add a test for client
+        # objects eventually).
+        service = self.session.get_service('s3')
+        endpoint = service.get_endpoint('us-east-1')
+        # The set_config_variable should ensure that we use sigv4 for s3.
+        self.assertIsInstance(endpoint.auth, botocore.auth.S3SigV4Auth)
+
+        # And just to be sure, we'll go ahead and make a basic S3
+        # call and verify it works with sigv4.
+        operation = service.get_operation('ListBuckets')
+        http, response = operation.call(endpoint)
+        self.assertEqual(http.status_code, 200)
+
+
 if __name__ == '__main__':
     unittest.main()
