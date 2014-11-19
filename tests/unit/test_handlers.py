@@ -145,22 +145,27 @@ class TestHandlers(BaseSessionTest):
         # object is None.  We need to handle this case.
         handlers.check_for_200_error(None)
 
-    def test_sse_headers(self):
-        prefix = 'x-amz-server-side-encryption-customer-'
+    def test_sse_params(self):
         for op in ('HeadObject', 'GetObject', 'PutObject', 'CopyObject',
                    'CreateMultipartUpload', 'UploadPart', 'UploadPartCopy'):
             event = self.session.create_event(
-                'before-call', 's3', op)
-            params = {'headers': {
-                prefix + 'algorithm': 'foo',
-                prefix + 'key': 'bar'
-                }}
+                'before-parameter-build', 's3', op)
+            params = {'SSECustomerKey': b'bar',
+                      'SSECustomerAlgorithm': 'AES256'}
             self.session.emit(event, params=params, model=mock.Mock())
-            self.assertEqual(
-                params['headers'][prefix + 'key'], 'YmFy')
-            self.assertEqual(
-                params['headers'][prefix + 'key-MD5'],
-                'N7UdGUp1E+RbVvZSTy1R8g==')
+            self.assertEqual(params['SSECustomerKey'], 'YmFy')
+            self.assertEqual(params['SSECustomerKeyMD5'],
+                             'N7UdGUp1E+RbVvZSTy1R8g==')
+
+    def test_sse_params_as_str(self):
+        event = self.session.create_event(
+            'before-parameter-build', 's3', 'PutObject')
+        params = {'SSECustomerKey': 'bar',
+                  'SSECustomerAlgorithm': 'AES256'}
+        self.session.emit(event, params=params, model=mock.Mock())
+        self.assertEqual(params['SSECustomerKey'], 'YmFy')
+        self.assertEqual(params['SSECustomerKeyMD5'],
+                            'N7UdGUp1E+RbVvZSTy1R8g==')
 
     def test_fix_s3_host_initial(self):
         endpoint = mock.Mock(region_name='us-west-2')

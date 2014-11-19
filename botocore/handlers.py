@@ -121,16 +121,21 @@ def sse_md5(params, **kwargs):
     encryption key. This handler does both if the MD5 has not been set by
     the caller.
     """
-    prefix = 'x-amz-server-side-encryption-customer-'
-    key = prefix + 'key'
-    key_md5 = prefix + 'key-MD5'
-    if key in params['headers'] and not key_md5 in params['headers']:
-        original = six.b(params['headers'][key])
-        md5 = hashlib.md5()
-        md5.update(original)
-        value = base64.b64encode(md5.digest()).decode('utf-8')
-        params['headers'][key] = base64.b64encode(original).decode('utf-8')
-        params['headers'][key_md5] = value
+    if not _needs_s3_sse_customization(params):
+        return
+    key_as_bytes = params['SSECustomerKey']
+    if isinstance(key_as_bytes, six.text_type):
+        key_as_bytes = key_as_bytes.encode('utf-8')
+    key_md5_str = base64.b64encode(
+        hashlib.md5(key_as_bytes).digest()).decode('utf-8')
+    key_b64_encoded = base64.b64encode(key_as_bytes).decode('utf-8')
+    params['SSECustomerKey'] = key_b64_encoded
+    params['SSECustomerKeyMD5'] = key_md5_str
+
+
+def _needs_s3_sse_customization(params):
+    return (params.get('SSECustomerKey') is not None and
+            'SSECustomerKeyMD5' not in params)
 
 
 def check_dns_name(bucket_name):
@@ -397,13 +402,13 @@ BUILTIN_HANDLERS = [
      REGISTER_FIRST),
     ('service-data-loaded', register_retries_for_service),
     ('service-data-loaded', signature_overrides),
-    ('before-call.s3.HeadObject', sse_md5),
-    ('before-call.s3.GetObject', sse_md5),
-    ('before-call.s3.PutObject', sse_md5),
-    ('before-call.s3.CopyObject', sse_md5),
-    ('before-call.s3.CreateMultipartUpload', sse_md5),
-    ('before-call.s3.UploadPart', sse_md5),
-    ('before-call.s3.UploadPartCopy', sse_md5),
+    ('before-parameter-build.s3.HeadObject', sse_md5),
+    ('before-parameter-build.s3.GetObject', sse_md5),
+    ('before-parameter-build.s3.PutObject', sse_md5),
+    ('before-parameter-build.s3.CopyObject', sse_md5),
+    ('before-parameter-build.s3.CreateMultipartUpload', sse_md5),
+    ('before-parameter-build.s3.UploadPart', sse_md5),
+    ('before-parameter-build.s3.UploadPartCopy', sse_md5),
     ('before-parameter-build.ec2.RunInstances', base64_encode_user_data),
     ('before-parameter-build.autoscaling.CreateLaunchConfiguration',
      base64_encode_user_data),

@@ -19,6 +19,7 @@ from collections import defaultdict
 import tempfile
 import shutil
 import threading
+import six
 try:
     from itertools import izip_longest as zip_longest
 except ImportError:
@@ -558,6 +559,56 @@ class TestGetBucketLocationForEUCentral1(BaseS3Test):
         us_east_1 = self.service.get_endpoint('us-east-1')
         response = operation.call(us_east_1, Bucket=self.bucket_name)
         self.assertEqual(response[1]['LocationConstraint'], 'eu-central-1')
+
+
+class TestSSEKeyParamValidation(unittest.TestCase):
+    def setUp(self):
+        self.session = botocore.session.get_session()
+        self.client = self.session.create_client('s3', 'us-west-2')
+        self.bucket_name = 'botocoretest%s-%s' % (
+            int(time.time()), random.randint(1, 1000))
+        self.client.create_bucket(
+            Bucket=self.bucket_name,
+            CreateBucketConfiguration={
+                'LocationConstraint': 'us-west-2',
+            }
+        )
+        self.addCleanup(self.client.delete_bucket, Bucket=self.bucket_name)
+
+    def test_make_request_with_sse(self):
+        key_bytes = os.urandom(32)
+        # Obviously a bad key here, but we just want to ensure we can use
+        # a str/unicode type as a key.
+        key_str = 'abcd' * 8
+
+        # Put two objects with an sse key, one with random bytes,
+        # one with str/unicode.  Then verify we can GetObject() both
+        # objects.
+        self.client.put_object(
+            Bucket=self.bucket_name, Key='foo.txt',
+            Body=six.BytesIO(b'mycontents'), SSECustomerAlgorithm='AES256',
+            SSECustomerKey=key_bytes)
+        self.addCleanup(self.client.delete_object,
+                        Bucket=self.bucket_name, Key='foo.txt')
+        self.client.put_object(
+            Bucket=self.bucket_name, Key='foo2.txt',
+            Body=six.BytesIO(b'mycontents2'), SSECustomerAlgorithm='AES256',
+            SSECustomerKey=key_str)
+        self.addCleanup(self.client.delete_object,
+                        Bucket=self.bucket_name, Key='foo2.txt')
+
+        self.assertEqual(
+            self.client.get_object(Bucket=self.bucket_name,
+                                   Key='foo.txt',
+                                   SSECustomerAlgorithm='AES256',
+                                   SSECustomerKey=key_bytes)['Body'].read(),
+            b'mycontents')
+        self.assertEqual(
+            self.client.get_object(Bucket=self.bucket_name,
+                                   Key='foo2.txt',
+                                   SSECustomerAlgorithm='AES256',
+                                   SSECustomerKey=key_str)['Body'].read(),
+            b'mycontents2')
 
 
 if __name__ == '__main__':
