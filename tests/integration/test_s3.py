@@ -19,6 +19,7 @@ from collections import defaultdict
 import tempfile
 import shutil
 import threading
+import mock
 try:
     from itertools import izip_longest as zip_longest
 except ImportError:
@@ -562,10 +563,25 @@ class TestGetBucketLocationForEUCentral1(BaseS3Test):
 
 class TestCanSwitchToSigV4(unittest.TestCase):
     def setUp(self):
+        self.environ = {}
+        self.environ_patch = mock.patch('os.environ', self.environ)
+        self.environ_patch.start()
         self.session = botocore.session.get_session()
+        self.tempdir = tempfile.mkdtemp()
+        self.config_filename = os.path.join(self.tempdir, 'config_file')
+        self.environ['AWS_CONFIG_FILE'] = self.config_filename
+
+    def tearDown(self):
+        self.environ_patch.stop()
+        shutil.rmtree(self.tempdir)
 
     def test_verify_can_switch_sigv4(self):
-        self.session.set_config_variable('s3', {'signature_version': 's3v4'})
+        # Verify we can turn on sigv4 from a config file.
+        with open(self.config_filename, 'w') as f:
+            f.write(
+                '[default]\n'
+                's3 =\n'
+                '  signature_version = s3v4\n')
         # We need to verify this option for service/operation objects so we're
         # not using client objects now (though we should add a test for client
         # objects eventually).
