@@ -32,6 +32,7 @@ from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.loaders import Loader
 from botocore.provider import get_provider
+from botocore.parsers import ResponseParserFactory
 from botocore import regions
 from botocore.model import ServiceModel
 import botocore.service
@@ -175,6 +176,7 @@ class Session(object):
         self._register_data_loader()
         self._register_endpoint_resolver()
         self._register_event_emitter()
+        self._register_response_parser_factory()
 
     def _register_event_emitter(self):
         self._components.register_component('event_emitter', self._events)
@@ -193,6 +195,10 @@ class Session(object):
         self._components.lazy_register_component(
             'endpoint_resolver',
             lambda:  regions.EndpointResolver(self.get_data('aws/_endpoints')))
+
+    def _register_response_parser_factory(self):
+        self._components.register_component('response_parser_factory',
+                                            ResponseParserFactory())
 
     def _reset_components(self):
         self._register_components()
