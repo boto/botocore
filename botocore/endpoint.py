@@ -40,7 +40,7 @@ DEFAULT_TIMEOUT = 60
 def convert_to_response_dict(http_response, operation_model):
     """Convert an HTTP response object to a request dict.
 
-    This converts the requests libraries HTTP response object to
+    This converts the requests library's HTTP response object to
     a dictionary.
 
     :type http_response: botocore.vendored.requests.model.Response
@@ -50,7 +50,7 @@ def convert_to_response_dict(http_response, operation_model):
     :return: A response dictionary which will contain the following keys:
         * headers (dict)
         * status_code (int)
-        * body (string of file-like object)
+        * body (string or file-like object)
 
     """
     response_dict = {
