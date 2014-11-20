@@ -106,9 +106,29 @@ LOG = logging.getLogger(__name__)
 DEFAULT_TIMESTAMP_PARSER = parse_timestamp
 
 
-def create_parser(protocol_name):
-    parser_cls = PROTOCOL_PARSERS[protocol_name]
-    return parser_cls()
+class ResponseParserFactory(object):
+    def __init__(self):
+        self._defaults = {}
+
+    def set_parser_defaults(self, **kwargs):
+        """Set default arguments when a parser instance is created.
+
+        You can specify any kwargs that are allowed by a ResponseParser
+        class.  There are currently two arguments:
+
+            * timestamp_parser - A callable that can parse a timetsamp string
+            * blob_parser - A callable that can parse a blob type
+
+        """
+        self._defaults.update(kwargs)
+
+    def create_parser(self, protocol_name):
+        parser_cls = PROTOCOL_PARSERS[protocol_name]
+        return parser_cls(**self._defaults)
+
+
+def create_parser(protocol):
+    return ResponseParserFactory().create_parser(protocol)
 
 
 def _text_content(func):
@@ -145,10 +165,19 @@ class ResponseParser(object):
     """
     DEFAULT_ENCODING = 'utf-8'
 
-    def __init__(self, timestamp_parser=None):
+    def __init__(self, timestamp_parser=None, blob_parser=None):
         if timestamp_parser is None:
             timestamp_parser = DEFAULT_TIMESTAMP_PARSER
         self._timestamp_parser = timestamp_parser
+        if blob_parser is None:
+            blob_parser = self._default_blob_parser
+        self._blob_parser = blob_parser
+
+    def _default_blob_parser(self, value):
+        # Blobs are always returned as bytes type (this matters on python3).
+        # We don't decode this to a str because it's entirely possible that the
+        # blob contains binary data that actually can't be decoded.
+        return base64.b64decode(value)
 
     def parse(self, response, shape):
         """Parse the HTTP response given a shape.
@@ -206,8 +235,9 @@ class ResponseParser(object):
 
 
 class BaseXMLResponseParser(ResponseParser):
-    def __init__(self, timestamp_parser=None):
-        super(BaseXMLResponseParser, self).__init__(timestamp_parser)
+    def __init__(self, timestamp_parser=None, blob_parser=None):
+        super(BaseXMLResponseParser, self).__init__(timestamp_parser,
+                                                    blob_parser)
         self._namespace_re = re.compile('{.*}')
 
     def _handle_map(self, shape, node):
@@ -334,6 +364,10 @@ class BaseXMLResponseParser(ResponseParser):
     def _handle_string(self, shape, text):
         return text
 
+    @_text_content
+    def _handle_blob(self, shape, text):
+        return self._blob_parser(text)
+
     _handle_character = _handle_string
     _handle_double = _handle_float
     _handle_long = _handle_integer
@@ -383,12 +417,6 @@ class QueryParser(BaseXMLResponseParser):
 
     def _handle_string(self, shape, node):
         return node.text
-
-    def _handle_blob(self, shape, node):
-        # Blobs are always returned as bytes type (this matters on python3).
-        # We don't decode this to a str because it's entirely possible that the
-        # blob contains binary data that actually can't be decoded.
-        return base64.b64decode(node.text)
 
     _handle_character = _handle_string
 
@@ -450,7 +478,7 @@ class BaseJSONParser(ResponseParser):
         return parsed
 
     def _handle_blob(self, shape, value):
-        return base64.b64decode(value)
+        return self._blob_parser(value)
 
     def _handle_timestamp(self, shape, value):
         return self._timestamp_parser(value)
@@ -670,9 +698,6 @@ class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
             # Other rest-xml serivces:
             parsed['ResponseMetadata'] = {'RequestId': parsed.pop('RequestId')}
         return parsed
-
-    def _handle_blob(self, shape, node):
-        return base64.b64decode(node.text)
 
 
 PROTOCOL_PARSERS = {

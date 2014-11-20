@@ -15,6 +15,7 @@ from tests import unittest, BaseSessionTest, create_session
 
 from mock import Mock, patch, sentinel
 from botocore.vendored.requests import ConnectionError
+from botocore.vendored.requests.models import Response
 import six
 
 from botocore.endpoint import get_endpoint, Endpoint, DEFAULT_TIMEOUT
@@ -128,22 +129,26 @@ class TestEndpointBase(unittest.TestCase):
         self.service.session.emit_first_non_none_response.return_value = None
         self.op = Mock()
         self.op.has_streaming_output = False
+        self.op.metadata = {'protocol': 'json'}
         self.signature_version = True
         self.auth = Mock()
         self.event_emitter = Mock()
         self.event_emitter.emit.return_value = []
+        self.factory_patch = patch(
+            'botocore.parsers.ResponseParserFactory')
+        self.factory = self.factory_patch.start()
         self.endpoint = Endpoint(
             'us-west-2', 'https://ec2.us-west-2.amazonaws.com/',
             auth=self.auth, user_agent='botoore', signature_version='v4',
             endpoint_prefix='ec2', event_emitter=self.event_emitter)
         self.http_session = Mock()
-        self.http_session.send.return_value = sentinel.HTTP_RETURN_VALUE
+        self.http_session.send.return_value = Mock(
+            status_code=200, headers={}, content=b'{"Foo": "bar"}',
+        )
         self.endpoint.http_session = self.http_session
-        self.get_response_patch = patch('botocore.response.get_response')
-        self.get_response = self.get_response_patch.start()
 
     def tearDown(self):
-        self.get_response_patch.stop()
+        self.factory_patch.stop()
 
 
 class TestEndpointFeatures(TestEndpointBase):
@@ -204,6 +209,8 @@ class TestRetryInterface(TestEndpointBase):
     def test_retry_events_are_emitted(self):
         op = Mock()
         op.name = 'DescribeInstances'
+        op.metadata = {'protocol': 'query'}
+        op.has_streaming_output = False
         self.endpoint.make_request(op, request_dict())
         call_args = self.event_emitter.emit.call_args
         self.assertEqual(call_args[0][0],
@@ -212,6 +219,7 @@ class TestRetryInterface(TestEndpointBase):
     def test_retry_events_can_alter_behavior(self):
         op = Mock()
         op.name = 'DescribeInstances'
+        op.metadata = {'protocol': 'json'}
         self.event_emitter.emit.side_effect = [
             [], # For initially preparing request
             [(None, 0)],  # Check if retry needed. Retry needed.
@@ -274,6 +282,7 @@ class TestS3ResetStreamOnRetry(TestEndpointBase):
         body = RecordStreamResets('foobar')
         op.name = 'PutObject'
         op.has_streaming_output = True
+        op.metadata = {'protocol': 'rest-xml'}
         request = request_dict()
         request['body'] = body
         self.event_emitter.emit.side_effect = [
