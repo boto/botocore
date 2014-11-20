@@ -19,14 +19,14 @@ import threading
 
 from botocore.vendored.requests.sessions import Session
 from botocore.vendored.requests.utils import get_environ_proxies
-import six
 
 import botocore.response
 import botocore.exceptions
 from botocore.auth import AUTH_TYPE_MAPS
-from botocore.exceptions import UnknownSignatureVersionError, UnknownEndpointError
+from botocore.exceptions import UnknownSignatureVersionError
+from botocore.exceptions import UnknownEndpointError
 from botocore.awsrequest import AWSRequest
-from botocore.compat import urljoin, json, quote
+from botocore.compat import urljoin
 from botocore.utils import percent_encode_sequence
 from botocore.hooks import first_non_none_response
 from botocore.response import StreamingBody
@@ -166,8 +166,10 @@ class Endpoint(object):
 
     def _send_request(self, request, operation_model):
         attempts = 1
-        response, exception = self._get_response(request, operation_model, attempts)
-        while self._needs_retry(attempts, operation_model, response, exception):
+        response, exception = self._get_response(
+            request, operation_model, attempts)
+        while self._needs_retry(attempts, operation_model,
+                                response, exception):
             attempts += 1
             # If there is a stream associated with the request, we need
             # to reset it before attempting to send the request again.
@@ -198,7 +200,7 @@ class Endpoint(object):
         parser = self._response_parser_factory.create_parser(
             operation_model.metadata['protocol'])
         return ((http_response, parser.parse(response_dict,
-                                            operation_model.output_shape)),
+                                             operation_model.output_shape)),
                 None)
 
     def _needs_retry(self, attempts, operation_model, response=None,
@@ -235,7 +237,6 @@ def get_endpoint(service, region_name, endpoint_url, verify=None):
     credentials = session.get_credentials()
     event_emitter = session.get_component('event_emitter')
     user_agent = session.user_agent()
-    auth = None
     return get_endpoint_complex(service_name, endpoint_prefix,
                                 signature_version, credentials,
                                 region_name, endpoint_url, verify, user_agent,
