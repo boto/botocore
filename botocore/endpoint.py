@@ -244,7 +244,8 @@ def get_endpoint(service, region_name, endpoint_url, verify=None):
 
 def get_endpoint_complex(service_name, endpoint_prefix, signature_version,
                          credentials, region_name, endpoint_url, verify,
-                         user_agent, event_emitter):
+                         user_agent, event_emitter,
+                         response_parser_factory=None):
     auth = None
     if signature_version is not None:
         auth = _get_auth(signature_version,
@@ -253,13 +254,15 @@ def get_endpoint_complex(service_name, endpoint_prefix, signature_version,
                          region_name=region_name)
     proxies = _get_proxies(endpoint_url)
     verify = _get_verify_value(verify)
-    return Endpoint(region_name, endpoint_url, auth=auth,
-               user_agent=user_agent,
-               endpoint_prefix=endpoint_prefix,
-               event_emitter=event_emitter,
-               signature_version=signature_version,
-               proxies=proxies,
-               verify=verify)
+    return Endpoint(
+        region_name, endpoint_url, auth=auth,
+        user_agent=user_agent,
+        endpoint_prefix=endpoint_prefix,
+        event_emitter=event_emitter,
+        signature_version=signature_version,
+        proxies=proxies,
+        verify=verify,
+        response_parser_factory=response_parser_factory)
 
 
 def _get_verify_value(verify):
@@ -301,7 +304,8 @@ class EndpointCreator(object):
         self._user_agent = user_agent
 
     def create_endpoint(self, service_model, region_name=None, is_secure=True,
-                        endpoint_url=None, verify=None, credentials=None):
+                        endpoint_url=None, verify=None, credentials=None,
+                        response_parser_factory=None):
         if region_name is None:
             region_name = self._configured_region
         # Use the endpoint resolver heuristics to build the endpoint url.
@@ -339,10 +343,11 @@ class EndpointCreator(object):
             final_endpoint_url = endpoint['uri']
         return self._get_endpoint(service_model, region_name,
                                   signature_version, final_endpoint_url,
-                                  verify, credentials)
+                                  verify, credentials, response_parser_factory)
 
     def _get_endpoint(self, service_model, region_name, signature_version,
-                      endpoint_url, verify, user_provided_creds):
+                      endpoint_url, verify, user_provided_creds,
+                      response_parser_factory):
         service_name = service_model.signing_name
         endpoint_prefix = service_model.endpoint_prefix
         credentials = self._credentials
@@ -356,4 +361,5 @@ class EndpointCreator(object):
         return get_endpoint_complex(service_name, endpoint_prefix,
                                     signature_version, credentials,
                                     region_name, endpoint_url,
-                                    verify, user_agent, event_emitter)
+                                    verify, user_agent, event_emitter,
+                                    response_parser_factory)
