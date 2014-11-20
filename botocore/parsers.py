@@ -235,8 +235,9 @@ class ResponseParser(object):
 
 
 class BaseXMLResponseParser(ResponseParser):
-    def __init__(self, timestamp_parser=None):
-        super(BaseXMLResponseParser, self).__init__(timestamp_parser)
+    def __init__(self, timestamp_parser=None, blob_parser=None):
+        super(BaseXMLResponseParser, self).__init__(timestamp_parser,
+                                                    blob_parser)
         self._namespace_re = re.compile('{.*}')
 
     def _handle_map(self, shape, node):
