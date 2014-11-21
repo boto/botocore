@@ -6,6 +6,7 @@
                               "ImageId": "ami-1a2b3c4d",
                               "InstanceType": "m1.small",
                               "KeyName": "gsg-keypair",
+                              "Monitoring": {"Enabled": false},
                               "SecurityGroups": [{"GroupId": "sg-1a2b3c4d",
                                                   "GroupName": "default"}]},
       "LaunchedAvailabilityZone": "us-east-1c",

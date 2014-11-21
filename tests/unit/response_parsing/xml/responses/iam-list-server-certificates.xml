@@ -3,31 +3,25 @@
     <IsTruncated>false</IsTruncated>
     <ServerCertificateMetadataList>
       <member>
-        <ServerCertificateMetadata>
-          <ServerCertificateName>ProdServerCert</ServerCertificateName>
-          <Path>/company/servercerts/</Path>
-          <Arn>arn:aws:iam::123456789012:server-certificate/company/servercerts/ProdServerCert</Arn>
-          <UploadDate>2010-05-08T01:02:03.004Z</UploadDate>
-          <ServerCertificateId>ASCACKCEVSQ6CEXAMPLE1</ServerCertificateId>
-        </ServerCertificateMetadata>
+        <ServerCertificateName>ProdServerCert</ServerCertificateName>
+        <Path>/company/servercerts/</Path>
+        <Arn>arn:aws:iam::123456789012:server-certificate/company/servercerts/ProdServerCert</Arn>
+        <UploadDate>2010-05-08T01:02:03.004Z</UploadDate>
+        <ServerCertificateId>ASCACKCEVSQ6CEXAMPLE1</ServerCertificateId>
       </member>
       <member>
-        <ServerCertificateMetadata>
-          <ServerCertificateName>BetaServerCert</ServerCertificateName>
-          <Path>/company/servercerts/</Path>
-          <Arn>arn:aws:iam::123456789012:server-certificate/company/servercerts/BetaServerCert</Arn>
-          <UploadDate>2010-05-08T02:03:01.004Z</UploadDate>
-          <ServerCertificateId>ASCACKCEVSQ6CEXAMPLE2</ServerCertificateId>
-        </ServerCertificateMetadata>
+        <ServerCertificateName>BetaServerCert</ServerCertificateName>
+        <Path>/company/servercerts/</Path>
+        <Arn>arn:aws:iam::123456789012:server-certificate/company/servercerts/BetaServerCert</Arn>
+        <UploadDate>2010-05-08T02:03:01.004Z</UploadDate>
+        <ServerCertificateId>ASCACKCEVSQ6CEXAMPLE2</ServerCertificateId>
       </member>
       <member>
-        <ServerCertificateMetadata>
-          <ServerCertificateName>TestServerCert</ServerCertificateName>
-          <Path>/company/servercerts/</Path>
-          <Arn>arn:aws:iam::123456789012:server-certificate/company/servercerts/TestServerCert</Arn>
-          <UploadDate>2010-05-08T03:01:02.004Z</UploadDate>
-          <ServerCertificateId>ASCACKCEVSQ6CEXAMPLE3</ServerCertificateId>
-        </ServerCertificateMetadata>
+        <ServerCertificateName>TestServerCert</ServerCertificateName>
+        <Path>/company/servercerts/</Path>
+        <Arn>arn:aws:iam::123456789012:server-certificate/company/servercerts/TestServerCert</Arn>
+        <UploadDate>2010-05-08T03:01:02.004Z</UploadDate>
+        <ServerCertificateId>ASCACKCEVSQ6CEXAMPLE3</ServerCertificateId>
       </member>
     </ServerCertificateMetadataList>
   </ListServerCertificatesResult>

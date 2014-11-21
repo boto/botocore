@@ -17,10 +17,11 @@ from tests import BaseSessionTest
 from mock import Mock, sentinel
 
 import botocore.session
-from botocore.exceptions import MissingParametersError, ValidationError
-from botocore.exceptions import UnknownParameterError
-from botocore.exceptions import UnknownKeyError
+from botocore.exceptions import ParamValidationError
 
+
+# The param validation is tested in test_validate.py, but
+# these tests verify it's hooked up through the operation object.
 
 class TestSESOperations(BaseSessionTest):
 
@@ -31,27 +32,26 @@ class TestSESOperations(BaseSessionTest):
 
     def test_send_email_missing_required_parameters(self):
         with self.assertRaisesRegexp(
-                MissingParametersError,
-                ('The following required parameters are missing '
-                 'for Operation:SendEmail: source, destination, message')):
+                ParamValidationError,
+                'Parameter validation failed.*'):
             self.op.build_parameters()
 
     def test_send_email_validates_structure(self):
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(ParamValidationError):
             self.op.build_parameters(
                 source='foo@example.com',
                 destination={'ToAddresses': ['bar@examplecom']},
                 message='bar')
 
     def test_send_email_with_required_inner_member(self):
-        with self.assertRaises(MissingParametersError):
+        with self.assertRaises(ParamValidationError):
             self.op.build_parameters(
                 source='foo@example.com',
                 destination={'ToAddresses': ['bar@examplecom']},
                 message={})
 
     def test_send_email_with_unknown_params(self):
-        with self.assertRaises(UnknownParameterError):
+        with self.assertRaises(ParamValidationError):
             self.op.build_parameters(
                 source='foo@example.com',
                 to={'ToAddresses': ['bar@examplecom']},
@@ -59,7 +59,7 @@ class TestSESOperations(BaseSessionTest):
 
 
     def test_send_email_with_missing_inner_member(self):
-        with self.assertRaises(MissingParametersError):
+        with self.assertRaises(ParamValidationError):
             self.op.build_parameters(source='foo@example.com',
                                      destination={'ToAddresses': ['bar@examplecom']},
                                      message={'Subject': {'Data': 'foo'},
@@ -68,7 +68,7 @@ class TestSESOperations(BaseSessionTest):
                                               'Body': {'Text': {}}})
 
     def test_send_email_with_unknown_inner_member(self):
-        with self.assertRaises(UnknownKeyError):
+        with self.assertRaises(ParamValidationError):
             self.op.build_parameters(
                 source='foo@example.com',
                 destination={'ToAddresses': ['bar@examplecom']},

@@ -68,6 +68,5 @@
         }
     ], 
     "IsTruncated": false, 
-    "VersionIdMarker": null, 
-    "CommonPrefixes": []
+    "VersionIdMarker": null
 }

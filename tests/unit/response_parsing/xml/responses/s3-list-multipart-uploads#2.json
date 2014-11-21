@@ -1,6 +1,5 @@
 {
     "UploadIdMarker": null, 
-    "CommonPrefixes": [], 
     "ResponseMetadata": {}, 
     "NextKeyMarker": "my-movie.m2ts", 
     "Bucket": "bucket", 

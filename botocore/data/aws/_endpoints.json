@@ -4,7 +4,10 @@
       "uri":"{scheme}://{service}.{region}.amazonaws.com.cn",
       "constraints":[
         ["region", "startsWith", "cn-"]
-      ]
+      ],
+      "properties": {
+          "signatureVersion": "v4"
+      }
     },
     {
       "uri":"{scheme}://{service}.{region}.amazonaws.com",
@@ -79,15 +82,30 @@
     },
     {
       "uri":"{scheme}://{service}.{region}.amazonaws.com.cn",
-      "constraints":[
+      "constraints": [
         ["region", "startsWith", "cn-"]
-      ]
+      ],
+      "properties": {
+        "signatureVersion": "s3v4"
+      }
     },
     {
       "uri":"{scheme}://{service}-{region}.amazonaws.com",
       "constraints": [
-        ["region", "notEquals", null]
+        ["region", "oneOf", ["us-east-1", "ap-northeast-1", "sa-east-1",
+                             "ap-southeast-1", "ap-southeast-2", "us-west-2",
+                             "us-west-1", "eu-west-1", "us-gov-west-1",
+                             "fips-us-gov-west-1"]]
       ]
+    },
+    {
+      "uri":"{scheme}://{service}.{region}.amazonaws.com",
+      "constraints": [
+        ["region", "notEquals", null]
+      ],
+      "properties": {
+        "signatureVersion": "s3v4"
+      }
     }
   ],
   "rds":[
