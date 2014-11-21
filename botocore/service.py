@@ -16,11 +16,11 @@ import logging
 
 from .endpoint import EndpointCreator
 from .operation import Operation
-from .waiter import Waiter
 from .exceptions import ServiceNotInRegionError, NoRegionError
 from .exceptions import UnknownEndpointError
 from .model import ServiceModel, OperationModel
 from .translate import denormalize_waiters
+from . import waiter
 
 
 logger = logging.getLogger(__name__)
@@ -39,7 +39,6 @@ class Service(object):
         optional value is an endpoint for that region.
     :ivar protocols: A list of protocols supported by the service.
     """
-    WAITER_CLASS = Waiter
 
     def __init__(self, session, provider, service_name,
                  path='/', port=None, api_version=None):
@@ -48,7 +47,7 @@ class Service(object):
             service_name,
             api_version=None
         )
-        self._model = ServiceModel(sdata)
+        self._model = session.get_service_model(service_name)
         self.__dict__.update(sdata)
         self._operations_data = self.__dict__.pop('operations')
         self._operations = None
@@ -152,13 +151,16 @@ class Service(object):
         resolver = self.session.get_component('endpoint_resolver')
         region = self.session.get_config_variable('region')
         event_emitter = self.session.get_component('event_emitter')
+        response_parser_factory = self.session.get_component(
+            'response_parser_factory')
         model = self._model
         credentials = self.session.get_credentials()
         user_agent= self.session.user_agent()
         endpoint_creator = EndpointCreator(resolver, region, event_emitter,
                                            credentials, user_agent)
-        return endpoint_creator.create_endpoint(self._model, region_name, is_secure,
-                                                endpoint_url, verify)
+        return endpoint_creator.create_endpoint(
+            self._model, region_name, is_secure, endpoint_url, verify,
+            response_parser_factory=response_parser_factory)
 
     def get_operation(self, operation_name):
         """
@@ -175,20 +177,19 @@ class Service(object):
                 return operation
         return None
 
-    def get_waiter(self, waiter_name):
+    def get_waiter(self, waiter_name, endpoint):
         try:
-            config = self._load_waiter_config()[waiter_name]
+            config = self._load_waiter_config()
         except Exception as e:
             raise ValueError("Waiter does not exist: %s" % waiter_name)
-        operation = self.get_operation(config['operation'])
-        return self.WAITER_CLASS(waiter_name, operation, config)
+        return waiter.create_waiter_from_legacy(waiter_name, config,
+                                                self, endpoint)
 
     def _load_waiter_config(self):
         loader = self.session.get_component('data_loader')
         api_version = self.api_version
         config = loader.load_data('aws/%s/%s.waiters' % (
             self.service_name, api_version))
-        config = denormalize_waiters(config['waiters'])
         return config
 
 

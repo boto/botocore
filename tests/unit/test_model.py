@@ -1,7 +1,5 @@
 from tests import unittest
 
-from nose.tools import assert_raises
-
 from botocore import model
 
 
@@ -9,9 +7,8 @@ def test_missing_model_attribute_raises_exception():
     # We're using a nose test generator here to cut down
     # on the duplication.  The property names below
     # all have the same test logic.
-    service_model = model.ServiceModel({'metadata': {}})
-    property_names = ['endpoint_prefix', 'signing_name', 'api_version',
-                      'protocol']
+    service_model = model.ServiceModel({'metadata': {'endpointPrefix': 'foo'}})
+    property_names = ['api_version', 'protocol']
 
     def _test_attribute_raise_exception(attr_name):
         try:
@@ -24,8 +21,9 @@ def test_missing_model_attribute_raises_exception():
                                  "be raised, but %s was raised instead" %
                                  (e.__class__))
         else:
-            raise AssertionError("Expected UndefinedModelAttributeError to "
-                                 "be raised, but no exception was raised.")
+            raise AssertionError(
+                "Expected UndefinedModelAttributeError to "
+                "be raised, but no exception was raised for: %s" % attr_name)
 
     for name in property_names:
         yield _test_attribute_raise_exception, name
@@ -35,7 +33,8 @@ class TestServiceModel(unittest.TestCase):
 
     def setUp(self):
         self.model = {
-            'metadata': {'protocol': 'query'},
+            'metadata': {'protocol': 'query',
+                         'endpointPrefix': 'endpoint-prefix'},
             'documentation': '',
             'operations': {},
             'shapes': {}
@@ -47,15 +46,26 @@ class TestServiceModel(unittest.TestCase):
         # through the service model object.
         self.assertEqual(self.service_model.metadata.get('protocol'), 'query')
 
+    def test_service_name_can_be_overriden(self):
+        service_model = model.ServiceModel(self.model,
+                                           service_name='myservice')
+        self.assertEqual(service_model.service_name, 'myservice')
+
+    def test_service_name_defaults_to_endpoint_prefix(self):
+        self.assertEqual(self.service_model.service_name, 'endpoint-prefix')
+
     def test_operation_does_not_exist(self):
         with self.assertRaises(model.OperationNotFoundError):
             self.service_model.operation_model('NoExistOperation')
+
+    def test_signing_name_defaults_to_endpoint_prefix(self):
+        self.assertEqual(self.service_model.signing_name, 'endpoint-prefix')
 
 
 class TestOperationModelFromService(unittest.TestCase):
     def setUp(self):
         self.model = {
-            'metadata': {'protocol': 'query'},
+            'metadata': {'protocol': 'query', 'endpointPrefix': 'foo'},
             'documentation': '',
             'operations': {
                 'OperationName': {
@@ -130,7 +140,7 @@ class TestOperationModelFromService(unittest.TestCase):
 
     def test_streaming_output_for_operation(self):
         self.model = {
-            'metadata': {'protocol': 'query'},
+            'metadata': {'protocol': 'query', 'endpointPrefix': 'foo'},
             'documentation': '',
             'operations': {
                 'OperationName': {
@@ -167,7 +177,7 @@ class TestOperationModelFromService(unittest.TestCase):
 
     def test_payload_thats_not_streaming(self):
         self.model = {
-            'metadata': {'protocol': 'query'},
+            'metadata': {'protocol': 'query', 'endpointPrefix': 'foo'},
             'operations': {
                 'OperationName': {
                     'name': 'OperationName',
@@ -231,7 +241,7 @@ class TestDeepMerge(unittest.TestCase):
         # in the StrToStrMap.
         # The member trait should have precedence.
         self.assertEqual(map_merged.serialization,
-                          # member beats the definition.
+                         # member beats the definition.
                          {'name': 'Attribute',
                           # From the definition.
                           'flattened': True,})

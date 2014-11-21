@@ -806,7 +806,7 @@
           "documentation":"<p> The request would result in the user exceeding the allowed number of cluster snapshots. </p>"
         }
       ],
-      "documentation":"<p> Deletes a previously provisioned cluster. A successful response from the web service indicates that the request was received correctly. If a final cluster snapshot is requested the status of the cluster will be \"final-snapshot\" while the snapshot is being taken, then it's \"deleting\" once Amazon Redshift begins deleting the cluster. Use <a>DescribeClusters</a> to monitor the status of the deletion. The delete operation cannot be canceled or reverted once submitted. For more information about managing clusters, go to <a href=\"http://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html\">Amazon Redshift Clusters</a> in the <i>Amazon Redshift Management Guide</i> . </p>"
+      "documentation":"<p> Deletes a previously provisioned cluster. A successful response from the web service indicates that the request was received correctly. Use <a>DescribeClusters</a> to monitor the status of the deletion. The delete operation cannot be canceled or reverted once submitted. For more information about managing clusters, go to <a href=\"http://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html\">Amazon Redshift Clusters</a> in the <i>Amazon Redshift Management Guide</i> . </p> <p> If you want to shut down the cluster and retain it for future use, set <i>SkipFinalClusterSnapshot</i> to <code>false</code> and specify a name for <i>FinalClusterSnapshotIdentifier</i>. You can later restore this snapshot to resume using the cluster. If a final cluster snapshot is requested, the status of the cluster will be \"final-snapshot\" while the snapshot is being taken, then it's \"deleting\" once Amazon Redshift begins deleting the cluster. </p> <p> For more information about managing clusters, go to <a href=\"http://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html\">Amazon Redshift Clusters</a> in the <i>Amazon Redshift Management Guide</i> . </p>"
     },
     "DeleteClusterParameterGroup":{
       "name":"DeleteClusterParameterGroup",
@@ -1912,7 +1912,7 @@
           "documentation":"<p> The account already has a cluster with the given identifier. </p>"
         }
       ],
-      "documentation":"<p> Modifies the settings for a cluster. For example, you can add another security or parameter group, update the preferred maintenance window, or change the master user password. Resetting a cluster password or modifying the security groups associated with a cluster do not need a reboot. However, modifying a parameter group requires a reboot for parameters to take effect. For more information about managing clusters, go to <a href=\"http://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html\">Amazon Redshift Clusters</a> in the <i>Amazon Redshift Management Guide</i> </p> <p>You can also change node type and the number of nodes to scale up or down the cluster. When resizing a cluster, you must specify both the number of nodes and the node type even if one of the parameters does not change. If you specify the same number of nodes and node type that are already configured for the cluster, an error is returned.</p>"
+      "documentation":"<p> Modifies the settings for a cluster. For example, you can add another security or parameter group, update the preferred maintenance window, or change the master user password. Resetting a cluster password or modifying the security groups associated with a cluster do not need a reboot. However, modifying a parameter group requires a reboot for parameters to take effect. For more information about managing clusters, go to <a href=\"http://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html\">Amazon Redshift Clusters</a> in the <i>Amazon Redshift Management Guide</i> . </p> <p>You can also change node type and the number of nodes to scale up or down the cluster. When resizing a cluster, you must specify both the number of nodes and the node type even if one of the parameters does not change.</p>"
     },
     "ModifyClusterParameterGroup":{
       "name":"ModifyClusterParameterGroup",
@@ -2892,7 +2892,7 @@
         },
         "AllowVersionUpgrade":{
           "shape":"Boolean",
-          "documentation":"<p> If <code>true</code>, version upgrades will be applied automatically to the cluster during the maintenance window. </p>"
+          "documentation":"<p> If <code>true</code>, major version upgrades will be applied automatically to the cluster during the maintenance window. </p>"
         },
         "NumberOfNodes":{
           "shape":"Integer",
@@ -3513,7 +3513,7 @@
         },
         "PreferredMaintenanceWindow":{
           "shape":"String",
-          "documentation":"<p> The weekly time range (in UTC) during which automated cluster maintenance can occur. </p> <p> Format: <code>ddd:hh24:mi-ddd:hh24:mi</code> </p> <p> Default: A 30-minute window selected at random from an 8-hour block of time per region, occurring on a random day of the week. The following list shows the time blocks for each region from which the default maintenance windows are assigned. </p> <ul> <li> <b>US-East (Northern Virginia) Region:</b> 03:00-11:00 UTC</li> <li> <b>US-West (Oregon) Region</b> 06:00-14:00 UTC</li> <li> <b>EU (Ireland) Region</b> 22:00-06:00 UTC</li> <li> <b>Asia Pacific (Singapore) Region</b> 14:00-22:00 UTC</li> <li> <b>Asia Pacific (Sydney) Region</b> 12:00-20:00 UTC</li> <li> <b>Asia Pacific (Tokyo) Region</b> 17:00-03:00 UTC</li> </ul> <p>Valid Days: Mon | Tue | Wed | Thu | Fri | Sat | Sun</p> <p>Constraints: Minimum 30-minute window.</p>"
+          "documentation":"<p> The weekly time range (in UTC) during which automated cluster maintenance can occur. </p> <p> Format: <code>ddd:hh24:mi-ddd:hh24:mi</code> </p> <p> Default: The value selected for the cluster from which the snapshot was taken. For more information about the time blocks for each region, see <a href=\"http://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html#rs-maintenance-windows\">Maintenance Windows</a> in Amazon Redshift Management Guide. </p> <p>Valid Days: Mon | Tue | Wed | Thu | Fri | Sat | Sun</p> <p>Constraints: Minimum 30-minute window.</p>"
         },
         "ClusterParameterGroupName":{
           "shape":"String",
@@ -3533,7 +3533,7 @@
         },
         "AllowVersionUpgrade":{
           "shape":"BooleanOptional",
-          "documentation":"<p>If <code>true</code>, upgrades can be applied during the maintenance window to the Amazon Redshift engine that is running on the cluster.</p> <p> When a new version of the Amazon Redshift engine is released, you can request that the service automatically apply upgrades during the maintenance window to the Amazon Redshift engine that is running on your cluster. </p> <p>Default: <code>true</code></p>"
+          "documentation":"<p>If <code>true</code>, major version upgrades can be applied during the maintenance window to the Amazon Redshift engine that is running on the cluster.</p> <p> When a new major version of the Amazon Redshift engine is released, you can request that the service automatically apply upgrades during the maintenance window to the Amazon Redshift engine that is running on your cluster. </p> <p>Default: <code>true</code></p>"
         },
         "NumberOfNodes":{
           "shape":"IntegerOptional",
@@ -4194,7 +4194,7 @@
       "members":{
         "ClusterIdentifier":{
           "shape":"String",
-          "documentation":"<p> The unique identifier of a cluster whose resize progress you are requesting. This parameter isn't case-sensitive. </p> <p>By default, resize operations for all clusters defined for an AWS account are returned. </p>"
+          "documentation":"<p> The unique identifier of a cluster whose resize progress you are requesting. This parameter is case-sensitive. </p> <p>By default, resize operations for all clusters defined for an AWS account are returned. </p>"
         }
       },
       "documentation":"<p> </p>"
@@ -4988,11 +4988,11 @@
         },
         "NodeType":{
           "shape":"String",
-          "documentation":"<p> The new node type of the cluster. If you specify a new node type, you must also specify the number of nodes parameter also. </p> <p> When you submit your request to resize a cluster, Amazon Redshift sets access permissions for the cluster to read-only. After Amazon Redshift provisions a new cluster according to your resize requirements, there will be a temporary outage while the old cluster is deleted and your connection is switched to the new cluster. When the new connection is complete, the original access permissions for the cluster are restored. You can use the <a>DescribeResize</a> to track the progress of the resize request. </p> <p>Valid Values: <code> dw1.xlarge</code> | <code>dw1.8xlarge</code> | <code>dw2.large</code> | <code>dw2.8xlarge</code>.</p>"
+          "documentation":"<p> The new node type of the cluster. If you specify a new node type, you must also specify the number of nodes parameter. </p> <p> When you submit your request to resize a cluster, Amazon Redshift sets access permissions for the cluster to read-only. After Amazon Redshift provisions a new cluster according to your resize requirements, there will be a temporary outage while the old cluster is deleted and your connection is switched to the new cluster. When the new connection is complete, the original access permissions for the cluster are restored. You can use <a>DescribeResize</a> to track the progress of the resize request. </p> <p>Valid Values: <code> dw1.xlarge</code> | <code>dw1.8xlarge</code> | <code>dw2.large</code> | <code>dw2.8xlarge</code>.</p>"
         },
         "NumberOfNodes":{
           "shape":"IntegerOptional",
-          "documentation":"<p> The new number of nodes of the cluster. If you specify a new number of nodes, you must also specify the node type parameter also. </p> <p> When you submit your request to resize a cluster, Amazon Redshift sets access permissions for the cluster to read-only. After Amazon Redshift provisions a new cluster according to your resize requirements, there will be a temporary outage while the old cluster is deleted and your connection is switched to the new cluster. When the new connection is complete, the original access permissions for the cluster are restored. You can use <a>DescribeResize</a> to track the progress of the resize request. </p> <p>Valid Values: Integer greater than <code>0</code>.</p>"
+          "documentation":"<p> The new number of nodes of the cluster. If you specify a new number of nodes, you must also specify the node type parameter. </p> <p> When you submit your request to resize a cluster, Amazon Redshift sets access permissions for the cluster to read-only. After Amazon Redshift provisions a new cluster according to your resize requirements, there will be a temporary outage while the old cluster is deleted and your connection is switched to the new cluster. When the new connection is complete, the original access permissions for the cluster are restored. You can use <a>DescribeResize</a> to track the progress of the resize request. </p> <p>Valid Values: Integer greater than <code>0</code>.</p>"
         },
         "ClusterSecurityGroups":{
           "shape":"ClusterSecurityGroupNameList",
@@ -5024,7 +5024,7 @@
         },
         "AllowVersionUpgrade":{
           "shape":"BooleanOptional",
-          "documentation":"<p> If <code>true</code>, upgrades will be applied automatically to the cluster during the maintenance window. </p> <p>Default: <code>false</code></p>"
+          "documentation":"<p> If <code>true</code>, major version upgrades will be applied automatically to the cluster during the maintenance window. </p> <p>Default: <code>false</code></p>"
         },
         "HsmClientCertificateIdentifier":{
           "shape":"String",
@@ -5634,7 +5634,7 @@
         },
         "AllowVersionUpgrade":{
           "shape":"BooleanOptional",
-          "documentation":"<p> If <code>true</code>, upgrades can be applied during the maintenance window to the Amazon Redshift engine that is running on the cluster. </p> <p>Default: <code>true</code></p>"
+          "documentation":"<p> If <code>true</code>, major version upgrades can be applied during the maintenance window to the Amazon Redshift engine that is running on the cluster. </p> <p>Default: <code>true</code></p>"
         },
         "ClusterSubnetGroupName":{
           "shape":"String",
@@ -5674,7 +5674,7 @@
         },
         "PreferredMaintenanceWindow":{
           "shape":"String",
-          "documentation":"<p> The weekly time range (in UTC) during which automated cluster maintenance can occur. </p> <p> Format: <code>ddd:hh24:mi-ddd:hh24:mi</code> </p> <p> Default: The value selected for the cluster from which the snapshot was taken. The following list shows the time blocks for each region from which the default maintenance windows are assigned. </p> <ul> <li> <b>US-East (Northern Virginia) Region:</b> 03:00-11:00 UTC</li> <li> <b>US-West (Oregon) Region</b> 06:00-14:00 UTC</li> <li> <b>EU (Ireland) Region</b> 22:00-06:00 UTC</li> <li> <b>Asia Pacific (Singapore) Region</b> 14:00-22:00 UTC</li> <li> <b>Asia Pacific (Sydney) Region</b> 12:00-20:00 UTC</li> <li> <b>Asia Pacific (Tokyo) Region</b> 17:00-03:00 UTC</li> </ul> <p>Valid Days: Mon | Tue | Wed | Thu | Fri | Sat | Sun</p> <p>Constraints: Minimum 30-minute window.</p>"
+          "documentation":"<p> The weekly time range (in UTC) during which automated cluster maintenance can occur. </p> <p> Format: <code>ddd:hh24:mi-ddd:hh24:mi</code> </p> <p> Default: The value selected for the cluster from which the snapshot was taken. For more information about the time blocks for each region, see <a href=\"http://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html#rs-maintenance-windows\">Maintenance Windows</a> in Amazon Redshift Management Guide. </p> <p>Valid Days: Mon | Tue | Wed | Thu | Fri | Sat | Sun</p> <p>Constraints: Minimum 30-minute window.</p>"
         },
         "AutomatedSnapshotRetentionPeriod":{
           "shape":"IntegerOptional",

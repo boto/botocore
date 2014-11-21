@@ -40,10 +40,9 @@ and if a str/unicode type is passed in, it will be encoded as utf-8.
 import re
 import time
 import base64
-import datetime
-import time
 from xml.etree import ElementTree
 
+import datetime
 from dateutil.tz import tzutc
 import six
 
@@ -133,13 +132,38 @@ class Serializer(object):
             timestamp_format = ISO8601_MICRO
         else:
             timestamp_format = ISO8601
-        return value.astimezone(tzutc()).strftime(timestamp_format)
+        if value.tzinfo is None:
+            # I think a case would be made that if no time zone is provided,
+            # we should use the local time.  However, to restore backwards
+            # compat, the previous behavior was to assume UTC, which is
+            # what we're going to do here.
+            datetime_obj = value.replace(tzinfo=tzutc())
+        else:
+            datetime_obj = value.astimezone(tzutc())
+        return datetime_obj.strftime(timestamp_format)
 
     def _timestamp_unixtimestamp(self, value):
         return int(time.mktime(value.timetuple()))
 
     def _timestamp_rfc822(self, value):
         return formatdate(value)
+
+    def _convert_timestamp_to_str(self, value):
+        # This is a general purpose method that handles several cases of
+        # converting the provided value to a string timestamp suitable to be
+        # serialized to an http request. It can handle:
+        # 1) A datetime.datetime object.
+        if isinstance(value, datetime.datetime):
+            datetime_obj = value
+        else:
+            # 2) A string object that's formatted as a timestamp.
+            #    We document this as being an iso8601 timestamp, although
+            #    parse_timestamp is a bit more flexible.
+            datetime_obj = parse_timestamp(value)
+        converter = getattr(
+            self, '_timestamp_%s' % self.TIMESTAMP_FORMAT.lower())
+        final_value = converter(datetime_obj)
+        return final_value
 
     def _get_serialized_name(self, shape, default_name):
         # Returns the serialized name for the shape if it exists.
@@ -235,10 +259,7 @@ class QuerySerializer(Serializer):
         serialized[prefix] = b64_encoded
 
     def _serialize_type_timestamp(self, serialized, value, shape, prefix=''):
-        datetime_obj = parse_timestamp(value)
-        converter = getattr(self, '_timestamp_%s' % self.TIMESTAMP_FORMAT.lower())
-        final_value = converter(datetime_obj)
-        serialized[prefix] = final_value
+        serialized[prefix] = self._convert_timestamp_to_str(value)
 
     def _serialize_type_boolean(self, serialized, value, shape, prefix=''):
         if value:
@@ -363,7 +384,6 @@ class BaseRestSerializer(Serializer):
         # /{Key+}/bar
         # A label ending with '+' is greedy.  There can only
         # be one greedy key.
-        greedy_param = None
         encoded_params = {}
         for template_param in re.findall(r'{(.*?)}', uri_template):
             if template_param.endswith('+'):
@@ -373,7 +393,6 @@ class BaseRestSerializer(Serializer):
                 encoded_params[template_param] = percent_encode(
                     params[template_param])
         return uri_template.format(**encoded_params)
-
 
     def _serialize_payload(self, partitioned, parameters,
                            serialized, shape, shape_members):
@@ -416,7 +435,7 @@ class BaseRestSerializer(Serializer):
         elif location == 'header':
             shape = shape_members[param_name]
             value = self._convert_header_value(shape, param_value)
-            partitioned['headers'][key_name] =  value
+            partitioned['headers'][key_name] = value
         elif location == 'headers':
             # 'headers' is a bit of an oddball.  The ``key_name``
             # is actually really a prefix for the header names:
@@ -434,7 +453,7 @@ class BaseRestSerializer(Serializer):
     def _do_serialize_header_map(self, header_prefix, headers, user_input):
         for key, val in user_input.items():
             full_key = header_prefix + key
-            headers[full_key] =  val
+            headers[full_key] = val
 
     def _serialize_body_params(self, params, shape):
         raise NotImplementedError('_serialize_body_params')
@@ -547,17 +566,12 @@ class RestXMLSerializer(BaseRestSerializer):
         node.text = encoded_value
 
     def _serialize_type_timestamp(self, xmlnode, params, shape, name):
-        datetime_obj = parse_timestamp(params)
-        converter = getattr(self, '_timestamp_%s' % self.TIMESTAMP_FORMAT.lower())
-
-        final_value = converter(datetime_obj)
         node = ElementTree.SubElement(xmlnode, name)
-        node.text = final_value
+        node.text = self._convert_timestamp_to_str(params)
 
     def _default_serialize(self, xmlnode, params, shape, name):
         node = ElementTree.SubElement(xmlnode, name)
         node.text = str(params)
-
 
 
 SERIALIZERS = {

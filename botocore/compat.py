@@ -31,7 +31,6 @@ if six.PY3:
     from urllib.parse import urljoin
     from urllib.parse import parse_qsl
     from urllib.parse import parse_qs
-    from urllib.parse import urlencode
     from http.client import HTTPResponse
     from io import IOBase as _IOBase
     from base64 import encodebytes
@@ -63,7 +62,6 @@ else:
     from urllib import urlencode
     from urllib import unquote
     from urllib import unquote_plus
-    from urllib import urlencode
     from urlparse import urlsplit
     from urlparse import urlunsplit
     from urlparse import urljoin

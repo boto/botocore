@@ -23,9 +23,10 @@ import mock
 
 import botocore.session
 import botocore.exceptions
-from botocore.hooks import EventHooks
 from botocore.model import ServiceModel
 from botocore import client
+from botocore.hooks import HierarchicalEmitter
+from botocore.waiter import WaiterModel
 
 
 class BaseSessionTest(unittest.TestCase):
@@ -176,7 +177,7 @@ class SessionTest(BaseSessionTest):
         self.assertEqual(calls[0]['event_name'], 'foo')
 
     def test_emitter_can_be_passed_in(self):
-        events = EventHooks()
+        events = HierarchicalEmitter()
         session = create_session(session_vars=self.env_vars,
                                  event_hooks=events)
         calls = []
@@ -282,13 +283,13 @@ class TestSessionConfigurationVars(BaseSessionTest):
         self.assertEqual(self.session.get_config_variable(
             'foobar', methods=('env', 'config')), 'default')
 
-
     def test_default_value_can_be_overriden(self):
         self.session.session_var_map['foobar'] = (None, 'FOOBAR', 'default')
         # Default value.
         self.assertEqual(self.session.get_config_variable('foobar'), 'default')
         self.assertEqual(
-            self.session.get_config_variable('foobar', default='per-call-default'),
+            self.session.get_config_variable('foobar',
+                                             default='per-call-default'),
             'per-call-default')
 
 
@@ -303,7 +304,8 @@ class TestSessionUserAgent(BaseSessionTest):
 
     def test_can_append_to_user_agent(self):
         self.session.user_agent_extra = 'custom-thing/other'
-        self.assertTrue(self.session.user_agent().endswith('custom-thing/other'))
+        self.assertTrue(
+            self.session.user_agent().endswith('custom-thing/other'))
 
 
 class TestConfigLoaderObject(BaseSessionTest):
@@ -324,16 +326,46 @@ class TestConfigLoaderObject(BaseSessionTest):
 class TestGetServiceModel(BaseSessionTest):
     def test_get_service_model(self):
         loader = mock.Mock()
-        loader.load_service_data.return_value = {}
+        loader.load_service_model.return_value = {}
         self.session.register_component('data_loader', loader)
         model = self.session.get_service_model('made_up')
         self.assertIsInstance(model, ServiceModel)
+
+
+class TestGetWaiterModel(BaseSessionTest):
+    def test_get_waiter_model(self):
+        loader = mock.Mock()
+        loader.determine_latest.return_value = 'aws/foo/2014-01-01.api.json'
+        loader.load_data.return_value = {"version": 2, "waiters": {}}
+        self.session.register_component('data_loader', loader)
+
+        model = self.session.get_waiter_model('foo')
+
+        # Verify we (1) get the expected return data,
+        self.assertIsInstance(model, WaiterModel)
+        self.assertEqual(model.waiter_names, [])
+        # and (2) call the loader correctly.
+        loader.load_data.assert_called_with('aws/foo/2014-01-01.waiters.json')
 
 
 class TestCreateClient(BaseSessionTest):
     def test_can_create_client(self):
         sts_client = self.session.create_client('sts', 'us-west-2')
         self.assertIsInstance(sts_client, client.BaseClient)
+
+    def test_credential_provider_not_called_when_creds_provided(self):
+        cred_provider = mock.Mock()
+        self.session.register_component(
+            'credential_provider', cred_provider)
+        self.session.create_client(
+            'sts', 'us-west-2',
+            aws_access_key_id='foo',
+            aws_secret_access_key='bar',
+            aws_session_token='baz')
+        self.assertFalse(cred_provider.load_credentials.called,
+                         "Credential provider was called even though "
+                         "explicit credentials were provided to the "
+                         "create_client call.")
 
 
 if __name__ == "__main__":

@@ -36,6 +36,8 @@ RESTRICTED_REGIONS = [
     'us-gov-west-1',
     'fips-us-gov-west-1',
 ]
+REGISTER_FIRST = object()
+REGISTER_LAST = object()
 
 
 
@@ -119,16 +121,21 @@ def sse_md5(params, **kwargs):
     encryption key. This handler does both if the MD5 has not been set by
     the caller.
     """
-    prefix = 'x-amz-server-side-encryption-customer-'
-    key = prefix + 'key'
-    key_md5 = prefix + 'key-MD5'
-    if key in params['headers'] and not key_md5 in params['headers']:
-        original = six.b(params['headers'][key])
-        md5 = hashlib.md5()
-        md5.update(original)
-        value = base64.b64encode(md5.digest()).decode('utf-8')
-        params['headers'][key] = base64.b64encode(original).decode('utf-8')
-        params['headers'][key_md5] = value
+    if not _needs_s3_sse_customization(params):
+        return
+    key_as_bytes = params['SSECustomerKey']
+    if isinstance(key_as_bytes, six.text_type):
+        key_as_bytes = key_as_bytes.encode('utf-8')
+    key_md5_str = base64.b64encode(
+        hashlib.md5(key_as_bytes).digest()).decode('utf-8')
+    key_b64_encoded = base64.b64encode(key_as_bytes).decode('utf-8')
+    params['SSECustomerKey'] = key_b64_encoded
+    params['SSECustomerKeyMD5'] = key_md5_str
+
+
+def _needs_s3_sse_customization(params):
+    return (params.get('SSECustomerKey') is not None and
+            'SSECustomerKeyMD5' not in params)
 
 
 def check_dns_name(bucket_name):
@@ -167,8 +174,20 @@ def fix_s3_host(event_name, endpoint, request, auth, **kwargs):
     addressing.  This allows us to avoid 301 redirects for all
     bucket names that can be CNAME'd.
     """
+    if request.auth_path is not None:
+        # The auth_path has already been applied (this may be a
+        # retried request).  We don't need to perform this
+        # customization again.
+        return
+    elif _is_get_bucket_location_request(request):
+        # For the GetBucketLocation response, we should not be using
+        # the virtual host style addressing so we can avoid any sigv4
+        # issues.
+        logger.debug("Request is GetBucketLocation operation, not checking "
+                     "for DNS compatibility.")
+        return
     parts = urlsplit(request.url)
-    auth.auth_path = parts.path
+    request.auth_path = parts.path
     path_parts = parts.path.split('/')
     if isinstance(auth, botocore.auth.SigV4Auth):
         return
@@ -180,8 +199,8 @@ def fix_s3_host(event_name, endpoint, request, auth, **kwargs):
             # If the operation is on a bucket, the auth_path must be
             # terminated with a '/' character.
             if len(path_parts) == 2:
-                if auth.auth_path[-1] != '/':
-                    auth.auth_path += '/'
+                if request.auth_path[-1] != '/':
+                    request.auth_path += '/'
             path_parts.remove(bucket_name)
             global_endpoint = 's3.amazonaws.com'
             host = bucket_name + '.' + global_endpoint
@@ -195,32 +214,40 @@ def fix_s3_host(event_name, endpoint, request, auth, **kwargs):
                          bucket_name)
 
 
+def _is_get_bucket_location_request(request):
+    return request.url.endswith('?location')
+
+
 def _allowed_region(region_name):
     return region_name not in RESTRICTED_REGIONS
 
 
-def register_retries_for_service(service, **kwargs):
-    loader = service.session.get_component('data_loader')
-    config = _load_retry_config(loader, service.endpoint_prefix)
+def register_retries_for_service(service_data, session,
+                                 service_name, **kwargs):
+    loader = session.get_component('data_loader')
+    endpoint_prefix = service_data.get('metadata', {}).get('endpointPrefix')
+    if endpoint_prefix is None:
+        logger.debug("Not registering retry handlers, could not endpoint "
+                     "prefix from model for service %s", service_name)
+        return
+    config = _load_retry_config(loader, endpoint_prefix)
     if not config:
         return
-    logger.debug("Registering retry handlers for service: %s", service)
-    session = service.session
+    logger.debug("Registering retry handlers for service: %s", service_name)
     handler = retryhandler.create_retry_handler(
-        config, service.endpoint_prefix)
-    unique_id = 'retry-config-%s' % service.endpoint_prefix
-    session.register('needs-retry.%s' % service.endpoint_prefix,
+        config, endpoint_prefix)
+    unique_id = 'retry-config-%s' % endpoint_prefix
+    session.register('needs-retry.%s' % endpoint_prefix,
                      handler, unique_id=unique_id)
     _register_for_operations(config, session,
-                             service_name=service.endpoint_prefix)
+                             service_name=endpoint_prefix)
 
 
 def _load_retry_config(loader, endpoint_prefix):
     original_config = loader.load_data('aws/_retry')
     retry_config = translate.build_retry_config(
         endpoint_prefix, original_config['retry'],
-        original_config['definitions'])
-    # TODO: I think I'm missing error conditions here.
+        original_config.get('definitions', {}))
     return retry_config
 
 
@@ -248,7 +275,8 @@ def signature_overrides(service_data, service_name, session, **kwargs):
         logger.debug("Switching signature version for service %s "
                      "to version %s based on config file override.",
                      service_name, signature_version_override)
-        service_data['signature_version'] = signature_version_override
+        service_metadata = service_data['metadata']
+        service_metadata['signatureVersion'] = signature_version_override
 
 
 def add_expect_header(model, params, **kwargs):
@@ -369,18 +397,19 @@ BUILTIN_HANDLERS = [
     ('before-call.s3', add_expect_header),
     ('before-call.ec2.CopySnapshot', copy_snapshot_encrypted),
     ('before-auth.s3', fix_s3_host),
-    ('needs-retry.s3.UploadPartCopy', check_for_200_error),
-    ('needs-retry.s3.CopyObject', check_for_200_error),
-    ('needs-retry.s3.CompleteMultipartUpload', check_for_200_error),
-    ('service-created', register_retries_for_service),
+    ('needs-retry.s3.UploadPartCopy', check_for_200_error, REGISTER_FIRST),
+    ('needs-retry.s3.CopyObject', check_for_200_error, REGISTER_FIRST),
+    ('needs-retry.s3.CompleteMultipartUpload', check_for_200_error,
+     REGISTER_FIRST),
+    ('service-data-loaded', register_retries_for_service),
     ('service-data-loaded', signature_overrides),
-    ('before-call.s3.HeadObject', sse_md5),
-    ('before-call.s3.GetObject', sse_md5),
-    ('before-call.s3.PutObject', sse_md5),
-    ('before-call.s3.CopyObject', sse_md5),
-    ('before-call.s3.CreateMultipartUpload', sse_md5),
-    ('before-call.s3.UploadPart', sse_md5),
-    ('before-call.s3.UploadPartCopy', sse_md5),
+    ('before-parameter-build.s3.HeadObject', sse_md5),
+    ('before-parameter-build.s3.GetObject', sse_md5),
+    ('before-parameter-build.s3.PutObject', sse_md5),
+    ('before-parameter-build.s3.CopyObject', sse_md5),
+    ('before-parameter-build.s3.CreateMultipartUpload', sse_md5),
+    ('before-parameter-build.s3.UploadPart', sse_md5),
+    ('before-parameter-build.s3.UploadPartCopy', sse_md5),
     ('before-parameter-build.ec2.RunInstances', base64_encode_user_data),
     ('before-parameter-build.autoscaling.CreateLaunchConfiguration',
      base64_encode_user_data),

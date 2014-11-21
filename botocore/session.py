@@ -32,9 +32,11 @@ from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.loaders import Loader
 from botocore.provider import get_provider
+from botocore.parsers import ResponseParserFactory
 from botocore import regions
 from botocore.model import ServiceModel
 import botocore.service
+from botocore import waiter
 
 
 class Session(object):
@@ -174,6 +176,7 @@ class Session(object):
         self._register_data_loader()
         self._register_endpoint_resolver()
         self._register_event_emitter()
+        self._register_response_parser_factory()
 
     def _register_event_emitter(self):
         self._components.register_component('event_emitter', self._events)
@@ -193,12 +196,24 @@ class Session(object):
             'endpoint_resolver',
             lambda:  regions.EndpointResolver(self.get_data('aws/_endpoints')))
 
+    def _register_response_parser_factory(self):
+        self._components.register_component('response_parser_factory',
+                                            ResponseParserFactory())
+
     def _reset_components(self):
         self._register_components()
 
     def _register_builtin_handlers(self, events):
-        for event_name, handler in handlers.BUILTIN_HANDLERS:
-            self.register(event_name, handler)
+        for spec in handlers.BUILTIN_HANDLERS:
+            if len(spec) == 2:
+                event_name, handler = spec
+                self.register(event_name, handler)
+            else:
+                event_name, handler, register_type = spec
+                if register_type is handlers.REGISTER_FIRST:
+                    self._events.register_first(event_name, handler)
+                elif register_first is handlers.REGISTER_LAST:
+                    self._events.register_last(event_name, handler)
 
     @property
     def provider(self):
@@ -485,6 +500,14 @@ class Session(object):
         """
         service_description = self.get_service_data(service_name, api_version)
         return ServiceModel(service_description)
+
+    def get_waiter_model(self, service_name, api_version=None):
+        loader = self.get_component('data_loader')
+        latest = loader.determine_latest('%s/%s' % (
+            self.provider.name, service_name), api_version)
+        waiter_path = latest.replace('.api', '.waiters')
+        waiter_config = loader.load_data(waiter_path)
+        return waiter.WaiterModel(waiter_config)
 
     def get_service_data(self, service_name, api_version=None):
         """
@@ -787,7 +810,9 @@ class Session(object):
 
         """
         loader = self.get_component('data_loader')
-        endpoint_creator = self._create_endpoint_creator()
+        endpoint_creator = self._create_endpoint_creator(aws_access_key_id,
+                                                         aws_secret_access_key,
+                                                         aws_session_token)
         event_emitter = self.get_component('event_emitter')
         client_creator = botocore.client.ClientCreator(loader, endpoint_creator,
                                                        event_emitter)
@@ -798,11 +823,15 @@ class Session(object):
                                               aws_session_token)
         return client
 
-    def _create_endpoint_creator(self):
+    def _create_endpoint_creator(self, aws_access_key_id, aws_secret_access_key,
+                                 aws_session_token):
         resolver = self.get_component('endpoint_resolver')
         region = self.get_config_variable('region')
         event_emitter = self.get_component('event_emitter')
-        credentials = self.get_credentials()
+        if aws_secret_access_key is None:
+            credentials = self.get_credentials()
+        else:
+            credentials = None
         user_agent= self.user_agent()
         endpoint_creator = EndpointCreator(resolver, region, event_emitter,
                                            credentials, user_agent)

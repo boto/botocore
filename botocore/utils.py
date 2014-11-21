@@ -20,6 +20,7 @@ from dateutil.tz import tzlocal
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.compat import json, quote
 from botocore.vendored import requests
+from botocore.compat import OrderedDict
 
 
 logger = logging.getLogger(__name__)
@@ -311,3 +312,89 @@ class CachedProperty(object):
             computed_value = self._fget(obj)
             obj.__dict__[self._fget.__name__] = computed_value
             return computed_value
+
+
+class ArgumentGenerator(object):
+    """Generate sample input based on a shape model.
+
+    This class contains a ``generate_skeleton`` method that will take
+    an input shape (created from ``botocore.model``) and generate
+    a sample dictionary corresponding to the input shape.
+
+    The specific values used are place holder values. For strings an
+    empty string is used, for numbers 0 or 0.0 is used.  The intended
+    usage of this class is to generate the *shape* of the input structure.
+
+    This can be useful for operations that have complex input shapes.
+    This allows a user to just fill in the necessary data instead of
+    worrying about the specific structure of the input arguments.
+
+    Example usage::
+
+        s = botocore.session.get_session()
+        ddb = s.get_service_model('dynamodb')
+        arg_gen = ArgumentGenerator()
+        sample_input = arg_gen.generate_skeleton(
+            ddb.operation_model('CreateTable').input_shape)
+        print("Sample input for dynamodb.CreateTable: %s" % sample_input)
+
+    """
+    def __init__(self):
+        pass
+
+    def generate_skeleton(self, shape):
+        """Generate a sample input.
+
+        :type shape: ``botocore.model.Shape``
+        :param shape: The input shape.
+
+        :return: The generated skeleton input corresponding to the
+            provided input shape.
+
+        """
+        stack = []
+        return self._generate_skeleton(shape, stack)
+
+    def _generate_skeleton(self, shape, stack):
+        stack.append(shape.name)
+        try:
+            if shape.type_name == 'structure':
+                return self._generate_type_structure(shape, stack)
+            elif shape.type_name == 'list':
+                return self._generate_type_list(shape, stack)
+            elif shape.type_name == 'map':
+                return self._generate_type_map(shape, stack)
+            elif shape.type_name == 'string':
+                return ''
+            elif shape.type_name in ['integer', 'long']:
+                return 0
+            elif shape.type_name == 'float':
+                return 0.0
+            elif shape.type_name == 'boolean':
+                return True
+        finally:
+            stack.pop()
+
+    def _generate_type_structure(self, shape, stack):
+        if stack.count(shape.name) > 1:
+            return {}
+        skeleton = OrderedDict()
+        for member_name, member_shape in shape.members.items():
+            skeleton[member_name] = self._generate_skeleton(member_shape,
+                                                            stack)
+        return skeleton
+
+    def _generate_type_list(self, shape, stack):
+        # For list elements we've arbitrarily decided to
+        # return two elements for the skeleton list.
+        return [
+            self._generate_skeleton(shape.member, stack),
+        ]
+
+    def _generate_type_map(self, shape, stack):
+        key_shape = shape.key
+        value_shape = shape.value
+        assert key_shape.type_name == 'string'
+        return OrderedDict([
+            ('KeyName', self._generate_skeleton(value_shape, stack)),
+        ])

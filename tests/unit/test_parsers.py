@@ -13,7 +13,6 @@
 from tests import unittest
 import datetime
 
-import mock
 from dateutil.tz import tzutc
 
 from botocore import parsers
@@ -23,7 +22,6 @@ from botocore import model
 # These tests contain botocore specific tests that either
 # don't make sense in the protocol tests or haven't been added
 # yet.
-
 class TestResponseMetadataParsed(unittest.TestCase):
     def test_response_metadata_parsed_for_query_service(self):
         parser = parsers.QueryParser()
@@ -57,11 +55,14 @@ class TestResponseMetadataParsed(unittest.TestCase):
                 }
             })
         )
-        parsed = parser.parse({'body': response, 'status_code': 200}, output_shape)
+        parsed = parser.parse(
+            {'body': response,
+             'headers': {},
+             'status_code': 200}, output_shape)
         self.assertEqual(
             parsed, {'Str': 'myname',
-                     'ResponseMetadata': {'RequestId': 'request-id'}})
-
+                     'ResponseMetadata': {'RequestId': 'request-id',
+                                          'HTTPStatusCode': 200}})
 
     def test_response_metadata_parsed_for_ec2(self):
         parser = parsers.EC2QueryParser()
@@ -82,12 +83,15 @@ class TestResponseMetadataParsed(unittest.TestCase):
             },
             model.ShapeResolver({'StringType': {'type': 'string'}})
         )
-        parsed = parser.parse({'body': response, 'status_code': 200}, output_shape)
+        parsed = parser.parse({'headers': {},
+                               'body': response,
+                               'status_code': 200}, output_shape)
         # Note that the response metadata is normalized to match the query
         # protocol, even though this is not how it appears in the output.
         self.assertEqual(
             parsed, {'Str': 'myname',
-                     'ResponseMetadata': {'RequestId': 'request-id'}})
+                     'ResponseMetadata': {'RequestId': 'request-id',
+                                          'HTTPStatusCode': 200}})
 
     def test_response_metadata_errors_for_json(self):
         parser = parsers.JSONParser()
@@ -152,16 +156,8 @@ class TestResponseMetadataParsed(unittest.TestCase):
         # protocol, even though this is not how it appears in the output.
         self.assertEqual(
             parsed, {'Str': 'mystring',
-                     'ResponseMetadata': {'RequestId': 'request-id'}})
-
-    def test_response_metadata_on_empty_rest_response(self):
-        headers = {'x-amzn-requestid': 'request-id'}
-        parser = parsers.RestJSONParser()
-        parsed = parser.parse(
-            {'body': b'', 'headers': headers, 'status_code': 200}, None)
-        self.assertEqual(
-            parsed,
-            {'ResponseMetadata': {'RequestId': 'request-id'}})
+                     'ResponseMetadata': {'RequestId': 'request-id',
+                                          'HTTPStatusCode': 200}})
 
     def test_response_metadata_on_rest_response(self):
         parser = parsers.RestJSONParser()
@@ -185,17 +181,8 @@ class TestResponseMetadataParsed(unittest.TestCase):
         # protocol, even though this is not how it appears in the output.
         self.assertEqual(
             parsed, {'Str': 'mystring',
-                     'ResponseMetadata': {'RequestId': 'request-id'}})
-
-    def test_response_metadata_on_empty_rest_xml_response(self):
-        # This is the format used by cloudfront, route53.
-        headers = {'x-amzn-requestid': 'request-id'}
-        parser = parsers.RestXMLParser()
-        parsed = parser.parse(
-            {'body': b'', 'headers': headers, 'status_code': 200}, None)
-        self.assertEqual(
-            parsed,
-            {'ResponseMetadata': {'RequestId': 'request-id'}})
+                     'ResponseMetadata': {'RequestId': 'request-id',
+                                          'HTTPStatusCode': 200}})
 
     def test_response_metadata_from_s3_response(self):
         # Even though s3 is a rest-xml service, it's response metadata
@@ -212,7 +199,8 @@ class TestResponseMetadataParsed(unittest.TestCase):
         self.assertEqual(
             parsed,
             {'ResponseMetadata': {'RequestId': 'request-id',
-                                  'HostId': 'second-id'}})
+                                  'HostId': 'second-id',
+                                  'HTTPStatusCode': 200}})
 
     def test_s3_error_response(self):
         body = (
@@ -242,6 +230,7 @@ class TestResponseMetadataParsed(unittest.TestCase):
         self.assertEqual(parsed['ResponseMetadata'], {
             'RequestId': 'request-id',
             'HostId': 'second-id',
+            'HTTPStatusCode': 400,
         })
 
     def test_s3_error_response_with_no_body(self):
@@ -265,6 +254,7 @@ class TestResponseMetadataParsed(unittest.TestCase):
         self.assertEqual(parsed['ResponseMetadata'], {
             'RequestId': 'request-id',
             'HostId': 'second-id',
+            'HTTPStatusCode': 404,
         })
 
 
@@ -284,3 +274,118 @@ class TestResponseParsingDatetimes(unittest.TestCase):
              'headers': [],
              'status_code': 200}, output_shape)
         self.assertEqual(parsed, expected_parsed)
+
+
+class TestCanDecorateResponseParsing(unittest.TestCase):
+    def setUp(self):
+        self.factory = parsers.ResponseParserFactory()
+
+    def create_request_dict(self, with_body):
+        return {
+            'body': with_body, 'headers': [], 'status_code': 200
+        }
+
+    def test_normal_blob_parsing(self):
+        output_shape = model.Shape(shape_name='BlobType',
+                                   shape_model={'type': 'blob'})
+        parser = self.factory.create_parser('json')
+
+        hello_world_b64 = b'"aGVsbG8gd29ybGQ="'
+        expected_parsed = b'hello world'
+        parsed = parser.parse(
+            self.create_request_dict(with_body=hello_world_b64),
+            output_shape)
+        self.assertEqual(parsed, expected_parsed)
+
+    def test_can_decorate_scalar_parsing(self):
+        output_shape = model.Shape(shape_name='BlobType',
+                                   shape_model={'type': 'blob'})
+        # Here we're overriding the blob parser so that
+        # we can change it to a noop parser.
+        self.factory.set_parser_defaults(
+            blob_parser=lambda x: x)
+        parser = self.factory.create_parser('json')
+
+        hello_world_b64 = b'"aGVsbG8gd29ybGQ="'
+        expected_parsed = "aGVsbG8gd29ybGQ="
+        parsed = parser.parse(
+            self.create_request_dict(with_body=hello_world_b64),
+            output_shape)
+        self.assertEqual(parsed, expected_parsed)
+
+    def test_can_decorate_timestamp_parser(self):
+        output_shape = model.Shape(shape_name='datetime',
+                                   shape_model={'type': 'timestamp'})
+        # Here we're overriding the timestamp parser so that
+        # we can change it to just convert a string to an integer
+        # instead of converting to a datetime.
+        self.factory.set_parser_defaults(
+            timestamp_parser=lambda x: int(x))
+        parser = self.factory.create_parser('json')
+
+        timestamp_as_int = b'1407538750'
+        expected_parsed = int(timestamp_as_int)
+        parsed = parser.parse(
+            self.create_request_dict(with_body=timestamp_as_int),
+            output_shape)
+        self.assertEqual(parsed, expected_parsed)
+
+
+class TestHandlesNoOutputShape(unittest.TestCase):
+    """Verify that each protocol handles no output shape properly."""
+
+    def test_empty_rest_json_response(self):
+        headers = {'x-amzn-requestid': 'request-id'}
+        parser = parsers.RestJSONParser()
+        output_shape = None
+        parsed = parser.parse(
+            {'body': b'', 'headers': headers, 'status_code': 200},
+            output_shape)
+        self.assertEqual(
+            parsed,
+            {'ResponseMetadata': {'RequestId': 'request-id',
+                                  'HTTPStatusCode': 200}})
+
+    def test_empty_rest_xml_response(self):
+        # This is the format used by cloudfront, route53.
+        headers = {'x-amzn-requestid': 'request-id'}
+        parser = parsers.RestXMLParser()
+        output_shape = None
+        parsed = parser.parse(
+            {'body': b'', 'headers': headers, 'status_code': 200},
+            output_shape)
+        self.assertEqual(
+            parsed,
+            {'ResponseMetadata': {'RequestId': 'request-id',
+                                  'HTTPStatusCode': 200}})
+
+    def test_empty_query_response(self):
+        body = (
+            b'<DeleteTagsResponse xmlns="http://autoscaling.amazonaws.com/">'
+            b'  <ResponseMetadata>'
+            b'    <RequestId>request-id</RequestId>'
+            b'  </ResponseMetadata>'
+            b'</DeleteTagsResponse>'
+        )
+        parser = parsers.QueryParser()
+        output_shape = None
+        parsed = parser.parse(
+            {'body': body, 'headers': {}, 'status_code': 200},
+            output_shape)
+        self.assertEqual(
+            parsed,
+            {'ResponseMetadata': {'RequestId': 'request-id',
+                                  'HTTPStatusCode': 200}})
+
+    def test_empty_json_response(self):
+        headers = {'x-amzn-requestid': 'request-id'}
+        # Output shape of None represents no output shape in the model.
+        output_shape = None
+        parser = parsers.JSONParser()
+        parsed = parser.parse(
+            {'body': b'', 'headers': headers, 'status_code': 200},
+            output_shape)
+        self.assertEqual(
+            parsed,
+            {'ResponseMetadata': {'RequestId': 'request-id',
+                                  'HTTPStatusCode': 200}})

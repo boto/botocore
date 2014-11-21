@@ -2,6 +2,17 @@
 Getting Started With botocore
 *****************************
 
+
+.. warning::
+
+  Botocore is currently under a developer preview, and its API is subject
+  to change prior to a GA (1.0) release.  Until botocore reaches a 1.0 release,
+  backwards compatibility is not guaranteed.
+
+  If you need a stable interface, please consider using
+  `boto <https://github.com/boto/boto>`__.
+
+
 The ``botocore`` package provides a low-level interface to Amazon
 services.  It is responsible for:
 
@@ -23,11 +34,25 @@ related to the service, information about supported regions and endpoints, etc.
 Because this data can be updated quickly based on the canonical description
 of these services, it's much easier to keep ``botocore`` current.
 
-Some examples:
+Using Botocore
+==============
 
-.. toctree::
-   :maxdepth: 2
+The main way to use botocore is to first create a ``Session`` object, and
+from the ``Session`` object you can create individual clients::
 
-   ec2_examples
-   s3_streaming_output
-   s3_streaming_input
+    import botocore.session
+    session = botocore.session.get_session()
+    client = session.create_client('ec2', region_name='us-west-2')
+
+Once you have that client created, each operation provided by the service is
+mapped to a method.  Each method takes ``**kwargs`` that maps to the parameter
+names exposed by the service.  For example, using the ``client`` object created
+above::
+
+    for reservation in client.describe_instances()['Reservations']:
+        for instance in reservation['Instances']:
+            print instance['InstanceId']
+
+    # All instances that are in a state of pending.
+    reservations = client.describe_instances(
+        Filters=[{"Name": "instance-state-name", "Values": ["pending"]}])

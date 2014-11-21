@@ -14,6 +14,7 @@
 
 from tests import BaseSessionTest
 
+from botocore.exceptions import NoRegionError
 import six
 
 
@@ -30,14 +31,12 @@ class TestCloudsearchOperations(BaseSessionTest):
         request = endpoint.create_request(built, signer=None)
         self.assertEqual(request.body, stream)
 
-    def test_region_not_required(self):
+    def test_region_required_due_to_sigv4(self):
         stream = six.StringIO('{"fakejson": true}')
         service = self.session.get_service('cloudsearchdomain')
-        service.signature_version = None
         operation = service.get_operation('UploadDocuments')
         built = operation.build_parameters(
             contentType='application/json', documents=stream)
         # Note we're not giving a region name.
-        endpoint = service.get_endpoint(endpoint_url='http://example.com')
-        request = endpoint.create_request(built, signer=None)
-        self.assertEqual(request.body, stream)
+        with self.assertRaises(NoRegionError):
+            endpoint = service.get_endpoint(endpoint_url='http://example.com')

@@ -62,6 +62,7 @@ def _test_parsed_response(xmlfile, response_body, operation_obj, expected):
     parser = parser_cls(timestamp_parser=lambda x: x)
     parsed = parser.parse(response, operation_obj.output_shape)
     parsed = _convert_bytes_to_str(parsed)
+    expected['ResponseMetadata']['HTTPStatusCode'] = response['status_code']
 
     d2 = parsed
     d1 = expected
