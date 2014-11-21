@@ -276,6 +276,61 @@ class TestResponseParsingDatetimes(unittest.TestCase):
         self.assertEqual(parsed, expected_parsed)
 
 
+class TestCanDecorateResponseParsing(unittest.TestCase):
+    def setUp(self):
+        self.factory = parsers.ResponseParserFactory()
+
+    def create_request_dict(self, with_body):
+        return {
+            'body': with_body, 'headers': [], 'status_code': 200
+        }
+
+    def test_normal_blob_parsing(self):
+        output_shape = model.Shape(shape_name='BlobType',
+                                   shape_model={'type': 'blob'})
+        parser = self.factory.create_parser('json')
+
+        hello_world_b64 = b'"aGVsbG8gd29ybGQ="'
+        expected_parsed = b'hello world'
+        parsed = parser.parse(
+            self.create_request_dict(with_body=hello_world_b64),
+            output_shape)
+        self.assertEqual(parsed, expected_parsed)
+
+    def test_can_decorate_scalar_parsing(self):
+        output_shape = model.Shape(shape_name='BlobType',
+                                   shape_model={'type': 'blob'})
+        # Here we're overriding the blob parser so that
+        # we can change it to a noop parser.
+        self.factory.set_parser_defaults(
+            blob_parser=lambda x: x)
+        parser = self.factory.create_parser('json')
+
+        hello_world_b64 = b'"aGVsbG8gd29ybGQ="'
+        expected_parsed = "aGVsbG8gd29ybGQ="
+        parsed = parser.parse(
+            self.create_request_dict(with_body=hello_world_b64),
+            output_shape)
+        self.assertEqual(parsed, expected_parsed)
+
+    def test_can_decorate_timestamp_parser(self):
+        output_shape = model.Shape(shape_name='datetime',
+                                   shape_model={'type': 'timestamp'})
+        # Here we're overriding the timestamp parser so that
+        # we can change it to just convert a string to an integer
+        # instead of converting to a datetime.
+        self.factory.set_parser_defaults(
+            timestamp_parser=lambda x: int(x))
+        parser = self.factory.create_parser('json')
+
+        timestamp_as_int = b'1407538750'
+        expected_parsed = int(timestamp_as_int)
+        parsed = parser.parse(
+            self.create_request_dict(with_body=timestamp_as_int),
+            output_shape)
+        self.assertEqual(parsed, expected_parsed)
+
+
 class TestHandlesNoOutputShape(unittest.TestCase):
     """Verify that each protocol handles no output shape properly."""
 

@@ -19,20 +19,52 @@ import threading
 
 from botocore.vendored.requests.sessions import Session
 from botocore.vendored.requests.utils import get_environ_proxies
-import six
 
 import botocore.response
 import botocore.exceptions
 from botocore.auth import AUTH_TYPE_MAPS
-from botocore.exceptions import UnknownSignatureVersionError, UnknownEndpointError
+from botocore.exceptions import UnknownSignatureVersionError
+from botocore.exceptions import UnknownEndpointError
 from botocore.awsrequest import AWSRequest
-from botocore.compat import urljoin, json, quote
+from botocore.compat import urljoin
 from botocore.utils import percent_encode_sequence
 from botocore.hooks import first_non_none_response
+from botocore.response import StreamingBody
+from botocore import parsers
 
 
 logger = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 60
+
+
+def convert_to_response_dict(http_response, operation_model):
+    """Convert an HTTP response object to a request dict.
+
+    This converts the requests library's HTTP response object to
+    a dictionary.
+
+    :type http_response: botocore.vendored.requests.model.Response
+    :param http_response: The HTTP response from an AWS service request.
+
+    :rtype: dict
+    :return: A response dictionary which will contain the following keys:
+        * headers (dict)
+        * status_code (int)
+        * body (string or file-like object)
+
+    """
+    response_dict = {
+        'headers': http_response.headers,
+        'status_code': http_response.status_code,
+    }
+    if response_dict['status_code'] >= 300:
+        response_dict['body'] = http_response.content
+    elif operation_model.has_streaming_output:
+        response_dict['body'] = StreamingBody(
+            http_response.raw, response_dict['headers'].get('content-length'))
+    else:
+        response_dict['body'] = http_response.content
+    return response_dict
 
 
 class Endpoint(object):
@@ -48,7 +80,7 @@ class Endpoint(object):
 
     def __init__(self, region_name, host, auth, user_agent, signature_version,
                  endpoint_prefix, event_emitter, proxies=None, verify=True,
-                 timeout=DEFAULT_TIMEOUT):
+                 timeout=DEFAULT_TIMEOUT, response_parser_factory=None):
         self._endpoint_prefix = endpoint_prefix
         self._signature_version = signature_version
         self._event_emitter = event_emitter
@@ -63,6 +95,9 @@ class Endpoint(object):
         self.http_session = Session()
         self.timeout = timeout
         self._lock = threading.Lock()
+        if response_parser_factory is None:
+            response_parser_factory = parsers.ResponseParserFactory()
+        self._response_parser_factory = response_parser_factory
 
     def __repr__(self):
         return '%s(%s)' % (self._endpoint_prefix, self.host)
@@ -131,8 +166,10 @@ class Endpoint(object):
 
     def _send_request(self, request, operation_model):
         attempts = 1
-        response, exception = self._get_response(request, operation_model, attempts)
-        while self._needs_retry(attempts, operation_model, response, exception):
+        response, exception = self._get_response(
+            request, operation_model, attempts)
+        while self._needs_retry(attempts, operation_model,
+                                response, exception):
             attempts += 1
             # If there is a stream associated with the request, we need
             # to reset it before attempting to send the request again.
@@ -158,8 +195,13 @@ class Endpoint(object):
                          exc_info=True)
             return (None, e)
         # This returns the http_response and the parsed_data.
-        return (botocore.response.get_response(operation_model,
-                                               http_response), None)
+        response_dict = convert_to_response_dict(http_response,
+                                                 operation_model)
+        parser = self._response_parser_factory.create_parser(
+            operation_model.metadata['protocol'])
+        return ((http_response, parser.parse(response_dict,
+                                             operation_model.output_shape)),
+                None)
 
     def _needs_retry(self, attempts, operation_model, response=None,
                      caught_exception=None):
@@ -195,7 +237,6 @@ def get_endpoint(service, region_name, endpoint_url, verify=None):
     credentials = session.get_credentials()
     event_emitter = session.get_component('event_emitter')
     user_agent = session.user_agent()
-    auth = None
     return get_endpoint_complex(service_name, endpoint_prefix,
                                 signature_version, credentials,
                                 region_name, endpoint_url, verify, user_agent,
@@ -204,7 +245,8 @@ def get_endpoint(service, region_name, endpoint_url, verify=None):
 
 def get_endpoint_complex(service_name, endpoint_prefix, signature_version,
                          credentials, region_name, endpoint_url, verify,
-                         user_agent, event_emitter):
+                         user_agent, event_emitter,
+                         response_parser_factory=None):
     auth = None
     if signature_version is not None:
         auth = _get_auth(signature_version,
@@ -213,13 +255,15 @@ def get_endpoint_complex(service_name, endpoint_prefix, signature_version,
                          region_name=region_name)
     proxies = _get_proxies(endpoint_url)
     verify = _get_verify_value(verify)
-    return Endpoint(region_name, endpoint_url, auth=auth,
-               user_agent=user_agent,
-               endpoint_prefix=endpoint_prefix,
-               event_emitter=event_emitter,
-               signature_version=signature_version,
-               proxies=proxies,
-               verify=verify)
+    return Endpoint(
+        region_name, endpoint_url, auth=auth,
+        user_agent=user_agent,
+        endpoint_prefix=endpoint_prefix,
+        event_emitter=event_emitter,
+        signature_version=signature_version,
+        proxies=proxies,
+        verify=verify,
+        response_parser_factory=response_parser_factory)
 
 
 def _get_verify_value(verify):
@@ -261,7 +305,8 @@ class EndpointCreator(object):
         self._user_agent = user_agent
 
     def create_endpoint(self, service_model, region_name=None, is_secure=True,
-                        endpoint_url=None, verify=None, credentials=None):
+                        endpoint_url=None, verify=None, credentials=None,
+                        response_parser_factory=None):
         if region_name is None:
             region_name = self._configured_region
         # Use the endpoint resolver heuristics to build the endpoint url.
@@ -299,10 +344,11 @@ class EndpointCreator(object):
             final_endpoint_url = endpoint['uri']
         return self._get_endpoint(service_model, region_name,
                                   signature_version, final_endpoint_url,
-                                  verify, credentials)
+                                  verify, credentials, response_parser_factory)
 
     def _get_endpoint(self, service_model, region_name, signature_version,
-                      endpoint_url, verify, user_provided_creds):
+                      endpoint_url, verify, user_provided_creds,
+                      response_parser_factory):
         service_name = service_model.signing_name
         endpoint_prefix = service_model.endpoint_prefix
         credentials = self._credentials
@@ -316,4 +362,5 @@ class EndpointCreator(object):
         return get_endpoint_complex(service_name, endpoint_prefix,
                                     signature_version, credentials,
                                     region_name, endpoint_url,
-                                    verify, user_agent, event_emitter)
+                                    verify, user_agent, event_emitter,
+                                    response_parser_factory)

@@ -47,7 +47,7 @@ class Service(object):
             service_name,
             api_version=None
         )
-        self._model = ServiceModel(sdata)
+        self._model = session.get_service_model(service_name)
         self.__dict__.update(sdata)
         self._operations_data = self.__dict__.pop('operations')
         self._operations = None
@@ -151,13 +151,16 @@ class Service(object):
         resolver = self.session.get_component('endpoint_resolver')
         region = self.session.get_config_variable('region')
         event_emitter = self.session.get_component('event_emitter')
+        response_parser_factory = self.session.get_component(
+            'response_parser_factory')
         model = self._model
         credentials = self.session.get_credentials()
         user_agent= self.session.user_agent()
         endpoint_creator = EndpointCreator(resolver, region, event_emitter,
                                            credentials, user_agent)
-        return endpoint_creator.create_endpoint(self._model, region_name, is_secure,
-                                                endpoint_url, verify)
+        return endpoint_creator.create_endpoint(
+            self._model, region_name, is_secure, endpoint_url, verify,
+            response_parser_factory=response_parser_factory)
 
     def get_operation(self, operation_name):
         """

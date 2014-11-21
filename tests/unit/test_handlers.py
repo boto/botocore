@@ -52,19 +52,23 @@ class TestHandlers(BaseSessionTest):
         mock_session.get_scoped_config.return_value = {
             's3': {'signature_version': 's3v4'}
         }
-        kwargs = {'service_data': {'signature_version': 's3'},
+        kwargs = {'service_data': {'metadata': {'signatureVersion': 's3'}},
                   'service_name': 's3', 'session': mock_session}
         self.session.emit(event, **kwargs)
-        self.assertEqual(kwargs['service_data']['signature_version'], 's3v4')
+        self.assertEqual(
+            kwargs['service_data']['metadata']['signatureVersion'],
+            's3v4')
 
     def test_noswitch_to_sigv4(self):
         event = self.session.create_event('service-data-loaded', 's3')
         mock_session = mock.Mock()
         mock_session.get_scoped_config.return_value = {}
-        kwargs = {'service_data': {'signature_version': 's3'},
+        kwargs = {'service_data': {'metadata': {'signatureVersion': 's3'}},
                   'service_name': 's3', 'session': mock_session}
         self.session.emit(event, **kwargs)
-        self.assertEqual(kwargs['service_data']['signature_version'], 's3')
+        self.assertEqual(
+            kwargs['service_data']['metadata']['signatureVersion'],
+            's3')
 
     def test_quote_source_header(self):
         for op in ('UploadPartCopy', 'CopyObject'):
@@ -145,22 +149,27 @@ class TestHandlers(BaseSessionTest):
         # object is None.  We need to handle this case.
         handlers.check_for_200_error(None)
 
-    def test_sse_headers(self):
-        prefix = 'x-amz-server-side-encryption-customer-'
+    def test_sse_params(self):
         for op in ('HeadObject', 'GetObject', 'PutObject', 'CopyObject',
                    'CreateMultipartUpload', 'UploadPart', 'UploadPartCopy'):
             event = self.session.create_event(
-                'before-call', 's3', op)
-            params = {'headers': {
-                prefix + 'algorithm': 'foo',
-                prefix + 'key': 'bar'
-                }}
+                'before-parameter-build', 's3', op)
+            params = {'SSECustomerKey': b'bar',
+                      'SSECustomerAlgorithm': 'AES256'}
             self.session.emit(event, params=params, model=mock.Mock())
-            self.assertEqual(
-                params['headers'][prefix + 'key'], 'YmFy')
-            self.assertEqual(
-                params['headers'][prefix + 'key-MD5'],
-                'N7UdGUp1E+RbVvZSTy1R8g==')
+            self.assertEqual(params['SSECustomerKey'], 'YmFy')
+            self.assertEqual(params['SSECustomerKeyMD5'],
+                             'N7UdGUp1E+RbVvZSTy1R8g==')
+
+    def test_sse_params_as_str(self):
+        event = self.session.create_event(
+            'before-parameter-build', 's3', 'PutObject')
+        params = {'SSECustomerKey': 'bar',
+                  'SSECustomerAlgorithm': 'AES256'}
+        self.session.emit(event, params=params, model=mock.Mock())
+        self.assertEqual(params['SSECustomerKey'], 'YmFy')
+        self.assertEqual(params['SSECustomerKeyMD5'],
+                            'N7UdGUp1E+RbVvZSTy1R8g==')
 
     def test_fix_s3_host_initial(self):
         endpoint = mock.Mock(region_name='us-west-2')
@@ -188,6 +197,52 @@ class TestHandlers(BaseSessionTest):
         # calling fix_s3_host() again does not alter the auth_path.
         # Otherwise we'll get signature errors.
         self.assertEqual(request.auth_path, '/bucket/key.txt')
+
+    def test_register_retry_for_handlers_with_no_endpoint_prefix(self):
+        no_endpoint_prefix = {'metadata': {}}
+        session = mock.Mock()
+        handlers.register_retries_for_service(service_data=no_endpoint_prefix,
+                                              session=mock.Mock(),
+                                              service_name='foo')
+        self.assertFalse(session.register.called)
+
+    def test_register_retry_handlers(self):
+        service_data = {
+            'metadata': {'endpointPrefix': 'foo'},
+        }
+        session = mock.Mock()
+        loader = mock.Mock()
+        session.get_component.return_value = loader
+        loader.load_data.return_value = {
+            'retry': {
+                '__default__': {
+                    'max_attempts': 10,
+                    'delay': {
+                        'type': 'exponential',
+                        'base': 2,
+                        'growth_factor': 5,
+                    },
+                },
+            },
+        }
+        handlers.register_retries_for_service(service_data=service_data,
+                                              session=session,
+                                              service_name='foo')
+        session.register.assert_called_with('needs-retry.foo', mock.ANY,
+                                            unique_id='retry-config-foo')
+
+    def test_dns_style_not_used_for_get_bucket_location(self):
+        endpoint = mock.Mock(region_name='us-west-2')
+        original_url = 'https://s3-us-west-2.amazonaws.com/bucket?location'
+        request = AWSRequest(
+            method='GET',headers={},
+            url=original_url,
+        )
+        auth = mock.Mock()
+        handlers.fix_s3_host('foo', endpoint, request, auth)
+        # The request url should not have been modified because this is
+        # a request for GetBucketLocation.
+        self.assertEqual(request.url, original_url)
 
 
 class TestRetryHandlerOrder(BaseSessionTest):

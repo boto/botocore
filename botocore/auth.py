@@ -117,6 +117,8 @@ class SigV3Auth(BaseSigner):
         if 'Date' not in request.headers:
             request.headers['Date'] = formatdate(usegmt=True)
         if self.credentials.token:
+            if 'X-Amz-Security-Token' in request.headers:
+                del request.headers['X-Amz-Security-Token']
             request.headers['X-Amz-Security-Token'] = self.credentials.token
         new_hmac = hmac.new(self.credentials.secret_key.encode('utf-8'),
                             digestmod=sha256)
@@ -125,6 +127,8 @@ class SigV3Auth(BaseSigner):
         signature = ('AWS3-HTTPS AWSAccessKeyId=%s,Algorithm=%s,Signature=%s' %
                      (self.credentials.access_key, 'HmacSHA256',
                       encoded_signature.decode('utf-8')))
+        if 'X-Amzn-Authorization' in request.headers:
+            del request.headers['X-Amzn-Authorization']
         request.headers['X-Amzn-Authorization'] = signature
 
 
@@ -328,8 +332,12 @@ class SigV4Auth(BaseSigner):
         if 'Authorization' in request.headers:
             del request.headers['Authorization']
         if 'Date' not in request.headers:
+            if 'X-Amz-Date' in request.headers:
+                del request.headers['X-Amz-Date']
             request.headers['X-Amz-Date'] = self.timestamp
         if self.credentials.token:
+            if 'X-Amz-Security-Token' in request.headers:
+                del request.headers['X-Amz-Security-Token']
             request.headers['X-Amz-Security-Token'] = self.credentials.token
 
 
@@ -535,7 +543,8 @@ class HmacV1Auth(BaseSigner):
 
     def get_signature(self, method, split, headers, expires=None,
                       auth_path=None):
-        if self.credentials.token and 'x-amz-security-token' not in headers:
+        if self.credentials.token:
+            del headers['x-amz-security-token']
             headers['x-amz-security-token'] = self.credentials.token
         string_to_sign = self.canonical_string(method,
                                                split,
