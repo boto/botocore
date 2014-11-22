@@ -27,6 +27,8 @@ from botocore.vendored.requests.models import Request
 
 class TestHMACV1(unittest.TestCase):
 
+    maxDiff = None
+
     def setUp(self):
         access_key = '44CF9590006BF252F707'
         secret_key = 'OtxrzxIsfpFjA7SwPzILwy8Bw21TLhquhboDYROV'
@@ -120,6 +122,8 @@ class TestHMACV1(unittest.TestCase):
 
 class TestSigV2(unittest.TestCase):
 
+    maxDiff = None
+
     def setUp(self):
         access_key = 'foo'
         secret_key = 'bar'
@@ -164,6 +168,8 @@ class TestSigV2(unittest.TestCase):
 
 class TestSigV3(unittest.TestCase):
 
+    maxDiff = None
+
     def setUp(self):
         self.access_key = 'access_key'
         self.secret_key = 'secret_key'
@@ -199,6 +205,9 @@ class TestSigV3(unittest.TestCase):
 
 
 class TestS3SigV4Auth(unittest.TestCase):
+
+    maxDiff = None
+
     def test_signature_is_not_normalized(self):
         request = AWSRequest()
         request.url = 'https://s3.amazonaws.com/bucket/foo/./bar/../bar'
@@ -212,6 +221,9 @@ class TestS3SigV4Auth(unittest.TestCase):
 
 
 class TestSigV4Resign(unittest.TestCase):
+
+    maxDiff = None
+
     def setUp(self):
         self.credentials = botocore.credentials.Credentials(
             access_key='foo', secret_key='bar', token='baz')
@@ -239,6 +251,7 @@ class TestSigV4Resign(unittest.TestCase):
 
 
 class TestSigV4Presign(unittest.TestCase):
+
     maxDiff = None
 
     def setUp(self):
