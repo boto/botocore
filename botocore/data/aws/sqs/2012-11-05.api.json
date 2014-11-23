@@ -487,16 +487,14 @@
       "member":{
         "shape":"String",
         "locationName":"AWSAccountId"
-      },
-      "flattened":true
+      }
     },
     "ActionNameList":{
       "type":"list",
       "member":{
         "shape":"String",
         "locationName":"ActionName"
-      },
-      "flattened":true
+      }
     },
     "AddPermissionRequest":{
       "type":"structure",
@@ -537,7 +535,6 @@
         "documentation":"<p>The value of a queue attribute.</p>",
         "locationName":"Value"
       },
-      "flattened":true,
       "locationName":"Attribute"
     },
     "AttributeNameList":{
@@ -545,8 +542,7 @@
       "member":{
         "shape":"QueueAttributeName",
         "locationName":"AttributeName"
-      },
-      "flattened":true
+      }
     },
     "BatchEntryIdsNotDistinct":{
       "type":"structure",
@@ -604,8 +600,7 @@
       "member":{
         "shape":"BatchResultErrorEntry",
         "locationName":"BatchResultErrorEntry"
-      },
-      "flattened":true
+      }
     },
     "Binary":{"type":"blob"},
     "BinaryList":{
@@ -660,8 +655,7 @@
       "member":{
         "shape":"ChangeMessageVisibilityBatchRequestEntry",
         "locationName":"ChangeMessageVisibilityBatchRequestEntry"
-      },
-      "flattened":true
+      }
     },
     "ChangeMessageVisibilityBatchResult":{
       "type":"structure",
@@ -697,8 +691,7 @@
       "member":{
         "shape":"ChangeMessageVisibilityBatchResultEntry",
         "locationName":"ChangeMessageVisibilityBatchResultEntry"
-      },
-      "flattened":true
+      }
     },
     "ChangeMessageVisibilityRequest":{
       "type":"structure",
@@ -787,8 +780,7 @@
       "member":{
         "shape":"DeleteMessageBatchRequestEntry",
         "locationName":"DeleteMessageBatchRequestEntry"
-      },
-      "flattened":true
+      }
     },
     "DeleteMessageBatchResult":{
       "type":"structure",
@@ -824,8 +816,7 @@
       "member":{
         "shape":"DeleteMessageBatchResultEntry",
         "locationName":"DeleteMessageBatchResultEntry"
-      },
-      "flattened":true
+      }
     },
     "DeleteMessageRequest":{
       "type":"structure",
@@ -1034,8 +1025,7 @@
       "value":{
         "shape":"MessageAttributeValue",
         "locationName":"Value"
-      },
-      "flattened":true
+      }
     },
     "MessageAttributeName":{"type":"string"},
     "MessageAttributeNameList":{
@@ -1043,8 +1033,7 @@
       "member":{
         "shape":"MessageAttributeName",
         "locationName":"MessageAttributeName"
-      },
-      "flattened":true
+      }
     },
     "MessageAttributeValue":{
       "type":"structure",
@@ -1061,13 +1050,11 @@
         "StringListValues":{
           "shape":"StringList",
           "documentation":"<p>Not implemented. Reserved for future use.</p>",
-          "flattened":true,
           "locationName":"StringListValue"
         },
         "BinaryListValues":{
           "shape":"BinaryList",
           "documentation":"<p>Not implemented. Reserved for future use.</p>",
-          "flattened":true,
           "locationName":"BinaryListValue"
         },
         "DataType":{
@@ -1082,8 +1069,7 @@
       "member":{
         "shape":"Message",
         "locationName":"Message"
-      },
-      "flattened":true
+      }
     },
     "MessageNotInflight":{
       "type":"structure",
@@ -1168,8 +1154,7 @@
       "member":{
         "shape":"String",
         "locationName":"QueueUrl"
-      },
-      "flattened":true
+      }
     },
     "ReceiptHandleIsInvalid":{
       "type":"structure",
@@ -1284,8 +1269,7 @@
       "member":{
         "shape":"SendMessageBatchRequestEntry",
         "locationName":"SendMessageBatchRequestEntry"
-      },
-      "flattened":true
+      }
     },
     "SendMessageBatchResult":{
       "type":"structure",
@@ -1337,8 +1321,7 @@
       "member":{
         "shape":"SendMessageBatchResultEntry",
         "locationName":"SendMessageBatchResultEntry"
-      },
-      "flattened":true
+      }
     },
     "SendMessageRequest":{
       "type":"structure",
