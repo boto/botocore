@@ -814,8 +814,11 @@ class Session(object):
                                                          aws_secret_access_key,
                                                          aws_session_token)
         event_emitter = self.get_component('event_emitter')
+        response_parser_factory = self.get_component(
+            'response_parser_factory')
         client_creator = botocore.client.ClientCreator(loader, endpoint_creator,
-                                                       event_emitter)
+                                                       event_emitter,
+                                                       response_parser_factory)
         client = client_creator.create_client(service_name, region_name, use_ssl,
                                               endpoint_url, verify,
                                               aws_access_key_id,

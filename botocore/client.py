@@ -25,10 +25,12 @@ from botocore import credentials
 
 class ClientCreator(object):
     """Creates client objects for a service."""
-    def __init__(self, loader, endpoint_creator, event_emitter):
+    def __init__(self, loader, endpoint_creator, event_emitter,
+                 response_parser_factory=None):
         self._loader = loader
         self._endpoint_creator = endpoint_creator
         self._event_emitter = event_emitter
+        self._response_parser_factory = response_parser_factory
 
     def create_client(self, service_name, region_name, is_secure=True,
                       endpoint_url=None, verify=None,
@@ -185,7 +187,8 @@ class ClientCreator(object):
         endpoint = self._endpoint_creator.create_endpoint(
             service_model, region_name, is_secure=is_secure,
             endpoint_url=endpoint_url, verify=verify,
-            credentials=creds)
+            credentials=creds,
+            response_parser_factory=self._response_parser_factory)
         response_parser = botocore.parsers.create_parser(protocol)
         return {
             'serializer': serializer,
