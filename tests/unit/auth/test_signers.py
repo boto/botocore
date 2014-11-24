@@ -214,7 +214,7 @@ class TestS3SigV4Auth(unittest.TestCase):
             access_key='foo', secret_key='bar', token='baz')
         self.auth = botocore.auth.S3SigV4Auth(
             self.credentials, 'ec2', 'eu-central-1')
-        self.request = AWSRequest(data=six.BytesIO("foo bar baz"))
+        self.request = AWSRequest(data=six.BytesIO(b"foo bar baz"))
         self.request.method = 'PUT'
         self.request.url = 'https://s3.eu-central-1.amazonaws.com/'
 
