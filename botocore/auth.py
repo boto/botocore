@@ -345,6 +345,8 @@ class S3SigV4Auth(SigV4Auth):
 
     def _modify_request_before_signing(self, request):
         super(S3SigV4Auth, self)._modify_request_before_signing(request)
+        if 'X-Amz-Content-SHA256' in request.headers:
+            del request.headers['X-Amz-Content-SHA256']
         request.headers['X-Amz-Content-SHA256'] = self.payload(request)
 
     def _normalize_url_path(self, path):

@@ -17,6 +17,7 @@ import datetime
 import time
 
 import mock
+import six
 
 import botocore.auth
 import botocore.credentials
@@ -207,6 +208,23 @@ class TestSigV3(unittest.TestCase):
 class TestS3SigV4Auth(unittest.TestCase):
 
     maxDiff = None
+
+    def setUp(self):
+        self.credentials = botocore.credentials.Credentials(
+            access_key='foo', secret_key='bar', token='baz')
+        self.auth = botocore.auth.S3SigV4Auth(
+            self.credentials, 'ec2', 'eu-central-1')
+        self.request = AWSRequest(data=six.BytesIO("foo bar baz"))
+        self.request.method = 'PUT'
+        self.request.url = 'https://s3.eu-central-1.amazonaws.com/'
+
+    def test_resign_with_content_hash(self):
+        self.auth.add_auth(self.request)
+        original_auth = self.request.headers['Authorization']
+
+        self.auth.add_auth(self.request)
+        self.assertEqual(self.request.headers.get_all('Authorization'),
+                         [original_auth])
 
     def test_signature_is_not_normalized(self):
         request = AWSRequest()
