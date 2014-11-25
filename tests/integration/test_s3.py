@@ -26,6 +26,8 @@ try:
 except ImportError:
     from itertools import zip_longest
 
+from botocore.vendored.requests import adapters
+from botocore.vendored.requests.exceptions import ConnectionError
 import botocore.session
 import botocore.auth
 import botocore.credentials
@@ -530,6 +532,49 @@ class TestCreateBucketInOtherRegion(BaseS3Test):
                                bucket=self.bucket_name,
                                key='foo.txt',
                                body=open(f.name, 'rb'))
+            self.assertEqual(response[0].status_code, 200)
+            self.keys.append('foo.txt')
+
+
+class TestSigV4IsRetried(BaseS3Test):
+    def setUp(self):
+        super(TestSigV4IsRetried, self).setUp()
+        self.endpoint = self.service.get_endpoint('eu-central-1')
+        self.bucket_name = 'botocoretest%s-%s' % (
+            int(time.time()), random.randint(1, 1000))
+        self.bucket_location = 'eu-central-1'
+
+        operation = self.service.get_operation('CreateBucket')
+        response = operation.call(self.endpoint, bucket=self.bucket_name,
+            create_bucket_configuration={'LocationConstraint': self.bucket_location})
+        self.assertEqual(response[0].status_code, 200)
+        self.keys = []
+
+    def tearDown(self):
+        for key in self.keys:
+            op = self.service.get_operation('DeleteObject')
+            response = op.call(self.endpoint, bucket=self.bucket_name, key=key)
+            self.assertEqual(response[0].status_code, 204)
+        self.delete_bucket(self.bucket_name)
+
+    def test_request_retried_for_sigv4(self):
+        operation = self.service.get_operation('PutObject')
+        body = six.BytesIO(b"Hello world!")
+
+        original_send = adapters.HTTPAdapter.send
+        state = mock.Mock()
+        state.error_raised = False
+        def mock_http_adapter_send(self, *args, **kwargs):
+            if not state.error_raised:
+                state.error_raised = True
+                raise ConnectionError("Simulated ConnectionError raised.")
+            else:
+                return original_send(self, *args, **kwargs)
+        with mock.patch('botocore.vendored.requests.adapters.HTTPAdapter.send',
+                        mock_http_adapter_send):
+            response = operation.call(self.endpoint,
+                                      Bucket=self.bucket_name,
+                                      Key='foo.txt', Body=body)
             self.assertEqual(response[0].status_code, 200)
             self.keys.append('foo.txt')
 
