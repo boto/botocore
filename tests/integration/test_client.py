@@ -13,6 +13,7 @@
 import time
 import random
 import logging
+import datetime
 from tests import unittest
 
 from six import StringIO
@@ -93,3 +94,33 @@ class TestResponseLog(unittest.TestCase):
         debug_log_contents = debug_log.getvalue()
         self.assertIn('Response headers', debug_log_contents)
         self.assertIn('Response body', debug_log_contents)
+
+
+class TestAcceptedDateTimeFormats(unittest.TestCase):
+    def setUp(self):
+        self.session = botocore.session.get_session()
+        self.client = self.session.create_client('emr')
+
+    def test_accepts_datetime_object(self):
+        response = self.client.list_clusters(
+            CreatedAfter=datetime.datetime.now())
+        self.assertIn('Clusters', response)
+
+    def test_accepts_epoch_format(self):
+        response = self.client.list_clusters(CreatedAfter=0)
+        self.assertIn('Clusters', response)
+
+    def test_accepts_iso_8601_unaware(self):
+        response = self.client.list_clusters(
+            CreatedAfter='2014-01-01T00:00:00')
+        self.assertIn('Clusters', response)
+
+    def test_accepts_iso_8601_utc(self):
+        response = self.client.list_clusters(
+            CreatedAfter='2014-01-01T00:00:00Z')
+        self.assertIn('Clusters', response)
+
+    def test_accepts_iso_8701_local(self):
+        response = self.client.list_clusters(
+            CreatedAfter='2014-01-01T00:00:00-08:00')
+        self.assertIn('Clusters', response)
