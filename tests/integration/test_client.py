@@ -59,7 +59,8 @@ class TestBucketWithVersions(unittest.TestCase):
             Bucket=self.bucket_name, Key='testkey')
         self.assertEqual(response['Body'].read(), b'bytes body')
 
-        response = self.client.delete_object(Bucket=self.bucket_name, Key='testkey')
+        response = self.client.delete_object(Bucket=self.bucket_name,
+                                             Key='testkey')
         # This cleanup step removes the DeleteMarker that's created
         # from the delete_object call above.
         self.addCleanup(self.client.delete_object,
@@ -99,7 +100,7 @@ class TestResponseLog(unittest.TestCase):
 class TestAcceptedDateTimeFormats(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
-        self.client = self.session.create_client('emr')
+        self.client = self.session.create_client('emr', 'us-west-2')
 
     def test_accepts_datetime_object(self):
         response = self.client.list_clusters(
