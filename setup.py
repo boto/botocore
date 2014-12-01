@@ -10,9 +10,9 @@ import botocore
 from setuptools import setup, find_packages
 
 
-requires = ['six>=1.1.0',
+requires = ['six>=1.8.0,<2.0.0',
             'jmespath==0.5.0',
-            'python-dateutil>=2.1']
+            'python-dateutil>=2.1,<3.0.0']
 
 
 if sys.version_info[:2] == (2, 6):

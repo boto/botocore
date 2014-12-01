@@ -41,13 +41,14 @@ import re
 import time
 import base64
 from xml.etree import ElementTree
+import calendar
 
 import datetime
 from dateutil.tz import tzutc
 import six
 
 from botocore.compat import json, formatdate
-from botocore.utils import parse_timestamp
+from botocore.utils import parse_timestamp, parse_to_aware_datetime
 from botocore.utils import percent_encode
 from botocore import validate
 
@@ -132,34 +133,16 @@ class Serializer(object):
             timestamp_format = ISO8601_MICRO
         else:
             timestamp_format = ISO8601
-        if value.tzinfo is None:
-            # I think a case would be made that if no time zone is provided,
-            # we should use the local time.  However, to restore backwards
-            # compat, the previous behavior was to assume UTC, which is
-            # what we're going to do here.
-            datetime_obj = value.replace(tzinfo=tzutc())
-        else:
-            datetime_obj = value.astimezone(tzutc())
-        return datetime_obj.strftime(timestamp_format)
+        return value.strftime(timestamp_format)
 
     def _timestamp_unixtimestamp(self, value):
-        return int(time.mktime(value.timetuple()))
+        return int(calendar.timegm(value.timetuple()))
 
     def _timestamp_rfc822(self, value):
         return formatdate(value)
 
     def _convert_timestamp_to_str(self, value):
-        # This is a general purpose method that handles several cases of
-        # converting the provided value to a string timestamp suitable to be
-        # serialized to an http request. It can handle:
-        # 1) A datetime.datetime object.
-        if isinstance(value, datetime.datetime):
-            datetime_obj = value
-        else:
-            # 2) A string object that's formatted as a timestamp.
-            #    We document this as being an iso8601 timestamp, although
-            #    parse_timestamp is a bit more flexible.
-            datetime_obj = parse_timestamp(value)
+        datetime_obj = parse_to_aware_datetime(value)
         converter = getattr(
             self, '_timestamp_%s' % self.TIMESTAMP_FORMAT.lower())
         final_value = converter(datetime_obj)
@@ -304,6 +287,8 @@ class EC2Serializer(QuerySerializer):
 
 
 class JSONSerializer(Serializer):
+    TIMESTAMP_FORMAT = 'unixtimestamp'
+
     def serialize_to_request(self, parameters, operation_model):
         target = '%s.%s' % (operation_model.metadata['targetPrefix'],
                             operation_model.name)
@@ -315,8 +300,38 @@ class JSONSerializer(Serializer):
             'X-Amz-Target': target,
             'Content-Type': 'application/x-amz-json-%s' % json_version,
         }
-        serialized['body'] = json.dumps(parameters)
+        body = {}
+        input_shape = operation_model.input_shape
+        if input_shape is not None:
+            self._serialize(body, parameters, input_shape)
+        serialized['body'] = json.dumps(body)
         return serialized
+
+    def _serialize(self, serialized, value, shape, key=None):
+        method = getattr(self, '_serialize_type_%s' % shape.type_name,
+                         self._default_serialize)
+        method(serialized, value, shape, key)
+
+    def _serialize_type_structure(self, serialized, value, shape, key):
+        if key is not None:
+            # If a key is provided, this is a result of a recursive
+            # call so we need to add a new child dict as the value
+            # of the passed in serialized dict.  We'll then add
+            # all the structure members as key/vals in the new serialized
+            # dictionary we just created.
+            new_serialized = {}
+            serialized[key] = new_serialized
+            serialized = new_serialized
+        members = shape.members
+        for member_key, member_value in value.items():
+            member_shape = members[member_key]
+            self._serialize(serialized, member_value, member_shape, member_key)
+
+    def _default_serialize(self, serialized, value, shape, key):
+        serialized[key] = value
+
+    def _serialize_type_timestamp(self, serialized, value, shape, key):
+        serialized[key] = self._convert_timestamp_to_str(value)
 
 
 class BaseRestSerializer(Serializer):

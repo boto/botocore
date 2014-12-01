@@ -17,7 +17,7 @@ import six
 import decimal
 from datetime import datetime
 
-from botocore.utils import parse_timestamp
+from botocore.utils import parse_to_aware_datetime
 from botocore.exceptions import ParamValidationError
 
 
@@ -250,10 +250,8 @@ class ParamValidator(object):
                             valid_types=valid_type_names)
 
     def _type_check_datetime(self, value):
-        if isinstance(value, datetime):
-            return True
         try:
-            parse_timestamp(value)
+            parse_to_aware_datetime(value)
             return True
         except (TypeError, ValueError):
             return False
