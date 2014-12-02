@@ -50,7 +50,7 @@ class TestKinesisListStreams(unittest.TestCase):
         records = self.client.get_records(
             ShardIterator=shard_iterator['ShardIterator'])
         self.assertTrue(len(records['Records']) > 0)
-        self.assertEqual(records['Records'][0]['Data'], 'foobar')
+        self.assertEqual(records['Records'][0]['Data'], b'foobar')
 
 
 if __name__ == '__main__':
