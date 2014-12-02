@@ -43,8 +43,6 @@ import base64
 from xml.etree import ElementTree
 import calendar
 
-import datetime
-from dateutil.tz import tzutc
 import six
 
 from botocore.compat import json, formatdate
@@ -327,11 +325,23 @@ class JSONSerializer(Serializer):
             member_shape = members[member_key]
             self._serialize(serialized, member_value, member_shape, member_key)
 
+    def _serialize_type_map(self, serialized, value, shape, key):
+        map_obj = self.MAP_TYPE()
+        serialized[key] = map_obj
+        for sub_key, sub_value in value.items():
+            self._serialize(map_obj, sub_value, shape.value, sub_key)
+
     def _default_serialize(self, serialized, value, shape, key):
         serialized[key] = value
 
     def _serialize_type_timestamp(self, serialized, value, shape, key):
         serialized[key] = self._convert_timestamp_to_str(value)
+
+    def _serialize_type_blob(self, serialized, value, shape, key):
+        b64_encoded = base64.b64encode(
+            value.encode(self.DEFAULT_ENCODING)).strip().decode(
+                self.DEFAULT_ENCODING)
+        serialized[key] = b64_encoded
 
 
 class BaseRestSerializer(Serializer):
