@@ -1208,6 +1208,10 @@
         "OptionsToRemove":{
           "shape":"OptionsSpecifierList",
           "documentation":"<p> A list of custom user-defined configuration options to remove from the configuration set for this new environment. </p>"
+        },
+        "TemplateSpecification":{
+          "shape":"EnvironmentTemplateSpecification",
+          "documentation":""
         }
       },
       "documentation":"<p></p>"
@@ -1925,6 +1929,50 @@
     "OptionsSpecifierList":{
       "type":"list",
       "member":{"shape":"OptionSpecification"}
+    },
+    "S3LocationUrl":{"type":"string"},
+    "SnippetOrder":{"type":"integer"},
+    "TemplateSnippet":{
+      "type":"structure",
+      "members":{
+        "SnippetName":{
+          "shape":"String"
+        },
+        "SourceUrl":{
+          "shape":"S3LocationUrl"
+        },
+        "Order":{
+          "shape":"SnippetOrder"
+        }
+      }
+    },
+    "TemplateSnippetList":{
+      "type":"list",
+      "member":{"shape":"TemplateSnippet"}
+    },
+    "TemplateSource":{
+      "type":"structure",
+      "members":{
+        "EnvironmentName":{
+          "shape":"EnvironmentName"
+        },
+        "SourceContents":{
+          "shape":"String"
+        }
+      }
+    },
+    "EnvironmentTemplateSpecification":{
+      "type": "structure",
+      "members": {
+        "TemplateSource":{
+          "shape":"TemplateSource",
+          "documentation": ""
+        },
+        "TemplateSnippets":{
+          "shape": "TemplateSnippetList",
+          "documentation":""
+        }
+      }
     },
     "Queue":{
       "type":"structure",
