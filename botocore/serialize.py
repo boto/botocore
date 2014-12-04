@@ -338,8 +338,9 @@ class JSONSerializer(Serializer):
         serialized[key] = self._convert_timestamp_to_str(value)
 
     def _serialize_type_blob(self, serialized, value, shape, key):
-        b64_encoded = base64.b64encode(
-            value.encode(self.DEFAULT_ENCODING)).strip().decode(
+        if isinstance(value, six.text_type):
+            value = value.encode(self.DEFAULT_ENCODING)
+        b64_encoded = base64.b64encode(value).strip().decode(
                 self.DEFAULT_ENCODING)
         serialized[key] = b64_encoded
 
