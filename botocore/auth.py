@@ -114,8 +114,9 @@ class SigV3Auth(BaseSigner):
     def add_auth(self, request):
         if self.credentials is None:
             raise NoCredentialsError
-        if 'Date' not in request.headers:
-            request.headers['Date'] = formatdate(usegmt=True)
+        if 'Date' in request.headers:
+            del request.headers['Date']
+        request.headers['Date'] = formatdate(usegmt=True)
         if self.credentials.token:
             if 'X-Amz-Security-Token' in request.headers:
                 del request.headers['X-Amz-Security-Token']
@@ -472,8 +473,9 @@ class HmacV1Auth(BaseSigner):
     def canonical_standard_headers(self, headers):
         interesting_headers = ['content-md5', 'content-type', 'date']
         hoi = []
-        if 'Date' not in headers:
-            headers['Date'] = formatdate(usegmt=True)
+        if 'Date' in headers:
+            del headers['Date']
+        headers['Date'] = formatdate(usegmt=True)
         for ih in interesting_headers:
             found = False
             for key in headers:
