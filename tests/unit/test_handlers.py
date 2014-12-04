@@ -171,6 +171,24 @@ class TestHandlers(BaseSessionTest):
         self.assertEqual(params['SSECustomerKeyMD5'],
                             'N7UdGUp1E+RbVvZSTy1R8g==')
 
+    def test_route53_resource_id(self):
+        event = self.session.create_event(
+            'before-parameter-build', 'route53', 'GetHostedZone')
+        params = {'Id': '/hostedzone/ABC123',
+                  'HostedZoneId': '/hostedzone/ABC123',
+                  'ResourceId': '/hostedzone/DEF456',
+                  'DelegationSetId': '/hostedzone/GHI789',
+                  'Other': '/hostedzone/foo'}
+        self.session.emit(event, params=params, model=mock.Mock())
+
+        self.assertEqual(params['Id'], 'ABC123')
+        self.assertEqual(params['HostedZoneId'], 'ABC123')
+        self.assertEqual(params['ResourceId'], 'DEF456')
+        self.assertEqual(params['DelegationSetId'], 'GHI789')
+
+        # This one should have been left alone
+        self.assertEqual(params['Other'], '/hostedzone/foo')
+
     def test_fix_s3_host_initial(self):
         endpoint = mock.Mock(region_name='us-west-2')
         request = AWSRequest(

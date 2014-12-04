@@ -377,6 +377,20 @@ def base64_encode_user_data(params, **kwargs):
             params['UserData'].encode('utf-8')).decode('utf-8')
 
 
+def fix_route53_ids(params, **kwargs):
+    """
+    Check for and split apart Route53 resource IDs, setting
+    only the last piece. This allows the output of one operation
+    (e.g. ``'foo/1234'``) to be used as input in another
+    operation (e.g. it expects just ``'1234'``).
+    """
+    for name in ['Id', 'HostedZoneId', 'ResourceId', 'DelegationSetId']:
+        if name in params:
+            orig_value = params[name]
+            params[name] = orig_value.split('/')[-1]
+            logger.debug('%s %s -> %s', name, orig_value, params[name])
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -413,4 +427,5 @@ BUILTIN_HANDLERS = [
     ('before-parameter-build.ec2.RunInstances', base64_encode_user_data),
     ('before-parameter-build.autoscaling.CreateLaunchConfiguration',
      base64_encode_user_data),
+    ('before-parameter-build.route53', fix_route53_ids)
 ]
