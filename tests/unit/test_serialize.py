@@ -12,6 +12,7 @@ spec.  This can happen for a number of reasons:
 
 """
 import base64
+import json
 import datetime
 import dateutil.tz
 from tests import unittest
@@ -144,3 +145,59 @@ class TestTimestamps(unittest.TestCase):
             {'Timestamp': '2014-01-01T12:12:12.123456'})
         self.assertEqual(request['body']['Timestamp'],
                          '2014-01-01T12:12:12.123456Z')
+
+
+class TestJSONTimestampSerialization(unittest.TestCase):
+    def setUp(self):
+        self.model = {
+            'metadata': {'protocol': 'json', 'apiVersion': '2014-01-01',
+                         'jsonVersion': '1.1', 'targetPrefix': 'foo'},
+            'documentation': '',
+            'operations': {
+                'TestOperation': {
+                    'name': 'TestOperation',
+                    'http': {
+                        'method': 'POST',
+                        'requestUri': '/',
+                    },
+                    'input': {'shape': 'InputShape'},
+                }
+            },
+            'shapes': {
+                'InputShape': {
+                    'type': 'structure',
+                    'members': {
+                        'Timestamp': {'shape': 'TimestampType'},
+                    }
+                },
+                'TimestampType': {
+                    'type': 'timestamp',
+                }
+            }
+        }
+        self.service_model = ServiceModel(self.model)
+
+    def serialize_to_request(self, input_params):
+        request_serializer = serialize.create_serializer(
+            self.service_model.metadata['protocol'])
+        return request_serializer.serialize_to_request(
+            input_params, self.service_model.operation_model('TestOperation'))
+
+    def test_accepts_iso_8601_format(self):
+        body = json.loads(self.serialize_to_request(
+            {'Timestamp': '1970-01-01T00:00:00'})['body'])
+        self.assertEqual(body['Timestamp'], 0)
+
+    def test_accepts_epoch(self):
+        body = json.loads(self.serialize_to_request(
+            {'Timestamp': '0'})['body'])
+        self.assertEqual(body['Timestamp'], 0)
+        # Can also be an integer 0.
+        body = json.loads(self.serialize_to_request(
+            {'Timestamp': 0})['body'])
+        self.assertEqual(body['Timestamp'], 0)
+
+    def test_accepts_partial_iso_format(self):
+        body = json.loads(self.serialize_to_request(
+            {'Timestamp': '1970-01-01'})['body'])
+        self.assertEqual(body['Timestamp'], 0)

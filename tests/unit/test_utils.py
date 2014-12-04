@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from tests import unittest
-from dateutil.tz import tzutc
+from dateutil.tz import tzutc, tzoffset
 import datetime
 
 import mock
@@ -26,6 +26,7 @@ from botocore.utils import set_value_from_jmespath
 from botocore.utils import parse_key_val_file_contents
 from botocore.utils import parse_key_val_file
 from botocore.utils import parse_timestamp
+from botocore.utils import parse_to_aware_datetime
 from botocore.utils import CachedProperty
 from botocore.utils import ArgumentGenerator
 from botocore.model import DenormalizedStructureBuilder
@@ -196,6 +197,16 @@ class TestParseTimestamps(unittest.TestCase):
             parse_timestamp(1222172800),
             datetime.datetime(2008, 9, 23, 12, 26, 40, tzinfo=tzutc()))
 
+    def test_parse_epoch_zero_time(self):
+        self.assertEqual(
+            parse_timestamp(0),
+            datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc()))
+
+    def test_parse_epoch_as_string(self):
+        self.assertEqual(
+            parse_timestamp('1222172800'),
+            datetime.datetime(2008, 9, 23, 12, 26, 40, tzinfo=tzutc()))
+
     def test_parse_rfc822(self):
         self.assertEqual(
             parse_timestamp('Wed, 02 Oct 2002 13:00:00 GMT'),
@@ -204,6 +215,40 @@ class TestParseTimestamps(unittest.TestCase):
     def test_parse_invalid_timestamp(self):
         with self.assertRaises(ValueError):
             parse_timestamp('invalid date')
+
+
+class TestParseToUTCDatetime(unittest.TestCase):
+    def test_handles_utc_time(self):
+        original = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
+        self.assertEqual(parse_to_aware_datetime(original), original)
+
+    def test_handles_other_timezone(self):
+        tzinfo = tzoffset("BRST", -10800)
+        original = datetime.datetime(2014, 1, 1, 0, 0, 0, tzinfo=tzinfo)
+        self.assertEqual(parse_to_aware_datetime(original), original)
+
+    def test_handles_naive_datetime(self):
+        original = datetime.datetime(1970, 1, 1, 0, 0, 0)
+        expected = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
+        self.assertEqual(parse_to_aware_datetime(original), expected)
+
+    def test_handles_string_epoch(self):
+        expected = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
+        self.assertEqual(parse_to_aware_datetime('0'), expected)
+
+    def test_handles_int_epoch(self):
+        expected = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
+        self.assertEqual(parse_to_aware_datetime(0), expected)
+
+    def test_handles_full_iso_8601(self):
+        expected = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
+        self.assertEqual(
+            parse_to_aware_datetime('1970-01-01T00:00:00Z'),
+            expected)
+
+    def test_year_only_iso_8601(self):
+        expected = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=tzutc())
+        self.assertEqual(parse_to_aware_datetime('1970-01-01'), expected)
 
 
 class TestCachedProperty(unittest.TestCase):
