@@ -36,6 +36,12 @@ class TestHMACV1(unittest.TestCase):
         self.credentials = botocore.credentials.Credentials(access_key,
                                                             secret_key)
         self.hmacv1 = botocore.auth.HmacV1Auth(self.credentials, None, None)
+        self.date_mock = mock.patch('botocore.auth.formatdate')
+        self.formatdate = self.date_mock.start()
+        self.formatdate.return_value = 'Thu, 17 Nov 2005 18:49:58 GMT'
+
+    def tearDown(self):
+        self.date_mock.stop()
 
     def test_put(self):
         headers = {'Date': 'Thu, 17 Nov 2005 18:49:58 GMT',
@@ -115,10 +121,36 @@ class TestHMACV1(unittest.TestCase):
         auth.add_auth(request)
         original_auth = request.headers['Authorization']
         # Resigning the request shouldn't change the authorization
-        # header.
+        # header.  We are also ensuring that the date stays the same
+        # because we're mocking out the formatdate() call.  There's
+        # another unit test that verifies we use the latest time
+        # when we sign the request.
         auth.add_auth(request)
         self.assertEqual(request.headers.get_all('Authorization'),
                          [original_auth])
+
+    def test_resign_uses_most_recent_date(self):
+        dates = [
+            'Thu, 17 Nov 2005 18:49:58 GMT',
+            'Thu, 17 Nov 2014 20:00:00 GMT',
+        ]
+        self.formatdate.side_effect = dates
+
+        request = AWSRequest()
+        request.headers['Content-Type'] = 'text/html'
+        request.method = 'PUT'
+        request.url = 'https://s3.amazonaws.com/bucket/key'
+
+        self.hmacv1.add_auth(request)
+        original_date = request.headers['Date']
+
+        self.hmacv1.add_auth(request)
+        modified_date = request.headers['Date']
+
+        # Each time we sign a request, we make another call to formatdate()
+        # so we should have a different date header each time.
+        self.assertEqual(original_date, dates[0])
+        self.assertEqual(modified_date, dates[1])
 
 
 class TestSigV2(unittest.TestCase):
@@ -177,6 +209,12 @@ class TestSigV3(unittest.TestCase):
         self.credentials = botocore.credentials.Credentials(self.access_key,
                                                             self.secret_key)
         self.auth = botocore.auth.SigV3Auth(self.credentials)
+        self.date_mock = mock.patch('botocore.auth.formatdate')
+        self.formatdate = self.date_mock.start()
+        self.formatdate.return_value = 'Thu, 17 Nov 2005 18:49:58 GMT'
+
+    def tearDown(self):
+        self.date_mock.stop()
 
     def test_signature_with_date_headers(self):
         request = AWSRequest()

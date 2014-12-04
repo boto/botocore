@@ -16,11 +16,13 @@ from tests import BaseSessionTest
 import base64
 import six
 import mock
+import copy
 
 import botocore.session
 from botocore.hooks import first_non_none_response
 from botocore.awsrequest import AWSRequest
 from botocore.compat import quote
+from botocore.model import OperationModel, ServiceModel
 from botocore import handlers
 
 
@@ -171,6 +173,81 @@ class TestHandlers(BaseSessionTest):
         self.assertEqual(params['SSECustomerKeyMD5'],
                             'N7UdGUp1E+RbVvZSTy1R8g==')
 
+    def test_route53_resource_id(self):
+        event = self.session.create_event(
+            'before-parameter-build', 'route53', 'GetHostedZone')
+        params = {'Id': '/hostedzone/ABC123',
+                  'HostedZoneId': '/hostedzone/ABC123',
+                  'ResourceId': '/hostedzone/DEF456',
+                  'DelegationSetId': '/hostedzone/GHI789',
+                  'Other': '/hostedzone/foo'}
+        operation_def = {
+            'name': 'GetHostedZone',
+            'input': {
+                'shape': 'GetHostedZoneInput'
+            }
+        }
+        service_def = {
+            'metadata': {},
+            'shapes': {
+                'GetHostedZoneInput': {
+                    'type': 'structure',
+                    'members': {
+                        'Id': {
+                            'shape': 'ResourceId'
+                        },
+                        'HostedZoneId': {
+                            'shape': 'ResourceId'
+                        },
+                        'ResourceId': {
+                            'shape': 'ResourceId'
+                        },
+                        'DelegationSetId': {
+                            'shape': 'DelegationSetId'
+                        },
+                        'Other': {
+                            'shape': 'String'
+                        }
+                    }
+                },
+                'ResourceId': {
+                    'type': 'string'
+                },
+                'DelegationSetId': {
+                    'type': 'string'
+                },
+                'String': {
+                    'type': 'string'
+                }
+            }
+        }
+        model = OperationModel(operation_def, ServiceModel(service_def))
+        self.session.emit(event, params=params, model=model)
+
+        self.assertEqual(params['Id'], 'ABC123')
+        self.assertEqual(params['HostedZoneId'], 'ABC123')
+        self.assertEqual(params['ResourceId'], 'DEF456')
+        self.assertEqual(params['DelegationSetId'], 'GHI789')
+
+        # This one should have been left alone
+        self.assertEqual(params['Other'], '/hostedzone/foo')
+
+    def test_route53_resource_id_missing_input_shape(self):
+        event = self.session.create_event(
+            'before-parameter-build', 'route53', 'GetHostedZone')
+        params = {'HostedZoneId': '/hostedzone/ABC123',}
+        operation_def = {
+            'name': 'GetHostedZone'
+        }
+        service_def = {
+            'metadata': {},
+            'shapes': {}
+        }
+        model = OperationModel(operation_def, ServiceModel(service_def))
+        self.session.emit(event, params=params, model=model)
+
+        self.assertEqual(params['HostedZoneId'], '/hostedzone/ABC123')
+
     def test_fix_s3_host_initial(self):
         endpoint = mock.Mock(region_name='us-west-2')
         request = AWSRequest(
@@ -243,6 +320,14 @@ class TestHandlers(BaseSessionTest):
         # The request url should not have been modified because this is
         # a request for GetBucketLocation.
         self.assertEqual(request.url, original_url)
+
+    def test_get_template_has_error_response(self):
+        original = {'Error': {'Code': 'Message'}}
+        handler_input = copy.deepcopy(original)
+        handlers.json_decode_template_body(parsed=handler_input)
+        # The handler should not have changed the response because it's
+        # an error response.
+        self.assertEqual(original, handler_input)
 
 
 class TestRetryHandlerOrder(BaseSessionTest):

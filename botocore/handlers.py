@@ -98,11 +98,12 @@ def decode_quoted_jsondoc(value):
 
 
 def json_decode_template_body(parsed, **kwargs):
-    try:
-        value = json.loads(parsed['TemplateBody'])
-        parsed['TemplateBody'] = value
-    except (ValueError, TypeError):
-        logger.debug('error loading JSON', exc_info=True)
+    if 'TemplateBody' in parsed:
+        try:
+            value = json.loads(parsed['TemplateBody'])
+            parsed['TemplateBody'] = value
+        except (ValueError, TypeError):
+            logger.debug('error loading JSON', exc_info=True)
 
 
 def calculate_md5(params, **kwargs):
@@ -377,6 +378,27 @@ def base64_encode_user_data(params, **kwargs):
             params['UserData'].encode('utf-8')).decode('utf-8')
 
 
+def fix_route53_ids(params, model, **kwargs):
+    """
+    Check for and split apart Route53 resource IDs, setting
+    only the last piece. This allows the output of one operation
+    (e.g. ``'foo/1234'``) to be used as input in another
+    operation (e.g. it expects just ``'1234'``).
+    """
+    input_shape = model.input_shape
+    if not input_shape or not hasattr(input_shape, 'members'):
+        return
+
+    members = [name for (name, shape) in input_shape.members.items()
+               if shape.name in ['ResourceId', 'DelegationSetId']]
+
+    for name in members:
+        if name in params:
+            orig_value = params[name]
+            params[name] = orig_value.split('/')[-1]
+            logger.debug('%s %s -> %s', name, orig_value, params[name])
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -413,4 +435,5 @@ BUILTIN_HANDLERS = [
     ('before-parameter-build.ec2.RunInstances', base64_encode_user_data),
     ('before-parameter-build.autoscaling.CreateLaunchConfiguration',
      base64_encode_user_data),
+    ('before-parameter-build.route53', fix_route53_ids)
 ]
