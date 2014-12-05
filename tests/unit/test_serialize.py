@@ -83,6 +83,47 @@ class TestBinaryTypes(unittest.TestCase):
             request, blob_bytes=body.encode('utf-8'))
 
 
+class TestBinaryTypesJSON(unittest.TestCase):
+    def setUp(self):
+        self.model = {
+            'metadata': {'protocol': 'json', 'apiVersion': '2014-01-01',
+                         'jsonVersion': '1.1', 'targetPrefix': 'foo'},
+            'documentation': '',
+            'operations': {
+                'TestOperation': {
+                    'name': 'TestOperation',
+                    'http': {
+                        'method': 'POST',
+                        'requestUri': '/',
+                    },
+                    'input': {'shape': 'InputShape'},
+                }
+            },
+            'shapes': {
+                'InputShape': {
+                    'type': 'structure',
+                    'members': {
+                        'Blob': {'shape': 'BlobType'},
+                    }
+                },
+                'BlobType': {
+                    'type': 'blob',
+                }
+            }
+        }
+        self.service_model = ServiceModel(self.model)
+
+    def serialize_to_request(self, input_params):
+        request_serializer = serialize.create_serializer(
+            self.service_model.metadata['protocol'])
+        return request_serializer.serialize_to_request(
+            input_params, self.service_model.operation_model('TestOperation'))
+
+    def test_blob_accepts_bytes_type(self):
+        body = b'bytes body'
+        self.serialize_to_request(input_params={'Blob': body})
+
+
 class TestTimestamps(unittest.TestCase):
     def setUp(self):
         self.model = {
