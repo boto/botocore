@@ -353,8 +353,6 @@ class SigV4Auth(BaseSigner):
             if 'X-Amz-Date' in request.headers:
                 del request.headers['X-Amz-Date']
             request.headers['X-Amz-Date'] = self.timestamp
-            if 'Date' in request.headers:
-                del request.headers['Date']
 
 
 class S3SigV4Auth(SigV4Auth):
