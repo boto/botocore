@@ -21,6 +21,7 @@ import botocore.session
 from botocore.hooks import first_non_none_response
 from botocore.awsrequest import AWSRequest
 from botocore.compat import quote
+from botocore.model import OperationModel, ServiceModel
 from botocore import handlers
 
 
@@ -179,7 +180,48 @@ class TestHandlers(BaseSessionTest):
                   'ResourceId': '/hostedzone/DEF456',
                   'DelegationSetId': '/hostedzone/GHI789',
                   'Other': '/hostedzone/foo'}
-        self.session.emit(event, params=params, model=mock.Mock())
+        operation_def = {
+            'name': 'GetHostedZone',
+            'input': {
+                'shape': 'GetHostedZoneInput'
+            }
+        }
+        service_def = {
+            'metadata': {},
+            'shapes': {
+                'GetHostedZoneInput': {
+                    'type': 'structure',
+                    'members': {
+                        'Id': {
+                            'shape': 'ResourceId'
+                        },
+                        'HostedZoneId': {
+                            'shape': 'ResourceId'
+                        },
+                        'ResourceId': {
+                            'shape': 'ResourceId'
+                        },
+                        'DelegationSetId': {
+                            'shape': 'DelegationSetId'
+                        },
+                        'Other': {
+                            'shape': 'String'
+                        }
+                    }
+                },
+                'ResourceId': {
+                    'type': 'string'
+                },
+                'DelegationSetId': {
+                    'type': 'string'
+                },
+                'String': {
+                    'type': 'string'
+                }
+            }
+        }
+        model = OperationModel(operation_def, ServiceModel(service_def))
+        self.session.emit(event, params=params, model=model)
 
         self.assertEqual(params['Id'], 'ABC123')
         self.assertEqual(params['HostedZoneId'], 'ABC123')
@@ -188,6 +230,22 @@ class TestHandlers(BaseSessionTest):
 
         # This one should have been left alone
         self.assertEqual(params['Other'], '/hostedzone/foo')
+
+    def test_route53_resource_id_missing_input_shape(self):
+        event = self.session.create_event(
+            'before-parameter-build', 'route53', 'GetHostedZone')
+        params = {'HostedZoneId': '/hostedzone/ABC123',}
+        operation_def = {
+            'name': 'GetHostedZone'
+        }
+        service_def = {
+            'metadata': {},
+            'shapes': {}
+        }
+        model = OperationModel(operation_def, ServiceModel(service_def))
+        self.session.emit(event, params=params, model=model)
+
+        self.assertEqual(params['HostedZoneId'], '/hostedzone/ABC123')
 
     def test_fix_s3_host_initial(self):
         endpoint = mock.Mock(region_name='us-west-2')

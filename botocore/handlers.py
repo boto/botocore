@@ -377,14 +377,21 @@ def base64_encode_user_data(params, **kwargs):
             params['UserData'].encode('utf-8')).decode('utf-8')
 
 
-def fix_route53_ids(params, **kwargs):
+def fix_route53_ids(params, model, **kwargs):
     """
     Check for and split apart Route53 resource IDs, setting
     only the last piece. This allows the output of one operation
     (e.g. ``'foo/1234'``) to be used as input in another
     operation (e.g. it expects just ``'1234'``).
     """
-    for name in ['Id', 'HostedZoneId', 'ResourceId', 'DelegationSetId']:
+    input_shape = model.input_shape
+    if not input_shape or not hasattr(input_shape, 'members'):
+        return
+
+    members = [name for (name, shape) in input_shape.members.items()
+               if shape.name in ['ResourceId', 'DelegationSetId']]
+
+    for name in members:
         if name in params:
             orig_value = params[name]
             params[name] = orig_value.split('/')[-1]
