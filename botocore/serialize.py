@@ -151,6 +151,15 @@ class Serializer(object):
         # Otherwise it will return the passed in default_name.
         return shape.serialization.get('name', default_name)
 
+    def _get_base64(self, value):
+        # Returns the base64-encoded version of value, handling
+        # both strings and bytes. The returned value is a string
+        # via the default encoding.
+        if isinstance(value, six.text_type):
+            value = value.encode(self.DEFAULT_ENCODING)
+        return base64.b64encode(value).strip().decode(
+            self.DEFAULT_ENCODING)
+
 
 class QuerySerializer(Serializer):
 
@@ -228,16 +237,7 @@ class QuerySerializer(Serializer):
 
     def _serialize_type_blob(self, serialized, value, shape, prefix=''):
         # Blob args must be base64 encoded.
-        if not isinstance(value, six.text_type):
-            b64_encoded = base64.b64encode(value).strip().decode(
-                self.DEFAULT_ENCODING)
-        else:
-            # The utf-8 encode/decode is so that we serialize the value
-            # as a str type in py3.
-            b64_encoded = base64.b64encode(
-                value.encode(self.DEFAULT_ENCODING)).strip().decode(
-                    self.DEFAULT_ENCODING)
-        serialized[prefix] = b64_encoded
+        serialized[prefix] = self._get_base64(value)
 
     def _serialize_type_timestamp(self, serialized, value, shape, prefix=''):
         serialized[prefix] = self._convert_timestamp_to_str(value)
@@ -338,11 +338,7 @@ class JSONSerializer(Serializer):
         serialized[key] = self._convert_timestamp_to_str(value)
 
     def _serialize_type_blob(self, serialized, value, shape, key):
-        if isinstance(value, six.text_type):
-            value = value.encode(self.DEFAULT_ENCODING)
-        b64_encoded = base64.b64encode(value).strip().decode(
-                self.DEFAULT_ENCODING)
-        serialized[key] = b64_encoded
+        serialized[key] = self._get_base64(value)
 
 
 class BaseRestSerializer(Serializer):
@@ -583,13 +579,8 @@ class RestXMLSerializer(BaseRestSerializer):
         node.text = str_value
 
     def _serialize_type_blob(self, xmlnode, params, shape, name):
-        # TODO: Double check the bytes vs. str bit.  Can they
-        # pass through binary content?
-        encoded_value = base64.b64encode(
-            params.encode(self.DEFAULT_ENCODING)).strip().decode(
-                self.DEFAULT_ENCODING)
         node = ElementTree.SubElement(xmlnode, name)
-        node.text = encoded_value
+        node.text = self._get_base64(params)
 
     def _serialize_type_timestamp(self, xmlnode, params, shape, name):
         node = ElementTree.SubElement(xmlnode, name)
