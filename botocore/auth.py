@@ -22,6 +22,7 @@ from email.utils import formatdate
 from operator import itemgetter
 import functools
 import time
+import calendar
 
 import six
 
@@ -144,8 +145,8 @@ class SigV4Auth(BaseSigner):
         # We initialize these value here so the unit tests can have
         # valid values.  But these will get overriden in ``add_auth``
         # later for real requests.
-        now = datetime.datetime.utcnow()
-        self.timestamp = now.strftime('%Y%m%dT%H%M%SZ')
+        self._now = datetime.datetime.utcnow()
+        self.timestamp = self._now.strftime('%Y%m%dT%H%M%SZ')
         self._region_name = region_name
         self._service_name = service_name
 
@@ -306,8 +307,8 @@ class SigV4Auth(BaseSigner):
         if self.credentials is None:
             raise NoCredentialsError
         # Create a new timestamp for each signing event
-        now = datetime.datetime.utcnow()
-        self.timestamp = now.strftime('%Y%m%dT%H%M%SZ')
+        self._now = datetime.datetime.utcnow()
+        self.timestamp = self._now.strftime('%Y%m%dT%H%M%SZ')
         # This could be a retry.  Make sure the previous
         # authorization header is removed first.
         self._modify_request_before_signing(request)
@@ -332,14 +333,28 @@ class SigV4Auth(BaseSigner):
     def _modify_request_before_signing(self, request):
         if 'Authorization' in request.headers:
             del request.headers['Authorization']
-        if 'Date' not in request.headers:
-            if 'X-Amz-Date' in request.headers:
-                del request.headers['X-Amz-Date']
-            request.headers['X-Amz-Date'] = self.timestamp
+        self._set_necessary_date_headers(request)
         if self.credentials.token:
             if 'X-Amz-Security-Token' in request.headers:
                 del request.headers['X-Amz-Security-Token']
             request.headers['X-Amz-Security-Token'] = self.credentials.token
+
+    def _set_necessary_date_headers(self, request):
+        # The spec allows for either the Date _or_ the X-Amz-Date value to be
+        # used so we check both.  If there's a Date header, we use the date
+        # header.  Otherwise we use the X-Amz-Date header.
+        if 'Date' in request.headers:
+            del request.headers['Date']
+            request.headers['Date'] = formatdate(
+                int(calendar.timegm(self._now.timetuple())))
+            if 'X-Amz-Date' in request.headers:
+                del request.headers['X-Amz-Date']
+        else:
+            if 'X-Amz-Date' in request.headers:
+                del request.headers['X-Amz-Date']
+            request.headers['X-Amz-Date'] = self.timestamp
+            if 'Date' in request.headers:
+                del request.headers['Date']
 
 
 class S3SigV4Auth(SigV4Auth):
