@@ -98,11 +98,12 @@ def decode_quoted_jsondoc(value):
 
 
 def json_decode_template_body(parsed, **kwargs):
-    try:
-        value = json.loads(parsed['TemplateBody'])
-        parsed['TemplateBody'] = value
-    except (ValueError, TypeError):
-        logger.debug('error loading JSON', exc_info=True)
+    if 'TemplateBody' in parsed:
+        try:
+            value = json.loads(parsed['TemplateBody'])
+            parsed['TemplateBody'] = value
+        except (ValueError, TypeError):
+            logger.debug('error loading JSON', exc_info=True)
 
 
 def calculate_md5(params, **kwargs):

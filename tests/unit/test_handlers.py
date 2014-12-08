@@ -16,6 +16,7 @@ from tests import BaseSessionTest
 import base64
 import six
 import mock
+import copy
 
 import botocore.session
 from botocore.hooks import first_non_none_response
@@ -319,6 +320,14 @@ class TestHandlers(BaseSessionTest):
         # The request url should not have been modified because this is
         # a request for GetBucketLocation.
         self.assertEqual(request.url, original_url)
+
+    def test_get_template_has_error_response(self):
+        original = {'Error': {'Code': 'Message'}}
+        handler_input = copy.deepcopy(original)
+        handlers.json_decode_template_body(parsed=handler_input)
+        # The handler should not have changed the response because it's
+        # an error response.
+        self.assertEqual(original, handler_input)
 
 
 class TestRetryHandlerOrder(BaseSessionTest):
