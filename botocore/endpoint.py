@@ -105,7 +105,7 @@ class Endpoint(object):
     def make_request(self, operation_model, request_dict):
         logger.debug("Making request for %s (verify_ssl=%s) with params: %s",
                      operation_model, self.verify, request_dict)
-        prepared_request = self.create_request(request_dict)
+        prepared_request = self.create_request(request_dict, operation_model)
         return self._send_request(prepared_request, operation_model)
 
     def _choose_signer(self, signer=None):
@@ -128,10 +128,11 @@ class Endpoint(object):
                 signer = None
         return signer
 
-    def create_request(self, params, signer=None):
+    def create_request(self, params, operation_model, signer=None):
         signer = self._choose_signer(signer)
         request = self._create_request_object(params)
-        prepared_request = self.prepare_request(request, signer)
+        prepared_request = self.prepare_request(
+            request, signer, operation_model)
         return prepared_request
 
     def _create_request_object(self, request_dict):
@@ -151,16 +152,25 @@ class Endpoint(object):
                              headers=headers)
         return request
 
-    def prepare_request(self, request, signer):
+    def prepare_request(self, request, signer, operation_model):
         if signer is not None:
             with self._lock:
                 # Parts of the auth signing code aren't thread safe (things
                 # that manipulate .auth_path), so we're using a lock here to
                 # prevent race conditions.
-                event_name = 'before-auth.%s' % self._endpoint_prefix
-                self._event_emitter.emit(
-                    event_name, endpoint=self, request=request, auth=signer)
-                signer.add_auth(request=request)
+                event_name = 'before-auth.%s.%s' % (self._endpoint_prefix,
+                                                    operation_model.name)
+                responses = self._event_emitter.emit(
+                    event_name, endpoint=self, request=request, auth=signer,
+                    operation_model=operation_model)
+                logger.debug('Responses: %s', responses)
+                signed = False
+                if responses:
+                    signed = first_non_none_response(responses)
+                if signed:
+                    logger.debug('Skipping automatic signing')
+                else:
+                    signer.add_auth(request=request)
         prepared_request = request.prepare()
         return prepared_request
 
@@ -178,7 +188,8 @@ class Endpoint(object):
             request.reset_stream()
             # Resign the request when retried.
             signer = self._choose_signer()
-            request = self.prepare_request(request.original, signer)
+            request = self.prepare_request(request.original, signer,
+                                           operation_model)
             response, exception = self._get_response(request, operation_model,
                                                      attempts)
         return response

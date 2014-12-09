@@ -399,6 +399,16 @@ def fix_route53_ids(params, model, **kwargs):
             logger.debug('%s %s -> %s', name, orig_value, params[name])
 
 
+def set_no_auth(request, **kwargs):
+    """
+    Prevent signing of this request.
+    """
+    # Any non-None response prevents the automatic signing
+    # of a request. Instead of doing our own signing, we do
+    # nothing so the request never gets signed.
+    return True
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -435,5 +445,7 @@ BUILTIN_HANDLERS = [
     ('before-parameter-build.ec2.RunInstances', base64_encode_user_data),
     ('before-parameter-build.autoscaling.CreateLaunchConfiguration',
      base64_encode_user_data),
-    ('before-parameter-build.route53', fix_route53_ids)
+    ('before-parameter-build.route53', fix_route53_ids),
+    ('before-auth.cognito-identity.GetId', set_no_auth),
+    ('before-auth.cognito-identity.GetOpenIdToken', set_no_auth),
 ]

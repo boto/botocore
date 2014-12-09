@@ -180,6 +180,18 @@ class TestEndpointFeatures(TestEndpointBase):
         self.assertNotIn('Authorization', prepared_request.headers)
 
 
+    def test_auth_override_event(self):
+        op = Mock()
+        op.name = 'DescribeInstances'
+        op.metadata = {'protocol': 'json'}
+        self.event_emitter.emit.side_effect = [
+            [(None, True)], # For initially preparing request
+            [(None, None)],  # Check if retry needed. Retry needed.
+        ]
+        self.endpoint.make_request(op, request_dict())
+        self.assertFalse(self.auth.add_auth.called)
+
+
 class TestRetryInterface(TestEndpointBase):
     def setUp(self):
         super(TestRetryInterface, self).setUp()
@@ -231,11 +243,11 @@ class TestRetryInterface(TestEndpointBase):
         self.assertEqual(self.event_emitter.emit.call_count, 4)
         # Check that all of the events are as expected.
         self.assertEqual(call_args[0][0][0],
-                         'before-auth.ec2')
+                         'before-auth.ec2.DescribeInstances')
         self.assertEqual(call_args[1][0][0],
                          'needs-retry.ec2.DescribeInstances')
         self.assertEqual(call_args[2][0][0],
-                         'before-auth.ec2')
+                         'before-auth.ec2.DescribeInstances')
         self.assertEqual(call_args[3][0][0],
                          'needs-retry.ec2.DescribeInstances')
 
@@ -254,11 +266,11 @@ class TestRetryInterface(TestEndpointBase):
         self.assertEqual(self.event_emitter.emit.call_count, 4)
         # Check that all of the events are as expected.
         self.assertEqual(call_args[0][0][0],
-                         'before-auth.ec2')
+                         'before-auth.ec2.DescribeInstances')
         self.assertEqual(call_args[1][0][0],
                          'needs-retry.ec2.DescribeInstances')
         self.assertEqual(call_args[2][0][0],
-                         'before-auth.ec2')
+                         'before-auth.ec2.DescribeInstances')
         self.assertEqual(call_args[3][0][0],
                          'needs-retry.ec2.DescribeInstances')
 
