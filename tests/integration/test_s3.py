@@ -38,7 +38,8 @@ class BaseS3Test(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.service = self.session.get_service('s3')
-        self.endpoint = self.service.get_endpoint('us-east-1')
+        self.region = 'us-east-1'
+        self.endpoint = self.service.get_endpoint(self.region)
         self.keys = []
 
     def create_object(self, key_name, body='foo'):
@@ -200,6 +201,23 @@ class TestS3Objects(TestS3BaseWithBucket):
         responses = list(generator)
         self.assertEqual(len(responses), 5, responses)
         data = [r[1] for r in responses]
+        key_names = [el['Contents'][0]['Key']
+                     for el in data]
+        self.assertEqual(key_names, ['key0', 'key1', 'key2', 'key3', 'key4'])
+
+    def test_client_can_paginate_with_page_size(self):
+        for i in range(5):
+            key_name = 'key%s' % i
+            self.create_object(key_name)
+        # Eventual consistency.
+        time.sleep(3)
+        client = self.session.create_client('s3', region_name=self.region)
+        paginator = client.get_paginator('list_objects')
+        generator = paginator.paginate(page_size=1,
+                                       Bucket=self.bucket_name)
+        responses = list(generator)
+        self.assertEqual(len(responses), 5, responses)
+        data = [r for r in responses]
         key_names = [el['Contents'][0]['Key']
                      for el in data]
         self.assertEqual(key_names, ['key0', 'key1', 'key2', 'key3', 'key4'])

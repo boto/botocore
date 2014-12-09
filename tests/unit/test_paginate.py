@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from tests import unittest
+from botocore.paginate import Paginator as FuturePaginator
 from botocore.paginate import DeprecatedPaginator as Paginator
 from botocore.exceptions import PaginationError
 from botocore.operation import Operation
@@ -147,6 +148,36 @@ class TestPagination(unittest.TestCase):
             self.operation.call.call_args_list,
             [mock.call(None),
              mock.call(None, NextToken='token1'),])
+
+
+class TestFuturePaginator(unittest.TestCase):
+    def setUp(self):
+        self.method = mock.Mock()
+        self.paginate_config = {
+            "output_token": "Marker",
+            "input_token": "Marker",
+            "result_key": "Users",
+            "limit_key": "MaxKeys",
+        }
+
+        self.paginator = FuturePaginator(self.method, self.paginate_config)
+
+    def test_with_page_size(self):
+        responses = [
+            {"Users": ["User1"], "Marker": "m1"},
+            {"Users": ["User2"], "Marker": "m2"},
+            {"Users": ["User3"]},
+        ]
+        self.method.side_effect = responses
+        users = []
+        for page in self.paginator.paginate(page_size=1):
+            users += page['Users']
+        self.assertEqual(
+            self.method.call_args_list,
+            [mock.call(MaxKeys=1),
+             mock.call(Marker='m1', MaxKeys=1),
+             mock.call(Marker='m2', MaxKeys=1)]
+        )
 
 
 class TestPaginatorObjectConstruction(unittest.TestCase):
