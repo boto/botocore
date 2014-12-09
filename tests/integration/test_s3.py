@@ -514,10 +514,11 @@ class TestCreateBucketInOtherRegion(BaseS3Test):
             f.write('foobarbaz' * 1024 * 1024)
             f.flush()
             op = self.service.get_operation('PutObject')
-            response = op.call(self.endpoint,
-                               bucket=self.bucket_name,
-                               key='foo.txt',
-                               body=open(f.name, 'rb'))
+            with open(f.name, 'rb') as body_file:
+                response = op.call(self.endpoint,
+                                bucket=self.bucket_name,
+                                key='foo.txt',
+                                body=body_file)
             self.assertEqual(response[0].status_code, 200)
             self.keys.append('foo.txt')
 
@@ -528,10 +529,11 @@ class TestCreateBucketInOtherRegion(BaseS3Test):
             f.write('foobarbaz' * 1024 * 1024)
             f.flush()
             op = self.service.get_operation('PutObject')
-            response = op.call(http_endpoint,
-                               bucket=self.bucket_name,
-                               key='foo.txt',
-                               body=open(f.name, 'rb'))
+            with open(f.name, 'rb') as body_file:
+                response = op.call(http_endpoint,
+                                bucket=self.bucket_name,
+                                key='foo.txt',
+                                body=body_file)
             self.assertEqual(response[0].status_code, 200)
             self.keys.append('foo.txt')
 
