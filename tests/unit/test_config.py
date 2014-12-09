@@ -71,6 +71,12 @@ class TestConfig(BaseEnvVar):
         with self.assertRaises(botocore.exceptions.ConfigParseError):
             loaded_config = load_config(filename)
 
+    def test_metadata_service(self):
+        filename = path('metadata_service')
+        loaded_config = load_config(filename)
+        config = loaded_config['profiles']['default']
+        self.assertEqual(config['metadata_service_timeout'], 1)
+        self.assertEqual(config['metadata_service_num_attempts'], 2)
 
 if __name__ == "__main__":
     unittest.main()

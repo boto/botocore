@@ -583,8 +583,8 @@ class TestCreateCredentialResolver(BaseEnvVar):
             'credentials_file': 'a',
             'legacy_config_file': 'b',
             'config_file': 'c',
-            'metadata_service_timeout': 'd',
-            'metadata_service_num_attempts': 'e',
+            'metadata_service_timeout': 1,
+            'metadata_service_num_attempts': 2,
             'profile': 'profilename',
         }
         fake_session.get_config_variable = lambda x: config[x]
