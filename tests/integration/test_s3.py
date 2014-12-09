@@ -101,6 +101,11 @@ class BaseS3Test(unittest.TestCase):
         self.fail("Expected to see %s uploads, instead saw: %s" % (
             num_uploads, amount_seen))
 
+    def assert_status_code(self, response, status_code):
+        self.assertEqual(
+            response['ResponseMetadata']['HTTPStatusCode'],
+            status_code
+        )
 
 class TestS3BaseWithBucket(BaseS3Test):
     def setUp(self):
@@ -562,68 +567,29 @@ class TestCreateBucketInOtherRegion(BaseS3Test):
             self.keys.append('foo.txt')
 
 
-class TestSigV4IsRetried(BaseS3Test):
+class TestS3SigV4Operations(BaseS3Test):
     def setUp(self):
-        super(TestSigV4IsRetried, self).setUp()
-        self.endpoint = self.service.get_endpoint('eu-central-1')
+        super(TestS3SigV4Operations, self).setUp()
         self.bucket_name = 'botocoretest%s-%s' % (
             int(time.time()), random.randint(1, 1000))
-        self.bucket_location = 'eu-central-1'
-
-        operation = self.service.get_operation('CreateBucket')
-        location = {'LocationConstraint': self.bucket_location}
-        response = operation.call(
-            self.endpoint, bucket=self.bucket_name,
-            create_bucket_configuration=location)
-        self.assertEqual(response[0].status_code, 200)
+        self.client = self.session.create_client('s3', 'eu-central-1')
+        response = self.client.create_bucket(
+            Bucket=self.bucket_name,
+            CreateBucketConfiguration={
+                'LocationConstraint': 'eu-central-1',
+            }
+        )
+        self.assert_status_code(response, 200)
         self.keys = []
 
     def tearDown(self):
+        super(TestS3SigV4Operations, self).tearDown()
         for key in self.keys:
             op = self.service.get_operation('DeleteObject')
-            response = op.call(self.endpoint, bucket=self.bucket_name, key=key)
-            self.assertEqual(response[0].status_code, 204)
-        self.delete_bucket(self.bucket_name)
-
-    def test_request_retried_for_sigv4(self):
-        operation = self.service.get_operation('PutObject')
-        body = six.BytesIO(b"Hello world!")
-
-        original_send = adapters.HTTPAdapter.send
-        state = mock.Mock()
-        state.error_raised = False
-
-        def mock_http_adapter_send(self, *args, **kwargs):
-            if not state.error_raised:
-                state.error_raised = True
-                raise ConnectionError("Simulated ConnectionError raised.")
-            else:
-                return original_send(self, *args, **kwargs)
-
-        with mock.patch('botocore.vendored.requests.adapters.HTTPAdapter.send',
-                        mock_http_adapter_send):
-            response = operation.call(self.endpoint,
-                                      Bucket=self.bucket_name,
-                                      Key='foo.txt', Body=body)
-            self.assertEqual(response[0].status_code, 200)
-            self.keys.append('foo.txt')
-
-
-class TestGetBucketLocationForEUCentral1(BaseS3Test):
-    def setUp(self):
-        super(TestGetBucketLocationForEUCentral1, self).setUp()
-        self.bucket_name = 'botocoretest%s-%s' % (
-            int(time.time()), random.randint(1, 1000))
-        client = self.session.create_client('s3', 'eu-central-1')
-        client.create_bucket(Bucket=self.bucket_name,
-                             CreateBucketConfiguration={
-                                 'LocationConstraint': 'eu-central-1',
-                             })
-
-    def tearDown(self):
-        super(TestGetBucketLocationForEUCentral1, self).tearDown()
-        client = self.session.create_client('s3', 'eu-central-1')
-        client.delete_bucket(Bucket=self.bucket_name)
+            response = self.client.delete_object(
+                Bucket=self.bucket_name, Key=key)
+            self.assert_status_code(response, 204)
+        self.client.delete_bucket(Bucket=self.bucket_name)
 
     def test_can_get_bucket_location(self):
         # Even though the bucket is in eu-central-1, we should still be able to
@@ -635,6 +601,47 @@ class TestGetBucketLocationForEUCentral1(BaseS3Test):
         us_east_1 = self.service.get_endpoint('us-east-1')
         response = operation.call(us_east_1, Bucket=self.bucket_name)
         self.assertEqual(response[1]['LocationConstraint'], 'eu-central-1')
+
+    def test_request_retried_for_sigv4(self):
+        body = six.BytesIO(b"Hello world!")
+
+        original_send = adapters.HTTPAdapter.send
+        state = mock.Mock()
+        state.error_raised = False
+        def mock_http_adapter_send(self, *args, **kwargs):
+            if not state.error_raised:
+                state.error_raised = True
+                raise ConnectionError("Simulated ConnectionError raised.")
+            else:
+                return original_send(self, *args, **kwargs)
+        with mock.patch('botocore.vendored.requests.adapters.HTTPAdapter.send',
+                        mock_http_adapter_send):
+            response = self.client.put_object(Bucket=self.bucket_name,
+                                              Key='foo.txt', Body=body)
+            self.assert_status_code(response, 200)
+            self.keys.append('foo.txt')
+
+    def test_paginate_list_objects_unicode(self):
+        key_names = [
+            u'non-ascii-key-\xe4\xf6\xfc-01.txt',
+            u'non-ascii-key-\xe4\xf6\xfc-02.txt',
+            u'non-ascii-key-\xe4\xf6\xfc-03.txt',
+            u'non-ascii-key-\xe4\xf6\xfc-04.txt',
+        ]
+        for key in key_names:
+            response = self.client.put_object(Bucket=self.bucket_name,
+                                              Key=key, Body='')
+            self.assert_status_code(response, 200)
+            self.keys.append(key)
+
+        list_objs_paginator = self.client.get_paginator('list_objects')
+        key_refs = []
+        for response in list_objs_paginator.paginate(Bucket=self.bucket_name,
+                                                     page_size=2):
+            for content in response['Contents']:
+                key_refs.append(content['Key'])
+
+        self.assertEqual(key_names, key_refs)
 
 
 class TestCanSwitchToSigV4(unittest.TestCase):

@@ -274,6 +274,21 @@ class TestS3SigV4Auth(unittest.TestCase):
         self.assertTrue(
             request.headers['Authorization'].startswith('AWS4-HMAC-SHA256'))
 
+    def test_query_string_params_in_urls(self):
+        request = AWSRequest()
+        request.url = (
+            'https://s3.amazonaws.com/bucket?'
+            'marker=%C3%A4%C3%B6%C3%BC-01.txt&prefix='
+        )
+        request.data = {'Action': 'MyOperation'}
+        request.method = 'GET'
+        self.auth.add_auth(request)
+        # Since the query string is already ulrencoded, it should not be
+        # modified when doing sigv4 signing.
+        self.assertIn(
+            'marker=%C3%A4%C3%B6%C3%BC-01.txt&prefix=',
+            request.url)
+
 
 class TestSigV4Resign(unittest.TestCase):
 
