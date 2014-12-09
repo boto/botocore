@@ -19,6 +19,8 @@ from tests import BaseSessionTest
 from mock import patch, Mock
 
 import botocore.session
+from botocore import auth
+from botocore import credentials
 from botocore.exceptions import ServiceNotInRegionError
 
 
@@ -29,8 +31,11 @@ class TestS3Addressing(BaseSessionTest):
         self.s3 = self.session.get_service('s3')
 
     @patch('botocore.response.get_response', Mock())
-    def get_prepared_request(self, op, param):
+    def get_prepared_request(self, op, param, force_hmacv1=False):
         request = []
+        if force_hmacv1:
+            self.endpoint.auth = auth.HmacV1Auth(
+                credentials.Credentials('foo', 'bar'))
         self.endpoint._send_request = lambda prepared_request, operation: \
                 request.append(prepared_request)
         self.endpoint.make_request(op.model, param)
@@ -40,7 +45,8 @@ class TestS3Addressing(BaseSessionTest):
         self.endpoint = self.s3.get_endpoint('us-east-1')
         op = self.s3.get_operation('ListObjects')
         params = op.build_parameters(bucket='safename')
-        prepared_request = self.get_prepared_request(op, params)
+        prepared_request = self.get_prepared_request(op, params,
+                                                     force_hmacv1=True)
         self.assertEqual(prepared_request.url,
                          'https://safename.s3.amazonaws.com/')
 
@@ -56,7 +62,8 @@ class TestS3Addressing(BaseSessionTest):
         self.endpoint = self.s3.get_endpoint('us-west-2')
         op = self.s3.get_operation('ListObjects')
         params = op.build_parameters(bucket='safename')
-        prepared_request = self.get_prepared_request(op, params)
+        prepared_request = self.get_prepared_request(op, params,
+                                                     force_hmacv1=True)
         self.assertEqual(prepared_request.url,
                          'https://safename.s3.amazonaws.com/')
 
