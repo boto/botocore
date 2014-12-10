@@ -22,9 +22,7 @@ import logging
 import re
 import xml.etree.cElementTree
 
-import six
-
-from botocore.compat import urlsplit, urlunsplit, unquote, json, quote
+from botocore.compat import urlsplit, urlunsplit, unquote, json, quote, six
 from botocore import retryhandler
 from botocore import translate
 import botocore.auth

@@ -20,7 +20,6 @@ import tempfile
 import shutil
 import threading
 import mock
-import six
 try:
     from itertools import izip_longest as zip_longest
 except ImportError:
@@ -28,6 +27,7 @@ except ImportError:
 
 from botocore.vendored.requests import adapters
 from botocore.vendored.requests.exceptions import ConnectionError
+from botocore.compat import six
 import botocore.session
 import botocore.auth
 import botocore.credentials
