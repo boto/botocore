@@ -100,6 +100,11 @@ def test_generator():
     )
     mocked_datetime = datetime_patcher.start()
     mocked_datetime.utcnow.return_value = datetime.datetime(2011, 9, 9, 23, 36)
+    formatdate_patcher = mock.patch('botocore.auth.formatdate')
+    formatdate = formatdate_patcher.start()
+    # We have to change this because Sep 9, 2011 was actually
+    # a Friday, but the tests have this set to a Monday.
+    formatdate.return_value = 'Mon, 09 Sep 2011 23:36:00 GMT'
     for test_case in set(os.path.splitext(i)[0]
                          for i in os.listdir(TESTSUITE_DIR)):
         if test_case in TESTS_TO_IGNORE:
@@ -107,6 +112,7 @@ def test_generator():
             continue
         yield (_test_signature_version_4, test_case)
     datetime_patcher.stop()
+    formatdate_patcher.stop()
 
 
 def create_request_from_raw_request(raw_request):

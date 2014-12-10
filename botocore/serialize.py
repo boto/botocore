@@ -43,8 +43,6 @@ import base64
 from xml.etree import ElementTree
 import calendar
 
-import datetime
-from dateutil.tz import tzutc
 import six
 
 from botocore.compat import json, formatdate
@@ -153,6 +151,15 @@ class Serializer(object):
         # Otherwise it will return the passed in default_name.
         return shape.serialization.get('name', default_name)
 
+    def _get_base64(self, value):
+        # Returns the base64-encoded version of value, handling
+        # both strings and bytes. The returned value is a string
+        # via the default encoding.
+        if isinstance(value, six.text_type):
+            value = value.encode(self.DEFAULT_ENCODING)
+        return base64.b64encode(value).strip().decode(
+            self.DEFAULT_ENCODING)
+
 
 class QuerySerializer(Serializer):
 
@@ -230,16 +237,7 @@ class QuerySerializer(Serializer):
 
     def _serialize_type_blob(self, serialized, value, shape, prefix=''):
         # Blob args must be base64 encoded.
-        if not isinstance(value, six.text_type):
-            b64_encoded = base64.b64encode(value).strip().decode(
-                self.DEFAULT_ENCODING)
-        else:
-            # The utf-8 encode/decode is so that we serialize the value
-            # as a str type in py3.
-            b64_encoded = base64.b64encode(
-                value.encode(self.DEFAULT_ENCODING)).strip().decode(
-                    self.DEFAULT_ENCODING)
-        serialized[prefix] = b64_encoded
+        serialized[prefix] = self._get_base64(value)
 
     def _serialize_type_timestamp(self, serialized, value, shape, prefix=''):
         serialized[prefix] = self._convert_timestamp_to_str(value)
@@ -327,11 +325,20 @@ class JSONSerializer(Serializer):
             member_shape = members[member_key]
             self._serialize(serialized, member_value, member_shape, member_key)
 
+    def _serialize_type_map(self, serialized, value, shape, key):
+        map_obj = self.MAP_TYPE()
+        serialized[key] = map_obj
+        for sub_key, sub_value in value.items():
+            self._serialize(map_obj, sub_value, shape.value, sub_key)
+
     def _default_serialize(self, serialized, value, shape, key):
         serialized[key] = value
 
     def _serialize_type_timestamp(self, serialized, value, shape, key):
         serialized[key] = self._convert_timestamp_to_str(value)
+
+    def _serialize_type_blob(self, serialized, value, shape, key):
+        serialized[key] = self._get_base64(value)
 
 
 class BaseRestSerializer(Serializer):
@@ -572,13 +579,8 @@ class RestXMLSerializer(BaseRestSerializer):
         node.text = str_value
 
     def _serialize_type_blob(self, xmlnode, params, shape, name):
-        # TODO: Double check the bytes vs. str bit.  Can they
-        # pass through binary content?
-        encoded_value = base64.b64encode(
-            params.encode(self.DEFAULT_ENCODING)).strip().decode(
-                self.DEFAULT_ENCODING)
         node = ElementTree.SubElement(xmlnode, name)
-        node.text = encoded_value
+        node.text = self._get_base64(params)
 
     def _serialize_type_timestamp(self, xmlnode, params, shape, name):
         node = ElementTree.SubElement(xmlnode, name)
