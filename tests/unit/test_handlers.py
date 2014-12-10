@@ -14,7 +14,7 @@
 from tests import BaseSessionTest
 
 import base64
-import six
+import botocore.compat.six as six
 import mock
 import copy
 

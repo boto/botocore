@@ -16,7 +16,7 @@ import logging
 import datetime
 from tests import unittest
 
-from six import StringIO
+from botocore.compat.six import StringIO
 
 import botocore.session
 from botocore.client import ClientError

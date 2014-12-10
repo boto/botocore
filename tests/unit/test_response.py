@@ -14,7 +14,7 @@
 from tests import unittest
 import datetime
 
-import six
+import botocore.compat.six as six
 from dateutil.tz import tzutc
 
 import botocore

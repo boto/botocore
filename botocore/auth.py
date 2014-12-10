@@ -24,7 +24,7 @@ import functools
 import time
 import calendar
 
-import six
+import botocore.compat.six as six
 
 from botocore.exceptions import NoCredentialsError
 from botocore.utils import normalize_url_path, percent_encode_sequence

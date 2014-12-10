@@ -20,7 +20,7 @@ import tempfile
 import shutil
 import threading
 import mock
-import six
+import botocore.compat.six as six
 try:
     from itertools import izip_longest as zip_longest
 except ImportError:

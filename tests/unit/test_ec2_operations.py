@@ -15,7 +15,7 @@
 
 from tests import TestParamSerialization
 import base64
-import six
+import botocore.compat.six as six
 import botocore.session
 
 

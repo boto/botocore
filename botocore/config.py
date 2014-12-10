@@ -15,7 +15,7 @@ import os
 import shlex
 import copy
 
-from six.moves import configparser
+from botocore.compat.six.moves import configparser
 
 import botocore.exceptions
 

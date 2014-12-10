@@ -13,7 +13,7 @@
 import logging
 import datetime
 
-from six import string_types, text_type
+from botocore.compat.six import string_types, text_type
 import dateutil.parser
 from dateutil.tz import tzlocal, tzutc
 

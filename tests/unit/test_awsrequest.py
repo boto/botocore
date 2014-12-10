@@ -21,7 +21,7 @@ import socket
 import sys
 
 from mock import Mock, patch
-import six
+import botocore.compat.six as six
 
 from botocore.exceptions import UnseekableStreamError
 from botocore.awsrequest import AWSRequest

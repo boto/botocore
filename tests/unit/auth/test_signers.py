@@ -17,7 +17,7 @@ import datetime
 import time
 
 import mock
-import six
+import botocore.compat.six as six
 
 import botocore.auth
 import botocore.credentials

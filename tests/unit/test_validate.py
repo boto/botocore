@@ -1,7 +1,7 @@
 from tests import unittest
 from datetime import datetime
 import decimal
-import six
+import botocore.compat.six as six
 
 from botocore.model import ShapeResolver
 from botocore.model import StructureShape
