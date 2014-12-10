@@ -19,6 +19,10 @@ from botocore.operation import Operation
 
 import mock
 
+# TODO: FuturePaginator tests should be merged into tests that used the renamed
+# Deprecated paginators when we completely remove the Deprecated
+# paginator class and make all of the tests use the actual Paginator class
+
 
 class TestPagination(unittest.TestCase):
     def setUp(self):
