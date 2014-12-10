@@ -14,14 +14,13 @@
 from tests import BaseSessionTest
 
 import base64
-import botocore.compat.six as six
 import mock
 import copy
 
 import botocore.session
 from botocore.hooks import first_non_none_response
 from botocore.awsrequest import AWSRequest
-from botocore.compat import quote
+from botocore.compat import quote, six
 from botocore.model import OperationModel, ServiceModel
 from botocore import handlers
 

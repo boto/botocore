@@ -14,11 +14,11 @@
 from tests import unittest
 import datetime
 
-import botocore.compat.six as six
 from dateutil.tz import tzutc
 
 import botocore
 from botocore import response
+from botocore.compat import six
 from botocore.exceptions import IncompleteReadError
 from botocore.vendored.requests.models import Response, Request
 

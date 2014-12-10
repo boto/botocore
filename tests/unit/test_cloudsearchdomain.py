@@ -15,7 +15,7 @@
 from tests import BaseSessionTest
 
 from botocore.exceptions import NoRegionError
-import botocore.compat.six as six
+from botocore.compat import six
 
 
 class TestCloudsearchOperations(BaseSessionTest):

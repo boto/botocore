@@ -17,11 +17,10 @@ import datetime
 import time
 
 import mock
-import botocore.compat.six as six
 
 import botocore.auth
 import botocore.credentials
-from botocore.compat import HTTPHeaders, urlsplit, parse_qs
+from botocore.compat import HTTPHeaders, urlsplit, parse_qs, six
 from botocore.awsrequest import AWSRequest
 from botocore.vendored.requests.models import Request
 

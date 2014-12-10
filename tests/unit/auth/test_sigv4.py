@@ -26,9 +26,9 @@ import os
 import logging
 import io
 import datetime
-from botocore.compat.six import BytesIO
-from botocore.compat.six.moves import BaseHTTPServer
-import botocore.compat.six as six
+from botocore.compat import six
+from six import BytesIO
+from six.moves import BaseHTTPServer
 
 import nose.tools as t
 from nose import with_setup

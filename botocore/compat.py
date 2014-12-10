@@ -13,13 +13,14 @@
 
 import copy
 import datetime
-import botocore.vendored.six as six
 import sys
 import inspect
 
+from botocore.vendored import six
+
 
 if six.PY3:
-    from botocore.compat.six.moves import http_client
+    from six.moves import http_client
     class HTTPHeaders(http_client.HTTPMessage):
         pass
     from urllib.parse import quote

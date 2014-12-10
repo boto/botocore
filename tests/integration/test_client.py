@@ -16,10 +16,10 @@ import logging
 import datetime
 from tests import unittest
 
-from botocore.compat.six import StringIO
-
 import botocore.session
 from botocore.client import ClientError
+from botocore.compat import six
+from six import StringIO
 
 
 class TestBucketWithVersions(unittest.TestCase):

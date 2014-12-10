@@ -16,8 +16,8 @@ from tests import unittest, BaseSessionTest, create_session
 from mock import Mock, patch, sentinel
 from botocore.vendored.requests import ConnectionError
 from botocore.vendored.requests.models import Response
-import botocore.compat.six as six
 
+from botocore.compat import six
 from botocore.endpoint import get_endpoint, Endpoint, DEFAULT_TIMEOUT
 from botocore.endpoint import EndpointCreator
 from botocore.auth import SigV4Auth

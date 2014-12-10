@@ -43,7 +43,7 @@ import base64
 from xml.etree import ElementTree
 import calendar
 
-import botocore.compat.six as six
+from botocore.compat import six
 
 from botocore.compat import json, formatdate
 from botocore.utils import parse_timestamp, parse_to_aware_datetime

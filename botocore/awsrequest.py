@@ -18,7 +18,7 @@ import functools
 import socket
 import inspect
 
-import botocore.compat.six as six
+from botocore.compat import six
 from botocore.vendored.requests import models
 from botocore.vendored.requests.sessions import REDIRECT_STATI
 from botocore.compat import HTTPHeaders, HTTPResponse
