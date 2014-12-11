@@ -101,11 +101,6 @@ class BaseS3Test(unittest.TestCase):
         self.fail("Expected to see %s uploads, instead saw: %s" % (
             num_uploads, amount_seen))
 
-    def assert_status_code(self, response, status_code):
-        self.assertEqual(
-            response['ResponseMetadata']['HTTPStatusCode'],
-            status_code
-        )
 
 class TestS3BaseWithBucket(BaseS3Test):
     def setUp(self):
@@ -567,29 +562,58 @@ class TestCreateBucketInOtherRegion(BaseS3Test):
             self.keys.append('foo.txt')
 
 
-class TestS3SigV4Operations(BaseS3Test):
+class BaseS3ClientTest(BaseS3Test):
     def setUp(self):
-        super(TestS3SigV4Operations, self).setUp()
-        self.bucket_name = 'botocoretest%s-%s' % (
-            int(time.time()), random.randint(1, 1000))
-        self.client = self.session.create_client('s3', 'eu-central-1')
-        response = self.client.create_bucket(
-            Bucket=self.bucket_name,
-            CreateBucketConfiguration={
-                'LocationConstraint': 'eu-central-1',
-            }
+        super(BaseS3ClientTest, self).setUp()
+        self.client = self.session.create_client('s3', region_name=self.region)
+
+    def assert_status_code(self, response, status_code):
+        self.assertEqual(
+            response['ResponseMetadata']['HTTPStatusCode'],
+            status_code
         )
+
+    def create_bucket(self, bucket_name=None):
+        bucket_kwargs = {}
+        if bucket_name is None:
+            bucket_name = 'botocoretest%s-%s' % (int(time.time()),
+                                                 random.randint(1, 1000))
+        bucket_kwargs = {'Bucket': bucket_name}
+        if self.region != 'us-east-1':
+            bucket_kwargs['CreateBucketConfiguration'] = {
+                'LocationConstraint': self.region,
+            }
+        response = self.client.create_bucket(**bucket_kwargs)
         self.assert_status_code(response, 200)
+        self.addCleanup(self.delete_bucket, bucket_name)
+        return bucket_name
+
+    def abort_multipart_upload(self, bucket_name, key, upload_id):
+        response = self.client.abort_multipart_upload(
+            UploadId=upload_id, Bucket=self.bucket_name, Key=key)
+
+    def delete_object(self, key, bucket_name):
+        response = self.client.delete_object(Bucket=bucket_name, Key=key)
+        self.assert_status_code(response, 204)
+
+    def delete_bucket(self, bucket_name):
+        response = self.client.delete_bucket(Bucket=bucket_name)
+        self.assert_status_code(response, 204)
+
+
+class TestS3SigV4Client(BaseS3ClientTest):
+    def setUp(self):
+        super(TestS3SigV4Client, self).setUp()
+        self.region = 'eu-central-1'
+        self.client = self.session.create_client('s3', self.region)
+        self.bucket_name = self.create_bucket()
         self.keys = []
 
     def tearDown(self):
-        super(TestS3SigV4Operations, self).tearDown()
+        super(TestS3SigV4Client, self).tearDown()
         for key in self.keys:
-            op = self.service.get_operation('DeleteObject')
-            response = self.client.delete_object(
-                Bucket=self.bucket_name, Key=key)
-            self.assert_status_code(response, 204)
-        self.client.delete_bucket(Bucket=self.bucket_name)
+            response = self.delete_object(bucket_name=self.bucket_name,
+                                          key=key)
 
     def test_can_get_bucket_location(self):
         # Even though the bucket is in eu-central-1, we should still be able to
@@ -608,6 +632,7 @@ class TestS3SigV4Operations(BaseS3Test):
         original_send = adapters.HTTPAdapter.send
         state = mock.Mock()
         state.error_raised = False
+
         def mock_http_adapter_send(self, *args, **kwargs):
             if not state.error_raised:
                 state.error_raised = True
@@ -642,6 +667,27 @@ class TestS3SigV4Operations(BaseS3Test):
                 key_refs.append(content['Key'])
 
         self.assertEqual(key_names, key_refs)
+
+    def test_create_multipart_upload(self):
+        key = 'mymultipartupload'
+        response = self.client.create_multipart_upload(
+            Bucket=self.bucket_name, Key=key
+        )
+        self.assert_status_code(response, 200)
+        upload_id = response['UploadId']
+        self.addCleanup(
+            self.abort_multipart_upload,
+            bucket_name=self.bucket_name, key=key, upload_id=upload_id
+        )
+
+        response = self.client.list_multipart_uploads(
+            Bucket=self.bucket_name, Prefix=key
+        )
+
+        # Make sure there is only one multipart upload.
+        self.assertEqual(len(response['Uploads']), 1)
+        # Make sure the upload id is as expected.
+        self.assertEqual(response['Uploads'][0]['UploadId'], upload_id)
 
 
 class TestCanSwitchToSigV4(unittest.TestCase):

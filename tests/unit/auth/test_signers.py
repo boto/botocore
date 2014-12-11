@@ -278,16 +278,16 @@ class TestS3SigV4Auth(unittest.TestCase):
         request = AWSRequest()
         request.url = (
             'https://s3.amazonaws.com/bucket?'
-            'marker=%C3%A4%C3%B6%C3%BC-01.txt&prefix='
+            'marker=%C3%A4%C3%B6%C3%BC-01.txt&prefix'
         )
         request.data = {'Action': 'MyOperation'}
         request.method = 'GET'
-        self.auth.add_auth(request)
-        # Since the query string is already ulrencoded, it should not be
-        # modified when doing sigv4 signing.
-        self.assertIn(
-            'marker=%C3%A4%C3%B6%C3%BC-01.txt&prefix=',
-            request.url)
+
+        # Check that the canonical query string is correct formatting
+        # by ensuring that query string paramters that are added to the
+        # canonical query string are correctly formatted.
+        cqs = self.auth.canonical_query_string(request)
+        self.assertEqual('marker=%C3%A4%C3%B6%C3%BC-01.txt&prefix=', cqs)
 
 
 class TestSigV4Resign(unittest.TestCase):

@@ -196,9 +196,16 @@ class SigV4Auth(BaseSigner):
         buf = ''
         if parts.query:
             qsa = parts.query.split('&')
-            if len(qsa) > 0:
-                sorted_qsa = sorted(qsa)
-                buf += '&'.join(sorted_qsa)
+            qsa = [a.split('=', 1) for a in qsa]
+            split_qsa = []
+            for q in qsa:
+                if len(q) == 2:
+                    split_qsa.append('%s=%s' % (q[0], q[1]))
+                elif len(q) == 1:
+                    split_qsa.append('%s=' % q[0])
+            if len(split_qsa) > 0:
+                split_qsa.sort()
+                buf += '&'.join(split_qsa)
         return buf
 
     def canonical_headers(self, headers_to_sign):
