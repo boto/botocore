@@ -12,14 +12,16 @@
 # language governing permissions and limitations under the License.
 import logging
 import datetime
+import hashlib
+import math
+import binascii
 
-from botocore.compat import six
 from six import string_types, text_type
 import dateutil.parser
 from dateutil.tz import tzlocal, tzutc
 
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
-from botocore.compat import json, quote
+from botocore.compat import json, quote, zip_longest
 from botocore.vendored import requests
 from botocore.compat import OrderedDict
 
@@ -343,6 +345,83 @@ def parse_to_aware_datetime(value):
     else:
         datetime_obj = datetime_obj.astimezone(tzutc())
     return datetime_obj
+
+
+def calculate_sha256(body, as_hex=False):
+    """Calculate a sha256 checksum.
+
+    This method will calculate the sha256 checksum of a file like
+    object.  Note that this method will iterate through the entire
+    file contents.  The caller is responsible for ensuring the proper
+    starting position of the file and ``seek()``'ing the file back
+    to its starting location if other consumers need to read from
+    the file like object.
+
+    :param body: Any file like object.  The file must be opened
+        in binary mode such that a ``.read()`` call returns bytes.
+    :param as_hex: If True, then the hex digest is returned.
+        If False, then the digest (as binary bytes) is returned.
+
+    :returns: The sha256 checksum
+
+    """
+    checksum = hashlib.sha256()
+    for chunk in iter(lambda: body.read(1024 * 1024), b''):
+        checksum.update(chunk)
+    if as_hex:
+        return checksum.hexdigest()
+    else:
+        return checksum.digest()
+
+
+def calculate_tree_hash(body):
+    """Calculate a tree hash checksum.
+
+    For more information see:
+
+    http://docs.aws.amazon.com/amazonglacier/latest/dev/checksum-calculations.html
+
+    :param body: Any file like object.  This has the same constraints as
+        the ``body`` param in calculate_sha256
+
+    :rtype: str
+    :returns: The hex version of the calculated tree hash
+
+    """
+    chunks = []
+    required_chunk_size = 1024 * 1024
+    sha256 = hashlib.sha256
+    for chunk in iter(lambda: body.read(required_chunk_size), b''):
+        chunks.append(sha256(chunk).digest())
+    if not chunks:
+        return sha256(b'').hexdigest()
+    while len(chunks) > 1:
+        new_chunks = []
+        for first, second in _in_pairs(chunks):
+            if second is not None:
+                new_chunks.append(sha256(first + second).digest())
+            else:
+                # We're at the end of the list and there's no pair left.
+                new_chunks.append(first)
+        chunks = new_chunks
+    return binascii.hexlify(chunks[0]).decode('ascii')
+
+
+def _in_pairs(iterable):
+    # Creates iterator that iterates over the list in pairs:
+    # for a, b in _in_pairs([0, 1, 2, 3, 4]):
+    #     print(a, b)
+    #
+    # will print:
+    # 0, 1
+    # 2, 3
+    # 4, None
+    shared_iter = iter(iterable)
+    # Note that zip_longest is a compat import that uses
+    # the itertools izip_longest.  This creates an iterator,
+    # this call below does _not_ immediately create the list
+    # of pairs.
+    return zip_longest(shared_iter, shared_iter)
 
 
 class CachedProperty(object):

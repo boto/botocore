@@ -359,6 +359,55 @@ class TestHandlers(BaseSessionTest):
         # an error response.
         self.assertEqual(original, handler_input)
 
+    def test_inject_account_id(self):
+        params = {}
+        handlers.inject_account_id(params)
+        self.assertEqual(params['accountId'], '-')
+
+    def test_account_id_not_added_if_present(self):
+        params = {'accountId': 'foo'}
+        handlers.inject_account_id(params)
+        self.assertEqual(params['accountId'], 'foo')
+
+    def test_glacier_version_header_added(self):
+        request_dict = {
+            'headers': {}
+        }
+        model = ServiceModel({'metadata': {'apiVersion': '2012-01-01'}})
+        handlers.add_glacier_version(model, request_dict)
+        self.assertEqual(request_dict['headers']['x-amz-glacier-version'],
+                         '2012-01-01')
+
+    def test_glacier_checksums_added(self):
+        request_dict = {
+            'headers': {},
+            'body': six.BytesIO(b'hello world'),
+        }
+        handlers.add_glacier_checksums(request_dict)
+        self.assertIn('x-amz-content-sha256', request_dict['headers'])
+        self.assertIn('x-amz-sha256-tree-hash', request_dict['headers'])
+        self.assertEqual(
+            request_dict['headers']['x-amz-content-sha256'],
+            'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9')
+        self.assertEqual(
+            request_dict['headers']['x-amz-sha256-tree-hash'],
+            'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9')
+        # And verify that the body can still be read.
+        self.assertEqual(request_dict['body'].read(), b'hello world')
+
+    def test_glacier_checksums_support_raw_bytes(self):
+        request_dict = {
+            'headers': {},
+            'body': b'hello world',
+        }
+        handlers.add_glacier_checksums(request_dict)
+        self.assertEqual(
+            request_dict['headers']['x-amz-content-sha256'],
+            'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9')
+        self.assertEqual(
+            request_dict['headers']['x-amz-sha256-tree-hash'],
+            'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9')
+
 
 class TestRetryHandlerOrder(BaseSessionTest):
     def get_handler_names(self, responses):
