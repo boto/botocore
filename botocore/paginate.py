@@ -21,8 +21,8 @@ from botocore.utils import set_value_from_jmespath, merge_dicts
 
 class PageIterator(object):
     def __init__(self, method, input_token, output_token, more_results,
-                 result_keys, non_aggregate_keys, max_items, starting_token,
-                 page_size, op_kwargs):
+                 result_keys, non_aggregate_keys, limit_key, max_items,
+                 starting_token, page_size, op_kwargs):
         self._method = method
         self._op_kwargs = op_kwargs
         self._input_token = input_token
@@ -30,6 +30,7 @@ class PageIterator(object):
         self._more_results = more_results
         self._result_keys = result_keys
         self._max_items = max_items
+        self._limit_key = limit_key
         self._starting_token = starting_token
         self._page_size = page_size
         self._op_kwargs = op_kwargs
@@ -135,11 +136,9 @@ class PageIterator(object):
             next_token = self._parse_starting_token()[0]
             self._inject_token_into_kwargs(op_kwargs, next_token)
         if self._page_size is not None:
-            # Determine the proper parameter name for limiting
-            # page size.
-            page_size_name = self._operation.pagination['limit_key']
-            # Pass the page size as the determined parameter name.
-            op_kwargs[page_size_name] = self._page_size
+            # Pass the page size as the parameter name for limiting
+            # page size, also known as the limit_key.
+            op_kwargs[self._limit_key] = self._page_size
 
     def _inject_token_into_kwargs(self, op_kwargs, next_token):
         for name, token in zip(self._input_token, next_token):
@@ -268,6 +267,7 @@ class Paginator(object):
         self._non_aggregate_keys = self._get_non_aggregate_keys(
             self._pagination_cfg)
         self._result_keys = self._get_result_keys(self._pagination_cfg)
+        self._limit_key = self._get_limit_key(self._pagination_cfg)
 
     @property
     def result_keys(self):
@@ -307,6 +307,9 @@ class Paginator(object):
             result_key = [jmespath.compile(rk) for rk in result_key]
             return result_key
 
+    def _get_limit_key(self, config):
+        return config.get('limit_key')
+
     def paginate(self, **kwargs):
         """Create paginator object for an operation.
 
@@ -320,6 +323,7 @@ class Paginator(object):
             self._method, self._input_token,
             self._output_token, self._more_results,
             self._result_keys, self._non_aggregate_keys,
+            self._limit_key,
             page_params['max_items'],
             page_params['starting_token'],
             page_params['page_size'],
@@ -373,12 +377,12 @@ class ResultKeyIterator(object):
 class DeprecatedPageIterator(PageIterator):
     def __init__(self, operation, endpoint, input_token,
                  output_token, more_results,
-                 result_keys, non_aggregate_keys, max_items, starting_token,
-                 page_size, op_kwargs):
+                 result_keys, non_aggregate_keys, limit_key, max_items,
+                 starting_token, page_size, op_kwargs):
         super(DeprecatedPageIterator, self).__init__(
             None, input_token, output_token, more_results, result_keys,
-            non_aggregate_keys, max_items, starting_token, page_size,
-            op_kwargs)
+            non_aggregate_keys, limit_key, max_items,
+            starting_token, page_size, op_kwargs)
         self._operation = operation
         self._endpoint = endpoint
 
@@ -410,6 +414,7 @@ class DeprecatedPaginator(Paginator):
             self._operation, endpoint, self._input_token,
             self._output_token, self._more_results,
             self._result_keys, self._non_aggregate_keys,
+            self._limit_key,
             page_params['max_items'],
             page_params['starting_token'],
             page_params['page_size'],

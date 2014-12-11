@@ -17,6 +17,7 @@ import functools
 import logging
 import os
 
+from botocore.compat import six
 from six.moves import configparser
 from dateutil.parser import parse
 from dateutil.tz import tzlocal

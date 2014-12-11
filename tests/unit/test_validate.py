@@ -1,8 +1,8 @@
 from tests import unittest
 from datetime import datetime
 import decimal
-import six
 
+from botocore.compat import six
 from botocore.model import ShapeResolver
 from botocore.model import StructureShape
 from botocore.validate import ParamValidator

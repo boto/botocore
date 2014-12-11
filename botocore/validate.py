@@ -13,7 +13,7 @@ Validation Errors
 
 """
 
-import six
+from botocore.compat import six
 import decimal
 from datetime import datetime
 

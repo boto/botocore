@@ -20,7 +20,6 @@ import tempfile
 import shutil
 import threading
 import mock
-import six
 try:
     from itertools import izip_longest as zip_longest
 except ImportError:
@@ -28,6 +27,7 @@ except ImportError:
 
 from botocore.vendored.requests import adapters
 from botocore.vendored.requests.exceptions import ConnectionError
+from botocore.compat import six
 import botocore.session
 import botocore.auth
 import botocore.credentials
@@ -38,7 +38,8 @@ class BaseS3Test(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.service = self.session.get_service('s3')
-        self.endpoint = self.service.get_endpoint('us-east-1')
+        self.region = 'us-east-1'
+        self.endpoint = self.service.get_endpoint(self.region)
         self.keys = []
 
     def create_object(self, key_name, body='foo'):
@@ -55,9 +56,10 @@ class BaseS3Test(unittest.TestCase):
                                                bucket=self.bucket_name,
                                                key=key_name)
         upload_id = parsed['UploadId']
-        self.addCleanup(self.service.get_operation('AbortMultipartUpload').call,
-                        self.endpoint, upload_id=upload_id,
-                        bucket=self.bucket_name, key=key_name)
+        self.addCleanup(
+            self.service.get_operation('AbortMultipartUpload').call,
+            self.endpoint, upload_id=upload_id,
+            bucket=self.bucket_name, key=key_name)
 
     def create_object_catch_exceptions(self, key_name):
         try:
@@ -108,8 +110,10 @@ class TestS3BaseWithBucket(BaseS3Test):
         self.bucket_location = 'us-west-2'
 
         operation = self.service.get_operation('CreateBucket')
-        response = operation.call(self.endpoint, bucket=self.bucket_name,
-            create_bucket_configuration={'LocationConstraint': self.bucket_location})
+        location = {'LocationConstraint': self.bucket_location}
+        response = operation.call(
+            self.endpoint, bucket=self.bucket_name,
+            create_bucket_configuration=location)
         self.assertEqual(response[0].status_code, 200)
 
     def tearDown(self):
@@ -159,7 +163,8 @@ class TestS3Objects(TestS3BaseWithBucket):
         self.assertEqual(bucket_contents[0]['Key'], 'a+b/foo')
 
         subdir_contents = self.service.get_operation('ListObjects').call(
-            self.endpoint, bucket=self.bucket_name, prefix='a+b')[1]['Contents']
+            self.endpoint,
+            bucket=self.bucket_name, prefix='a+b')[1]['Contents']
         self.assertEqual(len(subdir_contents), 1)
         self.assertEqual(subdir_contents[0]['Key'], 'a+b/foo')
 
@@ -196,6 +201,23 @@ class TestS3Objects(TestS3BaseWithBucket):
         responses = list(generator)
         self.assertEqual(len(responses), 5, responses)
         data = [r[1] for r in responses]
+        key_names = [el['Contents'][0]['Key']
+                     for el in data]
+        self.assertEqual(key_names, ['key0', 'key1', 'key2', 'key3', 'key4'])
+
+    def test_client_can_paginate_with_page_size(self):
+        for i in range(5):
+            key_name = 'key%s' % i
+            self.create_object(key_name)
+        # Eventual consistency.
+        time.sleep(3)
+        client = self.session.create_client('s3', region_name=self.region)
+        paginator = client.get_paginator('list_objects')
+        generator = paginator.paginate(page_size=1,
+                                       Bucket=self.bucket_name)
+        responses = list(generator)
+        self.assertEqual(len(responses), 5, responses)
+        data = [r for r in responses]
         key_names = [el['Contents'][0]['Key']
                      for el in data]
         self.assertEqual(key_names, ['key0', 'key1', 'key2', 'key3', 'key4'])
@@ -312,7 +334,8 @@ class TestS3Objects(TestS3BaseWithBucket):
         self.assertEqual(len(parsed['Contents']), 1)
         self.assertEqual(parsed['Contents'][0]['Key'], key_name)
         operation = self.service.get_operation('GetObject')
-        parsed = operation.call(self.endpoint, bucket=self.bucket_name, key=key_name)[1]
+        parsed = operation.call(self.endpoint, bucket=self.bucket_name,
+                                key=key_name)[1]
         self.assertEqual(parsed['Body'].read().decode('utf-8'), 'foo')
 
     def test_thread_safe_auth(self):
@@ -335,7 +358,8 @@ class TestS3Objects(TestS3BaseWithBucket):
             "Unexpectedly caught exceptions: %s" % self.caught_exceptions)
         self.assertEqual(
             len(set(self.auth_paths)), 10,
-            "Expected 10 unique auth paths, instead received: %s" % (self.auth_paths))
+            "Expected 10 unique auth paths, instead received: %s" %
+            (self.auth_paths))
 
     def test_non_normalized_key_paths(self):
         # The create_object method has assertEqual checks for 200 status.
@@ -493,8 +517,10 @@ class TestCreateBucketInOtherRegion(BaseS3Test):
         self.bucket_location = 'us-west-2'
 
         operation = self.service.get_operation('CreateBucket')
-        response = operation.call(self.endpoint, bucket=self.bucket_name,
-            create_bucket_configuration={'LocationConstraint': self.bucket_location})
+        location = {'LocationConstraint': self.bucket_location}
+        response = operation.call(
+            self.endpoint, bucket=self.bucket_name,
+            create_bucket_configuration=location)
         self.assertEqual(response[0].status_code, 200)
         self.keys = []
 
@@ -514,10 +540,10 @@ class TestCreateBucketInOtherRegion(BaseS3Test):
             f.write('foobarbaz' * 1024 * 1024)
             f.flush()
             op = self.service.get_operation('PutObject')
-            response = op.call(self.endpoint,
-                               bucket=self.bucket_name,
-                               key='foo.txt',
-                               body=open(f.name, 'rb'))
+            with open(f.name, 'rb') as body_file:
+                response = op.call(
+                    self.endpoint, bucket=self.bucket_name,
+                    key='foo.txt', body=body_file)
             self.assertEqual(response[0].status_code, 200)
             self.keys.append('foo.txt')
 
@@ -528,10 +554,10 @@ class TestCreateBucketInOtherRegion(BaseS3Test):
             f.write('foobarbaz' * 1024 * 1024)
             f.flush()
             op = self.service.get_operation('PutObject')
-            response = op.call(http_endpoint,
-                               bucket=self.bucket_name,
-                               key='foo.txt',
-                               body=open(f.name, 'rb'))
+            with open(f.name, 'rb') as body_file:
+                response = op.call(
+                    http_endpoint, bucket=self.bucket_name,
+                    key='foo.txt', body=body_file)
             self.assertEqual(response[0].status_code, 200)
             self.keys.append('foo.txt')
 
@@ -545,8 +571,10 @@ class TestSigV4IsRetried(BaseS3Test):
         self.bucket_location = 'eu-central-1'
 
         operation = self.service.get_operation('CreateBucket')
-        response = operation.call(self.endpoint, bucket=self.bucket_name,
-            create_bucket_configuration={'LocationConstraint': self.bucket_location})
+        location = {'LocationConstraint': self.bucket_location}
+        response = operation.call(
+            self.endpoint, bucket=self.bucket_name,
+            create_bucket_configuration=location)
         self.assertEqual(response[0].status_code, 200)
         self.keys = []
 
@@ -564,12 +592,14 @@ class TestSigV4IsRetried(BaseS3Test):
         original_send = adapters.HTTPAdapter.send
         state = mock.Mock()
         state.error_raised = False
+
         def mock_http_adapter_send(self, *args, **kwargs):
             if not state.error_raised:
                 state.error_raised = True
                 raise ConnectionError("Simulated ConnectionError raised.")
             else:
                 return original_send(self, *args, **kwargs)
+
         with mock.patch('botocore.vendored.requests.adapters.HTTPAdapter.send',
                         mock_http_adapter_send):
             response = operation.call(self.endpoint,
