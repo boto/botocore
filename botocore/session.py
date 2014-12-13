@@ -809,35 +809,35 @@ class Session(object):
         :return: A botocore client instance
 
         """
+        if region_name is None:
+            region_name = self.get_config_variable('region')
         loader = self.get_component('data_loader')
-        endpoint_creator = self._create_endpoint_creator(aws_access_key_id,
-                                                         aws_secret_access_key,
-                                                         aws_session_token)
+        endpoint_creator = self._create_endpoint_creator()
         event_emitter = self.get_component('event_emitter')
         response_parser_factory = self.get_component(
             'response_parser_factory')
+        if aws_secret_access_key is not None:
+            credentials = botocore.credentials.Credentials(
+                access_key=aws_access_key_id,
+                secret_key=aws_secret_access_key,
+                token=aws_session_token)
+        else:
+            credentials = self.get_credentials()
         client_creator = botocore.client.ClientCreator(loader, endpoint_creator,
                                                        event_emitter,
                                                        response_parser_factory)
-        client = client_creator.create_client(service_name, region_name, use_ssl,
-                                              endpoint_url, verify,
-                                              aws_access_key_id,
-                                              aws_secret_access_key,
-                                              aws_session_token)
+        client = client_creator.create_client(
+            service_name, region_name, use_ssl, endpoint_url, verify,
+            credentials, scoped_config=self.get_scoped_config())
         return client
 
-    def _create_endpoint_creator(self, aws_access_key_id, aws_secret_access_key,
-                                 aws_session_token):
+    def _create_endpoint_creator(self):
         resolver = self.get_component('endpoint_resolver')
         region = self.get_config_variable('region')
         event_emitter = self.get_component('event_emitter')
-        if aws_secret_access_key is None:
-            credentials = self.get_credentials()
-        else:
-            credentials = None
         user_agent= self.user_agent()
         endpoint_creator = EndpointCreator(resolver, region, event_emitter,
-                                           credentials, user_agent)
+                                           user_agent)
         return endpoint_creator
 
 

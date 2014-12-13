@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import copy
+import functools
 
 from botocore.model import ServiceModel
 from botocore.exceptions import DataNotFoundError
@@ -23,6 +24,7 @@ from botocore.utils import CachedProperty
 import botocore.validate
 import botocore.serialize
 from botocore import credentials
+from botocore.signers import RequestSigner
 
 
 class ClientCreator(object):
@@ -36,14 +38,12 @@ class ClientCreator(object):
 
     def create_client(self, service_name, region_name, is_secure=True,
                       endpoint_url=None, verify=None,
-                      aws_access_key_id=None, aws_secret_access_key=None,
-                      aws_session_token=None):
+                      credentials=None, scoped_config=None):
         service_model = self._load_service_model(service_name)
         cls = self.create_client_class(service_name)
         client_args = self._get_client_args(
             service_model, region_name, is_secure, endpoint_url,
-            verify, aws_access_key_id, aws_secret_access_key,
-            aws_session_token)
+            verify, credentials, scoped_config)
         return cls(**client_args)
 
     def create_client_class(self, service_name):
@@ -170,33 +170,46 @@ class ClientCreator(object):
         return service_model
 
     def _get_client_args(self, service_model, region_name, is_secure,
-                         endpoint_url, verify, aws_access_key_id,
-                         aws_secret_access_key, aws_session_token):
+                         endpoint_url, verify, credentials,
+                         scoped_config):
         # A client needs:
         #
         # * serializer
         # * endpoint
         # * response parser
+        # * request signer
         protocol = service_model.metadata['protocol']
         serializer = botocore.serialize.create_serializer(
             protocol, include_validation=True)
-        creds = None
-        if aws_secret_access_key is not None:
-            creds = credentials.Credentials(
-                access_key=aws_access_key_id,
-                secret_key=aws_secret_access_key,
-                token=aws_session_token)
         endpoint = self._endpoint_creator.create_endpoint(
             service_model, region_name, is_secure=is_secure,
             endpoint_url=endpoint_url, verify=verify,
-            credentials=creds,
             response_parser_factory=self._response_parser_factory)
         response_parser = botocore.parsers.create_parser(protocol)
+
+        # Get endpoint heuristic overrides before creating the
+        # request signer.
+        resolver = self._endpoint_creator.resolver
+        scheme = 'https' if is_secure else 'http'
+        endpoint_config = resolver.construct_endpoint(
+                service_model.endpoint_prefix,
+                region_name, scheme=scheme)
+        region_name = endpoint_config.get('properties', {}).get(
+            'credentialScope', {}).get('region', region_name)
+        signature_version = service_model.signature_version
+        if 'signatureVersion' in endpoint_config.get('properties', {}):
+            signature_version = endpoint_config['properties']\
+                                               ['signatureVersion']
+        signer = RequestSigner(service_model.service_name, region_name,
+                               service_model.signing_name,
+                               signature_version, credentials,
+                               self._event_emitter, scoped_config)
         return {
             'serializer': serializer,
             'endpoint': endpoint,
             'response_parser': response_parser,
             'event_emitter': copy.copy(self._event_emitter),
+            'request_signer': signer,
         }
 
     def _create_methods(self, service_model):
@@ -235,11 +248,16 @@ class ClientCreator(object):
                 'before-call.{endpoint_prefix}.{operation_name}'.format(
                     endpoint_prefix=service_model.endpoint_prefix,
                     operation_name=operation_name),
-                model=operation_model, params=request_dict
+                model=operation_model, params=request_dict,
+                request_signer=self._request_signer
             )
 
+            sign = functools.partial(self._request_signer.sign,
+                                     operation_name)
+
             http, parsed_response = self._endpoint.make_request(
-                operation_model, request_dict)
+                operation_model, request_dict,
+                request_created_handler=sign)
 
             self.meta.events.emit(
                 'after-call.{endpoint_prefix}.{operation_name}'.format(
@@ -262,15 +280,16 @@ class ClientCreator(object):
 class BaseClient(object):
 
     def __init__(self, serializer, endpoint, response_parser,
-                 event_emitter):
+                 event_emitter, request_signer):
         self._serializer = serializer
         self._endpoint = endpoint
         self._response_parser = response_parser
+        self._request_signer = request_signer
         self._cache = {}
         self.meta = ClientMeta(event_emitter)
 
     def clone_client(self, serializer=None, endpoint=None,
-                     response_parser=None):
+                     response_parser=None, request_signer=None):
         """Create a copy of the client object.
 
         This method will create a clone of an existing client.  By default, the
@@ -289,6 +308,7 @@ class BaseClient(object):
             'serializer': serializer,
             'endpoint': endpoint,
             'response_parser': response_parser,
+            'request_signer': request_signer,
         }
         for key, value in kwargs.items():
             if value is None:

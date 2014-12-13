@@ -12,10 +12,13 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import functools
 import logging
 from botocore.exceptions import MissingParametersError
 from botocore.exceptions import UnknownParameterError
+from botocore.exceptions import NoRegionError
 from botocore.paginate import DeprecatedPaginator
+from botocore.signers import RequestSigner
 from botocore import serialize
 from botocore import BotoCoreObject, xform_name
 
@@ -77,6 +80,31 @@ class Operation(BotoCoreObject):
                           model=self.model,
                           params=kwargs)
         request_dict = self.build_parameters(**kwargs)
+
+        service_name = self.service.service_name
+        service_model = self.session.get_service_model(service_name)
+        credentials = self.session.get_credentials()
+        scoped_config = self.session.get_scoped_config()
+        event_emitter = self.session.get_component('event_emitter')
+        resolver = self.session.get_component('endpoint_resolver')
+        scheme = endpoint.host.split(':')[0]
+        if endpoint.region_name is None:
+            raise NoRegionError(env_var='region')
+        endpoint_config = resolver.construct_endpoint(
+                service_model.endpoint_prefix,
+                endpoint.region_name, scheme=scheme)
+        region_name = endpoint_config.get('properties', {}).get(
+            'credentialScope', {}).get('region', endpoint.region_name)
+        signature_version = service_model.signature_version
+        if 'signatureVersion' in endpoint_config.get('properties', {}):
+            signature_version = endpoint_config['properties']\
+                                               ['signatureVersion']
+        signer = RequestSigner(service_model.service_name,
+                               region_name, service_model.signing_name,
+                               signature_version, credentials,
+                               event_emitter, scoped_config)
+        sign = functools.partial(signer.sign, self.name)
+
         event = self.session.create_event('before-call',
                                           self.service.endpoint_prefix,
                                           self.name)
@@ -86,8 +114,11 @@ class Operation(BotoCoreObject):
         self.session.emit(event, endpoint=endpoint,
                           model=self.model,
                           params=request_dict,
-                          operation=self)
-        response = endpoint.make_request(self.model, request_dict)
+                          operation=self,
+                          request_signer=signer)
+
+        response = endpoint.make_request(
+            self.model, request_dict, request_created_handler=sign)
         event = self.session.create_event('after-call',
                                           self.service.endpoint_prefix,
                                           self.name)
