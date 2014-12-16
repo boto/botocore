@@ -562,31 +562,71 @@ class TestCreateBucketInOtherRegion(BaseS3Test):
             self.keys.append('foo.txt')
 
 
-class TestSigV4IsRetried(BaseS3Test):
+class BaseS3ClientTest(BaseS3Test):
     def setUp(self):
-        super(TestSigV4IsRetried, self).setUp()
-        self.endpoint = self.service.get_endpoint('eu-central-1')
-        self.bucket_name = 'botocoretest%s-%s' % (
-            int(time.time()), random.randint(1, 1000))
-        self.bucket_location = 'eu-central-1'
+        super(BaseS3ClientTest, self).setUp()
+        self.client = self.session.create_client('s3', region_name=self.region)
 
-        operation = self.service.get_operation('CreateBucket')
-        location = {'LocationConstraint': self.bucket_location}
-        response = operation.call(
-            self.endpoint, bucket=self.bucket_name,
-            create_bucket_configuration=location)
-        self.assertEqual(response[0].status_code, 200)
+    def assert_status_code(self, response, status_code):
+        self.assertEqual(
+            response['ResponseMetadata']['HTTPStatusCode'],
+            status_code
+        )
+
+    def create_bucket(self, bucket_name=None):
+        bucket_kwargs = {}
+        if bucket_name is None:
+            bucket_name = 'botocoretest%s-%s' % (int(time.time()),
+                                                 random.randint(1, 1000))
+        bucket_kwargs = {'Bucket': bucket_name}
+        if self.region != 'us-east-1':
+            bucket_kwargs['CreateBucketConfiguration'] = {
+                'LocationConstraint': self.region,
+            }
+        response = self.client.create_bucket(**bucket_kwargs)
+        self.assert_status_code(response, 200)
+        self.addCleanup(self.delete_bucket, bucket_name)
+        return bucket_name
+
+    def abort_multipart_upload(self, bucket_name, key, upload_id):
+        response = self.client.abort_multipart_upload(
+            UploadId=upload_id, Bucket=self.bucket_name, Key=key)
+
+    def delete_object(self, key, bucket_name):
+        response = self.client.delete_object(Bucket=bucket_name, Key=key)
+        self.assert_status_code(response, 204)
+
+    def delete_bucket(self, bucket_name):
+        response = self.client.delete_bucket(Bucket=bucket_name)
+        self.assert_status_code(response, 204)
+
+
+class TestS3SigV4Client(BaseS3ClientTest):
+    def setUp(self):
+        super(TestS3SigV4Client, self).setUp()
+        self.region = 'eu-central-1'
+        self.client = self.session.create_client('s3', self.region)
+        self.bucket_name = self.create_bucket()
         self.keys = []
 
     def tearDown(self):
+        super(TestS3SigV4Client, self).tearDown()
         for key in self.keys:
-            op = self.service.get_operation('DeleteObject')
-            response = op.call(self.endpoint, bucket=self.bucket_name, key=key)
-            self.assertEqual(response[0].status_code, 204)
-        self.delete_bucket(self.bucket_name)
+            response = self.delete_object(bucket_name=self.bucket_name,
+                                          key=key)
+
+    def test_can_get_bucket_location(self):
+        # Even though the bucket is in eu-central-1, we should still be able to
+        # use the us-east-1 endpoint class to get the bucket location.
+        operation = self.service.get_operation('GetBucketLocation')
+        # Also keep in mind that while this test is useful, it doesn't test
+        # what happens once DNS propogates which is arguably more interesting,
+        # as DNS will point us to the eu-central-1 endpoint.
+        us_east_1 = self.service.get_endpoint('us-east-1')
+        response = operation.call(us_east_1, Bucket=self.bucket_name)
+        self.assertEqual(response[1]['LocationConstraint'], 'eu-central-1')
 
     def test_request_retried_for_sigv4(self):
-        operation = self.service.get_operation('PutObject')
         body = six.BytesIO(b"Hello world!")
 
         original_send = adapters.HTTPAdapter.send
@@ -599,42 +639,77 @@ class TestSigV4IsRetried(BaseS3Test):
                 raise ConnectionError("Simulated ConnectionError raised.")
             else:
                 return original_send(self, *args, **kwargs)
-
         with mock.patch('botocore.vendored.requests.adapters.HTTPAdapter.send',
                         mock_http_adapter_send):
-            response = operation.call(self.endpoint,
-                                      Bucket=self.bucket_name,
-                                      Key='foo.txt', Body=body)
-            self.assertEqual(response[0].status_code, 200)
+            response = self.client.put_object(Bucket=self.bucket_name,
+                                              Key='foo.txt', Body=body)
+            self.assert_status_code(response, 200)
             self.keys.append('foo.txt')
 
+    def test_paginate_list_objects_unicode(self):
+        key_names = [
+            u'non-ascii-key-\xe4\xf6\xfc-01.txt',
+            u'non-ascii-key-\xe4\xf6\xfc-02.txt',
+            u'non-ascii-key-\xe4\xf6\xfc-03.txt',
+            u'non-ascii-key-\xe4\xf6\xfc-04.txt',
+        ]
+        for key in key_names:
+            response = self.client.put_object(Bucket=self.bucket_name,
+                                              Key=key, Body='')
+            self.assert_status_code(response, 200)
+            self.keys.append(key)
 
-class TestGetBucketLocationForEUCentral1(BaseS3Test):
-    def setUp(self):
-        super(TestGetBucketLocationForEUCentral1, self).setUp()
-        self.bucket_name = 'botocoretest%s-%s' % (
-            int(time.time()), random.randint(1, 1000))
-        client = self.session.create_client('s3', 'eu-central-1')
-        client.create_bucket(Bucket=self.bucket_name,
-                             CreateBucketConfiguration={
-                                 'LocationConstraint': 'eu-central-1',
-                             })
+        list_objs_paginator = self.client.get_paginator('list_objects')
+        key_refs = []
+        for response in list_objs_paginator.paginate(Bucket=self.bucket_name,
+                                                     page_size=2):
+            for content in response['Contents']:
+                key_refs.append(content['Key'])
 
-    def tearDown(self):
-        super(TestGetBucketLocationForEUCentral1, self).tearDown()
-        client = self.session.create_client('s3', 'eu-central-1')
-        client.delete_bucket(Bucket=self.bucket_name)
+        self.assertEqual(key_names, key_refs)
 
-    def test_can_get_bucket_location(self):
-        # Even though the bucket is in eu-central-1, we should still be able to
-        # use the us-east-1 endpoint class to get the bucket location.
-        operation = self.service.get_operation('GetBucketLocation')
-        # Also keep in mind that while this test is useful, it doesn't test
-        # what happens once DNS propogates which is arguably more interesting,
-        # as DNS will point us to the eu-central-1 endpoint.
-        us_east_1 = self.service.get_endpoint('us-east-1')
-        response = operation.call(us_east_1, Bucket=self.bucket_name)
-        self.assertEqual(response[1]['LocationConstraint'], 'eu-central-1')
+    def test_paginate_list_objects_safe_chars(self):
+        key_names = [
+            u'-._~safe-chars-key-01.txt',
+            u'-._~safe-chars-key-02.txt',
+            u'-._~safe-chars-key-03.txt',
+            u'-._~safe-chars-key-04.txt',
+        ]
+        for key in key_names:
+            response = self.client.put_object(Bucket=self.bucket_name,
+                                              Key=key, Body='')
+            self.assert_status_code(response, 200)
+            self.keys.append(key)
+
+        list_objs_paginator = self.client.get_paginator('list_objects')
+        key_refs = []
+        for response in list_objs_paginator.paginate(Bucket=self.bucket_name,
+                                                     page_size=2):
+            for content in response['Contents']:
+                key_refs.append(content['Key'])
+
+        self.assertEqual(key_names, key_refs)
+
+    def test_create_multipart_upload(self):
+        key = 'mymultipartupload'
+        response = self.client.create_multipart_upload(
+            Bucket=self.bucket_name, Key=key
+        )
+        self.assert_status_code(response, 200)
+        upload_id = response['UploadId']
+        self.addCleanup(
+            self.abort_multipart_upload,
+            bucket_name=self.bucket_name, key=key, upload_id=upload_id
+        )
+
+        response = self.client.list_multipart_uploads(
+            Bucket=self.bucket_name, Prefix=key
+        )
+
+        # Make sure there is only one multipart upload.
+        self.assertEqual(len(response['Uploads']), 1)
+        # Make sure the upload id is as expected.
+        self.assertEqual(response['Uploads'][0]['UploadId'], upload_id)
 
 
 class TestCanSwitchToSigV4(unittest.TestCase):

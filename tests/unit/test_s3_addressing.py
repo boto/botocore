@@ -67,6 +67,18 @@ class TestS3Addressing(BaseSessionTest):
         self.assertEqual(prepared_request.url,
                          'https://safename.s3.amazonaws.com/')
 
+    def test_list_objects_unicode_query_string_eu_central_1(self):
+        self.endpoint = self.s3.get_endpoint('eu-central-1')
+        op = self.s3.get_operation('ListObjects')
+        params = op.build_parameters(bucket='safename',
+                                     marker=u'\xe4\xf6\xfc-01.txt')
+        prepared_request = self.get_prepared_request(op, params)
+        self.assertEqual(
+            prepared_request.url,
+            ('https://s3.eu-central-1.amazonaws.com/safename'
+             '?marker=%C3%A4%C3%B6%C3%BC-01.txt')
+        )
+
     def test_list_objects_in_restricted_regions(self):
         self.endpoint = self.s3.get_endpoint('us-gov-west-1')
         op = self.s3.get_operation('ListObjects')
