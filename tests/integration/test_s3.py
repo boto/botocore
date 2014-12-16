@@ -668,6 +668,28 @@ class TestS3SigV4Client(BaseS3ClientTest):
 
         self.assertEqual(key_names, key_refs)
 
+    def test_paginate_list_objects_safe_chars(self):
+        key_names = [
+            u'-._~safe-chars-key-01.txt',
+            u'-._~safe-chars-key-02.txt',
+            u'-._~safe-chars-key-03.txt',
+            u'-._~safe-chars-key-04.txt',
+        ]
+        for key in key_names:
+            response = self.client.put_object(Bucket=self.bucket_name,
+                                              Key=key, Body='')
+            self.assert_status_code(response, 200)
+            self.keys.append(key)
+
+        list_objs_paginator = self.client.get_paginator('list_objects')
+        key_refs = []
+        for response in list_objs_paginator.paginate(Bucket=self.bucket_name,
+                                                     page_size=2):
+            for content in response['Contents']:
+                key_refs.append(content['Key'])
+
+        self.assertEqual(key_names, key_refs)
+
     def test_create_multipart_upload(self):
         key = 'mymultipartupload'
         response = self.client.create_multipart_upload(
