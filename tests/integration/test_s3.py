@@ -741,12 +741,6 @@ class TestCanSwitchToSigV4(unittest.TestCase):
         # The set_config_variable should ensure that we use sigv4 for s3.
         self.assertIsInstance(endpoint.auth, botocore.auth.S3SigV4Auth)
 
-        # And just to be sure, we'll go ahead and make a basic S3
-        # call and verify it works with sigv4.
-        operation = service.get_operation('ListBuckets')
-        http, response = operation.call(endpoint)
-        self.assertEqual(http.status_code, 200)
-
 
 class TestSSEKeyParamValidation(unittest.TestCase):
     def setUp(self):
