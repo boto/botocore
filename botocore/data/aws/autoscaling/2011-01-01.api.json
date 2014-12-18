@@ -968,7 +968,6 @@
       "type":"structure",
       "required":[
         "AutoScalingGroupName",
-        "LaunchConfigurationName",
         "MinSize",
         "MaxSize",
         "DesiredCapacity",
@@ -1110,8 +1109,7 @@
         "AutoScalingGroupName",
         "AvailabilityZone",
         "LifecycleState",
-        "HealthStatus",
-        "LaunchConfigurationName"
+        "HealthStatus"
       ],
       "members":{
         "InstanceId":{
@@ -1916,8 +1914,7 @@
         "InstanceId",
         "AvailabilityZone",
         "LifecycleState",
-        "HealthStatus",
-        "LaunchConfigurationName"
+        "HealthStatus"
       ],
       "members":{
         "InstanceId":{
