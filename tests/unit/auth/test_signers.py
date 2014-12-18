@@ -274,6 +274,21 @@ class TestS3SigV4Auth(unittest.TestCase):
         self.assertTrue(
             request.headers['Authorization'].startswith('AWS4-HMAC-SHA256'))
 
+    def test_query_string_params_in_urls(self):
+        request = AWSRequest()
+        request.url = (
+            'https://s3.amazonaws.com/bucket?'
+            'marker=%C3%A4%C3%B6%C3%BC-01.txt&prefix'
+        )
+        request.data = {'Action': 'MyOperation'}
+        request.method = 'GET'
+
+        # Check that the canonical query string is correct formatting
+        # by ensuring that query string paramters that are added to the
+        # canonical query string are correctly formatted.
+        cqs = self.auth.canonical_query_string(request)
+        self.assertEqual('marker=%C3%A4%C3%B6%C3%BC-01.txt&prefix=', cqs)
+
 
 class TestSigV4Resign(unittest.TestCase):
 
