@@ -59,6 +59,34 @@ class TestHierarchicalEventEmitter(unittest.TestCase):
         self.assertEqual(calls, ['foo.bar.baz', 'foo.bar', 'foo'])
 
 
+class TestStopProcessing(unittest.TestCase):
+    def setUp(self):
+        self.emitter = HierarchicalEmitter()
+        self.hook_calls = []
+
+    def hook1(self, **kwargs):
+        self.hook_calls.append('hook1')
+
+    def hook2(self, **kwargs):
+        self.hook_calls.append('hook2')
+        return True
+
+    def hook3(self, **kwargs):
+        self.hook_calls.append('hook3')
+        return True
+
+    def test_stop_processing_after_first_response(self):
+        # Here we register three hooks, but only the first
+        # two should ever execute.
+        self.emitter.register('foo', self.hook1)
+        self.emitter.register('foo', self.hook2)
+        self.emitter.register('foo', self.hook3)
+        handler, response = self.emitter.emit_until_response('foo')
+
+        self.assertEqual(response, True)
+        self.assertEqual(self.hook_calls, ['hook1', 'hook2'])
+
+
 class TestFirstNonNoneResponse(unittest.TestCase):
     def test_all_none(self):
         self.assertIsNone(first_non_none_response([]))
