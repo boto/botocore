@@ -99,6 +99,20 @@ class TestEC2Operations(TestParamSerialization):
         # TODO: We need to base64 decode this!  Needs a customization
         #self.assert_params_serialize_to('ec2.RunInstances', params, result)
 
+    def test_run_instances_userdata_blob(self):
+        # Ensure that binary can be passed in as user data.
+        # This is valid because you can send gzip compressed files as
+        # user data.
+        user_data = b'\xc7\xa9This is a test'
+        b64_user_data = base64.b64encode(user_data).decode('utf-8')
+        op = self.ec2.get_operation('RunInstances')
+        params = dict(image_id='img-12345678',
+                      min_count=1, max_count=5, user_data=user_data)
+        result = {'ImageId': 'img-12345678',
+                  'MinCount': 1,
+                  'MaxCount': 5,
+                  'UserData': b64_user_data}
+
     def test_authorize_security_groups_ingress(self):
         params = dict(
             group_name='MyGroup',

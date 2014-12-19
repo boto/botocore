@@ -372,8 +372,11 @@ def parse_get_bucket_location(parsed, http_response, **kwargs):
 
 def base64_encode_user_data(params, **kwargs):
     if 'UserData' in params:
+        if isinstance(params['UserData'], six.text_type):
+            # Encode it to bytes if it is text.
+            params['UserData'] = params['UserData'].encode('utf-8')
         params['UserData'] = base64.b64encode(
-            params['UserData'].encode('utf-8')).decode('utf-8')
+            params['UserData']).decode('utf-8')
 
 
 def fix_route53_ids(params, model, **kwargs):
