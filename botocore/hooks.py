@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import copy
 import logging
 from collections import defaultdict, deque, namedtuple
 from botocore.compat import accepts_kwargs, six
@@ -454,3 +455,13 @@ class _PrefixTrie(object):
             else:
                 raise ValueError(
                     "key is not in trie: %s" % '.'.join(key_parts))
+
+    def __copy__(self):
+        # The fact that we're using a nested dict under the covers
+        # is an implementation detail, and the user shouldn't have
+        # to know that they'd normally need a deepcopy so we expose
+        # __copy__ instead of __deepcopy__.
+        new_copy = self.__class__()
+        copied_nodes = copy.deepcopy(self.__dict__)
+        new_copy.__dict__ = copied_nodes
+        return new_copy
