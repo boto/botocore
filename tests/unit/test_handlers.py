@@ -247,6 +247,37 @@ class TestHandlers(BaseSessionTest):
 
         self.assertEqual(params['HostedZoneId'], '/hostedzone/ABC123')
 
+    def test_run_instances_userdata(self):
+        user_data = 'This is a test'
+        b64_user_data = base64.b64encode(six.b(user_data)).decode('utf-8')
+        event = self.session.create_event(
+            'before-parameter-build', 'ec2', 'RunInstances')
+        params = dict(ImageId='img-12345678',
+                      MinCount=1, MaxCount=5, UserData=user_data)
+        self.session.emit(event, params=params)
+        result = {'ImageId': 'img-12345678',
+                  'MinCount': 1,
+                  'MaxCount': 5,
+                  'UserData': b64_user_data}
+        self.assertEqual(params, result)
+
+    def test_run_instances_userdata_blob(self):
+        # Ensure that binary can be passed in as user data.
+        # This is valid because you can send gzip compressed files as
+        # user data.
+        user_data = b'\xc7\xa9This is a test'
+        b64_user_data = base64.b64encode(user_data).decode('utf-8')
+        event = self.session.create_event(
+            'before-parameter-build', 'ec2', 'RunInstances')
+        params = dict(ImageId='img-12345678',
+                      MinCount=1, MaxCount=5, UserData=user_data)
+        self.session.emit(event, params=params)
+        result = {'ImageId': 'img-12345678',
+                  'MinCount': 1,
+                  'MaxCount': 5,
+                  'UserData': b64_user_data}
+        self.assertEqual(params, result)
+
     def test_fix_s3_host_initial(self):
         endpoint = mock.Mock(region_name='us-west-2')
         request = AWSRequest(
