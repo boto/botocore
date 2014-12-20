@@ -196,7 +196,7 @@ class ClientCreator(object):
             'serializer': serializer,
             'endpoint': endpoint,
             'response_parser': response_parser,
-            'event_emitter': self._event_emitter,
+            'event_emitter': copy.copy(self._event_emitter),
         }
 
     def _create_methods(self, service_model):
