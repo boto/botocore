@@ -475,31 +475,35 @@ class TestWildcardHandlers(unittest.TestCase):
         def second_handler(id_name, **kwargs):
             second.append(id_name)
 
-        self.emitter.register('foo', first_handler)
+        self.emitter.register('foo.bar.baz', first_handler)
         # First time we emit, only the first handler should be called.
-        self.emitter.emit('foo', id_name='first-time')
+        self.emitter.emit('foo.bar.baz', id_name='first-time')
         self.assertEqual(first, ['first-time'])
         self.assertEqual(second, [])
 
         copied_emitter = copy.copy(self.emitter)
         # If we emit from the copied emitter, we should still
         # only see the first handler called.
-        copied_emitter.emit('foo', id_name='second-time')
+        copied_emitter.emit('foo.bar.baz', id_name='second-time')
         self.assertEqual(first, ['first-time', 'second-time'])
         self.assertEqual(second, [])
 
         # However, if we register an event handler with the copied
         # emitter, the first emitter will not see this.
-        copied_emitter.register('foo', second_handler)
+        copied_emitter.register('foo.bar.baz', second_handler)
 
-        copied_emitter.emit('foo', id_name='third-time')
+        copied_emitter.emit('foo.bar.baz', id_name='third-time')
         self.assertEqual(first, ['first-time', 'second-time', 'third-time'])
         # And now the second handler is called.
         self.assertEqual(second, ['third-time'])
 
         # And vice-versa, emitting from the original emitter
         # will not trigger the second_handler.
-        self.emitter.emit('foo', id_name='last-time')
+        # We'll double check this by unregistering/re-registering
+        # the event handler.
+        self.emitter.unregister('foo.bar.baz', first_handler)
+        self.emitter.register('foo.bar.baz', first_handler)
+        self.emitter.emit('foo.bar.baz', id_name='last-time')
         self.assertEqual(second, ['third-time'])
 
 

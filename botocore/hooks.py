@@ -324,6 +324,13 @@ class HierarchicalEmitter(BaseEventHooks):
         except ValueError:
             pass
 
+    def __copy__(self):
+        new_instance = self.__class__()
+        new_state = self.__dict__.copy()
+        new_state['_handlers'] = copy.copy(self._handlers)
+        new_instance.__dict__ = new_state
+        return new_instance
+
 
 class _PrefixTrie(object):
     """Specialized prefix trie that handles wildcards.
