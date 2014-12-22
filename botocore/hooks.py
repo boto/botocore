@@ -162,7 +162,24 @@ class HierarchicalEmitter(BaseEventHooks):
         # registered once.
         self._unique_id_cache = {}
 
-    def emit(self, event_name, **kwargs):
+    def _emit(self, event_name, kwargs, stop_on_response=False):
+        """
+        Emit an event with optional keyword arguments.
+
+        :type event_name: string
+        :param event_name: Name of the event
+        :type kwargs: dict
+        :param kwargs: Arguments to be passed to the handler functions.
+        :type stop_on_response: boolean
+        :param stop_on_response: Whether to stop on the first non-None
+                                response. If False, then all handlers
+                                will be called. This is especially useful
+                                to handlers which mutate data and then
+                                want to stop propagation of the event.
+        :rtype: list
+        :return: List of (handler, response) tuples from all processed
+                 handlers.
+        """
         responses = []
         # Invoke the event handlers from most specific
         # to least specific, each time stripping off a dot.
@@ -181,7 +198,41 @@ class HierarchicalEmitter(BaseEventHooks):
             logger.debug('Event %s: calling handler %s', event_name, handler)
             response = handler(**kwargs)
             responses.append((handler, response))
+            if stop_on_response and response is not None:
+                return responses
         return responses
+
+    def emit(self, event_name, **kwargs):
+        """
+        Emit an event by name with arguments passed as keyword args.
+
+            >>> responses = emitter.emit(
+            ...     'my-event.service.operation', arg1='one', arg2='two')
+
+        :rtype: list
+        :return: List of (handler, response) tuples from all processed
+                 handlers.
+        """
+        return self._emit(event_name, kwargs)
+
+    def emit_until_response(self, event_name, **kwargs):
+        """
+        Emit an event by name with arguments passed as keyword args,
+        until the first non-``None`` response is received. This
+        method prevents subsequent handlers from being invoked.
+
+            >>> handler, response = emitter.emit_until_response(
+                'my-event.service.operation', arg1='one', arg2='two')
+
+        :rtype: tuple
+        :return: The first (handler, response) tuple where the response
+                 is not ``None``, otherwise (``None``, ``None``).
+        """
+        responses = self._emit(event_name, kwargs, stop_on_response=True)
+        if responses:
+            return responses[-1]
+        else:
+            return (None, None)
 
     def _register(self, event_name, handler, unique_id=None,
                   unique_id_uses_count=False):

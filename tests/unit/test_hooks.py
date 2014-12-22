@@ -59,6 +59,63 @@ class TestHierarchicalEventEmitter(unittest.TestCase):
         self.assertEqual(calls, ['foo.bar.baz', 'foo.bar', 'foo'])
 
 
+class TestStopProcessing(unittest.TestCase):
+    def setUp(self):
+        self.emitter = HierarchicalEmitter()
+        self.hook_calls = []
+
+    def hook1(self, **kwargs):
+        self.hook_calls.append('hook1')
+
+    def hook2(self, **kwargs):
+        self.hook_calls.append('hook2')
+        return 'hook2-response'
+
+    def hook3(self, **kwargs):
+        self.hook_calls.append('hook3')
+        return 'hook3-response'
+
+    def test_all_hooks(self):
+        # Here we register three hooks and sanity check
+        # that all three would be called by a normal emit.
+        # This ensures our hook calls are setup properly for
+        # later tests.
+        self.emitter.register('foo', self.hook1)
+        self.emitter.register('foo', self.hook2)
+        self.emitter.register('foo', self.hook3)
+        self.emitter.emit('foo')
+
+        self.assertEqual(self.hook_calls, ['hook1', 'hook2', 'hook3'])
+
+    def test_stop_processing_after_first_response(self):
+        # Here we register three hooks, but only the first
+        # two should ever execute.
+        self.emitter.register('foo', self.hook1)
+        self.emitter.register('foo', self.hook2)
+        self.emitter.register('foo', self.hook3)
+        handler, response = self.emitter.emit_until_response('foo')
+
+        self.assertEqual(response, 'hook2-response')
+        self.assertEqual(self.hook_calls, ['hook1', 'hook2'])
+
+    def test_no_responses(self):
+        # Here we register a handler that will not return a response
+        # and ensure we get back proper values.
+        self.emitter.register('foo', self.hook1)
+        responses = self.emitter.emit('foo')
+
+        self.assertEqual(self.hook_calls, ['hook1'])
+        self.assertEqual(responses, [(self.hook1, None)])
+
+    def test_no_handlers(self):
+        # Here we have no handlers, but still expect a tuple of return
+        # values.
+        handler, response = self.emitter.emit_until_response('foo')
+
+        self.assertIsNone(handler)
+        self.assertIsNone(response)
+
+
 class TestFirstNonNoneResponse(unittest.TestCase):
     def test_all_none(self):
         self.assertIsNone(first_non_none_response([]))
