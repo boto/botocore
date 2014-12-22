@@ -162,14 +162,14 @@ class HierarchicalEmitter(BaseEventHooks):
         # registered once.
         self._unique_id_cache = {}
 
-    def _emit(self, event_name, args, stop_on_response=False):
+    def _emit(self, event_name, kwargs, stop_on_response=False):
         """
         Emit an event with optional keyword arguments.
 
         :type event_name: string
         :param event_name: Name of the event
-        :type args: dict
-        :param args: Arguments to be passed to the handler functions.
+        :type kwargs: dict
+        :param kwargs: Arguments to be passed to the handler functions.
         :type stop_on_response: boolean
         :param stop_on_response: Whether to stop on the first non-None
                                 response. If False, then all handlers
@@ -192,11 +192,11 @@ class HierarchicalEmitter(BaseEventHooks):
             # no handlers to call.  This is the common case where
             # for the majority of signals, nothing is listening.
             return []
-        args['event_name'] = event_name
+        kwargs['event_name'] = event_name
         responses = []
         for handler in handlers_to_call:
             logger.debug('Event %s: calling handler %s', event_name, handler)
-            response = handler(**args)
+            response = handler(**kwargs)
             responses.append((handler, response))
             if stop_on_response and response is not None:
                 return responses
