@@ -270,16 +270,17 @@ class BaseClient(object):
         self.meta = ClientMeta(event_emitter)
 
     def clone_client(self, serializer=None, endpoint=None,
-                     response_parser=None, event_emitter=None):
+                     response_parser=None):
         """Create a copy of the client object.
 
-        All the parameters mirror the same arguments accepted by the
-        ``__init__`` of the client object.  Any argument not provided
-        will default to the value associated with the current client
-        object.  For example, if no ``endpoint`` argument is not provided,
-        then ``self._endpoint`` will be used.  This allows you to
-        either create an exact clone of the client, or create a clone with
-        certain objects modified.
+        This method will create a clone of an existing client.  By default, the
+        same internal attributes are used when creating a clone of the client,
+        with the exception of the event emitter. A copy of the event handlers
+        are created when a clone of the client is created.
+
+        You can also provide any of the above arguments as an override.  This
+        allows you to create a client that has the same values except for the
+        args you pass in as overrides.
 
         :return: A new copy of the botocore client.
 
@@ -316,6 +317,4 @@ class ClientMeta(object):
         self.events = events
 
     def __copy__(self):
-        # The event emitter does not support being copied,
-        # but once it does this will be updated.
-        return ClientMeta(**self.__dict__.copy())
+        return ClientMeta(**copy.deepcopy(self.__dict__))
