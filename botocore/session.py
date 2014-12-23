@@ -812,7 +812,6 @@ class Session(object):
         if region_name is None:
             region_name = self.get_config_variable('region')
         loader = self.get_component('data_loader')
-        endpoint_creator = self._create_endpoint_creator()
         event_emitter = self.get_component('event_emitter')
         response_parser_factory = self.get_component(
             'response_parser_factory')
@@ -823,22 +822,14 @@ class Session(object):
                 token=aws_session_token)
         else:
             credentials = self.get_credentials()
-        client_creator = botocore.client.ClientCreator(loader, endpoint_creator,
-                                                       event_emitter,
-                                                       response_parser_factory)
+        endpoint_resolver = self.get_component('endpoint_resolver')
+        client_creator = botocore.client.ClientCreator(
+            loader, endpoint_resolver, self.user_agent(), event_emitter,
+            response_parser_factory)
         client = client_creator.create_client(
             service_name, region_name, use_ssl, endpoint_url, verify,
             credentials, scoped_config=self.get_scoped_config())
         return client
-
-    def _create_endpoint_creator(self):
-        resolver = self.get_component('endpoint_resolver')
-        region = self.get_config_variable('region')
-        event_emitter = self.get_component('event_emitter')
-        user_agent= self.user_agent()
-        endpoint_creator = EndpointCreator(resolver, region, event_emitter,
-                                           user_agent)
-        return endpoint_creator
 
 
 class ComponentLocator(object):

@@ -25,14 +25,16 @@ import botocore.validate
 import botocore.serialize
 from botocore import credentials
 from botocore.signers import RequestSigner
+from botocore.endpoint import EndpointCreator
 
 
 class ClientCreator(object):
     """Creates client objects for a service."""
-    def __init__(self, loader, endpoint_creator, event_emitter,
+    def __init__(self, loader, endpoint_resolver, user_agent, event_emitter,
                  response_parser_factory=None):
         self._loader = loader
-        self._endpoint_creator = endpoint_creator
+        self._endpoint_resolver = endpoint_resolver
+        self._user_agent = user_agent
         self._event_emitter = event_emitter
         self._response_parser_factory = response_parser_factory
 
@@ -181,7 +183,10 @@ class ClientCreator(object):
         protocol = service_model.metadata['protocol']
         serializer = botocore.serialize.create_serializer(
             protocol, include_validation=True)
-        endpoint = self._endpoint_creator.create_endpoint(
+        event_emitter = copy.copy(self._event_emitter)
+        endpoint_creator = EndpointCreator(self._endpoint_resolver, region_name,
+                                           event_emitter, self._user_agent)
+        endpoint = endpoint_creator.create_endpoint(
             service_model, region_name, is_secure=is_secure,
             endpoint_url=endpoint_url, verify=verify,
             response_parser_factory=self._response_parser_factory)
@@ -189,7 +194,7 @@ class ClientCreator(object):
 
         # Get endpoint heuristic overrides before creating the
         # request signer.
-        resolver = self._endpoint_creator.resolver
+        resolver = endpoint_creator.resolver
         scheme = 'https' if is_secure else 'http'
         endpoint_config = resolver.construct_endpoint(
                 service_model.endpoint_prefix,
@@ -203,12 +208,12 @@ class ClientCreator(object):
         signer = RequestSigner(service_model.service_name, region_name,
                                service_model.signing_name,
                                signature_version, credentials,
-                               self._event_emitter, scoped_config)
+                               event_emitter, scoped_config)
         return {
             'serializer': serializer,
             'endpoint': endpoint,
             'response_parser': response_parser,
-            'event_emitter': copy.copy(self._event_emitter),
+            'event_emitter': event_emitter,
             'request_signer': signer,
         }
 
