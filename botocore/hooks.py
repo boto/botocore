@@ -18,10 +18,19 @@ from botocore.compat import accepts_kwargs, six
 logger = logging.getLogger(__name__)
 
 
-NodeList = namedtuple('NodeList', ['first', 'middle', 'last'])
+_NodeList = namedtuple('NodeList', ['first', 'middle', 'last'])
 _FIRST = 0
 _MIDDLE = 1
 _LAST = 2
+
+class NodeList(_NodeList):
+
+    def __copy__(self):
+        first_copy = copy.copy(self.first)
+        middle_copy = copy.copy(self.middle)
+        last_copy = copy.copy(self.last)
+        copied = NodeList(first_copy, middle_copy, last_copy)
+        return copied
 
 
 def first_non_none_response(responses, default=None):
@@ -271,7 +280,7 @@ class HierarchicalEmitter(BaseEventHooks):
                         raise ValueError("Initial registration of"
                             " unique id %s was specified to not use a counter."
                             " Subsequent register calls to unique id must"
-                            " specify not to use a counter as well." % 
+                            " specify not to use a counter as well." %
                             unique_id)
                 return
             else:
@@ -469,6 +478,20 @@ class _PrefixTrie(object):
         # to know that they'd normally need a deepcopy so we expose
         # __copy__ instead of __deepcopy__.
         new_copy = self.__class__()
-        copied_nodes = copy.deepcopy(self.__dict__)
-        new_copy.__dict__ = copied_nodes
+        copied_attrs = self._recursive_copy(self.__dict__)
+        new_copy.__dict__ = copied_attrs
         return new_copy
+
+    def _recursive_copy(self, node):
+        # We can't use copy.deepcopy because we actually only want to copy
+        # the structure of the trie, not the handlers themselves.
+        # Each node has a chunk, children, and values.
+        copied_node = {}
+        for key, value in node.items():
+            if isinstance(value, NodeList):
+                copied_node[key] = copy.copy(value)
+            elif isinstance(value, dict):
+                copied_node[key] = self._recursive_copy(value)
+            else:
+                copied_node[key] = value
+        return copied_node
