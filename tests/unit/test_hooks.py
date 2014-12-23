@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import copy
+import functools
 
 from tests import unittest
 from functools import partial
@@ -505,6 +506,19 @@ class TestWildcardHandlers(unittest.TestCase):
         self.emitter.register('foo.bar.baz', first_handler)
         self.emitter.emit('foo.bar.baz', id_name='last-time')
         self.assertEqual(second, ['third-time'])
+
+    def test_copy_events_with_partials(self):
+        # There's a bug in python2.6 where you can't deepcopy
+        # a partial object.  We want to ensure that doesn't
+        # break when a partial is hooked up as an event handler.
+        def handler(a, b, **kwargs):
+            return b
+
+        f = functools.partial(handler, 1)
+        self.emitter.register('a.b', f)
+        copied = copy.copy(self.emitter)
+        self.assertEqual(copied.emit_until_response(
+            'a.b', b='return-val')[1], 'return-val')
 
 
 if __name__ == '__main__':
