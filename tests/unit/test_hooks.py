@@ -10,7 +10,6 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import copy
 
 from tests import unittest
 from functools import partial
@@ -374,7 +373,7 @@ class TestWildcardHandlers(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.emitter.unregister('foo', self.hook, unique_id='foo',
                                     unique_id_uses_count=True)
-
+    
     def test_handlers_called_in_order(self):
         def handler(call_number, **kwargs):
             kwargs['call_number'] = call_number
@@ -463,48 +462,6 @@ class TestWildcardHandlers(unittest.TestCase):
 
         self.emitter.emit('foo')
         self.assertEqual(self.hook_calls, [])
-
-    def test_copy_emitter(self):
-        # Here we're not testing copy directly, we're testing
-        # the observable behavior from copying an event emitter.
-        first = []
-        def first_handler(id_name, **kwargs):
-            first.append(id_name)
-
-        second = []
-        def second_handler(id_name, **kwargs):
-            second.append(id_name)
-
-        self.emitter.register('foo.bar.baz', first_handler)
-        # First time we emit, only the first handler should be called.
-        self.emitter.emit('foo.bar.baz', id_name='first-time')
-        self.assertEqual(first, ['first-time'])
-        self.assertEqual(second, [])
-
-        copied_emitter = copy.copy(self.emitter)
-        # If we emit from the copied emitter, we should still
-        # only see the first handler called.
-        copied_emitter.emit('foo.bar.baz', id_name='second-time')
-        self.assertEqual(first, ['first-time', 'second-time'])
-        self.assertEqual(second, [])
-
-        # However, if we register an event handler with the copied
-        # emitter, the first emitter will not see this.
-        copied_emitter.register('foo.bar.baz', second_handler)
-
-        copied_emitter.emit('foo.bar.baz', id_name='third-time')
-        self.assertEqual(first, ['first-time', 'second-time', 'third-time'])
-        # And now the second handler is called.
-        self.assertEqual(second, ['third-time'])
-
-        # And vice-versa, emitting from the original emitter
-        # will not trigger the second_handler.
-        # We'll double check this by unregistering/re-registering
-        # the event handler.
-        self.emitter.unregister('foo.bar.baz', first_handler)
-        self.emitter.register('foo.bar.baz', first_handler)
-        self.emitter.emit('foo.bar.baz', id_name='last-time')
-        self.assertEqual(second, ['third-time'])
 
 
 if __name__ == '__main__':
