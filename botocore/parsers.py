@@ -141,6 +141,11 @@ def _text_content(func):
     def _get_text_content(self, shape, node_or_string):
         if hasattr(node_or_string, 'text'):
             text = node_or_string.text
+            if text is None:
+                # If an XML node is empty <foo></foo>,
+                # we want to parse that as an empty string,
+                # not as a null/None value.
+                text = ''
         else:
             text = node_or_string
         return func(self, shape, text)
