@@ -18,7 +18,7 @@
     "InvalidationCompleted": {
       "delay": 20,
       "operation": "GetInvalidation",
-      "maxAttempts": 30,
+      "maxAttempts": 60,
       "description": "Wait until an invalidation has completed.",
       "acceptors": [
         {
