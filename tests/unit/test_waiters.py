@@ -521,9 +521,6 @@ class ServiceWaiterFunctionalTest(BaseEnvVar):
         self.environ['BOTO_DATA_PATH'] = self.data_path
         self.loader = Loader(self.data_path)
 
-        # Make sure the cache is clear.
-        self.loader._cache.clear()
-
     def get_waiter_model(self, service, api_version=None):
         """
         Get the waiter model for the service
