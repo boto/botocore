@@ -10,15 +10,15 @@ It its simplest usage you give it a path to a file and it
 prints the location within botocore::
 
   $ scripts/get-model-filename /tmp/myfile.json
-  /Users/foo/botocore/botocore/data/aws/cloudwatch/2010-08-01.api.json
+  /Users/foo/botocore/botocore/data/aws/cloudwatch/2010-08-01.normal.json
 
 If you want, you can use the ``-c`` option to actually copy the file
 to this location.  When this option is specified, the parent directory
 will be created if it does not exist.
 
   $ scripts/get-model-filename -c /tmp/myfile.json
-  /Users/foo/botocore/data/aws/cloudwatch/2010-08-01.api.json
-  Copied: /tmp/myfile.json -> /Users/foo/botocore/data/aws/cloudwatch/2010-08-01.api.json
+  /Users/foo/botocore/data/aws/cloudwatch/2010-08-01.normal.json
+  Copied: /tmp/myfile.json -> /Users/foo/botocore/data/aws/cloudwatch/2010-08-01.normal.json
 
 """
 # Note we're using optparse for 2.6 compat.
@@ -30,7 +30,11 @@ import sys
 import json
 import shutil
 import os
-import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    # Python3 we need to import from the io module.
+    from io import StringIO
 
 
 def determine_json_data_path(fileobj):
@@ -66,7 +70,7 @@ def _determine_path_from_metadata(parsed):
     api_version = metadata['apiVersion']
     return os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        'botocore', 'data', 'aws', service_name, api_version + '.api.json')
+        'botocore', 'data', 'aws', service_name, api_version + '.normal.json')
 
 
 class TestDeterminePath(unittest.TestCase):
@@ -75,37 +79,37 @@ class TestDeterminePath(unittest.TestCase):
         self.metadata = {'metadata': metadata}
 
     def assert_filename_is(self, filename):
-        source_file = StringIO.StringIO(json.dumps(self.metadata))
+        source_file = StringIO(json.dumps(self.metadata))
         actual = determine_json_data_path(source_file)
         self.assertTrue(actual.endswith(filename))
 
     def test_can_determine_path_from_metadata(self):
         self.given_metadata(
             {'apiVersion': '2015-01-01', 'endpointPrefix': 'foo'})
-        self.assert_filename_is('botocore/data/aws/foo/2015-01-01.api.json')
+        self.assert_filename_is('botocore/data/aws/foo/2015-01-01.normal.json')
 
         self.given_metadata(
             {'apiVersion': '2015-01-01', 'endpointPrefix': 'foo',
              'serviceAbbreviation': 'Amazon Bar'})
-        self.assert_filename_is('botocore/data/aws/bar/2015-01-01.api.json')
+        self.assert_filename_is('botocore/data/aws/bar/2015-01-01.normal.json')
 
         self.given_metadata(
             {'apiVersion': '2015-01-01', 'endpointPrefix': 'foo',
              'serviceAbbreviation': 'AWS Baz'})
-        self.assert_filename_is('botocore/data/aws/baz/2015-01-01.api.json')
+        self.assert_filename_is('botocore/data/aws/baz/2015-01-01.normal.json')
 
         self.given_metadata(
             {'apiVersion': '2015-01-01', 'endpointPrefix': 'foo',
              'serviceAbbreviation': 'something else'})
         self.assert_filename_is(
-            'botocore/data/aws/somethingelse/2015-01-01.api.json')
+            'botocore/data/aws/somethingelse/2015-01-01.normal.json')
 
         # The special casing of elasticloadbalancing -> elb.
         self.given_metadata(
             {'apiVersion': '2015-01-01',
              'endpointPrefix': 'elasticloadbalancing'}),
         self.assert_filename_is(
-            'botocore/data/aws/elb/2015-01-01.api.json')
+            'botocore/data/aws/elb/2015-01-01.normal.json')
 
 
 def main():
