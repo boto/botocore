@@ -335,7 +335,7 @@ class TestGetServiceModel(BaseSessionTest):
 class TestGetWaiterModel(BaseSessionTest):
     def test_get_waiter_model(self):
         loader = mock.Mock()
-        loader.determine_latest.return_value = 'aws/foo/2014-01-01.api.json'
+        loader.determine_latest.return_value = 'aws/foo/2014-01-01.normal.json'
         loader.load_data.return_value = {"version": 2, "waiters": {}}
         self.session.register_component('data_loader', loader)
 
