@@ -24,7 +24,7 @@ contributions as well:
   a general rule of thumb, code changes should not lower the overall
   code coverage percentage for the project.  To help with this,
   we use `coveralls <https://coveralls.io/r/boto/botocore>`__, which will
-  comment on every pull request with any changes in code coverage.
+  comment on changes in code coverage for every pull request.
   In practice, this means that every bug fix and feature addition should
   include unit tests.
 * We may choose not to accept pull requests that change the JSON service descriptions,
