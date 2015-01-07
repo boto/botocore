@@ -302,6 +302,13 @@ class TestSigV4Resign(unittest.TestCase):
         self.request = AWSRequest()
         self.request.method = 'PUT'
         self.request.url = 'https://ec2.amazonaws.com/'
+        self.datetime_patch = mock.patch('botocore.auth.datetime')
+        self.datetime_mock = self.datetime_patch.start()
+        self.now = datetime.datetime.utcnow()
+        self.datetime_mock.datetime.utcnow.return_value = self.now
+
+    def tearDown(self):
+        self.datetime_patch.stop()
 
     def test_resign_request_with_date(self):
         self.request.headers['Date'] = 'Thu, 17 Nov 2005 18:49:58 GMT'
