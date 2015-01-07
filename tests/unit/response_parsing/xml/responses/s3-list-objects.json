@@ -2,8 +2,8 @@
     "Name": "test-1357854246", 
     "ResponseMetadata": {}, 
     "MaxKeys": 1000, 
-    "Prefix": null, 
-    "Marker": null, 
+    "Prefix": "", 
+    "Marker": "", 
     "IsTruncated": false, 
     "Contents": [
         {
