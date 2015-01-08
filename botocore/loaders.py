@@ -92,7 +92,7 @@ class Loader(object):
     """
     file_loader_class = JSONFileLoader
     extension = '.json'
-    service_extension = 'api.json'
+    service_extension = 'normal.json'
 
     def __init__(self, data_path='', file_loader_class=None, extension=None,
                  cache=None):
@@ -401,8 +401,8 @@ class Loader(object):
             # We need to look for an API version that either matches or is
             # the first to come before that (and hence, backward-compatible).
             for opt in all_options:
-                # ``opt`` will be something like "2014-01-01.api" so we need
-                # to strip off the ".api" part.
+                # ``opt`` will be something like "2014-01-01.normal" so we need
+                # to strip off the ".normal" part.
                 if opt.split('.')[0] == api_version:
                     best_match = opt
                     break

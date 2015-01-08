@@ -247,6 +247,37 @@ class TestHandlers(BaseSessionTest):
 
         self.assertEqual(params['HostedZoneId'], '/hostedzone/ABC123')
 
+    def test_run_instances_userdata(self):
+        user_data = 'This is a test'
+        b64_user_data = base64.b64encode(six.b(user_data)).decode('utf-8')
+        event = self.session.create_event(
+            'before-parameter-build', 'ec2', 'RunInstances')
+        params = dict(ImageId='img-12345678',
+                      MinCount=1, MaxCount=5, UserData=user_data)
+        self.session.emit(event, params=params)
+        result = {'ImageId': 'img-12345678',
+                  'MinCount': 1,
+                  'MaxCount': 5,
+                  'UserData': b64_user_data}
+        self.assertEqual(params, result)
+
+    def test_run_instances_userdata_blob(self):
+        # Ensure that binary can be passed in as user data.
+        # This is valid because you can send gzip compressed files as
+        # user data.
+        user_data = b'\xc7\xa9This is a test'
+        b64_user_data = base64.b64encode(user_data).decode('utf-8')
+        event = self.session.create_event(
+            'before-parameter-build', 'ec2', 'RunInstances')
+        params = dict(ImageId='img-12345678',
+                      MinCount=1, MaxCount=5, UserData=user_data)
+        self.session.emit(event, params=params)
+        result = {'ImageId': 'img-12345678',
+                  'MinCount': 1,
+                  'MaxCount': 5,
+                  'UserData': b64_user_data}
+        self.assertEqual(params, result)
+
     def test_fix_s3_host_initial(self):
         endpoint = mock.Mock(region_name='us-west-2')
         request = AWSRequest(
@@ -327,6 +358,77 @@ class TestHandlers(BaseSessionTest):
         # The handler should not have changed the response because it's
         # an error response.
         self.assertEqual(original, handler_input)
+
+    def test_inject_account_id(self):
+        params = {}
+        handlers.inject_account_id(params)
+        self.assertEqual(params['accountId'], '-')
+
+    def test_account_id_not_added_if_present(self):
+        params = {'accountId': 'foo'}
+        handlers.inject_account_id(params)
+        self.assertEqual(params['accountId'], 'foo')
+
+    def test_glacier_version_header_added(self):
+        request_dict = {
+            'headers': {}
+        }
+        model = ServiceModel({'metadata': {'apiVersion': '2012-01-01'}})
+        handlers.add_glacier_version(model, request_dict)
+        self.assertEqual(request_dict['headers']['x-amz-glacier-version'],
+                         '2012-01-01')
+
+    def test_glacier_checksums_added(self):
+        request_dict = {
+            'headers': {},
+            'body': six.BytesIO(b'hello world'),
+        }
+        handlers.add_glacier_checksums(request_dict)
+        self.assertIn('x-amz-content-sha256', request_dict['headers'])
+        self.assertIn('x-amz-sha256-tree-hash', request_dict['headers'])
+        self.assertEqual(
+            request_dict['headers']['x-amz-content-sha256'],
+            'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9')
+        self.assertEqual(
+            request_dict['headers']['x-amz-sha256-tree-hash'],
+            'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9')
+        # And verify that the body can still be read.
+        self.assertEqual(request_dict['body'].read(), b'hello world')
+
+    def test_tree_hash_added_only_if_not_exists(self):
+        request_dict = {
+            'headers': {
+                'x-amz-sha256-tree-hash': 'pre-exists',
+            },
+            'body': six.BytesIO(b'hello world'),
+        }
+        handlers.add_glacier_checksums(request_dict)
+        self.assertEqual(request_dict['headers']['x-amz-sha256-tree-hash'],
+                         'pre-exists')
+
+    def test_checksum_added_only_if_not_exists(self):
+        request_dict = {
+            'headers': {
+                'x-amz-content-sha256': 'pre-exists',
+            },
+            'body': six.BytesIO(b'hello world'),
+        }
+        handlers.add_glacier_checksums(request_dict)
+        self.assertEqual(request_dict['headers']['x-amz-content-sha256'],
+                         'pre-exists')
+
+    def test_glacier_checksums_support_raw_bytes(self):
+        request_dict = {
+            'headers': {},
+            'body': b'hello world',
+        }
+        handlers.add_glacier_checksums(request_dict)
+        self.assertEqual(
+            request_dict['headers']['x-amz-content-sha256'],
+            'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9')
+        self.assertEqual(
+            request_dict['headers']['x-amz-sha256-tree-hash'],
+            'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9')
 
 
 class TestRetryHandlerOrder(BaseSessionTest):

@@ -24,6 +24,7 @@ import xml.etree.cElementTree
 
 from botocore.compat import urlsplit, urlunsplit, unquote, json, quote, six
 from botocore import retryhandler
+from botocore import utils
 from botocore import translate
 import botocore.auth
 
@@ -372,8 +373,11 @@ def parse_get_bucket_location(parsed, http_response, **kwargs):
 
 def base64_encode_user_data(params, **kwargs):
     if 'UserData' in params:
+        if isinstance(params['UserData'], six.text_type):
+            # Encode it to bytes if it is text.
+            params['UserData'] = params['UserData'].encode('utf-8')
         params['UserData'] = base64.b64encode(
-            params['UserData'].encode('utf-8')).decode('utf-8')
+            params['UserData']).decode('utf-8')
 
 
 def fix_route53_ids(params, model, **kwargs):
@@ -397,6 +401,53 @@ def fix_route53_ids(params, model, **kwargs):
             logger.debug('%s %s -> %s', name, orig_value, params[name])
 
 
+def inject_account_id(params, **kwargs):
+    if params.get('accountId') is None:
+        # Glacier requires accountId, but allows you
+        # to specify '-' for the current owners account.
+        # We add this default value if the user does not
+        # provide the accountId as a convenience.
+        params['accountId'] = '-'
+
+
+def add_glacier_version(model, params, **kwargs):
+    request_dict = params
+    request_dict['headers']['x-amz-glacier-version'] = \
+            model.metadata['apiVersion']
+
+
+def add_glacier_checksums(params, **kwargs):
+    """Add glacier checksums to the http request.
+
+    This will add two headers to the http request:
+
+        * x-amz-content-sha256
+        * x-amz-sha256-tree-hash
+
+    These values will only be added if they are not present
+    in the HTTP request.
+
+    """
+    request_dict = params
+    headers = request_dict['headers']
+    body = request_dict['body']
+    if isinstance(body, six.binary_type):
+        # If the user provided a bytes type instead of a file
+        # like object, we're temporarily create a BytesIO object
+        # so we can use the util functions to calculate the
+        # checksums which assume file like objects.  Note that
+        # we're not actually changing the body in the request_dict.
+        body = six.BytesIO(body)
+    starting_position = body.tell()
+    if 'x-amz-content-sha256' not in headers:
+        headers['x-amz-content-sha256'] = utils.calculate_sha256(
+            body, as_hex=True)
+    body.seek(starting_position)
+    if 'x-amz-sha256-tree-hash' not in headers:
+        headers['x-amz-sha256-tree-hash'] = utils.calculate_tree_hash(body)
+    body.seek(starting_position)
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -415,6 +466,9 @@ BUILTIN_HANDLERS = [
     ('before-call.s3.UploadPartCopy', quote_source_header),
     ('before-call.s3.CopyObject', quote_source_header),
     ('before-call.s3', add_expect_header),
+    ('before-call.glacier', add_glacier_version),
+    ('before-call.glacier.UploadArchive', add_glacier_checksums),
+    ('before-call.glacier.UploadMultipartPart', add_glacier_checksums),
     ('before-call.ec2.CopySnapshot', copy_snapshot_encrypted),
     ('before-auth.s3', fix_s3_host),
     ('needs-retry.s3.UploadPartCopy', check_for_200_error, REGISTER_FIRST),
@@ -433,5 +487,6 @@ BUILTIN_HANDLERS = [
     ('before-parameter-build.ec2.RunInstances', base64_encode_user_data),
     ('before-parameter-build.autoscaling.CreateLaunchConfiguration',
      base64_encode_user_data),
-    ('before-parameter-build.route53', fix_route53_ids)
+    ('before-parameter-build.route53', fix_route53_ids),
+    ('before-parameter-build.glacier', inject_account_id),
 ]

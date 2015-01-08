@@ -169,14 +169,13 @@ class TestGetResponse(unittest.TestCase):
                             u'Size': 6702,
                             u'StorageClass': 'STANDARD'}],
              u'IsTruncated': False,
-             u'Marker': None,
+             u'Marker': "",
              u'MaxKeys': 1000,
              u'Name': 'mybucket',
-             u'Prefix': None,
+             u'Prefix': "",
              'ResponseMetadata': {
                  'RequestId': 'XXXXXXXXXXXXXXXX',
                  'HostId': 'AAAAAAAAAAAAAAAAAAA',
                  'HTTPStatusCode': 200,
              }}
         )
-

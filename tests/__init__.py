@@ -113,10 +113,7 @@ class TestParamSerialization(BaseSessionTest):
 
     def assert_params_serialize_to(self, dotted_name, input_params,
                                    serialized_params):
-        service_name, operation_name = dotted_name.split('.')
-        service = self.session.get_service(service_name)
-        operation = service.get_operation(operation_name)
-        serialized = operation.build_parameters(**input_params)
+        serialized = self.get_serialized_params(dotted_name, input_params)
         actual_body_params = serialized['body']
         # For query, we can remove the Action and Version params.
         if isinstance(actual_body_params, dict):
@@ -125,3 +122,10 @@ class TestParamSerialization(BaseSessionTest):
             self.assertDictEqual(serialized_params, actual_body_params)
         else:
             self.assertEqual(serialized_params, actual_body_params)
+
+    def get_serialized_params(self, dotted_name, input_params):
+        service_name, operation_name = dotted_name.split('.')
+        service = self.session.get_service(service_name)
+        operation = service.get_operation(operation_name)
+        serialized = operation.build_parameters(**input_params)
+        return serialized
