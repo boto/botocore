@@ -642,6 +642,8 @@ class RestJSONParser(BaseRestParser, BaseJSONParser):
             # x-amzn-errortype: ValidationException:
             code = code.split(':')[0]
             error['Error']['Code'] = code
+        elif 'code' in body:
+            error['Error']['Code'] = body['code']
         return error
 
 

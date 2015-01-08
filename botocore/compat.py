@@ -36,6 +36,7 @@ if six.PY3:
     from io import IOBase as _IOBase
     from base64 import encodebytes
     from email.utils import formatdate
+    from itertools import zip_longest
     file_type = _IOBase
     zip = zip
 
@@ -72,6 +73,7 @@ else:
     from email.Utils import formatdate
     file_type = file
     from itertools import izip as zip
+    from itertools import izip_longest as zip_longest
     from httplib import HTTPResponse
     from base64 import encodestring as encodebytes
 
