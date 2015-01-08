@@ -395,6 +395,28 @@ class TestHandlers(BaseSessionTest):
         # And verify that the body can still be read.
         self.assertEqual(request_dict['body'].read(), b'hello world')
 
+    def test_tree_hash_added_only_if_not_exists(self):
+        request_dict = {
+            'headers': {
+                'x-amz-sha256-tree-hash': 'pre-exists',
+            },
+            'body': six.BytesIO(b'hello world'),
+        }
+        handlers.add_glacier_checksums(request_dict)
+        self.assertEqual(request_dict['headers']['x-amz-sha256-tree-hash'],
+                         'pre-exists')
+
+    def test_checksum_added_only_if_not_exists(self):
+        request_dict = {
+            'headers': {
+                'x-amz-content-sha256': 'pre-exists',
+            },
+            'body': six.BytesIO(b'hello world'),
+        }
+        handlers.add_glacier_checksums(request_dict)
+        self.assertEqual(request_dict['headers']['x-amz-content-sha256'],
+                         'pre-exists')
+
     def test_glacier_checksums_support_raw_bytes(self):
         request_dict = {
             'headers': {},
