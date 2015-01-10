@@ -257,6 +257,18 @@ class TestResponseMetadataParsed(unittest.TestCase):
             'HTTPStatusCode': 404,
         })
 
+    def test_can_parse_glacier_error_response(self):
+        body = (b'{"code":"AccessDeniedException","type":"Client","message":'
+                b'"Access denied"}')
+        headers = {
+             'x-amzn-requestid': 'request-id'
+        }
+        parser = parsers.RestJSONParser()
+        parsed = parser.parse(
+            {'body': body, 'headers': headers, 'status_code': 400}, None)
+        self.assertEqual(parsed['Error'], {'Message': 'Access denied',
+                                           'Code': 'AccessDeniedException'})
+
 
 class TestResponseParsingDatetimes(unittest.TestCase):
     def test_can_parse_float_timestamps(self):

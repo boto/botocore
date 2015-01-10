@@ -10,16 +10,19 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import unittest
+import os
+from tests import unittest, BaseEnvVar
 
 import mock
 
+import botocore
 from botocore.exceptions import ClientError, WaiterConfigError, WaiterError
 from botocore.waiter import Waiter, WaiterModel, SingleWaiterConfig
 from botocore.waiter import create_waiter_with_client
 from botocore.waiter import create_waiter_from_legacy
 from botocore.waiter import NormalizedOperationMethod
 from botocore.waiter import LegacyOperationMethod
+from botocore.loaders import Loader
 
 
 class TestWaiterModel(unittest.TestCase):
@@ -504,3 +507,101 @@ class TestOperationMethods(unittest.TestCase):
 
         operation_object.call.assert_called_with(
             endpoint, Foo='a', Bar='b')
+
+
+class ServiceWaiterFunctionalTest(BaseEnvVar):
+    """
+    This class is used as a base class if you want to functionally test the
+    waiters for a specific service.
+    """
+    def setUp(self):
+        super(ServiceWaiterFunctionalTest, self).setUp()
+        self.data_path = os.path.join(
+            os.path.dirname(botocore.__file__), 'data')
+        self.environ['BOTO_DATA_PATH'] = self.data_path
+        self.loader = Loader(self.data_path)
+
+    def get_waiter_model(self, service, api_version=None):
+        """
+        Get the waiter model for the service
+        """
+        service = os.path.join('aws', service)
+        model_version = self.loader.determine_latest(service, api_version)
+        # Some wierd formatting required to get the name of the model
+        # correct. Right now this is returned: YYYY-MM-DD.api
+        # We need: YYYY-MM-DD
+        model_version = ''.join(model_version.split('.')[:-1])
+        waiter_model = model_version + '.waiters'
+        return WaiterModel(self.loader.load_data(waiter_model))
+
+
+class CloudFrontWaitersTest(ServiceWaiterFunctionalTest):
+    def setUp(self):
+        super(CloudFrontWaitersTest, self).setUp()
+        self.client = mock.Mock()
+        self.service = 'cloudfront'
+        self.old_api_versions = ['2014-05-31']
+
+    def assert_distribution_deployed_call_count(self, api_version=None):
+        waiter_name = 'DistributionDeployed'
+        waiter_model = self.get_waiter_model(self.service, api_version)
+        self.client.get_distribution.side_effect = [
+            {'Distribution': {'Status': 'Deployed'}}
+        ]
+        waiter = create_waiter_with_client(waiter_name, waiter_model,
+                                           self.client)
+        waiter.wait()
+        self.assertEqual(self.client.get_distribution.call_count, 1)
+
+    def assert_invalidation_completed_call_count(self, api_version=None):
+        waiter_name = 'InvalidationCompleted'
+        waiter_model = self.get_waiter_model(self.service, api_version)
+        self.client.get_invalidation.side_effect = [
+            {'Invalidation': {'Status': 'Completed'}}
+        ]
+        waiter = create_waiter_with_client(waiter_name, waiter_model,
+                                           self.client)
+        waiter.wait()
+        self.assertEqual(self.client.get_invalidation.call_count, 1)
+
+    def assert_streaming_distribution_deployed_call_count(
+            self, api_version=None):
+        waiter_name = 'StreamingDistributionDeployed'
+        waiter_model = self.get_waiter_model(self.service, api_version)
+        self.client.get_streaming_distribution.side_effect = [
+            {'StreamingDistribution': {'Status': 'Deployed'}}
+        ]
+        waiter = create_waiter_with_client(waiter_name, waiter_model,
+                                           self.client)
+        waiter.wait()
+        self.assertEqual(self.client.get_streaming_distribution.call_count, 1)
+
+    def test_distribution_deployed(self):
+        # Test the latest version.
+        self.assert_distribution_deployed_call_count()
+        self.client.reset_mock()
+
+        # Test previous api versions.
+        for api_version in self.old_api_versions:
+            self.assert_distribution_deployed_call_count(api_version)
+            self.client.reset_mock()
+
+    def test_invalidation_completed(self):
+        # Test the latest version.
+        self.assert_invalidation_completed_call_count()
+        self.client.reset_mock()
+
+        # Test previous api versions.
+        for api_version in self.old_api_versions:
+            self.assert_invalidation_completed_call_count(api_version)
+            self.client.reset_mock()
+
+    def test_streaming_distribution_deployed(self):
+        # Test the latest version.
+        self.assert_streaming_distribution_deployed_call_count()
+        self.client.reset_mock()
+
+        # Test previous api versions.
+        for api_version in self.old_api_versions:
+            self.assert_streaming_distribution_deployed_call_count(api_version)
+            self.client.reset_mock()

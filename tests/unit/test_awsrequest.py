@@ -21,12 +21,11 @@ import socket
 import sys
 
 from mock import Mock, patch
-import six
 
 from botocore.exceptions import UnseekableStreamError
 from botocore.awsrequest import AWSRequest
 from botocore.awsrequest import AWSHTTPConnection
-from botocore.compat import file_type
+from botocore.compat import file_type, six
 
 
 class FakeSocket(object):

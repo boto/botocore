@@ -38,6 +38,7 @@ SMOKE_TESTS = {
  'elastictranscoder': {'ListPipelines': {}},
  'elb': {'DescribeLoadBalancers': {}},
  'emr': {'ListClusters': {}},
+ 'glacier': {'ListVaults': {}},
  'iam': {'ListUsers': {}},
  # Does not work with session credentials so
  # importexport tests are not run.

@@ -251,7 +251,7 @@ KNOWN_REGIONS = {
     "monitoring": "monitoring.cn-north-1.amazonaws.com.cn",
     "dynamodb": "dynamodb.cn-north-1.amazonaws.com.cn",
     "ec2": "ec2.cn-north-1.amazonaws.com.cn",
-    "elasticmapreduce": "cn-north-1.elasticmapreduce.amazonaws.com.cn",
+    "elasticmapreduce": "elasticmapreduce.cn-north-1.amazonaws.com.cn",
     "elasticache": "elasticache.cn-north-1.amazonaws.com.cn",
     "rds": "rds.cn-north-1.amazonaws.com.cn",
     "sns": "sns.cn-north-1.amazonaws.com.cn",
@@ -284,6 +284,9 @@ KNOWN_REGIONS = {
   "fips-us-gov-west-1": {
     "s3": "s3-fips-us-gov-west-1.amazonaws.com"
   },
+  "eu-central-1": {
+      "elasticmapreduce": "elasticmapreduce.eu-central-1.amazonaws.com",
+  }
 }
 
 def test_known_endpoints():

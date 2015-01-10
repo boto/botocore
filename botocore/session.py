@@ -505,7 +505,7 @@ class Session(object):
         loader = self.get_component('data_loader')
         latest = loader.determine_latest('%s/%s' % (
             self.provider.name, service_name), api_version)
-        waiter_path = latest.replace('.api', '.waiters')
+        waiter_path = latest.replace('.normal', '.waiters')
         waiter_config = loader.load_data(waiter_path)
         return waiter.WaiterModel(waiter_config)
 
