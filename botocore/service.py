@@ -160,7 +160,8 @@ class Service(object):
                                            credentials, user_agent)
         return endpoint_creator.create_endpoint(
             self._model, region_name, is_secure, endpoint_url, verify,
-            response_parser_factory=response_parser_factory)
+            response_parser_factory=response_parser_factory,
+            signature_version=self.signature_version)
 
     def get_operation(self, operation_name):
         """

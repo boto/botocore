@@ -179,6 +179,20 @@ class TestEndpointFeatures(TestEndpointBase):
         prepared_request = self.http_session.send.call_args[0][0]
         self.assertNotIn('Authorization', prepared_request.headers)
 
+    def test_make_request_no_signature_version(self):
+        self.endpoint = Endpoint(
+            'us-west-2', 'https://ec2.us-west-2.amazonaws.com/',
+            auth=self.auth, user_agent='botoore', signature_version=None,
+            endpoint_prefix='ec2', event_emitter=self.event_emitter)
+        self.endpoint.http_session = self.http_session
+
+        self.endpoint.make_request(self.op, request_dict())
+
+        # http_session should be used to send the request.
+        self.assertTrue(self.http_session.send.called)
+        prepared_request = self.http_session.send.call_args[0][0]
+        self.assertNotIn('Authorization', prepared_request.headers)
+
 
 class TestRetryInterface(TestEndpointBase):
     def setUp(self):
