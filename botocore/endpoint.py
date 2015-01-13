@@ -35,6 +35,7 @@ from botocore import parsers
 
 logger = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 60
+NOT_SET = object()
 
 
 def convert_to_response_dict(http_response, operation_model):
@@ -306,7 +307,8 @@ class EndpointCreator(object):
 
     def create_endpoint(self, service_model, region_name=None, is_secure=True,
                         endpoint_url=None, verify=None, credentials=None,
-                        response_parser_factory=None):
+                        response_parser_factory=None,
+                        signature_version=NOT_SET):
         if region_name is None:
             region_name = self._configured_region
         # Use the endpoint resolver heuristics to build the endpoint url.
@@ -328,9 +330,10 @@ class EndpointCreator(object):
         # provided region name.
         region_name_override = endpoint['properties'].get(
             'credentialScope', {}).get('region')
-        signature_version = service_model.signature_version
-        if 'signatureVersion' in endpoint['properties']:
-            signature_version = endpoint['properties']['signatureVersion']
+        if signature_version is NOT_SET:
+            signature_version = service_model.signature_version
+            if 'signatureVersion' in endpoint['properties']:
+                signature_version = endpoint['properties']['signatureVersion']
         if region_name_override is not None:
             # Letting the heuristics rule override the region_name
             # allows for having a default region of something like us-west-2
