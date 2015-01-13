@@ -65,6 +65,7 @@ class Service(object):
         # as an attribute for client obejcts.
         self.service_name = service_name
         self._signature_version = NOT_SET
+        self._has_custom_signature_version = False
         # Not all services have a top level documentation key,
         # so we'll add one if needed.
         if 'documentation' not in self.__dict__:
@@ -99,11 +100,13 @@ class Service(object):
         if self._signature_version is NOT_SET:
             signature_version = self._model.metadata.get('signatureVersion')
             self._signature_version = signature_version
+            self._has_custom_signature_version = False
         return self._signature_version
 
     @signature_version.setter
     def signature_version(self, value):
         self._signature_version = value
+        self._has_custom_signature_version = True
 
     def _create_operation_objects(self):
         logger.debug("Creating operation objects for: %s", self)
@@ -158,10 +161,14 @@ class Service(object):
         user_agent= self.session.user_agent()
         endpoint_creator = EndpointCreator(resolver, region, event_emitter,
                                            credentials, user_agent)
-        return endpoint_creator.create_endpoint(
-            self._model, region_name, is_secure, endpoint_url, verify,
-            response_parser_factory=response_parser_factory,
-            signature_version=self.signature_version)
+        kwargs = {'service_model': self._model, 'region_name': region_name,
+                  'is_secure': is_secure, 'endpoint_url': endpoint_url,
+                  'verify': verify,
+                  'response_parser_factory': response_parser_factory}
+        if self._has_custom_signature_version:
+            kwargs['signature_version'] = self.signature_version
+
+        return endpoint_creator.create_endpoint(**kwargs)
 
     def get_operation(self, operation_name):
         """
