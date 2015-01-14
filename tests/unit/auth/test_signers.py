@@ -300,9 +300,9 @@ class TestSigV4(unittest.TestCase):
         request.url = (
             'https://search-testdomain1-j67dwxlet67gf7ghwfmik2c67i.us-west-2.'
             'cloudsearch.amazonaws.com/'
-            '2013-01-01/search?format=sdk&pretty=true&q=George%20Lucas&'
+            '2013-01-01/search?format=sdk&pretty=true&'
             'q.options=%7B%22defaultOperator%22%3A%20%22and%22%2C%20%22'
-            'fields%22%3A%5B%22directors%5E10%22%5D%7D'
+            'fields%22%3A%5B%22directors%5E10%22%5D%7D&q=George%20Lucas'
         )
         request.method = 'GET'
         auth = botocore.auth.SigV4Auth(
