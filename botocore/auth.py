@@ -171,7 +171,6 @@ class SigV4Auth(BaseSigner):
         return header_map
 
     def canonical_query_string(self, request):
-        cqs = ''
         # The query string can come from two parts.  One is the
         # params attribute of the request.  The other is from the request
         # url (in which case we have to re-split the url into its components
@@ -180,7 +179,6 @@ class SigV4Auth(BaseSigner):
             return self._canonical_query_string_params(request.params)
         else:
             return self._canonical_query_string_url(urlsplit(request.url))
-        return cqs
 
     def _canonical_query_string_params(self, params):
         l = []
