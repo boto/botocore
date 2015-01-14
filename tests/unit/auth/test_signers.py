@@ -290,6 +290,31 @@ class TestS3SigV4Auth(unittest.TestCase):
         self.assertEqual('marker=%C3%A4%C3%B6%C3%BC-01.txt&prefix=', cqs)
 
 
+class TestSigV4(unittest.TestCase):
+    def setUp(self):
+        self.credentials = botocore.credentials.Credentials(
+            access_key='foo', secret_key='bar')
+
+    def test_canonical_query_string(self):
+        request = AWSRequest()
+        request.url = (
+            'https://search-testdomain1-j67dwxlet67gf7ghwfmik2c67i.us-west-2.'
+            'cloudsearch.amazonaws.com/'
+            '2013-01-01/search?format=sdk&pretty=true&q=George%20Lucas&'
+            'q.options=%7B%22defaultOperator%22%3A%20%22and%22%2C%20%22'
+            'fields%22%3A%5B%22directors%5E10%22%5D%7D'
+        )
+        request.method = 'GET'
+        auth = botocore.auth.SigV4Auth(
+            self.credentials, 'cloudsearchdomain', 'us-west-2')
+        actual = auth.canonical_query_string(request)
+        # Here 'q' should come before 'q.options'.
+        expected = ("format=sdk&pretty=true&q=George%20Lucas&q.options=%7B%22"
+                    "defaultOperator%22%3A%20%22and%22%2C%20%22fields%22%3A%5B"
+                    "%22directors%5E10%22%5D%7D")
+        self.assertEqual(actual, expected)
+
+
 class TestSigV4Resign(unittest.TestCase):
 
     maxDiff = None
