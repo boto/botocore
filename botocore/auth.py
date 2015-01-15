@@ -171,7 +171,6 @@ class SigV4Auth(BaseSigner):
         return header_map
 
     def canonical_query_string(self, request):
-        cqs = ''
         # The query string can come from two parts.  One is the
         # params attribute of the request.  The other is from the request
         # url (in which case we have to re-split the url into its components
@@ -180,33 +179,31 @@ class SigV4Auth(BaseSigner):
             return self._canonical_query_string_params(request.params)
         else:
             return self._canonical_query_string_url(urlsplit(request.url))
-        return cqs
 
     def _canonical_query_string_params(self, params):
         l = []
-        for param in params:
+        for param in sorted(params):
             value = str(params[param])
             l.append('%s=%s' % (quote(param, safe='-_.~'),
                                 quote(value, safe='-_.~')))
-        l = sorted(l)
         cqs = '&'.join(l)
         return cqs
 
     def _canonical_query_string_url(self, parts):
-        buf = ''
+        canonical_query_string = ''
         if parts.query:
-            qsa = parts.query.split('&')
-            qsa = [a.split('=', 1) for a in qsa]
-            split_qsa = []
-            for q in qsa:
-                if len(q) == 2:
-                    split_qsa.append('%s=%s' % (q[0], q[1]))
-                elif len(q) == 1:
-                    split_qsa.append('%s=' % q[0])
-            if len(split_qsa) > 0:
-                split_qsa.sort()
-                buf += '&'.join(split_qsa)
-        return buf
+            # [(key, value), (key2, value2)]
+            key_val_pairs = []
+            for pair in parts.query.split('&'):
+                key, _, value = pair.partition('=')
+                key_val_pairs.append((key, value))
+            sorted_key_vals = []
+            # Sort by the key names, and in the case of
+            # repeated keys, then sort by the value.
+            for key, value in sorted(key_val_pairs):
+                sorted_key_vals.append('%s=%s' % (key, value))
+            canonical_query_string = '&'.join(sorted_key_vals)
+        return canonical_query_string
 
     def canonical_headers(self, headers_to_sign):
         """
