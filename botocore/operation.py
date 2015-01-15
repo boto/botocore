@@ -103,7 +103,6 @@ class Operation(BotoCoreObject):
                                region_name, service_model.signing_name,
                                signature_version, credentials,
                                event_emitter, scoped_config)
-        sign = functools.partial(signer.sign, self.name)
 
         event = self.session.create_event('before-call',
                                           self.service.endpoint_prefix,
@@ -117,8 +116,22 @@ class Operation(BotoCoreObject):
                           operation=self,
                           request_signer=signer)
 
-        response = endpoint.make_request(
-            self.model, request_dict, request_created_handler=sign)
+        # This is kind of ugly, but it lets us hook into the request
+        # created event on a per-operation basis without mucking with
+        # the Endpoint/EndpointCreator objects.
+        real_emit = event_emitter.emit
+        def fake_emit(name, **kwargs):
+            if name.startswith('request-created'):
+                signer.sign(self.name, kwargs['request'])
+            return real_emit(name, **kwargs)
+
+        event_emitter.emit = fake_emit
+
+        response = endpoint.make_request(self.model, request_dict)
+
+        # Restore event emitter
+        event_emitter.emit = real_emit
+
         event = self.session.create_event('after-call',
                                           self.service.endpoint_prefix,
                                           self.name)

@@ -99,20 +99,18 @@ class Endpoint(object):
     def __repr__(self):
         return '%s(%s)' % (self._endpoint_prefix, self.host)
 
-    def make_request(self, operation_model, request_dict,
-                     request_created_handler=None):
+    def make_request(self, operation_model, request_dict):
         logger.debug("Making request for %s (verify_ssl=%s) with params: %s",
                      operation_model, self.verify, request_dict)
         prepared_request = self.create_request(
-            request_dict, request_created_handler=request_created_handler)
+            request_dict, operation_model=operation_model)
         return self._send_request(
-            prepared_request, operation_model,
-            request_created_handler=request_created_handler)
+            prepared_request, operation_model)
 
-    def create_request(self, params, signer=None, request_created_handler=None):
+    def create_request(self, params, operation_model=None):
         request = self._create_request_object(params)
         prepared_request = self.prepare_request(
-            request, None, request_created_handler=request_created_handler)
+            request, operation_model=operation_model)
         return prepared_request
 
     def _create_request_object(self, request_dict):
@@ -132,14 +130,17 @@ class Endpoint(object):
                              headers=headers)
         return request
 
-    def prepare_request(self, request, signer, request_created_handler=None):
-        if request_created_handler is not None:
-            request_created_handler(request)
+    def prepare_request(self, request, operation_model=None):
+        if operation_model:
+            event_name = 'request-created.{endpoint_prefix}.{op_name}'.format(
+                endpoint_prefix=self._endpoint_prefix,
+                op_name=operation_model.name)
+            self._event_emitter.emit(event_name, request=request,
+                operation_name=operation_model.name)
         prepared_request = request.prepare()
         return prepared_request
 
-    def _send_request(self, request, operation_model,
-                      request_created_handler=None):
+    def _send_request(self, request, operation_model):
         attempts = 1
         response, exception = self._get_response(
             request, operation_model, attempts)
@@ -152,10 +153,8 @@ class Endpoint(object):
             # body.
             request.reset_stream()
             # Resign the request when retried.
-            signer = None
             request = self.prepare_request(
-                request.original, signer,
-                request_created_handler=request_created_handler)
+                request.original, operation_model=operation_model)
             response, exception = self._get_response(request, operation_model,
                                                      attempts)
         return response

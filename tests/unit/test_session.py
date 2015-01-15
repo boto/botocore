@@ -367,6 +367,15 @@ class TestCreateClient(BaseSessionTest):
                          "explicit credentials were provided to the "
                          "create_client call.")
 
+class TestPerformOperation(BaseSessionTest):
+    def test_s3(self):
+        service = self.session.get_service('s3')
+        operation = service.get_operation('ListBuckets')
+        endpoint = service.get_endpoint('us-west-2')
+        endpoint._send_request = mock.Mock()
+        endpoint._send_request.return_value = [{}, {}]
+        operation.call(endpoint)
+
 
 if __name__ == "__main__":
     unittest.main()

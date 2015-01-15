@@ -257,12 +257,8 @@ class ClientCreator(object):
                 request_signer=self._request_signer
             )
 
-            sign = functools.partial(self._request_signer.sign,
-                                     operation_name)
-
             http, parsed_response = self._endpoint.make_request(
-                operation_model, request_dict,
-                request_created_handler=sign)
+                operation_model, request_dict)
 
             self.meta.events.emit(
                 'after-call.{endpoint_prefix}.{operation_name}'.format(
@@ -292,6 +288,17 @@ class BaseClient(object):
         self._request_signer = request_signer
         self._cache = {}
         self.meta = ClientMeta(event_emitter)
+
+        # Register request signing, but only if we have an event
+        # emitter. When a client is cloned this is ignored, because
+        # the client's ``meta`` will be copied anyway.
+        if self.meta.events:
+            self.meta.events.register('request-created', self._sign_request)
+
+    def _sign_request(self, operation_name=None, request=None, **kwargs):
+        # Sign the request. This fires its own events and will
+        # mutate the request as needed.
+        self._request_signer.sign(operation_name, request)
 
     def clone_client(self, serializer=None, endpoint=None,
                      response_parser=None, request_signer=None):
@@ -342,4 +349,5 @@ class ClientMeta(object):
         self.events = events
 
     def __copy__(self):
-        return ClientMeta(**copy.deepcopy(self.__dict__))
+        copied_events = copy.copy(self.events)
+        return ClientMeta(copied_events)

@@ -38,13 +38,13 @@ class TestS3Addressing(BaseSessionTest):
         if force_hmacv1:
             self.endpoint.auth = auth.HmacV1Auth(
                 credentials.Credentials('foo', 'bar'))
-        def prepare_request(request, signer, **kwargs):
+        def prepare_request(request, **kwargs):
             fix_s3_host(request, self.signature_version,
                         self.endpoint.region_name)
             return request
         self.endpoint.prepare_request = prepare_request
-        self.endpoint._send_request = lambda prepared_request, operation, \
-            request_created_handler: request.append(prepared_request)
+        self.endpoint._send_request = lambda prepared_request, operation: \
+            request.append(prepared_request)
         self.endpoint.make_request(op.model, param)
         return request[0]
 
