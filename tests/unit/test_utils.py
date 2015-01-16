@@ -14,6 +14,7 @@
 from tests import unittest
 from dateutil.tz import tzutc, tzoffset
 import datetime
+import six
 
 import mock
 
@@ -29,6 +30,8 @@ from botocore.utils import parse_timestamp
 from botocore.utils import parse_to_aware_datetime
 from botocore.utils import CachedProperty
 from botocore.utils import ArgumentGenerator
+from botocore.utils import calculate_tree_hash
+from botocore.utils import calculate_sha256
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
 
@@ -402,6 +405,60 @@ class TestArgumentGenerator(unittest.TestCase):
             'B': ''
         }
         self.assertEqual(actual, expected)
+
+
+class TestChecksums(unittest.TestCase):
+    def test_empty_hash(self):
+        self.assertEqual(
+            calculate_sha256(six.BytesIO(b''), as_hex=True),
+            'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
+
+    def test_as_hex(self):
+        self.assertEqual(
+            calculate_sha256(six.BytesIO(b'hello world'), as_hex=True),
+            'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9')
+
+    def test_as_binary(self):
+        self.assertEqual(
+            calculate_sha256(six.BytesIO(b'hello world'), as_hex=False),
+            (b"\xb9M'\xb9\x93M>\x08\xa5.R\xd7\xda}\xab\xfa\xc4\x84\xef"
+             b"\xe3zS\x80\xee\x90\x88\xf7\xac\xe2\xef\xcd\xe9"))
+
+
+class TestTreeHash(unittest.TestCase):
+    # Note that for these tests I've independently verified
+    # what the expected tree hashes should be from other
+    # SDK implementations.
+
+    def test_empty_tree_hash(self):
+        self.assertEqual(
+            calculate_tree_hash(six.BytesIO(b'')),
+            'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
+
+    def test_tree_hash_less_than_one_mb(self):
+        one_k = six.BytesIO(b'a' * 1024)
+        self.assertEqual(
+            calculate_tree_hash(one_k),
+            '2edc986847e209b4016e141a6dc8716d3207350f416969382d431539bf292e4a')
+
+    def test_tree_hash_exactly_one_mb(self):
+        one_meg_bytestring = b'a' * (1 * 1024 * 1024)
+        one_meg = six.BytesIO(one_meg_bytestring)
+        self.assertEqual(
+            calculate_tree_hash(one_meg),
+            '9bc1b2a288b26af7257a36277ae3816a7d4f16e89c1e7e77d0a5c48bad62b360')
+
+    def test_tree_hash_multiple_of_one_mb(self):
+        four_mb = six.BytesIO(b'a' * (4 * 1024 * 1024))
+        self.assertEqual(
+            calculate_tree_hash(four_mb),
+            '9491cb2ed1d4e7cd53215f4017c23ec4ad21d7050a1e6bb636c4f67e8cddb844')
+
+    def test_tree_hash_offset_of_one_mb_multiple(self):
+        offset_four_mb = six.BytesIO(b'a' * (4 * 1024 * 1024) + b'a' * 20)
+        self.assertEqual(
+            calculate_tree_hash(offset_four_mb),
+            '12f3cbd6101b981cde074039f6f728071da8879d6f632de8afc7cdf00661b08f')
 
 
 if __name__ == '__main__':

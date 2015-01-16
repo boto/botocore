@@ -44,7 +44,7 @@
     ], 
     "MaxKeys": 5, 
     "Prefix": "my", 
-    "KeyMarker": null, 
+    "KeyMarker": "", 
     "DeleteMarkers": [
         {
             "Owner": {
@@ -68,5 +68,5 @@
         }
     ], 
     "IsTruncated": false, 
-    "VersionIdMarker": null
+    "VersionIdMarker": ""
 }

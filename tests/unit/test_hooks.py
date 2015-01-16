@@ -10,6 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import copy
+import functools
 
 from tests import unittest
 from functools import partial
@@ -57,6 +59,63 @@ class TestHierarchicalEventEmitter(unittest.TestCase):
 
         self.emitter.emit('foo.bar.baz')
         self.assertEqual(calls, ['foo.bar.baz', 'foo.bar', 'foo'])
+
+
+class TestStopProcessing(unittest.TestCase):
+    def setUp(self):
+        self.emitter = HierarchicalEmitter()
+        self.hook_calls = []
+
+    def hook1(self, **kwargs):
+        self.hook_calls.append('hook1')
+
+    def hook2(self, **kwargs):
+        self.hook_calls.append('hook2')
+        return 'hook2-response'
+
+    def hook3(self, **kwargs):
+        self.hook_calls.append('hook3')
+        return 'hook3-response'
+
+    def test_all_hooks(self):
+        # Here we register three hooks and sanity check
+        # that all three would be called by a normal emit.
+        # This ensures our hook calls are setup properly for
+        # later tests.
+        self.emitter.register('foo', self.hook1)
+        self.emitter.register('foo', self.hook2)
+        self.emitter.register('foo', self.hook3)
+        self.emitter.emit('foo')
+
+        self.assertEqual(self.hook_calls, ['hook1', 'hook2', 'hook3'])
+
+    def test_stop_processing_after_first_response(self):
+        # Here we register three hooks, but only the first
+        # two should ever execute.
+        self.emitter.register('foo', self.hook1)
+        self.emitter.register('foo', self.hook2)
+        self.emitter.register('foo', self.hook3)
+        handler, response = self.emitter.emit_until_response('foo')
+
+        self.assertEqual(response, 'hook2-response')
+        self.assertEqual(self.hook_calls, ['hook1', 'hook2'])
+
+    def test_no_responses(self):
+        # Here we register a handler that will not return a response
+        # and ensure we get back proper values.
+        self.emitter.register('foo', self.hook1)
+        responses = self.emitter.emit('foo')
+
+        self.assertEqual(self.hook_calls, ['hook1'])
+        self.assertEqual(responses, [(self.hook1, None)])
+
+    def test_no_handlers(self):
+        # Here we have no handlers, but still expect a tuple of return
+        # values.
+        handler, response = self.emitter.emit_until_response('foo')
+
+        self.assertIsNone(handler)
+        self.assertIsNone(response)
 
 
 class TestFirstNonNoneResponse(unittest.TestCase):
@@ -316,7 +375,7 @@ class TestWildcardHandlers(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.emitter.unregister('foo', self.hook, unique_id='foo',
                                     unique_id_uses_count=True)
-    
+
     def test_handlers_called_in_order(self):
         def handler(call_number, **kwargs):
             kwargs['call_number'] = call_number
@@ -405,6 +464,61 @@ class TestWildcardHandlers(unittest.TestCase):
 
         self.emitter.emit('foo')
         self.assertEqual(self.hook_calls, [])
+
+    def test_copy_emitter(self):
+        # Here we're not testing copy directly, we're testing
+        # the observable behavior from copying an event emitter.
+        first = []
+        def first_handler(id_name, **kwargs):
+            first.append(id_name)
+
+        second = []
+        def second_handler(id_name, **kwargs):
+            second.append(id_name)
+
+        self.emitter.register('foo.bar.baz', first_handler)
+        # First time we emit, only the first handler should be called.
+        self.emitter.emit('foo.bar.baz', id_name='first-time')
+        self.assertEqual(first, ['first-time'])
+        self.assertEqual(second, [])
+
+        copied_emitter = copy.copy(self.emitter)
+        # If we emit from the copied emitter, we should still
+        # only see the first handler called.
+        copied_emitter.emit('foo.bar.baz', id_name='second-time')
+        self.assertEqual(first, ['first-time', 'second-time'])
+        self.assertEqual(second, [])
+
+        # However, if we register an event handler with the copied
+        # emitter, the first emitter will not see this.
+        copied_emitter.register('foo.bar.baz', second_handler)
+
+        copied_emitter.emit('foo.bar.baz', id_name='third-time')
+        self.assertEqual(first, ['first-time', 'second-time', 'third-time'])
+        # And now the second handler is called.
+        self.assertEqual(second, ['third-time'])
+
+        # And vice-versa, emitting from the original emitter
+        # will not trigger the second_handler.
+        # We'll double check this by unregistering/re-registering
+        # the event handler.
+        self.emitter.unregister('foo.bar.baz', first_handler)
+        self.emitter.register('foo.bar.baz', first_handler)
+        self.emitter.emit('foo.bar.baz', id_name='last-time')
+        self.assertEqual(second, ['third-time'])
+
+    def test_copy_events_with_partials(self):
+        # There's a bug in python2.6 where you can't deepcopy
+        # a partial object.  We want to ensure that doesn't
+        # break when a partial is hooked up as an event handler.
+        def handler(a, b, **kwargs):
+            return b
+
+        f = functools.partial(handler, 1)
+        self.emitter.register('a.b', f)
+        copied = copy.copy(self.emitter)
+        self.assertEqual(copied.emit_until_response(
+            'a.b', b='return-val')[1], 'return-val')
 
 
 if __name__ == '__main__':

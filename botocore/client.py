@@ -10,6 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import copy
+
 from botocore.model import ServiceModel
 from botocore.exceptions import DataNotFoundError
 from botocore.exceptions import OperationNotPageableError
@@ -194,7 +196,7 @@ class ClientCreator(object):
             'serializer': serializer,
             'endpoint': endpoint,
             'response_parser': response_parser,
-            'event_emitter': self._event_emitter,
+            'event_emitter': copy.copy(self._event_emitter),
         }
 
     def _create_methods(self, service_model):
@@ -218,16 +220,18 @@ class ClientCreator(object):
                            service_model):
         def _api_call(self, **kwargs):
             operation_model = service_model.operation_model(operation_name)
-            self._event_emitter.emit(
-                'before-parameter-build.{endpoint_prefix}.{operation_name}'
-                    .format(endpoint_prefix=service_model.endpoint_prefix,
-                            operation_name=operation_name),
+            event_name = (
+                'before-parameter-build.{endpoint_prefix}.{operation_name}')
+            self.meta.events.emit(
+                event_name.format(
+                    endpoint_prefix=service_model.endpoint_prefix,
+                    operation_name=operation_name),
                 params=kwargs, model=operation_model)
 
             request_dict = self._serializer.serialize_to_request(
                 kwargs, operation_model)
 
-            self._event_emitter.emit(
+            self.meta.events.emit(
                 'before-call.{endpoint_prefix}.{operation_name}'.format(
                     endpoint_prefix=service_model.endpoint_prefix,
                     operation_name=operation_name),
@@ -237,7 +241,7 @@ class ClientCreator(object):
             http, parsed_response = self._endpoint.make_request(
                 operation_model, request_dict)
 
-            self._event_emitter.emit(
+            self.meta.events.emit(
                 'after-call.{endpoint_prefix}.{operation_name}'.format(
                     endpoint_prefix=service_model.endpoint_prefix,
                     operation_name=operation_name),
@@ -262,20 +266,21 @@ class BaseClient(object):
         self._serializer = serializer
         self._endpoint = endpoint
         self._response_parser = response_parser
-        self._event_emitter = event_emitter
         self._cache = {}
+        self.meta = ClientMeta(event_emitter)
 
     def clone_client(self, serializer=None, endpoint=None,
-                     response_parser=None, event_emitter=None):
+                     response_parser=None):
         """Create a copy of the client object.
 
-        All the parameters mirror the same arguments accepted by the
-        ``__init__`` of the client object.  Any argument not provided
-        will default to the value associated with the current client
-        object.  For example, if no ``endpoint`` argument is not provided,
-        then ``self._endpoint`` will be used.  This allows you to
-        either create an exact clone of the client, or create a clone with
-        certain objects modified.
+        This method will create a clone of an existing client.  By default, the
+        same internal attributes are used when creating a clone of the client,
+        with the exception of the event emitter. A copy of the event handlers
+        are created when a clone of the client is created.
+
+        You can also provide any of the above arguments as an override.  This
+        allows you to create a client that has the same values except for the
+        args you pass in as overrides.
 
         :return: A new copy of the botocore client.
 
@@ -284,9 +289,32 @@ class BaseClient(object):
             'serializer': serializer,
             'endpoint': endpoint,
             'response_parser': response_parser,
-            'event_emitter': event_emitter,
         }
         for key, value in kwargs.items():
             if value is None:
                 kwargs[key] = getattr(self, '_%s' % key)
-        return self.__class__(**kwargs)
+        # This will be swapped out in the ClientMeta class.
+        kwargs['event_emitter'] = None
+        new_object = self.__class__(**kwargs)
+        new_object.meta = copy.copy(self.meta)
+        return new_object
+
+
+class ClientMeta(object):
+    """Holds additional client methods.
+
+    This class holds additional information for clients.  It exists for
+    two reasons:
+
+        * To give advanced functionality to clients
+        * To namespace additional client attributes from the operation
+          names which are mapped to methods at runtime.  This avoids
+          ever running into collisions with operation names.
+
+    """
+
+    def __init__(self, events):
+        self.events = events
+
+    def __copy__(self):
+        return ClientMeta(**copy.deepcopy(self.__dict__))

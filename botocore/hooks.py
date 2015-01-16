@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import copy
 import logging
 from collections import defaultdict, deque, namedtuple
 from botocore.compat import accepts_kwargs, six
@@ -17,10 +18,19 @@ from botocore.compat import accepts_kwargs, six
 logger = logging.getLogger(__name__)
 
 
-NodeList = namedtuple('NodeList', ['first', 'middle', 'last'])
+_NodeList = namedtuple('NodeList', ['first', 'middle', 'last'])
 _FIRST = 0
 _MIDDLE = 1
 _LAST = 2
+
+class NodeList(_NodeList):
+
+    def __copy__(self):
+        first_copy = copy.copy(self.first)
+        middle_copy = copy.copy(self.middle)
+        last_copy = copy.copy(self.last)
+        copied = NodeList(first_copy, middle_copy, last_copy)
+        return copied
 
 
 def first_non_none_response(responses, default=None):
@@ -162,7 +172,24 @@ class HierarchicalEmitter(BaseEventHooks):
         # registered once.
         self._unique_id_cache = {}
 
-    def emit(self, event_name, **kwargs):
+    def _emit(self, event_name, kwargs, stop_on_response=False):
+        """
+        Emit an event with optional keyword arguments.
+
+        :type event_name: string
+        :param event_name: Name of the event
+        :type kwargs: dict
+        :param kwargs: Arguments to be passed to the handler functions.
+        :type stop_on_response: boolean
+        :param stop_on_response: Whether to stop on the first non-None
+                                response. If False, then all handlers
+                                will be called. This is especially useful
+                                to handlers which mutate data and then
+                                want to stop propagation of the event.
+        :rtype: list
+        :return: List of (handler, response) tuples from all processed
+                 handlers.
+        """
         responses = []
         # Invoke the event handlers from most specific
         # to least specific, each time stripping off a dot.
@@ -181,7 +208,41 @@ class HierarchicalEmitter(BaseEventHooks):
             logger.debug('Event %s: calling handler %s', event_name, handler)
             response = handler(**kwargs)
             responses.append((handler, response))
+            if stop_on_response and response is not None:
+                return responses
         return responses
+
+    def emit(self, event_name, **kwargs):
+        """
+        Emit an event by name with arguments passed as keyword args.
+
+            >>> responses = emitter.emit(
+            ...     'my-event.service.operation', arg1='one', arg2='two')
+
+        :rtype: list
+        :return: List of (handler, response) tuples from all processed
+                 handlers.
+        """
+        return self._emit(event_name, kwargs)
+
+    def emit_until_response(self, event_name, **kwargs):
+        """
+        Emit an event by name with arguments passed as keyword args,
+        until the first non-``None`` response is received. This
+        method prevents subsequent handlers from being invoked.
+
+            >>> handler, response = emitter.emit_until_response(
+                'my-event.service.operation', arg1='one', arg2='two')
+
+        :rtype: tuple
+        :return: The first (handler, response) tuple where the response
+                 is not ``None``, otherwise (``None``, ``None``).
+        """
+        responses = self._emit(event_name, kwargs, stop_on_response=True)
+        if responses:
+            return responses[-1]
+        else:
+            return (None, None)
 
     def _register(self, event_name, handler, unique_id=None,
                   unique_id_uses_count=False):
@@ -219,7 +280,7 @@ class HierarchicalEmitter(BaseEventHooks):
                         raise ValueError("Initial registration of"
                             " unique id %s was specified to not use a counter."
                             " Subsequent register calls to unique id must"
-                            " specify not to use a counter as well." % 
+                            " specify not to use a counter as well." %
                             unique_id)
                 return
             else:
@@ -271,6 +332,13 @@ class HierarchicalEmitter(BaseEventHooks):
             self._lookup_cache = {}
         except ValueError:
             pass
+
+    def __copy__(self):
+        new_instance = self.__class__()
+        new_state = self.__dict__.copy()
+        new_state['_handlers'] = copy.copy(self._handlers)
+        new_instance.__dict__ = new_state
+        return new_instance
 
 
 class _PrefixTrie(object):
@@ -403,3 +471,27 @@ class _PrefixTrie(object):
             else:
                 raise ValueError(
                     "key is not in trie: %s" % '.'.join(key_parts))
+
+    def __copy__(self):
+        # The fact that we're using a nested dict under the covers
+        # is an implementation detail, and the user shouldn't have
+        # to know that they'd normally need a deepcopy so we expose
+        # __copy__ instead of __deepcopy__.
+        new_copy = self.__class__()
+        copied_attrs = self._recursive_copy(self.__dict__)
+        new_copy.__dict__ = copied_attrs
+        return new_copy
+
+    def _recursive_copy(self, node):
+        # We can't use copy.deepcopy because we actually only want to copy
+        # the structure of the trie, not the handlers themselves.
+        # Each node has a chunk, children, and values.
+        copied_node = {}
+        for key, value in node.items():
+            if isinstance(value, NodeList):
+                copied_node[key] = copy.copy(value)
+            elif isinstance(value, dict):
+                copied_node[key] = self._recursive_copy(value)
+            else:
+                copied_node[key] = value
+        return copied_node

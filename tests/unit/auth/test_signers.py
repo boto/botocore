@@ -274,6 +274,46 @@ class TestS3SigV4Auth(unittest.TestCase):
         self.assertTrue(
             request.headers['Authorization'].startswith('AWS4-HMAC-SHA256'))
 
+    def test_query_string_params_in_urls(self):
+        request = AWSRequest()
+        request.url = (
+            'https://s3.amazonaws.com/bucket?'
+            'marker=%C3%A4%C3%B6%C3%BC-01.txt&prefix'
+        )
+        request.data = {'Action': 'MyOperation'}
+        request.method = 'GET'
+
+        # Check that the canonical query string is correct formatting
+        # by ensuring that query string paramters that are added to the
+        # canonical query string are correctly formatted.
+        cqs = self.auth.canonical_query_string(request)
+        self.assertEqual('marker=%C3%A4%C3%B6%C3%BC-01.txt&prefix=', cqs)
+
+
+class TestSigV4(unittest.TestCase):
+    def setUp(self):
+        self.credentials = botocore.credentials.Credentials(
+            access_key='foo', secret_key='bar')
+
+    def test_canonical_query_string(self):
+        request = AWSRequest()
+        request.url = (
+            'https://search-testdomain1-j67dwxlet67gf7ghwfmik2c67i.us-west-2.'
+            'cloudsearch.amazonaws.com/'
+            '2013-01-01/search?format=sdk&pretty=true&'
+            'q.options=%7B%22defaultOperator%22%3A%20%22and%22%2C%20%22'
+            'fields%22%3A%5B%22directors%5E10%22%5D%7D&q=George%20Lucas'
+        )
+        request.method = 'GET'
+        auth = botocore.auth.SigV4Auth(
+            self.credentials, 'cloudsearchdomain', 'us-west-2')
+        actual = auth.canonical_query_string(request)
+        # Here 'q' should come before 'q.options'.
+        expected = ("format=sdk&pretty=true&q=George%20Lucas&q.options=%7B%22"
+                    "defaultOperator%22%3A%20%22and%22%2C%20%22fields%22%3A%5B"
+                    "%22directors%5E10%22%5D%7D")
+        self.assertEqual(actual, expected)
+
 
 class TestSigV4Resign(unittest.TestCase):
 
@@ -287,6 +327,13 @@ class TestSigV4Resign(unittest.TestCase):
         self.request = AWSRequest()
         self.request.method = 'PUT'
         self.request.url = 'https://ec2.amazonaws.com/'
+        self.datetime_patch = mock.patch('botocore.auth.datetime')
+        self.datetime_mock = self.datetime_patch.start()
+        self.now = datetime.datetime.utcnow()
+        self.datetime_mock.datetime.utcnow.return_value = self.now
+
+    def tearDown(self):
+        self.datetime_patch.stop()
 
     def test_resign_request_with_date(self):
         self.request.headers['Date'] = 'Thu, 17 Nov 2005 18:49:58 GMT'

@@ -1,16 +1,16 @@
 {
-    "UploadIdMarker": null, 
+    "UploadIdMarker": "", 
     "CommonPrefixes": [
 	{"Prefix": "foo/"},
 	{"Prefix": "foobar/"}
     ], 
     "ResponseMetadata": {}, 
-    "NextKeyMarker": null, 
+    "NextKeyMarker": "", 
     "Bucket": "botocoretest1374528673-218", 
     "Prefix": "foo",
     "Delimiter": "/",
-    "NextUploadIdMarker": null, 
-    "KeyMarker": null, 
+    "NextUploadIdMarker": "", 
+    "KeyMarker": "", 
     "MaxUploads": 1000, 
     "IsTruncated": false
 }
