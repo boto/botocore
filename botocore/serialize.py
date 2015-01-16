@@ -331,6 +331,15 @@ class JSONSerializer(Serializer):
         for sub_key, sub_value in value.items():
             self._serialize(map_obj, sub_value, shape.value, sub_key)
 
+    def _serialize_type_list(self, serialized, value, shape, key):
+        list_obj = []
+        serialized[key] = list_obj
+        for list_item in value:
+            shell = {}
+            self._serialize(shell, list_item, shape.member, "s")
+            list_obj.append(shell["s"])
+        pass
+
     def _default_serialize(self, serialized, value, shape, key):
         serialized[key] = value
 
