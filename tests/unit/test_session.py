@@ -155,6 +155,17 @@ class SessionTest(BaseSessionTest):
                              {'aws_access_key_id': 'FROM_CREDS_FILE_1',
                               'aws_secret_access_key': 'FROM_CREDS_FILE_2'})
 
+    def test_available_profiles_with_creds_file(self):
+        with temporary_file('w') as f:
+            self.session.set_config_variable('credentials_file', f.name)
+            f.write('[newprofile]\n')
+            f.write('aws_access_key_id=FROM_CREDS_FILE_1\n')
+            f.write('aws_secret_access_key=FROM_CREDS_FILE_2\n')
+            f.flush()
+
+            available_profiles = self.session.available_profiles
+            self.assertItemsEqual(available_profiles,['default', 'foo', 'newprofile'])
+
     def test_register_unregister(self):
         calls = []
         handler = lambda **kwargs: calls.append(kwargs)
