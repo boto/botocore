@@ -385,6 +385,7 @@ class Session(object):
 
         :rtype: dict
         """
+
         if self._config is None:
             try:
                 config_file = self.get_config_variable('config_file')
@@ -399,6 +400,14 @@ class Session(object):
                 # profile.
                 cred_file = self.get_config_variable('credentials_file')
                 cred_profiles = botocore.config.raw_config_parse(cred_file)
+
+                # botocore.config.raw_config_parse() returns a dict with 
+                # a '_path' key pointing to the location of cred_file.  
+                # We don't want to process it as a profile so we kick it 
+                # to the curb. If left in, it breaks 
+                # session.available_profiles.
+                cred_profiles.pop('_path',None)
+
                 for profile in cred_profiles:
                     cred_vars = cred_profiles[profile]
                     if profile not in self._config['profiles']:
