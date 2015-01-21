@@ -11,6 +11,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import mock
 
 from tests import BaseSessionTest
 
@@ -82,6 +83,17 @@ class TestService(BaseSessionTest):
             region_name=None,
             endpoint_url='http://custom-endpoint/')
         self.assertEqual(endpoint.host, 'http://custom-endpoint/')
+
+    def test_turnoff_signing(self):
+        service = self.session.get_service('ec2')
+        service.signature_version = None
+        with mock.patch('botocore.endpoint.EndpointCreator.create_endpoint') \
+                as mock_create_endpoint:
+            service.get_endpoint('us-east-1')
+            self.assertEqual(
+                mock_create_endpoint.call_args[1]['signature_version'],
+                None
+            )
 
 
 if __name__ == "__main__":
