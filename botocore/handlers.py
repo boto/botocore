@@ -315,10 +315,10 @@ def copy_snapshot_encrypted(operation, params, request_signer, **kwargs):
     source_endpoint = operation.service.get_endpoint(region)
     presigner = request_signer.get_auth(
         'ec2', region, signature_version='v4-query')
-    signed_request = source_endpoint.create_request(
-        request_dict, request_created_handler=lambda request: \
-            presigner.add_auth(request=request))
-    params['PresignedUrl'] = signed_request.url
+    request = source_endpoint.create_request(request_dict)
+    presigner.add_auth(request=request.original)
+    request = request.original.prepare()
+    params['PresignedUrl'] = request.url
 
 
 def json_decode_policies(parsed, model, **kwargs):
