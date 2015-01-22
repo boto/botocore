@@ -64,7 +64,7 @@ class TestHandlers(BaseSessionTest):
         operation = mock.Mock()
         source_endpoint = mock.Mock()
         signed_request = mock.Mock()
-        signed_request.url = 'SIGNED_REQUEST'
+        signed_request.original.prepare().url = 'SIGNED_REQUEST'
         source_endpoint.create_request.return_value = signed_request
         operation.service.get_endpoint.return_value = source_endpoint
         request_signer = mock.Mock()
