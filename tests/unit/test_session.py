@@ -374,7 +374,8 @@ class TestPerformOperation(BaseSessionTest):
         endpoint = service.get_endpoint('us-west-2')
         endpoint._send_request = mock.Mock()
         endpoint._send_request.return_value = [{}, {}]
-        operation.call(endpoint)
+        response = operation.call(endpoint)
+        self.assertEqual(response, endpoint._send_request.return_value)
 
 
 if __name__ == "__main__":

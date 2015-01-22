@@ -99,10 +99,23 @@ class Operation(BotoCoreObject):
         if 'signatureVersion' in endpoint_config.get('properties', {}):
             signature_version = endpoint_config['properties']\
                                                ['signatureVersion']
+
+        # Signature overrides from a configuration file
+        if scoped_config is not None:
+            service_config = scoped_config.get(service_model.endpoint_prefix)
+            if service_config is not None and isinstance(service_config, dict):
+                override = service_config.get('signature_version')
+                if override:
+                    logger.debug(
+                        "Switching signature version for service %s "
+                         "to version %s based on config file override.",
+                         service_model.endpoint_prefix, override)
+                    signature_version = override
+
         signer = RequestSigner(service_model.service_name,
                                region_name, service_model.signing_name,
                                signature_version, credentials,
-                               event_emitter, scoped_config)
+                               event_emitter)
 
         event = self.session.create_event('before-call',
                                           self.service.endpoint_prefix,

@@ -266,19 +266,6 @@ def _register_for_operations(config, session, service_name):
                          handler, unique_id=unique_id)
 
 
-def signature_overrides(event_name, config, signature_version, **kwargs):
-    service_name = event_name.split('.')[1]
-    service_config = config.get(service_name)
-    if service_config is None or not isinstance(service_config, dict):
-        return
-    signature_version_override = service_config.get('signature_version')
-    if signature_version_override is not None:
-        logger.debug("Switching signature version for service %s "
-                     "to version %s based on config file override.",
-                     service_name, signature_version_override)
-        return signature_version_override
-
-
 def disable_signing(**kwargs):
     """
     This handler disables request signing by setting the signer
@@ -483,7 +470,6 @@ BUILTIN_HANDLERS = [
     ('needs-retry.s3.CompleteMultipartUpload', check_for_200_error,
      REGISTER_FIRST),
     ('service-data-loaded', register_retries_for_service),
-    ('choose-signer', signature_overrides),
     ('choose-signer.cognito-identity.GetId', disable_signing),
     ('choose-signer.cognito-identity.GetOpenIdToken', disable_signing),
     ('before-sign.s3', fix_s3_host),

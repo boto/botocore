@@ -47,20 +47,6 @@ class TestHandlers(BaseSessionTest):
         converted_value = handlers.decode_quoted_jsondoc(value)
         self.assertEqual(converted_value, value)
 
-    def test_switch_to_sigv4(self):
-        config = {
-            's3': {'signature_version': 's3v4'}
-        }
-        override = handlers.signature_overrides(
-            'choose-signer.s3.foo', config, 's3')
-        self.assertEqual(override, 's3v4')
-
-    def test_noswitch_to_sigv4(self):
-        config = {}
-        override = handlers.signature_overrides(
-            'choose-signer.s3.foo', config, 's3')
-        self.assertEqual(override, None)
-
     def test_disable_signing(self):
         self.assertEqual(handlers.disable_signing(), '')
 

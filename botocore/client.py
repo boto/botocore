@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 import copy
 import functools
+import logging
 
 from botocore.model import ServiceModel
 from botocore.exceptions import DataNotFoundError
@@ -26,6 +27,9 @@ import botocore.serialize
 from botocore import credentials
 from botocore.signers import RequestSigner
 from botocore.endpoint import EndpointCreator
+
+
+logger = logging.getLogger(__name__)
 
 
 class ClientCreator(object):
@@ -194,7 +198,7 @@ class ClientCreator(object):
 
         # Get endpoint heuristic overrides before creating the
         # request signer.
-        resolver = endpoint_creator.resolver
+        resolver = self._endpoint_resolver
         scheme = 'https' if is_secure else 'http'
         endpoint_config = resolver.construct_endpoint(
                 service_model.endpoint_prefix,
@@ -205,10 +209,23 @@ class ClientCreator(object):
         if 'signatureVersion' in endpoint_config.get('properties', {}):
             signature_version = endpoint_config['properties']\
                                                ['signatureVersion']
+
+        # Signature overrides from a configuration file
+        if scoped_config is not None:
+            service_config = scoped_config.get(service_model.endpoint_prefix)
+            if service_config is not None and isinstance(service_config, dict):
+                override = service_config.get('signature_version')
+                if override:
+                    logger.debug(
+                        "Switching signature version for service %s "
+                         "to version %s based on config file override.",
+                         service_model.endpoint_prefix, override)
+                    signature_version = override
+
         signer = RequestSigner(service_model.service_name, region_name,
                                service_model.signing_name,
                                signature_version, credentials,
-                               event_emitter, scoped_config)
+                               event_emitter)
         return {
             'serializer': serializer,
             'endpoint': endpoint,

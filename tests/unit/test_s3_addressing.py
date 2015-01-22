@@ -43,10 +43,7 @@ class TestS3Addressing(BaseSessionTest):
                         self.endpoint.region_name)
             return request
         self.endpoint.prepare_request = prepare_request
-        self.endpoint._send_request = lambda prepared_request, operation: \
-            request.append(prepared_request)
-        self.endpoint.make_request(op.model, param)
-        return request[0]
+        return self.endpoint.create_request(param, op)
 
     def test_list_objects_dns_name(self):
         self.endpoint = self.s3.get_endpoint('us-east-1')

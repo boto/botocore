@@ -485,8 +485,6 @@ class TestS3Presign(BaseS3Test):
         params = op.build_parameters(bucket=self.bucket_name, key=key_name)
         def sign(request):
             signer.add_auth(request)
-        print(self.endpoint)
-        print(self.endpoint.create_request)
         request = self.endpoint.create_request(
             params, request_created_handler=sign)
         presigned_url = request.url
@@ -730,22 +728,6 @@ class TestCanSwitchToSigV4(unittest.TestCase):
     def tearDown(self):
         self.environ_patch.stop()
         shutil.rmtree(self.tempdir)
-
-    def test_verify_can_switch_sigv4(self):
-        # Verify we can turn on sigv4 from a config file.
-        with open(self.config_filename, 'w') as f:
-            f.write(
-                '[default]\n'
-                's3 =\n'
-                '  signature_version = s3v4\n')
-        # We need to verify this option for service/operation objects so we're
-        # not using client objects now (though we should add a test for client
-        # objects eventually).
-        service = self.session.get_service('s3')
-        endpoint = service.get_endpoint('us-east-1')
-        # The set_config_variable should ensure that we use sigv4 for s3.
-        # TODO: How do we check this? It's not exposed anywhere anymore...
-        #self.assertIsInstance(endpoint.auth, botocore.auth.S3SigV4Auth)
 
 
 class TestSSEKeyParamValidation(unittest.TestCase):
