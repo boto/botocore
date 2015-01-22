@@ -14,6 +14,7 @@
 
 import functools
 import logging
+import threading
 from botocore.exceptions import MissingParametersError
 from botocore.exceptions import UnknownParameterError
 from botocore.exceptions import NoRegionError
@@ -129,21 +130,24 @@ class Operation(BotoCoreObject):
                           operation=self,
                           request_signer=signer)
 
-        # This is kind of ugly, but it lets us hook into the request
-        # created event on a per-operation basis without mucking with
-        # the Endpoint/EndpointCreator objects.
-        real_emit = event_emitter.emit
-        def fake_emit(name, **kwargs):
-            if name.startswith('request-created'):
-                signer.sign(self.name, kwargs['request'])
-            return real_emit(name, **kwargs)
+        # Here we register to the specific request-created event
+        # for this operation. Since it's possible to run the same
+        # operation in multiple threads, we used a lock to prevent
+        # issues. It's possible a request will be signed more than
+        # once. Once the request has been made, we unregister the
+        # handler.
+        def request_created(request, **kwargs):
+            with threading.Lock():
+                signer.sign(self.name, request)
 
-        event_emitter.emit = fake_emit
+        event_emitter.register('request-created.{0}.{1}'.format(
+            self.service.endpoint_prefix, self.name), request_created)
 
-        response = endpoint.make_request(self.model, request_dict)
-
-        # Restore event emitter
-        event_emitter.emit = real_emit
+        try:
+            response = endpoint.make_request(self.model, request_dict)
+        finally:
+            event_emitter.unregister('request-created.{0}.{1}'.format(
+                self.service.endpoint_prefix, self.name), request_created)
 
         event = self.session.create_event('after-call',
                                           self.service.endpoint_prefix,
