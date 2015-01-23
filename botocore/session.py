@@ -379,8 +379,8 @@ class Session(object):
     def full_config(self):
         """Return the parsed config file.
 
-        The ``get_config`` method returns the config associated with the
-        specified profile.  This property returns the contents of the
+        The ``get_scoped_config`` method returns the config associated with
+        the specified profile.  This property returns the contents of the
         **entire** config file.
 
         :rtype: dict
