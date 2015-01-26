@@ -111,9 +111,10 @@ class TestKinesisListStreams(unittest.TestCase):
         records = self.client.get_records(
             ShardIterator=shard_iterator['ShardIterator'])
         self.assertTrue(len(records['Records']) == 2)
-        #verify that both made it through
+        # Verify that both made it through.
         record_data = [r['Data'] for r in records['Records']]
-        self.assertItemsEqual(['foobar', 'barfoo'], record_data)
+        self.assertEqual(sorted([b'foobar', b'barfoo']), sorted(record_data))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -335,10 +335,13 @@ class JSONSerializer(Serializer):
         list_obj = []
         serialized[key] = list_obj
         for list_item in value:
-            shell = {}
-            self._serialize(shell, list_item, shape.member, "s")
-            list_obj.append(shell["s"])
-        pass
+            wrapper = {}
+            # The JSON list serialization is the only case where we aren't
+            # setting a key on a dict.  We handle this by using
+            # a __current__ key on a wrapper dict to serialize each
+            # list item before appending it to the serialized list.
+            self._serialize(wrapper, list_item, shape.member, "__current__")
+            list_obj.append(wrapper["__current__"])
 
     def _default_serialize(self, serialized, value, shape, key):
         serialized[key] = value
