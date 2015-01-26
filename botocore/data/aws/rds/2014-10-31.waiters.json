@@ -62,8 +62,8 @@
       "maxAttempts": 60,
       "acceptors": [
         {
-          "expected": 404,
-          "matcher": "status",
+          "expected": "DBInstanceNotFound",
+          "matcher": "error",
           "state": "success"
         },
         {
