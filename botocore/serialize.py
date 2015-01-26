@@ -331,6 +331,18 @@ class JSONSerializer(Serializer):
         for sub_key, sub_value in value.items():
             self._serialize(map_obj, sub_value, shape.value, sub_key)
 
+    def _serialize_type_list(self, serialized, value, shape, key):
+        list_obj = []
+        serialized[key] = list_obj
+        for list_item in value:
+            wrapper = {}
+            # The JSON list serialization is the only case where we aren't
+            # setting a key on a dict.  We handle this by using
+            # a __current__ key on a wrapper dict to serialize each
+            # list item before appending it to the serialized list.
+            self._serialize(wrapper, list_item, shape.member, "__current__")
+            list_obj.append(wrapper["__current__"])
+
     def _default_serialize(self, serialized, value, shape, key):
         serialized[key] = value
 

@@ -52,6 +52,69 @@ class TestKinesisListStreams(unittest.TestCase):
         self.assertTrue(len(records['Records']) > 0)
         self.assertEqual(records['Records'][0]['Data'], b'foobar')
 
+    def test_can_put_records_single_blob(self):
+        self.client.create_stream(StreamName=self.stream_name,
+                                  ShardCount=1)
+        waiter = self.client.get_waiter('stream_exists')
+        waiter.wait(StreamName=self.stream_name)
+        self.addCleanup(self.client.delete_stream,
+                        StreamName=self.stream_name)
+
+        self.client.put_records(
+            StreamName=self.stream_name,
+            Records=[{
+                'Data': 'foobar',
+                'PartitionKey': 'foo'
+            }]
+        )
+        # Give it a few seconds for the record to get into the stream.
+        time.sleep(10)
+
+        stream = self.client.describe_stream(StreamName=self.stream_name)
+        shard = stream['StreamDescription']['Shards'][0]
+        shard_iterator = self.client.get_shard_iterator(
+            StreamName=self.stream_name, ShardId=shard['ShardId'],
+            ShardIteratorType='TRIM_HORIZON')
+
+        records = self.client.get_records(
+            ShardIterator=shard_iterator['ShardIterator'])
+        self.assertTrue(len(records['Records']) > 0)
+        self.assertEqual(records['Records'][0]['Data'], b'foobar')
+
+    def test_can_put_records_multiple_blob(self):
+        self.client.create_stream(StreamName=self.stream_name,
+                                  ShardCount=1)
+        waiter = self.client.get_waiter('stream_exists')
+        waiter.wait(StreamName=self.stream_name)
+        self.addCleanup(self.client.delete_stream,
+                        StreamName=self.stream_name)
+
+        self.client.put_records(
+            StreamName=self.stream_name,
+            Records=[{
+                'Data': 'foobar',
+                'PartitionKey': 'foo'
+            },{
+                'Data': 'barfoo',
+                'PartitionKey': 'foo'
+            }]
+        )
+        # Give it a few seconds for the record to get into the stream.
+        time.sleep(10)
+
+        stream = self.client.describe_stream(StreamName=self.stream_name)
+        shard = stream['StreamDescription']['Shards'][0]
+        shard_iterator = self.client.get_shard_iterator(
+            StreamName=self.stream_name, ShardId=shard['ShardId'],
+            ShardIteratorType='TRIM_HORIZON')
+
+        records = self.client.get_records(
+            ShardIterator=shard_iterator['ShardIterator'])
+        self.assertTrue(len(records['Records']) == 2)
+        # Verify that both made it through.
+        record_data = [r['Data'] for r in records['Records']]
+        self.assertEqual(sorted([b'foobar', b'barfoo']), sorted(record_data))
+
 
 if __name__ == '__main__':
     unittest.main()
