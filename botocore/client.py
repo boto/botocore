@@ -175,6 +175,38 @@ class ClientCreator(object):
         service_model = ServiceModel(json_model, service_name=service_name)
         return service_model
 
+    def _get_signature_version_and_region(self, service_model, region_name,
+                                          is_secure, scoped_config):
+        # Get endpoint heuristic overrides before creating the
+        # request signer.
+        resolver = self._endpoint_resolver
+        scheme = 'https' if is_secure else 'http'
+        endpoint_config = resolver.construct_endpoint(
+                service_model.endpoint_prefix,
+                region_name, scheme=scheme)
+        # Region name override from endpoint
+        region_name = endpoint_config.get('properties', {}).get(
+            'credentialScope', {}).get('region', region_name)
+        # Signature version override from endpoint
+        signature_version = service_model.signature_version
+        if 'signatureVersion' in endpoint_config.get('properties', {}):
+            signature_version = endpoint_config['properties']\
+                                               ['signatureVersion']
+
+        # Signature overrides from a configuration file
+        if scoped_config is not None:
+            service_config = scoped_config.get(service_model.endpoint_prefix)
+            if service_config is not None and isinstance(service_config, dict):
+                override = service_config.get('signature_version')
+                if override:
+                    logger.debug(
+                        "Switching signature version for service %s "
+                         "to version %s based on config file override.",
+                         service_model.endpoint_prefix, override)
+                    signature_version = override
+
+        return signature_version, region_name
+
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,
                          scoped_config):
@@ -196,31 +228,9 @@ class ClientCreator(object):
             response_parser_factory=self._response_parser_factory)
         response_parser = botocore.parsers.create_parser(protocol)
 
-        # Get endpoint heuristic overrides before creating the
-        # request signer.
-        resolver = self._endpoint_resolver
-        scheme = 'https' if is_secure else 'http'
-        endpoint_config = resolver.construct_endpoint(
-                service_model.endpoint_prefix,
-                region_name, scheme=scheme)
-        region_name = endpoint_config.get('properties', {}).get(
-            'credentialScope', {}).get('region', region_name)
-        signature_version = service_model.signature_version
-        if 'signatureVersion' in endpoint_config.get('properties', {}):
-            signature_version = endpoint_config['properties']\
-                                               ['signatureVersion']
-
-        # Signature overrides from a configuration file
-        if scoped_config is not None:
-            service_config = scoped_config.get(service_model.endpoint_prefix)
-            if service_config is not None and isinstance(service_config, dict):
-                override = service_config.get('signature_version')
-                if override:
-                    logger.debug(
-                        "Switching signature version for service %s "
-                         "to version %s based on config file override.",
-                         service_model.endpoint_prefix, override)
-                    signature_version = override
+        signature_version, region_name = \
+            self._get_signature_version_and_region(
+                service_model, region_name, is_secure, scoped_config)
 
         signer = RequestSigner(service_model.service_name, region_name,
                                service_model.signing_name,

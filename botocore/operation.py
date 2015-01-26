@@ -65,6 +65,39 @@ class Operation(BotoCoreObject):
     def signature_version(self):
         return self.service.signature_version
 
+    def _get_signature_version_and_region(self, endpoint, service_model):
+        # An endpoint-aware signature version and region check
+        scoped_config = self.session.get_scoped_config()
+        resolver = self.session.get_component('endpoint_resolver')
+        scheme = endpoint.host.split(':')[0]
+        if endpoint.region_name is None:
+            raise NoRegionError(env_var='region')
+        endpoint_config = resolver.construct_endpoint(
+                service_model.endpoint_prefix,
+                endpoint.region_name, scheme=scheme)
+        # Region name override from endpoint
+        region_name = endpoint_config.get('properties', {}).get(
+            'credentialScope', {}).get('region', endpoint.region_name)
+        # Signature version override from endpoint
+        signature_version = service_model.signature_version
+        if 'signatureVersion' in endpoint_config.get('properties', {}):
+            signature_version = endpoint_config['properties']\
+                                               ['signatureVersion']
+
+        # Signature overrides from a configuration file
+        if scoped_config is not None:
+            service_config = scoped_config.get(service_model.endpoint_prefix)
+            if service_config is not None and isinstance(service_config, dict):
+                override = service_config.get('signature_version')
+                if override:
+                    logger.debug(
+                        "Switching signature version for service %s "
+                         "to version %s based on config file override.",
+                         service_model.endpoint_prefix, override)
+                    signature_version = override
+
+        return signature_version, region_name
+
     def call(self, endpoint, **kwargs):
         logger.debug("%s called with kwargs: %s", self, kwargs)
         # It probably seems a little weird to be firing two different
@@ -84,35 +117,13 @@ class Operation(BotoCoreObject):
 
         service_name = self.service.service_name
         service_model = self.session.get_service_model(service_name)
+
+        signature_version, region_name = \
+            self._get_signature_version_and_region(
+                endpoint, service_model)
+
         credentials = self.session.get_credentials()
-        scoped_config = self.session.get_scoped_config()
         event_emitter = self.session.get_component('event_emitter')
-        resolver = self.session.get_component('endpoint_resolver')
-        scheme = endpoint.host.split(':')[0]
-        if endpoint.region_name is None:
-            raise NoRegionError(env_var='region')
-        endpoint_config = resolver.construct_endpoint(
-                service_model.endpoint_prefix,
-                endpoint.region_name, scheme=scheme)
-        region_name = endpoint_config.get('properties', {}).get(
-            'credentialScope', {}).get('region', endpoint.region_name)
-        signature_version = service_model.signature_version
-        if 'signatureVersion' in endpoint_config.get('properties', {}):
-            signature_version = endpoint_config['properties']\
-                                               ['signatureVersion']
-
-        # Signature overrides from a configuration file
-        if scoped_config is not None:
-            service_config = scoped_config.get(service_model.endpoint_prefix)
-            if service_config is not None and isinstance(service_config, dict):
-                override = service_config.get('signature_version')
-                if override:
-                    logger.debug(
-                        "Switching signature version for service %s "
-                         "to version %s based on config file override.",
-                         service_model.endpoint_prefix, override)
-                    signature_version = override
-
         signer = RequestSigner(service_model.service_name,
                                region_name, service_model.signing_name,
                                signature_version, credentials,
@@ -137,8 +148,14 @@ class Operation(BotoCoreObject):
         # once. Once the request has been made, we unregister the
         # handler.
         def request_created(request, **kwargs):
-            with threading.Lock():
-                signer.sign(self.name, request)
+            # This first check lets us quickly determine when
+            # a request has already been signed without needing
+            # to acquire the lock.
+            if not getattr(request, '_is_signed', False):
+                with threading.Lock():
+                    if not getattr(request, '_is_signed', False):
+                        signer.sign(self.name, request)
+                        request._is_signed = True
 
         event_emitter.register('request-created.{0}.{1}'.format(
             self.service.endpoint_prefix, self.name), request_created)
