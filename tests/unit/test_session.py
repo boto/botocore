@@ -367,6 +367,13 @@ class TestCreateClient(BaseSessionTest):
                          "explicit credentials were provided to the "
                          "create_client call.")
 
+    @mock.patch('botocore.client.RequestSigner')
+    def test_no_credentials_set_anonymous(self, request_signer):
+        self.session.create_client(
+            'sts', 'us-west-2', anonymous=True)
+        request_signer.assert_called_with(
+            mock.ANY, mock.ANY, mock.ANY, mock.ANY, None, mock.ANY)
+
 class TestPerformOperation(BaseSessionTest):
     def test_s3(self):
         service = self.session.get_service('s3')

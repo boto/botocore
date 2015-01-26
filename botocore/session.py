@@ -750,7 +750,7 @@ class Session(object):
     def create_client(self, service_name, region_name=None, api_version=None,
                       use_ssl=True, verify=None, endpoint_url=None,
                       aws_access_key_id=None, aws_secret_access_key=None,
-                      aws_session_token=None):
+                      aws_session_token=None, anonymous=False):
         """Create a botocore client.
 
         :type service_name: string
@@ -815,13 +815,17 @@ class Session(object):
         event_emitter = self.get_component('event_emitter')
         response_parser_factory = self.get_component(
             'response_parser_factory')
-        if aws_secret_access_key is not None:
-            credentials = botocore.credentials.Credentials(
-                access_key=aws_access_key_id,
-                secret_key=aws_secret_access_key,
-                token=aws_session_token)
+        if not anonymous:
+            if aws_secret_access_key is not None:
+                credentials = botocore.credentials.Credentials(
+                    access_key=aws_access_key_id,
+                    secret_key=aws_secret_access_key,
+                    token=aws_session_token)
+            else:
+                credentials = self.get_credentials()
         else:
-            credentials = self.get_credentials()
+            # Request will be anonymous
+            credentials = None
         endpoint_resolver = self.get_component('endpoint_resolver')
         client_creator = botocore.client.ClientCreator(
             loader, endpoint_resolver, self.user_agent(), event_emitter,
