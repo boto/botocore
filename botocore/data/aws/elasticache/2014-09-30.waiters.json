@@ -44,8 +44,8 @@
       "maxAttempts": 60,
       "acceptors": [
         {
-          "expected": 404,
-          "matcher": "status",
+          "expected": "CacheClusterNotFound",
+          "matcher": "error",
           "state": "success"
         },
         {
@@ -111,8 +111,8 @@
       "maxAttempts": 60,
       "acceptors": [
         {
-          "expected": 404,
-          "matcher": "status",
+          "expected": "ReplicationGroupNotFoundFault",
+          "matcher": "error",
           "state": "success"
         },
         {
