@@ -696,7 +696,7 @@
         },
         "serialized": {
           "uri": "/path",
-          "headers": {"x-amz-timearg": "Sun, 25 Jan 2015 08:00:00 -0000"},
+          "headers": {"x-amz-timearg": "Sun, 25 Jan 2015 08:00:00 GMT"},
           "body": ""
         }
       }
