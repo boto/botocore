@@ -96,9 +96,27 @@ class LegacyOperationMethod(object):
         self._endpoint = endpoint
 
     def __call__(self, **kwargs):
-        http, parsed = self._operation_object.call(
-            self._endpoint, **kwargs)
+        try:
+            http, parsed = self._operation_object.call(
+                self._endpoint, **kwargs)
+        except Exception as e:
+            # In theory, a handler can raise an type of exception.
+            # We're going to make a best effort attempt to handle
+            # the ClientError attributes, but not require that
+            # the exception is an instance of ClientError.
+            if self._looks_like_client_error(e):
+                return {
+                    'Error': {
+                        'Code': e.error_code,
+                        'Message': e.error_message,
+                    }
+                }
+            else:
+                raise
         return parsed
+
+    def _looks_like_client_error(self, e):
+        return hasattr(e, 'error_code') and hasattr(e, 'error_message')
 
 
 class WaiterModel(object):
@@ -317,6 +335,8 @@ class Waiter(object):
                     raise WaiterError(name=self.name,
                                       reason='Unexpected error encountered.')
             if current_state == 'success':
+                logger.debug("Waiting complete, waiter matched the "
+                             "success state.")
                 return
             if current_state == 'failure':
                 raise WaiterError(
