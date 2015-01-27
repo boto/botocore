@@ -79,7 +79,7 @@ class Operation(BotoCoreObject):
         region_name = endpoint_config.get('properties', {}).get(
             'credentialScope', {}).get('region', endpoint.region_name)
         # Signature version override from endpoint
-        signature_version = service_model.signature_version
+        signature_version = self.service.signature_version
         if 'signatureVersion' in endpoint_config.get('properties', {}):
             signature_version = endpoint_config['properties']\
                                                ['signatureVersion']
