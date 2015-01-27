@@ -137,7 +137,7 @@ class Serializer(object):
         return int(calendar.timegm(value.timetuple()))
 
     def _timestamp_rfc822(self, value):
-        return formatdate(value)
+        return formatdate(value, usegmt=True)
 
     def _convert_timestamp_to_str(self, value):
         datetime_obj = parse_to_aware_datetime(value)
