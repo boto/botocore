@@ -86,7 +86,7 @@ class RequestSigner(object):
             signature_version=signature_version, request_signer=self)
 
         # Sign the request if the signature version isn't None or blank
-        if signature_version and self._credentials:
+        if signature_version:
             signer = self.get_auth(self._signing_name, self._region_name,
                                     signature_version)
             signer.add_auth(request=request)
