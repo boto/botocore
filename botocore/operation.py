@@ -12,10 +12,14 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import functools
 import logging
+import threading
 from botocore.exceptions import MissingParametersError
 from botocore.exceptions import UnknownParameterError
+from botocore.exceptions import NoRegionError
 from botocore.paginate import DeprecatedPaginator
+from botocore.signers import RequestSigner
 from botocore import serialize
 from botocore import BotoCoreObject, xform_name
 
@@ -61,6 +65,39 @@ class Operation(BotoCoreObject):
     def signature_version(self):
         return self.service.signature_version
 
+    def _get_signature_version_and_region(self, endpoint, service_model):
+        # An endpoint-aware signature version and region check
+        scoped_config = self.session.get_scoped_config()
+        resolver = self.session.get_component('endpoint_resolver')
+        scheme = endpoint.host.split(':')[0]
+        if endpoint.region_name is None:
+            raise NoRegionError(env_var='region')
+        endpoint_config = resolver.construct_endpoint(
+                service_model.endpoint_prefix,
+                endpoint.region_name, scheme=scheme)
+        # Region name override from endpoint
+        region_name = endpoint_config.get('properties', {}).get(
+            'credentialScope', {}).get('region', endpoint.region_name)
+        # Signature version override from endpoint
+        signature_version = self.service.signature_version
+        if 'signatureVersion' in endpoint_config.get('properties', {}):
+            signature_version = endpoint_config['properties']\
+                                               ['signatureVersion']
+
+        # Signature overrides from a configuration file
+        if scoped_config is not None:
+            service_config = scoped_config.get(service_model.endpoint_prefix)
+            if service_config is not None and isinstance(service_config, dict):
+                override = service_config.get('signature_version')
+                if override:
+                    logger.debug(
+                        "Switching signature version for service %s "
+                         "to version %s based on config file override.",
+                         service_model.endpoint_prefix, override)
+                    signature_version = override
+
+        return signature_version, region_name
+
     def call(self, endpoint, **kwargs):
         logger.debug("%s called with kwargs: %s", self, kwargs)
         # It probably seems a little weird to be firing two different
@@ -77,6 +114,21 @@ class Operation(BotoCoreObject):
                           model=self.model,
                           params=kwargs)
         request_dict = self.build_parameters(**kwargs)
+
+        service_name = self.service.service_name
+        service_model = self.session.get_service_model(service_name)
+
+        signature_version, region_name = \
+            self._get_signature_version_and_region(
+                endpoint, service_model)
+
+        credentials = self.session.get_credentials()
+        event_emitter = self.session.get_component('event_emitter')
+        signer = RequestSigner(service_model.service_name,
+                               region_name, service_model.signing_name,
+                               signature_version, credentials,
+                               event_emitter)
+
         event = self.session.create_event('before-call',
                                           self.service.endpoint_prefix,
                                           self.name)
@@ -86,8 +138,34 @@ class Operation(BotoCoreObject):
         self.session.emit(event, endpoint=endpoint,
                           model=self.model,
                           params=request_dict,
-                          operation=self)
-        response = endpoint.make_request(self.model, request_dict)
+                          operation=self,
+                          request_signer=signer)
+
+        # Here we register to the specific request-created event
+        # for this operation. Since it's possible to run the same
+        # operation in multiple threads, we used a lock to prevent
+        # issues. It's possible a request will be signed more than
+        # once. Once the request has been made, we unregister the
+        # handler.
+        def request_created(request, **kwargs):
+            # This first check lets us quickly determine when
+            # a request has already been signed without needing
+            # to acquire the lock.
+            if not getattr(request, '_is_signed', False):
+                with threading.Lock():
+                    if not getattr(request, '_is_signed', False):
+                        signer.sign(self.name, request)
+                        request._is_signed = True
+
+        event_emitter.register('request-created.{0}.{1}'.format(
+            self.service.endpoint_prefix, self.name), request_created)
+
+        try:
+            response = endpoint.make_request(self.model, request_dict)
+        finally:
+            event_emitter.unregister('request-created.{0}.{1}'.format(
+                self.service.endpoint_prefix, self.name), request_created)
+
         event = self.session.create_event('after-call',
                                           self.service.endpoint_prefix,
                                           self.name)

@@ -47,29 +47,8 @@ class TestHandlers(BaseSessionTest):
         converted_value = handlers.decode_quoted_jsondoc(value)
         self.assertEqual(converted_value, value)
 
-    def test_switch_to_sigv4(self):
-        event = self.session.create_event('service-data-loaded', 's3')
-        mock_session = mock.Mock()
-        mock_session.get_scoped_config.return_value = {
-            's3': {'signature_version': 's3v4'}
-        }
-        kwargs = {'service_data': {'metadata': {'signatureVersion': 's3'}},
-                  'service_name': 's3', 'session': mock_session}
-        self.session.emit(event, **kwargs)
-        self.assertEqual(
-            kwargs['service_data']['metadata']['signatureVersion'],
-            's3v4')
-
-    def test_noswitch_to_sigv4(self):
-        event = self.session.create_event('service-data-loaded', 's3')
-        mock_session = mock.Mock()
-        mock_session.get_scoped_config.return_value = {}
-        kwargs = {'service_data': {'metadata': {'signatureVersion': 's3'}},
-                  'service_name': 's3', 'session': mock_session}
-        self.session.emit(event, **kwargs)
-        self.assertEqual(
-            kwargs['service_data']['metadata']['signatureVersion'],
-            's3')
+    def test_disable_signing(self):
+        self.assertEqual(handlers.disable_signing(), '')
 
     def test_quote_source_header(self):
         for op in ('UploadPartCopy', 'CopyObject'):
@@ -85,15 +64,15 @@ class TestHandlers(BaseSessionTest):
         operation = mock.Mock()
         source_endpoint = mock.Mock()
         signed_request = mock.Mock()
-        signed_request.url = 'SIGNED_REQUEST'
-        source_endpoint.auth.credentials = mock.sentinel.credentials
+        signed_request.original.prepare().url = 'SIGNED_REQUEST'
         source_endpoint.create_request.return_value = signed_request
         operation.service.get_endpoint.return_value = source_endpoint
-        endpoint = mock.Mock()
-        endpoint.region_name = 'us-east-1'
+        request_signer = mock.Mock()
+        request_signer._region_name = 'us-east-1'
 
         params = {'SourceRegion': 'us-west-2'}
-        handlers.copy_snapshot_encrypted(operation, {'body': params}, endpoint)
+        handlers.copy_snapshot_encrypted(operation, {'body': params},
+                                         request_signer)
         self.assertEqual(params['PresignedUrl'], 'SIGNED_REQUEST')
         # We created an endpoint in the source region.
         operation.service.get_endpoint.assert_called_with('us-west-2')
@@ -112,13 +91,14 @@ class TestHandlers(BaseSessionTest):
         source_endpoint.auth.credentials = mock.sentinel.credentials
         source_endpoint.create_request.return_value = signed_request
         operation.service.get_endpoint.return_value = source_endpoint
-        endpoint = mock.Mock()
-        endpoint.region_name = 'us-west-1'
+        request_signer = mock.Mock()
+        request_signer._region_name = 'us-west-1'
 
         # The user provides us-east-1, but we will override this to
         # endpoint.region_name, of 'us-west-1' in this case.
         params = {'SourceRegion': 'us-west-2', 'DestinationRegion': 'us-east-1'}
-        handlers.copy_snapshot_encrypted(operation, {'body': params}, endpoint)
+        handlers.copy_snapshot_encrypted(operation, {'body': params},
+                                         request_signer)
         # Always use the DestinationRegion from the endpoint, regardless of
         # whatever value the user provides.
         self.assertEqual(params['DestinationRegion'], 'us-west-1')
@@ -279,26 +259,32 @@ class TestHandlers(BaseSessionTest):
         self.assertEqual(params, result)
 
     def test_fix_s3_host_initial(self):
-        endpoint = mock.Mock(region_name='us-west-2')
         request = AWSRequest(
             method='PUT',headers={},
             url='https://s3-us-west-2.amazonaws.com/bucket/key.txt'
         )
-        auth = mock.Mock()
-        handlers.fix_s3_host('foo', endpoint, request, auth)
+        region_name = 'us-west-2'
+        signature_version = 's3'
+        handlers.fix_s3_host(
+            request=request, signature_version=signature_version,
+            region_name=region_name)
         self.assertEqual(request.url, 'https://bucket.s3.amazonaws.com/key.txt')
         self.assertEqual(request.auth_path, '/bucket/key.txt')
 
     def test_fix_s3_host_only_applied_once(self):
-        endpoint = mock.Mock(region_name='us-west-2')
         request = AWSRequest(
             method='PUT',headers={},
             url='https://s3-us-west-2.amazonaws.com/bucket/key.txt'
         )
-        auth = mock.Mock()
-        handlers.fix_s3_host('foo', endpoint, request, auth)
+        region_name = 'us-west-2'
+        signature_version = 's3'
+        handlers.fix_s3_host(
+            request=request, signature_version=signature_version,
+            region_name=region_name)
         # Calling the handler again should not affect the end result:
-        handlers.fix_s3_host('foo', endpoint, request, auth)
+        handlers.fix_s3_host(
+            request=request, signature_version=signature_version,
+            region_name=region_name)
         self.assertEqual(request.url, 'https://bucket.s3.amazonaws.com/key.txt')
         # This was a bug previously.  We want to make sure that
         # calling fix_s3_host() again does not alter the auth_path.
@@ -339,14 +325,16 @@ class TestHandlers(BaseSessionTest):
                                             unique_id='retry-config-foo')
 
     def test_dns_style_not_used_for_get_bucket_location(self):
-        endpoint = mock.Mock(region_name='us-west-2')
         original_url = 'https://s3-us-west-2.amazonaws.com/bucket?location'
         request = AWSRequest(
             method='GET',headers={},
             url=original_url,
         )
-        auth = mock.Mock()
-        handlers.fix_s3_host('foo', endpoint, request, auth)
+        signature_version = 's3'
+        region_name = 'us-west-2'
+        handlers.fix_s3_host(
+            request=request, signature_version=signature_version,
+            region_name=region_name)
         # The request url should not have been modified because this is
         # a request for GetBucketLocation.
         self.assertEqual(request.url, original_url)
