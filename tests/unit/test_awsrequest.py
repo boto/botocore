@@ -194,7 +194,8 @@ class TestAWSHTTPConnection(unittest.TestCase):
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
             select_mock.return_value = ([s], [], [])
-            conn.request('GET', '/bucket/foo', b'body', {'Expect': '100-continue'})
+            conn.request('GET', '/bucket/foo', b'body',
+                         {'Expect': '100-continue'})
             response = conn.getresponse()
             # Now we should verify that our final response is the 200 OK
             self.assertEqual(response.status, 200)
@@ -216,7 +217,8 @@ class TestAWSHTTPConnection(unittest.TestCase):
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
             select_mock.return_value = ([s], [], [])
-            conn.request('GET', '/bucket/foo', b'body', {'Expect': '100-continue'})
+            conn.request('GET', '/bucket/foo', b'body',
+                         {'Expect': '100-continue'})
             response = conn.getresponse()
             self.assertEqual(response.status, 500)
 
@@ -232,7 +234,8 @@ class TestAWSHTTPConnection(unittest.TestCase):
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
             select_mock.return_value = ([s], [], [])
-            conn.request('GET', '/bucket/foo', b'body', {'Expect': '100-continue'})
+            conn.request('GET', '/bucket/foo', b'body',
+                         {'Expect': '100-continue'})
             response = conn.getresponse()
             # Now we should verify that our final response is the 307.
             self.assertEqual(response.status, 307)
@@ -250,7 +253,8 @@ class TestAWSHTTPConnection(unittest.TestCase):
             # that the server did not send any response.  In this situation
             # we should just send the request anyways.
             select_mock.return_value = ([], [], [])
-            conn.request('GET', '/bucket/foo', b'body', {'Expect': '100-continue'})
+            conn.request('GET', '/bucket/foo', b'body',
+                         {'Expect': '100-continue'})
             response = conn.getresponse()
             self.assertEqual(response.status, 307)
 

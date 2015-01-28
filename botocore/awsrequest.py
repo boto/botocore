@@ -23,10 +23,14 @@ from botocore.vendored.requests import models
 from botocore.vendored.requests.sessions import REDIRECT_STATI
 from botocore.compat import HTTPHeaders, HTTPResponse
 from botocore.exceptions import UnseekableStreamError
-from botocore.vendored.requests.packages.urllib3.connection import VerifiedHTTPSConnection
-from botocore.vendored.requests.packages.urllib3.connection import HTTPConnection
-from botocore.vendored.requests.packages.urllib3.connectionpool import HTTPConnectionPool
-from botocore.vendored.requests.packages.urllib3.connectionpool import HTTPSConnectionPool
+from botocore.vendored.requests.packages.urllib3.connection import \
+    VerifiedHTTPSConnection
+from botocore.vendored.requests.packages.urllib3.connection import \
+    HTTPConnection
+from botocore.vendored.requests.packages.urllib3.connectionpool import \
+    HTTPConnectionPool
+from botocore.vendored.requests.packages.urllib3.connectionpool import \
+    HTTPSConnectionPool
 
 
 logger = logging.getLogger(__name__)
@@ -90,8 +94,8 @@ class AWSHTTPConnection(HTTPConnection):
         for header, value in self._tunnel_headers.iteritems():
             self.send("%s: %s\r\n" % (header, value))
         self.send("\r\n")
-        response = self.response_class(self.sock, strict = self.strict,
-                                       method = self._method)
+        response = self.response_class(self.sock, strict=self.strict,
+                                       method=self._method)
         (version, code, message) = response._read_status()
 
         if code != 200:
@@ -176,7 +180,8 @@ class AWSHTTPConnection(HTTPConnection):
             parts = maybe_status_line.split(None, 2)
             if self._is_100_continue_status(maybe_status_line):
                 self._consume_headers(fp)
-                logger.debug("100 Continue response seen, now sending request body.")
+                logger.debug("100 Continue response seen, "
+                             "now sending request body.")
                 self._send_message_body(message_body)
             elif len(parts) == 3 and parts[0].startswith(b'HTTP/'):
                 # From the RFC:
@@ -192,7 +197,7 @@ class AWSHTTPConnection(HTTPConnection):
                 # whatever the server has sent back is the final response
                 # and don't send the message_body.
                 logger.debug("Received a non 100 Continue response "
-                            "from the server, NOT sending request body.")
+                             "from the server, NOT sending request body.")
                 status_tuple = (parts[0].decode('ascii'),
                                 int(parts[1]), parts[2].decode('ascii'))
                 response_class = functools.partial(
