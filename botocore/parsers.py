@@ -635,15 +635,17 @@ class RestJSONParser(BaseRestParser, BaseJSONParser):
     def _do_error_parse(self, response, shape):
         body = self._initial_body_parse(response['body'])
         error = {'Error': {}, 'ResponseMetadata': {}}
-        error['Error']['Message'] = body.get('message', '')
+        error['Error']['Message'] = body.get('message',
+                                             body.get('Message', ''))
         if 'x-amzn-errortype' in response['headers']:
             code = response['headers']['x-amzn-errortype']
             # Could be:
             # x-amzn-errortype: ValidationException:
             code = code.split(':')[0]
             error['Error']['Code'] = code
-        elif 'code' in body:
-            error['Error']['Code'] = body['code']
+        elif 'code' in body or 'Code' in body:
+            error['Error']['Code'] = body.get(
+                'code', body.get('Code', ''))
         return error
 
 
