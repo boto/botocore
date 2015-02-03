@@ -51,6 +51,9 @@ ScalarTypes = ('string', 'integer', 'boolean', 'timestamp', 'float', 'double')
 
 BOTOCORE_ROOT = os.path.dirname(os.path.abspath(__file__))
 
+# Used to specify anonymous (unsigned) request signature
+UNSIGNED = ''
+
 
 def xform_name(name, sep='_', _xform_cache=_xform_cache):
     """Convert camel case to a "pythonic" name.

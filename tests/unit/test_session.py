@@ -367,6 +367,15 @@ class TestCreateClient(BaseSessionTest):
                          "explicit credentials were provided to the "
                          "create_client call.")
 
+    @mock.patch('botocore.client.ClientCreator')
+    def test_config_passed_to_client_creator(self, client_creator):
+        config = mock.Mock()
+        self.session.create_client('sts', config=config)
+
+        client_creator.return_value.create_client.assert_called_with(
+            mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY,
+            scoped_config=mock.ANY, client_config=config)
+
 class TestPerformOperation(BaseSessionTest):
     def test_s3(self):
         service = self.session.get_service('s3')
