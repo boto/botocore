@@ -9,7 +9,7 @@
     "xmlNamespace":"https://iam.amazonaws.com/doc/2010-05-08/",
     "protocol":"query"
   },
-  "documentation":"<fullname>AWS Identity and Access Management</fullname> <p> AWS Identity and Access Management (IAM) is a web service that you can use to manage users and user permissions under your AWS account. This guide provides descriptions of IAM actions that you can call programmatically. For general information about IAM, see <a href=\"http://aws.amazon.com/iam/\">AWS Identity and Access Management (IAM)</a>. For the user guide for IAM, see <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/\">Using IAM</a>. </p> <note> AWS provides SDKs that consist of libraries and sample code for various programming languages and platforms (Java, Ruby, .NET, iOS, Android, etc.). The SDKs provide a convenient way to create programmatic access to IAM and AWS. For example, the SDKs take care of tasks such as cryptographically signing requests (see below), managing errors, and retrying requests automatically. For information about the AWS SDKs, including how to download and install them, see the <a href=\"http://aws.amazon.com/tools/\">Tools for Amazon Web Services</a> page. </note> <p> We recommend that you use the AWS SDKs to make programmatic API calls to IAM. However, you can also use the IAM Query API to make direct calls to the IAM web service. To learn more about the IAM Query API, see <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/IAM_UsingQueryAPI.html\">Making Query Requests</a> in the <i>Using IAM</i> guide. IAM supports GET and POST requests for all actions. That is, the API does not require you to use GET for some actions and POST for others. However, GET requests are subject to the limitation size of a URL. Therefore, for operations that require larger sizes, use a POST request. </p> <p><b>Signing Requests</b></p> <p> Requests must be signed using an access key ID and a secret access key. We strongly recommend that you do not use your AWS account access key ID and secret access key for everyday work with IAM. You can use the access key ID and secret access key for an IAM user or you can use the AWS Security Token Service to generate temporary security credentials and use those to sign requests. </p> <p> To sign requests, we recommend that you use <a href=\"http://docs.aws.amazon.com/general/latest/gr/signature-version-4.html\">Signature Version 4</a>. If you have an existing application that uses Signature Version 2, you do not have to update it to use Signature Version 4. However, some operations now require Signature Version 4. The documentation for operations that require version 4 indicate this requirement. </p> <p><b>Recording API requests</b></p> <p> IAM supports AWS CloudTrail, which is a service that records AWS calls for your AWS account and delivers log files to an Amazon S3 bucket. By using information collected by CloudTrail, you can determine what requests were successfully made to IAM, who made the request, when it was made, and so on. To learn more about CloudTrail, including how to turn it on and find your log files, see the <a href=\"http://docs.aws.amazon.com/awscloudtrail/latest/userguide/whatisawscloudtrail.html\">AWS CloudTrail User Guide</a>. </p> <p><b>Additional Resources</b></p> <p>For more information, see the following:</p> <ul> <li> <a href=\"http://docs.aws.amazon.com/general/latest/gr/aws-security-credentials.html\">AWS Security Credentials</a>. This topic provides general information about the types of credentials used for accessing AWS. </li> <li> <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/IAMBestPractices.html\">IAM Best Practices</a>. This topic presents a list of suggestions for using the IAM service to help secure your AWS resources. </li> <li> <a href=\"http://docs.aws.amazon.com/STS/latest/UsingSTS/\">AWS Security Token Service</a>. This guide describes how to create and use temporary security credentials. </li> <li> <a href=\"http://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html\">Signing AWS API Requests</a>. This set of topics walk you through the process of signing a request using an access key ID and secret access key. </li> </ul>",
+  "documentation":"<fullname>AWS Identity and Access Management</fullname> <p> AWS Identity and Access Management (IAM) is a web service that you can use to manage users and user permissions under your AWS account. This guide provides descriptions of IAM actions that you can call programmatically. For general information about IAM, see <a href=\"http://aws.amazon.com/iam/\">AWS Identity and Access Management (IAM)</a>. For the user guide for IAM, see <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/\">Using IAM</a>. </p> <note> AWS provides SDKs that consist of libraries and sample code for various programming languages and platforms (Java, Ruby, .NET, iOS, Android, etc.). The SDKs provide a convenient way to create programmatic access to IAM and AWS. For example, the SDKs take care of tasks such as cryptographically signing requests (see below), managing errors, and retrying requests automatically. For information about the AWS SDKs, including how to download and install them, see the <a href=\"http://aws.amazon.com/tools/\">Tools for Amazon Web Services</a> page. </note> <p> We recommend that you use the AWS SDKs to make programmatic API calls to IAM. However, you can also use the IAM Query API to make direct calls to the IAM web service. To learn more about the IAM Query API, see <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/IAM_UsingQueryAPI.html\">Making Query Requests</a> in the <i>Using IAM</i> guide. IAM supports GET and POST requests for all actions. That is, the API does not require you to use GET for some actions and POST for others. However, GET requests are subject to the limitation size of a URL. Therefore, for operations that require larger sizes, use a POST request. </p> <p> <b>Signing Requests</b> </p> <p> Requests must be signed using an access key ID and a secret access key. We strongly recommend that you do not use your AWS account access key ID and secret access key for everyday work with IAM. You can use the access key ID and secret access key for an IAM user or you can use the AWS Security Token Service to generate temporary security credentials and use those to sign requests. </p> <p> To sign requests, we recommend that you use <a href=\"http://docs.aws.amazon.com/general/latest/gr/signature-version-4.html\">Signature Version 4</a>. If you have an existing application that uses Signature Version 2, you do not have to update it to use Signature Version 4. However, some operations now require Signature Version 4. The documentation for operations that require version 4 indicate this requirement. </p> <p> <b>Recording API requests</b> </p> <p> IAM supports AWS CloudTrail, which is a service that records AWS calls for your AWS account and delivers log files to an Amazon S3 bucket. By using information collected by CloudTrail, you can determine what requests were successfully made to IAM, who made the request, when it was made, and so on. To learn more about CloudTrail, including how to turn it on and find your log files, see the <a href=\"http://docs.aws.amazon.com/awscloudtrail/latest/userguide/whatisawscloudtrail.html\">AWS CloudTrail User Guide</a>. </p> <p> <b>Additional Resources</b> </p> <p>For more information, see the following:</p> <ul> <li> <a href=\"http://docs.aws.amazon.com/general/latest/gr/aws-security-credentials.html\">AWS Security Credentials</a>. This topic provides general information about the types of credentials used for accessing AWS. </li> <li> <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/IAMBestPractices.html\">IAM Best Practices</a>. This topic presents a list of suggestions for using the IAM service to help secure your AWS resources. </li> <li> <a href=\"http://docs.aws.amazon.com/STS/latest/UsingSTS/\">AWS Security Token Service</a>. This guide describes how to create and use temporary security credentials. </li> <li> <a href=\"http://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html\">Signing AWS API Requests</a>. This set of topics walk you through the process of signing a request using an access key ID and secret access key. </li> </ul>",
   "operations":{
     "AddClientIDToOpenIDConnectProvider":{
       "name":"AddClientIDToOpenIDConnectProvider",
@@ -194,7 +194,6 @@
       "input":{"shape":"CreateAccessKeyRequest"},
       "output":{
         "shape":"CreateAccessKeyResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>CreateAccessKey</a> action.</p>",
         "resultWrapper":"CreateAccessKeyResult"
       },
       "errors":[
@@ -261,7 +260,6 @@
       "input":{"shape":"CreateGroupRequest"},
       "output":{
         "shape":"CreateGroupResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>CreateGroup</a> action.</p>",
         "resultWrapper":"CreateGroupResult"
       },
       "errors":[
@@ -307,7 +305,6 @@
       "input":{"shape":"CreateInstanceProfileRequest"},
       "output":{
         "shape":"CreateInstanceProfileResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>CreateInstanceProfile</a>action.</p>",
         "resultWrapper":"CreateInstanceProfileResult"
       },
       "errors":[
@@ -343,7 +340,6 @@
       "input":{"shape":"CreateLoginProfileRequest"},
       "output":{
         "shape":"CreateLoginProfileResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>CreateLoginProfile</a> action.</p>",
         "resultWrapper":"CreateLoginProfileResult"
       },
       "errors":[
@@ -399,7 +395,6 @@
       "input":{"shape":"CreateOpenIDConnectProviderRequest"},
       "output":{
         "shape":"CreateOpenIDConnectProviderResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>CreateOpenIDConnectProvider</a> action.</p>",
         "resultWrapper":"CreateOpenIDConnectProviderResult"
       },
       "errors":[
@@ -445,7 +440,6 @@
       "input":{"shape":"CreateRoleRequest"},
       "output":{
         "shape":"CreateRoleResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>CreateRole</a> action.</p>",
         "resultWrapper":"CreateRoleResult"
       },
       "errors":[
@@ -491,7 +485,6 @@
       "input":{"shape":"CreateSAMLProviderRequest"},
       "output":{
         "shape":"CreateSAMLProviderResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>CreateSAMLProvider</a> action.</p>",
         "resultWrapper":"CreateSAMLProviderResult"
       },
       "errors":[
@@ -537,7 +530,6 @@
       "input":{"shape":"CreateUserRequest"},
       "output":{
         "shape":"CreateUserResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>CreateUser</a> action.</p>",
         "resultWrapper":"CreateUserResult"
       },
       "errors":[
@@ -583,7 +575,6 @@
       "input":{"shape":"CreateVirtualMFADeviceRequest"},
       "output":{
         "shape":"CreateVirtualMFADeviceResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>CreateVirtualMFADevice</a> action.</p>",
         "resultWrapper":"CreateVirtualMFADeviceResult"
       },
       "errors":[
@@ -608,7 +599,7 @@
           "documentation":"<p>The request was rejected because it attempted to create a resource that already exists.</p>"
         }
       ],
-      "documentation":"<p> Creates a new virtual MFA device for the AWS account. After creating the virtual MFA, use <a href=\"http://docs.aws.amazon.com/IAM/latest/APIReference/API_EnableMFADevice.html\">EnableMFADevice</a> to attach the MFA device to an IAM user. For more information about creating and working with virtual MFA devices, go to <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_VirtualMFA.html\">Using a Virtual MFA Device</a> in the <i>Using IAM</i> guide. </p> <p> For information about limits on the number of MFA devices you can create, see <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/LimitationsOnEntities.html\">Limitations on Entities</a> in the <i>Using IAM</i> guide. </p> <important> The seed information contained in the QR code and the Base32 string should be treated like any other secret access information, such as your AWS access keys or your passwords. After you provision your virtual device, you should ensure that the information is destroyed following secure procedures. </important>"
+      "documentation":"<p> Creates a new virtual MFA device for the AWS account. After creating the virtual MFA, use <a>EnableMFADevice</a> to attach the MFA device to an IAM user. For more information about creating and working with virtual MFA devices, go to <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_VirtualMFA.html\">Using a Virtual MFA Device</a> in the <i>Using IAM</i> guide. </p> <p> For information about limits on the number of MFA devices you can create, see <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/LimitationsOnEntities.html\">Limitations on Entities</a> in the <i>Using IAM</i> guide. </p> <important> The seed information contained in the QR code and the Base32 string should be treated like any other secret access information, such as your AWS access keys or your passwords. After you provision your virtual device, you should ensure that the information is destroyed following secure procedures. </important>"
     },
     "DeactivateMFADevice":{
       "name":"DeactivateMFADevice",
@@ -1080,7 +1071,7 @@
           "documentation":"<p> The request was rejected because it attempted to create resources beyond the current AWS account limits. The error message describes the limit exceeded. </p>"
         }
       ],
-      "documentation":"<p>Deletes the specified server certificate.</p> <important> If you are using a server certificate with Elastic Load Balancing, deleting the certificate could have implications for your application. If Elastic Load Balancing doesn't detect the deletion of bound certificates, it may continue to use the certificates. This could cause Elastic Load Balancing to stop accepting traffic. We recommend that you remove the reference to the certificate from Elastic Load Balancing before using this command to delete the certificate. For more information, go to <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/APIReference/API_DeleteLoadBalancerListeners.html\" target=\"blank\">DeleteLoadBalancerListeners</a> in the <i>Elastic Load Balancing API Reference</i>. </important>"
+      "documentation":"<p>Deletes the specified server certificate.</p> <important> If you are using a server certificate with Elastic Load Balancing, deleting the certificate could have implications for your application. If Elastic Load Balancing doesn't detect the deletion of bound certificates, it may continue to use the certificates. This could cause Elastic Load Balancing to stop accepting traffic. We recommend that you remove the reference to the certificate from Elastic Load Balancing before using this command to delete the certificate. For more information, go to <a href=\"http://docs.aws.amazon.com/ElasticLoadBalancing/latest/APIReference/API_DeleteLoadBalancerListeners.html\">DeleteLoadBalancerListeners</a> in the <i>Elastic Load Balancing API Reference</i>. </important>"
     },
     "DeleteSigningCertificate":{
       "name":"DeleteSigningCertificate",
@@ -1224,7 +1215,7 @@
           "documentation":"<p> The request was rejected because it attempted to create resources beyond the current AWS account limits. The error message describes the limit exceeded. </p>"
         }
       ],
-      "documentation":"<p>Deletes a virtual MFA device.</p> <note> You must deactivate a user's virtual MFA device before you can delete it. For information about deactivating MFA devices, see <a href=\"http://docs.aws.amazon.com/IAM/latest/APIReference/API_DeactivateMFADevice.html\">DeactivateMFADevice</a>. </note>"
+      "documentation":"<p>Deletes a virtual MFA device.</p> <note> You must deactivate a user's virtual MFA device before you can delete it. For information about deactivating MFA devices, see <a>DeactivateMFADevice</a>. </note>"
     },
     "EnableMFADevice":{
       "name":"EnableMFADevice",
@@ -1295,7 +1286,6 @@
       },
       "output":{
         "shape":"GenerateCredentialReportResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>GenerateCredentialReport</a> action.</p>",
         "resultWrapper":"GenerateCredentialReportResult"
       },
       "errors":[
@@ -1321,10 +1311,9 @@
       "input":{"shape":"GetAccountAuthorizationDetailsRequest"},
       "output":{
         "shape":"GetAccountAuthorizationDetailsResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>GetAccountAuthorizationDetails</a> action.</p>",
         "resultWrapper":"GetAccountAuthorizationDetailsResult"
       },
-      "documentation":"<p>Retrieves information about all IAM users, groups, and roles in your account, including their relationships to one another and their attached policies. Use this API to obtain a snapshot of the configuration of IAM permissions (users, groups, roles, and policies) in your account.</p> <p>You can optionally filter the results using the <code>Filter</code> parameter. You can paginate the results using the <code>MaxItems</code> and <code>Marker</code> parameters.</p>"
+      "documentation":"<p>Retrieves information about all IAM users, groups, and roles in your account, including their relationships to one another and their policies. Use this API to obtain a snapshot of the configuration of IAM permissions (users, groups, roles, and their policies) in your account.</p> <p>You can optionally filter the results using the <code>Filter</code> parameter. You can paginate the results using the <code>MaxItems</code> and <code>Marker</code> parameters.</p>"
     },
     "GetAccountPasswordPolicy":{
       "name":"GetAccountPasswordPolicy",
@@ -1334,7 +1323,6 @@
       },
       "output":{
         "shape":"GetAccountPasswordPolicyResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>GetAccountPasswordPolicy</a> action.</p>",
         "resultWrapper":"GetAccountPasswordPolicyResult"
       },
       "errors":[
@@ -1359,7 +1347,6 @@
       },
       "output":{
         "shape":"GetAccountSummaryResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>GetAccountSummary</a> action.</p>",
         "resultWrapper":"GetAccountSummaryResult"
       },
       "documentation":"<p>Retrieves account level information about account entity usage and IAM quotas.</p> <p> For information about limitations on IAM entities, see <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/LimitationsOnEntities.html\">Limitations on IAM Entities</a> in the <i>Using IAM</i> guide. </p>"
@@ -1372,7 +1359,6 @@
       },
       "output":{
         "shape":"GetCredentialReportResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>GetCredentialReport</a> action.</p>",
         "resultWrapper":"GetCredentialReportResult"
       },
       "errors":[
@@ -1418,7 +1404,6 @@
       "input":{"shape":"GetGroupRequest"},
       "output":{
         "shape":"GetGroupResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>GetGroup</a> action.</p>",
         "resultWrapper":"GetGroupResult"
       },
       "errors":[
@@ -1444,7 +1429,6 @@
       "input":{"shape":"GetGroupPolicyRequest"},
       "output":{
         "shape":"GetGroupPolicyResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>GetGroupPolicy</a> action.</p>",
         "resultWrapper":"GetGroupPolicyResult"
       },
       "errors":[
@@ -1470,7 +1454,6 @@
       "input":{"shape":"GetInstanceProfileRequest"},
       "output":{
         "shape":"GetInstanceProfileResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>GetInstanceProfile</a> action.</p>",
         "resultWrapper":"GetInstanceProfileResult"
       },
       "errors":[
@@ -1496,7 +1479,6 @@
       "input":{"shape":"GetLoginProfileRequest"},
       "output":{
         "shape":"GetLoginProfileResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>GetLoginProfile</a> action.</p>",
         "resultWrapper":"GetLoginProfileResult"
       },
       "errors":[
@@ -1522,7 +1504,6 @@
       "input":{"shape":"GetOpenIDConnectProviderRequest"},
       "output":{
         "shape":"GetOpenIDConnectProviderResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>GetOpenIDConnectProvider</a> action.</p>",
         "resultWrapper":"GetOpenIDConnectProviderResult"
       },
       "errors":[
@@ -1558,7 +1539,6 @@
       "input":{"shape":"GetRoleRequest"},
       "output":{
         "shape":"GetRoleResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>GetRole</a> action.</p>",
         "resultWrapper":"GetRoleResult"
       },
       "errors":[
@@ -1584,7 +1564,6 @@
       "input":{"shape":"GetRolePolicyRequest"},
       "output":{
         "shape":"GetRolePolicyResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>GetRolePolicy</a> action.</p>",
         "resultWrapper":"GetRolePolicyResult"
       },
       "errors":[
@@ -1610,7 +1589,6 @@
       "input":{"shape":"GetSAMLProviderRequest"},
       "output":{
         "shape":"GetSAMLProviderResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>GetSAMLProvider</a> action.</p>",
         "resultWrapper":"GetSAMLProviderResult"
       },
       "errors":[
@@ -1646,7 +1624,6 @@
       "input":{"shape":"GetServerCertificateRequest"},
       "output":{
         "shape":"GetServerCertificateResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>GetServerCertificate</a> action.</p>",
         "resultWrapper":"GetServerCertificateResult"
       },
       "errors":[
@@ -1672,7 +1649,6 @@
       "input":{"shape":"GetUserRequest"},
       "output":{
         "shape":"GetUserResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>GetUser</a> action.</p>",
         "resultWrapper":"GetUserResult"
       },
       "errors":[
@@ -1698,7 +1674,6 @@
       "input":{"shape":"GetUserPolicyRequest"},
       "output":{
         "shape":"GetUserPolicyResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>GetUserPolicy</a> action.</p>",
         "resultWrapper":"GetUserPolicyResult"
       },
       "errors":[
@@ -1724,7 +1699,6 @@
       "input":{"shape":"ListAccessKeysRequest"},
       "output":{
         "shape":"ListAccessKeysResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>ListAccessKeys</a> action.</p>",
         "resultWrapper":"ListAccessKeysResult"
       },
       "errors":[
@@ -1750,7 +1724,6 @@
       "input":{"shape":"ListAccountAliasesRequest"},
       "output":{
         "shape":"ListAccountAliasesResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>ListAccountAliases</a> action.</p>",
         "resultWrapper":"ListAccountAliasesResult"
       },
       "documentation":"<p> Lists the account aliases associated with the account. For information about using an AWS account alias, see <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/AccountAlias.html\">Using an Alias for Your AWS Account ID</a> in the <i>Using IAM</i> guide. </p> <p> You can paginate the results using the <code>MaxItems</code> and <code>Marker</code> parameters. </p>"
@@ -1764,7 +1737,6 @@
       "input":{"shape":"ListGroupPoliciesRequest"},
       "output":{
         "shape":"ListGroupPoliciesResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>ListGroupPolicies</a> action.</p>",
         "resultWrapper":"ListGroupPoliciesResult"
       },
       "errors":[
@@ -1790,7 +1762,6 @@
       "input":{"shape":"ListGroupsRequest"},
       "output":{
         "shape":"ListGroupsResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>ListGroups</a> action.</p>",
         "resultWrapper":"ListGroupsResult"
       },
       "documentation":"<p>Lists the groups that have the specified path prefix.</p> <p> You can paginate the results using the <code>MaxItems</code> and <code>Marker</code> parameters. </p>"
@@ -1804,7 +1775,6 @@
       "input":{"shape":"ListGroupsForUserRequest"},
       "output":{
         "shape":"ListGroupsForUserResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>ListGroupsForUser</a> action.</p>",
         "resultWrapper":"ListGroupsForUserResult"
       },
       "errors":[
@@ -1830,7 +1800,6 @@
       "input":{"shape":"ListInstanceProfilesRequest"},
       "output":{
         "shape":"ListInstanceProfilesResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>ListInstanceProfiles</a> action.</p>",
         "resultWrapper":"ListInstanceProfilesResult"
       },
       "documentation":"<p> Lists the instance profiles that have the specified path prefix. If there are none, the action returns an empty list. For more information about instance profiles, go to <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/AboutInstanceProfiles.html\">About Instance Profiles</a>. </p> <p> You can paginate the results using the <code>MaxItems</code> and <code>Marker</code> parameters. </p>"
@@ -1844,7 +1813,6 @@
       "input":{"shape":"ListInstanceProfilesForRoleRequest"},
       "output":{
         "shape":"ListInstanceProfilesForRoleResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>ListInstanceProfilesForRole</a> action.</p>",
         "resultWrapper":"ListInstanceProfilesForRoleResult"
       },
       "errors":[
@@ -1870,7 +1838,6 @@
       "input":{"shape":"ListMFADevicesRequest"},
       "output":{
         "shape":"ListMFADevicesResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>ListMFADevices</a> action.</p>",
         "resultWrapper":"ListMFADevicesResult"
       },
       "errors":[
@@ -1896,7 +1863,6 @@
       "input":{"shape":"ListOpenIDConnectProvidersRequest"},
       "output":{
         "shape":"ListOpenIDConnectProvidersResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>ListOpenIDConnectProviders</a> action.</p>",
         "resultWrapper":"ListOpenIDConnectProvidersResult"
       },
       "documentation":"<p>Lists information about the OpenID Connect providers in the AWS account. </p>"
@@ -1910,7 +1876,6 @@
       "input":{"shape":"ListRolePoliciesRequest"},
       "output":{
         "shape":"ListRolePoliciesResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>ListRolePolicies</a> action.</p>",
         "resultWrapper":"ListRolePoliciesResult"
       },
       "errors":[
@@ -1936,7 +1901,6 @@
       "input":{"shape":"ListRolesRequest"},
       "output":{
         "shape":"ListRolesResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>ListRoles</a> action.</p>",
         "resultWrapper":"ListRolesResult"
       },
       "documentation":"<p> Lists the roles that have the specified path prefix. If there are none, the action returns an empty list. For more information about roles, go to <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/WorkingWithRoles.html\">Working with Roles</a>. </p> <p> You can paginate the results using the <code>MaxItems</code> and <code>Marker</code> parameters. </p> <p> The returned policy is URL-encoded according to RFC 3986. For more information about RFC 3986, go to <a href=\"http://www.faqs.org/rfcs/rfc3986.html\">http://www.faqs.org/rfcs/rfc3986.html</a>. </p>"
@@ -1950,7 +1914,6 @@
       "input":{"shape":"ListSAMLProvidersRequest"},
       "output":{
         "shape":"ListSAMLProvidersResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>ListSAMLProviders</a> action.</p>",
         "resultWrapper":"ListSAMLProvidersResult"
       },
       "documentation":"<p>Lists the SAML providers in the account.</p> <note> This operation requires <a href=\"http://docs.aws.amazon.com/general/latest/gr/signature-version-4.html\">Signature Version 4</a>. </note>"
@@ -1964,7 +1927,6 @@
       "input":{"shape":"ListServerCertificatesRequest"},
       "output":{
         "shape":"ListServerCertificatesResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>ListServerCertificates</a> action.</p>",
         "resultWrapper":"ListServerCertificatesResult"
       },
       "documentation":"<p> Lists the server certificates that have the specified path prefix. If none exist, the action returns an empty list. </p> <p> You can paginate the results using the <code>MaxItems</code> and <code>Marker</code> parameters. </p>"
@@ -1978,7 +1940,6 @@
       "input":{"shape":"ListSigningCertificatesRequest"},
       "output":{
         "shape":"ListSigningCertificatesResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>ListSigningCertificates</a> action.</p>",
         "resultWrapper":"ListSigningCertificatesResult"
       },
       "errors":[
@@ -2004,7 +1965,6 @@
       "input":{"shape":"ListUserPoliciesRequest"},
       "output":{
         "shape":"ListUserPoliciesResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>ListUserPolicies</a> action.</p>",
         "resultWrapper":"ListUserPoliciesResult"
       },
       "errors":[
@@ -2030,7 +1990,6 @@
       "input":{"shape":"ListUsersRequest"},
       "output":{
         "shape":"ListUsersResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>ListUsers</a> action.</p>",
         "resultWrapper":"ListUsersResult"
       },
       "documentation":"<p>Lists the IAM users that have the specified path prefix. If no path prefix is specified, the action returns all users in the AWS account. If there are none, the action returns an empty list. </p> <p>You can paginate the results using the <code>MaxItems</code> and <code>Marker</code> parameters. </p>"
@@ -2044,7 +2003,6 @@
       "input":{"shape":"ListVirtualMFADevicesRequest"},
       "output":{
         "shape":"ListVirtualMFADevicesResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>ListVirtualMFADevices</a>action.</p>",
         "resultWrapper":"ListVirtualMFADevicesResult"
       },
       "documentation":"<p> Lists the virtual MFA devices under the AWS account by assignment status. If you do not specify an assignment status, the action returns a list of all virtual MFA devices. Assignment status can be <code>Assigned</code>, <code>Unassigned</code>, or <code>Any</code>. </p> <p> You can paginate the results using the <code>MaxItems</code> and <code>Marker</code> parameters. </p>"
@@ -2540,7 +2498,7 @@
           "documentation":"<p> The request was rejected because it referenced an entity that does not exist. The error message describes the entity. </p>"
         }
       ],
-      "documentation":"<p>Replaces the existing list of server certificate thumbprints with a new list. </p> <p>The list that you pass with this action completely replaces the existing list of thumbprints. (The lists are not merged.)</p> <p>Typically, you need to update a thumbprint only when the identity provider's certificate changes, which occurs rarely. However, if the provider's certificate <i>does</i> change, any attempt to assume an IAM role that specifies the IAM provider as a principal will fail until the certificate thumbprint is updated.</p> <note>Because trust for the OpenID Connect provider is ultimately derived from the provider's certificate and is validated by the thumbprint, it is a best practice to limit access to the <code>UpdateOpenIDConnectProviderThumbprint</code> action to highly-privileged users. </note>"
+      "documentation":"<p>Replaces the existing list of server certificate thumbprints with a new list. </p> <p>The list that you pass with this action completely replaces the existing list of thumbprints. (The lists are not merged.)</p> <p>Typically, you need to update a thumbprint only when the identity provider's certificate changes, which occurs rarely. However, if the provider's certificate <i>does</i> change, any attempt to assume an IAM role that specifies the OIDC provider as a principal will fail until the certificate thumbprint is updated.</p> <note>Because trust for the OpenID Connect provider is ultimately derived from the provider's certificate and is validated by the thumbprint, it is a best practice to limit access to the <code>UpdateOpenIDConnectProviderThumbprint</code> action to highly-privileged users. </note>"
     },
     "UpdateSAMLProvider":{
       "name":"UpdateSAMLProvider",
@@ -2551,7 +2509,6 @@
       "input":{"shape":"UpdateSAMLProviderRequest"},
       "output":{
         "shape":"UpdateSAMLProviderResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>UpdateSAMLProvider</a> action.</p>",
         "resultWrapper":"UpdateSAMLProviderResult"
       },
       "errors":[
@@ -2720,7 +2677,6 @@
       "input":{"shape":"UploadServerCertificateRequest"},
       "output":{
         "shape":"UploadServerCertificateResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>UploadServerCertificate</a> action.</p>",
         "resultWrapper":"UploadServerCertificateResult"
       },
       "errors":[
@@ -2776,7 +2732,6 @@
       "input":{"shape":"UploadSigningCertificateRequest"},
       "output":{
         "shape":"UploadSigningCertificateResponse",
-        "documentation":"<p>Contains the result of a successful invocation of the <a>UploadSigningCertificate</a> action.</p>",
         "resultWrapper":"UploadSigningCertificateResult"
       },
       "errors":[
@@ -2988,8 +2943,7 @@
           "shape":"AccessKey",
           "documentation":"<p>Information about the access key.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>CreateAccessKey</a> action.</p>"
+      }
     },
     "CreateAccountAliasRequest":{
       "type":"structure",
@@ -2997,7 +2951,7 @@
       "members":{
         "AccountAlias":{
           "shape":"accountAliasType",
-          "documentation":"<p>The name of the account alias to create.</p>"
+          "documentation":"<p>The account alias to create.</p>"
         }
       }
     },
@@ -3023,8 +2977,7 @@
           "shape":"Group",
           "documentation":"<p>Information about the group.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>CreateGroup</a> action.</p>"
+      }
     },
     "CreateInstanceProfileRequest":{
       "type":"structure",
@@ -3048,8 +3001,7 @@
           "shape":"InstanceProfile",
           "documentation":"<p>Information about the instance profile.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>CreateInstanceProfile</a>action.</p>"
+      }
     },
     "CreateLoginProfileRequest":{
       "type":"structure",
@@ -3080,8 +3032,7 @@
           "shape":"LoginProfile",
           "documentation":"<p>The user name and password create date.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>CreateLoginProfile</a> action.</p>"
+      }
     },
     "CreateOpenIDConnectProviderRequest":{
       "type":"structure",
@@ -3100,7 +3051,7 @@
         },
         "ThumbprintList":{
           "shape":"thumbprintListType",
-          "documentation":"<p>A list of server certificate thumbprints for the OpenID Connect (OIDC) identity provider's server certificate(s). Typically this list includes only one entry. However, IAM lets you have up to five thumbprints for an OIDC provider. This lets you maintain multiple thumbprints if the identity provider is rotating certificates.</p> <p>The server certificate thumbprint is the hex-encoded SHA-1 hash value of the X.509 certificate used by the domain where the OpenID Connect provider makes its keys available. It is always a 40-character string. </p> <p>You must provide at least one thumbprint when creating an IAM OIDC provider. For example, if the OIDC provider is <code>server.example.com</code> and the provider stores its keys at \"https://keys.server.example.com/openid-connect\", the thumbprint string would be the hex-encoded SHA-1 hash value of the certificate used by https://keys.server.example.com. </p>"
+          "documentation":"<p>A list of server certificate thumbprints for the OpenID Connect (OIDC) identity provider's server certificate(s). Typically this list includes only one entry. However, IAM lets you have up to five thumbprints for an OIDC provider. This lets you maintain multiple thumbprints if the identity provider is rotating certificates.</p> <p>The server certificate thumbprint is the hex-encoded SHA-1 hash value of the X.509 certificate used by the domain where the OpenID Connect provider makes its keys available. It is always a 40-character string. </p> <p>You must provide at least one thumbprint when creating an IAM OIDC provider. For example, if the OIDC provider is <code>server.example.com</code> and the provider stores its keys at \"https://keys.server.example.com/openid-connect\", the thumbprint string would be the hex-encoded SHA-1 hash value of the certificate used by https://keys.server.example.com. </p> <p>For more information about obtaining the OIDC provider's thumbprint, see <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/identity-providers-oidc-obtain-thumbprint.html\">Obtaining the Thumbprint for an OpenID Connect Provider</a> in the <i>Using IAM</i> guide. </p>"
         }
       }
     },
@@ -3111,8 +3062,7 @@
           "shape":"arnType",
           "documentation":"<p>The Amazon Resource Name (ARN) of the IAM OpenID Connect provider that was created. For more information, see <a>OpenIDConnectProviderListEntry</a>. </p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>CreateOpenIDConnectProvider</a> action.</p>"
+      }
     },
     "CreateRoleRequest":{
       "type":"structure",
@@ -3143,8 +3093,7 @@
           "shape":"Role",
           "documentation":"<p>Information about the role.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>CreateRole</a> action.</p>"
+      }
     },
     "CreateSAMLProviderRequest":{
       "type":"structure",
@@ -3170,8 +3119,7 @@
           "shape":"arnType",
           "documentation":"<p>The Amazon Resource Name (ARN) of the SAML provider.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>CreateSAMLProvider</a> action.</p>"
+      }
     },
     "CreateUserRequest":{
       "type":"structure",
@@ -3194,8 +3142,7 @@
           "shape":"User",
           "documentation":"<p>Information about the user.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>CreateUser</a> action.</p>"
+      }
     },
     "CreateVirtualMFADeviceRequest":{
       "type":"structure",
@@ -3219,8 +3166,7 @@
           "shape":"VirtualMFADevice",
           "documentation":"<p>A newly created virtual MFA device.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>CreateVirtualMFADevice</a> action.</p>"
+      }
     },
     "CredentialReportExpiredException":{
       "type":"structure",
@@ -3549,14 +3495,13 @@
       "members":{
         "State":{
           "shape":"ReportStateType",
-          "documentation":"<p>Information about the state of a credential report.</p>"
+          "documentation":"<p>Information about the state of the credential report.</p>"
         },
         "Description":{
           "shape":"ReportStateDescriptionType",
           "documentation":"<p>Information about the credential report.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>GenerateCredentialReport</a> action.</p>"
+      }
     },
     "GetAccountAuthorizationDetailsRequest":{
       "type":"structure",
@@ -3598,26 +3543,23 @@
           "shape":"markerType",
           "documentation":"<p>If <code>IsTruncated</code> is <code>true</code>, this element is present and contains the value to use for the <code>Marker</code> parameter in a subsequent pagination request.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>GetAccountAuthorizationDetails</a> action.</p>"
+      }
     },
     "GetAccountPasswordPolicyResponse":{
       "type":"structure",
       "required":["PasswordPolicy"],
       "members":{
         "PasswordPolicy":{"shape":"PasswordPolicy"}
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>GetAccountPasswordPolicy</a> action.</p>"
+      }
     },
     "GetAccountSummaryResponse":{
       "type":"structure",
       "members":{
         "SummaryMap":{
           "shape":"summaryMapType",
-          "documentation":"<p>A set of key value pairs containing account-level information.</p> <p> <code>SummaryMap</code> contains the following keys: <ul> <li><p><code>AccessKeysPerUserQuota</code> - Maximum number of access keys that can be created per user</p></li> <li><p><code>AccountMFAEnabled</code> - 1 if the root account has an MFA device assigned to it, 0 otherwise</p></li> <li><p><code>AssumeRolePolicySizeQuota</code> - Maximum allowed size for assume role policy documents (in kilobytes)</p></li> <li><p><code>GroupPolicySizeQuota</code> - Maximum allowed size for Group policy documents (in kilobytes)</p></li> <li><p><code>Groups</code> - Number of Groups for the AWS account</p></li> <li><p><code>GroupsPerUserQuota</code> - Maximum number of groups an IAM user can belong to</p></li> <li><p><code>GroupsQuota</code> - Maximum groups allowed for the AWS account</p></li> <li><p><code>InstanceProfiles</code> - Number of instance profiles for the AWS account</p></li> <li><p><code>InstanceProfilesQuota</code> - Maximum instance profiles allowed for the AWS account</p></li> <li><p><code>MFADevices</code> - Number of MFA devices, either assigned or unassigned</p></li> <li><p><code>MFADevicesInUse</code> - Number of MFA devices that have been assigned to an IAM user or to the root account</p></li> <li><p><code>RolePolicySizeQuota</code> - Maximum allowed size for role policy documents (in kilobytes)</p></li> <li><p><code>Roles</code> - Number of roles for the AWS account</p></li> <li><p><code>RolesQuota</code> - Maximum roles allowed for the AWS account</p></li> <li><p><code>ServerCertificates</code> - Number of server certificates for the AWS account</p></li> <li><p><code>ServerCertificatesQuota</code> - Maximum server certificates allowed for the AWS account</p></li> <li><p><code>SigningCertificatesPerUserQuota</code> - Maximum number of X509 certificates allowed for a user</p></li> <li><p><code>UserPolicySizeQuota</code> - Maximum allowed size for user policy documents (in kilobytes)</p></li> <li><p><code>Users</code> - Number of users for the AWS account</p></li> <li><p><code>UsersQuota</code> - Maximum users allowed for the AWS account</p></li> </ul> </p>"
+          "documentation":"<p>A set of key value pairs containing account-level information.</p> <p> <code>SummaryMap</code> contains the following keys: <ul> <li> <p><code>AccessKeysPerUserQuota</code> - Maximum number of active access keys allowed per IAM user</p> </li> <li> <p><code>AccountAccessKeysPresent</code> - 1 if the root account has an access key, 0 otherwise</p> </li> <li> <p><code>AccountMFAEnabled</code> - 1 if the root account has an MFA device assigned to it, 0 otherwise</p> </li> <li> <p><code>AccountSigningCertificatesPresent</code> - 1 if the root account has a signing certificate, 0 otherwise</p> </li> <li> <p><code>AssumeRolePolicySizeQuota</code> - Maximum allowed size for assume role policy documents (trust policies), in non-whitespace characters</p> </li> <li> <p><code>GroupPolicySizeQuota</code> - Maximum allowed size for IAM group policy documents, in non-whitespace characters</p> </li> <li> <p><code>Groups</code> - Number of IAM groups in the AWS account</p> </li> <li> <p><code>GroupsPerUserQuota</code> - Maximum number of IAM groups each IAM user can belong to</p> </li> <li> <p><code>GroupsQuota</code> - Maximum number of IAM groups allowed in the AWS account</p> </li> <li> <p><code>InstanceProfiles</code> - Number of instance profiles in the AWS account</p> </li> <li> <p><code>InstanceProfilesQuota</code> - Maximum number of instance profiles allowed in the AWS account</p> </li> <li> <p><code>MFADevices</code> - Number of MFA devices, either assigned or unassigned</p> </li> <li> <p><code>MFADevicesInUse</code> - Number of MFA devices that have been assigned to an IAM user or to the root account</p> </li> <li> <p><code>RolePolicySizeQuota</code> - Maximum allowed size for IAM role policy documents (permissions policies), in non-whitespace characters</p> </li> <li> <p><code>Roles</code> - Number of roles IAM in the AWS account</p> </li> <li> <p><code>RolesQuota</code> - Maximum number of IAM roles allowed in the AWS account</p> </li> <li> <p><code>UserPolicySizeQuota</code> - Maximum allowed size for IAM user policy documents, in non-whitespace characters</p> </li> <li> <p><code>Users</code> - Number of IAM users in the AWS account</p> </li> <li> <p><code>UsersQuota</code> - Maximum number of IAM users allowed in the AWS account</p> </li> <li> <p><code>ServerCertificates</code> - Number of server certificates in the AWS account</p> </li> <li> <p><code>ServerCertificatesQuota</code> - Maximum number of server certificates allowed in the AWS account</p> </li> <li> <p><code>SigningCertificatesPerUserQuota</code> - Maximum number of X509 signing certificates allowed per IAM user</p> </li> </ul> </p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>GetAccountSummary</a> action.</p>"
+      }
     },
     "GetCredentialReportResponse":{
       "type":"structure",
@@ -3634,8 +3576,7 @@
           "shape":"dateType",
           "documentation":"<p> The date and time when the credential report was created, in <a href=\"http://www.iso.org/iso/iso8601\">ISO 8601 date-time format</a>. </p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>GetCredentialReport</a> action.</p>"
+      }
     },
     "GetGroupPolicyRequest":{
       "type":"structure",
@@ -3674,8 +3615,7 @@
           "shape":"policyDocumentType",
           "documentation":"<p>The policy document.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>GetGroupPolicy</a> action.</p>"
+      }
     },
     "GetGroupRequest":{
       "type":"structure",
@@ -3718,8 +3658,7 @@
           "shape":"markerType",
           "documentation":"<p> If IsTruncated is <code>true</code>, then this element is present and contains the value to use for the <code>Marker</code> parameter in a subsequent pagination request. </p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>GetGroup</a> action.</p>"
+      }
     },
     "GetInstanceProfileRequest":{
       "type":"structure",
@@ -3739,8 +3678,7 @@
           "shape":"InstanceProfile",
           "documentation":"<p>Information about the instance profile.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>GetInstanceProfile</a> action.</p>"
+      }
     },
     "GetLoginProfileRequest":{
       "type":"structure",
@@ -3760,8 +3698,7 @@
           "shape":"LoginProfile",
           "documentation":"<p>The user name and password create date for the user.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>GetLoginProfile</a> action.</p>"
+      }
     },
     "GetOpenIDConnectProviderRequest":{
       "type":"structure",
@@ -3792,8 +3729,7 @@
           "shape":"dateType",
           "documentation":"<p>The date and time when the IAM OpenID Connect provider entity was created in the AWS account. </p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>GetOpenIDConnectProvider</a> action.</p>"
+      }
     },
     "GetRolePolicyRequest":{
       "type":"structure",
@@ -3832,8 +3768,7 @@
           "shape":"policyDocumentType",
           "documentation":"<p>The policy document.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>GetRolePolicy</a> action.</p>"
+      }
     },
     "GetRoleRequest":{
       "type":"structure",
@@ -3853,8 +3788,7 @@
           "shape":"Role",
           "documentation":"<p>Information about the role.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>GetRole</a> action.</p>"
+      }
     },
     "GetSAMLProviderRequest":{
       "type":"structure",
@@ -3881,8 +3815,7 @@
           "shape":"dateType",
           "documentation":"<p>The expiration date and time for the SAML provider.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>GetSAMLProvider</a> action.</p>"
+      }
     },
     "GetServerCertificateRequest":{
       "type":"structure",
@@ -3902,8 +3835,7 @@
           "shape":"ServerCertificate",
           "documentation":"<p>Information about the server certificate.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>GetServerCertificate</a> action.</p>"
+      }
     },
     "GetUserPolicyRequest":{
       "type":"structure",
@@ -3942,8 +3874,7 @@
           "shape":"policyDocumentType",
           "documentation":"<p>The policy document.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>GetUserPolicy</a> action.</p>"
+      }
     },
     "GetUserRequest":{
       "type":"structure",
@@ -3962,8 +3893,7 @@
           "shape":"User",
           "documentation":"<p>Information about the user.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>GetUser</a> action.</p>"
+      }
     },
     "Group":{
       "type":"structure",
@@ -3996,7 +3926,7 @@
           "documentation":"<p>The date and time, in <a href=\"http://www.iso.org/iso/iso8601\">ISO 8601 date-time format</a>, when the group was created.</p>"
         }
       },
-      "documentation":"<p>Contains information about an IAM group entity.</p> <p> This data type is used as a response element in the following actions:</p> <ul> <li><a>CreateGroup</a></li> <li><a>GetGroup</a></li> <li><a>ListGroups</a></li> </ul>"
+      "documentation":"<p>Contains information about an IAM group entity.</p> <p> This data type is used as a response element in the following actions:</p> <ul> <li> <a>CreateGroup</a> </li> <li> <a>GetGroup</a> </li> <li> <a>ListGroups</a> </li> </ul>"
     },
     "GroupDetail":{
       "type":"structure",
@@ -4020,10 +3950,10 @@
         },
         "GroupPolicyList":{
           "shape":"policyDetailListType",
-          "documentation":"<p>A list of the policies attached to the group.</p>"
+          "documentation":"<p>A list of the group's policies.</p>"
         }
       },
-      "documentation":"<p>Contains information about an IAM group, including all of the policies attached to the group. </p> <p>The data type is used as a response element in the <a>GetAccountAuthorizationDetails</a> action.</p>"
+      "documentation":"<p>Contains information about an IAM group, including all of the group's policies. </p> <p>This data type is used as a response element in the <a>GetAccountAuthorizationDetails</a> action.</p>"
     },
     "InstanceProfile":{
       "type":"structure",
@@ -4061,7 +3991,7 @@
           "documentation":"<p>The role associated with the instance profile.</p>"
         }
       },
-      "documentation":"<p>Contains information about an instance profile.</p> <p>This data type is used as a response element in the following actions:</p> <ul> <li><p><a>CreateInstanceProfile</a></p></li> <li><p><a>GetInstanceProfile</a></p></li> <li><p><a>ListInstanceProfiles</a></p></li> <li><p><a>ListInstanceProfilesForRole</a></p></li> </ul>"
+      "documentation":"<p>Contains information about an instance profile.</p> <p>This data type is used as a response element in the following actions:</p> <ul> <li> <p> <a>CreateInstanceProfile</a> </p> </li> <li> <p> <a>GetInstanceProfile</a> </p> </li> <li> <p> <a>ListInstanceProfiles</a> </p> </li> <li> <p> <a>ListInstanceProfilesForRole</a> </p> </li> </ul>"
     },
     "InvalidAuthenticationCodeException":{
       "type":"structure",
@@ -4174,8 +4104,7 @@
           "shape":"markerType",
           "documentation":"<p> If <code>IsTruncated</code> is <code>true</code>, this element is present and contains the value to use for the <code>Marker</code> parameter in a subsequent pagination request. </p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>ListAccessKeys</a> action.</p>"
+      }
     },
     "ListAccountAliasesRequest":{
       "type":"structure",
@@ -4206,8 +4135,7 @@
           "shape":"markerType",
           "documentation":"<p> Use this only when paginating results, and only in a subsequent request after you've received a response where the results are truncated. Set it to the value of the <code>Marker</code> element in the response you just received. </p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>ListAccountAliases</a> action.</p>"
+      }
     },
     "ListGroupPoliciesRequest":{
       "type":"structure",
@@ -4243,8 +4171,7 @@
           "shape":"markerType",
           "documentation":"<p> If <code>IsTruncated</code> is <code>true</code>, this element is present and contains the value to use for the <code>Marker</code> parameter in a subsequent pagination request. </p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>ListGroupPolicies</a> action.</p>"
+      }
     },
     "ListGroupsForUserRequest":{
       "type":"structure",
@@ -4280,8 +4207,7 @@
           "shape":"markerType",
           "documentation":"<p> If <code>IsTruncated</code> is <code>true</code>, this element is present and contains the value to use for the <code>Marker</code> parameter in a subsequent pagination request. </p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>ListGroupsForUser</a> action.</p>"
+      }
     },
     "ListGroupsRequest":{
       "type":"structure",
@@ -4316,8 +4242,7 @@
           "shape":"markerType",
           "documentation":"<p> If <code>IsTruncated</code> is <code>true</code>, this element is present and contains the value to use for the <code>Marker</code> parameter in a subsequent pagination request. </p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>ListGroups</a> action.</p>"
+      }
     },
     "ListInstanceProfilesForRoleRequest":{
       "type":"structure",
@@ -4353,8 +4278,7 @@
           "shape":"markerType",
           "documentation":"<p> If <code>IsTruncated</code> is <code>true</code>, this element is present and contains the value to use for the <code>Marker</code> parameter in a subsequent pagination request. </p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>ListInstanceProfilesForRole</a> action.</p>"
+      }
     },
     "ListInstanceProfilesRequest":{
       "type":"structure",
@@ -4389,8 +4313,7 @@
           "shape":"markerType",
           "documentation":"<p> If <code>IsTruncated</code> is <code>true</code>, this element is present and contains the value to use for the <code>Marker</code> parameter in a subsequent pagination request. </p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>ListInstanceProfiles</a> action.</p>"
+      }
     },
     "ListMFADevicesRequest":{
       "type":"structure",
@@ -4425,8 +4348,7 @@
           "shape":"markerType",
           "documentation":"<p> If <code>IsTruncated</code> is <code>true</code>, this element is present and contains the value to use for the <code>Marker</code> parameter in a subsequent pagination request. </p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>ListMFADevices</a> action.</p>"
+      }
     },
     "ListOpenIDConnectProvidersRequest":{
       "type":"structure",
@@ -4440,8 +4362,7 @@
           "shape":"OpenIDConnectProviderListType",
           "documentation":"<p>The list of IAM OpenID Connect providers in the AWS account.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>ListOpenIDConnectProviders</a> action.</p>"
+      }
     },
     "ListRolePoliciesRequest":{
       "type":"structure",
@@ -4477,8 +4398,7 @@
           "shape":"markerType",
           "documentation":"<p> If <code>IsTruncated</code> is <code>true</code>, this element is present and contains the value to use for the <code>Marker</code> parameter in a subsequent pagination request. </p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>ListRolePolicies</a> action.</p>"
+      }
     },
     "ListRolesRequest":{
       "type":"structure",
@@ -4513,8 +4433,7 @@
           "shape":"markerType",
           "documentation":"<p> If <code>IsTruncated</code> is <code>true</code>, this element is present and contains the value to use for the <code>Marker</code> parameter in a subsequent pagination request. </p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>ListRoles</a> action.</p>"
+      }
     },
     "ListSAMLProvidersRequest":{
       "type":"structure",
@@ -4528,8 +4447,7 @@
           "shape":"SAMLProviderListType",
           "documentation":"<p>The list of SAML providers for this account.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>ListSAMLProviders</a> action.</p>"
+      }
     },
     "ListServerCertificatesRequest":{
       "type":"structure",
@@ -4564,8 +4482,7 @@
           "shape":"markerType",
           "documentation":"<p> If <code>IsTruncated</code> is <code>true</code>, this element is present and contains the value to use for the <code>Marker</code> parameter in a subsequent pagination request. </p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>ListServerCertificates</a> action.</p>"
+      }
     },
     "ListSigningCertificatesRequest":{
       "type":"structure",
@@ -4600,8 +4517,7 @@
           "shape":"markerType",
           "documentation":"<p> If <code>IsTruncated</code> is <code>true</code>, this element is present and contains the value to use for the <code>Marker</code> parameter in a subsequent pagination request. </p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>ListSigningCertificates</a> action.</p>"
+      }
     },
     "ListUserPoliciesRequest":{
       "type":"structure",
@@ -4637,8 +4553,7 @@
           "shape":"markerType",
           "documentation":"<p> If <code>IsTruncated</code> is <code>true</code>, this element is present and contains the value to use for the <code>Marker</code> parameter in a subsequent pagination request. </p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>ListUserPolicies</a> action.</p>"
+      }
     },
     "ListUsersRequest":{
       "type":"structure",
@@ -4673,8 +4588,7 @@
           "shape":"markerType",
           "documentation":"<p> If <code>IsTruncated</code> is <code>true</code>, this element is present and contains the value to use for the <code>Marker</code> parameter in a subsequent pagination request. </p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>ListUsers</a> action.</p>"
+      }
     },
     "ListVirtualMFADevicesRequest":{
       "type":"structure",
@@ -4709,8 +4623,7 @@
           "shape":"markerType",
           "documentation":"<p> If <code>IsTruncated</code> is <code>true</code>, this element is present and contains the value to use for the <code>Marker</code> parameter in a subsequent pagination request. </p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>ListVirtualMFADevices</a>action.</p>"
+      }
     },
     "LoginProfile":{
       "type":"structure",
@@ -5080,7 +4993,7 @@
           "documentation":"<p>The policy that grants an entity permission to assume the role.</p> <p> The returned policy is URL-encoded according to <a href=\"http://www.faqs.org/rfcs/rfc3986.html\">RFC 3986</a>. </p>"
         }
       },
-      "documentation":"<p>Contains information about an IAM role.</p> <p> This data type is used as a response element in the following actions:</p> <ul> <li><p><a>CreateRole</a></p></li> <li><p><a>GetRole</a></p></li> <li><p><a>ListRoles</a></p></li> </ul>"
+      "documentation":"<p>Contains information about an IAM role.</p> <p> This data type is used as a response element in the following actions:</p> <ul> <li> <p> <a>CreateRole</a> </p> </li> <li> <p> <a>GetRole</a> </p> </li> <li> <p> <a>ListRoles</a> </p> </li> </ul>"
     },
     "RoleDetail":{
       "type":"structure",
@@ -5104,15 +5017,15 @@
         },
         "AssumeRolePolicyDocument":{
           "shape":"policyDocumentType",
-          "documentation":"<p>The trust policy that grants an entity permission to assume the role.</p> <p> The returned policy is URL-encoded according to <a href=\"http://www.faqs.org/rfcs/rfc3986.html\">RFC 3986</a>. </p>"
+          "documentation":"<p>The trust policy that grants permission to assume the role.</p> <p> The returned policy is URL-encoded according to <a href=\"http://www.faqs.org/rfcs/rfc3986.html\">RFC 3986</a>. </p>"
         },
         "InstanceProfileList":{"shape":"instanceProfileListType"},
         "RolePolicyList":{
           "shape":"policyDetailListType",
-          "documentation":"<p>A list of the access (permissions) policies attached to the role. </p>"
+          "documentation":"<p>A list of the role's access (permissions) policies. </p>"
         }
       },
-      "documentation":"<p>Contains information about an IAM role, including all of the access policies attached to the role.</p> <p>This data type is used as a response element in the <a>GetAccountAuthorizationDetails</a> action.</p>"
+      "documentation":"<p>Contains information about an IAM role, including all of the role's policies.</p> <p>This data type is used as a response element in the <a>GetAccountAuthorizationDetails</a> action.</p>"
     },
     "SAMLMetadataDocumentType":{
       "type":"string",
@@ -5393,8 +5306,7 @@
           "shape":"arnType",
           "documentation":"<p>The Amazon Resource Name (ARN) of the SAML provider that was updated.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>UpdateSAMLProvider</a> action.</p>"
+      }
     },
     "UpdateServerCertificateRequest":{
       "type":"structure",
@@ -5490,8 +5402,7 @@
           "shape":"ServerCertificateMetadata",
           "documentation":"<p> The meta information of the uploaded server certificate without its certificate body, certificate chain, and private key. </p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>UploadServerCertificate</a> action.</p>"
+      }
     },
     "UploadSigningCertificateRequest":{
       "type":"structure",
@@ -5515,8 +5426,7 @@
           "shape":"SigningCertificate",
           "documentation":"<p>Information about the certificate.</p>"
         }
-      },
-      "documentation":"<p>Contains the result of a successful invocation of the <a>UploadSigningCertificate</a> action.</p>"
+      }
     },
     "User":{
       "type":"structure",
@@ -5553,7 +5463,7 @@
           "documentation":"<p>The date and time, in <a href=\"http://www.iso.org/iso/iso8601\">ISO 8601 date-time format</a>, when the user's password was last used to sign in to an AWS website. For a list of AWS websites that capture a user's last sign-in time, see the <a href=\"http://docs.aws.amazon.com/IAM/latest/UserGuide/credential-reports.html\">Credential Reports</a> topic in the <i>Using IAM</i> guide. If a password is used more than once in a five-minute span, only the first use is returned in this field. When the user does not have a password, this field is null (not present). When a user's password exists but has never been used, or when there is no sign-in data associated with the user, this field is null (not present). </p> <p>This value is returned only in the <a>GetUser</a> and <a>ListUsers</a> actions. </p>"
         }
       },
-      "documentation":"<p>Contains information about an IAM user entity.</p> <p> This data type is used as a response element in the following actions:</p> <ul> <li><p><a>CreateUser</a></p></li> <li><p><a>GetUser</a></p></li> <li><p><a>ListUsers</a></p></li> </ul>"
+      "documentation":"<p>Contains information about an IAM user entity.</p> <p> This data type is used as a response element in the following actions:</p> <ul> <li> <p> <a>CreateUser</a> </p> </li> <li> <p> <a>GetUser</a> </p> </li> <li> <p> <a>ListUsers</a> </p> </li> </ul>"
     },
     "UserDetail":{
       "type":"structure",
@@ -5577,14 +5487,14 @@
         },
         "UserPolicyList":{
           "shape":"policyDetailListType",
-          "documentation":"<p>A list of the policies attached to the user.</p>"
+          "documentation":"<p>A list of the user's policies.</p>"
         },
         "GroupList":{
           "shape":"groupNameListType",
-          "documentation":"<p>A list of the IAM groups that the user is in.</p>"
+          "documentation":"<p>A list of IAM groups that the user is in.</p>"
         }
       },
-      "documentation":"<p>Contains information about an IAM user, including all the policies attached to the user and all the IAM groups the user is in.</p> <p>This data type is used as a response element in the <a>GetAccountAuthorizationDetails</a> action.</p>"
+      "documentation":"<p>Contains information about an IAM user, including all the user's policies and all the IAM groups the user is in.</p> <p>This data type is used as a response element in the <a>GetAccountAuthorizationDetails</a> action.</p>"
     },
     "VirtualMFADevice":{
       "type":"structure",
