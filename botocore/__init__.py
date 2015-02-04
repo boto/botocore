@@ -52,7 +52,7 @@ ScalarTypes = ('string', 'integer', 'boolean', 'timestamp', 'float', 'double')
 BOTOCORE_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 # Used to specify anonymous (unsigned) request signature
-UNSIGNED = ''
+UNSIGNED = object()
 
 
 def xform_name(name, sep='_', _xform_cache=_xform_cache):

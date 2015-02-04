@@ -369,7 +369,7 @@ class TestCreateClient(BaseSessionTest):
 
     @mock.patch('botocore.client.ClientCreator')
     def test_config_passed_to_client_creator(self, client_creator):
-        config = mock.Mock()
+        config = client.Config()
         self.session.create_client('sts', config=config)
 
         client_creator.return_value.create_client.assert_called_with(

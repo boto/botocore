@@ -13,6 +13,7 @@
 
 import mock
 
+import botocore
 import botocore.auth
 
 from botocore.credentials import Credentials
@@ -118,7 +119,8 @@ class TestSigner(unittest.TestCase):
         # Returning a blank string from choose-signer disabled signing!
         request = mock.Mock()
         auth = mock.Mock()
-        self.emitter.emit_until_response.return_value = (None, '')
+        self.emitter.emit_until_response.return_value = (None,
+                                                         botocore.UNSIGNED)
 
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
                              {'v4': auth}):
