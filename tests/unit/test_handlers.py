@@ -17,6 +17,7 @@ import base64
 import mock
 import copy
 
+import botocore
 import botocore.session
 from botocore.hooks import first_non_none_response
 from botocore.awsrequest import AWSRequest
@@ -48,7 +49,7 @@ class TestHandlers(BaseSessionTest):
         self.assertEqual(converted_value, value)
 
     def test_disable_signing(self):
-        self.assertEqual(handlers.disable_signing(), '')
+        self.assertEqual(handlers.disable_signing(), botocore.UNSIGNED)
 
     def test_quote_source_header(self):
         for op in ('UploadPartCopy', 'CopyObject'):

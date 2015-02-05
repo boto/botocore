@@ -27,6 +27,7 @@ from botocore.compat import urlsplit, urlunsplit, unquote, json, quote, six
 from botocore import retryhandler
 from botocore import utils
 from botocore import translate
+import botocore
 import botocore.auth
 
 
@@ -269,10 +270,9 @@ def _register_for_operations(config, session, service_name):
 def disable_signing(**kwargs):
     """
     This handler disables request signing by setting the signer
-    name to an empty string, similar to how the signature
-    overrides above work.
+    name to a special sentinel value.
     """
-    return ''
+    return botocore.UNSIGNED
 
 
 def add_expect_header(model, params, **kwargs):

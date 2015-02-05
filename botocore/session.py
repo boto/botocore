@@ -750,7 +750,7 @@ class Session(object):
     def create_client(self, service_name, region_name=None, api_version=None,
                       use_ssl=True, verify=None, endpoint_url=None,
                       aws_access_key_id=None, aws_secret_access_key=None,
-                      aws_session_token=None):
+                      aws_session_token=None, config=None):
         """Create a botocore client.
 
         :type service_name: string
@@ -805,6 +805,9 @@ class Session(object):
         :param aws_session_token: The session token to use when creating
             the client.  Same semantics as aws_access_key_id above.
 
+        :type config: botocore.client.Config
+        :param config: Advanced client configuration options.
+
         :rtype: botocore.client.BaseClient
         :return: A botocore client instance
 
@@ -828,7 +831,8 @@ class Session(object):
             response_parser_factory)
         client = client_creator.create_client(
             service_name, region_name, use_ssl, endpoint_url, verify,
-            credentials, scoped_config=self.get_scoped_config())
+            credentials, scoped_config=self.get_scoped_config(),
+            client_config=config)
         return client
 
 

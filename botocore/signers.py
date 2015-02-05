@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import botocore
 import botocore.auth
 
 from botocore.exceptions import UnknownSignatureVersionError
@@ -86,7 +87,7 @@ class RequestSigner(object):
             signature_version=signature_version, request_signer=self)
 
         # Sign the request if the signature version isn't None or blank
-        if signature_version:
+        if signature_version != botocore.UNSIGNED:
             signer = self.get_auth(self._signing_name, self._region_name,
                                     signature_version)
             signer.add_auth(request=request)
