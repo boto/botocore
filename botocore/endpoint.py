@@ -20,8 +20,6 @@ import threading
 from botocore.vendored.requests.sessions import Session
 from botocore.vendored.requests.utils import get_environ_proxies
 
-import botocore.response
-import botocore.exceptions
 from botocore.exceptions import UnknownEndpointError
 from botocore.awsrequest import AWSRequest
 from botocore.compat import urljoin
@@ -66,6 +64,11 @@ def convert_to_response_dict(http_response, operation_model):
     return response_dict
 
 
+class PreserveAuthSession(Session):
+    def rebuild_auth(self, prepared_request, response):
+        pass
+
+
 class Endpoint(object):
     """
     Represents an endpoint for a particular service in a specific
@@ -89,7 +92,7 @@ class Endpoint(object):
         if proxies is None:
             proxies = {}
         self.proxies = proxies
-        self.http_session = Session()
+        self.http_session = PreserveAuthSession()
         self.timeout = timeout
         self._lock = threading.Lock()
         if response_parser_factory is None:
@@ -111,9 +114,8 @@ class Endpoint(object):
                 endpoint_prefix=self._endpoint_prefix,
                 op_name=operation_model.name)
             self._event_emitter.emit(event_name, request=request,
-                operation_name=operation_model.name)
-        prepared_request = self.prepare_request(
-            request)
+                                     operation_name=operation_model.name)
+        prepared_request = self.prepare_request(request)
         return prepared_request
 
     def _create_request_object(self, request_dict):
