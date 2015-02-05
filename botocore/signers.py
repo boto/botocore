@@ -42,20 +42,15 @@ class RequestSigner(object):
     :param credentials: User credentials with which to sign requests.
     :type event_emitter: :py:class:`~botocore.hooks.BaseEventHooks`
     :param event_emitter: Extension mechanism to fire events.
-    :type scoped_config: dict
-    :param scoped_config: User configuration which may include
-                          signature overrides.
     """
     def __init__(self, service_name, region_name, signing_name,
-                 signature_version, credentials, event_emitter,
-                 scoped_config):
+                 signature_version, credentials, event_emitter):
         self._service_name = service_name
         self._region_name = region_name
         self._signing_name = signing_name
         self._signature_version = signature_version
         self._credentials = credentials
         self._event_emitter = event_emitter
-        self._scoped_config = scoped_config
 
         # Used to cache auth instances since one request signer
         # can be used for many requests in a single client.
@@ -79,7 +74,7 @@ class RequestSigner(object):
         handler, response = self._event_emitter.emit_until_response(
             'choose-signer.{0}.{1}'.format(self._service_name, operation_name),
             signing_name=self._signing_name, region_name=self._region_name,
-            signature_version=signature_version, config=self._scoped_config)
+            signature_version=signature_version)
         if response is not None:
             signature_version = response
 

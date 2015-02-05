@@ -18,6 +18,7 @@ This module contains builtin handlers for events emitted by botocore.
 
 import base64
 import hashlib
+import functools
 import logging
 import re
 import xml.etree.cElementTree
@@ -164,7 +165,7 @@ def check_dns_name(bucket_name):
     return True
 
 
-def fix_s3_host(event_name, endpoint, request, auth, **kwargs):
+def fix_s3_host(request, signature_version, region_name, **kwargs):
     """
     This handler looks at S3 requests just before they are signed.
     If there is a bucket name on the path (true for everything except
@@ -189,13 +190,13 @@ def fix_s3_host(event_name, endpoint, request, auth, **kwargs):
     parts = urlsplit(request.url)
     request.auth_path = parts.path
     path_parts = parts.path.split('/')
-    if isinstance(auth, botocore.auth.SigV4Auth):
+    if signature_version in ['s3v4', 'v4']:
         return
     if len(path_parts) > 1:
         bucket_name = path_parts[1]
         logger.debug('Checking for DNS compatible bucket for: %s',
                      request.url)
-        if check_dns_name(bucket_name) and _allowed_region(endpoint.region_name):
+        if check_dns_name(bucket_name) and _allowed_region(region_name):
             # If the operation is on a bucket, the auth_path must be
             # terminated with a '/' character.
             if len(path_parts) == 2:
@@ -265,18 +266,13 @@ def _register_for_operations(config, session, service_name):
                          handler, unique_id=unique_id)
 
 
-def signature_overrides(service_data, service_name, session, **kwargs):
-    scoped_config = session.get_scoped_config()
-    service_config = scoped_config.get(service_name)
-    if service_config is None or not isinstance(service_config, dict):
-        return
-    signature_version_override = service_config.get('signature_version')
-    if signature_version_override is not None:
-        logger.debug("Switching signature version for service %s "
-                     "to version %s based on config file override.",
-                     service_name, signature_version_override)
-        service_metadata = service_data['metadata']
-        service_metadata['signatureVersion'] = signature_version_override
+def disable_signing(**kwargs):
+    """
+    This handler disables request signing by setting the signer
+    name to an empty string, similar to how the signature
+    overrides above work.
+    """
+    return ''
 
 
 def add_expect_header(model, params, **kwargs):
@@ -298,7 +294,7 @@ def quote_source_header(params, **kwargs):
             value.encode('utf-8'), '/~')
 
 
-def copy_snapshot_encrypted(operation, params, endpoint, **kwargs):
+def copy_snapshot_encrypted(operation, params, request_signer, **kwargs):
     # The presigned URL that facilities copying an encrypted snapshot.
     # If the user does not provide this value, we will automatically
     # calculate on behalf of the user and inject the PresignedUrl
@@ -311,19 +307,18 @@ def copy_snapshot_encrypted(operation, params, endpoint, **kwargs):
         # If the customer provided this value, then there's nothing for
         # us to do.
         return
-    params['DestinationRegion'] = endpoint.region_name
+    params['DestinationRegion'] = request_signer._region_name
     # The request will be sent to the destination region, so we need
     # to create an endpoint to the source region and create a presigned
     # url based on the source endpoint.
     region = params['SourceRegion']
     source_endpoint = operation.service.get_endpoint(region)
-    presigner = botocore.auth.SigV4QueryAuth(
-        credentials=source_endpoint.auth.credentials,
-        region_name=region,
-        service_name='ec2',
-        expires=60 * 60)
-    signed_request = source_endpoint.create_request(request_dict, presigner)
-    params['PresignedUrl'] = signed_request.url
+    presigner = request_signer.get_auth(
+        'ec2', region, signature_version='v4-query')
+    request = source_endpoint.create_request(request_dict)
+    presigner.add_auth(request=request.original)
+    request = request.original.prepare()
+    params['PresignedUrl'] = request.url
 
 
 def json_decode_policies(parsed, model, **kwargs):
@@ -470,13 +465,14 @@ BUILTIN_HANDLERS = [
     ('before-call.glacier.UploadArchive', add_glacier_checksums),
     ('before-call.glacier.UploadMultipartPart', add_glacier_checksums),
     ('before-call.ec2.CopySnapshot', copy_snapshot_encrypted),
-    ('before-auth.s3', fix_s3_host),
     ('needs-retry.s3.UploadPartCopy', check_for_200_error, REGISTER_FIRST),
     ('needs-retry.s3.CopyObject', check_for_200_error, REGISTER_FIRST),
     ('needs-retry.s3.CompleteMultipartUpload', check_for_200_error,
      REGISTER_FIRST),
     ('service-data-loaded', register_retries_for_service),
-    ('service-data-loaded', signature_overrides),
+    ('choose-signer.cognito-identity.GetId', disable_signing),
+    ('choose-signer.cognito-identity.GetOpenIdToken', disable_signing),
+    ('before-sign.s3', fix_s3_host),
     ('before-parameter-build.s3.HeadObject', sse_md5),
     ('before-parameter-build.s3.GetObject', sse_md5),
     ('before-parameter-build.s3.PutObject', sse_md5),

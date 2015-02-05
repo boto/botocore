@@ -150,7 +150,7 @@ class TestS3Objects(TestS3BaseWithBucket):
                            key=key)
         super(TestS3Objects, self).tearDown()
 
-    def increment_auth(self, request, auth, **kwargs):
+    def increment_auth(self, request, **kwargs):
         self.auth_paths.append(request.auth_path)
 
     def test_can_delete_urlencoded_object(self):
@@ -341,7 +341,7 @@ class TestS3Objects(TestS3BaseWithBucket):
     def test_thread_safe_auth(self):
         self.auth_paths = []
         self.caught_exceptions = []
-        self.session.register('before-auth', self.increment_auth)
+        self.session.register('before-sign', self.increment_auth)
         self.create_object(key_name='foo1')
         threads = []
         for i in range(10):
@@ -483,8 +483,9 @@ class TestS3Presign(BaseS3Test):
             region_name='us-east-1', service_name='s3', expires=60)
         op = self.service.get_operation('GetObject')
         params = op.build_parameters(bucket=self.bucket_name, key=key_name)
-        request = self.endpoint.create_request(params, signer)
-        presigned_url = request.url
+        request = self.endpoint.create_request(params)
+        signer.add_auth(request.original)
+        presigned_url = request.original.prepare().url
         # We should now be able to retrieve the contents of 'mykey' using
         # this presigned url.
         self.assertEqual(requests.get(presigned_url).content, b'foobar')
@@ -500,8 +501,9 @@ class TestS3PresignFixHost(BaseS3Test):
             region_name='us-west-2', service_name='s3', expires=60)
         op = self.service.get_operation('GetObject')
         params = op.build_parameters(bucket=bucket_name, key=key_name)
-        request = endpoint.create_request(params, signer)
-        presigned_url = request.url
+        request = endpoint.create_request(params)
+        signer.add_auth(request.original)
+        presigned_url = request.original.prepare().url
         # We should not have rewritten the host to be s3.amazonaws.com.
         self.assertTrue(presigned_url.startswith(
             'https://s3-us-west-2.amazonaws.com/mybucket/mykey'),
@@ -725,21 +727,6 @@ class TestCanSwitchToSigV4(unittest.TestCase):
     def tearDown(self):
         self.environ_patch.stop()
         shutil.rmtree(self.tempdir)
-
-    def test_verify_can_switch_sigv4(self):
-        # Verify we can turn on sigv4 from a config file.
-        with open(self.config_filename, 'w') as f:
-            f.write(
-                '[default]\n'
-                's3 =\n'
-                '  signature_version = s3v4\n')
-        # We need to verify this option for service/operation objects so we're
-        # not using client objects now (though we should add a test for client
-        # objects eventually).
-        service = self.session.get_service('s3')
-        endpoint = service.get_endpoint('us-east-1')
-        # The set_config_variable should ensure that we use sigv4 for s3.
-        self.assertIsInstance(endpoint.auth, botocore.auth.S3SigV4Auth)
 
 
 class TestSSEKeyParamValidation(unittest.TestCase):

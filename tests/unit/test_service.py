@@ -61,13 +61,6 @@ class TestService(BaseSessionTest):
         self.assertEqual(endpoint.host, 'https://wherever.i.want.com')
         self.assertIsNone(endpoint.region_name)
 
-    def test_region_required_for_sigv4(self):
-        # However, if the service uses siv4 auth, then an exception
-        # is raised if we call get_endpoint without a region name.
-        service = self.session.get_service('cloudformation')
-        with self.assertRaises(botocore.exceptions.NoRegionError):
-            service.get_endpoint(endpoint_url='https://wherever.i.want.com')
-
     def test_region_required_for_non_global_endpoint(self):
         # If you don't provide an endpoint_url, than you need to
         # provide a region_name.

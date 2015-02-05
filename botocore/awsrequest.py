@@ -23,10 +23,14 @@ from botocore.vendored.requests import models
 from botocore.vendored.requests.sessions import REDIRECT_STATI
 from botocore.compat import HTTPHeaders, HTTPResponse
 from botocore.exceptions import UnseekableStreamError
-from botocore.vendored.requests.packages.urllib3.connection import VerifiedHTTPSConnection
-from botocore.vendored.requests.packages.urllib3.connection import HTTPConnection
-from botocore.vendored.requests.packages.urllib3.connectionpool import HTTPConnectionPool
-from botocore.vendored.requests.packages.urllib3.connectionpool import HTTPSConnectionPool
+from botocore.vendored.requests.packages.urllib3.connection import \
+    VerifiedHTTPSConnection
+from botocore.vendored.requests.packages.urllib3.connection import \
+    HTTPConnection
+from botocore.vendored.requests.packages.urllib3.connectionpool import \
+    HTTPConnectionPool
+from botocore.vendored.requests.packages.urllib3.connectionpool import \
+    HTTPSConnectionPool
 
 
 logger = logging.getLogger(__name__)
@@ -90,8 +94,8 @@ class AWSHTTPConnection(HTTPConnection):
         for header, value in self._tunnel_headers.iteritems():
             self.send("%s: %s\r\n" % (header, value))
         self.send("\r\n")
-        response = self.response_class(self.sock, strict = self.strict,
-                                       method = self._method)
+        response = self.response_class(self.sock, strict=self.strict,
+                                       method=self._method)
         (version, code, message) = response._read_status()
 
         if code != 200:
@@ -154,6 +158,18 @@ class AWSHTTPConnection(HTTPConnection):
             # we must run the risk of Nagle.
             self.send(message_body)
 
+    def _consume_headers(self, fp):
+        # Most servers (including S3) will just return
+        # the CLRF after the 100 continue response.  However,
+        # some servers (I've specifically seen this for squid when
+        # used as a straight HTTP proxy) will also inject a
+        # Connection: keep-alive header.  To account for this
+        # we'll read until we read '\r\n', and ignore any headers
+        # that come immediately after the 100 continue response.
+        current = None
+        while current != b'\r\n':
+            current = fp.readline()
+
     def _handle_expect_response(self, message_body):
         # This is called when we sent the request headers containing
         # an Expect: 100-continue header and received a response.
@@ -163,9 +179,9 @@ class AWSHTTPConnection(HTTPConnection):
             maybe_status_line = fp.readline()
             parts = maybe_status_line.split(None, 2)
             if self._is_100_continue_status(maybe_status_line):
-                # Read an empty line as per the RFC.
-                fp.readline()
-                logger.debug("100 Continue response seen, now sending request body.")
+                self._consume_headers(fp)
+                logger.debug("100 Continue response seen, "
+                             "now sending request body.")
                 self._send_message_body(message_body)
             elif len(parts) == 3 and parts[0].startswith(b'HTTP/'):
                 # From the RFC:
@@ -181,7 +197,7 @@ class AWSHTTPConnection(HTTPConnection):
                 # whatever the server has sent back is the final response
                 # and don't send the message_body.
                 logger.debug("Received a non 100 Continue response "
-                            "from the server, NOT sending request body.")
+                             "from the server, NOT sending request body.")
                 status_tuple = (parts[0].decode('ascii'),
                                 int(parts[1]), parts[2].decode('ascii'))
                 response_class = functools.partial(

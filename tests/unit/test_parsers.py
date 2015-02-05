@@ -269,6 +269,18 @@ class TestResponseMetadataParsed(unittest.TestCase):
         self.assertEqual(parsed['Error'], {'Message': 'Access denied',
                                            'Code': 'AccessDeniedException'})
 
+    def test_can_parse_with_case_insensitive_keys(self):
+        body = (b'{"Code":"AccessDeniedException","type":"Client","Message":'
+                b'"Access denied"}')
+        headers = {
+             'x-amzn-requestid': 'request-id'
+        }
+        parser = parsers.RestJSONParser()
+        parsed = parser.parse(
+            {'body': body, 'headers': headers, 'status_code': 400}, None)
+        self.assertEqual(parsed['Error'], {'Message': 'Access denied',
+                                           'Code': 'AccessDeniedException'})
+
 
 class TestResponseParsingDatetimes(unittest.TestCase):
     def test_can_parse_float_timestamps(self):

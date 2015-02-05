@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import copy
+import functools
+import logging
 
 from botocore.model import ServiceModel
 from botocore.exceptions import DataNotFoundError
@@ -23,27 +25,31 @@ from botocore.utils import CachedProperty
 import botocore.validate
 import botocore.serialize
 from botocore import credentials
+from botocore.signers import RequestSigner
+from botocore.endpoint import EndpointCreator
+
+
+logger = logging.getLogger(__name__)
 
 
 class ClientCreator(object):
     """Creates client objects for a service."""
-    def __init__(self, loader, endpoint_creator, event_emitter,
+    def __init__(self, loader, endpoint_resolver, user_agent, event_emitter,
                  response_parser_factory=None):
         self._loader = loader
-        self._endpoint_creator = endpoint_creator
+        self._endpoint_resolver = endpoint_resolver
+        self._user_agent = user_agent
         self._event_emitter = event_emitter
         self._response_parser_factory = response_parser_factory
 
     def create_client(self, service_name, region_name, is_secure=True,
                       endpoint_url=None, verify=None,
-                      aws_access_key_id=None, aws_secret_access_key=None,
-                      aws_session_token=None):
+                      credentials=None, scoped_config=None):
         service_model = self._load_service_model(service_name)
         cls = self.create_client_class(service_name)
         client_args = self._get_client_args(
             service_model, region_name, is_secure, endpoint_url,
-            verify, aws_access_key_id, aws_secret_access_key,
-            aws_session_token)
+            verify, credentials, scoped_config)
         return cls(**client_args)
 
     def create_client_class(self, service_name):
@@ -169,34 +175,73 @@ class ClientCreator(object):
         service_model = ServiceModel(json_model, service_name=service_name)
         return service_model
 
+    def _get_signature_version_and_region(self, service_model, region_name,
+                                          is_secure, scoped_config):
+        # Get endpoint heuristic overrides before creating the
+        # request signer.
+        resolver = self._endpoint_resolver
+        scheme = 'https' if is_secure else 'http'
+        endpoint_config = resolver.construct_endpoint(
+                service_model.endpoint_prefix,
+                region_name, scheme=scheme)
+        # Region name override from endpoint
+        region_name = endpoint_config.get('properties', {}).get(
+            'credentialScope', {}).get('region', region_name)
+        # Signature version override from endpoint
+        signature_version = service_model.signature_version
+        if 'signatureVersion' in endpoint_config.get('properties', {}):
+            signature_version = endpoint_config['properties']\
+                                               ['signatureVersion']
+
+        # Signature overrides from a configuration file
+        if scoped_config is not None:
+            service_config = scoped_config.get(service_model.endpoint_prefix)
+            if service_config is not None and isinstance(service_config, dict):
+                override = service_config.get('signature_version')
+                if override:
+                    logger.debug(
+                        "Switching signature version for service %s "
+                         "to version %s based on config file override.",
+                         service_model.endpoint_prefix, override)
+                    signature_version = override
+
+        return signature_version, region_name
+
     def _get_client_args(self, service_model, region_name, is_secure,
-                         endpoint_url, verify, aws_access_key_id,
-                         aws_secret_access_key, aws_session_token):
+                         endpoint_url, verify, credentials,
+                         scoped_config):
         # A client needs:
         #
         # * serializer
         # * endpoint
         # * response parser
+        # * request signer
         protocol = service_model.metadata['protocol']
         serializer = botocore.serialize.create_serializer(
             protocol, include_validation=True)
-        creds = None
-        if aws_secret_access_key is not None:
-            creds = credentials.Credentials(
-                access_key=aws_access_key_id,
-                secret_key=aws_secret_access_key,
-                token=aws_session_token)
-        endpoint = self._endpoint_creator.create_endpoint(
+        event_emitter = copy.copy(self._event_emitter)
+        endpoint_creator = EndpointCreator(self._endpoint_resolver, region_name,
+                                           event_emitter, self._user_agent)
+        endpoint = endpoint_creator.create_endpoint(
             service_model, region_name, is_secure=is_secure,
             endpoint_url=endpoint_url, verify=verify,
-            credentials=creds,
             response_parser_factory=self._response_parser_factory)
         response_parser = botocore.parsers.create_parser(protocol)
+
+        signature_version, region_name = \
+            self._get_signature_version_and_region(
+                service_model, region_name, is_secure, scoped_config)
+
+        signer = RequestSigner(service_model.service_name, region_name,
+                               service_model.signing_name,
+                               signature_version, credentials,
+                               event_emitter)
         return {
             'serializer': serializer,
             'endpoint': endpoint,
             'response_parser': response_parser,
-            'event_emitter': copy.copy(self._event_emitter),
+            'event_emitter': event_emitter,
+            'request_signer': signer,
         }
 
     def _create_methods(self, service_model):
@@ -235,7 +280,8 @@ class ClientCreator(object):
                 'before-call.{endpoint_prefix}.{operation_name}'.format(
                     endpoint_prefix=service_model.endpoint_prefix,
                     operation_name=operation_name),
-                model=operation_model, params=request_dict
+                model=operation_model, params=request_dict,
+                request_signer=self._request_signer
             )
 
             http, parsed_response = self._endpoint.make_request(
@@ -262,15 +308,27 @@ class ClientCreator(object):
 class BaseClient(object):
 
     def __init__(self, serializer, endpoint, response_parser,
-                 event_emitter):
+                 event_emitter, request_signer):
         self._serializer = serializer
         self._endpoint = endpoint
         self._response_parser = response_parser
+        self._request_signer = request_signer
         self._cache = {}
         self.meta = ClientMeta(event_emitter)
 
+        # Register request signing, but only if we have an event
+        # emitter. When a client is cloned this is ignored, because
+        # the client's ``meta`` will be copied anyway.
+        if self.meta.events:
+            self.meta.events.register('request-created', self._sign_request)
+
+    def _sign_request(self, operation_name=None, request=None, **kwargs):
+        # Sign the request. This fires its own events and will
+        # mutate the request as needed.
+        self._request_signer.sign(operation_name, request)
+
     def clone_client(self, serializer=None, endpoint=None,
-                     response_parser=None):
+                     response_parser=None, request_signer=None):
         """Create a copy of the client object.
 
         This method will create a clone of an existing client.  By default, the
@@ -289,6 +347,7 @@ class BaseClient(object):
             'serializer': serializer,
             'endpoint': endpoint,
             'response_parser': response_parser,
+            'request_signer': request_signer,
         }
         for key, value in kwargs.items():
             if value is None:
@@ -317,4 +376,5 @@ class ClientMeta(object):
         self.events = events
 
     def __copy__(self):
-        return ClientMeta(**copy.deepcopy(self.__dict__))
+        copied_events = copy.copy(self.events)
+        return ClientMeta(copied_events)
