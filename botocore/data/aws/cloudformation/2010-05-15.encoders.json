@@ -1,0 +1,8 @@
+{
+  "encoding": {
+    "GetTemplateOutput": {
+      "encoding": "JSON",
+      "alias": "Template",
+    }
+  }
+}
