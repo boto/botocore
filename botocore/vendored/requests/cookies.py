@@ -8,7 +8,7 @@ requests.utils imports from here, so be careful with imports.
 
 import time
 import collections
-from .compat import cookielib, urlparse, Morsel
+from .compat import cookielib, urlparse, urlunparse, Morsel
 
 try:
     import threading
@@ -45,7 +45,18 @@ class MockRequest(object):
         return self.get_host()
 
     def get_full_url(self):
-        return self._r.url
+        # Only return the response's URL if the user hadn't set the Host
+        # header
+        if not self._r.headers.get('Host'):
+            return self._r.url
+        # If they did set it, retrieve it and reconstruct the expected domain
+        host = self._r.headers['Host']
+        parsed = urlparse(self._r.url)
+        # Reconstruct the URL as we expect it
+        return urlunparse([
+            parsed.scheme, host, parsed.path, parsed.params, parsed.query,
+            parsed.fragment
+        ])
 
     def is_unverifiable(self):
         return True
@@ -187,30 +198,39 @@ class RequestsCookieJar(cookielib.CookieJar, collections.MutableMapping):
         self.set_cookie(c)
         return c
 
+    def iterkeys(self):
+        """Dict-like iterkeys() that returns an iterator of names of cookies from the jar.
+        See itervalues() and iteritems()."""
+        for cookie in iter(self):
+            yield cookie.name
+
     def keys(self):
         """Dict-like keys() that returns a list of names of cookies from the jar.
         See values() and items()."""
-        keys = []
+        return list(self.iterkeys())
+
+    def itervalues(self):
+        """Dict-like itervalues() that returns an iterator of values of cookies from the jar.
+        See iterkeys() and iteritems()."""
         for cookie in iter(self):
-            keys.append(cookie.name)
-        return keys
+            yield cookie.value
 
     def values(self):
         """Dict-like values() that returns a list of values of cookies from the jar.
         See keys() and items()."""
-        values = []
+        return list(self.itervalues())
+
+    def iteritems(self):
+        """Dict-like iteritems() that returns an iterator of name-value tuples from the jar.
+        See iterkeys() and itervalues()."""
         for cookie in iter(self):
-            values.append(cookie.value)
-        return values
+            yield cookie.name, cookie.value
 
     def items(self):
         """Dict-like items() that returns a list of name-value tuples from the jar.
         See keys() and values(). Allows client-code to call "dict(RequestsCookieJar)
         and get a vanilla python dict of key value pairs."""
-        items = []
-        for cookie in iter(self):
-            items.append((cookie.name, cookie.value))
-        return items
+        return list(self.iteritems())
 
     def list_domains(self):
         """Utility method to list all the domains in the jar."""
@@ -267,7 +287,7 @@ class RequestsCookieJar(cookielib.CookieJar, collections.MutableMapping):
         remove_cookie_by_name(self, name)
 
     def set_cookie(self, cookie, *args, **kwargs):
-        if cookie.value.startswith('"') and cookie.value.endswith('"'):
+        if hasattr(cookie.value, 'startswith') and cookie.value.startswith('"') and cookie.value.endswith('"'):
             cookie.value = cookie.value.replace('\\"', '')
         return super(RequestsCookieJar, self).set_cookie(cookie, *args, **kwargs)
 
@@ -367,29 +387,29 @@ def create_cookie(name, value, **kwargs):
 
 def morsel_to_cookie(morsel):
     """Convert a Morsel object into a Cookie containing the one k/v pair."""
+
     expires = None
-    if morsel["max-age"]:
-        expires = time.time() + morsel["max-age"]
+    if morsel['max-age']:
+        expires = time.time() + morsel['max-age']
     elif morsel['expires']:
-        expires = morsel['expires']
-        if type(expires) == type(""):
-            time_template = "%a, %d-%b-%Y %H:%M:%S GMT"
-            expires = time.mktime(time.strptime(expires, time_template))
-    c = create_cookie(
-        name=morsel.key,
-        value=morsel.value,
-        version=morsel['version'] or 0,
-        port=None,
-        domain=morsel['domain'],
-        path=morsel['path'],
-        secure=bool(morsel['secure']),
-        expires=expires,
-        discard=False,
+        time_template = '%a, %d-%b-%Y %H:%M:%S GMT'
+        expires = time.mktime(
+            time.strptime(morsel['expires'], time_template)) - time.timezone
+    return create_cookie(
         comment=morsel['comment'],
         comment_url=bool(morsel['comment']),
+        discard=False,
+        domain=morsel['domain'],
+        expires=expires,
+        name=morsel.key,
+        path=morsel['path'],
+        port=None,
         rest={'HttpOnly': morsel['httponly']},
-        rfc2109=False,)
-    return c
+        rfc2109=False,
+        secure=bool(morsel['secure']),
+        value=morsel.value,
+        version=morsel['version'] or 0,
+    )
 
 
 def cookiejar_from_dict(cookie_dict, cookiejar=None, overwrite=True):
@@ -408,5 +428,27 @@ def cookiejar_from_dict(cookie_dict, cookiejar=None, overwrite=True):
         for name in cookie_dict:
             if overwrite or (name not in names_from_jar):
                 cookiejar.set_cookie(create_cookie(name, cookie_dict[name]))
+
+    return cookiejar
+
+
+def merge_cookies(cookiejar, cookies):
+    """Add cookies to cookiejar and returns a merged CookieJar.
+
+    :param cookiejar: CookieJar object to add the cookies to.
+    :param cookies: Dictionary or CookieJar object to be added.
+    """
+    if not isinstance(cookiejar, cookielib.CookieJar):
+        raise ValueError('You can only merge into CookieJar')
+    
+    if isinstance(cookies, dict):
+        cookiejar = cookiejar_from_dict(
+            cookies, cookiejar=cookiejar, overwrite=False)
+    elif isinstance(cookies, cookielib.CookieJar):
+        try:
+            cookiejar.update(cookies)
+        except AttributeError:
+            for cookie_in_jar in cookies:
+                cookiejar.set_cookie(cookie_in_jar)
 
     return cookiejar
