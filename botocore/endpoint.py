@@ -22,7 +22,7 @@ from botocore.vendored.requests.utils import get_environ_proxies
 
 from botocore.exceptions import UnknownEndpointError
 from botocore.awsrequest import AWSRequest
-from botocore.compat import urljoin
+from botocore.compat import urljoin, filter_ssl_san_warnings
 from botocore.utils import percent_encode_sequence
 from botocore.hooks import first_non_none_response
 from botocore.response import StreamingBody
@@ -32,6 +32,7 @@ from botocore import parsers
 logger = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 60
 NOT_SET = object()
+filter_ssl_san_warnings()
 
 
 def convert_to_response_dict(http_response, operation_model):
