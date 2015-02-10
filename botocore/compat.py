@@ -119,10 +119,31 @@ if sys.version_info[:2] == (2, 6):
     # will raise a plain old SyntaxError instead of
     # a real exception, so we need to abstract this change.
     XMLParseError = SyntaxError
+
+    # Handle https://github.com/shazow/urllib3/issues/497 for py2.6.  In
+    # python2.6, there is a known issue where sometimes we cannot read the SAN
+    # from an SSL cert (http://bugs.python.org/issue13034).  However, newer
+    # versions of urllib3 will warn you when there is no SAN.  While we could
+    # just turn off this warning in urllib3 altogether, we _do_ want warnings
+    # when they're legitimate warnings.  This method tries to scope the warning
+    # filter to be as specific as possible.
+    def filter_ssl_san_warnings():
+        import warnings
+        from botocore.vendored.requests.packages.urllib3 import exceptions
+        warnings.filterwarnings(
+            'ignore',
+            message="Certificate has no.*subjectAltName.*",
+            category=exceptions.SecurityWarning,
+            module=".*urllib3\.connection")
 else:
     import xml.etree.cElementTree
     XMLParseError = xml.etree.cElementTree.ParseError
     import json
+
+    def filter_ssl_san_warnings():
+        # Noop for non-py26 versions.  We will parse the SAN
+        # appropriately.
+        pass
 
 
 @classmethod

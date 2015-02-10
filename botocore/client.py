@@ -44,12 +44,13 @@ class ClientCreator(object):
 
     def create_client(self, service_name, region_name, is_secure=True,
                       endpoint_url=None, verify=None,
-                      credentials=None, scoped_config=None):
+                      credentials=None, scoped_config=None,
+                      client_config=None):
         service_model = self._load_service_model(service_name)
         cls = self.create_client_class(service_name)
         client_args = self._get_client_args(
             service_model, region_name, is_secure, endpoint_url,
-            verify, credentials, scoped_config)
+            verify, credentials, scoped_config, client_config)
         return cls(**client_args)
 
     def create_client_class(self, service_name):
@@ -209,7 +210,7 @@ class ClientCreator(object):
 
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,
-                         scoped_config):
+                         scoped_config, client_config):
         # A client needs:
         #
         # * serializer
@@ -231,6 +232,9 @@ class ClientCreator(object):
         signature_version, region_name = \
             self._get_signature_version_and_region(
                 service_model, region_name, is_secure, scoped_config)
+
+        if client_config and client_config.signature_version is not None:
+            signature_version = client_config.signature_version
 
         signer = RequestSigner(service_model.service_name, region_name,
                                service_model.signing_name,
@@ -378,3 +382,15 @@ class ClientMeta(object):
     def __copy__(self):
         copied_events = copy.copy(self.events)
         return ClientMeta(copied_events)
+
+
+class Config(object):
+    """Advanced configuration for Botocore clients.
+
+    This class allows you to configure:
+
+        * Signature version
+
+    """
+    def __init__(self, signature_version=None):
+        self.signature_version = signature_version
