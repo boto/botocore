@@ -123,7 +123,9 @@ class AWSHTTPConnection(HTTPConnection):
 
     def _send_output(self, message_body=None):
         self._buffer.extend((b"", b""))
-        msg = b"\r\n".join(self._buffer)
+        msg = b"\r\n".join(
+            b.encode('utf-8') if isinstance(b, six.text_type) else b
+            for b in self._buffer)
         del self._buffer[:]
         # If msg and message_body are sent in a single send() call,
         # it will avoid performance problems caused by the interaction
