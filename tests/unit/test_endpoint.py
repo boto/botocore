@@ -240,7 +240,8 @@ class TestRetryInterface(TestEndpointBase):
             [(None, None)]  # Check if retry needed. Retry not needed.
         ]
         self.http_session.send.side_effect = ConnectionError()
-        self.endpoint.make_request(op, request_dict())
+        with self.assertRaises(ConnectionError):
+            self.endpoint.make_request(op, request_dict())
         call_args = self.event_emitter.emit.call_args_list
         self.assertEqual(self.event_emitter.emit.call_count, 4)
         # Check that all of the events are as expected.
