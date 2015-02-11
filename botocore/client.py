@@ -14,19 +14,16 @@ import copy
 import functools
 import logging
 
-from botocore.model import ServiceModel
-from botocore.exceptions import DataNotFoundError
-from botocore.exceptions import OperationNotPageableError
-from botocore.exceptions import ClientError
-from botocore import waiter
-from botocore import xform_name
-from botocore.paginate import Paginator
-from botocore.utils import CachedProperty
-import botocore.validate
 import botocore.serialize
-from botocore import credentials
-from botocore.signers import RequestSigner
+import botocore.validate
+from botocore import credentials, retryhandler, translate, waiter, xform_name
 from botocore.endpoint import EndpointCreator
+from botocore.exceptions import ClientError, DataNotFoundError
+from botocore.exceptions import OperationNotPageableError
+from botocore.model import ServiceModel
+from botocore.paginate import Paginator
+from botocore.signers import RequestSigner
+from botocore.utils import CachedProperty
 
 
 logger = logging.getLogger(__name__)
@@ -174,7 +171,45 @@ class ClientCreator(object):
     def _load_service_model(self, service_name):
         json_model = self._loader.load_service_model('aws/%s' % service_name)
         service_model = ServiceModel(json_model, service_name=service_name)
+        self._register_retries(service_model)
         return service_model
+
+    def _register_retries(self, service_model):
+        endpoint_prefix = service_model.endpoint_prefix
+
+        # First, we load the entire retry config for all services,
+        # then pull out just the information we need.
+        original_config = self._loader.load_data('aws/_retry')
+        if not original_config:
+            return
+
+        retry_config = translate.build_retry_config(
+            endpoint_prefix, original_config.get('retry', {}),
+            original_config.get('definitions', {}))
+
+        logger.debug("Registering retry handlers for service: %s",
+                     service_model.service_name)
+        handler = retryhandler.create_retry_handler(
+            retry_config, endpoint_prefix)
+        unique_id = 'retry-config-%s' % endpoint_prefix
+        self._event_emitter.register('needs-retry.%s' % endpoint_prefix,
+                                     handler, unique_id=unique_id)
+
+        # There's certainly a tradeoff for registering the retry config
+        # for the operations when the service is created.  In practice,
+        # there aren't a whole lot of per operation retry configs so
+        # this is ok for now.
+        for key in retry_config:
+            if key == '__default__':
+                continue
+
+            handler = retryhandler.create_retry_handler(retry_config, key)
+            unique_id = 'retry-config-%s-%s' % (service_model.service_name,
+                                                key)
+            self._event_emitter.register(
+                'needs-retry.%s.%s' % (service_model.service_name, key),
+                handler, unique_id=unique_id)
+
 
     def _get_signature_version_and_region(self, service_model, region_name,
                                           is_secure, scoped_config):
