@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2012-2014 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
@@ -777,6 +778,18 @@ class TestSSEKeyParamValidation(unittest.TestCase):
                                    SSECustomerAlgorithm='AES256',
                                    SSECustomerKey=key_str)['Body'].read(),
             b'mycontents2')
+
+
+class TestS3UTF8Headers(BaseS3ClientTest):
+    def test_can_set_utf_8_headers(self):
+        bucket_name = self.create_bucket()
+        body = six.BytesIO(b"Hello world!")
+        response = self.client.put_object(
+            Bucket=bucket_name, Key="foo.txt", Body=body,
+            ContentDisposition="attachment; filename=5小時接力起跑.jpg;")
+        self.assert_status_code(response, 200)
+        self.addCleanup(self.client.delete_object,
+                        Bucket=bucket_name, Key="foo.txt")
 
 
 if __name__ == '__main__':

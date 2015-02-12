@@ -121,9 +121,22 @@ class AWSHTTPConnection(HTTPConnection):
         self._expect_header_set = False
         return rval
 
+    def _convert_to_bytes(self, mixed_buffer):
+        # Take a list of mixed str/bytes and convert it
+        # all into a single bytestring.
+        # Any six.text_types will be encoded as utf-8.
+        bytes_buffer = []
+        for chunk in mixed_buffer:
+            if isinstance(chunk, six.text_type):
+                bytes_buffer.append(chunk.encode('utf-8'))
+            else:
+                bytes_buffer.append(chunk)
+        msg = b"\r\n".join(bytes_buffer)
+        return msg
+
     def _send_output(self, message_body=None):
         self._buffer.extend((b"", b""))
-        msg = b"\r\n".join(self._buffer)
+        msg = self._convert_to_bytes(self._buffer)
         del self._buffer[:]
         # If msg and message_body are sent in a single send() call,
         # it will avoid performance problems caused by the interaction

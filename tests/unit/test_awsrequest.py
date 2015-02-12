@@ -328,6 +328,17 @@ class TestAWSHTTPConnection(unittest.TestCase):
             conn._tunnel()
             self.assertTrue(mock_tunnel.called)
 
+    def test_encodes_unicode_method_line(self):
+        s = FakeSocket(b'HTTP/1.1 200 OK\r\n')
+        conn = AWSHTTPConnection('s3.amazonaws.com', 443)
+        conn.sock = s
+        # Note the combination of unicode 'GET' and
+        # bytes 'Utf8-Header' value.
+        conn.request(u'GET', '/bucket/foo', b'body',
+                     headers={"Utf8-Header": b"\xe5\xb0\x8f"})
+        response = conn.getresponse()
+        self.assertEqual(response.status, 200)
+
 
 if __name__ == "__main__":
     unittest.main()
