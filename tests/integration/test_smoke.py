@@ -190,5 +190,5 @@ def _make_client_call_with_errors(client, operation_name, kwargs):
         try:
             response = operation(**kwargs)
         except ClientError as e:
-            self.fail('Request was not retried properly, '
-                      'received error:\n%s' % pformat(e))
+            assert False, ('Request was not retried properly, '
+                           'received error:\n%s' % pformat(e))
