@@ -26,6 +26,8 @@ try:
 except ImportError:
     from itertools import zip_longest
 
+from nose.plugins.attrib import attr
+
 from botocore.vendored.requests import adapters
 from botocore.vendored.requests.exceptions import ConnectionError
 from botocore.compat import six
@@ -174,6 +176,7 @@ class TestS3Objects(TestS3BaseWithBucket):
                                   key=key_name)[0]
         self.assertEqual(response.status_code, 204)
 
+    @attr('slow')
     def test_can_paginate(self):
         for i in range(5):
             key_name = 'key%s' % i
@@ -190,6 +193,7 @@ class TestS3Objects(TestS3BaseWithBucket):
                      for el in data]
         self.assertEqual(key_names, ['key0', 'key1', 'key2', 'key3', 'key4'])
 
+    @attr('slow')
     def test_can_paginate_with_page_size(self):
         for i in range(5):
             key_name = 'key%s' % i
@@ -206,6 +210,7 @@ class TestS3Objects(TestS3BaseWithBucket):
                      for el in data]
         self.assertEqual(key_names, ['key0', 'key1', 'key2', 'key3', 'key4'])
 
+    @attr('slow')
     def test_client_can_paginate_with_page_size(self):
         for i in range(5):
             key_name = 'key%s' % i
@@ -223,6 +228,7 @@ class TestS3Objects(TestS3BaseWithBucket):
                      for el in data]
         self.assertEqual(key_names, ['key0', 'key1', 'key2', 'key3', 'key4'])
 
+    @attr('slow')
     def test_result_key_iters(self):
         for i in range(5):
             key_name = 'key/%s/%s' % (i, i)
@@ -245,6 +251,7 @@ class TestS3Objects(TestS3BaseWithBucket):
         self.assertIn('Contents', response)
         self.assertIn('CommonPrefixes', response)
 
+    @attr('slow')
     def test_can_get_and_put_object(self):
         self.create_object('foobarbaz', body='body contents')
         time.sleep(3)
@@ -649,6 +656,7 @@ class TestS3SigV4Client(BaseS3ClientTest):
             self.assert_status_code(response, 200)
             self.keys.append('foo.txt')
 
+    @attr('slow')
     def test_paginate_list_objects_unicode(self):
         key_names = [
             u'non-ascii-key-\xe4\xf6\xfc-01.txt',
@@ -671,6 +679,7 @@ class TestS3SigV4Client(BaseS3ClientTest):
 
         self.assertEqual(key_names, key_refs)
 
+    @attr('slow')
     def test_paginate_list_objects_safe_chars(self):
         key_names = [
             u'-._~safe-chars-key-01.txt',

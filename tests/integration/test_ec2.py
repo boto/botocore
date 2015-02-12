@@ -13,6 +13,8 @@
 from tests import unittest
 import itertools
 
+from nose.plugins.attrib import attr
+
 import botocore.session
 
 
@@ -58,6 +60,7 @@ class TestEC2Pagination(unittest.TestCase):
             self.assertEqual(len(reserved_inst_offer), 1)
 
 
+@attr('slow')
 class TestCopySnapshotCustomization(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
