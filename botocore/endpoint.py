@@ -132,7 +132,6 @@ class Endpoint(object):
                 url += '?%s' % encoded_query_string
             else:
                 url += '&%s' % encoded_query_string
-        self._encode_headers(headers)
         request = AWSRequest(method=r['method'], url=url,
                              data=r['body'],
                              headers=headers)
@@ -145,6 +144,7 @@ class Endpoint(object):
                 headers[key] = value.encode('utf-8')
 
     def prepare_request(self, request):
+        self._encode_headers(request.headers)
         return request.prepare()
 
     def _send_request(self, request_dict, operation_model):
