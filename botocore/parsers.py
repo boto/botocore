@@ -391,7 +391,7 @@ class QueryParser(BaseXMLResponseParser):
         # with ResponseMetadata for non-error responses:
         # 1. {"Errors": {"Error": {...}}} -> {"Error": {...}}
         # 2. {"RequestId": "id"} -> {"ResponseMetadata": {"RequestId": "id"}}
-        if 'Errors' in parsed and isinstance(parsed['Errors'], dict):
+        if 'Errors' in parsed:
             parsed.update(parsed.pop('Errors'))
         if 'RequestId' in parsed:
             parsed['ResponseMetadata'] = {'RequestId': parsed.pop('RequestId')}
