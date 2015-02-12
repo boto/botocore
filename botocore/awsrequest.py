@@ -111,7 +111,7 @@ class AWSHTTPConnection(HTTPConnection):
 
     def _send_request(self, method, url, body, headers):
         self._response_received = False
-        if headers.get('Expect', '') == '100-continue':
+        if headers.get('Expect', b'') == b'100-continue':
             self._expect_header_set = True
         else:
             self._expect_header_set = False
