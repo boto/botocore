@@ -142,10 +142,10 @@ class Endpoint(object):
     def _send_request(self, request_dict, operation_model):
         attempts = 1
         request = self.create_request(request_dict, operation_model)
-        response, exception = self._get_response(
+        success_response, exception = self._get_response(
             request, operation_model, attempts)
         while self._needs_retry(attempts, operation_model,
-                                response, exception):
+                                success_response, exception):
             attempts += 1
             # If there is a stream associated with the request, we need
             # to reset it before attempting to send the request again.
@@ -155,11 +155,19 @@ class Endpoint(object):
             # Create a new request when retried (including a new signature).
             request = self.create_request(
                 request_dict, operation_model=operation_model)
-            response, exception = self._get_response(request, operation_model,
-                                                     attempts)
-        return response
+            success_response, exception = self._get_response(
+                request, operation_model, attempts)
+        if exception is not None:
+            raise exception
+        else:
+            return success_response
 
     def _get_response(self, request, operation_model, attempts):
+        # This will return a tuple of (success_response, exception)
+        # and success_response is itself a tuple of
+        # (http_response, parsed_dict).
+        # If an exception occurs then the success_response is None.
+        # If no exception occurs then exception is None.
         try:
             logger.debug("Sending http request: %s", request)
             http_response = self.http_session.send(
