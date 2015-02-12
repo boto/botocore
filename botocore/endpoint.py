@@ -19,6 +19,7 @@ import threading
 
 from botocore.vendored.requests.sessions import Session
 from botocore.vendored.requests.utils import get_environ_proxies
+from botocore.vendored import six
 
 from botocore.exceptions import UnknownEndpointError
 from botocore.awsrequest import AWSRequest
@@ -136,7 +137,14 @@ class Endpoint(object):
                              headers=headers)
         return request
 
+    def _encode_headers(self, headers):
+        # In place encoding of headers to utf-8 if they are unicode.
+        for key, value in headers.items():
+            if isinstance(value, six.text_type):
+                headers[key] = value.encode('utf-8')
+
     def prepare_request(self, request):
+        self._encode_headers(request.headers)
         return request.prepare()
 
     def _send_request(self, request_dict, operation_model):
