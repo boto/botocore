@@ -286,6 +286,10 @@ class ClientError(Exception):
         'operation: {error_message}')
 
     def __init__(self, error_response, operation_name):
+        if 'Errors' in error_response and isinstance(error_response['Errors'],
+                                                     dict):
+            error_response = error_response['Errors']
+
         msg = self.MSG_TEMPLATE.format(
             error_code=error_response['Error']['Code'],
             error_message=error_response['Error']['Message'],
