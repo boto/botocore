@@ -14,10 +14,13 @@ import time
 import random
 from tests import unittest
 
+from nose.plugins.attrib import attr
+
 import botocore.session
 from botocore.client import ClientError
 
 
+@attr('slow')
 class TestWaiterLegacy(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
@@ -46,6 +49,7 @@ class TestWaiterLegacy(unittest.TestCase):
 
 
 # This is the same test as above, except using the client interface.
+@attr('slow')
 class TestWaiterForDynamoDB(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
