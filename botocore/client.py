@@ -195,21 +195,6 @@ class ClientCreator(object):
         self._event_emitter.register('needs-retry.%s' % endpoint_prefix,
                                      handler, unique_id=unique_id)
 
-        # There's certainly a tradeoff for registering the retry config
-        # for the operations when the service is created.  In practice,
-        # there aren't a whole lot of per operation retry configs so
-        # this is ok for now.
-        for key in retry_config:
-            if key == '__default__':
-                continue
-
-            handler = retryhandler.create_retry_handler(retry_config, key)
-            unique_id = 'retry-config-%s-%s' % (service_model.service_name,
-                                                key)
-            self._event_emitter.register(
-                'needs-retry.%s.%s' % (service_model.service_name, key),
-                handler, unique_id=unique_id)
-
 
     def _get_signature_version_and_region(self, service_model, region_name,
                                           is_secure, scoped_config):
