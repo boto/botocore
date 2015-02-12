@@ -386,10 +386,13 @@ class QueryParser(BaseXMLResponseParser):
         root = self._parse_xml_string_to_dom(xml_contents)
         parsed = self._build_name_to_xml_node(root)
         self._replace_nodes(parsed)
-        # Once we've converted xml->dict, we need to make one more
-        # adjustment to be consistent with ResponseMetadata
-        # for non-error responses:
-        # {"RequestId": "id"} -> {"ResponseMetadata": {"RequestId": "id"}}
+        # Once we've converted xml->dict, we need to make one or two
+        # more adjustments to extract nested errors and to be consistent
+        # with ResponseMetadata for non-error responses:
+        # 1. {"Errors": {"Error": {...}}} -> {"Error": {...}}
+        # 2. {"RequestId": "id"} -> {"ResponseMetadata": {"RequestId": "id"}}
+        if 'Errors' in parsed and isinstance(parsed['Errors'], dict):
+            parsed.update(parsed.pop('Errors'))
         if 'RequestId' in parsed:
             parsed['ResponseMetadata'] = {'RequestId': parsed.pop('RequestId')}
         return parsed
@@ -446,15 +449,12 @@ class EC2QueryParser(QueryParser):
         #   </Errors>
         #   <RequestID>12345</RequestID>
         # </Response>
-        # This is different from QueryParser in two ways:
-        # 1. It's RequestId, not RequestID
-        # 2. There's an extra <Errors> wrapper.
+        # This is different from QueryParser in that it's RequestID,
+        # not RequestId
         original = super(EC2QueryParser, self)._do_error_parse(response, shape)
         original['ResponseMetadata'] = {
             'RequestId': original.pop('RequestID')
         }
-        errors = original.pop('Errors')
-        original['Error'] = errors['Error']
         return original
 
 

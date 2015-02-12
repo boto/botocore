@@ -187,7 +187,8 @@ def _make_client_call_with_errors(client, operation_name, kwargs):
             return original_send(self, *args, **kwargs)
     with mock.patch('botocore.vendored.requests.adapters.HTTPAdapter.send',
                     mock_http_adapter_send):
-        response = operation(**kwargs)
-        assert_true('Error' not in response,
-                    "Request was not retried properly, "
-                    "received error:\n%s" % pformat(response))
+        try:
+            response = operation(**kwargs)
+        except ClientError as e:
+            self.fail('Request was not retried properly, '
+                      'received error:\n%s' % pformat(e))
