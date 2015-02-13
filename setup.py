@@ -10,7 +10,7 @@ import botocore
 from setuptools import setup, find_packages
 
 
-requires = ['jmespath==0.5.0',
+requires = ['jmespath==0.6.1',
             'python-dateutil>=2.1,<3.0.0']
 
 

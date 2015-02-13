@@ -1,6 +1,7 @@
 """Smoke tests to verify basic communication to all AWS services."""
 import mock
 from pprint import pformat
+import warnings
 from nose.tools import assert_equals, assert_true
 
 from botocore import xform_name
@@ -108,8 +109,12 @@ def test_can_make_request_with_client():
 
 def _make_client_call(client, operation_name, kwargs):
     method = getattr(client, operation_name)
-    response = method(**kwargs)
-    assert_true('Errors' not in response)
+    with warnings.catch_warnings(record=True) as caught_warnings:
+        response = method(**kwargs)
+        assert_equals(len(caught_warnings), 0,
+                      "Warnings were emitted during smoke test: %s"
+                      % caught_warnings)
+        assert_true('Errors' not in response)
 
 
 def test_can_make_request_and_understand_errors_with_client():

@@ -13,6 +13,7 @@
 
 import mock
 
+import botocore
 import botocore.auth
 
 from botocore.credentials import Credentials
@@ -27,15 +28,14 @@ class TestSigner(unittest.TestCase):
         self.credentials = Credentials('key', 'secret')
         self.emitter = mock.Mock()
         self.emitter.emit_until_response.return_value = (None, None)
-        self.config = {}
         self.signer = RequestSigner(
             'service_name', 'region_name', 'signing_name',
-            'v4', self.credentials, self.emitter, self.config)
+            'v4', self.credentials, self.emitter)
 
     def test_region_required_for_sigv4(self):
         self.signer = RequestSigner(
             'service_name', None, 'signing_name', 'v4', self.credentials,
-            self.emitter, self.config)
+            self.emitter)
 
         with self.assertRaises(NoRegionError):
             self.signer.sign('operation_name', mock.Mock())
@@ -87,7 +87,7 @@ class TestSigner(unittest.TestCase):
         self.emitter.emit_until_response.assert_called_with(
             'choose-signer.service_name.operation_name',
             signing_name='signing_name', region_name='region_name',
-            signature_version='v4', config=self.config)
+            signature_version='v4')
 
     def test_choose_signer_override(self):
         request = mock.Mock()
@@ -116,10 +116,11 @@ class TestSigner(unittest.TestCase):
             request_signer=self.signer)
 
     def test_disable_signing(self):
-        # Returning a blank string from choose-signer disabled signing!
+        # Returning botocore.UNSIGNED from choose-signer disables signing!
         request = mock.Mock()
         auth = mock.Mock()
-        self.emitter.emit_until_response.return_value = (None, '')
+        self.emitter.emit_until_response.return_value = (None,
+                                                         botocore.UNSIGNED)
 
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
                              {'v4': auth}):

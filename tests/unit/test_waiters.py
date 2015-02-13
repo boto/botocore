@@ -508,6 +508,28 @@ class TestOperationMethods(unittest.TestCase):
         operation_object.call.assert_called_with(
             endpoint, Foo='a', Bar='b')
 
+    def test_legacy_method_handles_exceptions(self):
+        operation_object = mock.Mock()
+        exception = Exception()
+        exception.error_message = 'Foo'
+        exception.error_code = 'MyCode'
+        operation_object.call.side_effect = exception
+        endpoint = mock.Mock()
+        op = LegacyOperationMethod(operation_object, endpoint)
+        response = op(Foo='a', Bar='b')
+        self.assertEqual(response,
+                         {'Error': {'Code': 'MyCode', 'Message': 'Foo'}})
+
+    def test_legacy_method_with_unknown_exception(self):
+        operation_object = mock.Mock()
+        # A generic exception missing the error_message and error_code
+        # attrs will just be reraised.
+        operation_object.call.side_effect = ValueError
+        endpoint = mock.Mock()
+        op = LegacyOperationMethod(operation_object, endpoint)
+        with self.assertRaises(ValueError):
+            op(Foo='a', Bar='b')
+
 
 class ServiceWaiterFunctionalTest(BaseEnvVar):
     """

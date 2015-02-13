@@ -28,7 +28,7 @@ class TestCloudsearchOperations(BaseSessionTest):
             contentType='application/json', documents=stream)
         endpoint = service.get_endpoint(region_name='us-east-1',
                                         endpoint_url='http://example.com')
-        request = endpoint.create_request(built, signer=None)
+        request = endpoint.create_request(built)
         self.assertEqual(request.body, stream)
 
     def test_region_required_due_to_sigv4(self):
@@ -38,5 +38,6 @@ class TestCloudsearchOperations(BaseSessionTest):
         built = operation.build_parameters(
             contentType='application/json', documents=stream)
         # Note we're not giving a region name.
+        endpoint = service.get_endpoint(endpoint_url='http://example.com')
         with self.assertRaises(NoRegionError):
-            endpoint = service.get_endpoint(endpoint_url='http://example.com')
+            operation.call(endpoint, contentType='application/json', documents=stream)
