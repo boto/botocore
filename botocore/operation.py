@@ -49,6 +49,7 @@ class Operation(BotoCoreObject):
         if paginator_cls is None:
             paginator_cls = self._DEFAULT_PAGINATOR_CLS
         self._paginator_cls = paginator_cls
+        self._lock = threading.Lock()
 
     def __repr__(self):
         return 'Operation:%s' % self.name
@@ -152,7 +153,7 @@ class Operation(BotoCoreObject):
             # a request has already been signed without needing
             # to acquire the lock.
             if not getattr(request, '_is_signed', False):
-                with threading.Lock():
+                with self._lock:
                     if not getattr(request, '_is_signed', False):
                         signer.sign(self.name, request)
                         request._is_signed = True
