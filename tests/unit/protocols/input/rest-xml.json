@@ -652,7 +652,7 @@
         "given": {
           "http": {
             "method": "POST",
-            "requestUri": "/"
+            "requestUri": ""
           },
           "input": {
             "shape": "InputShape",
@@ -670,7 +670,7 @@
         "serialized": {
           "method": "POST",
           "body": "",
-          "uri": "/",
+          "uri": "",
           "headers": {
             "x-foo-a": "b",
             "x-foo-c": "d"
@@ -703,7 +703,7 @@
         "given": {
           "http": {
             "method": "POST",
-            "requestUri": "/"
+            "requestUri": ""
           },
           "input": {
             "shape": "InputShape",
@@ -717,7 +717,7 @@
         "serialized": {
           "method": "POST",
           "body": "bar",
-          "uri": "/"
+          "uri": ""
         }
       }
     ]
@@ -746,7 +746,7 @@
         "given": {
           "http": {
             "method": "POST",
-            "requestUri": "/"
+            "requestUri": ""
           },
           "input": {
             "shape": "InputShape",
@@ -760,14 +760,14 @@
         "serialized": {
           "method": "POST",
           "body": "bar",
-          "uri": "/"
+          "uri": ""
         }
       },
       {
         "given": {
           "http": {
             "method": "POST",
-            "requestUri": "/"
+            "requestUri": ""
           },
           "input": {
             "shape": "InputShape",
@@ -780,7 +780,7 @@
         "serialized": {
           "method": "POST",
           "body": "",
-          "uri": "/"
+          "uri": ""
         }
       }
     ]
@@ -818,7 +818,7 @@
         "given": {
           "http": {
             "method": "POST",
-            "requestUri": "/"
+            "requestUri": ""
           },
           "input": {
             "shape": "InputShape",
@@ -834,14 +834,14 @@
         "serialized": {
           "method": "POST",
           "body": "<foo><baz>bar</baz></foo>",
-          "uri": "/"
+          "uri": ""
         }
       },
       {
         "given": {
           "http": {
             "method": "POST",
-            "requestUri": "/"
+            "requestUri": ""
           },
           "input": {
             "shape": "InputShape",
@@ -853,7 +853,7 @@
         "serialized": {
           "method": "POST",
           "body": "",
-          "uri": "/"
+          "uri": ""
         }
       }
     ]
@@ -911,7 +911,7 @@
         "given": {
           "http": {
             "method": "POST",
-            "requestUri": "/"
+            "requestUri": ""
           },
           "input": {
             "shape": "InputShape",
@@ -930,7 +930,7 @@
         "serialized": {
           "method": "POST",
           "body": "<Grant><Grantee xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"CanonicalUser\"><EmailAddress>foo@example.com</EmailAddress></Grantee></Grant>",
-          "uri": "/"
+          "uri": ""
         }
       }
     ]
