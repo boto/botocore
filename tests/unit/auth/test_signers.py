@@ -197,6 +197,20 @@ class TestSigV2(unittest.TestCase):
         self.assertEqual(request.data['SignatureMethod'], 'HmacSHA256')
         self.assertEqual(request.data['SignatureVersion'], '2')
 
+    def test_resign(self):
+        # Make sure that resigning after e.g. retries works
+        request = Request()
+        request.url = '/'
+        request.method = 'POST'
+        params = {
+            'Foo': u'\u2713',
+            'Signature': u'VCtWuwaOL0yMffAT8W4y0AFW3W4KUykBqah9S40rB+Q='
+        }
+        result = self.signer.calc_signature(request, params)
+        self.assertEqual(
+            result, ('Foo=%E2%9C%93',
+                     u'VCtWuwaOL0yMffAT8W4y0AFW3W4KUykBqah9S40rB+Q='))
+
 
 class TestSigV3(unittest.TestCase):
 

@@ -37,6 +37,7 @@ from botocore import regions
 from botocore.model import ServiceModel
 import botocore.service
 from botocore import waiter
+from botocore import retryhandler, translate
 
 
 class Session(object):
@@ -828,7 +829,7 @@ class Session(object):
         endpoint_resolver = self.get_component('endpoint_resolver')
         client_creator = botocore.client.ClientCreator(
             loader, endpoint_resolver, self.user_agent(), event_emitter,
-            response_parser_factory)
+            retryhandler, translate, response_parser_factory)
         client = client_creator.create_client(
             service_name, region_name, use_ssl, endpoint_url, verify,
             credentials, scoped_config=self.get_scoped_config(),

@@ -340,7 +340,8 @@ def _decode_policy_types(parsed, shape):
     if shape.type_name == 'structure':
         for member_name, member_shape in shape.members.items():
             if member_shape.type_name == 'string' and \
-                    member_shape.name == shape_name:
+                    member_shape.name == shape_name and \
+                    member_name in parsed:
                 parsed[member_name] = decode_quoted_jsondoc(parsed[member_name])
             elif member_name in parsed:
                 _decode_policy_types(parsed[member_name], member_shape)

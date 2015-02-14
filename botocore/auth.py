@@ -72,6 +72,11 @@ class SigV2Auth(BaseSigner):
                          digestmod=sha256)
         pairs = []
         for key in sorted(params):
+            # Any previous signature should not be a part of this
+            # one, so we skip that particular key. This prevents
+            # issues during retries.
+            if key == 'Signature':
+                continue
             value = six.text_type(params[key])
             pairs.append(quote(key.encode('utf-8'), safe='') + '=' +
                          quote(value.encode('utf-8'), safe='-_~'))

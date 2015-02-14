@@ -257,6 +257,31 @@ class TestResponseMetadataParsed(unittest.TestCase):
             'HTTPStatusCode': 404,
         })
 
+    def test_can_parse_sdb_error_response(self):
+        body = (
+            '<OperationNameResponse>'
+                '<Errors>'
+                    '<Error>'
+                        '<Code>1</Code>'
+                        '<Message>msg</Message>'
+                    '</Error>'
+                '</Errors>'
+                '<RequestId>abc-123</RequestId>'
+            '</OperationNameResponse>'
+        ).encode('utf-8')
+        parser = parsers.QueryParser()
+        parsed = parser.parse({
+            'body': body, 'headers': {}, 'status_code': 500}, None)
+        self.assertIn('Error', parsed)
+        self.assertEqual(parsed['Error'], {
+            'Code': '1',
+            'Message': 'msg'
+        })
+        self.assertEqual(parsed['ResponseMetadata'], {
+            'RequestId': 'abc-123',
+            'HTTPStatusCode': 500
+        })
+
     def test_can_parse_glacier_error_response(self):
         body = (b'{"code":"AccessDeniedException","type":"Client","message":'
                 b'"Access denied"}')
