@@ -14,6 +14,8 @@ import time
 import random
 from tests import unittest
 
+from nose.plugins.attrib import attr
+
 import botocore.session
 
 
@@ -44,6 +46,7 @@ class TestKinesisListStreams(unittest.TestCase):
         parsed = self.client.list_streams()
         self.assertIn('StreamNames', parsed)
 
+    @attr('slow')
     def test_can_put_stream_blob(self):
         self.client.put_record(
             StreamName=self.stream_name, PartitionKey='foo', Data='foobar')
@@ -61,6 +64,7 @@ class TestKinesisListStreams(unittest.TestCase):
         self.assertTrue(len(records['Records']) > 0)
         self.assertEqual(records['Records'][0]['Data'], b'foobar')
 
+    @attr('slow')
     def test_can_put_records_single_blob(self):
         self.client.put_records(
             StreamName=self.stream_name,
@@ -83,6 +87,7 @@ class TestKinesisListStreams(unittest.TestCase):
         self.assertTrue(len(records['Records']) > 0)
         self.assertEqual(records['Records'][0]['Data'], b'foobar')
 
+    @attr('slow')
     def test_can_put_records_multiple_blob(self):
         self.client.put_records(
             StreamName=self.stream_name,

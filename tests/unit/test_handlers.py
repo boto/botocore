@@ -348,6 +348,46 @@ class TestHandlers(BaseSessionTest):
         # an error response.
         self.assertEqual(original, handler_input)
 
+    def test_decode_json_policy(self):
+        parsed = {
+            'Document': '{"foo": "foobarbaz"}',
+            'Other': 'bar',
+        }
+        service_def = {
+            'operations': {
+                'Foo': {
+                    'output': {'shape': 'PolicyOutput'},
+                }
+            },
+            'shapes': {
+                'PolicyOutput': {
+                    'type': 'structure',
+                    'members': {
+                        'Document': {
+                            'shape': 'policyDocumentType'
+                        },
+                        'Other': {
+                            'shape': 'stringType'
+                        }
+                    }
+                },
+                'policyDocumentType': {
+                    'type': 'string'
+                },
+                'stringType': {
+                    'type': 'string'
+                },
+            }
+        }
+        model = ServiceModel(service_def)
+        op_model = model.operation_model('Foo')
+        handlers.json_decode_policies(parsed, op_model)
+        self.assertEqual(parsed['Document'], {'foo': 'foobarbaz'})
+
+        no_document = {'Other': 'bar'}
+        handlers.json_decode_policies(no_document, op_model)
+        self.assertEqual(no_document, {'Other': 'bar'})
+
     def test_inject_account_id(self):
         params = {}
         handlers.inject_account_id(params)
