@@ -61,6 +61,9 @@
     },
     {
       "uri":"https://sts.amazonaws.com",
+      "constraints":[
+        ["region", "oneOf", ["us-east-1", null]]
+      ],
       "properties": {
         "credentialScope": {
             "region": "us-east-1"
