@@ -339,6 +339,23 @@ class TestEndpointCreator(unittest.TestCase):
         endpoint = creator.create_endpoint(self.service_model, endpoint_url='https://foo')
         self.assertEqual(endpoint.region_name, 'us-west-2')
 
+    def test_endpoint_resolver_uses_credential_scope_with_endpoint_url_and_no_region(self):
+        resolver = Mock()
+        resolver_region_override = 'us-east-1'
+        resolver.construct_endpoint.return_value = {
+            'uri': 'https://endpoint.url',
+            'properties': {
+                'credentialScope': {
+                    'region': resolver_region_override,
+                }
+            }
+        }
+        original_region_name = None
+        creator = EndpointCreator(resolver, original_region_name,
+                                  Mock(), 'user-agent')
+        endpoint = creator.create_endpoint(self.service_model, endpoint_url='https://foo')
+        self.assertEqual(endpoint.region_name, resolver_region_override)
+
 
 class TestAWSSession(unittest.TestCase):
     def test_auth_header_preserved_from_s3_redirects(self):

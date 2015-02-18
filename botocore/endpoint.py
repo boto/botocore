@@ -294,27 +294,28 @@ class EndpointCreator(object):
                 raise
         # We only support the credentialScope.region in the properties
         # bag right now, so if it's available, it will override the
-        # provided region name if an endpoint url was not manually set.
-        # If a endpoint url was specified, the user must specify a region.
-        region_name_override = None
-        if endpoint_url is None:
-            region_name_override = endpoint['properties'].get(
-                'credentialScope', {}).get('region')
+        # provided region name.
+        region_name_override = endpoint['properties'].get(
+            'credentialScope', {}).get('region')
         if signature_version is NOT_SET:
             signature_version = service_model.signature_version
             if 'signatureVersion' in endpoint['properties']:
                 signature_version = endpoint['properties']['signatureVersion']
-        if region_name_override is not None:
-            # Letting the heuristics rule override the region_name
-            # allows for having a default region of something like us-west-2
-            # for IAM, but we still will know to use us-east-1 for sigv4.
-            region_name = region_name_override
         if endpoint_url is not None:
+            # If an endpoint_url is provided, do not use region name override if a region
+            # was provided by the user.
+            if region_name is not None:
+                region_name_override = None
             # If the user provides an endpoint url, we'll use that
             # instead of what the heuristics rule gives us.
             final_endpoint_url = endpoint_url
         else:
             final_endpoint_url = endpoint['uri']
+        if region_name_override is not None:
+            # Letting the heuristics rule override the region_name
+            # allows for having a default region of something like us-west-2
+            # for IAM, but we still will know to use us-east-1 for sigv4.
+            region_name = region_name_override
         return self._get_endpoint(service_model, region_name,
                                   signature_version, final_endpoint_url,
                                   verify, response_parser_factory)
