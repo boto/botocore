@@ -294,9 +294,12 @@ class EndpointCreator(object):
                 raise
         # We only support the credentialScope.region in the properties
         # bag right now, so if it's available, it will override the
-        # provided region name.
-        region_name_override = endpoint['properties'].get(
-            'credentialScope', {}).get('region')
+        # provided region name if an endpoint url was not manually set.
+        # If a endpoint url was specified, the user must specify a region.
+        region_name_override = None
+        if endpoint_url is None:
+            region_name_override = endpoint['properties'].get(
+                'credentialScope', {}).get('region')
         if signature_version is NOT_SET:
             signature_version = service_model.signature_version
             if 'signatureVersion' in endpoint['properties']:
