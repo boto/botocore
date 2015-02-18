@@ -17,7 +17,8 @@ from tests import unittest
 
 import mock
 from botocore.vendored.requests import ConnectionError, Timeout
-from botocore.vendored.requests.packages.urllib3.exceptions import ClosedPoolError
+from botocore.vendored.requests.packages.urllib3.exceptions import \
+    ClosedPoolError, TimeoutError
 
 from botocore import retryhandler
 from botocore.exceptions import ChecksumError
@@ -220,6 +221,17 @@ class TestCreateRetryConfiguration(unittest.TestCase):
             self.retry_config, operation_name='OperationBar')
         sleep_time = handler(response=None, attempts=1,
                              caught_exception=Timeout())
+        self.assertEqual(sleep_time, 1)
+
+    def test_response_read_timeouts_are_retried(self):
+        # Sometimes the connection will get a valid response
+        # and then later while reading the raw body it may time
+        # out and throw a urllib3 exception instead of a requests
+        # exception. We need to handle this properly.
+        handler = retryhandler.create_retry_handler(
+            self.retry_config, operation_name='OperationBar')
+        sleep_time = handler(response=None, attempts=1,
+                             caught_exception=TimeoutError())
         self.assertEqual(sleep_time, 1)
 
     def test_retry_pool_closed_errors(self):
