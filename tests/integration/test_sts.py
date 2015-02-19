@@ -20,6 +20,12 @@ class TestSTS(unittest.TestCase):
         self.session = botocore.session.get_session()
 
     def test_regionalized_endpoints(self):
+
+        sts = self.session.create_client('sts', region_name='ap-southeast-1')
+        response = sts.get_session_token()
+        # Do not want to be revealing any temporary keys if the assertion fails
+        self.assertIn('Credentials', response.keys())
+
         # Since we have to activate STS regionalization, we will test
         # that you can send an STS request to a regionalized endpoint
         # by making a call with the explicitly wrong region name
@@ -36,6 +42,13 @@ class TestSTS(unittest.TestCase):
         # but this type of integration testing (non customized) should
         # be done at the botocore level.
         sts = self.session.get_service('sts')
+
+        endpoint = sts.get_endpoint(region_name='ap-southeast-1')
+        operation = sts.get_operation('GetSessionToken')
+        http, response = operation.call(endpoint)
+        # Do not want to be revealing any temporary keys if the assertion fails
+        self.assertIn('Credentials', response.keys())
+
         endpoint = sts.get_endpoint(
             region_name='ap-southeast-1',
             endpoint_url='https://sts.us-west-2.amazonaws.com')

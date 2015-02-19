@@ -290,11 +290,6 @@ class EndpointCreator(object):
                 endpoint = {'uri': endpoint_url, 'properties': {}}
             else:
                 raise
-        # We only support the credentialScope.region in the properties
-        # bag right now, so if it's available, it will override the
-        # provided region name.
-        region_name_override = endpoint['properties'].get(
-            'credentialScope', {}).get('region')
 
         region_name = self._determine_region_name(endpoint, region_name,
                                                   endpoint_url)
