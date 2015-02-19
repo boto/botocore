@@ -18,9 +18,11 @@ from botocore.exceptions import ClientError
 class TestSTS(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
+        credentials = self.session.get_credentials()
+        if credentials.token is not None:
+            self.skipTest('STS tests require long-term credentials')
 
     def test_regionalized_endpoints(self):
-
         sts = self.session.create_client('sts', region_name='ap-southeast-1')
         response = sts.get_session_token()
         # Do not want to be revealing any temporary keys if the assertion fails
