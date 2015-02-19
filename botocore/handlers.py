@@ -473,6 +473,7 @@ BUILTIN_HANDLERS = [
     ('service-data-loaded', register_retries_for_service),
     ('choose-signer.cognito-identity.GetId', disable_signing),
     ('choose-signer.cognito-identity.GetOpenIdToken', disable_signing),
+    ('choose-signer.sts.AssumeRoleWithSAML', disable_signing),
     ('before-sign.s3', fix_s3_host),
     ('before-parameter-build.s3.HeadObject', sse_md5),
     ('before-parameter-build.s3.GetObject', sse_md5),
