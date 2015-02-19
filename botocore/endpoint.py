@@ -299,11 +299,6 @@ class EndpointCreator(object):
         region_name = self._determine_region_name(endpoint, region_name,
                                                   endpoint_url)
         if endpoint_url is not None:
-            # If an endpoint_url is provided, do not use region name
-            # override if a region
-            # was provided by the user.
-            if region_name is not None:
-                region_name_override = None
             # If the user provides an endpoint url, we'll use that
             # instead of what the heuristics rule gives us.
             final_endpoint_url = endpoint_url
