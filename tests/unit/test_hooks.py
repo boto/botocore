@@ -507,6 +507,46 @@ class TestWildcardHandlers(unittest.TestCase):
         self.emitter.emit('foo.bar.baz', id_name='last-time')
         self.assertEqual(second, ['third-time'])
 
+    def test_copy_emitter_with_unique_id_event(self):
+        # Here we're not testing copy directly, we're testing
+        # the observable behavior from copying an event emitter.
+        first = []
+        def first_handler(id_name, **kwargs):
+            first.append(id_name)
+
+        second = []
+        def second_handler(id_name, **kwargs):
+            second.append(id_name)
+
+        self.emitter.register('foo', first_handler, 'bar')
+        self.emitter.emit('foo', id_name='first-time')
+        self.assertEqual(first, ['first-time'])
+        self.assertEqual(second, [])
+
+        copied_emitter = copy.copy(self.emitter)
+
+        # If we register an event handler with the copied
+        # emitter, the event should not get registered again
+        # because the unique id was already used.
+        copied_emitter.register('foo', second_handler, 'bar')
+        copied_emitter.emit('foo', id_name='second-time')
+        self.assertEqual(first, ['first-time', 'second-time'])
+        self.assertEqual(second, [])
+
+        # If we unregister the first event from the copied emitter,
+        # We should be able to register the second handler.
+        copied_emitter.unregister('foo', first_handler, 'bar')
+        copied_emitter.register('foo', second_handler, 'bar')
+        copied_emitter.emit('foo', id_name='third-time')
+        self.assertEqual(first, ['first-time', 'second-time'])
+        self.assertEqual(second, ['third-time'])
+
+        # The original event emitter should have the unique id event still
+        # registered though.
+        self.emitter.emit('foo', id_name='fourth-time')
+        self.assertEqual(first, ['first-time', 'second-time', 'fourth-time'])
+        self.assertEqual(second, ['third-time'])
+
     def test_copy_events_with_partials(self):
         # There's a bug in python2.6 where you can't deepcopy
         # a partial object.  We want to ensure that doesn't
