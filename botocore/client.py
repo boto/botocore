@@ -208,9 +208,7 @@ class ClientCreator(object):
         endpoint_config = resolver.construct_endpoint(
                 service_model.endpoint_prefix,
                 region_name, scheme=scheme)
-        # Region name override from endpoint
-        region_name = endpoint_config.get('properties', {}).get(
-            'credentialScope', {}).get('region', region_name)
+
         # Signature version override from endpoint
         signature_version = service_model.signature_version
         if 'signatureVersion' in endpoint_config.get('properties', {}):
@@ -252,6 +250,10 @@ class ClientCreator(object):
             response_parser_factory=self._response_parser_factory)
         response_parser = botocore.parsers.create_parser(protocol)
 
+        # This is only temporary in the sense that we should remove any
+        # region_name logic from endpoints and put it into clients.
+        # But that can only happen once operation objects are deprecated.
+        region_name = endpoint.region_name
         signature_version, region_name = \
             self._get_signature_version_and_region(
                 service_model, region_name, is_secure, scoped_config)

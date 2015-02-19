@@ -76,9 +76,7 @@ class Operation(BotoCoreObject):
         endpoint_config = resolver.construct_endpoint(
                 service_model.endpoint_prefix,
                 endpoint.region_name, scheme=scheme)
-        # Region name override from endpoint
-        region_name = endpoint_config.get('properties', {}).get(
-            'credentialScope', {}).get('region', endpoint.region_name)
+
         # Signature version override from endpoint
         signature_version = self.service.signature_version
         if 'signatureVersion' in endpoint_config.get('properties', {}):
@@ -97,7 +95,7 @@ class Operation(BotoCoreObject):
                          service_model.endpoint_prefix, override)
                     signature_version = override
 
-        return signature_version, region_name
+        return signature_version, endpoint.region_name
 
     def call(self, endpoint, **kwargs):
         logger.debug("%s called with kwargs: %s", self, kwargs)
