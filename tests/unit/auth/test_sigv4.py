@@ -122,6 +122,8 @@ def create_request_from_raw_request(raw_request):
     if raw.error_code is not None:
         raise Exception(raw.error_message)
     request.method = raw.command
+    datetime_now = datetime.datetime(2011, 9, 9, 23, 36)
+    request.context['timestamp'] = datetime_now.strftime('%Y%m%dT%H%M%SZ')
     for key, val in raw.headers.items():
         request.headers[key] = val
     request.data = raw.rfile.read().decode('utf-8')

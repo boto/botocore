@@ -263,6 +263,7 @@ class AWSRequest(models.RequestEncodingMixin, models.Request):
             for key, value in self.headers.items():
                 headers[key] = value
         self.headers = headers
+        self.context = {}
 
     def prepare(self):
         """Constructs a :class:`AWSPreparedRequest <AWSPreparedRequest>`."""

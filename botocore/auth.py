@@ -149,8 +149,6 @@ class SigV4Auth(BaseSigner):
         # We initialize these value here so the unit tests can have
         # valid values.  But these will get overriden in ``add_auth``
         # later for real requests.
-        self._now = datetime.datetime.utcnow()
-        self.timestamp = self._now.strftime('%Y%m%dT%H%M%SZ')
         self._region_name = region_name
         self._service_name = service_name
 
@@ -265,17 +263,17 @@ class SigV4Auth(BaseSigner):
         normalized_path = quote(normalize_url_path(path), safe='/~')
         return normalized_path
 
-    def scope(self, args):
+    def scope(self, request):
         scope = [self.credentials.access_key]
-        scope.append(self.timestamp[0:8])
+        scope.append(request.context['timestamp'][0:8])
         scope.append(self._region_name)
         scope.append(self._service_name)
         scope.append('aws4_request')
         return '/'.join(scope)
 
-    def credential_scope(self, args):
+    def credential_scope(self, request):
         scope = []
-        scope.append(self.timestamp[0:8])
+        scope.append(request.context['timestamp'][0:8])
         scope.append(self._region_name)
         scope.append(self._service_name)
         scope.append('aws4_request')
@@ -288,15 +286,15 @@ class SigV4Auth(BaseSigner):
         were included in the StringToSign.
         """
         sts = ['AWS4-HMAC-SHA256']
-        sts.append(self.timestamp)
+        sts.append(request.context['timestamp'])
         sts.append(self.credential_scope(request))
         sts.append(sha256(canonical_request.encode('utf-8')).hexdigest())
         return '\n'.join(sts)
 
-    def signature(self, string_to_sign):
+    def signature(self, string_to_sign, request):
         key = self.credentials.secret_key
         k_date = self._sign(('AWS4' + key).encode('utf-8'),
-                            self.timestamp[0:8])
+                            request.context['timestamp'][0:8])
         k_region = self._sign(k_date, self._region_name)
         k_service = self._sign(k_region, self._service_name)
         k_signing = self._sign(k_service, 'aws4_request')
@@ -305,9 +303,8 @@ class SigV4Auth(BaseSigner):
     def add_auth(self, request):
         if self.credentials is None:
             raise NoCredentialsError
-        # Create a new timestamp for each signing event
-        self._now = datetime.datetime.utcnow()
-        self.timestamp = self._now.strftime('%Y%m%dT%H%M%SZ')
+        datetime_now = datetime.datetime.utcnow()
+        request.context['timestamp'] = datetime_now.strftime('%Y%m%dT%H%M%SZ')
         # This could be a retry.  Make sure the previous
         # authorization header is removed first.
         self._modify_request_before_signing(request)
@@ -316,7 +313,7 @@ class SigV4Auth(BaseSigner):
         logger.debug('CanonicalRequest:\n%s', canonical_request)
         string_to_sign = self.string_to_sign(request, canonical_request)
         logger.debug('StringToSign:\n%s', string_to_sign)
-        signature = self.signature(string_to_sign)
+        signature = self.signature(string_to_sign, request)
         logger.debug('Signature:\n%s', signature)
 
         self._inject_signature_to_request(request, signature)
@@ -344,14 +341,16 @@ class SigV4Auth(BaseSigner):
         # header.  Otherwise we use the X-Amz-Date header.
         if 'Date' in request.headers:
             del request.headers['Date']
+            datetime_timestamp = datetime.datetime.strptime(
+                request.context['timestamp'], '%Y%m%dT%H%M%SZ')
             request.headers['Date'] = formatdate(
-                int(calendar.timegm(self._now.timetuple())))
+                int(calendar.timegm(datetime_timestamp.timetuple())))
             if 'X-Amz-Date' in request.headers:
                 del request.headers['X-Amz-Date']
         else:
             if 'X-Amz-Date' in request.headers:
                 del request.headers['X-Amz-Date']
-            request.headers['X-Amz-Date'] = self.timestamp
+            request.headers['X-Amz-Date'] = request.context['timestamp']
 
 
 class S3SigV4Auth(SigV4Auth):
@@ -387,7 +386,7 @@ class SigV4QueryAuth(SigV4Auth):
         auth_params = {
             'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
             'X-Amz-Credential': self.scope(request),
-            'X-Amz-Date': self.timestamp,
+            'X-Amz-Date': request.context['timestamp'],
             'X-Amz-Expires': self._expires,
             'X-Amz-SignedHeaders': 'host',
         }

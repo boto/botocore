@@ -328,6 +328,45 @@ class TestSigV4(unittest.TestCase):
                     "%22directors%5E10%22%5D%7D")
         self.assertEqual(actual, expected)
 
+    def test_thread_safe_timestamp(self):
+        request = AWSRequest()
+        request.url = (
+            'https://search-testdomain1-j67dwxlet67gf7ghwfmik2c67i.us-west-2.'
+            'cloudsearch.amazonaws.com/'
+            '2013-01-01/search?format=sdk&pretty=true&'
+            'q.options=%7B%22defaultOperator%22%3A%20%22and%22%2C%20%22'
+            'fields%22%3A%5B%22directors%5E10%22%5D%7D&q=George%20Lucas'
+        )
+        request.method = 'GET'
+        auth = botocore.auth.SigV4Auth(
+            self.credentials, 'cloudsearchdomain', 'us-west-2')
+        with mock.patch.object(
+                botocore.auth.datetime, 'datetime',
+                mock.Mock(wraps=datetime.datetime)) as mock_datetime:
+            original_utcnow = datetime.datetime(2014, 1, 1, 0, 0)
+ 
+            mock_datetime.utcnow.return_value = original_utcnow
+            # Go through the add_auth process once. This will attach
+            # a timestamp to the request at the beginning of auth.
+            auth.add_auth(request)
+            self.assertEqual(request.context['timestamp'], '20140101T000000Z')
+            # Ensure the date is in the Authorization header
+            self.assertIn('20140101', request.headers['Authorization'])
+            # Now suppose the utc time becomes the next day all of a sudden
+            mock_datetime.utcnow.return_value = datetime.datetime(
+                2014, 1, 2, 0, 0)
+            # Smaller methods like the canonical request and string_to_sign
+            # should  have the timestamp attached to the request in their
+            # body and not what the time is now mocked as. This is to ensure
+            # there is no mismatching in timestamps when signing.
+            cr = auth.canonical_request(request)
+            self.assertIn('x-amz-date:20140101T000000Z', cr)
+            self.assertNotIn('x-amz-date:20140102T000000Z', cr)
+
+            sts = auth.string_to_sign(request, cr)
+            self.assertIn('20140101T000000Z', sts)
+            self.assertNotIn('20140102T000000Z', sts)
+
 
 class TestSigV4Resign(unittest.TestCase):
 
@@ -341,13 +380,6 @@ class TestSigV4Resign(unittest.TestCase):
         self.request = AWSRequest()
         self.request.method = 'PUT'
         self.request.url = 'https://ec2.amazonaws.com/'
-        self.datetime_patch = mock.patch('botocore.auth.datetime')
-        self.datetime_mock = self.datetime_patch.start()
-        self.now = datetime.datetime.utcnow()
-        self.datetime_mock.datetime.utcnow.return_value = self.now
-
-    def tearDown(self):
-        self.datetime_patch.stop()
 
     def test_resign_request_with_date(self):
         self.request.headers['Date'] = 'Thu, 17 Nov 2005 18:49:58 GMT'
