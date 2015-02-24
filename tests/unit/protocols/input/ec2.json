@@ -34,7 +34,7 @@
           "Bar": "val2"
         },
         "serialized": {
-          "uri": "/",
+          "uri": "",
           "body": "Action=OperationName&Version=2014-01-01&Foo=val1&Bar=val2"
         }
       }
@@ -82,7 +82,7 @@
           "Yuck": "val3"
         },
         "serialized": {
-          "uri": "/",
+          "uri": "",
           "body": "Action=OperationName&Version=2014-01-01&Foo=val1&BarLocationName=val2&yuckQueryName=val3"
         }
       }
@@ -131,7 +131,7 @@
           }
         },
         "serialized": {
-          "uri": "/",
+          "uri": "",
           "body": "Action=OperationName&Version=2014-01-01&Struct.Scalar=foo"
         }
       }
@@ -178,7 +178,7 @@
           ]
         },
         "serialized": {
-          "uri": "/",
+          "uri": "",
           "body": "Action=OperationName&Version=2014-01-01&ListArg.1=foo&ListArg.2=bar&ListArg.3=baz"
         }
       }
@@ -227,7 +227,7 @@
           ]
         },
         "serialized": {
-          "uri": "/",
+          "uri": "",
           "body": "Action=OperationName&Version=2014-01-01&ListMemberName.1=a&ListMemberName.2=b&ListMemberName.3=c"
         }
       }
@@ -277,7 +277,7 @@
           ]
         },
         "serialized": {
-          "uri": "/",
+          "uri": "",
           "body": "Action=OperationName&Version=2014-01-01&ListQueryName.1=a&ListQueryName.2=b&ListQueryName.3=c"
         }
       }
@@ -314,7 +314,7 @@
           "BlobArg": "foo"
         },
         "serialized": {
-          "uri": "/",
+          "uri": "",
           "body": "Action=OperationName&Version=2014-01-01&BlobArg=Zm9v"
         }
       }
@@ -351,7 +351,7 @@
           "TimeArg": 1422172800
         },
         "serialized": {
-          "uri": "/",
+          "uri": "",
           "body": "Action=OperationName&Version=2014-01-01&TimeArg=2015-01-25T08%3A00%3A00Z"
         }
       }

@@ -11,31 +11,21 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import unittest, BaseSessionTest, create_session
+from tests import unittest
 
-from mock import Mock, patch, sentinel
+from mock import Mock, patch
 from botocore.vendored.requests import ConnectionError
-from botocore.vendored.requests.models import Response
 
 from botocore.compat import six
 from botocore.awsrequest import AWSRequest
 from botocore.endpoint import get_endpoint, Endpoint, DEFAULT_TIMEOUT
 from botocore.endpoint import EndpointCreator
 from botocore.endpoint import PreserveAuthSession
-from botocore.auth import SigV4Auth
-from botocore.session import Session
-from botocore.exceptions import UnknownServiceStyle
-from botocore.exceptions import UnknownSignatureVersionError
+from botocore import serialize
 
 
 def request_dict():
-    return {
-        'headers': {},
-        'body': '',
-        'url_path': '/',
-        'query_string': '',
-        'method': 'POST',
-    }
+    return serialize.Serializer()._create_default_request()
 
 
 class RecordStreamResets(six.StringIO):
@@ -146,7 +136,6 @@ class TestEndpointFeatures(TestEndpointBase):
             prepared_request, verify=True, stream=False,
             proxies=proxies, timeout=DEFAULT_TIMEOUT)
 
-
     def test_make_request_with_no_auth(self):
         self.endpoint.auth = None
         self.endpoint.make_request(self.op, request_dict())
@@ -169,6 +158,34 @@ class TestEndpointFeatures(TestEndpointBase):
         self.assertTrue(self.http_session.send.called)
         prepared_request = self.http_session.send.call_args[0][0]
         self.assertNotIn('Authorization', prepared_request.headers)
+
+    def test_make_request_with_empty_path(self):
+        self.endpoint = Endpoint(
+            'us-west-2', 'https://ec2.us-west-2.amazonaws.com/',
+            user_agent='botoore',
+            endpoint_prefix='ec2', event_emitter=self.event_emitter)
+        self.endpoint.http_session = self.http_session
+
+        self.endpoint.make_request(self.op, request_dict())
+
+        # http_session should be used to send the request.
+        self.assertTrue(self.http_session.send.called)
+        prepared_request = self.http_session.send.call_args[0][0]
+        self.assertEqual('/', prepared_request.path_url)
+
+    def test_make_request_with_non_empty_path(self):
+        self.endpoint = Endpoint(
+            'us-west-2', 'https://ec2.us-west-2.amazonaws.com/fake/path',
+            user_agent='botoore',
+            endpoint_prefix='ec2', event_emitter=self.event_emitter)
+        self.endpoint.http_session = self.http_session
+
+        self.endpoint.make_request(self.op, request_dict())
+
+        # http_session should be used to send the request.
+        self.assertTrue(self.http_session.send.called)
+        prepared_request = self.http_session.send.call_args[0][0]
+        self.assertEqual('/fake/path', prepared_request.path_url)
 
 
 class TestRetryInterface(TestEndpointBase):

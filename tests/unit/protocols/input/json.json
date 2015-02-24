@@ -39,7 +39,7 @@
             "X-Amz-Target": "com.amazonaws.foo.OperationName",
             "Content-Type": "application/x-amz-json-1.1"
           },
-          "uri": "/"
+          "uri": ""
         }
       }
     ]
@@ -81,7 +81,7 @@
             "X-Amz-Target": "com.amazonaws.foo.OperationName",
             "Content-Type": "application/x-amz-json-1.1"
           },
-          "uri": "/"
+          "uri": ""
         }
       }
     ]
@@ -134,7 +134,7 @@
             "X-Amz-Target": "com.amazonaws.foo.OperationName",
             "Content-Type": "application/x-amz-json-1.1"
           },
-          "uri": "/"
+          "uri": ""
         }
       },
       {
@@ -156,7 +156,7 @@
             "X-Amz-Target": "com.amazonaws.foo.OperationName",
             "Content-Type": "application/x-amz-json-1.1"
           },
-          "uri": "/"
+          "uri": ""
         }
       }
     ]
@@ -203,7 +203,7 @@
         },
         "serialized": {
           "body": "{\"ListParam\": [\"Zm9v\", \"YmFy\"]}",
-          "uri": "/",
+          "uri": "",
           "headers": {"X-Amz-Target": "com.amazonaws.foo.OperationName",
                       "Content-Type": "application/x-amz-json-1.1"}
         }
@@ -276,7 +276,7 @@
           }
         },
         "serialized": {
-          "uri": "/",
+          "uri": "",
           "headers": {
             "X-Amz-Target": "com.amazonaws.foo.OperationName",
             "Content-Type": "application/x-amz-json-1.1"
@@ -299,7 +299,7 @@
           }
         },
         "serialized": {
-          "uri": "/",
+          "uri": "",
           "headers": {
             "X-Amz-Target": "com.amazonaws.foo.OperationName",
             "Content-Type": "application/x-amz-json-1.1"
@@ -326,7 +326,7 @@
           }
         },
         "serialized": {
-          "uri": "/",
+          "uri": "",
           "headers": {
             "X-Amz-Target": "com.amazonaws.foo.OperationName",
             "Content-Type": "application/x-amz-json-1.1"
@@ -354,7 +354,7 @@
           }
         },
         "serialized": {
-          "uri": "/",
+          "uri": "",
           "headers": {
             "X-Amz-Target": "com.amazonaws.foo.OperationName",
             "Content-Type": "application/x-amz-json-1.1"
@@ -384,7 +384,7 @@
           }
         },
         "serialized": {
-          "uri": "/",
+          "uri": "",
           "headers": {
             "X-Amz-Target": "com.amazonaws.foo.OperationName",
             "Content-Type": "application/x-amz-json-1.1"
@@ -412,7 +412,7 @@
           }
         },
         "serialized": {
-          "uri": "/",
+          "uri": "",
           "headers": {
             "X-Amz-Target": "com.amazonaws.foo.OperationName",
             "Content-Type": "application/x-amz-json-1.1"

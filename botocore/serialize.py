@@ -115,7 +115,7 @@ class Serializer(object):
         # Creates a boilerplate default request dict that subclasses
         # can use as a starting point.
         serialized = {
-            'url_path': '/',
+            'url_path': '',
             'query_string': '',
             'method': self.DEFAULT_METHOD,
             'headers': {},
