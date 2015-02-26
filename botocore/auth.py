@@ -42,6 +42,7 @@ EMPTY_SHA256_HASH = (
 # gave the best result (in terms of performance).
 PAYLOAD_BUFFER = 1024 * 1024
 ISO8601 = '%Y-%m-%dT%H:%M:%SZ'
+SIGV4_TIMESTAMP = '%Y%m%dT%H%M%SZ'
 
 
 class BaseSigner(object):
@@ -304,7 +305,7 @@ class SigV4Auth(BaseSigner):
         if self.credentials is None:
             raise NoCredentialsError
         datetime_now = datetime.datetime.utcnow()
-        request.context['timestamp'] = datetime_now.strftime('%Y%m%dT%H%M%SZ')
+        request.context['timestamp'] = datetime_now.strftime(SIGV4_TIMESTAMP)
         # This could be a retry.  Make sure the previous
         # authorization header is removed first.
         self._modify_request_before_signing(request)
@@ -342,7 +343,7 @@ class SigV4Auth(BaseSigner):
         if 'Date' in request.headers:
             del request.headers['Date']
             datetime_timestamp = datetime.datetime.strptime(
-                request.context['timestamp'], '%Y%m%dT%H%M%SZ')
+                request.context['timestamp'], SIGV4_TIMESTAMP)
             request.headers['Date'] = formatdate(
                 int(calendar.timegm(datetime_timestamp.timetuple())))
             if 'X-Amz-Date' in request.headers:
