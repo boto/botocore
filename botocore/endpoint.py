@@ -25,7 +25,7 @@ from botocore.exceptions import UnknownEndpointError
 from botocore.awsrequest import AWSRequest
 from botocore.compat import filter_ssl_san_warnings, urlsplit
 from botocore.compat import urlunsplit
-from botocore.utils import percent_encode_sequence, normalize_url_path
+from botocore.utils import percent_encode_sequence
 from botocore.hooks import first_non_none_response
 from botocore.response import StreamingBody
 from botocore import parsers
@@ -122,7 +122,10 @@ class RequestCreator(object):
             if not p[2]:
                 return endpoint_url + '/'
             return endpoint_url
-        new_path = normalize_url_path(p[2] + url_path)
+        if p[2].endswith('/') and url_path.startswith('/'):
+            new_path = p[2][:-1] + url_path
+        else:
+            new_path = p[2] + url_path
         reconstructed = urlunsplit((p[0], p[1], new_path, p[3], p[4]))
         return reconstructed
 
