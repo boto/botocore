@@ -341,7 +341,7 @@ class BaseClient(object):
         self._response_parser = response_parser
         self._request_signer = request_signer
         self._cache = {}
-        self.meta = ClientMeta(event_emitter)
+        self.meta = ClientMeta(event_emitter, endpoint.region_name)
 
         # Register request signing, but only if we have an event
         # emitter. When a client is cloned this is ignored, because
@@ -368,8 +368,13 @@ class ClientMeta(object):
 
     """
 
-    def __init__(self, events):
+    def __init__(self, events, region_name):
         self.events = events
+        self._region_name = region_name
+
+    @property
+    def region_name(self):
+        return self._region_name
 
     def __copy__(self):
         copied_events = copy.copy(self.events)
