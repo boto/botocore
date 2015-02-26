@@ -11,12 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import copy
-import functools
 import logging
 
 import botocore.serialize
 import botocore.validate
-from botocore import credentials, waiter, xform_name
+from botocore import waiter, xform_name
 from botocore.endpoint import EndpointCreator
 from botocore.exceptions import ClientError, DataNotFoundError
 from botocore.exceptions import OperationNotPageableError
@@ -198,7 +197,6 @@ class ClientCreator(object):
         self._event_emitter.register('needs-retry.%s' % endpoint_prefix,
                                      handler, unique_id=unique_id)
 
-
     def _get_signature_version_and_region(self, service_model, region_name,
                                           is_secure, scoped_config):
         # Get endpoint heuristic overrides before creating the
@@ -206,16 +204,15 @@ class ClientCreator(object):
         resolver = self._endpoint_resolver
         scheme = 'https' if is_secure else 'http'
         endpoint_config = resolver.construct_endpoint(
-                service_model.endpoint_prefix,
-                region_name, scheme=scheme)
+            service_model.endpoint_prefix, region_name, scheme=scheme)
 
-        # Signature version override from endpoint
+        # Signature version override from endpoint.
         signature_version = service_model.signature_version
         if 'signatureVersion' in endpoint_config.get('properties', {}):
-            signature_version = endpoint_config['properties']\
-                                               ['signatureVersion']
+            signature_version = endpoint_config[
+                'properties']['signatureVersion']
 
-        # Signature overrides from a configuration file
+        # Signature overrides from a configuration file.
         if scoped_config is not None:
             service_config = scoped_config.get(service_model.endpoint_prefix)
             if service_config is not None and isinstance(service_config, dict):
@@ -223,8 +220,8 @@ class ClientCreator(object):
                 if override:
                     logger.debug(
                         "Switching signature version for service %s "
-                         "to version %s based on config file override.",
-                         service_model.endpoint_prefix, override)
+                        "to version %s based on config file override.",
+                        service_model.endpoint_prefix, override)
                     signature_version = override
 
         return signature_version, region_name
@@ -242,8 +239,9 @@ class ClientCreator(object):
         serializer = botocore.serialize.create_serializer(
             protocol, include_validation=True)
         event_emitter = copy.copy(self._event_emitter)
-        endpoint_creator = EndpointCreator(self._endpoint_resolver, region_name,
-                                           event_emitter, self._user_agent)
+        endpoint_creator = EndpointCreator(self._endpoint_resolver,
+                                           region_name, event_emitter,
+                                           self._user_agent)
         endpoint = endpoint_creator.create_endpoint(
             service_model, region_name, is_secure=is_secure,
             endpoint_url=endpoint_url, verify=verify,
