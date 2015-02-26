@@ -356,37 +356,6 @@ class BaseClient(object):
         # mutate the request as needed.
         self._request_signer.sign(operation_name, request)
 
-    def clone_client(self, serializer=None, endpoint=None,
-                     response_parser=None, request_signer=None):
-        """Create a copy of the client object.
-
-        This method will create a clone of an existing client.  By default, the
-        same internal attributes are used when creating a clone of the client,
-        with the exception of the event emitter. A copy of the event handlers
-        are created when a clone of the client is created.
-
-        You can also provide any of the above arguments as an override.  This
-        allows you to create a client that has the same values except for the
-        args you pass in as overrides.
-
-        :return: A new copy of the botocore client.
-
-        """
-        kwargs = {
-            'serializer': serializer,
-            'endpoint': endpoint,
-            'response_parser': response_parser,
-            'request_signer': request_signer,
-        }
-        for key, value in kwargs.items():
-            if value is None:
-                kwargs[key] = getattr(self, '_%s' % key)
-        # This will be swapped out in the ClientMeta class.
-        kwargs['event_emitter'] = None
-        new_object = self.__class__(**kwargs)
-        new_object.meta = copy.copy(self.meta)
-        return new_object
-
 
 class ClientMeta(object):
     """Holds additional client methods.
