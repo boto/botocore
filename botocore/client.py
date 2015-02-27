@@ -11,12 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import copy
-import functools
 import logging
 
 import botocore.serialize
 import botocore.validate
-from botocore import credentials, waiter, xform_name
+from botocore import waiter, xform_name
 from botocore.endpoint import EndpointCreator
 from botocore.exceptions import ClientError, DataNotFoundError
 from botocore.exceptions import OperationNotPageableError
@@ -198,7 +197,6 @@ class ClientCreator(object):
         self._event_emitter.register('needs-retry.%s' % endpoint_prefix,
                                      handler, unique_id=unique_id)
 
-
     def _get_signature_version_and_region(self, service_model, region_name,
                                           is_secure, scoped_config):
         # Get endpoint heuristic overrides before creating the
@@ -206,16 +204,15 @@ class ClientCreator(object):
         resolver = self._endpoint_resolver
         scheme = 'https' if is_secure else 'http'
         endpoint_config = resolver.construct_endpoint(
-                service_model.endpoint_prefix,
-                region_name, scheme=scheme)
+            service_model.endpoint_prefix, region_name, scheme=scheme)
 
-        # Signature version override from endpoint
+        # Signature version override from endpoint.
         signature_version = service_model.signature_version
         if 'signatureVersion' in endpoint_config.get('properties', {}):
-            signature_version = endpoint_config['properties']\
-                                               ['signatureVersion']
+            signature_version = endpoint_config[
+                'properties']['signatureVersion']
 
-        # Signature overrides from a configuration file
+        # Signature overrides from a configuration file.
         if scoped_config is not None:
             service_config = scoped_config.get(service_model.endpoint_prefix)
             if service_config is not None and isinstance(service_config, dict):
@@ -223,8 +220,8 @@ class ClientCreator(object):
                 if override:
                     logger.debug(
                         "Switching signature version for service %s "
-                         "to version %s based on config file override.",
-                         service_model.endpoint_prefix, override)
+                        "to version %s based on config file override.",
+                        service_model.endpoint_prefix, override)
                     signature_version = override
 
         return signature_version, region_name
@@ -242,8 +239,9 @@ class ClientCreator(object):
         serializer = botocore.serialize.create_serializer(
             protocol, include_validation=True)
         event_emitter = copy.copy(self._event_emitter)
-        endpoint_creator = EndpointCreator(self._endpoint_resolver, region_name,
-                                           event_emitter, self._user_agent)
+        endpoint_creator = EndpointCreator(self._endpoint_resolver,
+                                           region_name, event_emitter,
+                                           self._user_agent)
         endpoint = endpoint_creator.create_endpoint(
             service_model, region_name, is_secure=is_secure,
             endpoint_url=endpoint_url, verify=verify,
@@ -343,7 +341,7 @@ class BaseClient(object):
         self._response_parser = response_parser
         self._request_signer = request_signer
         self._cache = {}
-        self.meta = ClientMeta(event_emitter)
+        self.meta = ClientMeta(event_emitter, endpoint.region_name)
 
         # Register request signing, but only if we have an event
         # emitter. When a client is cloned this is ignored, because
@@ -355,37 +353,6 @@ class BaseClient(object):
         # Sign the request. This fires its own events and will
         # mutate the request as needed.
         self._request_signer.sign(operation_name, request)
-
-    def clone_client(self, serializer=None, endpoint=None,
-                     response_parser=None, request_signer=None):
-        """Create a copy of the client object.
-
-        This method will create a clone of an existing client.  By default, the
-        same internal attributes are used when creating a clone of the client,
-        with the exception of the event emitter. A copy of the event handlers
-        are created when a clone of the client is created.
-
-        You can also provide any of the above arguments as an override.  This
-        allows you to create a client that has the same values except for the
-        args you pass in as overrides.
-
-        :return: A new copy of the botocore client.
-
-        """
-        kwargs = {
-            'serializer': serializer,
-            'endpoint': endpoint,
-            'response_parser': response_parser,
-            'request_signer': request_signer,
-        }
-        for key, value in kwargs.items():
-            if value is None:
-                kwargs[key] = getattr(self, '_%s' % key)
-        # This will be swapped out in the ClientMeta class.
-        kwargs['event_emitter'] = None
-        new_object = self.__class__(**kwargs)
-        new_object.meta = copy.copy(self.meta)
-        return new_object
 
 
 class ClientMeta(object):
@@ -401,8 +368,13 @@ class ClientMeta(object):
 
     """
 
-    def __init__(self, events):
+    def __init__(self, events, region_name):
         self.events = events
+        self._region_name = region_name
+
+    @property
+    def region_name(self):
+        return self._region_name
 
     def __copy__(self):
         copied_events = copy.copy(self.events)
