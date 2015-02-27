@@ -291,8 +291,6 @@ class BaseClient(object):
         :return: A paginator object.
 
         """
-        # Note that the 'self' in this method refers to the self on
-        # BaseClient, not on ClientCreator.
         if not self.can_paginate(operation_name):
             raise OperationNotPageableError(operation_name=operation_name)
         else:
