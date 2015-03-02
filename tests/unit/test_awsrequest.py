@@ -200,6 +200,23 @@ class TestAWSHTTPConnection(unittest.TestCase):
             # Now we should verify that our final response is the 200 OK
             self.assertEqual(response.status, 200)
 
+    def test_handles_expect_100_with_different_reason_phrase(self):
+        with patch('select.select') as select_mock:
+            # Shows the server first sending a 100 continue response
+            # then a 200 ok response.
+            s = FakeSocket(b'HTTP/1.1 100 (Continue)\r\n\r\nHTTP/1.1 200 OK\r\n')
+            conn = AWSHTTPConnection('s3.amazonaws.com', 443)
+            conn.sock = s
+            select_mock.return_value = ([s], [], [])
+            conn.request('GET', '/bucket/foo', six.BytesIO(b'body'),
+                         {'Expect': '100-continue', 'Content-Length': '4'})
+            response = conn.getresponse()
+            # Now we should verify that our final response is the 200 OK.
+            self.assertEqual(response.status, 200)
+            # Verify that we went the request body because we got a 100
+            # continue.
+            self.assertIn(b'body', s.sent_data)
+
     def test_expect_100_sends_connection_header(self):
         # When using squid as an HTTP proxy, it will also send
         # a Connection: keep-alive header back with the 100 continue
