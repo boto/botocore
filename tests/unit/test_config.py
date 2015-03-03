@@ -37,10 +37,6 @@ class TestConfig(BaseEnvVar):
         loaded_config = raw_config_parse(path('aws_config'))
         self.assertIn('default', loaded_config)
         self.assertIn('profile "personal"', loaded_config)
-        # A _path key is inserted that is the full path of the
-        # config file.
-        self.assertEqual(loaded_config['_path'], path('aws_config'))
-
 
     def test_profile_map_conversion(self):
         loaded_config = load_config(path('aws_config'))
