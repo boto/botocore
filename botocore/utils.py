@@ -545,6 +545,10 @@ def is_valid_endpoint_url(endpoint_url):
     hostname = parts.hostname
     if hostname is None:
         return False
+    # Hostname validation is based on http://tools.ietf.org/html/rfc952
+    # and http://tools.ietf.org/html/rfc1123#page-13
+    # with the validation taken from:
+    # http://stackoverflow.com/questions/2532053/validate-a-hostname-string
     if len(hostname) > 255:
         return False
     if hostname[-1] == ".":
