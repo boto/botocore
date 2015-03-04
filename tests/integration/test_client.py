@@ -127,7 +127,7 @@ class TestAcceptedDateTimeFormats(unittest.TestCase):
         self.assertIn('Clusters', response)
 
 
-class TestClientCanBeCloned(unittest.TestCase):
+class TestCreateClients(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
 
@@ -141,3 +141,8 @@ class TestClientCanBeCloned(unittest.TestCase):
         # We really just want to ensure create_client doesn't raise
         # an exception, but we'll double check that the client looks right.
         self.assertTrue(hasattr(client, 'list_buckets'))
+
+    def test_client_raises_exception_invalid_region(self):
+        with self.assertRaisesRegexp(ValueError, 'Invalid endpoint'):
+            self.session.create_client('cloudformation',
+                                       region_name='invalid region name')

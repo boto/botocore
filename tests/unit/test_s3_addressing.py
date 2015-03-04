@@ -200,13 +200,17 @@ class TestS3Addressing(BaseSessionTest):
             prepared_request.url,
             'https://s3-us-west-2.amazonaws.com/192.168.5.256/mykeyname')
 
+    def test_invalid_endpoint_raises_exception(self):
+        with self.assertRaisesRegexp(ValueError, 'Invalid endpoint'):
+            self.s3.get_endpoint('bad region name')
+
     def test_non_existent_region(self):
         # If I ask for a region that does not
         # exist on a global endpoint, such as:
-        endpoint = self.s3.get_endpoint('REGION DOES NOT EXIST')
+        endpoint = self.s3.get_endpoint('REGION-DOES-NOT-EXIST')
         # Then the default endpoint heuristic will apply and we'll
         # get the region name as specified.
-        self.assertEqual(endpoint.region_name, 'REGION DOES NOT EXIST')
+        self.assertEqual(endpoint.region_name, 'REGION-DOES-NOT-EXIST')
         # Why not fixed this?  Well backwards compatability for one thing.
         # The other reason is because it was intended to accomodate this
         # use case.  Let's say I have us-west-2 set as my default region,
