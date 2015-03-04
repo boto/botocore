@@ -438,3 +438,20 @@ class TestHandlesNoOutputShape(unittest.TestCase):
             parsed,
             {'ResponseMetadata': {'RequestId': 'request-id',
                                   'HTTPStatusCode': 200}})
+
+
+class TestHandlesInvalidXMLResponses(unittest.TestCase):
+    def test_invalid_xml_shown_in_error_message(self):
+        # Missing the closing XML tags.
+        invalid_xml = (
+            b'<DeleteTagsResponse xmlns="http://autoscaling.amazonaws.com/">'
+            b'  <ResponseMetadata>'
+        )
+        parser = parsers.QueryParser()
+        output_shape = None
+        # The XML body should be in the error message.
+        with self.assertRaisesRegexp(parsers.ResponseParserError,
+                                     '<DeleteTagsResponse'):
+            parser.parse(
+                {'body': invalid_xml, 'headers': {}, 'status_code': 200},
+                output_shape)
