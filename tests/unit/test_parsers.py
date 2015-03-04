@@ -27,10 +27,10 @@ class TestResponseMetadataParsed(unittest.TestCase):
         parser = parsers.QueryParser()
         response = (
             '<OperationNameResponse>'
-              '<OperationNameResult><Str>myname</Str></OperationNameResult>'
-              '<ResponseMetadata>'
-                '<RequestId>request-id</RequestId>'
-              '</ResponseMetadata>'
+            '  <OperationNameResult><Str>myname</Str></OperationNameResult>'
+            '  <ResponseMetadata>'
+            '    <RequestId>request-id</RequestId>'
+            '  </ResponseMetadata>'
             '</OperationNameResponse>').encode('utf-8')
         output_shape = model.StructureShape(
             'OutputShape',
@@ -68,8 +68,8 @@ class TestResponseMetadataParsed(unittest.TestCase):
         parser = parsers.EC2QueryParser()
         response = (
             '<OperationNameResponse>'
-              '<Str>myname</Str>'
-              '<requestId>request-id</requestId>'
+            '  <Str>myname</Str>'
+            '  <requestId>request-id</requestId>'
             '</OperationNameResponse>').encode('utf-8')
         output_shape = model.StructureShape(
             'OutputShape',
@@ -205,11 +205,11 @@ class TestResponseMetadataParsed(unittest.TestCase):
     def test_s3_error_response(self):
         body = (
             '<Error>'
-              '<Code>NoSuchBucket</Code>'
-              '<Message>error message</Message>'
-              '<BucketName>asdf</BucketName>'
-              '<RequestId>EF1EF43A74415102</RequestId>'
-              '<HostId>hostid</HostId>'
+            '  <Code>NoSuchBucket</Code>'
+            '  <Message>error message</Message>'
+            '  <BucketName>asdf</BucketName>'
+            '  <RequestId>EF1EF43A74415102</RequestId>'
+            '  <HostId>hostid</HostId>'
             '</Error>'
         ).encode('utf-8')
         headers = {
@@ -260,13 +260,13 @@ class TestResponseMetadataParsed(unittest.TestCase):
     def test_can_parse_sdb_error_response(self):
         body = (
             '<OperationNameResponse>'
-                '<Errors>'
-                    '<Error>'
-                        '<Code>1</Code>'
-                        '<Message>msg</Message>'
-                    '</Error>'
-                '</Errors>'
-                '<RequestId>abc-123</RequestId>'
+            '    <Errors>'
+            '        <Error>'
+            '            <Code>1</Code>'
+            '            <Message>msg</Message>'
+            '        </Error>'
+            '    </Errors>'
+            '    <RequestId>abc-123</RequestId>'
             '</OperationNameResponse>'
         ).encode('utf-8')
         parser = parsers.QueryParser()
