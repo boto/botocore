@@ -19,9 +19,11 @@ import threading
 
 from botocore.vendored.requests.sessions import Session
 from botocore.vendored.requests.utils import get_environ_proxies
+from botocore.vendored.requests.exceptions import ConnectionError
 from botocore.vendored import six
 
 from botocore.exceptions import UnknownEndpointError
+from botocore.exceptions import EndpointConnectionError
 from botocore.awsrequest import AWSRequest
 from botocore.compat import filter_ssl_san_warnings, urlsplit
 from botocore.compat import urlunsplit
@@ -227,6 +229,18 @@ class Endpoint(object):
                 request, verify=self.verify,
                 stream=operation_model.has_streaming_output,
                 proxies=self.proxies, timeout=self.timeout)
+        except ConnectionError as e:
+            # For a connection error, if it looks like it's a DNS
+            # lookup issue, 99% of the time this is due to a misconfigured
+            # region/endpoint so we'll raise a more specific error message
+            # to help users.
+            if self._looks_like_dns_error(e):
+                endpoint = e.request.url
+                better_exception = EndpointConnectionError(
+                    endpoint=endpoint, error=e)
+                return (None, better_exception)
+            else:
+                return (None, e)
         except Exception as e:
             logger.debug("Exception received when sending HTTP request.",
                          exc_info=True)
@@ -239,6 +253,9 @@ class Endpoint(object):
         return ((http_response, parser.parse(response_dict,
                                              operation_model.output_shape)),
                 None)
+
+    def _looks_like_dns_error(self, e):
+        return 'gaierror' in str(e) and e.request is not None
 
     def _needs_retry(self, attempts, operation_model, response=None,
                      caught_exception=None):

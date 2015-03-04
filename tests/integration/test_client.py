@@ -19,6 +19,7 @@ from tests import unittest
 import botocore.session
 from botocore.client import ClientError
 from botocore.compat import six
+from botocore.exceptions import EndpointConnectionError
 from six import StringIO
 
 
@@ -146,3 +147,13 @@ class TestCreateClients(unittest.TestCase):
         with self.assertRaisesRegexp(ValueError, 'Invalid endpoint'):
             self.session.create_client('cloudformation',
                                        region_name='invalid region name')
+
+
+class TestClientErrorMessages(unittest.TestCase):
+    def test_region_mentioned_in_invalid_region(self):
+        session = botocore.session.get_session()
+        client = session.create_client(
+            'cloudformation', region_name='bad-region-name')
+        with self.assertRaisesRegexp(EndpointConnectionError,
+                                     'verify your region'):
+            client.list_stacks()

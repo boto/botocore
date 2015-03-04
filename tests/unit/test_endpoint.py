@@ -27,6 +27,7 @@ from botocore.auth import SigV4Auth
 from botocore.session import Session
 from botocore.exceptions import UnknownServiceStyle
 from botocore.exceptions import UnknownSignatureVersionError
+from botocore.exceptions import EndpointConnectionError
 
 
 def request_dict():
@@ -169,6 +170,19 @@ class TestEndpointFeatures(TestEndpointBase):
         self.assertTrue(self.http_session.send.called)
         prepared_request = self.http_session.send.call_args[0][0]
         self.assertNotIn('Authorization', prepared_request.headers)
+
+    def test_make_request_injects_better_dns_error_msg(self):
+        self.endpoint = Endpoint(
+            'us-west-2', 'https://ec2.us-west-2.amazonaws.com/',
+            user_agent='botoore',
+            endpoint_prefix='ec2', event_emitter=self.event_emitter)
+        self.endpoint.http_session = self.http_session
+        fake_request = Mock(url='https://ec2.us-west-2.amazonaws.com')
+        self.http_session.send.side_effect = ConnectionError(
+            "Fake gaierror(8, node or host not known)", request=fake_request)
+        with self.assertRaisesRegexp(EndpointConnectionError,
+                                     'verify your region'):
+            self.endpoint.make_request(self.op, request_dict())
 
 
 class TestRetryInterface(TestEndpointBase):
