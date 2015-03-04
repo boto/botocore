@@ -26,6 +26,7 @@ from botocore.awsrequest import AWSRequest
 from botocore.compat import filter_ssl_san_warnings, urlsplit
 from botocore.compat import urlunsplit
 from botocore.utils import percent_encode_sequence
+from botocore.utils import is_valid_endpoint_url
 from botocore.hooks import first_non_none_response
 from botocore.response import StreamingBody
 from botocore import parsers
@@ -343,6 +344,8 @@ class EndpointCreator(object):
             final_endpoint_url = endpoint_url
         else:
             final_endpoint_url = endpoint['uri']
+        if not is_valid_endpoint_url(final_endpoint_url):
+            raise ValueError("Invalid endpoint: %s" % final_endpoint_url)
         return self._get_endpoint(service_model, region_name,
                                   final_endpoint_url, verify,
                                   response_parser_factory)
