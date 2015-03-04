@@ -98,7 +98,6 @@ import logging
 from pprint import pformat
 
 from botocore.compat import six, XMLParseError
-from six.moves import http_client
 
 from botocore.utils import parse_timestamp
 
@@ -684,7 +683,7 @@ class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
         return {
             'Error': {
                 'Code': str(response['status_code']),
-                'Message': http_client.responses.get(
+                'Message': six.moves.http_client.responses.get(
                     response['status_code'], ''),
             },
             'ResponseMetadata': {
