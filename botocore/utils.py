@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import re
 import logging
 import datetime
 import hashlib
@@ -21,7 +22,7 @@ import dateutil.parser
 from dateutil.tz import tzlocal, tzutc
 
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
-from botocore.compat import json, quote, zip_longest
+from botocore.compat import json, quote, zip_longest, urlsplit
 from botocore.vendored import requests
 from botocore.compat import OrderedDict
 
@@ -528,3 +529,29 @@ class ArgumentGenerator(object):
         return OrderedDict([
             ('KeyName', self._generate_skeleton(value_shape, stack)),
         ])
+
+
+def is_valid_endpoint_url(endpoint_url):
+    """Verify the endpoint_url is valid.
+
+    :type endpoint_url: string
+    :param endpoint_url: An endpoint_url.  Must have at least a scheme
+        and a hostname.
+
+    :return: True if the endpoint url is valid. False otherwise.
+
+    """
+    parts = urlsplit(endpoint_url)
+    hostname = parts.hostname
+    if hostname is None:
+        return False
+    # Hostname validation is based on http://tools.ietf.org/html/rfc952
+    # and http://tools.ietf.org/html/rfc1123#page-13
+    # with the validation taken from:
+    # http://stackoverflow.com/questions/2532053/validate-a-hostname-string
+    if len(hostname) > 255:
+        return False
+    if hostname[-1] == ".":
+        hostname = hostname[:-1]
+    allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
+    return all(allowed.match(x) for x in hostname.split("."))

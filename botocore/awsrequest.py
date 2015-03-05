@@ -235,8 +235,8 @@ class AWSHTTPConnection(HTTPConnection):
         parts = maybe_status_line.split(None, 2)
         # Check for HTTP/<version> 100 Continue\r\n
         return (
-            len(parts) == 3 and parts[0].startswith(b'HTTP/') and
-            parts[1] == b'100' and parts[2].startswith(b'Continue'))
+            len(parts) >= 3 and parts[0].startswith(b'HTTP/') and
+            parts[1] == b'100')
 
 
 class AWSHTTPSConnection(VerifiedHTTPSConnection):
@@ -263,6 +263,14 @@ class AWSRequest(models.RequestEncodingMixin, models.Request):
             for key, value in self.headers.items():
                 headers[key] = value
         self.headers = headers
+        # This is a dictionary to hold information that is used when
+        # processing the request. What is inside of ``context`` is open-ended.
+        # For example, it may have a timestamp key that is used for holding
+        # what the timestamp is when signing the request. Note that none
+        # of the information that is inside of ``context`` is directly
+        # sent over the wire; the information is only used to assist in
+        # creating what is sent over the wire.
+        self.context = {}
 
     def prepare(self):
         """Constructs a :class:`AWSPreparedRequest <AWSPreparedRequest>`."""

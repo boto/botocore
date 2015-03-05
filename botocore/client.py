@@ -11,12 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import copy
-import functools
 import logging
 
 import botocore.serialize
 import botocore.validate
-from botocore import credentials, waiter, xform_name
+from botocore import waiter, xform_name
 from botocore.endpoint import EndpointCreator
 from botocore.exceptions import ClientError, DataNotFoundError
 from botocore.exceptions import OperationNotPageableError
@@ -55,121 +54,11 @@ class ClientCreator(object):
 
     def create_client_class(self, service_name):
         service_model = self._load_service_model(service_name)
-        methods = self._create_methods(service_model)
+        class_attributes = self._create_methods(service_model)
         py_name_to_operation_name = self._create_name_mapping(service_model)
-        self._add_pagination_methods(service_model, methods,
-                                     py_name_to_operation_name)
-        self._add_waiter_methods(service_model, methods,
-                                 py_name_to_operation_name)
-        cls = type(service_name, (BaseClient,), methods)
+        class_attributes['_PY_TO_OP_NAME'] = py_name_to_operation_name
+        cls = type(service_name, (BaseClient,), class_attributes)
         return cls
-
-    def _add_pagination_methods(self, service_model, methods, name_mapping):
-        loader = self._loader
-
-        def get_paginator(self, operation_name):
-            """Create a paginator for an operation.
-
-            :type operation_name: string
-            :param operation_name: The operation name.  This is the same name
-                as the method name on the client.  For example, if the
-                method name is ``create_foo``, and you'd normally invoke the
-                operation as ``client.create_foo(**kwargs)``, if the
-                ``create_foo`` operation can be paginated, you can use the
-                call ``client.get_paginator("create_foo")``.
-
-            :raise OperationNotPageableError: Raised if the operation is not
-                pageable.  You can use the ``client.can_paginate`` method to
-                check if an operation is pageable.
-
-            :rtype: L{botocore.paginate.Paginator}
-            :return: A paginator object.
-
-            """
-            # Note that the 'self' in this method refers to the self on
-            # BaseClient, not on ClientCreator.
-            if not self.can_paginate(operation_name):
-                raise OperationNotPageableError(operation_name=operation_name)
-            else:
-                actual_operation_name = name_mapping[operation_name]
-                paginator = Paginator(
-                    getattr(self, operation_name),
-                    self._cache['page_config'][actual_operation_name])
-                return paginator
-
-        def can_paginate(self, operation_name):
-            """Check if an operation can be paginated.
-
-            :type operation_name: string
-            :param operation_name: The operation name.  This is the same name
-                as the method name on the client.  For example, if the
-                method name is ``create_foo``, and you'd normally invoke the
-                operation as ``client.create_foo(**kwargs)``, if the
-                ``create_foo`` operation can be paginated, you can use the
-                call ``client.get_paginator("create_foo")``.
-
-            :return: ``True`` if the operation can be paginated,
-                ``False`` otherwise.
-
-            """
-            if 'page_config' not in self._cache:
-                try:
-                    page_config = loader.load_data('aws/%s/%s.paginators' % (
-                        service_model.service_name,
-                        service_model.api_version))['pagination']
-                    self._cache['page_config'] = page_config
-                except DataNotFoundError:
-                    self._cache['page_config'] = {}
-            actual_operation_name = name_mapping[operation_name]
-            return actual_operation_name in self._cache['page_config']
-
-        methods['get_paginator'] = get_paginator
-        methods['can_paginate'] = can_paginate
-
-    def _add_waiter_methods(self, service_model, methods_dict,
-                            method_name_map):
-
-        loader = self._loader
-
-        def _get_waiter_config(self):
-            if 'waiter_config' not in self._cache:
-                try:
-                    waiter_config = loader.load_data('aws/%s/%s.waiters' % (
-                        service_model.service_name,
-                        service_model.api_version))
-                    self._cache['waiter_config'] = waiter_config
-                except DataNotFoundError:
-                    self._cache['waiter_config'] = {}
-            return self._cache['waiter_config']
-
-        def get_waiter(self, waiter_name):
-            config = self._get_waiter_config()
-            if not config:
-                raise ValueError("Waiter does not exist: %s" % waiter_name)
-            model = waiter.WaiterModel(config)
-            mapping = {}
-            for name in model.waiter_names:
-                mapping[xform_name(name)] = name
-            if waiter_name not in mapping:
-                raise ValueError("Waiter does not exist: %s" % waiter_name)
-
-            return waiter.create_waiter_with_client(
-                mapping[waiter_name], model, self)
-
-        @CachedProperty
-        def waiter_names(self):
-            """Returns a list of all available waiters."""
-            config = self._get_waiter_config()
-            if not config:
-                return[]
-            model = waiter.WaiterModel(config)
-            # Waiter configs is a dict, we just want the waiter names
-            # which are the keys in the dict.
-            return [xform_name(name) for name in model.waiter_names]
-
-        methods_dict['_get_waiter_config'] = _get_waiter_config
-        methods_dict['get_waiter'] = get_waiter
-        methods_dict['waiter_names'] = waiter_names
 
     def _load_service_model(self, service_name):
         json_model = self._loader.load_service_model('aws/%s' % service_name)
@@ -198,7 +87,6 @@ class ClientCreator(object):
         self._event_emitter.register('needs-retry.%s' % endpoint_prefix,
                                      handler, unique_id=unique_id)
 
-
     def _get_signature_version_and_region(self, service_model, region_name,
                                           is_secure, scoped_config):
         # Get endpoint heuristic overrides before creating the
@@ -206,16 +94,15 @@ class ClientCreator(object):
         resolver = self._endpoint_resolver
         scheme = 'https' if is_secure else 'http'
         endpoint_config = resolver.construct_endpoint(
-                service_model.endpoint_prefix,
-                region_name, scheme=scheme)
+            service_model.endpoint_prefix, region_name, scheme=scheme)
 
-        # Signature version override from endpoint
+        # Signature version override from endpoint.
         signature_version = service_model.signature_version
         if 'signatureVersion' in endpoint_config.get('properties', {}):
-            signature_version = endpoint_config['properties']\
-                                               ['signatureVersion']
+            signature_version = endpoint_config[
+                'properties']['signatureVersion']
 
-        # Signature overrides from a configuration file
+        # Signature overrides from a configuration file.
         if scoped_config is not None:
             service_config = scoped_config.get(service_model.endpoint_prefix)
             if service_config is not None and isinstance(service_config, dict):
@@ -223,8 +110,8 @@ class ClientCreator(object):
                 if override:
                     logger.debug(
                         "Switching signature version for service %s "
-                         "to version %s based on config file override.",
-                         service_model.endpoint_prefix, override)
+                        "to version %s based on config file override.",
+                        service_model.endpoint_prefix, override)
                     signature_version = override
 
         return signature_version, region_name
@@ -242,8 +129,9 @@ class ClientCreator(object):
         serializer = botocore.serialize.create_serializer(
             protocol, include_validation=True)
         event_emitter = copy.copy(self._event_emitter)
-        endpoint_creator = EndpointCreator(self._endpoint_resolver, region_name,
-                                           event_emitter, self._user_agent)
+        endpoint_creator = EndpointCreator(self._endpoint_resolver,
+                                           region_name, event_emitter,
+                                           self._user_agent)
         endpoint = endpoint_creator.create_endpoint(
             service_model, region_name, is_secure=is_secure,
             endpoint_url=endpoint_url, verify=verify,
@@ -271,6 +159,8 @@ class ClientCreator(object):
             'response_parser': response_parser,
             'event_emitter': event_emitter,
             'request_signer': signer,
+            'service_model': service_model,
+            'loader': self._loader,
         }
 
     def _create_methods(self, service_model):
@@ -293,41 +183,8 @@ class ClientCreator(object):
     def _create_api_method(self, py_operation_name, operation_name,
                            service_model):
         def _api_call(self, **kwargs):
-            operation_model = service_model.operation_model(operation_name)
-            event_name = (
-                'before-parameter-build.{endpoint_prefix}.{operation_name}')
-            self.meta.events.emit(
-                event_name.format(
-                    endpoint_prefix=service_model.endpoint_prefix,
-                    operation_name=operation_name),
-                params=kwargs, model=operation_model)
-
-            request_dict = self._serializer.serialize_to_request(
-                kwargs, operation_model)
-
-            self.meta.events.emit(
-                'before-call.{endpoint_prefix}.{operation_name}'.format(
-                    endpoint_prefix=service_model.endpoint_prefix,
-                    operation_name=operation_name),
-                model=operation_model, params=request_dict,
-                request_signer=self._request_signer
-            )
-
-            http, parsed_response = self._endpoint.make_request(
-                operation_model, request_dict)
-
-            self.meta.events.emit(
-                'after-call.{endpoint_prefix}.{operation_name}'.format(
-                    endpoint_prefix=service_model.endpoint_prefix,
-                    operation_name=operation_name),
-                http_response=http, parsed=parsed_response,
-                model=operation_model
-            )
-
-            if http.status_code >= 300:
-                raise ClientError(parsed_response, operation_name)
-            else:
-                return parsed_response
+            # The "self" in this scope is referring to the BaseClient.
+            return self._make_api_call(operation_name, kwargs)
 
         _api_call.__name__ = str(py_operation_name)
         # TODO: docstrings.
@@ -336,14 +193,24 @@ class ClientCreator(object):
 
 class BaseClient(object):
 
+    # This is actually reassigned with the py->op_name mapping
+    # when the client creator creates the subclass.  This value is used
+    # because calls such as client.get_paginator('list_objects') use the
+    # snake_case name, but we need to know the ListObjects form.
+    # xform_name() does the ListObjects->list_objects conversion, but
+    # we need the reverse mapping here.
+    _PY_TO_OP_NAME = {}
+
     def __init__(self, serializer, endpoint, response_parser,
-                 event_emitter, request_signer):
+                 event_emitter, request_signer, service_model, loader):
         self._serializer = serializer
         self._endpoint = endpoint
         self._response_parser = response_parser
         self._request_signer = request_signer
         self._cache = {}
-        self.meta = ClientMeta(event_emitter)
+        self._loader = loader
+        self.meta = ClientMeta(event_emitter, endpoint.region_name,
+                               service_model)
 
         # Register request signing, but only if we have an event
         # emitter. When a client is cloned this is ignored, because
@@ -351,41 +218,149 @@ class BaseClient(object):
         if self.meta.events:
             self.meta.events.register('request-created', self._sign_request)
 
+    @property
+    def _service_model(self):
+        return self.meta.service_model
+
+    def _make_api_call(self, operation_name, api_params):
+        operation_model = self._service_model.operation_model(operation_name)
+        request_dict = self._convert_to_request_dict(
+            api_params, operation_model)
+
+        http, parsed_response = self._endpoint.make_request(
+            operation_model, request_dict)
+
+        self.meta.events.emit(
+            'after-call.{endpoint_prefix}.{operation_name}'.format(
+                endpoint_prefix=self._service_model.endpoint_prefix,
+                operation_name=operation_name),
+            http_response=http, parsed=parsed_response,
+            model=operation_model
+        )
+
+        if http.status_code >= 300:
+            raise ClientError(parsed_response, operation_name)
+        else:
+            return parsed_response
+
+    def _convert_to_request_dict(self, api_params, operation_model):
+        # Given the API params provided by the user and the operation_model
+        # we can serialize the request to a request_dict.
+        operation_name = operation_model.name
+        event_name = (
+            'before-parameter-build.{endpoint_prefix}.{operation_name}')
+        self.meta.events.emit(
+            event_name.format(
+                endpoint_prefix=self._service_model.endpoint_prefix,
+                operation_name=operation_name),
+            params=api_params, model=operation_model)
+
+        request_dict = self._serializer.serialize_to_request(
+            api_params, operation_model)
+
+        self.meta.events.emit(
+            'before-call.{endpoint_prefix}.{operation_name}'.format(
+                endpoint_prefix=self._service_model.endpoint_prefix,
+                operation_name=operation_name),
+            model=operation_model, params=request_dict,
+            request_signer=self._request_signer
+        )
+        return request_dict
+
     def _sign_request(self, operation_name=None, request=None, **kwargs):
         # Sign the request. This fires its own events and will
         # mutate the request as needed.
         self._request_signer.sign(operation_name, request)
 
-    def clone_client(self, serializer=None, endpoint=None,
-                     response_parser=None, request_signer=None):
-        """Create a copy of the client object.
+    def get_paginator(self, operation_name):
+        """Create a paginator for an operation.
 
-        This method will create a clone of an existing client.  By default, the
-        same internal attributes are used when creating a clone of the client,
-        with the exception of the event emitter. A copy of the event handlers
-        are created when a clone of the client is created.
+        :type operation_name: string
+        :param operation_name: The operation name.  This is the same name
+            as the method name on the client.  For example, if the
+            method name is ``create_foo``, and you'd normally invoke the
+            operation as ``client.create_foo(**kwargs)``, if the
+            ``create_foo`` operation can be paginated, you can use the
+            call ``client.get_paginator("create_foo")``.
 
-        You can also provide any of the above arguments as an override.  This
-        allows you to create a client that has the same values except for the
-        args you pass in as overrides.
+        :raise OperationNotPageableError: Raised if the operation is not
+            pageable.  You can use the ``client.can_paginate`` method to
+            check if an operation is pageable.
 
-        :return: A new copy of the botocore client.
+        :rtype: L{botocore.paginate.Paginator}
+        :return: A paginator object.
 
         """
-        kwargs = {
-            'serializer': serializer,
-            'endpoint': endpoint,
-            'response_parser': response_parser,
-            'request_signer': request_signer,
-        }
-        for key, value in kwargs.items():
-            if value is None:
-                kwargs[key] = getattr(self, '_%s' % key)
-        # This will be swapped out in the ClientMeta class.
-        kwargs['event_emitter'] = None
-        new_object = self.__class__(**kwargs)
-        new_object.meta = copy.copy(self.meta)
-        return new_object
+        if not self.can_paginate(operation_name):
+            raise OperationNotPageableError(operation_name=operation_name)
+        else:
+            actual_operation_name = self._PY_TO_OP_NAME[operation_name]
+            paginator = Paginator(
+                getattr(self, operation_name),
+                self._cache['page_config'][actual_operation_name])
+            return paginator
+
+    def can_paginate(self, operation_name):
+        """Check if an operation can be paginated.
+
+        :type operation_name: string
+        :param operation_name: The operation name.  This is the same name
+            as the method name on the client.  For example, if the
+            method name is ``create_foo``, and you'd normally invoke the
+            operation as ``client.create_foo(**kwargs)``, if the
+            ``create_foo`` operation can be paginated, you can use the
+            call ``client.get_paginator("create_foo")``.
+
+        :return: ``True`` if the operation can be paginated,
+            ``False`` otherwise.
+
+        """
+        if 'page_config' not in self._cache:
+            try:
+                page_config = self._loader.load_data('aws/%s/%s.paginators' % (
+                    self._service_model.service_name,
+                    self._service_model.api_version))['pagination']
+                self._cache['page_config'] = page_config
+            except DataNotFoundError:
+                self._cache['page_config'] = {}
+        actual_operation_name = self._PY_TO_OP_NAME[operation_name]
+        return actual_operation_name in self._cache['page_config']
+
+    def _get_waiter_config(self):
+        if 'waiter_config' not in self._cache:
+            try:
+                waiter_config = self._loader.load_data('aws/%s/%s.waiters' % (
+                    self._service_model.service_name,
+                    self._service_model.api_version))
+                self._cache['waiter_config'] = waiter_config
+            except DataNotFoundError:
+                self._cache['waiter_config'] = {}
+        return self._cache['waiter_config']
+
+    def get_waiter(self, waiter_name):
+        config = self._get_waiter_config()
+        if not config:
+            raise ValueError("Waiter does not exist: %s" % waiter_name)
+        model = waiter.WaiterModel(config)
+        mapping = {}
+        for name in model.waiter_names:
+            mapping[xform_name(name)] = name
+        if waiter_name not in mapping:
+            raise ValueError("Waiter does not exist: %s" % waiter_name)
+
+        return waiter.create_waiter_with_client(
+            mapping[waiter_name], model, self)
+
+    @CachedProperty
+    def waiter_names(self):
+        """Returns a list of all available waiters."""
+        config = self._get_waiter_config()
+        if not config:
+            return []
+        model = waiter.WaiterModel(config)
+        # Waiter configs is a dict, we just want the waiter names
+        # which are the keys in the dict.
+        return [xform_name(name) for name in model.waiter_names]
 
 
 class ClientMeta(object):
@@ -401,12 +376,18 @@ class ClientMeta(object):
 
     """
 
-    def __init__(self, events):
+    def __init__(self, events, region_name, service_model):
         self.events = events
+        self._region_name = region_name
+        self._service_model = service_model
 
-    def __copy__(self):
-        copied_events = copy.copy(self.events)
-        return ClientMeta(copied_events)
+    @property
+    def service_model(self):
+        return self._service_model
+
+    @property
+    def region_name(self):
+        return self._region_name
 
 
 class Config(object):
