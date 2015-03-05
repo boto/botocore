@@ -147,7 +147,6 @@ class TestEndpointFeatures(TestEndpointBase):
             prepared_request, verify=True, stream=False,
             proxies=proxies, timeout=DEFAULT_TIMEOUT)
 
-
     def test_make_request_with_no_auth(self):
         self.endpoint.auth = None
         self.endpoint.make_request(self.op, request_dict())
