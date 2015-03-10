@@ -47,7 +47,9 @@ def create_credential_resolver(session):
     metadata_timeout = session.get_config_variable('metadata_service_timeout')
     num_attempts = session.get_config_variable('metadata_service_num_attempts')
     providers = [
-        EnvProvider(),
+        # We use ``session.profile`` for EnvProvider rather than
+        # ``profile_name`` so that it can be ``None`` when unset.
+        EnvProvider(profile_name=session.profile),
         SharedCredentialProvider(
             creds_filename=credential_file,
             profile_name=profile_name
@@ -275,7 +277,7 @@ class EnvProvider(CredentialProvider):
     # AWS_SESSION_TOKEN is what other AWS SDKs have standardized on.
     TOKENS = ['AWS_SECURITY_TOKEN', 'AWS_SESSION_TOKEN']
 
-    def __init__(self, environ=None, mapping=None):
+    def __init__(self, environ=None, mapping=None, profile_name=None):
         """
 
         :param environ: The environment variables (defaults to
@@ -289,6 +291,7 @@ class EnvProvider(CredentialProvider):
         if environ is None:
             environ = os.environ
         self.environ = environ
+        self._profile_name = profile_name
         self._mapping = self._build_mapping(mapping)
 
     def _build_mapping(self, mapping):
@@ -314,6 +317,11 @@ class EnvProvider(CredentialProvider):
         """
         Search for credentials in explicit environment variables.
         """
+        if self._profile_name is not None:
+            logger.info('Skipping environment variable credential check'
+                        ' because profile name was explicitly set')
+            return None
+
         if self._mapping['access_key'] in self.environ:
             logger.info('Found credentials in environment variables.')
             access_key, secret_key = self._extract_creds_from_mapping(

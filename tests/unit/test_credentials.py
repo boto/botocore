@@ -195,6 +195,18 @@ class TestEnvVar(BaseEnvVar):
         with self.assertRaises(botocore.exceptions.PartialCredentialsError):
             provider.load()
 
+    def test_profile_override_returns_none(self):
+        # If a profile has been explicitly set, e.g. by something
+        # like ``session.profile = 'dev'``, then we want to ignore
+        # the environment variables in favor of loading the correct
+        # info from the config file based on the profile name.
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'prod',
+            'AWS_SECRET_ACCESS_KEY': 'abc123'
+        }
+        provider = credentials.EnvProvider(environ, profile_name='dev')
+        creds = provider.load()
+        self.assertEqual(creds, None)
 
 class TestSharedCredentialsProvider(BaseEnvVar):
     def setUp(self):
