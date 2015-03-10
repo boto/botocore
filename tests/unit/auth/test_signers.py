@@ -25,6 +25,18 @@ from botocore.awsrequest import AWSRequest
 from botocore.vendored.requests.models import Request
 
 
+class BaseTestWithFixedDate(unittest.TestCase):
+    def setUp(self):
+        self.datetime_patch = mock.patch('botocore.auth.datetime')
+        self.datetime_mock = self.datetime_patch.start()
+        self.fixed_date = datetime.datetime(2014, 3, 10, 17, 2, 55, 0)
+        self.datetime_mock.datetime.utcnow.return_value = self.fixed_date
+        self.datetime_mock.datetime.strptime.return_value = self.fixed_date
+
+    def tearDown(self):
+        self.datetime_patch.stop()
+
+
 class TestHMACV1(unittest.TestCase):
 
     maxDiff = None
@@ -256,11 +268,12 @@ class TestSigV3(unittest.TestCase):
                          [original_auth])
 
 
-class TestS3SigV4Auth(unittest.TestCase):
+class TestS3SigV4Auth(BaseTestWithFixedDate):
 
     maxDiff = None
 
     def setUp(self):
+        super(TestS3SigV4Auth, self).setUp()
         self.credentials = botocore.credentials.Credentials(
             access_key='foo', secret_key='bar', token='baz')
         self.auth = botocore.auth.S3SigV4Auth(
@@ -344,7 +357,7 @@ class TestSigV4(unittest.TestCase):
                 botocore.auth.datetime, 'datetime',
                 mock.Mock(wraps=datetime.datetime)) as mock_datetime:
             original_utcnow = datetime.datetime(2014, 1, 1, 0, 0)
- 
+
             mock_datetime.utcnow.return_value = original_utcnow
             # Go through the add_auth process once. This will attach
             # a timestamp to the request at the beginning of auth.
@@ -368,11 +381,12 @@ class TestSigV4(unittest.TestCase):
             self.assertNotIn('20140102T000000Z', sts)
 
 
-class TestSigV4Resign(unittest.TestCase):
+class TestSigV4Resign(BaseTestWithFixedDate):
 
     maxDiff = None
 
     def setUp(self):
+        super(TestSigV4Resign, self).setUp()
         self.credentials = botocore.credentials.Credentials(
             access_key='foo', secret_key='bar', token='baz')
         self.auth = botocore.auth.SigV4Auth(self.credentials,
