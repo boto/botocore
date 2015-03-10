@@ -155,5 +155,5 @@ class TestClientErrorMessages(unittest.TestCase):
         client = session.create_client(
             'cloudformation', region_name='bad-region-name')
         with self.assertRaisesRegexp(EndpointConnectionError,
-                                     'verify your region'):
+                                     'Could not connect to the endpoint URL'):
             client.list_stacks()
