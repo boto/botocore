@@ -235,9 +235,9 @@ class Endpoint(object):
             # region/endpoint so we'll raise a more specific error message
             # to help users.
             if self._looks_like_dns_error(e):
-                endpoint = e.request.url
+                endpoint_url = e.request.url
                 better_exception = EndpointConnectionError(
-                    endpoint=endpoint, error=e)
+                    endpoint_url=endpoint_url, error=e)
                 return (None, better_exception)
             else:
                 return (None, e)

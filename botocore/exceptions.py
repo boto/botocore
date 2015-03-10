@@ -49,8 +49,7 @@ class ApiVersionNotFoundError(BotoCoreError):
 
 class EndpointConnectionError(BotoCoreError):
     fmt = (
-        'Could not connect to the endpoint "{endpoint}", please verify '
-        'your region value.')
+        'Could not connect to the endpoint URL: "{endpoint_url}"')
 
 
 class NoCredentialsError(BotoCoreError):

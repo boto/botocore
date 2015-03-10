@@ -176,7 +176,7 @@ class TestEndpointFeatures(TestEndpointBase):
         self.http_session.send.side_effect = ConnectionError(
             "Fake gaierror(8, node or host not known)", request=fake_request)
         with self.assertRaisesRegexp(EndpointConnectionError,
-                                     'verify your region'):
+                                     'Could not connect'):
             self.endpoint.make_request(self.op, request_dict())
 
 
