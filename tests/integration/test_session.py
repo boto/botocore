@@ -47,3 +47,17 @@ class TestCanChangeParsing(unittest.TestCase):
         dates = [bucket['CreationDate'] for bucket in parsed['Buckets']]
         self.assertTrue(all(isinstance(date, str) for date in dates),
                         "Expected all str types but instead got: %s" % dates)
+
+    def test_maps_service_name_when_overriden(self):
+        ses = self.session.get_service_model('ses')
+        self.assertEqual(ses.endpoint_prefix, 'email')
+        # But we should map the service_name to be the same name
+        # used when calling get_service_model which is different
+        # than the endpoint_prefix.
+        self.assertEqual(ses.service_name, 'ses')
+
+    def test_maps_service_name_from_client(self):
+        # Same thing as test_maps_service_name_from_client,
+        # except through the client interface.
+        client = self.session.create_client('ses')
+        self.assertEqual(client.meta.service_model.service_name, 'ses')

@@ -343,6 +343,7 @@ class TestGetServiceModel(BaseSessionTest):
         self.session.register_component('data_loader', loader)
         model = self.session.get_service_model('made_up')
         self.assertIsInstance(model, ServiceModel)
+        self.assertEqual(model.service_name, 'made_up')
 
 
 class TestGetWaiterModel(BaseSessionTest):

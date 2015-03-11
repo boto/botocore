@@ -500,7 +500,7 @@ class Session(object):
 
         """
         service_description = self.get_service_data(service_name, api_version)
-        return ServiceModel(service_description)
+        return ServiceModel(service_description, service_name=service_name)
 
     def get_waiter_model(self, service_name, api_version=None):
         loader = self.get_component('data_loader')
