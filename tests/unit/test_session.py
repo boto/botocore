@@ -390,6 +390,7 @@ class TestCreateClient(BaseSessionTest):
             mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY,
             scoped_config=mock.ANY, client_config=config)
 
+
 class TestPerformOperation(BaseSessionTest):
     def test_s3(self):
         service = self.session.get_service('s3')
