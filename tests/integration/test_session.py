@@ -59,5 +59,5 @@ class TestCanChangeParsing(unittest.TestCase):
     def test_maps_service_name_from_client(self):
         # Same thing as test_maps_service_name_from_client,
         # except through the client interface.
-        client = self.session.create_client('ses')
+        client = self.session.create_client('ses', region_name='us-east-1')
         self.assertEqual(client.meta.service_model.service_name, 'ses')
