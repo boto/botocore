@@ -324,6 +324,10 @@ class OperationModel(object):
         self.metadata = service_model.metadata
         self.http = operation_model.get('http', {})
 
+    @property
+    def service_model(self):
+        return self._service_model
+
     @CachedProperty
     def input_shape(self):
         if 'input' not in self._operation_model:
