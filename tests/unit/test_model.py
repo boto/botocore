@@ -125,9 +125,10 @@ class TestOperationModelFromService(unittest.TestCase):
     def test_service_model_available_from_operation_model(self):
         service_model = model.ServiceModel(self.model)
         operation = service_model.operation_model('OperationName')
+        # This is an identity comparison because we don't implement
+        # __eq__, so we may need to change this in the future.
         self.assertEqual(
-            operation.service_model.service_name,
-            service_model.service_name)
+            operation.service_model, service_model)
 
     def test_operation_output_model(self):
         service_model = model.ServiceModel(self.model)
