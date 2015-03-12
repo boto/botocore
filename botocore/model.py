@@ -236,6 +236,10 @@ class ServiceModel(object):
         return OperationModel(model, self)
 
     @CachedProperty
+    def documentation(self):
+        return self._service_description.get('documentation', '')
+
+    @CachedProperty
     def operation_names(self):
         return list(self._service_description.get('operations', []))
 
@@ -327,6 +331,10 @@ class OperationModel(object):
     @property
     def service_model(self):
         return self._service_model
+
+    @CachedProperty
+    def documentation(self):
+        return self._operation_model.get('documentation', '')
 
     @CachedProperty
     def input_shape(self):
