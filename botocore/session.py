@@ -35,6 +35,7 @@ from botocore.provider import get_provider
 from botocore.parsers import ResponseParserFactory
 from botocore import regions
 from botocore.model import ServiceModel
+from botocore import paginate
 import botocore.service
 from botocore import waiter
 from botocore import retryhandler, translate
@@ -509,6 +510,14 @@ class Session(object):
         waiter_path = latest.replace('.normal', '.waiters')
         waiter_config = loader.load_data(waiter_path)
         return waiter.WaiterModel(waiter_config)
+
+    def get_paginator_model(self, service_name, api_version=None):
+        loader = self.get_component('data_loader')
+        latest = loader.determine_latest('%s/%s' % (
+            self.provider.name, service_name), api_version)
+        paginator_path = latest.replace('.normal', '.paginators')
+        paginator_config = loader.load_data(paginator_path)
+        return paginate.PaginatorModel(paginator_config)
 
     def get_service_data(self, service_name, api_version=None):
         """
