@@ -210,7 +210,7 @@ class BaseClient(object):
         self._cache = {}
         self._loader = loader
         self.meta = ClientMeta(event_emitter, endpoint.region_name,
-                               service_model)
+                               endpoint.host, service_model)
 
         # Register request signing, but only if we have an event
         # emitter. When a client is cloned this is ignored, because
@@ -376,9 +376,10 @@ class ClientMeta(object):
 
     """
 
-    def __init__(self, events, region_name, service_model):
+    def __init__(self, events, region_name, endpoint_url, service_model):
         self.events = events
         self._region_name = region_name
+        self._endpoint_url = endpoint_url
         self._service_model = service_model
 
     @property
@@ -388,6 +389,10 @@ class ClientMeta(object):
     @property
     def region_name(self):
         return self._region_name
+
+    @property
+    def endpoint_url(self):
+        return self._endpoint_url
 
 
 class Config(object):
