@@ -35,7 +35,7 @@ class TestServiceModel(unittest.TestCase):
         self.model = {
             'metadata': {'protocol': 'query',
                          'endpointPrefix': 'endpoint-prefix'},
-            'documentation': '',
+            'documentation': 'Documentation value',
             'operations': {},
             'shapes': {}
         }
@@ -61,6 +61,10 @@ class TestServiceModel(unittest.TestCase):
     def test_signing_name_defaults_to_endpoint_prefix(self):
         self.assertEqual(self.service_model.signing_name, 'endpoint-prefix')
 
+    def test_documentation_exposed_as_property(self):
+        self.assertEqual(self.service_model.documentation,
+                         'Documentation value')
+
 
 class TestOperationModelFromService(unittest.TestCase):
     def setUp(self):
@@ -81,6 +85,7 @@ class TestOperationModelFromService(unittest.TestCase):
                         'shape': 'OperationNameResponse',
                     },
                     'errors': [{'shape': 'NoSuchResourceException'}],
+                    'documentation': 'Docs for OperationName',
                 }
             },
             'shapes': {
@@ -121,6 +126,11 @@ class TestOperationModelFromService(unittest.TestCase):
         shape = operation.input_shape
         self.assertEqual(shape.name, 'OperationNameRequest')
         self.assertEqual(list(sorted(shape.members)), ['Arg1', 'Arg2'])
+
+    def test_has_documentation_property(self):
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertEqual(operation.documentation, 'Docs for OperationName')
 
     def test_service_model_available_from_operation_model(self):
         service_model = model.ServiceModel(self.model)
