@@ -21,6 +21,7 @@ import logging
 import os
 import platform
 import shlex
+import warnings
 
 from botocore import __version__
 import botocore.config
@@ -545,11 +546,17 @@ class Session(object):
         """
         Get information about a service.
 
+        .. warning::
+            This method is deprecated and will be removed in the
+            near future.  Use ``session.create_client`` instead.
+
         :type service_name: str
         :param service_name: The name of the service (e.g. 'ec2')
 
         :returns: :class:`botocore.service.Service`
         """
+        warnings.warn("get_service is deprecated and will be removed.  "
+                      "Use create_client instead.", PendingDeprecationWarning)
         service = botocore.service.get_service(self, service_name,
                                                self.provider,
                                                api_version=api_version)
