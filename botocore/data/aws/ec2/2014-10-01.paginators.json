@@ -40,6 +40,12 @@
       "output_token": "NextToken",
       "limit_key": "MaxResults",
       "result_key": "VolumeStatuses"
+    },
+    "DescribeSnapshots": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "Snapshots"
     }
   }
 }
