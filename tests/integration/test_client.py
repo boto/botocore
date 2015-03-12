@@ -19,6 +19,7 @@ from tests import unittest
 import botocore.session
 from botocore.client import ClientError
 from botocore.compat import six
+from botocore.exceptions import EndpointConnectionError
 from six import StringIO
 
 
@@ -146,3 +147,27 @@ class TestCreateClients(unittest.TestCase):
         with self.assertRaisesRegexp(ValueError, 'Invalid endpoint'):
             self.session.create_client('cloudformation',
                                        region_name='invalid region name')
+
+
+class TestClientErrorMessages(unittest.TestCase):
+    def test_region_mentioned_in_invalid_region(self):
+        session = botocore.session.get_session()
+        client = session.create_client(
+            'cloudformation', region_name='bad-region-name')
+        with self.assertRaisesRegexp(EndpointConnectionError,
+                                     'Could not connect to the endpoint URL'):
+            client.list_stacks()
+
+
+class TestClientMeta(unittest.TestCase):
+    def setUp(self):
+        self.session = botocore.session.get_session()
+
+    def test_region_name_on_meta(self):
+        client = self.session.create_client('s3', 'us-west-2')
+        self.assertEqual(client.meta.region_name, 'us-west-2')
+
+    def test_endpoint_url_on_meta(self):
+        client = self.session.create_client('s3', 'us-west-2',
+                                            endpoint_url='https://foo')
+        self.assertEqual(client.meta.endpoint_url, 'https://foo')

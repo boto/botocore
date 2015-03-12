@@ -47,6 +47,11 @@ class ApiVersionNotFoundError(BotoCoreError):
     fmt = 'Unable to load data {data_path} for: {api_version}'
 
 
+class EndpointConnectionError(BotoCoreError):
+    fmt = (
+        'Could not connect to the endpoint URL: "{endpoint_url}"')
+
+
 class NoCredentialsError(BotoCoreError):
     """
     No credentials could be found

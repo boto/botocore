@@ -183,6 +183,17 @@ class TestFuturePaginator(unittest.TestCase):
              mock.call(Marker='m2', MaxKeys=1)]
         )
 
+    def test_build_full_result_with_single_key(self):
+        responses = [
+            {"Users": ["User1"], "Marker": "m1"},
+            {"Users": ["User2"], "Marker": "m2"},
+            {"Users": ["User3"]}
+        ]
+        self.method.side_effect = responses
+        pages = self.paginator.paginate()
+        complete = pages.build_full_result()
+        self.assertEqual(complete, {'Users': ['User1', 'User2', 'User3']})
+
 
 class TestPaginatorObjectConstruction(unittest.TestCase):
     def test_pagination_delegates_to_paginator(self):
