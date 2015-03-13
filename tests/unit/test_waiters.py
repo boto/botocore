@@ -19,9 +19,7 @@ import botocore
 from botocore.exceptions import ClientError, WaiterConfigError, WaiterError
 from botocore.waiter import Waiter, WaiterModel, SingleWaiterConfig
 from botocore.waiter import create_waiter_with_client
-from botocore.waiter import create_waiter_from_legacy
 from botocore.waiter import NormalizedOperationMethod
-from botocore.waiter import LegacyOperationMethod
 from botocore.loaders import Loader
 
 
@@ -468,13 +466,6 @@ class TestCreateWaiter(unittest.TestCase):
             waiter_name, self.waiter_model, client)
         self.assertIsInstance(waiter, Waiter)
 
-    def test_can_create_waiter_legacy_interface(self):
-        service_object = mock.Mock()
-        endpoint = mock.Mock()
-        waiter = create_waiter_from_legacy(
-            'WaiterName', self.waiter_config, service_object, endpoint)
-        self.assertIsInstance(waiter, Waiter)
-
 
 class TestOperationMethods(unittest.TestCase):
     def test_normalized_op_method_makes_call(self):
@@ -496,39 +487,6 @@ class TestOperationMethods(unittest.TestCase):
         client_method.side_effect = exception
         actual_response = op(Foo='a', Bar='b')
         self.assertEqual(actual_response, parsed_response)
-
-    def test_legacy_op_method_makes_call(self):
-        operation_object = mock.Mock()
-        http = mock.Mock()
-        operation_object.call.return_value = (http, {})
-        endpoint = mock.Mock()
-        op = LegacyOperationMethod(operation_object, endpoint)
-        op(Foo='a', Bar='b')
-
-        operation_object.call.assert_called_with(
-            endpoint, Foo='a', Bar='b')
-
-    def test_legacy_method_handles_exceptions(self):
-        operation_object = mock.Mock()
-        exception = Exception()
-        exception.error_message = 'Foo'
-        exception.error_code = 'MyCode'
-        operation_object.call.side_effect = exception
-        endpoint = mock.Mock()
-        op = LegacyOperationMethod(operation_object, endpoint)
-        response = op(Foo='a', Bar='b')
-        self.assertEqual(response,
-                         {'Error': {'Code': 'MyCode', 'Message': 'Foo'}})
-
-    def test_legacy_method_with_unknown_exception(self):
-        operation_object = mock.Mock()
-        # A generic exception missing the error_message and error_code
-        # attrs will just be reraised.
-        operation_object.call.side_effect = ValueError
-        endpoint = mock.Mock()
-        op = LegacyOperationMethod(operation_object, endpoint)
-        with self.assertRaises(ValueError):
-            op(Foo='a', Bar='b')
 
 
 class ServiceWaiterFunctionalTest(BaseEnvVar):

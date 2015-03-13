@@ -169,19 +169,6 @@ class SessionTest(BaseSessionTest):
                 set(profiles),
                 set(['foo', 'default', 'newprofile']))
 
-    def test_register_unregister(self):
-        calls = []
-        handler = lambda **kwargs: calls.append(kwargs)
-        self.session.register('service-created', handler)
-        service = self.session.get_service('ec2')
-        self.assertEqual(len(calls), 1)
-        self.assertEqual(calls[0]['service'], service)
-
-        calls[:] = []
-        self.session.unregister('service-created', handler)
-        service = self.session.get_service('ec2')
-        self.assertEqual(len(calls), 0)
-
     def test_emit_delegates_to_emitter(self):
         calls = []
         handler = lambda **kwargs: calls.append(kwargs)
@@ -406,17 +393,6 @@ class TestCreateClient(BaseSessionTest):
         client_creator.return_value.create_client.assert_called_with(
             mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY,
             scoped_config=mock.ANY, client_config=config)
-
-
-class TestPerformOperation(BaseSessionTest):
-    def test_s3(self):
-        service = self.session.get_service('s3')
-        operation = service.get_operation('ListBuckets')
-        endpoint = service.get_endpoint('us-west-2')
-        endpoint._send_request = mock.Mock()
-        endpoint._send_request.return_value = [{}, {}]
-        response = operation.call(endpoint)
-        self.assertEqual(response, endpoint._send_request.return_value)
 
 
 if __name__ == "__main__":

@@ -37,7 +37,6 @@ from botocore.parsers import ResponseParserFactory
 from botocore import regions
 from botocore.model import ServiceModel
 from botocore import paginate
-import botocore.service
 from botocore import waiter
 from botocore import retryhandler, translate
 
@@ -541,28 +540,6 @@ class Session(object):
         data_path = '%s' % self.provider.name
         return self.get_component('data_loader')\
                 .list_available_services(data_path)
-
-    def get_service(self, service_name, api_version=None):
-        """
-        Get information about a service.
-
-        .. warning::
-            This method is deprecated and will be removed in the
-            near future.  Use ``session.create_client`` instead.
-
-        :type service_name: str
-        :param service_name: The name of the service (e.g. 'ec2')
-
-        :returns: :class:`botocore.service.Service`
-        """
-        warnings.warn("get_service is deprecated and will be removed.  "
-                      "Use create_client instead.", PendingDeprecationWarning)
-        service = botocore.service.get_service(self, service_name,
-                                               self.provider,
-                                               api_version=api_version)
-        event = self.create_event('service-created')
-        self._events.emit(event, service=service)
-        return service
 
     def set_debug_logger(self, logger_name='botocore'):
         """
