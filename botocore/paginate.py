@@ -383,60 +383,9 @@ class ResultKeyIterator(object):
         self.result_key = result_key
 
     def __iter__(self):
-        for _, page in self._pages_iterator:
+        for page in self._pages_iterator:
             results = self.result_key.search(page)
             if results is None:
                 results = []
             for result in results:
                 yield result
-
-
-# These two class use the Operation.call() interface that is
-# being deprecated.  This is here so that both interfaces can be
-# supported during a transition period.  Eventually these two
-# interfaces will be removed.
-class DeprecatedPageIterator(PageIterator):
-    def __init__(self, operation, endpoint, input_token,
-                 output_token, more_results,
-                 result_keys, non_aggregate_keys, limit_key, max_items,
-                 starting_token, page_size, op_kwargs):
-        super(DeprecatedPageIterator, self).__init__(
-            None, input_token, output_token, more_results, result_keys,
-            non_aggregate_keys, limit_key, max_items,
-            starting_token, page_size, op_kwargs)
-        self._operation = operation
-        self._endpoint = endpoint
-
-    def _make_request(self, current_kwargs):
-        return self._operation.call(self._endpoint, **current_kwargs)
-
-    def _extract_parsed_response(self, response):
-        return response[1]
-
-
-class DeprecatedPaginator(Paginator):
-    PAGE_ITERATOR_CLS = DeprecatedPageIterator
-
-    def __init__(self, operation, pagination_config):
-        super(DeprecatedPaginator, self).__init__(None, pagination_config)
-        self._operation = operation
-
-    def paginate(self, endpoint, **kwargs):
-        """Paginate responses to an operation.
-
-        The responses to some operations are too large for a single response.
-        When this happens, the service will indicate that there are more
-        results in its response.  This method handles the details of how
-        to detect when this happens and how to retrieve more results.
-
-        """
-        page_params = self._extract_paging_params(kwargs)
-        return self.PAGE_ITERATOR_CLS(
-            self._operation, endpoint, self._input_token,
-            self._output_token, self._more_results,
-            self._result_keys, self._non_aggregate_keys,
-            self._limit_key,
-            page_params['max_items'],
-            page_params['starting_token'],
-            page_params['page_size'],
-            kwargs)
