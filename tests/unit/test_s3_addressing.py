@@ -29,55 +29,56 @@ class TestS3Addressing(BaseSessionTest):
 
     def setUp(self):
         super(TestS3Addressing, self).setUp()
-        self.s3 = self.session.get_service('s3')
+        self.region_name = 'us-east-1'
         self.signature_version = 's3'
 
-    @patch('botocore.response.get_response', Mock())
-    def get_prepared_request(self, op, param, force_hmacv1=False):
-        request = []
+        self.mock_response = Mock()
+        self.mock_response.content = ''
+        self.mock_response.headers = {}
+        self.mock_response.status_code = 200
+
+    def get_prepared_request(self, operation, params,
+                             force_hmacv1=False):
         if force_hmacv1:
-            self.endpoint.auth = auth.HmacV1Auth(
-                credentials.Credentials('foo', 'bar'))
-        def prepare_request(request, **kwargs):
-            fix_s3_host(request, self.signature_version,
-                        self.endpoint.region_name)
-            return request
-        self.endpoint.prepare_request = prepare_request
-        return self.endpoint.create_request(param, op)
+            self.session.register('choose-signer', self.enable_hmacv1)
+        with patch('botocore.endpoint.PreserveAuthSession') as \
+                mock_http_session:
+            mock_send = mock_http_session.return_value.send
+            mock_send.return_value = self.mock_response
+            client = self.session.create_client('s3', self.region_name)
+            getattr(client, operation)(**params)
+            # Return the request that was sent over the wire.
+            return mock_send.call_args[0][0]
+
+    def enable_hmacv1(self, **kwargs):
+        return 's3'
 
     def test_list_objects_dns_name(self):
-        self.endpoint = self.s3.get_endpoint('us-east-1')
-        op = self.s3.get_operation('ListObjects')
-        params = op.build_parameters(bucket='safename')
-        prepared_request = self.get_prepared_request(op, params,
+        params = {'Bucket': 'safename'}
+        prepared_request = self.get_prepared_request('list_objects', params,
                                                      force_hmacv1=True)
         self.assertEqual(prepared_request.url,
-                         'https://safename.s3.amazonaws.com')
+                         'https://safename.s3.amazonaws.com/')
 
     def test_list_objects_non_dns_name(self):
-        self.endpoint = self.s3.get_endpoint('us-east-1')
-        op = self.s3.get_operation('ListObjects')
-        params = op.build_parameters(bucket='un_safe_name')
-        prepared_request = self.get_prepared_request(op, params)
+        params = {'Bucket': 'un_safe_name'}
+        prepared_request = self.get_prepared_request('list_objects', params,
+                                                     force_hmacv1=True)
         self.assertEqual(prepared_request.url,
                          'https://s3.amazonaws.com/un_safe_name')
 
     def test_list_objects_dns_name_non_classic(self):
-        self.endpoint = self.s3.get_endpoint('us-west-2')
-        op = self.s3.get_operation('ListObjects')
-        params = op.build_parameters(bucket='safename')
-        prepared_request = self.get_prepared_request(op, params,
+        self.region_name = 'us-west-2'
+        params = {'Bucket': 'safename'}
+        prepared_request = self.get_prepared_request('list_objects', params,
                                                      force_hmacv1=True)
         self.assertEqual(prepared_request.url,
-                         'https://safename.s3.amazonaws.com')
+                         'https://safename.s3.amazonaws.com/')
 
     def test_list_objects_unicode_query_string_eu_central_1(self):
-        self.signature_version = 's3v4'
-        self.endpoint = self.s3.get_endpoint('eu-central-1')
-        op = self.s3.get_operation('ListObjects')
-        params = op.build_parameters(bucket='safename',
-                                     marker=u'\xe4\xf6\xfc-01.txt')
-        prepared_request = self.get_prepared_request(op, params)
+        self.region_name = 'eu-central-1'
+        params = {'Bucket': 'safename', 'Marker': u'\xe4\xf6\xfc-01.txt'}
+        prepared_request = self.get_prepared_request('list_objects', params)
         self.assertEqual(
             prepared_request.url,
             ('https://s3.eu-central-1.amazonaws.com/safename'
@@ -85,144 +86,147 @@ class TestS3Addressing(BaseSessionTest):
         )
 
     def test_list_objects_in_restricted_regions(self):
-        self.endpoint = self.s3.get_endpoint('us-gov-west-1')
-        op = self.s3.get_operation('ListObjects')
-        params = op.build_parameters(bucket='safename')
-        prepared_request = self.get_prepared_request(op, params)
+        self.region_name = 'us-gov-west-1'
+        params = {'Bucket': 'safename'}
+        prepared_request = self.get_prepared_request('list_objects', params)
         # Note how we keep the region specific endpoint here.
         self.assertEqual(prepared_request.url,
                          'https://s3-us-gov-west-1.amazonaws.com/safename')
 
     def test_list_objects_in_fips(self):
-        self.endpoint = self.s3.get_endpoint('fips-us-gov-west-1')
-        op = self.s3.get_operation('ListObjects')
-        params = op.build_parameters(bucket='safename')
-        prepared_request = self.get_prepared_request(op, params)
+        self.region_name = 'fips-us-gov-west-1'
+        params = {'Bucket': 'safename'}
+        prepared_request = self.get_prepared_request('list_objects', params)
         # Note how we keep the region specific endpoint here.
         self.assertEqual(
             prepared_request.url,
             'https://s3-fips-us-gov-west-1.amazonaws.com/safename')
 
     def test_list_objects_non_dns_name_non_classic(self):
-        self.endpoint = self.s3.get_endpoint('us-west-2')
-        op = self.s3.get_operation('ListObjects')
-        params = op.build_parameters(bucket='un_safe_name')
-        prepared_request = self.get_prepared_request(op, params)
+        self.region_name = 'us-west-2'
+        params = {'Bucket': 'un_safe_name'}
+        prepared_request = self.get_prepared_request('list_objects', params)
         self.assertEqual(prepared_request.url,
                          'https://s3-us-west-2.amazonaws.com/un_safe_name')
 
     def test_put_object_dns_name_non_classic(self):
-        self.endpoint = self.s3.get_endpoint('us-west-2')
-        op = self.s3.get_operation('PutObject')
+        self.region_name = 'us-west-2'
         file_path = os.path.join(os.path.dirname(__file__),
                                  'put_object_data')
-        fp = open(file_path, 'rb')
-        params = op.build_parameters(bucket='my.valid.name',
-                                     key='mykeyname',
-                                     body=fp,
-                                     acl='public-read',
-                                     content_language='piglatin',
-                                     content_type='text/plain')
-        prepared_request = self.get_prepared_request(op, params)
-        self.assertEqual(prepared_request.url,
-                         'https://s3-us-west-2.amazonaws.com/my.valid.name/mykeyname')
-        fp.close()
+        with open(file_path, 'rb') as fp:
+            params = {
+                'Bucket': 'my.valid.name',
+                'Key': 'mykeyname',
+                'Body': fp,
+                'ACL': 'public-read',
+                'ContentLanguage': 'piglatin',
+                'ContentType': 'text/plain'
+            }
+            prepared_request = self.get_prepared_request('put_object', params)
+            self.assertEqual(
+                prepared_request.url,
+                'https://s3-us-west-2.amazonaws.com/my.valid.name/mykeyname')
 
     def test_put_object_dns_name_classic(self):
-        self.endpoint = self.s3.get_endpoint('us-east-1')
-        op = self.s3.get_operation('PutObject')
+        self.region_name = 'us-east-1'
         file_path = os.path.join(os.path.dirname(__file__),
                                  'put_object_data')
-        fp = open(file_path, 'rb')
-        params = op.build_parameters(bucket='my.valid.name',
-                                     key='mykeyname',
-                                     body=fp,
-                                     acl='public-read',
-                                     content_language='piglatin',
-                                     content_type='text/plain')
-        prepared_request = self.get_prepared_request(op, params)
-        self.assertEqual(prepared_request.url,
-                         'https://s3.amazonaws.com/my.valid.name/mykeyname')
-        fp.close()
+        with open(file_path, 'rb') as fp:
+            params = {
+                'Bucket': 'my.valid.name',
+                'Key': 'mykeyname',
+                'Body': fp,
+                'ACL': 'public-read',
+                'ContentLanguage': 'piglatin',
+                'ContentType': 'text/plain'
+            }
+            prepared_request = self.get_prepared_request('put_object', params)
+            self.assertEqual(
+                prepared_request.url,
+                'https://s3.amazonaws.com/my.valid.name/mykeyname')
 
     def test_put_object_dns_name_single_letter_non_classic(self):
-        self.endpoint = self.s3.get_endpoint('us-west-2')
-        op = self.s3.get_operation('PutObject')
+        self.region_name = 'us-west-2'
         file_path = os.path.join(os.path.dirname(__file__),
                                  'put_object_data')
-        fp = open(file_path, 'rb')
-        params = op.build_parameters(bucket='a.valid.name',
-                                     key='mykeyname',
-                                     body=fp,
-                                     acl='public-read',
-                                     content_language='piglatin',
-                                     content_type='text/plain')
-        prepared_request = self.get_prepared_request(op, params)
-        self.assertEqual(prepared_request.url,
-                         'https://s3-us-west-2.amazonaws.com/a.valid.name/mykeyname')
-        fp.close()
+        with open(file_path, 'rb') as fp:
+            params = {
+                'Bucket': 'a.valid.name',
+                'Key': 'mykeyname',
+                'Body': fp,
+                'ACL': 'public-read',
+                'ContentLanguage': 'piglatin',
+                'ContentType': 'text/plain'
+            }
+            prepared_request = self.get_prepared_request('put_object', params)
+            self.assertEqual(
+                prepared_request.url,
+                'https://s3-us-west-2.amazonaws.com/a.valid.name/mykeyname')
 
     def test_get_object_non_dns_name_non_classic(self):
-        self.endpoint = self.s3.get_endpoint('us-west-2')
-        op = self.s3.get_operation('GetObject')
-        params = op.build_parameters(bucket='AnInvalidName',
-                                     key='mykeyname')
-        prepared_request = self.get_prepared_request(op, params)
-        self.assertEqual(prepared_request.url,
-                         'https://s3-us-west-2.amazonaws.com/AnInvalidName/mykeyname')
+        self.region_name = 'us-west-2'
+        params = {
+            'Bucket': 'AnInvalidName',
+            'Key': 'mykeyname'
+        }
+        prepared_request = self.get_prepared_request('get_object', params)
+        self.assertEqual(
+            prepared_request.url,
+            'https://s3-us-west-2.amazonaws.com/AnInvalidName/mykeyname')
 
     def test_get_object_non_dns_name_classic(self):
-        self.endpoint = self.s3.get_endpoint('us-east-1')
-        op = self.s3.get_operation('GetObject')
-        params = op.build_parameters(bucket='AnInvalidName',
-                                     key='mykeyname')
-        prepared_request = self.get_prepared_request(op, params)
+        self.region_name = 'us-east-1'
+        params = {
+            'Bucket': 'AnInvalidName',
+            'Key': 'mykeyname'
+        }
+        prepared_request = self.get_prepared_request('get_object', params)
         self.assertEqual(prepared_request.url,
                          'https://s3.amazonaws.com/AnInvalidName/mykeyname')
 
     def test_get_object_ip_address_name_non_classic(self):
-        self.endpoint = self.s3.get_endpoint('us-west-2')
-        op = self.s3.get_operation('GetObject')
-        params = op.build_parameters(bucket='192.168.5.4',
-                                     key='mykeyname')
-        prepared_request = self.get_prepared_request(op, params)
+        self.region_name = 'us-west-2'
+        params = {
+            'Bucket': '192.168.5.4',
+            'Key': 'mykeyname'}
+        prepared_request = self.get_prepared_request('get_object', params)
         self.assertEqual(
             prepared_request.url,
             'https://s3-us-west-2.amazonaws.com/192.168.5.4/mykeyname')
 
     def test_get_object_almost_an_ip_address_name_non_classic(self):
-        self.endpoint = self.s3.get_endpoint('us-west-2')
-        op = self.s3.get_operation('GetObject')
-        params = op.build_parameters(bucket='192.168.5.256',
-                                     key='mykeyname')
-        prepared_request = self.get_prepared_request(op, params)
+        self.region_name = 'us-west-2'
+        params = {
+            'Bucket': '192.168.5.256',
+            'Key': 'mykeyname'}
+        prepared_request = self.get_prepared_request('get_object', params)
         self.assertEqual(
             prepared_request.url,
             'https://s3-us-west-2.amazonaws.com/192.168.5.256/mykeyname')
 
     def test_invalid_endpoint_raises_exception(self):
         with self.assertRaisesRegexp(ValueError, 'Invalid endpoint'):
-            self.s3.get_endpoint('bad region name')
+            self.session.create_client('s3', 'Invalid region')
 
     def test_non_existent_region(self):
         # If I ask for a region that does not
         # exist on a global endpoint, such as:
-        endpoint = self.s3.get_endpoint('REGION-DOES-NOT-EXIST')
+        client = self.session.create_client('s3', 'REGION-DOES-NOT-EXIST')
         # Then the default endpoint heuristic will apply and we'll
         # get the region name as specified.
-        self.assertEqual(endpoint.region_name, 'REGION-DOES-NOT-EXIST')
+        self.assertEqual(client.meta.region_name, 'REGION-DOES-NOT-EXIST')
         # Why not fixed this?  Well backwards compatability for one thing.
         # The other reason is because it was intended to accomodate this
         # use case.  Let's say I have us-west-2 set as my default region,
         # possibly through an env var or config variable.  Well, by default,
         # we'd make a call like:
-        iam_endpoint = self.session.get_service('iam').get_endpoint('us-west-2')
+        client = self.session.create_client('iam', 'us-west-2')
         # Instead of giving the user an error, we should instead give
         # them the global endpoint.
-        self.assertEqual(iam_endpoint.region_name, 'us-east-1')
+        self.assertEqual(client.meta.region_name, 'us-east-1')
         # But if they request an endpoint that we *do* know about, we use
         # that specific endpoint.
+        client = self.session.create_client('iam', 'us-gov-west-1')
         self.assertEqual(
-            self.session.get_service('iam').get_endpoint(
-                'us-gov-west-1').region_name,
+            client.meta.region_name,
             'us-gov-west-1')
