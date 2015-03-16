@@ -65,7 +65,7 @@ class TestService(BaseSessionTest):
         # If you don't provide an endpoint_url, than you need to
         # provide a region_name.
         service = self.session.get_service('ec2')
-        with self.assertRaises(botocore.exceptions.UnknownEndpointError):
+        with self.assertRaises(botocore.exceptions.NoRegionError):
             service.get_endpoint()
 
     def test_region_not_required_if_endpoint_url_given(self):
