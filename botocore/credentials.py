@@ -46,10 +46,8 @@ def create_credential_resolver(session):
     config_file = session.get_config_variable('config_file')
     metadata_timeout = session.get_config_variable('metadata_service_timeout')
     num_attempts = session.get_config_variable('metadata_service_num_attempts')
+
     providers = [
-        # We use ``session.profile`` for EnvProvider rather than
-        # ``profile_name`` so that it can be ``None`` when unset.
-        EnvProvider(profile_name=session.profile),
         SharedCredentialProvider(
             creds_filename=credential_file,
             profile_name=profile_name
@@ -65,6 +63,18 @@ def create_credential_resolver(session):
                 num_attempts=num_attempts)
         )
     ]
+
+    # We use ``session.profile`` for EnvProvider rather than
+    # ``profile_name`` because it is ``None`` when unset.
+    if session.profile is None:
+        # No profile has been explicitly set, so we prepend the environment
+        # variable provider. That provider, in turn, may set a profile
+        # or credentials.
+        providers.insert(0, EnvProvider())
+    else:
+        logger.info('Skipping environment variable credential check'
+                    ' because profile name was explicitly set.')
+
     resolver = CredentialResolver(providers=providers)
     return resolver
 
@@ -277,7 +287,7 @@ class EnvProvider(CredentialProvider):
     # AWS_SESSION_TOKEN is what other AWS SDKs have standardized on.
     TOKENS = ['AWS_SECURITY_TOKEN', 'AWS_SESSION_TOKEN']
 
-    def __init__(self, environ=None, mapping=None, profile_name=None):
+    def __init__(self, environ=None, mapping=None):
         """
 
         :param environ: The environment variables (defaults to
@@ -291,7 +301,6 @@ class EnvProvider(CredentialProvider):
         if environ is None:
             environ = os.environ
         self.environ = environ
-        self._profile_name = profile_name
         self._mapping = self._build_mapping(mapping)
 
     def _build_mapping(self, mapping):
@@ -317,11 +326,6 @@ class EnvProvider(CredentialProvider):
         """
         Search for credentials in explicit environment variables.
         """
-        if self._profile_name is not None:
-            logger.info('Skipping environment variable credential check'
-                        ' because profile name was explicitly set')
-            return None
-
         if self._mapping['access_key'] in self.environ:
             logger.info('Found credentials in environment variables.')
             access_key, secret_key = self._extract_creds_from_mapping(
@@ -588,7 +592,7 @@ class CredentialResolver(object):
         # If we got here, no credentials could be found.
         # This feels like it should be an exception, but historically, ``None``
         # is returned.
-        # 
+        #
         # +1
         # -js
         return None
