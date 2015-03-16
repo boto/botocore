@@ -105,9 +105,7 @@ class NoRegionError(BaseEndpointResolverError):
     :ivar env_var: The name of the environment variable to use to
         specify the default region.
     """
-    fmt = (
-        'You must specify a region or set the {env_var} environment variable.'
-    )
+    fmt = 'You must specify a region.'
 
 
 class UnknownEndpointError(BaseEndpointResolverError):

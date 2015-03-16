@@ -72,7 +72,7 @@ class Operation(BotoCoreObject):
         resolver = self.session.get_component('endpoint_resolver')
         scheme = endpoint.host.split(':')[0]
         if endpoint.region_name is None:
-            raise NoRegionError(env_var='region')
+            raise NoRegionError()
         endpoint_config = resolver.construct_endpoint(
                 service_model.endpoint_prefix,
                 endpoint.region_name, scheme=scheme)

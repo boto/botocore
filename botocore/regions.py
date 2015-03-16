@@ -67,7 +67,7 @@ class EndpointResolver(object):
             if region_name is None:
                 # Raise a more specific error message that will give
                 # better guidance to the user what needs to happen.
-                raise NoRegionError(env_var='AWS_DEFAULT_REGION')
+                raise NoRegionError()
             else:
                 raise UnknownEndpointError(service_name=service_name,
                                         region_name=region_name)
