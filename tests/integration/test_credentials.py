@@ -15,24 +15,30 @@ import os
 import mock
 
 from botocore.session import Session
-from tests import unittest
+from tests import BaseEnvVar
 
 
-class TestCredentialPrecedence(unittest.TestCase):
+class TestCredentialPrecedence(BaseEnvVar):
     def setUp(self):
-        # Clean up any existing environment
-        for name in ['AWS_ACCESS_KEY_ID',
-                     'AWS_SECRET_ACCESS_KEY',
-                     'BOTO_DEFAULT_PROFILE']:
-            if name in os.environ:
-                del os.environ[name]
+        super(TestCredentialPrecedence, self).setUp()
 
-        # Set the config file to something that doesn't exist, then
-        # set the shared credential file to our test config.
+        # Set the config file to something that doesn't exist so
+        # that we don't accidentally load a config.
         os.environ['AWS_CONFIG_FILE'] = '~/.aws/config-missing'
-        Session.SessionVariables['credentials_file'] = (
-            None, None,
-            os.path.join(os.path.dirname(__file__), 'test-credentials'))
+
+    def create_session(self, *args, **kwargs):
+        """
+        Create a new session with the given arguments. Additionally,
+        this method will set the credentials file to the test credentials
+        used by the following test cases.
+        """
+        kwargs['session_vars'] = {
+            'credentials_file': (
+                None, None,
+                os.path.join(os.path.dirname(__file__), 'test-credentials'))
+        }
+
+        return Session(*args, **kwargs)
 
     def test_access_secret_vs_profile_env(self):
         # If all three are given, then the access/secret keys should
@@ -41,7 +47,7 @@ class TestCredentialPrecedence(unittest.TestCase):
         os.environ['AWS_SECRET_ACCESS_KEY'] = 'env-secret'
         os.environ['BOTO_DEFAULT_PROFILE'] = 'test'
 
-        s = Session()
+        s = self.create_session()
         credentials = s.get_credentials()
 
         self.assertEqual(credentials.access_key, 'env')
@@ -51,7 +57,7 @@ class TestCredentialPrecedence(unittest.TestCase):
     def test_access_secret_vs_profile_code(self, credentials_cls):
         # If all three are given, then the access/secret keys should
         # take precedence.
-        s = Session()
+        s = self.create_session()
         s.profile = 'test'
 
         client = s.create_client('s3', aws_access_key_id='code',
@@ -64,7 +70,7 @@ class TestCredentialPrecedence(unittest.TestCase):
         # If the profile is set both by the env var and by code,
         # then the one set by code should take precedence.
         os.environ['BOTO_DEFAULT_PROFILE'] = 'test'
-        s = Session()
+        s = self.create_session()
         s.profile = 'default'
 
         credentials = s.get_credentials()
@@ -78,7 +84,7 @@ class TestCredentialPrecedence(unittest.TestCase):
         # code, then those set by code should take precedence.
         os.environ['AWS_ACCESS_KEY_ID'] = 'env'
         os.environ['AWS_SECRET_ACCESS_KEY'] = 'secret'
-        s = Session()
+        s = self.create_session()
 
         client = s.create_client('s3', aws_access_key_id='code',
                                  aws_secret_access_key='code-secret')
@@ -97,7 +103,7 @@ class TestCredentialPrecedence(unittest.TestCase):
         #
         os.environ['AWS_ACCESS_KEY_ID'] = 'env'
         os.environ['AWS_SECRET_ACCESS_KEY'] = 'env-secret'
-        s = Session()
+        s = self.create_session()
         s.profile = 'test'
 
         client = s.create_client('s3')
