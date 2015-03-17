@@ -72,8 +72,8 @@ def create_credential_resolver(session):
         # or credentials.
         providers.insert(0, EnvProvider())
     else:
-        logger.info('Skipping environment variable credential check'
-                    ' because profile name was explicitly set.')
+        logger.debug('Skipping environment variable credential check'
+                     ' because profile name was explicitly set.')
 
     resolver = CredentialResolver(providers=providers)
     return resolver
