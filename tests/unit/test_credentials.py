@@ -19,6 +19,7 @@ import os
 from dateutil.tz import tzlocal
 
 from botocore import credentials
+from botocore.credentials import EnvProvider
 import botocore.exceptions
 import botocore.session
 from tests import unittest, BaseEnvVar
@@ -598,20 +599,16 @@ class TestCreateCredentialResolver(BaseEnvVar):
         self.config['profile'] = 'dev'
         resolver = credentials.create_credential_resolver(self.session)
 
-        for provider in resolver.providers:
-            self.assertNotIsInstance(provider, credentials.EnvProvider)
+        self.assertTrue(
+            all(not isinstance(p, EnvProvider) for p in resolver.providers))
 
     def test_no_profile_checks_env_provider(self):
         self.config['profile'] = None
         self.session.profile = None
         resolver = credentials.create_credential_resolver(self.session)
 
-        found = False
-        for provider in resolver.providers:
-            if isinstance(provider, credentials.EnvProvider):
-                found = True
-
-        self.assertTrue(found)
+        self.assertTrue(
+            any(isinstance(p, EnvProvider) for p in resolver.providers))
 
     def test_no_profile_env_provider_is_first(self):
         self.config['profile'] = None
