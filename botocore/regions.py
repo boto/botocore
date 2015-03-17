@@ -70,7 +70,7 @@ class EndpointResolver(object):
                 raise NoRegionError()
             else:
                 raise UnknownEndpointError(service_name=service_name,
-                                        region_name=region_name)
+                                           region_name=region_name)
         return endpoint
 
     def _match_rules(self, service_rules, region_name, **kwargs):

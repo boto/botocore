@@ -99,12 +99,7 @@ class BaseEndpointResolverError(BotoCoreError):
 
 
 class NoRegionError(BaseEndpointResolverError):
-    """
-    No region was specified
-
-    :ivar env_var: The name of the environment variable to use to
-        specify the default region.
-    """
+    """No region was specified."""
     fmt = 'You must specify a region.'
 
 
