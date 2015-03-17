@@ -22,7 +22,7 @@ from botocore.vendored.requests.utils import get_environ_proxies
 from botocore.vendored.requests.exceptions import ConnectionError
 from botocore.vendored import six
 
-from botocore.exceptions import UnknownEndpointError
+from botocore.exceptions import BaseEndpointResolverError
 from botocore.exceptions import EndpointConnectionError
 from botocore.awsrequest import AWSRequest
 from botocore.compat import filter_ssl_san_warnings, urlsplit
@@ -344,7 +344,7 @@ class EndpointCreator(object):
             endpoint = self._endpoint_resolver.construct_endpoint(
                 service_model.endpoint_prefix,
                 region_name, scheme=scheme)
-        except UnknownEndpointError:
+        except BaseEndpointResolverError:
             if endpoint_url is not None:
                 # If the user provides an endpoint_url, it's ok
                 # if the heuristics didn't find anything.  We use the
