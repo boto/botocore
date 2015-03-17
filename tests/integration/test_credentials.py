@@ -92,8 +92,7 @@ class TestCredentialPrecedence(BaseEnvVar):
         credentials_cls.assert_called_with(
             access_key='code', secret_key='code-secret', token=mock.ANY)
 
-    @mock.patch('botocore.credentials.Credentials')
-    def test_access_secret_env_vs_profile_code(self, credentials_cls):
+    def test_access_secret_env_vs_profile_code(self):
         # If access/secret keys are set in the environment, but then a
         # specific profile is passed via code, then the access/secret
         # keys defined in that profile should take precedence over
@@ -106,7 +105,7 @@ class TestCredentialPrecedence(BaseEnvVar):
         s = self.create_session()
         s.profile = 'test'
 
-        client = s.create_client('s3')
+        credentials = s.get_credentials()
 
-        credentials_cls.assert_called_with(
-            'test', 'test-secret', None, method='shared-credentials-file')
+        self.assertEqual(credentials.access_key, 'test')
+        self.assertEqual(credentials.secret_key, 'test-secret')
