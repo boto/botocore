@@ -19,6 +19,7 @@ import os
 from dateutil.tz import tzlocal
 
 from botocore import credentials
+from botocore.credentials import EnvProvider
 import botocore.exceptions
 import botocore.session
 from tests import unittest, BaseEnvVar
@@ -194,7 +195,6 @@ class TestEnvVar(BaseEnvVar):
         provider = credentials.EnvProvider(environ)
         with self.assertRaises(botocore.exceptions.PartialCredentialsError):
             provider.load()
-
 
 class TestSharedCredentialsProvider(BaseEnvVar):
     def setUp(self):
@@ -577,9 +577,11 @@ class CredentialResolverTest(BaseEnvVar):
 
 
 class TestCreateCredentialResolver(BaseEnvVar):
-    def test_create_credential_resolver(self):
-        fake_session = mock.Mock()
-        config = {
+    def setUp(self):
+        super(TestCreateCredentialResolver, self).setUp()
+
+        self.session = mock.Mock()
+        self.config = {
             'credentials_file': 'a',
             'legacy_config_file': 'b',
             'config_file': 'c',
@@ -587,9 +589,33 @@ class TestCreateCredentialResolver(BaseEnvVar):
             'metadata_service_num_attempts': 'e',
             'profile': 'profilename',
         }
-        fake_session.get_config_variable = lambda x: config[x]
-        resolver = credentials.create_credential_resolver(fake_session)
+        self.session.get_config_variable = lambda x: self.config[x]
+
+    def test_create_credential_resolver(self):
+        resolver = credentials.create_credential_resolver(self.session)
         self.assertIsInstance(resolver, credentials.CredentialResolver)
+
+    def test_explicit_profile_ignores_env_provider(self):
+        self.config['profile'] = 'dev'
+        resolver = credentials.create_credential_resolver(self.session)
+
+        self.assertTrue(
+            all(not isinstance(p, EnvProvider) for p in resolver.providers))
+
+    def test_no_profile_checks_env_provider(self):
+        self.config['profile'] = None
+        self.session.profile = None
+        resolver = credentials.create_credential_resolver(self.session)
+
+        self.assertTrue(
+            any(isinstance(p, EnvProvider) for p in resolver.providers))
+
+    def test_no_profile_env_provider_is_first(self):
+        self.config['profile'] = None
+        self.session.profile = None
+        resolver = credentials.create_credential_resolver(self.session)
+
+        self.assertIsInstance(resolver.providers[0], credentials.EnvProvider)
 
 
 if __name__ == "__main__":

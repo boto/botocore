@@ -46,8 +46,8 @@ def create_credential_resolver(session):
     config_file = session.get_config_variable('config_file')
     metadata_timeout = session.get_config_variable('metadata_service_timeout')
     num_attempts = session.get_config_variable('metadata_service_num_attempts')
+
     providers = [
-        EnvProvider(),
         SharedCredentialProvider(
             creds_filename=credential_file,
             profile_name=profile_name
@@ -63,6 +63,18 @@ def create_credential_resolver(session):
                 num_attempts=num_attempts)
         )
     ]
+
+    # We use ``session.profile`` for EnvProvider rather than
+    # ``profile_name`` because it is ``None`` when unset.
+    if session.profile is None:
+        # No profile has been explicitly set, so we prepend the environment
+        # variable provider. That provider, in turn, may set a profile
+        # or credentials.
+        providers.insert(0, EnvProvider())
+    else:
+        logger.debug('Skipping environment variable credential check'
+                     ' because profile name was explicitly set.')
+
     resolver = CredentialResolver(providers=providers)
     return resolver
 
@@ -580,7 +592,7 @@ class CredentialResolver(object):
         # If we got here, no credentials could be found.
         # This feels like it should be an exception, but historically, ``None``
         # is returned.
-        # 
+        #
         # +1
         # -js
         return None
