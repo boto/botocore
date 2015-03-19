@@ -13,6 +13,7 @@
 # language governing permissions and limitations under the License.
 
 import logging
+import warnings
 
 from .endpoint import EndpointCreator
 from .operation import Operation
@@ -134,6 +135,10 @@ class Service(object):
         Return the Endpoint object for this service in a particular
         region.
 
+        .. warning::
+            This method is deprecated and will be removed in the
+            near future.  Use ``Session.create_client`` instead.
+
         :type region_name: str
         :param region_name: The name of the region.
 
@@ -151,6 +156,8 @@ class Service(object):
             use in the signature calculation).
 
         """
+        warnings.warn("get_endpoint is deprecated and will be removed.  "
+                      "Use create_client instead.", PendingDeprecationWarning)
         resolver = self.session.get_component('endpoint_resolver')
         region = self.session.get_config_variable('region')
         event_emitter = self.session.get_component('event_emitter')
@@ -177,6 +184,8 @@ class Service(object):
         :type operation_name: str
         :param operation_name: The name of the operation.
         """
+        warnings.warn("get_operation is deprecated and will be removed.  "
+                      "Use create_client instead.", PendingDeprecationWarning)
         for operation in self.operations:
             op_names = (operation.name, operation.py_name, operation.cli_name)
             if operation_name in op_names:
@@ -184,6 +193,9 @@ class Service(object):
         return None
 
     def get_waiter(self, waiter_name, endpoint):
+        warnings.warn("get_waiter is deprecated and will be removed.  "
+                      "Use client.get_waiter instead.",
+                      PendingDeprecationWarning)
         try:
             config = self._load_waiter_config()
         except Exception as e:
@@ -203,11 +215,18 @@ def get_service(session, service_name, provider, api_version=None):
     """
     Return a Service object for a given provider name and service name.
 
+    .. warning::
+        This function is deprecated and will be removed in the
+        near future.  Use ``Session.create_client`` instead.
+
     :type service_name: str
     :param service_name: The name of the service.
 
     :type provider: Provider
     :param provider: The Provider object associated with the session.
     """
+    warnings.warn("get_service is deprecated and will be removed.  "
+                  "Use Session.create_client instead.",
+                  PendingDeprecationWarning)
     logger.debug("Creating service object for: %s", service_name)
     return Service(session, provider, service_name)
