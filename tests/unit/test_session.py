@@ -27,6 +27,7 @@ from botocore.model import ServiceModel
 from botocore import client
 from botocore.hooks import HierarchicalEmitter
 from botocore.waiter import WaiterModel
+from botocore.paginate import PaginatorModel
 
 
 class BaseSessionTest(unittest.TestCase):
@@ -344,6 +345,22 @@ class TestGetServiceModel(BaseSessionTest):
         model = self.session.get_service_model('made_up')
         self.assertIsInstance(model, ServiceModel)
         self.assertEqual(model.service_name, 'made_up')
+
+
+class TestGetPaginatorModel(BaseSessionTest):
+    def test_get_paginator_model(self):
+        loader = mock.Mock()
+        loader.determine_latest.return_value = 'aws/foo/2014-01-01.normal.json'
+        loader.load_data.return_value = {"pagination": {}}
+        self.session.register_component('data_loader', loader)
+
+        model = self.session.get_paginator_model('foo')
+
+        # Verify we get a PaginatorModel back
+        self.assertIsInstance(model, PaginatorModel)
+        # Verify we called the loader correctly.
+        loader.load_data.assert_called_with(
+            'aws/foo/2014-01-01.paginators.json')
 
 
 class TestGetWaiterModel(BaseSessionTest):

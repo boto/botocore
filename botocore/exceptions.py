@@ -69,18 +69,6 @@ class PartialCredentialsError(BotoCoreError):
     fmt = 'Partial credentials found in {provider}, missing: {cred_var}'
 
 
-class NoRegionError(BotoCoreError):
-    """
-    No region was specified
-
-    :ivar env_var: The name of the environment variable to use to
-        specify the default region.
-    """
-    fmt = (
-        'You must specify a region or set the {env_var} environment variable.'
-    )
-
-
 class UnknownSignatureVersionError(BotoCoreError):
     """
     Requested Signature Version is not known.
@@ -100,7 +88,22 @@ class ServiceNotInRegionError(BotoCoreError):
     fmt = 'Service {service_name} not available in region {region_name}'
 
 
-class UnknownEndpointError(BotoCoreError):
+class BaseEndpointResolverError(BotoCoreError):
+    """Base error for endpoint resolving errors.
+
+    Should never be raised directly, but clients can catch
+    this exception if they want to generically handle any errors
+    during the endpoint resolution process.
+
+    """
+
+
+class NoRegionError(BaseEndpointResolverError):
+    """No region was specified."""
+    fmt = 'You must specify a region.'
+
+
+class UnknownEndpointError(BaseEndpointResolverError):
     """
     Could not construct an endpoint.
 

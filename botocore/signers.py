@@ -124,8 +124,7 @@ class RequestSigner(object):
             kwargs = {'credentials': self._credentials}
             if cls.REQUIRES_REGION:
                 if self._region_name is None:
-                    raise botocore.exceptions.NoRegionError(
-                        env_var='AWS_DEFAULT_REGION')
+                    raise botocore.exceptions.NoRegionError()
                 kwargs['region_name'] = region_name
                 kwargs['service_name'] = signing_name
             auth = cls(**kwargs)
