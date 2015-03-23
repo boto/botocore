@@ -876,6 +876,27 @@
           "body": "<foo />",
           "uri": "/"
         }
+      },
+      {
+        "given": {
+          "http": {
+            "method": "POST",
+            "requestUri": "/"
+          },
+          "input": {
+            "shape": "InputShape",
+            "payload": "foo"
+          },
+          "name": "OperationName"
+        },
+        "params": {
+          "foo": null
+        },
+        "serialized": {
+          "method": "POST",
+          "body": "",
+          "uri": "/"
+        }
       }
     ]
   },
