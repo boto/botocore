@@ -472,6 +472,7 @@ BUILTIN_HANDLERS = [
     ('before-call.s3.PutBucketLifecycle', calculate_md5),
     ('before-call.s3.PutBucketCors', calculate_md5),
     ('before-call.s3.DeleteObjects', calculate_md5),
+    ('before-call.s3.PutBucketReplication', calculate_md5),
     ('before-call.s3.UploadPartCopy', quote_source_header),
     ('before-call.s3.CopyObject', quote_source_header),
     ('before-call.s3', add_expect_header),
