@@ -233,7 +233,7 @@ class ServiceModel(object):
             model = self._service_description['operations'][operation_name]
         except KeyError:
             raise OperationNotFoundError(operation_name)
-        return OperationModel(model, self)
+        return OperationModel(model, self, operation_name)
 
     @CachedProperty
     def documentation(self):
@@ -308,7 +308,7 @@ class ServiceModel(object):
 
 
 class OperationModel(object):
-    def __init__(self, operation_model, service_model):
+    def __init__(self, operation_model, service_model, name=None):
         """
 
         :type operation_model: dict
@@ -322,11 +322,18 @@ class OperationModel(object):
         """
         self._operation_model = operation_model
         self._service_model = service_model
+        self._api_name = name
         # Clients can access '.name' to get the operation name
         # and '.metadata' to get the top level metdata of the service.
         self.name = operation_model.get('name')
         self.metadata = service_model.metadata
         self.http = operation_model.get('http', {})
+
+    @property
+    def api_name(self):
+        if self._api_name is None:
+            self._api_name = self.name
+        return self._api_name
 
     @property
     def service_model(self):
