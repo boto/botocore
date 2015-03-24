@@ -445,7 +445,7 @@ class BaseRestSerializer(Serializer):
             # If there's a payload member, we serialized that
             # member to they body.
             body_params = parameters.get(payload_member)
-            if body_params:
+            if body_params is not None:
                 serialized['body'] = self._serialize_body_params(
                     body_params,
                     shape_members[payload_member])
