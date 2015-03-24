@@ -319,21 +319,52 @@ class OperationModel(object):
         :type service_model: botocore.model.ServiceModel
         :param service_model: The service model associated with the operation.
 
+        :type name: string
+        :param name: The operation name.  This is the operation name exposed to
+            the users of this model.  This can potentially be different from
+            the "wire_name", which is the operation name that *must* by
+            provided over the wire.  For example, given::
+
+               "CreateCloudFrontOriginAccessIdentity":{
+                 "name":"CreateCloudFrontOriginAccessIdentity2014_11_06",
+                  ...
+              }
+
+           The ``name`` would be ``CreateCloudFrontOriginAccessIdentity``,
+           but the ``self.wire_name`` would be
+           ``CreateCloudFrontOriginAccessIdentity2014_11_06``, which is the
+           value we must send in the corresponding HTTP request.
+
         """
         self._operation_model = operation_model
         self._service_model = service_model
         self._api_name = name
         # Clients can access '.name' to get the operation name
         # and '.metadata' to get the top level metdata of the service.
-        self.name = operation_model.get('name')
+        self._wire_name = operation_model.get('name')
         self.metadata = service_model.metadata
         self.http = operation_model.get('http', {})
 
+    @CachedProperty
+    def name(self):
+        if self._api_name is not None:
+            return self._api_name
+        else:
+            return self.wire_name
+
     @property
-    def api_name(self):
-        if self._api_name is None:
-            self._api_name = self.name
-        return self._api_name
+    def wire_name(self):
+        """The wire name of the operation.
+
+        In many situations this is the same value as the
+        ``name``, value, but in some services, the operation name
+        exposed to the user is different from the operaiton name
+        we send across the wire (e.g cloudfront).
+
+        Any serialization code should use ``wire_name``.
+
+        """
+        return self._operation_model.get('name')
 
     @property
     def service_model(self):

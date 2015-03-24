@@ -119,25 +119,26 @@ class TestOperationModelFromService(unittest.TestCase):
         service_model = model.ServiceModel(self.model)
         operation = model.OperationModel(
             self.model['operations']['OperationName'], service_model, 'Foo')
-        self.assertEqual(operation.api_name, 'Foo')
+        self.assertEqual(operation.name, 'Foo')
+        self.assertEqual(operation.wire_name, 'OperationName')
 
     def test_api_name_default(self):
         service_model = model.ServiceModel(self.model)
         operation = model.OperationModel(
             self.model['operations']['OperationName'], service_model)
-        self.assertEqual(operation.api_name, 'OperationName')
+        self.assertEqual(operation.name, 'OperationName')
 
     def test_api_name_from_service(self):
         service_model = model.ServiceModel(self.model)
         operation = service_model.operation_model('OperationName')
-        self.assertEqual(operation.api_name, 'OperationName')
+        self.assertEqual(operation.name, 'OperationName')
 
     def test_api_name_from_service_model_when_differs_from_name(self):
         self.model['operations']['Foo'] = \
             self.model['operations']['OperationName']
         service_model = model.ServiceModel(self.model)
         operation = service_model.operation_model('Foo')
-        self.assertEqual(operation.api_name, 'Foo')
+        self.assertEqual(operation.name, 'Foo')
 
     def test_operation_input_model(self):
         service_model = model.ServiceModel(self.model)
