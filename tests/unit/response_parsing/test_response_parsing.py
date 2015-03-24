@@ -23,6 +23,7 @@ from mock import Mock
 from botocore.vendored.requests.structures import CaseInsensitiveDict
 
 import botocore.session
+from botocore import xform_name
 #from botocore.response import XmlResponse, JSONResponse, get_response
 from botocore import response
 from botocore import parsers
@@ -40,7 +41,7 @@ SPECIAL_CASES = [
 ]
 
 
-def _test_parsed_response(xmlfile, response_body, operation_obj, expected):
+def _test_parsed_response(xmlfile, response_body, operation_model, expected):
     response = {
         'body': response_body,
         'status_code': 200,
@@ -58,9 +59,10 @@ def _test_parsed_response(xmlfile, response_body, operation_obj, expected):
         response['headers'] = loaded.pop('__headers__')
         response['body'] = json.dumps(loaded).encode('utf-8')
 
-    parser_cls = parsers.PROTOCOL_PARSERS[operation_obj.service.type]
+    protocol = operation_model.service_model.protocol
+    parser_cls = parsers.PROTOCOL_PARSERS[protocol]
     parser = parser_cls(timestamp_parser=lambda x: x)
-    parsed = parser.parse(response, operation_obj.output_shape)
+    parsed = parser.parse(response, operation_model.output_shape)
     parsed = _convert_bytes_to_str(parsed)
     expected['ResponseMetadata']['HTTPStatusCode'] = response['status_code']
 
@@ -115,14 +117,15 @@ def test_xml_parsing():
         for fn in xml_files:
             service_names.add(os.path.split(fn)[1].split('-')[0])
         for service_name in service_names:
-            service = session.get_service(service_name)
+            service_model = session.get_service_model(service_name)
             service_xml_files = glob.glob('%s/%s-*.xml' % (data_path,
                                                            service_name))
             for xmlfile in service_xml_files:
                 expected = _get_expected_parsed_result(xmlfile)
-                operation_obj = _get_operation_obj(service, xmlfile)
+                operation_model = _get_operation_model(service_model, xmlfile)
                 raw_response_body = _get_raw_response_body(xmlfile)
-                yield _test_parsed_response, xmlfile, raw_response_body, operation_obj, expected
+                yield _test_parsed_response, xmlfile, raw_response_body, \
+                    operation_model, expected
 
 
 def _get_raw_response_body(xmlfile):
@@ -130,7 +133,7 @@ def _get_raw_response_body(xmlfile):
         return f.read()
 
 
-def _get_operation_obj(service, filename):
+def _get_operation_model(service_model, filename):
     dirname, filename = os.path.split(filename)
     basename = os.path.splitext(filename)[0]
     sn, opname = basename.split('-', 1)
@@ -140,7 +143,10 @@ def _get_operation_obj(service, filename):
     # the tests have a different filename, e.g
     # my-operation#1.xml, my-operation#2.xml.
     opname = opname.split('#')[0]
-    operation = service.get_operation(opname)
+    operation_names = service_model.operation_names
+    for operation_name in operation_names:
+        if xform_name(operation_name) == opname.replace('-', '_'):
+            return service_model.operation_model(operation_name)
     return operation
 
 
@@ -170,11 +176,16 @@ def test_json_errors_parsing():
                                          json_response_file)
         with open(expected_parsed_response) as f:
             expected = json.load(f)
-        service_obj = session.get_service(service_name)
-        operation_obj = service_obj.get_operation(operation_name)
+        service_model = session.get_service_model(service_name)
+        operation_names = service_model.operation_names
+        operation_model = None
+        for op_name in operation_names:
+            if xform_name(op_name) == operation_name.replace('-', '_'):
+                operation_model = service_model.operation_model(op_name)
         with open(raw_response_file, 'rb') as f:
             raw_response_body = f.read()
-        yield _test_parsed_response, raw_response_file, raw_response_body, operation_obj, expected
+        yield _test_parsed_response, raw_response_file, \
+            raw_response_body, operation_model, expected
 
 
 def _uhg_test_json_parsing():
@@ -188,15 +199,16 @@ def _uhg_test_json_parsing():
     for fn in jsonfiles:
         service_names.add(os.path.split(fn)[1].split('-')[0])
     for service_name in service_names:
-        service = session.get_service(service_name)
+        service_model = session.get_service_model(service_name)
         service_json_files = glob.glob('%s/%s-*.json' % (input_path,
                                                          service_name))
         for jsonfile in service_json_files:
             expected = _get_expected_parsed_result(jsonfile)
-            operation_obj = _get_operation_obj(service, jsonfile)
+            operation_model = _get_operation_model(service_model, jsonfile)
             with open(jsonfile, 'rb') as f:
                 raw_response_body = f.read()
-            yield _test_parsed_response, jsonfile, raw_response_body, operation_obj, expected
+            yield _test_parsed_response, jsonfile, \
+                raw_response_body, operation_model, expected
             # TODO: handle the __headers crap.
 
 
