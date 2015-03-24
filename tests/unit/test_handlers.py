@@ -498,12 +498,12 @@ class TestRetryHandlerOrder(BaseSessionTest):
         return names
 
     def test_s3_special_case_is_before_other_retry(self):
-        service = self.session.get_service('s3')
-        operation = service.get_operation('CopyObject')
+        service_model = self.session.get_service_model('s3')
+        operation = service_model.operation_model('CopyObject')
         responses = self.session.emit(
             'needs-retry.s3.CopyObject',
-            response=(mock.Mock(), mock.Mock()), endpoint=mock.Mock(), operation=operation,
-            attempts=1, caught_exception=None)
+            response=(mock.Mock(), mock.Mock()), endpoint=mock.Mock(),
+            operation=operation, attempts=1, caught_exception=None)
         # This is implementation specific, but we're trying to verify that
         # the check_for_200_error is before any of the retry logic in
         # botocore.retryhandlers.
