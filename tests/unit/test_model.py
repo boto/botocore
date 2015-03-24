@@ -115,25 +115,26 @@ class TestOperationModelFromService(unittest.TestCase):
         }
         self.service_model = model.ServiceModel(self.model)
 
-    def test_api_name(self):
+    def test_wire_name_always_matches_model(self):
         service_model = model.ServiceModel(self.model)
         operation = model.OperationModel(
             self.model['operations']['OperationName'], service_model, 'Foo')
         self.assertEqual(operation.name, 'Foo')
         self.assertEqual(operation.wire_name, 'OperationName')
 
-    def test_api_name_default(self):
+    def test_name_and_wire_name_defaults_to_same_value(self):
         service_model = model.ServiceModel(self.model)
         operation = model.OperationModel(
             self.model['operations']['OperationName'], service_model)
         self.assertEqual(operation.name, 'OperationName')
+        self.assertEqual(operation.wire_name, 'OperationName')
 
-    def test_api_name_from_service(self):
+    def test_name_from_service(self):
         service_model = model.ServiceModel(self.model)
         operation = service_model.operation_model('OperationName')
         self.assertEqual(operation.name, 'OperationName')
 
-    def test_api_name_from_service_model_when_differs_from_name(self):
+    def test_name_from_service_model_when_differs_from_name(self):
         self.model['operations']['Foo'] = \
             self.model['operations']['OperationName']
         service_model = model.ServiceModel(self.model)
