@@ -294,7 +294,7 @@ def quote_source_header(params, **kwargs):
             value.encode('utf-8'), '/~')
 
 
-def copy_snapshot_encrypted(operation, params, request_signer, **kwargs):
+def copy_snapshot_encrypted(params, request_signer, endpoint, **kwargs):
     # The presigned URL that facilities copying an encrypted snapshot.
     # If the user does not provide this value, we will automatically
     # calculate on behalf of the user and inject the PresignedUrl
@@ -307,18 +307,31 @@ def copy_snapshot_encrypted(operation, params, request_signer, **kwargs):
         # If the customer provided this value, then there's nothing for
         # us to do.
         return
-    params['DestinationRegion'] = request_signer._region_name
+    destination_region = request_signer._region_name
+    params['DestinationRegion'] = destination_region
     # The request will be sent to the destination region, so we need
     # to create an endpoint to the source region and create a presigned
     # url based on the source endpoint.
-    region = params['SourceRegion']
-    source_endpoint = operation.service.get_endpoint(region)
+    source_region = params['SourceRegion']
+
     presigner = request_signer.get_auth(
-        'ec2', region, signature_version='v4-query')
-    request = source_endpoint.create_request(request_dict)
-    presigner.add_auth(request=request.original)
-    request = request.original.prepare()
-    params['PresignedUrl'] = request.url
+        'ec2', source_region, signature_version='v4-query')
+
+    request = endpoint.create_request(request_dict)
+    original = request.original
+    # The better way to do this is to actually get the
+    # endpoint_resolver and get the endpoint_url given the
+    # source region.  In this specific case, we know that
+    # we can safely replace the dest region with the source
+    # region because of the supported EC2 regions, but in
+    # general this is not a safe assumption to make.
+    # I think eventually we should try to plumb through something
+    # that allows us to resolve endpoints from regions.
+    original.url = original.url.replace(destination_region, source_region)
+
+    presigner.add_auth(request=original)
+    request = original.prepare()
+    params['PresignedUrl'] = original.url
 
 
 def json_decode_policies(parsed, model, **kwargs):
