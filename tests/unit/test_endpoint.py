@@ -23,6 +23,7 @@ from botocore.endpoint import EndpointCreator
 from botocore.endpoint import PreserveAuthSession
 from botocore.endpoint import RequestCreator
 from botocore.exceptions import EndpointConnectionError
+from botocore.exceptions import BaseEndpointResolverError
 
 
 def request_dict():
@@ -100,9 +101,6 @@ class TestGetEndpoint(unittest.TestCase):
 class TestEndpointBase(unittest.TestCase):
 
     def setUp(self):
-        self.service = Mock()
-        self.service.session.user_agent.return_value = 'botocore-test'
-        self.service.session.emit_first_non_none_response.return_value = None
         self.op = Mock()
         self.op.has_streaming_output = False
         self.op.metadata = {'protocol': 'json'}
@@ -366,6 +364,23 @@ class TestEndpointCreator(unittest.TestCase):
         endpoint = creator.create_endpoint(self.service_model,
                                            endpoint_url='https://foo')
         self.assertEqual(endpoint.region_name, resolver_region_override)
+
+    def test_create_endpoint_with_endpoint_resolver_exception(self):
+        resolver = Mock()
+        resolver.construct_endpoint.side_effect = BaseEndpointResolverError()
+        creator = EndpointCreator(resolver, 'us-west-2',
+                                  Mock(), 'user-agent')
+        with self.assertRaises(BaseEndpointResolverError):
+            creator.create_endpoint(self.service_model)
+
+    def test_create_endpoint_with_endpoint_url_and_resolver_exception(self):
+        resolver = Mock()
+        resolver.construct_endpoint.side_effect = BaseEndpointResolverError()
+        creator = EndpointCreator(resolver, 'us-west-2',
+                                  Mock(), 'user-agent')
+        endpoint = creator.create_endpoint(self.service_model,
+                                           endpoint_url='https://foo')
+        self.assertEqual(endpoint.host, 'https://foo')
 
 
 class TestAWSSession(unittest.TestCase):

@@ -104,28 +104,3 @@ class BaseSessionTest(BaseEnvVar):
         self.environ.update(environ)
         self.session = create_session()
         self.session.config_filename = 'no-exist-foo'
-
-
-class TestParamSerialization(BaseSessionTest):
-    def setUp(self):
-        super(TestParamSerialization, self).setUp()
-        self.session = create_session()
-
-    def assert_params_serialize_to(self, dotted_name, input_params,
-                                   serialized_params):
-        serialized = self.get_serialized_params(dotted_name, input_params)
-        actual_body_params = serialized['body']
-        # For query, we can remove the Action and Version params.
-        if isinstance(actual_body_params, dict):
-            actual_body_params.pop('Version', None)
-            actual_body_params.pop('Action', None)
-            self.assertDictEqual(serialized_params, actual_body_params)
-        else:
-            self.assertEqual(serialized_params, actual_body_params)
-
-    def get_serialized_params(self, dotted_name, input_params):
-        service_name, operation_name = dotted_name.split('.')
-        service = self.session.get_service(service_name)
-        operation = service.get_operation(operation_name)
-        serialized = operation.build_parameters(**input_params)
-        return serialized

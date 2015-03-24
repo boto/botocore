@@ -78,6 +78,21 @@ class TestValidateRequiredParams(BaseTestValidate):
             input_params={'A': {'B': 'foo'}},
             errors=['Missing required parameter'])
 
+    def test_validate_unknown_param(self):
+        self.assert_has_validation_errors(
+            given_shapes={
+                'Input': {
+                    'type': 'structure',
+                    'required': ['A'],
+                    'members': {
+                        'A': {'shape': 'StringType'},
+                    }
+                },
+                'StringType': {'type': 'string'}
+            },
+            input_params={'A': 'foo', 'B': 'bar'},
+            errors=['Unknown parameter'])
+
 
 class TestValidateTypes(BaseTestValidate):
     def setUp(self):

@@ -119,7 +119,7 @@ class TestPagination(unittest.TestCase):
             {'not_next_token': 'foo'},
         ]
         self.method.side_effect = responses
-        actual = list(self.paginator.paginate())
+        list(self.paginator.paginate())
         self.assertEqual(
             self.method.call_args_list,
             [mock.call(),
