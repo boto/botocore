@@ -61,48 +61,72 @@ class TestHandlers(BaseSessionTest):
             self.assertEqual(
                 params['headers']['x-amz-copy-source'], 'foo%2B%2Bbar.txt')
 
+    def test_presigned_url_already_present(self):
+        params = {'body': {'PresignedUrl': 'https://foo'}}
+        handlers.copy_snapshot_encrypted(params, None, None)
+        self.assertEqual(params['body']['PresignedUrl'], 'https://foo')
+
     def test_copy_snapshot_encrypted(self):
-        operation = mock.Mock()
-        source_endpoint = mock.Mock()
-        signed_request = mock.Mock()
-        signed_request.original.prepare().url = 'SIGNED_REQUEST'
-        source_endpoint.create_request.return_value = signed_request
-        operation.service.get_endpoint.return_value = source_endpoint
+        v4query_auth = mock.Mock()
+
+        def add_auth(request):
+            request.url += '?PRESIGNED_STUFF'
+
+        v4query_auth.add_auth = add_auth
+
         request_signer = mock.Mock()
         request_signer._region_name = 'us-east-1'
+        request_signer.get_auth.return_value = v4query_auth
 
         params = {'SourceRegion': 'us-west-2'}
-        handlers.copy_snapshot_encrypted(operation, {'body': params},
-                                         request_signer)
-        self.assertEqual(params['PresignedUrl'], 'SIGNED_REQUEST')
-        # We created an endpoint in the source region.
-        operation.service.get_endpoint.assert_called_with('us-west-2')
+        endpoint = mock.Mock()
+        request = AWSRequest()
+        request.method = 'POST'
+        request.url = 'https://ec2.us-east-1.amazonaws.com'
+        request = request.prepare()
+        endpoint.create_request.return_value = request
+
+        handlers.copy_snapshot_encrypted({'body': params},
+                                         request_signer,
+                                         endpoint)
+        self.assertEqual(params['PresignedUrl'],
+                         'https://ec2.us-west-2.amazonaws.com?PRESIGNED_STUFF')
         # We should also populate the DestinationRegion with the
         # region_name of the endpoint object.
         self.assertEqual(params['DestinationRegion'], 'us-east-1')
 
-    def test_destination_region_left_untouched(self):
+    def test_destination_region_always_changed(self):
         # If the user provides a destination region, we will still
         # override the DesinationRegion with the region_name from
         # the endpoint object.
-        operation = mock.Mock()
-        source_endpoint = mock.Mock()
-        signed_request = mock.Mock()
-        signed_request.url = 'SIGNED_REQUEST'
-        source_endpoint.auth.credentials = mock.sentinel.credentials
-        source_endpoint.create_request.return_value = signed_request
-        operation.service.get_endpoint.return_value = source_endpoint
+        actual_region = 'us-west-1'
+        v4query_auth = mock.Mock()
+
+        def add_auth(request):
+            request.url += '?PRESIGNED_STUFF'
+
+        v4query_auth.add_auth = add_auth
+
         request_signer = mock.Mock()
-        request_signer._region_name = 'us-west-1'
+        request_signer._region_name = actual_region
+        request_signer.get_auth.return_value = v4query_auth
+
+        endpoint = mock.Mock()
+        request = AWSRequest()
+        request.method = 'POST'
+        request.url = 'https://ec2.us-east-1.amazonaws.com'
+        request = request.prepare()
+        endpoint.create_request.return_value = request
 
         # The user provides us-east-1, but we will override this to
         # endpoint.region_name, of 'us-west-1' in this case.
         params = {'SourceRegion': 'us-west-2', 'DestinationRegion': 'us-east-1'}
-        handlers.copy_snapshot_encrypted(operation, {'body': params},
-                                         request_signer)
+        handlers.copy_snapshot_encrypted({'body': params},
+                                         request_signer,
+                                         endpoint)
         # Always use the DestinationRegion from the endpoint, regardless of
         # whatever value the user provides.
-        self.assertEqual(params['DestinationRegion'], 'us-west-1')
+        self.assertEqual(params['DestinationRegion'], actual_region)
 
     def test_500_status_code_set_for_200_response(self):
         http_response = mock.Mock()

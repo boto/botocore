@@ -471,7 +471,8 @@ class HmacV1Auth(BaseSigner):
                      'response-content-language', 'response-expires',
                      'response-cache-control', 'response-content-disposition',
                      'response-content-encoding', 'delete', 'lifecycle',
-                     'tagging', 'restore', 'storageClass', 'notification']
+                     'tagging', 'restore', 'storageClass', 'notification',
+                     'replication', 'requestPayment']
 
     def __init__(self, credentials, service_name=None, region_name=None):
         self.credentials = credentials
