@@ -81,7 +81,7 @@ class BaseS3ClientTest(unittest.TestCase):
             Bucket=self.bucket_name, Key=key_name)
 
     def abort_multipart_upload(self, bucket_name, key, upload_id):
-        response = self.client.abort_multipart_upload(
+        self.client.abort_multipart_upload(
             UploadId=upload_id, Bucket=self.bucket_name, Key=key)
 
     def delete_object(self, key, bucket_name):
@@ -260,8 +260,6 @@ class TestS3Objects(TestS3BaseWithBucket):
         self.create_multipart_upload('bar/key1')
         self.create_multipart_upload('bar/key2')
 
-        method = self.client.list_multipart_uploads
-
         # Verify when we have max_items=None, we get back all 8 uploads.
         self.assert_num_uploads_found('list_multipart_uploads',
                                       max_items=None, num_uploads=8)
@@ -373,7 +371,7 @@ class TestS3Regions(BaseS3ClientTest):
         with open(filename, 'wb') as f:
             f.write(b'foo' * 1024)
         with open(filename, 'rb') as f:
-            parsed = self.client.put_object(
+            self.client.put_object(
                 Bucket=bucket_name, Key='foo', Body=f)
 
         self.addCleanup(self.delete_object, key='foo',
@@ -388,7 +386,7 @@ class TestS3Copy(TestS3BaseWithBucket):
 
     def tearDown(self):
         for key in self.keys:
-            operation = self.client.delete_object(
+            self.client.delete_object(
                 Bucket=self.bucket_name, Key=key)
         super(TestS3Copy, self).tearDown()
 
@@ -397,7 +395,7 @@ class TestS3Copy(TestS3BaseWithBucket):
         self.create_object(key_name=key_name)
 
         key_name2 = key_name + 'bar'
-        parsed = self.client.copy_object(
+        self.client.copy_object(
             Bucket=self.bucket_name, Key=key_name + 'bar',
             CopySource='%s/%s' % (self.bucket_name, key_name))
         self.keys.append(key_name2)

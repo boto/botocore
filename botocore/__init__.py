@@ -73,22 +73,3 @@ def xform_name(name, sep='_', _xform_cache=_xform_cache):
         transformed = _end_cap_regex.sub(r'\1' + sep + r'\2', s2).lower()
         _xform_cache[key] = transformed
     return _xform_cache[key]
-
-
-class BotoCoreObject(object):
-
-    def __init__(self, **kwargs):
-        self.name = ''
-        self.py_name = None
-        self.cli_name = None
-        self.type = None
-        self.members = []
-        self.documentation = ''
-        self.__dict__.update(kwargs)
-        if self.py_name is None:
-            self.py_name = xform_name(self.name, '_')
-        if self.cli_name is None:
-            self.cli_name = xform_name(self.name, '-')
-
-    def __repr__(self):
-        return '%s:%s' % (self.type, self.name)
