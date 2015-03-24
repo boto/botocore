@@ -20,14 +20,13 @@ import botocore.session
 class TestRDSPagination(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
-        self.service = self.session.get_service('route53')
-        self.endpoint = self.service.get_endpoint('us-west-2')
+        self.client = self.session.create_client('route53', 'us-west-2')
 
     def test_paginate_with_max_items(self):
         # Route53 has a string type for MaxItems.  We need to ensure that this
         # still works without any issues.
-        operation = self.service.get_operation('ListHostedZones')
-        results = list(operation.paginate(self.endpoint, max_items='1'))
+        paginator = self.client.get_paginator('list_hosted_zones')
+        results = list(paginator.paginate(max_items='1'))
         self.assertTrue(len(results) >= 0)
 
 

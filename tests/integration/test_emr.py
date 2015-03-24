@@ -15,7 +15,8 @@ from tests import unittest
 from nose.tools import assert_true
 
 import botocore.session
-from botocore.paginate import DeprecatedPageIterator
+from botocore.paginate import PageIterator
+from botocore.exceptions import OperationNotPageableError
 
 
 def test_emr_endpoints_work_with_py26():
@@ -42,27 +43,25 @@ def _test_can_list_clusters_in_region(session, region):
 class TestEMRGetExtraResources(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
-        self.service = self.session.get_service('emr')
-        self.endpoint = self.service.get_endpoint('us-west-2')
+        self.client = self.session.create_client('emr', 'us-west-2')
 
     def test_can_access_pagination_configs(self):
         # Using an operation that we know will paginate.
-        operation = self.service.get_operation('ListClusters')
-        paginator = operation.paginate(self.endpoint)
-        self.assertIsInstance(paginator, DeprecatedPageIterator)
+        paginator = self.client.get_paginator('list_clusters')
+        page_iterator = paginator.paginate()
+        self.assertIsInstance(page_iterator, PageIterator)
 
     def test_operation_cant_be_paginated(self):
-        operation = self.service.get_operation('AddInstanceGroups')
-        with self.assertRaises(TypeError):
-            operation.paginate(self.endpoint)
+        with self.assertRaises(OperationNotPageableError):
+            self.client.get_paginator('add_instance_groups')
 
     def test_can_get_waiters(self):
-        waiter = self.service.get_waiter('ClusterRunning', self.endpoint)
+        waiter = self.client.get_waiter('cluster_running')
         self.assertTrue(hasattr(waiter, 'wait'))
 
     def test_waiter_does_not_exist(self):
         with self.assertRaises(ValueError):
-            self.service.get_waiter('DoesNotExist', self.endpoint)
+            self.client.get_waiter('does_not_exist')
 
 
 if __name__ == '__main__':
