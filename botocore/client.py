@@ -263,7 +263,8 @@ class BaseClient(object):
                 endpoint_prefix=self._service_model.endpoint_prefix,
                 operation_name=operation_name),
             model=operation_model, params=request_dict,
-            request_signer=self._request_signer
+            request_signer=self._request_signer,
+            endpoint=self._endpoint
         )
         return request_dict
 
