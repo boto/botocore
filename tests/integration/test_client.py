@@ -133,10 +133,6 @@ class TestCreateClients(unittest.TestCase):
         self.session = botocore.session.get_session()
 
     def test_client_can_clone_with_service_events(self):
-        # While the Service/Operation objects exist, we need
-        # to ensure they can interop.  Specifically, if we create
-        # a service object:
-        service = self.session.get_service('s3')
         # We should also be able to create a client object.
         client = self.session.create_client('s3', region_name='us-west-2')
         # We really just want to ensure create_client doesn't raise
