@@ -78,23 +78,6 @@ ERROR_TESTS = {
     'sns': {'ConfirmSubscription': {'TopicArn': 'a', 'Token': 'b'}},
 }
 
-
-def test_can_make_request():
-    session = botocore.session.get_session()
-    for service_name in SMOKE_TESTS:
-        service = session.get_service(service_name)
-        endpoint = service.get_endpoint(REGION)
-        for operation_name in SMOKE_TESTS[service_name]:
-            kwargs = SMOKE_TESTS[service_name][operation_name]
-            yield _make_call, service, endpoint, operation_name, kwargs
-
-
-def _make_call(service, endpoint, operation_name, kwargs):
-    operation = service.get_operation(operation_name)
-    response, parsed = operation.call(endpoint, **kwargs)
-    assert_equals(response.status_code, 200)
-
-
 def test_can_make_request_with_client():
     # Same as test_can_make_request, but with Client objects
     # instead of service/operations.
@@ -138,43 +121,15 @@ def _make_error_client_call(client, operation_name, kwargs):
                              "for %s.%s" % (client, operation_name))
 
 
-def test_can_retry_request_properly():
-    session = botocore.session.get_session()
-    for service_name in SMOKE_TESTS:
-        client = session.create_client(service_name, region_name=REGION)
-        for operation_name in SMOKE_TESTS[service_name]:
-            kwargs = SMOKE_TESTS[service_name][operation_name]
-            yield (_make_call_with_errors, session, service_name,
-                   REGION, operation_name, kwargs)
-
-
 def test_client_can_retry_request_properly():
     session = botocore.session.get_session()
     for service_name in SMOKE_TESTS:
         client = session.create_client(service_name, region_name=REGION)
         for operation_name in SMOKE_TESTS[service_name]:
             kwargs = SMOKE_TESTS[service_name][operation_name]
-            yield (_make_client_call_with_errors, client, operation_name, kwargs)
+            yield (_make_client_call_with_errors, client,
+                   operation_name, kwargs)
 
-
-def _make_call_with_errors(session, service_name,
-                           region_name, operation_name, kwargs):
-    service = session.get_service(service_name)
-    endpoint = service.get_endpoint(region_name)
-    operation = service.get_operation(operation_name)
-    original_send = adapters.HTTPAdapter.send
-    def mock_http_adapter_send(self, *args, **kwargs):
-        if not getattr(self, '_integ_test_error_raised', False):
-            self._integ_test_error_raised = True
-            raise ConnectionError("Simulated ConnectionError raised.")
-        else:
-            return original_send(self, *args, **kwargs)
-    with mock.patch('botocore.vendored.requests.adapters.HTTPAdapter.send',
-                    mock_http_adapter_send):
-        response = operation.call(endpoint, **kwargs)[1]
-        assert_true('Error' not in response,
-                    "Request was not retried properly, "
-                    "received error:\n%s" % pformat(response))
 
 def _make_client_call_with_errors(client, operation_name, kwargs):
     operation = getattr(client, xform_name(operation_name))
