@@ -33,46 +33,34 @@ DEFAULT_ROLE_POLICY = """\
 class TestElasticTranscoder(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
-        self.service = self.session.get_service('elastictranscoder')
-        self.endpoint = self.service.get_endpoint('us-east-1')
+        self.client = self.session.create_client(
+            'elastictranscoder', 'us-east-1')
+        self.s3_client = self.session.create_client('s3', 'us-east-1')
+        self.iam_client = self.session.create_client('iam', 'us-east-1')
 
     def create_bucket(self):
-        s3 = self.session.get_service('s3')
         bucket_name = 'ets-bucket-1-%s' % random.randint(1, 1000000)
-        create_bucket = s3.get_operation('CreateBucket')
-        delete_bucket = s3.get_operation('DeleteBucket')
-        endpoint = s3.get_endpoint('us-east-1')
-        response = create_bucket.call(endpoint, bucket=bucket_name)[0]
-        self.assertEqual(response.status_code, 200)
+        self.s3_client.create_bucket(Bucket=bucket_name)
         self.addCleanup(
-            functools.partial(delete_bucket.call, endpoint,
-                              bucket=bucket_name))
+            self.s3_client.delete_bucket, Bucket=bucket_name)
         return bucket_name
 
     def create_iam_role(self):
-        iam = self.session.get_service('iam')
-        endpoint = iam.get_endpoint('us-east-1')
-        create_role = iam.get_operation('CreateRole')
-        delete_role = iam.get_operation('DeleteRole')
         role_name = 'ets-role-name-1-%s' % random.randint(1, 1000000)
-        response, parsed = create_role.call(endpoint, role_name=role_name,
-            assume_role_policy_document=DEFAULT_ROLE_POLICY)
-        self.assertEqual(response.status_code, 200)
+        parsed = self.iam_client.create_role(
+            RoleName=role_name,
+            AssumeRolePolicyDocument=DEFAULT_ROLE_POLICY)
         arn = parsed['Role']['Arn']
         self.addCleanup(
-            functools.partial(delete_role.call, endpoint, role_name=role_name))
+            self.iam_client.delete_role, RoleName=role_name)
         return arn
 
     def test_list_streams(self):
-        operation = self.service.get_operation('ListPipelines')
-        http, parsed = operation.call(self.endpoint)
-        self.assertEqual(http.status_code, 200)
+        parsed = self.client.list_pipelines()
         self.assertIn('Pipelines', parsed)
 
     def test_list_presets(self):
-        operation = self.service.get_operation('ListPresets')
-        http, parsed = operation.call(self.endpoint, ascending='true')
-        self.assertEqual(http.status_code, 200)
+        parsed = self.client.list_presets(Ascending='true')
         self.assertIn('Presets', parsed)
 
     def test_create_pipeline(self):
@@ -83,20 +71,13 @@ class TestElasticTranscoder(unittest.TestCase):
         role = self.create_iam_role()
         pipeline_name = 'botocore-test-create-%s' % (random.randint(1, 1000000))
 
-        operation = self.service.get_operation('CreatePipeline')
-        http, parsed = operation.call(
-            self.endpoint, input_bucket=input_bucket, output_bucket=output_bucket,
-            role=role, name=pipeline_name,
-            notifications={'Progressing': '', 'Completed': '',
+        parsed = self.client.create_pipeline(
+            InputBucket=input_bucket, OutputBucket=output_bucket,
+            Role=role, Name=pipeline_name,
+            Notifications={'Progressing': '', 'Completed': '',
                            'Warning': '', 'Error': ''})
-        if http.status_code == 429:
-            # It's possible that we have too many existing pipelines.
-            # We don't want to fail the test, but we need to indicate
-            # that it didn't pass.  A SkipTest is a reasonable compromise.
-            raise unittest.SkipTest(
-                "HTTP status 429, too many existing pipelines."
-            )
-        self.assertEqual(http.status_code, 201)
+        pipeline_id = parsed['Pipeline']['Id']
+        self.addCleanup(self.client.delete_pipeline, Id=pipeline_id)
         self.assertIn('Pipeline', parsed)
 
 
