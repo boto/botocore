@@ -25,6 +25,7 @@ from mock import Mock, patch
 from botocore.exceptions import UnseekableStreamError
 from botocore.awsrequest import AWSRequest
 from botocore.awsrequest import AWSHTTPConnection
+from botocore.awsrequest import prepare_request_dict, create_request_object
 from botocore.compat import file_type, six
 
 
@@ -355,6 +356,122 @@ class TestAWSHTTPConnection(unittest.TestCase):
                      headers={"Utf8-Header": b"\xe5\xb0\x8f"})
         response = conn.getresponse()
         self.assertEqual(response.status, 200)
+
+
+class TestPrepareRequestDict(unittest.TestCase):
+    def setUp(self):
+        self.user_agent = 'botocore/1.0'
+        self.endpoint_url = 'https://s3.amazonaws.com'
+        self.base_request_dict = {
+            'body': '',
+            'headers': {},
+            'method': u'GET',
+            'query_string': '',
+            'url_path': '/'
+        }
+
+    def prepare_base_request_dict(self, request_dict, endpoint_url=None,
+                                  user_agent=None):
+        self.base_request_dict.update(request_dict)
+        if user_agent is None:
+            user_agent = self.user_agent
+        if endpoint_url is None:
+            endpoint_url = self.endpoint_url
+        prepare_request_dict(self.base_request_dict, user_agent, endpoint_url)
+
+    def test_prepare_request_dict_for_get(self):
+        request_dict = {
+            'method': u'GET',
+            'url_path': '/'
+        }
+        self.prepare_base_request_dict(
+            request_dict, endpoint_url='https://s3.amazonaws.com')
+        self.assertEqual(self.base_request_dict['method'], 'GET')
+        self.assertEqual(self.base_request_dict['url'],
+                         'https://s3.amazonaws.com/')
+        self.assertEqual(self.base_request_dict['headers']['User-Agent'],
+                         self.user_agent)
+
+    def test_query_string_serialized_to_url(self):
+        request_dict = {
+            'method': u'GET',
+            'query_string': {u'prefix': u'foo'},
+            'url_path': u'/mybucket'
+        }
+        self.prepare_base_request_dict(request_dict)
+        self.assertEqual(
+            self.base_request_dict['url'],
+            'https://s3.amazonaws.com/mybucket?prefix=foo')
+
+    def test_url_path_combined_with_endpoint_url(self):
+        # This checks the case where a user specifies and
+        # endpoint_url that has a path component, and the
+        # serializer gives us a request_dict that has a url
+        # component as well (say from a rest-* service).
+        request_dict = {
+            'query_string': {u'prefix': u'foo'},
+            'url_path': u'/mybucket'
+        }
+        endpoint_url = 'https://custom.endpoint/foo/bar'
+        self.prepare_base_request_dict(request_dict, endpoint_url)
+        self.assertEqual(
+            self.base_request_dict['url'],
+            'https://custom.endpoint/foo/bar/mybucket?prefix=foo')
+
+    def test_url_path_with_trailing_slash(self):
+        self.prepare_base_request_dict(
+            {'url_path': u'/mybucket'},
+            endpoint_url='https://custom.endpoint/foo/bar/')
+
+        self.assertEqual(
+            self.base_request_dict['url'],
+            'https://custom.endpoint/foo/bar/mybucket')
+
+    def test_url_path_is_slash(self):
+        self.prepare_base_request_dict(
+            {'url_path': u'/'},
+            endpoint_url='https://custom.endpoint/foo/bar/')
+
+        self.assertEqual(
+            self.base_request_dict['url'],
+            'https://custom.endpoint/foo/bar/')
+
+    def test_url_path_is_slash_with_endpoint_url_no_slash(self):
+        self.prepare_base_request_dict(
+            {'url_path': u'/'},
+            endpoint_url='https://custom.endpoint/foo/bar')
+
+        self.assertEqual(
+            self.base_request_dict['url'],
+            'https://custom.endpoint/foo/bar')
+
+    def test_custom_endpoint_with_query_string(self):
+        self.prepare_base_request_dict(
+            {'url_path': u'/baz', 'query_string': {'x': 'y'}},
+            endpoint_url='https://custom.endpoint/foo/bar?foo=bar')
+
+        self.assertEqual(
+            self.base_request_dict['url'],
+            'https://custom.endpoint/foo/bar/baz?foo=bar&x=y')
+
+
+class TestCreateRequestObject(unittest.TestCase):
+    def setUp(self):
+        self.request_dict = {
+            'method': u'GET',
+            'query_string': {u'prefix': u'foo'},
+            'url_path': u'/mybucket',
+            'headers': {u'User-Agent': u'my-agent'},
+            'body': u'my body',
+            'url': u'https://s3.amazonaws.com/mybucket?prefix=foo'
+        }
+
+    def test_create_request_object(self):
+        request = create_request_object(self.request_dict)
+        self.assertEqual(request.method, self.request_dict['method'])
+        self.assertEqual(request.url, self.request_dict['url'])
+        self.assertEqual(request.data, self.request_dict['body'])
+        self.assertIn('User-Agent', request.headers)
 
 
 if __name__ == "__main__":

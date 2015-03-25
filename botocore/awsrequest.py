@@ -19,10 +19,11 @@ import socket
 import inspect
 
 from botocore.compat import six
+from botocore.compat import HTTPHeaders, HTTPResponse, urlunsplit, urlsplit
+from botocore.exceptions import UnseekableStreamError
+from botocore.utils import percent_encode_sequence
 from botocore.vendored.requests import models
 from botocore.vendored.requests.sessions import REDIRECT_STATI
-from botocore.compat import HTTPHeaders, HTTPResponse
-from botocore.exceptions import UnseekableStreamError
 from botocore.vendored.requests.packages.urllib3.connection import \
     VerifiedHTTPSConnection
 from botocore.vendored.requests.packages.urllib3.connection import \
@@ -249,6 +250,77 @@ class AWSHTTPSConnection(VerifiedHTTPSConnection):
 for name, function in AWSHTTPConnection.__dict__.items():
     if inspect.isfunction(function):
         setattr(AWSHTTPSConnection, name, function)
+
+
+def prepare_request_dict(request_dict, user_agent, endpoint_url):
+    """
+    This method prepares a request dict to be created into an
+    AWSRequestObject. This prepares the request dict by adding the
+    url and the user agent to the request dict.
+
+    :type request_dict: dict
+    :param request_dict:  The request dict (created from the
+        ``serialize`` module).
+
+    :type user_agent: string
+    :param user_agent: The user agent to use for this request.
+
+    :type endpoint_url: string
+    :param endpoint_url: The full endpoint url, which contains at least
+        the scheme, the hostname, and optionally any path components.
+    """
+    r = request_dict
+    headers = r['headers']
+    headers['User-Agent'] = user_agent
+    url = _urljoin(endpoint_url, r['url_path'])
+    if r['query_string']:
+        encoded_query_string = percent_encode_sequence(r['query_string'])
+        if '?' not in url:
+            url += '?%s' % encoded_query_string
+        else:
+            url += '&%s' % encoded_query_string
+    r['url'] = url
+
+
+def create_request_object(request_dict):
+    """
+    This method takes a request dict and creates an AWSRequest object
+    from it.
+
+    :type request_dict: dict
+    :param request_dict:  The request dict (created from the
+        ``prepare_request_dict`` method).
+
+    :rtype: ``botocore.awsrequest.AWSRequest``
+    :return: An AWSRequest object based on the request_dict.
+
+    """
+    r = request_dict
+    return AWSRequest(method=r['method'], url=r['url'],
+                      data=r['body'],
+                      headers=r['headers'])
+
+
+def _urljoin(endpoint_url, url_path):
+    p = urlsplit(endpoint_url)
+    # <part>   - <index>
+    # scheme   - p[0]
+    # netloc   - p[1]
+    # path     - p[2]
+    # query    - p[3]
+    # fragment - p[4]
+    if not url_path or url_path == '/':
+        # If there's no path component, ensure the URL ends with
+        # a '/' for backwards compatibility.
+        if not p[2]:
+            return endpoint_url + '/'
+        return endpoint_url
+    if p[2].endswith('/') and url_path.startswith('/'):
+        new_path = p[2][:-1] + url_path
+    else:
+        new_path = p[2] + url_path
+    reconstructed = urlunsplit((p[0], p[1], new_path, p[3], p[4]))
+    return reconstructed
 
 
 class AWSRequest(models.RequestEncodingMixin, models.Request):
