@@ -812,7 +812,10 @@ class Session(object):
 
         """
         if region_name is None:
-            region_name = self.get_config_variable('region')
+            if config and config.region_name is not None:
+                region_name = config.region_name
+            else:
+                region_name = self.get_config_variable('region')
         loader = self.get_component('data_loader')
         event_emitter = self.get_component('event_emitter')
         response_parser_factory = self.get_component(

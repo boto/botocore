@@ -414,6 +414,32 @@ class TestCreateClient(BaseSessionTest):
             mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY,
             scoped_config=mock.ANY, client_config=config)
 
+    def test_create_client_with_region(self):
+        ec2_client = self.session.create_client(
+            'ec2', 'us-west-2')
+        self.assertEqual(ec2_client.meta.region_name, 'us-west-2')
+
+    def test_create_client_with_region_and_client_config(self):
+        config = client.Config()
+        # Use a client config with no region configured.
+        ec2_client = self.session.create_client(
+            'ec2', region_name='us-west-2', config=config)
+        self.assertEqual(ec2_client.meta.region_name, 'us-west-2')
+
+        # If the region name is changed, it should not change the
+        # region of the client
+        config.region_name = 'us-east-1'
+        self.assertEqual(ec2_client.meta.region_name, 'us-west-2')
+
+        # Now make a new client with the updated client config.
+        ec2_client = self.session.create_client(
+            'ec2', config=config)
+        self.assertEqual(ec2_client.meta.region_name, 'us-east-1')
+
+    def test_create_client_no_region_and_no_client_config(self):
+        ec2_client = self.session.create_client('ec2')
+        self.assertEqual(ec2_client.meta.region_name, 'moon-west-1')
+
 
 if __name__ == "__main__":
     unittest.main()
