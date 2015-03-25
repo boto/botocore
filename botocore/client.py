@@ -159,16 +159,13 @@ class ClientCreator(object):
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,
                          scoped_config, client_config):
-        # A client needs:
-        #
-        # * serializer
-        # * endpoint
-        # * response parser
-        # * request signer
+
         protocol = service_model.metadata['protocol']
         serializer = botocore.serialize.create_serializer(
             protocol, include_validation=True)
+
         event_emitter = copy.copy(self._event_emitter)
+
         endpoint_creator = EndpointCreator(self._endpoint_resolver,
                                            region_name, event_emitter,
                                            self._user_agent)
@@ -176,13 +173,25 @@ class ClientCreator(object):
             service_model, region_name, is_secure=is_secure,
             endpoint_url=endpoint_url, verify=verify,
             response_parser_factory=self._response_parser_factory)
+
         response_parser = botocore.parsers.create_parser(protocol)
 
+        # Determine what region the user provided either via the
+        # region_name argument or the client_config.
+        if region_name is None:
+            if client_config and client_config.region_name is not None:
+                region_name = client_config.region_name
+
+        # Based on what the user provided use the scoped config file
+        # to determine if the region is going to change and what
+        # signature should be used.
         signature_version, region_name = \
             self._get_signature_version_and_region(
                 service_model, region_name, is_secure, scoped_config,
                 endpoint_url)
 
+        # Override the signature if the user specifies it in the client
+        # config.
         if client_config and client_config.signature_version is not None:
             signature_version = client_config.signature_version
 
@@ -190,6 +199,13 @@ class ClientCreator(object):
                                service_model.signing_name,
                                signature_version, credentials,
                                event_emitter)
+
+        # Create a new client config to be passed to the client based
+        # on the final values. We do not want the user to be able
+        # to try to modify an existing client with a client config.
+        client_config = Config(
+            region_name=region_name, signature_version=signature_version)
+
         return {
             'serializer': serializer,
             'endpoint': endpoint,
@@ -198,7 +214,7 @@ class ClientCreator(object):
             'request_signer': signer,
             'service_model': service_model,
             'loader': self._loader,
-            'region_name': region_name
+            'client_config': client_config
         }
 
     def _create_methods(self, service_model):
@@ -247,14 +263,15 @@ class BaseClient(object):
 
     def __init__(self, serializer, endpoint, response_parser,
                  event_emitter, request_signer, service_model, loader,
-                 region_name):
+                 client_config):
         self._serializer = serializer
         self._endpoint = endpoint
         self._response_parser = response_parser
         self._request_signer = request_signer
         self._cache = {}
         self._loader = loader
-        self.meta = ClientMeta(event_emitter, region_name,
+        self._client_config = client_config
+        self.meta = ClientMeta(event_emitter, self._client_config.region_name,
                                endpoint.host, service_model)
 
         # Register request signing, but only if we have an event
@@ -448,8 +465,10 @@ class Config(object):
 
     This class allows you to configure:
 
+        * Region name
         * Signature version
 
     """
-    def __init__(self, signature_version=None):
+    def __init__(self, region_name=None, signature_version=None):
+        self.region_name = region_name
         self.signature_version = signature_version
