@@ -144,13 +144,12 @@ class Endpoint(object):
     :ivar session: The session object.
     """
 
-    def __init__(self, region_name, host, user_agent,
-                 endpoint_prefix, event_emitter, proxies=None, verify=True,
+    def __init__(self, host, user_agent, endpoint_prefix,
+                 event_emitter, proxies=None, verify=True,
                  timeout=DEFAULT_TIMEOUT, response_parser_factory=None):
         self._endpoint_prefix = endpoint_prefix
         self._event_emitter = event_emitter
         self._user_agent = user_agent
-        self.region_name = region_name
         self.host = host
         self.verify = verify
         if proxies is None:
@@ -277,53 +276,6 @@ class Endpoint(object):
             return True
 
 
-def _get_proxies(url):
-    # We could also support getting proxies from a config file,
-    # but for now proxy support is taken from the environment.
-    return get_environ_proxies(url)
-
-
-def get_endpoint(service, region_name, endpoint_url, verify=None):
-    service_name = getattr(service, 'signing_name', service.endpoint_prefix)
-    endpoint_prefix = service.endpoint_prefix
-    session = service.session
-    event_emitter = session.get_component('event_emitter')
-    user_agent = session.user_agent()
-    return get_endpoint_complex(service_name, endpoint_prefix,
-                                region_name, endpoint_url, verify, user_agent,
-                                event_emitter)
-
-
-def get_endpoint_complex(service_name, endpoint_prefix,
-                         region_name, endpoint_url, verify,
-                         user_agent, event_emitter,
-                         response_parser_factory=None):
-    proxies = _get_proxies(endpoint_url)
-    verify = _get_verify_value(verify)
-    return Endpoint(
-        region_name, endpoint_url,
-        user_agent=user_agent,
-        endpoint_prefix=endpoint_prefix,
-        event_emitter=event_emitter,
-        proxies=proxies,
-        verify=verify,
-        response_parser_factory=response_parser_factory)
-
-
-def _get_verify_value(verify):
-    # This is to account for:
-    # https://github.com/kennethreitz/requests/issues/1436
-    # where we need to honor REQUESTS_CA_BUNDLE because we're creating our
-    # own request objects.
-    # First, if verify is not None, then the user explicitly specified
-    # a value so this automatically wins.
-    if verify is not None:
-        return verify
-    # Otherwise use the value from REQUESTS_CA_BUNDLE, or default to
-    # True if the env var does not exist.
-    return os.environ.get('REQUESTS_CA_BUNDLE', True)
-
-
 class EndpointCreator(object):
     def __init__(self, endpoint_resolver, configured_region, event_emitter,
                  user_agent):
@@ -333,9 +285,8 @@ class EndpointCreator(object):
         self._user_agent = user_agent
 
     def create_endpoint(self, service_model, region_name=None, is_secure=True,
-                        endpoint_url=None, verify=None, credentials=None,
-                        response_parser_factory=None,
-                        signature_version=NOT_SET):
+                        endpoint_url=None, verify=None,
+                        response_parser_factory=None):
         if region_name is None:
             region_name = self._configured_region
         # Use the endpoint resolver heuristics to build the endpoint url.
@@ -353,8 +304,6 @@ class EndpointCreator(object):
             else:
                 raise
 
-        region_name = self._determine_region_name(endpoint, region_name,
-                                                  endpoint_url)
         if endpoint_url is not None:
             # If the user provides an endpoint url, we'll use that
             # instead of what the heuristics rule gives us.
@@ -363,51 +312,47 @@ class EndpointCreator(object):
             final_endpoint_url = endpoint['uri']
         if not is_valid_endpoint_url(final_endpoint_url):
             raise ValueError("Invalid endpoint: %s" % final_endpoint_url)
-        return self._get_endpoint(service_model, region_name,
-                                  final_endpoint_url, verify,
-                                  response_parser_factory)
+        return self._get_endpoint(
+            service_model, final_endpoint_url, verify, response_parser_factory)
 
-    def _determine_region_name(self, endpoint_config, region_name=None,
-                               endpoint_url=None):
-        # This is a helper function to determine region name to use.
-        # It will take into account whether the user passes in a region
-        # name, whether their is a rule in the endpoint JSON, or
-        # an endpoint url was provided.
-
-        # TODO: Once we completely move to clients. We will remove region
-        # as public attribute from endpoints and as a result move this helper
-        # function to clients becuase region is really only important for
-        # signing.
-
-        # We only support the credentialScope.region in the properties
-        # bag right now, so if it's available, it will override the
-        # provided region name.
-        region_name_override = endpoint_config['properties'].get(
-            'credentialScope', {}).get('region')
-
-        if endpoint_url is not None:
-            # If an endpoint_url is provided, do not use region name
-            # override if a region
-            # was provided by the user.
-            if region_name is not None:
-                region_name_override = None
-
-        if region_name_override is not None:
-            # Letting the heuristics rule override the region_name
-            # allows for having a default region of something like us-west-2
-            # for IAM, but we still will know to use us-east-1 for sigv4.
-            region_name = region_name_override
-
-        return region_name
-
-    def _get_endpoint(self, service_model, region_name, endpoint_url,
+    def _get_endpoint(self, service_model, endpoint_url,
                       verify, response_parser_factory):
-        service_name = service_model.signing_name
         endpoint_prefix = service_model.endpoint_prefix
-        user_agent = self._user_agent
         event_emitter = self._event_emitter
         user_agent = self._user_agent
-        return get_endpoint_complex(service_name, endpoint_prefix,
-                                    region_name, endpoint_url,
-                                    verify, user_agent, event_emitter,
-                                    response_parser_factory)
+        return self._get_endpoint_complex(endpoint_prefix, endpoint_url,
+                                          verify, user_agent, event_emitter,
+                                          response_parser_factory)
+
+    def _get_proxies(self, url):
+        # We could also support getting proxies from a config file,
+        # but for now proxy support is taken from the environment.
+        return get_environ_proxies(url)
+
+    def _get_verify_value(self, verify):
+        # This is to account for:
+        # https://github.com/kennethreitz/requests/issues/1436
+        # where we need to honor REQUESTS_CA_BUNDLE because we're creating our
+        # own request objects.
+        # First, if verify is not None, then the user explicitly specified
+        # a value so this automatically wins.
+        if verify is not None:
+            return verify
+        # Otherwise use the value from REQUESTS_CA_BUNDLE, or default to
+        # True if the env var does not exist.
+        return os.environ.get('REQUESTS_CA_BUNDLE', True)
+
+    def _get_endpoint_complex(self, endpoint_prefix,
+                              endpoint_url, verify,
+                              user_agent, event_emitter,
+                              response_parser_factory=None):
+        proxies = self._get_proxies(endpoint_url)
+        verify = self._get_verify_value(verify)
+        return Endpoint(
+            endpoint_url,
+            user_agent=user_agent,
+            endpoint_prefix=endpoint_prefix,
+            event_emitter=event_emitter,
+            proxies=proxies,
+            verify=verify,
+            response_parser_factory=response_parser_factory)

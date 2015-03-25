@@ -95,7 +95,8 @@ class ClientCreator(object):
                                      handler, unique_id=unique_id)
 
     def _get_signature_version_and_region(self, service_model, region_name,
-                                          is_secure, scoped_config):
+                                          is_secure, scoped_config,
+                                          endpoint_url):
         # Get endpoint heuristic overrides before creating the
         # request signer.
         resolver = self._endpoint_resolver
@@ -121,7 +122,39 @@ class ClientCreator(object):
                         service_model.endpoint_prefix, override)
                     signature_version = override
 
+        # Determine the region name as well
+        region_name = self._determine_region_name(
+            endpoint_config, region_name, endpoint_url)
+
         return signature_version, region_name
+
+    def _determine_region_name(self, endpoint_config, region_name=None,
+                               endpoint_url=None):
+        # This is a helper function to determine region name to use.
+        # It will take into account whether the user passes in a region
+        # name, whether their is a rule in the endpoint JSON, or
+        # an endpoint url was provided.
+
+        # We only support the credentialScope.region in the properties
+        # bag right now, so if it's available, it will override the
+        # provided region name.
+        region_name_override = endpoint_config['properties'].get(
+            'credentialScope', {}).get('region')
+
+        if endpoint_url is not None:
+            # If an endpoint_url is provided, do not use region name
+            # override if a region
+            # was provided by the user.
+            if region_name is not None:
+                region_name_override = None
+
+        if region_name_override is not None:
+            # Letting the heuristics rule override the region_name
+            # allows for having a default region of something like us-west-2
+            # for IAM, but we still will know to use us-east-1 for sigv4.
+            region_name = region_name_override
+
+        return region_name
 
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,
@@ -145,13 +178,10 @@ class ClientCreator(object):
             response_parser_factory=self._response_parser_factory)
         response_parser = botocore.parsers.create_parser(protocol)
 
-        # This is only temporary in the sense that we should remove any
-        # region_name logic from endpoints and put it into clients.
-        # But that can only happen once operation objects are deprecated.
-        region_name = endpoint.region_name
         signature_version, region_name = \
             self._get_signature_version_and_region(
-                service_model, region_name, is_secure, scoped_config)
+                service_model, region_name, is_secure, scoped_config,
+                endpoint_url)
 
         if client_config and client_config.signature_version is not None:
             signature_version = client_config.signature_version
@@ -168,6 +198,7 @@ class ClientCreator(object):
             'request_signer': signer,
             'service_model': service_model,
             'loader': self._loader,
+            'region_name': region_name
         }
 
     def _create_methods(self, service_model):
@@ -215,14 +246,15 @@ class BaseClient(object):
     _PY_TO_OP_NAME = {}
 
     def __init__(self, serializer, endpoint, response_parser,
-                 event_emitter, request_signer, service_model, loader):
+                 event_emitter, request_signer, service_model, loader,
+                 region_name):
         self._serializer = serializer
         self._endpoint = endpoint
         self._response_parser = response_parser
         self._request_signer = request_signer
         self._cache = {}
         self._loader = loader
-        self.meta = ClientMeta(event_emitter, endpoint.region_name,
+        self.meta = ClientMeta(event_emitter, region_name,
                                endpoint.host, service_model)
 
         # Register request signing, but only if we have an event
