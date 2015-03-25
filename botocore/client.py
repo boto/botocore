@@ -16,6 +16,7 @@ import logging
 import botocore.serialize
 import botocore.validate
 from botocore import waiter, xform_name
+from botocore.awsrequest import prepare_request_dict
 from botocore.endpoint import EndpointCreator
 from botocore.exceptions import ClientError, DataNotFoundError
 from botocore.exceptions import OperationNotPageableError
@@ -166,8 +167,7 @@ class ClientCreator(object):
         event_emitter = copy.copy(self._event_emitter)
 
         endpoint_creator = EndpointCreator(self._endpoint_resolver,
-                                           region_name, event_emitter,
-                                           self._user_agent)
+                                           region_name, event_emitter)
         endpoint = endpoint_creator.create_endpoint(
             service_model, region_name, is_secure=is_secure,
             endpoint_url=endpoint_url, verify=verify,
@@ -194,6 +194,11 @@ class ClientCreator(object):
         if client_config and client_config.signature_version is not None:
             signature_version = client_config.signature_version
 
+        # Override the user agent if specified in the client config.
+        user_agent = self._user_agent
+        if client_config and client_config.user_agent is not None:
+            user_agent = client_config.user_agent
+
         signer = RequestSigner(service_model.service_name, region_name,
                                service_model.signing_name,
                                signature_version, credentials,
@@ -203,7 +208,8 @@ class ClientCreator(object):
         # on the final values. We do not want the user to be able
         # to try to modify an existing client with a client config.
         client_config = Config(
-            region_name=region_name, signature_version=signature_version)
+            region_name=region_name, signature_version=signature_version,
+            user_agent=user_agent)
 
         return {
             'serializer': serializer,
@@ -287,7 +293,6 @@ class BaseClient(object):
         operation_model = self._service_model.operation_model(operation_name)
         request_dict = self._convert_to_request_dict(
             api_params, operation_model)
-
         http, parsed_response = self._endpoint.make_request(
             operation_model, request_dict)
 
@@ -318,7 +323,8 @@ class BaseClient(object):
 
         request_dict = self._serializer.serialize_to_request(
             api_params, operation_model)
-
+        prepare_request_dict(request_dict, self._client_config.user_agent,
+                             self._endpoint.host)
         self.meta.events.emit(
             'before-call.{endpoint_prefix}.{operation_name}'.format(
                 endpoint_prefix=self._service_model.endpoint_prefix,
@@ -466,8 +472,11 @@ class Config(object):
 
         * Region name
         * Signature version
+        * User agent
 
     """
-    def __init__(self, region_name=None, signature_version=None):
+    def __init__(self, region_name=None, signature_version=None,
+                 user_agent=None):
         self.region_name = region_name
         self.signature_version = signature_version
+        self.user_agent = user_agent
