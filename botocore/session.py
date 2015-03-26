@@ -556,7 +556,7 @@ class Session(object):
         :returns: :class:`botocore.service.Service`
         """
         warnings.warn("get_service is deprecated and will be removed.  "
-                      "Use create_client instead.", PendingDeprecationWarning)
+                      "Use create_client instead.", DeprecationWarning)
         service = botocore.service.get_service(self, service_name,
                                                self.provider,
                                                api_version=api_version)
