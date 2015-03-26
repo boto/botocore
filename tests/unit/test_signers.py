@@ -127,3 +127,62 @@ class TestSigner(unittest.TestCase):
             self.signer.sign('operation_name', request)
 
         auth.assert_not_called()
+
+    def test_generate_url(self):
+        auth = mock.Mock()
+        auth.REQUIRES_REGION = True
+
+        request_dict = {
+            'headers': {},
+            'url': 'https://foo.com',
+            'body': '',
+            'url_path': '/',
+            'method': 'GET'
+        }
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
+                             {'v4-query': auth}):
+            presigned_url = self.signer.generate_url(request_dict)
+        auth.assert_called_with(
+            credentials=self.credentials, region_name='region_name',
+            service_name='signing_name')
+        self.assertEqual(presigned_url, 'https://foo.com')
+
+    def test_generate_url_with_region_override(self):
+        auth = mock.Mock()
+        auth.REQUIRES_REGION = True
+
+        request_dict = {
+            'headers': {},
+            'url': 'https://foo.com',
+            'body': '',
+            'url_path': '/',
+            'method': 'GET'
+        }
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
+                             {'v4-query': auth}):
+            presigned_url = self.signer.generate_url(
+                request_dict, region_name='us-west-2')
+        auth.assert_called_with(
+            credentials=self.credentials, region_name='us-west-2',
+            service_name='signing_name')
+        self.assertEqual(presigned_url, 'https://foo.com')
+
+    def test_generate_url_with_exipres_in(self):
+        auth = mock.Mock()
+        auth.REQUIRES_REGION = True
+
+        request_dict = {
+            'headers': {},
+            'url': 'https://foo.com',
+            'body': '',
+            'url_path': '/',
+            'method': 'GET'
+        }
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
+                             {'v4-query': auth}):
+            presigned_url = self.signer.generate_url(
+                request_dict, expires_in=900)
+        auth.assert_called_with(
+            credentials=self.credentials, region_name='region_name',
+            expires=900, service_name='signing_name')
+        self.assertEqual(presigned_url, 'https://foo.com')

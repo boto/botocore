@@ -22,6 +22,7 @@ import functools
 import logging
 import re
 import xml.etree.cElementTree
+import copy
 
 from botocore.compat import urlsplit, urlunsplit, unquote, json, quote, six
 from botocore import retryhandler
@@ -294,7 +295,7 @@ def quote_source_header(params, **kwargs):
             value.encode('utf-8'), '/~')
 
 
-def copy_snapshot_encrypted(params, request_signer, endpoint, **kwargs):
+def copy_snapshot_encrypted(params, request_signer, **kwargs):
     # The presigned URL that facilities copying an encrypted snapshot.
     # If the user does not provide this value, we will automatically
     # calculate on behalf of the user and inject the PresignedUrl
@@ -314,11 +315,6 @@ def copy_snapshot_encrypted(params, request_signer, endpoint, **kwargs):
     # url based on the source endpoint.
     source_region = params['SourceRegion']
 
-    presigner = request_signer.get_auth(
-        'ec2', source_region, signature_version='v4-query')
-
-    request = endpoint.create_request(request_dict)
-    original = request.original
     # The better way to do this is to actually get the
     # endpoint_resolver and get the endpoint_url given the
     # source region.  In this specific case, we know that
@@ -327,11 +323,12 @@ def copy_snapshot_encrypted(params, request_signer, endpoint, **kwargs):
     # general this is not a safe assumption to make.
     # I think eventually we should try to plumb through something
     # that allows us to resolve endpoints from regions.
-    original.url = original.url.replace(destination_region, source_region)
-
-    presigner.add_auth(request=original)
-    request = original.prepare()
-    params['PresignedUrl'] = original.url
+    request_dict_copy = copy.deepcopy(request_dict)
+    request_dict_copy['url'] = request_dict['url'].replace(
+        destination_region, source_region)
+    presigned_url = request_signer.generate_url(
+        request_dict_copy, region_name=source_region)
+    params['PresignedUrl'] = presigned_url
 
 
 def json_decode_policies(parsed, model, **kwargs):

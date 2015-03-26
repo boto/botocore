@@ -14,6 +14,7 @@
 import botocore
 import botocore.auth
 
+from botocore.awsrequest import create_request_object
 from botocore.exceptions import UnknownSignatureVersionError
 
 class RequestSigner(object):
@@ -92,7 +93,8 @@ class RequestSigner(object):
                                     signature_version)
             signer.add_auth(request=request)
 
-    def get_auth(self, signing_name, region_name, signature_version=None):
+    def get_auth(self, signing_name, region_name, signature_version=None,
+                 **kwargs):
         """
         Get an auth instance which can be used to sign a request
         using the given signature version.
@@ -121,7 +123,7 @@ class RequestSigner(object):
             raise UnknownSignatureVersionError(
                 signature_version=signature_version)
         else:
-            kwargs = {'credentials': self._credentials}
+            kwargs['credentials'] = self._credentials
             if cls.REQUIRES_REGION:
                 if self._region_name is None:
                     raise botocore.exceptions.NoRegionError()
@@ -130,3 +132,32 @@ class RequestSigner(object):
             auth = cls(**kwargs)
             self._cache[key] = auth
             return auth
+
+    def generate_url(self, request_dict, expires_in=None, region_name=None):
+        if region_name is None:
+            region_name = self._region_name
+        query_prefix = '-query'
+        signature_version = self._signature_version
+        if not signature_version.endswith(query_prefix):
+            signature_version += query_prefix
+
+        kwargs = {'signing_name': self._signing_name,
+                  'region_name': region_name,
+                  'signature_version': signature_version}
+        if expires_in is not None:
+            kwargs['expires'] = expires_in
+        auth = self.get_auth(**kwargs)
+        request = create_request_object(request_dict)
+
+        # Emit for before sign just in case anything wants to modify the
+        # request before presigning.
+        """
+        self._event_emitter.emit(
+            'before-sign.{0}'.format(self._service_name),
+            request=request, signing_name=self._signing_name,
+            region_name=region_name,
+            signature_version=signature_version, request_signer=self)
+        """
+        auth.add_auth(request)
+        request.prepare()
+        return request.url
