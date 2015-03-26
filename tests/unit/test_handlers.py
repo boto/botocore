@@ -23,6 +23,8 @@ from botocore.hooks import first_non_none_response
 from botocore.awsrequest import AWSRequest
 from botocore.compat import quote, six
 from botocore.model import OperationModel, ServiceModel
+from botocore.signers import RequestSigner
+from botocore.credentials import Credentials
 from botocore import handlers
 
 
@@ -63,34 +65,26 @@ class TestHandlers(BaseSessionTest):
 
     def test_presigned_url_already_present(self):
         params = {'body': {'PresignedUrl': 'https://foo'}}
-        handlers.copy_snapshot_encrypted(params, None, None)
+        handlers.copy_snapshot_encrypted(params, None)
         self.assertEqual(params['body']['PresignedUrl'], 'https://foo')
 
     def test_copy_snapshot_encrypted(self):
-        v4query_auth = mock.Mock()
-
-        def add_auth(request):
-            request.url += '?PRESIGNED_STUFF'
-
-        v4query_auth.add_auth = add_auth
-
-        request_signer = mock.Mock()
-        request_signer._region_name = 'us-east-1'
-        request_signer.get_auth.return_value = v4query_auth
-
+        credentials = Credentials('key', 'secret')
+        request_signer = RequestSigner(
+            'ec2', 'us-east-1', 'ec2', 'v4', credentials, None)
+        request_dict = {}
         params = {'SourceRegion': 'us-west-2'}
-        endpoint = mock.Mock()
-        request = AWSRequest()
-        request.method = 'POST'
-        request.url = 'https://ec2.us-east-1.amazonaws.com'
-        request = request.prepare()
-        endpoint.create_request.return_value = request
+        request_dict['body'] = params
+        request_dict['url'] = 'https://ec2.us-east-1.amazonaws.com'
+        request_dict['method'] = 'POST'
+        request_dict['headers'] = {}
 
-        handlers.copy_snapshot_encrypted({'body': params},
-                                         request_signer,
-                                         endpoint)
-        self.assertEqual(params['PresignedUrl'],
-                         'https://ec2.us-west-2.amazonaws.com?PRESIGNED_STUFF')
+        handlers.copy_snapshot_encrypted(request_dict, request_signer)
+
+        self.assertIn('https://ec2.us-west-2.amazonaws.com?',
+                      params['PresignedUrl'])
+        self.assertIn('X-Amz-Signature',
+                      params['PresignedUrl'])
         # We should also populate the DestinationRegion with the
         # region_name of the endpoint object.
         self.assertEqual(params['DestinationRegion'], 'us-east-1')
@@ -100,30 +94,26 @@ class TestHandlers(BaseSessionTest):
         # override the DesinationRegion with the region_name from
         # the endpoint object.
         actual_region = 'us-west-1'
-        v4query_auth = mock.Mock()
 
-        def add_auth(request):
-            request.url += '?PRESIGNED_STUFF'
-
-        v4query_auth.add_auth = add_auth
-
-        request_signer = mock.Mock()
-        request_signer._region_name = actual_region
-        request_signer.get_auth.return_value = v4query_auth
-
-        endpoint = mock.Mock()
-        request = AWSRequest()
-        request.method = 'POST'
-        request.url = 'https://ec2.us-east-1.amazonaws.com'
-        request = request.prepare()
-        endpoint.create_request.return_value = request
+        credentials = Credentials('key', 'secret')
+        request_signer = RequestSigner(
+            'ec2', actual_region, 'ec2', 'v4', credentials, None)
+        request_dict = {}
+        params = {
+            'SourceRegion': 'us-west-2',
+            'DestinationRegion': 'us-east-1'}
+        request_dict['body'] = params
+        request_dict['url'] = 'https://ec2.us-west-1.amazonaws.com'
+        request_dict['method'] = 'POST'
+        request_dict['headers'] = {}
 
         # The user provides us-east-1, but we will override this to
         # endpoint.region_name, of 'us-west-1' in this case.
-        params = {'SourceRegion': 'us-west-2', 'DestinationRegion': 'us-east-1'}
-        handlers.copy_snapshot_encrypted({'body': params},
-                                         request_signer,
-                                         endpoint)
+        handlers.copy_snapshot_encrypted(request_dict, request_signer)
+
+        self.assertIn('https://ec2.us-west-2.amazonaws.com?',
+                      params['PresignedUrl'])
+
         # Always use the DestinationRegion from the endpoint, regardless of
         # whatever value the user provides.
         self.assertEqual(params['DestinationRegion'], actual_region)
