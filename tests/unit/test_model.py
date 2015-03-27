@@ -654,10 +654,10 @@ class TestBuilders(unittest.TestCase):
         )).build_model()
 
         # Members should be in order
-        self.assertEqual(['A', 'B'], shape.members.keys())
+        self.assertEqual(['A', 'B'], list(shape.members.keys()))
 
         # Nested structure members should *also* stay ordered
-        self.assertEqual(['C', 'D'], shape.members['B'].members.keys())
+        self.assertEqual(['C', 'D'], list(shape.members['B'].members.keys()))
 
 
 if __name__ == '__main__':
