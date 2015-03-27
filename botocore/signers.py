@@ -149,15 +149,6 @@ class RequestSigner(object):
         auth = self.get_auth(**kwargs)
         request = create_request_object(request_dict)
 
-        # Emit for before sign just in case anything wants to modify the
-        # request before presigning.
-        """
-        self._event_emitter.emit(
-            'before-sign.{0}'.format(self._service_name),
-            request=request, signing_name=self._signing_name,
-            region_name=region_name,
-            signature_version=signature_version, request_signer=self)
-        """
         auth.add_auth(request)
         request.prepare()
         return request.url
