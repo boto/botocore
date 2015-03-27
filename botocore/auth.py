@@ -488,7 +488,7 @@ class HmacV1Auth(BaseSigner):
         hoi = []
         if 'Date' in headers:
             del headers['Date']
-        headers['Date'] = formatdate(usegmt=True)
+        headers['Date'] = self._get_date()
         for ih in interesting_headers:
             found = False
             for key in headers:
@@ -501,6 +501,7 @@ class HmacV1Auth(BaseSigner):
         return '\n'.join(hoi)
 
     def canonical_custom_headers(self, headers):
+        hoi = []
         custom_headers = {}
         for key in headers:
             lk = key.lower()
@@ -509,7 +510,6 @@ class HmacV1Auth(BaseSigner):
                     custom_headers[lk] = ','.join(v.strip() for v in
                                                   headers.get_all(key))
         sorted_header_keys = sorted(custom_headers.keys())
-        hoi = []
         for key in sorted_header_keys:
             hoi.append("%s:%s" % (key, custom_headers[key]))
         return '\n'.join(hoi)
@@ -579,6 +579,12 @@ class HmacV1Auth(BaseSigner):
         signature = self.get_signature(request.method, split,
                                        request.headers,
                                        auth_path=request.auth_path)
+        self._inject_signature(request, signature)
+
+    def _get_date(self):
+        return formatdate(usegmt=True)
+
+    def _inject_signature(self, request, signature):
         if 'Authorization' in request.headers:
             # We have to do this because request.headers is not
             # normal dictionary.  It has the (unintuitive) behavior
@@ -591,6 +597,52 @@ class HmacV1Auth(BaseSigner):
             "AWS %s:%s" % (self.credentials.access_key, signature))
 
 
+class HmacV1QueryAuth(HmacV1Auth):
+    """
+    Generates a presigned request for s3.
+
+    Spec from this document:
+
+    http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html
+    #RESTAuthenticationQueryStringAuth
+
+    """
+    DEFAULT_EXPIRES = 3600
+
+    def __init__(self, credentials, expires=DEFAULT_EXPIRES):
+        self.credentials = credentials
+        self._expires = expires
+
+    def _get_date(self):
+        return str(int(time.time() + int(self._expires)))
+
+    def _inject_signature(self, request, signature):
+        query_dict = {}
+        query_dict['AWSAccessKeyId'] = self.credentials.access_key
+        query_dict['Signature'] = signature
+
+        for header_key in request.headers:
+            lk = header_key.lower()
+            # For query string requests, Expires is used instead of the
+            # Date header.
+            if header_key == 'Date':
+                query_dict['Expires'] = request.headers['Date']
+            # We only want to include relevant headers in the query string.
+            # These can be anything that starts with x-amz, is Content-MD5,
+            # or is Content-Type.
+            elif lk.startswith('x-amz-') or lk in ['content-md5',
+                                                   'content-type']:
+                query_dict[lk] = request.headers[lk]
+        # Combine all of the identified headers into an encoded
+        # query string
+        new_query_string = percent_encode_sequence(query_dict)
+
+        # Create a new url with the presigned url.
+        p = urlsplit(request.url)
+        new_url_parts = (p[0], p[1], p[2], new_query_string, p[4])
+        request.url = urlunsplit(new_url_parts)
+
+
 # Defined at the bottom instead of the top of the module because the Auth
 # classes weren't defined yet.
 AUTH_TYPE_MAPS = {
@@ -599,6 +651,7 @@ AUTH_TYPE_MAPS = {
     'v3': SigV3Auth,
     'v3https': SigV3Auth,
     's3': HmacV1Auth,
+    's3-query': HmacV1QueryAuth,
     's3v4': S3SigV4Auth,
     's3v4-query': S3SigV4QueryAuth,
     'v4-query': SigV4QueryAuth,
