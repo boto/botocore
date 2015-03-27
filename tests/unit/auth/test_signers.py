@@ -413,7 +413,84 @@ class TestSigV4Resign(BaseTestWithFixedDate):
                          [original_auth])
 
 
-class TestSigV4Presign(unittest.TestCase):
+class BasePresignTest(unittest.TestCase):
+    def get_parsed_query_string(self, request):
+        query_string_dict = parse_qs(urlsplit(request.url).query)
+        # Also, parse_qs sets each value in the dict to be a list, but
+        # because we know that we won't have repeated keys, we simplify
+        # the dict and convert it back to a single value.
+        for key in query_string_dict:
+            query_string_dict[key] = query_string_dict[key][0]
+        return query_string_dict
+
+
+class TestS3SigV2Presign(BasePresignTest):
+
+    def setUp(self):
+        self.access_key = 'access_key'
+        self.secret_key = 'secret_key'
+        self.credentials = botocore.credentials.Credentials(self.access_key,
+                                                            self.secret_key)
+        self.expires = 3000
+        self.auth = botocore.auth.HmacV1QueryAuth(
+            self.credentials, expires=self.expires)
+
+        self.current_epoch_time = 1427427247.465591
+        self.time_patch = mock.patch('time.time')
+        self.time_mock = self.time_patch.start()
+        self.time_mock.return_value = self.current_epoch_time
+
+        self.request = AWSRequest()
+        self.bucket = 'mybucket'
+        self.key = 'myobject'
+        self.path = 'https://s3.amazonaws.com/%s/%s' % (
+            self.bucket, self.key)
+        self.request.url = self.path
+        self.request.method = 'GET'
+
+    def tearDown(self):
+        self.time_patch.stop()
+
+    def test_presign_no_headers(self):
+        self.auth.add_auth(self.request)
+        self.assertTrue(self.request.url.startswith(self.path + '?'))
+        query_string = self.get_parsed_query_string(self.request)
+        self.assertEqual(query_string['AWSAccessKeyId'], self.access_key)
+        self.assertEqual(query_string['Expires'],
+                         str(int(self.current_epoch_time) + self.expires))
+        self.assertEquals(query_string['Signature'],
+                          'ZRSgywstwIruKLTLt/Bcrf9H1K4=')
+
+    def test_presign_with_x_amz_headers(self):
+        self.request.headers['x-amz-security-token'] = 'foo'
+        self.request.headers['x-amz-acl'] = 'read-only'
+        self.auth.add_auth(self.request)
+        query_string = self.get_parsed_query_string(self.request)
+        self.assertEqual(query_string['x-amz-security-token'], 'foo')
+        self.assertEqual(query_string['x-amz-acl'], 'read-only')
+        self.assertEquals(query_string['Signature'],
+                          '5oyMAGiUk1E5Ry2BnFr6cIS3Gus=')
+
+    def test_presign_with_content_headers(self):
+        self.request.headers['content-type'] = 'txt'
+        self.request.headers['content-md5'] = 'foo'
+        self.auth.add_auth(self.request)
+        query_string = self.get_parsed_query_string(self.request)
+        self.assertEqual(query_string['content-type'], 'txt')
+        self.assertEqual(query_string['content-md5'], 'foo')
+        self.assertEquals(query_string['Signature'],
+                          '/YQRFdQGywXP74WrOx2ET/RUqz8=')
+
+    def test_presign_with_unused_headers(self):
+        self.request.headers['user-agent'] = 'botocore'
+        self.auth.add_auth(self.request)
+        query_string = self.get_parsed_query_string(self.request)
+        self.assertNotIn('user-agent', query_string)
+        self.assertEquals(query_string['Signature'],
+                          'ZRSgywstwIruKLTLt/Bcrf9H1K4=')
+
+
+class TestSigV4Presign(BasePresignTest):
 
     maxDiff = None
 
@@ -436,15 +513,6 @@ class TestSigV4Presign(unittest.TestCase):
 
     def tearDown(self):
         self.datetime_patcher.stop()
-
-    def get_parsed_query_string(self, request):
-        query_string_dict = parse_qs(urlsplit(request.url).query)
-        # Also, parse_qs sets each value in the dict to be a list, but
-        # because we know that we won't have repeated keys, we simplify
-        # the dict and convert it back to a single value.
-        for key in query_string_dict:
-            query_string_dict[key] = query_string_dict[key][0]
-        return query_string_dict
 
     def test_presign_no_params(self):
         request = AWSRequest()
