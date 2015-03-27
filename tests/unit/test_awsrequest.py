@@ -394,11 +394,11 @@ class TestPrepareRequestDict(unittest.TestCase):
                          self.user_agent)
 
     def test_prepare_request_dict_for_get_no_user_agent(self):
+        self.user_agent = None
         request_dict = {
             'method': u'GET',
             'url_path': '/'
         }
-        self.user_agent = None
         self.prepare_base_request_dict(
             request_dict, endpoint_url='https://s3.amazonaws.com')
         self.assertNotIn('User-Agent', self.base_request_dict['headers'])

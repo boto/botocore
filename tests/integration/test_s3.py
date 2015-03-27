@@ -455,8 +455,7 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
         signer = RequestSigner(
             's3', 'us-east-1', 's3', 's3', creds, self.emitter)
         prepare_request_dict(
-            self.request_dict, user_agent=self.session.user_agent(),
-            endpoint_url=self.client.meta.endpoint_url)
+            self.request_dict, endpoint_url=self.client.meta.endpoint_url)
         presigned_url = signer.generate_url(self.request_dict)
         self.assertEqual(requests.get(presigned_url).content, b'foo')
 
@@ -465,8 +464,7 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
         signer = RequestSigner(
             's3', 'us-east-1', 's3', 's3v4', creds, self.emitter)
         prepare_request_dict(
-            self.request_dict, user_agent=self.session.user_agent(),
-            endpoint_url=self.client.meta.endpoint_url)
+            self.request_dict, endpoint_url=self.client.meta.endpoint_url)
         presigned_url = signer.generate_url(self.request_dict)
         self.assertTrue(
             presigned_url.startswith(
@@ -491,8 +489,7 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
         signer = RequestSigner(
             's3', self.region, 's3', 's3', creds, self.emitter)
         prepare_request_dict(
-            self.request_dict, user_agent=self.session.user_agent(),
-            endpoint_url=self.client.meta.endpoint_url)
+            self.request_dict, endpoint_url=self.client.meta.endpoint_url)
         presigned_url = signer.generate_url(self.request_dict)
         self.assertEqual(requests.get(presigned_url).content, b'foo')
 
@@ -501,8 +498,7 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
         signer = RequestSigner(
             's3', 'us-west-2', 's3', 's3v4', creds, self.emitter)
         prepare_request_dict(
-            self.request_dict, user_agent=self.session.user_agent(),
-            endpoint_url=self.client.meta.endpoint_url)
+            self.request_dict, endpoint_url=self.client.meta.endpoint_url)
         presigned_url = signer.generate_url(self.request_dict)
 
         self.assertTrue(
