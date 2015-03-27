@@ -252,7 +252,7 @@ for name, function in AWSHTTPConnection.__dict__.items():
         setattr(AWSHTTPSConnection, name, function)
 
 
-def prepare_request_dict(request_dict, user_agent, endpoint_url):
+def prepare_request_dict(request_dict, endpoint_url, user_agent=None):
     """
     This method prepares a request dict to be created into an
     AWSRequestObject. This prepares the request dict by adding the
@@ -270,8 +270,9 @@ def prepare_request_dict(request_dict, user_agent, endpoint_url):
         the scheme, the hostname, and optionally any path components.
     """
     r = request_dict
-    headers = r['headers']
-    headers['User-Agent'] = user_agent
+    if user_agent is not None:
+        headers = r['headers']
+        headers['User-Agent'] = user_agent
     url = _urljoin(endpoint_url, r['url_path'])
     if r['query_string']:
         encoded_query_string = percent_encode_sequence(r['query_string'])

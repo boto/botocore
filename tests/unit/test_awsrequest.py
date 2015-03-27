@@ -377,7 +377,8 @@ class TestPrepareRequestDict(unittest.TestCase):
             user_agent = self.user_agent
         if endpoint_url is None:
             endpoint_url = self.endpoint_url
-        prepare_request_dict(self.base_request_dict, user_agent, endpoint_url)
+        prepare_request_dict(self.base_request_dict, endpoint_url=endpoint_url,
+                             user_agent=user_agent)
 
     def test_prepare_request_dict_for_get(self):
         request_dict = {
@@ -391,6 +392,16 @@ class TestPrepareRequestDict(unittest.TestCase):
                          'https://s3.amazonaws.com/')
         self.assertEqual(self.base_request_dict['headers']['User-Agent'],
                          self.user_agent)
+
+    def test_prepare_request_dict_for_get_no_user_agent(self):
+        request_dict = {
+            'method': u'GET',
+            'url_path': '/'
+        }
+        self.user_agent = None
+        self.prepare_base_request_dict(
+            request_dict, endpoint_url='https://s3.amazonaws.com')
+        self.assertNotIn('User-Agent', self.base_request_dict['headers'])
 
     def test_query_string_serialized_to_url(self):
         request_dict = {
