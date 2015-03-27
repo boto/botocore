@@ -132,7 +132,7 @@ class ClientCreator(object):
                                endpoint_url=None):
         # This is a helper function to determine region name to use.
         # It will take into account whether the user passes in a region
-        # name, whether their is a rule in the endpoint JSON, or
+        # name, whether there is a rule in the endpoint JSON, or
         # an endpoint url was provided.
 
         # We only support the credentialScope.region in the properties
@@ -143,8 +143,7 @@ class ClientCreator(object):
 
         if endpoint_url is not None:
             # If an endpoint_url is provided, do not use region name
-            # override if a region
-            # was provided by the user.
+            # override if a region was provided by the user.
             if region_name is not None:
                 region_name_override = None
 
