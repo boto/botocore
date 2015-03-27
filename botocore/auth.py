@@ -377,19 +377,16 @@ class SigV4QueryAuth(SigV4Auth):
         self._expires = expires
 
     def _modify_request_before_signing(self, request):
-        # This is our chance to add additional query params we need
-        # before we go about calculating the signature.
-        request.headers = {}
-        request.method = 'GET'
         # Note that we're not including X-Amz-Signature.
         # From the docs: "The Canonical Query String must include all the query
         # parameters from the preceding table except for X-Amz-Signature.
+        signed_headers = self.signed_headers(self.headers_to_sign(request))
         auth_params = {
             'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
             'X-Amz-Credential': self.scope(request),
             'X-Amz-Date': request.context['timestamp'],
             'X-Amz-Expires': self._expires,
-            'X-Amz-SignedHeaders': 'host',
+            'X-Amz-SignedHeaders': signed_headers,
         }
         if self.credentials.token is not None:
             auth_params['X-Amz-Security-Token'] = self.credentials.token

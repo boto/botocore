@@ -516,6 +516,7 @@ class TestSigV4Presign(BasePresignTest):
 
     def test_presign_no_params(self):
         request = AWSRequest()
+        request.method = 'GET'
         request.url = 'https://ec2.us-east-1.amazonaws.com/'
         self.auth.add_auth(request)
         query_string = self.get_parsed_query_string(request)
@@ -533,6 +534,7 @@ class TestSigV4Presign(BasePresignTest):
     def test_operation_params_before_auth_params(self):
         # The spec is picky about this.
         request = AWSRequest()
+        request.method = 'GET'
         request.url = 'https://ec2.us-east-1.amazonaws.com/?Action=MyOperation'
         self.auth.add_auth(request)
         # Verify auth params come after the existing params.
@@ -541,6 +543,7 @@ class TestSigV4Presign(BasePresignTest):
 
     def test_operation_params_before_auth_params_in_body(self):
         request = AWSRequest()
+        request.method = 'GET'
         request.url = 'https://ec2.us-east-1.amazonaws.com/'
         request.data = {'Action': 'MyOperation'}
         self.auth.add_auth(request)
@@ -551,6 +554,7 @@ class TestSigV4Presign(BasePresignTest):
 
     def test_presign_with_spaces_in_param(self):
         request = AWSRequest()
+        request.method = 'GET'
         request.url = 'https://ec2.us-east-1.amazonaws.com/'
         request.data = {'Action': 'MyOperation', 'Description': 'With Spaces'}
         self.auth.add_auth(request)
@@ -561,6 +565,7 @@ class TestSigV4Presign(BasePresignTest):
         auth = botocore.auth.S3SigV4QueryAuth(
             self.credentials, self.service_name, self.region_name, expires=60)
         request = AWSRequest()
+        request.method = 'GET'
         request.url = (
             'https://s3.us-west-2.amazonaws.com/mybucket/keyname/.bar')
         auth.add_auth(request)
@@ -584,6 +589,7 @@ class TestSigV4Presign(BasePresignTest):
         auth = botocore.auth.S3SigV4QueryAuth(
             self.credentials, self.service_name, self.region_name, expires=60)
         request = AWSRequest()
+        request.method = 'GET'
         request.url = 'https://ec2.us-east-1.amazonaws.com/'
         auth.add_auth(request)
         query_string = self.get_parsed_query_string(request)
