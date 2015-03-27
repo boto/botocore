@@ -497,12 +497,19 @@ class DenormalizedStructureBuilder(object):
         }).build_model()
         # ``shape`` is now an instance of botocore.model.StructureShape
 
+    :type dict_type: class
+    :param dict_type: The dictionary type to use, allowing you to opt-in
+                      to using OrderedDict or another dict type. This can
+                      be particularly useful for testing when order
+                      matters, such as for documentation.
+
     """
-    def __init__(self, name=None):
-        self.members = {}
+    def __init__(self, name=None, dict_type=dict):
+        self.members = dict_type()
         self._name_generator = ShapeNameGenerator()
         if name is None:
             self.name = self._name_generator.new_shape_name('structure')
+        self._dict_type = dict_type
 
     def with_members(self, members):
         """
@@ -523,7 +530,7 @@ class DenormalizedStructureBuilder(object):
         :return: The built StructureShape object.
 
         """
-        shapes = {}
+        shapes = self._dict_type()
         denormalized = {
             'type': 'structure',
             'members': self._members,
@@ -548,7 +555,7 @@ class DenormalizedStructureBuilder(object):
             raise InvalidShapeError("Unknown shape type: %s" % model['type'])
 
     def _build_structure(self, model, shapes):
-        members = {}
+        members = self._dict_type()
         shape = self._build_initial_shape(model)
         shape['members'] = members
 
