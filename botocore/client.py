@@ -323,8 +323,8 @@ class BaseClient(object):
 
         request_dict = self._serializer.serialize_to_request(
             api_params, operation_model)
-        prepare_request_dict(request_dict, self._client_config.user_agent,
-                             self._endpoint.host)
+        prepare_request_dict(request_dict, endpoint_url=self._endpoint.host,
+                             user_agent=self._client_config.user_agent)
         self.meta.events.emit(
             'before-call.{endpoint_prefix}.{operation_name}'.format(
                 endpoint_prefix=self._service_model.endpoint_prefix,
