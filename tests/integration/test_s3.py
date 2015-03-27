@@ -450,6 +450,16 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
         self.client = self.session.create_client('s3', self.region)
         self.setup_presigner()
 
+    def test_presign_sigv2(self):
+        creds = self.session.get_credentials()
+        signer = RequestSigner(
+            's3', 'us-east-1', 's3', 's3', creds, self.emitter)
+        prepare_request_dict(
+            self.request_dict, user_agent=self.session.user_agent(),
+            endpoint_url=self.client.meta.endpoint_url)
+        presigned_url = signer.generate_url(self.request_dict)
+        self.assertEqual(requests.get(presigned_url).content, b'foo')
+
     def test_presign_sigv4(self):
         creds = self.session.get_credentials()
         signer = RequestSigner(
@@ -475,6 +485,16 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
         self.region = 'us-west-2'
         self.client = self.session.create_client('s3', self.region)
         self.setup_presigner()
+
+    def test_presign_sigv2(self):
+        creds = self.session.get_credentials()
+        signer = RequestSigner(
+            's3', self.region, 's3', 's3', creds, self.emitter)
+        prepare_request_dict(
+            self.request_dict, user_agent=self.session.user_agent(),
+            endpoint_url=self.client.meta.endpoint_url)
+        presigned_url = signer.generate_url(self.request_dict)
+        self.assertEqual(requests.get(presigned_url).content, b'foo')
 
     def test_presign_sigv4(self):
         creds = self.session.get_credentials()
