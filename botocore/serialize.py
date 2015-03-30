@@ -515,8 +515,7 @@ class RestXMLSerializer(BaseRestSerializer):
         pseudo_root = ElementTree.Element('')
         self._serialize(shape, params, pseudo_root, root_name)
         real_root = list(pseudo_root)[0]
-        # TODO: double check on the utf-8 encoding bit.
-        return ElementTree.tostring(real_root).decode('utf-8')
+        return ElementTree.tostring(real_root, encoding='utf-8')
 
     def _serialize(self, shape, params, xmlnode, name):
         method = getattr(self, '_serialize_type_%s' % shape.type_name,
