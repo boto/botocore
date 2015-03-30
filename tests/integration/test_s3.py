@@ -466,12 +466,6 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
         prepare_request_dict(
             self.request_dict, endpoint_url=self.client.meta.endpoint_url)
         presigned_url = signer.generate_url(self.request_dict)
-        self.assertTrue(
-            presigned_url.startswith(
-                'https://s3.amazonaws.com/%s/%s' % (
-                    self.bucket_name, self.key)),
-            "Host was suppose to be the us-east-1 endpoint, instead "
-            "got: %s" % presigned_url)
         # Now try to retrieve the object using the presigned url.
         self.assertEqual(requests.get(presigned_url).content, b'foo')
 
