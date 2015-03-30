@@ -631,7 +631,7 @@ class TestBuilders(unittest.TestCase):
             }).build_model()
 
     def test_ordered_shape_builder(self):
-        b = model.DenormalizedStructureBuilder(dict_type=OrderedDict)
+        b = model.DenormalizedStructureBuilder()
         shape = b.with_members(OrderedDict(
             [
                 ('A', {

@@ -504,12 +504,11 @@ class DenormalizedStructureBuilder(object):
                       matters, such as for documentation.
 
     """
-    def __init__(self, name=None, dict_type=dict):
-        self.members = dict_type()
+    def __init__(self, name=None):
+        self.members = OrderedDict()
         self._name_generator = ShapeNameGenerator()
         if name is None:
             self.name = self._name_generator.new_shape_name('structure')
-        self._dict_type = dict_type
 
     def with_members(self, members):
         """
@@ -530,7 +529,7 @@ class DenormalizedStructureBuilder(object):
         :return: The built StructureShape object.
 
         """
-        shapes = self._dict_type()
+        shapes = OrderedDict()
         denormalized = {
             'type': 'structure',
             'members': self._members,
@@ -555,7 +554,7 @@ class DenormalizedStructureBuilder(object):
             raise InvalidShapeError("Unknown shape type: %s" % model['type'])
 
     def _build_structure(self, model, shapes):
-        members = self._dict_type()
+        members = OrderedDict()
         shape = self._build_initial_shape(model)
         shape['members'] = members
 
