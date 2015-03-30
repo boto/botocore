@@ -800,14 +800,20 @@ class Session(object):
             the client.  Same semantics as aws_access_key_id above.
 
         :type config: botocore.client.Config
-        :param config: Advanced client configuration options.
+        :param config: Advanced client configuration options. If region_name
+            is specified in the client config, its value will take precedence
+            over environment variables and configuration values, but not over
+            a region_name value passed explicitly to the method.
 
         :rtype: botocore.client.BaseClient
         :return: A botocore client instance
 
         """
         if region_name is None:
-            region_name = self.get_config_variable('region')
+            if config and config.region_name is not None:
+                region_name = config.region_name
+            else:
+                region_name = self.get_config_variable('region')
         loader = self.get_component('data_loader')
         event_emitter = self.get_component('event_emitter')
         response_parser_factory = self.get_component(
