@@ -460,10 +460,12 @@ class S3SigV4QueryAuth(SigV4QueryAuth):
 
 
 class S3SigV4PostAuth(SigV4Auth):
+    """
+    Presigns a s3 post
 
-    # Implementation doc here:
-    # http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-UsingHTTPPOST.html
-
+    Implementation doc here:
+    http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-UsingHTTPPOST.html
+    """
     def add_auth(self, request):
         datetime_now = datetime.datetime.utcnow()
         request.context['timestamp'] = datetime_now.strftime(SIGV4_TIMESTAMP)
@@ -672,6 +674,31 @@ class HmacV1QueryAuth(HmacV1Auth):
         request.url = urlunsplit(new_url_parts)
 
 
+class HmacV1PostAuth(HmacV1Auth):
+    """
+    Generates a presigned post for s3.
+
+    Spec from this document:
+
+    http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingHTTPPOST.html
+    """
+    def add_auth(self, request):
+        fields = request.context['s3-presign-post-fields']
+        policy = request.context['s3-presign-post-policy']
+        conditions = policy['conditions']
+
+        fields['AWSAccessKeyId'] = self.credentials.access_key
+
+        if self.credentials.token is not None:
+            fields['x-amz-security-token'] = self.credentials.token
+            conditions.append({'x-amz-security-token': self.credentials.token})
+
+        # Dump the base64 encoded policy into the fields dictionary.
+        fields['policy'] = base64.b64encode(json.dumps(policy))
+
+        fields['signature'] = self.sign_string(fields['policy'])
+
+
 # Defined at the bottom instead of the top of the module because the Auth
 # classes weren't defined yet.
 AUTH_TYPE_MAPS = {
@@ -682,6 +709,7 @@ AUTH_TYPE_MAPS = {
     'v3https': SigV3Auth,
     's3': HmacV1Auth,
     's3-query': HmacV1QueryAuth,
+    's3-presign-post': HmacV1PostAuth,
     's3v4': S3SigV4Auth,
     's3v4-query': S3SigV4QueryAuth,
     's3v4-presign-post': S3SigV4PostAuth,

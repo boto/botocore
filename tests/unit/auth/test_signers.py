@@ -15,6 +15,7 @@
 from tests import unittest
 import datetime
 import time
+import base64
 
 import mock
 
@@ -597,7 +598,7 @@ class TestSigV4Presign(BasePresignTest):
             query_string['X-Amz-Security-Token'], 'security-token')
 
 
-class TestS3SigV4PostPost(unittest.TestCase):
+class BaseS3PresignPostTest(unittest.TestCase):
     def setUp(self):
         self.access_key = 'access_key'
         self.secret_key = 'secret_key'
@@ -606,15 +607,7 @@ class TestS3SigV4PostPost(unittest.TestCase):
 
         self.service_name = 'myservice'
         self.region_name = 'myregion'
-        self.auth = botocore.auth.S3SigV4PostAuth(
-            self.credentials, self.service_name, self.region_name)
-        self.datetime_patcher = mock.patch.object(
-            botocore.auth.datetime, 'datetime',
-            mock.Mock(wraps=datetime.datetime)
-        )
-        mocked_datetime = self.datetime_patcher.start()
-        mocked_datetime.utcnow.return_value = datetime.datetime(
-            2014, 1, 1, 0, 0)
+        self.auth = botocore.auth.HmacV1PostAuth(self.credentials)
 
         self.bucket = 'mybucket'
         self.key = 'mykey'
@@ -638,6 +631,41 @@ class TestS3SigV4PostPost(unittest.TestCase):
         self.request.context['s3-presign-post-fields'] = self.fields
         self.request.context['s3-presign-post-policy'] = self.policy
 
+    def test_presign_post(self):
+        self.auth.add_auth(self.request)
+        result_fields = self.request.context['s3-presign-post-fields']
+        self.assertEqual(
+            result_fields['AWSAccessKeyId'], self.credentials.access_key)
+        self.assertEqual(
+            base64.b64decode(result_fields['policy']),
+            '{"conditions": [{"acl": "public-read"}, {"bucket": "mybucket"}, '
+            '["starts-with", "$key", "mykey"]], '
+            '"expiration": "2007-12-01T12:00:00.000Z"}')
+        self.assertEqual(
+            result_fields['signature'],
+            'LFsXwH6yh58SqKYrik4JoaxnzXc=')
+
+    def test_presign_post_with_security_token(self):
+        self.credentials.token = 'my-token'
+        self.auth = botocore.auth.HmacV1PostAuth(self.credentials)
+        self.auth.add_auth(self.request)
+        result_fields = self.request.context['s3-presign-post-fields']
+        self.assertEqual(result_fields['x-amz-security-token'], 'my-token')
+
+
+class TestS3SigV4Post(BaseS3PresignPostTest):
+    def setUp(self):
+        super(TestS3SigV4Post, self).setUp()
+        self.auth = botocore.auth.S3SigV4PostAuth(
+            self.credentials, self.service_name, self.region_name)
+        self.datetime_patcher = mock.patch.object(
+            botocore.auth.datetime, 'datetime',
+            mock.Mock(wraps=datetime.datetime)
+        )
+        mocked_datetime = self.datetime_patcher.start()
+        mocked_datetime.utcnow.return_value = datetime.datetime(
+            2014, 1, 1, 0, 0)
+
     def tearDown(self):
         self.datetime_patcher.stop()
 
@@ -652,14 +680,14 @@ class TestS3SigV4PostPost(unittest.TestCase):
             result_fields['x-amz-date'],
             '20140101T000000Z')
         self.assertEqual(
-            result_fields['policy'],
-            'eyJjb25kaXRpb25zIjogW3siYWNsIjogInB1YmxpYy1yZWFkIn0sIHsiYnVja2V0'
-            'IjogIm15YnVja2V0In0sIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICJteWtleSJdL'
-            'CB7IngtYW16LWFsZ29yaXRobSI6ICJBV1M0LUhNQUMtU0hBMjU2In0sIHsieC1hbX'
-            'otY3JlZGVudGlhbCI6ICJhY2Nlc3Nfa2V5LzIwMTQwMTAxL215cmVnaW9uL215c2V'
-            'ydmljZS9hd3M0X3JlcXVlc3QifSwgeyJ4LWFtei1kYXRlIjogIjIwMTQwMTAxVDAw'
-            'MDAwMFoifV0sICJleHBpcmF0aW9uIjogIjIwMDctMTItMDFUMTI6MDA6MDAuMDAwW'
-            'iJ9')
+            base64.b64decode(result_fields['policy']),
+            '{"conditions": [{"acl": "public-read"}, {"bucket": "mybucket"}, '
+            '["starts-with", "$key", "mykey"], '
+            '{"x-amz-algorithm": "AWS4-HMAC-SHA256"}, '
+            '{"x-amz-credential": '
+            '"access_key/20140101/myregion/myservice/aws4_request"}, '
+            '{"x-amz-date": "20140101T000000Z"}], '
+            '"expiration": "2007-12-01T12:00:00.000Z"}')
         self.assertEqual(
             result_fields['x-amz-signature'],
             'a9fd5d2c6d24fcaa5b84e18dfb9f4a0e45ef009959aac21aff4fe95b62477c99')
