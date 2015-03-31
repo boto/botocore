@@ -475,6 +475,40 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
         # Now try to retrieve the object using the presigned url.
         self.assertEqual(requests.get(presigned_url).content, b'foo')
 
+    def test_presign_post_sigv2(self):
+        self.setup_serializer('CreateBucket')
+        self.params = {'Bucket': self.bucket_name}
+        self.setup_request_dict()
+
+        creds = self.session.get_credentials()
+        signer = RequestSigner(
+            's3', 'us-east-1', 's3', 's3', creds, self.emitter)
+        prepare_request_dict(
+            self.request_dict, endpoint_url=self.client.meta.endpoint_url)
+
+        # Create some of the various supported conditions.
+        conditions = [
+            {"acl": "public-read"},
+            {"bucket": self.bucket_name},
+            ["starts-with", "$key", self.key]
+        ]
+
+        # Create the fields that follow the policy.
+        fields = {
+            'key': self.key,
+            'acl': 'public-read',
+        }
+
+        # Retrieve the args for the presigned post.
+        post_args = signer.build_post_form_args(
+            self.request_dict, fields=fields, conditions=conditions)
+
+        # Make sure that the form can be posted successfully.
+        files = {'file': ('baz', 'some data')}
+        r = requests.post(
+            post_args['url'], data=post_args['fields'], files=files)
+        self.assertEqual(r.status_code, 204)
+
     def test_presign_post_sigv4(self):
         self.setup_serializer('CreateBucket')
         self.params = {'Bucket': self.bucket_name}
@@ -543,6 +577,40 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
             "got: %s" % presigned_url)
         # Now try to retrieve the object using the presigned url.
         self.assertEqual(requests.get(presigned_url).content, b'foo')
+
+    def test_presign_post_sigv2(self):
+        self.setup_serializer('CreateBucket')
+        self.params = {'Bucket': self.bucket_name}
+        self.setup_request_dict()
+
+        creds = self.session.get_credentials()
+        signer = RequestSigner(
+            's3', 'us-west-2', 's3', 's3', creds, self.emitter)
+        prepare_request_dict(
+            self.request_dict, endpoint_url=self.client.meta.endpoint_url)
+
+        # Create some of the various supported conditions.
+        conditions = [
+            {"acl": "public-read"},
+            {"bucket": self.bucket_name},
+            ["starts-with", "$key", self.key]
+        ]
+
+        # Create the fields that follow the policy.
+        fields = {
+            'key': self.key,
+            'acl': 'public-read',
+        }
+
+        # Retrieve the args for the presigned post.
+        post_args = signer.build_post_form_args(
+            self.request_dict, fields=fields, conditions=conditions)
+
+        # Make sure that the form can be posted successfully.
+        files = {'file': ('baz', 'some data')}
+        r = requests.post(
+            post_args['url'], data=post_args['fields'], files=files)
+        self.assertEqual(r.status_code, 204)
 
     def test_presign_post_sigv4(self):
         self.setup_serializer('CreateBucket')
