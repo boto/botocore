@@ -595,3 +595,79 @@ class TestSigV4Presign(BasePresignTest):
         query_string = self.get_parsed_query_string(request)
         self.assertEqual(
             query_string['X-Amz-Security-Token'], 'security-token')
+
+
+class TestS3SigV4PostPost(unittest.TestCase):
+    def setUp(self):
+        self.access_key = 'access_key'
+        self.secret_key = 'secret_key'
+        self.credentials = botocore.credentials.Credentials(
+            self.access_key, self.secret_key)
+
+        self.service_name = 'myservice'
+        self.region_name = 'myregion'
+        self.auth = botocore.auth.S3SigV4PostAuth(
+            self.credentials, self.service_name, self.region_name)
+        self.datetime_patcher = mock.patch.object(
+            botocore.auth.datetime, 'datetime',
+            mock.Mock(wraps=datetime.datetime)
+        )
+        mocked_datetime = self.datetime_patcher.start()
+        mocked_datetime.utcnow.return_value = datetime.datetime(
+            2014, 1, 1, 0, 0)
+
+        self.bucket = 'mybucket'
+        self.key = 'mykey'
+        self.policy = {
+            "expiration": "2007-12-01T12:00:00.000Z",
+            "conditions": [
+                {"acl": "public-read"},
+                {"bucket": self.bucket},
+                ["starts-with", "$key", self.key],
+            ]
+        }
+        self.fields = {
+            'key': self.key,
+            'acl': 'public-read',
+        }
+
+        self.request = AWSRequest()
+        self.request.url = 'https://s3.amazonaws.com/%s' % self.bucket
+        self.request.method = 'POST'
+
+        self.request.context['s3-presign-post-fields'] = self.fields
+        self.request.context['s3-presign-post-policy'] = self.policy
+
+    def tearDown(self):
+        self.datetime_patcher.stop()
+
+    def test_presign_post(self):
+        self.auth.add_auth(self.request)
+        result_fields = self.request.context['s3-presign-post-fields']
+        self.assertEqual(result_fields['x-amz-algorithm'], 'AWS4-HMAC-SHA256')
+        self.assertEqual(
+            result_fields['x-amz-credential'],
+            'access_key/20140101/myregion/myservice/aws4_request')
+        self.assertEqual(
+            result_fields['x-amz-date'],
+            '20140101T000000Z')
+        self.assertEqual(
+            result_fields['policy'],
+            'eyJjb25kaXRpb25zIjogW3siYWNsIjogInB1YmxpYy1yZWFkIn0sIHsiYnVja2V0'
+            'IjogIm15YnVja2V0In0sIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICJteWtleSJdL'
+            'CB7IngtYW16LWFsZ29yaXRobSI6ICJBV1M0LUhNQUMtU0hBMjU2In0sIHsieC1hbX'
+            'otY3JlZGVudGlhbCI6ICJhY2Nlc3Nfa2V5LzIwMTQwMTAxL215cmVnaW9uL215c2V'
+            'ydmljZS9hd3M0X3JlcXVlc3QifSwgeyJ4LWFtei1kYXRlIjogIjIwMTQwMTAxVDAw'
+            'MDAwMFoifV0sICJleHBpcmF0aW9uIjogIjIwMDctMTItMDFUMTI6MDA6MDAuMDAwW'
+            'iJ9')
+        self.assertEqual(
+            result_fields['x-amz-signature'],
+            'a9fd5d2c6d24fcaa5b84e18dfb9f4a0e45ef009959aac21aff4fe95b62477c99')
+
+    def test_presign_post_with_security_token(self):
+        self.credentials.token = 'my-token'
+        self.auth = botocore.auth.S3SigV4PostAuth(
+            self.credentials, self.service_name, self.region_name)
+        self.auth.add_auth(self.request)
+        result_fields = self.request.context['s3-presign-post-fields']
+        self.assertEqual(result_fields['x-amz-security-token'], 'my-token')
