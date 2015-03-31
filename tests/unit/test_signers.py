@@ -210,17 +210,16 @@ class TestPresignS3Post(BaseSignerTest):
         self.add_auth = mock.Mock()
         self.auth.return_value.add_auth = self.add_auth
 
-
         self.datetime_patch = mock.patch('botocore.signers.datetime')
         self.datetime_mock = self.datetime_patch.start()
         self.fixed_date = datetime.datetime(2014, 3, 10, 17, 2, 55, 0)
-        self.fixed_delta =  datetime.timedelta(seconds=3600)
+        self.fixed_delta = datetime.timedelta(seconds=3600)
         self.datetime_mock.datetime.utcnow.return_value = self.fixed_date
         self.datetime_mock.timedelta.return_value = self.fixed_delta
 
     def tearDown(self):
         super(TestPresignS3Post, self).tearDown()
-        self.datetime_patch.stop()  
+        self.datetime_patch.stop()
 
     def test_build_post_form_args(self):
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
@@ -246,7 +245,7 @@ class TestPresignS3Post(BaseSignerTest):
         ]
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
                              {'s3v4-presign-post': self.auth}):
-            post_form_args = self.signer.build_post_form_args(
+            self.signer.build_post_form_args(
                 self.request_dict, conditions=conditions)
         self.auth.assert_called_with(
             credentials=self.credentials, region_name='region_name',
@@ -259,7 +258,7 @@ class TestPresignS3Post(BaseSignerTest):
     def test_build_post_form_args_with_region_override(self):
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
                              {'s3v4-presign-post': self.auth}):
-            post_form_args = self.signer.build_post_form_args(
+            self.signer.build_post_form_args(
                 self.request_dict, region_name='foo')
         self.auth.assert_called_with(
             credentials=self.credentials, region_name='foo',
