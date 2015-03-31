@@ -532,7 +532,7 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
             'key': self.key,
             'acl': 'public-read',
         }
-        
+
         # Retrieve the args for the presigned post.
         post_args = signer.build_post_form_args(
             self.request_dict, fields=fields, conditions=conditions)
@@ -635,7 +635,7 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
             'key': self.key,
             'acl': 'public-read',
         }
-        
+
         # Retrieve the args for the presigned post.
         post_args = signer.build_post_form_args(
             self.request_dict, fields=fields, conditions=conditions)
