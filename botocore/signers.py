@@ -10,12 +10,13 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import datetime
 
 import botocore
 import botocore.auth
-
 from botocore.awsrequest import create_request_object
 from botocore.exceptions import UnknownSignatureVersionError
+
 
 class RequestSigner(object):
     """
@@ -152,3 +153,48 @@ class RequestSigner(object):
         auth.add_auth(request)
         request.prepare()
         return request.url
+
+    def build_post_form_args(self, request_dict, fields=None, conditions=None,
+                             expires_in=3600, region_name=None):
+        if fields is None:
+            fields = {}
+
+        if conditions is None:
+            conditions = []
+
+        if region_name is None:
+            region_name = self._region_name
+
+        # Create the policy for the post.
+        policy = {}
+
+        # Create an expiration date for the policy
+        datetime_now = datetime.datetime.utcnow()
+        expire_date =  datetime_now + datetime.timedelta(seconds=expires_in)
+        policy['expiration'] = expire_date.strftime(botocore.auth.ISO8601)
+
+        # Append all of the conditions that the user supplied.
+        policy['conditions'] = []
+        for condition in conditions:
+            policy['conditions'].append(condition)
+
+        # Obtain the appropriate signer.
+        query_prefix = '-presign-post'
+        signature_version = self._signature_version
+        if not signature_version.endswith(query_prefix):
+            signature_version += query_prefix
+
+        kwargs = {'signing_name': self._signing_name,
+                  'region_name': region_name,
+                  'signature_version': signature_version}
+        auth = self.get_auth(**kwargs)
+
+        # Store the policy and the fields in the request for signing
+        request = create_request_object(request_dict)
+        request.context['s3-presign-post-fields'] = fields
+        request.context['s3-presign-post-policy'] = policy
+
+        auth.add_auth(request)
+
+        # Return the url and the fields for th form to post.
+        return {'url': request.url, 'fields': fields}

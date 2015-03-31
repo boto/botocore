@@ -23,6 +23,7 @@ from operator import itemgetter
 import functools
 import time
 import calendar
+import json
 
 from botocore.exceptions import NoCredentialsError
 from botocore.utils import normalize_url_path, percent_encode_sequence
@@ -458,6 +459,37 @@ class S3SigV4QueryAuth(SigV4QueryAuth):
         return "UNSIGNED-PAYLOAD"
 
 
+class S3SigV4PostAuth(SigV4Auth):
+
+    # Implementation doc here:
+    # http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-UsingHTTPPOST.html
+
+    def add_auth(self, request):
+        datetime_now = datetime.datetime.utcnow()
+        request.context['timestamp'] = datetime_now.strftime(SIGV4_TIMESTAMP)
+
+        fields = request.context['s3-presign-post-fields']
+        policy = request.context['s3-presign-post-policy']
+        conditions = policy['conditions']
+
+        fields['x-amz-algorithm'] = 'AWS4-HMAC-SHA256'
+        fields['x-amz-credential'] = self.scope(request)
+        fields['x-amz-date'] = request.context['timestamp']
+
+        conditions.append({'x-amz-algorithm': 'AWS4-HMAC-SHA256'})
+        conditions.append({'x-amz-credential': self.scope(request)})
+        conditions.append({'x-amz-date': request.context['timestamp']})
+
+        if self.credentials.token is not None:
+            fields['x-amz-security-token'] = self.credentials.token
+            conditions.append({'x-amz-security-token': self.credentials.token})
+
+        # Dump the base64 encoded policy into the fields dictionary.
+        fields['policy'] = base64.b64encode(json.dumps(policy))
+
+        fields['x-amz-signature'] = self.signature(fields['policy'], request)
+
+
 class HmacV1Auth(BaseSigner):
 
     # List of Query String Arguments of Interest
@@ -645,11 +677,13 @@ class HmacV1QueryAuth(HmacV1Auth):
 AUTH_TYPE_MAPS = {
     'v2': SigV2Auth,
     'v4': SigV4Auth,
+    'v4-query': SigV4QueryAuth,
     'v3': SigV3Auth,
     'v3https': SigV3Auth,
     's3': HmacV1Auth,
     's3-query': HmacV1QueryAuth,
     's3v4': S3SigV4Auth,
     's3v4-query': S3SigV4QueryAuth,
-    'v4-query': SigV4QueryAuth,
+    's3v4-presign-post': S3SigV4PostAuth,
+
 }
