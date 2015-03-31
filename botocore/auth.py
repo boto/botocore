@@ -241,7 +241,10 @@ class SigV4Auth(BaseSigner):
             request.body.seek(position)
             return hex_checksum
         elif request.body:
-            return sha256(request.body.encode('utf-8')).hexdigest()
+            body = request.body
+            if isinstance(body, six.string_types):
+                body = body.encode('utf-8')
+            return sha256(body).hexdigest()
         else:
             return EMPTY_SHA256_HASH
 

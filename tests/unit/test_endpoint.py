@@ -491,3 +491,12 @@ class TestRequestCreator(unittest.TestCase):
                 {'url_path': u'/baz', 'query_string': {'x': 'y'}},
                 endpoint_url='https://custom.endpoint/foo/bar?foo=bar').url,
             'https://custom.endpoint/foo/bar/baz?foo=bar&x=y')
+
+    def test_body_is_bytes(self):
+        request_dict = {
+            'method': u'POST',
+            'body': u'Some data',
+            'url_path': u'/mybucket'
+        }
+        request = self.create_request(request_dict)
+        self.assertIsInstance(request.body, bytes)
