@@ -463,6 +463,13 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
         prepare_request_dict(
             self.request_dict, endpoint_url=self.client.meta.endpoint_url)
         presigned_url = signer.generate_url(self.request_dict)
+        self.assertTrue(
+            presigned_url.startswith(
+                'https://%s.s3.amazonaws.com/%s' % (
+                    self.bucket_name, self.key)),
+            "Host was suppose to use DNS style, instead "
+            "got: %s" % presigned_url)
+        # Try to retrieve the object using the presigned url.
         self.assertEqual(requests.get(presigned_url).content, b'foo')
 
     def test_presign_sigv4(self):
@@ -472,7 +479,13 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
         prepare_request_dict(
             self.request_dict, endpoint_url=self.client.meta.endpoint_url)
         presigned_url = signer.generate_url(self.request_dict)
-        # Now try to retrieve the object using the presigned url.
+        self.assertTrue(
+            presigned_url.startswith(
+                'https://s3.amazonaws.com/%s/%s' % (
+                    self.bucket_name, self.key)),
+            "Host was suppose to be the us-east-1 endpoint, instead "
+            "got: %s" % presigned_url)
+        # Try to retrieve the object using the presigned url.
         self.assertEqual(requests.get(presigned_url).content, b'foo')
 
     def test_presign_post_sigv2(self):
@@ -505,6 +518,15 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
 
         # Make sure that the form can be posted successfully.
         files = {'file': ('baz', 'some data')}
+
+        # Make sure the correct endpoint is being used
+        self.assertTrue(
+            post_args['url'].startswith(
+                'https://%s.s3.amazonaws.com' % self.bucket_name),
+            "Host was suppose to use DNS style, instead "
+            "got: %s" % post_args['url'])
+
+        # Try to retrieve the object using the presigned url.
         r = requests.post(
             post_args['url'], data=post_args['fields'], files=files)
         self.assertEqual(r.status_code, 204)
@@ -539,6 +561,14 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
 
         # Make sure that the form can be posted successfully.
         files = {'file': ('baz', 'some data')}
+
+        # Make sure the correct endpoint is being used
+        self.assertTrue(
+            post_args['url'].startswith(
+                'https://s3.amazonaws.com/%s' % self.bucket_name),
+            "Host was suppose to use us-east-1 endpoint, instead "
+            "got: %s" % post_args['url'])
+
         r = requests.post(
             post_args['url'], data=post_args['fields'], files=files)
         self.assertEqual(r.status_code, 204)
@@ -559,6 +589,13 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
         prepare_request_dict(
             self.request_dict, endpoint_url=self.client.meta.endpoint_url)
         presigned_url = signer.generate_url(self.request_dict)
+        self.assertTrue(
+            presigned_url.startswith(
+                'https://%s.s3.amazonaws.com/%s' % (
+                    self.bucket_name, self.key)),
+            "Host was suppose to use DNS style, instead "
+            "got: %s" % presigned_url)
+        # Try to retrieve the object using the presigned url.
         self.assertEqual(requests.get(presigned_url).content, b'foo')
 
     def test_presign_sigv4(self):
@@ -575,7 +612,7 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
                     self.bucket_name, self.key)),
             "Host was suppose to be the us-west-2 endpoint, instead "
             "got: %s" % presigned_url)
-        # Now try to retrieve the object using the presigned url.
+        # Try to retrieve the object using the presigned url.
         self.assertEqual(requests.get(presigned_url).content, b'foo')
 
     def test_presign_post_sigv2(self):
@@ -608,6 +645,14 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
 
         # Make sure that the form can be posted successfully.
         files = {'file': ('baz', 'some data')}
+
+        # Make sure the correct endpoint is being used
+        self.assertTrue(
+            post_args['url'].startswith(
+                'https://%s.s3.amazonaws.com' % self.bucket_name),
+            "Host was suppose to use DNS style, instead "
+            "got: %s" % post_args['url'])
+
         r = requests.post(
             post_args['url'], data=post_args['fields'], files=files)
         self.assertEqual(r.status_code, 204)
@@ -642,6 +687,14 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
 
         # Make sure that the form can be posted successfully.
         files = {'file': ('baz', 'some data')}
+
+        # Make sure the correct endpoint is being used
+        self.assertTrue(
+            post_args['url'].startswith(
+                'https://s3-us-west-2.amazonaws.com/%s' % self.bucket_name),
+            "Host was suppose to use DNS style, instead "
+            "got: %s" % post_args['url'])
+
         r = requests.post(
             post_args['url'], data=post_args['fields'], files=files)
         self.assertEqual(r.status_code, 204)
