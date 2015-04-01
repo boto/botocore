@@ -21,6 +21,7 @@ import logging
 import os
 import platform
 import shlex
+import warnings
 
 from botocore import __version__
 import botocore.config
@@ -35,8 +36,10 @@ from botocore.provider import get_provider
 from botocore.parsers import ResponseParserFactory
 from botocore import regions
 from botocore.model import ServiceModel
+from botocore import paginate
 import botocore.service
 from botocore import waiter
+from botocore import retryhandler, translate
 
 
 class Session(object):
@@ -499,7 +502,7 @@ class Session(object):
 
         """
         service_description = self.get_service_data(service_name, api_version)
-        return ServiceModel(service_description)
+        return ServiceModel(service_description, service_name=service_name)
 
     def get_waiter_model(self, service_name, api_version=None):
         loader = self.get_component('data_loader')
@@ -508,6 +511,14 @@ class Session(object):
         waiter_path = latest.replace('.normal', '.waiters')
         waiter_config = loader.load_data(waiter_path)
         return waiter.WaiterModel(waiter_config)
+
+    def get_paginator_model(self, service_name, api_version=None):
+        loader = self.get_component('data_loader')
+        latest = loader.determine_latest('%s/%s' % (
+            self.provider.name, service_name), api_version)
+        paginator_path = latest.replace('.normal', '.paginators')
+        paginator_config = loader.load_data(paginator_path)
+        return paginate.PaginatorModel(paginator_config)
 
     def get_service_data(self, service_name, api_version=None):
         """
@@ -535,11 +546,17 @@ class Session(object):
         """
         Get information about a service.
 
+        .. warning::
+            This method is deprecated and will be removed in the
+            near future.  Use ``session.create_client`` instead.
+
         :type service_name: str
         :param service_name: The name of the service (e.g. 'ec2')
 
         :returns: :class:`botocore.service.Service`
         """
+        warnings.warn("get_service is deprecated and will be removed.  "
+                      "Use create_client instead.", DeprecationWarning)
         service = botocore.service.get_service(self, service_name,
                                                self.provider,
                                                api_version=api_version)
@@ -750,7 +767,7 @@ class Session(object):
     def create_client(self, service_name, region_name=None, api_version=None,
                       use_ssl=True, verify=None, endpoint_url=None,
                       aws_access_key_id=None, aws_secret_access_key=None,
-                      aws_session_token=None):
+                      aws_session_token=None, config=None):
         """Create a botocore client.
 
         :type service_name: string
@@ -805,40 +822,35 @@ class Session(object):
         :param aws_session_token: The session token to use when creating
             the client.  Same semantics as aws_access_key_id above.
 
+        :type config: botocore.client.Config
+        :param config: Advanced client configuration options.
+
         :rtype: botocore.client.BaseClient
         :return: A botocore client instance
 
         """
+        if region_name is None:
+            region_name = self.get_config_variable('region')
         loader = self.get_component('data_loader')
-        endpoint_creator = self._create_endpoint_creator(aws_access_key_id,
-                                                         aws_secret_access_key,
-                                                         aws_session_token)
         event_emitter = self.get_component('event_emitter')
         response_parser_factory = self.get_component(
             'response_parser_factory')
-        client_creator = botocore.client.ClientCreator(loader, endpoint_creator,
-                                                       event_emitter,
-                                                       response_parser_factory)
-        client = client_creator.create_client(service_name, region_name, use_ssl,
-                                              endpoint_url, verify,
-                                              aws_access_key_id,
-                                              aws_secret_access_key,
-                                              aws_session_token)
-        return client
-
-    def _create_endpoint_creator(self, aws_access_key_id, aws_secret_access_key,
-                                 aws_session_token):
-        resolver = self.get_component('endpoint_resolver')
-        region = self.get_config_variable('region')
-        event_emitter = self.get_component('event_emitter')
-        if aws_secret_access_key is None:
-            credentials = self.get_credentials()
+        if aws_secret_access_key is not None:
+            credentials = botocore.credentials.Credentials(
+                access_key=aws_access_key_id,
+                secret_key=aws_secret_access_key,
+                token=aws_session_token)
         else:
-            credentials = None
-        user_agent= self.user_agent()
-        endpoint_creator = EndpointCreator(resolver, region, event_emitter,
-                                           credentials, user_agent)
-        return endpoint_creator
+            credentials = self.get_credentials()
+        endpoint_resolver = self.get_component('endpoint_resolver')
+        client_creator = botocore.client.ClientCreator(
+            loader, endpoint_resolver, self.user_agent(), event_emitter,
+            retryhandler, translate, response_parser_factory)
+        client = client_creator.create_client(
+            service_name, region_name, use_ssl, endpoint_url, verify,
+            credentials, scoped_config=self.get_scoped_config(),
+            client_config=config)
+        return client
 
 
 class ComponentLocator(object):

@@ -22,6 +22,7 @@ import botocore.session
 from botocore import auth
 from botocore import credentials
 from botocore.exceptions import ServiceNotInRegionError
+from botocore.handlers import fix_s3_host
 
 
 class TestS3Addressing(BaseSessionTest):
@@ -29,6 +30,7 @@ class TestS3Addressing(BaseSessionTest):
     def setUp(self):
         super(TestS3Addressing, self).setUp()
         self.s3 = self.session.get_service('s3')
+        self.signature_version = 's3'
 
     @patch('botocore.response.get_response', Mock())
     def get_prepared_request(self, op, param, force_hmacv1=False):
@@ -36,10 +38,12 @@ class TestS3Addressing(BaseSessionTest):
         if force_hmacv1:
             self.endpoint.auth = auth.HmacV1Auth(
                 credentials.Credentials('foo', 'bar'))
-        self.endpoint._send_request = lambda prepared_request, operation: \
-                request.append(prepared_request)
-        self.endpoint.make_request(op.model, param)
-        return request[0]
+        def prepare_request(request, **kwargs):
+            fix_s3_host(request, self.signature_version,
+                        self.endpoint.region_name)
+            return request
+        self.endpoint.prepare_request = prepare_request
+        return self.endpoint.create_request(param, op)
 
     def test_list_objects_dns_name(self):
         self.endpoint = self.s3.get_endpoint('us-east-1')
@@ -48,7 +52,7 @@ class TestS3Addressing(BaseSessionTest):
         prepared_request = self.get_prepared_request(op, params,
                                                      force_hmacv1=True)
         self.assertEqual(prepared_request.url,
-                         'https://safename.s3.amazonaws.com/')
+                         'https://safename.s3.amazonaws.com')
 
     def test_list_objects_non_dns_name(self):
         self.endpoint = self.s3.get_endpoint('us-east-1')
@@ -65,9 +69,10 @@ class TestS3Addressing(BaseSessionTest):
         prepared_request = self.get_prepared_request(op, params,
                                                      force_hmacv1=True)
         self.assertEqual(prepared_request.url,
-                         'https://safename.s3.amazonaws.com/')
+                         'https://safename.s3.amazonaws.com')
 
     def test_list_objects_unicode_query_string_eu_central_1(self):
+        self.signature_version = 's3v4'
         self.endpoint = self.s3.get_endpoint('eu-central-1')
         op = self.s3.get_operation('ListObjects')
         params = op.build_parameters(bucket='safename',
@@ -195,13 +200,17 @@ class TestS3Addressing(BaseSessionTest):
             prepared_request.url,
             'https://s3-us-west-2.amazonaws.com/192.168.5.256/mykeyname')
 
+    def test_invalid_endpoint_raises_exception(self):
+        with self.assertRaisesRegexp(ValueError, 'Invalid endpoint'):
+            self.s3.get_endpoint('bad region name')
+
     def test_non_existent_region(self):
         # If I ask for a region that does not
         # exist on a global endpoint, such as:
-        endpoint = self.s3.get_endpoint('REGION DOES NOT EXIST')
+        endpoint = self.s3.get_endpoint('REGION-DOES-NOT-EXIST')
         # Then the default endpoint heuristic will apply and we'll
         # get the region name as specified.
-        self.assertEqual(endpoint.region_name, 'REGION DOES NOT EXIST')
+        self.assertEqual(endpoint.region_name, 'REGION-DOES-NOT-EXIST')
         # Why not fixed this?  Well backwards compatability for one thing.
         # The other reason is because it was intended to accomodate this
         # use case.  Let's say I have us-west-2 set as my default region,

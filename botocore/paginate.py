@@ -19,6 +19,19 @@ from botocore.compat import zip
 from botocore.utils import set_value_from_jmespath, merge_dicts
 
 
+class PaginatorModel(object):
+    def __init__(self, paginator_config):
+        self._paginator_config = paginator_config['pagination']
+
+    def get_paginator(self, operation_name):
+        try:
+            single_paginator_config = self._paginator_config[operation_name]
+        except KeyError:
+            raise ValueError("Paginator for operation does not exist: %s"
+                             % operation_name)
+        return single_paginator_config
+
+
 class PageIterator(object):
     def __init__(self, method, input_token, output_token, more_results,
                  result_keys, non_aggregate_keys, limit_key, max_items,
@@ -212,7 +225,15 @@ class PageIterator(object):
         for result_expression in self.result_keys:
             set_value_from_jmespath(complete_result,
                                     result_expression.expression, [])
-        for _, page in self:
+        for response in self:
+            page = response
+            # We want to try to catch operation object pagination
+            # and format correctly for those. They come in the form
+            # of a tuple of two elements: (http_response, parsed_responsed).
+            # We want the parsed_response as that is what the page iterator
+            # uses. We can remove it though once operation objects are removed.
+            if isinstance(response, tuple) and len(response) == 2:
+                page = response[1]
             # We're incrementally building the full response page
             # by page.  For each page in the response we need to
             # inject the necessary components from the page

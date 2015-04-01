@@ -27,10 +27,10 @@ class TestResponseMetadataParsed(unittest.TestCase):
         parser = parsers.QueryParser()
         response = (
             '<OperationNameResponse>'
-              '<OperationNameResult><Str>myname</Str></OperationNameResult>'
-              '<ResponseMetadata>'
-                '<RequestId>request-id</RequestId>'
-              '</ResponseMetadata>'
+            '  <OperationNameResult><Str>myname</Str></OperationNameResult>'
+            '  <ResponseMetadata>'
+            '    <RequestId>request-id</RequestId>'
+            '  </ResponseMetadata>'
             '</OperationNameResponse>').encode('utf-8')
         output_shape = model.StructureShape(
             'OutputShape',
@@ -68,8 +68,8 @@ class TestResponseMetadataParsed(unittest.TestCase):
         parser = parsers.EC2QueryParser()
         response = (
             '<OperationNameResponse>'
-              '<Str>myname</Str>'
-              '<requestId>request-id</requestId>'
+            '  <Str>myname</Str>'
+            '  <requestId>request-id</requestId>'
             '</OperationNameResponse>').encode('utf-8')
         output_shape = model.StructureShape(
             'OutputShape',
@@ -205,11 +205,11 @@ class TestResponseMetadataParsed(unittest.TestCase):
     def test_s3_error_response(self):
         body = (
             '<Error>'
-              '<Code>NoSuchBucket</Code>'
-              '<Message>error message</Message>'
-              '<BucketName>asdf</BucketName>'
-              '<RequestId>EF1EF43A74415102</RequestId>'
-              '<HostId>hostid</HostId>'
+            '  <Code>NoSuchBucket</Code>'
+            '  <Message>error message</Message>'
+            '  <BucketName>asdf</BucketName>'
+            '  <RequestId>EF1EF43A74415102</RequestId>'
+            '  <HostId>hostid</HostId>'
             '</Error>'
         ).encode('utf-8')
         headers = {
@@ -257,8 +257,45 @@ class TestResponseMetadataParsed(unittest.TestCase):
             'HTTPStatusCode': 404,
         })
 
+    def test_can_parse_sdb_error_response(self):
+        body = (
+            '<OperationNameResponse>'
+            '    <Errors>'
+            '        <Error>'
+            '            <Code>1</Code>'
+            '            <Message>msg</Message>'
+            '        </Error>'
+            '    </Errors>'
+            '    <RequestId>abc-123</RequestId>'
+            '</OperationNameResponse>'
+        ).encode('utf-8')
+        parser = parsers.QueryParser()
+        parsed = parser.parse({
+            'body': body, 'headers': {}, 'status_code': 500}, None)
+        self.assertIn('Error', parsed)
+        self.assertEqual(parsed['Error'], {
+            'Code': '1',
+            'Message': 'msg'
+        })
+        self.assertEqual(parsed['ResponseMetadata'], {
+            'RequestId': 'abc-123',
+            'HTTPStatusCode': 500
+        })
+
     def test_can_parse_glacier_error_response(self):
         body = (b'{"code":"AccessDeniedException","type":"Client","message":'
+                b'"Access denied"}')
+        headers = {
+             'x-amzn-requestid': 'request-id'
+        }
+        parser = parsers.RestJSONParser()
+        parsed = parser.parse(
+            {'body': body, 'headers': headers, 'status_code': 400}, None)
+        self.assertEqual(parsed['Error'], {'Message': 'Access denied',
+                                           'Code': 'AccessDeniedException'})
+
+    def test_can_parse_with_case_insensitive_keys(self):
+        body = (b'{"Code":"AccessDeniedException","type":"Client","Message":'
                 b'"Access denied"}')
         headers = {
              'x-amzn-requestid': 'request-id'
@@ -401,3 +438,20 @@ class TestHandlesNoOutputShape(unittest.TestCase):
             parsed,
             {'ResponseMetadata': {'RequestId': 'request-id',
                                   'HTTPStatusCode': 200}})
+
+
+class TestHandlesInvalidXMLResponses(unittest.TestCase):
+    def test_invalid_xml_shown_in_error_message(self):
+        # Missing the closing XML tags.
+        invalid_xml = (
+            b'<DeleteTagsResponse xmlns="http://autoscaling.amazonaws.com/">'
+            b'  <ResponseMetadata>'
+        )
+        parser = parsers.QueryParser()
+        output_shape = None
+        # The XML body should be in the error message.
+        with self.assertRaisesRegexp(parsers.ResponseParserError,
+                                     '<DeleteTagsResponse'):
+            parser.parse(
+                {'body': invalid_xml, 'headers': {}, 'status_code': 200},
+                output_shape)

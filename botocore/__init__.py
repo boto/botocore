@@ -16,7 +16,7 @@ import os
 import re
 import logging
 
-__version__ = '0.84.0'
+__version__ = '0.99.0'
 
 
 class NullHandler(logging.Handler):
@@ -50,6 +50,9 @@ _xform_cache = {
 ScalarTypes = ('string', 'integer', 'boolean', 'timestamp', 'float', 'double')
 
 BOTOCORE_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+# Used to specify anonymous (unsigned) request signature
+UNSIGNED = object()
 
 
 def xform_name(name, sep='_', _xform_cache=_xform_cache):

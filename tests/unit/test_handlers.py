@@ -17,6 +17,7 @@ import base64
 import mock
 import copy
 
+import botocore
 import botocore.session
 from botocore.hooks import first_non_none_response
 from botocore.awsrequest import AWSRequest
@@ -47,29 +48,8 @@ class TestHandlers(BaseSessionTest):
         converted_value = handlers.decode_quoted_jsondoc(value)
         self.assertEqual(converted_value, value)
 
-    def test_switch_to_sigv4(self):
-        event = self.session.create_event('service-data-loaded', 's3')
-        mock_session = mock.Mock()
-        mock_session.get_scoped_config.return_value = {
-            's3': {'signature_version': 's3v4'}
-        }
-        kwargs = {'service_data': {'metadata': {'signatureVersion': 's3'}},
-                  'service_name': 's3', 'session': mock_session}
-        self.session.emit(event, **kwargs)
-        self.assertEqual(
-            kwargs['service_data']['metadata']['signatureVersion'],
-            's3v4')
-
-    def test_noswitch_to_sigv4(self):
-        event = self.session.create_event('service-data-loaded', 's3')
-        mock_session = mock.Mock()
-        mock_session.get_scoped_config.return_value = {}
-        kwargs = {'service_data': {'metadata': {'signatureVersion': 's3'}},
-                  'service_name': 's3', 'session': mock_session}
-        self.session.emit(event, **kwargs)
-        self.assertEqual(
-            kwargs['service_data']['metadata']['signatureVersion'],
-            's3')
+    def test_disable_signing(self):
+        self.assertEqual(handlers.disable_signing(), botocore.UNSIGNED)
 
     def test_quote_source_header(self):
         for op in ('UploadPartCopy', 'CopyObject'):
@@ -81,47 +61,72 @@ class TestHandlers(BaseSessionTest):
             self.assertEqual(
                 params['headers']['x-amz-copy-source'], 'foo%2B%2Bbar.txt')
 
+    def test_presigned_url_already_present(self):
+        params = {'body': {'PresignedUrl': 'https://foo'}}
+        handlers.copy_snapshot_encrypted(params, None, None)
+        self.assertEqual(params['body']['PresignedUrl'], 'https://foo')
+
     def test_copy_snapshot_encrypted(self):
-        operation = mock.Mock()
-        source_endpoint = mock.Mock()
-        signed_request = mock.Mock()
-        signed_request.url = 'SIGNED_REQUEST'
-        source_endpoint.auth.credentials = mock.sentinel.credentials
-        source_endpoint.create_request.return_value = signed_request
-        operation.service.get_endpoint.return_value = source_endpoint
-        endpoint = mock.Mock()
-        endpoint.region_name = 'us-east-1'
+        v4query_auth = mock.Mock()
+
+        def add_auth(request):
+            request.url += '?PRESIGNED_STUFF'
+
+        v4query_auth.add_auth = add_auth
+
+        request_signer = mock.Mock()
+        request_signer._region_name = 'us-east-1'
+        request_signer.get_auth.return_value = v4query_auth
 
         params = {'SourceRegion': 'us-west-2'}
-        handlers.copy_snapshot_encrypted(operation, {'body': params}, endpoint)
-        self.assertEqual(params['PresignedUrl'], 'SIGNED_REQUEST')
-        # We created an endpoint in the source region.
-        operation.service.get_endpoint.assert_called_with('us-west-2')
+        endpoint = mock.Mock()
+        request = AWSRequest()
+        request.method = 'POST'
+        request.url = 'https://ec2.us-east-1.amazonaws.com'
+        request = request.prepare()
+        endpoint.create_request.return_value = request
+
+        handlers.copy_snapshot_encrypted({'body': params},
+                                         request_signer,
+                                         endpoint)
+        self.assertEqual(params['PresignedUrl'],
+                         'https://ec2.us-west-2.amazonaws.com?PRESIGNED_STUFF')
         # We should also populate the DestinationRegion with the
         # region_name of the endpoint object.
         self.assertEqual(params['DestinationRegion'], 'us-east-1')
 
-    def test_destination_region_left_untouched(self):
+    def test_destination_region_always_changed(self):
         # If the user provides a destination region, we will still
         # override the DesinationRegion with the region_name from
         # the endpoint object.
-        operation = mock.Mock()
-        source_endpoint = mock.Mock()
-        signed_request = mock.Mock()
-        signed_request.url = 'SIGNED_REQUEST'
-        source_endpoint.auth.credentials = mock.sentinel.credentials
-        source_endpoint.create_request.return_value = signed_request
-        operation.service.get_endpoint.return_value = source_endpoint
+        actual_region = 'us-west-1'
+        v4query_auth = mock.Mock()
+
+        def add_auth(request):
+            request.url += '?PRESIGNED_STUFF'
+
+        v4query_auth.add_auth = add_auth
+
+        request_signer = mock.Mock()
+        request_signer._region_name = actual_region
+        request_signer.get_auth.return_value = v4query_auth
+
         endpoint = mock.Mock()
-        endpoint.region_name = 'us-west-1'
+        request = AWSRequest()
+        request.method = 'POST'
+        request.url = 'https://ec2.us-east-1.amazonaws.com'
+        request = request.prepare()
+        endpoint.create_request.return_value = request
 
         # The user provides us-east-1, but we will override this to
         # endpoint.region_name, of 'us-west-1' in this case.
         params = {'SourceRegion': 'us-west-2', 'DestinationRegion': 'us-east-1'}
-        handlers.copy_snapshot_encrypted(operation, {'body': params}, endpoint)
+        handlers.copy_snapshot_encrypted({'body': params},
+                                         request_signer,
+                                         endpoint)
         # Always use the DestinationRegion from the endpoint, regardless of
         # whatever value the user provides.
-        self.assertEqual(params['DestinationRegion'], 'us-west-1')
+        self.assertEqual(params['DestinationRegion'], actual_region)
 
     def test_500_status_code_set_for_200_response(self):
         http_response = mock.Mock()
@@ -279,26 +284,32 @@ class TestHandlers(BaseSessionTest):
         self.assertEqual(params, result)
 
     def test_fix_s3_host_initial(self):
-        endpoint = mock.Mock(region_name='us-west-2')
         request = AWSRequest(
             method='PUT',headers={},
             url='https://s3-us-west-2.amazonaws.com/bucket/key.txt'
         )
-        auth = mock.Mock()
-        handlers.fix_s3_host('foo', endpoint, request, auth)
+        region_name = 'us-west-2'
+        signature_version = 's3'
+        handlers.fix_s3_host(
+            request=request, signature_version=signature_version,
+            region_name=region_name)
         self.assertEqual(request.url, 'https://bucket.s3.amazonaws.com/key.txt')
         self.assertEqual(request.auth_path, '/bucket/key.txt')
 
     def test_fix_s3_host_only_applied_once(self):
-        endpoint = mock.Mock(region_name='us-west-2')
         request = AWSRequest(
             method='PUT',headers={},
             url='https://s3-us-west-2.amazonaws.com/bucket/key.txt'
         )
-        auth = mock.Mock()
-        handlers.fix_s3_host('foo', endpoint, request, auth)
+        region_name = 'us-west-2'
+        signature_version = 's3'
+        handlers.fix_s3_host(
+            request=request, signature_version=signature_version,
+            region_name=region_name)
         # Calling the handler again should not affect the end result:
-        handlers.fix_s3_host('foo', endpoint, request, auth)
+        handlers.fix_s3_host(
+            request=request, signature_version=signature_version,
+            region_name=region_name)
         self.assertEqual(request.url, 'https://bucket.s3.amazonaws.com/key.txt')
         # This was a bug previously.  We want to make sure that
         # calling fix_s3_host() again does not alter the auth_path.
@@ -339,14 +350,16 @@ class TestHandlers(BaseSessionTest):
                                             unique_id='retry-config-foo')
 
     def test_dns_style_not_used_for_get_bucket_location(self):
-        endpoint = mock.Mock(region_name='us-west-2')
         original_url = 'https://s3-us-west-2.amazonaws.com/bucket?location'
         request = AWSRequest(
             method='GET',headers={},
             url=original_url,
         )
-        auth = mock.Mock()
-        handlers.fix_s3_host('foo', endpoint, request, auth)
+        signature_version = 's3'
+        region_name = 'us-west-2'
+        handlers.fix_s3_host(
+            request=request, signature_version=signature_version,
+            region_name=region_name)
         # The request url should not have been modified because this is
         # a request for GetBucketLocation.
         self.assertEqual(request.url, original_url)
@@ -358,6 +371,46 @@ class TestHandlers(BaseSessionTest):
         # The handler should not have changed the response because it's
         # an error response.
         self.assertEqual(original, handler_input)
+
+    def test_decode_json_policy(self):
+        parsed = {
+            'Document': '{"foo": "foobarbaz"}',
+            'Other': 'bar',
+        }
+        service_def = {
+            'operations': {
+                'Foo': {
+                    'output': {'shape': 'PolicyOutput'},
+                }
+            },
+            'shapes': {
+                'PolicyOutput': {
+                    'type': 'structure',
+                    'members': {
+                        'Document': {
+                            'shape': 'policyDocumentType'
+                        },
+                        'Other': {
+                            'shape': 'stringType'
+                        }
+                    }
+                },
+                'policyDocumentType': {
+                    'type': 'string'
+                },
+                'stringType': {
+                    'type': 'string'
+                },
+            }
+        }
+        model = ServiceModel(service_def)
+        op_model = model.operation_model('Foo')
+        handlers.json_decode_policies(parsed, op_model)
+        self.assertEqual(parsed['Document'], {'foo': 'foobarbaz'})
+
+        no_document = {'Other': 'bar'}
+        handlers.json_decode_policies(no_document, op_model)
+        self.assertEqual(no_document, {'Other': 'bar'})
 
     def test_inject_account_id(self):
         params = {}

@@ -11,19 +11,18 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import unittest, BaseSessionTest, create_session
+from tests import unittest
 
-from mock import Mock, patch, sentinel
+from mock import Mock, patch
 from botocore.vendored.requests import ConnectionError
-from botocore.vendored.requests.models import Response
 
 from botocore.compat import six
+from botocore.awsrequest import AWSRequest
 from botocore.endpoint import get_endpoint, Endpoint, DEFAULT_TIMEOUT
 from botocore.endpoint import EndpointCreator
-from botocore.auth import SigV4Auth
-from botocore.session import Session
-from botocore.exceptions import UnknownServiceStyle
-from botocore.exceptions import UnknownSignatureVersionError
+from botocore.endpoint import PreserveAuthSession
+from botocore.endpoint import RequestCreator
+from botocore.exceptions import EndpointConnectionError
 
 
 def request_dict():
@@ -60,29 +59,6 @@ class TestGetEndpoint(unittest.TestCase):
         service.type = service_type
         service.signature_version = signature_version
         return service
-
-    def test_auth_is_properly_created_for_endpoint(self):
-        service = self.create_mock_service('query', signature_version='v4')
-        endpoint = get_endpoint(service, 'us-west-2',
-                                'https://service.region.amazonaws.com')
-        self.assertIsInstance(endpoint.auth, SigV4Auth)
-
-    def test_unknown_auth_handler(self):
-        service = self.create_mock_service('query', signature_version='v5000')
-        with self.assertRaises(UnknownSignatureVersionError):
-            endpoint = get_endpoint(service, 'us-west-2',
-                                    'https://service.region.amazonaws.com')
-
-    def test_signature_version_is_none(self):
-        # If signature_version is set to None, we don't assign any auth classes
-        # to the endpoint.
-        service = self.create_mock_service('query', signature_version=None)
-        # Verify we have a signature_version attr and that it's None.  This is
-        # a different case from not having the 'signature_version' at all.
-        self.assertIsNone(service.signature_version)
-        endpoint = get_endpoint(service, 'us-west-2',
-                                'https://service.region.amazonaws.com')
-        self.assertIsNone(endpoint.auth)
 
     def test_get_endpoint_default_verify_ssl(self):
         service = self.create_mock_service('query')
@@ -130,8 +106,6 @@ class TestEndpointBase(unittest.TestCase):
         self.op = Mock()
         self.op.has_streaming_output = False
         self.op.metadata = {'protocol': 'json'}
-        self.signature_version = True
-        self.auth = Mock()
         self.event_emitter = Mock()
         self.event_emitter.emit.return_value = []
         self.factory_patch = patch(
@@ -139,8 +113,8 @@ class TestEndpointBase(unittest.TestCase):
         self.factory = self.factory_patch.start()
         self.endpoint = Endpoint(
             'us-west-2', 'https://ec2.us-west-2.amazonaws.com/',
-            auth=self.auth, user_agent='botoore', signature_version='v4',
-            endpoint_prefix='ec2', event_emitter=self.event_emitter)
+            user_agent='botoore', endpoint_prefix='ec2',
+            event_emitter=self.event_emitter)
         self.http_session = Mock()
         self.http_session.send.return_value = Mock(
             status_code=200, headers={}, content=b'{"Foo": "bar"}',
@@ -169,7 +143,6 @@ class TestEndpointFeatures(TestEndpointBase):
             prepared_request, verify=True, stream=False,
             proxies=proxies, timeout=DEFAULT_TIMEOUT)
 
-
     def test_make_request_with_no_auth(self):
         self.endpoint.auth = None
         self.endpoint.make_request(self.op, request_dict())
@@ -182,7 +155,7 @@ class TestEndpointFeatures(TestEndpointBase):
     def test_make_request_no_signature_version(self):
         self.endpoint = Endpoint(
             'us-west-2', 'https://ec2.us-west-2.amazonaws.com/',
-            auth=self.auth, user_agent='botoore', signature_version=None,
+            user_agent='botoore',
             endpoint_prefix='ec2', event_emitter=self.event_emitter)
         self.endpoint.http_session = self.http_session
 
@@ -192,6 +165,19 @@ class TestEndpointFeatures(TestEndpointBase):
         self.assertTrue(self.http_session.send.called)
         prepared_request = self.http_session.send.call_args[0][0]
         self.assertNotIn('Authorization', prepared_request.headers)
+
+    def test_make_request_injects_better_dns_error_msg(self):
+        self.endpoint = Endpoint(
+            'us-west-2', 'https://ec2.us-west-2.amazonaws.com/',
+            user_agent='botoore',
+            endpoint_prefix='ec2', event_emitter=self.event_emitter)
+        self.endpoint.http_session = self.http_session
+        fake_request = Mock(url='https://ec2.us-west-2.amazonaws.com')
+        self.http_session.send.side_effect = ConnectionError(
+            "Fake gaierror(8, node or host not known)", request=fake_request)
+        with self.assertRaisesRegexp(EndpointConnectionError,
+                                     'Could not connect'):
+            self.endpoint.make_request(self.op, request_dict())
 
 
 class TestRetryInterface(TestEndpointBase):
@@ -235,21 +221,21 @@ class TestRetryInterface(TestEndpointBase):
         op.name = 'DescribeInstances'
         op.metadata = {'protocol': 'json'}
         self.event_emitter.emit.side_effect = [
-            [], # For initially preparing request
-            [(None, 0)],  # Check if retry needed. Retry needed.
-            [],  # For preparing the request again
-            [(None, None)]  # Check if retry needed. Retry not needed.
+            [(None, None)],    # Request created.
+            [(None, 0)],       # Check if retry needed. Retry needed.
+            [(None, None)],    # Request created.
+            [(None, None)]     # Check if retry needed. Retry not needed.
         ]
         self.endpoint.make_request(op, request_dict())
         call_args = self.event_emitter.emit.call_args_list
         self.assertEqual(self.event_emitter.emit.call_count, 4)
         # Check that all of the events are as expected.
         self.assertEqual(call_args[0][0][0],
-                         'before-auth.ec2')
+                         'request-created.ec2.DescribeInstances')
         self.assertEqual(call_args[1][0][0],
                          'needs-retry.ec2.DescribeInstances')
         self.assertEqual(call_args[2][0][0],
-                         'before-auth.ec2')
+                         'request-created.ec2.DescribeInstances')
         self.assertEqual(call_args[3][0][0],
                          'needs-retry.ec2.DescribeInstances')
 
@@ -257,22 +243,23 @@ class TestRetryInterface(TestEndpointBase):
         op = Mock()
         op.name = 'DescribeInstances'
         self.event_emitter.emit.side_effect = [
-            [], # For initially preparing request
-            [(None, 0)],  # Check if retry needed. Retry needed.
-            [],  # For preparing the request again
-            [(None, None)]  # Check if retry needed. Retry not needed.
+            [(None, None)],    # Request created.
+            [(None, 0)],       # Check if retry needed. Retry needed.
+            [(None, None)],    # Request created
+            [(None, None)]     # Check if retry needed. Retry not needed.
         ]
         self.http_session.send.side_effect = ConnectionError()
-        self.endpoint.make_request(op, request_dict())
+        with self.assertRaises(ConnectionError):
+            self.endpoint.make_request(op, request_dict())
         call_args = self.event_emitter.emit.call_args_list
         self.assertEqual(self.event_emitter.emit.call_count, 4)
         # Check that all of the events are as expected.
         self.assertEqual(call_args[0][0][0],
-                         'before-auth.ec2')
+                         'request-created.ec2.DescribeInstances')
         self.assertEqual(call_args[1][0][0],
                          'needs-retry.ec2.DescribeInstances')
         self.assertEqual(call_args[2][0][0],
-                         'before-auth.ec2')
+                         'request-created.ec2.DescribeInstances')
         self.assertEqual(call_args[3][0][0],
                          'needs-retry.ec2.DescribeInstances')
 
@@ -300,12 +287,12 @@ class TestS3ResetStreamOnRetry(TestEndpointBase):
         request = request_dict()
         request['body'] = body
         self.event_emitter.emit.side_effect = [
-            [(None, 0)],  # Prepare initial request.
-            [(None, 0)],  # Check if retry needed. Needs Retry.
-            [(None, 0)],  # Prepare request again.
-            [(None, 0)],  # Check if retry needed again. Needs Retry.
-            [(None, 0)],  # Prepare request again.
-            [(None, None)], # Finally emit no rety is needed.
+            [(None, None)],   # Request created.
+            [(None, 0)],      # Check if retry needed. Needs Retry.
+            [(None, None)],   # Request created.
+            [(None, 0)],      # Check if retry needed again. Needs Retry.
+            [(None, None)],   # Request created.
+            [(None, None)],   # Finally emit no rety is needed.
         ]
         self.endpoint.make_request(op, request)
         self.assertEqual(body.total_resets, 2)
@@ -323,7 +310,7 @@ class TestEndpointCreator(unittest.TestCase):
             'uri': 'https://endpoint.url', 'properties': {}
         }
         creator = EndpointCreator(resolver, 'us-west-2',
-                                  Mock(), Mock(), 'user-agent')
+                                  Mock(), 'user-agent')
         endpoint = creator.create_endpoint(self.service_model)
         self.assertEqual(endpoint.host, 'https://endpoint.url')
 
@@ -340,22 +327,167 @@ class TestEndpointCreator(unittest.TestCase):
         }
         original_region_name = 'us-west-2'
         creator = EndpointCreator(resolver, original_region_name,
-                                  Mock(), Mock(), 'user-agent')
+                                  Mock(), 'user-agent')
         endpoint = creator.create_endpoint(self.service_model)
         self.assertEqual(endpoint.region_name, 'us-east-1')
 
-    def test_endpoint_resolver_uses_signature_version(self):
+    def test_resolver_no_uses_cred_scope_with_endpoint_url(self):
         resolver = Mock()
+        resolver_region_override = 'us-east-1'
         resolver.construct_endpoint.return_value = {
             'uri': 'https://endpoint.url',
             'properties': {
-                # Setting a signatureVersion in the properties
-                # back of an endpoint heuristic will override
-                # any other value when constructing an endpoint.
-                'signatureVersion': 'v4',
+                'credentialScope': {
+                    'region': resolver_region_override,
+                }
             }
         }
-        creator = EndpointCreator(resolver, 'us-west-2',
-                                  Mock(), Mock(), 'user-agent')
-        endpoint = creator.create_endpoint(self.service_model)
-        self.assertIsInstance(endpoint.auth, SigV4Auth)
+        original_region_name = 'us-west-2'
+        creator = EndpointCreator(resolver, original_region_name,
+                                  Mock(), 'user-agent')
+        endpoint = creator.create_endpoint(self.service_model,
+                                           endpoint_url='https://foo')
+        self.assertEqual(endpoint.region_name, 'us-west-2')
+
+    def test_resolver_uses_cred_scope_with_endpoint_url_and_no_region(self):
+        resolver = Mock()
+        resolver_region_override = 'us-east-1'
+        resolver.construct_endpoint.return_value = {
+            'uri': 'https://endpoint.url',
+            'properties': {
+                'credentialScope': {
+                    'region': resolver_region_override,
+                }
+            }
+        }
+        original_region_name = None
+        creator = EndpointCreator(resolver, original_region_name,
+                                  Mock(), 'user-agent')
+        endpoint = creator.create_endpoint(self.service_model,
+                                           endpoint_url='https://foo')
+        self.assertEqual(endpoint.region_name, resolver_region_override)
+
+
+class TestAWSSession(unittest.TestCase):
+    def test_auth_header_preserved_from_s3_redirects(self):
+        request = AWSRequest()
+        request.url = 'https://bucket.s3.amazonaws.com/'
+        request.method = 'GET'
+        request.headers['Authorization'] = 'original auth header'
+        prepared_request = request.prepare()
+
+        fake_response = Mock()
+        fake_response.headers = {
+            'location': 'https://bucket.s3-us-west-2.amazonaws.com'}
+        fake_response.url = request.url
+        fake_response.status_code = 307
+        fake_response.is_permanent_redirect = False
+        # This line is needed to disable the cookie handling
+        # code in requests.
+        fake_response.raw._original_response = None
+
+        success_response = Mock()
+        success_response.raw._original_response = None
+        success_response.is_redirect = False
+        success_response.status_code = 200
+        session = PreserveAuthSession()
+        session.send = Mock(return_value=success_response)
+
+        list(session.resolve_redirects(
+            fake_response, prepared_request, stream=False))
+
+        redirected_request = session.send.call_args[0][0]
+        # The Authorization header for the newly sent request should
+        # still have our original Authorization header.
+        self.assertEqual(
+            redirected_request.headers['Authorization'],
+            'original auth header')
+
+
+class TestRequestCreator(unittest.TestCase):
+    def setUp(self):
+        self.request_creator = RequestCreator()
+        self.user_agent = 'botocore/1.0'
+        self.endpoint_url = 'https://s3.amazonaws.com'
+        self.base_request_dict = {
+            'body': '',
+            'headers': {},
+            'method': u'GET',
+            'query_string': '',
+            'url_path': '/'
+        }
+
+    def create_request(self, request_dict, endpoint_url=None,
+                       user_agent=None):
+        self.base_request_dict.update(request_dict)
+        if user_agent is None:
+            user_agent = self.user_agent
+        if endpoint_url is None:
+            endpoint_url = self.endpoint_url
+        return self.request_creator.create_request_object(
+            self.base_request_dict, user_agent, endpoint_url)
+
+    def test_create_request_object_for_get(self):
+        request_dict = {
+            'method': u'GET',
+            'url_path': '/'
+        }
+        request = self.create_request(
+            request_dict, endpoint_url='https://s3.amazonaws.com')
+        self.assertEqual(request.method, 'GET')
+        self.assertEqual(request.url, 'https://s3.amazonaws.com/')
+        self.assertEqual(request.headers['User-Agent'], self.user_agent)
+
+    def test_query_string_serialized_to_url(self):
+        request_dict = {
+            'method': u'GET',
+            'query_string': {u'prefix': u'foo'},
+            'url_path': u'/mybucket'
+        }
+        request = self.create_request(request_dict)
+        self.assertEqual(
+            request.url,
+            'https://s3.amazonaws.com/mybucket?prefix=foo')
+
+    def test_url_path_combined_with_endpoint_url(self):
+        # This checks the case where a user specifies and
+        # endpoint_url that has a path component, and the
+        # serializer gives us a request_dict that has a url
+        # component as well (say from a rest-* service).
+        request_dict = {
+            'query_string': {u'prefix': u'foo'},
+            'url_path': u'/mybucket'
+        }
+        endpoint_url = 'https://custom.endpoint/foo/bar'
+        request = self.create_request(request_dict, endpoint_url)
+        self.assertEqual(
+            request.url,
+            'https://custom.endpoint/foo/bar/mybucket?prefix=foo')
+
+    def test_url_path_with_trailing_slash(self):
+        self.assertEqual(
+            self.create_request(
+                {'url_path': u'/mybucket'},
+                endpoint_url='https://custom.endpoint/foo/bar/').url,
+            'https://custom.endpoint/foo/bar/mybucket')
+
+    def test_url_path_is_slash(self):
+        self.assertEqual(
+            self.create_request(
+                {'url_path': u'/'},
+                endpoint_url='https://custom.endpoint/foo/bar/').url,
+            'https://custom.endpoint/foo/bar/')
+
+    def test_url_path_is_slash_with_endpoint_url_no_slash(self):
+        self.assertEqual(
+            self.create_request(
+                {'url_path': u'/'},
+                endpoint_url='https://custom.endpoint/foo/bar').url,
+            'https://custom.endpoint/foo/bar')
+
+    def test_custom_endpoint_with_query_string(self):
+        self.assertEqual(
+            self.create_request(
+                {'url_path': u'/baz', 'query_string': {'x': 'y'}},
+                endpoint_url='https://custom.endpoint/foo/bar?foo=bar').url,
+            'https://custom.endpoint/foo/bar/baz?foo=bar&x=y')

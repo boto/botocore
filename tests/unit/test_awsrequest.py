@@ -28,17 +28,25 @@ from botocore.awsrequest import AWSHTTPConnection
 from botocore.compat import file_type, six
 
 
+class IgnoreCloseBytesIO(io.BytesIO):
+    def close(self):
+        pass
+
+
 class FakeSocket(object):
-    def __init__(self, read_data, fileclass=io.BytesIO):
+    def __init__(self, read_data, fileclass=IgnoreCloseBytesIO):
         self.sent_data = b''
         self.read_data = read_data
         self.fileclass = fileclass
+        self._fp_object = None
 
     def sendall(self, data):
         self.sent_data += data
 
     def makefile(self, mode, bufsize=None):
-        return self.fileclass(self.read_data)
+        if self._fp_object is None:
+            self._fp_object = self.fileclass(self.read_data)
+        return self._fp_object
 
     def close(self):
         pass
@@ -186,10 +194,50 @@ class TestAWSHTTPConnection(unittest.TestCase):
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
             select_mock.return_value = ([s], [], [])
-            conn.request('GET', '/bucket/foo', b'body', {'Expect': '100-continue'})
+            conn.request('GET', '/bucket/foo', b'body',
+                         {'Expect': '100-continue'})
             response = conn.getresponse()
             # Now we should verify that our final response is the 200 OK
             self.assertEqual(response.status, 200)
+
+    def test_handles_expect_100_with_different_reason_phrase(self):
+        with patch('select.select') as select_mock:
+            # Shows the server first sending a 100 continue response
+            # then a 200 ok response.
+            s = FakeSocket(b'HTTP/1.1 100 (Continue)\r\n\r\nHTTP/1.1 200 OK\r\n')
+            conn = AWSHTTPConnection('s3.amazonaws.com', 443)
+            conn.sock = s
+            select_mock.return_value = ([s], [], [])
+            conn.request('GET', '/bucket/foo', six.BytesIO(b'body'),
+                         {'Expect': '100-continue', 'Content-Length': '4'})
+            response = conn.getresponse()
+            # Now we should verify that our final response is the 200 OK.
+            self.assertEqual(response.status, 200)
+            # Verify that we went the request body because we got a 100
+            # continue.
+            self.assertIn(b'body', s.sent_data)
+
+    def test_expect_100_sends_connection_header(self):
+        # When using squid as an HTTP proxy, it will also send
+        # a Connection: keep-alive header back with the 100 continue
+        # response.  We need to ensure we handle this case.
+        with patch('select.select') as select_mock:
+            # Shows the server first sending a 100 continue response
+            # then a 500 response.  We're picking 500 to confirm we
+            # actually parse the response instead of getting the
+            # default status of 200 which happens when we can't parse
+            # the response.
+            s = FakeSocket(b'HTTP/1.1 100 Continue\r\n'
+                           b'Connection: keep-alive\r\n'
+                           b'\r\n'
+                           b'HTTP/1.1 500 Internal Service Error\r\n')
+            conn = AWSHTTPConnection('s3.amazonaws.com', 443)
+            conn.sock = s
+            select_mock.return_value = ([s], [], [])
+            conn.request('GET', '/bucket/foo', b'body',
+                         {'Expect': '100-continue'})
+            response = conn.getresponse()
+            self.assertEqual(response.status, 500)
 
     def test_expect_100_continue_sends_307(self):
         # This is the case where we send a 100 continue and the server
@@ -203,7 +251,8 @@ class TestAWSHTTPConnection(unittest.TestCase):
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
             select_mock.return_value = ([s], [], [])
-            conn.request('GET', '/bucket/foo', b'body', {'Expect': '100-continue'})
+            conn.request('GET', '/bucket/foo', b'body',
+                         {'Expect': '100-continue'})
             response = conn.getresponse()
             # Now we should verify that our final response is the 307.
             self.assertEqual(response.status, 307)
@@ -221,7 +270,8 @@ class TestAWSHTTPConnection(unittest.TestCase):
             # that the server did not send any response.  In this situation
             # we should just send the request anyways.
             select_mock.return_value = ([], [], [])
-            conn.request('GET', '/bucket/foo', b'body', {'Expect': '100-continue'})
+            conn.request('GET', '/bucket/foo', b'body',
+                         {'Expect': '100-continue'})
             response = conn.getresponse()
             self.assertEqual(response.status, 307)
 
@@ -294,6 +344,17 @@ class TestAWSHTTPConnection(unittest.TestCase):
                    'HTTPConnection._tunnel') as mock_tunnel:
             conn._tunnel()
             self.assertTrue(mock_tunnel.called)
+
+    def test_encodes_unicode_method_line(self):
+        s = FakeSocket(b'HTTP/1.1 200 OK\r\n')
+        conn = AWSHTTPConnection('s3.amazonaws.com', 443)
+        conn.sock = s
+        # Note the combination of unicode 'GET' and
+        # bytes 'Utf8-Header' value.
+        conn.request(u'GET', '/bucket/foo', b'body',
+                     headers={"Utf8-Header": b"\xe5\xb0\x8f"})
+        response = conn.getresponse()
+        self.assertEqual(response.status, 200)
 
 
 if __name__ == "__main__":

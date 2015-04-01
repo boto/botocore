@@ -20,7 +20,7 @@ from binascii import crc32
 from botocore.vendored.requests import ConnectionError, Timeout
 from botocore.vendored.requests.packages.urllib3.exceptions import ClosedPoolError
 
-from botocore.exceptions import ChecksumError
+from botocore.exceptions import ChecksumError, EndpointConnectionError
 
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,10 @@ logger = logging.getLogger(__name__)
 # to get more specific exceptions from requests we can update
 # this mapping with more specific exceptions.
 EXCEPTION_MAP = {
-    'GENERAL_CONNECTION_ERROR': [ConnectionError, ClosedPoolError, Timeout],
+    'GENERAL_CONNECTION_ERROR': [
+        ConnectionError, ClosedPoolError, Timeout,
+        EndpointConnectionError
+    ],
 }
 
 

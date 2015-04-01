@@ -27,6 +27,7 @@ from botocore.model import ServiceModel
 from botocore import client
 from botocore.hooks import HierarchicalEmitter
 from botocore.waiter import WaiterModel
+from botocore.paginate import PaginatorModel
 
 
 class BaseSessionTest(unittest.TestCase):
@@ -154,6 +155,19 @@ class SessionTest(BaseSessionTest):
             self.assertEqual(full_config['profiles']['newprofile'],
                              {'aws_access_key_id': 'FROM_CREDS_FILE_1',
                               'aws_secret_access_key': 'FROM_CREDS_FILE_2'})
+
+    def test_path_not_in_available_profiles(self):
+        with temporary_file('w') as f:
+            self.session.set_config_variable('credentials_file', f.name)
+            f.write('[newprofile]\n')
+            f.write('aws_access_key_id=FROM_CREDS_FILE_1\n')
+            f.write('aws_secret_access_key=FROM_CREDS_FILE_2\n')
+            f.flush()
+
+            profiles = self.session.available_profiles
+            self.assertEqual(
+                set(profiles),
+                set(['foo', 'default', 'newprofile']))
 
     def test_register_unregister(self):
         calls = []
@@ -330,6 +344,23 @@ class TestGetServiceModel(BaseSessionTest):
         self.session.register_component('data_loader', loader)
         model = self.session.get_service_model('made_up')
         self.assertIsInstance(model, ServiceModel)
+        self.assertEqual(model.service_name, 'made_up')
+
+
+class TestGetPaginatorModel(BaseSessionTest):
+    def test_get_paginator_model(self):
+        loader = mock.Mock()
+        loader.determine_latest.return_value = 'aws/foo/2014-01-01.normal.json'
+        loader.load_data.return_value = {"pagination": {}}
+        self.session.register_component('data_loader', loader)
+
+        model = self.session.get_paginator_model('foo')
+
+        # Verify we get a PaginatorModel back
+        self.assertIsInstance(model, PaginatorModel)
+        # Verify we called the loader correctly.
+        loader.load_data.assert_called_with(
+            'aws/foo/2014-01-01.paginators.json')
 
 
 class TestGetWaiterModel(BaseSessionTest):
@@ -366,6 +397,26 @@ class TestCreateClient(BaseSessionTest):
                          "Credential provider was called even though "
                          "explicit credentials were provided to the "
                          "create_client call.")
+
+    @mock.patch('botocore.client.ClientCreator')
+    def test_config_passed_to_client_creator(self, client_creator):
+        config = client.Config()
+        self.session.create_client('sts', config=config)
+
+        client_creator.return_value.create_client.assert_called_with(
+            mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY,
+            scoped_config=mock.ANY, client_config=config)
+
+
+class TestPerformOperation(BaseSessionTest):
+    def test_s3(self):
+        service = self.session.get_service('s3')
+        operation = service.get_operation('ListBuckets')
+        endpoint = service.get_endpoint('us-west-2')
+        endpoint._send_request = mock.Mock()
+        endpoint._send_request.return_value = [{}, {}]
+        response = operation.call(endpoint)
+        self.assertEqual(response, endpoint._send_request.return_value)
 
 
 if __name__ == "__main__":

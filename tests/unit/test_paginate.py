@@ -14,10 +14,37 @@
 from tests import unittest
 from botocore.paginate import Paginator as FuturePaginator
 from botocore.paginate import DeprecatedPaginator as Paginator
+from botocore.paginate import PaginatorModel
 from botocore.exceptions import PaginationError
 from botocore.operation import Operation
 
 import mock
+
+
+class TestPaginatorModel(unittest.TestCase):
+    def setUp(self):
+        self.paginator_config = {}
+        self.paginator_config['pagination'] = {
+            'ListFoos': {
+                'output_token': 'NextToken',
+                'input_token': 'NextToken',
+                'result_key': 'Foo'
+            }
+        }
+        self.paginator_model = PaginatorModel(self.paginator_config)
+
+    def test_get_paginator(self):
+        paginator_config = self.paginator_model.get_paginator('ListFoos')
+        self.assertEqual(
+            paginator_config,
+            {'output_token': 'NextToken', 'input_token': 'NextToken',
+             'result_key': 'Foo'}
+        )
+
+    def test_get_paginator_no_exists(self):
+        with self.assertRaises(ValueError):
+            paginator_config = self.paginator_model.get_paginator('ListBars')
+
 
 # TODO: FuturePaginator tests should be merged into tests that used the renamed
 # Deprecated paginators when we completely remove the Deprecated
@@ -182,6 +209,17 @@ class TestFuturePaginator(unittest.TestCase):
              mock.call(Marker='m1', MaxKeys=1),
              mock.call(Marker='m2', MaxKeys=1)]
         )
+
+    def test_build_full_result_with_single_key(self):
+        responses = [
+            {"Users": ["User1"], "Marker": "m1"},
+            {"Users": ["User2"], "Marker": "m2"},
+            {"Users": ["User3"]}
+        ]
+        self.method.side_effect = responses
+        pages = self.paginator.paginate()
+        complete = pages.build_full_result()
+        self.assertEqual(complete, {'Users': ['User1', 'User2', 'User3']})
 
 
 class TestPaginatorObjectConstruction(unittest.TestCase):

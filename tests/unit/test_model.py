@@ -1,6 +1,7 @@
 from tests import unittest
 
 from botocore import model
+from botocore.compat import OrderedDict
 
 
 def test_missing_model_attribute_raises_exception():
@@ -35,7 +36,7 @@ class TestServiceModel(unittest.TestCase):
         self.model = {
             'metadata': {'protocol': 'query',
                          'endpointPrefix': 'endpoint-prefix'},
-            'documentation': '',
+            'documentation': 'Documentation value',
             'operations': {},
             'shapes': {}
         }
@@ -61,6 +62,10 @@ class TestServiceModel(unittest.TestCase):
     def test_signing_name_defaults_to_endpoint_prefix(self):
         self.assertEqual(self.service_model.signing_name, 'endpoint-prefix')
 
+    def test_documentation_exposed_as_property(self):
+        self.assertEqual(self.service_model.documentation,
+                         'Documentation value')
+
 
 class TestOperationModelFromService(unittest.TestCase):
     def setUp(self):
@@ -81,6 +86,7 @@ class TestOperationModelFromService(unittest.TestCase):
                         'shape': 'OperationNameResponse',
                     },
                     'errors': [{'shape': 'NoSuchResourceException'}],
+                    'documentation': 'Docs for OperationName',
                 }
             },
             'shapes': {
@@ -110,6 +116,32 @@ class TestOperationModelFromService(unittest.TestCase):
         }
         self.service_model = model.ServiceModel(self.model)
 
+    def test_wire_name_always_matches_model(self):
+        service_model = model.ServiceModel(self.model)
+        operation = model.OperationModel(
+            self.model['operations']['OperationName'], service_model, 'Foo')
+        self.assertEqual(operation.name, 'Foo')
+        self.assertEqual(operation.wire_name, 'OperationName')
+
+    def test_name_and_wire_name_defaults_to_same_value(self):
+        service_model = model.ServiceModel(self.model)
+        operation = model.OperationModel(
+            self.model['operations']['OperationName'], service_model)
+        self.assertEqual(operation.name, 'OperationName')
+        self.assertEqual(operation.wire_name, 'OperationName')
+
+    def test_name_from_service(self):
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertEqual(operation.name, 'OperationName')
+
+    def test_name_from_service_model_when_differs_from_name(self):
+        self.model['operations']['Foo'] = \
+            self.model['operations']['OperationName']
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('Foo')
+        self.assertEqual(operation.name, 'Foo')
+
     def test_operation_input_model(self):
         service_model = model.ServiceModel(self.model)
         operation = service_model.operation_model('OperationName')
@@ -121,6 +153,19 @@ class TestOperationModelFromService(unittest.TestCase):
         shape = operation.input_shape
         self.assertEqual(shape.name, 'OperationNameRequest')
         self.assertEqual(list(sorted(shape.members)), ['Arg1', 'Arg2'])
+
+    def test_has_documentation_property(self):
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertEqual(operation.documentation, 'Docs for OperationName')
+
+    def test_service_model_available_from_operation_model(self):
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        # This is an identity comparison because we don't implement
+        # __eq__, so we may need to change this in the future.
+        self.assertEqual(
+            operation.service_model, service_model)
 
     def test_operation_output_model(self):
         service_model = model.ServiceModel(self.model)
@@ -584,6 +629,35 @@ class TestBuilders(unittest.TestCase):
                     'type': 'brand-new-shape-type',
                 },
             }).build_model()
+
+    def test_ordered_shape_builder(self):
+        b = model.DenormalizedStructureBuilder()
+        shape = b.with_members(OrderedDict(
+            [
+                ('A', {
+                    'type': 'string'
+                }),
+                ('B', {
+                    'type': 'structure',
+                    'members': OrderedDict(
+                        [
+                            ('C', {
+                                'type': 'string'
+                            }),
+                            ('D', {
+                                'type': 'string'
+                            })
+                        ]
+                    )
+                })
+            ]
+        )).build_model()
+
+        # Members should be in order
+        self.assertEqual(['A', 'B'], list(shape.members.keys()))
+
+        # Nested structure members should *also* stay ordered
+        self.assertEqual(['C', 'D'], list(shape.members['B'].members.keys()))
 
 
 if __name__ == '__main__':

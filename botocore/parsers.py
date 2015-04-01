@@ -97,8 +97,7 @@ import xml.etree.cElementTree
 import logging
 from pprint import pformat
 
-from botocore.compat import six
-from six.moves import http_client
+from botocore.compat import six, XMLParseError
 
 from botocore.utils import parse_timestamp
 
@@ -331,11 +330,16 @@ class BaseXMLResponseParser(ResponseParser):
         return xml_dict
 
     def _parse_xml_string_to_dom(self, xml_string):
-        parser = xml.etree.cElementTree.XMLParser(
-            target=xml.etree.cElementTree.TreeBuilder(),
-            encoding=self.DEFAULT_ENCODING)
-        parser.feed(xml_string)
-        root = parser.close()
+        try:
+            parser = xml.etree.cElementTree.XMLParser(
+                target=xml.etree.cElementTree.TreeBuilder(),
+                encoding=self.DEFAULT_ENCODING)
+            parser.feed(xml_string)
+            root = parser.close()
+        except XMLParseError as e:
+            raise ResponseParserError(
+                "Unable to parse response (%s), "
+                "invalid XML received:\n%s" % (e, xml_string))
         return root
 
     def _replace_nodes(self, parsed):
@@ -386,10 +390,13 @@ class QueryParser(BaseXMLResponseParser):
         root = self._parse_xml_string_to_dom(xml_contents)
         parsed = self._build_name_to_xml_node(root)
         self._replace_nodes(parsed)
-        # Once we've converted xml->dict, we need to make one more
-        # adjustment to be consistent with ResponseMetadata
-        # for non-error responses:
-        # {"RequestId": "id"} -> {"ResponseMetadata": {"RequestId": "id"}}
+        # Once we've converted xml->dict, we need to make one or two
+        # more adjustments to extract nested errors and to be consistent
+        # with ResponseMetadata for non-error responses:
+        # 1. {"Errors": {"Error": {...}}} -> {"Error": {...}}
+        # 2. {"RequestId": "id"} -> {"ResponseMetadata": {"RequestId": "id"}}
+        if 'Errors' in parsed:
+            parsed.update(parsed.pop('Errors'))
         if 'RequestId' in parsed:
             parsed['ResponseMetadata'] = {'RequestId': parsed.pop('RequestId')}
         return parsed
@@ -446,15 +453,12 @@ class EC2QueryParser(QueryParser):
         #   </Errors>
         #   <RequestID>12345</RequestID>
         # </Response>
-        # This is different from QueryParser in two ways:
-        # 1. It's RequestId, not RequestID
-        # 2. There's an extra <Errors> wrapper.
+        # This is different from QueryParser in that it's RequestID,
+        # not RequestId
         original = super(EC2QueryParser, self)._do_error_parse(response, shape)
         original['ResponseMetadata'] = {
             'RequestId': original.pop('RequestID')
         }
-        errors = original.pop('Errors')
-        original['Error'] = errors['Error']
         return original
 
 
@@ -635,15 +639,17 @@ class RestJSONParser(BaseRestParser, BaseJSONParser):
     def _do_error_parse(self, response, shape):
         body = self._initial_body_parse(response['body'])
         error = {'Error': {}, 'ResponseMetadata': {}}
-        error['Error']['Message'] = body.get('message', '')
+        error['Error']['Message'] = body.get('message',
+                                             body.get('Message', ''))
         if 'x-amzn-errortype' in response['headers']:
             code = response['headers']['x-amzn-errortype']
             # Could be:
             # x-amzn-errortype: ValidationException:
             code = code.split(':')[0]
             error['Error']['Code'] = code
-        elif 'code' in body:
-            error['Error']['Code'] = body['code']
+        elif 'code' in body or 'Code' in body:
+            error['Error']['Code'] = body.get(
+                'code', body.get('Code', ''))
         return error
 
 
@@ -677,7 +683,7 @@ class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
         return {
             'Error': {
                 'Code': str(response['status_code']),
-                'Message': http_client.responses.get(
+                'Message': six.moves.http_client.responses.get(
                     response['status_code'], ''),
             },
             'ResponseMetadata': {

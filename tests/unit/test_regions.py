@@ -17,6 +17,7 @@ from nose.tools import assert_equals
 
 from botocore import regions
 from botocore.exceptions import UnknownEndpointError
+from botocore.exceptions import NoRegionError
 
 
 # NOTE: sqs endpoint updated to be the CN in the SSL cert because
@@ -344,6 +345,17 @@ class TestEndpointHeuristics(unittest.TestCase):
         with self.assertRaises(UnknownEndpointError):
             resolver.construct_endpoint(service_name='iam',
                                         region_name='not-us-gov-2')
+
+    def test_no_region_throws_specific_error(self):
+        resolver = self.create_endpoint_resolver({
+            'iam': [
+                {'uri': 'https://{service}.us-gov.amazonaws.com',
+                 'constraints': [['region', 'startsWith', 'us-gov']]}
+            ]
+        })
+        with self.assertRaises(NoRegionError):
+            resolver.construct_endpoint(service_name='iam',
+                                        region_name=None)
 
     def test_use_default_section_if_no_service_name(self):
         resolver = self.create_endpoint_resolver({

@@ -162,6 +162,55 @@
     ]
   },
   {
+    "description": "Nested blobs",
+    "metadata": {
+      "protocol": "json",
+      "jsonVersion": 1.1,
+      "targetPrefix": "com.amazonaws.foo"
+    },
+    "shapes": {
+      "InputShape": {
+        "type": "structure",
+        "members": {
+          "ListParam": {
+            "shape": "ListOfStructures"
+          }
+        }
+      },
+      "ListOfStructures": {
+        "type": "list",
+        "member": {
+            "shape": "BlobType"
+        }
+      },
+      "BlobType": {
+        "type": "blob"
+      }
+    },
+    "cases": [
+      {
+        "given": {
+          "http": {
+            "method": "POST"
+          },
+          "input": {
+            "shape": "InputShape"
+          },
+          "name": "OperationName"
+        },
+        "params": {
+          "ListParam": ["foo", "bar"]
+        },
+        "serialized": {
+          "body": "{\"ListParam\": [\"Zm9v\", \"YmFy\"]}",
+          "uri": "/",
+          "headers": {"X-Amz-Target": "com.amazonaws.foo.OperationName",
+                      "Content-Type": "application/x-amz-json-1.1"}
+        }
+      }
+    ]
+  },
+  {
     "description": "Recursive shapes",
     "metadata": {
       "protocol": "json",

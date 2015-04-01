@@ -122,6 +122,25 @@
         }
       ]
     },
+    "ImageAvailable": {
+      "operation": "DescribeImages",
+      "maxAttempts": 40,
+      "delay": 15,
+      "acceptors": [
+        {
+          "state": "success",
+          "matcher": "pathAll",
+          "argument": "Images[].State",
+          "expected": "available"
+        },
+        {
+          "state": "failure",
+          "matcher": "pathAny",
+          "argument": "Images[].State",
+          "expected": "failed"
+        }
+      ]
+    },
     "InstanceRunning": {
       "delay": 15,
       "operation": "DescribeInstances",
@@ -150,6 +169,19 @@
           "matcher": "pathAny",
           "state": "failure",
           "argument": "Reservations[].Instances[].State.Name"
+        }
+      ]
+    },
+    "InstanceStatusOk": {
+      "operation": "DescribeInstanceStatus",
+      "maxAttempts": 40,
+      "delay": 15,
+      "acceptors": [
+        {
+          "state": "success",
+          "matcher": "pathAll",
+          "argument": "InstanceStatuses[].InstanceStatus.Status",
+          "expected": "ok"
         }
       ]
     },
@@ -203,6 +235,19 @@
         }
       ]
     },
+    "PasswordDataAvailable": {
+      "operation": "GetPasswordData",
+      "maxAttempts": 40,
+      "delay": 15,
+      "acceptors": [
+        {
+          "state": "success",
+          "matcher": "path",
+          "argument": "length(PasswordData) > `0`",
+          "expected": true
+        }
+      ]
+    },
     "SnapshotCompleted": {
       "delay": 15,
       "operation": "DescribeSnapshots",
@@ -216,6 +261,43 @@
         }
       ]
     },
+    "SpotInstanceRequestFulfilled": {
+      "operation": "DescribeSpotInstanceRequests",
+      "maxAttempts": 40,
+      "delay": 15,
+      "acceptors": [
+        {
+          "state": "success",
+          "matcher": "pathAll",
+          "argument": "SpotInstanceRequests[].Status.Code",
+          "expected": "fulfilled"
+        },
+        {
+          "state": "failure",
+          "matcher": "pathAny",
+          "argument": "SpotInstanceRequests[].Status.Code",
+          "expected": "schedule-expired"
+        },
+        {
+          "state": "failure",
+          "matcher": "pathAny",
+          "argument": "SpotInstanceRequests[].Status.Code",
+          "expected": "canceled-before-fulfillment"
+        },
+        {
+          "state": "failure",
+          "matcher": "pathAny",
+          "argument": "SpotInstanceRequests[].Status.Code",
+          "expected": "bad-parameters"
+        },
+        {
+          "state": "failure",
+          "matcher": "pathAny",
+          "argument": "SpotInstanceRequests[].Status.Code",
+          "expected": "system-error"
+        }
+      ]
+    },
     "SubnetAvailable": {
       "delay": 15,
       "operation": "DescribeSubnets",
@@ -226,6 +308,19 @@
           "matcher": "pathAll",
           "state": "success",
           "argument": "Subnets[].State"
+        }
+      ]
+    },
+    "SystemStatusOk": {
+      "operation": "DescribeInstanceStatus",
+      "maxAttempts": 40,
+      "delay": 15,
+      "acceptors": [
+        {
+          "state": "success",
+          "matcher": "pathAll",
+          "argument": "InstanceStatuses[].SystemStatus.Status",
+          "expected": "ok"
         }
       ]
     },
