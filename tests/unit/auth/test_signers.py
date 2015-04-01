@@ -16,6 +16,7 @@ from tests import unittest
 import datetime
 import time
 import base64
+import json
 
 import mock
 
@@ -636,11 +637,16 @@ class BaseS3PresignPostTest(unittest.TestCase):
         result_fields = self.request.context['s3-presign-post-fields']
         self.assertEqual(
             result_fields['AWSAccessKeyId'], self.credentials.access_key)
+
+        result_policy = json.loads(base64.b64decode(
+            result_fields['policy']).decode('utf-8'))
+        self.assertEqual(result_policy['expiration'],
+                         '2007-12-01T12:00:00.000Z')
         self.assertEqual(
-            base64.b64decode(result_fields['policy']),
-            '{"conditions": [{"acl": "public-read"}, {"bucket": "mybucket"}, '
-            '["starts-with", "$key", "mykey"]], '
-            '"expiration": "2007-12-01T12:00:00.000Z"}')
+            result_policy['conditions'],
+            [{"acl": "public-read"},
+             {"bucket": "mybucket"},
+             ["starts-with", "$key", "mykey"]])
         self.assertEqual(
             result_fields['signature'],
             'LFsXwH6yh58SqKYrik4JoaxnzXc=')
@@ -679,15 +685,19 @@ class TestS3SigV4Post(BaseS3PresignPostTest):
         self.assertEqual(
             result_fields['x-amz-date'],
             '20140101T000000Z')
+
+        result_policy = json.loads(base64.b64decode(
+            result_fields['policy']).decode('utf-8'))
+        self.assertEqual(result_policy['expiration'],
+                         '2007-12-01T12:00:00.000Z')
         self.assertEqual(
-            base64.b64decode(result_fields['policy']),
-            '{"conditions": [{"acl": "public-read"}, {"bucket": "mybucket"}, '
-            '["starts-with", "$key", "mykey"], '
-            '{"x-amz-algorithm": "AWS4-HMAC-SHA256"}, '
-            '{"x-amz-credential": '
-            '"access_key/20140101/myregion/myservice/aws4_request"}, '
-            '{"x-amz-date": "20140101T000000Z"}], '
-            '"expiration": "2007-12-01T12:00:00.000Z"}')
+            result_policy['conditions'],
+            [{"acl": "public-read"}, {"bucket": "mybucket"},
+             ["starts-with", "$key", "mykey"],
+             {"x-amz-algorithm": "AWS4-HMAC-SHA256"},
+             {"x-amz-credential":
+              "access_key/20140101/myregion/myservice/aws4_request"},
+             {"x-amz-date": "20140101T000000Z"}])
         self.assertEqual(
             result_fields['x-amz-signature'],
             'a9fd5d2c6d24fcaa5b84e18dfb9f4a0e45ef009959aac21aff4fe95b62477c99')
