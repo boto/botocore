@@ -487,7 +487,8 @@ class S3SigV4PostAuth(SigV4Auth):
             conditions.append({'x-amz-security-token': self.credentials.token})
 
         # Dump the base64 encoded policy into the fields dictionary.
-        fields['policy'] = base64.b64encode(json.dumps(policy))
+        fields['policy'] = base64.b64encode(
+            json.dumps(policy).encode('utf-8')).decode('utf-8')
 
         fields['x-amz-signature'] = self.signature(fields['policy'], request)
 
@@ -694,7 +695,8 @@ class HmacV1PostAuth(HmacV1Auth):
             conditions.append({'x-amz-security-token': self.credentials.token})
 
         # Dump the base64 encoded policy into the fields dictionary.
-        fields['policy'] = base64.b64encode(json.dumps(policy))
+        fields['policy'] = base64.b64encode(
+            json.dumps(policy).encode('utf-8')).decode('utf-8')
 
         fields['signature'] = self.sign_string(fields['policy'])
 
