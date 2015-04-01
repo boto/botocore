@@ -16,6 +16,7 @@ import botocore
 import botocore.auth
 from botocore.awsrequest import create_request_object
 from botocore.exceptions import UnknownSignatureVersionError
+from botocore.handlers import fix_s3_host
 
 
 class RequestSigner(object):
@@ -150,8 +151,13 @@ class RequestSigner(object):
         auth = self.get_auth(**kwargs)
         request = create_request_object(request_dict)
 
+        # Fix s3 host for s3 sigv2 bucket names
+        signature_type = signature_version.split('-', 1)[0]
+        fix_s3_host(request, signature_type, region_name)
+
         auth.add_auth(request)
         request.prepare()
+
         return request.url
 
     def build_post_form_args(self, request_dict, fields=None, conditions=None,
@@ -196,5 +202,8 @@ class RequestSigner(object):
 
         auth.add_auth(request)
 
+        # Fix s3 host for s3 sigv2 bucket names
+        signature_type = signature_version.split('-', 1)[0]
+        fix_s3_host(request, signature_type, region_name)
         # Return the url and the fields for th form to post.
         return {'url': request.url, 'fields': fields}
