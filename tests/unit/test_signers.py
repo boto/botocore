@@ -191,6 +191,31 @@ class TestSigner(BaseSignerTest):
             expires=900, service_name='signing_name')
         self.assertEqual(presigned_url, 'https://foo.com')
 
+    def test_generate_url_fixes_s3_host(self):
+        self.signer = RequestSigner(
+            'service_name', 'region_name', 'signing_name',
+            's3', self.credentials, self.emitter)
+
+        auth = mock.Mock()
+        auth.REQUIRES_REGION = True
+
+        request_dict = {
+            'headers': {},
+            'url': 'https://s3.amazonaws.com/mybucket/myobject',
+            'body': '',
+            'url_path': '/',
+            'method': 'GET'
+        }
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
+                             {'s3-query': auth}):
+            presigned_url = self.signer.generate_url(
+                request_dict, expires_in=900)
+        auth.assert_called_with(
+            credentials=self.credentials, region_name='region_name',
+            expires=900, service_name='signing_name')
+        self.assertEqual(presigned_url,
+                         'https://mybucket.s3.amazonaws.com/myobject')
+
 
 class TestPresignS3Post(BaseSignerTest):
     def setUp(self):
@@ -200,7 +225,7 @@ class TestPresignS3Post(BaseSignerTest):
             's3v4', self.credentials, self.emitter)
         self.request_dict = {
             'headers': {},
-            'url': 'https://foo.com/mybucket',
+            'url': 'https://s3.amazonaws.com/mybucket',
             'body': '',
             'url_path': '/',
             'method': 'POST'
@@ -235,7 +260,8 @@ class TestPresignS3Post(BaseSignerTest):
         self.assertEqual(ref_policy['expiration'], '2014-03-10T18:02:55Z')
         self.assertEqual(ref_policy['conditions'], [])
 
-        self.assertEqual(post_form_args['url'], 'https://foo.com/mybucket')
+        self.assertEqual(post_form_args['url'],
+                         'https://s3.amazonaws.com/mybucket')
         self.assertEqual(post_form_args['fields'], {})
 
     def test_build_post_form_args_with_conditions(self):
@@ -263,3 +289,18 @@ class TestPresignS3Post(BaseSignerTest):
         self.auth.assert_called_with(
             credentials=self.credentials, region_name='foo',
             service_name='signing_name')
+
+    def test_build_post_form_args_fixes_s3_host(self):
+        self.signer = RequestSigner(
+            'service_name', 'region_name', 'signing_name',
+            's3', self.credentials, self.emitter)
+
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
+                             {'s3-presign-post': self.auth}):
+            post_form_args = self.signer.build_post_form_args(
+                self.request_dict)
+        self.auth.assert_called_with(
+            credentials=self.credentials, region_name='region_name',
+            service_name='signing_name')
+        self.assertEqual(post_form_args['url'],
+                         'https://mybucket.s3.amazonaws.com')
