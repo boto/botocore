@@ -14,7 +14,7 @@ import datetime
 
 import botocore
 import botocore.auth
-from botocore.awsrequest import create_request_object
+from botocore.awsrequest import create_request_object, prepare_request_dict
 from botocore.exceptions import UnknownSignatureVersionError
 from botocore.handlers import fix_s3_host
 
@@ -135,7 +135,7 @@ class RequestSigner(object):
             self._cache[key] = auth
             return auth
 
-    def generate_url(self, request_dict, expires_in=None, region_name=None):
+    def generate_url(self, request_dict, expires_in=3600, region_name=None):
         """Generates a presigned url
 
         :type request_dict: dict
@@ -144,7 +144,7 @@ class RequestSigner(object):
 
         :type expires_in: int
         :param expires_in: The number of seconds the presigned url is valid
-            for.
+            for. By default it expires in an hour (3600 seconds)
 
         :type region_name: string
         :param region_name: The region name to sign the presigned url.
@@ -160,9 +160,9 @@ class RequestSigner(object):
 
         kwargs = {'signing_name': self._signing_name,
                   'region_name': region_name,
-                  'signature_version': signature_version}
-        if expires_in is not None:
-            kwargs['expires'] = expires_in
+                  'signature_version': signature_version,
+                  'expires': expires_in}
+
         auth = self.get_auth(**kwargs)
         request = create_request_object(request_dict)
 
@@ -261,3 +261,148 @@ class RequestSigner(object):
         fix_s3_host(request, signature_type, region_name)
         # Return the url and the fields for th form to post.
         return {'url': request.url, 'fields': fields}
+
+
+def generate_url(client, client_method, client_kwargs=None, expires_in=3600):
+    """Generate a presigned url given a client, its method, and arguments
+
+    :type client: ``botocore.client.Client``
+    :param client: The client that will be used to generate the url
+
+    :type client_method: string
+    :param client_method: The client method to presign for
+
+    :type client_kwargs: dict
+    :param client_kwargs: The parameters normally passed to ``client_method``.
+
+    :type expires_in: int
+    :param expires_in: The number of seconds the presigned url is valid
+        for. By default it expires in an hour (3600 seconds)
+
+    returns: The presigned url
+    """
+    if client_kwargs is None:
+        client_kwargs = {}
+
+    request_signer = client._request_signer
+    serializer = client._serializer
+    operation_name = client.meta.service_model.client_name_to_operation_name(
+        client_method)
+    operation_model = client.meta.service_model.operation_model(operation_name)
+
+    # Create a request dict based on the params to serialize.
+    request_dict = serializer.serialize_to_request(
+        client_kwargs, operation_model)
+
+    # Prepare the request dict by including the client's endpoint url.
+    prepare_request_dict(
+        request_dict, endpoint_url=client.meta.endpoint_url)
+
+    # Generate the presigned url.
+    return request_signer.generate_url(
+        request_dict=request_dict, expires_in=expires_in)
+
+
+def build_s3_post_form_args(client, bucket, key, fields=None, conditions=None,
+                            expires_in=3600):
+    """Builds the url and the form fields used for a presigned s3 post
+
+    :type client: ``botocore.client.Client``
+    :param client: The client that will be used to generate the url
+
+    :type bucket: string
+    :param bucket: The name of the bucket to presign the post to. Note that
+        bucket related conditions should not be included in the
+        ``conditions`` parameter.
+
+    :type key: string
+    :param key: Key name, optionally add ${filename} to the end to
+        attach the submitted filename. Note that key related condtions and
+        fieldss are filled out for you and should not be included in the
+        ``fields`` or ``condtions`` parmater.
+
+    :type fields: dict
+    :param fields: A dictionary of prefilled form fields to build on top
+        of. Elements that may be included are acl, Cache-Control,
+        Content-Type, Content-Disposition, Content-Encoding, Expires,
+        success_action_redirect, redirect, success_action_status,
+        and x-amz-meta-.
+
+        Note that if a particular element is included in the fields
+        dictionary it will not be automatically added to the conditions list.
+        You must specify a condition for the element as well.
+
+    :type conditions: list
+    :param conditions: A list of conditions to include in the policy. Each
+        element can be either a list or a structure. For example:
+
+        [
+         {"acl": "public-read"},
+         ["content-length-range", 2, 5],
+         ["starts-with", "$success_action_redirect", ""]
+        ]
+
+        Conditions that are included may pertain to acl, content-length-range,
+        Cache-Control, Content-Type, Content-Disposition, Content-Encoding,
+        Expires, success_action_redirect, redirect, success_action_status,
+        and/or x-amz-meta-.
+
+        Note that if you include a condition, you must specify
+        the a valid value in the fields dictionary as well. A value will not
+        be added automatically to the fields dictionary based on the
+        conditions.
+
+    :type expires_in: int
+    :param expires_in: The number of seconds the presigned post is valid for.
+
+    :rtype: dict
+    :returns: A dictionary with two elements: ``url`` and ``fields``.
+        Url is the url to post to. Fields is a dictionary filled with
+        the form fields and respective values to use when submitting the
+        post. For example:
+
+        {'url': 'https://mybucket.s3.amazonaws.com
+         'fields': {'acl': 'public-read',
+                    'key': 'mykey',
+                    'signature': 'mysignature',
+                    'policy': 'mybase64 encoded policy'}
+        }
+    """
+
+    if fields is None:
+        fields = {}
+
+    if conditions is None:
+        conditions = []
+
+    request_signer = client._request_signer
+    serializer = client._serializer
+
+    # We choose the CreateBucket operation model because its url gets
+    # serialized to what a presign post requires.
+    operation_model = client.meta.service_model.operation_model('CreateBucket')
+
+    # Create a request dict based on the params to serialize.
+    request_dict = serializer.serialize_to_request(
+        {'Bucket': bucket}, operation_model)
+
+    # Prepare the request dict by including the client's endpoint url.
+    prepare_request_dict(
+        request_dict, endpoint_url=client.meta.endpoint_url)
+
+    # Append that the bucket name to the list of conditions.
+    conditions.append({'bucket': bucket})
+
+    # If the key ends with filename, the only constraint that can be imposed
+    # is if it starts with the specified prefix.
+    if key.endswith('${filename}'):
+        conditions.append(["starts-with", '$key', key[:-len('${filename}')]])
+    else:
+        conditions.append({'key': key})
+
+    # Add the key to the fields.
+    fields['key'] = key
+
+    return request_signer.build_post_form_args(
+        request_dict=request_dict, fields=fields, conditions=conditions,
+        expires_in=expires_in)
