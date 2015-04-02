@@ -19,7 +19,9 @@ import botocore.auth
 
 from botocore.credentials import Credentials
 from botocore.exceptions import NoRegionError, UnknownSignatureVersionError
-from botocore.signers import RequestSigner
+from botocore.exceptions import ParamValidationError
+from botocore.signers import RequestSigner, generate_url
+from botocore.signers import build_s3_post_form_args
 
 from tests import unittest
 
@@ -148,7 +150,7 @@ class TestSigner(BaseSignerTest):
             presigned_url = self.signer.generate_url(request_dict)
         auth.assert_called_with(
             credentials=self.credentials, region_name='region_name',
-            service_name='signing_name')
+            service_name='signing_name', expires=3600)
         self.assertEqual(presigned_url, 'https://foo.com')
 
     def test_generate_url_with_region_override(self):
@@ -168,7 +170,7 @@ class TestSigner(BaseSignerTest):
                 request_dict, region_name='us-west-2')
         auth.assert_called_with(
             credentials=self.credentials, region_name='us-west-2',
-            service_name='signing_name')
+            service_name='signing_name', expires=3600)
         self.assertEqual(presigned_url, 'https://foo.com')
 
     def test_generate_url_with_exipres_in(self):
@@ -217,9 +219,9 @@ class TestSigner(BaseSignerTest):
                          'https://mybucket.s3.amazonaws.com/myobject')
 
 
-class TestPresignS3Post(BaseSignerTest):
+class TestSignerS3Post(BaseSignerTest):
     def setUp(self):
-        super(TestPresignS3Post, self).setUp()
+        super(TestSignerS3Post, self).setUp()
         self.signer = RequestSigner(
             'service_name', 'region_name', 'signing_name',
             's3v4', self.credentials, self.emitter)
@@ -243,7 +245,7 @@ class TestPresignS3Post(BaseSignerTest):
         self.datetime_mock.timedelta.return_value = self.fixed_delta
 
     def tearDown(self):
-        super(TestPresignS3Post, self).tearDown()
+        super(TestSignerS3Post, self).tearDown()
         self.datetime_patch.stop()
 
     def test_build_post_form_args(self):
@@ -304,3 +306,138 @@ class TestPresignS3Post(BaseSignerTest):
             service_name='signing_name')
         self.assertEqual(post_form_args['url'],
                          'https://mybucket.s3.amazonaws.com')
+
+
+class TestGenerateUrl(unittest.TestCase):
+    def setUp(self):
+        self.session = botocore.session.get_session()
+        self.client = self.session.create_client('s3', region_name='us-east-1')
+        self.bucket = 'mybucket'
+        self.key = 'mykey'
+        self.client_kwargs = {'Bucket': self.bucket, 'Key': self.key}
+        self.generate_url_patch = mock.patch(
+            'botocore.signers.RequestSigner.generate_url')
+        self.generate_url_mock = self.generate_url_patch.start()
+
+    def tearDown(self):
+        self.generate_url_patch.stop()
+
+    def test_generate_url(self):
+        generate_url(self.client, 'get_object', self.client_kwargs)
+
+        ref_request_dict = {
+            'body': '',
+            'url': u'https://s3.amazonaws.com/mybucket/mykey',
+            'headers': {},
+            'query_string': {},
+            'url_path': u'/mybucket/mykey',
+            'method': u'GET'}
+        self.generate_url_mock.assert_called_with(
+            request_dict=ref_request_dict, expires_in=3600)
+
+    def test_generate_url_missing_required_params(self):
+        with self.assertRaises(ParamValidationError):
+            generate_url(self.client, 'get_object')
+
+    def test_generate_url_expires(self):
+        generate_url(
+            self.client, 'get_object', self.client_kwargs, expires_in=20)
+        ref_request_dict = {
+            'body': '',
+            'url': u'https://s3.amazonaws.com/mybucket/mykey',
+            'headers': {},
+            'query_string': {},
+            'url_path': u'/mybucket/mykey',
+            'method': u'GET'}
+        self.generate_url_mock.assert_called_with(
+            request_dict=ref_request_dict, expires_in=20)
+
+
+class TestBuildS3PostFormArgs(unittest.TestCase):
+    def setUp(self):
+        self.session = botocore.session.get_session()
+        self.client = self.session.create_client('s3', region_name='us-east-1')
+        self.bucket = 'mybucket'
+        self.key = 'mykey'
+        self.build_post_form_args_patch = mock.patch(
+            'botocore.signers.RequestSigner.build_post_form_args')
+        self.post_form_args_mock = self.build_post_form_args_patch.start()
+
+    def tearDown(self):
+        self.build_post_form_args_patch.stop()
+
+    def test_build_s3_post_form_args(self):
+        build_s3_post_form_args(
+            self.client, self.bucket, self.key)
+
+        _, post_form_kwargs = self.post_form_args_mock.call_args
+        request_dict = post_form_kwargs['request_dict']
+        fields = post_form_kwargs['fields']
+        conditions = post_form_kwargs['conditions']
+        self.assertEqual(
+            request_dict['url'], 'https://s3.amazonaws.com/mybucket')
+        self.assertEqual(post_form_kwargs['expires_in'], 3600)
+        self.assertEqual(
+            conditions,
+            [{'bucket': 'mybucket'}, {'key': 'mykey'}])
+        self.assertEqual(
+            fields,
+            {'key': 'mykey'})
+
+    def test_build_s3_post_form_args_with_filename(self):
+        self.key = 'myprefix/${filename}'
+        build_s3_post_form_args(
+            self.client, self.bucket, self.key)
+
+        _, post_form_kwargs = self.post_form_args_mock.call_args
+        request_dict = post_form_kwargs['request_dict']
+        fields = post_form_kwargs['fields']
+        conditions = post_form_kwargs['conditions']
+        self.assertEqual(
+            request_dict['url'], 'https://s3.amazonaws.com/mybucket')
+        self.assertEqual(post_form_kwargs['expires_in'], 3600)
+        self.assertEqual(
+            conditions,
+            [{'bucket': 'mybucket'}, ['starts-with', '$key', 'myprefix/']])
+        self.assertEqual(
+            fields,
+            {'key': 'myprefix/${filename}'})
+
+    def test_build_s3_post_form_args_expires(self):
+        build_s3_post_form_args(
+            self.client, self.bucket, self.key, expires_in=50)
+
+        _, post_form_kwargs = self.post_form_args_mock.call_args
+        request_dict = post_form_kwargs['request_dict']
+        fields = post_form_kwargs['fields']
+        conditions = post_form_kwargs['conditions']
+        self.assertEqual(
+            request_dict['url'], 'https://s3.amazonaws.com/mybucket')
+        self.assertEqual(post_form_kwargs['expires_in'], 50)
+        self.assertEqual(
+            conditions,
+            [{'bucket': 'mybucket'}, {'key': 'mykey'}])
+        self.assertEqual(
+            fields,
+            {'key': 'mykey'})
+
+    def test_build_s3_post_form_args_with_prefilled(self):
+        conditions = [{'acl': 'public-read'}]
+        fields = {'acl': 'public-read'}
+
+        build_s3_post_form_args(
+            self.client, self.bucket, self.key, fields=fields,
+            conditions=conditions)
+
+        _, post_form_kwargs = self.post_form_args_mock.call_args
+        request_dict = post_form_kwargs['request_dict']
+        fields = post_form_kwargs['fields']
+        conditions = post_form_kwargs['conditions']
+        self.assertEqual(
+            request_dict['url'], 'https://s3.amazonaws.com/mybucket')
+        self.assertEqual(
+            conditions,
+            [{'acl': 'public-read'}, {'bucket': 'mybucket'}, {'key': 'mykey'}])
+        self.assertEqual(fields['acl'], 'public-read')
+        self.assertEqual(
+            fields, {'key': 'mykey', 'acl': 'public-read'})

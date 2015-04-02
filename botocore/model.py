@@ -1,6 +1,7 @@
 """Abstractions to interact with service models."""
 from collections import defaultdict
 
+from botocore import xform_name
 from botocore.utils import CachedProperty
 from botocore.compat import OrderedDict
 
@@ -234,6 +235,13 @@ class ServiceModel(object):
         except KeyError:
             raise OperationNotFoundError(operation_name)
         return OperationModel(model, self, operation_name)
+
+    def client_name_to_operation_name(self, name):
+        for operation_name in self.operation_names:
+            client_name = xform_name(operation_name)
+            if client_name == name:
+                return operation_name
+        raise OperationNotFoundError(name)
 
     @CachedProperty
     def documentation(self):
