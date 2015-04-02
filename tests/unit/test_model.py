@@ -59,6 +59,17 @@ class TestServiceModel(unittest.TestCase):
         with self.assertRaises(model.OperationNotFoundError):
             self.service_model.operation_model('NoExistOperation')
 
+    def test_client_name_to_operation_name(self):
+        self.model['operations']['MyOperation'] = {}
+        op_name = self.service_model.client_name_to_operation_name(
+            'my_operation')
+        self.assertEqual(op_name, 'MyOperation')
+
+    def test_client_name_to_operation_name_throw_unkown_error(self):
+        self.model['operations']['MyOperation'] = {}
+        with self.assertRaises(model.OperationNotFoundError):
+            self.service_model.client_name_to_operation_name('myoperation')
+
     def test_signing_name_defaults_to_endpoint_prefix(self):
         self.assertEqual(self.service_model.signing_name, 'endpoint-prefix')
 
