@@ -1,6 +1,7 @@
 from tests import unittest
 
 from botocore import model
+from botocore.compat import OrderedDict
 
 
 def test_missing_model_attribute_raises_exception():
@@ -628,6 +629,35 @@ class TestBuilders(unittest.TestCase):
                     'type': 'brand-new-shape-type',
                 },
             }).build_model()
+
+    def test_ordered_shape_builder(self):
+        b = model.DenormalizedStructureBuilder()
+        shape = b.with_members(OrderedDict(
+            [
+                ('A', {
+                    'type': 'string'
+                }),
+                ('B', {
+                    'type': 'structure',
+                    'members': OrderedDict(
+                        [
+                            ('C', {
+                                'type': 'string'
+                            }),
+                            ('D', {
+                                'type': 'string'
+                            })
+                        ]
+                    )
+                })
+            ]
+        )).build_model()
+
+        # Members should be in order
+        self.assertEqual(['A', 'B'], list(shape.members.keys()))
+
+        # Nested structure members should *also* stay ordered
+        self.assertEqual(['C', 'D'], list(shape.members['B'].members.keys()))
 
 
 if __name__ == '__main__':
