@@ -57,7 +57,11 @@ class ClientCreator(object):
         class_attributes = self._create_methods(service_model)
         py_name_to_operation_name = self._create_name_mapping(service_model)
         class_attributes['_PY_TO_OP_NAME'] = py_name_to_operation_name
-        cls = type(str(service_name), (BaseClient,), class_attributes)
+        bases = [BaseClient]
+        self._event_emitter.emit('creating-client-class.%s' % service_name,
+                                 class_attributes=class_attributes,
+                                 base_classes=bases)
+        cls = type(str(service_name), tuple(bases), class_attributes)
         return cls
 
     def _load_service_model(self, service_name):

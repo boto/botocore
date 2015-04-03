@@ -171,3 +171,24 @@ class TestClientMeta(unittest.TestCase):
         client = self.session.create_client('s3', 'us-west-2',
                                             endpoint_url='https://foo')
         self.assertEqual(client.meta.endpoint_url, 'https://foo')
+
+
+class TestClientInjection(unittest.TestCase):
+    def setUp(self):
+        self.session = botocore.session.get_session()
+
+    def test_can_inject_client_methods(self):
+
+        def extra_client_method(self, name):
+            return name
+
+        def inject_client_method(class_attributes, **kwargs):
+            class_attributes['extra_client_method'] = extra_client_method
+
+        self.session.register('creating-client-class.s3',
+                              inject_client_method)
+
+        client = self.session.create_client('s3', 'us-west-2')
+
+        # We should now have access to the extra_client_method above.
+        self.assertEqual(client.extra_client_method('foo'), 'foo')
