@@ -19,6 +19,7 @@ import six
 import mock
 
 from botocore import xform_name
+from botocore.awsrequest import AWSRequest
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.utils import remove_dot_segments
 from botocore.utils import normalize_url_path
@@ -33,6 +34,7 @@ from botocore.utils import ArgumentGenerator
 from botocore.utils import calculate_tree_hash
 from botocore.utils import calculate_sha256
 from botocore.utils import is_valid_endpoint_url
+from botocore.utils import fix_s3_host
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
 
@@ -494,6 +496,58 @@ class TestIsValidEndpointURL(unittest.TestCase):
 
     def test_hostname_can_end_with_dot(self):
         self.assertTrue(is_valid_endpoint_url('https://foo.bar.com./'))
+
+
+class TestFixS3Host(unittest.TestCase):
+    def test_fix_s3_host_initial(self):
+        request = AWSRequest(
+            method='PUT', headers={},
+            url='https://s3-us-west-2.amazonaws.com/bucket/key.txt'
+        )
+        region_name = 'us-west-2'
+        signature_version = 's3'
+        fix_s3_host(
+            request=request, signature_version=signature_version,
+            region_name=region_name)
+        self.assertEqual(request.url,
+                         'https://bucket.s3.amazonaws.com/key.txt')
+        self.assertEqual(request.auth_path, '/bucket/key.txt')
+
+    def test_fix_s3_host_only_applied_once(self):
+        request = AWSRequest(
+            method='PUT', headers={},
+            url='https://s3-us-west-2.amazonaws.com/bucket/key.txt'
+        )
+        region_name = 'us-west-2'
+        signature_version = 's3'
+        fix_s3_host(
+            request=request, signature_version=signature_version,
+            region_name=region_name)
+        # Calling the handler again should not affect the end result:
+        fix_s3_host(
+            request=request, signature_version=signature_version,
+            region_name=region_name)
+        self.assertEqual(request.url,
+                         'https://bucket.s3.amazonaws.com/key.txt')
+        # This was a bug previously.  We want to make sure that
+        # calling fix_s3_host() again does not alter the auth_path.
+        # Otherwise we'll get signature errors.
+        self.assertEqual(request.auth_path, '/bucket/key.txt')
+
+    def test_dns_style_not_used_for_get_bucket_location(self):
+        original_url = 'https://s3-us-west-2.amazonaws.com/bucket?location'
+        request = AWSRequest(
+            method='GET', headers={},
+            url=original_url,
+        )
+        signature_version = 's3'
+        region_name = 'us-west-2'
+        fix_s3_host(
+            request=request, signature_version=signature_version,
+            region_name=region_name)
+        # The request url should not have been modified because this is
+        # a request for GetBucketLocation.
+        self.assertEqual(request.url, original_url)
 
 
 if __name__ == '__main__':
