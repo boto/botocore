@@ -288,6 +288,16 @@ class WaiterConfigError(BotoCoreError):
     fmt = 'Error processing waiter config: {error_msg}'
 
 
+class UnknownClientMethodError(BotoCoreError):
+    """Error when trying to access a method on a client that does not exist."""
+    fmt = 'Client does not have method: {method_name}'
+
+
+class UnsupportedSignatureVersionError(BotoCoreError):
+    """Error when trying to access a method on a client that does not exist."""
+    fmt = 'Signature version is not supported: {signature_version}'
+
+
 class ClientError(Exception):
     MSG_TEMPLATE = (
         'An error occurred ({error_code}) when calling the {operation_name} '

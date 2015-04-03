@@ -22,7 +22,6 @@ import botocore.session
 from botocore import auth
 from botocore import credentials
 from botocore.exceptions import ServiceNotInRegionError
-from botocore.handlers import fix_s3_host
 
 
 class TestS3Addressing(BaseSessionTest):
