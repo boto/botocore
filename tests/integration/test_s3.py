@@ -31,7 +31,6 @@ from nose.plugins.attrib import attr
 from botocore.vendored.requests import adapters
 from botocore.vendored.requests.exceptions import ConnectionError
 from botocore.compat import six
-from botocore.signers import generate_url, build_s3_post_form_args
 import botocore.session
 import botocore.auth
 import botocore.credentials
@@ -446,9 +445,8 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
         self.setup_bucket()
 
     def test_presign_sigv2(self):
-        presigned_url = generate_url(
-            self.client, 'get_object',
-            {'Bucket': self.bucket_name, 'Key': self.key})
+        presigned_url = self.client.generate_presigned_url(
+            'get_object', Params={'Bucket': self.bucket_name, 'Key': self.key})
         self.assertTrue(
             presigned_url.startswith(
                 'https://%s.s3.amazonaws.com/%s' % (
@@ -462,9 +460,8 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
         self.client_config.signature_version = 's3v4'
         self.client = self.session.create_client(
             's3', config=self.client_config)
-        presigned_url = generate_url(
-            self.client, 'get_object',
-            {'Bucket': self.bucket_name, 'Key': self.key})
+        presigned_url = self.client.generate_presigned_url(
+            'get_object', Params={'Bucket': self.bucket_name, 'Key': self.key})
         self.assertTrue(
             presigned_url.startswith(
                 'https://s3.amazonaws.com/%s/%s' % (
@@ -487,9 +484,9 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
         }
 
         # Retrieve the args for the presigned post.
-        post_args = build_s3_post_form_args(
-            self.client, self.bucket_name, self.key, fields=fields,
-            conditions=conditions)
+        post_args = self.client.generate_presigned_post(
+            self.bucket_name, self.key, Fields=fields,
+            Conditions=conditions)
 
         # Make sure that the form can be posted successfully.
         files = {'file': ('baz', 'some data')}
@@ -522,9 +519,9 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
         }
 
         # Retrieve the args for the presigned post.
-        post_args = build_s3_post_form_args(
-            self.client, self.bucket_name, self.key, fields=fields,
-            conditions=conditions)
+        post_args = self.client.generate_presigned_post(
+            self.bucket_name, self.key, Fields=fields,
+            Conditions=conditions)
 
         # Make sure that the form can be posted successfully.
         files = {'file': ('baz', 'some data')}
@@ -553,9 +550,8 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
         self.setup_bucket()
 
     def test_presign_sigv2(self):
-        presigned_url = generate_url(
-            self.client, 'get_object',
-            {'Bucket': self.bucket_name, 'Key': self.key})
+        presigned_url = self.client.generate_presigned_url(
+            'get_object', Params={'Bucket': self.bucket_name, 'Key': self.key})
         self.assertTrue(
             presigned_url.startswith(
                 'https://%s.s3.amazonaws.com/%s' % (
@@ -569,9 +565,8 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
         self.client_config.signature_version = 's3v4'
         self.client = self.session.create_client(
             's3', config=self.client_config)
-        presigned_url = generate_url(
-            self.client, 'get_object',
-            {'Bucket': self.bucket_name, 'Key': self.key})
+        presigned_url = self.client.generate_presigned_url(
+            'get_object', Params={'Bucket': self.bucket_name, 'Key': self.key})
 
         self.assertTrue(
             presigned_url.startswith(
@@ -594,9 +589,8 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
         }
 
         # Retrieve the args for the presigned post.
-        post_args = build_s3_post_form_args(
-            self.client, self.bucket_name, self.key, fields=fields,
-            conditions=conditions)
+        post_args = self.client.generate_presigned_post(
+            self.bucket_name, self.key, Fields=fields, Conditions=conditions)
 
         # Make sure that the form can be posted successfully.
         files = {'file': ('baz', 'some data')}
@@ -628,9 +622,8 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
         }
 
         # Retrieve the args for the presigned post.
-        post_args = build_s3_post_form_args(
-            self.client, self.bucket_name, self.key, fields=fields,
-            conditions=conditions)
+        post_args = self.client.generate_presigned_post(
+            self.bucket_name, self.key, Fields=fields, Conditions=conditions)
 
         # Make sure that the form can be posted successfully.
         files = {'file': ('baz', 'some data')}

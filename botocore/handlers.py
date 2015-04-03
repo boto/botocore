@@ -24,7 +24,10 @@ import re
 import xml.etree.cElementTree
 import copy
 
-from botocore.compat import urlsplit, urlunsplit, unquote, json, quote, six
+from botocore.compat import unquote, json, quote, six
+from botocore.signers import add_generate_presigned_url
+from botocore.signers import add_generate_presigned_post
+
 from botocore import retryhandler
 from botocore import utils
 from botocore import translate
@@ -33,11 +36,7 @@ import botocore.auth
 
 
 logger = logging.getLogger(__name__)
-LABEL_RE = re.compile('[a-z0-9][a-z0-9\-]*[a-z0-9]')
-RESTRICTED_REGIONS = [
-    'us-gov-west-1',
-    'fips-us-gov-west-1',
-]
+
 REGISTER_FIRST = object()
 REGISTER_LAST = object()
 
@@ -139,90 +138,6 @@ def sse_md5(params, **kwargs):
 def _needs_s3_sse_customization(params):
     return (params.get('SSECustomerKey') is not None and
             'SSECustomerKeyMD5' not in params)
-
-
-def check_dns_name(bucket_name):
-    """
-    Check to see if the ``bucket_name`` complies with the
-    restricted DNS naming conventions necessary to allow
-    access via virtual-hosting style.
-
-    Even though "." characters are perfectly valid in this DNS
-    naming scheme, we are going to punt on any name containing a
-    "." character because these will cause SSL cert validation
-    problems if we try to use virtual-hosting style addressing.
-    """
-    if '.' in bucket_name:
-        return False
-    n = len(bucket_name)
-    if n < 3 or n > 63:
-        # Wrong length
-        return False
-    if n == 1:
-        if not bucket_name.isalnum():
-            return False
-    match = LABEL_RE.match(bucket_name)
-    if match is None or match.end() != len(bucket_name):
-        return False
-    return True
-
-
-def fix_s3_host(request, signature_version, region_name, **kwargs):
-    """
-    This handler looks at S3 requests just before they are signed.
-    If there is a bucket name on the path (true for everything except
-    ListAllBuckets) it checks to see if that bucket name conforms to
-    the DNS naming conventions.  If it does, it alters the request to
-    use ``virtual hosting`` style addressing rather than ``path-style``
-    addressing.  This allows us to avoid 301 redirects for all
-    bucket names that can be CNAME'd.
-    """
-    if request.auth_path is not None:
-        # The auth_path has already been applied (this may be a
-        # retried request).  We don't need to perform this
-        # customization again.
-        return
-    elif _is_get_bucket_location_request(request):
-        # For the GetBucketLocation response, we should not be using
-        # the virtual host style addressing so we can avoid any sigv4
-        # issues.
-        logger.debug("Request is GetBucketLocation operation, not checking "
-                     "for DNS compatibility.")
-        return
-    parts = urlsplit(request.url)
-    request.auth_path = parts.path
-    path_parts = parts.path.split('/')
-    if signature_version in ['s3v4', 'v4']:
-        return
-    if len(path_parts) > 1:
-        bucket_name = path_parts[1]
-        logger.debug('Checking for DNS compatible bucket for: %s',
-                     request.url)
-        if check_dns_name(bucket_name) and _allowed_region(region_name):
-            # If the operation is on a bucket, the auth_path must be
-            # terminated with a '/' character.
-            if len(path_parts) == 2:
-                if request.auth_path[-1] != '/':
-                    request.auth_path += '/'
-            path_parts.remove(bucket_name)
-            global_endpoint = 's3.amazonaws.com'
-            host = bucket_name + '.' + global_endpoint
-            new_tuple = (parts.scheme, host, '/'.join(path_parts),
-                         parts.query, '')
-            new_uri = urlunsplit(new_tuple)
-            request.url = new_uri
-            logger.debug('URI updated to: %s', new_uri)
-        else:
-            logger.debug('Not changing URI, bucket is not DNS compatible: %s',
-                         bucket_name)
-
-
-def _is_get_bucket_location_request(request):
-    return request.url.endswith('?location')
-
-
-def _allowed_region(region_name):
-    return region_name not in RESTRICTED_REGIONS
 
 
 def register_retries_for_service(service_data, session,
@@ -328,7 +243,7 @@ def copy_snapshot_encrypted(params, request_signer, **kwargs):
         destination_region, source_region)
     request_dict_copy['method'] = 'GET'
     request_dict_copy['headers'] = {}
-    presigned_url = request_signer.generate_url(
+    presigned_url = request_signer.generate_presigned_url(
         request_dict_copy, region_name=source_region)
     params['PresignedUrl'] = presigned_url
 
@@ -483,6 +398,8 @@ def switch_host_with_param(request, param_name):
 # automatically registered with that Session.
 
 BUILTIN_HANDLERS = [
+    ('creating-client-class', add_generate_presigned_url),
+    ('creating-client-class.s3', add_generate_presigned_post),
     ('after-call.iam', json_decode_policies),
 
     ('after-call.ec2.GetConsoleOutput', decode_console_output),
@@ -510,7 +427,7 @@ BUILTIN_HANDLERS = [
     ('choose-signer.cognito-identity.GetId', disable_signing),
     ('choose-signer.cognito-identity.GetOpenIdToken', disable_signing),
     ('choose-signer.sts.AssumeRoleWithSAML', disable_signing),
-    ('before-sign.s3', fix_s3_host),
+    ('before-sign.s3', utils.fix_s3_host),
     ('before-parameter-build.s3.HeadObject', sse_md5),
     ('before-parameter-build.s3.GetObject', sse_md5),
     ('before-parameter-build.s3.PutObject', sse_md5),

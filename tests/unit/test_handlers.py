@@ -273,39 +273,6 @@ class TestHandlers(BaseSessionTest):
                   'UserData': b64_user_data}
         self.assertEqual(params, result)
 
-    def test_fix_s3_host_initial(self):
-        request = AWSRequest(
-            method='PUT',headers={},
-            url='https://s3-us-west-2.amazonaws.com/bucket/key.txt'
-        )
-        region_name = 'us-west-2'
-        signature_version = 's3'
-        handlers.fix_s3_host(
-            request=request, signature_version=signature_version,
-            region_name=region_name)
-        self.assertEqual(request.url, 'https://bucket.s3.amazonaws.com/key.txt')
-        self.assertEqual(request.auth_path, '/bucket/key.txt')
-
-    def test_fix_s3_host_only_applied_once(self):
-        request = AWSRequest(
-            method='PUT',headers={},
-            url='https://s3-us-west-2.amazonaws.com/bucket/key.txt'
-        )
-        region_name = 'us-west-2'
-        signature_version = 's3'
-        handlers.fix_s3_host(
-            request=request, signature_version=signature_version,
-            region_name=region_name)
-        # Calling the handler again should not affect the end result:
-        handlers.fix_s3_host(
-            request=request, signature_version=signature_version,
-            region_name=region_name)
-        self.assertEqual(request.url, 'https://bucket.s3.amazonaws.com/key.txt')
-        # This was a bug previously.  We want to make sure that
-        # calling fix_s3_host() again does not alter the auth_path.
-        # Otherwise we'll get signature errors.
-        self.assertEqual(request.auth_path, '/bucket/key.txt')
-
     def test_register_retry_for_handlers_with_no_endpoint_prefix(self):
         no_endpoint_prefix = {'metadata': {}}
         session = mock.Mock()
@@ -338,21 +305,6 @@ class TestHandlers(BaseSessionTest):
                                               service_name='foo')
         session.register.assert_called_with('needs-retry.foo', mock.ANY,
                                             unique_id='retry-config-foo')
-
-    def test_dns_style_not_used_for_get_bucket_location(self):
-        original_url = 'https://s3-us-west-2.amazonaws.com/bucket?location'
-        request = AWSRequest(
-            method='GET',headers={},
-            url=original_url,
-        )
-        signature_version = 's3'
-        region_name = 'us-west-2'
-        handlers.fix_s3_host(
-            request=request, signature_version=signature_version,
-            region_name=region_name)
-        # The request url should not have been modified because this is
-        # a request for GetBucketLocation.
-        self.assertEqual(request.url, original_url)
 
     def test_get_template_has_error_response(self):
         original = {'Error': {'Code': 'Message'}}

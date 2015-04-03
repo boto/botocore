@@ -668,6 +668,19 @@ class TestS3SigV2Post(BaseS3PresignPostTest):
         result_fields = self.request.context['s3-presign-post-fields']
         self.assertEqual(result_fields['x-amz-security-token'], 'my-token')
 
+    def test_empty_fields_and_policy(self):
+        self.request = AWSRequest()
+        self.request.url = 'https://s3.amazonaws.com/%s' % self.bucket
+        self.request.method = 'POST'
+        self.auth.add_auth(self.request)
+
+        result_fields = self.request.context['s3-presign-post-fields']
+        self.assertEqual(
+            result_fields['AWSAccessKeyId'], self.credentials.access_key)
+        result_policy = json.loads(base64.b64decode(
+            result_fields['policy']).decode('utf-8'))
+        self.assertEqual(result_policy['conditions'], [])
+        self.assertIn('signature', result_fields)
 
 class TestS3SigV4Post(BaseS3PresignPostTest):
     def setUp(self):
@@ -717,3 +730,28 @@ class TestS3SigV4Post(BaseS3PresignPostTest):
         self.auth.add_auth(self.request)
         result_fields = self.request.context['s3-presign-post-fields']
         self.assertEqual(result_fields['x-amz-security-token'], 'my-token')
+
+    def test_empty_fields_and_policy(self):
+        self.request = AWSRequest()
+        self.request.url = 'https://s3.amazonaws.com/%s' % self.bucket
+        self.request.method = 'POST'
+        self.auth.add_auth(self.request)
+
+        result_fields = self.request.context['s3-presign-post-fields']
+        self.assertEqual(result_fields['x-amz-algorithm'], 'AWS4-HMAC-SHA256')
+        self.assertEqual(
+            result_fields['x-amz-credential'],
+            'access_key/20140101/myregion/myservice/aws4_request')
+        self.assertEqual(
+            result_fields['x-amz-date'],
+            '20140101T000000Z')
+
+        result_policy = json.loads(base64.b64decode(
+            result_fields['policy']).decode('utf-8'))
+        self.assertEqual(
+            result_policy['conditions'],
+            [{"x-amz-algorithm": "AWS4-HMAC-SHA256"},
+             {"x-amz-credential":
+              "access_key/20140101/myregion/myservice/aws4_request"},
+             {"x-amz-date": "20140101T000000Z"}])
+        self.assertIn('x-amz-signature', result_fields)

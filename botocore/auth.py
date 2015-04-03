@@ -23,7 +23,6 @@ from operator import itemgetter
 import functools
 import time
 import calendar
-import json
 
 from botocore.exceptions import NoCredentialsError
 from botocore.utils import normalize_url_path, percent_encode_sequence
@@ -32,6 +31,7 @@ from botocore.compat import quote, unquote, urlsplit, parse_qs
 from botocore.compat import urlunsplit
 from botocore.compat import encodebytes
 from botocore.compat import six
+from botocore.compat import json
 
 logger = logging.getLogger(__name__)
 
@@ -470,9 +470,18 @@ class S3SigV4PostAuth(SigV4Auth):
         datetime_now = datetime.datetime.utcnow()
         request.context['timestamp'] = datetime_now.strftime(SIGV4_TIMESTAMP)
 
-        fields = request.context['s3-presign-post-fields']
-        policy = request.context['s3-presign-post-policy']
-        conditions = policy['conditions']
+        fields = {}
+        if request.context.get('s3-presign-post-fields', None) is not None:
+            fields = request.context['s3-presign-post-fields']
+
+        policy = {}
+        conditions = []
+        if request.context.get('s3-presign-post-policy', None) is not None:
+            policy = request.context['s3-presign-post-policy']
+            if policy.get('conditions', None) is not None:
+                conditions = policy['conditions']
+
+        policy['conditions'] = conditions
 
         fields['x-amz-algorithm'] = 'AWS4-HMAC-SHA256'
         fields['x-amz-credential'] = self.scope(request)
@@ -491,6 +500,9 @@ class S3SigV4PostAuth(SigV4Auth):
             json.dumps(policy).encode('utf-8')).decode('utf-8')
 
         fields['x-amz-signature'] = self.signature(fields['policy'], request)
+
+        request.context['s3-presign-post-fields'] = fields
+        request.context['s3-presign-post-policy'] = policy
 
 
 class HmacV1Auth(BaseSigner):
@@ -684,9 +696,18 @@ class HmacV1PostAuth(HmacV1Auth):
     http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingHTTPPOST.html
     """
     def add_auth(self, request):
-        fields = request.context['s3-presign-post-fields']
-        policy = request.context['s3-presign-post-policy']
-        conditions = policy['conditions']
+        fields = {}
+        if request.context.get('s3-presign-post-fields', None) is not None:
+            fields = request.context['s3-presign-post-fields']
+
+        policy = {}
+        conditions = []
+        if request.context.get('s3-presign-post-policy', None) is not None:
+            policy = request.context['s3-presign-post-policy']
+            if policy.get('conditions', None) is not None:
+                conditions = policy['conditions']
+
+        policy['conditions'] = conditions
 
         fields['AWSAccessKeyId'] = self.credentials.access_key
 
@@ -699,6 +720,9 @@ class HmacV1PostAuth(HmacV1Auth):
             json.dumps(policy).encode('utf-8')).decode('utf-8')
 
         fields['signature'] = self.sign_string(fields['policy'])
+
+        request.context['s3-presign-post-fields'] = fields
+        request.context['s3-presign-post-policy'] = policy
 
 
 # Defined at the bottom instead of the top of the module because the Auth
