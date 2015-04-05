@@ -4,7 +4,7 @@
       "encoding": "URLJSON",
       "alias": "AssumeRolePolicy"
     },
-    "PolicyDocument": {
+    "policyDocumentType": {
       "encoding": "URLJSON",
       "alias": "Policy"
     }

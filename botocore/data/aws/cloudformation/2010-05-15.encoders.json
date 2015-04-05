@@ -1,6 +1,6 @@
 {
   "encoding": {
-    "GetTemplateOutput": {
+    "TemplateBody": {
       "encoding": "JSON",
       "alias": "Template"
     }
