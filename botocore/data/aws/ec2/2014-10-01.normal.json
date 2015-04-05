@@ -1577,6 +1577,9 @@
     }
   },
   "shapes":{
+    "ConsoleOutput":{
+      "type":"string"
+    },
     "AcceptVpcPeeringConnectionRequest":{
       "type":"structure",
       "members":{
@@ -6124,7 +6127,7 @@
           "locationName":"timestamp"
         },
         "Output":{
-          "shape":"String",
+          "shape":"ConsoleOutput",
           "documentation":"<p>The console output, Base64 encoded.</p>",
           "locationName":"output"
         }
