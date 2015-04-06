@@ -1,7 +1,6 @@
 """Abstractions to interact with service models."""
 from collections import defaultdict
 
-from botocore import xform_name
 from botocore.utils import CachedProperty
 from botocore.compat import OrderedDict
 
