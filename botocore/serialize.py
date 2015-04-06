@@ -501,10 +501,12 @@ class BaseRestSerializer(Serializer):
             return value
 
 
-class RestJSONSerializer(BaseRestSerializer):
+class RestJSONSerializer(BaseRestSerializer, JSONSerializer):
 
     def _serialize_body_params(self, params, shape):
-        return json.dumps(params)
+        serialized_body = {}
+        self._serialize(serialized_body, params, shape)
+        return json.dumps(serialized_body)
 
 
 class RestXMLSerializer(BaseRestSerializer):
