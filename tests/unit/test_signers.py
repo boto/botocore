@@ -38,6 +38,15 @@ class BaseSignerTest(unittest.TestCase):
 
 class TestSigner(BaseSignerTest):
 
+    def test_region_name(self):
+        self.assertEqual(self.signer.region_name, 'region_name')
+
+    def test_signature_version(self):
+        self.assertEqual(self.signer.signature_version, 'v4')
+
+    def test_signing_name(self):
+        self.assertEqual(self.signer.signing_name, 'signing_name')
+
     def test_region_required_for_sigv4(self):
         self.signer = RequestSigner(
             'service_name', None, 'signing_name', 'v4', self.credentials,
@@ -378,7 +387,7 @@ class TestGenerateUrl(unittest.TestCase):
     def test_generate_presigned_url_override_http_method(self):
         self.client.generate_presigned_url(
             'get_object', Params={'Bucket': self.bucket, 'Key': self.key},
-            HTTPMethod='PUT')
+            HttpMethod='PUT')
         ref_request_dict = {
             'body': '',
             'url': u'https://s3.amazonaws.com/mybucket/mykey',
