@@ -363,6 +363,57 @@
     ]
   },
   {
+    "description": "Serialize blobs in body",
+    "metadata": {
+      "protocol": "rest-json",
+      "apiVersion": "2014-01-01"
+    },
+    "shapes": {
+      "InputShape": {
+        "type": "structure",
+        "members": {
+          "Foo": {
+            "shape": "StringType",
+            "location": "uri",
+            "locationName": "Foo"
+          },
+          "Bar": {"shape": "BlobType"}
+        },
+        "required": [
+          "Foo"
+        ]
+      },
+      "StringType": {
+        "type": "string"
+      },
+      "BlobType": {
+        "type": "blob"
+      }
+    },
+    "cases": [
+      {
+        "given": {
+          "http": {
+            "method": "GET",
+            "requestUri": "/2014-01-01/{Foo}"
+          },
+          "input": {
+            "shape": "InputShape"
+          },
+          "name": "OperationName"
+        },
+        "params": {
+          "Foo": "foo_name",
+          "Bar": "Blob param"
+        },
+        "serialized": {
+          "body": "{\"Bar\": \"QmxvYiBwYXJhbQ==\"}",
+          "uri": "/2014-01-01/foo_name"
+        }
+      }
+    ]
+  },
+  {
     "description": "Omits null query params, but serializes empty strings",
     "metadata": {
       "protocol": "rest-json",
