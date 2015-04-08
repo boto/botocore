@@ -2490,7 +2490,6 @@
       "type":"structure",
       "required":[
         "HostedZones",
-        "Marker",
         "IsTruncated",
         "MaxItems"
       ],
@@ -2612,7 +2611,6 @@
       "type":"structure",
       "required":[
         "DelegationSets",
-        "Marker",
         "IsTruncated",
         "MaxItems"
       ],
@@ -2676,8 +2674,7 @@
     "ListTagsForResourcesRequest":{
       "type":"structure",
       "required":[
-        "ResourceType",
-        "ResourceIds"
+        "ResourceType"
       ],
       "members":{
         "ResourceType":{
@@ -2685,10 +2682,6 @@
           "location":"uri",
           "locationName":"ResourceType",
           "documentation":"<p>The type of the resources.</p> <p>- The resource type for health checks is <code>healthcheck</code>.</p> <p>- The resource type for hosted zones is <code>hostedzone</code>.</p>"
-        },
-        "ResourceIds":{
-          "shape":"TagResourceIdList",
-          "documentation":"<p>A complex type that contains the ResourceId element for each resource for which you want to get a list of tags.</p>"
         }
       },
       "documentation":"<p>A complex type containing information about a request for a list of the tags that are associated with up to 10 specified resources.</p>"
