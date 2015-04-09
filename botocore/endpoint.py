@@ -25,7 +25,7 @@ from botocore.vendored import six
 from botocore.exceptions import BaseEndpointResolverError
 from botocore.exceptions import EndpointConnectionError
 from botocore.awsrequest import AWSRequest
-from botocore.compat import filter_ssl_san_warnings, urlsplit
+from botocore.compat import filter_ssl_warnings, urlsplit
 from botocore.compat import urlunsplit
 from botocore.utils import percent_encode_sequence
 from botocore.utils import is_valid_endpoint_url
@@ -37,7 +37,7 @@ from botocore import parsers
 logger = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 60
 NOT_SET = object()
-filter_ssl_san_warnings()
+filter_ssl_warnings()
 
 
 def convert_to_response_dict(http_response, operation_model):
