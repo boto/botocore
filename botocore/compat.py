@@ -15,8 +15,10 @@ import copy
 import datetime
 import sys
 import inspect
+import warnings
 
 from botocore.vendored import six
+from botocore.vendored.requests.packages.urllib3 import exceptions
 
 
 if six.PY3:
@@ -128,8 +130,6 @@ if sys.version_info[:2] == (2, 6):
     # when they're legitimate warnings.  This method tries to scope the warning
     # filter to be as specific as possible.
     def filter_ssl_san_warnings():
-        import warnings
-        from botocore.vendored.requests.packages.urllib3 import exceptions
         warnings.filterwarnings(
             'ignore',
             message="Certificate has no.*subjectAltName.*",
@@ -144,6 +144,16 @@ else:
         # Noop for non-py26 versions.  We will parse the SAN
         # appropriately.
         pass
+
+
+def filter_ssl_warnings():
+    # Ignore warnings related to SNI as it is not being used in validations.
+    warnings.filterwarnings(
+        'ignore',
+        message="A true SSLContext object is not available.*",
+        category=exceptions.InsecurePlatformWarning,
+        module=".*urllib3\.util\.ssl_")
+    filter_ssl_san_warnings()
 
 
 @classmethod

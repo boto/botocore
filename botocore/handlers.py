@@ -457,6 +457,28 @@ def add_glacier_checksums(params, **kwargs):
     body.seek(starting_position)
 
 
+def switch_host_machinelearning(request, **kwargs):
+    switch_host_with_param(request, 'PredictEndpoint')
+
+
+def switch_host_with_param(request, param_name):
+    request_json = json.loads(request.data)
+    if request_json.get(param_name):
+        new_endpoint = request_json[param_name]
+        new_endpoint_components = urlsplit(new_endpoint)
+        original_endpoint = request.url
+        original_endpoint_components = urlsplit(original_endpoint)
+        final_endpoint_components = (
+            new_endpoint_components.scheme,
+            new_endpoint_components.netloc,
+            original_endpoint_components.path,
+            original_endpoint_components.query,
+            ''
+        )
+        final_endpoint = urlunsplit(final_endpoint_components)
+        request.url = final_endpoint
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -480,6 +502,7 @@ BUILTIN_HANDLERS = [
     ('before-call.glacier.UploadArchive', add_glacier_checksums),
     ('before-call.glacier.UploadMultipartPart', add_glacier_checksums),
     ('before-call.ec2.CopySnapshot', copy_snapshot_encrypted),
+    ('request-created.machinelearning.Predict', switch_host_machinelearning),
     ('needs-retry.s3.UploadPartCopy', check_for_200_error, REGISTER_FIRST),
     ('needs-retry.s3.CopyObject', check_for_200_error, REGISTER_FIRST),
     ('needs-retry.s3.CompleteMultipartUpload', check_for_200_error,
