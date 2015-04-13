@@ -6,7 +6,7 @@
                                          "InstanceOwnerId": "123456789012",
                                          "Status": "attached"},
                          "AvailabilityZone": "ap-southeast-1b",
-                         "Description": null,
+                         "Description": "",
                          "Groups": [{"GroupId": "sg-3f4b5653",
                                       "GroupName": "default"}],
                          "MacAddress": "02:81:60:cb:27:37",
