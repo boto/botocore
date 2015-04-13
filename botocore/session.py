@@ -71,9 +71,9 @@ class Session(object):
 
     SessionVariables = {
         # logical:  config_file, env_var,        default_value
-        'profile': (None, 'BOTO_DEFAULT_PROFILE', None),
-        'region': ('region', 'BOTO_DEFAULT_REGION', None),
-        'data_path': ('data_path', 'BOTO_DATA_PATH', None),
+        'profile': (None, ['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'], None),
+        'region': ('region', ['AWS_DEFAULT_REGION', 'AWS_REGION'], None),
+        'data_path': ('data_path', 'AWS_DATA_PATH', None),
         'config_file': (None, 'AWS_CONFIG_FILE', '~/.aws/config'),
         'provider': ('provider', 'BOTO_PROVIDER_NAME', 'aws'),
 
