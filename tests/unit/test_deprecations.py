@@ -19,6 +19,7 @@ from nose.tools import assert_equal
 from nose.tools import assert_true
 
 import botocore.session
+from botocore.exceptions import ImminentRemovalWarning
 
 
 @contextlib.contextmanager
@@ -44,15 +45,15 @@ class TestDeprecationsHaveWarnings(unittest.TestCase):
         self.session = botocore.session.get_session()
 
     def test_get_service_deprecated(self):
-        with assert_warns(DeprecationWarning, contains='get_service'):
+        with assert_warns(ImminentRemovalWarning, contains='get_service'):
             self.session.get_service('cloudformation')
 
     def test_service_get_operation_deprecated(self):
         service = self.session.get_service('cloudformation')
-        with assert_warns(DeprecationWarning, contains='get_operation'):
+        with assert_warns(ImminentRemovalWarning, contains='get_operation'):
             service.get_operation('ListStacks')
 
     def test_get_endpoint(self):
         service = self.session.get_service('cloudformation')
-        with assert_warns(DeprecationWarning, contains='get_endpoint'):
+        with assert_warns(ImminentRemovalWarning, contains='get_endpoint'):
             service.get_endpoint('us-east-1')
