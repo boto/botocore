@@ -28,6 +28,7 @@ from botocore import client
 from botocore.hooks import HierarchicalEmitter
 from botocore.waiter import WaiterModel
 from botocore.paginate import PaginatorModel
+import botocore.loaders
 
 
 class BaseSessionTest(unittest.TestCase):
@@ -51,6 +52,8 @@ class BaseSessionTest(unittest.TestCase):
                                    'foo_config')
         self.environ['FOO_CONFIG_FILE'] = config_path
         self.session = create_session(session_vars=self.env_vars)
+        self.loader = botocore.loaders.Loader()
+        self.session.register_component('data_loader', self.loader)
 
     def tearDown(self):
         self.environ_patch.stop()
@@ -72,6 +75,24 @@ class SessionTest(BaseSessionTest):
                 # handling the closing of the file ourself.
                 logging.raiseExceptions = False
         shutil.rmtree(tempdir)
+
+    def test_supports_multiple_env_vars_for_single_logical_name(self):
+        env_vars = {
+            'profile': (None, ['BAR_DEFAULT_PROFILE', 'BAR_PROFILE'], None),
+        }
+        session = create_session(session_vars=env_vars)
+        self.environ['BAR_DEFAULT_PROFILE'] = 'first'
+        self.environ['BAR_PROFILE'] = 'second'
+        self.assertEqual(session.get_config_variable('profile'), 'first')
+
+    def test_multiple_env_vars_uses_second_var(self):
+        env_vars = {
+            'profile': (None, ['BAR_DEFAULT_PROFILE', 'BAR_PROFILE'], None),
+        }
+        session = create_session(session_vars=env_vars)
+        self.environ.pop('BAR_DEFAULT_PROFILE', None)
+        self.environ['BAR_PROFILE'] = 'second'
+        self.assertEqual(session.get_config_variable('profile'), 'second')
 
     def test_profile(self):
         self.assertEqual(self.session.get_config_variable('profile'), 'foo')
