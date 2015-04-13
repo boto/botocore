@@ -21,12 +21,14 @@ backwards compatibility is not guaranteed. The plan for GA is as follows:
 
 1. Add client interface to botocore.
 2. Add pending deprecation warnings to the use of ``Service`` and ``Operation``
-   objects.
-3. Change the pending deprecation warnings to deprecation warnings.
+   objects (added in version 0.96.0).
+3. Change the pending deprecation warnings to deprecation warnings
+   (added in version 0.99.0).
 4. Create a `clients-only <https://github.com/boto/botocore/tree/clients-only>`_
    branch that completely removes ``Service`` and ``Operation`` objects.
 5. Changing the deprecation warnings to ImminentRemovalWarning.  These will
-   now print to stderr by default so the warnings are more visible.
+   now print to stderr by default so the warnings are more visible
+   (added in version 0.104.0).
 6. Merge ``clients-only`` branch to develop branch, and make an alpha
    release of botocore.
 7. Make a beta release of botocore.
