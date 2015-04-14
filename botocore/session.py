@@ -29,6 +29,7 @@ import botocore.credentials
 import botocore.client
 from botocore.endpoint import EndpointCreator
 from botocore.exceptions import EventNotFound, ConfigNotFound, ProfileNotFound
+from botocore.exceptions import ImminentRemovalWarning
 from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.loaders import Loader
@@ -556,7 +557,7 @@ class Session(object):
         :returns: :class:`botocore.service.Service`
         """
         warnings.warn("get_service is deprecated and will be removed.  "
-                      "Use create_client instead.", DeprecationWarning)
+                      "Use create_client instead.", ImminentRemovalWarning)
         service = botocore.service.get_service(self, service_name,
                                                self.provider,
                                                api_version=api_version)

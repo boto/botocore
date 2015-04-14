@@ -20,6 +20,7 @@ import warnings
 from botocore.exceptions import MissingParametersError
 from botocore.exceptions import UnknownParameterError
 from botocore.exceptions import NoRegionError
+from botocore.exceptions import ImminentRemovalWarning
 from botocore.paginate import DeprecatedPaginator
 from botocore.signers import RequestSigner
 from botocore import serialize
@@ -101,7 +102,7 @@ class Operation(BotoCoreObject):
 
     def call(self, endpoint, **kwargs):
         warnings.warn("call() is deprecated and will be removed.  "
-                      "Use clients instead.", DeprecationWarning)
+                      "Use clients instead.", ImminentRemovalWarning)
         logger.debug("%s called with kwargs: %s", self, kwargs)
         # It probably seems a little weird to be firing two different
         # events here.  The reason is that the first event is fired
@@ -190,7 +191,7 @@ class Operation(BotoCoreObject):
     def can_paginate(self):
         warnings.warn("can_paginate is deprecated and will be removed.  "
                       "Use client.can_paginate instead.",
-                      DeprecationWarning)
+                      ImminentRemovalWarning)
         try:
             self._load_pagination_config()
         except Exception as e:
@@ -212,7 +213,7 @@ class Operation(BotoCoreObject):
         """
         warnings.warn("paginate is deprecated and will be removed.  "
                       "Use client.get_paginator instead.",
-                      DeprecationWarning)
+                      ImminentRemovalWarning)
         if not self.can_paginate:
             raise TypeError("Operation cannot be paginated: %s" % self)
         config = self._load_pagination_config()
