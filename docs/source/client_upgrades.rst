@@ -54,7 +54,7 @@ a few notable improvements:
   smaller than on a Service/Operation.  For example, you can now
   create a client and add specific customizations and event handlers
   that apply to only that specific client, instead of any S3 client.
-        
+
 
 Deprecation Timeline
 --------------------
@@ -83,7 +83,7 @@ to this schedule:
   pick up any alpha/beta releases.
 * A 1.0 beta version will be released.
 * A GA (1.0) version of botocore will be released.
-  
+
 
 How To Upgrade
 ==============
@@ -238,11 +238,11 @@ an example of how you can handle an error:
 
     ec2 = session.get_client('ec2', 'us-west-2')
     try:
-        parsed = ec2.describe_instances()
+        parsed = ec2.describe_instances(InstanceIds=['i-badid'])
     except ClientError as e:
         logger.error("Received error: %s", e, exc_info=True)
         # Only worry about a specific service error code
-        if e.response['Error']['Code'] == 'ResourceUnavailable':
+        if e.response['Error']['Code'] == 'InvalidInstanceID.NotFound':
             raise
 
 If you run into any issues migrating from the old interface to the newer
