@@ -224,7 +224,7 @@ returned.
 Error Handling
 --------------
 
-With clients, exceptions are now raised on any non 200 response.
+With clients, exceptions are now raised on any non 2xx response.
 A ``ClientError`` exception has both a ``.msg`` attribute as well
 as the parsed error response (which is a dictionary).  There isn't
 really equivalent functionality in the old interface, but below is
