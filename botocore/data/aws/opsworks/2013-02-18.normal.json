@@ -30,7 +30,7 @@
           "documentation":"<p>Indicates that a resource was not found.</p>"
         }
       ],
-      "documentation":"<p>Assign a registered instance to a custom layer. You cannot use this action with instances that were created with AWS OpsWorks.</p> <p><b>Required Permissions</b>: To use this action, an IAM user must have a Manage permissions level for the stack or an attached policy that explicitly grants permissions. For more information on user permissions, see <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html\">Managing User Permissions</a>.</p>"
+      "documentation":"<p>Assign a registered instance to a layer.</p> <ul> <li>You can assign registered on-premises instances to any layer type.</li> <li>You can assign registered Amazon EC2 instances only to custom layers.</li> <li>You cannot use this action with instances that were created with AWS OpsWorks.</li> </ul> <p><b>Required Permissions</b>: To use this action, an IAM user must have a Manage permissions level for the stack or an attached policy that explicitly grants permissions. For more information on user permissions, see <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html\">Managing User Permissions</a>.</p>"
     },
     "AssignVolume":{
       "name":"AssignVolume",
@@ -1846,7 +1846,7 @@
         },
         "Type":{
           "shape":"String",
-          "documentation":"<p>The command type:</p> <ul> <li><code>deploy</code></li> <li><code>rollback</code></li> <li><code>start</code></li> <li><code>stop</code></li> <li><code>restart</code></li> <li><code>undeploy</code></li> <li><code>update_dependencies</code></li> <li><code>install_dependencies</code></li> <li><code>update_custom_cookbooks</code></li> <li><code>execute_recipes</code></li> </ul>"
+          "documentation":"<p>The command type:</p> <ul> <li> <code>deploy</code> </li> <li> <code>rollback</code> </li> <li> <code>start</code> </li> <li> <code>stop</code> </li> <li> <code>restart</code> </li> <li> <code>undeploy</code> </li> <li> <code>update_dependencies</code> </li> <li> <code>install_dependencies</code> </li> <li> <code>update_custom_cookbooks</code> </li> <li> <code>execute_recipes</code> </li> </ul>"
         }
       },
       "documentation":"<p>Describes a command.</p>"
@@ -2385,7 +2385,7 @@
         },
         "CustomJson":{
           "shape":"String",
-          "documentation":"<p>A string that contains user-defined custom JSON. It is used to override the corresponding default stack configuration JSON values for stack. The string should be in the following format and must escape characters such as '\"'.:</p> <p><code>\"{\\\"key1\\\": \\\"value1\\\", \\\"key2\\\": \\\"value2\\\",...}\"</code></p> <p>For more information on custom JSON, see <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-json.html\">Use Custom JSON to Modify the Stack Configuration JSON</a>.</p>"
+          "documentation":"<p>A string that contains user-defined custom JSON. It is used to override the corresponding default stack configuration JSON values for stack. The string should be in the following format and must escape characters such as '\"'.:</p> <p> <code>\"{\\\"key1\\\": \\\"value1\\\", \\\"key2\\\": \\\"value2\\\",...}\"</code> </p> <p>For more information on custom JSON, see <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-json.html\">Use Custom JSON to Modify the Stack Configuration JSON</a>.</p>"
         },
         "InstanceIds":{
           "shape":"Strings",
@@ -2404,7 +2404,7 @@
         },
         "Args":{
           "shape":"DeploymentCommandArgs",
-          "documentation":"<p>The arguments of those commands that take arguments. It should be set to a JSON object with the following format:</p> <p><code>{\"arg_name1\" : [\"value1\", \"value2\", ...], \"arg_name2\" : [\"value1\", \"value2\", ...], ...}</code></p> <p>The <code>update_dependencies</code> command takes two arguments:</p> <ul> <li> <code>upgrade_os_to</code> - Specifies the desired Amazon Linux version for instances whose OS you want to upgrade, such as <code>Amazon Linux 2014.09</code>. You must also set the <code>allow_reboot</code> argument to true.</li> <li> <code>allow_reboot</code> - Specifies whether to allow AWS OpsWorks to reboot the instances if necessary, after installing the updates. This argument can be set to either <code>true</code> or <code>false</code>. The default value is <code>false</code>.</li> </ul> <p>For example, to upgrade an instance to Amazon Linux 2014.09, set <code>Args</code> to the following.</p> <code> { \"upgrade_os_to\":[\"Amazon Linux 2014.09\"], \"allow_reboot\":[\"true\"] } </code>"
+          "documentation":"<p>The arguments of those commands that take arguments. It should be set to a JSON object with the following format:</p> <p> <code>{\"arg_name1\" : [\"value1\", \"value2\", ...], \"arg_name2\" : [\"value1\", \"value2\", ...], ...}</code> </p> <p>The <code>update_dependencies</code> command takes two arguments:</p> <ul> <li> <code>upgrade_os_to</code> - Specifies the desired Amazon Linux version for instances whose OS you want to upgrade, such as <code>Amazon Linux 2014.09</code>. You must also set the <code>allow_reboot</code> argument to true.</li> <li> <code>allow_reboot</code> - Specifies whether to allow AWS OpsWorks to reboot the instances if necessary, after installing the updates. This argument can be set to either <code>true</code> or <code>false</code>. The default value is <code>false</code>.</li> </ul> <p>For example, to upgrade an instance to Amazon Linux 2014.09, set <code>Args</code> to the following.</p> <code> { \"upgrade_os_to\":[\"Amazon Linux 2014.09\"], \"allow_reboot\":[\"true\"] } </code>"
         }
       },
       "documentation":"<p>Used to specify a stack or deployment command.</p>"
@@ -3064,7 +3064,7 @@
         },
         "Secure":{
           "shape":"Boolean",
-          "documentation":"<p>(Optional) Whether the variable's value will be returned by the <a>DescribeApps</a> action. To conceal an environment variable's value, set <code>Secure</code> to <code>true</code>. <code>DescribeApps</code> then returns <code>**Filtered**</code> instead of the actual value. The default value for <code>Secure</code> is <code>false</code>. </p>"
+          "documentation":"<p>(Optional) Whether the variable's value will be returned by the <a>DescribeApps</a> action. To conceal an environment variable's value, set <code>Secure</code> to <code>true</code>. <code>DescribeApps</code> then returns <code>*****FILTERED*****</code> instead of the actual value. The default value for <code>Secure</code> is <code>false</code>. </p>"
         }
       },
       "documentation":"<p>Represents an app's environment variable.</p>"
@@ -3139,7 +3139,7 @@
         },
         "Status":{
           "shape":"String",
-          "documentation":"<p>The instance status:</p> <ul> <li><code>booting</code></li> <li><code>connection_lost</code></li> <li><code>online</code></li> <li><code>pending</code></li> <li><code>rebooting</code></li> <li><code>requested</code></li> <li><code>running_setup</code></li> <li><code>setup_failed</code></li> <li><code>shutting_down</code></li> <li><code>start_failed</code></li> <li><code>stopped</code></li> <li><code>stopping</code></li> <li><code>terminated</code></li> <li><code>terminating</code></li> </ul>"
+          "documentation":"<p>The instance status:</p> <ul> <li> <code>booting</code> </li> <li> <code>connection_lost</code> </li> <li> <code>online</code> </li> <li> <code>pending</code> </li> <li> <code>rebooting</code> </li> <li> <code>requested</code> </li> <li> <code>running_setup</code> </li> <li> <code>setup_failed</code> </li> <li> <code>shutting_down</code> </li> <li> <code>start_failed</code> </li> <li> <code>stopped</code> </li> <li> <code>stopping</code> </li> <li> <code>terminated</code> </li> <li> <code>terminating</code> </li> </ul>"
         },
         "Os":{
           "shape":"String",
@@ -3373,7 +3373,7 @@
         },
         "Attributes":{
           "shape":"LayerAttributes",
-          "documentation":"<p>The layer attributes.</p>"
+          "documentation":"<p>The layer attributes.</p> <note>For the <code>HaproxyStatsPassword</code>, <code>MysqlRootPassword</code>, and <code>GangliaPassword</code> attributes, AWS OpsWorks returns <code>*****FILTERED*****</code> instead of the actual value</note>"
         },
         "CustomInstanceProfileArn":{
           "shape":"String",
@@ -3552,7 +3552,7 @@
         },
         "Level":{
           "shape":"String",
-          "documentation":"<p>The user's permission level, which must be the following:</p> <ul> <li><code>deny</code></li> <li><code>show</code></li> <li><code>deploy</code></li> <li><code>manage</code></li> <li><code>iam_only</code></li> </ul> <p>For more information on the permissions associated with these levels, see <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html\">Managing User Permissions</a></p>"
+          "documentation":"<p>The user's permission level, which must be the following:</p> <ul> <li> <code>deny</code> </li> <li> <code>show</code> </li> <li> <code>deploy</code> </li> <li> <code>manage</code> </li> <li> <code>iam_only</code> </li> </ul> <p>For more information on the permissions associated with these levels, see <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html\">Managing User Permissions</a></p>"
         }
       },
       "documentation":"<p>Describes stack or user permissions.</p>"
@@ -3640,7 +3640,7 @@
         },
         "DbPassword":{
           "shape":"String",
-          "documentation":"<p>The database password.</p>"
+          "documentation":"<p>AWS OpsWorks returns <code>*****FILTERED*****</code> instead of the actual value.</p>"
         },
         "Region":{
           "shape":"String",
@@ -4015,11 +4015,11 @@
         },
         "Password":{
           "shape":"String",
-          "documentation":"<p>This parameter depends on the repository type. </p> <ul> <li>For Amazon S3 bundles, set <code>Password</code> to the appropriate IAM secret access key.</li> <li>For HTTP bundles and Subversion repositories, set <code>Password</code> to the password.</li> </ul> <p>For more information on how to safely handle IAM credentials, see <a href=\"http://docs.aws.amazon.com/general/latest/gr/aws-access-keys-best-practices.html\"></a>.</p>"
+          "documentation":"<p>When included in a request, the parameter depends on the repository type. </p> <ul> <li>For Amazon S3 bundles, set <code>Password</code> to the appropriate IAM secret access key.</li> <li>For HTTP bundles and Subversion repositories, set <code>Password</code> to the password.</li> </ul> <p>For more information on how to safely handle IAM credentials, see <a href=\"http://docs.aws.amazon.com/general/latest/gr/aws-access-keys-best-practices.html\"></a>.</p> <p>In responses, AWS OpsWorks returns <code>*****FILTERED*****</code> instead of the actual value.</p>"
         },
         "SshKey":{
           "shape":"String",
-          "documentation":"<p>The repository's SSH key.</p>"
+          "documentation":"<p>In requests, the repository's SSH key.</p> <p>In responses, AWS OpsWorks returns <code>*****FILTERED*****</code> instead of the actual value.</p>"
         },
         "Revision":{
           "shape":"String",
@@ -4112,7 +4112,7 @@
         },
         "CustomJson":{
           "shape":"String",
-          "documentation":"<p>A string that contains user-defined, custom JSON. It is used to override the corresponding default stack configuration JSON values. The string should be in the following format and must escape characters such as '\"'.:</p> <p><code>\"{\\\"key1\\\": \\\"value1\\\", \\\"key2\\\": \\\"value2\\\",...}\"</code></p> <p>For more information on custom JSON, see <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-json.html\">Use Custom JSON to Modify the Stack Configuration JSON</a>.</p>"
+          "documentation":"<p>A string that contains user-defined, custom JSON. It is used to override the corresponding default stack configuration JSON values. The string should be in the following format and must escape characters such as '\"'.:</p> <p> <code>\"{\\\"key1\\\": \\\"value1\\\", \\\"key2\\\": \\\"value2\\\",...}\"</code> </p> <p>For more information on custom JSON, see <a href=\"http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-json.html\">Use Custom JSON to Modify the Stack Configuration JSON</a>.</p>"
         },
         "ConfigurationManager":{
           "shape":"StackConfigurationManager",
@@ -4794,7 +4794,7 @@
           "documentation":"<p>The schedule for Sunday.</p>"
         }
       },
-      "documentation":"<p>Describes a time-based instance's auto scaling schedule. The schedule consists of a set of key-value pairs.</p> <ul> <li>The key is the time period (a UTC hour) and must be an integer from 0 - 23.</li> <li>The value indicates whether the instance should be online or offline for the specified period, and must be set to \"on\" or \"off\"</li> </ul> <p>The default setting for all time periods is off, so you use the following parameters primarily to specify the online periods. You don't have to explicitly specify offline periods unless you want to change an online period to an offline period. </p> <p>The following example specifies that the instance should be online for four hours, from UTC 1200 - 1600. It will be off for the remainder of the day.</p> <p><code> { \"12\":\"on\", \"13\":\"on\", \"14\":\"on\", \"15\":\"on\" } </code></p>"
+      "documentation":"<p>Describes a time-based instance's auto scaling schedule. The schedule consists of a set of key-value pairs.</p> <ul> <li>The key is the time period (a UTC hour) and must be an integer from 0 - 23.</li> <li>The value indicates whether the instance should be online or offline for the specified period, and must be set to \"on\" or \"off\"</li> </ul> <p>The default setting for all time periods is off, so you use the following parameters primarily to specify the online periods. You don't have to explicitly specify offline periods unless you want to change an online period to an offline period. </p> <p>The following example specifies that the instance should be online for four hours, from UTC 1200 - 1600. It will be off for the remainder of the day.</p> <p> <code> { \"12\":\"on\", \"13\":\"on\", \"14\":\"on\", \"15\":\"on\" } </code> </p>"
     }
   }
 }
