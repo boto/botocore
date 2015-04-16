@@ -14,7 +14,7 @@
             "OwnerId": "123456789012"
         },
         {
-            "Description": null,
+            "Description": "",
             "VolumeId": "vol-213dd14a",
             "State": "completed",
             "VolumeSize": 90,
@@ -24,7 +24,7 @@
             "OwnerId": "123456789012"
         },
         {
-            "Description": null,
+            "Description": "",
             "VolumeId": "vol-4ab8dc22",
             "State": "completed",
             "VolumeSize": 8,

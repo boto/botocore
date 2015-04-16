@@ -6,7 +6,7 @@
         {
             "ResourceType": "instance",
             "ResourceId": "i-fde9cece",
-            "Value": null,
+            "Value": "",
             "Key": "notebook"
         }
     ]

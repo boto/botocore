@@ -14,7 +14,7 @@
                     "Monitoring": {
                         "State": "disabled"
                     },
-                    "PublicDnsName": null,
+                    "PublicDnsName": "",
                     "KernelId": "aki-98e26fa8",
                     "State": {
                         "Code": 80,
@@ -26,7 +26,7 @@
                     "StateTransitionReason": "User initiated (2013-03-01 17:24:16 GMT)",
                     "InstanceId": "i-fde9cece",
                     "ImageId": "ami-30fe7300",
-                    "PrivateDnsName": null,
+                    "PrivateDnsName": "",
                     "KeyName": "aws",
                     "SecurityGroups": [
                         {
@@ -34,12 +34,12 @@
                             "GroupId": "sg-4e970e7e"
                         }
                     ],
-                    "ClientToken": null,
+                    "ClientToken": "",
                     "InstanceType": "m1.small",
                     "NetworkInterfaces": [],
                     "Placement": {
                         "Tenancy": "default",
-                        "GroupName": null,
+                        "GroupName": "",
                         "AvailabilityZone": "us-west-2a"
                     },
                     "Hypervisor": "xen",
@@ -64,7 +64,7 @@
                     "RootDeviceType": "ebs",
                     "Tags": [
                         {
-                            "Value": null,
+                            "Value": "",
                             "Key": "notebook"
                         }
                     ],
@@ -97,7 +97,7 @@
                     "PublicIpAddress": "54.245.16.142",
                     "PrivateIpAddress": "10.253.17.74",
                     "ProductCodes": [],
-                    "StateTransitionReason": null,
+                    "StateTransitionReason": "",
                     "InstanceId": "i-78f1b94a",
                     "ImageId": "ami-c4d643f4",
                     "PrivateDnsName": "ip-10-253-17-74.us-west-2.compute.internal",
@@ -113,7 +113,7 @@
                     "NetworkInterfaces": [],
                     "Placement": {
                         "Tenancy": "default",
-                        "GroupName": null,
+                        "GroupName": "",
                         "AvailabilityZone": "us-west-2b"
                     },
                     "Hypervisor": "xen",
