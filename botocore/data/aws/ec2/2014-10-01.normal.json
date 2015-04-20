@@ -6965,7 +6965,7 @@
           "locationName":"ramdisk"
         },
         "UserData":{
-          "shape":"AttributeValue",
+          "shape":"BlobAttributeValue",
           "documentation":"<p>The Base64-encoded MIME user data.</p>",
           "locationName":"userData"
         },
@@ -7848,7 +7848,7 @@
           "locationName":"groupSet"
         },
         "UserData":{
-          "shape":"String",
+          "shape":"Blob",
           "documentation":"<p>The Base64-encoded MIME user data to make available to the instances.</p>",
           "locationName":"userData"
         },
@@ -10298,7 +10298,7 @@
           "locationName":"SecurityGroupId"
         },
         "UserData":{
-          "shape":"String",
+          "shape":"Blob",
           "documentation":"<p>The Base64-encoded MIME user data for the instances.</p>"
         },
         "InstanceType":{
@@ -12016,7 +12016,7 @@
           "locationName":"SecurityGroup"
         },
         "UserData":{
-          "shape":"String",
+          "shape":"Blob",
           "documentation":"<p>The Base64-encoded MIME user data to make available to the instances.</p>",
           "locationName":"userData"
         },
