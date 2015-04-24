@@ -46,7 +46,7 @@ class ClientCreator(object):
                       credentials=None, scoped_config=None,
                       client_config=None):
         service_model = self._load_service_model(service_name)
-        cls = self.create_client_class(service_name)
+        cls = self._create_client_class(service_name, service_model)
         client_args = self._get_client_args(
             service_model, region_name, is_secure, endpoint_url,
             verify, credentials, scoped_config, client_config)
@@ -54,6 +54,9 @@ class ClientCreator(object):
 
     def create_client_class(self, service_name):
         service_model = self._load_service_model(service_name)
+        return self._create_client_class(service_name, service_model)
+
+    def _create_client_class(self, service_name, service_model):
         class_attributes = self._create_methods(service_model)
         py_name_to_operation_name = self._create_name_mapping(service_model)
         class_attributes['_PY_TO_OP_NAME'] = py_name_to_operation_name
@@ -65,7 +68,7 @@ class ClientCreator(object):
         return cls
 
     def _load_service_model(self, service_name):
-        json_model = self._loader.load_service_model('aws/%s' % service_name)
+        json_model = self._loader.load_service_model(service_name, 'service-2')
         service_model = ServiceModel(json_model, service_name=service_name)
         self._register_retries(service_model)
         return service_model
@@ -75,7 +78,7 @@ class ClientCreator(object):
 
         # First, we load the entire retry config for all services,
         # then pull out just the information we need.
-        original_config = self._loader.load_data('aws/_retry')
+        original_config = self._loader.load_data('_retry')
         if not original_config:
             return
 
@@ -328,9 +331,10 @@ class BaseClient(object):
         """
         if 'page_config' not in self._cache:
             try:
-                page_config = self._loader.load_data('aws/%s/%s.paginators' % (
+                page_config = self._loader.load_service_model(
                     self._service_model.service_name,
-                    self._service_model.api_version))['pagination']
+                    'paginators-1',
+                    self._service_model.api_version)['pagination']
                 self._cache['page_config'] = page_config
             except DataNotFoundError:
                 self._cache['page_config'] = {}
@@ -340,9 +344,10 @@ class BaseClient(object):
     def _get_waiter_config(self):
         if 'waiter_config' not in self._cache:
             try:
-                waiter_config = self._loader.load_data('aws/%s/%s.waiters' % (
+                waiter_config = self._loader.load_service_model(
                     self._service_model.service_name,
-                    self._service_model.api_version))
+                    'waiters-2',
+                    self._service_model.api_version)
                 self._cache['waiter_config'] = waiter_config
             except DataNotFoundError:
                 self._cache['waiter_config'] = {}

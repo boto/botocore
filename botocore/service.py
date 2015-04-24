@@ -207,8 +207,8 @@ class Service(object):
     def _load_waiter_config(self):
         loader = self.session.get_component('data_loader')
         api_version = self.api_version
-        config = loader.load_data('aws/%s/%s.waiters' % (
-            self.service_name, api_version))
+        config = loader.load_service_model(self.service_name,
+                                           'waiters-2', api_version)
         return config
 
 
