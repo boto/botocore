@@ -428,11 +428,6 @@ class QueryParser(BaseXMLResponseParser):
                 sub_mapping[key] = value.text
             inject_into['ResponseMetadata'] = sub_mapping
 
-    def _handle_string(self, shape, node):
-        return node.text
-
-    _handle_character = _handle_string
-
 
 class EC2QueryParser(QueryParser):
 

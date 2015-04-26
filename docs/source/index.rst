@@ -35,6 +35,16 @@ Contents:
 Upgrade Notes
 =============
 
+Upgrading to 0.104.0
+--------------------
+
+* Warnings about imminent removal of service/operation objects are
+  now printed to stderr by default.  It is highly encouraged that
+  you switch to clients as soon as possible, as the deprecated
+  service/operation object is going away.  See :ref:`client-upgrades`
+  for more information.
+
+
 Upgrading to 0.66.0
 -------------------
 

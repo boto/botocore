@@ -29,6 +29,7 @@ import botocore.credentials
 import botocore.client
 from botocore.endpoint import EndpointCreator
 from botocore.exceptions import EventNotFound, ConfigNotFound, ProfileNotFound
+from botocore.exceptions import ImminentRemovalWarning
 from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.loaders import Loader
@@ -71,9 +72,9 @@ class Session(object):
 
     SessionVariables = {
         # logical:  config_file, env_var,        default_value
-        'profile': (None, 'BOTO_DEFAULT_PROFILE', None),
-        'region': ('region', 'BOTO_DEFAULT_REGION', None),
-        'data_path': ('data_path', 'BOTO_DATA_PATH', None),
+        'profile': (None, ['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'], None),
+        'region': ('region', 'AWS_DEFAULT_REGION', None),
+        'data_path': ('data_path', 'AWS_DATA_PATH', None),
         'config_file': (None, 'AWS_CONFIG_FILE', '~/.aws/config'),
         'provider': ('provider', 'BOTO_PROVIDER_NAME', 'aws'),
 
@@ -299,8 +300,9 @@ class Session(object):
                 config_name = None
             if logical_name == 'profile' and self._profile:
                 value = self._profile
-            elif 'env' in methods and envvar_name and envvar_name in os.environ:
-                value = os.environ[envvar_name]
+            elif 'env' in methods and envvar_name and self._handle_env_vars(
+                    envvar_name, os.environ) is not None:
+                value = self._handle_env_vars(envvar_name, os.environ)
             elif 'config' in methods:
                 if config_name:
                     config = self.get_scoped_config()
@@ -313,6 +315,16 @@ class Session(object):
         if value is None and config_default is not None:
             value = config_default
         return value
+
+    def _handle_env_vars(self, names, environ):
+        # We need to handle the case where names is either
+        # a single value or a list of variables.
+        if not isinstance(names, list):
+            names = [names]
+        for name in names:
+            if name in environ:
+                return environ[name]
+        return None
 
     def set_config_variable(self, logical_name, value):
         """Set a configuration variable to a specific value.
@@ -556,7 +568,7 @@ class Session(object):
         :returns: :class:`botocore.service.Service`
         """
         warnings.warn("get_service is deprecated and will be removed.  "
-                      "Use create_client instead.", DeprecationWarning)
+                      "Use create_client instead.", ImminentRemovalWarning)
         service = botocore.service.get_service(self, service_name,
                                                self.provider,
                                                api_version=api_version)
