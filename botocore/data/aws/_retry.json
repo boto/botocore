@@ -55,133 +55,9 @@
           "general_socket_errors": {"$ref": "general_socket_errors"},
           "general_server_error": {"$ref": "general_server_error"},
           "service_unavailable": {"$ref": "service_unavailable"},
-          "limit_exceeded": {"$ref": "limit_exceeded"}
-      }
-    },
-    "autoscaling": {
-      "__default__": {
-        "policies": {
+          "limit_exceeded": {"$ref": "limit_exceeded"},
+          "throttling_exception": {"$ref": "throttling_exception"},
           "throttling": {"$ref": "throttling"}
-        }
-      }
-    },
-    "elasticmapreduce": {
-      "__default__": {
-        "policies": {
-          "throttling": {"$ref": "throttling_exception"}
-        }
-      }
-    },
-    "rds": {
-      "__default__": {
-        "policies": {
-          "throttling": {"$ref": "throttling"}
-        }
-      }
-    },
-    "elasticache": {
-      "__default__": {
-        "policies": {
-          "throttling": {"$ref": "throttling"}
-        }
-      }
-    },
-    "redshift": {
-      "__default__": {
-        "policies": {
-          "throttling": {"$ref": "throttling"}
-        }
-      }
-    },
-    "elasticbeanstalk": {
-      "__default__": {
-        "policies": {
-          "throttling": {"$ref": "throttling"}
-        }
-      }
-    },
-    "cloudformation": {
-      "__default__": {
-        "policies": {
-          "throttling": {"$ref": "throttling"}
-        }
-      }
-    },
-    "datapipeline": {
-      "__default__": {
-        "policies": {
-          "throttling": {"$ref": "throttling"}
-        }
-      }
-    },
-    "opsworks": {
-      "__default__": {
-        "policies": {
-          "throttling": {"$ref": "throttling"}
-        }
-      }
-    },
-    "iam": {
-      "__default__": {
-        "policies": {
-          "throttling": {"$ref": "throttling"}
-        }
-      }
-    },
-    "sts": {
-      "__default__": {
-        "policies": {
-          "throttling": {"$ref": "throttling"}
-        }
-      }
-    },
-    "swf": {
-      "__default__": {
-        "policies": {
-          "throttling": {"$ref": "throttling"}
-        }
-      }
-    },
-    "sns": {
-      "__default__": {
-        "policies": {
-          "throttling": {"$ref": "throttling"}
-        }
-      }
-    },
-    "ses": {
-      "__default__": {
-        "policies": {
-          "throttling": {"$ref": "throttling"}
-        }
-      }
-    },
-    "cloudwatch": {
-      "__default__": {
-        "policies": {
-          "throttling": {"$ref": "throttling"}
-        }
-      }
-    },
-    "route53": {
-      "__default__": {
-        "policies": {
-          "throttling": {"$ref": "throttling"}
-        }
-      }
-    },
-    "directconnect": {
-      "__default__": {
-        "policies": {
-          "throttling": {"$ref": "throttling"}
-        }
-      }
-    },
-    "elb": {
-      "__default__": {
-        "policies": {
-          "throttling": {"$ref": "throttling"}
-        }
       }
     },
     "dynamodb": {
@@ -201,7 +77,6 @@
               }
             }
           },
-          "throttling": {"$ref": "throttling_exception"},
           "crc32": {
             "applies_when": {
               "response": {
@@ -209,20 +84,6 @@
               }
             }
           }
-        }
-      }
-    },
-    "glacier": {
-      "__default__": {
-        "policies": {
-          "throttling": {"$ref": "throttling_exception"}
-        }
-      }
-    },
-    "storagegateway": {
-      "__default__": {
-        "policies": {
-          "throttling": {"$ref": "throttling_exception"}
         }
       }
     },
@@ -279,13 +140,6 @@
               }
             }
           }
-        }
-      }
-    },
-    "elastictranscoder": {
-      "__default__": {
-        "policies": {
-          "throttling": {"$ref": "throttling_exception"}
         }
       }
     }
