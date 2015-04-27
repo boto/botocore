@@ -248,7 +248,9 @@ class Loader(object):
                 full_dirname = os.path.join(possible_path, service_name)
                 api_versions = os.listdir(full_dirname)
                 for api_version in api_versions:
-                    full_load_path = os.path.join(full_dirname, api_version, type_name)
+                    full_load_path = os.path.join(full_dirname,
+                                                  api_version,
+                                                  type_name)
                     if self.file_loader.exists(full_load_path):
                         services.add(service_name)
                         break

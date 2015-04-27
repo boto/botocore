@@ -545,7 +545,7 @@ class Session(object):
         Return a list of names of available services.
         """
         return self.get_component('data_loader')\
-                .list_available_services(type_name='service-2')
+            .list_available_services(type_name='service-2')
 
     def get_service(self, service_name, api_version=None):
         """

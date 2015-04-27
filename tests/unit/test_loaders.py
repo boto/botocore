@@ -23,13 +23,11 @@ import os
 
 import mock
 
-from botocore.exceptions import ApiVersionNotFoundError
 from botocore.exceptions import DataNotFoundError
 from botocore.loaders import JSONFileLoader
-from botocore.loaders import Loader
-import botocore.session
+from botocore.loaders import Loader, create_loader
 
-from tests import unittest, BaseEnvVar
+from tests import BaseEnvVar
 
 
 class TestJSONFileLoader(BaseEnvVar):
@@ -91,10 +89,12 @@ class TestLoader(BaseEnvVar):
     @mock.patch('os.path.isdir', mock.Mock(return_value=True))
     def test_load_data_uses_loader(self):
         search_paths = ['foo', 'bar', 'baz']
+
         class FakeLoader(object):
             def load_file(self, name):
                 if name.endswith('bar/baz'):
                     return ['loaded data']
+
         loader = Loader(extra_search_paths=search_paths,
                         file_loader=FakeLoader())
         loaded = loader.load_data('baz')
@@ -136,6 +136,7 @@ class TestLoader(BaseEnvVar):
                 },
             },
         }
+
         def listdir(dirname):
             parts = dirname.split(os.path.sep)
             result = fake_directories
@@ -150,8 +151,6 @@ class TestLoader(BaseEnvVar):
                 parts[0]][parts[1]][parts[2]]
         mock_file_loader = mock.Mock()
         mock_file_loader.exists = exists
-
-
 
         search_paths = list(fake_directories)
         loader = Loader(extra_search_paths=search_paths,
@@ -189,6 +188,7 @@ class TestLoader(BaseEnvVar):
                 },
             },
         }
+
         def listdir(dirname):
             parts = dirname.split(os.path.sep)
             return fake_directories[parts[0]][parts[1]]
@@ -229,3 +229,10 @@ class TestLoader(BaseEnvVar):
         loader.determine_latest_version = mock.Mock(return_value='2015-03-01')
         loaded = loader.load_service_model('baz', type_name='service-2')
         self.assertEqual(loaded, ['loaded data'])
+
+    def test_create_loader_parses_data_path(self):
+        search_path = os.pathsep.join(['foo', 'bar', 'baz'])
+        loader = create_loader(search_path)
+        self.assertIn('foo', loader.search_paths)
+        self.assertIn('bar', loader.search_paths)
+        self.assertIn('baz', loader.search_paths)
