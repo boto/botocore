@@ -225,7 +225,7 @@ class Loader(object):
         :type type_name: str
         :param type_name: The type of the service (service-2,
             paginators-1, waiters-2, etc).  This is needed because
-            the latest API version available can depend on the service
+            the list of available services depends on the service
             type.  For example, the latest API version available for
             a resource-1.json file may not be the latest API version
             available for a services-2.json file.
