@@ -93,7 +93,8 @@ class TestLoader(BaseEnvVar):
 
         class FakeLoader(object):
             def load_file(self, name):
-                if name.endswith('bar/baz'):
+                expected_ending = os.path.join('bar', 'baz')
+                if name.endswith(expected_ending):
                     return ['loaded data']
 
         loader = Loader(extra_search_paths=search_paths,
