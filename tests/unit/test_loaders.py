@@ -20,6 +20,7 @@
 # IN THE SOFTWARE.
 
 import os
+import contextlib
 
 import mock
 
@@ -111,106 +112,6 @@ class TestLoader(BaseEnvVar):
             loader.load_data('baz')
 
     @mock.patch('os.path.isdir', mock.Mock(return_value=True))
-    def test_list_available_services(self):
-        # Fake mapping of directory name
-        # to directory names.
-        fake_directories = {
-            'foo': {
-                'ec2': {
-                    '2010-01-01': ['service-2'],
-                    '2014-10-01': ['service-1'],
-                },
-                'dynamodb': {
-                    '2010-01-01': ['service-2'],
-                },
-            },
-            'bar': {
-                'ec2': {
-                    '2012-01-01': ['service-2'],
-                    # 2015-03-1 is *not* the latest for service-2,
-                    # because its directory only has service-1.json.
-                    '2015-03-01': ['service-1'],
-                },
-                'rds': {
-                    '2012-01-01': ['resource-1'],
-                },
-            },
-        }
-
-        def listdir(dirname):
-            parts = dirname.split(os.path.sep)
-            result = fake_directories
-            while parts:
-                current = parts.pop(0)
-                result = result[current]
-            return list(result)
-
-        def exists(path):
-            parts = path.split(os.sep)
-            return parts[-1] in fake_directories[
-                parts[0]][parts[1]][parts[2]]
-        mock_file_loader = mock.Mock()
-        mock_file_loader.exists = exists
-
-        search_paths = list(fake_directories)
-        loader = Loader(extra_search_paths=search_paths,
-                        include_default_search_paths=False,
-                        file_loader=mock_file_loader)
-
-        with mock.patch('os.listdir', listdir):
-            self.assertEqual(
-                loader.list_available_services(type_name='service-2'),
-                ['dynamodb', 'ec2'])
-            self.assertEqual(
-                loader.list_available_services(type_name='resource-1'),
-                ['rds'])
-
-    @mock.patch('os.path.isdir', mock.Mock(return_value=True))
-    def test_determine_latest(self):
-        # Fake mapping of directories to subdirectories.
-        # In this example, we can see that the 'bar' directory
-        # contains the latest EC2 API version, 2015-03-01,
-        # so loader.determine_latest('ec2') should return
-        # this value 2015-03-01.
-        fake_directories = {
-            'foo': {
-                'ec2': {
-                    '2010-01-01': ['service-2'],
-                    '2014-10-01': ['service-2'],
-                },
-            },
-            'bar': {
-                'ec2': {
-                    '2012-01-01': ['service-2'],
-                    # 2015-03-1 is *not* the latest for service-2,
-                    # because its directory only has service-1.json.
-                    '2015-03-01': ['service-1'],
-                },
-            },
-        }
-
-        def listdir(dirname):
-            parts = dirname.split(os.path.sep)
-            return fake_directories[parts[0]][parts[1]]
-
-        def exists(path):
-            parts = path.split(os.sep)
-            return parts[-1] in fake_directories[
-                parts[0]][parts[1]][parts[2]]
-        mock_file_loader = mock.Mock()
-        mock_file_loader.exists = exists
-
-        search_paths = list(fake_directories)
-        loader = Loader(extra_search_paths=search_paths,
-                        include_default_search_paths=False,
-                        file_loader=mock_file_loader)
-
-        with mock.patch('os.listdir', listdir):
-            latest = loader.determine_latest_version('ec2', 'service-2')
-
-        self.assertEqual(latest, '2014-10-01')
-
-    @mock.patch('os.path.isdir', mock.Mock(return_value=True))
     def test_error_raised_if_service_does_not_exist(self):
         loader = Loader(extra_search_paths=[],
                         include_default_search_paths=False)
@@ -236,3 +137,105 @@ class TestLoader(BaseEnvVar):
         self.assertIn('foo', loader.search_paths)
         self.assertIn('bar', loader.search_paths)
         self.assertIn('baz', loader.search_paths)
+
+
+class TestLoadersWithDirectorySearching(BaseEnvVar):
+    def setUp(self):
+        super(TestLoadersWithDirectorySearching, self).setUp()
+        self.fake_directories = {}
+
+    def tearDown(self):
+        super(TestLoadersWithDirectorySearching, self).tearDown()
+
+    @contextlib.contextmanager
+    def loader_with_fake_dirs(self):
+        mock_file_loader = mock.Mock()
+        mock_file_loader.exists = self.fake_exists
+        search_paths = list(self.fake_directories)
+        loader = Loader(extra_search_paths=search_paths,
+                        include_default_search_paths=False,
+                        file_loader=mock_file_loader)
+        with mock.patch('os.listdir', self.fake_listdir):
+            with mock.patch('os.path.isdir', mock.Mock(return_value=True)):
+                yield loader
+
+
+    def fake_listdir(self, dirname):
+        parts = dirname.split(os.path.sep)
+        result = self.fake_directories
+        while parts:
+            current = parts.pop(0)
+            result = result[current]
+        return list(result)
+
+    def fake_exists(self, path):
+        parts = path.split(os.sep)
+        result = self.fake_directories
+        while len(parts) > 1:
+            current = parts.pop(0)
+            result = result[current]
+        return parts[0] in result
+
+    def test_list_available_services(self):
+        self.fake_directories = {
+            'foo': {
+                'ec2': {
+                    '2010-01-01': ['service-2'],
+                    '2014-10-01': ['service-1'],
+                },
+                'dynamodb': {
+                    '2010-01-01': ['service-2'],
+                },
+            },
+            'bar': {
+                'ec2': {
+                    '2015-03-01': ['service-1'],
+                },
+                'rds': {
+                    # This will not show up in
+                    # list_available_services() for type
+                    # service-2 because it does not contains
+                    # a service-2.
+                    '2012-01-01': ['resource-1'],
+                },
+            },
+        }
+        with self.loader_with_fake_dirs() as loader:
+            self.assertEqual(
+                loader.list_available_services(type_name='service-2'),
+                ['dynamodb', 'ec2'])
+            self.assertEqual(
+                loader.list_available_services(type_name='resource-1'),
+                ['rds'])
+
+    def test_determine_latest(self):
+        # Fake mapping of directories to subdirectories.
+        # In this example, we can see that the 'bar' directory
+        # contains the latest EC2 API version, 2015-03-01,
+        # so loader.determine_latest('ec2') should return
+        # this value 2015-03-01.
+        self.fake_directories = {
+            'foo': {
+                'ec2': {
+                    '2010-01-01': ['service-2'],
+                    # This directory contains the latest API version
+                    # for EC2 because its the highest API directory
+                    # that contains a service-2.
+                    '2014-10-01': ['service-2'],
+                },
+            },
+            'bar': {
+                'ec2': {
+                    '2012-01-01': ['service-2'],
+                    # 2015-03-1 is *not* the latest for service-2,
+                    # because its directory only has service-1.json.
+                    '2015-03-01': ['service-1'],
+                },
+            },
+        }
+        with self.loader_with_fake_dirs() as loader:
+            latest = loader.determine_latest_version('ec2', 'service-2')
+            self.assertEqual(loader.determine_latest_version('ec2', 'service-2'),
+                             '2014-10-01')
+            self.assertEqual(loader.determine_latest_version('ec2', 'service-1'),
+                             '2015-03-01')
