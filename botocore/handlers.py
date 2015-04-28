@@ -246,7 +246,7 @@ def register_retries_for_service(service_data, session,
 
 
 def _load_retry_config(loader, endpoint_prefix):
-    original_config = loader.load_data('aws/_retry')
+    original_config = loader.load_data('_retry')
     retry_config = translate.build_retry_config(
         endpoint_prefix, original_config['retry'],
         original_config.get('definitions', {}))

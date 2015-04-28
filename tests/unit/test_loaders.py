@@ -20,160 +20,222 @@
 # IN THE SOFTWARE.
 
 import os
+import contextlib
 
 import mock
 
-from botocore.exceptions import ApiVersionNotFoundError
 from botocore.exceptions import DataNotFoundError
-from botocore.loaders import cachable
 from botocore.loaders import JSONFileLoader
-from botocore.loaders import Loader
-import botocore.session
+from botocore.loaders import Loader, create_loader
 
-from tests import unittest, BaseEnvVar
+from tests import BaseEnvVar
 
 
-class JSONFileLoaderTestCase(BaseEnvVar):
+class TestJSONFileLoader(BaseEnvVar):
     def setUp(self):
-        super(JSONFileLoaderTestCase, self).setUp()
+        super(TestJSONFileLoader, self).setUp()
         self.data_path = os.path.join(os.path.dirname(__file__), 'data')
         self.file_loader = JSONFileLoader()
+        self.valid_file_path = os.path.join(self.data_path, 'foo')
 
     def test_load_file(self):
-        data = self.file_loader.load_file(
-            os.path.join(self.data_path, 'foo.json')
-        )
+        data = self.file_loader.load_file(self.valid_file_path)
         self.assertEqual(len(data), 3)
         self.assertTrue('test_key_1' in data)
 
+    def test_load_json_file_does_not_exist_returns_none(self):
+        # None is used to indicate that the loader could not find a
+        # file to load.
+        self.assertIsNone(self.file_loader.load_file('fooasdfasdfasdf'))
 
-class LoaderTestCase(BaseEnvVar):
-    def setUp(self):
-        super(LoaderTestCase, self).setUp()
-        self.data_path = os.path.join(os.path.dirname(__file__), 'data')
-        self.environ['BOTO_DATA_PATH'] = self.data_path
-        self.loader = Loader(data_path=self.environ['BOTO_DATA_PATH'])
+    def test_file_exists_check(self):
+        self.assertTrue(self.file_loader.exists(self.valid_file_path))
 
-        # Make sure the cache is clear.
-        self.loader._cache.clear()
+    def test_file_does_not_exist_returns_false(self):
+        self.assertFalse(self.file_loader.exists(
+            os.path.join(self.data_path, 'does', 'not', 'exist')))
 
-    def test_data_path_not_required(self):
+
+class TestLoader(BaseEnvVar):
+
+    def test_default_search_paths(self):
         loader = Loader()
-        self.assertEqual(loader.data_path, '')
-        loader.data_path = 'foo:bar'
-        self.assertEqual(loader.data_path, 'foo:bar')
+        self.assertEqual(len(loader.search_paths), 2)
+        # We should also have ~/.aws/models added to
+        # the search path.  To deal with cross platform
+        # issues we'll just check for a path that ends
+        # with .aws/models.
+        home_dir_path = os.path.join('.aws', 'models')
+        self.assertTrue(
+            any(p.endswith(home_dir_path) for p in
+                loader.search_paths))
 
-    def test_get_search_paths(self):
-        paths = self.loader.get_search_paths()
-        self.assertTrue(self.data_path in paths)
+    def test_can_add_to_search_path(self):
+        loader = Loader()
+        loader.search_paths.append('mypath')
+        self.assertIn('mypath', loader.search_paths)
 
-    def test_determine_latest_no_version(self):
-        path = self.loader.determine_latest('someservice')
-        self.assertEqual(path, os.path.join('someservice',
-                                            '2013-08-21.normal'))
+    def test_can_initialize_with_search_paths(self):
+        loader = Loader(extra_search_paths=['foo', 'bar'])
+        self.assertIn('foo', loader.search_paths)
+        self.assertIn('bar', loader.search_paths)
+        # We should also always add the default search
+        # paths even if the loader is initialized with
+        # additional search paths.
+        self.assertEqual(len(loader.search_paths), 4)
 
-    def test_determine_latest_with_version(self):
-        path = self.loader.determine_latest(
-            'someservice',
-            api_version='2012-10-01'
-        )
-        self.assertEqual(path, os.path.join('someservice',
-                                            '2012-10-01.normal'))
+    # The file loader isn't consulted unless the current
+    # search path exists, so we're patching isdir to always
+    # say that a directory exists.
+    @mock.patch('os.path.isdir', mock.Mock(return_value=True))
+    def test_load_data_uses_loader(self):
+        search_paths = ['foo', 'bar', 'baz']
 
-    def test_determine_latest_with_version_the_wrong_way(self):
-        with self.assertRaises(ApiVersionNotFoundError):
-            self.loader.determine_latest('someservice/2012-10-01')
+        class FakeLoader(object):
+            def load_file(self, name):
+                if name.endswith('bar/baz'):
+                    return ['loaded data']
 
-    def test_determine_latest_with_version_not_found(self):
-        with self.assertRaises(ApiVersionNotFoundError):
-            path = self.loader.determine_latest(
-                'someservice',
-                api_version='2010-02-02'
-            )
+        loader = Loader(extra_search_paths=search_paths,
+                        file_loader=FakeLoader())
+        loaded = loader.load_data('baz')
+        self.assertEqual(loaded, ['loaded data'])
 
-    def test_load_data_plain_file(self):
-        data = self.loader.load_data('foo')
-        self.assertEqual(data['test_key_1'], 'test_value_1')
-
-    def test_load_data_plain_file_nonexistant(self):
+    def test_data_not_found_raises_exception(self):
+        class FakeLoader(object):
+            def load_file(self, name):
+                # Returning None indicates that the
+                # loader couldn't find anything.
+                return None
+        loader = Loader(file_loader=FakeLoader())
         with self.assertRaises(DataNotFoundError):
-            data = self.loader.load_data('i_totally_dont_exist')
+            loader.load_data('baz')
 
-    def test_load_service_model_latest_without_version(self):
-        data = self.loader.load_service_model('someservice')
-        self.assertEqual(data['api_version'], '2013-08-21')
+    @mock.patch('os.path.isdir', mock.Mock(return_value=True))
+    def test_error_raised_if_service_does_not_exist(self):
+        loader = Loader(extra_search_paths=[],
+                        include_default_search_paths=False)
+        with self.assertRaises(DataNotFoundError):
+            loader.determine_latest_version('unknownservice', 'service-2')
 
-    def test_load_service_model_with_version(self):
-        data = self.loader.load_service_model(
-            'someservice',
-            api_version='2012-10-01'
-        )
-        self.assertEqual(data['api_version'], '2012-10-01')
+    @mock.patch('os.path.isdir', mock.Mock(return_value=True))
+    def test_load_service_model(self):
+        class FakeLoader(object):
+            def load_file(self, name):
+                return ['loaded data']
 
-    def test_load_service_model_version_not_found(self):
-        with self.assertRaises(ApiVersionNotFoundError):
-            data = self.loader.load_service_model(
-                'someservice',
-                api_version='2010-02-02'
-            )
+        loader = Loader(extra_search_paths=['foo'],
+                        file_loader=FakeLoader(),
+                        include_default_search_paths=False)
+        loader.determine_latest_version = mock.Mock(return_value='2015-03-01')
+        loaded = loader.load_service_model('baz', type_name='service-2')
+        self.assertEqual(loaded, ['loaded data'])
 
-    def test_load_service_model_data_path_order(self):
-        # There's an s3/ directory both in our custom BOTO_DATA_PATH
-        # directory as well as in the botocore/data/ directory.
-        # Our path should win since the default built in path is always
-        # last.
-        data = self.loader.load_service_model('aws/s3')
-        self.assertTrue(data.get('WAS_OVERRIDEN_VIA_DATA_PATH'),
-                        "S3 model was loaded from botocore's default "
-                        "data path instead of from the BOTO_DATA_PATH"
-                        " directory.")
+    def test_create_loader_parses_data_path(self):
+        search_path = os.pathsep.join(['foo', 'bar', 'baz'])
+        loader = create_loader(search_path)
+        self.assertIn('foo', loader.search_paths)
+        self.assertIn('bar', loader.search_paths)
+        self.assertIn('baz', loader.search_paths)
+
+
+class TestLoadersWithDirectorySearching(BaseEnvVar):
+    def setUp(self):
+        super(TestLoadersWithDirectorySearching, self).setUp()
+        self.fake_directories = {}
+
+    def tearDown(self):
+        super(TestLoadersWithDirectorySearching, self).tearDown()
+
+    @contextlib.contextmanager
+    def loader_with_fake_dirs(self):
+        mock_file_loader = mock.Mock()
+        mock_file_loader.exists = self.fake_exists
+        search_paths = list(self.fake_directories)
+        loader = Loader(extra_search_paths=search_paths,
+                        include_default_search_paths=False,
+                        file_loader=mock_file_loader)
+        with mock.patch('os.listdir', self.fake_listdir):
+            with mock.patch('os.path.isdir', mock.Mock(return_value=True)):
+                yield loader
+
+
+    def fake_listdir(self, dirname):
+        parts = dirname.split(os.path.sep)
+        result = self.fake_directories
+        while parts:
+            current = parts.pop(0)
+            result = result[current]
+        return list(result)
+
+    def fake_exists(self, path):
+        parts = path.split(os.sep)
+        result = self.fake_directories
+        while len(parts) > 1:
+            current = parts.pop(0)
+            result = result[current]
+        return parts[0] in result
 
     def test_list_available_services(self):
-        avail = self.loader.list_available_services('')
-        self.assertEqual(sorted(avail), [
-            'aws',
-            'aws',
-            'someservice',
-            'sub',
-        ])
+        self.fake_directories = {
+            'foo': {
+                'ec2': {
+                    '2010-01-01': ['service-2'],
+                    '2014-10-01': ['service-1'],
+                },
+                'dynamodb': {
+                    '2010-01-01': ['service-2'],
+                },
+            },
+            'bar': {
+                'ec2': {
+                    '2015-03-01': ['service-1'],
+                },
+                'rds': {
+                    # This will not show up in
+                    # list_available_services() for type
+                    # service-2 because it does not contains
+                    # a service-2.
+                    '2012-01-01': ['resource-1'],
+                },
+            },
+        }
+        with self.loader_with_fake_dirs() as loader:
+            self.assertEqual(
+                loader.list_available_services(type_name='service-2'),
+                ['dynamodb', 'ec2'])
+            self.assertEqual(
+                loader.list_available_services(type_name='resource-1'),
+                ['rds'])
 
-        aws_avail = self.loader.list_available_services('aws')
-        self.assertTrue(len(aws_avail) > 10)
-        self.assertTrue('ec2' in aws_avail)
-
-    def test_load_data_overridden(self):
-        self.overrides_path = os.path.join(
-            os.path.dirname(__file__),
-            'data_overrides'
-        )
-        self.environ['BOTO_DATA_PATH'] = "{0}{1}{2}".format(
-            self.overrides_path,
-            os.pathsep,
-            self.data_path
-        )
-        loader = Loader(data_path=self.environ['BOTO_DATA_PATH'])
-        # This should load the data the first data it finds.
-        data = loader.load_service_model(
-            'someservice',
-            api_version='2012-10-01'
-        )
-        # An overridden key.
-        self.assertEqual(data['api_version'], '2012-10-01')
-        # A key unique to the base.
-        self.assertEqual(data['something-else'], 'another')
-        # Ensure a key present in other variants is not there.
-        self.assertTrue('Purpose' not in data)
-
-    @mock.patch('os.pathsep', ';')
-    def test_search_path_on_windows(self):
-        # On windows, the search path is separated by ';' chars.
-        self.environ['BOTO_DATA_PATH'] = 'c:\\path1;c:\\path2'
-        # The builtin botocore data path is added as the last element
-        # so we're only interested in checking the two that we've added.
-        loader = Loader(data_path=self.environ['BOTO_DATA_PATH'])
-        paths = loader.get_search_paths()[:-1]
-        self.assertEqual(paths, ['c:\\path1', 'c:\\path2'])
-
-
-if __name__ == "__main__":
-    unittest.main()
+    def test_determine_latest(self):
+        # Fake mapping of directories to subdirectories.
+        # In this example, we can see that the 'bar' directory
+        # contains the latest EC2 API version, 2015-03-01,
+        # so loader.determine_latest('ec2') should return
+        # this value 2015-03-01.
+        self.fake_directories = {
+            'foo': {
+                'ec2': {
+                    '2010-01-01': ['service-2'],
+                    # This directory contains the latest API version
+                    # for EC2 because its the highest API directory
+                    # that contains a service-2.
+                    '2014-10-01': ['service-2'],
+                },
+            },
+            'bar': {
+                'ec2': {
+                    '2012-01-01': ['service-2'],
+                    # 2015-03-1 is *not* the latest for service-2,
+                    # because its directory only has service-1.json.
+                    '2015-03-01': ['service-1'],
+                },
+            },
+        }
+        with self.loader_with_fake_dirs() as loader:
+            latest = loader.determine_latest_version('ec2', 'service-2')
+            self.assertEqual(loader.determine_latest_version('ec2', 'service-2'),
+                             '2014-10-01')
+            self.assertEqual(loader.determine_latest_version('ec2', 'service-1'),
+                             '2015-03-01')

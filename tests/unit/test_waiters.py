@@ -544,17 +544,9 @@ class ServiceWaiterFunctionalTest(BaseEnvVar):
         self.loader = Loader(self.data_path)
 
     def get_waiter_model(self, service, api_version=None):
-        """
-        Get the waiter model for the service
-        """
-        service = os.path.join('aws', service)
-        model_version = self.loader.determine_latest(service, api_version)
-        # Some wierd formatting required to get the name of the model
-        # correct. Right now this is returned: YYYY-MM-DD.api
-        # We need: YYYY-MM-DD
-        model_version = ''.join(model_version.split('.')[:-1])
-        waiter_model = model_version + '.waiters'
-        return WaiterModel(self.loader.load_data(waiter_model))
+        """Get the waiter model for the service."""
+        return WaiterModel(self.loader.load_service_model(
+            service, type_name='waiters-2', api_version=api_version))
 
 
 class CloudFrontWaitersTest(ServiceWaiterFunctionalTest):
