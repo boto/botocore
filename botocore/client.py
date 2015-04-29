@@ -196,8 +196,11 @@ class ClientCreator(object):
 
         # Override the user agent if specified in the client config.
         user_agent = self._user_agent
-        if client_config and client_config.user_agent is not None:
-            user_agent = client_config.user_agent
+        if client_config is not None:
+            if client_config.user_agent is not None:
+                user_agent = client_config.user_agent
+            if client_config.user_agent_extra is not None:
+                user_agent += ' %s' % client_config.user_agent_extra
 
         signer = RequestSigner(service_model.service_name, region_name,
                                service_model.signing_name,
@@ -276,7 +279,7 @@ class BaseClient(object):
         self._cache = {}
         self._loader = loader
         self._client_config = client_config
-        self.meta = ClientMeta(event_emitter, self._client_config.region_name,
+        self.meta = ClientMeta(event_emitter, self._client_config,
                                endpoint.host, service_model)
 
         # Register request signing, but only if we have an event
@@ -445,9 +448,9 @@ class ClientMeta(object):
 
     """
 
-    def __init__(self, events, region_name, endpoint_url, service_model):
+    def __init__(self, events, client_config, endpoint_url, service_model):
         self.events = events
-        self._region_name = region_name
+        self._client_config = client_config
         self._endpoint_url = endpoint_url
         self._service_model = service_model
 
@@ -457,11 +460,15 @@ class ClientMeta(object):
 
     @property
     def region_name(self):
-        return self._region_name
+        return self._client_config.region_name
 
     @property
     def endpoint_url(self):
         return self._endpoint_url
+
+    @property
+    def config(self):
+        return self._client_config
 
 
 class Config(object):
@@ -472,10 +479,12 @@ class Config(object):
         * Region name
         * Signature version
         * User agent
+        * User agent extra
 
     """
     def __init__(self, region_name=None, signature_version=None,
-                 user_agent=None):
+                 user_agent=None, user_agent_extra=None):
         self.region_name = region_name
         self.signature_version = signature_version
         self.user_agent = user_agent
+        self.user_agent_extra = user_agent_extra
