@@ -25,7 +25,7 @@ from botocore.vendored import six
 from botocore.awsrequest import create_request_object
 from botocore.exceptions import BaseEndpointResolverError
 from botocore.exceptions import EndpointConnectionError
-from botocore.compat import filter_ssl_san_warnings
+from botocore.compat import filter_ssl_warnings
 from botocore.utils import is_valid_endpoint_url
 from botocore.hooks import first_non_none_response
 from botocore.response import StreamingBody
