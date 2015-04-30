@@ -210,6 +210,23 @@ class TestFuturePaginator(unittest.TestCase):
              mock.call(Marker='m2', MaxKeys=1)]
         )
 
+    def test_with_empty_markers(self):
+        responses = [
+            {"Users": ["User1"], "Marker": ""},
+            {"Users": ["User1"], "Marker": ""},
+            {"Users": ["User1"], "Marker": ""}
+        ]
+        self.method.side_effect = responses
+        users = []
+        for page in self.paginator.paginate():
+            users += page['Users']
+        # We want to stop paginating if the next token is empty.
+        self.assertEqual(
+            self.method.call_args_list,
+            [mock.call()]
+        )
+        self.assertEqual(users, ['User1'])
+
     def test_build_full_result_with_single_key(self):
         responses = [
             {"Users": ["User1"], "Marker": "m1"},
