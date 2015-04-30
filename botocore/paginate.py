@@ -211,7 +211,9 @@ class PageIterator(object):
                 return [None]
         next_tokens = []
         for token in self._output_token:
-            next_tokens.append(token.search(parsed))
+            next_token = token.search(parsed)
+            if next_token:
+                next_tokens.append(next_token)
         return next_tokens
 
     def result_key_iters(self):
