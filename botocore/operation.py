@@ -223,8 +223,8 @@ class Operation(BotoCoreObject):
     def _load_pagination_config(self):
         loader = self.session.get_component('data_loader')
         api_version = self.service.api_version
-        config = loader.load_data('aws/%s/%s.paginators' %
-                                  (self.service.service_name, api_version))
+        config = loader.load_service_model(self.service.service_name,
+                                           'paginators-1', api_version)
         return config['pagination'][self.name]
 
     @property

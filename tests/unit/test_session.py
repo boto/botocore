@@ -371,8 +371,7 @@ class TestGetServiceModel(BaseSessionTest):
 class TestGetPaginatorModel(BaseSessionTest):
     def test_get_paginator_model(self):
         loader = mock.Mock()
-        loader.determine_latest.return_value = 'aws/foo/2014-01-01.normal.json'
-        loader.load_data.return_value = {"pagination": {}}
+        loader.load_service_model.return_value = {"pagination": {}}
         self.session.register_component('data_loader', loader)
 
         model = self.session.get_paginator_model('foo')
@@ -380,15 +379,14 @@ class TestGetPaginatorModel(BaseSessionTest):
         # Verify we get a PaginatorModel back
         self.assertIsInstance(model, PaginatorModel)
         # Verify we called the loader correctly.
-        loader.load_data.assert_called_with(
-            'aws/foo/2014-01-01.paginators.json')
+        loader.load_service_model.assert_called_with(
+            'foo', 'paginators-1', None)
 
 
 class TestGetWaiterModel(BaseSessionTest):
     def test_get_waiter_model(self):
         loader = mock.Mock()
-        loader.determine_latest.return_value = 'aws/foo/2014-01-01.normal.json'
-        loader.load_data.return_value = {"version": 2, "waiters": {}}
+        loader.load_service_model.return_value = {"version": 2, "waiters": {}}
         self.session.register_component('data_loader', loader)
 
         model = self.session.get_waiter_model('foo')
@@ -397,7 +395,8 @@ class TestGetWaiterModel(BaseSessionTest):
         self.assertIsInstance(model, WaiterModel)
         self.assertEqual(model.waiter_names, [])
         # and (2) call the loader correctly.
-        loader.load_data.assert_called_with('aws/foo/2014-01-01.waiters.json')
+        loader.load_service_model.assert_called_with(
+            'foo', 'waiters-2', None)
 
 
 class TestCreateClient(BaseSessionTest):
