@@ -13,6 +13,19 @@
 
 import sys, os
 
+import botocore.session
+from botocore.docs.service import ServiceDocumentor
+
+if not os.path.exists('reference/services'):
+    os.makedirs('reference/services')
+
+# Generate reference docs.
+session = botocore.session.get_session()
+for service_name in session.get_available_services():
+    docs = ServiceDocumentor(
+        service_name).document_service()
+    open('reference/services/{0}.rst'.format(service_name), 'w').write(docs)
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -41,7 +54,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'botocore'
-copyright = u'2013, Mitch Garnaat'
+copyright = u'2015, Amazon.com, Inc.'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -131,7 +144,13 @@ html_static_path = ['_static']
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
+html_show_sourcelink = False
+html_sidebars = {
+    '**': [
+        'globaltoc.html',
+        'localtoc.html',
+        'searchbox.html']
+}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -166,6 +185,19 @@ html_static_path = ['_static']
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'botocoredoc'
 
+import guzzle_sphinx_theme
+
+extensions.append("guzzle_sphinx_theme")
+html_translator_class = 'guzzle_sphinx_theme.HTMLTranslator'
+html_theme_path = guzzle_sphinx_theme.html_theme_path()
+html_theme = 'guzzle_sphinx_theme'
+# Guzzle theme options (see theme.conf for more information)
+
+html_theme_options = {
+    # hack to add tracking
+    "google_analytics_account": os.getenv('TRACKING', False),
+    "base_url": "http://docs.aws.amazon.com/aws-sdk-php/guide/latest/"
+}
 
 # -- Options for LaTeX output --------------------------------------------------
 
@@ -184,7 +216,7 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
   ('index', 'botocore.tex', u'botocore Documentation',
-   u'Mitch Garnaat', 'manual'),
+   'Amazon.com, Inc.', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -214,7 +246,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'botocore', u'botocore Documentation',
-     [u'Mitch Garnaat'], 3)
+     ['Amazon.com, Inc.'], 3)
 ]
 
 # If true, show URL addresses after external links.
@@ -228,7 +260,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'botocore', u'botocore Documentation',
-   u'Mitch Garnaat', 'botocore', 'One line description of project.',
+   'Amazon.com, Inc.', 'botocore', 'One line description of project.',
    'Miscellaneous'),
 ]
 
