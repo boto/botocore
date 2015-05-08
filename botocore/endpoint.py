@@ -106,9 +106,12 @@ class RequestCreator(object):
                 url += '?%s' % encoded_query_string
             else:
                 url += '&%s' % encoded_query_string
+        body = r['body']
+        if isinstance(body, six.string_types):
+            # Only encode strings into bytes. Streams should be left alone.
+            body = body.encode('utf-8')
         request = AWSRequest(method=r['method'], url=url,
-                             data=r['body'],
-                             headers=headers)
+                             data=body, headers=headers)
         return request
 
     def _urljoin(self, endpoint_url, url_path):

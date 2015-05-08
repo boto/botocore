@@ -273,7 +273,12 @@ def _serialize_request_description(request_dict):
 
 
 def _assert_requests_equal(actual, expected):
-    assert_equal(actual['body'], expected['body'], 'Body value')
+    body = actual['body']
+    if isinstance(body, bytes):
+        # The data files with expected output are loaded as string
+        # values, so let's convert to a string for the comparison.
+        body = body.decode('utf-8')
+    assert_equal(body, expected['body'], 'Body value')
     actual_headers = dict(actual['headers'])
     expected_headers = expected.get('headers', {})
     assert_equal(actual_headers, expected_headers, "Header values")
