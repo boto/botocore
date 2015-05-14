@@ -34,6 +34,7 @@ SMOKE_TESTS = {
  'config': {'DescribeDeliveryChannels': {}},
  'datapipeline': {'ListPipelines': {}},
  'directconnect': {'DescribeConnections': {}},
+ 'ds': {'DescribeDirectories': {}},
  'dynamodb': {'ListTables': {}},
  'ec2': {'DescribeRegions': {},
          'DescribeInstances': {}},
