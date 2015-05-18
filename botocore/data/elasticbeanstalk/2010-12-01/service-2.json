@@ -998,6 +998,7 @@
     "ConfigurationOptionSetting":{
       "type":"structure",
       "members":{
+        "ResourceName":{"shape":"ResourceName"},
         "Namespace":{
           "shape":"OptionNamespace",
           "documentation":"<p> A unique namespace identifying the option's associated AWS resource. </p>"
@@ -1958,6 +1959,7 @@
     "OptionSpecification":{
       "type":"structure",
       "members":{
+        "ResourceName":{"shape":"ResourceName"},
         "Namespace":{
           "shape":"OptionNamespace",
           "documentation":"<p> A unique namespace identifying the option's associated AWS resource. </p>"
@@ -2028,6 +2030,11 @@
     },
     "RequestId":{"type":"string"},
     "ResourceId":{"type":"string"},
+    "ResourceName":{
+      "type":"string",
+      "min":1,
+      "max":256
+    },
     "RestartAppServerMessage":{
       "type":"structure",
       "members":{
