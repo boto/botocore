@@ -41,7 +41,7 @@ class TestServiceDocumentor(BaseDocsTest):
             '.. py:class:: myservice.Client',
             '  A low-level client representing AWS MyService::',
             '    client = session.create_client(\'myservice\')',
-            '  These are the available methods:',  
+            '  These are the available methods:',
             '  *   :py:meth:`myservice.Client.sample_operation`',
             '  .. py:method:: sample_operation(Biz=None)',
             '==========',
@@ -58,4 +58,3 @@ class TestServiceDocumentor(BaseDocsTest):
         ]
         for line in lines:
             self.assertIn(line, contents)
-

@@ -49,7 +49,6 @@ class BaseDocsTest(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.root_dir)
 
-
     def setup_client(self):
         with open(self.waiter_model_file, 'w') as f:
             json.dump(self.waiter_json_model, f)
@@ -107,19 +106,20 @@ class BaseDocsTest(unittest.TestCase):
             "version": 2,
             "waiters": {
                 "SampleOperationComplete": {
-                "delay": 15,
-                "operation": "SampleOperation",
-                "maxAttempts": 40,
-                "acceptors": [
-                    {"expected": "complete",
-                     "matcher": "pathAll",
-                     "state": "success",
-                     "argument": "Biz"},
-                    {"expected": "failed",
-                     "matcher": "pathAny",
-                     "state": "failure",
-                     "argument": "Biz"}
-                ]}
+                    "delay": 15,
+                    "operation": "SampleOperation",
+                    "maxAttempts": 40,
+                    "acceptors": [
+                        {"expected": "complete",
+                         "matcher": "pathAll",
+                         "state": "success",
+                         "argument": "Biz"},
+                        {"expected": "failed",
+                         "matcher": "pathAny",
+                         "state": "failure",
+                         "argument": "Biz"}
+                    ]
+                }
             }
         }
 

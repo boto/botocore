@@ -10,8 +10,6 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import mock
-
 from tests import unittest
 from tests.unit.docs import BaseDocsTest
 from botocore.docs.utils import py_type_name
@@ -419,9 +417,9 @@ class TestDocumentList(BaseUtilsDocumentorTest):
         super(TestDocumentList, self).setUp()
         self.add_shape(
             {'List': {
-                 'type': 'list',
-                 'member': {'shape': 'String',
-                            'documentation': 'A string element'}}})
+                'type': 'list',
+                'member': {'shape': 'String',
+                           'documentation': 'A string element'}}})
         self.add_shape_to_params('Foo', 'List', 'This describes the list.')
 
     def test_request_params(self):

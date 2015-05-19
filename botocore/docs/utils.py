@@ -87,7 +87,7 @@ def get_instance_methods(instance):
     :rtype: dict
     :returns: A dictionary that represents an instance's methods where
         the keys are the name of the methods and the
-        values are the handler to the method.         
+        values are the handler to the method.
     """
     instance_members = inspect.getmembers(instance)
     instance_methods = {}
@@ -182,7 +182,7 @@ class CustomMethodSignatureDocumentor(BaseMethodSignatureDocumentor):
         signature_params = inspect.formatargspec(
             args, varargs, keywords, defaults)
         signature_params = signature_params.lstrip('(')
-        signature_params = signature_params.rstrip(')') 
+        signature_params = signature_params.rstrip(')')
         section.style.start_sphinx_py_method(name, signature_params)
 
 
@@ -221,7 +221,7 @@ class BaseShapeDocumentor(object):
 
     def _start_nested_param(self, section, start=None):
         if start is not None:
-            section.write(start)  
+            section.write(start)
         section.style.indent()
         section.style.new_line()
 
@@ -273,7 +273,6 @@ class BaseParamsDocumentor(BaseShapeDocumentor):
 
     def _document_shape_type_map(self, section, shape, history, include=None,
                                  exclude=None, **kwargs):
-        name = kwargs.get('name', None)
         self._add_member_documentation(section, shape, **kwargs)
 
         self._start_nested_param(section)
@@ -334,9 +333,10 @@ class RequestParamsDocumentor(BaseParamsDocumentor):
             is_required = kwargs.get('is_required', False)
             getattr(self, '_document_shape_type_%s' % param_type,
                     self._document_shape_default)(
-                    section, shape, history=history, name=name,
-                    is_top_level_param=is_top_level_param,
-                    is_required=is_required, include=include, exclude=exclude)
+                        section, shape, history=history, name=name,
+                        is_top_level_param=is_top_level_param,
+                        is_required=is_required, include=include,
+                        exclude=exclude)
             history.pop()
 
     def _document_shape_type_structure(self, section, shape, history,
@@ -409,7 +409,7 @@ class BaseExampleDocumentor(BaseShapeDocumentor):
         section.style.new_line()
         section.style.start_codeblock()
         if prefix is not None:
-            section.write(prefix)  
+            section.write(prefix)
         self._document_shape(section, shape, history, include=include,
                              exclude=exclude)
 
@@ -467,7 +467,7 @@ class BaseExampleDocumentor(BaseShapeDocumentor):
 
     def _start_nested_param(self, section, start=None):
         if start is not None:
-            section.write(start)  
+            section.write(start)
         section.style.indent()
         section.style.indent()
         section.style.new_line()
@@ -611,4 +611,4 @@ class ModelDrivenMethodDocumentor(object):
                 return_description_section, operation_model.output_shape,
                 include=include_output, exclude=exclude_output)
         else:
-            return_section.write(':returns: None')  
+            return_section.write(':returns: None')

@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 from bcdoc.restdoc import DocumentStructure
 
-from botocore import xform_name
 import botocore.session
 from botocore.exceptions import DataNotFoundError
 from botocore.docs.utils import get_official_service_name
@@ -42,7 +41,7 @@ class ServiceDocumentor(object):
         """Documents an entire service.
 
         :returns: The reStructured text of the documented service.
-        """ 
+        """
         self._register_sections()
         doc_structure = DocumentStructure(
             self._service_name, self._client.meta.events,
@@ -82,6 +81,5 @@ class ServiceDocumentor(object):
             service_waiter_model = self._session.get_waiter_model(
                 self._service_name)
             waiter_documentor = WaiterDocumentor(
-            self._client, service_waiter_model)
+                self._client, service_waiter_model)
             waiter_documentor.document_waiters(section)
-

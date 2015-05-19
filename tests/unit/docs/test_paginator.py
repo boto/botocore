@@ -69,6 +69,6 @@ class TestPaginatorDocumentor(BaseDocsTest):
             '        }',
             '      **Response Structure**',
             '      - *(dict) --*',
-            '        - **Biz** *(string) --*',   
+            '        - **Biz** *(string) --*',
             '        - **NextToken** *(string) --*'
         ])

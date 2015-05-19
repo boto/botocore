@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from botocore import xform_name
-from botocore.docs.utils import DocumentedShape 
+from botocore.docs.utils import DocumentedShape
 from botocore.docs.utils import ModelDrivenMethodDocumentor
 
 
@@ -107,11 +107,10 @@ class PaginatorDocumentor(object):
         else:
             service_pagination_params.append(paginator_config['input_token'])
 
-
         # Hide the limit key in the documentation.
         if paginator_config.get('limit_key', None):
             service_pagination_params.append(paginator_config['limit_key'])
-        
+
         # Hide the output tokens in the documentation.
         service_pagination_response_params = []
         if isinstance(paginator_config['output_token'], list):

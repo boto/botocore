@@ -61,7 +61,7 @@ class ClientDocumentor(object):
         for method_name in sorted(client_methods):
             section.style.li(':py:meth:`%s.Client.%s`' % (
                 self._service_name, method_name))
-        
+
     def _add_class_signature(self, section):
         section.style.start_sphinx_py_class(
             class_name='%s.Client' % self._service_name)
@@ -99,4 +99,4 @@ class ClientDocumentor(object):
             section, method_name, operation_model,
             method_description=operation_model.documentation,
             example_prefix='response = client.%s' % method_name
-        ) 
+        )

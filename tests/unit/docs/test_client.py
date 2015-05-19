@@ -45,7 +45,7 @@ class TestClientDocumentor(BaseDocsTest):
             '          Biz=\'string\'',
             '      )',
             '    :type Biz: string',
-            '    :param Biz:',    
+            '    :param Biz:',
             '    :rtype: dict',
             '    :returns:',
             '      **Response Example**',
