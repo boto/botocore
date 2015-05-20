@@ -38,7 +38,6 @@ from botocore.parsers import ResponseParserFactory
 from botocore import regions
 from botocore.model import ServiceModel
 from botocore import paginate
-import botocore.service
 from botocore import waiter
 from botocore import retryhandler, translate
 
@@ -547,28 +546,6 @@ class Session(object):
         return self.get_component('data_loader')\
             .list_available_services(type_name='service-2')
 
-    def get_service(self, service_name, api_version=None):
-        """
-        Get information about a service.
-
-        .. warning::
-            This method is deprecated and will be removed in the
-            near future.  Use ``session.create_client`` instead.
-
-        :type service_name: str
-        :param service_name: The name of the service (e.g. 'ec2')
-
-        :returns: :class:`botocore.service.Service`
-        """
-        warnings.warn("get_service is deprecated and will be removed.  "
-                      "Use create_client instead.", ImminentRemovalWarning)
-        service = botocore.service.get_service(self, service_name,
-                                               self.provider,
-                                               api_version=api_version)
-        event = self.create_event('service-created')
-        self._events.emit(event, service=service)
-        return service
-
     def set_debug_logger(self, logger_name='botocore'):
         """
         Convenience function to quickly configure full debug output
@@ -828,14 +805,20 @@ class Session(object):
             the client.  Same semantics as aws_access_key_id above.
 
         :type config: botocore.client.Config
-        :param config: Advanced client configuration options.
+        :param config: Advanced client configuration options. If region_name
+            is specified in the client config, its value will take precedence
+            over environment variables and configuration values, but not over
+            a region_name value passed explicitly to the method.
 
         :rtype: botocore.client.BaseClient
         :return: A botocore client instance
 
         """
         if region_name is None:
-            region_name = self.get_config_variable('region')
+            if config and config.region_name is not None:
+                region_name = config.region_name
+            else:
+                region_name = self.get_config_variable('region')
         loader = self.get_component('data_loader')
         event_emitter = self.get_component('event_emitter')
         response_parser_factory = self.get_component(
