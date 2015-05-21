@@ -22,7 +22,7 @@ import dateutil.parser
 from dateutil.tz import tzlocal, tzutc
 
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
-from botocore.compat import json, quote, zip_longest, urlsplit
+from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
 from botocore.vendored import requests
 from botocore.compat import OrderedDict
 
@@ -35,6 +35,11 @@ METADATA_SECURITY_CREDENTIALS_URL = (
 # These are chars that do not need to be urlencoded.
 # Based on rfc2986, section 2.3
 SAFE_CHARS = '-._~'
+LABEL_RE = re.compile('[a-z0-9][a-z0-9\-]*[a-z0-9]')
+RESTRICTED_REGIONS = [
+    'us-gov-west-1',
+    'fips-us-gov-west-1',
+]
 
 
 class _RetriesExceededError(Exception):
@@ -555,3 +560,87 @@ def is_valid_endpoint_url(endpoint_url):
         hostname = hostname[:-1]
     allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
     return all(allowed.match(x) for x in hostname.split("."))
+
+
+def check_dns_name(bucket_name):
+    """
+    Check to see if the ``bucket_name`` complies with the
+    restricted DNS naming conventions necessary to allow
+    access via virtual-hosting style.
+
+    Even though "." characters are perfectly valid in this DNS
+    naming scheme, we are going to punt on any name containing a
+    "." character because these will cause SSL cert validation
+    problems if we try to use virtual-hosting style addressing.
+    """
+    if '.' in bucket_name:
+        return False
+    n = len(bucket_name)
+    if n < 3 or n > 63:
+        # Wrong length
+        return False
+    if n == 1:
+        if not bucket_name.isalnum():
+            return False
+    match = LABEL_RE.match(bucket_name)
+    if match is None or match.end() != len(bucket_name):
+        return False
+    return True
+
+
+def fix_s3_host(request, signature_version, region_name, **kwargs):
+    """
+    This handler looks at S3 requests just before they are signed.
+    If there is a bucket name on the path (true for everything except
+    ListAllBuckets) it checks to see if that bucket name conforms to
+    the DNS naming conventions.  If it does, it alters the request to
+    use ``virtual hosting`` style addressing rather than ``path-style``
+    addressing.  This allows us to avoid 301 redirects for all
+    bucket names that can be CNAME'd.
+    """
+    if request.auth_path is not None:
+        # The auth_path has already been applied (this may be a
+        # retried request).  We don't need to perform this
+        # customization again.
+        return
+    elif _is_get_bucket_location_request(request):
+        # For the GetBucketLocation response, we should not be using
+        # the virtual host style addressing so we can avoid any sigv4
+        # issues.
+        logger.debug("Request is GetBucketLocation operation, not checking "
+                     "for DNS compatibility.")
+        return
+    parts = urlsplit(request.url)
+    request.auth_path = parts.path
+    path_parts = parts.path.split('/')
+    if signature_version in ['s3v4', 'v4']:
+        return
+    if len(path_parts) > 1:
+        bucket_name = path_parts[1]
+        logger.debug('Checking for DNS compatible bucket for: %s',
+                     request.url)
+        if check_dns_name(bucket_name) and _allowed_region(region_name):
+            # If the operation is on a bucket, the auth_path must be
+            # terminated with a '/' character.
+            if len(path_parts) == 2:
+                if request.auth_path[-1] != '/':
+                    request.auth_path += '/'
+            path_parts.remove(bucket_name)
+            global_endpoint = 's3.amazonaws.com'
+            host = bucket_name + '.' + global_endpoint
+            new_tuple = (parts.scheme, host, '/'.join(path_parts),
+                         parts.query, '')
+            new_uri = urlunsplit(new_tuple)
+            request.url = new_uri
+            logger.debug('URI updated to: %s', new_uri)
+        else:
+            logger.debug('Not changing URI, bucket is not DNS compatible: %s',
+                         bucket_name)
+
+
+def _is_get_bucket_location_request(request):
+    return request.url.endswith('?location')
+
+
+def _allowed_region(region_name):
+    return region_name not in RESTRICTED_REGIONS

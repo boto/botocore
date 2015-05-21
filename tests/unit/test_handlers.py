@@ -23,6 +23,8 @@ from botocore.hooks import first_non_none_response
 from botocore.awsrequest import AWSRequest
 from botocore.compat import quote, six
 from botocore.model import OperationModel, ServiceModel
+from botocore.signers import RequestSigner
+from botocore.credentials import Credentials
 from botocore import handlers
 
 
@@ -63,34 +65,26 @@ class TestHandlers(BaseSessionTest):
 
     def test_presigned_url_already_present(self):
         params = {'body': {'PresignedUrl': 'https://foo'}}
-        handlers.copy_snapshot_encrypted(params, None, None)
+        handlers.copy_snapshot_encrypted(params, None)
         self.assertEqual(params['body']['PresignedUrl'], 'https://foo')
 
     def test_copy_snapshot_encrypted(self):
-        v4query_auth = mock.Mock()
-
-        def add_auth(request):
-            request.url += '?PRESIGNED_STUFF'
-
-        v4query_auth.add_auth = add_auth
-
-        request_signer = mock.Mock()
-        request_signer._region_name = 'us-east-1'
-        request_signer.get_auth.return_value = v4query_auth
-
+        credentials = Credentials('key', 'secret')
+        request_signer = RequestSigner(
+            'ec2', 'us-east-1', 'ec2', 'v4', credentials, None)
+        request_dict = {}
         params = {'SourceRegion': 'us-west-2'}
-        endpoint = mock.Mock()
-        request = AWSRequest()
-        request.method = 'POST'
-        request.url = 'https://ec2.us-east-1.amazonaws.com'
-        request = request.prepare()
-        endpoint.create_request.return_value = request
+        request_dict['body'] = params
+        request_dict['url'] = 'https://ec2.us-east-1.amazonaws.com'
+        request_dict['method'] = 'POST'
+        request_dict['headers'] = {}
 
-        handlers.copy_snapshot_encrypted({'body': params},
-                                         request_signer,
-                                         endpoint)
-        self.assertEqual(params['PresignedUrl'],
-                         'https://ec2.us-west-2.amazonaws.com?PRESIGNED_STUFF')
+        handlers.copy_snapshot_encrypted(request_dict, request_signer)
+
+        self.assertIn('https://ec2.us-west-2.amazonaws.com?',
+                      params['PresignedUrl'])
+        self.assertIn('X-Amz-Signature',
+                      params['PresignedUrl'])
         # We should also populate the DestinationRegion with the
         # region_name of the endpoint object.
         self.assertEqual(params['DestinationRegion'], 'us-east-1')
@@ -100,30 +94,26 @@ class TestHandlers(BaseSessionTest):
         # override the DesinationRegion with the region_name from
         # the endpoint object.
         actual_region = 'us-west-1'
-        v4query_auth = mock.Mock()
 
-        def add_auth(request):
-            request.url += '?PRESIGNED_STUFF'
-
-        v4query_auth.add_auth = add_auth
-
-        request_signer = mock.Mock()
-        request_signer._region_name = actual_region
-        request_signer.get_auth.return_value = v4query_auth
-
-        endpoint = mock.Mock()
-        request = AWSRequest()
-        request.method = 'POST'
-        request.url = 'https://ec2.us-east-1.amazonaws.com'
-        request = request.prepare()
-        endpoint.create_request.return_value = request
+        credentials = Credentials('key', 'secret')
+        request_signer = RequestSigner(
+            'ec2', actual_region, 'ec2', 'v4', credentials, None)
+        request_dict = {}
+        params = {
+            'SourceRegion': 'us-west-2',
+            'DestinationRegion': 'us-east-1'}
+        request_dict['body'] = params
+        request_dict['url'] = 'https://ec2.us-west-1.amazonaws.com'
+        request_dict['method'] = 'POST'
+        request_dict['headers'] = {}
 
         # The user provides us-east-1, but we will override this to
         # endpoint.region_name, of 'us-west-1' in this case.
-        params = {'SourceRegion': 'us-west-2', 'DestinationRegion': 'us-east-1'}
-        handlers.copy_snapshot_encrypted({'body': params},
-                                         request_signer,
-                                         endpoint)
+        handlers.copy_snapshot_encrypted(request_dict, request_signer)
+
+        self.assertIn('https://ec2.us-west-2.amazonaws.com?',
+                      params['PresignedUrl'])
+
         # Always use the DestinationRegion from the endpoint, regardless of
         # whatever value the user provides.
         self.assertEqual(params['DestinationRegion'], actual_region)
@@ -283,39 +273,6 @@ class TestHandlers(BaseSessionTest):
                   'UserData': b64_user_data}
         self.assertEqual(params, result)
 
-    def test_fix_s3_host_initial(self):
-        request = AWSRequest(
-            method='PUT',headers={},
-            url='https://s3-us-west-2.amazonaws.com/bucket/key.txt'
-        )
-        region_name = 'us-west-2'
-        signature_version = 's3'
-        handlers.fix_s3_host(
-            request=request, signature_version=signature_version,
-            region_name=region_name)
-        self.assertEqual(request.url, 'https://bucket.s3.amazonaws.com/key.txt')
-        self.assertEqual(request.auth_path, '/bucket/key.txt')
-
-    def test_fix_s3_host_only_applied_once(self):
-        request = AWSRequest(
-            method='PUT',headers={},
-            url='https://s3-us-west-2.amazonaws.com/bucket/key.txt'
-        )
-        region_name = 'us-west-2'
-        signature_version = 's3'
-        handlers.fix_s3_host(
-            request=request, signature_version=signature_version,
-            region_name=region_name)
-        # Calling the handler again should not affect the end result:
-        handlers.fix_s3_host(
-            request=request, signature_version=signature_version,
-            region_name=region_name)
-        self.assertEqual(request.url, 'https://bucket.s3.amazonaws.com/key.txt')
-        # This was a bug previously.  We want to make sure that
-        # calling fix_s3_host() again does not alter the auth_path.
-        # Otherwise we'll get signature errors.
-        self.assertEqual(request.auth_path, '/bucket/key.txt')
-
     def test_register_retry_for_handlers_with_no_endpoint_prefix(self):
         no_endpoint_prefix = {'metadata': {}}
         session = mock.Mock()
@@ -348,21 +305,6 @@ class TestHandlers(BaseSessionTest):
                                               service_name='foo')
         session.register.assert_called_with('needs-retry.foo', mock.ANY,
                                             unique_id='retry-config-foo')
-
-    def test_dns_style_not_used_for_get_bucket_location(self):
-        original_url = 'https://s3-us-west-2.amazonaws.com/bucket?location'
-        request = AWSRequest(
-            method='GET',headers={},
-            url=original_url,
-        )
-        signature_version = 's3'
-        region_name = 'us-west-2'
-        handlers.fix_s3_host(
-            request=request, signature_version=signature_version,
-            region_name=region_name)
-        # The request url should not have been modified because this is
-        # a request for GetBucketLocation.
-        self.assertEqual(request.url, original_url)
 
     def test_get_template_has_error_response(self):
         original = {'Error': {'Code': 'Message'}}
@@ -498,12 +440,12 @@ class TestRetryHandlerOrder(BaseSessionTest):
         return names
 
     def test_s3_special_case_is_before_other_retry(self):
-        service = self.session.get_service('s3')
-        operation = service.get_operation('CopyObject')
+        service_model = self.session.get_service_model('s3')
+        operation = service_model.operation_model('CopyObject')
         responses = self.session.emit(
             'needs-retry.s3.CopyObject',
-            response=(mock.Mock(), mock.Mock()), endpoint=mock.Mock(), operation=operation,
-            attempts=1, caught_exception=None)
+            response=(mock.Mock(), mock.Mock()), endpoint=mock.Mock(),
+            operation=operation, attempts=1, caught_exception=None)
         # This is implementation specific, but we're trying to verify that
         # the check_for_200_error is before any of the retry logic in
         # botocore.retryhandlers.

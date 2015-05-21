@@ -18,11 +18,11 @@ from botocore.vendored.requests import ConnectionError
 
 from botocore.compat import six
 from botocore.awsrequest import AWSRequest
-from botocore.endpoint import get_endpoint, Endpoint, DEFAULT_TIMEOUT
+from botocore.endpoint import Endpoint, DEFAULT_TIMEOUT
 from botocore.endpoint import EndpointCreator
 from botocore.endpoint import PreserveAuthSession
-from botocore.endpoint import RequestCreator
 from botocore.exceptions import EndpointConnectionError
+from botocore.exceptions import BaseEndpointResolverError
 
 
 def request_dict():
@@ -32,6 +32,7 @@ def request_dict():
         'url_path': '/',
         'query_string': '',
         'method': 'POST',
+        'url': 'https://foo.com'
     }
 
 
@@ -45,64 +46,9 @@ class RecordStreamResets(six.StringIO):
         six.StringIO.seek(self, where)
 
 
-class TestGetEndpoint(unittest.TestCase):
-    def setUp(self):
-        self.environ = {}
-        self.environ_patch = patch('os.environ', self.environ)
-        self.environ_patch.start()
-
-    def tearDown(self):
-        self.environ_patch.stop()
-
-    def create_mock_service(self, service_type, signature_version='v2'):
-        service = Mock()
-        service.type = service_type
-        service.signature_version = signature_version
-        return service
-
-    def test_get_endpoint_default_verify_ssl(self):
-        service = self.create_mock_service('query')
-        endpoint = get_endpoint(service, 'us-west-2',
-                                'https://service.region.amazonaws.com')
-        self.assertTrue(endpoint.verify)
-
-    def test_verify_ssl_can_be_disabled(self):
-        service = self.create_mock_service('query')
-        endpoint = get_endpoint(service, 'us-west-2',
-                                'https://service.region.amazonaws.com',
-                                verify=False)
-        self.assertFalse(endpoint.verify)
-
-    def test_verify_ssl_can_specify_cert_bundle(self):
-        service = self.create_mock_service('query')
-        endpoint = get_endpoint(service, 'us-west-2',
-                                'https://service.region.amazonaws.com',
-                                verify='/path/cacerts.pem')
-        self.assertEqual(endpoint.verify, '/path/cacerts.pem')
-
-    def test_honor_cert_bundle_env_var(self):
-        self.environ['REQUESTS_CA_BUNDLE'] = '/env/cacerts.pem'
-        service = self.create_mock_service('query')
-        endpoint = get_endpoint(service, 'us-west-2',
-                                'https://service.region.amazonaws.com')
-        self.assertEqual(endpoint.verify, '/env/cacerts.pem')
-
-    def test_env_ignored_if_explicitly_passed(self):
-        self.environ['REQUESTS_CA_BUNDLE'] = '/env/cacerts.pem'
-        service = self.create_mock_service('query')
-        endpoint = get_endpoint(service, 'us-west-2',
-                                'https://service.region.amazonaws.com',
-                                verify='/path/cacerts.pem')
-        # /path/cacerts.pem wins over the value from the env var.
-        self.assertEqual(endpoint.verify, '/path/cacerts.pem')
-
-
 class TestEndpointBase(unittest.TestCase):
 
     def setUp(self):
-        self.service = Mock()
-        self.service.session.user_agent.return_value = 'botocore-test'
-        self.service.session.emit_first_non_none_response.return_value = None
         self.op = Mock()
         self.op.has_streaming_output = False
         self.op.metadata = {'protocol': 'json'}
@@ -112,8 +58,8 @@ class TestEndpointBase(unittest.TestCase):
             'botocore.parsers.ResponseParserFactory')
         self.factory = self.factory_patch.start()
         self.endpoint = Endpoint(
-            'us-west-2', 'https://ec2.us-west-2.amazonaws.com/',
-            user_agent='botoore', endpoint_prefix='ec2',
+            'https://ec2.us-west-2.amazonaws.com/',
+            endpoint_prefix='ec2',
             event_emitter=self.event_emitter)
         self.http_session = Mock()
         self.http_session.send.return_value = Mock(
@@ -154,9 +100,9 @@ class TestEndpointFeatures(TestEndpointBase):
 
     def test_make_request_no_signature_version(self):
         self.endpoint = Endpoint(
-            'us-west-2', 'https://ec2.us-west-2.amazonaws.com/',
-            user_agent='botoore',
-            endpoint_prefix='ec2', event_emitter=self.event_emitter)
+            'https://ec2.us-west-2.amazonaws.com/',
+            endpoint_prefix='ec2',
+            event_emitter=self.event_emitter)
         self.endpoint.http_session = self.http_session
 
         self.endpoint.make_request(self.op, request_dict())
@@ -168,8 +114,7 @@ class TestEndpointFeatures(TestEndpointBase):
 
     def test_make_request_injects_better_dns_error_msg(self):
         self.endpoint = Endpoint(
-            'us-west-2', 'https://ec2.us-west-2.amazonaws.com/',
-            user_agent='botoore',
+            'https://ec2.us-west-2.amazonaws.com/',
             endpoint_prefix='ec2', event_emitter=self.event_emitter)
         self.endpoint.http_session = self.http_session
         fake_request = Mock(url='https://ec2.us-west-2.amazonaws.com')
@@ -303,70 +248,63 @@ class TestEndpointCreator(unittest.TestCase):
         self.service_model = Mock(
             endpoint_prefix='ec2', signature_version='v2',
             signing_name='ec2')
+        self.environ = {}
+        self.environ_patch = patch('os.environ', self.environ)
+        self.environ_patch.start()
 
-    def test_endpoint_resolver_with_configured_region_name(self):
-        resolver = Mock()
-        resolver.construct_endpoint.return_value = {
+        self.resolver = Mock()
+        self.resolver.construct_endpoint.return_value = {
             'uri': 'https://endpoint.url', 'properties': {}
         }
-        creator = EndpointCreator(resolver, 'us-west-2',
-                                  Mock(), 'user-agent')
-        endpoint = creator.create_endpoint(self.service_model)
+        self.creator = EndpointCreator(self.resolver, 'us-west-2', Mock())
+
+    def tearDown(self):
+        self.environ_patch.stop()
+
+    def test_endpoint_resolver_with_configured_region_name(self):
+        endpoint = self.creator.create_endpoint(self.service_model)
         self.assertEqual(endpoint.host, 'https://endpoint.url')
 
-    def test_endpoint_resolver_uses_credential_scope(self):
-        resolver = Mock()
-        resolver_region_override = 'us-east-1'
-        resolver.construct_endpoint.return_value = {
-            'uri': 'https://endpoint.url',
-            'properties': {
-                'credentialScope': {
-                    'region': resolver_region_override,
-                }
-            }
-        }
-        original_region_name = 'us-west-2'
-        creator = EndpointCreator(resolver, original_region_name,
-                                  Mock(), 'user-agent')
-        endpoint = creator.create_endpoint(self.service_model)
-        self.assertEqual(endpoint.region_name, 'us-east-1')
+    def test_create_endpoint_with_endpoint_resolver_exception(self):
+        self.resolver.construct_endpoint.side_effect = \
+            BaseEndpointResolverError()
+        with self.assertRaises(BaseEndpointResolverError):
+            self.creator.create_endpoint(self.service_model)
 
-    def test_resolver_no_uses_cred_scope_with_endpoint_url(self):
-        resolver = Mock()
-        resolver_region_override = 'us-east-1'
-        resolver.construct_endpoint.return_value = {
-            'uri': 'https://endpoint.url',
-            'properties': {
-                'credentialScope': {
-                    'region': resolver_region_override,
-                }
-            }
-        }
-        original_region_name = 'us-west-2'
-        creator = EndpointCreator(resolver, original_region_name,
-                                  Mock(), 'user-agent')
-        endpoint = creator.create_endpoint(self.service_model,
-                                           endpoint_url='https://foo')
-        self.assertEqual(endpoint.region_name, 'us-west-2')
+    def test_create_endpoint_with_endpoint_url_and_resolver_exception(self):
+        self.resolver.construct_endpoint.side_effect = \
+            BaseEndpointResolverError()
+        endpoint = self.creator.create_endpoint(self.service_model,
+                                                endpoint_url='https://foo')
+        self.assertEqual(endpoint.host, 'https://foo')
 
-    def test_resolver_uses_cred_scope_with_endpoint_url_and_no_region(self):
-        resolver = Mock()
-        resolver_region_override = 'us-east-1'
-        resolver.construct_endpoint.return_value = {
-            'uri': 'https://endpoint.url',
-            'properties': {
-                'credentialScope': {
-                    'region': resolver_region_override,
-                }
-            }
-        }
-        original_region_name = None
-        creator = EndpointCreator(resolver, original_region_name,
-                                  Mock(), 'user-agent')
-        endpoint = creator.create_endpoint(self.service_model,
-                                           endpoint_url='https://foo')
-        self.assertEqual(endpoint.region_name, resolver_region_override)
+    def test_get_endpoint_default_verify_ssl(self):
+        endpoint = self.creator.create_endpoint(
+            self.service_model, 'us-west-2')
+        self.assertTrue(endpoint.verify)
 
+    def test_verify_ssl_can_be_disabled(self):
+        endpoint = self.creator.create_endpoint(
+            self.service_model, 'us-west-2', verify=False)
+        self.assertFalse(endpoint.verify)
+
+    def test_verify_ssl_can_specify_cert_bundle(self):
+        endpoint = self.creator.create_endpoint(
+            self.service_model, 'us-west-2', verify='/path/cacerts.pem')
+        self.assertEqual(endpoint.verify, '/path/cacerts.pem')
+
+    def test_honor_cert_bundle_env_var(self):
+        self.environ['REQUESTS_CA_BUNDLE'] = '/env/cacerts.pem'
+        endpoint = self.creator.create_endpoint(
+            self.service_model, 'us-west-2')
+        self.assertEqual(endpoint.verify, '/env/cacerts.pem')
+
+    def test_env_ignored_if_explicitly_passed(self):
+        self.environ['REQUESTS_CA_BUNDLE'] = '/env/cacerts.pem'
+        endpoint = self.creator.create_endpoint(
+            self.service_model, 'us-west-2', verify='/path/cacerts.pem')
+        # /path/cacerts.pem wins over the value from the env var.
+        self.assertEqual(endpoint.verify, '/path/cacerts.pem')
 
 class TestAWSSession(unittest.TestCase):
     def test_auth_header_preserved_from_s3_redirects(self):
@@ -402,92 +340,3 @@ class TestAWSSession(unittest.TestCase):
         self.assertEqual(
             redirected_request.headers['Authorization'],
             'original auth header')
-
-
-class TestRequestCreator(unittest.TestCase):
-    def setUp(self):
-        self.request_creator = RequestCreator()
-        self.user_agent = 'botocore/1.0'
-        self.endpoint_url = 'https://s3.amazonaws.com'
-        self.base_request_dict = {
-            'body': '',
-            'headers': {},
-            'method': u'GET',
-            'query_string': '',
-            'url_path': '/'
-        }
-
-    def create_request(self, request_dict, endpoint_url=None,
-                       user_agent=None):
-        self.base_request_dict.update(request_dict)
-        if user_agent is None:
-            user_agent = self.user_agent
-        if endpoint_url is None:
-            endpoint_url = self.endpoint_url
-        return self.request_creator.create_request_object(
-            self.base_request_dict, user_agent, endpoint_url)
-
-    def test_create_request_object_for_get(self):
-        request_dict = {
-            'method': u'GET',
-            'url_path': '/'
-        }
-        request = self.create_request(
-            request_dict, endpoint_url='https://s3.amazonaws.com')
-        self.assertEqual(request.method, 'GET')
-        self.assertEqual(request.url, 'https://s3.amazonaws.com/')
-        self.assertEqual(request.headers['User-Agent'], self.user_agent)
-
-    def test_query_string_serialized_to_url(self):
-        request_dict = {
-            'method': u'GET',
-            'query_string': {u'prefix': u'foo'},
-            'url_path': u'/mybucket'
-        }
-        request = self.create_request(request_dict)
-        self.assertEqual(
-            request.url,
-            'https://s3.amazonaws.com/mybucket?prefix=foo')
-
-    def test_url_path_combined_with_endpoint_url(self):
-        # This checks the case where a user specifies and
-        # endpoint_url that has a path component, and the
-        # serializer gives us a request_dict that has a url
-        # component as well (say from a rest-* service).
-        request_dict = {
-            'query_string': {u'prefix': u'foo'},
-            'url_path': u'/mybucket'
-        }
-        endpoint_url = 'https://custom.endpoint/foo/bar'
-        request = self.create_request(request_dict, endpoint_url)
-        self.assertEqual(
-            request.url,
-            'https://custom.endpoint/foo/bar/mybucket?prefix=foo')
-
-    def test_url_path_with_trailing_slash(self):
-        self.assertEqual(
-            self.create_request(
-                {'url_path': u'/mybucket'},
-                endpoint_url='https://custom.endpoint/foo/bar/').url,
-            'https://custom.endpoint/foo/bar/mybucket')
-
-    def test_url_path_is_slash(self):
-        self.assertEqual(
-            self.create_request(
-                {'url_path': u'/'},
-                endpoint_url='https://custom.endpoint/foo/bar/').url,
-            'https://custom.endpoint/foo/bar/')
-
-    def test_url_path_is_slash_with_endpoint_url_no_slash(self):
-        self.assertEqual(
-            self.create_request(
-                {'url_path': u'/'},
-                endpoint_url='https://custom.endpoint/foo/bar').url,
-            'https://custom.endpoint/foo/bar')
-
-    def test_custom_endpoint_with_query_string(self):
-        self.assertEqual(
-            self.create_request(
-                {'url_path': u'/baz', 'query_string': {'x': 'y'}},
-                endpoint_url='https://custom.endpoint/foo/bar?foo=bar').url,
-            'https://custom.endpoint/foo/bar/baz?foo=bar&x=y')

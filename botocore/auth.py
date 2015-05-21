@@ -31,6 +31,7 @@ from botocore.compat import quote, unquote, urlsplit, parse_qs
 from botocore.compat import urlunsplit
 from botocore.compat import encodebytes
 from botocore.compat import six
+from botocore.compat import json
 
 logger = logging.getLogger(__name__)
 
@@ -377,19 +378,16 @@ class SigV4QueryAuth(SigV4Auth):
         self._expires = expires
 
     def _modify_request_before_signing(self, request):
-        # This is our chance to add additional query params we need
-        # before we go about calculating the signature.
-        request.headers = {}
-        request.method = 'GET'
         # Note that we're not including X-Amz-Signature.
         # From the docs: "The Canonical Query String must include all the query
         # parameters from the preceding table except for X-Amz-Signature.
+        signed_headers = self.signed_headers(self.headers_to_sign(request))
         auth_params = {
             'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
             'X-Amz-Credential': self.scope(request),
             'X-Amz-Date': request.context['timestamp'],
             'X-Amz-Expires': self._expires,
-            'X-Amz-SignedHeaders': 'host',
+            'X-Amz-SignedHeaders': signed_headers,
         }
         if self.credentials.token is not None:
             auth_params['X-Amz-Security-Token'] = self.credentials.token
@@ -461,6 +459,52 @@ class S3SigV4QueryAuth(SigV4QueryAuth):
         return "UNSIGNED-PAYLOAD"
 
 
+class S3SigV4PostAuth(SigV4Auth):
+    """
+    Presigns a s3 post
+
+    Implementation doc here:
+    http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-UsingHTTPPOST.html
+    """
+    def add_auth(self, request):
+        datetime_now = datetime.datetime.utcnow()
+        request.context['timestamp'] = datetime_now.strftime(SIGV4_TIMESTAMP)
+
+        fields = {}
+        if request.context.get('s3-presign-post-fields', None) is not None:
+            fields = request.context['s3-presign-post-fields']
+
+        policy = {}
+        conditions = []
+        if request.context.get('s3-presign-post-policy', None) is not None:
+            policy = request.context['s3-presign-post-policy']
+            if policy.get('conditions', None) is not None:
+                conditions = policy['conditions']
+
+        policy['conditions'] = conditions
+
+        fields['x-amz-algorithm'] = 'AWS4-HMAC-SHA256'
+        fields['x-amz-credential'] = self.scope(request)
+        fields['x-amz-date'] = request.context['timestamp']
+
+        conditions.append({'x-amz-algorithm': 'AWS4-HMAC-SHA256'})
+        conditions.append({'x-amz-credential': self.scope(request)})
+        conditions.append({'x-amz-date': request.context['timestamp']})
+
+        if self.credentials.token is not None:
+            fields['x-amz-security-token'] = self.credentials.token
+            conditions.append({'x-amz-security-token': self.credentials.token})
+
+        # Dump the base64 encoded policy into the fields dictionary.
+        fields['policy'] = base64.b64encode(
+            json.dumps(policy).encode('utf-8')).decode('utf-8')
+
+        fields['x-amz-signature'] = self.signature(fields['policy'], request)
+
+        request.context['s3-presign-post-fields'] = fields
+        request.context['s3-presign-post-policy'] = policy
+
+
 class HmacV1Auth(BaseSigner):
 
     # List of Query String Arguments of Interest
@@ -488,7 +532,7 @@ class HmacV1Auth(BaseSigner):
         hoi = []
         if 'Date' in headers:
             del headers['Date']
-        headers['Date'] = formatdate(usegmt=True)
+        headers['Date'] = self._get_date()
         for ih in interesting_headers:
             found = False
             for key in headers:
@@ -501,6 +545,7 @@ class HmacV1Auth(BaseSigner):
         return '\n'.join(hoi)
 
     def canonical_custom_headers(self, headers):
+        hoi = []
         custom_headers = {}
         for key in headers:
             lk = key.lower()
@@ -509,7 +554,6 @@ class HmacV1Auth(BaseSigner):
                     custom_headers[lk] = ','.join(v.strip() for v in
                                                   headers.get_all(key))
         sorted_header_keys = sorted(custom_headers.keys())
-        hoi = []
         for key in sorted_header_keys:
             hoi.append("%s:%s" % (key, custom_headers[key]))
         return '\n'.join(hoi)
@@ -579,6 +623,12 @@ class HmacV1Auth(BaseSigner):
         signature = self.get_signature(request.method, split,
                                        request.headers,
                                        auth_path=request.auth_path)
+        self._inject_signature(request, signature)
+
+    def _get_date(self):
+        return formatdate(usegmt=True)
+
+    def _inject_signature(self, request, signature):
         if 'Authorization' in request.headers:
             # We have to do this because request.headers is not
             # normal dictionary.  It has the (unintuitive) behavior
@@ -591,15 +641,103 @@ class HmacV1Auth(BaseSigner):
             "AWS %s:%s" % (self.credentials.access_key, signature))
 
 
+class HmacV1QueryAuth(HmacV1Auth):
+    """
+    Generates a presigned request for s3.
+
+    Spec from this document:
+
+    http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html
+    #RESTAuthenticationQueryStringAuth
+
+    """
+    DEFAULT_EXPIRES = 3600
+
+    def __init__(self, credentials, expires=DEFAULT_EXPIRES):
+        self.credentials = credentials
+        self._expires = expires
+
+    def _get_date(self):
+        return str(int(time.time() + int(self._expires)))
+
+    def _inject_signature(self, request, signature):
+        query_dict = {}
+        query_dict['AWSAccessKeyId'] = self.credentials.access_key
+        query_dict['Signature'] = signature
+
+        for header_key in request.headers:
+            lk = header_key.lower()
+            # For query string requests, Expires is used instead of the
+            # Date header.
+            if header_key == 'Date':
+                query_dict['Expires'] = request.headers['Date']
+            # We only want to include relevant headers in the query string.
+            # These can be anything that starts with x-amz, is Content-MD5,
+            # or is Content-Type.
+            elif lk.startswith('x-amz-') or lk in ['content-md5',
+                                                   'content-type']:
+                query_dict[lk] = request.headers[lk]
+        # Combine all of the identified headers into an encoded
+        # query string
+        new_query_string = percent_encode_sequence(query_dict)
+
+        # Create a new url with the presigned url.
+        p = urlsplit(request.url)
+        new_url_parts = (p[0], p[1], p[2], new_query_string, p[4])
+        request.url = urlunsplit(new_url_parts)
+
+
+class HmacV1PostAuth(HmacV1Auth):
+    """
+    Generates a presigned post for s3.
+
+    Spec from this document:
+
+    http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingHTTPPOST.html
+    """
+    def add_auth(self, request):
+        fields = {}
+        if request.context.get('s3-presign-post-fields', None) is not None:
+            fields = request.context['s3-presign-post-fields']
+
+        policy = {}
+        conditions = []
+        if request.context.get('s3-presign-post-policy', None) is not None:
+            policy = request.context['s3-presign-post-policy']
+            if policy.get('conditions', None) is not None:
+                conditions = policy['conditions']
+
+        policy['conditions'] = conditions
+
+        fields['AWSAccessKeyId'] = self.credentials.access_key
+
+        if self.credentials.token is not None:
+            fields['x-amz-security-token'] = self.credentials.token
+            conditions.append({'x-amz-security-token': self.credentials.token})
+
+        # Dump the base64 encoded policy into the fields dictionary.
+        fields['policy'] = base64.b64encode(
+            json.dumps(policy).encode('utf-8')).decode('utf-8')
+
+        fields['signature'] = self.sign_string(fields['policy'])
+
+        request.context['s3-presign-post-fields'] = fields
+        request.context['s3-presign-post-policy'] = policy
+
+
 # Defined at the bottom instead of the top of the module because the Auth
 # classes weren't defined yet.
 AUTH_TYPE_MAPS = {
     'v2': SigV2Auth,
     'v4': SigV4Auth,
+    'v4-query': SigV4QueryAuth,
     'v3': SigV3Auth,
     'v3https': SigV3Auth,
     's3': HmacV1Auth,
+    's3-query': HmacV1QueryAuth,
+    's3-presign-post': HmacV1PostAuth,
     's3v4': S3SigV4Auth,
     's3v4-query': S3SigV4QueryAuth,
-    'v4-query': SigV4QueryAuth,
+    's3v4-presign-post': S3SigV4PostAuth,
+
 }

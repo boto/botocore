@@ -79,10 +79,10 @@ class TestGetResponse(unittest.TestCase):
         http_response.reason = 'OK'
 
         session = botocore.session.get_session()
-        s3 = session.get_service('s3')
-        operation = s3.get_operation('GetObject')
+        service_model = session.get_service_model('s3')
+        operation_model = service_model.operation_model('GetObject')
 
-        res = response.get_response(operation.model, http_response)
+        res = response.get_response(operation_model, http_response)
         self.assertTrue(isinstance(res[1]['Body'], response.StreamingBody))
         self.assertEqual(res[1]['ETag'],
                          '"00000000000000000000000000000000"')
@@ -101,18 +101,18 @@ class TestGetResponse(unittest.TestCase):
         http_response.reason = 'Forbidden'
 
         session = botocore.session.get_session()
-        s3 = session.get_service('s3')
-        operation = s3.get_operation('GetObject') # streaming operation
+        service_model = session.get_service_model('s3')
+        operation_model = service_model.operation_model('GetObject')
 
         self.assertEqual(
-            response.get_response(operation.model, http_response)[1],
+            response.get_response(operation_model, http_response)[1],
             {'Error': {'Message': 'Access Denied',
                        'Code': 'AccessDenied',},
              'ResponseMetadata': {'HostId': 'AAAAAAAAAAAAAAAAAAA',
                                   'RequestId': 'XXXXXXXXXXXXXXXX',
                                   'HTTPStatusCode': 403},
              }
-            )
+        )
 
     def test_get_response_nonstreaming_ok(self):
         http_response = Response()
@@ -129,11 +129,11 @@ class TestGetResponse(unittest.TestCase):
         http_response.request = Request()
 
         session = botocore.session.get_session()
-        s3 = session.get_service('s3')
-        operation = s3.get_operation('ListObjects') # non-streaming operation
+        service_model = session.get_service_model('s3')
+        operation_model = service_model.operation_model('ListObjects')
 
         self.assertEqual(
-            response.get_response(operation.model, http_response)[1],
+            response.get_response(operation_model, http_response)[1],
             { 'ResponseMetadata': {'RequestId': 'XXXXXXXXXXXXXXXX',
                                    'HostId': 'AAAAAAAAAAAAAAAAAAA',
                                    'HTTPStatusCode': 403},
@@ -156,11 +156,11 @@ class TestGetResponse(unittest.TestCase):
         http_response.request = Request()
 
         session = botocore.session.get_session()
-        s3 = session.get_service('s3')
-        operation = s3.get_operation('ListObjects') # non-streaming operation
+        service_model = session.get_service_model('s3')
+        operation_model = service_model.operation_model('ListObjects')
 
         self.assertEqual(
-            response.get_response(operation.model, http_response)[1],
+            response.get_response(operation_model, http_response)[1],
             {u'Contents': [{u'ETag': '"00000000000000000000000000000000"',
                             u'Key': 'test.png',
                             u'LastModified': datetime.datetime(2014, 3, 1, 17, 6, 40, tzinfo=tzutc()),

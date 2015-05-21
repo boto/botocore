@@ -48,37 +48,6 @@ def create_waiter_with_client(waiter_name, waiter_model, client):
     )
 
 
-def create_waiter_from_legacy(waiter_name, waiter_config,
-                              service_object, endpoint):
-    """
-
-    :type waiter_name: str
-    :param waiter_name: The name of the waiter.
-
-    :type waiter_config: dict
-    :param waiter_config: The loaded waiter model file.
-
-    :type service_object: botocore.service.Service
-    :param service_object: The service object associated with the waiter.
-
-    :rtype: botocore.waiter.Waiter
-    :return: The waiter object.
-
-    """
-    model = WaiterModel(waiter_config)
-    single_waiter_config = model.get_waiter(waiter_name)
-    operation_object = service_object.get_operation(
-        single_waiter_config.operation)
-    operation_method = LegacyOperationMethod(operation_object,
-                                             endpoint)
-    return Waiter(waiter_name, single_waiter_config,
-                  operation_method)
-
-
-# The NormalizedOperationMethod and the LegacyOperationMethod
-# below will normalize the differences between the client interface
-# and the Service/Operation object interface.  This allows for a single
-# Waiter class to be used for both clients and Service/Operation.
 class NormalizedOperationMethod(object):
     def __init__(self, client_method):
         self._client_method = client_method
@@ -88,35 +57,6 @@ class NormalizedOperationMethod(object):
             return self._client_method(**kwargs)
         except ClientError as e:
             return e.response
-
-
-class LegacyOperationMethod(object):
-    def __init__(self, operation_object, endpoint):
-        self._operation_object = operation_object
-        self._endpoint = endpoint
-
-    def __call__(self, **kwargs):
-        try:
-            http, parsed = self._operation_object.call(
-                self._endpoint, **kwargs)
-        except Exception as e:
-            # In theory, a handler can raise an type of exception.
-            # We're going to make a best effort attempt to handle
-            # the ClientError attributes, but not require that
-            # the exception is an instance of ClientError.
-            if self._looks_like_client_error(e):
-                return {
-                    'Error': {
-                        'Code': e.error_code,
-                        'Message': e.error_message,
-                    }
-                }
-            else:
-                raise
-        return parsed
-
-    def _looks_like_client_error(self, e):
-        return hasattr(e, 'error_code') and hasattr(e, 'error_message')
 
 
 class WaiterModel(object):
