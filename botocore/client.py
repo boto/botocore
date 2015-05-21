@@ -20,6 +20,7 @@ from botocore.awsrequest import prepare_request_dict
 from botocore.endpoint import EndpointCreator
 from botocore.exceptions import ClientError, DataNotFoundError
 from botocore.exceptions import OperationNotPageableError
+from botocore.hooks import first_non_none_response
 from botocore.model import ServiceModel
 from botocore.paginate import Paginator
 from botocore.signers import RequestSigner
@@ -316,6 +317,17 @@ class BaseClient(object):
         # Given the API params provided by the user and the operation_model
         # we can serialize the request to a request_dict.
         operation_name = operation_model.name
+
+        # Emit an event that allows users to modify the parameters at the
+        # beginning of the method. It allows handlers to modify existing
+        # parameters or return a new set of parameters to use.
+        responses = self.meta.events.emit(
+            'client-method-called.{endpoint_prefix}.{operation_name}'.format(
+                endpoint_prefix=self._service_model.endpoint_prefix,
+                operation_name=operation_name),
+            params=api_params, model=operation_model)
+        api_params = first_non_none_response(responses, default=api_params)
+
         event_name = (
             'before-parameter-build.{endpoint_prefix}.{operation_name}')
         self.meta.events.emit(
