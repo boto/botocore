@@ -19,22 +19,6 @@ class TestCanChangeParsing(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
 
-    def test_can_change_timestamp_parsing_with_service_obj(self):
-        # This is an example of what a library such as the AWS CLI
-        # could do to alter the parsing behavior of botocore.
-        factory = self.session.get_component('response_parser_factory')
-        # We'll be explicit here and type convert to a str().
-        factory.set_parser_defaults(timestamp_parser=lambda x: str(x))
-
-        # Now if we get a response with timestamps in the model, they
-        # will be returned as strings. We're testing service/operation
-        # objects, but we should also add a test for clients.
-        s3 = self.session.get_service('s3')
-        endpoint = s3.get_endpoint('us-west-2')
-        http, parsed = s3.get_operation('ListBuckets').call(endpoint)
-        dates = [bucket['CreationDate'] for bucket in parsed['Buckets']]
-        self.assertTrue(all(isinstance(date, str) for date in dates))
-
     def test_can_change_timestamp_with_clients(self):
         factory = self.session.get_component('response_parser_factory')
         factory.set_parser_defaults(timestamp_parser=lambda x: str(x))

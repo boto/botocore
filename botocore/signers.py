@@ -10,11 +10,16 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import datetime
 
 import botocore
 import botocore.auth
-
+from botocore.awsrequest import create_request_object, prepare_request_dict
 from botocore.exceptions import UnknownSignatureVersionError
+from botocore.exceptions import UnknownClientMethodError
+from botocore.exceptions import UnsupportedSignatureVersionError
+from botocore.utils import fix_s3_host
+
 
 class RequestSigner(object):
     """
@@ -57,6 +62,18 @@ class RequestSigner(object):
         # can be used for many requests in a single client.
         self._cache = {}
 
+    @property
+    def region_name(self):
+        return self._region_name
+
+    @property
+    def signature_version(self):
+        return self._signature_version
+
+    @property
+    def signing_name(self):
+        return self._signing_name
+
     def sign(self, operation_name, request):
         """
         Sign a request before it goes out over the wire.
@@ -92,7 +109,8 @@ class RequestSigner(object):
                                     signature_version)
             signer.add_auth(request=request)
 
-    def get_auth(self, signing_name, region_name, signature_version=None):
+    def get_auth(self, signing_name, region_name, signature_version=None,
+                 **kwargs):
         """
         Get an auth instance which can be used to sign a request
         using the given signature version.
@@ -121,7 +139,7 @@ class RequestSigner(object):
             raise UnknownSignatureVersionError(
                 signature_version=signature_version)
         else:
-            kwargs = {'credentials': self._credentials}
+            kwargs['credentials'] = self._credentials
             if cls.REQUIRES_REGION:
                 if self._region_name is None:
                     raise botocore.exceptions.NoRegionError()
@@ -130,3 +148,320 @@ class RequestSigner(object):
             auth = cls(**kwargs)
             self._cache[key] = auth
             return auth
+
+    def generate_presigned_url(self, request_dict, expires_in=3600,
+                               region_name=None):
+        """Generates a presigned url
+
+        :type request_dict: dict
+        :param request_dict: The prepared request dictionary returned by
+            ``botocore.awsrequest.prepare_request_dict()``
+
+        :type expires_in: int
+        :param expires_in: The number of seconds the presigned url is valid
+            for. By default it expires in an hour (3600 seconds)
+
+        :type region_name: string
+        :param region_name: The region name to sign the presigned url.
+
+        returns: The presigned url
+        """
+        if region_name is None:
+            region_name = self._region_name
+        query_prefix = '-query'
+        signature_version = self._signature_version
+        if not signature_version.endswith(query_prefix):
+            signature_version += query_prefix
+
+        kwargs = {'signing_name': self._signing_name,
+                  'region_name': region_name,
+                  'signature_version': signature_version,
+                  'expires': expires_in}
+
+        signature_type = signature_version.split('-', 1)[0]
+        try:
+            auth = self.get_auth(**kwargs)
+        except UnknownSignatureVersionError:
+            raise UnsupportedSignatureVersionError(
+                signature_version=signature_type)
+
+        request = create_request_object(request_dict)
+
+        # Fix s3 host for s3 sigv2 bucket names
+        fix_s3_host(request, signature_type, region_name)
+
+        auth.add_auth(request)
+        request.prepare()
+
+        return request.url
+
+
+class S3PostPresigner(object):
+    def __init__(self, request_signer):
+        self._request_signer = request_signer
+
+    def generate_presigned_post(self, request_dict, fields=None,
+                                conditions=None, expires_in=3600,
+                                region_name=None):
+        """Generates the url and the form fields used for a presigned s3 post
+
+        :type request_dict: dict
+        :param request_dict: The prepared request dictionary returned by
+            ``botocore.awsrequest.prepare_request_dict()``
+
+        :type fields: dict
+        :param fields: A dictionary of prefilled form fields to build on top
+            of.
+
+        :type conditions: list
+        :param conditions: A list of conditions to include in the policy. Each
+            element can be either a list or a structure. For example:
+            [
+             {"acl": "public-read"},
+             {"bucket": "mybucket"},
+             ["starts-with", "$key", "mykey"]
+            ]
+
+        :type expires_in: int
+        :param expires_in: The number of seconds the presigned post is valid
+            for.
+
+        :type region_name: string
+        :param region_name: The region name to sign the presigned post to.
+
+        :rtype: dict
+        :returns: A dictionary with two elements: ``url`` and ``fields``.
+            Url is the url to post to. Fields is a dictionary filled with
+            the form fields and respective values to use when submitting the
+            post. For example:
+
+            {'url': 'https://mybucket.s3.amazonaws.com
+             'fields': {'acl': 'public-read',
+                        'key': 'mykey',
+                        'signature': 'mysignature',
+                        'policy': 'mybase64 encoded policy'}
+            }
+        """
+        if fields is None:
+            fields = {}
+
+        if conditions is None:
+            conditions = []
+
+        if region_name is None:
+            region_name = self._request_signer.region_name
+
+        # Create the policy for the post.
+        policy = {}
+
+        # Create an expiration date for the policy
+        datetime_now = datetime.datetime.utcnow()
+        expire_date = datetime_now + datetime.timedelta(seconds=expires_in)
+        policy['expiration'] = expire_date.strftime(botocore.auth.ISO8601)
+
+        # Append all of the conditions that the user supplied.
+        policy['conditions'] = []
+        for condition in conditions:
+            policy['conditions'].append(condition)
+
+        # Obtain the appropriate signer.
+        query_prefix = '-presign-post'
+        signature_version = self._request_signer.signature_version
+        if not signature_version.endswith(query_prefix):
+            signature_version += query_prefix
+
+        kwargs = {'signing_name': self._request_signer.signing_name,
+                  'region_name': region_name,
+                  'signature_version': signature_version}
+
+        signature_type = signature_version.split('-', 1)[0]
+
+        try:
+            auth = self._request_signer.get_auth(**kwargs)
+        except UnknownSignatureVersionError:
+            raise UnsupportedSignatureVersionError(
+                signature_version=signature_type)
+
+        # Store the policy and the fields in the request for signing
+        request = create_request_object(request_dict)
+        request.context['s3-presign-post-fields'] = fields
+        request.context['s3-presign-post-policy'] = policy
+
+        auth.add_auth(request)
+
+        # Fix s3 host for s3 sigv2 bucket names
+        fix_s3_host(request, signature_type, region_name)
+        # Return the url and the fields for th form to post.
+        return {'url': request.url, 'fields': fields}
+
+
+def add_generate_presigned_url(class_attributes, **kwargs):
+    class_attributes['generate_presigned_url'] = generate_presigned_url
+
+
+def generate_presigned_url(self, ClientMethod, Params=None, ExpiresIn=3600,
+                           HttpMethod=None):
+    """Generate a presigned url given a client, its method, and arguments
+
+    :type ClientMethod: string
+    :param ClientMethod: The client method to presign for
+
+    :type Params: dict
+    :param Params: The parameters normally passed to
+        ``ClientMethod``.
+
+    :type ExpiresIn: int
+    :param expires_in: The number of seconds the presigned url is valid
+        for. By default it expires in an hour (3600 seconds)
+
+    :type HttpMethod: string
+    :param HttpMethod: The http method to use on the generated url. By
+        default, the http method is whatever is used in the method's model.
+
+    returns: The presigned url
+    """
+    client_method = ClientMethod
+    params = Params
+    expires_in = ExpiresIn
+    http_method = HttpMethod
+
+    request_signer = self._request_signer
+    serializer = self._serializer
+
+    try:
+        operation_name = self._PY_TO_OP_NAME[client_method]
+    except KeyError:
+        raise UnknownClientMethodError(method_name=client_method)
+
+    operation_model = self.meta.service_model.operation_model(
+        operation_name)
+
+    # Create a request dict based on the params to serialize.
+    request_dict = serializer.serialize_to_request(
+        params, operation_model)
+
+    # Switch out the http method if user specified it.
+    if http_method is not None:
+        request_dict['method'] = http_method
+
+    # Prepare the request dict by including the client's endpoint url.
+    prepare_request_dict(
+        request_dict, endpoint_url=self.meta.endpoint_url)
+
+    # Generate the presigned url.
+    return request_signer.generate_presigned_url(
+        request_dict=request_dict, expires_in=expires_in)
+
+
+def add_generate_presigned_post(class_attributes, **kwargs):
+    class_attributes['generate_presigned_post'] = generate_presigned_post
+
+
+def generate_presigned_post(self, Bucket, Key, Fields=None, Conditions=None,
+                            ExpiresIn=3600):
+    """Builds the url and the form fields used for a presigned s3 post
+
+    :type Bucket: string
+    :param Bucket: The name of the bucket to presign the post to. Note that
+        bucket related conditions should not be included in the
+        ``conditions`` parameter.
+
+    :type Key: string
+    :param Key: Key name, optionally add ${filename} to the end to
+        attach the submitted filename. Note that key related condtions and
+        fields are filled out for you and should not be included in the
+        ``fields`` or ``condtions`` parmater.
+
+    :type Fields: dict
+    :param Fields: A dictionary of prefilled form fields to build on top
+        of. Elements that may be included are acl, Cache-Control,
+        Content-Type, Content-Disposition, Content-Encoding, Expires,
+        success_action_redirect, redirect, success_action_status,
+        and x-amz-meta-.
+
+        Note that if a particular element is included in the fields
+        dictionary it will not be automatically added to the conditions
+        list. You must specify a condition for the element as well.
+
+    :type Conditions: list
+    :param Conditions: A list of conditions to include in the policy. Each
+        element can be either a list or a structure. For example:
+
+        [
+         {"acl": "public-read"},
+         ["content-length-range", 2, 5],
+         ["starts-with", "$success_action_redirect", ""]
+        ]
+
+        Conditions that are included may pertain to acl,
+        content-length-range, Cache-Control, Content-Type,
+        Content-Disposition, Content-Encoding, Expires,
+        success_action_redirect, redirect, success_action_status,
+        and/or x-amz-meta-.
+
+        Note that if you include a condition, you must specify
+        the a valid value in the fields dictionary as well. A value will
+        not be added automatically to the fields dictionary based on the
+        conditions.
+
+    :type ExpiresIn: int
+    :param ExpiresIn: The number of seconds the presigned post
+        is valid for.
+
+    :rtype: dict
+    :returns: A dictionary with two elements: ``url`` and ``fields``.
+        Url is the url to post to. Fields is a dictionary filled with
+        the form fields and respective values to use when submitting the
+        post. For example:
+
+        {'url': 'https://mybucket.s3.amazonaws.com
+         'fields': {'acl': 'public-read',
+                    'key': 'mykey',
+                    'signature': 'mysignature',
+                    'policy': 'mybase64 encoded policy'}
+        }
+    """
+    bucket = Bucket
+    key = Key
+    fields = Fields
+    conditions = Conditions
+    expires_in = ExpiresIn
+
+    if fields is None:
+        fields = {}
+
+    if conditions is None:
+        conditions = []
+
+    post_presigner = S3PostPresigner(self._request_signer)
+    serializer = self._serializer
+
+    # We choose the CreateBucket operation model because its url gets
+    # serialized to what a presign post requires.
+    operation_model = self.meta.service_model.operation_model(
+        'CreateBucket')
+
+    # Create a request dict based on the params to serialize.
+    request_dict = serializer.serialize_to_request(
+        {'Bucket': bucket}, operation_model)
+
+    # Prepare the request dict by including the client's endpoint url.
+    prepare_request_dict(
+        request_dict, endpoint_url=self.meta.endpoint_url)
+
+    # Append that the bucket name to the list of conditions.
+    conditions.append({'bucket': bucket})
+
+    # If the key ends with filename, the only constraint that can be
+    # imposed is if it starts with the specified prefix.
+    if key.endswith('${filename}'):
+        conditions.append(["starts-with", '$key', key[:-len('${filename}')]])
+    else:
+        conditions.append({'key': key})
+
+    # Add the key to the fields.
+    fields['key'] = key
+
+    return post_presigner.generate_presigned_post(
+        request_dict=request_dict, fields=fields, conditions=conditions,
+        expires_in=expires_in)

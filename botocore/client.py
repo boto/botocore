@@ -16,6 +16,7 @@ import logging
 import botocore.serialize
 import botocore.validate
 from botocore import waiter, xform_name
+from botocore.awsrequest import prepare_request_dict
 from botocore.endpoint import EndpointCreator
 from botocore.exceptions import ClientError, DataNotFoundError
 from botocore.exceptions import OperationNotPageableError
@@ -95,7 +96,8 @@ class ClientCreator(object):
                                      handler, unique_id=unique_id)
 
     def _get_signature_version_and_region(self, service_model, region_name,
-                                          is_secure, scoped_config):
+                                          is_secure, scoped_config,
+                                          endpoint_url):
         # Get endpoint heuristic overrides before creating the
         # request signer.
         resolver = self._endpoint_resolver
@@ -121,45 +123,97 @@ class ClientCreator(object):
                         service_model.endpoint_prefix, override)
                     signature_version = override
 
+        # Determine the region name as well
+        region_name = self._determine_region_name(
+            endpoint_config, region_name, endpoint_url)
+
         return signature_version, region_name
+
+    def _determine_region_name(self, endpoint_config, region_name=None,
+                               endpoint_url=None):
+        # This is a helper function to determine region name to use.
+        # It will take into account whether the user passes in a region
+        # name, whether there is a rule in the endpoint JSON, or
+        # an endpoint url was provided.
+
+        # We only support the credentialScope.region in the properties
+        # bag right now, so if it's available, it will override the
+        # provided region name.
+        region_name_override = endpoint_config['properties'].get(
+            'credentialScope', {}).get('region')
+
+        if endpoint_url is not None:
+            # If an endpoint_url is provided, do not use region name
+            # override if a region was provided by the user.
+            if region_name is not None:
+                region_name_override = None
+
+        if region_name_override is not None:
+            # Letting the heuristics rule override the region_name
+            # allows for having a default region of something like us-west-2
+            # for IAM, but we still will know to use us-east-1 for sigv4.
+            region_name = region_name_override
+
+        return region_name
 
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,
                          scoped_config, client_config):
-        # A client needs:
-        #
-        # * serializer
-        # * endpoint
-        # * response parser
-        # * request signer
+
         protocol = service_model.metadata['protocol']
         serializer = botocore.serialize.create_serializer(
             protocol, include_validation=True)
+
         event_emitter = copy.copy(self._event_emitter)
+
         endpoint_creator = EndpointCreator(self._endpoint_resolver,
-                                           region_name, event_emitter,
-                                           self._user_agent)
+                                           region_name, event_emitter)
         endpoint = endpoint_creator.create_endpoint(
             service_model, region_name, is_secure=is_secure,
             endpoint_url=endpoint_url, verify=verify,
             response_parser_factory=self._response_parser_factory)
+
         response_parser = botocore.parsers.create_parser(protocol)
 
-        # This is only temporary in the sense that we should remove any
-        # region_name logic from endpoints and put it into clients.
-        # But that can only happen once operation objects are deprecated.
-        region_name = endpoint.region_name
+        # Determine what region the user provided either via the
+        # region_name argument or the client_config.
+        if region_name is None:
+            if client_config and client_config.region_name is not None:
+                region_name = client_config.region_name
+
+        # Based on what the user provided use the scoped config file
+        # to determine if the region is going to change and what
+        # signature should be used.
         signature_version, region_name = \
             self._get_signature_version_and_region(
-                service_model, region_name, is_secure, scoped_config)
+                service_model, region_name, is_secure, scoped_config,
+                endpoint_url)
 
+        # Override the signature if the user specifies it in the client
+        # config.
         if client_config and client_config.signature_version is not None:
             signature_version = client_config.signature_version
+
+        # Override the user agent if specified in the client config.
+        user_agent = self._user_agent
+        if client_config is not None:
+            if client_config.user_agent is not None:
+                user_agent = client_config.user_agent
+            if client_config.user_agent_extra is not None:
+                user_agent += ' %s' % client_config.user_agent_extra
 
         signer = RequestSigner(service_model.service_name, region_name,
                                service_model.signing_name,
                                signature_version, credentials,
                                event_emitter)
+
+        # Create a new client config to be passed to the client based
+        # on the final values. We do not want the user to be able
+        # to try to modify an existing client with a client config.
+        client_config = Config(
+            region_name=region_name, signature_version=signature_version,
+            user_agent=user_agent)
+
         return {
             'serializer': serializer,
             'endpoint': endpoint,
@@ -168,6 +222,7 @@ class ClientCreator(object):
             'request_signer': signer,
             'service_model': service_model,
             'loader': self._loader,
+            'client_config': client_config
         }
 
     def _create_methods(self, service_model):
@@ -215,14 +270,16 @@ class BaseClient(object):
     _PY_TO_OP_NAME = {}
 
     def __init__(self, serializer, endpoint, response_parser,
-                 event_emitter, request_signer, service_model, loader):
+                 event_emitter, request_signer, service_model, loader,
+                 client_config):
         self._serializer = serializer
         self._endpoint = endpoint
         self._response_parser = response_parser
         self._request_signer = request_signer
         self._cache = {}
         self._loader = loader
-        self.meta = ClientMeta(event_emitter, endpoint.region_name,
+        self._client_config = client_config
+        self.meta = ClientMeta(event_emitter, self._client_config,
                                endpoint.host, service_model)
 
         # Register request signing, but only if we have an event
@@ -239,7 +296,6 @@ class BaseClient(object):
         operation_model = self._service_model.operation_model(operation_name)
         request_dict = self._convert_to_request_dict(
             api_params, operation_model)
-
         http, parsed_response = self._endpoint.make_request(
             operation_model, request_dict)
 
@@ -270,14 +326,14 @@ class BaseClient(object):
 
         request_dict = self._serializer.serialize_to_request(
             api_params, operation_model)
-
+        prepare_request_dict(request_dict, endpoint_url=self._endpoint.host,
+                             user_agent=self._client_config.user_agent)
         self.meta.events.emit(
             'before-call.{endpoint_prefix}.{operation_name}'.format(
                 endpoint_prefix=self._service_model.endpoint_prefix,
                 operation_name=operation_name),
             model=operation_model, params=request_dict,
-            request_signer=self._request_signer,
-            endpoint=self._endpoint
+            request_signer=self._request_signer
         )
         return request_dict
 
@@ -392,9 +448,9 @@ class ClientMeta(object):
 
     """
 
-    def __init__(self, events, region_name, endpoint_url, service_model):
+    def __init__(self, events, client_config, endpoint_url, service_model):
         self.events = events
-        self._region_name = region_name
+        self._client_config = client_config
         self._endpoint_url = endpoint_url
         self._service_model = service_model
 
@@ -404,11 +460,15 @@ class ClientMeta(object):
 
     @property
     def region_name(self):
-        return self._region_name
+        return self._client_config.region_name
 
     @property
     def endpoint_url(self):
         return self._endpoint_url
+
+    @property
+    def config(self):
+        return self._client_config
 
 
 class Config(object):
@@ -416,8 +476,15 @@ class Config(object):
 
     This class allows you to configure:
 
+        * Region name
         * Signature version
+        * User agent
+        * User agent extra
 
     """
-    def __init__(self, signature_version=None):
+    def __init__(self, region_name=None, signature_version=None,
+                 user_agent=None, user_agent_extra=None):
+        self.region_name = region_name
         self.signature_version = signature_version
+        self.user_agent = user_agent
+        self.user_agent_extra = user_agent_extra
