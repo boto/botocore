@@ -322,7 +322,7 @@ class BaseClient(object):
         # beginning of the method. It allows handlers to modify existing
         # parameters or return a new set of parameters to use.
         responses = self.meta.events.emit(
-            'client-method-called.{endpoint_prefix}.{operation_name}'.format(
+            'provide-client-params.{endpoint_prefix}.{operation_name}'.format(
                 endpoint_prefix=self._service_model.endpoint_prefix,
                 operation_name=operation_name),
             params=api_params, model=operation_model)
