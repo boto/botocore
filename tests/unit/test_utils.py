@@ -35,6 +35,7 @@ from botocore.utils import calculate_tree_hash
 from botocore.utils import calculate_sha256
 from botocore.utils import is_valid_endpoint_url
 from botocore.utils import fix_s3_host
+from botocore.utils import instance_cache
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
 
@@ -548,6 +549,36 @@ class TestFixS3Host(unittest.TestCase):
         # The request url should not have been modified because this is
         # a request for GetBucketLocation.
         self.assertEqual(request.url, original_url)
+
+
+class TestInstanceCache(unittest.TestCase):
+    def test_cache_method(self):
+        cache = {}
+        class DummyClass(object):
+            def __init__(self):
+                self._instance_cache = cache
+
+            @instance_cache
+            def add(self, x, y):
+                return x + y
+
+            @instance_cache
+            def sub(self, x, y):
+                return x - y
+
+        adder = DummyClass()
+        self.assertEqual(adder.add(2, 1), 3)
+        # This one's from cache.
+        self.assertEqual(adder.add(2, 1), 3)
+        # This one's from cache.
+        self.assertEqual(adder.sub(2, 1), 1)
+        self.assertEqual(adder.sub(2, 1), 1)
+
+        self.assertEqual(adder.add(2, 3), 5)
+        self.assertEqual(adder.add(2, 3), 5)
+
+        # Should have three cached entries.
+        self.assertEqual(len(cache), 3)
 
 
 if __name__ == '__main__':

@@ -1,7 +1,19 @@
+# Copyright 2015 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
+#
+# http://aws.amazon.com/apache2.0/
+#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
 """Abstractions to interact with service models."""
 from collections import defaultdict
 
-from botocore.utils import CachedProperty
+from botocore.utils import CachedProperty, instance_cache
 from botocore.compat import OrderedDict
 
 
@@ -220,6 +232,7 @@ class ServiceModel(object):
             service_description.get('shapes', {}))
         self._signature_version = NOT_SET
         self._service_name = service_name
+        self._instance_cache = {}
 
     def shape_for(self, shape_name, member_traits=None):
         return self._shape_resolver.get_shape_by_name(
@@ -228,6 +241,7 @@ class ServiceModel(object):
     def resolve_shape_ref(self, shape_ref):
         return self._shape_resolver.resolve_shape_ref(shape_ref)
 
+    @instance_cache
     def operation_model(self, operation_name):
         try:
             model = self._service_description['operations'][operation_name]
@@ -433,7 +447,8 @@ class ShapeResolver(object):
         if member_traits:
             shape_model = shape_model.copy()
             shape_model.update(member_traits)
-        return shape_cls(shape_name, shape_model, self)
+        result = shape_cls(shape_name, shape_model, self)
+        return result
 
     def resolve_shape_ref(self, shape_ref):
         # A shape_ref is a dict that has a 'shape' key that
