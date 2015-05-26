@@ -552,33 +552,46 @@ class TestFixS3Host(unittest.TestCase):
 
 
 class TestInstanceCache(unittest.TestCase):
-    def test_cache_method(self):
-        cache = {}
-        class DummyClass(object):
-            def __init__(self):
-                self._instance_cache = cache
+    class DummyClass(object):
+        def __init__(self, cache):
+            self._instance_cache = cache
 
-            @instance_cache
-            def add(self, x, y):
-                return x + y
+        @instance_cache
+        def add(self, x, y):
+            return x + y
 
-            @instance_cache
-            def sub(self, x, y):
-                return x - y
+        @instance_cache
+        def sub(self, x, y):
+            return x - y
 
-        adder = DummyClass()
+    def setUp(self):
+        self.cache = {}
+
+    def test_cache_single_method_call(self):
+        adder = self.DummyClass(self.cache)
         self.assertEqual(adder.add(2, 1), 3)
-        # This one's from cache.
+        # This should result in one entry in the cache.
+        self.assertEqual(len(self.cache), 1)
+        # When we call the method with the same args,
+        # we should reuse the same entry in the cache.
         self.assertEqual(adder.add(2, 1), 3)
-        # This one's from cache.
+        self.assertEqual(len(self.cache), 1)
+
+    def test_can_cache_multiple_methods(self):
+        adder = self.DummyClass(self.cache)
+        adder.add(2, 1)
+
+        # A different method results in a new cache entry,
+        # so now there should be two elements in the cache.
         self.assertEqual(adder.sub(2, 1), 1)
+        self.assertEqual(len(self.cache), 2)
         self.assertEqual(adder.sub(2, 1), 1)
 
-        self.assertEqual(adder.add(2, 3), 5)
-        self.assertEqual(adder.add(2, 3), 5)
-
-        # Should have three cached entries.
-        self.assertEqual(len(cache), 3)
+    def test_can_cache_kwargs(self):
+        adder = self.DummyClass(self.cache)
+        adder.add(x=2, y=1)
+        self.assertEqual(adder.add(x=2, y=1), 3)
+        self.assertEqual(len(self.cache), 1)
 
 
 if __name__ == '__main__':
