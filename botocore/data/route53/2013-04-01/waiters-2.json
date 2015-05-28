@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "waiters": {
+    "ResourceRecordSetsChanged": {
+      "delay": 30,
+      "maxAttempts": 60,
+      "operation": "GetChange",
+      "acceptors": [
+        {
+          "matcher": "path",
+          "expected": "INSYNC",
+          "argument": "ChangeInfo.Status",
+          "state": "success"
+        },
+        {
+          "matcher": "path",
+          "expected": "PENDING",
+          "argument": "ChangeInfo.Status",
+          "state": "retry"
+        },
+        {
+          "expected": "NoSuchChange",
+          "matcher": "error",
+          "state": "success"
+        }
+      ]
+    }
+  }
+}
