@@ -28,7 +28,7 @@ class TestServiceDocumentor(BaseDocsTest):
     def test_document_service(self):
         # Note that not everything will be included as it is just
         # a smoke test to make sure all of the main parts are inluded.
-        contents = self.service_documentor.document_service()
+        contents = self.service_documentor.document_service().decode('utf-8')
         lines = [
             '*************',
             'AWS MyService',

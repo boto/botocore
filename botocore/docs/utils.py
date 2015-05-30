@@ -148,7 +148,7 @@ class ModelDrivenMethodSignatureDocumentor(BaseMethodSignatureDocumentor):
             params = operation_model.input_shape.members
             required = operation_model.input_shape.required_members
 
-        parameter_names = params.keys()
+        parameter_names = list(params.keys())
 
         if include is not None:
             for member in include:

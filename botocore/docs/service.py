@@ -32,9 +32,9 @@ class ServiceDocumentor(object):
         self.sections = [
             'title',
             'table-of-contents',
-            'client_api',
+            'client-api',
             'paginator-api',
-            'waiter_api'
+            'waiter-api'
         ]
 
     def document_service(self):
@@ -42,31 +42,27 @@ class ServiceDocumentor(object):
 
         :returns: The reStructured text of the documented service.
         """
-        self._register_sections()
         doc_structure = DocumentStructure(
-            self._service_name, self._client.meta.events,
-            section_names=self.sections)
+            self._service_name, section_names=self.sections)
+        self.title(doc_structure.get_section('title'))
+        self.table_of_contents(doc_structure.get_section('table-of-contents'))
+        self.client_api(doc_structure.get_section('client-api'))
+        self.paginator_api(doc_structure.get_section('paginator-api'))
+        self.waiter_api(doc_structure.get_section('waiter-api'))
         return doc_structure.flush_structure()
 
-    def _register_sections(self):
-        for section in self.sections:
-            self._client.meta.events.register(
-                'docs-adding-section.%s-%s' % (self._service_name, section),
-                getattr(self, section.replace('-', '_')),
-                unique_id='%s-%s' % (self._service_name, section))
-
-    def title(self, section, **kwargs):
+    def title(self, section):
         official_service_name = get_official_service_name(
             self._client.meta.service_model)
         section.style.h1(official_service_name)
 
-    def table_of_contents(self, section, **kwargs):
+    def table_of_contents(self, section):
         section.style.table_of_contents(title='Table of Contents', depth=2)
 
-    def client_api(self, section, **kwargs):
+    def client_api(self, section):
         ClientDocumentor(self._client).document_client(section)
 
-    def paginator_api(self, section, **kwargs):
+    def paginator_api(self, section):
         try:
             service_paginator_model = self._session.get_paginator_model(
                 self._service_name)
@@ -76,7 +72,7 @@ class ServiceDocumentor(object):
             self._client, service_paginator_model)
         paginator_documentor.document_paginators(section)
 
-    def waiter_api(self, section, **kwargs):
+    def waiter_api(self, section):
         if self._client.waiter_names:
             service_waiter_model = self._session.get_waiter_model(
                 self._service_name)

@@ -19,6 +19,7 @@ from bcdoc.restdoc import DocumentStructure
 import mock
 
 from tests import unittest
+from botocore.compat import OrderedDict
 from botocore.hooks import HierarchicalEmitter
 from botocore.model import ServiceModel, OperationModel
 from botocore.client import ClientCreator
@@ -44,7 +45,7 @@ class BaseDocsTest(unittest.TestCase):
         self.events = HierarchicalEmitter()
         self.setup_client()
         self.doc_name = 'MyDoc'
-        self.doc_structure = DocumentStructure(self.doc_name, self.events)
+        self.doc_structure = DocumentStructure(self.doc_name)
 
     def tearDown(self):
         shutil.rmtree(self.root_dir)
@@ -94,7 +95,7 @@ class BaseDocsTest(unittest.TestCase):
             'shapes': {
                 'SampleOperationInputOutput': {
                     'type': 'structure',
-                    'members': {}
+                    'members': OrderedDict()
                 },
                 'String': {
                     'type': 'string'
@@ -142,7 +143,7 @@ class BaseDocsTest(unittest.TestCase):
         )
 
     def add_shape(self, shape):
-        shape_name = shape.keys()[0]
+        shape_name = list(shape.keys())[0]
         self.json_model['shapes'][shape_name] = shape[shape_name]
 
     def add_shape_to_params(self, param_name, shape_name, documentation=None,
@@ -159,19 +160,19 @@ class BaseDocsTest(unittest.TestCase):
             params_shape['required'] = required_list
 
     def assert_contains_line(self, line):
-        contents = self.doc_structure.flush_structure()
+        contents = self.doc_structure.flush_structure().decode('utf-8')
         self.assertIn(line, contents)
 
     def assert_contains_lines(self, lines):
-        contents = self.doc_structure.flush_structure()
+        contents = self.doc_structure.flush_structure().decode('utf-8')
         for line in lines:
             self.assertIn(line, contents)
 
     def assert_not_contains_line(self, line):
-        contents = self.doc_structure.flush_structure()
+        contents = self.doc_structure.flush_structure().decode('utf-8')
         self.assertNotIn(line, contents)
 
     def assert_not_contains_lines(self, lines):
-        contents = self.doc_structure.flush_structure()
+        contents = self.doc_structure.flush_structure().decode('utf-8')
         for line in lines:
             self.assertNotIn(line, contents)

@@ -147,7 +147,7 @@ class TestModelDrivenMethodSignatureDocumentor(BaseDocsTest):
         self.sig_documentor.document_signature(
             self.doc_structure, 'my_method', self.operation_model)
         self.assert_contains_line(
-            '.. py:method:: my_method(Bar=None, Baz=None, Foo=None)')
+            '.. py:method:: my_method(Bar=None, Foo=None, Baz=None)')
 
     def test_document_signature_include(self):
         include_params = [
@@ -158,7 +158,7 @@ class TestModelDrivenMethodSignatureDocumentor(BaseDocsTest):
             self.doc_structure, 'my_method', self.operation_model,
             include=include_params)
         self.assert_contains_line(
-            '.. py:method:: my_method(Bar=None, Baz=None, Foo=None, Biz=None)')
+            '.. py:method:: my_method(Bar=None, Foo=None, Baz=None, Biz=None)')
 
     def test_document_signature_exclude(self):
         exclude_params = ['Baz']
@@ -801,7 +801,7 @@ class TestModelDrivenMethodDocumentor(BaseDocsTest):
             exclude_output=['Bar']
         )
         self.assert_contains_lines([
-            '.. py:method:: foo(Biz=None, Bar=None)',
+            '.. py:method:: foo(Bar=None, Biz=None)',
             '  This describes the foo method.',
             '  **Example**',
             '  ::',
