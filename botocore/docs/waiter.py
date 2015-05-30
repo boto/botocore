@@ -11,10 +11,10 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from botocore import xform_name
-from botocore.docs.utils import ModelDrivenMethodDocumentor
+from botocore.docs.utils import ModelDrivenMethodDocumenter
 
 
-class WaiterDocumentor(object):
+class WaiterDocumenter(object):
     def __init__(self, client, service_waiter_model):
         self._client = client
         self._service_name = self._client.meta.service_model.service_name
@@ -65,7 +65,7 @@ class WaiterDocumentor(object):
                 waiter_model.delay, waiter_model.max_attempts)
         )
 
-        ModelDrivenMethodDocumentor().document_method(
+        ModelDrivenMethodDocumenter().document_method(
             section, 'wait', operation_model,
             method_description=wait_description,
             example_prefix='waiter.wait',

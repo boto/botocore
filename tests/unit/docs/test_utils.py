@@ -16,13 +16,13 @@ from botocore.docs.utils import py_type_name
 from botocore.docs.utils import py_default
 from botocore.docs.utils import get_official_service_name
 from botocore.docs.utils import get_instance_methods
-from botocore.docs.utils import ModelDrivenMethodSignatureDocumentor
-from botocore.docs.utils import CustomMethodSignatureDocumentor
-from botocore.docs.utils import RequestParamsDocumentor
-from botocore.docs.utils import ResponseParamsDocumentor
-from botocore.docs.utils import ResponseExampleDocumentor
-from botocore.docs.utils import RequestExampleDocumentor
-from botocore.docs.utils import ModelDrivenMethodDocumentor
+from botocore.docs.utils import ModelDrivenMethodSignatureDocumenter
+from botocore.docs.utils import CustomMethodSignatureDocumenter
+from botocore.docs.utils import RequestParamsDocumenter
+from botocore.docs.utils import ResponseParamsDocumenter
+from botocore.docs.utils import ResponseExampleDocumenter
+from botocore.docs.utils import RequestExampleDocumenter
+from botocore.docs.utils import ModelDrivenMethodDocumenter
 from botocore.docs.utils import DocumentedShape
 
 
@@ -135,16 +135,16 @@ class TestGetInstanceMethods(unittest.TestCase):
             instance.public_method, instance_methods['public_method'])
 
 
-class TestModelDrivenMethodSignatureDocumentor(BaseDocsTest):
+class TestModelDrivenMethodSignatureDocumenter(BaseDocsTest):
     def setUp(self):
-        super(TestModelDrivenMethodSignatureDocumentor, self).setUp()
-        self.sig_documentor = ModelDrivenMethodSignatureDocumentor()
+        super(TestModelDrivenMethodSignatureDocumenter, self).setUp()
+        self.sig_documenter = ModelDrivenMethodSignatureDocumenter()
         self.add_shape_to_params('Foo', 'String')
         self.add_shape_to_params('Bar', 'String', is_required=True)
         self.add_shape_to_params('Baz', 'String')
 
     def test_document_signature(self):
-        self.sig_documentor.document_signature(
+        self.sig_documenter.document_signature(
             self.doc_structure, 'my_method', self.operation_model)
         self.assert_contains_line(
             '.. py:method:: my_method(Bar=None, Foo=None, Baz=None)')
@@ -154,7 +154,7 @@ class TestModelDrivenMethodSignatureDocumentor(BaseDocsTest):
             DocumentedShape(
                 name='Biz', type_name='integer', documentation='biz docs')
         ]
-        self.sig_documentor.document_signature(
+        self.sig_documenter.document_signature(
             self.doc_structure, 'my_method', self.operation_model,
             include=include_params)
         self.assert_contains_line(
@@ -162,38 +162,38 @@ class TestModelDrivenMethodSignatureDocumentor(BaseDocsTest):
 
     def test_document_signature_exclude(self):
         exclude_params = ['Baz']
-        self.sig_documentor.document_signature(
+        self.sig_documenter.document_signature(
             self.doc_structure, 'my_method', self.operation_model,
             exclude=exclude_params)
         self.assert_contains_line(
             '.. py:method:: my_method(Bar=None, Foo=None)')
 
 
-class TestCustomMethodSignatureDocumentor(BaseDocsTest):
+class TestCustomMethodSignatureDocumenter(BaseDocsTest):
     def setUp(self):
-        super(TestCustomMethodSignatureDocumentor, self).setUp()
-        self.sig_documentor = CustomMethodSignatureDocumentor()
+        super(TestCustomMethodSignatureDocumenter, self).setUp()
+        self.sig_documenter = CustomMethodSignatureDocumenter()
 
     def sample_method(self, foo, bar='bar', baz=None):
         pass
 
     def test_document_signature(self):
-        self.sig_documentor.document_signature(
+        self.sig_documenter.document_signature(
             self.doc_structure, 'my_method', self.sample_method)
         self.assert_contains_line(
             '.. py:method:: my_method(foo, bar=\'bar\', baz=None)')
 
 
-class BaseUtilsDocumentorTest(BaseDocsTest):
+class BaseUtilsDocumenterTest(BaseDocsTest):
     def setUp(self):
-        super(BaseUtilsDocumentorTest, self).setUp()
-        self.request_params = RequestParamsDocumentor()
-        self.response_params = ResponseParamsDocumentor()
-        self.request_example = RequestExampleDocumentor()
-        self.response_example = ResponseExampleDocumentor()
+        super(BaseUtilsDocumenterTest, self).setUp()
+        self.request_params = RequestParamsDocumenter()
+        self.response_params = ResponseParamsDocumenter()
+        self.request_example = RequestExampleDocumenter()
+        self.response_example = ResponseExampleDocumenter()
 
 
-class TestDocumentDefaultValue(BaseUtilsDocumentorTest):
+class TestDocumentDefaultValue(BaseUtilsDocumenterTest):
     def setUp(self):
         super(TestDocumentDefaultValue, self).setUp()
         self.add_shape_to_params('Foo', 'String', 'This describes foo.')
@@ -238,7 +238,7 @@ class TestDocumentDefaultValue(BaseUtilsDocumentorTest):
         ])
 
 
-class TestDocumentMultipleDefaultValues(BaseUtilsDocumentorTest):
+class TestDocumentMultipleDefaultValues(BaseUtilsDocumenterTest):
     def setUp(self):
         super(TestDocumentMultipleDefaultValues, self).setUp()
         self.add_shape_to_params('Foo', 'String', 'This describes foo.')
@@ -290,7 +290,7 @@ class TestDocumentMultipleDefaultValues(BaseUtilsDocumentorTest):
         ])
 
 
-class TestDocumentInclude(BaseUtilsDocumentorTest):
+class TestDocumentInclude(BaseUtilsDocumenterTest):
     def setUp(self):
         super(TestDocumentInclude, self).setUp()
         self.add_shape_to_params('Foo', 'String', 'This describes foo.')
@@ -352,7 +352,7 @@ class TestDocumentInclude(BaseUtilsDocumentorTest):
         ])
 
 
-class TestDocumentExclude(BaseUtilsDocumentorTest):
+class TestDocumentExclude(BaseUtilsDocumenterTest):
     def setUp(self):
         super(TestDocumentExclude, self).setUp()
         self.add_shape_to_params('Foo', 'String', 'This describes foo.')
@@ -412,7 +412,7 @@ class TestDocumentExclude(BaseUtilsDocumentorTest):
         self.assert_not_contains_line('\'Foo\': \'string\',')
 
 
-class TestDocumentList(BaseUtilsDocumentorTest):
+class TestDocumentList(BaseUtilsDocumenterTest):
     def setUp(self):
         super(TestDocumentList, self).setUp()
         self.add_shape(
@@ -466,7 +466,7 @@ class TestDocumentList(BaseUtilsDocumentorTest):
         ])
 
 
-class TestDocumentMap(BaseUtilsDocumentorTest):
+class TestDocumentMap(BaseUtilsDocumenterTest):
     def setUp(self):
         super(TestDocumentMap, self).setUp()
         self.add_shape(
@@ -522,7 +522,7 @@ class TestDocumentMap(BaseUtilsDocumentorTest):
         ])
 
 
-class TestDocumentStructure(BaseUtilsDocumentorTest):
+class TestDocumentStructure(BaseUtilsDocumenterTest):
     def setUp(self):
         super(TestDocumentStructure, self).setUp()
         self.add_shape(
@@ -578,7 +578,7 @@ class TestDocumentStructure(BaseUtilsDocumentorTest):
         ])
 
 
-class TestDocumentRecursiveShape(BaseUtilsDocumentorTest):
+class TestDocumentRecursiveShape(BaseUtilsDocumenterTest):
     def setUp(self):
         super(TestDocumentRecursiveShape, self).setUp()
         self.add_shape(
@@ -634,14 +634,14 @@ class TestDocumentRecursiveShape(BaseUtilsDocumentorTest):
         ])
 
 
-class TestModelDrivenMethodDocumentor(BaseDocsTest):
+class TestModelDrivenMethodDocumenter(BaseDocsTest):
     def setUp(self):
-        super(TestModelDrivenMethodDocumentor, self).setUp()
-        self.method_documentor = ModelDrivenMethodDocumentor()
+        super(TestModelDrivenMethodDocumenter, self).setUp()
+        self.method_documenter = ModelDrivenMethodDocumenter()
         self.add_shape_to_params('Bar', 'String')
 
     def test_default(self):
-        self.method_documentor.document_method(
+        self.method_documenter.document_method(
             self.doc_structure, 'foo', self.operation_model,
             method_description='This describes the foo method.',
             example_prefix='response = client.foo'
@@ -671,7 +671,7 @@ class TestModelDrivenMethodDocumentor(BaseDocsTest):
     def test_no_input_output_shape(self):
         del self.json_model['operations']['SampleOperation']['input']
         del self.json_model['operations']['SampleOperation']['output']
-        self.method_documentor.document_method(
+        self.method_documenter.document_method(
             self.doc_structure, 'foo', self.operation_model,
             method_description='This describes the foo method.',
             example_prefix='response = client.foo'
@@ -690,7 +690,7 @@ class TestModelDrivenMethodDocumentor(BaseDocsTest):
             DocumentedShape(
                 name='Biz', type_name='string', documentation='biz docs')
         ]
-        self.method_documentor.document_method(
+        self.method_documenter.document_method(
             self.doc_structure, 'foo', self.operation_model,
             method_description='This describes the foo method.',
             example_prefix='response = client.foo',
@@ -726,7 +726,7 @@ class TestModelDrivenMethodDocumentor(BaseDocsTest):
             DocumentedShape(
                 name='Biz', type_name='string', documentation='biz docs')
         ]
-        self.method_documentor.document_method(
+        self.method_documenter.document_method(
             self.doc_structure, 'foo', self.operation_model,
             method_description='This describes the foo method.',
             example_prefix='response = client.foo',
@@ -758,7 +758,7 @@ class TestModelDrivenMethodDocumentor(BaseDocsTest):
 
     def test_exclude_input(self):
         self.add_shape_to_params('Biz', 'String')
-        self.method_documentor.document_method(
+        self.method_documenter.document_method(
             self.doc_structure, 'foo', self.operation_model,
             method_description='This describes the foo method.',
             example_prefix='response = client.foo',
@@ -794,7 +794,7 @@ class TestModelDrivenMethodDocumentor(BaseDocsTest):
 
     def test_exclude_output(self):
         self.add_shape_to_params('Biz', 'String')
-        self.method_documentor.document_method(
+        self.method_documenter.document_method(
             self.doc_structure, 'foo', self.operation_model,
             method_description='This describes the foo method.',
             example_prefix='response = client.foo',

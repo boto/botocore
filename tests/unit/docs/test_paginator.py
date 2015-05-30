@@ -11,24 +11,24 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from tests.unit.docs import BaseDocsTest
-from botocore.docs.paginator import PaginatorDocumentor
+from botocore.docs.paginator import PaginatorDocumenter
 from botocore.paginate import PaginatorModel
 
 
-class TestPaginatorDocumentor(BaseDocsTest):
+class TestPaginatorDocumenter(BaseDocsTest):
     def setUp(self):
-        super(TestPaginatorDocumentor, self).setUp()
+        super(TestPaginatorDocumenter, self).setUp()
         self.add_shape_to_params('Biz', 'String')
         self.extra_setup()
 
     def extra_setup(self):
         self.setup_client()
         paginator_model = PaginatorModel(self.paginator_json_model)
-        self.paginator_documentor = PaginatorDocumentor(
+        self.paginator_documenter = PaginatorDocumenter(
             client=self.client, service_paginator_model=paginator_model)
 
     def test_document_paginators(self):
-        self.paginator_documentor.document_paginators(
+        self.paginator_documenter.document_paginators(
             self.doc_structure)
         self.assert_contains_lines([
             '==========',

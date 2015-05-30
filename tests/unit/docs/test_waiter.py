@@ -11,21 +11,21 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from tests.unit.docs import BaseDocsTest
-from botocore.docs.waiter import WaiterDocumentor
+from botocore.docs.waiter import WaiterDocumenter
 from botocore.waiter import WaiterModel
 
 
-class TestWaiterDocumentor(BaseDocsTest):
+class TestWaiterDocumenter(BaseDocsTest):
     def setUp(self):
-        super(TestWaiterDocumentor, self).setUp()
+        super(TestWaiterDocumenter, self).setUp()
         self.add_shape_to_params('Biz', 'String')
         self.setup_client()
         waiter_model = WaiterModel(self.waiter_json_model)
-        self.waiter_documentor = WaiterDocumentor(
+        self.waiter_documenter = WaiterDocumenter(
             client=self.client, service_waiter_model=waiter_model)
 
     def test_document_waiters(self):
-        self.waiter_documentor.document_waiters(
+        self.waiter_documenter.document_waiters(
             self.doc_structure)
         self.assert_contains_lines([
             '=======',

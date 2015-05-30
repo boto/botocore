@@ -13,22 +13,22 @@
 import mock
 
 from tests.unit.docs import BaseDocsTest
-from botocore.docs.service import ServiceDocumentor
+from botocore.docs.service import ServiceDocumenter
 
 
-class TestServiceDocumentor(BaseDocsTest):
+class TestServiceDocumenter(BaseDocsTest):
     def setUp(self):
-        super(TestServiceDocumentor, self).setUp()
+        super(TestServiceDocumenter, self).setUp()
         self.add_shape_to_params('Biz', 'String')
         self.setup_client()
         with mock.patch('botocore.session.create_loader',
                         return_value=self.loader):
-            self.service_documentor = ServiceDocumentor('myservice')
+            self.service_documenter = ServiceDocumenter('myservice')
 
     def test_document_service(self):
         # Note that not everything will be included as it is just
         # a smoke test to make sure all of the main parts are inluded.
-        contents = self.service_documentor.document_service().decode('utf-8')
+        contents = self.service_documenter.document_service().decode('utf-8')
         lines = [
             '*************',
             'AWS MyService',

@@ -15,12 +15,12 @@ from bcdoc.restdoc import DocumentStructure
 import botocore.session
 from botocore.exceptions import DataNotFoundError
 from botocore.docs.utils import get_official_service_name
-from botocore.docs.client import ClientDocumentor
-from botocore.docs.waiter import WaiterDocumentor
-from botocore.docs.paginator import PaginatorDocumentor
+from botocore.docs.client import ClientDocumenter
+from botocore.docs.waiter import WaiterDocumenter
+from botocore.docs.paginator import PaginatorDocumenter
 
 
-class ServiceDocumentor(object):
+class ServiceDocumenter(object):
     def __init__(self, service_name):
         self._session = botocore.session.get_session()
         self._service_name = service_name
@@ -60,7 +60,7 @@ class ServiceDocumentor(object):
         section.style.table_of_contents(title='Table of Contents', depth=2)
 
     def client_api(self, section):
-        ClientDocumentor(self._client).document_client(section)
+        ClientDocumenter(self._client).document_client(section)
 
     def paginator_api(self, section):
         try:
@@ -68,14 +68,14 @@ class ServiceDocumentor(object):
                 self._service_name)
         except DataNotFoundError:
             return
-        paginator_documentor = PaginatorDocumentor(
+        paginator_documenter = PaginatorDocumenter(
             self._client, service_paginator_model)
-        paginator_documentor.document_paginators(section)
+        paginator_documenter.document_paginators(section)
 
     def waiter_api(self, section):
         if self._client.waiter_names:
             service_waiter_model = self._session.get_waiter_model(
                 self._service_name)
-            waiter_documentor = WaiterDocumentor(
+            waiter_documenter = WaiterDocumenter(
                 self._client, service_waiter_model)
-            waiter_documentor.document_waiters(section)
+            waiter_documenter.document_waiters(section)

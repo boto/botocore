@@ -12,10 +12,10 @@
 # language governing permissions and limitations under the License.
 from botocore import xform_name
 from botocore.docs.utils import DocumentedShape
-from botocore.docs.utils import ModelDrivenMethodDocumentor
+from botocore.docs.utils import ModelDrivenMethodDocumenter
 
 
-class PaginatorDocumentor(object):
+class PaginatorDocumenter(object):
     def __init__(self, client, service_paginator_model):
         self._client = client
         self._service_name = self._client.meta.service_model.service_name
@@ -126,7 +126,7 @@ class PaginatorDocumentor(object):
                 self._service_name, xform_name(paginator_name))
         )
 
-        ModelDrivenMethodDocumentor().document_method(
+        ModelDrivenMethodDocumenter().document_method(
             section, 'paginate', operation_model,
             method_description=paginate_description,
             example_prefix='response_iterator = paginator.paginate',

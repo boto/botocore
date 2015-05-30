@@ -14,11 +14,11 @@ import inspect
 
 from botocore.docs.utils import get_instance_methods
 from botocore.docs.utils import get_official_service_name
-from botocore.docs.utils import CustomMethodSignatureDocumentor
-from botocore.docs.utils import ModelDrivenMethodDocumentor
+from botocore.docs.utils import CustomMethodSignatureDocumenter
+from botocore.docs.utils import ModelDrivenMethodDocumenter
 
 
-class ClientDocumentor(object):
+class ClientDocumenter(object):
     def __init__(self, client):
         self._client = client
         self._service_name = self._client.meta.service_model.service_name
@@ -83,7 +83,7 @@ class ClientDocumentor(object):
         return method_name not in self._client._PY_TO_OP_NAME
 
     def _add_custom_method(self, section, method_name, method):
-        CustomMethodSignatureDocumentor().document_signature(
+        CustomMethodSignatureDocumenter().document_signature(
             section, method_name, method)
         method_intro_section = section.add_new_section('method-intro')
         doc_string = inspect.getdoc(method)
@@ -95,7 +95,7 @@ class ClientDocumentor(object):
         operation_name = self._client._PY_TO_OP_NAME[method_name]
         operation_model = service_model.operation_model(operation_name)
 
-        ModelDrivenMethodDocumentor().document_method(
+        ModelDrivenMethodDocumenter().document_method(
             section, method_name, operation_model,
             method_description=operation_model.documentation,
             example_prefix='response = client.%s' % method_name

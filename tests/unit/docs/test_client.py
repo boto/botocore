@@ -11,18 +11,18 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from tests.unit.docs import BaseDocsTest
-from botocore.docs.client import ClientDocumentor
+from botocore.docs.client import ClientDocumenter
 
 
-class TestClientDocumentor(BaseDocsTest):
+class TestClientDocumenter(BaseDocsTest):
     def setUp(self):
-        super(TestClientDocumentor, self).setUp()
+        super(TestClientDocumenter, self).setUp()
         self.add_shape_to_params('Biz', 'String')
         self.setup_client()
-        self.client_documentor = ClientDocumentor(self.client)
+        self.client_documenter = ClientDocumenter(self.client)
 
     def test_document_client(self):
-        self.client_documentor.document_client(self.doc_structure)
+        self.client_documenter.document_client(self.doc_structure)
         self.assert_contains_lines([
             '======',
             'Client',

@@ -111,7 +111,7 @@ class DocumentedShape (_DocumentedShape):
             cls, name, type_name, documentation, metadata)
 
 
-class BaseMethodSignatureDocumentor(object):
+class BaseMethodSignatureDocumenter(object):
     """Documents the method signature"""
     def document_signature(self, section, name, method_obj, include=None,
                            exclude=None):
@@ -137,7 +137,7 @@ class BaseMethodSignatureDocumentor(object):
                                  exclude=exclude)
 
 
-class ModelDrivenMethodSignatureDocumentor(BaseMethodSignatureDocumentor):
+class ModelDrivenMethodSignatureDocumenter(BaseMethodSignatureDocumenter):
     """Documents a model method signature (i.e. has a JSON model)"""
     def _document_signature(self, section, name, method_obj, include=None,
                             exclude=None):
@@ -169,7 +169,7 @@ class ModelDrivenMethodSignatureDocumentor(BaseMethodSignatureDocumentor):
         section.style.start_sphinx_py_method(name, signature_params)
 
 
-class CustomMethodSignatureDocumentor(BaseMethodSignatureDocumentor):
+class CustomMethodSignatureDocumenter(BaseMethodSignatureDocumenter):
     """Documents a custom method signature (i.e. not model driven)
 
     Note that currently the exclude and include parameters are ignored
@@ -186,7 +186,7 @@ class CustomMethodSignatureDocumentor(BaseMethodSignatureDocumentor):
         section.style.start_sphinx_py_method(name, signature_params)
 
 
-class BaseShapeDocumentor(object):
+class BaseShapeDocumenter(object):
     """Generates documentation for a shape"""
 
     def _document_shape(self, section, shape, history, include=None,
@@ -232,7 +232,7 @@ class BaseShapeDocumentor(object):
             section.write(end)
 
 
-class BaseParamsDocumentor(BaseShapeDocumentor):
+class BaseParamsDocumenter(BaseShapeDocumenter):
     def document_params(self, section, shape, include=None, exclude=None):
         """Fills out the documentation for a section given a model shape.
 
@@ -300,7 +300,7 @@ class BaseParamsDocumentor(BaseShapeDocumentor):
             self._end_nested_param(section)
 
 
-class ResponseParamsDocumentor(BaseParamsDocumentor):
+class ResponseParamsDocumenter(BaseParamsDocumenter):
     """Generates the description for the response parameters"""
 
     def _add_member_documentation(self, section, shape, **kwargs):
@@ -318,7 +318,7 @@ class ResponseParamsDocumentor(BaseParamsDocumentor):
         section.style.new_paragraph()
 
 
-class RequestParamsDocumentor(BaseParamsDocumentor):
+class RequestParamsDocumenter(BaseParamsDocumenter):
     """Generates the description for the request parameters"""
 
     def _document_shape(self, section, shape, history, include=None,
@@ -386,7 +386,7 @@ class RequestParamsDocumentor(BaseParamsDocumentor):
         section.style.new_paragraph()
 
 
-class BaseExampleDocumentor(BaseShapeDocumentor):
+class BaseExampleDocumenter(BaseShapeDocumenter):
     def document_example(self, section, shape, prefix=None, include=None,
                          exclude=None):
         """Generates an example based on a shape
@@ -480,11 +480,11 @@ class BaseExampleDocumentor(BaseShapeDocumentor):
             section.write(end)
 
 
-class ResponseExampleDocumentor(BaseExampleDocumentor):
+class ResponseExampleDocumenter(BaseExampleDocumenter):
     pass
 
 
-class RequestExampleDocumentor(BaseExampleDocumentor):
+class RequestExampleDocumenter(BaseExampleDocumenter):
     def _document_shape_type_structure(self, section, shape, history,
                                        include=None, exclude=None, **kwargs):
         param_format = '\'%s\''
@@ -514,7 +514,7 @@ class RequestExampleDocumentor(BaseExampleDocumentor):
         self._end_nested_param(section, end)
 
 
-class ModelDrivenMethodDocumentor(object):
+class ModelDrivenMethodDocumenter(object):
     def document_method(self, section, method_name, operation_model,
                         method_description=None, example_prefix=None,
                         include_input=None, include_output=None,
@@ -552,7 +552,7 @@ class ModelDrivenMethodDocumentor(object):
             document the output.
         """
         # Add the signature.
-        ModelDrivenMethodSignatureDocumentor().document_signature(
+        ModelDrivenMethodSignatureDocumenter().document_signature(
             section, method_name, operation_model, include=include_input,
             exclude=exclude_input)
 
@@ -565,7 +565,7 @@ class ModelDrivenMethodDocumentor(object):
         example_section.style.new_paragraph()
         example_section.style.bold('Example')
         if operation_model.input_shape:
-            RequestExampleDocumentor().document_example(
+            RequestExampleDocumenter().document_example(
                 example_section, operation_model.input_shape,
                 prefix=example_prefix, include=include_input,
                 exclude=exclude_input)
@@ -577,7 +577,7 @@ class ModelDrivenMethodDocumentor(object):
         # Add the request parameter documentation.
         request_params_section = section.add_new_section('request-params')
         if operation_model.input_shape:
-            RequestParamsDocumentor().document_params(
+            RequestParamsDocumenter().document_params(
                 request_params_section, operation_model.input_shape,
                 include=include_input, exclude=exclude_input)
 
@@ -596,7 +596,7 @@ class ModelDrivenMethodDocumentor(object):
             return_example_section.style.new_line()
             return_example_section.style.bold('Response Example')
             return_example_section.style.new_paragraph()
-            ResponseExampleDocumentor().document_example(
+            ResponseExampleDocumenter().document_example(
                 return_example_section, operation_model.output_shape,
                 include=include_output, exclude=exclude_output)
             return_example_section.style.new_paragraph()
@@ -607,7 +607,7 @@ class ModelDrivenMethodDocumentor(object):
             return_description_section.style.new_line()
             return_description_section.style.bold('Response Structure')
             return_description_section.style.new_paragraph()
-            ResponseParamsDocumentor().document_params(
+            ResponseParamsDocumenter().document_params(
                 return_description_section, operation_model.output_shape,
                 include=include_output, exclude=exclude_output)
         else:
