@@ -12,10 +12,10 @@
 # language governing permissions and limitations under the License.
 import inspect
 
-from botocore.docs.utils import get_instance_methods
 from botocore.docs.utils import get_official_service_name
-from botocore.docs.utils import CustomMethodSignatureDocumenter
-from botocore.docs.utils import ModelDrivenMethodDocumenter
+from botocore.docs.method import document_custom_signature
+from botocore.docs.method import document_model_driven_method
+from botocore.docs.method import get_instance_public_methods
 
 
 class ClientDocumenter(object):
@@ -30,7 +30,7 @@ class ClientDocumenter(object):
         """
         self._add_title(section)
         self._add_class_signature(section)
-        client_methods = get_instance_methods(self._client)
+        client_methods = get_instance_public_methods(self._client)
         self._add_client_intro(section, client_methods)
         self._add_client_methods(section, client_methods)
 
@@ -83,7 +83,7 @@ class ClientDocumenter(object):
         return method_name not in self._client._PY_TO_OP_NAME
 
     def _add_custom_method(self, section, method_name, method):
-        CustomMethodSignatureDocumenter().document_signature(
+        document_custom_signature(
             section, method_name, method)
         method_intro_section = section.add_new_section('method-intro')
         doc_string = inspect.getdoc(method)
@@ -95,7 +95,7 @@ class ClientDocumenter(object):
         operation_name = self._client._PY_TO_OP_NAME[method_name]
         operation_model = service_model.operation_model(operation_name)
 
-        ModelDrivenMethodDocumenter().document_method(
+        document_model_driven_method(
             section, method_name, operation_model,
             method_description=operation_model.documentation,
             example_prefix='response = client.%s' % method_name
