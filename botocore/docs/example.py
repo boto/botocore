@@ -46,7 +46,7 @@ class BaseExampleDocumenter(object):
         section.write('{\'... recursive ...\'}')
 
     def document_shape_default(self, section, shape, history, include=None,
-                                exclude=None, **kwargs):
+                               exclude=None, **kwargs):
         py_type = py_default(shape.type_name)
         section.write(py_type)
 
@@ -71,7 +71,7 @@ class BaseExampleDocumenter(object):
         self._end_nested_param(section, ']')
 
     def document_shape_type_structure(self, section, shape, history,
-                                       include=None, exclude=None, **kwargs):
+                                      include=None, exclude=None, **kwargs):
         self._start_nested_param(section, '{')
 
         input_members = self._add_members_to_shape(shape.members, include)
@@ -128,7 +128,7 @@ class ResponseExampleDocumenter(BaseExampleDocumenter):
 
 class RequestExampleDocumenter(BaseExampleDocumenter):
     def document_shape_type_structure(self, section, shape, history,
-                                       include=None, exclude=None, **kwargs):
+                                      include=None, exclude=None, **kwargs):
         param_format = '\'%s\''
         operator = ': '
         start = '{'

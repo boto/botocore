@@ -15,7 +15,6 @@ from tests.unit.docs import BaseDocsTest
 from botocore.docs.utils import py_type_name
 from botocore.docs.utils import py_default
 from botocore.docs.utils import get_official_service_name
-from botocore.docs.utils import DocumentedShape
 
 
 class TestPythonTypeName(unittest.TestCase):

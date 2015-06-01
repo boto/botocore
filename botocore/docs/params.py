@@ -43,7 +43,7 @@ class BaseParamsDocumenter(object):
         self._add_member_documentation(section, shape, **kwargs)
 
     def document_shape_type_list(self, section, shape, history, include=None,
-                                  exclude=None, **kwargs):
+                                 exclude=None, **kwargs):
         self._add_member_documentation(section, shape, **kwargs)
         param_shape = shape.member
         self._start_nested_param(section)
@@ -91,17 +91,14 @@ class BaseParamsDocumenter(object):
                 members[param.name] = param
         return members
 
-    def _start_nested_param(self, section, start=None):
-        if start is not None:
-            section.write(start)
+    def _start_nested_param(self, section):
         section.style.indent()
         section.style.new_line()
 
-    def _end_nested_param(self, section, end=None):
+    def _end_nested_param(self, section):
         section.style.dedent()
         section.style.new_line()
-        if end is not None:
-            section.write(end)
+
 
 class ResponseParamsDocumenter(BaseParamsDocumenter):
     """Generates the description for the response parameters"""
