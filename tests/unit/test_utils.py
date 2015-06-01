@@ -498,6 +498,9 @@ class TestIsValidEndpointURL(unittest.TestCase):
     def test_hostname_can_end_with_dot(self):
         self.assertTrue(is_valid_endpoint_url('https://foo.bar.com./'))
 
+    def test_hostname_no_dots(self):
+        self.assertTrue(is_valid_endpoint_url('https://foo/'))
+
 
 class TestFixS3Host(unittest.TestCase):
     def test_fix_s3_host_initial(self):

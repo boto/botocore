@@ -550,17 +550,14 @@ def is_valid_endpoint_url(endpoint_url):
     hostname = parts.hostname
     if hostname is None:
         return False
-    # Hostname validation is based on http://tools.ietf.org/html/rfc952
-    # and http://tools.ietf.org/html/rfc1123#page-13
-    # with the validation taken from:
-    # http://stackoverflow.com/questions/2532053/validate-a-hostname-string
     if len(hostname) > 255:
         return False
     if hostname[-1] == ".":
         hostname = hostname[:-1]
-    allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
-    return all(allowed.match(x) for x in hostname.split("."))
-
+    allowed = re.compile(
+        "^((?!-)[A-Z\d-]{1,63}(?<!-)\.)*((?!-)[A-Z\d-]{1,63}(?<!-))$",
+        re.IGNORECASE)
+    return allowed.match(hostname)
 
 def check_dns_name(bucket_name):
     """
