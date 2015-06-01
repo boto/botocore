@@ -10,6 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import os
+
 import mock
 
 from tests.unit.docs import BaseDocsTest
@@ -58,3 +60,13 @@ class TestServiceDocumenter(BaseDocsTest):
         ]
         for line in lines:
             self.assertIn(line, contents)
+
+    def test_document_service_no_paginator(self):
+        os.remove(self.paginator_model_file)
+        contents = self.service_documenter.document_service().decode('utf-8')
+        self.assertNotIn('Paginators', contents)
+
+    def test_document_service_no_waiter(self):
+        os.remove(self.waiter_model_file)
+        contents = self.service_documenter.document_service().decode('utf-8')
+        self.assertNotIn('Waiters', contents)

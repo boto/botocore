@@ -52,6 +52,44 @@ class TestDocumentDefaultValue(BaseExampleDocumenterTest):
         ])
 
 
+class TestDocumentEnumValue(BaseExampleDocumenterTest):
+    def setUp(self):
+        super(TestDocumentEnumValue, self).setUp()
+        self.add_shape(
+            {'EnumString': {
+                'type': 'string',
+                'enum': [
+                    'foo',
+                    'bar'
+                ]
+            }}
+        )
+        self.add_shape_to_params('Foo', 'EnumString', 'This describes foo.')
+
+    def test_request_example(self):
+        self.request_example.document_example(
+            self.doc_structure, self.operation_model.input_shape,
+            prefix='response = myclient.call'
+        )
+        self.assert_contains_lines([
+            '::',
+            '  response = myclient.call(',
+            '      Foo=\'foo\'|\'bar\'',
+            '  )'
+        ])
+
+    def test_response_example(self):
+        self.response_example.document_example(
+            self.doc_structure, self.operation_model.input_shape,
+        )
+        self.assert_contains_lines([
+            '::',
+            '  {',
+            '      \'Foo\': \'foo\'|\'bar\'',
+            '  }'
+        ])
+
+
 class TestDocumentMultipleDefaultValues(BaseExampleDocumenterTest):
     def setUp(self):
         super(TestDocumentMultipleDefaultValues, self).setUp()
