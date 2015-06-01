@@ -12,19 +12,9 @@
 # serve to show the default.
 
 import sys, os
+from botocore.docs import generate_docs
 
-import botocore.session
-from botocore.docs.service import ServiceDocumentor
-
-if not os.path.exists('reference/services'):
-    os.makedirs('reference/services')
-
-# Generate reference docs.
-session = botocore.session.get_session()
-for service_name in session.get_available_services():
-    docs = ServiceDocumentor(
-        service_name).document_service()
-    open('reference/services/{0}.rst'.format(service_name), 'w').write(docs)
+generate_docs()
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
