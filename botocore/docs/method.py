@@ -12,10 +12,10 @@
 # language governing permissions and limitations under the License.
 import inspect
 
-from botocore.docs.utils import RequestParamsDocumenter
-from botocore.docs.utils import ResponseParamsDocumenter
-from botocore.docs.utils import ResponseExampleDocumenter
-from botocore.docs.utils import RequestExampleDocumenter
+from botocore.docs.params import RequestParamsDocumenter
+from botocore.docs.params import ResponseParamsDocumenter
+from botocore.docs.example import ResponseExampleDocumenter
+from botocore.docs.example import RequestExampleDocumenter
 
 
 def get_instance_public_methods(instance):
