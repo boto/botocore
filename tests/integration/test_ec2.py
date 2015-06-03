@@ -50,7 +50,7 @@ class TestEC2Pagination(unittest.TestCase):
         # Using an operation that we know will paginate.
         paginator = self.client.get_paginator(
             'describe_reserved_instances_offerings')
-        pages = paginator.paginate(page_size=1)
+        pages = paginator.paginate(PaginationConfig={'PageSize': 1})
         results = list(itertools.islice(pages, 0, 3))
         self.assertEqual(len(results), 3)
         for parsed in results:
