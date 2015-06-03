@@ -253,7 +253,9 @@ class ParamValidator(object):
         try:
             parse_to_aware_datetime(value)
             return True
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, AttributeError):
+            # Yes, dateutil can sometimes raise an AttributeError
+            # when parsing timestamps.
             return False
 
 
