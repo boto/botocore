@@ -163,6 +163,16 @@ class TestValidateTypes(BaseTestValidate):
         error_msg = errors.generate_report()
         self.assertEqual(error_msg, '')
 
+    def test_can_handle_none_datetimes(self):
+        # This is particularly to workaround a bug in dateutil
+        # where low level exceptions can propogate back up to
+        # us.
+        errors = self.get_validation_error_message(
+            given_shapes=self.shapes,
+            input_params={'Timestamp': None})
+        error_msg = errors.generate_report()
+        self.assertIn('Invalid type for parameter Timestamp', error_msg)
+
 
 class TestValidateRanges(BaseTestValidate):
     def setUp(self):
