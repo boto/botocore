@@ -73,7 +73,7 @@ class PaginatorDocumenter(object):
         # we want to include in the description of the paginate method.
         # These are parameters we expose via the botocore interface.
         pagination_config_members = OrderedDict()
-        
+
         pagination_config_members['MaxItems'] = DocumentedShape(
             name='MaxItems', type_name='integer',
             documentation=(

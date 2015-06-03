@@ -58,9 +58,9 @@ class TestPaginatorDocumenter(BaseDocsTest):
             '    :param PaginationConfig:',
             ('      A dictionary that provides parameters to '
              'control pagination.'),
-            '      - **MaxItems** *(integer) --*', 
-            '      - **PageSize** *(integer) --*', 
-            '      - **StartingToken** *(string) --*', 
+            '      - **MaxItems** *(integer) --*',
+            '      - **PageSize** *(integer) --*',
+            '      - **StartingToken** *(string) --*',
             '    :rtype: dict',
             '    :returns:',
             '      **Response Example**',

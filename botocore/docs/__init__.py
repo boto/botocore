@@ -13,7 +13,6 @@
 import os
 
 import botocore.session
-from botocore.compat import six
 from botocore.docs.service import ServiceDocumenter
 
 
