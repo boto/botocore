@@ -12,6 +12,9 @@
 # serve to show the default.
 
 import sys, os
+from botocore.docs import generate_docs
+
+generate_docs(os.path.dirname(os.path.abspath(__file__)))
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -131,7 +134,13 @@ html_static_path = ['_static']
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
+html_show_sourcelink = False
+html_sidebars = {
+    '**': [
+        'globaltoc.html',
+        'localtoc.html',
+        'searchbox.html']
+}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -166,6 +175,19 @@ html_static_path = ['_static']
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'botocoredoc'
 
+import guzzle_sphinx_theme
+
+extensions.append("guzzle_sphinx_theme")
+html_translator_class = 'guzzle_sphinx_theme.HTMLTranslator'
+html_theme_path = guzzle_sphinx_theme.html_theme_path()
+html_theme = 'guzzle_sphinx_theme'
+# Guzzle theme options (see theme.conf for more information)
+
+html_theme_options = {
+    # hack to add tracking
+    "google_analytics_account": os.getenv('TRACKING', False),
+    "base_url": "http://docs.aws.amazon.com/aws-sdk-php/guide/latest/"
+}
 
 # -- Options for LaTeX output --------------------------------------------------
 
