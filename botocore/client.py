@@ -281,7 +281,8 @@ class BaseClient(object):
         self._loader = loader
         self._client_config = client_config
         self.meta = ClientMeta(event_emitter, self._client_config,
-                               endpoint.host, service_model)
+                               endpoint.host, service_model,
+                               self._PY_TO_OP_NAME)
 
         # Register request signing, but only if we have an event
         # emitter. When a client is cloned this is ignored, because
@@ -460,11 +461,13 @@ class ClientMeta(object):
 
     """
 
-    def __init__(self, events, client_config, endpoint_url, service_model):
+    def __init__(self, events, client_config, endpoint_url, service_model,
+                 method_to_api_mapping):
         self.events = events
         self._client_config = client_config
         self._endpoint_url = endpoint_url
         self._service_model = service_model
+        self._method_to_api_mapping = method_to_api_mapping
 
     @property
     def service_model(self):
@@ -481,6 +484,10 @@ class ClientMeta(object):
     @property
     def config(self):
         return self._client_config
+
+    @property
+    def method_to_api_mapping(self):
+        return self._method_to_api_mapping
 
 
 class Config(object):

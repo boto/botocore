@@ -80,7 +80,7 @@ class ClientDocumenter(object):
             self._add_model_driven_method(section, method_name)
 
     def _is_custom_method(self, method_name):
-        return method_name not in self._client._PY_TO_OP_NAME
+        return method_name not in self._client.meta.method_to_api_mapping
 
     def _add_custom_method(self, section, method_name, method):
         document_custom_signature(
@@ -92,7 +92,7 @@ class ClientDocumenter(object):
 
     def _add_model_driven_method(self, section, method_name):
         service_model = self._client.meta.service_model
-        operation_name = self._client._PY_TO_OP_NAME[method_name]
+        operation_name = self._client.meta.method_to_api_mapping[method_name]
         operation_model = service_model.operation_model(operation_name)
 
         document_model_driven_method(
