@@ -585,8 +585,6 @@
         "SenderId",
         "SentTimestamp",
         "ApproximateReceiveCount",
-        "ApproximateFirstReceiveTimestamp",
-        "SentTimestamp",
         "ApproximateFirstReceiveTimestamp"
       ]
     },
