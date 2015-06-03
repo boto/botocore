@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from tests.unit.docs import BaseDocsTest
+from botocore.hooks import HierarchicalEmitter
 from botocore.docs.params import RequestParamsDocumenter
 from botocore.docs.params import ResponseParamsDocumenter
 from botocore.docs.utils import DocumentedShape
@@ -19,8 +20,13 @@ from botocore.docs.utils import DocumentedShape
 class BaseParamsDocumenterTest(BaseDocsTest):
     def setUp(self):
         super(BaseParamsDocumenterTest, self).setUp()
-        self.request_params = RequestParamsDocumenter()
-        self.response_params = ResponseParamsDocumenter()
+        self.event_emitter = HierarchicalEmitter()
+        self.request_params = RequestParamsDocumenter(
+            service='myservice', operation='SampleOpertation',
+            event_emitter=self.event_emitter)
+        self.response_params = ResponseParamsDocumenter(
+            service='myservice', operation='SampleOpertation',
+            event_emitter=self.event_emitter)
 
 
 class TestDocumentDefaultValue(BaseParamsDocumenterTest):

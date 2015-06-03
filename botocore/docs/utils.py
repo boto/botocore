@@ -96,6 +96,33 @@ class DocumentedShape (_DocumentedShape):
             required_members)
 
 
+class AutoPopulatedParam(object):
+    def __init__(self, name):
+        self.name = name
+
+    def document_auto_populated_param(self, event_name, section, **kwargs):
+        """This documents the auto populated parameters
+
+        It will remove any required marks for the parameter, remove the
+        parameter from the example, and add a snippet about the parameter
+        being autopopulated in the description.
+        """
+        if event_name.startswith('docs.request-params'):
+            if self.name in section.available_sections:
+                section = section.get_section(self.name)
+                if 'is-required' in section.available_sections:
+                    section.delete_section('is-required')
+                description_section = section.get_section(
+                    'param-documentation')
+                description_section.writeln(
+                    'Note this parameter is autopopulated. There is no '
+                    'need to include in method call.\n')
+        elif event_name.startswith('docs.request-example'):
+            section = section.get_section('structure-value')
+            if self.name in section.available_sections:
+                section.delete_section(self.name)
+
+
 def traverse_and_document_shape(documenter, section, shape, history,
                                 include=None, exclude=None, name=None,
                                 is_required=False):
@@ -135,4 +162,18 @@ def traverse_and_document_shape(documenter, section, shape, history,
                     include=include, exclude=exclude,
                     is_top_level_param=is_top_level_param,
                     is_required=is_required)
+        if is_top_level_param:
+            documenter.event_emitter.emit(
+                'docs.%s.%s.%s.%s' % (documenter.EVENT_NAME,
+                                      documenter.service,
+                                      documenter.operation,
+                                      name),
+                section=section)
+        at_overlying_method_section = (len(history) == 1)
+        if at_overlying_method_section:
+            documenter.event_emitter.emit(
+                'docs.%s.%s.%s.complete-section' % (documenter.EVENT_NAME,
+                                                    documenter.service,
+                                                    documenter.operation),
+                section=section)
         history.pop()

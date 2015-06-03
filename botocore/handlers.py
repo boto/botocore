@@ -25,6 +25,7 @@ import xml.etree.cElementTree
 import copy
 
 from botocore.compat import unquote, json, quote, six
+from botocore.docs.utils import AutoPopulatedParam
 from botocore.signers import add_generate_presigned_url
 from botocore.signers import add_generate_presigned_post
 
@@ -440,4 +441,8 @@ BUILTIN_HANDLERS = [
      base64_encode_user_data),
     ('before-parameter-build.route53', fix_route53_ids),
     ('before-parameter-build.glacier', inject_account_id),
+    ('docs.*.glacier.*.complete-section',
+     AutoPopulatedParam('accountId').document_auto_populated_param),
+    ('docs.*.glacier.*.complete-section',
+     AutoPopulatedParam('checksum').document_auto_populated_param)
 ]
