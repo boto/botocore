@@ -14,8 +14,7 @@ from collections import namedtuple
 
 
 def py_type_name(type_name):
-    """
-    Get the Python type name for a given model type.
+    """Get the Python type name for a given model type.
 
         >>> py_type_name('list')
         'list'
