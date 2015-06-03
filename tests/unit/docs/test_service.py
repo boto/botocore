@@ -50,8 +50,7 @@ class TestServiceDocumenter(BaseDocsTest):
             'Paginators',
             '==========',
             '.. py:class:: myservice.Paginator.sample_operation',
-            ('  .. py:method:: paginate(Biz=None, max_items=None, '
-             'page_size=None, starting_token=None)'),
+            '  .. py:method:: paginate(Biz=None, PaginationConfig=None)',
             '=======',
             'Waiters',
             '=======',

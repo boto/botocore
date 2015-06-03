@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from botocore import xform_name
+from botocore.compat import OrderedDict
 from botocore.docs.utils import DocumentedShape
 from botocore.docs.method import document_model_driven_method
 
@@ -71,24 +72,35 @@ class PaginatorDocumenter(object):
         # Add representations of the request and response parameters
         # we want to include in the description of the paginate method.
         # These are parameters we expose via the botocore interface.
+        pagination_config_members = OrderedDict()
+        
+        pagination_config_members['MaxItems'] = DocumentedShape(
+            name='MaxItems', type_name='integer',
+            documentation=(
+                '<p>The total number of items to return. If the total '
+                'number of items available is more than the value '
+                'specified in max-items then a <code>NextToken</code> '
+                'will be provided in the output that you can use to '
+                'resume pagination.</p>'))
+
+        pagination_config_members['PageSize'] = DocumentedShape(
+            name='PageSize', type_name='integer',
+            documentation='<p>The size of each page.<p>')
+
+        pagination_config_members['StartingToken'] = DocumentedShape(
+            name='StartingToken', type_name='string',
+            documentation=(
+                '<p>A token to specify where to start paginating. '
+                'This is the <code>NextToken</code> from a previous '
+                'response.</p>'))
+
         botocore_pagination_params = [
             DocumentedShape(
-                name='max_items', type_name='integer',
+                name='PaginationConfig', type_name='structure',
                 documentation=(
-                    '<p>The total number of items to return. If the total '
-                    'number of items available is more than the value '
-                    'specified in max-items then a <code>NextToken</code> '
-                    'will be provided in the output that you can use to '
-                    'resume pagination.</p>')),
-            DocumentedShape(
-                name='page_size', type_name='integer',
-                documentation='<p>The size of each page.<p>'),
-            DocumentedShape(
-                name='starting_token', type_name='string',
-                documentation=(
-                    '<p>A token to specify where to start paginating. '
-                    'This is the <code>NextToken</code> from a previous '
-                    'response.</p>'))
+                    '<p>A dictionary that provides parameters to control '
+                    'pagination.</p>'),
+                members=pagination_config_members)
         ]
 
         botocore_pagination_response_params = [

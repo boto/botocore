@@ -77,16 +77,23 @@ def get_official_service_name(service_model):
 
 
 _DocumentedShape = namedtuple(
-    'DocumentedShape', ['name', 'type_name', 'documentation', 'metadata'])
+    'DocumentedShape', ['name', 'type_name', 'documentation', 'metadata',
+                        'members', 'required_members'])
 
 
 class DocumentedShape (_DocumentedShape):
     """Use this class to inject new shapes into a model for documentation"""
-    def __new__(cls, name, type_name, documentation, metadata=None):
+    def __new__(cls, name, type_name, documentation, metadata=None,
+                members=None, required_members=None):
         if metadata is None:
             metadata = []
+        if members is None:
+            members = []
+        if required_members is None:
+            required_members = []
         return super(DocumentedShape, cls).__new__(
-            cls, name, type_name, documentation, metadata)
+            cls, name, type_name, documentation, metadata, members,
+            required_members)
 
 
 def traverse_and_document_shape(documenter, section, shape, history,
