@@ -17,13 +17,17 @@ from botocore.compat import six
 from botocore.docs.service import ServiceDocumenter
 
 
-def generate_docs():
-    services_doc_path = os.path.join(
-        os.path.dirname(
-            os.path.dirname(
-                os.path.dirname(
-                    os.path.abspath(__file__)))), 'docs', 'source',
-        'reference', 'services')
+def generate_docs(root_dir):
+    """Generates the reference documentation for botocore
+
+    This will go through every available AWS service and output ReSTructured
+    text files documenting each service.
+
+    :param root_dir: The directory to write the reference files to. Each
+        service's reference documentation is loacated at
+        root_dir/reference/services/service-name.rst
+    """
+    services_doc_path = os.path.join(root_dir, 'reference', 'services')
     if not os.path.exists(services_doc_path):
         os.makedirs(services_doc_path)
 

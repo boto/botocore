@@ -148,7 +148,9 @@ class TestDocumentList(BaseParamsDocumenterTest):
                 'type': 'list',
                 'member': {'shape': 'String',
                            'documentation': 'A string element'}}})
-        self.add_shape_to_params('Foo', 'List', 'This describes the list.')
+        self.add_shape_to_params(
+            'Foo', 'List',
+            'This describes the list. Each element of this list is a string.')
 
     def test_request_params(self):
         self.request_params.document_params(
@@ -164,7 +166,8 @@ class TestDocumentList(BaseParamsDocumenterTest):
             self.doc_structure, self.operation_model.input_shape)
         self.assert_contains_lines([
             '- *(dict) --*',
-            '  - **Foo** *(list) --* This describes the list.',
+            ('  - **Foo** *(list) --* This describes the list. '
+             'Each element of this list is a string.'),
             '    - *(string) --* A string element'
         ])
 

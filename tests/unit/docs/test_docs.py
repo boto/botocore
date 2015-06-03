@@ -23,7 +23,7 @@ from botocore.docs import generate_docs
 class TestGenerateDocs(BaseDocsTest):
     def setUp(self):
         super(TestGenerateDocs, self).setUp()
-        self.botocore_root = tempfile.mkdtemp()
+        self.docs_root = tempfile.mkdtemp()
         self.loader_patch = mock.patch(
             'botocore.session.create_loader', return_value=self.loader)
         self.available_service_patch = mock.patch(
@@ -34,20 +34,16 @@ class TestGenerateDocs(BaseDocsTest):
 
     def tearDown(self):
         super(TestGenerateDocs, self).tearDown()
-        shutil.rmtree(self.botocore_root)
+        shutil.rmtree(self.docs_root)
         self.loader_patch.stop()
         self.available_service_patch.stop()
 
     def test_generate_docs(self):
         # Have the rst files get written to the temporary directory
-        with mock.patch('os.path.abspath',
-                        return_value=os.path.join(
-                            self.botocore_root,
-                            'botocore', 'docs', '__init__.py')):
-            generate_docs()
+        generate_docs(self.docs_root)
 
         reference_services_path = os.path.join(
-            self.botocore_root, 'docs', 'source', 'reference', 'services')
+            self.docs_root, 'reference', 'services')
         reference_service_path = os.path.join(
             reference_services_path, 'myservice.rst')
         self.assertTrue(os.path.exists(reference_service_path))
