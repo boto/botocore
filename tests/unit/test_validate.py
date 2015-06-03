@@ -164,7 +164,7 @@ class TestValidateTypes(BaseTestValidate):
         self.assertEqual(error_msg, '')
 
     def test_can_handle_none_datetimes(self):
-        # This is particularly to workaround a bug in dateutil
+        # This is specifically to test a workaround a bug in dateutil
         # where low level exceptions can propogate back up to
         # us.
         errors = self.get_validation_error_message(
