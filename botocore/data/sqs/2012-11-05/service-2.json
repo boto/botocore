@@ -582,19 +582,12 @@
     "AttributeName":{
       "type":"string",
       "enum":[
-        "Policy",
-        "VisibilityTimeout",
-        "MaximumMessageSize",
-        "MessageRetentionPeriod",
-        "ApproximateNumberOfMessages",
-        "ApproximateNumberOfMessagesNotVisible",
-        "CreatedTimestamp",
-        "LastModifiedTimestamp",
-        "QueueArn",
-        "ApproximateNumberOfMessagesDelayed",
-        "DelaySeconds",
-        "ReceiveMessageWaitTimeSeconds",
-        "RedrivePolicy"
+        "SenderId",
+        "SentTimestamp",
+        "ApproximateReceiveCount",
+        "ApproximateFirstReceiveTimestamp",
+        "SentTimestamp",
+        "ApproximateFirstReceiveTimestamp"
       ]
     },
     "QueueAttributeMap":{
