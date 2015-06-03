@@ -33,7 +33,7 @@ class TestDocumentDefaultValue(BaseExampleDocumenterTest):
             self.doc_structure, self.operation_model.input_shape,
             prefix='response = myclient.call'
         )
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '::',
             '  response = myclient.call(',
             '      Foo=\'string\'',
@@ -44,7 +44,7 @@ class TestDocumentDefaultValue(BaseExampleDocumenterTest):
         self.response_example.document_example(
             self.doc_structure, self.operation_model.input_shape,
         )
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '::',
             '  {',
             '      \'Foo\': \'string\'',
@@ -71,7 +71,7 @@ class TestDocumentEnumValue(BaseExampleDocumenterTest):
             self.doc_structure, self.operation_model.input_shape,
             prefix='response = myclient.call'
         )
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '::',
             '  response = myclient.call(',
             '      Foo=\'foo\'|\'bar\'',
@@ -82,7 +82,7 @@ class TestDocumentEnumValue(BaseExampleDocumenterTest):
         self.response_example.document_example(
             self.doc_structure, self.operation_model.input_shape,
         )
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '::',
             '  {',
             '      \'Foo\': \'foo\'|\'bar\'',
@@ -102,7 +102,7 @@ class TestDocumentMultipleDefaultValues(BaseExampleDocumenterTest):
             self.doc_structure, self.operation_model.input_shape,
             prefix='response = myclient.call'
         )
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '::',
             '  response = myclient.call(',
             '      Foo=\'string\',',
@@ -114,7 +114,7 @@ class TestDocumentMultipleDefaultValues(BaseExampleDocumenterTest):
         self.response_example.document_example(
             self.doc_structure, self.operation_model.input_shape,
         )
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '::',
             '  {',
             '      \'Foo\': \'string\',',
@@ -140,7 +140,7 @@ class TestDocumentInclude(BaseExampleDocumenterTest):
             prefix='response = myclient.call',
             include=self.include_params
         )
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '::',
             '  response = myclient.call(',
             '      Foo=\'string\',',
@@ -153,7 +153,7 @@ class TestDocumentInclude(BaseExampleDocumenterTest):
             self.doc_structure, self.operation_model.input_shape,
             include=self.include_params
         )
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '::',
             '  {',
             '      \'Foo\': \'string\',',
@@ -176,7 +176,7 @@ class TestDocumentExclude(BaseExampleDocumenterTest):
             prefix='response = myclient.call',
             exclude=self.exclude_params
         )
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '::',
             '  response = myclient.call(',
             '      Bar=\'string\'',
@@ -189,7 +189,7 @@ class TestDocumentExclude(BaseExampleDocumenterTest):
             self.doc_structure, self.operation_model.input_shape,
             exclude=self.exclude_params
         )
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '::',
             '  {',
             '      \'Bar\': \'string\'',
@@ -212,7 +212,7 @@ class TestDocumentList(BaseExampleDocumenterTest):
         self.request_example.document_example(
             self.doc_structure, self.operation_model.input_shape,
             prefix='response = myclient.call')
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '::',
             '  response = myclient.call(',
             '      Foo=[',
@@ -224,7 +224,7 @@ class TestDocumentList(BaseExampleDocumenterTest):
     def test_response_example(self):
         self.response_example.document_example(
             self.doc_structure, self.operation_model.input_shape)
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '::',
             '  {',
             '      \'Foo\': [',
@@ -248,7 +248,7 @@ class TestDocumentMap(BaseExampleDocumenterTest):
         self.request_example.document_example(
             self.doc_structure, self.operation_model.input_shape,
             prefix='response = myclient.call')
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '::',
             '  response = myclient.call(',
             '      Foo={',
@@ -260,7 +260,7 @@ class TestDocumentMap(BaseExampleDocumenterTest):
     def test_response_example(self):
         self.response_example.document_example(
             self.doc_structure, self.operation_model.input_shape)
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '::',
             '  {',
             '      \'Foo\': {',
@@ -286,7 +286,7 @@ class TestDocumentStructure(BaseExampleDocumenterTest):
         self.request_example.document_example(
             self.doc_structure, self.operation_model.input_shape,
             prefix='response = myclient.call')
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '::',
             '  response = myclient.call(',
             '      Foo={',
@@ -298,7 +298,7 @@ class TestDocumentStructure(BaseExampleDocumenterTest):
     def test_response_example(self):
         self.response_example.document_example(
             self.doc_structure, self.operation_model.input_shape)
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '::',
             '  {',
             '      \'Foo\': {',
@@ -325,7 +325,7 @@ class TestDocumentRecursiveShape(BaseExampleDocumenterTest):
         self.request_example.document_example(
             self.doc_structure, self.operation_model.input_shape,
             prefix='response = myclient.call')
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '::',
             '  response = myclient.call(',
             '      Foo={',
@@ -337,7 +337,7 @@ class TestDocumentRecursiveShape(BaseExampleDocumenterTest):
     def test_response_example(self):
         self.response_example.document_example(
             self.doc_structure, self.operation_model.input_shape)
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '::',
             '  {',
             '      \'Foo\': {',

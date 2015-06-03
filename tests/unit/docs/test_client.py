@@ -23,7 +23,7 @@ class TestClientDocumenter(BaseDocsTest):
 
     def test_document_client(self):
         self.client_documenter.document_client(self.doc_structure)
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '======',
             'Client',
             '======',

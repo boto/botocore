@@ -31,7 +31,7 @@ class TestDocumentDefaultValue(BaseParamsDocumenterTest):
     def test_request_params(self):
         self.request_params.document_params(
             self.doc_structure, self.operation_model.input_shape)
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             ':type Foo: string',
             ':param Foo: This describes foo.'
         ])
@@ -39,7 +39,7 @@ class TestDocumentDefaultValue(BaseParamsDocumenterTest):
     def test_response_params(self):
         self.response_params.document_params(
             self.doc_structure, self.operation_model.input_shape)
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '- *(dict) --*',
             '  - **Foo** *(string) --* This describes foo.'
         ])
@@ -55,7 +55,7 @@ class TestDocumentMultipleDefaultValues(BaseParamsDocumenterTest):
     def test_request_params(self):
         self.request_params.document_params(
             self.doc_structure, self.operation_model.input_shape)
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             ':type Foo: string',
             ':param Foo: This describes foo.',
             ':type Bar: string',
@@ -65,7 +65,7 @@ class TestDocumentMultipleDefaultValues(BaseParamsDocumenterTest):
     def test_response_params(self):
         self.response_params.document_params(
             self.doc_structure, self.operation_model.input_shape)
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '- *(dict) --*',
             '  - **Foo** *(string) --* This describes foo.',
             '  - **Bar** *(string) --* This describes bar.'
@@ -88,7 +88,7 @@ class TestDocumentInclude(BaseParamsDocumenterTest):
             self.doc_structure, self.operation_model.input_shape,
             include=self.include_params
         )
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             ':type Foo: string',
             ':param Foo: This describes foo.',
             ':type Baz: int',
@@ -100,7 +100,7 @@ class TestDocumentInclude(BaseParamsDocumenterTest):
             self.doc_structure, self.operation_model.input_shape,
             include=self.include_params
         )
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '- *(dict) --*',
             '  - **Foo** *(string) --* This describes foo.',
             '  - **Baz** *(integer) --* This describes baz.'
@@ -119,7 +119,7 @@ class TestDocumentExclude(BaseParamsDocumenterTest):
         self.request_params.document_params(
             self.doc_structure, self.operation_model.input_shape,
             exclude=self.exclude_params)
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             ':type Bar: string',
             ':param Bar: **[REQUIRED]** This describes bar.'
         ])
@@ -132,7 +132,7 @@ class TestDocumentExclude(BaseParamsDocumenterTest):
         self.response_params.document_params(
             self.doc_structure, self.operation_model.input_shape,
             exclude=self.exclude_params)
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '- *(dict) --*',
             '  - **Bar** *(string) --* This describes bar.'
         ])
@@ -155,7 +155,7 @@ class TestDocumentList(BaseParamsDocumenterTest):
     def test_request_params(self):
         self.request_params.document_params(
             self.doc_structure, self.operation_model.input_shape)
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             ':type Foo: list',
             ':param Foo: This describes the list.',
             '  - *(string) --* A string element'
@@ -164,7 +164,7 @@ class TestDocumentList(BaseParamsDocumenterTest):
     def test_response_params(self):
         self.response_params.document_params(
             self.doc_structure, self.operation_model.input_shape)
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '- *(dict) --*',
             ('  - **Foo** *(list) --* This describes the list. '
              'Each element of this list is a string.'),
@@ -185,7 +185,7 @@ class TestDocumentMap(BaseParamsDocumenterTest):
     def test_request_params(self):
         self.request_params.document_params(
             self.doc_structure, self.operation_model.input_shape)
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             ':type Foo: dict',
             ':param Foo: This describes the map.',
             '  - *(string) --*',
@@ -195,7 +195,7 @@ class TestDocumentMap(BaseParamsDocumenterTest):
     def test_response_params(self):
         self.response_params.document_params(
             self.doc_structure, self.operation_model.input_shape)
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '- *(dict) --*',
             '  - **Foo** *(dict) --* This describes the map.',
             '    - *(string) --*',
@@ -218,7 +218,7 @@ class TestDocumentStructure(BaseParamsDocumenterTest):
     def test_request_params(self):
         self.request_params.document_params(
             self.doc_structure, self.operation_model.input_shape)
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             ':type Foo: dict',
             ':param Foo: This describes the structure.',
             '  - **Member** *(string) --* This is its member.'
@@ -227,7 +227,7 @@ class TestDocumentStructure(BaseParamsDocumenterTest):
     def test_response_params(self):
         self.response_params.document_params(
             self.doc_structure, self.operation_model.input_shape)
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '- *(dict) --*',
             '  - **Foo** *(dict) --* This describes the structure.',
             '    - **Member** *(string) --* This is its member.'
@@ -250,7 +250,7 @@ class TestDocumentRecursiveShape(BaseParamsDocumenterTest):
     def test_request_params(self):
         self.request_params.document_params(
             self.doc_structure, self.operation_model.input_shape)
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             ':type Foo: dict',
             ':param Foo: This describes the structure.',
             '  - **Foo** *(dict) --* This is a recursive structure.'
@@ -259,7 +259,7 @@ class TestDocumentRecursiveShape(BaseParamsDocumenterTest):
     def test_response_params(self):
         self.response_params.document_params(
             self.doc_structure, self.operation_model.input_shape)
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '- *(dict) --*',
             '  - **Foo** *(dict) --* This is a recursive structure.',
         ])

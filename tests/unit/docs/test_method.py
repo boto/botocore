@@ -91,7 +91,7 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
             method_description='This describes the foo method.',
             example_prefix='response = client.foo'
         )
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '.. py:method:: foo(Bar=None)',
             '  This describes the foo method.',
             '  **Example**',
@@ -121,7 +121,7 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
             method_description='This describes the foo method.',
             example_prefix='response = client.foo'
         )
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '.. py:method:: foo()',
             '  This describes the foo method.',
             '  **Example**',
@@ -141,7 +141,7 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
             example_prefix='response = client.foo',
             include_input=include_params
         )
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '.. py:method:: foo(Bar=None, Biz=None)',
             '  This describes the foo method.',
             '  **Example**',
@@ -177,7 +177,7 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
             example_prefix='response = client.foo',
             include_output=include_params
         )
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '.. py:method:: foo(Bar=None)',
             '  This describes the foo method.',
             '  **Example**',
@@ -209,7 +209,7 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
             example_prefix='response = client.foo',
             exclude_input=['Bar']
         )
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '.. py:method:: foo(Biz=None)',
             '  This describes the foo method.',
             '  **Example**',
@@ -245,7 +245,7 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
             example_prefix='response = client.foo',
             exclude_output=['Bar']
         )
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '.. py:method:: foo(Bar=None, Biz=None)',
             '  This describes the foo method.',
             '  **Example**',

@@ -30,7 +30,7 @@ class TestPaginatorDocumenter(BaseDocsTest):
     def test_document_paginators(self):
         self.paginator_documenter.document_paginators(
             self.doc_structure)
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '==========',
             'Paginators',
             '==========',

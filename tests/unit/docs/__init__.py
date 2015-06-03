@@ -163,10 +163,12 @@ class BaseDocsTest(unittest.TestCase):
         contents = self.doc_structure.flush_structure().decode('utf-8')
         self.assertIn(line, contents)
 
-    def assert_contains_lines(self, lines):
+    def assert_contains_lines_in_order(self, lines):
         contents = self.doc_structure.flush_structure().decode('utf-8')
         for line in lines:
             self.assertIn(line, contents)
+            beginning = contents.find(line)
+            contents = contents[(beginning + len(line)):]
 
     def assert_not_contains_line(self, line):
         contents = self.doc_structure.flush_structure().decode('utf-8')

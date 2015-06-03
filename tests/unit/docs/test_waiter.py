@@ -27,7 +27,7 @@ class TestWaiterDocumenter(BaseDocsTest):
     def test_document_waiters(self):
         self.waiter_documenter.document_waiters(
             self.doc_structure)
-        self.assert_contains_lines([
+        self.assert_contains_lines_in_order([
             '=======',
             'Waiters',
             '=======',
