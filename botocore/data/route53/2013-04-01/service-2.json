@@ -861,7 +861,7 @@
       "name":"ListResourceRecordSets",
       "http":{
         "method":"GET",
-        "requestUri":"/2013-04-01/hostedzone/{Id}/rrset"
+        "requestUri":"/2013-04-01/hostedzone/{HostedZoneId}/rrset"
       },
       "input":{
         "shape":"ListResourceRecordSetsRequest",
