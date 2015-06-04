@@ -26,7 +26,7 @@ class TestRDSPagination(unittest.TestCase):
         # Route53 has a string type for MaxItems.  We need to ensure that this
         # still works without any issues.
         paginator = self.client.get_paginator('list_hosted_zones')
-        results = list(paginator.paginate(max_items='1'))
+        results = list(paginator.paginate(PaginationConfig={'MaxItems': '1'}))
         self.assertTrue(len(results) >= 0)
 
 
