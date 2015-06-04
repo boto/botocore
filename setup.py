@@ -1,9 +1,4 @@
 #!/usr/bin/env python
-
-"""
-distutils/setuptools install script.
-"""
-
 import sys
 import botocore
 
@@ -11,7 +6,7 @@ from setuptools import setup, find_packages
 
 
 requires = ['jmespath==0.7.1',
-            'bcdoc==0.14.0',
+            'bcdoc>=0.15.0,<0.16.0',
             'python-dateutil>=2.1,<3.0.0']
 
 
@@ -45,7 +40,7 @@ setup(
     install_requires=requires,
     license=open("LICENSE.txt").read(),
     classifiers=(
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'Natural Language :: English',
