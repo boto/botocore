@@ -351,22 +351,23 @@ class Paginator(object):
             self._output_token, self._more_results,
             self._result_keys, self._non_aggregate_keys,
             self._limit_key,
-            page_params['max_items'],
-            page_params['starting_token'],
-            page_params['page_size'],
+            page_params['MaxItems'],
+            page_params['StartingToken'],
+            page_params['PageSize'],
             kwargs)
 
     def _extract_paging_params(self, kwargs):
-        max_items = kwargs.pop('max_items', None)
+        pagination_config = kwargs.pop('PaginationConfig', {})
+        max_items = pagination_config.get('MaxItems', None)
         if max_items is not None:
             max_items = int(max_items)
-        page_size = kwargs.pop('page_size', None)
+        page_size = pagination_config.get('PageSize', None)
         if page_size is not None:
             page_size = int(page_size)
         return {
-            'max_items': max_items,
-            'starting_token': kwargs.pop('starting_token', None),
-            'page_size': page_size,
+            'MaxItems': max_items,
+            'StartingToken': pagination_config.get('StartingToken', None),
+            'PageSize': page_size,
         }
 
 
