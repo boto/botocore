@@ -97,8 +97,13 @@ class DocumentedShape (_DocumentedShape):
 
 
 class AutoPopulatedParam(object):
-    def __init__(self, name):
+    def __init__(self, name, param_description=None):
         self.name = name
+        self.param_description = param_description
+        if param_description is None:
+            self.param_description = (
+                'Note this parameter is autopopulated. There is no '
+                'need to include in method call.\n')
 
     def document_auto_populated_param(self, event_name, section, **kwargs):
         """This documents the auto populated parameters
@@ -114,9 +119,7 @@ class AutoPopulatedParam(object):
                     section.delete_section('is-required')
                 description_section = section.get_section(
                     'param-documentation')
-                description_section.writeln(
-                    'Note this parameter is autopopulated. There is no '
-                    'need to include in method call.\n')
+                description_section.writeln(self.param_description)
         elif event_name.startswith('docs.request-example'):
             section = section.get_section('structure-value')
             if self.name in section.available_sections:

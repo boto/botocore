@@ -144,6 +144,15 @@ class TestAutopopulatedParam(BaseDocsTest):
             ('Note this parameter is autopopulated. There is no need '
              'to include in method call'))
 
+    def test_non_default_param_description(self):
+        description = 'This is a custom description'
+        self.param = AutoPopulatedParam(self.name, description)
+        section = self.doc_structure.add_new_section(self.name)
+        section.add_new_section('param-documentation')
+        self.param.document_auto_populated_param(
+            'docs.request-params', self.doc_structure)
+        self.assert_contains_line(description)
+
     def test_request_example(self):
         top_section = self.doc_structure.add_new_section('structure-value')
         section = top_section.add_new_section(self.name)
