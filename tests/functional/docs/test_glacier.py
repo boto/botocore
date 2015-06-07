@@ -14,9 +14,13 @@ from tests.functional.docs import BaseDocsFunctionalTest
 
 class TestGlacierDocs(BaseDocsFunctionalTest):
     def test_account_id(self):
-        self.check_autopopulated_param_doc(
-            'glacier', 'abort_multipart_upload', 'accountId')
+        self.assert_is_documented_as_autopopulated_param(
+            service_name='glacier',
+            method_name='abort_multipart_upload',
+            param_name='accountId')
 
     def test_checksum(self):
-        self.check_autopopulated_param_doc(
-            'glacier', 'upload_archive', 'checksum')
+        self.assert_is_documented_as_autopopulated_param(
+            service_name='glacier',
+            method_name='upload_archive',
+            param_name='checksum')

@@ -56,19 +56,20 @@ class BaseDocsFunctionalTest(unittest.TestCase):
         contents = contents[:end_index]
         return contents.encode('utf-8')
 
-    def check_autopopulated_param_doc(self, service, method, param):
-        contents = ServiceDocumenter(service).document_service()
+    def assert_is_documented_as_autopopulated_param(
+            self, service_name, method_name, param_name):
+        contents = ServiceDocumenter(service_name).document_service()
         # Pick an arbitrary method that uses AccountId.
-        operation_name = method
         method_contents = self.get_method_document_block(
-            operation_name, contents)
+            method_name, contents)
 
         # Ensure it is not in the example.
-        self.assert_not_contains_line('%s=\'string\'' % param, method_contents)
+        self.assert_not_contains_line('%s=\'string\'' % param_name,
+                                      method_contents)
 
         # Ensure it is in the params.
         param_contents = self.get_parameter_document_block(
-            param, method_contents)
+            param_name, method_contents)
 
         # Ensure it is not labeled as required.
         self.assert_not_contains_line('REQUIRED', param_contents)
