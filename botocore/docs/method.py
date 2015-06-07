@@ -162,8 +162,8 @@ def document_model_driven_method(section, method_name, operation_model,
     example_section.style.bold('Example')
     if operation_model.input_shape:
         RequestExampleDocumenter(
-            service=operation_model.service_model.service_name,
-            operation=operation_model.name,
+            service_name=operation_model.service_model.service_name,
+            operation_name=operation_model.name,
             event_emitter=event_emitter).document_example(
                 example_section, operation_model.input_shape,
                 prefix=example_prefix, include=include_input,
@@ -177,8 +177,8 @@ def document_model_driven_method(section, method_name, operation_model,
     request_params_section = section.add_new_section('request-params')
     if operation_model.input_shape:
         RequestParamsDocumenter(
-            service=operation_model.service_model.service_name,
-            operation=operation_model.name,
+            service_name=operation_model.service_model.service_name,
+            operation_name=operation_model.name,
             event_emitter=event_emitter).document_params(
                 request_params_section, operation_model.input_shape,
                 include=include_input, exclude=exclude_input)
@@ -199,8 +199,8 @@ def document_model_driven_method(section, method_name, operation_model,
         return_example_section.style.bold('Response Example')
         return_example_section.style.new_paragraph()
         ResponseExampleDocumenter(
-            service=operation_model.service_model.service_name,
-            operation=operation_model.name,
+            service_name=operation_model.service_model.service_name,
+            operation_name=operation_model.name,
             event_emitter=event_emitter).document_example(
                 return_example_section, operation_model.output_shape,
                 include=include_output, exclude=exclude_output)
@@ -212,8 +212,8 @@ def document_model_driven_method(section, method_name, operation_model,
         return_description_section.style.bold('Response Structure')
         return_description_section.style.new_paragraph()
         ResponseParamsDocumenter(
-            service=operation_model.service_model.service_name,
-            operation=operation_model.name,
+            service_name=operation_model.service_model.service_name,
+            operation_name=operation_model.name,
             event_emitter=event_emitter).document_params(
                 return_description_section, operation_model.output_shape,
                 include=include_output, exclude=exclude_output)

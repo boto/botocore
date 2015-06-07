@@ -57,15 +57,15 @@ class ShapeDocumenter(object):
             if is_top_level_param:
                 self.event_emitter.emit(
                     'docs.%s.%s.%s.%s' % (self.EVENT_NAME,
-                                          self.service,
-                                          self.operation,
+                                          self.service_name,
+                                          self.operation_name,
                                           name),
                     section=section)
             at_overlying_method_section = (len(history) == 1)
             if at_overlying_method_section:
                 self.event_emitter.emit(
                     'docs.%s.%s.%s.complete-section' % (self.EVENT_NAME,
-                                                        self.service,
-                                                        self.operation),
+                                                        self.service_name,
+                                                        self.operation_name),
                     section=section)
             history.pop()

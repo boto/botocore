@@ -24,10 +24,10 @@ class BaseExampleDocumenterTest(BaseDocsTest):
         super(BaseExampleDocumenterTest, self).setUp()
         self.event_emitter = HierarchicalEmitter()
         self.request_example = RequestExampleDocumenter(
-            service='myservice', operation='SampleOperation',
+            service_name='myservice', operation_name='SampleOperation',
             event_emitter=self.event_emitter)
         self.response_example = ResponseExampleDocumenter(
-            service='myservice', operation='SampleOperation',
+            service_name='myservice', operation_name='SampleOperation',
             event_emitter=self.event_emitter)
 
 

@@ -24,10 +24,10 @@ class BaseParamsDocumenterTest(BaseDocsTest):
         super(BaseParamsDocumenterTest, self).setUp()
         self.event_emitter = HierarchicalEmitter()
         self.request_params = RequestParamsDocumenter(
-            service='myservice', operation='SampleOperation',
+            service_name='myservice', operation_name='SampleOperation',
             event_emitter=self.event_emitter)
         self.response_params = ResponseParamsDocumenter(
-            service='myservice', operation='SampleOperation',
+            service_name='myservice', operation_name='SampleOperation',
             event_emitter=self.event_emitter)
 
 
