@@ -10,11 +10,11 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from botocore.docs.utils import traverse_and_document_shape
+from botocore.docs.shape import ShapeDocumenter
 from botocore.docs.utils import py_type_name
 
 
-class BaseParamsDocumenter(object):
+class BaseParamsDocumenter(ShapeDocumenter):
     EVENT_NAME = ''
 
     def __init__(self, service, operation, event_emitter):
@@ -38,8 +38,8 @@ class BaseParamsDocumenter(object):
             documentation.
         """
         history = []
-        traverse_and_document_shape(
-            documenter=self, section=section, shape=shape, history=history,
+        self.traverse_and_document_shape(
+            section=section, shape=shape, history=history,
             name=None, include=include, exclude=exclude)
 
     def document_recursive_shape(self, section, shape, **kwargs):
@@ -55,8 +55,8 @@ class BaseParamsDocumenter(object):
         param_shape = shape.member
         param_section = section.add_new_section(param_shape.name)
         self._start_nested_param(param_section)
-        traverse_and_document_shape(
-            documenter=self, section=param_section, shape=param_shape,
+        self.traverse_and_document_shape(
+            section=param_section, shape=param_shape,
             history=history, name=None)
         section = section.add_new_section('end-list')
         self._end_nested_param(section)
@@ -72,8 +72,8 @@ class BaseParamsDocumenter(object):
         param_section = section.add_new_section(shape.value.name)
         param_section.style.indent()
         self._start_nested_param(param_section)
-        traverse_and_document_shape(
-            documenter=self, section=param_section, shape=shape.value,
+        self.traverse_and_document_shape(
+            section=param_section, shape=shape.value,
             history=history, name=None)
 
         end_section = section.add_new_section('end-map')
@@ -91,8 +91,8 @@ class BaseParamsDocumenter(object):
             param_section = section.add_new_section(param)
             self._start_nested_param(param_section)
             param_shape = members[param]
-            traverse_and_document_shape(
-                documenter=self, section=param_section, shape=param_shape,
+            self.traverse_and_document_shape(
+                section=param_section, shape=param_shape,
                 history=history, name=param)
         section = section.add_new_section('end-structure')
         self._end_nested_param(section)
@@ -156,8 +156,8 @@ class RequestParamsDocumenter(BaseParamsDocumenter):
             param_section.style.new_line()
             param_shape = members[param]
             is_required = param in shape.required_members
-            traverse_and_document_shape(
-                documenter=self, section=param_section, shape=param_shape,
+            self.traverse_and_document_shape(
+                section=param_section, shape=param_shape,
                 history=history, name=param, is_required=is_required)
         section = section.add_new_section('end-structure')
         if len(history) > 1:

@@ -10,11 +10,11 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from botocore.docs.utils import traverse_and_document_shape
+from botocore.docs.shape import ShapeDocumenter
 from botocore.docs.utils import py_default
 
 
-class BaseExampleDocumenter(object):
+class BaseExampleDocumenter(ShapeDocumenter):
     EVENT_NAME = ''
 
     def __init__(self, service, operation, event_emitter):
@@ -45,8 +45,8 @@ class BaseExampleDocumenter(object):
         section.style.start_codeblock()
         if prefix is not None:
             section.write(prefix)
-        traverse_and_document_shape(
-            documenter=self, section=section, shape=shape, history=history,
+        self.traverse_and_document_shape(
+            section=section, shape=shape, history=history,
             include=include, exclude=exclude)
 
     def document_recursive_shape(self, section, shape, **kwargs):
@@ -72,9 +72,8 @@ class BaseExampleDocumenter(object):
         list_section = section.add_new_section('list-value')
         self._start_nested_param(list_section, '[')
         param_shape = shape.member
-        traverse_and_document_shape(
-            documenter=self, section=list_section, shape=param_shape,
-            history=history)
+        self.traverse_and_document_shape(
+            section=list_section, shape=param_shape, history=history)
         ending_comma_section = list_section.add_new_section('ending-comma')
         ending_comma_section.write(',')
         ending_bracket_section = list_section.add_new_section(
@@ -94,8 +93,8 @@ class BaseExampleDocumenter(object):
             param_section = section.add_new_section(param)
             param_section.write('\'%s\': ' % param)
             param_shape = input_members[param]
-            traverse_and_document_shape(
-                documenter=self, section=param_section, shape=param_shape,
+            self.traverse_and_document_shape(
+                section=param_section, shape=param_shape,
                 history=history, name=param)
             if i < len(input_members) - 1:
                 ending_comma_section = param_section.add_new_section(
@@ -113,9 +112,8 @@ class BaseExampleDocumenter(object):
         key_section = map_section.add_new_section('key')
         key_section.write('\'string\': ')
         value_section = map_section.add_new_section('value')
-        traverse_and_document_shape(
-            documenter=self, section=value_section, shape=value_shape,
-            history=history)
+        self.traverse_and_document_shape(
+            section=value_section, shape=value_shape, history=history)
         end_bracket_section = map_section.add_new_section('ending-bracket')
         self._end_nested_param(end_bracket_section, '}')
 
@@ -172,8 +170,8 @@ class RequestExampleDocumenter(BaseExampleDocumenter):
             param_section.write(param_format % param)
             param_section.write(operator)
             param_shape = input_members[param]
-            traverse_and_document_shape(
-                documenter=self, section=param_section, shape=param_shape,
+            self.traverse_and_document_shape(
+                section=param_section, shape=param_shape,
                 history=history, name=param)
             if i < len(input_members) - 1:
                 ending_comma_section = param_section.add_new_section(

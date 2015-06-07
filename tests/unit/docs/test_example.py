@@ -10,6 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import mock
+
 from tests.unit.docs import BaseDocsTest
 from botocore.hooks import HierarchicalEmitter
 from botocore.docs.example import ResponseExampleDocumenter
@@ -22,10 +24,10 @@ class BaseExampleDocumenterTest(BaseDocsTest):
         super(BaseExampleDocumenterTest, self).setUp()
         self.event_emitter = HierarchicalEmitter()
         self.request_example = RequestExampleDocumenter(
-            service='myservice', operation='SampleOpertation',
+            service='myservice', operation='SampleOperation',
             event_emitter=self.event_emitter)
         self.response_example = ResponseExampleDocumenter(
-            service='myservice', operation='SampleOpertation',
+            service='myservice', operation='SampleOperation',
             event_emitter=self.event_emitter)
 
 
@@ -56,6 +58,43 @@ class TestDocumentDefaultValue(BaseExampleDocumenterTest):
             '      \'Foo\': \'string\'',
             '  }'
         ])
+
+
+class TestTraverseAndDocumentShape(BaseExampleDocumenterTest):
+    def setUp(self):
+        super(TestTraverseAndDocumentShape, self).setUp()
+        self.add_shape_to_params('Foo', 'String', 'This describes foo.')
+        self.event_emitter = mock.Mock()
+
+    def test_events_emitted_response_example(self):
+        self.response_example.event_emitter = self.event_emitter
+        self.response_example.traverse_and_document_shape(
+            section=self.doc_structure,
+            shape=self.operation_model.input_shape, history=[]
+        )
+        structure_section = self.doc_structure.get_section('structure-value')
+        self.assertEqual(
+            self.event_emitter.emit.call_args_list,
+            [mock.call('docs.response-example.myservice.SampleOperation.Foo',
+                       section=structure_section.get_section('Foo')),
+             mock.call(('docs.response-example.myservice.SampleOperation'
+                        '.complete-section'), section=self.doc_structure)]
+        )
+
+    def test_events_emitted_request_example(self):
+        self.request_example.event_emitter = self.event_emitter
+        self.request_example.traverse_and_document_shape(
+            section=self.doc_structure,
+            shape=self.operation_model.input_shape, history=[]
+        )
+        structure_section = self.doc_structure.get_section('structure-value')
+        self.assertEqual(
+            self.event_emitter.emit.call_args_list,
+            [mock.call('docs.request-example.myservice.SampleOperation.Foo',
+                       section=structure_section.get_section('Foo')),
+             mock.call(('docs.request-example.myservice.SampleOperation'
+                        '.complete-section'), section=self.doc_structure)]
+        )
 
 
 class TestDocumentEnumValue(BaseExampleDocumenterTest):
