@@ -15,13 +15,6 @@ from botocore.docs.utils import py_type_name
 
 
 class BaseParamsDocumenter(ShapeDocumenter):
-    EVENT_NAME = ''
-
-    def __init__(self, service_name, operation_name, event_emitter):
-        self.service_name = service_name
-        self.operation_name = operation_name
-        self.event_emitter = event_emitter
-
     def document_params(self, section, shape, include=None, exclude=None):
         """Fills out the documentation for a section given a model shape.
 

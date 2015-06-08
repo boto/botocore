@@ -17,6 +17,13 @@
 # inherited from a Documenter class with the appropriate methods
 # and attributes.
 class ShapeDocumenter(object):
+    EVENT_NAME = ''
+
+    def __init__(self, service_name, operation_name, event_emitter):
+        self._service_name = service_name
+        self._operation_name = operation_name
+        self._event_emitter = event_emitter
+
     def traverse_and_document_shape(self, section, shape, history,
                                     include=None, exclude=None, name=None,
                                     is_required=False):
@@ -55,17 +62,17 @@ class ShapeDocumenter(object):
                         is_top_level_param=is_top_level_param,
                         is_required=is_required)
             if is_top_level_param:
-                self.event_emitter.emit(
+                self._event_emitter.emit(
                     'docs.%s.%s.%s.%s' % (self.EVENT_NAME,
-                                          self.service_name,
-                                          self.operation_name,
+                                          self._service_name,
+                                          self._operation_name,
                                           name),
                     section=section)
             at_overlying_method_section = (len(history) == 1)
             if at_overlying_method_section:
-                self.event_emitter.emit(
+                self._event_emitter.emit(
                     'docs.%s.%s.%s.complete-section' % (self.EVENT_NAME,
-                                                        self.service_name,
-                                                        self.operation_name),
+                                                        self._service_name,
+                                                        self._operation_name),
                     section=section)
             history.pop()
