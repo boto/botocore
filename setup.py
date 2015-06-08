@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import sys
 import botocore
 
 from setuptools import setup, find_packages
@@ -15,14 +14,12 @@ setup(
     version=botocore.__version__,
     description='Low-level, data-driven core of boto 3.',
     long_description=open('README.rst').read(),
-    author='Mitch Garnaat',
-    author_email='garnaat@amazon.com',
+    author='Amazon Web Services',
     url='https://github.com/boto/botocore',
     scripts=[],
     packages=find_packages(exclude=['tests*']),
-    package_data={'botocore': ['data/*.json', 'data/aws/*.json'],
+    package_data={'botocore': ['data/*.json', 'data/*/*.json'],
                   'botocore.vendored.requests': ['*.pem']},
-    package_dir={'botocore': 'botocore'},
     include_package_data=True,
     install_requires=requires,
     extras_require={
@@ -31,7 +28,7 @@ setup(
             'simplejson==3.3.0',
         ]
     },
-    license=open("LICENSE.txt").read(),
+    license="Apache License 2.0",
     classifiers=(
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
@@ -43,5 +40,6 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
     ),
 )
