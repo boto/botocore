@@ -67,6 +67,7 @@ class WaiterDocumenter(object):
 
         document_model_driven_method(
             section, 'wait', operation_model,
+            event_emitter=self._client.meta.events,
             method_description=wait_description,
             example_prefix='waiter.wait',
             document_output=False

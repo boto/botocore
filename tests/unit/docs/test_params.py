@@ -10,7 +10,10 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import mock
+
 from tests.unit.docs import BaseDocsTest
+from botocore.hooks import HierarchicalEmitter
 from botocore.docs.params import RequestParamsDocumenter
 from botocore.docs.params import ResponseParamsDocumenter
 from botocore.docs.utils import DocumentedShape
@@ -19,8 +22,13 @@ from botocore.docs.utils import DocumentedShape
 class BaseParamsDocumenterTest(BaseDocsTest):
     def setUp(self):
         super(BaseParamsDocumenterTest, self).setUp()
-        self.request_params = RequestParamsDocumenter()
-        self.response_params = ResponseParamsDocumenter()
+        self.event_emitter = HierarchicalEmitter()
+        self.request_params = RequestParamsDocumenter(
+            service_name='myservice', operation_name='SampleOperation',
+            event_emitter=self.event_emitter)
+        self.response_params = ResponseParamsDocumenter(
+            service_name='myservice', operation_name='SampleOperation',
+            event_emitter=self.event_emitter)
 
 
 class TestDocumentDefaultValue(BaseParamsDocumenterTest):
@@ -43,6 +51,45 @@ class TestDocumentDefaultValue(BaseParamsDocumenterTest):
             '- *(dict) --*',
             '  - **Foo** *(string) --* This describes foo.'
         ])
+
+
+class TestTraverseAndDocumentShape(BaseParamsDocumenterTest):
+    def setUp(self):
+        super(TestTraverseAndDocumentShape, self).setUp()
+        self.add_shape_to_params('Foo', 'String', 'This describes foo.')
+        self.event_emitter = mock.Mock()
+        self.request_params = RequestParamsDocumenter(
+            service_name='myservice', operation_name='SampleOperation',
+            event_emitter=self.event_emitter)
+        self.response_params = ResponseParamsDocumenter(
+            service_name='myservice', operation_name='SampleOperation',
+            event_emitter=self.event_emitter)
+
+    def test_events_emitted_response_params(self):
+        self.response_params.traverse_and_document_shape(
+            section=self.doc_structure,
+            shape=self.operation_model.input_shape, history=[]
+        )
+        self.assertEqual(
+            self.event_emitter.emit.call_args_list,
+            [mock.call('docs.response-params.myservice.SampleOperation.Foo',
+                       section=self.doc_structure.get_section('Foo')),
+             mock.call(('docs.response-params.myservice.SampleOperation'
+                        '.complete-section'), section=self.doc_structure)]
+        )
+
+    def test_events_emitted_request_params(self):
+        self.request_params.traverse_and_document_shape(
+            section=self.doc_structure,
+            shape=self.operation_model.input_shape, history=[]
+        )
+        self.assertEqual(
+            self.event_emitter.emit.call_args_list,
+            [mock.call('docs.request-params.myservice.SampleOperation.Foo',
+                       section=self.doc_structure.get_section('Foo')),
+             mock.call(('docs.request-params.myservice.SampleOperation'
+                        '.complete-section'), section=self.doc_structure)]
+        )
 
 
 class TestDocumentMultipleDefaultValues(BaseParamsDocumenterTest):

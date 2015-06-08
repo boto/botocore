@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 from tests import unittest
 from tests.unit.docs import BaseDocsTest
+from botocore.hooks import HierarchicalEmitter
 from botocore.docs.method import document_model_driven_signature
 from botocore.docs.method import document_custom_signature
 from botocore.docs.method import document_model_driven_method
@@ -83,11 +84,13 @@ class TestDocumentCustomSignature(BaseDocsTest):
 class TestDocumentModelDrivenMethod(BaseDocsTest):
     def setUp(self):
         super(TestDocumentModelDrivenMethod, self).setUp()
+        self.event_emitter = HierarchicalEmitter()
         self.add_shape_to_params('Bar', 'String')
 
     def test_default(self):
         document_model_driven_method(
             self.doc_structure, 'foo', self.operation_model,
+            event_emitter=self.event_emitter,
             method_description='This describes the foo method.',
             example_prefix='response = client.foo'
         )
@@ -118,6 +121,7 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
         del self.json_model['operations']['SampleOperation']['output']
         document_model_driven_method(
             self.doc_structure, 'foo', self.operation_model,
+            event_emitter=self.event_emitter,
             method_description='This describes the foo method.',
             example_prefix='response = client.foo'
         )
@@ -137,6 +141,7 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
         ]
         document_model_driven_method(
             self.doc_structure, 'foo', self.operation_model,
+            event_emitter=self.event_emitter,
             method_description='This describes the foo method.',
             example_prefix='response = client.foo',
             include_input=include_params
@@ -173,6 +178,7 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
         ]
         document_model_driven_method(
             self.doc_structure, 'foo', self.operation_model,
+            event_emitter=self.event_emitter,
             method_description='This describes the foo method.',
             example_prefix='response = client.foo',
             include_output=include_params
@@ -205,6 +211,7 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
         self.add_shape_to_params('Biz', 'String')
         document_model_driven_method(
             self.doc_structure, 'foo', self.operation_model,
+            event_emitter=self.event_emitter,
             method_description='This describes the foo method.',
             example_prefix='response = client.foo',
             exclude_input=['Bar']
@@ -241,6 +248,7 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
         self.add_shape_to_params('Biz', 'String')
         document_model_driven_method(
             self.doc_structure, 'foo', self.operation_model,
+            event_emitter=self.event_emitter,
             method_description='This describes the foo method.',
             example_prefix='response = client.foo',
             exclude_output=['Bar']

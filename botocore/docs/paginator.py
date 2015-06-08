@@ -140,6 +140,7 @@ class PaginatorDocumenter(object):
 
         document_model_driven_method(
             section, 'paginate', operation_model,
+            event_emitter=self._client.meta.events,
             method_description=paginate_description,
             example_prefix='response_iterator = paginator.paginate',
             include_input=botocore_pagination_params,
