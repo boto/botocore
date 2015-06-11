@@ -96,43 +96,31 @@ class DocumentedShape (_DocumentedShape):
             required_members)
 
 
-def traverse_and_document_shape(documenter, section, shape, history,
-                                include=None, exclude=None, name=None,
-                                is_required=False):
-    """Traverses and documents a shape
+class AutoPopulatedParam(object):
+    def __init__(self, name, param_description=None):
+        self.name = name
+        self.param_description = param_description
+        if param_description is None:
+            self.param_description = (
+                'Note this parameter is autopopulated. There is no '
+                'need to include in method call.\n')
 
-    Will take a documenter class and call its appropriate methods as a shape
-    is traversed.
+    def document_auto_populated_param(self, event_name, section, **kwargs):
+        """This documents the auto populated parameters
 
-    :param documenter: The documenter class to dispatch to as the shape is
-        traversed.
-
-    :param section: The section to document.
-
-    :param history: A list of the names of the shapes that have been traversed.
-
-    :type include: Dictionary where keys are parameter names and
-        values are the shapes of the parameter names.
-    :param include: The parameter shapes to include in the documentation.
-
-    :type exclude: List of the names of the parameters to exclude.
-    :param exclude: The names of the parameters to exclude from
-        documentation.
-
-    :param name: The name of the shape.
-
-    :param is_required: If the shape is a required member.
-    """
-    param_type = shape.type_name
-    if shape.name in history:
-        documenter.document_recursive_shape(section, shape, name=name)
-    else:
-        history.append(shape.name)
-        is_top_level_param = (len(history) == 2)
-        getattr(documenter, 'document_shape_type_%s' % param_type,
-                documenter.document_shape_default)(
-                    section, shape, history=history, name=name,
-                    include=include, exclude=exclude,
-                    is_top_level_param=is_top_level_param,
-                    is_required=is_required)
-        history.pop()
+        It will remove any required marks for the parameter, remove the
+        parameter from the example, and add a snippet about the parameter
+        being autopopulated in the description.
+        """
+        if event_name.startswith('docs.request-params'):
+            if self.name in section.available_sections:
+                section = section.get_section(self.name)
+                if 'is-required' in section.available_sections:
+                    section.delete_section('is-required')
+                description_section = section.get_section(
+                    'param-documentation')
+                description_section.writeln(self.param_description)
+        elif event_name.startswith('docs.request-example'):
+            section = section.get_section('structure-value')
+            if self.name in section.available_sections:
+                section.delete_section(self.name)
