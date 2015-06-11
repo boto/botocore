@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 
 requires = ['jmespath==0.7.1',
-            'bcdoc>=0.15.0,<0.16.0',
+            'bcdoc>=0.16.0,<0.17.0',
             'python-dateutil>=2.1,<3.0.0']
 
 
