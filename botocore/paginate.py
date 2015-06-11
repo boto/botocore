@@ -125,6 +125,32 @@ class PageIterator(object):
                 self._inject_token_into_kwargs(current_kwargs, next_token)
                 previous_next_token = next_token
 
+    def search(self, expression):
+        """Applies a JMESPath expression to a paginator
+
+        Each page of results is searched using the provided JMESPath
+        expression. If the result is not a list, it is yielded
+        directly. If the result is a list, each element in the result
+        is yielded individually (essentially implementing a flatmap in
+        which the JMESPath search is the mapping function).
+
+        :type expression: str
+        :param expression: JMESPath expression to apply to each page.
+
+        :return: Returns an iterator that yields the individual
+            elements of applying a JMESPath expression to each page of
+            results.
+        """
+        compiled = jmespath.compile(expression)
+        for page in self:
+            results = compiled.search(page)
+            if isinstance(results, list):
+                for element in results:
+                    yield element
+            else:
+                # Yield result directly if it is not a list.
+                yield results
+
     def _make_request(self, current_kwargs):
         return self._method(**current_kwargs)
 
