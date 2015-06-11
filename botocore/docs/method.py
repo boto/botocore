@@ -109,9 +109,10 @@ def document_custom_signature(section, name, method,
 
 
 def document_model_driven_method(section, method_name, operation_model,
-                                 method_description=None, example_prefix=None,
-                                 include_input=None, include_output=None,
-                                 exclude_input=None, exclude_output=None,
+                                 event_emitter, method_description=None,
+                                 example_prefix=None, include_input=None,
+                                 include_output=None, exclude_input=None,
+                                 exclude_output=None,
                                  document_output=True):
     """Documents an individual method
 
@@ -120,6 +121,8 @@ def document_model_driven_method(section, method_name, operation_model,
     :param method_name: The name of the method
 
     :param operation_model: The model of the operation
+
+    :param event_emitter: The event emitter to use to emit events
 
     :param example_prefix: The prefix to use in the method example.
 
@@ -158,10 +161,13 @@ def document_model_driven_method(section, method_name, operation_model,
     example_section.style.new_paragraph()
     example_section.style.bold('Example')
     if operation_model.input_shape:
-        RequestExampleDocumenter().document_example(
-            example_section, operation_model.input_shape,
-            prefix=example_prefix, include=include_input,
-            exclude=exclude_input)
+        RequestExampleDocumenter(
+            service_name=operation_model.service_model.service_name,
+            operation_name=operation_model.name,
+            event_emitter=event_emitter).document_example(
+                example_section, operation_model.input_shape,
+                prefix=example_prefix, include=include_input,
+                exclude=exclude_input)
     else:
         example_section.style.new_paragraph()
         example_section.style.start_codeblock()
@@ -170,9 +176,12 @@ def document_model_driven_method(section, method_name, operation_model,
     # Add the request parameter documentation.
     request_params_section = section.add_new_section('request-params')
     if operation_model.input_shape:
-        RequestParamsDocumenter().document_params(
-            request_params_section, operation_model.input_shape,
-            include=include_input, exclude=exclude_input)
+        RequestParamsDocumenter(
+            service_name=operation_model.service_model.service_name,
+            operation_name=operation_model.name,
+            event_emitter=event_emitter).document_params(
+                request_params_section, operation_model.input_shape,
+                include=include_input, exclude=exclude_input)
 
     # Add the return value documentation
     return_section = section.add_new_section('return')
@@ -189,10 +198,12 @@ def document_model_driven_method(section, method_name, operation_model,
         return_example_section.style.new_line()
         return_example_section.style.bold('Response Example')
         return_example_section.style.new_paragraph()
-        ResponseExampleDocumenter().document_example(
-            return_example_section, operation_model.output_shape,
-            include=include_output, exclude=exclude_output)
-        return_example_section.style.new_paragraph()
+        ResponseExampleDocumenter(
+            service_name=operation_model.service_model.service_name,
+            operation_name=operation_model.name,
+            event_emitter=event_emitter).document_example(
+                return_example_section, operation_model.output_shape,
+                include=include_output, exclude=exclude_output)
 
         # Add a description for the return value
         return_description_section = return_section.add_new_section(
@@ -200,8 +211,11 @@ def document_model_driven_method(section, method_name, operation_model,
         return_description_section.style.new_line()
         return_description_section.style.bold('Response Structure')
         return_description_section.style.new_paragraph()
-        ResponseParamsDocumenter().document_params(
-            return_description_section, operation_model.output_shape,
-            include=include_output, exclude=exclude_output)
+        ResponseParamsDocumenter(
+            service_name=operation_model.service_model.service_name,
+            operation_name=operation_model.name,
+            event_emitter=event_emitter).document_params(
+                return_description_section, operation_model.output_shape,
+                include=include_output, exclude=exclude_output)
     else:
         return_section.write(':returns: None')

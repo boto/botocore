@@ -97,6 +97,7 @@ class ClientDocumenter(object):
 
         document_model_driven_method(
             section, method_name, operation_model,
+            event_emitter=self._client.meta.events,
             method_description=operation_model.documentation,
             example_prefix='response = client.%s' % method_name
         )

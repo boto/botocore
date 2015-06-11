@@ -837,7 +837,7 @@ class Session(object):
         client = client_creator.create_client(
             service_name, region_name, use_ssl, endpoint_url, verify,
             credentials, scoped_config=self.get_scoped_config(),
-            client_config=config)
+            client_config=config, api_version=api_version)
         return client
 
 

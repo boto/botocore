@@ -749,5 +749,41 @@ class TestIncludeNonResultKeys(unittest.TestCase):
         self.assertEqual(actual, expected)
 
 
+class TestSearchOverResults(unittest.TestCase):
+    def setUp(self):
+        self.method = mock.Mock()
+        self.paginate_config = {
+            'more_results': 'IsTruncated',
+            'output_token': 'NextToken',
+            'input_token': 'NextToken',
+            'result_key': 'Foo',
+        }
+        self.paginator = Paginator(self.method, self.paginate_config)
+        responses = [
+            {'Foo': [{'a': 1}, {'b': 2}],
+             'IsTruncated': True, 'NextToken': '1'},
+            {'Foo': [{'a': 3}, {'b': 4}],
+             'IsTruncated': True, 'NextToken': '2'},
+            {'Foo': [{'a': 5}], 'IsTruncated': False, 'NextToken': '3'}
+        ]
+        self.method.side_effect = responses
+
+    def test_yields_non_list_values(self):
+        result = list(self.paginator.paginate().search('Foo[0].a'))
+        self.assertEqual([1, 3, 5], result)
+
+    def test_yields_individual_list_values(self):
+        result = list(self.paginator.paginate().search('Foo[].*[]'))
+        self.assertEqual([1, 2, 3, 4, 5], result)
+
+    def test_empty_when_no_match(self):
+        result = list(self.paginator.paginate().search('Foo[].qux'))
+        self.assertEqual([], result)
+
+    def test_no_yield_when_no_match_on_page(self):
+        result = list(self.paginator.paginate().search('Foo[].b'))
+        self.assertEqual([2, 4], result)
+
+
 if __name__ == '__main__':
     unittest.main()

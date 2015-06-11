@@ -412,7 +412,8 @@ class TestCreateClient(BaseSessionTest):
 
         client_creator.return_value.create_client.assert_called_with(
             mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY,
-            scoped_config=mock.ANY, client_config=config)
+            scoped_config=mock.ANY, client_config=config,
+            api_version=mock.ANY)
 
     def test_create_client_with_region(self):
         ec2_client = self.session.create_client(
