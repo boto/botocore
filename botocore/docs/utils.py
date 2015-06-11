@@ -102,11 +102,12 @@ class AutoPopulatedParam(object):
         self.param_description = param_description
         if param_description is None:
             self.param_description = (
-                'Note this parameter is autopopulated. There is no '
-                'need to include in method call.\n')
+                'Please note that this parameter is automatically populated if'
+                'it is not provided. Including this parameter is not '
+                'required\n')
 
     def document_auto_populated_param(self, event_name, section, **kwargs):
-        """This documents the auto populated parameters
+        """Documents auto populated parameters
 
         It will remove any required marks for the parameter, remove the
         parameter from the example, and add a snippet about the parameter
@@ -124,3 +125,49 @@ class AutoPopulatedParam(object):
             section = section.get_section('structure-value')
             if self.name in section.available_sections:
                 section.delete_section(self.name)
+
+
+class HideParamFromOperations(object):
+    """Hides a single parameter from multiple operations.
+
+    This method will remove a parameter from documentation and from
+    examples. This method is typically used for things that are
+    automatically populated because a user would be unable to provide
+    a value (e.g., a checksum of a serialized XML request body)."""
+    def __init__(self, service, parameter_name, operation_names):
+        """
+        :type parameter_name: str
+        :param parameter_name: Name of the parameter to modify.
+
+        :type operation_names: list
+        :param operation_names: Operation names to modify.
+        """
+        self._parameter_name = parameter_name
+        self._event_list = {}
+        # Build up a hash of relevant event names.
+        param_template = 'docs.request-params.%s.%s.complete-section'
+        example_template = 'docs.request-example.%s.%s.complete-section'
+        for name in operation_names:
+            self._event_list[param_template % (service, name)] = 'params'
+            self._event_list[example_template % (service, name)] = 'example'
+
+    def hide_param(self, event_name, section, **kwargs):
+        if event_name in self._event_list:
+            if self._event_list[event_name] == 'example':
+                section = section.get_section('structure-value')
+            if self._parameter_name in section.available_sections:
+                section.delete_section(self._parameter_name)
+
+
+class AppendParamDocumentation(object):
+    """Appends documentation to a specific parameter"""
+    def __init__(self, parameter_name, doc_string):
+        self._parameter_name = parameter_name
+        self._doc_string = doc_string
+
+    def append_documentation(self, event_name, section, **kwargs):
+        if self._parameter_name in section.available_sections:
+            section = section.get_section(self._parameter_name)
+            description_section = section.get_section(
+                'param-documentation')
+            description_section.writeln(self._doc_string)

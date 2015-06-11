@@ -18,14 +18,14 @@ This module contains builtin handlers for events emitted by botocore.
 
 import base64
 import hashlib
-import functools
 import logging
-import re
 import xml.etree.cElementTree
 import copy
 
 from botocore.compat import unquote, json, quote, six
 from botocore.docs.utils import AutoPopulatedParam
+from botocore.docs.utils import HideParamFromOperations
+from botocore.docs.utils import AppendParamDocumentation
 from botocore.signers import add_generate_presigned_url
 from botocore.signers import add_generate_presigned_post
 
@@ -304,6 +304,12 @@ def base64_encode_user_data(params, **kwargs):
             params['UserData']).decode('utf-8')
 
 
+def document_base64_encoding():
+    description = 'UserData will be automatically base64 encoded if necessary.'
+    append = AppendParamDocumentation('UserData', description)
+    return append.append_documentation
+
+
 def fix_route53_ids(params, model, **kwargs):
     """
     Check for and split apart Route53 resource IDs, setting
@@ -441,8 +447,33 @@ BUILTIN_HANDLERS = [
      base64_encode_user_data),
     ('before-parameter-build.route53', fix_route53_ids),
     ('before-parameter-build.glacier', inject_account_id),
+
+    # Glacier documentation customizations
     ('docs.*.glacier.*.complete-section',
-     AutoPopulatedParam('accountId').document_auto_populated_param),
+     AutoPopulatedParam('accountId', 'Note: this parameter is set to "-" by \
+                         default if no value is not specified.')
+     .document_auto_populated_param),
     ('docs.*.glacier.*.complete-section',
-     AutoPopulatedParam('checksum').document_auto_populated_param)
+     AutoPopulatedParam('checksum').document_auto_populated_param),
+    # UserData base64 encoding documentation customizations
+    ('docs.*.ec2.RunInstances.complete-section', document_base64_encoding()),
+    ('docs.*.autoscaling.CreateLaunchConfiguration.complete-section',
+     document_base64_encoding()),
+    # EC2 CopySnapshot documentation customizations
+    ('docs.*.ec2.CopySnapshot.complete-section',
+     AutoPopulatedParam('PresignedUrl').document_auto_populated_param),
+    ('docs.*.ec2.CopySnapshot.complete-section',
+     AutoPopulatedParam('DestinationRegion').document_auto_populated_param),
+    # S3 SSE documentation modifications
+    ('docs.*.s3.*.complete-section',
+     AutoPopulatedParam('SSECustomerKeyMD5').document_auto_populated_param),
+    # The following S3 operations cannot actually accept a ContentMD5
+    ('docs.*.s3.*.complete-section',
+     HideParamFromOperations(
+         's3', 'ContentMD5',
+         ['DeleteObjects', 'PutBucketAcl', 'PutBucketCors',
+          'PutBucketLifecycle', 'PutBucketLogging', 'PutBucketNotification',
+          'PutBucketPolicy', 'PutBucketReplication', 'PutBucketRequestPayment',
+          'PutBucketTagging', 'PutBucketVersioning', 'PutBucketWebsite',
+          'PutObjectAcl']).hide_param)
 ]
