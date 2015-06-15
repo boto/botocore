@@ -134,8 +134,11 @@ class HideParamFromOperations(object):
     examples. This method is typically used for things that are
     automatically populated because a user would be unable to provide
     a value (e.g., a checksum of a serialized XML request body)."""
-    def __init__(self, service, parameter_name, operation_names):
+    def __init__(self, service_name, parameter_name, operation_names):
         """
+        :type service_name: str
+        :param service_name: Name of the service to modify.
+
         :type parameter_name: str
         :param parameter_name: Name of the parameter to modify.
 
@@ -143,20 +146,23 @@ class HideParamFromOperations(object):
         :param operation_names: Operation names to modify.
         """
         self._parameter_name = parameter_name
-        self._event_list = {}
-        # Build up a hash of relevant event names.
+        self._params_events = set()
+        self._example_events = set()
+        # Build up the sets of relevant event names.
         param_template = 'docs.request-params.%s.%s.complete-section'
         example_template = 'docs.request-example.%s.%s.complete-section'
         for name in operation_names:
-            self._event_list[param_template % (service, name)] = 'params'
-            self._event_list[example_template % (service, name)] = 'example'
+            self._params_events.add(param_template % (service_name, name))
+            self._example_events.add(example_template % (service_name, name))
 
     def hide_param(self, event_name, section, **kwargs):
-        if event_name in self._event_list:
-            if self._event_list[event_name] == 'example':
-                section = section.get_section('structure-value')
-            if self._parameter_name in section.available_sections:
-                section.delete_section(self._parameter_name)
+        if event_name in self._example_events:
+            # Modify the structure value for example events.
+            section = section.get_section('structure-value')
+        elif event_name not in self._params_events:
+            return
+        if self._parameter_name in section.available_sections:
+            section.delete_section(self._parameter_name)
 
 
 class AppendParamDocumentation(object):
