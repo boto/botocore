@@ -54,7 +54,7 @@ class Session(object):
     :ivar profile: The current profile.
     """
 
-    AllEvents = {
+    ALL_EVENTS = {
         'after-call': '.%s.%s',
         'after-parsed': '.%s.%s.%s.%s',
         'before-parameter-build': '.%s.%s',
@@ -116,7 +116,7 @@ class Session(object):
     found.
     """
 
-    FmtString = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
     def __init__(self, session_vars=None, event_hooks=None,
                  include_builtin_handlers=True, loader=None):
@@ -562,7 +562,7 @@ class Session(object):
         :type format_string: str
         :param format_string: The format string to use for the log
             formatter.  If none is provided this will default to
-            ``self.FmtString``.
+            ``self.LOG_FORMAT``.
 
         """
         log = logging.getLogger(logger_name)
@@ -573,7 +573,7 @@ class Session(object):
 
         # create formatter
         if format_string is None:
-            format_string = self.FmtString
+            format_string = self.LOG_FORMAT
         formatter = logging.Formatter(format_string)
 
         # add formatter to ch
@@ -602,7 +602,7 @@ class Session(object):
         ch.setLevel(log_level)
 
         # create formatter
-        formatter = logging.Formatter(self.FmtString)
+        formatter = logging.Formatter(self.LOG_FORMAT)
 
         # add formatter to ch
         ch.setFormatter(formatter)
@@ -683,7 +683,7 @@ class Session(object):
 
     def register_event(self, event_name, fmtstr):
         """
-        Register a new event.  The event will be added to ``AllEvents``
+        Register a new event.  The event will be added to ``ALL_EVENTS``
         and will then be able to be created using ``create_event``.
 
         :type event_name: str
@@ -692,8 +692,8 @@ class Session(object):
         :type fmtstr: str
         :param fmtstr: The formatting string for the event.
         """
-        if event_name not in self.AllEvents:
-            self.AllEvents[event_name] = fmtstr
+        if event_name not in self.ALL_EVENTS:
+            self.ALL_EVENTS[event_name] = fmtstr
 
     def create_event(self, event_name, *fmtargs):
         """
@@ -710,8 +710,8 @@ class Session(object):
             actual values passed depend on the type of event you
             are creating.
         """
-        if event_name in self.AllEvents:
-            fmt_string = self.AllEvents[event_name]
+        if event_name in self.ALL_EVENTS:
+            fmt_string = self.ALL_EVENTS[event_name]
             if fmt_string:
                 event = event_name + (fmt_string % fmtargs)
             else:
