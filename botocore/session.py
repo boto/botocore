@@ -70,7 +70,7 @@ class Session(object):
     is the formatting string used to construct a new event.
     """
 
-    SessionVariables = {
+    SESSION_VARIABLES = {
         # logical:  config_file, env_var,        default_value
         'profile': (None, ['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'], None),
         'region': ('region', 'AWS_DEFAULT_REGION', None),
@@ -102,13 +102,6 @@ class Session(object):
     remap the logical names or to add new logical names.  You can then get the
     current value for these variables by using the ``get_config_variable``
     method of the :class:`botocore.session.Session` class.
-    The default set of logical variable names are:
-
-    * profile - Default profile name you want to use.
-    * region - Default region name to use, if not otherwise specified.
-    * data_path - Additional directories to search for data files.
-    * config_file - Location of a Boto config file.
-    * provider - The name of the service provider (e.g. aws)
 
     These form the keys of the dictionary.  The values in the dictionary
     are tuples of (<config_name>, <environment variable>, <default value).
@@ -134,7 +127,7 @@ class Session(object):
         :param session_vars: A dictionary that is used to override some or all
             of the environment variables associated with this session.  The
             key/value pairs defined in this dictionary will override the
-            corresponding variables defined in ``SessionVariables``.
+            corresponding variables defined in ``SESSION_VARIABLES``.
 
         :type event_hooks: BaseEventHooks
         :param event_hooks: The event hooks object to use. If one is not
@@ -145,7 +138,7 @@ class Session(object):
         :param include_builtin_handlers: Indicates whether or not to
             automatically register builtin handlers.
         """
-        self.session_var_map = copy.copy(self.SessionVariables)
+        self.session_var_map = copy.copy(self.SESSION_VARIABLES)
         if session_vars:
             self.session_var_map.update(session_vars)
         if event_hooks is None:
@@ -272,32 +265,43 @@ class Session(object):
         :returns: value of variable or None if not defined.
 
         """
+        # Handle all the short circuit special cases first.
+        if logical_name not in self.session_var_map:
+            return
+        if logical_name == 'profile' and self._profile:
+            return self._profile
+
+        # Do the actual lookups.  We need to handle
+        # 'instance', 'env', and 'config' locations, in that order.
         value = None
-        config_default = None
-        if logical_name in self.session_var_map:
-            # Short circuit case, check if the var has been explicitly
-            # overriden via set_config_variable.
-            if 'instance' in methods and \
-                    logical_name in self._session_instance_vars:
-                return self._session_instance_vars[logical_name]
-            config_name, envvar_name, config_default = self.session_var_map[
-                logical_name]
-            if logical_name in ('config_file', 'profile'):
-                config_name = None
-            if logical_name == 'profile' and self._profile:
-                value = self._profile
-            elif 'env' in methods and envvar_name and self._handle_env_vars(
-                    envvar_name, os.environ) is not None:
-                value = self._handle_env_vars(envvar_name, os.environ)
-            elif 'config' in methods:
-                if config_name:
-                    config = self.get_scoped_config()
-                    value = config.get(config_name)
-        if value is None and config_default is not None:
-            value = config_default
+        var_config = self.session_var_map[logical_name]
+        if self._found_in_instance_vars(methods, logical_name):
+            return self._session_instance_vars[logical_name]
+        elif self._found_in_env(methods, var_config):
+            value = self._retrieve_from_env(var_config[1], os.environ)
+        elif self._found_in_config_file(methods, var_config):
+            value = self.get_scoped_config()[var_config[0]]
+        if value is None:
+            value = var_config[2]
         return value
 
-    def _handle_env_vars(self, names, environ):
+    def _found_in_instance_vars(self, methods, logical_name):
+        if 'instance' in methods:
+            return logical_name in self._session_instance_vars
+        return False
+
+    def _found_in_env(self, methods, var_config):
+        return (
+            'env' in methods and
+            var_config[1] is not None and
+            self._retrieve_from_env(var_config[1], os.environ) is not None)
+
+    def _found_in_config_file(self, methods, var_config):
+        if 'config' in methods and var_config[0] is not None:
+            return var_config[0] in self.get_scoped_config()
+        return False
+
+    def _retrieve_from_env(self, names, environ):
         # We need to handle the case where names is either
         # a single value or a list of variables.
         if not isinstance(names, list):
@@ -327,7 +331,7 @@ class Session(object):
 
         :type logical_name: str
         :param logical_name: The logical name of the session variable
-            you want to set.  These are the keys in ``SessionVariables``.
+            you want to set.  These are the keys in ``SESSION_VARIABLES``.
         :param value: The value to associate with the config variable.
 
         """
