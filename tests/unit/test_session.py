@@ -307,12 +307,7 @@ class TestSessionConfigurationVars(BaseSessionTest):
 
     def test_default_value_can_be_overriden(self):
         self.session.session_var_map['foobar'] = (None, 'FOOBAR', 'default')
-        # Default value.
         self.assertEqual(self.session.get_config_variable('foobar'), 'default')
-        self.assertEqual(
-            self.session.get_config_variable('foobar',
-                                             default='per-call-default'),
-            'per-call-default')
 
 
 class TestSessionUserAgent(BaseSessionTest):

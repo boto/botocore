@@ -22,6 +22,7 @@ import os
 import platform
 import shlex
 import warnings
+from collections import namedtuple
 
 from botocore import __version__
 import botocore.config
@@ -248,8 +249,7 @@ class Session(object):
         self._reset_components()
 
     def get_config_variable(self, logical_name,
-                            methods=('instance', 'env', 'config'),
-                            default=None):
+                            methods=('instance', 'env', 'config')):
         """
         Retrieve the value associated with the specified logical_name
         from the environment or the config file.  Values found in the
@@ -269,20 +269,10 @@ class Session(object):
             by supplying a different value to this parameter.
             Valid choices are: instance|env|config
 
-        :param default: The default value to return if there is no
-            value associated with the config file.  This value will
-            override any default value specified in ``SessionVariables``.
-
-        :returns: str value of variable of None if not defined.
+        :returns: value of variable or None if not defined.
 
         """
         value = None
-        # There's two types of defaults here.  One if the
-        # default value specified in the SessionVariables.
-        # The second is an explicit default value passed into this
-        # function (the default parameter).
-        # config_default is tracking the default value specified
-        # in the SessionVariables.
         config_default = None
         if logical_name in self.session_var_map:
             # Short circuit case, check if the var has been explicitly
@@ -303,11 +293,6 @@ class Session(object):
                 if config_name:
                     config = self.get_scoped_config()
                     value = config.get(config_name)
-        # If we don't have a value at this point, we need to try to assign
-        # a default value.  An explicit default argument will win over the
-        # default value from SessionVariables.
-        if value is None and default is not None:
-            value = default
         if value is None and config_default is not None:
             value = config_default
         return value
