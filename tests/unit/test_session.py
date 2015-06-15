@@ -35,11 +35,11 @@ class BaseSessionTest(unittest.TestCase):
 
     def setUp(self):
         self.env_vars = {
-            'profile': (None, 'FOO_PROFILE', None),
-            'region': ('foo_region', 'FOO_REGION', None),
-            'data_path': ('data_path', 'FOO_DATA_PATH', None),
-            'config_file': (None, 'FOO_CONFIG_FILE', None),
-            'credentials_file': (None, None, '/tmp/nowhere'),
+            'profile': (None, 'FOO_PROFILE', None, None),
+            'region': ('foo_region', 'FOO_REGION', None, None),
+            'data_path': ('data_path', 'FOO_DATA_PATH', None, None),
+            'config_file': (None, 'FOO_CONFIG_FILE', None, None),
+            'credentials_file': (None, None, '/tmp/nowhere', None),
         }
         self.environ = {}
         self.environ_patch = mock.patch('os.environ', self.environ)
@@ -78,7 +78,8 @@ class SessionTest(BaseSessionTest):
 
     def test_supports_multiple_env_vars_for_single_logical_name(self):
         env_vars = {
-            'profile': (None, ['BAR_DEFAULT_PROFILE', 'BAR_PROFILE'], None),
+            'profile': (None, ['BAR_DEFAULT_PROFILE', 'BAR_PROFILE'],
+                        None, None),
         }
         session = create_session(session_vars=env_vars)
         self.environ['BAR_DEFAULT_PROFILE'] = 'first'
@@ -87,7 +88,8 @@ class SessionTest(BaseSessionTest):
 
     def test_multiple_env_vars_uses_second_var(self):
         env_vars = {
-            'profile': (None, ['BAR_DEFAULT_PROFILE', 'BAR_PROFILE'], None),
+            'profile': (None, ['BAR_DEFAULT_PROFILE', 'BAR_PROFILE'],
+                        None, None),
         }
         session = create_session(session_vars=env_vars)
         self.environ.pop('BAR_DEFAULT_PROFILE', None)
@@ -132,6 +134,19 @@ class SessionTest(BaseSessionTest):
         # that foo_access_key which is defined in the config
         # file should be present in the loaded config dict.
         self.assertIn('aws_access_key_id', config)
+
+    def test_type_conversions_occur_when_specified(self):
+        # Specify that we can retrieve the var from the
+        # FOO_TIMEOUT env var, with a conversion function
+        # of int().
+        self.env_vars['metadata_service_timeout'] = (
+            None, 'FOO_TIMEOUT', None, int)
+        # Environment variables are always strings.
+        self.environ['FOO_TIMEOUT'] = '10'
+        session = create_session(session_vars=self.env_vars)
+        # But we should type convert this to a string.
+        self.assertEqual(
+            session.get_config_variable('metadata_service_timeout'), 10)
 
     def test_default_profile_specified_raises_exception(self):
         # If you explicity set the default profile and you don't
@@ -288,7 +303,8 @@ class TestBuiltinEventHandlers(BaseSessionTest):
 
 class TestSessionConfigurationVars(BaseSessionTest):
     def test_per_session_config_vars(self):
-        self.session.session_var_map['foobar'] = (None, 'FOOBAR', 'default')
+        self.session.session_var_map['foobar'] = (None, 'FOOBAR',
+                                                  'default', None)
         # Default value.
         self.assertEqual(self.session.get_config_variable('foobar'), 'default')
         # Retrieve from os environment variable.
@@ -306,7 +322,8 @@ class TestSessionConfigurationVars(BaseSessionTest):
             'foobar', methods=('env', 'config')), 'default')
 
     def test_default_value_can_be_overriden(self):
-        self.session.session_var_map['foobar'] = (None, 'FOOBAR', 'default')
+        self.session.session_var_map['foobar'] = (None, 'FOOBAR', 'default',
+                                                  None)
         self.assertEqual(self.session.get_config_variable('foobar'), 'default')
 
 

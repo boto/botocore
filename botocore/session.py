@@ -72,7 +72,13 @@ class Session(object):
     #: ``get_config_variable`` method of the :class:`botocore.session.Session`
     #: class.
     #: These form the keys of the dictionary.  The values in the dictionary
-    #: are tuples of (<config_name>, <environment variable>, <default value).
+    #: are tuples of (<config_name>, <environment variable>, <default value>,
+    #: <conversion func>).
+    #: The conversion func is a function that takes the configuration value
+    #: as an arugment and returns the converted value.  If this value is
+    #: None, then the configuration value is returned unmodified.  This
+    #: conversion function that be used to type convert config values to
+    #: values other than the default values of strings.
     #: The ``profile`` and ``config_file`` variables should always have a
     #: None value for the first entry in the tuple because it doesn't make
     #: sense to look inside the config file for the location of the config
@@ -82,27 +88,28 @@ class Session(object):
     #: use, and ``default_value`` is the value to use if no value is otherwise
     #: found.
     SESSION_VARIABLES = {
-        # logical:  config_file, env_var,        default_value
-        'profile': (None, ['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'], None),
-        'region': ('region', 'AWS_DEFAULT_REGION', None),
-        'data_path': ('data_path', 'AWS_DATA_PATH', None),
-        'config_file': (None, 'AWS_CONFIG_FILE', '~/.aws/config'),
-        'provider': ('provider', 'BOTO_PROVIDER_NAME', 'aws'),
+        # logical:  config_file, env_var,        default_value, conversion_func
+        'profile': (None, ['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'], None, None),
+        'region': ('region', 'AWS_DEFAULT_REGION', None, None),
+        'data_path': ('data_path', 'AWS_DATA_PATH', None, None),
+        'config_file': (None, 'AWS_CONFIG_FILE', '~/.aws/config', None),
+        'provider': ('provider', 'BOTO_PROVIDER_NAME', 'aws', None),
 
         # These variables are intended for internal use so don't have any
         # user settable values.
         # This is the shared credentials file amongst sdks.
-        'credentials_file': (None, None, '~/.aws/credentials'),
+        'credentials_file': (None, None, '~/.aws/credentials', None),
 
         # These variables only exist in the config file.
 
         # This is the number of seconds until we time out a request to
         # the instance metadata service.
-        'metadata_service_timeout': ('metadata_service_timeout', None, 1),
+        'metadata_service_timeout': ('metadata_service_timeout',
+                                     None, 1, int),
         # This is the number of request attempts we make until we give
         # up trying to retrieve data from the instance metadata service.
         'metadata_service_num_attempts': ('metadata_service_num_attempts',
-                                          None, 1),
+                                          None, 1, int),
     }
 
     #: The default format string to use when configuring the botocore logger.
@@ -273,6 +280,8 @@ class Session(object):
             value = self.get_scoped_config()[var_config[0]]
         if value is None:
             value = var_config[2]
+        if var_config[3] is not None:
+            value = var_config[3](value)
         return value
 
     def _found_in_instance_vars(self, methods, logical_name):
