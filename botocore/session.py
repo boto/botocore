@@ -49,6 +49,8 @@ class Session(object):
     :ivar profile: The current profile.
     """
 
+    #: A dictionary where each key is an event name and the value
+    #: is the formatting string used to construct a new event.
     ALL_EVENTS = {
         'after-call': '.%s.%s',
         'after-parsed': '.%s.%s.%s.%s',
@@ -60,11 +62,25 @@ class Session(object):
         'before-auth': '.%s',
         'needs-retry': '.%s.%s',
     }
-    """
-    A dictionary where each key is an event name and the value
-    is the formatting string used to construct a new event.
-    """
 
+    #: A default dictionary that maps the logical names for session variables
+    #: to the specific environment variables and configuration file names
+    #: that contain the values for these variables.
+    #: When creating a new Session object, you can pass in your own dictionary
+    #: to remap the logical names or to add new logical names.  You can then
+    #: get the current value for these variables by using the
+    #: ``get_config_variable`` method of the :class:`botocore.session.Session`
+    #: class.
+    #: These form the keys of the dictionary.  The values in the dictionary
+    #: are tuples of (<config_name>, <environment variable>, <default value).
+    #: The ``profile`` and ``config_file`` variables should always have a
+    #: None value for the first entry in the tuple because it doesn't make
+    #: sense to look inside the config file for the location of the config
+    #: file or for the default profile to use.
+    #: The ``config_name`` is the name to look for in the configuration file,
+    #: the ``env var`` is the OS environment variable (``os.environ``) to
+    #: use, and ``default_value`` is the value to use if no value is otherwise
+    #: found.
     SESSION_VARIABLES = {
         # logical:  config_file, env_var,        default_value
         'profile': (None, ['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'], None),
@@ -87,30 +103,9 @@ class Session(object):
         # up trying to retrieve data from the instance metadata service.
         'metadata_service_num_attempts': ('metadata_service_num_attempts',
                                           None, 1),
-        }
-    """
-    A default dictionary that maps the logical names for session variables
-    to the specific environment variables and configuration file names
-    that contain the values for these variables.
+    }
 
-    When creating a new Session object, you can pass in your own dictionary to
-    remap the logical names or to add new logical names.  You can then get the
-    current value for these variables by using the ``get_config_variable``
-    method of the :class:`botocore.session.Session` class.
-
-    These form the keys of the dictionary.  The values in the dictionary
-    are tuples of (<config_name>, <environment variable>, <default value).
-    The ``profile`` and ``config_file`` variables should always have a
-    None value for the first entry in the tuple because it doesn't make
-    sense to look inside the config file for the location of the config
-    file or for the default profile to use.
-
-    The ``config_name`` is the name to look for in the configuration file,
-    the ``env var`` is the OS environment variable (``os.environ``) to
-    use, and ``default_value`` is the value to use if no value is otherwise
-    found.
-    """
-
+    #: The default format string to use when configuring the botocore logger.
     LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
     def __init__(self, session_vars=None, event_hooks=None,
