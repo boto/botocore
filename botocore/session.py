@@ -20,17 +20,12 @@ import copy
 import logging
 import os
 import platform
-import shlex
-import warnings
-from collections import namedtuple
 
 from botocore import __version__
 import botocore.config
 import botocore.credentials
 import botocore.client
-from botocore.endpoint import EndpointCreator
 from botocore.exceptions import EventNotFound, ConfigNotFound, ProfileNotFound
-from botocore.exceptions import ImminentRemovalWarning
 from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.loaders import create_loader
@@ -206,7 +201,7 @@ class Session(object):
                 event_name, handler, register_type = spec
                 if register_type is handlers.REGISTER_FIRST:
                     self._events.register_first(event_name, handler)
-                elif register_first is handlers.REGISTER_LAST:
+                elif register_type is handlers.REGISTER_LAST:
                     self._events.register_last(event_name, handler)
 
     @property
@@ -336,7 +331,6 @@ class Session(object):
 
         """
         self._session_instance_vars[logical_name] = value
-
 
     def get_scoped_config(self):
         """
@@ -757,26 +751,28 @@ class Session(object):
             of the client.
 
         :type use_ssl: boolean
-        :param use_ssl: Whether or not to use SSL.  By default, SSL is used.  Note that
-            not all services support non-ssl connections.
+        :param use_ssl: Whether or not to use SSL.  By default, SSL is used.
+            Note that not all services support non-ssl connections.
 
         :type verify: boolean/string
-        :param verify: Whether or not to verify SSL certificates.  By default SSL certificates
-            are verified.  You can provide the following values:
+        :param verify: Whether or not to verify SSL certificates.
+            By default SSL certificates are verified.  You can provide the
+            following values:
 
             * False - do not validate SSL certificates.  SSL will still be
               used (unless use_ssl is False), but SSL certificates
               will not be verified.
             * path/to/cert/bundle.pem - A filename of the CA cert bundle to
-              uses.  You can specify this argument if you want to use a different
-              CA cert bundle than the one used by botocore.
+              uses.  You can specify this argument if you want to use a
+              different CA cert bundle than the one used by botocore.
 
         :type endpoint_url: string
-        :param endpoint_url: The complete URL to use for the constructed client.
-            Normally, botocore will automatically construct the appropriate URL
-            to use when communicating with a service.  You can specify a
-            complete URL (including the "http/https" scheme) to override this
-            behavior.  If this value is provided, then ``use_ssl`` is ignored.
+        :param endpoint_url: The complete URL to use for the constructed
+            client.  Normally, botocore will automatically construct the
+            appropriate URL to use when communicating with a service.  You can
+            specify a complete URL (including the "http/https" scheme) to
+            override this behavior.  If this value is provided, then
+            ``use_ssl`` is ignored.
 
         :type aws_access_key_id: string
         :param aws_access_key_id: The access key to use when creating
