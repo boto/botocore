@@ -20,6 +20,7 @@ import copy
 import botocore
 import botocore.session
 from botocore.compat import quote, six
+from botocore.awsrequest import AWSRequest
 from botocore.model import OperationModel, ServiceModel
 from botocore.signers import RequestSigner
 from botocore.credentials import Credentials
