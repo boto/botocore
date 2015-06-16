@@ -13,7 +13,7 @@
 # language governing permissions and limitations under the License.
 import os
 import time
-from tests import unittest, temporary_file
+from tests import unittest, temporary_file, random_chars
 from collections import defaultdict
 import tempfile
 import shutil
@@ -38,13 +38,9 @@ from botocore.client import Config
 
 
 def random_bucketname():
-    # Shooting for a max length of 63:
+    # 63 is the max bucket length.
     bucket_name = 'botocoretest'
-    # 1 byte -> 2 hex chars so we need to divide
-    # the remaining available length by 2.
-    bucket_name += binascii.hexlify(
-        os.urandom(int((63 - len(bucket_name)) / 2))).decode('ascii')
-    return bucket_name
+    return bucket_name + random_chars(63 - len(bucket_name))
 
 
 class BaseS3ClientTest(unittest.TestCase):
