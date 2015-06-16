@@ -286,8 +286,8 @@ class BaseClient(object):
                                endpoint.host, service_model,
                                self._PY_TO_OP_NAME)
         self.meta.events.register('request-created.%s' %
-                                    service_model.service_name,
-                                    self._sign_request)
+                                  service_model.endpoint_prefix,
+                                  self._sign_request)
 
     @property
     def _service_model(self):
