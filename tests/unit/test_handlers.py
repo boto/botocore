@@ -425,6 +425,16 @@ class TestHandlers(BaseSessionTest):
             request_dict['headers']['x-amz-sha256-tree-hash'],
             'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9')
 
+    def test_switch_host_with_param(self):
+        request = AWSRequest()
+        url = 'https://machinelearning.us-east-1.amazonaws.com'
+        new_endpoint = 'https://my-custom-endpoint.amazonaws.com'
+        data = '{"PredictEndpoint":"%s"}' % new_endpoint
+        request.data = data
+        request.url = url
+        handlers.switch_host_with_param(request, 'PredictEndpoint')
+        self.assertEqual(request.url, new_endpoint)
+
 
 class TestRetryHandlerOrder(BaseSessionTest):
     def get_handler_names(self, responses):

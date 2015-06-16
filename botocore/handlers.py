@@ -24,7 +24,7 @@ import re
 import xml.etree.cElementTree
 import copy
 
-from botocore.compat import unquote, json, quote, six
+from botocore.compat import urlsplit, urlunsplit, unquote, json, quote, six
 from botocore.docs.utils import AutoPopulatedParam
 from botocore.signers import add_generate_presigned_url
 from botocore.signers import add_generate_presigned_post
