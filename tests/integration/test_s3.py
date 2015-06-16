@@ -688,9 +688,11 @@ class TestS3SigV4Client(BaseS3ClientTest):
         self.client = self.session.create_client('s3', self.region)
         self.bucket_name = self.create_bucket()
         self.keys = []
+        self.tempdir = tempfile.mkdtemp()
 
     def tearDown(self):
         super(TestS3SigV4Client, self).tearDown()
+        shutil.rmtree(self.tempdir)
         for key in self.keys:
             response = self.delete_object(bucket_name=self.bucket_name,
                                           key=key)
@@ -869,6 +871,64 @@ class TestS3UTF8Headers(BaseS3ClientTest):
         self.assert_status_code(response, 200)
         self.addCleanup(self.client.delete_object,
                         Bucket=bucket_name, Key="foo.txt")
+
+
+class TestSupportedPutObjectBodyTypes(BaseS3ClientTest):
+    def setUp(self):
+        super(TestSupportedPutObjectBodyTypes, self).setUp()
+        self.region = 'us-east-1'
+        self.client = self.create_client()
+        self.bucket_name = self.create_bucket()
+        self.tempdir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+        super(TestSupportedPutObjectBodyTypes, self).tearDown()
+
+    def create_client(self):
+        # Even though the default signature_version is s3,
+        # we're being explicit in case this ever changes.
+        client_config = Config(signature_version='s3')
+        return self.session.create_client('s3', self.region,
+                                          config=client_config)
+
+    def assert_can_put_object(self, body):
+        response = self.client.put_object(
+            Bucket=self.bucket_name, Key='foo',
+            Body=body)
+        self.assert_status_code(response, 200)
+        self.addCleanup(self.client.delete_object, Bucket=self.bucket_name,
+                        Key='foo')
+
+    def test_can_put_unicode_content(self):
+        self.assert_can_put_object(body=u'\u2713')
+
+    def test_can_put_non_ascii_bytes(self):
+        self.assert_can_put_object(body=u'\u2713'.encode('utf-8'))
+
+    def test_can_put_binary_file(self):
+        filename = os.path.join(self.tempdir, 'foo')
+        with open(filename, 'wb') as f:
+            f.write(u'\u2713'.encode('utf-8'))
+        with open(filename, 'rb') as binary_file:
+            self.assert_can_put_object(body=binary_file)
+
+    def test_can_put_unicode_file(self):
+        filename = os.path.join(self.tempdir, 'foo')
+        with open(filename, 'w') as f:
+            f.write(u'\u2713')
+        # Now, don't open the file as 'r', not 'rb'
+        # and verify we can upload this file like object
+        # appropriately.
+        with open(filename, 'r') as text_file:
+            self.assert_can_put_object(body=text_file)
+
+
+class TestSupportedPutObjectBodyTypesSigv4(TestSupportedPutObjectBodyTypes):
+    def create_client(self):
+        client_config = Config(signature_version='s3v4')
+        return self.session.create_client('s3', self.region,
+                                          config=client_config)
 
 
 if __name__ == '__main__':
