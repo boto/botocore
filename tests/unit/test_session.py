@@ -232,19 +232,6 @@ class SessionTest(BaseSessionTest):
         response = session.emit_first_non_none_response('foo')
         self.assertEqual(response, 'first')
 
-    def test_create_events(self):
-        event = self.session.create_event('before-call', 'foo', 'bar')
-        self.assertEqual(event, 'before-call.foo.bar')
-        event = self.session.create_event('after-call', 'foo', 'bar')
-        self.assertEqual(event, 'after-call.foo.bar')
-        event = self.session.create_event('after-parsed', 'foo',
-                                          'bar', 'fie', 'baz')
-        self.assertEqual(event, 'after-parsed.foo.bar.fie.baz')
-        event = self.session.create_event('service-created')
-        self.assertEqual(event, 'service-created')
-        self.assertRaises(botocore.exceptions.EventNotFound,
-                          self.session.create_event, 'foo-bar')
-
     @mock.patch('logging.getLogger')
     @mock.patch('logging.FileHandler')
     def test_logger_name_can_be_passed_in(self, file_handler, get_logger):

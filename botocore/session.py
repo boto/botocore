@@ -49,20 +49,6 @@ class Session(object):
     :ivar profile: The current profile.
     """
 
-    #: A dictionary where each key is an event name and the value
-    #: is the formatting string used to construct a new event.
-    ALL_EVENTS = {
-        'after-call': '.%s.%s',
-        'after-parsed': '.%s.%s.%s.%s',
-        'before-parameter-build': '.%s.%s',
-        'before-call': '.%s.%s',
-        'service-created': '',
-        'service-data-loaded': '.%s',
-        'creating-endpoint': '.%s',
-        'before-auth': '.%s',
-        'needs-retry': '.%s.%s',
-    }
-
     #: A default dictionary that maps the logical names for session variables
     #: to the specific environment variables and configuration file names
     #: that contain the values for these variables.
@@ -521,8 +507,8 @@ class Session(object):
             type_name='service-2',
             api_version=api_version
         )
-        event_name = self.create_event('service-data-loaded', service_name)
-        self._events.emit(event_name, service_data=service_data,
+        self._events.emit('service-data-loaded.%s' % service_name,
+                          service_data=service_data,
                           service_name=service_name, session=self)
         return service_data
 
@@ -678,44 +664,6 @@ class Session(object):
         self._events.unregister(event_name, handler=handler,
                                 unique_id=unique_id,
                                 unique_id_uses_count=unique_id_uses_count)
-
-    def register_event(self, event_name, fmtstr):
-        """
-        Register a new event.  The event will be added to ``ALL_EVENTS``
-        and will then be able to be created using ``create_event``.
-
-        :type event_name: str
-        :param event_name: The base name of the event.
-
-        :type fmtstr: str
-        :param fmtstr: The formatting string for the event.
-        """
-        if event_name not in self.ALL_EVENTS:
-            self.ALL_EVENTS[event_name] = fmtstr
-
-    def create_event(self, event_name, *fmtargs):
-        """
-        Creates a new event string that can then be emitted.
-        You could just create it manually, since it's just
-        a string but this helps to define the range of known events.
-
-        :type event_name: str
-        :param event_name: The base name of the new event.
-
-        :type fmtargs: tuple
-        :param fmtargs: A tuple of values that will be used as the
-            arguments pass to the string formatting operation.  The
-            actual values passed depend on the type of event you
-            are creating.
-        """
-        if event_name in self.ALL_EVENTS:
-            fmt_string = self.ALL_EVENTS[event_name]
-            if fmt_string:
-                event = event_name + (fmt_string % fmtargs)
-            else:
-                event = event_name
-            return event
-        raise EventNotFound(event_name=event_name)
 
     def emit(self, event_name, **kwargs):
         return self._events.emit(event_name, **kwargs)
