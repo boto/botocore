@@ -25,7 +25,7 @@ from botocore import __version__
 import botocore.config
 import botocore.credentials
 import botocore.client
-from botocore.exceptions import EventNotFound, ConfigNotFound, ProfileNotFound
+from botocore.exceptions import ConfigNotFound, ProfileNotFound
 from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.loaders import create_loader
