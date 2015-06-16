@@ -18,6 +18,8 @@ from botocore.docs.utils import py_type_name
 from botocore.docs.utils import py_default
 from botocore.docs.utils import get_official_service_name
 from botocore.docs.utils import AutoPopulatedParam
+from botocore.docs.utils import HideParamFromOperations
+from botocore.docs.utils import AppendParamDocumentation
 
 
 class TestPythonTypeName(unittest.TestCase):
@@ -124,8 +126,7 @@ class TestAutopopulatedParam(BaseDocsTest):
         self.param.document_auto_populated_param(
             'docs.request-params', self.doc_structure)
         self.assert_contains_line(
-            ('Note this parameter is autopopulated. There is no need '
-             'to include in method call'))
+            'this parameter is automatically populated')
 
     def test_request_param_required(self):
         section = self.doc_structure.add_new_section(self.name)
@@ -136,8 +137,7 @@ class TestAutopopulatedParam(BaseDocsTest):
             'docs.request-params', self.doc_structure)
         self.assert_not_contains_line('**[REQUIRED]**')
         self.assert_contains_line(
-            ('Note this parameter is autopopulated. There is no need '
-             'to include in method call'))
+            'this parameter is automatically populated')
 
     def test_non_default_param_description(self):
         description = 'This is a custom description'
@@ -174,3 +174,48 @@ class TestAutopopulatedParam(BaseDocsTest):
         self.param.document_auto_populated_param(
             'docs.request-example', self.doc_structure)
         self.assert_contains_line(example)
+
+
+class TestHideParamFromOperations(BaseDocsTest):
+    def setUp(self):
+        super(TestHideParamFromOperations, self).setUp()
+        self.name = 'MyMember'
+        self.param = HideParamFromOperations(
+            's3', self.name, ['SampleOperation'])
+
+    def test_hides_params_from_doc_string(self):
+        section = self.doc_structure.add_new_section(self.name)
+        param_signature = ':param %s: ' % self.name
+        section.write(param_signature)
+        self.assert_contains_line(param_signature)
+        self.param.hide_param(
+            'docs.request-params.s3.SampleOperation.complete-section',
+            self.doc_structure)
+        self.assert_not_contains_line(param_signature)
+
+    def test_hides_param_from_example(self):
+        structure = self.doc_structure.add_new_section('structure-value')
+        section = structure.add_new_section(self.name)
+        example = '%s: \'string\'' % self.name
+        section.write(example)
+        self.assert_contains_line(example)
+        self.param.hide_param(
+            'docs.request-example.s3.SampleOperation.complete-section',
+            self.doc_structure)
+        self.assert_not_contains_line(example)
+
+
+class TestAppendParamDocumentation(BaseDocsTest):
+    def setUp(self):
+        super(TestAppendParamDocumentation, self).setUp()
+        self.name = 'MyMember'
+        self.param = AppendParamDocumentation(self.name, 'hello!')
+
+    def test_appends_documentation(self):
+        section = self.doc_structure.add_new_section(self.name)
+        param_section = section.add_new_section('param-documentation')
+        param_section.writeln('foo')
+        self.param.append_documentation(
+            'docs.request-params', self.doc_structure)
+        self.assert_contains_line('foo\n')
+        self.assert_contains_line('hello!')
