@@ -19,6 +19,7 @@ import copy
 
 import botocore
 import botocore.session
+from botocore.awsrequest import AWSRequest
 from botocore.compat import quote, six
 from botocore.awsrequest import AWSRequest
 from botocore.model import OperationModel, ServiceModel
@@ -442,6 +443,30 @@ class TestHandlers(BaseSessionTest):
         request.url = url
         handlers.switch_host_with_param(request, 'PredictEndpoint')
         self.assertEqual(request.url, new_endpoint)
+
+    def test_does_not_add_md5_when_v4(self):
+        credentials = Credentials('key', 'secret')
+        request_signer = RequestSigner(
+            's3', 'us-east-1', 's3', 'v4', credentials, None)
+        request_dict = {'body': 'bar',
+                        'url': 'https://s3.us-east-1.amazonaws.com',
+                        'method': 'PUT',
+                        'headers': {}}
+        handlers.conditionally_calculate_md5(request_dict,
+                                             request_signer=request_signer)
+        self.assertTrue('Content-MD5' not in request_dict['headers'])
+
+    def test_adds_md5_when_not_v4(self):
+        credentials = Credentials('key', 'secret')
+        request_signer = RequestSigner(
+            's3', 'us-east-1', 's3', 's3', credentials, None)
+        request_dict = {'body': 'bar',
+                        'url': 'https://s3.us-east-1.amazonaws.com',
+                        'method': 'PUT',
+                        'headers': {}}
+        handlers.conditionally_calculate_md5(request_dict,
+                                             request_signer=request_signer)
+        self.assertTrue('Content-MD5' in request_dict['headers'])
 
 
 class TestRetryHandlerOrder(BaseSessionTest):

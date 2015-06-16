@@ -116,6 +116,13 @@ def calculate_md5(params, **kwargs):
         params['headers']['Content-MD5'] = value
 
 
+def conditionally_calculate_md5(params, **kwargs):
+    """Only add a Content-MD5 when not using sigv4"""
+    signer = kwargs['request_signer']
+    if signer.signature_version != 'v4':
+        calculate_md5(params, **kwargs)
+
+
 def sse_md5(params, **kwargs):
     """
     S3 server-side encryption requires the encryption key to be sent to the
@@ -423,6 +430,17 @@ BUILTIN_HANDLERS = [
     ('before-call.s3.PutBucketCors', calculate_md5),
     ('before-call.s3.DeleteObjects', calculate_md5),
     ('before-call.s3.PutBucketReplication', calculate_md5),
+    ('before-call.s3.PutObject', conditionally_calculate_md5),
+    ('before-call.s3.UploadPart', conditionally_calculate_md5),
+    ('before-call.s3.PutBucketAcl', conditionally_calculate_md5),
+    ('before-call.s3.PutBucketLogging', conditionally_calculate_md5),
+    ('before-call.s3.PutBucketNotification', conditionally_calculate_md5),
+    ('before-call.s3.PutBucketPolicy', conditionally_calculate_md5),
+    ('before-call.s3.PutBucketRequestPayment', conditionally_calculate_md5),
+    ('before-call.s3.PutBucketVersioning', conditionally_calculate_md5),
+    ('before-call.s3.PutBucketWebsite', conditionally_calculate_md5),
+    ('before-call.s3.PutObjectAcl', conditionally_calculate_md5),
+
     ('before-call.s3.UploadPartCopy', quote_source_header),
     ('before-call.s3.CopyObject', quote_source_header),
     ('before-call.s3', add_expect_header),
