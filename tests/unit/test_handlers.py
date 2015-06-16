@@ -19,8 +19,6 @@ import copy
 
 import botocore
 import botocore.session
-from botocore.hooks import first_non_none_response
-from botocore.awsrequest import AWSRequest
 from botocore.compat import quote, six
 from botocore.model import OperationModel, ServiceModel
 from botocore.signers import RequestSigner
@@ -162,7 +160,7 @@ class TestHandlers(BaseSessionTest):
         self.session.emit(event, params=params, model=mock.Mock())
         self.assertEqual(params['SSECustomerKey'], 'YmFy')
         self.assertEqual(params['SSECustomerKeyMD5'],
-                            'N7UdGUp1E+RbVvZSTy1R8g==')
+                         'N7UdGUp1E+RbVvZSTy1R8g==')
 
     def test_route53_resource_id(self):
         event = 'before-parameter-build.route53.GetHostedZone'
@@ -224,7 +222,7 @@ class TestHandlers(BaseSessionTest):
 
     def test_route53_resource_id_missing_input_shape(self):
         event = 'before-parameter-build.route53.GetHostedZone'
-        params = {'HostedZoneId': '/hostedzone/ABC123',}
+        params = {'HostedZoneId': '/hostedzone/ABC123'}
         operation_def = {
             'name': 'GetHostedZone'
         }
@@ -462,7 +460,3 @@ class TestRetryHandlerOrder(BaseSessionTest):
         self.assertTrue(s3_200_handler < general_retry_handler,
                         "S3 200 error handler was supposed to be before "
                         "the general retry handler, but it was not.")
-
-
-if __name__ == '__main__':
-    unittest.main()
