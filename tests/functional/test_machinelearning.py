@@ -27,7 +27,7 @@ class TestMachineLearning(BaseSessionTest):
                 http_session_send_patch:
             http_response = mock.Mock()
             http_response.status_code = 200
-            http_response.content = '{}'
+            http_response.content = b'{}'
             http_response.headers = {}
             http_session_send_patch.return_value = http_response
             custom_endpoint = 'https://myendpoint.amazonaws.com/'
