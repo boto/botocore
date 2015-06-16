@@ -285,12 +285,9 @@ class BaseClient(object):
         self.meta = ClientMeta(event_emitter, self._client_config,
                                endpoint.host, service_model,
                                self._PY_TO_OP_NAME)
-
-        # Register request signing, but only if we have an event
-        # emitter. When a client is cloned this is ignored, because
-        # the client's ``meta`` will be copied anyway.
-        if self.meta.events:
-            self.meta.events.register('request-created', self._sign_request)
+        self.meta.events.register('request-created.%s' %
+                                    service_model.service_name,
+                                    self._sign_request)
 
     @property
     def _service_model(self):
