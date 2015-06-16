@@ -11,16 +11,15 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
 import os
 import time
-import random
 from tests import unittest, temporary_file
 from collections import defaultdict
 import tempfile
 import shutil
 import threading
 import mock
+import binascii
 try:
     from itertools import izip_longest as zip_longest
 except ImportError:
@@ -36,6 +35,16 @@ import botocore.auth
 import botocore.credentials
 import botocore.vendored.requests as requests
 from botocore.client import Config
+
+
+def random_bucketname():
+    # Shooting for a max length of 63:
+    bucket_name = 'botocoretest'
+    # 1 byte -> 2 hex chars so we need to divide
+    # the remaining available length by 2.
+    bucket_name += binascii.hexlify(
+        os.urandom(int((63 - len(bucket_name)) / 2))).decode('ascii')
+    return bucket_name
 
 
 class BaseS3ClientTest(unittest.TestCase):
@@ -54,8 +63,7 @@ class BaseS3ClientTest(unittest.TestCase):
     def create_bucket(self, bucket_name=None):
         bucket_kwargs = {}
         if bucket_name is None:
-            bucket_name = 'botocoretest%s-%s' % (int(time.time()),
-                                                 random.randint(1, 1000))
+            bucket_name = random_bucketname()
         bucket_kwargs = {'Bucket': bucket_name}
         if self.region != 'us-east-1':
             bucket_kwargs['CreateBucketConfiguration'] = {
@@ -810,8 +818,7 @@ class TestSSEKeyParamValidation(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.client = self.session.create_client('s3', 'us-west-2')
-        self.bucket_name = 'botocoretest%s-%s' % (
-            int(time.time()), random.randint(1, 1000))
+        self.bucket_name = random_bucketname()
         self.client.create_bucket(
             Bucket=self.bucket_name,
             CreateBucketConfiguration={
