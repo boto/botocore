@@ -52,6 +52,13 @@ class TestStyle(unittest.TestCase):
         style.italics('foobar')
         self.assertEqual(style.doc.getvalue(), six.b('*foobar* '))
 
+    def test_p(self):
+        style = ReSTStyle(ReSTDocument())
+        style.start_p()
+        style.doc.write('foo')
+        style.end_p()
+        self.assertEqual(style.doc.getvalue(), six.b('\n\nfoo\n\n'))
+
     def test_code(self):
         style = ReSTStyle(ReSTDocument())
         style.code('foobar')
