@@ -306,6 +306,29 @@ class TestResponseMetadataParsed(unittest.TestCase):
         self.assertEqual(parsed['Error'], {'Message': 'Access denied',
                                            'Code': 'AccessDeniedException'})
 
+    def test_can_parse_route53_with_missing_message(self):
+        # The message isn't always in the XML response (or even the headers).
+        # We should be able to handle this gracefully and still at least
+        # populate a "Message" key so that consumers don't have to
+        # conditionally check for this.
+        body =  (
+            '<ErrorResponse>'
+            '  <Error>'
+            '    <Type>Sender</Type>'
+            '    <Code>InvalidInput</Code>'
+            '  </Error>'
+            '  <RequestId>id</RequestId>'
+            '</ErrorResponse>'
+        ).encode('utf-8')
+        parser = parsers.RestXMLParser()
+        parsed = parser.parse({
+            'body': body, 'headers': {}, 'status_code': 400}, None)
+        error = parsed['Error']
+        self.assertEqual(error['Code'], 'InvalidInput')
+        # Even though there's no <Message /> we should
+        # still populate an empty string.
+        self.assertEqual(error['Message'], '')
+
 
 class TestResponseParsingDatetimes(unittest.TestCase):
     def test_can_parse_float_timestamps(self):
