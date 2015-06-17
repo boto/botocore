@@ -694,8 +694,7 @@ class TestS3SigV4Client(BaseS3ClientTest):
         super(TestS3SigV4Client, self).tearDown()
         shutil.rmtree(self.tempdir)
         for key in self.keys:
-            response = self.delete_object(bucket_name=self.bucket_name,
-                                          key=key)
+            self.delete_object(bucket_name=self.bucket_name, key=key)
 
     def test_can_get_bucket_location(self):
         # Even though the bucket is in eu-central-1, we should still be able to
