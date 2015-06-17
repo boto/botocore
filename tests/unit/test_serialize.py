@@ -19,9 +19,10 @@ from tests import unittest
 
 from botocore.model import ServiceModel
 from botocore import serialize
+from botocore.compat import six
 
 
-class TestBinaryTypes(unittest.TestCase):
+class BaseModelWithBlob(unittest.TestCase):
 
     def setUp(self):
         self.model = {
@@ -49,13 +50,13 @@ class TestBinaryTypes(unittest.TestCase):
                 }
             }
         }
-        self.service_model = ServiceModel(self.model)
 
     def serialize_to_request(self, input_params):
+        service_model = ServiceModel(self.model)
         request_serializer = serialize.create_serializer(
-            self.service_model.metadata['protocol'])
+            service_model.metadata['protocol'])
         return request_serializer.serialize_to_request(
-            input_params, self.service_model.operation_model('TestOperation'))
+            input_params, service_model.operation_model('TestOperation'))
 
     def assert_serialized_blob_equals(self, request, blob_bytes):
         # This method handles all the details of the base64 decoding.
@@ -65,6 +66,9 @@ class TestBinaryTypes(unittest.TestCase):
         # ascii so it's safe to use the ascii encoding.
         expected = encoded.decode('ascii')
         self.assertEqual(request['body']['Blob'], expected)
+
+
+class TestBinaryTypes(BaseModelWithBlob):
 
     def test_blob_accepts_bytes_type(self):
         body = b'bytes body'
@@ -83,45 +87,54 @@ class TestBinaryTypes(unittest.TestCase):
             request, blob_bytes=body.encode('utf-8'))
 
 
-class TestBinaryTypesJSON(unittest.TestCase):
+class TestBinaryTypesJSON(BaseModelWithBlob):
     def setUp(self):
-        self.model = {
-            'metadata': {'protocol': 'json', 'apiVersion': '2014-01-01',
-                         'jsonVersion': '1.1', 'targetPrefix': 'foo'},
-            'documentation': '',
-            'operations': {
-                'TestOperation': {
-                    'name': 'TestOperation',
-                    'http': {
-                        'method': 'POST',
-                        'requestUri': '/',
-                    },
-                    'input': {'shape': 'InputShape'},
-                }
-            },
-            'shapes': {
-                'InputShape': {
-                    'type': 'structure',
-                    'members': {
-                        'Blob': {'shape': 'BlobType'},
-                    }
-                },
-                'BlobType': {
-                    'type': 'blob',
-                }
-            }
+        super(TestBinaryTypesJSON, self).setUp()
+        self.model['metadata'] = {
+            'protocol': 'json',
+            'apiVersion': '2014-01-01',
+            'jsonVersion': '1.1',
+            'targetPrefix': 'foo',
         }
-        self.service_model = ServiceModel(self.model)
-
-    def serialize_to_request(self, input_params):
-        request_serializer = serialize.create_serializer(
-            self.service_model.metadata['protocol'])
-        return request_serializer.serialize_to_request(
-            input_params, self.service_model.operation_model('TestOperation'))
 
     def test_blob_accepts_bytes_type(self):
         body = b'bytes body'
-        self.serialize_to_request(input_params={'Blob': body})
+        request = self.serialize_to_request(input_params={'Blob': body})
+        serialized_blob = json.loads(request['body'])['Blob']
+        self.assertEqual(
+            base64.b64encode(body).decode('ascii'),
+            serialized_blob)
+
+
+class TestBinaryTypesWithRestXML(BaseModelWithBlob):
+    def setUp(self):
+        super(TestBinaryTypesWithRestXML, self).setUp()
+        self.model['metadata'] = {
+            'protocol': 'rest-xml',
+            'apiVersion': '2014-01-01',
+        }
+        self.model['operations']['TestOperation']['input'] = {
+            'shape': 'InputShape',
+            'locationName': 'OperationRequest',
+            'payload': 'Blob',
+        }
+
+    def test_blob_serialization_with_file_like_object(self):
+        body = six.BytesIO(b'foobar')
+        request = self.serialize_to_request(input_params={'Blob': body})
+        self.assertEqual(request['body'], body)
+
+    def test_blob_serialization_when_payload_is_unicode(self):
+        # When the body is a text type, we should encode the
+        # text to bytes.
+        body = u'\u2713'
+        request = self.serialize_to_request(input_params={'Blob': body})
+        self.assertEqual(request['body'], body.encode('utf-8'))
+
+    def test_blob_serialization_when_payload_is_bytes(self):
+        body = b'bytes body'
+        request = self.serialize_to_request(input_params={'Blob': body})
+        self.assertEqual(request['body'], body)
 
 
 class TestTimestamps(unittest.TestCase):

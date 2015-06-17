@@ -440,7 +440,9 @@ class BaseRestSerializer(Serializer):
                 shape_members[payload_member].type_name in ['blob', 'string']:
             # If it's streaming, then the body is just the
             # value of the payload.
-            serialized['body'] = parameters.get(payload_member, '')
+            body_payload = parameters.get(payload_member, b'')
+            body_payload = self._encode_payload(body_payload)
+            serialized['body'] = body_payload
         elif payload_member is not None:
             # If there's a payload member, we serialized that
             # member to they body.
@@ -452,6 +454,11 @@ class BaseRestSerializer(Serializer):
         elif partitioned['body_kwargs']:
             serialized['body'] = self._serialize_body_params(
                 partitioned['body_kwargs'], shape)
+
+    def _encode_payload(self, body):
+        if isinstance(body, six.text_type):
+            return body.encode(self.DEFAULT_ENCODING)
+        return body
 
     def _partition_parameters(self, partitioned, param_name,
                               param_value, shape_members):
