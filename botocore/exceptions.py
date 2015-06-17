@@ -236,15 +236,6 @@ class OperationNotPageableError(BotoCoreError):
     fmt = 'Operation cannot be paginated: {operation_name}'
 
 
-class EventNotFound(BotoCoreError):
-    """
-    The specified event name is unknown to the system.
-
-    :ivar event_name: The name of the event the user attempted to use.
-    """
-    fmt = 'The event ({event_name}) is not known'
-
-
 class ChecksumError(BotoCoreError):
     """The expected checksum did not match the calculated checksum.
 

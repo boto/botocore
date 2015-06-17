@@ -35,6 +35,14 @@ Contents:
 Upgrade Notes
 =============
 
+Upgrading to 1.0.0rc1
+---------------------
+
+* The ``default`` argument to ``session.get_config_variable()`` has been
+  removed.  If you need this functionality you can use::
+
+        value = session.get_config_variable() or 'default value'
+
 Upgrading to 0.104.0
 --------------------
 
