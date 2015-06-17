@@ -116,9 +116,16 @@ def _test_input(json_description, case, basename):
     request = serializer.serialize_to_request(case['params'], operation_model)
     _serialize_request_description(request)
     try:
+        _assert_request_body_is_bytes(request['body'])
         _assert_requests_equal(request, case['serialized'])
     except AssertionError as e:
         _input_failure_message(protocol_type, case, request, e)
+
+
+def _assert_request_body_is_bytes(body):
+    if not isinstance(body, bytes):
+        raise AssertionError("Expected body to be serialized as type "
+                             "bytes(), instead got: %s" % type(body))
 
 
 def _test_output(json_description, case, basename):
