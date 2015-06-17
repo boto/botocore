@@ -119,8 +119,8 @@ class Serializer(object):
             'query_string': '',
             'method': self.DEFAULT_METHOD,
             'headers': {},
-            # An empty body is represented as an empty string.
-            'body': ''
+            # An empty body is represented as an empty byte string.
+            'body': b''
         }
         return serialized
 
@@ -302,7 +302,7 @@ class JSONSerializer(Serializer):
         input_shape = operation_model.input_shape
         if input_shape is not None:
             self._serialize(body, parameters, input_shape)
-        serialized['body'] = json.dumps(body)
+        serialized['body'] = json.dumps(body).encode('utf-8')
         return serialized
 
     def _serialize(self, serialized, value, shape, key=None):
@@ -513,7 +513,7 @@ class RestJSONSerializer(BaseRestSerializer, JSONSerializer):
     def _serialize_body_params(self, params, shape):
         serialized_body = self.MAP_TYPE()
         self._serialize(serialized_body, params, shape)
-        return json.dumps(serialized_body)
+        return json.dumps(serialized_body).encode('utf-8')
 
 
 class RestXMLSerializer(BaseRestSerializer):
@@ -525,7 +525,7 @@ class RestXMLSerializer(BaseRestSerializer):
         self._serialize(shape, params, pseudo_root, root_name)
         real_root = list(pseudo_root)[0]
         # TODO: double check on the utf-8 encoding bit.
-        return ElementTree.tostring(real_root).decode('utf-8')
+        return ElementTree.tostring(real_root, encoding='utf-8')
 
     def _serialize(self, shape, params, xmlnode, name):
         method = getattr(self, '_serialize_type_%s' % shape.type_name,

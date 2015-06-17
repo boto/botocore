@@ -258,7 +258,7 @@ def assert_equal(first, second, prefix):
 def _serialize_request_description(request_dict):
     if isinstance(request_dict.get('body'), dict):
         # urlencode the request body.
-        encoded = urlencode(request_dict['body'])
+        encoded = urlencode(request_dict['body']).encode('utf-8')
         request_dict['body'] = encoded
     if isinstance(request_dict.get('query_string'), dict):
         encoded = urlencode(request_dict.pop('query_string'))
@@ -273,7 +273,8 @@ def _serialize_request_description(request_dict):
 
 
 def _assert_requests_equal(actual, expected):
-    assert_equal(actual['body'], expected['body'], 'Body value')
+    assert_equal(actual['body'], expected['body'].encode('utf-8'),
+                 'Body value')
     actual_headers = dict(actual['headers'])
     expected_headers = expected.get('headers', {})
     assert_equal(actual_headers, expected_headers, "Header values")

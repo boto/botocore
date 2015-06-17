@@ -383,7 +383,7 @@ def switch_host_machinelearning(request, **kwargs):
 
 
 def switch_host_with_param(request, param_name):
-    request_json = json.loads(request.data)
+    request_json = json.loads(request.data.decode('utf-8'))
     if request_json.get(param_name):
         new_endpoint = request_json[param_name]
         new_endpoint_components = urlsplit(new_endpoint)

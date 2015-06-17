@@ -914,8 +914,8 @@ class TestSupportedPutObjectBodyTypes(BaseS3ClientTest):
 
     def test_can_put_unicode_file(self):
         filename = os.path.join(self.tempdir, 'foo')
-        with open(filename, 'w') as f:
-            f.write(u'\u2713')
+        with open(filename, 'wb') as f:
+            f.write(u'\u2713'.encode('utf-8'))
         # Now, don't open the file as 'r', not 'rb'
         # and verify we can upload this file like object
         # appropriately.

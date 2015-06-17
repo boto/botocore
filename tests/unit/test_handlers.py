@@ -422,7 +422,7 @@ class TestHandlers(BaseSessionTest):
         url = 'https://machinelearning.us-east-1.amazonaws.com'
         new_endpoint = 'https://my-custom-endpoint.amazonaws.com'
         data = '{"PredictEndpoint":"%s"}' % new_endpoint
-        request.data = data
+        request.data = data.encode('utf-8')
         request.url = url
         handlers.switch_host_with_param(request, 'PredictEndpoint')
         self.assertEqual(request.url, new_endpoint)

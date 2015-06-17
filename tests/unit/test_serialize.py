@@ -100,7 +100,7 @@ class TestBinaryTypesJSON(BaseModelWithBlob):
     def test_blob_accepts_bytes_type(self):
         body = b'bytes body'
         request = self.serialize_to_request(input_params={'Blob': body})
-        serialized_blob = json.loads(request['body'])['Blob']
+        serialized_blob = json.loads(request['body'].decode('utf-8'))['Blob']
         self.assertEqual(
             base64.b64encode(body).decode('ascii'),
             serialized_blob)
@@ -239,19 +239,19 @@ class TestJSONTimestampSerialization(unittest.TestCase):
 
     def test_accepts_iso_8601_format(self):
         body = json.loads(self.serialize_to_request(
-            {'Timestamp': '1970-01-01T00:00:00'})['body'])
+            {'Timestamp': '1970-01-01T00:00:00'})['body'].decode('utf-8'))
         self.assertEqual(body['Timestamp'], 0)
 
     def test_accepts_epoch(self):
         body = json.loads(self.serialize_to_request(
-            {'Timestamp': '0'})['body'])
+            {'Timestamp': '0'})['body'].decode('utf-8'))
         self.assertEqual(body['Timestamp'], 0)
         # Can also be an integer 0.
         body = json.loads(self.serialize_to_request(
-            {'Timestamp': 0})['body'])
+            {'Timestamp': 0})['body'].decode('utf-8'))
         self.assertEqual(body['Timestamp'], 0)
 
     def test_accepts_partial_iso_format(self):
         body = json.loads(self.serialize_to_request(
-            {'Timestamp': '1970-01-01'})['body'])
+            {'Timestamp': '1970-01-01'})['body'].decode('utf-8'))
         self.assertEqual(body['Timestamp'], 0)
