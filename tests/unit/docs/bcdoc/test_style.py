@@ -20,12 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 #
-import unittest
-
-import six
-
-from bcdoc.style import ReSTStyle
-from bcdoc.restdoc import ReSTDocument
+from tests import unittest
+from botocore.compat import six
+from botocore.docs.bcdoc.style import ReSTStyle
+from botocore.docs.bcdoc.restdoc import ReSTDocument
 
 
 class TestStyle(unittest.TestCase):
