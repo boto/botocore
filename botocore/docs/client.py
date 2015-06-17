@@ -13,7 +13,7 @@
 import inspect
 
 from botocore.docs.utils import get_official_service_name
-from botocore.docs.method import document_custom_signature
+from botocore.docs.method import document_custom_method
 from botocore.docs.method import document_model_driven_method
 from botocore.docs.method import get_instance_public_methods
 
@@ -83,12 +83,7 @@ class ClientDocumenter(object):
         return method_name not in self._client.meta.method_to_api_mapping
 
     def _add_custom_method(self, section, method_name, method):
-        document_custom_signature(
-            section, method_name, method)
-        method_intro_section = section.add_new_section('method-intro')
-        doc_string = inspect.getdoc(method)
-        if doc_string is not None:
-            method_intro_section.style.write_py_doc_string(doc_string)
+        document_custom_method(section, method_name, method)
 
     def _add_model_driven_method(self, section, method_name):
         service_model = self._client.meta.service_model

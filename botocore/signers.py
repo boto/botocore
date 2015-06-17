@@ -164,7 +164,7 @@ class RequestSigner(object):
         :type region_name: string
         :param region_name: The region name to sign the presigned url.
 
-        returns: The presigned url
+        :returns: The presigned url
         """
         if region_name is None:
             region_name = self._region_name
@@ -318,7 +318,7 @@ def generate_presigned_url(self, ClientMethod, Params=None, ExpiresIn=3600,
     :param HttpMethod: The http method to use on the generated url. By
         default, the http method is whatever is used in the method's model.
 
-    returns: The presigned url
+    :returns: The presigned url
     """
     client_method = ClientMethod
     params = Params

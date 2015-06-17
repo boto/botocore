@@ -108,6 +108,24 @@ def document_custom_signature(section, name, method,
     section.style.start_sphinx_py_method(name, signature_params)
 
 
+def document_custom_method(section, method_name, method):
+    """Documents a non-data driven method
+
+    :param section: The section to write the documentation to.
+
+    :param method_name: The name of the method
+
+    :param method: The handle to the method being documented
+    """
+    document_custom_signature(
+        section, method_name, method)
+    method_intro_section = section.add_new_section('method-intro')
+    method_intro_section.writeln('')
+    doc_string = inspect.getdoc(method)
+    if doc_string is not None:
+        method_intro_section.style.write_py_doc_string(doc_string)
+
+
 def document_model_driven_method(section, method_name, operation_model,
                                  event_emitter, method_description=None,
                                  example_prefix=None, include_input=None,

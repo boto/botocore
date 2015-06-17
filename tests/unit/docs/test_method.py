@@ -15,6 +15,7 @@ from tests.unit.docs import BaseDocsTest
 from botocore.hooks import HierarchicalEmitter
 from botocore.docs.method import document_model_driven_signature
 from botocore.docs.method import document_custom_signature
+from botocore.docs.method import document_custom_method
 from botocore.docs.method import document_model_driven_method
 from botocore.docs.method import get_instance_public_methods
 from botocore.docs.utils import DocumentedShape
@@ -79,6 +80,26 @@ class TestDocumentCustomSignature(BaseDocsTest):
             self.doc_structure, 'my_method', self.sample_method)
         self.assert_contains_line(
             '.. py:method:: my_method(foo, bar=\'bar\', baz=None)')
+
+
+class TestDocumentCustomMethod(BaseDocsTest):
+    def custom_method(self, foo):
+        """This is a custom method
+
+        :type foo: string
+        :param foo: The foo parameter
+        """
+        pass
+
+    def test_document_custom_signature(self):
+        document_custom_method(
+            self.doc_structure, 'my_method', self.custom_method)
+        self.assert_contains_lines_in_order([
+            '.. py:method:: my_method(foo)',
+            '  This is a custom method',
+            '  :type foo: string',
+            '  :param foo: The foo parameter'
+        ])
 
 
 class TestDocumentModelDrivenMethod(BaseDocsTest):
