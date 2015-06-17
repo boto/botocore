@@ -44,7 +44,7 @@ class TestServiceDocumenter(BaseDocsTest):
             '  A low-level client representing AWS MyService::',
             '    client = session.create_client(\'myservice\')',
             '  These are the available methods:',
-            '  *   :py:meth:`MyService.Client.sample_operation`',
+            '  *   :py:meth:`sample_operation`',
             '  .. py:method:: sample_operation(**kwargs)',
             '==========',
             'Paginators',
