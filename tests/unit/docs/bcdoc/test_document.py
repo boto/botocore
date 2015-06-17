@@ -131,3 +131,8 @@ class TestDocumentStructure(unittest.TestCase):
             self.doc_structure.available_sections,
             ['mysection', 'mysection2']
         )
+
+    def test_clear_text(self):
+        self.doc_structure.write('Foo')
+        self.doc_structure.clear_text()
+        self.assertEqual(self.doc_structure.flush_structure(), six.b(''))

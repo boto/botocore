@@ -197,3 +197,6 @@ class DocumentStructure(ReSTDocument):
 
     def getvalue(self):
         return ''.join(self._writes).encode('utf-8')
+
+    def clear_text(self):
+        self._writes = []
