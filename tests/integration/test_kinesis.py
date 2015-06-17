@@ -11,8 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import time
-import random
-from tests import unittest
+from tests import unittest, random_chars
 
 from nose.plugins.attrib import attr
 
@@ -29,8 +28,7 @@ class TestKinesisListStreams(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.session = botocore.session.get_session()
-        cls.stream_name = 'botocore-test-%s-%s' % (int(time.time()),
-                                                   random.randint(1, 100))
+        cls.stream_name = 'botocore-test-%s' % random_chars(10)
         client = cls.session.create_client('kinesis', cls.REGION)
         client.create_stream(StreamName=cls.stream_name,
                              ShardCount=1)

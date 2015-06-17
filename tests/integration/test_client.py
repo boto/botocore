@@ -11,10 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import time
-import random
 import logging
 import datetime
-from tests import unittest
+from tests import unittest, random_chars
 
 import botocore.session
 from botocore.client import ClientError
@@ -27,8 +26,7 @@ class TestBucketWithVersions(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.client = self.session.create_client('s3', region_name='us-west-2')
-        self.bucket_name = 'botocoretest%s-%s' % (
-            int(time.time()), random.randint(1, 1000000))
+        self.bucket_name = 'botocoretest%s' % random_chars(50)
 
     def extract_version_ids(self, versions):
         version_ids = []
