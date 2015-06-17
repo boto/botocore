@@ -151,7 +151,7 @@ class ReSTStyle(BaseStyle):
 
     def end_p(self):
         if self.do_p:
-            self.doc.write('\n\n')
+            self.doc.write('\n\n%s' % self.spaces())
 
     def start_code(self, attrs=None):
         self.doc.do_translation = True
