@@ -45,17 +45,17 @@ class TestServiceDocumenter(BaseDocsTest):
             '    client = session.create_client(\'myservice\')',
             '  These are the available methods:',
             '  *   :py:meth:`MyService.Client.sample_operation`',
-            '  .. py:method:: sample_operation(Biz=None)',
+            '  .. py:method:: sample_operation(**kwargs)',
             '==========',
             'Paginators',
             '==========',
             '.. py:class:: MyService.Paginator.sample_operation',
-            '  .. py:method:: paginate(Biz=None, PaginationConfig=None)',
+            '  .. py:method:: paginate(**kwargs)',
             '=======',
             'Waiters',
             '=======',
             '.. py:class:: MyService.Waiter.sample_operation_complete',
-            '  .. py:method:: wait(Biz=None)'
+            '  .. py:method:: wait(**kwargs)'
         ]
         for line in lines:
             self.assertIn(line, contents)

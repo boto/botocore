@@ -39,7 +39,7 @@ class TestPaginatorDocumenter(BaseDocsTest):
             '.. py:class:: MyService.Paginator.sample_operation',
             '  ::',
             '    paginator = client.get_paginator(\'sample_operation\')',
-            '  .. py:method:: paginate(Biz=None, PaginationConfig=None)',
+            '  .. py:method:: paginate(**kwargs)',
             ('    Creates an iterator that will paginate through responses'
              ' from :py:meth:`MyService.Client.sample_operation`.'),
             '    **Request Syntax**',
