@@ -20,6 +20,11 @@ from six.moves import configparser
 
 import botocore.exceptions
 
+INTEGER_CONFIG_OPTIONS = (
+    "metadata_service_num_attempts",
+    "metadata_service_timeout",
+)
+
 
 def multi_file_load_config(*filenames):
     """Load and combine multiple INI configs with profiles.
@@ -134,16 +139,19 @@ def raw_config_parse(config_filename):
             for section in cp.sections():
                 config[section] = {}
                 for option in cp.options(section):
-                    config_value = cp.get(section, option)
-                    if config_value.startswith('\n'):
-                        # Then we need to parse the inner contents as
-                        # hierarchical.  We support a single level
-                        # of nesting for now.
-                        try:
-                            config_value = _parse_nested(config_value)
-                        except ValueError:
-                            raise botocore.exceptions.ConfigParseError(
-                                path=path)
+                    if option in INTEGER_CONFIG_OPTIONS:
+                        config_value = cp.getint(section, option)
+                    else:
+                        config_value = cp.get(section, option)
+                        if config_value.startswith('\n'):
+                            # Then we need to parse the inner contents as
+                            # hierarchical.  We support a single level
+                            # of nesting for now.
+                            try:
+                                config_value = _parse_nested(config_value)
+                            except ValueError:
+                                raise botocore.exceptions.ConfigParseError(
+                                    path=path)
                     config[section][option] = config_value
     return config
 

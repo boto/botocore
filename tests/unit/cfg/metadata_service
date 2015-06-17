@@ -1,0 +1,3 @@
+[default]
+metadata_service_timeout = 1
+metadata_service_num_attempts = 2
