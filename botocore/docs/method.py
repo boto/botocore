@@ -159,7 +159,7 @@ def document_model_driven_method(section, method_name, operation_model,
     # Add the example section.
     example_section = section.add_new_section('example')
     example_section.style.new_paragraph()
-    example_section.style.bold('Example')
+    example_section.style.bold('Request Syntax')
     if operation_model.input_shape:
         RequestExampleDocumenter(
             service_name=operation_model.service_model.service_name,
@@ -196,7 +196,7 @@ def document_model_driven_method(section, method_name, operation_model,
         # Add an example return value
         return_example_section = return_section.add_new_section('example')
         return_example_section.style.new_line()
-        return_example_section.style.bold('Response Example')
+        return_example_section.style.bold('Response Syntax')
         return_example_section.style.new_paragraph()
         ResponseExampleDocumenter(
             service_name=operation_model.service_model.service_name,
