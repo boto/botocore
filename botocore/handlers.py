@@ -42,7 +42,6 @@ REGISTER_FIRST = object()
 REGISTER_LAST = object()
 
 
-
 def check_for_200_error(response, **kwargs):
     # From: http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectCOPY.html
     # There are two opportunities for a copy request to return an error. One
@@ -66,8 +65,8 @@ def check_for_200_error(response, **kwargs):
     http_response, parsed = response
     if _looks_like_special_case_error(http_response):
         logger.debug("Error found for response with 200 status code, "
-                        "errors: %s, changing status code to "
-                        "500.", parsed)
+                     "errors: %s, changing status code to "
+                     "500.", parsed)
         http_response.status_code = 500
 
 
@@ -110,7 +109,7 @@ def json_decode_template_body(parsed, **kwargs):
 
 def calculate_md5(params, **kwargs):
     request_dict = params
-    if request_dict['body'] and not 'Content-MD5' in params['headers']:
+    if request_dict['body'] and 'Content-MD5' not in params['headers']:
         md5 = hashlib.md5()
         md5.update(six.b(params['body']))
         value = base64.b64encode(md5.digest()).decode('utf-8')
@@ -207,8 +206,13 @@ def add_expect_header(model, params, **kwargs):
 def quote_source_header(params, **kwargs):
     if params['headers'] and 'x-amz-copy-source' in params['headers']:
         value = params['headers']['x-amz-copy-source']
-        params['headers']['x-amz-copy-source'] = quote(
-            value.encode('utf-8'), '/~')
+        p = urlsplit(value)
+        # We only want to quote the path.  If the user specified
+        # extra parts, say '?versionId=myversionid' then that part
+        # should not be quoted.
+        quoted = quote(p[2].encode('utf-8'), '/~')
+        final_source = urlunsplit((p[0], p[1], quoted, p[3], p[4]))
+        params['headers']['x-amz-copy-source'] = final_source
 
 
 def copy_snapshot_encrypted(params, request_signer, **kwargs):
@@ -270,7 +274,8 @@ def _decode_policy_types(parsed, shape):
             if member_shape.type_name == 'string' and \
                     member_shape.name == shape_name and \
                     member_name in parsed:
-                parsed[member_name] = decode_quoted_jsondoc(parsed[member_name])
+                parsed[member_name] = decode_quoted_jsondoc(
+                    parsed[member_name])
             elif member_name in parsed:
                 _decode_policy_types(parsed[member_name], member_shape)
     if shape.type_name == 'list':
@@ -342,8 +347,8 @@ def inject_account_id(params, **kwargs):
 
 def add_glacier_version(model, params, **kwargs):
     request_dict = params
-    request_dict['headers']['x-amz-glacier-version'] = \
-            model.metadata['apiVersion']
+    request_dict['headers']['x-amz-glacier-version'] = model.metadata[
+        'apiVersion']
 
 
 def add_glacier_checksums(params, **kwargs):
