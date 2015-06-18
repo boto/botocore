@@ -20,16 +20,12 @@ import copy
 import logging
 import os
 import platform
-import shlex
-import warnings
 
 from botocore import __version__
 import botocore.config
 import botocore.credentials
 import botocore.client
-from botocore.endpoint import EndpointCreator
-from botocore.exceptions import EventNotFound, ConfigNotFound, ProfileNotFound
-from botocore.exceptions import ImminentRemovalWarning
+from botocore.exceptions import ConfigNotFound, ProfileNotFound
 from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.loaders import create_loader
@@ -53,76 +49,57 @@ class Session(object):
     :ivar profile: The current profile.
     """
 
-    AllEvents = {
-        'after-call': '.%s.%s',
-        'after-parsed': '.%s.%s.%s.%s',
-        'before-parameter-build': '.%s.%s',
-        'before-call': '.%s.%s',
-        'service-created': '',
-        'service-data-loaded': '.%s',
-        'creating-endpoint': '.%s',
-        'before-auth': '.%s',
-        'needs-retry': '.%s.%s',
-    }
-    """
-    A dictionary where each key is an event name and the value
-    is the formatting string used to construct a new event.
-    """
-
-    SessionVariables = {
-        # logical:  config_file, env_var,        default_value
-        'profile': (None, ['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'], None),
-        'region': ('region', 'AWS_DEFAULT_REGION', None),
-        'data_path': ('data_path', 'AWS_DATA_PATH', None),
-        'config_file': (None, 'AWS_CONFIG_FILE', '~/.aws/config'),
-        'provider': ('provider', 'BOTO_PROVIDER_NAME', 'aws'),
+    #: A default dictionary that maps the logical names for session variables
+    #: to the specific environment variables and configuration file names
+    #: that contain the values for these variables.
+    #: When creating a new Session object, you can pass in your own dictionary
+    #: to remap the logical names or to add new logical names.  You can then
+    #: get the current value for these variables by using the
+    #: ``get_config_variable`` method of the :class:`botocore.session.Session`
+    #: class.
+    #: These form the keys of the dictionary.  The values in the dictionary
+    #: are tuples of (<config_name>, <environment variable>, <default value>,
+    #: <conversion func>).
+    #: The conversion func is a function that takes the configuration value
+    #: as an arugment and returns the converted value.  If this value is
+    #: None, then the configuration value is returned unmodified.  This
+    #: conversion function that be used to type convert config values to
+    #: values other than the default values of strings.
+    #: The ``profile`` and ``config_file`` variables should always have a
+    #: None value for the first entry in the tuple because it doesn't make
+    #: sense to look inside the config file for the location of the config
+    #: file or for the default profile to use.
+    #: The ``config_name`` is the name to look for in the configuration file,
+    #: the ``env var`` is the OS environment variable (``os.environ``) to
+    #: use, and ``default_value`` is the value to use if no value is otherwise
+    #: found.
+    SESSION_VARIABLES = {
+        # logical:  config_file, env_var,        default_value, conversion_func
+        'profile': (None, ['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'], None, None),
+        'region': ('region', 'AWS_DEFAULT_REGION', None, None),
+        'data_path': ('data_path', 'AWS_DATA_PATH', None, None),
+        'config_file': (None, 'AWS_CONFIG_FILE', '~/.aws/config', None),
+        'provider': ('provider', 'BOTO_PROVIDER_NAME', 'aws', None),
 
         # These variables are intended for internal use so don't have any
         # user settable values.
         # This is the shared credentials file amongst sdks.
-        'credentials_file': (None, None, '~/.aws/credentials'),
+        'credentials_file': (None, None, '~/.aws/credentials', None),
 
         # These variables only exist in the config file.
 
         # This is the number of seconds until we time out a request to
         # the instance metadata service.
-        'metadata_service_timeout': ('metadata_service_timeout', None, 1),
+        'metadata_service_timeout': ('metadata_service_timeout',
+                                     None, 1, int),
         # This is the number of request attempts we make until we give
         # up trying to retrieve data from the instance metadata service.
         'metadata_service_num_attempts': ('metadata_service_num_attempts',
-                                          None, 1),
-        }
-    """
-    A default dictionary that maps the logical names for session variables
-    to the specific environment variables and configuration file names
-    that contain the values for these variables.
+                                          None, 1, int),
+    }
 
-    When creating a new Session object, you can pass in your own dictionary to
-    remap the logical names or to add new logical names.  You can then get the
-    current value for these variables by using the ``get_config_variable``
-    method of the :class:`botocore.session.Session` class.
-    The default set of logical variable names are:
-
-    * profile - Default profile name you want to use.
-    * region - Default region name to use, if not otherwise specified.
-    * data_path - Additional directories to search for data files.
-    * config_file - Location of a Boto config file.
-    * provider - The name of the service provider (e.g. aws)
-
-    These form the keys of the dictionary.  The values in the dictionary
-    are tuples of (<config_name>, <environment variable>, <default value).
-    The ``profile`` and ``config_file`` variables should always have a
-    None value for the first entry in the tuple because it doesn't make
-    sense to look inside the config file for the location of the config
-    file or for the default profile to use.
-
-    The ``config_name`` is the name to look for in the configuration file,
-    the ``env var`` is the OS environment variable (``os.environ``) to
-    use, and ``default_value`` is the value to use if no value is otherwise
-    found.
-    """
-
-    FmtString = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    #: The default format string to use when configuring the botocore logger.
+    LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
     def __init__(self, session_vars=None, event_hooks=None,
                  include_builtin_handlers=True, loader=None):
@@ -133,7 +110,7 @@ class Session(object):
         :param session_vars: A dictionary that is used to override some or all
             of the environment variables associated with this session.  The
             key/value pairs defined in this dictionary will override the
-            corresponding variables defined in ``SessionVariables``.
+            corresponding variables defined in ``SESSION_VARIABLES``.
 
         :type event_hooks: BaseEventHooks
         :param event_hooks: The event hooks object to use. If one is not
@@ -144,7 +121,7 @@ class Session(object):
         :param include_builtin_handlers: Indicates whether or not to
             automatically register builtin handlers.
         """
-        self.session_var_map = copy.copy(self.SessionVariables)
+        self.session_var_map = copy.copy(self.SESSION_VARIABLES)
         if session_vars:
             self.session_var_map.update(session_vars)
         if event_hooks is None:
@@ -212,7 +189,7 @@ class Session(object):
                 event_name, handler, register_type = spec
                 if register_type is handlers.REGISTER_FIRST:
                     self._events.register_first(event_name, handler)
-                elif register_first is handlers.REGISTER_LAST:
+                elif register_type is handlers.REGISTER_LAST:
                     self._events.register_last(event_name, handler)
 
     @property
@@ -248,8 +225,7 @@ class Session(object):
         self._reset_components()
 
     def get_config_variable(self, logical_name,
-                            methods=('instance', 'env', 'config'),
-                            default=None):
+                            methods=('instance', 'env', 'config')):
         """
         Retrieve the value associated with the specified logical_name
         from the environment or the config file.  Values found in the
@@ -269,50 +245,48 @@ class Session(object):
             by supplying a different value to this parameter.
             Valid choices are: instance|env|config
 
-        :param default: The default value to return if there is no
-            value associated with the config file.  This value will
-            override any default value specified in ``SessionVariables``.
-
-        :returns: str value of variable of None if not defined.
+        :returns: value of variable or None if not defined.
 
         """
+        # Handle all the short circuit special cases first.
+        if logical_name not in self.session_var_map:
+            return
+        if logical_name == 'profile' and self._profile:
+            return self._profile
+
+        # Do the actual lookups.  We need to handle
+        # 'instance', 'env', and 'config' locations, in that order.
         value = None
-        # There's two types of defaults here.  One if the
-        # default value specified in the SessionVariables.
-        # The second is an explicit default value passed into this
-        # function (the default parameter).
-        # config_default is tracking the default value specified
-        # in the SessionVariables.
-        config_default = None
-        if logical_name in self.session_var_map:
-            # Short circuit case, check if the var has been explicitly
-            # overriden via set_config_variable.
-            if 'instance' in methods and \
-                    logical_name in self._session_instance_vars:
-                return self._session_instance_vars[logical_name]
-            config_name, envvar_name, config_default = self.session_var_map[
-                logical_name]
-            if logical_name in ('config_file', 'profile'):
-                config_name = None
-            if logical_name == 'profile' and self._profile:
-                value = self._profile
-            elif 'env' in methods and envvar_name and self._handle_env_vars(
-                    envvar_name, os.environ) is not None:
-                value = self._handle_env_vars(envvar_name, os.environ)
-            elif 'config' in methods:
-                if config_name:
-                    config = self.get_scoped_config()
-                    value = config.get(config_name)
-        # If we don't have a value at this point, we need to try to assign
-        # a default value.  An explicit default argument will win over the
-        # default value from SessionVariables.
-        if value is None and default is not None:
-            value = default
-        if value is None and config_default is not None:
-            value = config_default
+        var_config = self.session_var_map[logical_name]
+        if self._found_in_instance_vars(methods, logical_name):
+            return self._session_instance_vars[logical_name]
+        elif self._found_in_env(methods, var_config):
+            value = self._retrieve_from_env(var_config[1], os.environ)
+        elif self._found_in_config_file(methods, var_config):
+            value = self.get_scoped_config()[var_config[0]]
+        if value is None:
+            value = var_config[2]
+        if var_config[3] is not None:
+            value = var_config[3](value)
         return value
 
-    def _handle_env_vars(self, names, environ):
+    def _found_in_instance_vars(self, methods, logical_name):
+        if 'instance' in methods:
+            return logical_name in self._session_instance_vars
+        return False
+
+    def _found_in_env(self, methods, var_config):
+        return (
+            'env' in methods and
+            var_config[1] is not None and
+            self._retrieve_from_env(var_config[1], os.environ) is not None)
+
+    def _found_in_config_file(self, methods, var_config):
+        if 'config' in methods and var_config[0] is not None:
+            return var_config[0] in self.get_scoped_config()
+        return False
+
+    def _retrieve_from_env(self, names, environ):
         # We need to handle the case where names is either
         # a single value or a list of variables.
         if not isinstance(names, list):
@@ -342,12 +316,11 @@ class Session(object):
 
         :type logical_name: str
         :param logical_name: The logical name of the session variable
-            you want to set.  These are the keys in ``SessionVariables``.
+            you want to set.  These are the keys in ``SESSION_VARIABLES``.
         :param value: The value to associate with the config variable.
 
         """
         self._session_instance_vars[logical_name] = value
-
 
     def get_scoped_config(self):
         """
@@ -534,8 +507,8 @@ class Session(object):
             type_name='service-2',
             api_version=api_version
         )
-        event_name = self.create_event('service-data-loaded', service_name)
-        self._events.emit(event_name, service_data=service_data,
+        self._events.emit('service-data-loaded.%s' % service_name,
+                          service_data=service_data,
                           service_name=service_name, session=self)
         return service_data
 
@@ -573,7 +546,7 @@ class Session(object):
         :type format_string: str
         :param format_string: The format string to use for the log
             formatter.  If none is provided this will default to
-            ``self.FmtString``.
+            ``self.LOG_FORMAT``.
 
         """
         log = logging.getLogger(logger_name)
@@ -584,7 +557,7 @@ class Session(object):
 
         # create formatter
         if format_string is None:
-            format_string = self.FmtString
+            format_string = self.LOG_FORMAT
         formatter = logging.Formatter(format_string)
 
         # add formatter to ch
@@ -613,7 +586,7 @@ class Session(object):
         ch.setLevel(log_level)
 
         # create formatter
-        formatter = logging.Formatter(self.FmtString)
+        formatter = logging.Formatter(self.LOG_FORMAT)
 
         # add formatter to ch
         ch.setFormatter(formatter)
@@ -692,44 +665,6 @@ class Session(object):
                                 unique_id=unique_id,
                                 unique_id_uses_count=unique_id_uses_count)
 
-    def register_event(self, event_name, fmtstr):
-        """
-        Register a new event.  The event will be added to ``AllEvents``
-        and will then be able to be created using ``create_event``.
-
-        :type event_name: str
-        :param event_name: The base name of the event.
-
-        :type fmtstr: str
-        :param fmtstr: The formatting string for the event.
-        """
-        if event_name not in self.AllEvents:
-            self.AllEvents[event_name] = fmtstr
-
-    def create_event(self, event_name, *fmtargs):
-        """
-        Creates a new event string that can then be emitted.
-        You could just create it manually, since it's just
-        a string but this helps to define the range of known events.
-
-        :type event_name: str
-        :param event_name: The base name of the new event.
-
-        :type fmtargs: tuple
-        :param fmtargs: A tuple of values that will be used as the
-            arguments pass to the string formatting operation.  The
-            actual values passed depend on the type of event you
-            are creating.
-        """
-        if event_name in self.AllEvents:
-            fmt_string = self.AllEvents[event_name]
-            if fmt_string:
-                event = event_name + (fmt_string % fmtargs)
-            else:
-                event = event_name
-            return event
-        raise EventNotFound(event_name=event_name)
-
     def emit(self, event_name, **kwargs):
         return self._events.emit(event_name, **kwargs)
 
@@ -768,26 +703,28 @@ class Session(object):
             of the client.
 
         :type use_ssl: boolean
-        :param use_ssl: Whether or not to use SSL.  By default, SSL is used.  Note that
-            not all services support non-ssl connections.
+        :param use_ssl: Whether or not to use SSL.  By default, SSL is used.
+            Note that not all services support non-ssl connections.
 
         :type verify: boolean/string
-        :param verify: Whether or not to verify SSL certificates.  By default SSL certificates
-            are verified.  You can provide the following values:
+        :param verify: Whether or not to verify SSL certificates.
+            By default SSL certificates are verified.  You can provide the
+            following values:
 
             * False - do not validate SSL certificates.  SSL will still be
               used (unless use_ssl is False), but SSL certificates
               will not be verified.
             * path/to/cert/bundle.pem - A filename of the CA cert bundle to
-              uses.  You can specify this argument if you want to use a different
-              CA cert bundle than the one used by botocore.
+              uses.  You can specify this argument if you want to use a
+              different CA cert bundle than the one used by botocore.
 
         :type endpoint_url: string
-        :param endpoint_url: The complete URL to use for the constructed client.
-            Normally, botocore will automatically construct the appropriate URL
-            to use when communicating with a service.  You can specify a
-            complete URL (including the "http/https" scheme) to override this
-            behavior.  If this value is provided, then ``use_ssl`` is ignored.
+        :param endpoint_url: The complete URL to use for the constructed
+            client.  Normally, botocore will automatically construct the
+            appropriate URL to use when communicating with a service.  You can
+            specify a complete URL (including the "http/https" scheme) to
+            override this behavior.  If this value is provided, then
+            ``use_ssl`` is ignored.
 
         :type aws_access_key_id: string
         :param aws_access_key_id: The access key to use when creating

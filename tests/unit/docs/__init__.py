@@ -15,7 +15,7 @@ import json
 import tempfile
 import shutil
 
-from bcdoc.restdoc import DocumentStructure
+from botocore.docs.bcdoc.restdoc import DocumentStructure
 import mock
 
 from tests import unittest

@@ -6,8 +6,8 @@ from setuptools import setup, find_packages
 
 
 requires = ['jmespath==0.7.1',
-            'bcdoc>=0.16.0,<0.17.0',
-            'python-dateutil>=2.1,<3.0.0']
+            'python-dateutil>=2.1,<3.0.0',
+            'docutils>=0.10']
 
 
 if sys.version_info[:2] == (2, 6):

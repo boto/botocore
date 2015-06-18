@@ -108,6 +108,24 @@ def document_custom_signature(section, name, method,
     section.style.start_sphinx_py_method(name, signature_params)
 
 
+def document_custom_method(section, method_name, method):
+    """Documents a non-data driven method
+
+    :param section: The section to write the documentation to.
+
+    :param method_name: The name of the method
+
+    :param method: The handle to the method being documented
+    """
+    document_custom_signature(
+        section, method_name, method)
+    method_intro_section = section.add_new_section('method-intro')
+    method_intro_section.writeln('')
+    doc_string = inspect.getdoc(method)
+    if doc_string is not None:
+        method_intro_section.style.write_py_doc_string(doc_string)
+
+
 def document_model_driven_method(section, method_name, operation_model,
                                  event_emitter, method_description=None,
                                  example_prefix=None, include_input=None,
@@ -159,7 +177,7 @@ def document_model_driven_method(section, method_name, operation_model,
     # Add the example section.
     example_section = section.add_new_section('example')
     example_section.style.new_paragraph()
-    example_section.style.bold('Example')
+    example_section.style.bold('Request Syntax')
     if operation_model.input_shape:
         RequestExampleDocumenter(
             service_name=operation_model.service_model.service_name,
@@ -196,7 +214,7 @@ def document_model_driven_method(section, method_name, operation_model,
         # Add an example return value
         return_example_section = return_section.add_new_section('example')
         return_example_section.style.new_line()
-        return_example_section.style.bold('Response Example')
+        return_example_section.style.bold('Response Syntax')
         return_example_section.style.new_paragraph()
         ResponseExampleDocumenter(
             service_name=operation_model.service_model.service_name,
