@@ -225,6 +225,13 @@ class TestStyle(unittest.TestCase):
             style.doc.getvalue(),
             six.b('\n\n.. py:method:: method(foo=None)\n\n  \n\n'))
 
+    def test_sphinx_py_attr(self):
+        style = ReSTStyle(ReSTDocument())
+        style.start_sphinx_py_attr('Foo')
+        style.end_sphinx_py_attr()
+        self.assertEqual(style.doc.getvalue(),
+                         six.b('\n\n.. py:attribute:: Foo\n\n  \n\n'))
+
     def test_write_py_doc_string(self):
         style = ReSTStyle(ReSTDocument())
         docstring = (
