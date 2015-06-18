@@ -11,8 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import time
-import random
-from tests import unittest
+from tests import unittest, random_chars
 
 from nose.plugins.attrib import attr
 
@@ -28,7 +27,7 @@ class TestWaiterForDynamoDB(unittest.TestCase):
         self.client = self.session.create_client('dynamodb', 'us-west-2')
 
     def test_create_table_and_wait(self):
-        table_name = 'botocoretestddb-%s' % random.randint(1, 10000)
+        table_name = 'botocoretest-%s' % random_chars(10)
         self.client.create_table(
             TableName=table_name,
             ProvisionedThroughput={"ReadCapacityUnits": 5,

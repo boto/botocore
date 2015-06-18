@@ -11,9 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import unittest
+from tests import unittest, random_chars
 import functools
-import random
 
 import botocore.session
 
@@ -39,14 +38,14 @@ class TestElasticTranscoder(unittest.TestCase):
         self.iam_client = self.session.create_client('iam', 'us-east-1')
 
     def create_bucket(self):
-        bucket_name = 'ets-bucket-1-%s' % random.randint(1, 1000000)
+        bucket_name = 'ets-bucket-1-%s' % random_chars(50)
         self.s3_client.create_bucket(Bucket=bucket_name)
         self.addCleanup(
             self.s3_client.delete_bucket, Bucket=bucket_name)
         return bucket_name
 
     def create_iam_role(self):
-        role_name = 'ets-role-name-1-%s' % random.randint(1, 1000000)
+        role_name = 'ets-role-name-1-%s' % random_chars(10)
         parsed = self.iam_client.create_role(
             RoleName=role_name,
             AssumeRolePolicyDocument=DEFAULT_ROLE_POLICY)
@@ -69,7 +68,7 @@ class TestElasticTranscoder(unittest.TestCase):
         input_bucket = self.create_bucket()
         output_bucket = self.create_bucket()
         role = self.create_iam_role()
-        pipeline_name = 'botocore-test-create-%s' % (random.randint(1, 1000000))
+        pipeline_name = 'botocore-test-create-%s' % random_chars(10)
 
         parsed = self.client.create_pipeline(
             InputBucket=input_bucket, OutputBucket=output_bucket,

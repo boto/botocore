@@ -19,9 +19,8 @@ import copy
 
 import botocore
 import botocore.session
-from botocore.hooks import first_non_none_response
-from botocore.awsrequest import AWSRequest
 from botocore.compat import quote, six
+from botocore.awsrequest import AWSRequest
 from botocore.model import OperationModel, ServiceModel
 from botocore.signers import RequestSigner
 from botocore.credentials import Credentials
@@ -55,13 +54,28 @@ class TestHandlers(BaseSessionTest):
 
     def test_quote_source_header(self):
         for op in ('UploadPartCopy', 'CopyObject'):
-            event = self.session.create_event(
-                'before-call', 's3', op)
+            event = 'before-call.s3.%s' % op
             params = {'headers': {'x-amz-copy-source': 'foo++bar.txt'}}
             m = mock.Mock()
             self.session.emit(event, params=params, model=m)
             self.assertEqual(
                 params['headers']['x-amz-copy-source'], 'foo%2B%2Bbar.txt')
+
+    def test_only_quote_url_path_not_query_string(self):
+        request = {
+            'headers': {'x-amz-copy-source': '/foo/bar++baz?versionId=123'}
+        }
+        handlers.quote_source_header(request)
+        self.assertEqual(request['headers']['x-amz-copy-source'],
+                         '/foo/bar%2B%2Bbaz?versionId=123')
+
+    def test_quote_source_header_needs_no_changes(self):
+        request = {
+            'headers': {'x-amz-copy-source': '/foo/bar?versionId=123'}
+        }
+        handlers.quote_source_header(request)
+        self.assertEqual(request['headers']['x-amz-copy-source'],
+                         '/foo/bar?versionId=123')
 
     def test_presigned_url_already_present(self):
         params = {'body': {'PresignedUrl': 'https://foo'}}
@@ -148,8 +162,7 @@ class TestHandlers(BaseSessionTest):
     def test_sse_params(self):
         for op in ('HeadObject', 'GetObject', 'PutObject', 'CopyObject',
                    'CreateMultipartUpload', 'UploadPart', 'UploadPartCopy'):
-            event = self.session.create_event(
-                'before-parameter-build', 's3', op)
+            event = 'before-parameter-build.s3.%s' % op
             params = {'SSECustomerKey': b'bar',
                       'SSECustomerAlgorithm': 'AES256'}
             self.session.emit(event, params=params, model=mock.Mock())
@@ -158,18 +171,16 @@ class TestHandlers(BaseSessionTest):
                              'N7UdGUp1E+RbVvZSTy1R8g==')
 
     def test_sse_params_as_str(self):
-        event = self.session.create_event(
-            'before-parameter-build', 's3', 'PutObject')
+        event = 'before-parameter-build.s3.PutObject'
         params = {'SSECustomerKey': 'bar',
                   'SSECustomerAlgorithm': 'AES256'}
         self.session.emit(event, params=params, model=mock.Mock())
         self.assertEqual(params['SSECustomerKey'], 'YmFy')
         self.assertEqual(params['SSECustomerKeyMD5'],
-                            'N7UdGUp1E+RbVvZSTy1R8g==')
+                         'N7UdGUp1E+RbVvZSTy1R8g==')
 
     def test_route53_resource_id(self):
-        event = self.session.create_event(
-            'before-parameter-build', 'route53', 'GetHostedZone')
+        event = 'before-parameter-build.route53.GetHostedZone'
         params = {'Id': '/hostedzone/ABC123',
                   'HostedZoneId': '/hostedzone/ABC123',
                   'ResourceId': '/hostedzone/DEF456',
@@ -227,9 +238,8 @@ class TestHandlers(BaseSessionTest):
         self.assertEqual(params['Other'], '/hostedzone/foo')
 
     def test_route53_resource_id_missing_input_shape(self):
-        event = self.session.create_event(
-            'before-parameter-build', 'route53', 'GetHostedZone')
-        params = {'HostedZoneId': '/hostedzone/ABC123',}
+        event = 'before-parameter-build.route53.GetHostedZone'
+        params = {'HostedZoneId': '/hostedzone/ABC123'}
         operation_def = {
             'name': 'GetHostedZone'
         }
@@ -245,8 +255,7 @@ class TestHandlers(BaseSessionTest):
     def test_run_instances_userdata(self):
         user_data = 'This is a test'
         b64_user_data = base64.b64encode(six.b(user_data)).decode('utf-8')
-        event = self.session.create_event(
-            'before-parameter-build', 'ec2', 'RunInstances')
+        event = 'before-parameter-build.ec2.RunInstances'
         params = dict(ImageId='img-12345678',
                       MinCount=1, MaxCount=5, UserData=user_data)
         self.session.emit(event, params=params)
@@ -262,8 +271,7 @@ class TestHandlers(BaseSessionTest):
         # user data.
         user_data = b'\xc7\xa9This is a test'
         b64_user_data = base64.b64encode(user_data).decode('utf-8')
-        event = self.session.create_event(
-            'before-parameter-build', 'ec2', 'RunInstances')
+        event = 'before-parameter-build.ec2.RunInstances'
         params = dict(ImageId='img-12345678',
                       MinCount=1, MaxCount=5, UserData=user_data)
         self.session.emit(event, params=params)
@@ -425,6 +433,16 @@ class TestHandlers(BaseSessionTest):
             request_dict['headers']['x-amz-sha256-tree-hash'],
             'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9')
 
+    def test_switch_host_with_param(self):
+        request = AWSRequest()
+        url = 'https://machinelearning.us-east-1.amazonaws.com'
+        new_endpoint = 'https://my-custom-endpoint.amazonaws.com'
+        data = '{"PredictEndpoint":"%s"}' % new_endpoint
+        request.data = data
+        request.url = url
+        handlers.switch_host_with_param(request, 'PredictEndpoint')
+        self.assertEqual(request.url, new_endpoint)
+
 
 class TestRetryHandlerOrder(BaseSessionTest):
     def get_handler_names(self, responses):
@@ -459,7 +477,3 @@ class TestRetryHandlerOrder(BaseSessionTest):
         self.assertTrue(s3_200_handler < general_retry_handler,
                         "S3 200 error handler was supposed to be before "
                         "the general retry handler, but it was not.")
-
-
-if __name__ == '__main__':
-    unittest.main()

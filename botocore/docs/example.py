@@ -94,8 +94,7 @@ class BaseExampleDocumenter(ShapeDocumenter):
                     'ending-comma')
                 ending_comma_section.write(',')
                 ending_comma_section.style.new_line()
-        ending_bracket_section = section.add_new_section('ending-bracket')
-        self._end_nested_param(ending_bracket_section, '}')
+        self._end_structure(section, '{', '}')
 
     def document_shape_type_map(self, section, shape, history,
                                 include=None, exclude=None, **kwargs):
@@ -130,6 +129,18 @@ class BaseExampleDocumenter(ShapeDocumenter):
         section.style.new_line()
         if end is not None:
             section.write(end)
+
+    def _end_structure(self, section, start, end):
+        # If there are no members in the strucuture, then make sure the
+        # start and the end bracket are on the same line, by removing all
+        # previous text and writing the start and end.
+        if not section.available_sections:
+            section.clear_text()
+            section.write(start + end)
+            self._end_nested_param(section)
+        else:
+            end_bracket_section = section.add_new_section('ending-bracket')
+            self._end_nested_param(end_bracket_section, end)
 
 
 class ResponseExampleDocumenter(BaseExampleDocumenter):
@@ -171,5 +182,4 @@ class RequestExampleDocumenter(BaseExampleDocumenter):
                     'ending-comma')
                 ending_comma_section.write(',')
                 ending_comma_section.style.new_line()
-        end_bracket_section = section.add_new_section('ending-bracket')
-        self._end_nested_param(end_bracket_section, end)
+        self._end_structure(section, start, end)

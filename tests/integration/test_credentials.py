@@ -35,7 +35,8 @@ class TestCredentialPrecedence(BaseEnvVar):
         kwargs['session_vars'] = {
             'credentials_file': (
                 None, None,
-                os.path.join(os.path.dirname(__file__), 'test-credentials'))
+                os.path.join(os.path.dirname(__file__), 'test-credentials'),
+                None)
         }
 
         return Session(*args, **kwargs)

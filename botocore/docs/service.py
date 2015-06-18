@@ -10,14 +10,13 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from bcdoc.restdoc import DocumentStructure
-
 import botocore.session
 from botocore.exceptions import DataNotFoundError
 from botocore.docs.utils import get_official_service_name
 from botocore.docs.client import ClientDocumenter
 from botocore.docs.waiter import WaiterDocumenter
 from botocore.docs.paginator import PaginatorDocumenter
+from botocore.docs.bcdoc.restdoc import DocumentStructure
 
 
 class ServiceDocumenter(object):

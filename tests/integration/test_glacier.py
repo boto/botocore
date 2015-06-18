@@ -11,7 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from tests import unittest
-import random
 
 from botocore.exceptions import ClientError
 from botocore.vendored import six

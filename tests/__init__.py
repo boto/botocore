@@ -19,6 +19,7 @@ import random
 import shutil
 import contextlib
 import tempfile
+import binascii
 
 
 # The unittest module got a significant overhaul
@@ -33,6 +34,15 @@ else:
 import botocore.loaders
 import botocore.session
 _LOADER = botocore.loaders.Loader()
+
+
+def random_chars(num_chars):
+    """Returns random hex characters.
+
+    Useful for creating resources with random names.
+
+    """
+    return binascii.hexlify(os.urandom(int(num_chars / 2))).decode('ascii')
 
 
 def create_session(**kwargs):
