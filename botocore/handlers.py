@@ -42,7 +42,6 @@ REGISTER_FIRST = object()
 REGISTER_LAST = object()
 
 
-
 def check_for_200_error(response, **kwargs):
     # From: http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectCOPY.html
     # There are two opportunities for a copy request to return an error. One
@@ -66,8 +65,8 @@ def check_for_200_error(response, **kwargs):
     http_response, parsed = response
     if _looks_like_special_case_error(http_response):
         logger.debug("Error found for response with 200 status code, "
-                        "errors: %s, changing status code to "
-                        "500.", parsed)
+                     "errors: %s, changing status code to "
+                     "500.", parsed)
         http_response.status_code = 500
 
 
@@ -110,7 +109,7 @@ def json_decode_template_body(parsed, **kwargs):
 
 def calculate_md5(params, **kwargs):
     request_dict = params
-    if request_dict['body'] and not 'Content-MD5' in params['headers']:
+    if request_dict['body'] and 'Content-MD5' not in params['headers']:
         md5 = hashlib.md5()
         md5.update(six.b(params['body']))
         value = base64.b64encode(md5.digest()).decode('utf-8')
@@ -275,7 +274,8 @@ def _decode_policy_types(parsed, shape):
             if member_shape.type_name == 'string' and \
                     member_shape.name == shape_name and \
                     member_name in parsed:
-                parsed[member_name] = decode_quoted_jsondoc(parsed[member_name])
+                parsed[member_name] = decode_quoted_jsondoc(
+                    parsed[member_name])
             elif member_name in parsed:
                 _decode_policy_types(parsed[member_name], member_shape)
     if shape.type_name == 'list':
@@ -347,8 +347,8 @@ def inject_account_id(params, **kwargs):
 
 def add_glacier_version(model, params, **kwargs):
     request_dict = params
-    request_dict['headers']['x-amz-glacier-version'] = \
-            model.metadata['apiVersion']
+    request_dict['headers']['x-amz-glacier-version'] = model.metadata[
+        'apiVersion']
 
 
 def add_glacier_checksums(params, **kwargs):
