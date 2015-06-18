@@ -60,6 +60,30 @@ class TestDocumentDefaultValue(BaseExampleDocumenterTest):
         ])
 
 
+class TestDocumentNoMembers(BaseExampleDocumenterTest):
+    def setUp(self):
+        super(TestDocumentNoMembers, self).setUp()
+
+    def test_request_example(self):
+        self.request_example.document_example(
+            self.doc_structure, self.operation_model.input_shape,
+            prefix='response = myclient.call'
+        )
+        self.assert_contains_lines_in_order([
+            '::',
+            '  response = myclient.call()'
+        ])
+
+    def test_response_example(self):
+        self.response_example.document_example(
+            self.doc_structure, self.operation_model.input_shape,
+        )
+        self.assert_contains_lines_in_order([
+            '::',
+            '  {}'
+        ])
+
+
 class TestTraverseAndDocumentShape(BaseExampleDocumenterTest):
     def setUp(self):
         super(TestTraverseAndDocumentShape, self).setUp()
