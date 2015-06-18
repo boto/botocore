@@ -207,8 +207,13 @@ def add_expect_header(model, params, **kwargs):
 def quote_source_header(params, **kwargs):
     if params['headers'] and 'x-amz-copy-source' in params['headers']:
         value = params['headers']['x-amz-copy-source']
-        params['headers']['x-amz-copy-source'] = quote(
-            value.encode('utf-8'), '/~')
+        p = urlsplit(value)
+        # We only want to quote the path.  If the user specified
+        # extra parts, say '?versionId=myversionid' then that part
+        # should not be quoted.
+        quoted = quote(p[2].encode('utf-8'), '/~')
+        final_source = urlunsplit((p[0], p[1], quoted, p[3], p[4]))
+        params['headers']['x-amz-copy-source'] = final_source
 
 
 def copy_snapshot_encrypted(params, request_signer, **kwargs):
