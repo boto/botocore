@@ -132,6 +132,15 @@ class TestDocumentStructure(unittest.TestCase):
             ['mysection', 'mysection2']
         )
 
+    def test_meta(self):
+        meta = {'Foo': 'Bar'}
+        section = self.doc_structure.add_new_section('mysection', meta=meta)
+        self.assertEqual(section.meta, meta)
+
+        # Make sure if meta is not specified it is empty.
+        section = self.doc_structure.add_new_section('mysection2')
+        self.assertEqual(section.meta, {})
+
     def test_clear_text(self):
         self.doc_structure.write('Foo')
         self.doc_structure.clear_text()
