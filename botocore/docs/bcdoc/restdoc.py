@@ -209,5 +209,8 @@ class DocumentStructure(ReSTDocument):
     def getvalue(self):
         return ''.join(self._writes).encode('utf-8')
 
+    def remove_all_sections(self):
+        self._structure = OrderedDict()
+
     def clear_text(self):
         self._writes = []

@@ -141,6 +141,11 @@ class TestDocumentStructure(unittest.TestCase):
         section = self.doc_structure.add_new_section('mysection2')
         self.assertEqual(section.meta, {})
 
+    def test_remove_all_sections(self):
+        self.doc_structure.add_new_section('mysection2')
+        self.doc_structure.remove_all_sections()
+        self.assertEqual(self.doc_structure.available_sections, [])
+
     def test_clear_text(self):
         self.doc_structure.write('Foo')
         self.doc_structure.clear_text()
