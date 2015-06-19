@@ -202,6 +202,9 @@ class Session(object):
 
     @property
     def profile(self):
+        if self._profile is None:
+            profile = self.get_config_variable('profile')
+            self._profile = profile
         return self._profile
 
     def get_config_variable(self, logical_name,
