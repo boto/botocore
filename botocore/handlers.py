@@ -110,10 +110,26 @@ def json_decode_template_body(parsed, **kwargs):
 def calculate_md5(params, **kwargs):
     request_dict = params
     if request_dict['body'] and 'Content-MD5' not in params['headers']:
-        md5 = hashlib.md5()
-        md5.update(six.b(params['body']))
-        value = base64.b64encode(md5.digest()).decode('utf-8')
-        params['headers']['Content-MD5'] = value
+        body = request_dict['body']
+        if isinstance(body, bytes):
+            hex_md5 = _calculate_md5_from_bytes(body)
+        else:
+            hex_md5 = _calculate_md5_from_file(body)
+        params['headers']['Content-MD5'] = hex_md5
+
+
+def _calculate_md5_from_bytes(body_bytes):
+    md5 = hashlib.md5(body_bytes)
+    return md5.hexdigest()
+
+
+def _calculate_md5_from_file(fileobj):
+    start_position = fileobj.tell()
+    md5 = hashlib.md5()
+    for chunk in iter(lambda: fileobj.read(1024 * 1024), b''):
+        md5.update(chunk)
+    fileobj.seek(start_position)
+    return md5.hexdigest()
 
 
 def conditionally_calculate_md5(params, **kwargs):
