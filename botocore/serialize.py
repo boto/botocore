@@ -119,8 +119,8 @@ class Serializer(object):
             'query_string': '',
             'method': self.DEFAULT_METHOD,
             'headers': {},
-            # An empty body is represented as an empty string.
-            'body': ''
+            # An empty body is represented as an empty byte string.
+            'body': b''
         }
         return serialized
 
@@ -302,7 +302,7 @@ class JSONSerializer(Serializer):
         input_shape = operation_model.input_shape
         if input_shape is not None:
             self._serialize(body, parameters, input_shape)
-        serialized['body'] = json.dumps(body)
+        serialized['body'] = json.dumps(body).encode(self.DEFAULT_ENCODING)
         return serialized
 
     def _serialize(self, serialized, value, shape, key=None):
@@ -440,7 +440,9 @@ class BaseRestSerializer(Serializer):
                 shape_members[payload_member].type_name in ['blob', 'string']:
             # If it's streaming, then the body is just the
             # value of the payload.
-            serialized['body'] = parameters.get(payload_member, '')
+            body_payload = parameters.get(payload_member, b'')
+            body_payload = self._encode_payload(body_payload)
+            serialized['body'] = body_payload
         elif payload_member is not None:
             # If there's a payload member, we serialized that
             # member to they body.
@@ -452,6 +454,11 @@ class BaseRestSerializer(Serializer):
         elif partitioned['body_kwargs']:
             serialized['body'] = self._serialize_body_params(
                 partitioned['body_kwargs'], shape)
+
+    def _encode_payload(self, body):
+        if isinstance(body, six.text_type):
+            return body.encode(self.DEFAULT_ENCODING)
+        return body
 
     def _partition_parameters(self, partitioned, param_name,
                               param_value, shape_members):
@@ -506,7 +513,7 @@ class RestJSONSerializer(BaseRestSerializer, JSONSerializer):
     def _serialize_body_params(self, params, shape):
         serialized_body = self.MAP_TYPE()
         self._serialize(serialized_body, params, shape)
-        return json.dumps(serialized_body)
+        return json.dumps(serialized_body).encode(self.DEFAULT_ENCODING)
 
 
 class RestXMLSerializer(BaseRestSerializer):
@@ -517,8 +524,7 @@ class RestXMLSerializer(BaseRestSerializer):
         pseudo_root = ElementTree.Element('')
         self._serialize(shape, params, pseudo_root, root_name)
         real_root = list(pseudo_root)[0]
-        # TODO: double check on the utf-8 encoding bit.
-        return ElementTree.tostring(real_root).decode('utf-8')
+        return ElementTree.tostring(real_root, encoding=self.DEFAULT_ENCODING)
 
     def _serialize(self, shape, params, xmlnode, name):
         method = getattr(self, '_serialize_type_%s' % shape.type_name,
