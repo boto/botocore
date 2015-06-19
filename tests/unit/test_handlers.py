@@ -21,7 +21,6 @@ import botocore
 import botocore.session
 from botocore.awsrequest import AWSRequest
 from botocore.compat import quote, six
-from botocore.awsrequest import AWSRequest
 from botocore.model import OperationModel, ServiceModel
 from botocore.signers import RequestSigner
 from botocore.credentials import Credentials
@@ -448,7 +447,7 @@ class TestHandlers(BaseSessionTest):
         credentials = Credentials('key', 'secret')
         request_signer = RequestSigner(
             's3', 'us-east-1', 's3', 'v4', credentials, None)
-        request_dict = {'body': 'bar',
+        request_dict = {'body': b'bar',
                         'url': 'https://s3.us-east-1.amazonaws.com',
                         'method': 'PUT',
                         'headers': {}}
@@ -460,13 +459,32 @@ class TestHandlers(BaseSessionTest):
         credentials = Credentials('key', 'secret')
         request_signer = RequestSigner(
             's3', 'us-east-1', 's3', 's3', credentials, None)
-        request_dict = {'body': 'bar',
+        request_dict = {'body': b'bar',
                         'url': 'https://s3.us-east-1.amazonaws.com',
                         'method': 'PUT',
                         'headers': {}}
         handlers.conditionally_calculate_md5(request_dict,
                                              request_signer=request_signer)
         self.assertTrue('Content-MD5' in request_dict['headers'])
+
+    def test_adds_md5_with_file_like_body(self):
+        request_dict = {
+            'body': six.BytesIO(b'foobar'),
+            'headers': {}
+        }
+        handlers.calculate_md5(request_dict)
+        self.assertEqual(request_dict['headers']['Content-MD5'],
+                         'OFj2IjCsPJFfMAxmQxLGPw==')
+
+    def test_adds_md6_with_bytes_object(self):
+        request_dict = {
+            'body': b'foobar',
+            'headers': {}
+        }
+        handlers.calculate_md5(request_dict)
+        self.assertEqual(
+            request_dict['headers']['Content-MD5'],
+            'OFj2IjCsPJFfMAxmQxLGPw==')
 
 
 class TestRetryHandlerOrder(BaseSessionTest):
