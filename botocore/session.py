@@ -102,7 +102,7 @@ class Session(object):
     LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
     def __init__(self, session_vars=None, event_hooks=None,
-                 include_builtin_handlers=True, loader=None):
+                 include_builtin_handlers=True):
         """
         Create a new Session object.
 
@@ -141,10 +141,6 @@ class Session(object):
         # This is a dict that stores per session specific config variable
         # overrides via set_config_variable().
         self._session_instance_vars = {}
-        # _data_paths_added is used to track whether or not we added
-        # extra paths to the loader.  We will do this lazily
-        # only when we ask for the loader.
-        self._data_paths_added = False
         self._components = ComponentLocator()
         self._register_components()
 
