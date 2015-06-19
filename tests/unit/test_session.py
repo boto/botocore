@@ -52,8 +52,6 @@ class BaseSessionTest(unittest.TestCase):
                                    'foo_config')
         self.environ['FOO_CONFIG_FILE'] = config_path
         self.session = create_session(session_vars=self.env_vars)
-        self.loader = botocore.loaders.Loader()
-        self.session.register_component('data_loader', self.loader)
 
     def tearDown(self):
         self.environ_patch.stop()
@@ -186,7 +184,6 @@ class SessionTest(BaseSessionTest):
             f.write('aws_secret_access_key=FROM_CREDS_FILE_2\n')
             f.flush()
 
-            self.session.set_config_variable('profile', 'newprofile')
             full_config = self.session.full_config
             self.assertEqual(full_config['profiles']['newprofile'],
                              {'aws_access_key_id': 'FROM_CREDS_FILE_1',
@@ -331,15 +328,16 @@ class TestSessionUserAgent(BaseSessionTest):
 
 class TestConfigLoaderObject(BaseSessionTest):
     def test_config_loader_delegation(self):
+        session = create_session(session_vars=self.env_vars,
+                                 profile='credfile-profile')
         with temporary_file('w') as f:
             f.write('[credfile-profile]\naws_access_key_id=a\n')
             f.write('aws_secret_access_key=b\n')
             f.flush()
-            self.session.set_config_variable('credentials_file', f.name)
-            self.session.set_config_variable('profile', 'credfile-profile')
+            session.set_config_variable('credentials_file', f.name)
             # Now trying to retrieve the scoped config should pull in
             # values from the shared credentials file.
-            self.assertEqual(self.session.get_scoped_config(),
+            self.assertEqual(session.get_scoped_config(),
                              {'aws_access_key_id': 'a',
                               'aws_secret_access_key': 'b'})
 
