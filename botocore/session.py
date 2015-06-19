@@ -29,7 +29,6 @@ from botocore.exceptions import ConfigNotFound, ProfileNotFound
 from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.loaders import create_loader
-from botocore.provider import get_provider
 from botocore.parsers import ResponseParserFactory
 from botocore import regions
 from botocore.model import ServiceModel
@@ -79,7 +78,6 @@ class Session(object):
         'region': ('region', 'AWS_DEFAULT_REGION', None, None),
         'data_path': ('data_path', 'AWS_DATA_PATH', None, None),
         'config_file': (None, 'AWS_CONFIG_FILE', '~/.aws/config', None),
-        'provider': ('provider', 'BOTO_PROVIDER_NAME', 'aws', None),
 
         # These variables are intended for internal use so don't have any
         # user settable values.
@@ -143,7 +141,6 @@ class Session(object):
         self._config = None
         self._credentials = None
         self._profile_map = None
-        self._provider = None
         # This is a dict that stores per session specific config variable
         # overrides via set_config_variable().
         self._session_instance_vars = {}
@@ -190,13 +187,6 @@ class Session(object):
                     self._events.register_first(event_name, handler)
                 elif register_type is handlers.REGISTER_LAST:
                     self._events.register_last(event_name, handler)
-
-    @property
-    def provider(self):
-        if self._provider is None:
-            self._provider = get_provider(
-                self, self.get_config_variable('provider'))
-        return self._provider
 
     @property
     def available_profiles(self):
