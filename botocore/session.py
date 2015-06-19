@@ -173,9 +173,6 @@ class Session(object):
         self._components.register_component('response_parser_factory',
                                             ResponseParserFactory())
 
-    def _reset_components(self):
-        self._register_components()
-
     def _register_builtin_handlers(self, events):
         for spec in handlers.BUILTIN_HANDLERS:
             if len(spec) == 2:
@@ -210,15 +207,6 @@ class Session(object):
     @property
     def profile(self):
         return self._profile
-
-    @profile.setter
-    def profile(self, profile):
-        # Since provider can be specified in profile, changing the
-        # profile should reset the provider.
-        self._provider = None
-        self._profile = profile
-        # Need to potentially reload the config file/creds.
-        self._reset_components()
 
     def get_config_variable(self, logical_name,
                             methods=('instance', 'env', 'config')):
