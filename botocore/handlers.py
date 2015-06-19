@@ -110,10 +110,34 @@ def json_decode_template_body(parsed, **kwargs):
 def calculate_md5(params, **kwargs):
     request_dict = params
     if request_dict['body'] and 'Content-MD5' not in params['headers']:
-        md5 = hashlib.md5()
-        md5.update(six.b(params['body']))
-        value = base64.b64encode(md5.digest()).decode('utf-8')
-        params['headers']['Content-MD5'] = value
+        body = request_dict['body']
+        if isinstance(body, bytes):
+            binary_md5 = _calculate_md5_from_bytes(body)
+        else:
+            binary_md5 = _calculate_md5_from_file(body)
+        base64_md5 = base64.b64encode(binary_md5).decode('ascii')
+        params['headers']['Content-MD5'] = base64_md5
+
+
+def _calculate_md5_from_bytes(body_bytes):
+    md5 = hashlib.md5(body_bytes)
+    return md5.digest()
+
+
+def _calculate_md5_from_file(fileobj):
+    start_position = fileobj.tell()
+    md5 = hashlib.md5()
+    for chunk in iter(lambda: fileobj.read(1024 * 1024), b''):
+        md5.update(chunk)
+    fileobj.seek(start_position)
+    return md5.digest()
+
+
+def conditionally_calculate_md5(params, **kwargs):
+    """Only add a Content-MD5 when not using sigv4"""
+    signer = kwargs['request_signer']
+    if signer.signature_version != 'v4':
+        calculate_md5(params, **kwargs)
 
 
 def sse_md5(params, **kwargs):
@@ -423,6 +447,17 @@ BUILTIN_HANDLERS = [
     ('before-call.s3.PutBucketCors', calculate_md5),
     ('before-call.s3.DeleteObjects', calculate_md5),
     ('before-call.s3.PutBucketReplication', calculate_md5),
+    ('before-call.s3.PutObject', conditionally_calculate_md5),
+    ('before-call.s3.UploadPart', conditionally_calculate_md5),
+    ('before-call.s3.PutBucketAcl', conditionally_calculate_md5),
+    ('before-call.s3.PutBucketLogging', conditionally_calculate_md5),
+    ('before-call.s3.PutBucketNotification', conditionally_calculate_md5),
+    ('before-call.s3.PutBucketPolicy', conditionally_calculate_md5),
+    ('before-call.s3.PutBucketRequestPayment', conditionally_calculate_md5),
+    ('before-call.s3.PutBucketVersioning', conditionally_calculate_md5),
+    ('before-call.s3.PutBucketWebsite', conditionally_calculate_md5),
+    ('before-call.s3.PutObjectAcl', conditionally_calculate_md5),
+
     ('before-call.s3.UploadPartCopy', quote_source_header),
     ('before-call.s3.CopyObject', quote_source_header),
     ('before-call.s3', add_expect_header),
