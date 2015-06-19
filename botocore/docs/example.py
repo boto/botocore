@@ -66,7 +66,7 @@ class BaseExampleDocumenter(ShapeDocumenter):
         list_section = section.add_new_section('list-value')
         self._start_nested_param(list_section, '[')
         param_section = list_section.add_new_section(
-            'member', meta={'shape': param_shape.name})
+            'member', context={'shape': param_shape.name})
         self.traverse_and_document_shape(
             section=param_section, shape=param_shape, history=history)
         ending_comma_section = list_section.add_new_section('ending-comma')
@@ -89,7 +89,7 @@ class BaseExampleDocumenter(ShapeDocumenter):
             param_section.write('\'%s\': ' % param)
             param_shape = input_members[param]
             param_value_section = param_section.add_new_section(
-                'member-value', meta={'shape': param_shape.name})
+                'member-value', context={'shape': param_shape.name})
             self.traverse_and_document_shape(
                 section=param_value_section, shape=param_shape,
                 history=history, name=param)
@@ -106,10 +106,10 @@ class BaseExampleDocumenter(ShapeDocumenter):
         self._start_nested_param(map_section, '{')
         value_shape = shape.value
         key_section = map_section.add_new_section(
-            'key', meta={'shape': shape.key.name})
+            'key', context={'shape': shape.key.name})
         key_section.write('\'string\': ')
         value_section = map_section.add_new_section(
-            'value', meta={'shape': value_shape.name})
+            'value', context={'shape': value_shape.name})
         self.traverse_and_document_shape(
             section=value_section, shape=value_shape, history=history)
         end_bracket_section = map_section.add_new_section('ending-bracket')
@@ -181,7 +181,7 @@ class RequestExampleDocumenter(BaseExampleDocumenter):
             param_section.write(operator)
             param_shape = input_members[param]
             param_value_section = param_section.add_new_section(
-                'member-value', meta={'shape': param_shape.name})
+                'member-value', context={'shape': param_shape.name})
             self.traverse_and_document_shape(
                 section=param_value_section, shape=param_shape,
                 history=history, name=param)

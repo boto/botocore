@@ -132,14 +132,15 @@ class TestDocumentStructure(unittest.TestCase):
             ['mysection', 'mysection2']
         )
 
-    def test_meta(self):
-        meta = {'Foo': 'Bar'}
-        section = self.doc_structure.add_new_section('mysection', meta=meta)
-        self.assertEqual(section.meta, meta)
+    def test_context(self):
+        context = {'Foo': 'Bar'}
+        section = self.doc_structure.add_new_section(
+            'mysection', context=context)
+        self.assertEqual(section.context, context)
 
-        # Make sure if meta is not specified it is empty.
+        # Make sure if context is not specified it is empty.
         section = self.doc_structure.add_new_section('mysection2')
-        self.assertEqual(section.meta, {})
+        self.assertEqual(section.context, {})
 
     def test_remove_all_sections(self):
         self.doc_structure.add_new_section('mysection2')

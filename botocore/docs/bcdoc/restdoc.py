@@ -103,7 +103,7 @@ class ReSTDocument(object):
 
 
 class DocumentStructure(ReSTDocument):
-    def __init__(self, name, section_names=None, target='man', meta=None):
+    def __init__(self, name, section_names=None, target='man', context=None):
         """Provides a Hierarichial structure to a ReSTDocument
 
         You can write to it similiar to as you can to a ReSTDocument but
@@ -113,16 +113,16 @@ class DocumentStructure(ReSTDocument):
         :param section_names: A list of sections to be included
             in the document.
         :param target: The target documentation of the Document structure
-        :param meta: A dictionary of data to store with the strucuture. These
+        :param context: A dictionary of data to store with the strucuture. These
             are only stored per section not the entire structure.
         """
         super(DocumentStructure, self).__init__(target=target)
         self._name = name
         self._structure = OrderedDict()
         self._path = [self._name]
-        self._meta = {}
-        if meta is not None:
-            self._meta = meta
+        self._context = {}
+        if context is not None:
+            self._context = context
         if section_names is not None:
             self._generate_structure(section_names)
 
@@ -148,14 +148,14 @@ class DocumentStructure(ReSTDocument):
         return list(self._structure)
 
     @property
-    def meta(self):
-        return self._meta
+    def context(self):
+        return self._context
 
     def _generate_structure(self, section_names):
         for section_name in section_names:
             self.add_new_section(section_name)
 
-    def add_new_section(self, name, meta=None):
+    def add_new_section(self, name, context=None):
         """Adds a new section to the current document structure
 
         This document structure will be considered a section to the
@@ -164,14 +164,15 @@ class DocumentStructure(ReSTDocument):
         as well
 
         :param name: The name of the section.
-        :param meta: A dictionary of data to store with the strucuture. These
+        :param context: A dictionary of data to store with the strucuture. These
             are only stored per section not the entire structure.
         :rtype: DocumentStructure
         :returns: A new document structure to add to but lives as a section
             to the document structure it was instantiated from.
         """
         # Add a new section
-        section = self.__class__(name=name, target=self.target, meta=meta)
+        section = self.__class__(name=name, target=self.target,
+                                 context=context)
         section.path = self.path + [name]
         # Indent the section apporpriately as well
         section.style.indentation = self.style.indentation

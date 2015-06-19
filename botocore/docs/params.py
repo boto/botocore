@@ -47,7 +47,7 @@ class BaseParamsDocumenter(ShapeDocumenter):
         self._add_member_documentation(section, shape, **kwargs)
         param_shape = shape.member
         param_section = section.add_new_section(
-            param_shape.name, meta={'shape': shape.member.name})
+            param_shape.name, context={'shape': shape.member.name})
         self._start_nested_param(param_section)
         self.traverse_and_document_shape(
             section=param_section, shape=param_shape,
@@ -60,12 +60,12 @@ class BaseParamsDocumenter(ShapeDocumenter):
         self._add_member_documentation(section, shape, **kwargs)
 
         key_section = section.add_new_section(
-            'key', meta={'shape': shape.key.name})
+            'key', context={'shape': shape.key.name})
         self._start_nested_param(key_section)
         self._add_member_documentation(key_section, shape.key)
 
         param_section = section.add_new_section(
-            shape.value.name, meta={'shape': shape.value.name})
+            shape.value.name, context={'shape': shape.value.name})
         param_section.style.indent()
         self._start_nested_param(param_section)
         self.traverse_and_document_shape(
@@ -86,7 +86,7 @@ class BaseParamsDocumenter(ShapeDocumenter):
                 continue
             param_shape = members[param]
             param_section = section.add_new_section(
-                param, meta={'shape': param_shape.name})
+                param, context={'shape': param_shape.name})
             self._start_nested_param(param_section)
             self.traverse_and_document_shape(
                 section=param_section, shape=param_shape,
@@ -152,7 +152,7 @@ class RequestParamsDocumenter(BaseParamsDocumenter):
                 continue
             param_shape = members[param]
             param_section = section.add_new_section(
-                param, meta={'shape': param_shape.name})
+                param, context={'shape': param_shape.name})
             param_section.style.new_line()
             is_required = param in shape.required_members
             self.traverse_and_document_shape(
