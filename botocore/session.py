@@ -102,7 +102,7 @@ class Session(object):
     LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
     def __init__(self, session_vars=None, event_hooks=None,
-                 include_builtin_handlers=True):
+                 include_builtin_handlers=True, profile=None):
         """
         Create a new Session object.
 
@@ -120,6 +120,12 @@ class Session(object):
         :type include_builtin_handlers: bool
         :param include_builtin_handlers: Indicates whether or not to
             automatically register builtin handlers.
+
+        :type profile: str
+        :param profile: The name of the profile to use for this
+            session.  Note that the profile can only be set when
+            the session is created.
+
         """
         self.session_var_map = copy.copy(self.SESSION_VARIABLES)
         if session_vars:
@@ -133,7 +139,7 @@ class Session(object):
         self.user_agent_name = 'Botocore'
         self.user_agent_version = __version__
         self.user_agent_extra = ''
-        self._profile = None
+        self._profile = profile
         self._config = None
         self._credentials = None
         self._profile_map = None
