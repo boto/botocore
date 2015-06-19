@@ -84,6 +84,16 @@ class SessionTest(BaseSessionTest):
         self.environ['BAR_PROFILE'] = 'second'
         self.assertEqual(session.get_config_variable('profile'), 'first')
 
+    def test_profile_when_set_explicitly(self):
+        session = create_session(session_vars=self.env_vars, profile='asdf')
+        self.assertEqual(session.profile, 'asdf')
+
+    def test_profile_when_pulled_from_env(self):
+        self.environ['FOO_PROFILE'] = 'bar'
+        # Even though we didn't explicitly pass in a profile, the
+        # profile property will still look this up for us.
+        self.assertEqual(self.session.profile, 'bar')
+
     def test_multiple_env_vars_uses_second_var(self):
         env_vars = {
             'profile': (None, ['BAR_DEFAULT_PROFILE', 'BAR_PROFILE'],
