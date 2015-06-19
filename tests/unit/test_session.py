@@ -186,7 +186,7 @@ class SessionTest(BaseSessionTest):
             f.write('aws_secret_access_key=FROM_CREDS_FILE_2\n')
             f.flush()
 
-            self.session.profile = 'newprofile'
+            self.session.set_config_variable('profile', 'newprofile')
             full_config = self.session.full_config
             self.assertEqual(full_config['profiles']['newprofile'],
                              {'aws_access_key_id': 'FROM_CREDS_FILE_1',
@@ -336,7 +336,7 @@ class TestConfigLoaderObject(BaseSessionTest):
             f.write('aws_secret_access_key=b\n')
             f.flush()
             self.session.set_config_variable('credentials_file', f.name)
-            self.session.profile = 'credfile-profile'
+            self.session.set_config_variable('profile', 'credfile-profile')
             # Now trying to retrieve the scoped config should pull in
             # values from the shared credentials file.
             self.assertEqual(self.session.get_scoped_config(),
