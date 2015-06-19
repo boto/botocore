@@ -362,6 +362,8 @@ class AWSRequest(models.RequestEncodingMixin, models.Request):
         p = models.PreparedRequest()
         p.prepare_headers({})
         p.prepare_body(self.data, self.files)
+        if isinstance(p.body, six.text_type):
+            p.body = p.body.encode('utf-8')
         return p.body
 
 
