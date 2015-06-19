@@ -102,7 +102,7 @@ class Session(object):
     LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
     def __init__(self, session_vars=None, event_hooks=None,
-                 include_builtin_handlers=True):
+                 include_builtin_handlers=True, profile=None):
         """
         Create a new Session object.
 
@@ -120,6 +120,12 @@ class Session(object):
         :type include_builtin_handlers: bool
         :param include_builtin_handlers: Indicates whether or not to
             automatically register builtin handlers.
+
+        :type profile: str
+        :param profile: The name of the profile to use for this
+            session.  Note that the profile can only be set when
+            the session is created.
+
         """
         self.session_var_map = copy.copy(self.SESSION_VARIABLES)
         if session_vars:
@@ -133,7 +139,7 @@ class Session(object):
         self.user_agent_name = 'Botocore'
         self.user_agent_version = __version__
         self.user_agent_extra = ''
-        self._profile = None
+        self._profile = profile
         self._config = None
         self._credentials = None
         self._profile_map = None
@@ -173,9 +179,6 @@ class Session(object):
         self._components.register_component('response_parser_factory',
                                             ResponseParserFactory())
 
-    def _reset_components(self):
-        self._register_components()
-
     def _register_builtin_handlers(self, events):
         for spec in handlers.BUILTIN_HANDLERS:
             if len(spec) == 2:
@@ -210,15 +213,6 @@ class Session(object):
     @property
     def profile(self):
         return self._profile
-
-    @profile.setter
-    def profile(self, profile):
-        # Since provider can be specified in profile, changing the
-        # profile should reset the provider.
-        self._provider = None
-        self._profile = profile
-        # Need to potentially reload the config file/creds.
-        self._reset_components()
 
     def get_config_variable(self, logical_name,
                             methods=('instance', 'env', 'config')):
