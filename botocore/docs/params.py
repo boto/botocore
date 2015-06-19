@@ -46,7 +46,8 @@ class BaseParamsDocumenter(ShapeDocumenter):
                                  exclude=None, **kwargs):
         self._add_member_documentation(section, shape, **kwargs)
         param_shape = shape.member
-        param_section = section.add_new_section(param_shape.name)
+        param_section = section.add_new_section(
+            param_shape.name, context={'shape': shape.member.name})
         self._start_nested_param(param_section)
         self.traverse_and_document_shape(
             section=param_section, shape=param_shape,
@@ -58,11 +59,13 @@ class BaseParamsDocumenter(ShapeDocumenter):
                                 exclude=None, **kwargs):
         self._add_member_documentation(section, shape, **kwargs)
 
-        key_section = section.add_new_section('key')
+        key_section = section.add_new_section(
+            'key', context={'shape': shape.key.name})
         self._start_nested_param(key_section)
         self._add_member_documentation(key_section, shape.key)
 
-        param_section = section.add_new_section(shape.value.name)
+        param_section = section.add_new_section(
+            shape.value.name, context={'shape': shape.value.name})
         param_section.style.indent()
         self._start_nested_param(param_section)
         self.traverse_and_document_shape(
@@ -81,9 +84,10 @@ class BaseParamsDocumenter(ShapeDocumenter):
         for param in members:
             if exclude and param in exclude:
                 continue
-            param_section = section.add_new_section(param)
-            self._start_nested_param(param_section)
             param_shape = members[param]
+            param_section = section.add_new_section(
+                param, context={'shape': param_shape.name})
+            self._start_nested_param(param_section)
             self.traverse_and_document_shape(
                 section=param_section, shape=param_shape,
                 history=history, name=param)
@@ -121,7 +125,8 @@ class ResponseParamsDocumenter(BaseParamsDocumenter):
         name_section.write('- ')
         if name is not None:
             name_section.style.bold('%s ' % name)
-        name_section.style.italics('(%s) -- ' % py_type)
+        type_section = section.add_new_section('param-type')
+        type_section.style.italics('(%s) -- ' % py_type)
 
         documentation_section = section.add_new_section('param-documentation')
         if shape.documentation:
@@ -145,9 +150,10 @@ class RequestParamsDocumenter(BaseParamsDocumenter):
         for i, param in enumerate(members):
             if exclude and param in exclude:
                 continue
-            param_section = section.add_new_section(param)
-            param_section.style.new_line()
             param_shape = members[param]
+            param_section = section.add_new_section(
+                param, context={'shape': param_shape.name})
+            param_section.style.new_line()
             is_required = param in shape.required_members
             self.traverse_and_document_shape(
                 section=param_section, shape=param_shape,
@@ -174,7 +180,8 @@ class RequestParamsDocumenter(BaseParamsDocumenter):
             name_section.write('- ')
             if name is not None:
                 name_section.style.bold('%s ' % name)
-            name_section.style.italics('(%s) -- ' % py_type)
+            type_section = section.add_new_section('param-type')
+            type_section.style.italics('(%s) -- ' % py_type)
 
         if is_required:
             is_required_section = section.add_new_section('is-required')
