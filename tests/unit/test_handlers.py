@@ -476,7 +476,7 @@ class TestHandlers(BaseSessionTest):
         self.assertEqual(request_dict['headers']['Content-MD5'],
                          'OFj2IjCsPJFfMAxmQxLGPw==')
 
-    def test_adds_md6_with_bytes_object(self):
+    def test_adds_md5_with_bytes_object(self):
         request_dict = {
             'body': b'foobar',
             'headers': {}
