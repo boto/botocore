@@ -112,15 +112,16 @@ def calculate_md5(params, **kwargs):
     if request_dict['body'] and 'Content-MD5' not in params['headers']:
         body = request_dict['body']
         if isinstance(body, bytes):
-            hex_md5 = _calculate_md5_from_bytes(body)
+            binary_md5 = _calculate_md5_from_bytes(body)
         else:
-            hex_md5 = _calculate_md5_from_file(body)
-        params['headers']['Content-MD5'] = hex_md5
+            binary_md5 = _calculate_md5_from_file(body)
+        base64_md5 = base64.b64encode(binary_md5).decode('ascii')
+        params['headers']['Content-MD5'] = base64_md5
 
 
 def _calculate_md5_from_bytes(body_bytes):
     md5 = hashlib.md5(body_bytes)
-    return md5.hexdigest()
+    return md5.digest()
 
 
 def _calculate_md5_from_file(fileobj):
@@ -129,7 +130,7 @@ def _calculate_md5_from_file(fileobj):
     for chunk in iter(lambda: fileobj.read(1024 * 1024), b''):
         md5.update(chunk)
     fileobj.seek(start_position)
-    return md5.hexdigest()
+    return md5.digest()
 
 
 def conditionally_calculate_md5(params, **kwargs):
