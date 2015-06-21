@@ -29,7 +29,6 @@ from botocore.exceptions import ConfigNotFound, ProfileNotFound
 from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.loaders import create_loader
-from botocore.provider import get_provider
 from botocore.parsers import ResponseParserFactory
 from botocore import regions
 from botocore.model import ServiceModel
@@ -79,7 +78,6 @@ class Session(object):
         'region': ('region', 'AWS_DEFAULT_REGION', None, None),
         'data_path': ('data_path', 'AWS_DATA_PATH', None, None),
         'config_file': (None, 'AWS_CONFIG_FILE', '~/.aws/config', None),
-        'provider': ('provider', 'BOTO_PROVIDER_NAME', 'aws', None),
 
         # These variables are intended for internal use so don't have any
         # user settable values.
@@ -102,7 +100,7 @@ class Session(object):
     LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
     def __init__(self, session_vars=None, event_hooks=None,
-                 include_builtin_handlers=True, loader=None):
+                 include_builtin_handlers=True, profile=None):
         """
         Create a new Session object.
 
@@ -120,6 +118,12 @@ class Session(object):
         :type include_builtin_handlers: bool
         :param include_builtin_handlers: Indicates whether or not to
             automatically register builtin handlers.
+
+        :type profile: str
+        :param profile: The name of the profile to use for this
+            session.  Note that the profile can only be set when
+            the session is created.
+
         """
         self.session_var_map = copy.copy(self.SESSION_VARIABLES)
         if session_vars:
@@ -133,18 +137,13 @@ class Session(object):
         self.user_agent_name = 'Botocore'
         self.user_agent_version = __version__
         self.user_agent_extra = ''
-        self._profile = None
+        self._profile = profile
         self._config = None
         self._credentials = None
         self._profile_map = None
-        self._provider = None
         # This is a dict that stores per session specific config variable
         # overrides via set_config_variable().
         self._session_instance_vars = {}
-        # _data_paths_added is used to track whether or not we added
-        # extra paths to the loader.  We will do this lazily
-        # only when we ask for the loader.
-        self._data_paths_added = False
         self._components = ComponentLocator()
         self._register_components()
 
@@ -177,9 +176,6 @@ class Session(object):
         self._components.register_component('response_parser_factory',
                                             ResponseParserFactory())
 
-    def _reset_components(self):
-        self._register_components()
-
     def _register_builtin_handlers(self, events):
         for spec in handlers.BUILTIN_HANDLERS:
             if len(spec) == 2:
@@ -191,13 +187,6 @@ class Session(object):
                     self._events.register_first(event_name, handler)
                 elif register_type is handlers.REGISTER_LAST:
                     self._events.register_last(event_name, handler)
-
-    @property
-    def provider(self):
-        if self._provider is None:
-            self._provider = get_provider(
-                self, self.get_config_variable('provider'))
-        return self._provider
 
     @property
     def available_profiles(self):
@@ -213,16 +202,10 @@ class Session(object):
 
     @property
     def profile(self):
+        if self._profile is None:
+            profile = self.get_config_variable('profile')
+            self._profile = profile
         return self._profile
-
-    @profile.setter
-    def profile(self, profile):
-        # Since provider can be specified in profile, changing the
-        # profile should reset the provider.
-        self._provider = None
-        self._profile = profile
-        # Need to potentially reload the config file/creds.
-        self._reset_components()
 
     def get_config_variable(self, logical_name,
                             methods=('instance', 'env', 'config')):

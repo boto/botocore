@@ -49,26 +49,27 @@ class TestDocumentModelDrivenSignature(BaseDocsTest):
         document_model_driven_signature(
             self.doc_structure, 'my_method', self.operation_model)
         self.assert_contains_line(
-            '.. py:method:: my_method(Bar=None, Foo=None, Baz=None)')
+            '.. py:method:: my_method(**kwargs)')
 
-    def test_document_signature_include(self):
+    def test_document_signature_exclude_all_kwargs(self):
+        exclude_params = ['Foo', 'Bar', 'Baz']
+        document_model_driven_signature(
+            self.doc_structure, 'my_method', self.operation_model,
+            exclude=exclude_params)
+        self.assert_contains_line(
+            '.. py:method:: my_method()')
+
+    def test_document_signature_exclude_and_include(self):
+        exclude_params = ['Foo', 'Bar', 'Baz']
         include_params = [
             DocumentedShape(
                 name='Biz', type_name='integer', documentation='biz docs')
         ]
         document_model_driven_signature(
             self.doc_structure, 'my_method', self.operation_model,
-            include=include_params)
+            include=include_params, exclude=exclude_params)
         self.assert_contains_line(
-            '.. py:method:: my_method(Bar=None, Foo=None, Baz=None, Biz=None)')
-
-    def test_document_signature_exclude(self):
-        exclude_params = ['Baz']
-        document_model_driven_signature(
-            self.doc_structure, 'my_method', self.operation_model,
-            exclude=exclude_params)
-        self.assert_contains_line(
-            '.. py:method:: my_method(Bar=None, Foo=None)')
+            '.. py:method:: my_method(**kwargs)')
 
 
 class TestDocumentCustomSignature(BaseDocsTest):
@@ -116,7 +117,7 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
             example_prefix='response = client.foo'
         )
         self.assert_contains_lines_in_order([
-            '.. py:method:: foo(Bar=None)',
+            '.. py:method:: foo(**kwargs)',
             '  This describes the foo method.',
             '  **Request Syntax**',
             '  ::',
@@ -168,7 +169,7 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
             include_input=include_params
         )
         self.assert_contains_lines_in_order([
-            '.. py:method:: foo(Bar=None, Biz=None)',
+            '.. py:method:: foo(**kwargs)',
             '  This describes the foo method.',
             '  **Request Syntax**',
             '  ::',
@@ -205,7 +206,7 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
             include_output=include_params
         )
         self.assert_contains_lines_in_order([
-            '.. py:method:: foo(Bar=None)',
+            '.. py:method:: foo(**kwargs)',
             '  This describes the foo method.',
             '  **Request Syntax**',
             '  ::',
@@ -238,7 +239,7 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
             exclude_input=['Bar']
         )
         self.assert_contains_lines_in_order([
-            '.. py:method:: foo(Biz=None)',
+            '.. py:method:: foo(**kwargs)',
             '  This describes the foo method.',
             '  **Request Syntax**',
             '  ::',
@@ -275,7 +276,7 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
             exclude_output=['Bar']
         )
         self.assert_contains_lines_in_order([
-            '.. py:method:: foo(Bar=None, Biz=None)',
+            '.. py:method:: foo(**kwargs)',
             '  This describes the foo method.',
             '  **Request Syntax**',
             '  ::',

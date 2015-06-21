@@ -150,7 +150,7 @@ class TestSigner(BaseSignerTest):
         request_dict = {
             'headers': {},
             'url': 'https://foo.com',
-            'body': '',
+            'body': b'',
             'url_path': '/',
             'method': 'GET'
         }
@@ -169,7 +169,7 @@ class TestSigner(BaseSignerTest):
         request_dict = {
             'headers': {},
             'url': 'https://foo.com',
-            'body': '',
+            'body': b'',
             'url_path': '/',
             'method': 'GET'
         }
@@ -189,7 +189,7 @@ class TestSigner(BaseSignerTest):
         request_dict = {
             'headers': {},
             'url': 'https://foo.com',
-            'body': '',
+            'body': b'',
             'url_path': '/',
             'method': 'GET'
         }
@@ -213,7 +213,7 @@ class TestSigner(BaseSignerTest):
         request_dict = {
             'headers': {},
             'url': 'https://s3.amazonaws.com/mybucket/myobject',
-            'body': '',
+            'body': b'',
             'url_path': '/',
             'method': 'GET'
         }
@@ -245,7 +245,7 @@ class TestS3PostPresigner(BaseSignerTest):
         self.request_dict = {
             'headers': {},
             'url': 'https://s3.amazonaws.com/mybucket',
-            'body': '',
+            'body': b'',
             'url_path': '/',
             'method': 'POST'
         }
@@ -353,7 +353,7 @@ class TestGenerateUrl(unittest.TestCase):
             'get_object', Params={'Bucket': self.bucket, 'Key': self.key})
 
         ref_request_dict = {
-            'body': '',
+            'body': b'',
             'url': u'https://s3.amazonaws.com/mybucket/mykey',
             'headers': {},
             'query_string': {},
@@ -375,7 +375,7 @@ class TestGenerateUrl(unittest.TestCase):
             'get_object', Params={'Bucket': self.bucket, 'Key': self.key},
             ExpiresIn=20)
         ref_request_dict = {
-            'body': '',
+            'body': b'',
             'url': u'https://s3.amazonaws.com/mybucket/mykey',
             'headers': {},
             'query_string': {},
@@ -389,7 +389,7 @@ class TestGenerateUrl(unittest.TestCase):
             'get_object', Params={'Bucket': self.bucket, 'Key': self.key},
             HttpMethod='PUT')
         ref_request_dict = {
-            'body': '',
+            'body': b'',
             'url': u'https://s3.amazonaws.com/mybucket/mykey',
             'headers': {},
             'query_string': {},

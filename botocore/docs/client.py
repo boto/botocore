@@ -46,6 +46,20 @@ class ClientDocumenter(object):
             'A low-level client representing %s' % official_service_name)
 
         # Write out the client example instantiation.
+        self._add_client_creation_example(section)
+
+        # List out all of the possible client methods.
+        section.style.new_line()
+        section.write('These are the available methods:')
+        section.style.new_line()
+        for method_name in sorted(client_methods):
+            section.style.li(':py:meth:`%s`' % (method_name))
+
+    def _add_class_signature(self, section):
+        section.style.start_sphinx_py_class(
+            class_name='%s.Client' % self._client.__class__.__name__)
+
+    def _add_client_creation_example(self, section):
         section.style.start_codeblock()
         section.style.new_line()
         section.write(
@@ -53,18 +67,6 @@ class ClientDocumenter(object):
                 service=self._service_name)
         )
         section.style.end_codeblock()
-
-        # List out all of the possible client methods.
-        section.style.new_line()
-        section.write('These are the available methods:')
-        section.style.new_line()
-        for method_name in sorted(client_methods):
-            section.style.li(':py:meth:`%s.Client.%s`' % (
-                self._service_name, method_name))
-
-    def _add_class_signature(self, section):
-        section.style.start_sphinx_py_class(
-            class_name='%s.Client' % self._service_name)
 
     def _add_client_methods(self, section, client_methods):
         section = section.add_new_section('methods')

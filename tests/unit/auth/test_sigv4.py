@@ -126,7 +126,7 @@ def create_request_from_raw_request(raw_request):
     request.context['timestamp'] = datetime_now.strftime('%Y%m%dT%H%M%SZ')
     for key, val in raw.headers.items():
         request.headers[key] = val
-    request.data = raw.rfile.read().decode('utf-8')
+    request.data = raw.rfile.read()
     host = raw.headers.get('host', '')
     # For whatever reason, the BaseHTTPRequestHandler encodes
     # the first line of the response as 'iso-8859-1',

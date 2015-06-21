@@ -362,6 +362,16 @@ class ReSTStyle(BaseStyle):
         self.dedent()
         self.new_paragraph()
 
+    def start_sphinx_py_attr(self, attr_name):
+        self.new_paragraph()
+        self.doc.write('.. py:attribute:: %s' % attr_name)
+        self.indent()
+        self.new_paragraph()
+
+    def end_sphinx_py_attr(self):
+        self.dedent()
+        self.new_paragraph()
+
     def write_py_doc_string(self, docstring):
         docstring_lines = docstring.splitlines()
         for docstring_line in docstring_lines:

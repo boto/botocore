@@ -62,11 +62,13 @@ class BaseExampleDocumenter(ShapeDocumenter):
 
     def document_shape_type_list(self, section, shape, history, include=None,
                                  exclude=None, **kwargs):
+        param_shape = shape.member
         list_section = section.add_new_section('list-value')
         self._start_nested_param(list_section, '[')
-        param_shape = shape.member
+        param_section = list_section.add_new_section(
+            'member', context={'shape': param_shape.name})
         self.traverse_and_document_shape(
-            section=list_section, shape=param_shape, history=history)
+            section=param_section, shape=param_shape, history=history)
         ending_comma_section = list_section.add_new_section('ending-comma')
         ending_comma_section.write(',')
         ending_bracket_section = list_section.add_new_section(
@@ -86,8 +88,10 @@ class BaseExampleDocumenter(ShapeDocumenter):
             param_section = section.add_new_section(param)
             param_section.write('\'%s\': ' % param)
             param_shape = input_members[param]
+            param_value_section = param_section.add_new_section(
+                'member-value', context={'shape': param_shape.name})
             self.traverse_and_document_shape(
-                section=param_section, shape=param_shape,
+                section=param_value_section, shape=param_shape,
                 history=history, name=param)
             if i < len(input_members) - 1:
                 ending_comma_section = param_section.add_new_section(
@@ -101,9 +105,11 @@ class BaseExampleDocumenter(ShapeDocumenter):
         map_section = section.add_new_section('map-value')
         self._start_nested_param(map_section, '{')
         value_shape = shape.value
-        key_section = map_section.add_new_section('key')
+        key_section = map_section.add_new_section(
+            'key', context={'shape': shape.key.name})
         key_section.write('\'string\': ')
-        value_section = map_section.add_new_section('value')
+        value_section = map_section.add_new_section(
+            'value', context={'shape': value_shape.name})
         self.traverse_and_document_shape(
             section=value_section, shape=value_shape, history=history)
         end_bracket_section = map_section.add_new_section('ending-bracket')
@@ -174,8 +180,10 @@ class RequestExampleDocumenter(BaseExampleDocumenter):
             param_section.write(param_format % param)
             param_section.write(operator)
             param_shape = input_members[param]
+            param_value_section = param_section.add_new_section(
+                'member-value', context={'shape': param_shape.name})
             self.traverse_and_document_shape(
-                section=param_section, shape=param_shape,
+                section=param_value_section, shape=param_shape,
                 history=history, name=param)
             if i < len(input_members) - 1:
                 ending_comma_section = param_section.add_new_section(

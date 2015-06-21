@@ -55,10 +55,8 @@ def document_model_driven_signature(section, name, operation_model,
         documentation.
     """
     params = {}
-    required = []
     if operation_model.input_shape:
         params = operation_model.input_shape.members
-        required = operation_model.input_shape.required_members
 
     parameter_names = list(params.keys())
 
@@ -71,13 +69,9 @@ def document_model_driven_signature(section, name, operation_model,
             if member in parameter_names:
                 parameter_names.remove(member)
 
-    required_params = [k for k in parameter_names if k in required]
-    optional_params = [k for k in parameter_names if k not in required]
-
-    signature_params = ', '.join([
-        ', '.join(['{0}=None'.format(k) for k in required_params]),
-        ', '.join(['{0}=None'.format(k) for k in optional_params])
-    ]).strip(', ')
+    signature_params = ''
+    if parameter_names:
+        signature_params = '**kwargs'
     section.style.start_sphinx_py_method(name, signature_params)
 
 
