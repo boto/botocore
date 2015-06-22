@@ -40,22 +40,22 @@ class TestServiceDocumenter(BaseDocsTest):
             '======',
             'Client',
             '======',
-            '.. py:class:: myservice.Client',
+            '.. py:class:: MyService.Client',
             '  A low-level client representing AWS MyService::',
             '    client = session.create_client(\'myservice\')',
             '  These are the available methods:',
-            '  *   :py:meth:`myservice.Client.sample_operation`',
-            '  .. py:method:: sample_operation(Biz=None)',
+            '  *   :py:meth:`sample_operation`',
+            '  .. py:method:: sample_operation(**kwargs)',
             '==========',
             'Paginators',
             '==========',
-            '.. py:class:: myservice.Paginator.sample_operation',
-            '  .. py:method:: paginate(Biz=None, PaginationConfig=None)',
+            '.. py:class:: MyService.Paginator.sample_operation',
+            '  .. py:method:: paginate(**kwargs)',
             '=======',
             'Waiters',
             '=======',
-            '.. py:class:: myservice.Waiter.sample_operation_complete',
-            '  .. py:method:: wait(Biz=None)'
+            '.. py:class:: MyService.Waiter.sample_operation_complete',
+            '  .. py:method:: wait(**kwargs)'
         ]
         for line in lines:
             self.assertIn(line, contents)

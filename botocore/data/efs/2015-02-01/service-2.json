@@ -3,7 +3,7 @@
   "metadata":{
     "apiVersion":"2015-02-01",
     "endpointPrefix":"elasticfilesystem",
-    "serviceAbbreviation":"ElasticFileSystem",
+    "serviceAbbreviation":"EFS",
     "serviceFullName":"Amazon Elastic File System",
     "signatureVersion":"v4",
     "protocol":"rest-json"

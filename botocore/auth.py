@@ -242,7 +242,9 @@ class SigV4Auth(BaseSigner):
             request.body.seek(position)
             return hex_checksum
         elif request.body:
-            return sha256(request.body.encode('utf-8')).hexdigest()
+            # The request serialization has ensured that
+            # request.body is a bytes() type.
+            return sha256(request.body).hexdigest()
         else:
             return EMPTY_SHA256_HASH
 

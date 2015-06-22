@@ -46,7 +46,7 @@ class TestCredentialPrecedence(BaseEnvVar):
         # take precedence.
         os.environ['AWS_ACCESS_KEY_ID'] = 'env'
         os.environ['AWS_SECRET_ACCESS_KEY'] = 'env-secret'
-        os.environ['BOTO_DEFAULT_PROFILE'] = 'test'
+        os.environ['AWS_DEFAULT_PROFILE'] = 'test'
 
         s = self.create_session()
         credentials = s.get_credentials()
@@ -58,8 +58,7 @@ class TestCredentialPrecedence(BaseEnvVar):
     def test_access_secret_vs_profile_code(self, credentials_cls):
         # If all three are given, then the access/secret keys should
         # take precedence.
-        s = self.create_session()
-        s.profile = 'test'
+        s = self.create_session(profile='test')
 
         client = s.create_client('s3', aws_access_key_id='code',
                                  aws_secret_access_key='code-secret')
@@ -70,9 +69,8 @@ class TestCredentialPrecedence(BaseEnvVar):
     def test_profile_env_vs_code(self):
         # If the profile is set both by the env var and by code,
         # then the one set by code should take precedence.
-        os.environ['BOTO_DEFAULT_PROFILE'] = 'test'
-        s = self.create_session()
-        s.profile = 'default'
+        os.environ['AWS_DEFAULT_PROFILE'] = 'test'
+        s = self.create_session(profile='default')
 
         credentials = s.get_credentials()
 
@@ -103,8 +101,7 @@ class TestCredentialPrecedence(BaseEnvVar):
         #
         os.environ['AWS_ACCESS_KEY_ID'] = 'env'
         os.environ['AWS_SECRET_ACCESS_KEY'] = 'env-secret'
-        s = self.create_session()
-        s.profile = 'test'
+        s = self.create_session(profile='test')
 
         credentials = s.get_credentials()
 
