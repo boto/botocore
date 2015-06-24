@@ -32,9 +32,9 @@ class TestServiceDocumenter(BaseDocsTest):
         # a smoke test to make sure all of the main parts are inluded.
         contents = self.service_documenter.document_service().decode('utf-8')
         lines = [
-            '*************',
-            'AWS MyService',
-            '*************',
+            '*********',
+            'MyService',
+            '*********',
             '.. contents:: Table of Contents',
             '   :depth: 2',
             '======',
