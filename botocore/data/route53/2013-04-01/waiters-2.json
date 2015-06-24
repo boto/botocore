@@ -11,17 +11,6 @@
           "expected": "INSYNC",
           "argument": "ChangeInfo.Status",
           "state": "success"
-        },
-        {
-          "matcher": "path",
-          "expected": "PENDING",
-          "argument": "ChangeInfo.Status",
-          "state": "retry"
-        },
-        {
-          "expected": "NoSuchChange",
-          "matcher": "error",
-          "state": "success"
         }
       ]
     }
