@@ -15,13 +15,7 @@
         {
           "expected": "FAILED",
           "matcher": "pathAny",
-          "state": "success",
-          "argument": "Results[].Status"
-        },
-        {
-          "expected": "INPROGRESS",
-          "matcher": "pathAny",
-          "state": "retry",
+          "state": "failure",
           "argument": "Results[].Status"
         }
       ]
@@ -40,13 +34,7 @@
         {
           "expected": "FAILED",
           "matcher": "pathAny",
-          "state": "success",
-          "argument": "Results[].Status"
-        },
-        {
-          "expected": "INPROGRESS",
-          "matcher": "pathAny",
-          "state": "retry",
+          "state": "failure",
           "argument": "Results[].Status"
         }
       ]
@@ -65,13 +53,7 @@
         {
           "expected": "FAILED",
           "matcher": "pathAny",
-          "state": "success",
-          "argument": "Results[].Status"
-        },
-        {
-          "expected": "INPROGRESS",
-          "matcher": "pathAny",
-          "state": "retry",
+          "state": "failure",
           "argument": "Results[].Status"
         }
       ]
@@ -90,13 +72,7 @@
         {
           "expected": "FAILED",
           "matcher": "pathAny",
-          "state": "success",
-          "argument": "Results[].Status"
-        },
-        {
-          "expected": "INPROGRESS",
-          "matcher": "pathAny",
-          "state": "retry",
+          "state": "failure",
           "argument": "Results[].Status"
         }
       ]
