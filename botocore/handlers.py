@@ -334,7 +334,9 @@ def base64_encode_user_data(params, **kwargs):
 
 
 def document_base64_encoding():
-    description = 'UserData will be automatically base64 encoded if necessary.'
+    description = ('**This value will be base64 encoded automatically. Do '
+                   'not base64 encode this value prior to performing the '
+                   'operation.**')
     append = AppendParamDocumentation('UserData', description)
     return append.append_documentation
 
