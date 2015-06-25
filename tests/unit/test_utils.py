@@ -36,6 +36,7 @@ from botocore.utils import calculate_sha256
 from botocore.utils import is_valid_endpoint_url
 from botocore.utils import fix_s3_host
 from botocore.utils import instance_cache
+from botocore.utils import merge_dicts
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
 
@@ -595,6 +596,56 @@ class TestInstanceCache(unittest.TestCase):
         adder.add(x=2, y=1)
         self.assertEqual(adder.add(x=2, y=1), 3)
         self.assertEqual(len(self.cache), 1)
+
+
+class TestMergeDicts(unittest.TestCase):
+    def test_scalar_values(self):
+        dict1 = {'Foo': 'old_foo_value'}
+        dict2 = {'Foo': 'new_foo_value'}
+        merge_dicts(dict1, dict2)
+        self.assertEqual(dict1, {'Foo': 'new_foo_value'})
+
+    def test_nested_dict(self):
+        dict1 = {'Foo': {'Bar': 'bar_value'}}
+        dict2 = {'Foo': {'Biz': 'biz_value'}}
+        merge_dicts(dict1, dict2)
+        self.assertEqual(
+            dict1, {'Foo': {'Bar': 'bar_value', 'Biz': 'biz_value'}})
+
+    def test_nested_dict_override_scalars(self):
+        dict1 = {'Foo': {'Bar': 'old_bar_value'}}
+        dict2 = {'Foo': {'Bar': 'new_bar_value'}}
+        merge_dicts(dict1, dict2)
+        self.assertEqual(
+            dict1, {'Foo': {'Bar': 'new_bar_value'}})
+
+    def test_list_values_no_append(self):
+        dict1 = {'Foo': ['old_foo_value']}
+        dict2 = {'Foo': ['new_foo_value']}
+        merge_dicts(dict1, dict2)
+        self.assertEqual(
+            dict1, {'Foo': ['new_foo_value']})
+
+    def test_list_values_append(self):
+        dict1 = {'Foo': ['old_foo_value']}
+        dict2 = {'Foo': ['new_foo_value']}
+        merge_dicts(dict1, dict2, append_lists=True)
+        self.assertEqual(
+            dict1, {'Foo': ['old_foo_value', 'new_foo_value']})
+
+    def test_list_values_mismatching_types(self):
+        dict1 = {'Foo': 'old_foo_value'}
+        dict2 = {'Foo': ['new_foo_value']}
+        merge_dicts(dict1, dict2, append_lists=True)
+        self.assertEqual(
+            dict1, {'Foo': ['new_foo_value']})
+
+    def test_list_values_missing_key(self):
+        dict1 = {}
+        dict2 = {'Foo': ['foo_value']}
+        merge_dicts(dict1, dict2, append_lists=True)
+        self.assertEqual(
+            dict1, {'Foo': ['foo_value']})
 
 
 if __name__ == '__main__':

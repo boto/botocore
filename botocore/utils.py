@@ -200,16 +200,28 @@ class InstanceMetadataFetcher(object):
         return final_data
 
 
-def merge_dicts(dict1, dict2):
+def merge_dicts(dict1, dict2, append_lists=False):
     """Given two dict, merge the second dict into the first.
 
     The dicts can have arbitrary nesting.
 
+    :param append_lists: If true, instead of clobbering a list with the new
+        value, append all of the new values onto the original list.
     """
     for key in dict2:
         if isinstance(dict2[key], dict):
             if key in dict1 and key in dict2:
                 merge_dicts(dict1[key], dict2[key])
+            else:
+                dict1[key] = dict2[key]
+        # If the value is a list and the ``append_lists`` flag is set,
+        # append the new values onto the original list
+        elif isinstance(dict2[key], list) and append_lists:
+            # The value in dict1 must be a list in order to append new
+            # values onto it.
+            if key in dict1 and isinstance(dict1[key], list):
+                for value in dict2[key]:
+                    dict1[key].append(value)
             else:
                 dict1[key] = dict2[key]
         else:
