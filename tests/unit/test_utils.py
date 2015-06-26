@@ -599,25 +599,51 @@ class TestInstanceCache(unittest.TestCase):
 
 
 class TestMergeDicts(unittest.TestCase):
-    def test_scalar_values(self):
-        dict1 = {'Foo': 'old_foo_value'}
-        dict2 = {'Foo': 'new_foo_value'}
-        merge_dicts(dict1, dict2)
-        self.assertEqual(dict1, {'Foo': 'new_foo_value'})
+    def test_merge_dicts_overrides(self):
+        first = {
+            'foo': {'bar': {'baz': {'one': 'ORIGINAL', 'two': 'ORIGINAL'}}}}
+        second = {'foo': {'bar': {'baz': {'one': 'UPDATE'}}}}
 
-    def test_nested_dict(self):
-        dict1 = {'Foo': {'Bar': 'bar_value'}}
-        dict2 = {'Foo': {'Biz': 'biz_value'}}
-        merge_dicts(dict1, dict2)
-        self.assertEqual(
-            dict1, {'Foo': {'Bar': 'bar_value', 'Biz': 'biz_value'}})
+        merge_dicts(first, second)
+        # The value from the second dict wins.
+        self.assertEqual(first['foo']['bar']['baz']['one'], 'UPDATE')
+        # And we still preserve the other attributes.
+        self.assertEqual(first['foo']['bar']['baz']['two'], 'ORIGINAL')
 
-    def test_nested_dict_override_scalars(self):
-        dict1 = {'Foo': {'Bar': 'old_bar_value'}}
-        dict2 = {'Foo': {'Bar': 'new_bar_value'}}
-        merge_dicts(dict1, dict2)
-        self.assertEqual(
-            dict1, {'Foo': {'Bar': 'new_bar_value'}})
+    def test_merge_dicts_new_keys(self):
+        first = {
+            'foo': {'bar': {'baz': {'one': 'ORIGINAL', 'two': 'ORIGINAL'}}}}
+        second = {'foo': {'bar': {'baz': {'three': 'UPDATE'}}}}
+
+        merge_dicts(first, second)
+        self.assertEqual(first['foo']['bar']['baz']['one'], 'ORIGINAL')
+        self.assertEqual(first['foo']['bar']['baz']['two'], 'ORIGINAL')
+        self.assertEqual(first['foo']['bar']['baz']['three'], 'UPDATE')
+
+    def test_merge_empty_dict_does_nothing(self):
+        first = {'foo': {'bar': 'baz'}}
+        merge_dicts(first, {})
+        self.assertEqual(first, {'foo': {'bar': 'baz'}})
+
+    def test_more_than_one_sub_dict(self):
+        first = {'one': {'inner': 'ORIGINAL', 'inner2': 'ORIGINAL'},
+                 'two': {'inner': 'ORIGINAL', 'inner2': 'ORIGINAL'}}
+        second = {'one': {'inner': 'UPDATE'}, 'two': {'inner': 'UPDATE'}}
+
+        merge_dicts(first, second)
+        self.assertEqual(first['one']['inner'], 'UPDATE')
+        self.assertEqual(first['one']['inner2'], 'ORIGINAL')
+
+        self.assertEqual(first['two']['inner'], 'UPDATE')
+        self.assertEqual(first['two']['inner2'], 'ORIGINAL')
+
+    def test_new_keys(self):
+        first = {'one': {'inner': 'ORIGINAL'}, 'two': {'inner': 'ORIGINAL'}}
+        second = {'three': {'foo': {'bar': 'baz'}}}
+        # In this case, second has no keys in common, but we'd still expect
+        # this to get merged.
+        merge_dicts(first, second)
+        self.assertEqual(first['three']['foo']['bar'], 'baz')
 
     def test_list_values_no_append(self):
         dict1 = {'Foo': ['old_foo_value']}

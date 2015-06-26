@@ -220,8 +220,7 @@ def merge_dicts(dict1, dict2, append_lists=False):
             # The value in dict1 must be a list in order to append new
             # values onto it.
             if key in dict1 and isinstance(dict1[key], list):
-                for value in dict2[key]:
-                    dict1[key].append(value)
+                dict1[key].extend(dict2[key])
             else:
                 dict1[key] = dict2[key]
         else:
