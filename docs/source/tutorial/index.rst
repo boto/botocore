@@ -3,16 +3,6 @@ Getting Started With botocore
 *****************************
 
 
-.. warning::
-
-  Botocore is currently under a developer preview, and its API is subject
-  to change prior to a GA (1.0) release.  Until botocore reaches a 1.0 release,
-  backwards compatibility is not guaranteed.
-
-  If you need a stable interface, please consider using
-  `boto <https://github.com/boto/boto>`__.
-
-
 The ``botocore`` package provides a low-level interface to Amazon
 services.  It is responsible for:
 
