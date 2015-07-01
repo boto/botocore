@@ -687,52 +687,6 @@ class TestTranslateModel(unittest.TestCase):
         self.assertEqual(new_model['pagination'], extra['pagination'])
 
 
-class TestDictMerge(unittest.TestCase):
-    def test_merge_dicts_overrides(self):
-        first = {'foo': {'bar': {'baz': {'one': 'ORIGINAL', 'two': 'ORIGINAL'}}}}
-        second = {'foo': {'bar': {'baz': {'one': 'UPDATE'}}}}
-
-        merge_dicts(first, second)
-        # The value from the second dict wins.
-        self.assertEqual(first['foo']['bar']['baz']['one'], 'UPDATE')
-        # And we still preserve the other attributes.
-        self.assertEqual(first['foo']['bar']['baz']['two'], 'ORIGINAL')
-
-    def test_merge_dicts_new_keys(self):
-        first = {'foo': {'bar': {'baz': {'one': 'ORIGINAL', 'two': 'ORIGINAL'}}}}
-        second = {'foo': {'bar': {'baz': {'three': 'UPDATE'}}}}
-
-        merge_dicts(first, second)
-        self.assertEqual(first['foo']['bar']['baz']['one'], 'ORIGINAL')
-        self.assertEqual(first['foo']['bar']['baz']['two'], 'ORIGINAL')
-        self.assertEqual(first['foo']['bar']['baz']['three'], 'UPDATE')
-
-    def test_merge_empty_dict_does_nothing(self):
-        first = {'foo': {'bar': 'baz'}}
-        merge_dicts(first, {})
-        self.assertEqual(first, {'foo': {'bar': 'baz'}})
-
-    def test_more_than_one_sub_dict(self):
-        first = {'one': {'inner': 'ORIGINAL', 'inner2': 'ORIGINAL'},
-                 'two': {'inner': 'ORIGINAL', 'inner2': 'ORIGINAL'}}
-        second = {'one': {'inner': 'UPDATE'}, 'two': {'inner': 'UPDATE'}}
-
-        merge_dicts(first, second)
-        self.assertEqual(first['one']['inner'], 'UPDATE')
-        self.assertEqual(first['one']['inner2'], 'ORIGINAL')
-
-        self.assertEqual(first['two']['inner'], 'UPDATE')
-        self.assertEqual(first['two']['inner2'], 'ORIGINAL')
-
-    def test_new_keys(self):
-        first = {'one': {'inner': 'ORIGINAL'}, 'two': {'inner': 'ORIGINAL'}}
-        second = {'three': {'foo': {'bar': 'baz'}}}
-        # In this case, second has no keys in common, but we'd still expect
-        # this to get merged.
-        merge_dicts(first, second)
-        self.assertEqual(first['three']['foo']['bar'], 'baz')
-
-
 class TestBuildRetryConfig(unittest.TestCase):
     def setUp(self):
         self.retry = {
