@@ -27,8 +27,8 @@ of these services, it's much easier to keep ``botocore`` current.
 Using Botocore
 ==============
 
-The main way to use botocore is to first create a ``Session`` object, and
-from the ``Session`` object you can create individual clients::
+The first step in using botocore is to create a ``Session`` object.
+``Session`` objects then allow you to create individual clients::
 
     import botocore.session
     session = botocore.session.get_session()
