@@ -102,8 +102,8 @@ class AutoPopulatedParam(object):
         self.param_description = param_description
         if param_description is None:
             self.param_description = (
-                'Please note that this parameter is automatically populated if'
-                'it is not provided. Including this parameter is not '
+                'Please note that this parameter is automatically populated '
+                'if it is not provided. Including this parameter is not '
                 'required\n')
 
     def document_auto_populated_param(self, event_name, section, **kwargs):
