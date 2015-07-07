@@ -82,7 +82,7 @@ class Session(object):
         # These variables are intended for internal use so don't have any
         # user settable values.
         # This is the shared credentials file amongst sdks.
-        'credentials_file': (None, None, '~/.aws/credentials', None),
+        'credentials_file': (None, 'AWS_CREDENTIALS_FILE', '~/.aws/credentials', None),
 
         # These variables only exist in the config file.
 
