@@ -29,6 +29,7 @@ SMOKE_TESTS = {
  'cloudtrail': {'DescribeTrails': {}},
  'cloudwatch': {'ListMetrics': {}},
  'codedeploy': {'ListApplications': {}},
+ 'codecommit': {'ListRepositories': {}},
  'cognito-identity': {'ListIdentityPools': {'MaxResults': 1}},
  'cognito-sync': {'ListIdentityPoolUsage': {}},
  'config': {'DescribeDeliveryChannels': {}},
