@@ -692,6 +692,7 @@
         },
         "Entries":{
           "shape":"ChangeMessageVisibilityBatchRequestEntryList",
+          "locationName":"ChangeMessageVisibilityBatchRequestEntry",
           "documentation":"<p>A list of receipt handles of the messages for which the visibility timeout must be changed.</p>"
         }
       }
@@ -823,6 +824,7 @@
         },
         "Entries":{
           "shape":"DeleteMessageBatchRequestEntryList",
+          "locationName":"DeleteMessageBatchRequestEntry",
           "documentation":"<p>A list of receipt handles for the messages to be deleted.</p>"
         }
       }
@@ -1333,6 +1335,7 @@
         },
         "Entries":{
           "shape":"SendMessageBatchRequestEntryList",
+          "locationName":"SendMessageBatchRequestEntry",
           "documentation":"<p>A list of <a>SendMessageBatchRequestEntry</a> items.</p>"
         }
       }
