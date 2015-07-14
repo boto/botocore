@@ -34,9 +34,11 @@ SMOKE_TESTS = {
  'cognito-sync': {'ListIdentityPoolUsage': {}},
  'config': {'DescribeDeliveryChannels': {}},
  'datapipeline': {'ListPipelines': {}},
+ 'devicefarm': {'ListProjects': {}},
  'directconnect': {'DescribeConnections': {}},
  'ds': {'DescribeDirectories': {}},
  'dynamodb': {'ListTables': {}},
+ 'dynamodbstreams': {'ListStreams': {}},
  'ec2': {'DescribeRegions': {},
          'DescribeInstances': {}},
  'ecs': {'DescribeClusters': {}},
@@ -89,12 +91,19 @@ ERROR_TESTS = {
     'sns': {'ConfirmSubscription': {'TopicArn': 'a', 'Token': 'b'}},
 }
 
+
+REGION_OVERRIDES = {
+    'devicefarm': 'us-west-2',
+}
+
+
 def test_can_make_request_with_client():
     # Same as test_can_make_request, but with Client objects
     # instead of service/operations.
     session = botocore.session.get_session()
     for service_name in SMOKE_TESTS:
-        client = session.create_client(service_name, region_name=REGION)
+        region_name = REGION_OVERRIDES.get(service_name, REGION)
+        client = session.create_client(service_name, region_name=region_name)
         for operation_name in SMOKE_TESTS[service_name]:
             kwargs = SMOKE_TESTS[service_name][operation_name]
             method_name = xform_name(operation_name)
@@ -135,7 +144,9 @@ def _make_error_client_call(client, operation_name, kwargs):
 def test_client_can_retry_request_properly():
     session = botocore.session.get_session()
     for service_name in SMOKE_TESTS:
-        client = session.create_client(service_name, region_name=REGION)
+        client = session.create_client(
+            service_name,
+            region_name=REGION_OVERRIDES.get(service_name, REGION))
         for operation_name in SMOKE_TESTS[service_name]:
             kwargs = SMOKE_TESTS[service_name][operation_name]
             yield (_make_client_call_with_errors, client,
