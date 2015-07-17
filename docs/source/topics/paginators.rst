@@ -27,24 +27,29 @@ underlying API operation. The ``paginate`` method then returns an iterable
 
     # Create a session and a client
     session = botocore.session.get_session()
-    client = session.create_client('ec2', region_name='us-west-2')
+    client = session.create_client('s3', region_name='us-west-2')
 
     # Create a reusable Paginator
-    paginator = client.get_paginator('describe_instances')
+    paginator = client.get_paginator('list_objects')
 
     # Create a PageIterator from the Paginator
-    page_iterator = paginator.paginate()
+    page_iterator = paginator.paginate(Bucket='my-bucket')
 
-    for reservation in page_iterator:
-        print(reservation)
+    for page in page_iterator:
+        print(page['Contents'])
 
 
 Customizing Page Iterators
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You must call the ``paginate`` method of a Paginator in order to iterate over
-the pages of API operation results. The ``paginate`` method accepts a number
-keyword arguments that can be used to customize the pagination.
+the pages of API operation results. The ``paginate`` method accepts a
+``PaginationConfig`` named argument that can be used to customize the
+pagination::
+
+    paginator = client.get_paginator('list_objects')
+    page_iterator = paginator.paginate(Bucket='my-bucket',
+                                       PaginationConfig={'MaxItems': 10})
 
 ``MaxItems``
     Limits the maximum number of total returned items returned while
@@ -70,26 +75,19 @@ Filtering results
 
 Many Paginators can be filtered server-side with options that are passed
 through to each underlying API call. For example,
-:py:meth:`EC2.Paginator.describe_instances.paginate` accepts a ``Filter``
-parameter that can be used to filter the paginated results before sending them
+:py:meth:`S3.Paginator.list_objects.paginate` accepts a ``Prefix`` parameter
+used to filter the paginated results by prefix server-side before sending them
 to the client::
 
     import botocore.session
     session = botocore.session.get_session()
-    client = session.create_client('ec2', region_name='us-west-2')
-    paginator = client.get_paginator('describe_instances')
-    operation_parameters = {
-        'Filters': [
-            {
-                'Name': 'architecture',
-                'Values': ['x86_64']
-            }
-        ]
-    }
+    client = session.create_client('s3', region_name='us-west-2')
+    paginator = client.get_paginator('list_objects')
+    operation_parameters = {'Bucket': 'my-bucket',
+                            'Prefix': 'foo/baz'}
     page_iterator = paginator.paginate(**operation_parameters)
-
-    for reservation in page_iterator:
-        print(reservation)
+    for page in page_iterator:
+        print(page['Contents'])
 
 
 Filtering Results with JMESPath
@@ -102,17 +100,17 @@ JMESPath expressions that are applied to each page of results through the
 
 .. code-block:: python
 
-    paginator = client.get_paginator('describe_instances')
-    page_iterator = paginator.paginate()
-    filtered_iterator = page_iterator.search(
-        "Reservations[].Instances[?Architecture=='x86_64'][]")
-    for instance in filtered_iterator:
-        print(instance)
+    paginator = client.get_paginator('list_objects')
+    page_iterator = paginator.paginate(Bucket='my-bucket')
+    filtered_iterator = page_iterator.search("Contents[?Size > `100`][]")
+    for key_data in filtered_iterator:
+        print(key_data)
 
 When filtering with JMESPath expressions, each page of results that is yielded
 by the paginator is mapped through the JMESPath expression. If a JMESPath
 expression returns a single value that is not an array, that value is yielded
 directly. If the the result of applying the JMESPath expression to a page of
-results is an array, then each value of the array is yielded individually. For
-example, in the above expression, each instance that has an ``Architecture`` of
-``x86_64`` is yielded by the ``filtered_iterator``.
+results is a list, then each value of the list is yielded individually
+(essentially implementing a flat map). For example, in the above expression,
+each key that has a ``Size`` greater than `100` is yielded by the
+``filtered_iterator``.
