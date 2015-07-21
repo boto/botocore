@@ -5,3 +5,4 @@ Botocore Topic Guides
    :maxdepth: 2
 
    events
+   paginators
