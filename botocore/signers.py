@@ -311,7 +311,7 @@ def generate_presigned_url(self, ClientMethod, Params=None, ExpiresIn=3600,
         ``ClientMethod``.
 
     :type ExpiresIn: int
-    :param expires_in: The number of seconds the presigned url is valid
+    :param ExpiresIn: The number of seconds the presigned url is valid
         for. By default it expires in an hour (3600 seconds)
 
     :type HttpMethod: string
