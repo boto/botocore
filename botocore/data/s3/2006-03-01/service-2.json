@@ -976,7 +976,7 @@
         },
         "PartNumber":{
           "shape":"PartNumber",
-          "documentation":"Part number that identifies the part."
+          "documentation":"Part number that identifies the part. This is a positive integer between 1 and 10,000."
         }
       }
     },
@@ -1003,6 +1003,7 @@
     "ContentLanguage":{"type":"string"},
     "ContentLength":{"type":"integer"},
     "ContentMD5":{"type":"string"},
+    "ContentRange":{"type":"string"},
     "ContentType":{"type":"string"},
     "CopyObjectOutput":{
       "type":"structure",
@@ -1199,7 +1200,7 @@
           "shape":"SSECustomerAlgorithm",
           "location":"header",
           "locationName":"x-amz-server-side-encryption-customer-algorithm",
-          "documentation":"Specifies the algorithm to use to when encrypting the object (e.g., AES256, aws:kms)."
+          "documentation":"Specifies the algorithm to use to when encrypting the object (e.g., AES256)."
         },
         "SSECustomerKey":{
           "shape":"SSECustomerKey",
@@ -1510,7 +1511,7 @@
           "shape":"SSECustomerAlgorithm",
           "location":"header",
           "locationName":"x-amz-server-side-encryption-customer-algorithm",
-          "documentation":"Specifies the algorithm to use to when encrypting the object (e.g., AES256, aws:kms)."
+          "documentation":"Specifies the algorithm to use to when encrypting the object (e.g., AES256)."
         },
         "SSECustomerKey":{
           "shape":"SSECustomerKey",
@@ -1828,10 +1829,14 @@
       "type":"string",
       "enum":[
         "s3:ReducedRedundancyLostObject",
+        "s3:ObjectCreated:*",
         "s3:ObjectCreated:Put",
         "s3:ObjectCreated:Post",
         "s3:ObjectCreated:Copy",
-        "s3:ObjectCreated:CompleteMultipartUpload"
+        "s3:ObjectCreated:CompleteMultipartUpload",
+        "s3:ObjectRemoved:*",
+        "s3:ObjectRemoved:Delete",
+        "s3:ObjectRemoved:DeleteMarkerCreated"
       ],
       "documentation":"Bucket event for which to send notifications."
     },
@@ -2216,6 +2221,12 @@
           "locationName":"Content-Language",
           "documentation":"The language the content is in."
         },
+        "ContentRange":{
+          "shape":"ContentRange",
+          "location":"header",
+          "locationName":"Content-Range",
+          "documentation":"The portion of the object returned in the response."
+        },
         "ContentType":{
           "shape":"ContentType",
           "location":"header",
@@ -2263,6 +2274,11 @@
           "location":"header",
           "locationName":"x-amz-server-side-encryption-aws-kms-key-id",
           "documentation":"If present, specifies the ID of the AWS Key Management Service (KMS) master encryption key that was used for the object."
+        },
+        "StorageClass":{
+          "shape":"StorageClass",
+          "location":"header",
+          "locationName":"x-amz-storage-class"
         },
         "RequestCharged":{
           "shape":"RequestCharged",
@@ -2370,7 +2386,7 @@
           "shape":"SSECustomerAlgorithm",
           "location":"header",
           "locationName":"x-amz-server-side-encryption-customer-algorithm",
-          "documentation":"Specifies the algorithm to use to when encrypting the object (e.g., AES256, aws:kms)."
+          "documentation":"Specifies the algorithm to use to when encrypting the object (e.g., AES256)."
         },
         "SSECustomerKey":{
           "shape":"SSECustomerKey",
@@ -2623,6 +2639,11 @@
           "locationName":"x-amz-server-side-encryption-aws-kms-key-id",
           "documentation":"If present, specifies the ID of the AWS Key Management Service (KMS) master encryption key that was used for the object."
         },
+        "StorageClass":{
+          "shape":"StorageClass",
+          "location":"header",
+          "locationName":"x-amz-storage-class"
+        },
         "RequestCharged":{
           "shape":"RequestCharged",
           "location":"header",
@@ -2692,7 +2713,7 @@
           "shape":"SSECustomerAlgorithm",
           "location":"header",
           "locationName":"x-amz-server-side-encryption-customer-algorithm",
-          "documentation":"Specifies the algorithm to use to when encrypting the object (e.g., AES256, aws:kms)."
+          "documentation":"Specifies the algorithm to use to when encrypting the object (e.g., AES256)."
         },
         "SSECustomerKey":{
           "shape":"SSECustomerKey",
@@ -3430,7 +3451,7 @@
       "members":{
         "PartNumber":{
           "shape":"PartNumber",
-          "documentation":"Part number identifying the part."
+          "documentation":"Part number identifying the part. This is a positive integer between 1 and 10,000."
         },
         "LastModified":{
           "shape":"LastModified",
@@ -4066,7 +4087,7 @@
           "shape":"SSECustomerAlgorithm",
           "location":"header",
           "locationName":"x-amz-server-side-encryption-customer-algorithm",
-          "documentation":"Specifies the algorithm to use to when encrypting the object (e.g., AES256, aws:kms)."
+          "documentation":"Specifies the algorithm to use to when encrypting the object (e.g., AES256)."
         },
         "SSECustomerKey":{
           "shape":"SSECustomerKey",
@@ -4387,14 +4408,18 @@
     },
     "ServerSideEncryption":{
       "type":"string",
-      "enum":["AES256"]
+      "enum":[
+        "AES256",
+        "aws:kms"
+      ]
     },
     "Size":{"type":"integer"},
     "StorageClass":{
       "type":"string",
       "enum":[
         "STANDARD",
-        "REDUCED_REDUNDANCY"
+        "REDUCED_REDUNDANCY",
+        "LT"
       ]
     },
     "Suffix":{"type":"string"},
@@ -4626,7 +4651,7 @@
           "shape":"PartNumber",
           "location":"querystring",
           "locationName":"partNumber",
-          "documentation":"Part number of part being copied."
+          "documentation":"Part number of part being copied. This is a positive integer between 1 and 10,000."
         },
         "UploadId":{
           "shape":"MultipartUploadId",
@@ -4638,7 +4663,7 @@
           "shape":"SSECustomerAlgorithm",
           "location":"header",
           "locationName":"x-amz-server-side-encryption-customer-algorithm",
-          "documentation":"Specifies the algorithm to use to when encrypting the object (e.g., AES256, aws:kms)."
+          "documentation":"Specifies the algorithm to use to when encrypting the object (e.g., AES256)."
         },
         "SSECustomerKey":{
           "shape":"SSECustomerKey",
@@ -4755,7 +4780,7 @@
           "shape":"PartNumber",
           "location":"querystring",
           "locationName":"partNumber",
-          "documentation":"Part number of part being uploaded."
+          "documentation":"Part number of part being uploaded. This is a positive integer between 1 and 10,000."
         },
         "UploadId":{
           "shape":"MultipartUploadId",
@@ -4767,7 +4792,7 @@
           "shape":"SSECustomerAlgorithm",
           "location":"header",
           "locationName":"x-amz-server-side-encryption-customer-algorithm",
-          "documentation":"Specifies the algorithm to use to when encrypting the object (e.g., AES256, aws:kms)."
+          "documentation":"Specifies the algorithm to use to when encrypting the object (e.g., AES256)."
         },
         "SSECustomerKey":{
           "shape":"SSECustomerKey",
@@ -4815,5 +4840,7 @@
       }
     },
     "WebsiteRedirectLocation":{"type":"string"}
+  },
+  "examples":{
   }
 }
