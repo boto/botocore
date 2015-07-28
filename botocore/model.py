@@ -191,18 +191,18 @@ class MapShape(Shape):
         return self._resolve_shape_ref(self._shape_model['value'])
 
 
+class StringShape(Shape):
+    @CachedProperty
+    def enum(self):
+        return self.metadata.get('enum', [])
+
+
 class ServiceModel(object):
     """
 
     :ivar service_description: The parsed service description dictionary.
 
     """
-    # Any type not in this mapping will default to the Shape class.
-    SHAPE_CLASSES = {
-        'structure': StructureShape,
-        'list': ListShape,
-        'map': MapShape,
-    }
 
     def __init__(self, service_description, service_name=None):
         """
@@ -428,6 +428,7 @@ class ShapeResolver(object):
         'structure': StructureShape,
         'list': ListShape,
         'map': MapShape,
+        'string': StringShape
     }
 
     def __init__(self, shape_map):
