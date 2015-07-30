@@ -588,17 +588,20 @@ class TestBuilders(unittest.TestCase):
         self.assertEqual(
             shape.members['A'].members['B'].members['C'].type_name, 'string')
 
-    def test_enum_values_on_scalar_used(self):
+    def test_enum_values_on_string_used(self):
         b = model.DenormalizedStructureBuilder()
+        enum_values = ['foo', 'bar', 'baz']
         shape = b.with_members({
             'A': {
                 'type': 'string',
-                'enum': ['foo', 'bar', 'baz'],
+                'enum': enum_values,
             },
         }).build_model()
         self.assertIsInstance(shape, model.StructureShape)
-        self.assertEqual(shape.members['A'].metadata['enum'],
-                         ['foo', 'bar', 'baz'])
+        string_shape = shape.members['A']
+        self.assertIsInstance(string_shape, model.StringShape)
+        self.assertEqual(string_shape.metadata['enum'], enum_values)
+        self.assertEqual(string_shape.enum, enum_values)
 
     def test_documentation_on_shape_used(self):
         b = model.DenormalizedStructureBuilder()
