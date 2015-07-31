@@ -16,6 +16,7 @@ from botocore.docs.params import RequestParamsDocumenter
 from botocore.docs.params import ResponseParamsDocumenter
 from botocore.docs.example import ResponseExampleDocumenter
 from botocore.docs.example import RequestExampleDocumenter
+from botocore.docs.sharedexample import SharedExampleBuilder
 
 
 def get_instance_public_methods(instance):
@@ -121,10 +122,10 @@ def document_custom_method(section, method_name, method):
 
 
 def document_model_driven_method(section, method_name, operation_model,
-                                 event_emitter, method_description=None,
-                                 example_prefix=None, include_input=None,
-                                 include_output=None, exclude_input=None,
-                                 exclude_output=None,
+                                 event_emitter, method_description=None, 
+                                 example_prefix=None, shared_examples=None,
+                                 include_input=None, include_output=None, 
+                                 exclude_input=None, exclude_output=None,
                                  document_output=True):
     """Documents an individual method
 
@@ -135,6 +136,8 @@ def document_model_driven_method(section, method_name, operation_model,
     :param operation_model: The model of the operation
 
     :param event_emitter: The event emitter to use to emit events
+
+    :param shared_examples: The shared JSON examples from the model. 
 
     :param example_prefix: The prefix to use in the method example.
 
@@ -231,3 +234,45 @@ def document_model_driven_method(section, method_name, operation_model,
                 include=include_output, exclude=exclude_output)
     else:
         return_section.write(':returns: None')
+
+    # Add the shared examples
+    if shared_examples:
+        shared_example_section = section.add_new_section('shared-examples')
+        shared_example_section.style.new_paragraph()
+        shared_example_section.style.bold('Examples')
+        for example in shared_examples:
+            shared_example_section.style.new_paragraph()
+            shared_example_section.write(example['description'])
+            shared_example_section.style.new_line()
+            comments = example['comments']
+            request = SharedExampleBuilder(
+                        params=example['input'],
+                        operation_name=operation_model.name,
+                        comments=comments['input']).example_code(
+                            prefix=example_prefix).split('\n')
+            shared_example_section.style.start_codeblock()
+            shared_example_section.write(request.pop(0) + '\n')
+            for line in request:
+                shared_example_section.writeln(line)
+
+            if 'output' in example:
+                shared_example_section.style.new_line()
+                shared_example_section.write('# Print out the response.'
+                                             + '\n')
+                shared_example_section.writeln('print(response)')
+                shared_example_section.style.end_codeblock()
+                shared_example_section.style.new_line()
+                shared_example_section.write('Expected Output:')
+                shared_example_section.style.new_line()
+                response = SharedExampleBuilder(
+                            params=example['output'],
+                            operation_name=operation_model.name,
+                            comments=comments['output'],
+                            is_input=False).example_code().split('\n')
+                shared_example_section.style.start_codeblock()
+                shared_example_section.write(response.pop(0) + '\n')
+                for line in response:
+                    shared_example_section.writeln(line)
+                shared_example_section.style.end_codeblock()
+            else:
+                shared_example_section.style.end_codeblock()

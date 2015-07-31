@@ -480,6 +480,11 @@ class Session(object):
             service_name, 'paginators-1', api_version)
         return paginate.PaginatorModel(paginator_config)
 
+    def get_examples(self, service_name, api_version=None):
+        loader = self.get_component('data_loader')
+        examples = loader.load_examples(service_name, api_version)
+        return examples['examples'] if examples else {}
+
     def get_service_data(self, service_name, api_version=None):
         """
         Retrieve the fully merged data associated with a service.

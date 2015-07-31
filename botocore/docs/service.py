@@ -57,7 +57,8 @@ class ServiceDocumenter(object):
         section.style.table_of_contents(title='Table of Contents', depth=2)
 
     def client_api(self, section):
-        ClientDocumenter(self._client).document_client(section)
+        examples = self._session.get_examples(self._service_name)
+        ClientDocumenter(self._client, examples).document_client(section)
 
     def paginator_api(self, section):
         try:

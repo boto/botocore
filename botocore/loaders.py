@@ -94,6 +94,7 @@ version to use.
 
 """
 import os
+import glob
 
 from botocore import BOTOCORE_ROOT
 from botocore.compat import json
@@ -362,6 +363,35 @@ class Loader(object):
                 return found
         # We didn't find anything that matched on any path.
         raise DataNotFoundError(data_path=name)
+
+    @instance_cache
+    def load_examples(self, service_name, api_version=None):
+        """Load example JSON.
+
+        This method loads the example JSON models given a service name
+        and optionally, an API version.
+
+        :type service_name: str
+        :param service_name: The name of the service (e.g ``ec2``, ``s3``).
+
+        :type api_version: str
+        :param api_version: The API version to load.  If this is not
+            provided, then the latest API version will be used.
+
+        :return: The loaded examples or None if no examples found.
+        """
+        if api_version is not None:
+            name = os.path.join(self.BUILTIN_DATA_PATH, service_name,
+                                api_version, 'examples-1.json')
+            path = os.path.splitext(name)[0]
+            return self.file_loader.load_file(path)
+        else:
+            name = os.path.join(self.BUILTIN_DATA_PATH, service_name,
+                                '**/examples-1.json')
+            paths = glob.glob(name)
+            if paths:
+                example_path = os.path.splitext(max(paths))[0]
+                return self.file_loader.load_file(example_path)
 
     def _potential_locations(self, name=None, must_exist=False,
                              is_dir=False):
