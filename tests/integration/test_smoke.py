@@ -169,6 +169,7 @@ ERROR_TESTS = {
 
 REGION_OVERRIDES = {
     'devicefarm': 'us-west-2',
+    'efs': 'us-west-2',
 }
 
 
