@@ -11,7 +11,6 @@ from botocore.vendored.requests import adapters
 from botocore.vendored.requests.exceptions import ConnectionError
 
 
-REGION = 'us-east-1'
 # Mapping of service -> api calls to try.
 # Each api call is a dict of OperationName->params.
 # Empty params means that the operation will be called with no params.  This is
@@ -114,6 +113,7 @@ ERROR_TESTS = {
         'GetResourceConfigHistory': {'resourceType': '', 'resourceId': ''},
         },
     'datapipeline': {'GetPipelineDefinition': {'pipelineId': 'fake'}},
+    'devicefarm': {'GetDevice': {'arn': 'arn:aws:devicefarm:REGION::device:f'}},
     'directconnect': {'DescribeConnections': {'connectionId': 'fake'}},
     'ds': {'CreateDirectory': {'Name': 'n', 'Password': 'p', 'Size': '1'}},
     'dynamodb': {'DescribeTable': {'TableName': 'fake'}},
@@ -166,11 +166,16 @@ ERROR_TESTS = {
     'workspaces': {'DescribeWorkspaces': {'DirectoryId': 'fake'}},
 }
 
-
+REGION = 'us-east-1'
 REGION_OVERRIDES = {
     'devicefarm': 'us-west-2',
     'efs': 'us-west-2',
 }
+
+
+def _get_client(session, service):
+    region_name = REGION_OVERRIDES.get(service, REGION)
+    return session.create_client(service, region_name=region_name)
 
 
 def test_can_make_request_with_client():
@@ -178,8 +183,7 @@ def test_can_make_request_with_client():
     # instead of service/operations.
     session = botocore.session.get_session()
     for service_name in SMOKE_TESTS:
-        region_name = REGION_OVERRIDES.get(service_name, REGION)
-        client = session.create_client(service_name, region_name=region_name)
+        client = _get_client(session, service_name)
         for operation_name in SMOKE_TESTS[service_name]:
             kwargs = SMOKE_TESTS[service_name][operation_name]
             method_name = xform_name(operation_name)
@@ -199,7 +203,7 @@ def _make_client_call(client, operation_name, kwargs):
 def test_can_make_request_and_understand_errors_with_client():
     session = botocore.session.get_session()
     for service_name in ERROR_TESTS:
-        client = session.create_client(service_name, region_name=REGION)
+        client = _get_client(session, service_name)
         for operation_name in ERROR_TESTS[service_name]:
             kwargs = ERROR_TESTS[service_name][operation_name]
             method_name = xform_name(operation_name)
@@ -220,9 +224,7 @@ def _make_error_client_call(client, operation_name, kwargs):
 def test_client_can_retry_request_properly():
     session = botocore.session.get_session()
     for service_name in SMOKE_TESTS:
-        client = session.create_client(
-            service_name,
-            region_name=REGION_OVERRIDES.get(service_name, REGION))
+        client = _get_client(session, service_name)
         for operation_name in SMOKE_TESTS[service_name]:
             kwargs = SMOKE_TESTS[service_name][operation_name]
             yield (_make_client_call_with_errors, client,
