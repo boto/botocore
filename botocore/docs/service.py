@@ -56,7 +56,13 @@ class ServiceDocumenter(object):
         section.style.table_of_contents(title='Table of Contents', depth=2)
 
     def client_api(self, section):
-        ClientDocumenter(self._client).document_client(section)
+        examples = None
+        try:
+            examples = self.get_examples(self._service_name)
+        except DataNotFoundError:
+            pass
+
+        ClientDocumenter(self._client, examples).document_client(section)
 
     def paginator_api(self, section):
         try:
@@ -75,3 +81,9 @@ class ServiceDocumenter(object):
             waiter_documenter = WaiterDocumenter(
                 self._client, service_waiter_model)
             waiter_documenter.document_waiters(section)
+
+    def get_examples(self, service_name, api_version=None):
+        loader = self._session.get_component('data_loader')
+        examples = loader.load_service_model(
+            service_name, 'examples-1', api_version)
+        return examples['examples']
