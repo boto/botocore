@@ -294,6 +294,23 @@ class TestResponseMetadataParsed(unittest.TestCase):
         self.assertEqual(parsed['Error'], {'Message': 'Access denied',
                                            'Code': 'AccessDeniedException'})
 
+    def test_can_parse_restjson_error_code(self):
+        body = b'''{
+            "status": "error",
+            "errors": [{"message": "[*Deprecated*: blah"}],
+            "adds": 0,
+            "__type": "#WasUnableToParseThis",
+            "message": "blah",
+            "deletes": 0}'''
+        headers = {
+             'x-amzn-requestid': 'request-id'
+        }
+        parser = parsers.RestJSONParser()
+        parsed = parser.parse(
+            {'body': body, 'headers': headers, 'status_code': 400}, None)
+        self.assertEqual(parsed['Error'], {'Message': 'blah',
+                                           'Code': 'WasUnableToParseThis'})
+
     def test_can_parse_with_case_insensitive_keys(self):
         body = (b'{"Code":"AccessDeniedException","type":"Client","Message":'
                 b'"Access denied"}')
