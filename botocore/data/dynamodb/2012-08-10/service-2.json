@@ -518,7 +518,7 @@
     },
     "AttributeMap":{
       "type":"map",
-      "key":{"shape":"AttributeName","locationName":"name"},
+      "key":{"shape":"AttributeName"},
       "value":{"shape":"AttributeValue"}
     },
     "AttributeName":{
