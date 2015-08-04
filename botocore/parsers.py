@@ -487,21 +487,6 @@ class BaseJSONParser(ResponseParser):
     def _handle_timestamp(self, shape, value):
         return self._timestamp_parser(value)
 
-
-class JSONParser(BaseJSONParser):
-    """Response parse for the "json" protocol."""
-    def _do_parse(self, response, shape):
-        # The json.loads() gives us the primitive JSON types,
-        # but we need to traverse the parsed JSON data to convert
-        # to richer types (blobs, timestamps, etc.
-        parsed = {}
-        if shape is not None:
-            body = response['body'].decode(self.DEFAULT_ENCODING)
-            original_parsed = json.loads(body)
-            parsed = self._parse_shape(shape, original_parsed)
-        self._inject_response_metadata(parsed, response['headers'])
-        return parsed
-
     def _do_error_parse(self, response, shape):
         body = json.loads(response['body'].decode(self.DEFAULT_ENCODING))
         error = {"Error": {}, "ResponseMetadata": {}}
@@ -530,6 +515,21 @@ class JSONParser(BaseJSONParser):
         if 'x-amzn-requestid' in headers:
             parsed.setdefault('ResponseMetadata', {})['RequestId'] = (
                 headers['x-amzn-requestid'])
+
+
+class JSONParser(BaseJSONParser):
+    """Response parse for the "json" protocol."""
+    def _do_parse(self, response, shape):
+        # The json.loads() gives us the primitive JSON types,
+        # but we need to traverse the parsed JSON data to convert
+        # to richer types (blobs, timestamps, etc.
+        parsed = {}
+        if shape is not None:
+            body = response['body'].decode(self.DEFAULT_ENCODING)
+            original_parsed = json.loads(body)
+            parsed = self._parse_shape(shape, original_parsed)
+        self._inject_response_metadata(parsed, response['headers'])
+        return parsed
 
 
 class BaseRestParser(ResponseParser):
@@ -632,7 +632,7 @@ class RestJSONParser(BaseRestParser, BaseJSONParser):
 
     def _do_error_parse(self, response, shape):
         body = self._initial_body_parse(response['body'])
-        error = {'Error': {}, 'ResponseMetadata': {}}
+        error = super(RestJSONParser, self)._do_error_parse(response, shape)
         error['Error']['Message'] = body.get('message',
                                              body.get('Message', ''))
         if 'x-amzn-errortype' in response['headers']:
