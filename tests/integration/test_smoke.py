@@ -11,7 +11,6 @@ from botocore.vendored.requests import adapters
 from botocore.vendored.requests.exceptions import ConnectionError
 
 
-REGION = 'us-east-1'
 # Mapping of service -> api calls to try.
 # Each api call is a dict of OperationName->params.
 # Empty params means that the operation will be called with no params.  This is
@@ -86,15 +85,97 @@ SMOKE_TESTS = {
 # that we get an error response back from the server because
 # we've sent invalid params.
 ERROR_TESTS = {
+    'autoscaling': {'CreateLaunchConfiguration': {
+        'LaunchConfigurationName': 'foo',
+        'ImageId': 'ami-12345678',
+        'InstanceType': 'm1.small',
+        }},
+    'cloudformation': {'CreateStack': {
+        'StackName': 'fake',
+        'TemplateURL': 'http://s3.amazonaws.com/foo/bar',
+        }},
+    'cloudfront': {'GetDistribution': {'Id': 'fake-id'}},
+    'cloudhsm': {'DescribeHapg': {'HapgArn': 'bogus-arn'}},
+    'cloudsearch': {'DescribeIndexFields': {'DomainName': 'fakedomain'}},
+    'cloudtrail': {'DeleteTrail': {'Name': 'fake-trail'}},
+    'cloudwatch': {'SetAlarmState': {
+        'AlarmName': 'abc',
+        'StateValue': 'mno',
+        'StateReason': 'xyz',
+        }},
+    'logs': {'GetLogEvents': {'logGroupName': 'a', 'logStreamName': 'b'}},
+    'codecommit': {'ListBranches': {'repositoryName': 'fake-repo'}},
+    'codedeploy': {'GetDeployment': {'deploymentId': 'fake-id'}},
+    'codepipeline': {'GetPipeline': {'name': 'fake-pipeline'}},
+    'cognito-identity': {'DescribeIdentityPool': {'IdentityPoolId': 'fake'}},
+    'cognito-sync': {'DescribeIdentityPoolUsage': {'IdentityPoolId': 'fake'}},
+    'config': {
+        'GetResourceConfigHistory': {'resourceType': '', 'resourceId': ''},
+        },
+    'datapipeline': {'GetPipelineDefinition': {'pipelineId': 'fake'}},
+    'devicefarm': {'GetDevice': {'arn': 'arn:aws:devicefarm:REGION::device:f'}},
+    'directconnect': {'DescribeConnections': {'connectionId': 'fake'}},
+    'ds': {'CreateDirectory': {'Name': 'n', 'Password': 'p', 'Size': '1'}},
+    'dynamodb': {'DescribeTable': {'TableName': 'fake'}},
+    'dynamodbstreams': {'DescribeStream': {'StreamArn': 'x'*37}},
+    'ec2': {'DescribeInstances': {'InstanceIds': ['i-12345678']}},
+    'ecs': {'StopTask': {'task': 'fake'}},
+    'efs': {'DeleteFileSystem': {'FileSystemId': 'fake'}},
+    'elasticache': {'DescribeCacheClusters': {'CacheClusterId': 'fake'}},
+    'elasticbeanstalk': {
+        'DescribeEnvironmentResources': {'EnvironmentId': 'x'},
+        },
+    'elb': {'DescribeLoadBalancers': {'LoadBalancerNames': ['fake']}},
+    'elastictranscoder': {'ReadJob': {'Id': 'fake'}},
+    'emr': {'DescribeCluster': {'ClusterId': 'fake'}},
+    'glacier': {'ListVaults': {'accountId': 'fake'}},
+    'iam': {'GetUser': {'UserName': 'fake'}},
+    'importexport': {'CreateJob': {
+        'JobType': 'Import',
+        'ValidateOnly': False,
+        'Manifest': 'fake',
+        }},
+    'kinesis': {'DescribeStream': {'StreamName': 'fake'}},
+    'kms': {'GetKeyPolicy': {'KeyId': 'fake', 'PolicyName': 'fake'}},
+    'lambda': {'Invoke': {'FunctionName': 'fake'}},
+    'machinelearning': {'GetBatchPrediction': {'BatchPredictionId': 'fake'}},
+    'opsworks': {'DescribeLayers': {'StackId': 'fake'}},
+    'rds': {'DescribeDBInstances': {'DBInstanceIdentifier': 'fake'}},
+    'redshift': {'DescribeClusters': {'ClusterIdentifier': 'fake'}},
+    'route53': {'GetHostedZone': {'Id': 'fake'}},
+    'route53domains': {'GetDomainDetail': {'DomainName': 'fake'}},
     's3': {'ListObjects': {'Bucket': 'thisbucketdoesnotexistasdf'}},
-    'dynamodb': {'DescribeTable': {'TableName': 'unknowntablefoo'}},
-    'sns': {'ConfirmSubscription': {'TopicArn': 'a', 'Token': 'b'}},
+    'ses': {'VerifyEmailIdentity': {'EmailAddress': 'fake'}},
+    'sdb': {'CreateDomain': {'DomainName': ''}},
+    'sns': {
+        'ConfirmSubscription': {'TopicArn': 'a', 'Token': 'b'},
+        'Publish': {'Message': 'hello', 'TopicArn': 'fake'},
+        },
+    'sqs': {'GetQueueUrl': {'QueueName': 'fake'}},
+    'ssm': {'GetDocument': {'Name': 'fake'}},
+    'storagegateway': {'ListVolumes': {'GatewayARN': 'x'*50}},
+    'sts': {'GetFederationToken': {'Name': 'fake', 'Policy': 'fake'}},
+    'support': {'CreateCase': {
+        'subject': 'x',
+        'communicationBody': 'x',
+        'categoryCode': 'x',
+        'serviceCode': 'x',
+        'severityCode': 'low',
+        }},
+    'swf': {'DescribeDomain': {'name': 'fake'}},
+    'workspaces': {'DescribeWorkspaces': {'DirectoryId': 'fake'}},
 }
 
-
+REGION = 'us-east-1'
 REGION_OVERRIDES = {
     'devicefarm': 'us-west-2',
+    'efs': 'us-west-2',
 }
+
+
+def _get_client(session, service):
+    region_name = REGION_OVERRIDES.get(service, REGION)
+    return session.create_client(service, region_name=region_name)
 
 
 def test_can_make_request_with_client():
@@ -102,8 +183,7 @@ def test_can_make_request_with_client():
     # instead of service/operations.
     session = botocore.session.get_session()
     for service_name in SMOKE_TESTS:
-        region_name = REGION_OVERRIDES.get(service_name, REGION)
-        client = session.create_client(service_name, region_name=region_name)
+        client = _get_client(session, service_name)
         for operation_name in SMOKE_TESTS[service_name]:
             kwargs = SMOKE_TESTS[service_name][operation_name]
             method_name = xform_name(operation_name)
@@ -123,7 +203,7 @@ def _make_client_call(client, operation_name, kwargs):
 def test_can_make_request_and_understand_errors_with_client():
     session = botocore.session.get_session()
     for service_name in ERROR_TESTS:
-        client = session.create_client(service_name, region_name=REGION)
+        client = _get_client(session, service_name)
         for operation_name in ERROR_TESTS[service_name]:
             kwargs = ERROR_TESTS[service_name][operation_name]
             method_name = xform_name(operation_name)
@@ -144,9 +224,7 @@ def _make_error_client_call(client, operation_name, kwargs):
 def test_client_can_retry_request_properly():
     session = botocore.session.get_session()
     for service_name in SMOKE_TESTS:
-        client = session.create_client(
-            service_name,
-            region_name=REGION_OVERRIDES.get(service_name, REGION))
+        client = _get_client(session, service_name)
         for operation_name in SMOKE_TESTS[service_name]:
             kwargs = SMOKE_TESTS[service_name][operation_name]
             yield (_make_client_call_with_errors, client,
