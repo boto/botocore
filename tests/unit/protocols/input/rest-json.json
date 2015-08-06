@@ -1,5 +1,29 @@
 [
   {
+    "description": "No parameters",
+    "metadata": {
+      "protocol": "rest-json",
+      "apiVersion": "2014-01-01"
+    },
+    "shapes": {},
+    "cases": [
+      {
+        "given": {
+          "http": {
+            "method": "GET",
+            "requestUri": "/2014-01-01/jobs"
+          },
+          "name": "OperationName"
+        },
+        "serialized": {
+          "body": "",
+          "uri": "/2014-01-01/jobs",
+          "headers": {}
+        }
+      }
+    ]
+  },
+  {
     "description": "URI parameter only with no location name",
     "metadata": {
       "protocol": "rest-json",
