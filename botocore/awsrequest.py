@@ -77,6 +77,7 @@ class AWSHTTPConnection(HTTPConnection):
         # body in _send_request, as opposed to endheaders(), which is where the
         # body is sent in all versions > 2.6.
         self._response_received = False
+        self._expect_header_set = False
 
     def _tunnel(self):
         # Works around a bug in py26 which is fixed in later versions of
@@ -414,6 +415,25 @@ class AWSPreparedRequest(models.PreparedRequest):
             logger.debug("Unable to rewind stream: %s", e)
             raise UnseekableStreamError(stream_object=self.body)
 
+    def prepare_body(self, data, files, json=None):
+        """Prepares the given HTTP body data."""
+        super(AWSPreparedRequest, self).prepare_body(data, files, json)
+
+        # Transfer-Encoding is not supported for AWS Services so remove it
+        # if it is added.
+        if 'Transfer-Encoding' in self.headers:
+            self.headers.pop('Transfer-Encoding')
+
+        # Calculate the Content-Length by trying to seek the file as
+        # requests cannot determine content length for some seekable file-like
+        # objects.
+        if 'Content-Length' not in self.headers:
+            if hasattr(data, 'seek') and hasattr(data, 'tell'):
+                orig_pos = data.tell()
+                data.seek(0, 2)
+                end_file_pos = data.tell()
+                self.headers['Content-Length'] = str(end_file_pos - orig_pos)
+                data.seek(orig_pos)
 
 HTTPSConnectionPool.ConnectionCls = AWSHTTPSConnection
 HTTPConnectionPool.ConnectionCls = AWSHTTPConnection

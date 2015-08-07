@@ -19,6 +19,8 @@ import tempfile
 import shutil
 import threading
 import mock
+from tarfile import TarFile
+from contextlib import closing
 
 from nose.plugins.attrib import attr
 
@@ -853,6 +855,31 @@ class TestSupportedPutObjectBodyTypes(TestS3BaseWithBucket):
             f.write(u'\u2713'.encode('utf-8'))
         with open(filename, 'rb') as binary_file:
             self.assert_can_put_object(body=binary_file)
+
+    def test_can_put_extracted_file_from_tar(self):
+        tempdir = self.make_tempdir()
+        tarname = os.path.join(tempdir, 'mytar.tar')
+        filename = os.path.join(tempdir, 'foo')
+
+        # Set up a file to add the tarfile.
+        with open(filename, 'w') as f:
+            f.write('bar')
+
+        # Setup the tar file by adding the file to it.
+        # Note there is no context handler for TarFile in python 2.6
+        try:
+            tar = TarFile(tarname, 'w')
+            tar.add(filename, 'foo')
+        finally:
+            tar.close()
+
+        # See if an extracted file can be uploaded to s3.
+        try:
+            tar = TarFile(tarname, 'r')
+            with closing(tar.extractfile('foo')) as f:
+                self.assert_can_put_object(body=f)
+        finally:
+            tar.close()
 
 
 class TestSupportedPutObjectBodyTypesSigv4(TestSupportedPutObjectBodyTypes):
