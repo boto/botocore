@@ -374,6 +374,7 @@ class BaseRestSerializer(Serializer):
                                                         self.DEFAULT_METHOD)
         shape = operation_model.input_shape
         if shape is None:
+            serialized['url_path'] = operation_model.http['requestUri']
             return serialized
         shape_members = shape.members
         # While the ``serialized`` key holds the final serialized request
