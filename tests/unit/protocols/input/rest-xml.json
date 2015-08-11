@@ -73,16 +73,16 @@
       {
         "given": {
           "http": {
-            "method": "PUT",
+            "method": "GET",
             "requestUri": "/2014-01-01/hostedzone"
           },
           "name": "OperationName"
         },
         "params": {},
         "serialized": {
-          "method": "PUT",
+          "method": "GET",
           "body": "",
-          "uri": "/",
+          "uri": "/2014-01-01/hostedzone",
           "headers": {}
         }
       }
