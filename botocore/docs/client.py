@@ -19,8 +19,11 @@ from botocore.docs.method import get_instance_public_methods
 
 
 class ClientDocumenter(object):
-    def __init__(self, client):
+    def __init__(self, client, shared_examples=None):
         self._client = client
+        self._shared_examples = shared_examples
+        if self._shared_examples is None:
+            self._shared_examples = {}
         self._service_name = self._client.meta.service_model.service_name
 
     def document_client(self, section):
@@ -96,5 +99,6 @@ class ClientDocumenter(object):
             section, method_name, operation_model,
             event_emitter=self._client.meta.events,
             method_description=operation_model.documentation,
-            example_prefix='response = client.%s' % method_name
+            example_prefix='response = client.%s' % method_name,
+            shared_examples=self._shared_examples.get(operation_name)
         )
