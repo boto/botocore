@@ -15,7 +15,7 @@ import os
 import mock
 
 from botocore.session import Session
-from tests import BaseEnvVar
+from tests import BaseEnvVar, temporary_file
 
 
 class TestCredentialPrecedence(BaseEnvVar):
@@ -107,3 +107,16 @@ class TestCredentialPrecedence(BaseEnvVar):
 
         self.assertEqual(credentials.access_key, 'test')
         self.assertEqual(credentials.secret_key, 'test-secret')
+
+    def test_honors_aws_shared_credentials_file_env_var(self):
+        with temporary_file('w') as f:
+            f.write('[default]\n'
+                    'aws_access_key_id=custom1\n'
+                    'aws_secret_access_key=custom2\n')
+            f.flush()
+            os.environ['AWS_SHARED_CREDENTIALS_FILE'] = f.name
+            s = Session()
+            credentials = s.get_credentials()
+
+            self.assertEqual(credentials.access_key, 'custom1')
+            self.assertEqual(credentials.secret_key, 'custom2')
