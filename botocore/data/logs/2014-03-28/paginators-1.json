@@ -1,0 +1,40 @@
+{
+  "pagination": {
+    "DescribeLogGroups": {
+      "input_token": "nextToken",
+      "output_token": "nextToken",
+      "limit_key": "Limit",
+      "result_key": "LogGroups"
+    },
+    "DescribeLogStreams": {
+      "input_token": "nextToken",
+      "output_token": "nextToken",
+      "limit_key": "Limit",
+      "result_key": "LogStreams"
+    },
+    "DescribeMetricFilters": {
+      "input_token": "nextToken",
+      "output_token": "nextToken",
+      "limit_key": "Limit",
+      "result_key": "MetricFilters"
+    },
+    "DescribeSubscriptionFilters": {
+      "input_token": "nextToken",
+      "output_token": "nextToken",
+      "limit_key": "Limit",
+      "result_key": "SubscriptionFilters"
+    },
+    "FilterLogEvents": {
+      "input_token": "nextToken",
+      "output_token": "nextToken",
+      "limit_key": "Limit",
+      "result_key": "Events"
+    },
+    "GetLogEvents": {
+      "input_token": "nextToken",
+      "output_token": "nextForwardToken",
+      "limit_key": "Limit",
+      "result_key": "Events"
+    }
+  }
+}
