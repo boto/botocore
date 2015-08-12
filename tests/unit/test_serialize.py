@@ -137,6 +137,78 @@ class TestBinaryTypesWithRestXML(BaseModelWithBlob):
         self.assertEqual(request['body'], body)
 
 
+class TestTimestampHeadersWithRestXML(unittest.TestCase):
+
+    def setUp(self):
+        self.model = {
+            'metadata': {'protocol': 'rest-xml', 'apiVersion': '2014-01-01'},
+            'documentation': '',
+            'operations': {
+                'TestOperation': {
+                    'name': 'TestOperation',
+                    'http': {
+                        'method': 'POST',
+                        'requestUri': '/',
+                    },
+                    'input': {'shape': 'InputShape'},
+                }
+            },
+            'shapes': {
+                'InputShape': {
+                    'type': 'structure',
+                    'members': {
+                        'TimestampHeader': {
+                            'shape': 'TimestampType',
+                            'location': 'header',
+                            'locationName': 'x-timestamp'
+                        },
+                    }
+                },
+                'TimestampType': {
+                    'type': 'timestamp',
+                }
+            }
+        }
+        self.service_model = ServiceModel(self.model)
+
+    def serialize_to_request(self, input_params):
+        request_serializer = serialize.create_serializer(
+            self.service_model.metadata['protocol'])
+        return request_serializer.serialize_to_request(
+            input_params, self.service_model.operation_model('TestOperation'))
+
+    def test_accepts_datetime_object(self):
+        request = self.serialize_to_request(
+            {'TimestampHeader': datetime.datetime(2014, 1, 1, 12, 12, 12,
+                                                  tzinfo=dateutil.tz.tzutc())})
+        self.assertEqual(request['headers']['x-timestamp'],
+                         'Wed, 01 Jan 2014 12:12:12 GMT')
+
+    def test_accepts_iso_8601_format(self):
+        request = self.serialize_to_request(
+            {'TimestampHeader': '2014-01-01T12:12:12+00:00'})
+        self.assertEqual(request['headers']['x-timestamp'],
+                         'Wed, 01 Jan 2014 12:12:12 GMT')
+
+    def test_accepts_iso_8601_format_non_utc(self):
+        request = self.serialize_to_request(
+            {'TimestampHeader': '2014-01-01T07:12:12-05:00'})
+        self.assertEqual(request['headers']['x-timestamp'],
+                         'Wed, 01 Jan 2014 12:12:12 GMT')
+
+    def test_accepts_rfc_822_format(self):
+        request = self.serialize_to_request(
+            {'TimestampHeader': 'Wed, 01 Jan 2014 12:12:12 GMT'})
+        self.assertEqual(request['headers']['x-timestamp'],
+                         'Wed, 01 Jan 2014 12:12:12 GMT')
+
+    def test_accepts_unix_timestamp_integer(self):
+        request = self.serialize_to_request(
+            {'TimestampHeader': 1388578332})
+        self.assertEqual(request['headers']['x-timestamp'],
+                         'Wed, 01 Jan 2014 12:12:12 GMT')
+
+
 class TestTimestamps(unittest.TestCase):
     def setUp(self):
         self.model = {
