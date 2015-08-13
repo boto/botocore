@@ -29,12 +29,6 @@
       "output_token": "nextToken",
       "limit_key": "Limit",
       "result_key": "Events"
-    },
-    "GetLogEvents": {
-      "input_token": "nextToken",
-      "output_token": "nextForwardToken",
-      "limit_key": "Limit",
-      "result_key": "Events"
     }
   }
 }
