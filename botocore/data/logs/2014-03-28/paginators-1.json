@@ -3,32 +3,32 @@
     "DescribeLogGroups": {
       "input_token": "nextToken",
       "output_token": "nextToken",
-      "limit_key": "Limit",
-      "result_key": "LogGroups"
+      "limit_key": "limit",
+      "result_key": "logGroups"
     },
     "DescribeLogStreams": {
       "input_token": "nextToken",
       "output_token": "nextToken",
-      "limit_key": "Limit",
-      "result_key": "LogStreams"
+      "limit_key": "limit",
+      "result_key": "logStreams"
     },
     "DescribeMetricFilters": {
       "input_token": "nextToken",
       "output_token": "nextToken",
-      "limit_key": "Limit",
-      "result_key": "MetricFilters"
+      "limit_key": "limit",
+      "result_key": "metricFilters"
     },
     "DescribeSubscriptionFilters": {
       "input_token": "nextToken",
       "output_token": "nextToken",
-      "limit_key": "Limit",
-      "result_key": "SubscriptionFilters"
+      "limit_key": "limit",
+      "result_key": "subscriptionFilters"
     },
     "FilterLogEvents": {
       "input_token": "nextToken",
       "output_token": "nextToken",
-      "limit_key": "Limit",
-      "result_key": "Events"
+      "limit_key": "limit",
+      "result_key": "events"
     }
   }
 }
