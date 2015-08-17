@@ -419,11 +419,6 @@ class AWSPreparedRequest(models.PreparedRequest):
         """Prepares the given HTTP body data."""
         super(AWSPreparedRequest, self).prepare_body(data, files, json)
 
-        # Transfer-Encoding is not supported for AWS Services so remove it
-        # if it is added.
-        if 'Transfer-Encoding' in self.headers:
-            self.headers.pop('Transfer-Encoding')
-
         # Calculate the Content-Length by trying to seek the file as
         # requests cannot determine content length for some seekable file-like
         # objects.
@@ -434,6 +429,13 @@ class AWSPreparedRequest(models.PreparedRequest):
                 end_file_pos = data.tell()
                 self.headers['Content-Length'] = str(end_file_pos - orig_pos)
                 data.seek(orig_pos)
+                # If the Content-Length was added this way, a
+                # Transfer-Encoding was added by requests because it did
+                # not add a Content-Length header. However, the
+                # Transfer-Encoding header is not supported for
+                # AWS Services so remove it if it is added.
+                if 'Transfer-Encoding' in self.headers:
+                    self.headers.pop('Transfer-Encoding')
 
 HTTPSConnectionPool.ConnectionCls = AWSHTTPSConnection
 HTTPConnectionPool.ConnectionCls = AWSHTTPConnection
