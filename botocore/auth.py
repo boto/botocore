@@ -685,6 +685,10 @@ class HmacV1QueryAuth(HmacV1Auth):
 
         # Create a new url with the presigned url.
         p = urlsplit(request.url)
+        if p[3]:
+            # If there was a pre-existing query string, we should
+            # add that back before injecting the new query string.
+            new_query_string ='%s&%s' % (p[3], new_query_string)
         new_url_parts = (p[0], p[1], p[2], new_query_string, p[4])
         request.url = urlunsplit(new_url_parts)
 

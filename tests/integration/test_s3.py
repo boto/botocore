@@ -452,6 +452,17 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
         # Try to retrieve the object using the presigned url.
         self.assertEqual(requests.get(presigned_url).content, b'foo')
 
+    def test_presign_with_existing_query_string_values(self):
+        content_disposition = 'attachment; filename=foo.txt;'
+        presigned_url = self.client.generate_presigned_url(
+            'get_object', Params={
+                'Bucket': self.bucket_name, 'Key': self.key,
+                'ResponseContentDisposition': content_disposition})
+        response = requests.get(presigned_url)
+        self.assertEqual(response.headers['Content-Disposition'],
+                         content_disposition)
+        self.assertEqual(response.content, b'foo')
+
     def test_presign_sigv4(self):
         self.client_config.signature_version = 's3v4'
         self.client = self.session.create_client(

@@ -362,6 +362,25 @@ class TestGenerateUrl(unittest.TestCase):
         self.generate_url_mock.assert_called_with(
             request_dict=ref_request_dict, expires_in=3600)
 
+    def test_generate_presigned_url_with_query_string(self):
+        disposition = 'attachment; filename="download.jpg"'
+        self.client.generate_presigned_url(
+            'get_object', Params={
+                'Bucket': self.bucket,
+                'Key': self.key,
+                'ResponseContentDisposition': disposition})
+        ref_request_dict = {
+            'body': b'',
+            'url': (u'https://s3.amazonaws.com/mybucket/mykey'
+                    '?response-content-disposition='
+                    'attachment%3B%20filename%3D%22download.jpg%22'),
+            'headers': {},
+            'query_string': {u'response-content-disposition': disposition},
+            'url_path': u'/mybucket/mykey',
+            'method': u'GET'}
+        self.generate_url_mock.assert_called_with(
+            request_dict=ref_request_dict, expires_in=3600)
+
     def test_generate_presigned_url_unknown_method_name(self):
         with self.assertRaises(UnknownClientMethodError):
             self.client.generate_presigned_url('getobject')
