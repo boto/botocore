@@ -85,7 +85,7 @@ class Seekable(object):
         self._stream = stream
 
     def __iter__(self):
-        yield self._stream.__iter__()
+        return iter(self._stream)
 
     def read(self):
         return self._stream.read()
