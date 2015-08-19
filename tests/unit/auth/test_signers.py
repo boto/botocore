@@ -475,6 +475,21 @@ class TestS3SigV2Presign(BasePresignTest):
     def tearDown(self):
         self.time_patch.stop()
 
+    def test_presign_with_query_string(self):
+        self.request.url = (
+            u'https://foo-bucket.s3.amazonaws.com/image.jpg'
+            u'?response-content-disposition='
+            'attachment%3B%20filename%3D%22download.jpg%22')
+        self.auth.add_auth(self.request)
+        query_string = self.get_parsed_query_string(self.request)
+        # We should have still kept the response-content-disposition
+        # in the query string.
+        self.assertIn('response-content-disposition', query_string)
+        self.assertEqual(query_string['response-content-disposition'],
+                         'attachment; filename="download.jpg"')
+        # But we should have also added the parts from the signer.
+        self.assertEqual(query_string['AWSAccessKeyId'], self.access_key)
+
     def test_presign_no_headers(self):
         self.auth.add_auth(self.request)
         self.assertTrue(self.request.url.startswith(self.path + '?'))

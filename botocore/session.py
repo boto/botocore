@@ -90,11 +90,11 @@ class Session(object):
         # This is the number of seconds until we time out a request to
         # the instance metadata service.
         'metadata_service_timeout': ('metadata_service_timeout',
-                                     None, 1, int),
+                                     'AWS_METADATA_SERVICE_TIMEOUT', 1, int),
         # This is the number of request attempts we make until we give
         # up trying to retrieve data from the instance metadata service.
         'metadata_service_num_attempts': ('metadata_service_num_attempts',
-                                          None, 1, int),
+                                          'AWS_METADATA_SERVICE_NUM_ATTEMPTS', 1, int),
     }
 
     #: The default format string to use when configuring the botocore logger.
