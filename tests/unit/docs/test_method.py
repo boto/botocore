@@ -10,7 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import unittest
+from tests import unittest, mock
 from tests.unit.docs import BaseDocsTest
 from botocore.hooks import HierarchicalEmitter
 from botocore.docs.method import document_model_driven_signature
@@ -18,6 +18,7 @@ from botocore.docs.method import document_custom_signature
 from botocore.docs.method import document_custom_method
 from botocore.docs.method import document_model_driven_method
 from botocore.docs.method import get_instance_public_methods
+from botocore.docs.method import LazyLoadedDocstring
 from botocore.docs.utils import DocumentedShape
 
 
@@ -301,3 +302,44 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
             '\'Bar\': \'string\'',
             '- **Bar** *(string) --*',
         ])
+
+
+class TestLazyLoadedDocstring(unittest.TestCase):
+    def setUp(self):
+        self.document_method_patch = mock.patch(
+            'botocore.docs.method.document_model_driven_method')
+        self.document_method = self.document_method_patch.start()
+
+    def tearDown(self):
+        self.document_method_patch.stop()
+
+    def test_expandtabs(self):
+        self.document_method.side_effect = lambda section: section.write(
+            'foo\t')
+        docstring = LazyLoadedDocstring()
+        self.assertEqual('foo ', docstring.expandtabs(1))
+
+    def test_str(self):
+        self.document_method.side_effect = lambda section: section.write('foo')
+        docstring = LazyLoadedDocstring()
+        self.assertEqual('foo', str(docstring))
+
+    def test_repr(self):
+        self.document_method.side_effect = lambda section: section.write('foo')
+        docstring = LazyLoadedDocstring()
+        self.assertEqual('foo', repr(docstring))
+
+    def test_is_lazy_loaded(self):
+        docstring = LazyLoadedDocstring()
+        str(docstring)
+        str(docstring)
+        # The mock.ANY represents the DocumentStructure that is filled out.
+        self.document_method.assert_called_once_with(mock.ANY)
+
+    def test_args_kwargs_passed(self):
+        args = ['foo', 'bar']
+        kwargs = {'biz': 'baz'}
+        docstring = LazyLoadedDocstring(*args, **kwargs)
+        str(docstring)
+        # The mock.ANY represents the DocumentStructure that is filled out.
+        self.document_method.assert_called_with(mock.ANY, *args, **kwargs)
