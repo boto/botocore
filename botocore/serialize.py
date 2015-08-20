@@ -38,7 +38,6 @@ with the exception of blob types.  Those are assumed to be binary,
 and if a str/unicode type is passed in, it will be encoded as utf-8.
 """
 import re
-import time
 import base64
 from xml.etree import ElementTree
 import calendar
@@ -46,7 +45,7 @@ import calendar
 from botocore.compat import six
 
 from botocore.compat import json, formatdate
-from botocore.utils import parse_timestamp, parse_to_aware_datetime
+from botocore.utils import parse_to_aware_datetime
 from botocore.utils import percent_encode
 from botocore import validate
 
@@ -502,8 +501,8 @@ class BaseRestSerializer(Serializer):
 
     def _convert_header_value(self, shape, value):
         if shape.type_name == 'timestamp':
-            datetime_obj = parse_timestamp(value)
-            timestamp = time.mktime(datetime_obj.timetuple())
+            datetime_obj = parse_to_aware_datetime(value)
+            timestamp = calendar.timegm(datetime_obj.utctimetuple())
             return self._timestamp_rfc822(timestamp)
         else:
             return value
