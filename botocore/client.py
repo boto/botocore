@@ -260,14 +260,22 @@ class ClientCreator(object):
     def _create_api_method(self, py_operation_name, operation_name,
                            service_model):
         def _api_call(self, *args, **kwargs):
-            # We're accepting *args so that we can give a more helpful
-            # error message than TypeError: _api_call takes exactly
-            # 1 argument.
-            if args:
-                raise TypeError(
-                    "%s() only accepts keyword arguments." % py_operation_name)
+            # They have two options:
+            # 1. Specify arguments via **kwargs
+            # 2. Specify arguments via a single positional argument.
+            # If they do both, it's an error.
+            if args and kwargs:
+                raise TypeError("Can't provide both positional args as well "
+                                "as kwargs.")
+            elif args and len(args) != 1:
+                raise TypeError("More than one positional argument was provided. "
+                                "Only a single positional argument can be provided.")
+            elif args and len(args) == 1:
+                client_params = args[0]
+            else:
+                client_params = kwargs
             # The "self" in this scope is referring to the BaseClient.
-            return self._make_api_call(operation_name, kwargs)
+            return self._make_api_call(operation_name, client_params)
 
         _api_call.__name__ = str(py_operation_name)
 
