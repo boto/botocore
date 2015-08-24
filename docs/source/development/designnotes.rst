@@ -25,7 +25,7 @@ In boto, the equivalent code would be::
 There are several reasons why this was changed in botocore.
 
 The first reason was because we wanted to have the same casing for
-inputs as well as outputs.  In both boto and botocre, the response
+inputs as well as outputs.  In both boto and botocore, the response
 for the ``describe_table`` calls is::
 
     {'Table': {'CreationDateTime': 1393007077.387,
