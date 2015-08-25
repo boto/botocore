@@ -96,6 +96,7 @@ class Endpoint(object):
         self.proxies = proxies
         self.http_session = PreserveAuthSession()
         self.timeout = timeout
+        logger.debug('Setting %s timeout as %s', endpoint_prefix, self.timeout)
         self._lock = threading.Lock()
         if response_parser_factory is None:
             response_parser_factory = parsers.ResponseParserFactory()
@@ -221,7 +222,7 @@ class EndpointCreator(object):
 
     def create_endpoint(self, service_model, region_name=None, is_secure=True,
                         endpoint_url=None, verify=None,
-                        response_parser_factory=None):
+                        response_parser_factory=None, timeout=DEFAULT_TIMEOUT):
         if region_name is None:
             region_name = self._configured_region
         # Use the endpoint resolver heuristics to build the endpoint url.
@@ -247,16 +248,17 @@ class EndpointCreator(object):
             final_endpoint_url = endpoint['uri']
         if not is_valid_endpoint_url(final_endpoint_url):
             raise ValueError("Invalid endpoint: %s" % final_endpoint_url)
-        return self._get_endpoint(
-            service_model, final_endpoint_url, verify, response_parser_factory)
 
-    def _get_endpoint(self, service_model, endpoint_url,
-                      verify, response_parser_factory):
-        endpoint_prefix = service_model.endpoint_prefix
-        event_emitter = self._event_emitter
-        return self._get_endpoint_complex(endpoint_prefix, endpoint_url,
-                                          verify, event_emitter,
-                                          response_parser_factory)
+        proxies = self._get_proxies(final_endpoint_url)
+        verify_value = self._get_verify_value(verify)
+        return Endpoint(
+            final_endpoint_url,
+            endpoint_prefix=service_model.endpoint_prefix,
+            event_emitter=self._event_emitter,
+            proxies=proxies,
+            verify=verify_value,
+            timeout=timeout,
+            response_parser_factory=response_parser_factory)
 
     def _get_proxies(self, url):
         # We could also support getting proxies from a config file,
@@ -275,17 +277,3 @@ class EndpointCreator(object):
         # Otherwise use the value from REQUESTS_CA_BUNDLE, or default to
         # True if the env var does not exist.
         return os.environ.get('REQUESTS_CA_BUNDLE', True)
-
-    def _get_endpoint_complex(self, endpoint_prefix,
-                              endpoint_url, verify,
-                              event_emitter,
-                              response_parser_factory=None):
-        proxies = self._get_proxies(endpoint_url)
-        verify = self._get_verify_value(verify)
-        return Endpoint(
-            endpoint_url,
-            endpoint_prefix=endpoint_prefix,
-            event_emitter=event_emitter,
-            proxies=proxies,
-            verify=verify,
-            response_parser_factory=response_parser_factory)
