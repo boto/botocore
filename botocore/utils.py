@@ -389,6 +389,23 @@ def parse_to_aware_datetime(value):
     return datetime_obj
 
 
+def datetime2timestamp(dt):
+    """Calculate the timestamp based on the given datetime instance.
+
+    Naive datetime input will be treated as UTC time rather than local time.
+    Note that this behavior is different from datetime.timestamp() in Python 3.
+    (We want unambiguous UTC to avoid test cases failing on different locale.)
+    """
+    epoch = datetime.datetime(1970, 1, 1)
+    if dt.tzinfo:
+        d = dt.replace(tzinfo=None) - dt.utcoffset() - epoch
+    else:
+        d = dt - epoch
+    if hasattr(d, "total_seconds"):
+        return d.total_seconds()  # Works in Python 2.7+
+    return (d.microseconds + (d.seconds + d.days * 24 * 3600) * 10**6) / 10**6
+
+
 def calculate_sha256(body, as_hex=False):
     """Calculate a sha256 checksum.
 

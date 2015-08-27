@@ -12,6 +12,15 @@
 # language governing permissions and limitations under the License.
 import datetime
 import weakref
+import logging
+import json
+import base64
+try:
+    maketrans = bytes.maketrans  # For Python 3
+except:
+    from string import maketrans
+
+import rsa
 
 import botocore
 import botocore.auth
@@ -20,6 +29,9 @@ from botocore.exceptions import UnknownSignatureVersionError
 from botocore.exceptions import UnknownClientMethodError
 from botocore.exceptions import UnsupportedSignatureVersionError
 from botocore.utils import fix_s3_host
+
+
+LOG = logging.getLogger(__name__)
 
 
 class RequestSigner(object):
@@ -211,6 +223,65 @@ class RequestSigner(object):
         request.prepare()
 
         return request.url
+
+
+class CloudFrontSigner(object):
+
+    @staticmethod
+    def b64encode(content):
+        return base64.b64encode(content).translate(maketrans(b'+=/', b'-_~'))
+
+    def __init__(self, key_id, private_key):
+        """Create a CloudFrontSigner.
+
+        :type key_id: str
+        :param key_id: The CloudFront Key Pair ID
+
+        :type private_key: str
+        :param private_key: The private key string used for signing.
+        """
+        self.key_id = key_id
+        self.rsa_pk = rsa.PrivateKey.load_pkcs1(private_key.encode('utf8'))
+
+    def sign(self, url, expires, starts=None, ip_address=None):
+        """Sign a given url.
+
+        :type url: str
+        :param url: The URL of the protected object.
+
+        :type expires: int
+        :param expires: The expiry time of the URL. Format is a timestamp.
+
+        :type starts: int
+        :param starts: The start time of the URL. Format is a timestamp.
+
+        :type ip_address: str
+        :param ip_address: Use 'x.x.x.x' for an IP, or 'x.x.x.x/x' for a subnet
+
+        :rtype: str
+        :return: The signed URL.
+        """
+        # SEE: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-creating-signed-url-custom-policy.html
+        condition = {"DateLessThan": {"AWS:EpochTime": int(expires)}}
+        if ip_address:
+            if '/' not in ip_address:
+                ip_address += '/32'
+            condition["IpAddress"] = {"AWS:SourceIp": ip_address}
+        if starts:
+            condition["DateGreaterThan"] = {"AWS:EpochTime": int(starts)}
+        custom_policy = {
+            "Statement": [{"Resource": url, "Condition": condition}]}
+        compact_policy = json.dumps(
+            custom_policy,
+            sort_keys=True,  # Otherwise test cases become unstable on Python3
+            separators=(',', ':')).encode('utf8')
+        LOG.debug("Policy = %s", compact_policy)
+        signed_policy = rsa.sign(compact_policy, self.rsa_pk, 'SHA-1')
+        return url + ('&' if '?' in url else '?') + '&'.join([
+            'Policy=%s' % self.b64encode(compact_policy).decode('utf8'),
+            'Signature=%s' % self.b64encode(signed_policy).decode('utf8'),
+            'Key-Pair-Id=%s' % self.key_id,
+            ])
 
 
 class S3PostPresigner(object):
