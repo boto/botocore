@@ -20,6 +20,9 @@ import shutil
 import contextlib
 import tempfile
 import binascii
+import platform
+import select
+from subprocess import Popen, PIPE
 
 
 # The unittest module got a significant overhaul
@@ -34,6 +37,12 @@ else:
 import botocore.loaders
 import botocore.session
 _LOADER = botocore.loaders.Loader()
+
+
+def requires_memory_collection(cls):
+    if platform.system() not in ['Darwin', 'Linux']:
+        return unittest.skip('Memory tests only supported on mac/linux.')(cls)
+    return cls
 
 
 def random_chars(num_chars):
@@ -114,3 +123,107 @@ class BaseSessionTest(BaseEnvVar):
         self.environ.update(environ)
         self.session = create_session()
         self.session.config_filename = 'no-exist-foo'
+
+
+@requires_memory_collection
+class BaseClientDriverTest(unittest.TestCase):
+    def setUp(self):
+        self.runner = ClientRunner()
+        self.runner.start()
+
+    def cmd(self, *args):
+        self.runner.cmd(*args)
+
+    def record_memory(self):
+        self.runner.record_memory()
+
+    def memory_samples(self):
+        return self.runner.memory_samples()
+
+    def tearDown(self):
+        self.runner.stop()
+
+
+class ClientRunner(object):
+    CLIENT_SERVER = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        'cmd-runner'
+    )
+
+    def __init__(self):
+        self._popen = None
+        self.memory_samples = []
+
+    def _get_memory_with_ps(self, pid):
+        # It would be better to eventually switch to psutil,
+        # which should allow us to test on windows, but for now
+        # we'll just use ps and run on POSIX platforms.
+        command_list = ['ps', 'u', '-p']
+        command_list.append(str(pid))
+        p = Popen(command_list, stdout=PIPE)
+        stdout = p.communicate()[0]
+        if not p.returncode == 0:
+            raise RuntimeError("Could not retrieve memory")
+        else:
+            # Get the RSS from output that looks like this:
+            # USER       PID  %CPU %MEM      VSZ    RSS   TT  STAT STARTED      TIME COMMAND
+            # user     47102   0.0  0.1  2437000   4496 s002  S+    7:04PM   0:00.12 python2.6
+            return int(stdout.splitlines()[1].split()[5]) * 1024
+
+    def record_memory(self):
+        mem = self._get_memory_with_ps(self._popen.pid)
+        self.memory_samples.append(mem)
+
+    def start(self):
+        """Start up the command runner process."""
+        self._popen = Popen(['python', self.CLIENT_SERVER],
+                            stdout=PIPE, stdin=PIPE)
+
+    def stop(self):
+        """Shutdown the command runner process."""
+        self.cmd('exit')
+        self._popen.wait()
+
+    def send_cmd(self, *cmd):
+        """Send a command and return immediately.
+
+        This is a lower level method thatn cmd().
+        This method will instruct the cmd-runner process
+        to execute a command, but this method will
+        immediately return.  You will need to use
+        ``is_cmd_finished()`` to check that the command
+        is finished.
+
+        This method is useful if you want to record attributes
+        about the process while an operation is occurring.  For
+        example, if you want to instruct the cmd-runner process
+        to upload a 1GB file to S3 and you'd like to record
+        the memory during the upload process, you can use
+        send_cmd() instead of cmd().
+
+        """
+        cmd_str = ' '.join(cmd) + '\n'
+        self._popen.stdin.write(cmd_str)
+        self._popen.stdin.flush()
+
+    def is_cmd_finished(self):
+        rlist = [self._popen.stdout.fileno()]
+        result = select.select(rlist, [], [], 0.01)
+        if result[0]:
+            return True
+        return False
+
+    def cmd(self, *cmd):
+        """Send a command and block until it finishes.
+
+        This method will send a command to the cmd-runner process
+        to run.  It will block until the cmd-runner process is
+        finished executing the command and sends back a status
+        response.
+
+        """
+        self.send_cmd(*cmd)
+        result = self._popen.stdout.readline().strip()
+        if result != b'OK':
+            raise RuntimeError(
+                "Error from command '%s': %s" % (cmd, result))
