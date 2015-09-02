@@ -145,7 +145,8 @@ class CommandRunner(object):
         # * filename - The name of the local filename to upload
         bucket, key, local_filename = args
         client = self._session.create_client('s3')
-        client.put_object(Bucket=bucket, Key=key, Body=open(local_filename))
+        with open(local_filename, 'rb') as f:
+            client.put_object(Bucket=bucket, Key=key, Body=f)
 
     def _do_stream_s3_download(self, args):
         # Stream a download to S3 from a local file.

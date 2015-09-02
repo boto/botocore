@@ -203,7 +203,8 @@ class ClientRunner(object):
 
         """
         cmd_str = ' '.join(cmd) + '\n'
-        self._popen.stdin.write(cmd_str)
+        cmd_bytes = cmd_str.encode('utf-8')
+        self._popen.stdin.write(cmd_bytes)
         self._popen.stdin.flush()
 
     def is_cmd_finished(self):
