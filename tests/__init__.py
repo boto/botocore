@@ -176,7 +176,7 @@ class ClientRunner(object):
 
     def start(self):
         """Start up the command runner process."""
-        self._popen = Popen(['python', self.CLIENT_SERVER],
+        self._popen = Popen([sys.executable, self.CLIENT_SERVER],
                             stdout=PIPE, stdin=PIPE)
 
     def stop(self):
