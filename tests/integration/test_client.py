@@ -186,3 +186,15 @@ class TestClientInjection(unittest.TestCase):
 
         # We should now have access to the extra_client_method above.
         self.assertEqual(client.extra_client_method('foo'), 'foo')
+
+
+class TestClientWithArgParams(unittest.TestCase):
+    def setUp(self):
+        self.session = botocore.session.get_session()
+        self.client = self.session.create_client('emr', 'us-west-2')
+
+    def test_accepts_datetime_object(self):
+        response = self.client.list_clusters(
+            {'CreatedAfter': datetime.datetime.now()})
+        self.assertIn('Clusters', response)
+
