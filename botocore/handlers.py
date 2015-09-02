@@ -21,6 +21,7 @@ import hashlib
 import logging
 import xml.etree.cElementTree
 import copy
+import string
 
 from botocore.compat import urlsplit, urlunsplit, unquote, json, quote, six
 from botocore.docs.utils import AutoPopulatedParam
@@ -28,6 +29,7 @@ from botocore.docs.utils import HideParamFromOperations
 from botocore.docs.utils import AppendParamDocumentation
 from botocore.signers import add_generate_presigned_url
 from botocore.signers import add_generate_presigned_post
+from botocore.exceptions import ParamValidationError
 
 from botocore import retryhandler
 from botocore import utils
@@ -40,6 +42,7 @@ logger = logging.getLogger(__name__)
 
 REGISTER_FIRST = object()
 REGISTER_LAST = object()
+VALID_BUCKET_CHARS = string.ascii_letters + string.digits + '.-_'
 
 
 def check_for_200_error(response, **kwargs):
@@ -138,6 +141,28 @@ def conditionally_calculate_md5(params, **kwargs):
     signer = kwargs['request_signer']
     if signer.signature_version != 'v4':
         calculate_md5(params, **kwargs)
+
+
+def validate_bucket_name(params, **kwargs):
+    # The rules for bucket names in the US Standard region allow bucket names
+    # to be as long as 255 characters, and bucket names can contain any
+    # combination of uppercase letters, lowercase letters, numbers, periods
+    # (.), hyphens (-), and underscores (_).
+    if 'Bucket' not in params:
+        return
+    bucket = params['Bucket']
+    if len(bucket) > 255:
+        error_msg = (
+            'Invalid bucket name "%s": Bucket name cannot be '
+            'longer than 255 characters.' % bucket)
+        raise ParamValidationError(report=error_msg)
+    for char in bucket:
+        if char not in VALID_BUCKET_CHARS:
+            error_msg = (
+                'Invalid bucket name "%s", can only contain '
+                'uppercase letters, lowercase letters, numbers, periods, '
+                'hyphens, and underscores.' % bucket)
+            raise ParamValidationError(report=error_msg)
 
 
 def sse_md5(params, **kwargs):
@@ -443,6 +468,8 @@ BUILTIN_HANDLERS = [
     ('after-call.ec2.GetConsoleOutput', decode_console_output),
     ('after-call.cloudformation.GetTemplate', json_decode_template_body),
     ('after-call.s3.GetBucketLocation', parse_get_bucket_location),
+
+    ('before-parameter-build.s3', validate_bucket_name),
 
     ('before-call.s3.PutBucketTagging', calculate_md5),
     ('before-call.s3.PutBucketLifecycle', calculate_md5),

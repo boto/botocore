@@ -19,6 +19,7 @@ import copy
 
 import botocore
 import botocore.session
+from botocore.exceptions import ParamValidationError
 from botocore.awsrequest import AWSRequest
 from botocore.compat import quote, six
 from botocore.model import OperationModel, ServiceModel
@@ -485,6 +486,35 @@ class TestHandlers(BaseSessionTest):
         self.assertEqual(
             request_dict['headers']['Content-MD5'],
             'OFj2IjCsPJFfMAxmQxLGPw==')
+
+    def test_invalid_char_in_bucket_raises_exception(self):
+        params = {
+            'Bucket': 'bad/bucket/name',
+            'Key': 'foo',
+            'Body': b'asdf',
+        }
+        with self.assertRaises(ParamValidationError):
+            handlers.validate_bucket_name(params)
+
+    def test_bucket_too_long_raises_exception(self):
+        params = {
+            'Bucket': 'a' * 300,
+            'Key': 'foo',
+            'Body': b'asdf',
+        }
+        with self.assertRaises(ParamValidationError):
+            handlers.validate_bucket_name(params)
+
+    def test_not_dns_compat_but_still_valid_bucket_name(self):
+        params = {
+            'Bucket': 'foasdf......bar--baz-a_b_CD10',
+            'Key': 'foo',
+            'Body': b'asdf',
+        }
+        self.assertIsNone(handlers.validate_bucket_name(params))
+
+    def test_validation_is_noop_if_no_bucket_param_exists(self):
+        self.assertIsNone(handlers.validate_bucket_name(params={}))
 
 
 class TestRetryHandlerOrder(BaseSessionTest):
