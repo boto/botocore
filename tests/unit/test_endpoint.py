@@ -278,6 +278,16 @@ class TestEndpointCreator(unittest.TestCase):
                                                 endpoint_url='https://foo')
         self.assertEqual(endpoint.host, 'https://foo')
 
+    def test_create_endpoint_with_default_timeout(self):
+        endpoint = self.creator.create_endpoint(
+            self.service_model, 'us-west-2')
+        self.assertEqual(endpoint.timeout, DEFAULT_TIMEOUT)
+
+    def test_create_endpoint_with_customized_timeout(self):
+        endpoint = self.creator.create_endpoint(
+            self.service_model, 'us-west-2', timeout=123)
+        self.assertEqual(endpoint.timeout, 123)
+
     def test_get_endpoint_default_verify_ssl(self):
         endpoint = self.creator.create_endpoint(
             self.service_model, 'us-west-2')

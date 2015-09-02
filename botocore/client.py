@@ -18,7 +18,7 @@ import botocore.serialize
 import botocore.validate
 from botocore import waiter, xform_name
 from botocore.awsrequest import prepare_request_dict
-from botocore.endpoint import EndpointCreator
+from botocore.endpoint import EndpointCreator, DEFAULT_TIMEOUT
 from botocore.exceptions import ClientError, DataNotFoundError
 from botocore.exceptions import OperationNotPageableError
 from botocore.hooks import first_non_none_response
@@ -181,13 +181,6 @@ class ClientCreator(object):
 
         event_emitter = copy.copy(self._event_emitter)
 
-        endpoint_creator = EndpointCreator(self._endpoint_resolver,
-                                           region_name, event_emitter)
-        endpoint = endpoint_creator.create_endpoint(
-            service_model, region_name, is_secure=is_secure,
-            endpoint_url=endpoint_url, verify=verify,
-            response_parser_factory=self._response_parser_factory)
-
         response_parser = botocore.parsers.create_parser(protocol)
 
         # Determine what region the user provided either via the
@@ -225,9 +218,22 @@ class ClientCreator(object):
         # Create a new client config to be passed to the client based
         # on the final values. We do not want the user to be able
         # to try to modify an existing client with a client config.
-        client_config = Config(
+        config_kwargs = dict(
             region_name=region_name, signature_version=signature_version,
             user_agent=user_agent)
+        if client_config is not None:
+            config_kwargs.update(
+                connect_timeout=client_config.connect_timeout,
+                read_timeout=client_config.read_timeout)
+        new_config = Config(**config_kwargs)
+
+        endpoint_creator = EndpointCreator(self._endpoint_resolver,
+                                           region_name, event_emitter)
+        endpoint = endpoint_creator.create_endpoint(
+            service_model, region_name, is_secure=is_secure,
+            endpoint_url=endpoint_url, verify=verify,
+            response_parser_factory=self._response_parser_factory,
+            timeout=(new_config.connect_timeout, new_config.read_timeout))
 
         return {
             'serializer': serializer,
@@ -237,7 +243,7 @@ class ClientCreator(object):
             'request_signer': signer,
             'service_model': service_model,
             'loader': self._loader,
-            'client_config': client_config
+            'client_config': new_config
         }
 
     def _create_methods(self, service_model):
@@ -521,11 +527,17 @@ class Config(object):
         * Signature version
         * User agent
         * User agent extra
+        * Connect timeout
+        * Read timeout
 
     """
     def __init__(self, region_name=None, signature_version=None,
-                 user_agent=None, user_agent_extra=None):
+                 user_agent=None, user_agent_extra=None,
+                 connect_timeout=DEFAULT_TIMEOUT,
+                 read_timeout=DEFAULT_TIMEOUT):
         self.region_name = region_name
         self.signature_version = signature_version
         self.user_agent = user_agent
         self.user_agent_extra = user_agent_extra
+        self.connect_timeout = connect_timeout
+        self.read_timeout = read_timeout
