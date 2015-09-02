@@ -47,6 +47,21 @@ class _RetriesExceededError(Exception):
     pass
 
 
+def get_service_module_name(service_model):
+    """Returns the module name for a service
+
+    This is the value used in both the documentation and client class name
+    """
+    name = service_model.metadata.get(
+        'serviceAbbreviation',
+        service_model.metadata.get(
+            'serviceFullName', service_model.service_name))
+    name = name.replace('Amazon', '')
+    name = name.replace('AWS', '')
+    name = re.sub('\W+', '', name)
+    return name
+
+
 def normalize_url_path(path):
     if not path:
         return '/'

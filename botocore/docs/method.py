@@ -255,6 +255,7 @@ class LazyLoadedDocstring(str):
         self._gen_args = args
         self._gen_kwargs = kwargs
         self._docstring = None
+        self._docstring_writer = document_model_driven_method
 
     def __new__(cls, *args, **kwargs):
         # Needed in order to sub class from str with args and kwargs
@@ -290,7 +291,7 @@ class LazyLoadedDocstring(str):
         docstring_structure = DocumentStructure('docstring')
         # Call the document method function with the args and kwargs
         # passed to the class.
-        document_model_driven_method(
+        self._docstring_writer(
             docstring_structure, *self._gen_args,
             **self._gen_kwargs)
         return docstring_structure.flush_structure().decode('utf-8')
