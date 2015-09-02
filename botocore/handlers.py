@@ -21,6 +21,7 @@ import hashlib
 import logging
 import xml.etree.cElementTree
 import copy
+import re
 import string
 
 from botocore.compat import urlsplit, urlunsplit, unquote, json, quote, six
@@ -42,7 +43,12 @@ logger = logging.getLogger(__name__)
 
 REGISTER_FIRST = object()
 REGISTER_LAST = object()
-VALID_BUCKET_CHARS = string.ascii_letters + string.digits + '.-_'
+# From the S3 docs:
+# The rules for bucket names in the US Standard region allow bucket names
+# to be as long as 255 characters, and bucket names can contain any
+# combination of uppercase letters, lowercase letters, numbers, periods
+# (.), hyphens (-), and underscores (_).
+VALID_BUCKET = re.compile('^[a-zA-Z0-9.\-_]{1,255}$')
 
 
 def check_for_200_error(response, **kwargs):
@@ -144,25 +150,14 @@ def conditionally_calculate_md5(params, **kwargs):
 
 
 def validate_bucket_name(params, **kwargs):
-    # The rules for bucket names in the US Standard region allow bucket names
-    # to be as long as 255 characters, and bucket names can contain any
-    # combination of uppercase letters, lowercase letters, numbers, periods
-    # (.), hyphens (-), and underscores (_).
     if 'Bucket' not in params:
         return
     bucket = params['Bucket']
-    if len(bucket) > 255:
+    if VALID_BUCKET.search(bucket) is None:
         error_msg = (
-            'Invalid bucket name "%s": Bucket name cannot be '
-            'longer than 255 characters.' % bucket)
+            'Invalid bucket name "%s": Bucket name must match '
+            'the regex "%s"' % (bucket, VALID_BUCKET.pattern))
         raise ParamValidationError(report=error_msg)
-    for char in bucket:
-        if char not in VALID_BUCKET_CHARS:
-            error_msg = (
-                'Invalid bucket name "%s", can only contain '
-                'uppercase letters, lowercase letters, numbers, periods, '
-                'hyphens, and underscores.' % bucket)
-            raise ParamValidationError(report=error_msg)
 
 
 def sse_md5(params, **kwargs):

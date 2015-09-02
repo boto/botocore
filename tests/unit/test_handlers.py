@@ -513,6 +513,18 @@ class TestHandlers(BaseSessionTest):
         }
         self.assertIsNone(handlers.validate_bucket_name(params))
 
+    def test_valid_bucket_name_hyphen(self):
+        self.assertIsNone(
+            handlers.validate_bucket_name({'Bucket': 'my-bucket-name'}))
+
+    def test_valid_bucket_name_underscore(self):
+        self.assertIsNone(
+            handlers.validate_bucket_name({'Bucket': 'my_bucket_name'}))
+
+    def test_valid_bucket_name_period(self):
+        self.assertIsNone(
+            handlers.validate_bucket_name({'Bucket': 'my.bucket.name'}))
+
     def test_validation_is_noop_if_no_bucket_param_exists(self):
         self.assertIsNone(handlers.validate_bucket_name(params={}))
 
