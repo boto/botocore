@@ -39,7 +39,14 @@ import botocore.session
 _LOADER = botocore.loaders.Loader()
 
 
-def requires_memory_collection(cls):
+def skip_unless_has_memory_collection(cls):
+    """Class decorator to skip tests that require memory collection.
+
+    Any test that uses memory collection (such as the resource leak tests)
+    can decorate their class with skip_unless_has_memory_collection to
+    indicate that if the platform does not support memory collection
+    the tests should be skipped.
+    """
     if platform.system() not in ['Darwin', 'Linux']:
         return unittest.skip('Memory tests only supported on mac/linux.')(cls)
     return cls
@@ -125,26 +132,30 @@ class BaseSessionTest(BaseEnvVar):
         self.session.config_filename = 'no-exist-foo'
 
 
-@requires_memory_collection
+@skip_unless_has_memory_collection
 class BaseClientDriverTest(unittest.TestCase):
     def setUp(self):
-        self.runner = ClientRunner()
-        self.runner.start()
+        self.driver = ClientDriver()
+        self.driver.start()
 
     def cmd(self, *args):
-        self.runner.cmd(*args)
+        self.driver.cmd(*args)
+
+    def send_cmd(self, *args):
+        self.driver.send_cmd(*args)
 
     def record_memory(self):
-        self.runner.record_memory()
+        self.driver.record_memory()
 
+    @property
     def memory_samples(self):
-        return self.runner.memory_samples()
+        return self.driver.memory_samples
 
     def tearDown(self):
-        self.runner.stop()
+        self.driver.stop()
 
 
-class ClientRunner(object):
+class ClientDriver(object):
     CLIENT_SERVER = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         'cmd-runner'
@@ -158,17 +169,16 @@ class ClientRunner(object):
         # It would be better to eventually switch to psutil,
         # which should allow us to test on windows, but for now
         # we'll just use ps and run on POSIX platforms.
-        command_list = ['ps', 'u', '-p']
-        command_list.append(str(pid))
+        command_list = ['ps', '-p', str(pid), '-o', 'rss']
         p = Popen(command_list, stdout=PIPE)
         stdout = p.communicate()[0]
         if not p.returncode == 0:
             raise RuntimeError("Could not retrieve memory")
         else:
             # Get the RSS from output that looks like this:
-            # USER       PID  %CPU %MEM      VSZ    RSS   TT  STAT STARTED      TIME COMMAND
-            # user     47102   0.0  0.1  2437000   4496 s002  S+    7:04PM   0:00.12 python2.6
-            return int(stdout.splitlines()[1].split()[5]) * 1024
+            # RSS
+            # 4496
+            return int(stdout.splitlines()[1].split()[0]) * 1024
 
     def record_memory(self):
         mem = self._get_memory_with_ps(self._popen.pid)
@@ -187,7 +197,7 @@ class ClientRunner(object):
     def send_cmd(self, *cmd):
         """Send a command and return immediately.
 
-        This is a lower level method thatn cmd().
+        This is a lower level method than cmd().
         This method will instruct the cmd-runner process
         to execute a command, but this method will
         immediately return.  You will need to use

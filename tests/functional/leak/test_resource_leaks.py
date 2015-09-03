@@ -26,10 +26,26 @@ class TestDoesNotLeakMemory(BaseClientDriverTest):
             self.cmd('create_client', 's3')
             self.cmd('free_clients')
         self.record_memory()
-        start, end = self.runner.memory_samples
+        start, end = self.memory_samples
         self.assertTrue((end - start) < self.MAX_GROWTH_BYTES, (end - start))
 
     def test_create_memory_clients_in_loop(self):
+        # We need to first create clients and free then before
+        # recording our memory samples.  This is because of two reasons:
+        # 1. Caching.  Some of the botocore internals will cache data, so
+        #    the first client created will consume more memory than subsequent
+        #    clients.  We're interested in growing memory, not total
+        #    memory usage (for now), so we we care about the memory in the
+        #    steady state case.
+        # 2. Python memory allocation.  Due to how python allocates memory
+        #    via it's small object allocator, arena's aren't freed until the
+        #    entire 256kb isn't in use.  If a single allocation in a single
+        #    pool in a single arena is still in use, the arena is not
+        #    freed.  This case is easy to hit, and pretty much any
+        #    fragmentation guarantees this case is hit.  The best we can
+        #    do is verify that memory that's released back to python's
+        #    allocator (but not to the OS) is at least reused in subsequent
+        #    requests to create botocore clients.
         self.cmd('create_multiple_clients', '200', 's3')
         self.cmd('free_clients')
         self.record_memory()
@@ -38,5 +54,5 @@ class TestDoesNotLeakMemory(BaseClientDriverTest):
             self.cmd('create_multiple_clients', '50', 's3')
             self.cmd('free_clients')
         self.record_memory()
-        start, end = self.runner.memory_samples
+        start, end = self.memory_samples
         self.assertTrue((end - start) < self.MAX_GROWTH_BYTES, (end - start))

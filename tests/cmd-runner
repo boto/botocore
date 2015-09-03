@@ -17,7 +17,7 @@ How it Works
 ============
 
 This script is part of the infrastructure used for resource leak tests.
-At a high level, we're trying to varify that specific types of operations
+At a high level, we're trying to verify that specific types of operations
 don't leak memory.  For example:
 
 * Creating 100 clients in a loop doesn't leak memory within reason
@@ -111,11 +111,6 @@ class CommandRunner(object):
     def _do_free_clients(self, args):
         # Frees the memory associated with all clients.
         self._clients = []
-
-    def _do_gc_collect(self, args):
-        # Run a gc collection to clean up cyclic references.
-        import gc
-        gc.collect()
 
     def _do_make_aws_request(self, args):
         # Create a client and make a number of AWS requests.
