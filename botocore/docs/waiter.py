@@ -13,7 +13,6 @@
 from botocore import xform_name
 from botocore.utils import get_service_module_name
 from botocore.docs.method import document_model_driven_method
-from botocore.docs.method import LazyLoadedDocstring
 
 
 class WaiterDocumenter(object):
@@ -100,9 +99,3 @@ def document_wait_method(section, waiter_name, event_emitter,
         document_output=False,
         include_signature=include_signature
     )
-
-
-class WaiterDocstring(LazyLoadedDocstring):
-    def __init__(self, *args, **kwargs):
-        super(WaiterDocstring, self).__init__(*args, **kwargs)
-        self._docstring_writer = document_wait_method

@@ -15,7 +15,7 @@ import logging
 import time
 
 from botocore.utils import get_service_module_name
-from botocore.docs.waiter import WaiterDocstring
+from botocore.docs.docstring import WaiterDocstring
 from .exceptions import WaiterError, ClientError, WaiterConfigError
 from . import xform_name
 
