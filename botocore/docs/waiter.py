@@ -11,7 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from botocore import xform_name
+from botocore.utils import get_service_module_name
 from botocore.docs.method import document_model_driven_method
+from botocore.docs.method import LazyLoadedDocstring
 
 
 class WaiterDocumenter(object):
@@ -50,26 +52,57 @@ class WaiterDocumenter(object):
 
         # Add information on the wait() method
         section.style.new_line()
-        self._add_wait_method(section, waiter_name)
-
-    def _add_wait_method(self, section, waiter_name):
-        waiter_model = self._service_waiter_model.get_waiter(waiter_name)
-        operation_model = self._client.meta.service_model.operation_model(
-            waiter_model.operation)
-
-        wait_description = (
-            'This polls :py:meth:`{0}.Client.{1}` every {2} '
-            'seconds until a successful state is reached. An error is '
-            'returned after {3} failed checks.'.format(
-                self._client.__class__.__name__,
-                xform_name(waiter_model.operation),
-                waiter_model.delay, waiter_model.max_attempts)
-        )
-
-        document_model_driven_method(
-            section, 'wait', operation_model,
+        document_wait_method(
+            section=section,
+            waiter_name=waiter_name,
             event_emitter=self._client.meta.events,
-            method_description=wait_description,
-            example_prefix='waiter.wait',
-            document_output=False
+            service_model=self._client.meta.service_model,
+            service_waiter_model=self._service_waiter_model
         )
+
+
+def document_wait_method(section, waiter_name, event_emitter,
+                         service_model, service_waiter_model,
+                         include_signature=True):
+    """Documents a the wait method of a waiter
+
+    :param section: The section to write to
+
+    :param waiter_name: The name of the waiter
+
+    :param event_emitter: The event emitter to use to emit events
+
+    :param service_model: The service model
+
+    :param service_waiter_model: The waiter model associated to the service
+
+    :param include_signature: Whether or not to include the signature.
+        It is useful for generating docstrings.
+    """
+    waiter_model = service_waiter_model.get_waiter(waiter_name)
+    operation_model = service_model.operation_model(
+        waiter_model.operation)
+
+    wait_description = (
+        'This polls :py:meth:`{0}.Client.{1}` every {2} '
+        'seconds until a successful state is reached. An error is '
+        'returned after {3} failed checks.'.format(
+            get_service_module_name(service_model),
+            xform_name(waiter_model.operation),
+            waiter_model.delay, waiter_model.max_attempts)
+    )
+
+    document_model_driven_method(
+        section, 'wait', operation_model,
+        event_emitter=event_emitter,
+        method_description=wait_description,
+        example_prefix='waiter.wait',
+        document_output=False,
+        include_signature=include_signature
+    )
+
+
+class WaiterDocstring(LazyLoadedDocstring):
+    def __init__(self, *args, **kwargs):
+        super(WaiterDocstring, self).__init__(*args, **kwargs)
+        self._docstring_writer = document_wait_method
