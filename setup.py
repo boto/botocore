@@ -7,7 +7,6 @@ from setuptools import setup, find_packages
 
 requires = ['jmespath>=0.7.1,<1.0.0',
             'python-dateutil>=2.1,<3.0.0',
-            'rsa>=3.1.2,<=3.1.4',
             'docutils>=0.10']
 
 
