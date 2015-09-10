@@ -61,6 +61,14 @@ class TestStreamWrapper(unittest.TestCase):
         with self.assertRaises(IncompleteReadError):
             stream.read()
 
+    def test_streaming_body_closes(self):
+        body = six.BytesIO(b'1234567890')
+        stream = response.StreamingBody(body, content_length=10)
+        self.assertFalse(body.closed)
+        stream.close()
+        self.assertTrue(body.closed)
+
+
 class TestGetResponse(unittest.TestCase):
     maxDiff = None
 
