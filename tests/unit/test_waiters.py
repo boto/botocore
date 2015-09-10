@@ -565,16 +565,20 @@ class ServiceWaiterFunctionalTest(BaseEnvVar):
 
     def get_waiter_model(self, service, api_version=None):
         """Get the waiter model for the service."""
-        return WaiterModel(self.loader.load_service_model(
-            service, type_name='waiters-2', api_version=api_version))
+        with mock.patch('botocore.loaders.Loader.list_available_services',
+                        return_value=[service]):
+            return WaiterModel(self.loader.load_service_model(
+                service, type_name='waiters-2', api_version=api_version))
 
     def get_service_model(self, service, api_version=None):
         """Get the service model for the service."""
-        return ServiceModel(
-            self.loader.load_service_model(
-                service, type_name='service-2', api_version=api_version),
-            service_name=service
-        )
+        with mock.patch('botocore.loaders.Loader.list_available_services',
+                        return_value=[service]):
+            return ServiceModel(
+                self.loader.load_service_model(
+                    service, type_name='service-2', api_version=api_version),
+                service_name=service
+            )
 
 
 class CloudFrontWaitersTest(ServiceWaiterFunctionalTest):
