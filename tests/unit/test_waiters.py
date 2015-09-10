@@ -342,6 +342,26 @@ class TestWaitersObjects(unittest.TestCase):
         with self.assertRaises(WaiterError):
             waiter.wait()
 
+    def test_unspecified_errors_propagate_error_code(self):
+        # If a waiter receives an error response, then the
+        # waiter should pass along the error code
+        config = self.create_waiter_config()
+        operation_method = mock.Mock()
+        error_code = 'error_message'
+        error_message = 'error_message'
+        self.client_responses_are(
+            # This is an unknown error that's not called out
+            # in any of the waiter config, so when the
+            # waiter encounters this response it will transition
+            # to the failure state.
+            {'Error': {'Code': error_code, 'Message': error_message}},
+            for_operation=operation_method
+        )
+        waiter = Waiter('MyWaiter', config, operation_method)
+
+        with self.assertRaisesRegexp(WaiterError, error_message):
+            waiter.wait()
+
     def test_waiter_transitions_to_failure_state(self):
         acceptors = [
             # A success state that will never be hit.

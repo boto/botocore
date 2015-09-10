@@ -272,8 +272,9 @@ class Waiter(object):
                 if 'Error' in response:
                     # Transition to the failure state, which we can
                     # just handle here by raising an exception.
-                    raise WaiterError(name=self.name,
-                                      reason='Unexpected error encountered.')
+                    raise WaiterError(
+                        name=self.name,
+                        reason=response['Error'].get('Message', 'Unknown'))
             if current_state == 'success':
                 logger.debug("Waiting complete, waiter matched the "
                              "success state.")
