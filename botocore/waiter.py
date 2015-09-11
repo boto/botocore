@@ -63,7 +63,7 @@ def create_waiter_with_client(waiter_name, waiter_model, client):
     # Rename the waiter class based on the type of waiter.
     waiter_class_name = str('%s.Waiter.%s' % (
         get_service_module_name(client.meta.service_model),
-        xform_name(waiter_name)))
+        waiter_name))
 
     # Create the new waiter class
     documented_waiter_cls = type(

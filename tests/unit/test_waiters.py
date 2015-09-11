@@ -502,7 +502,7 @@ class TestCreateWaiter(unittest.TestCase):
             waiter_name, self.waiter_model, self.client)
         self.assertEqual(
             waiter.__class__.__name__,
-            'MyService.Waiter.waiter_name'
+            'MyService.Waiter.WaiterName'
         )
 
     def test_waiter_help_documentation(self):
