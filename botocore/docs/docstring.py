@@ -56,7 +56,7 @@ class LazyLoadedDocstring(str):
         docstrings.
         """
         if self._docstring is None:
-            self._generate().expandtabs(tabsize)
+            self._generate()
         return self._docstring.expandtabs(tabsize)
 
     def __str__(self):
