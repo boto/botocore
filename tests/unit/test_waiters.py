@@ -513,7 +513,7 @@ class TestCreateWaiter(unittest.TestCase):
             help(waiter.wait)
         content = mock_stdout.getvalue()
         lines = [
-            ('    This polls :py:meth:`MyService.Client.foo` every 1 '
+            ('    Polls :py:meth:`MyService.Client.foo` every 1 '
              'seconds until a successful state is reached. An error '
              'is returned after 1 failed checks.'),
             '    **Request Syntax** ',

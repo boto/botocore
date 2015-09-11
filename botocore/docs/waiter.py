@@ -83,7 +83,7 @@ def document_wait_method(section, waiter_name, event_emitter,
         waiter_model.operation)
 
     wait_description = (
-        'This polls :py:meth:`{0}.Client.{1}` every {2} '
+        'Polls :py:meth:`{0}.Client.{1}` every {2} '
         'seconds until a successful state is reached. An error is '
         'returned after {3} failed checks.'.format(
             get_service_module_name(service_model),
