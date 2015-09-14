@@ -33,16 +33,15 @@ class LazyLoadedDocstring(str):
         self._gen_args = args
         self._gen_kwargs = kwargs
         self._docstring = None
-        self._docstring_writer = self._raise_docstring_not_implemented
 
     def __new__(cls, *args, **kwargs):
         # Needed in order to sub class from str with args and kwargs
         return super(LazyLoadedDocstring, cls).__new__(cls)
 
-    def _raise_docstring_not_implemented(*args, **kwargs):
+    def _write_docstring(self, *args, **kwargs):
         raise NotImplementedError(
-            '_docstring_writer is not implemented. Please subclass from '
-            'this class and provide your own _docstring_writer'
+            '_write_docstring is not implemented. Please subclass from '
+            'this class and provide your own _write_docstring method'
         )
 
     def expandtabs(self, tabsize=8):
@@ -75,19 +74,17 @@ class LazyLoadedDocstring(str):
         docstring_structure = DocumentStructure('docstring')
         # Call the document method function with the args and kwargs
         # passed to the class.
-        self._docstring_writer(
+        self._write_docstring(
             docstring_structure, *self._gen_args,
             **self._gen_kwargs)
         return docstring_structure.flush_structure().decode('utf-8')
 
 
 class ClientMethodDocstring(LazyLoadedDocstring):
-    def __init__(self, *args, **kwargs):
-        super(ClientMethodDocstring, self).__init__(*args, **kwargs)
-        self._docstring_writer = document_model_driven_method
+    def _write_docstring(self, *args, **kwargs):
+        document_model_driven_method(*args, **kwargs)
 
 
 class WaiterDocstring(LazyLoadedDocstring):
-    def __init__(self, *args, **kwargs):
-        super(WaiterDocstring, self).__init__(*args, **kwargs)
-        self._docstring_writer = document_wait_method
+    def _write_docstring(self, *args, **kwargs):
+        document_wait_method(*args, **kwargs)

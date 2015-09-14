@@ -20,7 +20,9 @@ class MockedLazyLoadedDocstring(LazyLoadedDocstring):
     def __init__(self, *args, **kwargs):
         super(MockedLazyLoadedDocstring, self).__init__(*args, **kwargs)
         self.mocked_writer_method = mock.Mock()
-        self._docstring_writer = self.mocked_writer_method
+
+    def _write_docstring(self, *args, **kwargs):
+        self.mocked_writer_method(*args, **kwargs)
 
 
 class TestLazyLoadedDocstring(unittest.TestCase):
