@@ -39,8 +39,7 @@ class PaginatorDocumenter(object):
         for paginator_name in paginator_names:
             section.style.li(
                 ':py:class:`%s.Paginator.%s`' % (
-                    self._client.__class__.__name__,
-                    xform_name(paginator_name)))
+                    self._client.__class__.__name__, paginator_name))
             self._add_paginator(section, paginator_name)
 
     def _add_paginator(self, section, paginator_name):
@@ -49,7 +48,7 @@ class PaginatorDocumenter(object):
         # Docment the paginator class
         section.style.start_sphinx_py_class(
             class_name='%s.Paginator.%s' % (
-                self._client.__class__.__name__, xform_name(paginator_name)))
+                self._client.__class__.__name__, paginator_name))
         section.style.start_codeblock()
         section.style.new_line()
 

@@ -420,7 +420,7 @@ class BaseClient(object):
             # Rename the paginator class based on the type of paginator.
             paginator_class_name = str('%s.Paginator.%s' % (
                 get_service_module_name(self.meta.service_model),
-                operation_name))
+                actual_operation_name))
 
             # Create the new paginator class
             documented_paginator_cls = type(
