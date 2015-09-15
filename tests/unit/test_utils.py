@@ -21,6 +21,7 @@ import mock
 from botocore import xform_name
 from botocore.awsrequest import AWSRequest
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
+from botocore.model import ServiceModel
 from botocore.utils import remove_dot_segments
 from botocore.utils import normalize_url_path
 from botocore.utils import validate_jmespath_for_set
@@ -37,6 +38,7 @@ from botocore.utils import is_valid_endpoint_url
 from botocore.utils import fix_s3_host
 from botocore.utils import instance_cache
 from botocore.utils import merge_dicts
+from botocore.utils import get_service_module_name
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
 
@@ -672,6 +674,60 @@ class TestMergeDicts(unittest.TestCase):
         merge_dicts(dict1, dict2, append_lists=True)
         self.assertEqual(
             dict1, {'Foo': ['foo_value']})
+
+
+class TestGetServiceModuleName(unittest.TestCase):
+    def setUp(self):
+        self.service_description = {
+            'metadata': {
+                'serviceFullName': 'AWS MyService',
+                'apiVersion': '2014-01-01',
+                'endpointPrefix': 'myservice',
+                'signatureVersion': 'v4',
+                'protocol': 'query'
+            },
+            'operations': {},
+            'shapes': {},
+        }
+        self.service_model = ServiceModel(
+            self.service_description, 'myservice')
+
+    def test_default(self):
+        self.assertEqual(
+            get_service_module_name(self.service_model),
+            'MyService'
+        )
+
+    def test_client_name_with_amazon(self):
+        self.service_description['metadata']['serviceFullName'] = (
+            'Amazon MyService')
+        self.assertEqual(
+            get_service_module_name(self.service_model),
+            'MyService'
+        )
+
+    def test_client_name_using_abreviation(self):
+        self.service_description['metadata']['serviceAbbreviation'] = (
+            'Abbreviation')
+        self.assertEqual(
+            get_service_module_name(self.service_model),
+            'Abbreviation'
+        )
+
+    def test_client_name_with_non_alphabet_characters(self):
+        self.service_description['metadata']['serviceFullName'] = (
+            'Amazon My-Service')
+        self.assertEqual(
+            get_service_module_name(self.service_model),
+            'MyService'
+        )
+
+    def test_client_name_with_no_full_name_or_abbreviation(self):
+        del self.service_description['metadata']['serviceFullName']
+        self.assertEqual(
+            get_service_module_name(self.service_model),
+            'myservice'
+        )
 
 
 if __name__ == '__main__':

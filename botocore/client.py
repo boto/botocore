@@ -26,6 +26,7 @@ from botocore.model import ServiceModel
 from botocore.paginate import Paginator
 from botocore.signers import RequestSigner
 from botocore.utils import CachedProperty
+from botocore.utils import get_service_module_name
 from botocore.docs.method import LazyLoadedDocstring
 
 
@@ -69,7 +70,7 @@ class ClientCreator(object):
         self._event_emitter.emit('creating-client-class.%s' % service_name,
                                  class_attributes=class_attributes,
                                  base_classes=bases)
-        class_name = self._get_client_class_name(service_model, service_name)
+        class_name = get_service_module_name(service_model)
         cls = type(str(class_name), tuple(bases), class_attributes)
         return cls
 
@@ -79,15 +80,6 @@ class ClientCreator(object):
         service_model = ServiceModel(json_model, service_name=service_name)
         self._register_retries(service_model)
         return service_model
-
-    def _get_client_class_name(self, service_model, service_name):
-        name = service_model.metadata.get(
-            'serviceAbbreviation',
-            service_model.metadata.get('serviceFullName', service_name))
-        name = name.replace('Amazon', '')
-        name = name.replace('AWS', '')
-        name = re.sub('\W+', '', name)
-        return name
 
     def _register_retries(self, service_model):
         endpoint_prefix = service_model.endpoint_prefix

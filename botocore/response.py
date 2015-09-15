@@ -83,6 +83,9 @@ class StreamingBody(object):
                 actual_bytes=self._amount_read,
                 expected_bytes=int(self._content_length))
 
+    def close(self):
+        self._raw_stream.close()
+
 
 def _validate_content_length(expected_content_length, body_length):
     # See: https://github.com/kennethreitz/requests/issues/1855
