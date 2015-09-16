@@ -495,3 +495,39 @@ class TestHandlesInvalidXMLResponses(unittest.TestCase):
             parser.parse(
                 {'body': invalid_xml, 'headers': {}, 'status_code': 200},
                 output_shape)
+
+
+class TestRESTXMLResponses(unittest.TestCase):
+    def test_multiple_structures_list_returns_struture(self):
+        # This is to handle the scenario when something is modeled
+        # as a structure and instead a list of structures is returned.
+        # For this case, a single element from the list should be parsed
+        # For botocore, this will be the first element.
+        # Currently, this logic may happen in s3's GetBucketLifecycle
+        # operation.
+        headers = {}
+        parser = parsers.RestXMLParser()
+        body = (
+            '<?xml version="1.0" ?>'
+            '<OperationName xmlns="http://s3.amazonaws.com/doc/2006-03-01/">'
+            '	<Foo><Bar>first_value</Bar></Foo>'
+            '	<Foo><Bar>middle_value</Bar></Foo>'
+            '	<Foo><Bar>last_value</Bar></Foo>'
+            '</OperationName>'
+        )
+        builder = model.DenormalizedStructureBuilder()
+        output_shape = builder.with_members({
+            'Foo': {
+                'type': 'structure',
+                'members': {
+                    'Bar': {
+                        'type': 'string',
+                    }
+                }
+            }
+        }).build_model()
+        parsed = parser.parse(
+            {'body': body, 'headers': headers, 'status_code': 200},
+            output_shape)
+        # Ensure the first element is used out of the list.
+        self.assertEqual(parsed['Foo'], {'Bar': 'first_value'})
