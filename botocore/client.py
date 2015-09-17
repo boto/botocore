@@ -404,7 +404,7 @@ class BaseClient(object):
             # the underlying Paginator.paginate method. This is needed to
             # attach a docstring to the method.
             def paginate(self, **kwargs):
-                Paginator.paginate(self, **kwargs)
+                return Paginator.paginate(self, **kwargs)
 
             paginator_config = self._cache['page_config'][
                 actual_operation_name]
