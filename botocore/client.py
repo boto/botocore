@@ -27,7 +27,7 @@ from botocore.paginate import Paginator
 from botocore.signers import RequestSigner
 from botocore.utils import CachedProperty
 from botocore.utils import get_service_module_name
-from botocore.docs.method import LazyLoadedDocstring
+from botocore.docs.docstring import ClientMethodDocstring
 
 
 logger = logging.getLogger(__name__)
@@ -271,7 +271,7 @@ class ClientCreator(object):
 
         # Add the docstring to the client method
         operation_model = service_model.operation_model(operation_name)
-        docstring = LazyLoadedDocstring(
+        docstring = ClientMethodDocstring(
             operation_model=operation_model,
             method_name=operation_name,
             event_emitter=self._event_emitter,

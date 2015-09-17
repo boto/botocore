@@ -16,11 +16,13 @@ from tests import unittest, BaseEnvVar
 import mock
 
 import botocore
+from botocore.compat import six
 from botocore.exceptions import ClientError, WaiterConfigError, WaiterError
 from botocore.waiter import Waiter, WaiterModel, SingleWaiterConfig
 from botocore.waiter import create_waiter_with_client
 from botocore.waiter import NormalizedOperationMethod
 from botocore.loaders import Loader
+from botocore.model import ServiceModel
 
 
 class TestWaiterModel(unittest.TestCase):
@@ -458,13 +460,73 @@ class TestCreateWaiter(unittest.TestCase):
             },
         }
         self.waiter_model = WaiterModel(self.waiter_config)
+        self.service_json_model = {
+            'metadata': {
+                'serviceFullName': 'Amazon MyService'
+            },
+            'operations': {
+                'Foo': {
+                    'name': 'Foo',
+                    'input': {'shape': 'FooInputOutput'},
+                    'output': {'shape': 'FooInputOutput'}
+                }
+            },
+            'shapes': {
+                'FooInputOutput': {
+                    'type': 'structure',
+                    'members': {
+                        'bar': {
+                            'shape': 'String',
+                            'documentation': 'Documents bar'
+                        }
+                    }
+                },
+                'String': {
+                    'type': 'string'
+                }
+            }
+        }
+        self.service_model = ServiceModel(self.service_json_model, 'myservice')
+        self.client = mock.Mock()
+        self.client.meta.service_model = self.service_model
 
     def test_can_create_waiter_from_client(self):
         waiter_name = 'WaiterName'
-        client = mock.Mock()
         waiter = create_waiter_with_client(
-            waiter_name, self.waiter_model, client)
+            waiter_name, self.waiter_model, self.client)
         self.assertIsInstance(waiter, Waiter)
+
+    def test_waiter_class_name(self):
+        waiter_name = 'WaiterName'
+        waiter = create_waiter_with_client(
+            waiter_name, self.waiter_model, self.client)
+        self.assertEqual(
+            waiter.__class__.__name__,
+            'MyService.Waiter.WaiterName'
+        )
+
+    def test_waiter_help_documentation(self):
+        waiter_name = 'WaiterName'
+        waiter = create_waiter_with_client(
+            waiter_name, self.waiter_model, self.client)
+        with mock.patch('sys.stdout', six.StringIO()) as mock_stdout:
+            help(waiter.wait)
+        content = mock_stdout.getvalue()
+        lines = [
+            ('    Polls :py:meth:`MyService.Client.foo` every 1 '
+             'seconds until a successful state is reached. An error '
+             'is returned after 1 failed checks.'),
+            '    **Request Syntax** ',
+            '    ::',
+            '      waiter.wait(',
+            "          bar='string'",
+            '      )',
+            '    :type bar: string',
+            '    :param bar: Documents bar',
+            '    :returns: None',
+        ]
+        for line in lines:
+            self.assertIn(line, content)
 
 
 class TestOperationMethods(unittest.TestCase):
@@ -506,6 +568,14 @@ class ServiceWaiterFunctionalTest(BaseEnvVar):
         return WaiterModel(self.loader.load_service_model(
             service, type_name='waiters-2', api_version=api_version))
 
+    def get_service_model(self, service, api_version=None):
+        """Get the service model for the service."""
+        return ServiceModel(
+            self.loader.load_service_model(
+                service, type_name='service-2', api_version=api_version),
+            service_name=service
+        )
+
 
 class CloudFrontWaitersTest(ServiceWaiterFunctionalTest):
     def setUp(self):
@@ -517,6 +587,8 @@ class CloudFrontWaitersTest(ServiceWaiterFunctionalTest):
     def assert_distribution_deployed_call_count(self, api_version=None):
         waiter_name = 'DistributionDeployed'
         waiter_model = self.get_waiter_model(self.service, api_version)
+        self.client.meta.service_model = self.get_service_model(
+            self.service, api_version)
         self.client.get_distribution.side_effect = [
             {'Distribution': {'Status': 'Deployed'}}
         ]
@@ -528,6 +600,8 @@ class CloudFrontWaitersTest(ServiceWaiterFunctionalTest):
     def assert_invalidation_completed_call_count(self, api_version=None):
         waiter_name = 'InvalidationCompleted'
         waiter_model = self.get_waiter_model(self.service, api_version)
+        self.client.meta.service_model = self.get_service_model(
+            self.service, api_version)
         self.client.get_invalidation.side_effect = [
             {'Invalidation': {'Status': 'Completed'}}
         ]
@@ -540,6 +614,8 @@ class CloudFrontWaitersTest(ServiceWaiterFunctionalTest):
             self, api_version=None):
         waiter_name = 'StreamingDistributionDeployed'
         waiter_model = self.get_waiter_model(self.service, api_version)
+        self.client.meta.service_model = self.get_service_model(
+            self.service, api_version)
         self.client.get_streaming_distribution.side_effect = [
             {'StreamingDistribution': {'Status': 'Deployed'}}
         ]

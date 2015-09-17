@@ -77,6 +77,7 @@ class CommandRunner(object):
     def __init__(self):
         self._session = botocore.session.get_session()
         self._clients = []
+        self._waiters = []
 
     def run(self):
         while True:
@@ -111,6 +112,27 @@ class CommandRunner(object):
     def _do_free_clients(self, args):
         # Frees the memory associated with all clients.
         self._clients = []
+
+    def _do_create_waiter(self, args):
+        # Args:
+        # [0] client name used in its instantiation
+        # [1] waiter name used in its instantiation
+        client = self._session.create_client(args[0])
+        self._waiters.append(client.get_waiter(args[1]))
+
+    def _do_create_multiple_waiters(self, args):
+        # Args:
+        # [0] num_waiters - Number of clients to create in a loop
+        # [1] client name used in its instantiation
+        # [2] waiter name used in its instantiation
+        num_waiters = args[0]
+        client = self._session.create_client(args[1])
+        for _ in range(int(num_waiters)):
+            self._waiters.append(client.get_waiter(args[2]))
+
+    def _do_free_waiters(self, args):
+        # Frees the memory associated with all of the waiters.
+        self._waiters = []
 
     def _do_make_aws_request(self, args):
         # Create a client and make a number of AWS requests.

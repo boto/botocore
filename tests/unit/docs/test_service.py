@@ -54,7 +54,7 @@ class TestServiceDocumenter(BaseDocsTest):
             '=======',
             'Waiters',
             '=======',
-            '.. py:class:: MyService.Waiter.sample_operation_complete',
+            '.. py:class:: MyService.Waiter.SampleOperationComplete',
             '  .. py:method:: wait(**kwargs)'
         ]
         for line in lines:
