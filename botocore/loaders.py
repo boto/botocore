@@ -98,7 +98,7 @@ import os
 from botocore import BOTOCORE_ROOT
 from botocore.compat import json
 from botocore.compat import OrderedDict
-from botocore.exceptions import DataNotFoundError
+from botocore.exceptions import DataNotFoundError, ValidationError
 
 
 def instance_cache(func):
@@ -333,6 +333,9 @@ class Loader(object):
         """
         # Wrapper around the load_data.  This will calculate the path
         # to call load_data with.
+        if service_name not in self.list_available_services('service-2'):
+            raise ValidationError(value=service_name, param='service_name',
+                                  type_name='str')
         if api_version is None:
             api_version = self.determine_latest_version(
                 service_name, type_name)
