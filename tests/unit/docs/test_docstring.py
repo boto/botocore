@@ -14,6 +14,7 @@ from tests import unittest, mock
 from botocore.docs.docstring import LazyLoadedDocstring
 from botocore.docs.docstring import ClientMethodDocstring
 from botocore.docs.docstring import WaiterDocstring
+from botocore.docs.docstring import PaginatorDocstring
 
 
 class MockedLazyLoadedDocstring(LazyLoadedDocstring):
@@ -81,5 +82,15 @@ class TestWaiterDocstring(unittest.TestCase):
                 'botocore.docs.docstring'
                 '.document_wait_method') as mock_writer:
             docstring = WaiterDocstring()
+            str(docstring)
+            self.assertTrue(mock_writer.called)
+
+
+class TestPaginatorDocstring(unittest.TestCase):
+    def test_use_correct_docstring_writer(self):
+        with mock.patch(
+                'botocore.docs.docstring'
+                '.document_paginate_method') as mock_writer:
+            docstring = PaginatorDocstring()
             str(docstring)
             self.assertTrue(mock_writer.called)

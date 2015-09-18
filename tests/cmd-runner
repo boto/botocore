@@ -78,6 +78,7 @@ class CommandRunner(object):
         self._session = botocore.session.get_session()
         self._clients = []
         self._waiters = []
+        self._paginators = []
 
     def run(self):
         while True:
@@ -133,6 +134,27 @@ class CommandRunner(object):
     def _do_free_waiters(self, args):
         # Frees the memory associated with all of the waiters.
         self._waiters = []
+
+    def _do_create_paginator(self, args):
+        # Args:
+        # [0] client name used in its instantiation
+        # [1] paginator name used in its instantiation
+        client = self._session.create_client(args[0])
+        self._paginators.append(client.get_paginator(args[1]))
+
+    def _do_create_multiple_paginators(self, args):
+        # Args:
+        # [0] num_paginators - Number of paginators to create in a loop
+        # [1] client name used in its instantiation
+        # [2] paginator name used in its instantiation
+        num_paginators = args[0]
+        client = self._session.create_client(args[1])
+        for _ in range(int(num_paginators)):
+            self._paginators.append(client.get_paginator(args[2]))
+
+    def _do_free_paginators(self, args):
+        # Frees the memory associated with all of the waiters.
+        self._paginators = []
 
     def _do_make_aws_request(self, args):
         # Create a client and make a number of AWS requests.
