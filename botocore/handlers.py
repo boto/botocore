@@ -92,11 +92,12 @@ def _looks_like_special_case_error(http_response):
 
 
 def decode_console_output(parsed, **kwargs):
-    try:
-        value = base64.b64decode(six.b(parsed['Output'])).decode('utf-8')
-        parsed['Output'] = value
-    except (ValueError, TypeError, AttributeError):
-        logger.debug('Error decoding base64', exc_info=True)
+    if 'Output' in parsed:
+        try:
+            value = base64.b64decode(six.b(parsed['Output'])).decode('utf-8')
+            parsed['Output'] = value
+        except (ValueError, TypeError, AttributeError):
+            logger.debug('Error decoding base64', exc_info=True)
 
 
 def decode_quoted_jsondoc(value):
