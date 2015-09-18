@@ -296,8 +296,8 @@ class ClientError(Exception):
 
     def __init__(self, error_response, operation_name):
         msg = self.MSG_TEMPLATE.format(
-            error_code=error_response['Error']['Code'],
-            error_message=error_response['Error']['Message'],
+            error_code=error_response['Error'].get('Code', 'Unknown'),
+            error_message=error_response['Error'].get('Message', 'Unknown'),
             operation_name=operation_name)
         super(ClientError, self).__init__(msg)
         self.response = error_response
