@@ -311,6 +311,11 @@ class BaseXMLResponseParser(ResponseParser):
         return member_name
 
     def _build_name_to_xml_node(self, parent_node):
+        # If the parent node is actually a list. We should not be trying
+        # to serialize it to a dictionary. Instead, return the first element
+        # in the list.
+        if isinstance(parent_node, list):
+            return self._build_name_to_xml_node(parent_node[0])
         xml_dict = {}
         for item in parent_node:
             key = self._node_tag(item)

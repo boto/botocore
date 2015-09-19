@@ -27,7 +27,8 @@ from botocore.paginate import Paginator
 from botocore.signers import RequestSigner
 from botocore.utils import CachedProperty
 from botocore.utils import get_service_module_name
-from botocore.docs.method import LazyLoadedDocstring
+from botocore.docs.docstring import ClientMethodDocstring
+from botocore.docs.docstring import PaginatorDocstring
 
 
 logger = logging.getLogger(__name__)
@@ -271,7 +272,7 @@ class ClientCreator(object):
 
         # Add the docstring to the client method
         operation_model = service_model.operation_model(operation_name)
-        docstring = LazyLoadedDocstring(
+        docstring = ClientMethodDocstring(
             operation_model=operation_model,
             method_name=operation_name,
             event_emitter=self._event_emitter,
@@ -398,9 +399,36 @@ class BaseClient(object):
             raise OperationNotPageableError(operation_name=operation_name)
         else:
             actual_operation_name = self._PY_TO_OP_NAME[operation_name]
-            paginator = Paginator(
+
+            # Create a new paginate method that will serve as a proxy to
+            # the underlying Paginator.paginate method. This is needed to
+            # attach a docstring to the method.
+            def paginate(self, **kwargs):
+                return Paginator.paginate(self, **kwargs)
+
+            paginator_config = self._cache['page_config'][
+                actual_operation_name]
+            # Add the docstring for the paginate method.
+            paginate.__doc__ = PaginatorDocstring(
+                paginator_name=actual_operation_name,
+                event_emitter=self.meta.events,
+                service_model=self.meta.service_model,
+                paginator_config=paginator_config,
+                include_signature=False
+            )
+
+            # Rename the paginator class based on the type of paginator.
+            paginator_class_name = str('%s.Paginator.%s' % (
+                get_service_module_name(self.meta.service_model),
+                actual_operation_name))
+
+            # Create the new paginator class
+            documented_paginator_cls = type(
+                paginator_class_name, (Paginator,), {'paginate': paginate})
+
+            paginator = documented_paginator_cls(
                 getattr(self, operation_name),
-                self._cache['page_config'][actual_operation_name])
+                paginator_config)
             return paginator
 
     def can_paginate(self, operation_name):

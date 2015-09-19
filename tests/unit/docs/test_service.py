@@ -49,12 +49,12 @@ class TestServiceDocumenter(BaseDocsTest):
             '==========',
             'Paginators',
             '==========',
-            '.. py:class:: MyService.Paginator.sample_operation',
+            '.. py:class:: MyService.Paginator.SampleOperation',
             '  .. py:method:: paginate(**kwargs)',
             '=======',
             'Waiters',
             '=======',
-            '.. py:class:: MyService.Waiter.sample_operation_complete',
+            '.. py:class:: MyService.Waiter.SampleOperationComplete',
             '  .. py:method:: wait(**kwargs)'
         ]
         for line in lines:

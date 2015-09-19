@@ -468,6 +468,7 @@ BUILTIN_HANDLERS = [
 
     ('before-call.s3.PutBucketTagging', calculate_md5),
     ('before-call.s3.PutBucketLifecycle', calculate_md5),
+    ('before-call.s3.PutBucketLifecycleConfiguration', calculate_md5),
     ('before-call.s3.PutBucketCors', calculate_md5),
     ('before-call.s3.DeleteObjects', calculate_md5),
     ('before-call.s3.PutBucketReplication', calculate_md5),

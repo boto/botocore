@@ -32,12 +32,12 @@ class TestWaiterDocumenter(BaseDocsTest):
             'Waiters',
             '=======',
             'The available waiters are:',
-            '* :py:class:`MyService.Waiter.sample_operation_complete`',
-            '.. py:class:: MyService.Waiter.sample_operation_complete',
+            '* :py:class:`MyService.Waiter.SampleOperationComplete`',
+            '.. py:class:: MyService.Waiter.SampleOperationComplete',
             '  ::',
             '    waiter = client.get_waiter(\'sample_operation_complete\')',
             '  .. py:method:: wait(**kwargs)',
-            ('    This polls :py:meth:`MyService.Client.sample_operation` '
+            ('    Polls :py:meth:`MyService.Client.sample_operation` '
              'every 15 seconds until a successful state is reached. An error '
              'is returned after 40 failed checks.'),
             '    **Request Syntax**',
