@@ -770,8 +770,12 @@ class ComponentLocator(object):
 
     def get_component(self, name):
         if name in self._deferred:
-            factory = self._deferred.pop(name)
+            factory = self._deferred[name]
             self._components[name] = factory()
+            # Only delete the component from the deferred dict after
+            # successfully creating the object from the factory as well as
+            # injecting the instantiated value into the _components dict.
+            del self._deferred[name]
         try:
             return self._components[name]
         except KeyError:
