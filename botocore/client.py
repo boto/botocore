@@ -21,12 +21,15 @@ from botocore.awsrequest import prepare_request_dict
 from botocore.endpoint import EndpointCreator, DEFAULT_TIMEOUT
 from botocore.exceptions import ClientError, DataNotFoundError
 from botocore.exceptions import OperationNotPageableError
+from botocore.exceptions import InvalidS3AddressingStyleError
 from botocore.hooks import first_non_none_response
 from botocore.model import ServiceModel
 from botocore.paginate import Paginator
 from botocore.signers import RequestSigner
 from botocore.utils import CachedProperty
 from botocore.utils import get_service_module_name
+from botocore.utils import fix_s3_host
+from botocore.utils import switch_to_virtual_host_style
 from botocore.docs.docstring import ClientMethodDocstring
 from botocore.docs.docstring import PaginatorDocstring
 
@@ -218,6 +221,28 @@ class ClientCreator(object):
             config_kwargs.update(
                 connect_timeout=client_config.connect_timeout,
                 read_timeout=client_config.read_timeout)
+
+        # Determine if the user specified the use of virtual host addressing
+        # style for s3.
+        s3_addressing_style = 'default'
+
+        # Check the scoped config first
+        if scoped_config is not None:
+            s3_addressing_style = scoped_config.get('s3', {}).get(
+                'addressing_style', 'default')
+
+        # Next the client config value takes precedence
+        if client_config is not None:
+            # Note we are checking for None here becasue that means the user
+            # is not opting in nor out. For example, the virtual_host_value
+            # could be False in the ClientConfig  which would explicitly mean
+            # override what is in scoped config.
+            if client_config.s3_addressing_style is not None:
+                s3_addressing_style = client_config.s3_addressing_style
+
+        config_kwargs['s3_addressing_style'] = s3_addressing_style
+
+
         new_config = Config(**config_kwargs)
 
         endpoint_creator = EndpointCreator(self._endpoint_resolver,
@@ -307,9 +332,27 @@ class BaseClient(object):
         self.meta = ClientMeta(event_emitter, self._client_config,
                                endpoint.host, service_model,
                                self._PY_TO_OP_NAME)
+        self._validate_arguments()
+        self._register_handlers()
+
+    def _validate_arguments(self):
+        if self.meta.s3_addressing_style not in ['virtual', 'default']:
+            raise InvalidS3AddressingStyleError(
+                s3_addressing_style=self.meta.s3_addressing_style)
+
+    def _register_handlers(self):
+        # Register the handler required to sign requests.
         self.meta.events.register('request-created.%s' %
-                                  service_model.endpoint_prefix,
+                                  self.meta.service_model.endpoint_prefix,
                                   self._sign_request)
+        # If the virtual host addressing style is being forced,
+        # switch the default fix_s3_host handler for the more general
+        # switch_to_virtual_host_style handler that does not have opt out
+        # cases (other than throwing an error if the name is DNS incompatible)
+        if self.meta.s3_addressing_style == 'virtual':
+            self.meta.events.unregister('before-sign.s3', fix_s3_host)
+            self.meta.events.register(
+                'before-sign.s3', switch_to_virtual_host_style)
 
     @property
     def _service_model(self):
@@ -537,6 +580,10 @@ class ClientMeta(object):
     def method_to_api_mapping(self):
         return self._method_to_api_mapping
 
+    @property
+    def s3_addressing_style(self):
+        return self._client_config.s3_addressing_style
+
 
 class Config(object):
     """Advanced configuration for Botocore clients.
@@ -554,10 +601,12 @@ class Config(object):
     def __init__(self, region_name=None, signature_version=None,
                  user_agent=None, user_agent_extra=None,
                  connect_timeout=DEFAULT_TIMEOUT,
-                 read_timeout=DEFAULT_TIMEOUT):
+                 read_timeout=DEFAULT_TIMEOUT,
+                 s3_addressing_style=None):
         self.region_name = region_name
         self.signature_version = signature_version
         self.user_agent = user_agent
         self.user_agent_extra = user_agent_extra
         self.connect_timeout = connect_timeout
         self.read_timeout = read_timeout
+        self.s3_addressing_style = s3_addressing_style

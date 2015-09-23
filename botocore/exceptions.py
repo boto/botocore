@@ -305,3 +305,18 @@ class ClientError(Exception):
 
 class ImminentRemovalWarning(Warning):
     pass
+
+
+class InvalidDNSNameError(BotoCoreError):
+    """Error when virtual host path is forced on a non-DNS compatible bucket"""
+    fmt = (
+        'Bucket named {bucket_name} is not DNS compatible. Virtual '
+        'hosted-style access cannot be used.'
+    )
+
+class InvalidS3AddressingStyleError(BotoCoreError):
+    """Error when an invalid path style is specified"""
+    fmt = (
+        'S3 addressing style {s3_addressing_style} is invaild. Valid options '
+        'are: \'default\' and \'virtual\''
+    )

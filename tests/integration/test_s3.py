@@ -900,5 +900,38 @@ class TestSupportedPutObjectBodyTypesSigv4(TestSupportedPutObjectBodyTypes):
                                           config=client_config)
 
 
+class TestS3VirtualAddressing(BaseS3ClientTest):
+    def setUp(self):
+        super(TestS3VirtualAddressing, self).setUp()
+        self.region = 'us-west-2'
+        self.client = self.session.create_client(
+            's3', region_name=self.region,
+            endpoint_url='https://s3-us-west-2.amazonaws.com',
+            config=Config(s3_addressing_style='virtual'))
+
+    def test_can_list_buckets(self):
+        response = self.client.list_buckets()
+        self.assertIn('Buckets', response)
+
+    def test_can_make_bucket_and_put_object(self):
+        bucket_name = self.create_bucket(self.region)
+        response = self.client.put_object(
+            Bucket=bucket_name, Key='foo', Body='contents')
+        self.assertEqual(
+            response['ResponseMetadata']['HTTPStatusCode'], 200)
+
+    def test_can_make_bucket_and_put_object_with_sigv4(self):
+        self.region = 'eu-central-1'
+        self.client = self.session.create_client(
+            's3', region_name=self.region,
+            endpoint_url='https://s3-eu-central-1.amazonaws.com',
+            config=Config(s3_addressing_style='virtual'))
+        bucket_name = self.create_bucket(self.region)
+        response = self.client.put_object(
+            Bucket=bucket_name, Key='foo', Body='contents')
+        self.assertEqual(
+            response['ResponseMetadata']['HTTPStatusCode'], 200)
+
+
 if __name__ == '__main__':
     unittest.main()

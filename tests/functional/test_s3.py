@@ -13,6 +13,7 @@
 from tests import unittest, mock, BaseSessionTest
 
 import botocore.session
+from botocore.client import Config
 from botocore.exceptions import ParamValidationError
 
 
@@ -87,3 +88,40 @@ class TestS3GetBucketLifecycle(BaseSessionTest):
             response['Rules'][1]['NoncurrentVersionTransition'],
             {'NoncurrentDays': 40, 'StorageClass': 'STANDARD_IA'}
         )
+
+
+class TestVirtualHostStyle(unittest.TestCase):
+    def test_default_endpoint_for_virtual_addressing(self):
+        session = botocore.session.get_session()
+        s3 = session.create_client(
+            's3', config=Config(s3_addressing_style='virtual'))
+        http_response = mock.Mock()
+
+        http_response.status_code = 200
+        http_response.headers = {}
+        http_response.content = b''
+        with mock.patch('botocore.endpoint.Session.send') \
+                as mock_send:
+            mock_send.return_value = http_response
+            s3.put_object(Bucket='mybucket', Key='mykey', Body='mybody')
+            request_sent = mock_send.call_args[0][0]
+            self.assertEqual(
+                'https://mybucket.s3.amazonaws.com/mykey', request_sent.url)
+
+    def test_provided_endpoint_url_for_virtual_addressing(self):
+        session = botocore.session.get_session()
+        s3 = session.create_client(
+            's3', config=Config(s3_addressing_style='virtual'),
+            endpoint_url='https://foo.amazonaws.com')
+        http_response = mock.Mock()
+
+        http_response.status_code = 200
+        http_response.headers = {}
+        http_response.content = b''
+        with mock.patch('botocore.endpoint.Session.send') \
+                as mock_send:
+            mock_send.return_value = http_response
+            s3.put_object(Bucket='mybucket', Key='mykey', Body='mybody')
+            request_sent = mock_send.call_args[0][0]
+            self.assertEqual(
+                'https://mybucket.foo.amazonaws.com/mykey', request_sent.url)
