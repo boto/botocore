@@ -90,7 +90,7 @@ class TestS3GetBucketLifecycle(BaseSessionTest):
         )
 
 
-class TestVirtualHostStyle(unittest.TestCase):
+class TestVirtualHostStyle(BaseSessionTest):
     def test_default_endpoint_for_virtual_addressing(self):
         session = botocore.session.get_session()
         s3 = session.create_client(
