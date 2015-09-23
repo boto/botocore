@@ -40,6 +40,15 @@ class TestHandlers(BaseSessionTest):
         handlers.decode_console_output(parsed)
         self.assertEqual(parsed['Output'], 1)
 
+    def test_noop_if_output_key_does_not_exist(self):
+        original = {'foo': 'bar'}
+        parsed = original.copy()
+
+        handlers.decode_console_output(parsed)
+        # Should be unchanged because the 'Output'
+        # key is not in the output.
+        self.assertEqual(parsed, original)
+
     def test_decode_quoted_jsondoc(self):
         value = quote('{"foo":"bar"}')
         converted_value = handlers.decode_quoted_jsondoc(value)
