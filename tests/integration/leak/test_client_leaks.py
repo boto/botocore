@@ -59,8 +59,7 @@ class TestAPICallsDontLeakMemory(BaseClientDriverTest):
         client = self.session.create_client('s3')
         with temporary_file('wb') as f:
             random_content(num_megabytes=50, filename=f.name)
-            self.send_cmd('stream_s3_upload', bucket_name, 'foo',
-                                 f.name)
+            self.send_cmd('stream_s3_upload', bucket_name, 'foo', f.name)
             self.collect_memory_until_finished()
             client.delete_object(Bucket=bucket_name, Key='foo')
         memory = self.memory_samples
@@ -81,7 +80,7 @@ class TestAPICallsDontLeakMemory(BaseClientDriverTest):
                                 Key='foo')
             download_filename = f.name + '.download'
             self.send_cmd('stream_s3_download', bucket_name,
-                                 'foo', download_filename)
+                          'foo', download_filename)
             self.collect_memory_until_finished()
         memory = self.memory_samples
         mem_range = max(memory) - min(memory)
