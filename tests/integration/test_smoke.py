@@ -1,4 +1,16 @@
-"""Smoke tests to verify basic communication to all AWS services."""
+"""Smoke tests to verify basic communication to all AWS services.
+
+If you want to control what services/regions are used you can
+also provide two separate env vars:
+
+    * AWS_SMOKE_TEST_REGION - The region used to create clients.
+    * AWS_SMOKE_TEST_SERVICES - A CSV list of service names to test.
+
+Otherwise, the ``REGION`` variable specifies the default region
+to use and all the services in SMOKE_TESTS/ERROR_TESTS will be tested.
+
+"""
+import os
 import mock
 from pprint import pformat
 import warnings
@@ -174,15 +186,30 @@ REGION_OVERRIDES = {
 
 
 def _get_client(session, service):
-    region_name = REGION_OVERRIDES.get(service, REGION)
+    if os.environ.get('AWS_SMOKE_TEST_REGION', ''):
+        region_name = os.environ['AWS_SMOKE_TEST_REGION']
+    else:
+        region_name = REGION_OVERRIDES.get(service, REGION)
     return session.create_client(service, region_name=region_name)
+
+
+def _list_services(dict_entries):
+    # List all services in the provided dict_entry.
+    # If the AWS_SMOKE_TEST_SERVICES is provided,
+    # it's a comma separated list of services you can provide
+    # if you only want to run the smoke tests for certain services.
+    wanted_services = set(
+        os.environ.get('AWS_SMOKE_TEST_SERVICES', '').split(','))
+    if not wanted_services:
+        return dict_entries.keys()
+    return [key for key in dict_entries if key in wanted_services]
 
 
 def test_can_make_request_with_client():
     # Same as test_can_make_request, but with Client objects
     # instead of service/operations.
     session = botocore.session.get_session()
-    for service_name in SMOKE_TESTS:
+    for service_name in _list_services(SMOKE_TESTS):
         client = _get_client(session, service_name)
         for operation_name in SMOKE_TESTS[service_name]:
             kwargs = SMOKE_TESTS[service_name][operation_name]
@@ -202,7 +229,7 @@ def _make_client_call(client, operation_name, kwargs):
 
 def test_can_make_request_and_understand_errors_with_client():
     session = botocore.session.get_session()
-    for service_name in ERROR_TESTS:
+    for service_name in _list_services(ERROR_TESTS):
         client = _get_client(session, service_name)
         for operation_name in ERROR_TESTS[service_name]:
             kwargs = ERROR_TESTS[service_name][operation_name]
@@ -223,7 +250,7 @@ def _make_error_client_call(client, operation_name, kwargs):
 
 def test_client_can_retry_request_properly():
     session = botocore.session.get_session()
-    for service_name in SMOKE_TESTS:
+    for service_name in _list_services(SMOKE_TESTS):
         client = _get_client(session, service_name)
         for operation_name in SMOKE_TESTS[service_name]:
             kwargs = SMOKE_TESTS[service_name][operation_name]

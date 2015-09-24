@@ -449,5 +449,65 @@ class TestCreateClient(BaseSessionTest):
         self.assertEqual(ec2_client.meta.region_name, 'moon-west-1')
 
 
+class TestComponentLocator(unittest.TestCase):
+    def setUp(self):
+        self.components = botocore.session.ComponentLocator()
+
+    def test_unknown_component_raises_exception(self):
+        with self.assertRaises(ValueError):
+            self.components.get_component('unknown-component')
+
+    def test_can_register_and_retrieve_component(self):
+        component = object()
+        self.components.register_component('foo', component)
+        self.assertIs(self.components.get_component('foo'), component)
+
+    def test_last_registration_wins(self):
+        first = object()
+        second = object()
+        self.components.register_component('foo', first)
+        self.components.register_component('foo', second)
+        self.assertIs(self.components.get_component('foo'), second)
+
+    def test_can_lazy_register_a_component(self):
+        component = object()
+        lazy = lambda: component
+        self.components.lazy_register_component('foo', lazy)
+        self.assertIs(self.components.get_component('foo'), component)
+
+    def test_latest_registration_wins_even_if_lazy(self):
+        first = object()
+        second = object()
+        lazy_second = lambda: second
+        self.components.register_component('foo', first)
+        self.components.lazy_register_component('foo', lazy_second)
+        self.assertIs(self.components.get_component('foo'), second)
+
+    def test_latest_registration_overrides_lazy(self):
+        first = object()
+        second = object()
+        lazy_first = lambda: first
+        self.components.lazy_register_component('foo', lazy_first)
+        self.components.register_component('foo', second)
+        self.assertIs(self.components.get_component('foo'), second)
+
+    def test_lazy_registration_factory_does_not_remove_from_list_on_error(self):
+        class ArbitraryError(Exception):
+            pass
+
+        def bad_factory():
+            raise ArbitraryError("Factory raises an exception.")
+
+        self.components.lazy_register_component('foo', bad_factory)
+
+        with self.assertRaises(ArbitraryError):
+            self.components.get_component('foo')
+
+        # Trying again should raise the same exception,
+        # not an ValueError("Unknown component")
+        with self.assertRaises(ArbitraryError):
+            self.components.get_component('foo')
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -16,6 +16,7 @@ import itertools
 from nose.plugins.attrib import attr
 
 import botocore.session
+from botocore.exceptions import ClientError
 
 
 class TestEC2(unittest.TestCase):
@@ -29,6 +30,12 @@ class TestEC2(unittest.TestCase):
         result = self.client.describe_availability_zones()
         zones = list(sorted(a['ZoneName'] for a in result['AvailabilityZones']))
         self.assertEqual(zones, ['us-west-2a', 'us-west-2b', 'us-west-2c'])
+
+    def test_get_console_output_handles_error(self):
+        # Want to ensure the underlying ClientError is propogated
+        # on error.
+        with self.assertRaises(ClientError):
+            self.client.get_console_output(InstanceId='i-12345')
 
 
 class TestEC2Pagination(unittest.TestCase):

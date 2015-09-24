@@ -92,11 +92,12 @@ def _looks_like_special_case_error(http_response):
 
 
 def decode_console_output(parsed, **kwargs):
-    try:
-        value = base64.b64decode(six.b(parsed['Output'])).decode('utf-8')
-        parsed['Output'] = value
-    except (ValueError, TypeError, AttributeError):
-        logger.debug('Error decoding base64', exc_info=True)
+    if 'Output' in parsed:
+        try:
+            value = base64.b64decode(six.b(parsed['Output'])).decode('utf-8')
+            parsed['Output'] = value
+        except (ValueError, TypeError, AttributeError):
+            logger.debug('Error decoding base64', exc_info=True)
 
 
 def decode_quoted_jsondoc(value):
@@ -498,7 +499,11 @@ BUILTIN_HANDLERS = [
     ('service-data-loaded', register_retries_for_service),
     ('choose-signer.cognito-identity.GetId', disable_signing),
     ('choose-signer.cognito-identity.GetOpenIdToken', disable_signing),
+    ('choose-signer.cognito-identity.UnlinkIdentity', disable_signing),
+    ('choose-signer.cognito-identity.GetCredentialsForIdentity',
+        disable_signing),
     ('choose-signer.sts.AssumeRoleWithSAML', disable_signing),
+    ('choose-signer.sts.AssumeRoleWithWebIdentity', disable_signing),
     ('before-sign.s3', utils.fix_s3_host),
     ('before-parameter-build.s3.HeadObject', sse_md5),
     ('before-parameter-build.s3.GetObject', sse_md5),

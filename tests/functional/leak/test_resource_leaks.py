@@ -82,3 +82,29 @@ class TestDoesNotLeakMemory(BaseClientDriverTest):
         self.record_memory()
         start, end = self.memory_samples
         self.assertTrue((end - start) < self.MAX_GROWTH_BYTES, (end - start))
+
+    def test_create_single_paginator_memory_constant(self):
+        self.cmd('create_paginator', 's3', 'list_objects')
+        self.cmd('free_paginators')
+        self.record_memory()
+        for _ in range(100):
+            self.cmd('create_paginator', 's3', 'list_objects')
+            self.cmd('free_paginators')
+        self.record_memory()
+        start, end = self.memory_samples
+        self.assertTrue((end - start) < self.MAX_GROWTH_BYTES, (end - start))
+
+    def test_create_memory_paginators_in_loop(self):
+        # See ``test_create_memory_clients_in_loop`` to understand why
+        # paginators are first initialized and then freed. Same reason applies.
+        self.cmd('create_multiple_paginators', '200', 's3', 'list_objects')
+        self.cmd('free_paginators')
+        self.record_memory()
+        # 500 waiters in batches of 50.
+        for _ in range(10):
+            self.cmd(
+                'create_multiple_paginators', '50', 's3', 'list_objects')
+            self.cmd('free_paginators')
+        self.record_memory()
+        start, end = self.memory_samples
+        self.assertTrue((end - start) < self.MAX_GROWTH_BYTES, (end - start))
