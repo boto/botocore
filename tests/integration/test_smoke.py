@@ -1,4 +1,15 @@
-"""Smoke tests to verify basic communication to all AWS services."""
+"""Smoke tests to verify basic communication to all AWS services.
+
+If you want to control what services/regions are used you can
+also provide two separate env vars:
+
+    * AWS_SMOKE_TEST_REGION - The region used to create clients.
+    * AWS_SMOKE_TEST_SERVICES - A CSV list of service names to test.
+
+Otherwise, the ``REGION`` variable specifies the default region
+to use and all the services in SMOKE_TESTS/ERROR_TESTS will be tested.
+
+"""
 import os
 import mock
 from pprint import pformat
@@ -175,7 +186,10 @@ REGION_OVERRIDES = {
 
 
 def _get_client(session, service):
-    region_name = REGION_OVERRIDES.get(service, REGION)
+    if os.environ.get('AWS_SMOKE_TEST_REGION', ''):
+        region_name = os.environ['AWS_SMOKE_TEST_REGION']
+    else:
+        region_name = REGION_OVERRIDES.get(service, REGION)
     return session.create_client(service, region_name=region_name)
 
 
