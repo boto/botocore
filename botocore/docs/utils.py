@@ -177,3 +177,59 @@ class AppendParamDocumentation(object):
             description_section = section.get_section(
                 'param-documentation')
             description_section.writeln(self._doc_string)
+
+
+class DocumentModifiedShape(object):
+    def __init__(self, shape_name, new_type, new_description=None,
+                 new_example_value=None):
+        self._shape_name = shape_name
+        self._new_type = new_type
+        self._new_description = new_description
+        self._new_example_value = new_example_value
+
+    def replace_documentation_for_matching_shape(self, event_name, section,
+                                                 **kwargs):
+        if self._shape_name == section.context.get('shape'):
+            self._replace_documentation(event_name, section)
+        for section_name in section.available_sections:
+            sub_section = section.get_section(section_name)
+            if self._shape_name == sub_section.context.get('shape'):
+                self._replace_documentation(event_name, sub_section)
+            else:
+                self.replace_documentation_for_matching_shape(
+                    event_name, sub_section)
+
+    def _replace_documentation(self, event_name, section):
+        if self._new_example_value is not None and\
+                (event_name.startswith('docs.request-example') or
+                 event_name.startswith('docs.response-example')):
+            section.remove_all_sections()
+            section.clear_text()
+            section.write(self._new_example_value)
+
+        if event_name.startswith('docs.request-params') or \
+                event_name.startswith('docs.response-params'):
+            for section_name in section.available_sections:
+                # Delete any extra members as a new shape is being
+                # used.
+                if section_name not in ['param-name', 'param-documentation',
+                                        'end-structure', 'param-type',
+                                        'end-param']:
+                    section.delete_section(section_name)
+
+            # Update the documentation
+            if self._new_description is not None and \
+                    'param-documentation' in section.available_sections:
+                description_section = section.get_section('param-documentation')
+                description_section.clear_text()
+                description_section.write(self._new_description)
+
+            # Update the param type
+            type_section = section.get_section('param-type')
+            if type_section.getvalue().decode('utf-8').startswith(':type'):
+                type_section.clear_text()
+                type_section.write(':type %s: %s' % (
+                    section.name, self._new_type))
+            else:
+                type_section.clear_text()
+                type_section.style.italics('(%s) -- ' % self._new_type)
