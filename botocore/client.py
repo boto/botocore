@@ -167,6 +167,28 @@ class ClientCreator(object):
 
         return region_name
 
+    def _inject_s3_addressing_style(self, config_kwargs, scoped_config,
+                                    client_config):
+        # Determine if the user specified the use of virtual host addressing
+        # style for s3.
+        s3_addressing_style = 'default'
+
+        # Check the scoped config first
+        if scoped_config is not None:
+            s3_addressing_style = scoped_config.get('s3', {}).get(
+                'addressing_style', 'default')
+
+        # Next the client config value takes precedence
+        if client_config is not None:
+            # Note we are checking for None here becasue that means the user
+            # is not opting in nor out. For example, the virtual_host_value
+            # could be False in the ClientConfig  which would explicitly mean
+            # override what is in scoped config.
+            if client_config.s3_addressing_style is not None:
+                s3_addressing_style = client_config.s3_addressing_style
+
+        config_kwargs['s3_addressing_style'] = s3_addressing_style
+
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,
                          scoped_config, client_config):
@@ -222,26 +244,9 @@ class ClientCreator(object):
                 connect_timeout=client_config.connect_timeout,
                 read_timeout=client_config.read_timeout)
 
-        # Determine if the user specified the use of virtual host addressing
-        # style for s3.
-        s3_addressing_style = 'default'
-
-        # Check the scoped config first
-        if scoped_config is not None:
-            s3_addressing_style = scoped_config.get('s3', {}).get(
-                'addressing_style', 'default')
-
-        # Next the client config value takes precedence
-        if client_config is not None:
-            # Note we are checking for None here becasue that means the user
-            # is not opting in nor out. For example, the virtual_host_value
-            # could be False in the ClientConfig  which would explicitly mean
-            # override what is in scoped config.
-            if client_config.s3_addressing_style is not None:
-                s3_addressing_style = client_config.s3_addressing_style
-
-        config_kwargs['s3_addressing_style'] = s3_addressing_style
-
+        # Add the s3 addressing style for client
+        self._inject_s3_addressing_style(
+            config_kwargs, scoped_config, client_config)
 
         new_config = Config(**config_kwargs)
 
