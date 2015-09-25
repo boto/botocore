@@ -318,5 +318,5 @@ class InvalidS3AddressingStyleError(BotoCoreError):
     """Error when an invalid path style is specified"""
     fmt = (
         'S3 addressing style {s3_addressing_style} is invaild. Valid options '
-        'are: \'default\' and \'virtual\''
+        'are: \'auto\' and \'virtual\''
     )

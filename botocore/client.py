@@ -347,7 +347,7 @@ class BaseClient(object):
         else:
             s3_addressing_style = self.meta.config.s3.get('addressing_style')
 
-        if s3_addressing_style in [None, 'default']:
+        if s3_addressing_style in [None, 'auto']:
             self.meta.events.register('before-sign.s3', fix_s3_host)
         elif s3_addressing_style == 'virtual':
             self.meta.events.register(
@@ -609,10 +609,10 @@ class Config(object):
         Valid keys are:
             * 'addressing_style' -- Refers to the style in which to address
               s3 endpoints. Values must be a string that equals:
-                  * default -- Addressing style is chosen for user. Depending
-                               on the configuration of client, the endpoint
-                               may be addressed in the virtual or the path
-                               style.
+                  * auto -- Addressing style is chosen for user. Depending
+                            on the configuration of client, the endpoint
+                            may be addressed in the virtual or the path
+                            style.
                   * virtual -- Addressing style is always virtual. The name of
                                the bucket must be DNS compatible or an
                                exception will be thrown. Endpoints will be
@@ -635,6 +635,6 @@ class Config(object):
     def _validate_s3_configuration(self, s3):
         if s3 is not None:
             addressing_style = s3.get('addressing_style')
-            if addressing_style not in ['virtual', 'default', None]:
+            if addressing_style not in ['virtual', 'auto', None]:
                 raise InvalidS3AddressingStyleError(
                     s3_addressing_style=addressing_style)
