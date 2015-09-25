@@ -907,7 +907,7 @@ class TestS3VirtualAddressing(BaseS3ClientTest):
         self.client = self.session.create_client(
             's3', region_name=self.region,
             endpoint_url='https://s3-us-west-2.amazonaws.com',
-            config=Config(s3_addressing_style='virtual'))
+            config=Config(s3={'addressing_style': 'virtual'}))
 
     def test_can_list_buckets(self):
         response = self.client.list_buckets()
@@ -925,7 +925,7 @@ class TestS3VirtualAddressing(BaseS3ClientTest):
         self.client = self.session.create_client(
             's3', region_name=self.region,
             endpoint_url='https://s3-eu-central-1.amazonaws.com',
-            config=Config(s3_addressing_style='virtual'))
+            config=Config(s3={'addressing_style': 'virtual'}))
         bucket_name = self.create_bucket(self.region)
         response = self.client.put_object(
             Bucket=bucket_name, Key='foo', Body='contents')

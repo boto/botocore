@@ -94,7 +94,7 @@ class TestVirtualHostStyle(BaseSessionTest):
     def test_default_endpoint_for_virtual_addressing(self):
         session = botocore.session.get_session()
         s3 = session.create_client(
-            's3', config=Config(s3_addressing_style='virtual'))
+            's3', config=Config(s3={'addressing_style': 'virtual'}))
         http_response = mock.Mock()
 
         http_response.status_code = 200
@@ -111,7 +111,7 @@ class TestVirtualHostStyle(BaseSessionTest):
     def test_provided_endpoint_url_for_virtual_addressing(self):
         session = botocore.session.get_session()
         s3 = session.create_client(
-            's3', config=Config(s3_addressing_style='virtual'),
+            's3', config=Config(s3={'addressing_style': 'virtual'}),
             endpoint_url='https://foo.amazonaws.com')
         http_response = mock.Mock()
 
