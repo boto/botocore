@@ -337,15 +337,21 @@ class BaseClient(object):
         self.meta.events.register('request-created.%s' %
                                   self.meta.service_model.endpoint_prefix,
                                   self._sign_request)
+
         # If the virtual host addressing style is being forced,
         # switch the default fix_s3_host handler for the more general
         # switch_to_virtual_host_style handler that does not have opt out
         # cases (other than throwing an error if the name is DNS incompatible)
-        if self.meta.config.s3 is not None:
-            if self.meta.config.s3.get('addressing_style') == 'virtual':
-                self.meta.events.unregister('before-sign.s3', fix_s3_host)
-                self.meta.events.register(
-                    'before-sign.s3', switch_to_virtual_host_style)
+        if self.meta.config.s3 is None:
+            s3_addressing_style = None
+        else:
+            s3_addressing_style = self.meta.config.s3.get('addressing_style')
+
+        if s3_addressing_style in [None, 'default']:
+            self.meta.events.register('before-sign.s3', fix_s3_host)
+        elif s3_addressing_style == 'virtual':
+            self.meta.events.register(
+                'before-sign.s3', switch_to_virtual_host_style)
 
     @property
     def _service_model(self):
