@@ -617,6 +617,8 @@ class Config(object):
                                the bucket must be DNS compatible or an
                                exception will be thrown. Endpoints will be
                                addressed as such: mybucket.s3.amazonaws.com
+                  * path -- Addressing style is always by path. Endpoints will
+                            be addressed as such: s3.amazonaws.com/mybucket
     """
     def __init__(self, region_name=None, signature_version=None,
                  user_agent=None, user_agent_extra=None,
@@ -635,6 +637,6 @@ class Config(object):
     def _validate_s3_configuration(self, s3):
         if s3 is not None:
             addressing_style = s3.get('addressing_style')
-            if addressing_style not in ['virtual', 'auto', None]:
+            if addressing_style not in ['virtual', 'auto', 'path', None]:
                 raise InvalidS3AddressingStyleError(
                     s3_addressing_style=addressing_style)

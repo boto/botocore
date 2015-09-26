@@ -900,14 +900,17 @@ class TestSupportedPutObjectBodyTypesSigv4(TestSupportedPutObjectBodyTypes):
                                           config=client_config)
 
 
-class TestS3VirtualAddressing(BaseS3ClientTest):
+class TestAutoS3Addressing(BaseS3ClientTest):
     def setUp(self):
-        super(TestS3VirtualAddressing, self).setUp()
+        super(TestAutoS3Addressing, self).setUp()
         self.region = 'us-west-2'
-        self.client = self.session.create_client(
+        self.addressing_style = 'auto'
+        self.client = self.create_client()
+
+    def create_client(self):
+        return self.session.create_client(
             's3', region_name=self.region,
-            endpoint_url='https://s3-us-west-2.amazonaws.com',
-            config=Config(s3={'addressing_style': 'virtual'}))
+            config=Config(s3={'addressing_style': self.addressing_style}))
 
     def test_can_list_buckets(self):
         response = self.client.list_buckets()
@@ -922,15 +925,26 @@ class TestS3VirtualAddressing(BaseS3ClientTest):
 
     def test_can_make_bucket_and_put_object_with_sigv4(self):
         self.region = 'eu-central-1'
-        self.client = self.session.create_client(
-            's3', region_name=self.region,
-            endpoint_url='https://s3-eu-central-1.amazonaws.com',
-            config=Config(s3={'addressing_style': 'virtual'}))
+        self.client = self.create_client()
         bucket_name = self.create_bucket(self.region)
         response = self.client.put_object(
             Bucket=bucket_name, Key='foo', Body='contents')
         self.assertEqual(
             response['ResponseMetadata']['HTTPStatusCode'], 200)
+
+
+class TestS3VirtualAddressing(TestAutoS3Addressing):
+    def setUp(self):
+        super(TestS3VirtualAddressing, self).setUp()
+        self.addressing_style = 'virtual'
+        self.client = self.create_client()
+
+
+class TestS3PathAddressing(TestAutoS3Addressing):
+    def setUp(self):
+        super(TestS3PathAddressing, self).setUp()
+        self.addressing_style = 'path'
+        self.client = self.create_client()
 
 
 if __name__ == '__main__':
