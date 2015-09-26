@@ -641,6 +641,13 @@ def switch_to_virtual_host_style(request, signature_version, region_name,
     This is a handler to force virtual host style s3 addressing no matter
     the signature version (which is taken in consideration for the default
     case). If the bucket is not DNS compatible an InvalidDNSName is thrown.
+
+    :param request: A AWSRequest object that is about to be sent.
+    :param signature_version: The signature version to sign with
+    :param region_name: The name of the region to sign with
+    :param default_endpoint_url: The endpoint to use when switching to a
+        virtual style. If None is supplied, the virtual host will be
+        constructed from the url of the request.
     """
     if request.auth_path is not None:
         # The auth_path has already been applied (this may be a
