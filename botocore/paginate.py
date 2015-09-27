@@ -34,8 +34,8 @@ class PaginatorModel(object):
 
 class PageIterator(object):
     def __init__(self, method, input_token, output_token, more_results,
-                 result_keys, non_aggregate_keys, limit_key, max_items,
-                 starting_token, page_size, op_kwargs):
+                 result_keys, sum_keys, non_aggregate_keys, limit_key,
+                 max_items, starting_token, page_size, op_kwargs):
         self._method = method
         self._op_kwargs = op_kwargs
         self._input_token = input_token
@@ -48,6 +48,8 @@ class PageIterator(object):
         self._page_size = page_size
         self._op_kwargs = op_kwargs
         self._resume_token = None
+        self._sum_key_exprs = sum_keys
+        self._sum_part = {}
         self._non_aggregate_key_exprs = non_aggregate_keys
         self._non_aggregate_part = {}
 
@@ -64,6 +66,10 @@ class PageIterator(object):
     def resume_token(self, value):
         if isinstance(value, list):
             self._resume_token = '___'.join([str(v) for v in value])
+
+    @property
+    def sum_part(self):
+        return self._sum_part
 
     @property
     def non_aggregate_part(self):
@@ -90,7 +96,12 @@ class PageIterator(object):
                     starting_truncation = self._handle_first_request(
                         parsed, primary_result_key, starting_truncation)
                 first_request = False
-                self._record_non_aggregate_key_values(parsed)
+                self._record_non_sequential_values(
+                    parsed,
+                    self._non_aggregate_key_exprs, self._non_aggregate_part,
+                    lambda _, value: value)
+            self._record_non_sequential_values(
+                parsed, self._sum_key_exprs, self._sum_part, lambda x, y: x+y)
             current_response = primary_result_key.search(parsed)
             if current_response is None:
                 current_response = []
@@ -157,14 +168,10 @@ class PageIterator(object):
     def _extract_parsed_response(self, response):
         return response
 
-    def _record_non_aggregate_key_values(self, response):
-        non_aggregate_keys = {}
-        for expression in self._non_aggregate_key_exprs:
-            result = expression.search(response)
-            set_value_from_jmespath(non_aggregate_keys,
-                                    expression.expression,
-                                    result)
-        self._non_aggregate_part = non_aggregate_keys
+    def _record_non_sequential_values(self, response, exprs, parts, method):
+        for expr in exprs:
+            set_value_from_jmespath(
+                parts, expr.expression, expr.search(response), method=method)
 
     def _inject_starting_params(self, op_kwargs):
         # If the user has specified a starting token we need to
@@ -281,6 +288,7 @@ class PageIterator(object):
                 result_value = result_expression.search(page)
                 if result_value is not None:
                     existing_value.extend(result_value)
+        merge_dicts(complete_result, self.sum_part)
         merge_dicts(complete_result, self.non_aggregate_part)
         if self.resume_token is not None:
             complete_result['NextToken'] = self.resume_token
@@ -317,6 +325,8 @@ class Paginator(object):
         self._output_token = self._get_output_tokens(self._pagination_cfg)
         self._input_token = self._get_input_tokens(self._pagination_cfg)
         self._more_results = self._get_more_results_token(self._pagination_cfg)
+        self._sum_keys = [
+            jmespath.compile(k) for k in pagination_config.get('sum_keys', [])]
         self._non_aggregate_keys = self._get_non_aggregate_keys(
             self._pagination_cfg)
         self._result_keys = self._get_result_keys(self._pagination_cfg)
@@ -375,7 +385,7 @@ class Paginator(object):
         return self.PAGE_ITERATOR_CLS(
             self._method, self._input_token,
             self._output_token, self._more_results,
-            self._result_keys, self._non_aggregate_keys,
+            self._result_keys, self._sum_keys, self._non_aggregate_keys,
             self._limit_key,
             page_params['MaxItems'],
             page_params['StartingToken'],

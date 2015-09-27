@@ -671,6 +671,33 @@ class TestExpressionKeyIterators(unittest.TestCase):
         })
 
 
+class TestIncludeSumKeys(unittest.TestCase):
+    def setUp(self):
+        self.method = mock.Mock()
+        self.paginate_config = {
+            'output_token': 'NextToken',
+            'input_token': 'NextToken',
+            'result_key': 'ResultKey',
+            'sum_keys': ['Count1', 'Count2'],
+        }
+        self.paginator = Paginator(self.method, self.paginate_config)
+
+    def test_include_non_aggregate_keys(self):
+        self.method.side_effect = [
+            {'ResultKey': ['foo'], 'Count1': 1, 'Count2': 2, 'NextToken': 'a'},
+            {'ResultKey': ['bar'], 'Count1': 1, 'Count2': 2, 'NextToken': 'b'},
+            {'ResultKey': ['baz'], 'Count1': 1, 'Count2': 2},
+        ]
+        pages = self.paginator.paginate()
+        expected = {
+            'ResultKey': ['foo', 'bar', 'baz'],
+            'Count1': 3,
+            'Count2': 6,
+        }
+        self.assertEqual(pages.build_full_result(), expected)
+        self.assertEqual(pages.sum_part, {'Count1': 3, 'Count2': 6})
+
+
 class TestIncludeNonResultKeys(unittest.TestCase):
     maxDiff = None
 

@@ -120,7 +120,8 @@ def validate_jmespath_for_set(expression):
             raise InvalidExpressionError(expression=expression)
 
 
-def set_value_from_jmespath(source, expression, value, is_first=True):
+def set_value_from_jmespath(source, expression, value, is_first=True,
+                            method=lambda current_value, new_value: new_value):
     # This takes a (limited) jmespath-like expression & can set a value based
     # on it.
     # Limitations:
@@ -146,11 +147,17 @@ def set_value_from_jmespath(source, expression, value, is_first=True):
             source[current_key],
             remainder,
             value,
-            is_first=False
+            is_first=False,
+            method=method
         )
 
-    # If we're down to a single key, set it.
-    source[current_key] = value
+    # Now we're down to a single key
+    if current_key not in source:
+        # If we havn't set this key before, set its initial value now
+        source[current_key] = value
+    else:
+        # Otherwise set it in a way specified by the method
+        source[current_key] = method(source[current_key], value)
 
 
 class InstanceMetadataFetcher(object):
