@@ -74,6 +74,8 @@ import sys
 
 
 class CommandRunner(object):
+    DEFAULT_REGION = 'us-west-2'
+
     def __init__(self):
         self._session = botocore.session.get_session()
         self._clients = []
@@ -118,7 +120,7 @@ class CommandRunner(object):
         # Args:
         # [0] client name used in its instantiation
         # [1] waiter name used in its instantiation
-        client = self._session.create_client(args[0])
+        client = self._create_client(args[0])
         self._waiters.append(client.get_waiter(args[1]))
 
     def _do_create_multiple_waiters(self, args):
@@ -127,7 +129,7 @@ class CommandRunner(object):
         # [1] client name used in its instantiation
         # [2] waiter name used in its instantiation
         num_waiters = args[0]
-        client = self._session.create_client(args[1])
+        client = self._create_client(args[1])
         for _ in range(int(num_waiters)):
             self._waiters.append(client.get_waiter(args[2]))
 
@@ -139,7 +141,7 @@ class CommandRunner(object):
         # Args:
         # [0] client name used in its instantiation
         # [1] paginator name used in its instantiation
-        client = self._session.create_client(args[0])
+        client = self._create_client(args[0])
         self._paginators.append(client.get_paginator(args[1]))
 
     def _do_create_multiple_paginators(self, args):
@@ -148,7 +150,7 @@ class CommandRunner(object):
         # [1] client name used in its instantiation
         # [2] paginator name used in its instantiation
         num_paginators = args[0]
-        client = self._session.create_client(args[1])
+        client = self._create_client(args[1])
         for _ in range(int(num_paginators)):
             self._paginators.append(client.get_paginator(args[2]))
 
@@ -168,7 +170,7 @@ class CommandRunner(object):
         service_name = args[1]
         operation_name = args[2]
         kwargs = dict([v.split(':', 1) for v in args[3:]])
-        client = self._session.create_client(service_name)
+        client = self._create_client(service_name)
         method = getattr(client, operation_name)
         for _ in range(num_requests):
             method(**kwargs)
@@ -183,7 +185,7 @@ class CommandRunner(object):
         # * key      - The name of the S3 key
         # * filename - The name of the local filename to upload
         bucket, key, local_filename = args
-        client = self._session.create_client('s3')
+        client = self._create_client('s3')
         with open(local_filename, 'rb') as f:
             client.put_object(Bucket=bucket, Key=key, Body=f)
 
@@ -197,12 +199,18 @@ class CommandRunner(object):
         # * key      - The name of the S3 key
         # * filename - The local filename where the object will be downloaded
         bucket, key, local_filename = args
-        client = self._session.create_client('s3')
+        client = self._create_client('s3')
         response = client.get_object(Bucket=bucket, Key=key)
         body_stream = response['Body']
         with open(local_filename, 'wb') as f:
             for chunk in iter(lambda: body_stream.read(64 * 1024), b''):
                 f.write(chunk)
+
+    def _create_client(self, service_name):
+        # Create a client using the provided service name.
+        # It will also inject a region name of self.DEFAULT_REGION.
+        return self._session.create_client(service_name,
+                                           region_name=self.DEFAULT_REGION)
 
 
 def run():
