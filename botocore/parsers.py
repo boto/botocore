@@ -465,6 +465,11 @@ class BaseJSONParser(ResponseParser):
 
     def _handle_structure(self, shape, value):
         member_shapes = shape.members
+        if value is None:
+            # If the comes across the wire as "null" (None in python),
+            # we should be returning this unchanged, instead of as an
+            # empty dict.
+            return None
         final_parsed = {}
         for member_name in member_shapes:
             member_shape = member_shapes[member_name]

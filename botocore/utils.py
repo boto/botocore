@@ -277,6 +277,10 @@ def percent_encode_sequence(mapping, safe=SAFE_CHARS):
     * It has a default list of safe chars that don't need
       to be encoded, which matches what AWS services expect.
 
+    If any value in the input ``mapping`` is a list type,
+    then each list element wil be serialized.  This is the equivalent
+    to ``urlencode``'s ``doseq=True`` argument.
+
     This function should be preferred over the stdlib
     ``urlencode()`` function.
 
@@ -290,8 +294,13 @@ def percent_encode_sequence(mapping, safe=SAFE_CHARS):
     else:
         pairs = mapping
     for key, value in pairs:
-        encoded_pairs.append('%s=%s' % (percent_encode(key),
-                                        percent_encode(value)))
+        if isinstance(value, list):
+            for element in value:
+                encoded_pairs.append('%s=%s' % (percent_encode(key),
+                                                percent_encode(element)))
+        else:
+            encoded_pairs.append('%s=%s' % (percent_encode(key),
+                                            percent_encode(value)))
     return '&'.join(encoded_pairs)
 
 
