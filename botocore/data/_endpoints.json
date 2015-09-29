@@ -18,7 +18,7 @@
   ],
   "iam":[
     {
-      "uri":"https://{service}.cn-north-1.amazonaws.com.cn",
+      "uri":"https://{service}.{region}.amazonaws.com.cn",
       "constraints":[
         ["region", "startsWith", "cn-"]
       ]
@@ -48,7 +48,7 @@
   ],
   "sts":[
     {
-      "uri":"{scheme}://{service}.cn-north-1.amazonaws.com.cn",
+      "uri":"{scheme}://{service}.{region}.amazonaws.com.cn",
       "constraints":[
         ["region", "startsWith", "cn-"]
       ]
@@ -126,7 +126,7 @@
   ],
   "elasticmapreduce":[
     {
-      "uri":"https://elasticmapreduce.cn-north-1.amazonaws.com.cn",
+      "uri":"https://elasticmapreduce.{region}.amazonaws.com.cn",
       "constraints":[
         ["region", "startsWith", "cn-"]
       ]
