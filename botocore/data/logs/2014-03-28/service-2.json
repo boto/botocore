@@ -1350,7 +1350,7 @@
         },
         "nextToken":{
           "shape":"NextToken",
-          "documentation":"<p>A pagination token obtained from a <code class=\"code\">FilterLogEvents</code> response to continue paginating the FilterLogEvents results.</p>"
+          "documentation":"<p>A pagination token obtained from a <code class=\"code\">FilterLogEvents</code> response to continue paginating the FilterLogEvents results.  This element is omitted from the response when there are no other events to paginate over.</p>"
         }
       }
     },
