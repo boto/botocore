@@ -175,10 +175,19 @@ class ClientCreator(object):
         if scoped_config is not None:
             s3_configuration = scoped_config.get('s3')
 
-        # Next the client config value takes precedence
+        # Next specfic client config values takes precedence over
+        # specific values in the scoped config.
         if client_config is not None:
             if client_config.s3 is not None:
-                s3_configuration = client_config.s3
+                if s3_configuration is None:
+                    s3_configuration = client_config.s3
+                else:
+                    # The current s3_configuration dictionary may be
+                    # from a source that only should be read from so
+                    # we want to be safe and just make a copy of it to modify
+                    # before it actually gets updated.
+                    s3_configuration = s3_configuration.copy()
+                    s3_configuration.update(client_config.s3)
 
         config_kwargs['s3'] = s3_configuration
 
