@@ -21,6 +21,7 @@ import mock
 from botocore import xform_name
 from botocore.awsrequest import AWSRequest
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
+from botocore.exceptions import InvalidDNSNameError
 from botocore.model import ServiceModel
 from botocore.utils import remove_dot_segments
 from botocore.utils import normalize_url_path
@@ -36,6 +37,7 @@ from botocore.utils import calculate_tree_hash
 from botocore.utils import calculate_sha256
 from botocore.utils import is_valid_endpoint_url
 from botocore.utils import fix_s3_host
+from botocore.utils import switch_to_virtual_host_style
 from botocore.utils import instance_cache
 from botocore.utils import merge_dicts
 from botocore.utils import get_service_module_name
@@ -555,6 +557,125 @@ class TestFixS3Host(unittest.TestCase):
         # The request url should not have been modified because this is
         # a request for GetBucketLocation.
         self.assertEqual(request.url, original_url)
+
+
+class TestSwitchToVirtualHostStyle(unittest.TestCase):
+    def test_switch_to_virtual_host_style(self):
+        request = AWSRequest(
+            method='PUT', headers={},
+            url='https://foo.amazonaws.com/bucket/key.txt'
+        )
+        region_name = 'us-west-2'
+        signature_version = 's3'
+        switch_to_virtual_host_style(
+            request=request, signature_version=signature_version,
+            region_name=region_name)
+        self.assertEqual(request.url,
+                         'https://bucket.foo.amazonaws.com/key.txt')
+        self.assertEqual(request.auth_path, '/bucket/key.txt')
+
+    def test_uses_default_endpoint(self):
+        request = AWSRequest(
+            method='PUT', headers={},
+            url='https://foo.amazonaws.com/bucket/key.txt'
+        )
+        region_name = 'us-west-2'
+        signature_version = 's3'
+        switch_to_virtual_host_style(
+            request=request, signature_version=signature_version,
+            region_name=region_name, default_endpoint_url='s3.amazonaws.com')
+        self.assertEqual(request.url,
+                         'https://bucket.s3.amazonaws.com/key.txt')
+        self.assertEqual(request.auth_path, '/bucket/key.txt')
+
+    def test_throws_invalid_dns_name_error(self):
+        request = AWSRequest(
+            method='PUT', headers={},
+            url='https://foo.amazonaws.com/mybucket.foo/key.txt'
+        )
+        region_name = 'us-west-2'
+        signature_version = 's3'
+        with self.assertRaises(InvalidDNSNameError):
+            switch_to_virtual_host_style(
+                request=request, signature_version=signature_version,
+                region_name=region_name)
+
+    def test_fix_s3_host_only_applied_once(self):
+        request = AWSRequest(
+            method='PUT', headers={},
+            url='https://foo.amazonaws.com/bucket/key.txt'
+        )
+        region_name = 'us-west-2'
+        signature_version = 's3'
+        switch_to_virtual_host_style(
+            request=request, signature_version=signature_version,
+            region_name=region_name)
+        # Calling the handler again should not affect the end result:
+        switch_to_virtual_host_style(
+            request=request, signature_version=signature_version,
+            region_name=region_name)
+        self.assertEqual(request.url,
+                         'https://bucket.foo.amazonaws.com/key.txt')
+        # This was a bug previously.  We want to make sure that
+        # calling fix_s3_host() again does not alter the auth_path.
+        # Otherwise we'll get signature errors.
+        self.assertEqual(request.auth_path, '/bucket/key.txt')
+
+    def test_virtual_host_style_for_make_bucket(self):
+        request = AWSRequest(
+            method='PUT', headers={},
+            url='https://foo.amazonaws.com/bucket'
+        )
+        region_name = 'us-west-2'
+        signature_version = 's3'
+        switch_to_virtual_host_style(
+            request=request, signature_version=signature_version,
+            region_name=region_name)
+        self.assertEqual(request.url,
+                         'https://bucket.foo.amazonaws.com/')
+
+    def test_virtual_host_style_not_used_for_get_bucket_location(self):
+        original_url = 'https://foo.amazonaws.com/bucket?location'
+        request = AWSRequest(
+            method='GET', headers={},
+            url=original_url,
+        )
+        signature_version = 's3'
+        region_name = 'us-west-2'
+        switch_to_virtual_host_style(
+            request=request, signature_version=signature_version,
+            region_name=region_name)
+        # The request url should not have been modified because this is
+        # a request for GetBucketLocation.
+        self.assertEqual(request.url, original_url)
+
+    def test_virtual_host_style_not_used_for_list_buckets(self):
+        original_url = 'https://foo.amazonaws.com/'
+        request = AWSRequest(
+            method='GET', headers={},
+            url=original_url,
+        )
+        signature_version = 's3'
+        region_name = 'us-west-2'
+        switch_to_virtual_host_style(
+            request=request, signature_version=signature_version,
+            region_name=region_name)
+        # The request url should not have been modified because this is
+        # a request for GetBucketLocation.
+        self.assertEqual(request.url, original_url)
+
+    def test_is_unaffected_by_sigv4(self):
+        request = AWSRequest(
+            method='PUT', headers={},
+            url='https://foo.amazonaws.com/bucket/key.txt'
+        )
+        region_name = 'us-west-2'
+        signature_version = 's3v4'
+        switch_to_virtual_host_style(
+            request=request, signature_version=signature_version,
+            region_name=region_name, default_endpoint_url='s3.amazonaws.com')
+        self.assertEqual(request.url,
+                         'https://bucket.s3.amazonaws.com/key.txt')
 
 
 class TestInstanceCache(unittest.TestCase):
