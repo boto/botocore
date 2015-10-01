@@ -323,7 +323,7 @@ class TestS3PostPresigner(BaseSignerTest):
             credentials=self.credentials, region_name='region_name',
             service_name='signing_name')
         self.assertEqual(post_form_args['url'],
-                         'https://mybucket.s3.amazonaws.com')
+                         'https://mybucket.s3.amazonaws.com/')
 
     def test_presigned_post_throws_unsupported_signature_error(self):
         self.request_signer = RequestSigner(
