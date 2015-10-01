@@ -198,11 +198,12 @@ def _list_services(dict_entries):
     # If the AWS_SMOKE_TEST_SERVICES is provided,
     # it's a comma separated list of services you can provide
     # if you only want to run the smoke tests for certain services.
-    wanted_services = set(
-        os.environ.get('AWS_SMOKE_TEST_SERVICES', '').split(','))
-    if not wanted_services:
+    if 'AWS_SMOKE_TEST_SERVICES' not in os.environ:
         return dict_entries.keys()
-    return [key for key in dict_entries if key in wanted_services]
+    else:
+        wanted_services = os.environ.get(
+            'AWS_SMOKE_TEST_SERVICES', '').split(',')
+        return [key for key in dict_entries if key in wanted_services]
 
 
 def test_can_make_request_with_client():
