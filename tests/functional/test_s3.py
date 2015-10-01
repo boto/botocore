@@ -13,7 +13,6 @@
 from tests import unittest, mock, BaseSessionTest
 
 import botocore.session
-from botocore.client import Config
 from botocore.exceptions import ParamValidationError
 
 
@@ -88,62 +87,3 @@ class TestS3GetBucketLifecycle(BaseSessionTest):
             response['Rules'][1]['NoncurrentVersionTransition'],
             {'NoncurrentDays': 40, 'StorageClass': 'STANDARD_IA'}
         )
-
-
-class BaseS3AddressingStyle(BaseSessionTest):
-    def setUp(self):
-        super(BaseS3AddressingStyle, self).setUp()
-        self.http_response = mock.Mock()
-        self.http_response.status_code = 200
-        self.http_response.headers = {}
-        self.http_response.content = b''
-
-
-class TestVirtualHostStyle(BaseS3AddressingStyle):
-    def test_default_endpoint_for_virtual_addressing(self):
-        s3 = self.session.create_client(
-            's3', config=Config(s3={'addressing_style': 'virtual'}))
-        with mock.patch('botocore.endpoint.Session.send') \
-                as mock_send:
-            mock_send.return_value = self.http_response
-            s3.put_object(Bucket='mybucket', Key='mykey', Body='mybody')
-            request_sent = mock_send.call_args[0][0]
-            self.assertEqual(
-                'https://mybucket.s3.amazonaws.com/mykey', request_sent.url)
-
-    def test_provided_endpoint_url_for_virtual_addressing(self):
-        s3 = self.session.create_client(
-            's3', config=Config(s3={'addressing_style': 'virtual'}),
-            endpoint_url='https://foo.amazonaws.com')
-        with mock.patch('botocore.endpoint.Session.send') \
-                as mock_send:
-            mock_send.return_value = self.http_response
-            s3.put_object(Bucket='mybucket', Key='mykey', Body='mybody')
-            request_sent = mock_send.call_args[0][0]
-            self.assertEqual(
-                'https://mybucket.foo.amazonaws.com/mykey', request_sent.url)
-
-
-class TestPathHostStyle(BaseS3AddressingStyle):
-    def test_default_endpoint_for_path_addressing(self):
-        s3 = self.session.create_client(
-            's3', config=Config(s3={'addressing_style': 'path'}))
-        with mock.patch('botocore.endpoint.Session.send') \
-                as mock_send:
-            mock_send.return_value = self.http_response
-            s3.put_object(Bucket='mybucket', Key='mykey', Body='mybody')
-            request_sent = mock_send.call_args[0][0]
-            self.assertEqual(
-                'https://s3.amazonaws.com/mybucket/mykey', request_sent.url)
-
-    def test_provided_endpoint_url_for_path_addressing(self):
-        s3 = self.session.create_client(
-            's3', config=Config(s3={'addressing_style': 'path'}),
-            endpoint_url='https://foo.amazonaws.com')
-        with mock.patch('botocore.endpoint.Session.send') \
-                as mock_send:
-            mock_send.return_value = self.http_response
-            s3.put_object(Bucket='mybucket', Key='mykey', Body='mybody')
-            request_sent = mock_send.call_args[0][0]
-            self.assertEqual(
-                'https://foo.amazonaws.com/mybucket/mykey', request_sent.url)
