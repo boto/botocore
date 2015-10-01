@@ -22,7 +22,6 @@ import dateutil.parser
 from dateutil.tz import tzlocal, tzutc
 
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
-from botocore.exceptions import InvalidDNSNameError
 from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
 from botocore.vendored import requests
 from botocore.compat import OrderedDict
@@ -622,33 +621,6 @@ def fix_s3_host(request, signature_version, region_name, **kwargs):
     addressing.  This allows us to avoid 301 redirects for all
     bucket names that can be CNAME'd.
     """
-    # By default we do not use virtual hosted style addressing when
-    # signed with signature version 4.
-    if signature_version in ['s3v4', 'v4']:
-        return
-    try:
-        switch_to_virtual_host_style(
-            request, signature_version, region_name, 's3.amazonaws.com')
-    except InvalidDNSNameError as e:
-        bucket_name = e.kwargs['bucket_name']
-        logger.debug('Not changing URI, bucket is not DNS compatible: %s',
-                     bucket_name)
-
-
-def switch_to_virtual_host_style(request, signature_version, region_name,
-                                 default_endpoint_url=None, **kwargs):
-    """
-    This is a handler to force virtual host style s3 addressing no matter
-    the signature version (which is taken in consideration for the default
-    case). If the bucket is not DNS compatible an InvalidDNSName is thrown.
-
-    :param request: A AWSRequest object that is about to be sent.
-    :param signature_version: The signature version to sign with
-    :param region_name: The name of the region to sign with
-    :param default_endpoint_url: The endpoint to use when switching to a
-        virtual style. If None is supplied, the virtual host will be
-        constructed from the url of the request.
-    """
     if request.auth_path is not None:
         # The auth_path has already been applied (this may be a
         # retried request).  We don't need to perform this
@@ -664,17 +636,10 @@ def switch_to_virtual_host_style(request, signature_version, region_name,
     parts = urlsplit(request.url)
     request.auth_path = parts.path
     path_parts = parts.path.split('/')
-
-    # Retrieve what the endpoint we will be prepending the bucket name to.
-    if default_endpoint_url is None:
-        default_endpoint_url = parts.netloc
-
+    if signature_version in ['s3v4', 'v4']:
+        return
     if len(path_parts) > 1:
         bucket_name = path_parts[1]
-        if not bucket_name:
-            # If the bucket name is empty we should not be checking for
-            # dns compatibility.
-            return
         logger.debug('Checking for DNS compatible bucket for: %s',
                      request.url)
         if check_dns_name(bucket_name) and _allowed_region(region_name):
@@ -684,19 +649,16 @@ def switch_to_virtual_host_style(request, signature_version, region_name,
                 if request.auth_path[-1] != '/':
                     request.auth_path += '/'
             path_parts.remove(bucket_name)
-            # At the very least the path must be a '/', such as with the
-            # CreateBucket operation when DNS style is being used. If this
-            # is not used you will get an empty path which is incorrect.
-            path = '/'.join(path_parts) or '/'
-            global_endpoint = default_endpoint_url
+            global_endpoint = 's3.amazonaws.com'
             host = bucket_name + '.' + global_endpoint
-            new_tuple = (parts.scheme, host, path,
+            new_tuple = (parts.scheme, host, '/'.join(path_parts),
                          parts.query, '')
             new_uri = urlunsplit(new_tuple)
             request.url = new_uri
             logger.debug('URI updated to: %s', new_uri)
         else:
-            raise InvalidDNSNameError(bucket_name=bucket_name)
+            logger.debug('Not changing URI, bucket is not DNS compatible: %s',
+                         bucket_name)
 
 
 def _is_get_bucket_location_request(request):
