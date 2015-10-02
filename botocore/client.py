@@ -356,9 +356,10 @@ class BaseClient(object):
         else:
             s3_addressing_style = self.meta.config.s3.get('addressing_style')
 
-        if s3_addressing_style in [None, 'auto']:
-            self.meta.events.register('before-sign.s3', fix_s3_host)
+        if s3_addressing_style == 'path':
+            self.meta.events.unregister('before-sign.s3', fix_s3_host)
         elif s3_addressing_style == 'virtual':
+            self.meta.events.unregister('before-sign.s3', fix_s3_host)
             self.meta.events.register(
                 'before-sign.s3', switch_to_virtual_host_style)
 
