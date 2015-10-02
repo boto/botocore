@@ -10,7 +10,6 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import botocore.session
 from botocore.exceptions import DataNotFoundError
 from botocore.docs.utils import get_official_service_name
 from botocore.docs.client import ClientDocumenter
@@ -20,8 +19,8 @@ from botocore.docs.bcdoc.restdoc import DocumentStructure
 
 
 class ServiceDocumenter(object):
-    def __init__(self, service_name):
-        self._session = botocore.session.get_session()
+    def __init__(self, service_name, session):
+        self._session = session
         self._service_name = service_name
 
         self._client = self._session.create_client(

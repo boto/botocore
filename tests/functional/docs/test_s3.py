@@ -29,7 +29,8 @@ class TestS3Docs(BaseDocsFunctionalTest):
                             'put_bucket_replication', 'put_bucket_website',
                             'put_bucket_request_payment', 'put_object_acl',
                             'put_bucket_versioning']
-        service_contents = ServiceDocumenter('s3').document_service()
+        service_contents = ServiceDocumenter(
+            's3', self._session).document_service()
         for method_name in modified_methods:
             method_contents = self.get_method_document_block(
                 method_name, service_contents)
