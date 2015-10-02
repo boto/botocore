@@ -17,6 +17,7 @@ import tempfile
 import mock
 
 from tests.unit.docs import BaseDocsTest
+from botocore.session import get_session
 from botocore.docs import generate_docs
 
 
@@ -39,8 +40,9 @@ class TestGenerateDocs(BaseDocsTest):
         self.available_service_patch.stop()
 
     def test_generate_docs(self):
+        session = get_session()
         # Have the rst files get written to the temporary directory
-        generate_docs(self.docs_root)
+        generate_docs(self.docs_root, session)
 
         reference_services_path = os.path.join(
             self.docs_root, 'reference', 'services')

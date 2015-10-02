@@ -15,6 +15,7 @@ import os
 import mock
 
 from tests.unit.docs import BaseDocsTest
+from botocore.session import get_session
 from botocore.docs.service import ServiceDocumenter
 
 
@@ -25,7 +26,9 @@ class TestServiceDocumenter(BaseDocsTest):
         self.setup_client()
         with mock.patch('botocore.session.create_loader',
                         return_value=self.loader):
-            self.service_documenter = ServiceDocumenter('myservice')
+            session = get_session()
+            self.service_documenter = ServiceDocumenter(
+                'myservice', session)
 
     def test_document_service(self):
         # Note that not everything will be included as it is just
