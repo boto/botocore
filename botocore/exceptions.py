@@ -303,5 +303,10 @@ class ClientError(Exception):
         self.response = error_response
 
 
+class UnsupportedTLSVersionWarning(Warning):
+    """Warn when an openssl version that uses TLS 1.2 is required"""
+    pass
+
+
 class ImminentRemovalWarning(Warning):
     pass
