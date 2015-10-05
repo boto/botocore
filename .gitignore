@@ -29,6 +29,9 @@ pip-log.txt
 # Emacs backup files
 *~
 
+# IDEA / PyCharm IDE
+.idea/
+
 # Virtualenvs
 env
 env2
