@@ -91,6 +91,7 @@ SMOKE_TESTS = {
  # Subscription needed for support API calls.
  'support': {},
  'swf': {'ListDomains': {'registrationStatus': 'REGISTERED'}},
+ 'waf': {'ListWebACLs': {'Limit': 1}},
  'workspaces': {'DescribeWorkspaces': {}},
 }
 
@@ -177,6 +178,7 @@ ERROR_TESTS = {
         'severityCode': 'low',
         }},
     'swf': {'DescribeDomain': {'name': 'fake'}},
+    'waf': {'GetWebACL': {'WebACLId': 'fake'}},
     'workspaces': {'DescribeWorkspaces': {'DirectoryId': 'fake'}},
 }
 
