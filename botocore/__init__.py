@@ -16,7 +16,7 @@ import os
 import re
 import logging
 
-__version__ = '1.2.7'
+__version__ = '1.2.8'
 
 
 class NullHandler(logging.Handler):
@@ -46,6 +46,8 @@ _xform_cache = {
     ('CreateStorediSCSIVolume', '-'): 'create-stored-iscsi-volume',
     ('NotificationARNs', '_'): 'notification_arns',
     ('NotificationARNs', '-'): 'notification-arns',
+    ('ListWebACLs', '_'): 'list_web_acls',
+    ('ListWebACLs', '-'): 'list-web-acls',
 }
 ScalarTypes = ('string', 'integer', 'boolean', 'timestamp', 'float', 'double')
 
