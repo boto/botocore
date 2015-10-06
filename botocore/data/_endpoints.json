@@ -124,6 +124,19 @@
       ]
     }
   ],
+  "waf":[
+    {
+      "uri":"https://waf.amazonaws.com",
+      "properties": {
+        "credentialScope": {
+            "region": "us-east-1"
+        }
+      },
+      "constraints": [
+        ["region", "notStartsWith", "cn-"]
+      ]
+    }
+  ],
   "elasticmapreduce":[
     {
       "uri":"https://elasticmapreduce.{region}.amazonaws.com.cn",
