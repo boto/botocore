@@ -12,11 +12,10 @@
 # language governing permissions and limitations under the License.
 import os
 
-import botocore.session
 from botocore.docs.service import ServiceDocumenter
 
 
-def generate_docs(root_dir):
+def generate_docs(root_dir, session):
     """Generates the reference documentation for botocore
 
     This will go through every available AWS service and output ReSTructured
@@ -31,9 +30,8 @@ def generate_docs(root_dir):
         os.makedirs(services_doc_path)
 
     # Generate reference docs and write them out.
-    session = botocore.session.get_session()
     for service_name in session.get_available_services():
-        docs = ServiceDocumenter(service_name).document_service()
+        docs = ServiceDocumenter(service_name, session).document_service()
         service_doc_path = os.path.join(
             services_doc_path, service_name + '.rst')
         with open(service_doc_path, 'wb') as f:

@@ -11,10 +11,14 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from tests import unittest
+from botocore.session import get_session
 from botocore.docs.service import ServiceDocumenter
 
 
 class BaseDocsFunctionalTest(unittest.TestCase):
+    def setUp(self):
+        self._session = get_session()
+
     def assert_contains_line(self, line, contents):
         contents = contents.decode('utf-8')
         self.assertIn(line, contents)
@@ -58,7 +62,8 @@ class BaseDocsFunctionalTest(unittest.TestCase):
 
     def get_parameter_documentation_from_service(
             self, service_name, method_name, param_name):
-        contents = ServiceDocumenter(service_name).document_service()
+        contents = ServiceDocumenter(
+            service_name, self._session).document_service()
         method_contents = self.get_method_document_block(
             method_name, contents)
         return self.get_parameter_document_block(
@@ -66,7 +71,8 @@ class BaseDocsFunctionalTest(unittest.TestCase):
 
     def assert_is_documented_as_autopopulated_param(
             self, service_name, method_name, param_name, doc_string=None):
-        contents = ServiceDocumenter(service_name).document_service()
+        contents = ServiceDocumenter(
+            service_name, self._session).document_service()
         # Pick an arbitrary method that uses AccountId.
         method_contents = self.get_method_document_block(
             method_name, contents)
