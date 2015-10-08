@@ -674,9 +674,14 @@ class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
         #   <RequestId>request-id</RequestId>
         # </ErrorResponse>
         if response['body']:
-            return self._parse_error_from_body(response)
-        else:
-            return self._parse_error_from_http_status(response)
+            # If the body ends up being invalid xml, the xml parser should not
+            # blow up. It should at least try to pull information about the
+            # the error response from other sources like the HTTP status code.
+            try:
+                return self._parse_error_from_body(response)
+            except ResponseParserError:
+                pass
+        return self._parse_error_from_http_status(response)
 
     def _parse_error_from_http_status(self, response):
         return {
