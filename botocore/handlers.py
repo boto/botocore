@@ -23,6 +23,7 @@ import xml.etree.cElementTree
 import copy
 import re
 import string
+import warnings
 
 from botocore.compat import urlsplit, urlunsplit, unquote, json, quote, six
 from botocore.docs.utils import AutoPopulatedParam
@@ -31,6 +32,7 @@ from botocore.docs.utils import AppendParamDocumentation
 from botocore.signers import add_generate_presigned_url
 from botocore.signers import add_generate_presigned_post
 from botocore.exceptions import ParamValidationError
+from botocore.exceptions import UnsupportedTLSVersionWarning
 
 from botocore import retryhandler
 from botocore import utils
@@ -452,6 +454,24 @@ def switch_host_with_param(request, param_name):
         request.url = final_endpoint
 
 
+def check_openssl_supports_tls_version_1_2(**kwargs):
+    import ssl
+    try:
+        openssl_version_tuple = ssl.OPENSSL_VERSION_INFO
+        if openssl_version_tuple[0] < 1 or openssl_version_tuple[2] < 1:
+            warnings.warn(
+                'Currently installed openssl version: %s does not '
+                'support TLS 1.2, which is required for use of iot-data. '
+                'Please use python installed with openssl version 1.0.1 or '
+                'higher.' % (ssl.OPENSSL_VERSION),
+                UnsupportedTLSVersionWarning
+            )
+    # We cannot check the openssl version on python2.6, so we should just
+    # pass on this conveniency check.
+    except AttributeError:
+        pass
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -459,6 +479,7 @@ def switch_host_with_param(request, param_name):
 BUILTIN_HANDLERS = [
     ('creating-client-class', add_generate_presigned_url),
     ('creating-client-class.s3', add_generate_presigned_post),
+    ('creating-client-class.iot-data', check_openssl_supports_tls_version_1_2),
     ('after-call.iam', json_decode_policies),
 
     ('after-call.ec2.GetConsoleOutput', decode_console_output),
