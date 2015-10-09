@@ -55,6 +55,13 @@ class TestJSONFileLoader(BaseEnvVar):
         self.assertFalse(self.file_loader.exists(
             os.path.join(self.data_path, 'does', 'not', 'exist')))
 
+    def test_file_with_non_ascii(self):
+        try:
+            filename = os.path.join(self.data_path, 'non_ascii')
+            self.assertTrue(self.file_loader.load_file(filename) is not None)
+        except UnicodeDecodeError:
+            self.fail('Fail to handle data file with non-ascii characters')
+
 
 class TestLoader(BaseEnvVar):
 

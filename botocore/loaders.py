@@ -94,6 +94,7 @@ version to use.
 
 """
 import os
+import io
 
 from botocore import BOTOCORE_ROOT
 from botocore.compat import json
@@ -153,7 +154,10 @@ class JSONFileLoader(object):
         full_path = file_path + '.json'
         if not os.path.isfile(full_path):
             return
-        with open(full_path) as fp:
+
+        # By default the file will be opened with locale encoding on Python 3.
+        # We specify "utf8" here to ensure the correct behavior.
+        with io.open(full_path, encoding='utf8') as fp:
             return json.load(fp, object_pairs_hook=OrderedDict)
 
 
