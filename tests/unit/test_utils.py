@@ -19,6 +19,7 @@ import six
 import mock
 
 from botocore import xform_name
+from botocore.compat import OrderedDict
 from botocore.awsrequest import AWSRequest
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.model import ServiceModel
@@ -39,6 +40,7 @@ from botocore.utils import fix_s3_host
 from botocore.utils import instance_cache
 from botocore.utils import merge_dicts
 from botocore.utils import get_service_module_name
+from botocore.utils import percent_encode_sequence
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
 
@@ -728,6 +730,37 @@ class TestGetServiceModuleName(unittest.TestCase):
             get_service_module_name(self.service_model),
             'myservice'
         )
+
+
+class TestPercentEncodeSequence(unittest.TestCase):
+    def test_percent_encode_empty(self):
+        self.assertEqual(percent_encode_sequence({}), '')
+
+    def test_percent_encode_special_chars(self):
+        self.assertEqual(
+            percent_encode_sequence({'k1': 'with spaces++/'}), 'k1=with%20spaces%2B%2B%2F')
+
+    def test_percent_encode_string_string_tuples(self):
+        self.assertEqual(percent_encode_sequence([('k1', 'v1'), ('k2', 'v2')]),
+                         'k1=v1&k2=v2')
+
+    def test_percent_encode_dict_single_pair(self):
+        self.assertEqual(percent_encode_sequence({'k1': 'v1'}), 'k1=v1')
+
+    def test_percent_encode_dict_string_string(self):
+        self.assertEqual(
+            percent_encode_sequence(OrderedDict([('k1', 'v1'), ('k2', 'v2')])),
+                                    'k1=v1&k2=v2')
+
+    def test_percent_encode_single_list_of_values(self):
+        self.assertEqual(percent_encode_sequence({'k1': ['a', 'b', 'c']}),
+                         'k1=a&k1=b&k1=c')
+
+    def test_percent_encode_list_values_of_string(self):
+        self.assertEqual(
+            percent_encode_sequence(
+                OrderedDict([('k1', ['a', 'list']), ('k2', ['another', 'list'])])),
+            'k1=a&k1=list&k2=another&k2=list')
 
 
 if __name__ == '__main__':
