@@ -679,8 +679,10 @@ class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
             # the error response from other sources like the HTTP status code.
             try:
                 return self._parse_error_from_body(response)
-            except ResponseParserError:
-                pass
+            except ResponseParserError as e:
+                LOG.debug(
+                    'Exception caught when parsing error response body:',
+                    exc_info=True)
         return self._parse_error_from_http_status(response)
 
     def _parse_error_from_http_status(self, response):
