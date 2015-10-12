@@ -622,7 +622,8 @@ class Config(object):
                   * auto -- Addressing style is chosen for user. Depending
                             on the configuration of client, the endpoint
                             may be addressed in the virtual or the path
-                            style.
+                            style. Note that this is the default behavior if
+                            no style is specified.
                   * virtual -- Addressing style is always virtual. The name of
                                the bucket must be DNS compatible or an
                                exception will be thrown. Endpoints will be
