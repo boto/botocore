@@ -635,16 +635,18 @@ def fix_s3_host(request, signature_version, region_name, **kwargs):
     # signed with signature version 4.
     if signature_version in ['s3v4', 'v4']:
         return
+    elif not _allowed_region(region_name):
+        return
     try:
         switch_to_virtual_host_style(
-            request, signature_version, region_name, 's3.amazonaws.com')
+            request, signature_version, 's3.amazonaws.com')
     except InvalidDNSNameError as e:
         bucket_name = e.kwargs['bucket_name']
         logger.debug('Not changing URI, bucket is not DNS compatible: %s',
                      bucket_name)
 
 
-def switch_to_virtual_host_style(request, signature_version, region_name,
+def switch_to_virtual_host_style(request, signature_version,
                                  default_endpoint_url=None, **kwargs):
     """
     This is a handler to force virtual host style s3 addressing no matter
@@ -653,7 +655,6 @@ def switch_to_virtual_host_style(request, signature_version, region_name,
 
     :param request: A AWSRequest object that is about to be sent.
     :param signature_version: The signature version to sign with
-    :param region_name: The name of the region to sign with
     :param default_endpoint_url: The endpoint to use when switching to a
         virtual style. If None is supplied, the virtual host will be
         constructed from the url of the request.
@@ -686,7 +687,7 @@ def switch_to_virtual_host_style(request, signature_version, region_name,
             return
         logger.debug('Checking for DNS compatible bucket for: %s',
                      request.url)
-        if check_dns_name(bucket_name) and _allowed_region(region_name):
+        if check_dns_name(bucket_name):
             # If the operation is on a bucket, the auth_path must be
             # terminated with a '/' character.
             if len(path_parts) == 2:
