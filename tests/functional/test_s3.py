@@ -93,14 +93,20 @@ class TestS3GetBucketLifecycle(BaseS3OperationTest):
 
 class TestS3PutObject(BaseS3OperationTest):
     def test_500_error_with_non_xml_body(self):
-        # This test was added because in some use cases, the response
-        # returned from S3 is a 500 response which should be retrieved even
-        # though the body of the response is in not valid xml such as
-        # headers being in the body. From what we can tell, the reason this
-        # happens is that the code of the response was probably mutated
-        # somewhere when the response was sent to the client, maybe was a
-        # proxy's doing and/or how expect 100's are treated,
-        # but a 200 response is mutated to have a 500 response code.
+        # Note: This exact test case may not be applicable from
+        # an integration standpoint if the issue is fixed in the future.
+        #
+        # The issue is that:
+        # S3 returns a 200 response but the received response from urllib3 has
+        # a 500 status code and the headers are in the body of the
+        # the response. Botocore will try to parse out the error body as xml,
+        # but the body is invalid xml because it is full of headers.
+        # So instead of blowing up on an XML parsing error, we
+        # should at least use the 500 status code because that can be
+        # retried.
+        #
+        # We are unsure of what exactly causes the response to be mangled
+        # but we expect it to be how 100 continues are handled.
         non_xml_content = (
             'x-amz-id-2: foo\r\n'
             'x-amz-request-id: bar\n'
