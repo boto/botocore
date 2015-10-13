@@ -153,8 +153,12 @@ class JSONFileLoader(object):
         full_path = file_path + '.json'
         if not os.path.isfile(full_path):
             return
-        with open(full_path) as fp:
-            return json.load(fp, object_pairs_hook=OrderedDict)
+
+        # By default the file will be opened with locale encoding on Python 3.
+        # We specify "utf8" here to ensure the correct behavior.
+        with open(full_path, 'rb') as fp:
+            payload = fp.read().decode('utf-8')
+            return json.loads(payload, object_pairs_hook=OrderedDict)
 
 
 def create_loader(search_path_string=None):

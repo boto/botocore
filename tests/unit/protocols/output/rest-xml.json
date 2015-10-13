@@ -673,7 +673,7 @@
             "x-double": "1.5",
             "x-long": "100",
             "x-char": "a",
-            "x-timestamp": "Sun, 25 Jan 2015 08:00:00 -0000"
+            "x-timestamp": "Sun, 25 Jan 2015 08:00:00 GMT"
           },
           "body": ""
         }
