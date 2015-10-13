@@ -41,6 +41,35 @@ RESTRICTED_REGIONS = [
     'us-gov-west-1',
     'fips-us-gov-west-1',
 ]
+# A list of names that are common elements in the name of a pagination
+# parameter. If one of these elements is in the name of parameter,
+# it will most likely be a parameter used in pagination.
+COMMON_PAGINATION_PARAM_ELEMENTS = [
+    'nextToken',
+    'NextToken',
+    'marker',
+    'Marker',
+    'nextPageToken',
+    'NextPageToken',
+
+    # DynamoDB specific
+    'ExclusiveStartTableName',
+    'LastEvaluatedTableName',
+    'ExclusiveStartKey',
+    'LastEvaluatedKey',
+
+    # Kinesis specific
+    'ExclusiveStartShardId',
+    'ExclusiveStartStreamName',
+
+    # Route53 specific
+    'StartRecordName',
+    'NextRecordName',
+    'StartRecordType',
+    'NextRecordType',
+    'StartRecordIdentifier',
+    'NextRecordIdentifier',
+]
 
 
 class _RetriesExceededError(Exception):
@@ -747,3 +776,44 @@ def instance_cache(func):
         self._instance_cache[cache_key] = result
         return result
     return _cache_guard
+
+
+def operation_looks_paginated(operation_model):
+    """Checks whether an operation looks like it can be paginated
+
+    :type operation_model: botocore.model.OperationModel
+    :param operation_model: The model for a particular operation
+
+    :returns: True if determines it can be paginated. False otherwise.
+    """
+    # A static dictionary of operations that prove to be false positives
+    black_listed_operations = {
+        's3': ['GetObject', 'HeadObject', 'DeleteObject']
+    }
+    service_name = operation_model.service_model.service_name
+    # Check that the operation is not a false positive by looking it up
+    # directly.
+    if service_name in black_listed_operations:
+        if operation_model.name in black_listed_operations[service_name]:
+            return False
+    has_input_param = _shape_has_pagination_param(operation_model.input_shape)
+    has_output_param = _shape_has_pagination_param(
+        operation_model.output_shape)
+    # If there is a parameter in either the input or output that
+    # is used in pagination, mark the operation as paginateable.
+    return (has_input_param or has_output_param)
+
+
+def _shape_has_pagination_param(shape):
+    if shape:
+        members = shape.members
+        # Go through the list of common elements that may be in a pagination
+        # parameter name
+        for param in COMMON_PAGINATION_PARAM_ELEMENTS:
+            # Go through all of the shapes members.
+            for member in members:
+                # See if the element is in the member name. If it is, mark
+                # it as a pagination parameter.
+                if param in member:
+                    return True
+    return False
