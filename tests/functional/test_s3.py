@@ -169,6 +169,19 @@ class TestVirtualHostStyle(BaseS3AddressingStyle):
             self.assertEqual(
                 'https://mybucket.foo.amazonaws.com/mykey', request_sent.url)
 
+    def test_us_gov_with_virtual_addressing(self):
+        s3 = self.session.create_client(
+            's3', region_name='us-gov-west-1',
+            config=Config(s3={'addressing_style': 'virtual'}))
+        with mock.patch('botocore.endpoint.Session.send') \
+                as mock_send:
+            mock_send.return_value = self.http_response
+            s3.put_object(Bucket='mybucket', Key='mykey', Body='mybody')
+            request_sent = mock_send.call_args[0][0]
+            self.assertEqual(
+                'https://mybucket.s3-us-gov-west-1.amazonaws.com/mykey',
+                request_sent.url)
+
 
 class TestPathHostStyle(BaseS3AddressingStyle):
     def test_default_endpoint_for_path_addressing(self):
