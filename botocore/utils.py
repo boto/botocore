@@ -40,6 +40,7 @@ RESTRICTED_REGIONS = [
     'us-gov-west-1',
     'fips-us-gov-west-1',
 ]
+GLOBAL_ENDPOINT = 's3.amazonaws.com'
 
 
 class _RetriesExceededError(Exception):
@@ -658,8 +659,7 @@ def fix_s3_host(request, signature_version, region_name, **kwargs):
                 if request.auth_path[-1] != '/':
                     request.auth_path += '/'
             path_parts.remove(bucket_name)
-            global_endpoint = 's3.amazonaws.com'
-            host = bucket_name + '.' + global_endpoint
+            host = bucket_name + '.' + GLOBAL_ENDPOINT
             new_tuple = (parts.scheme, host, '/'.join(path_parts),
                          parts.query, '')
             new_uri = urlunsplit(new_tuple)
