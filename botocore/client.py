@@ -21,12 +21,15 @@ from botocore.awsrequest import prepare_request_dict
 from botocore.endpoint import EndpointCreator, DEFAULT_TIMEOUT
 from botocore.exceptions import ClientError, DataNotFoundError
 from botocore.exceptions import OperationNotPageableError
+from botocore.exceptions import InvalidS3AddressingStyleError
 from botocore.hooks import first_non_none_response
 from botocore.model import ServiceModel
 from botocore.paginate import Paginator
 from botocore.signers import RequestSigner
 from botocore.utils import CachedProperty
 from botocore.utils import get_service_module_name
+from botocore.utils import fix_s3_host
+from botocore.utils import switch_to_virtual_host_style
 from botocore.docs.docstring import ClientMethodDocstring
 from botocore.docs.docstring import PaginatorDocstring
 
@@ -164,6 +167,30 @@ class ClientCreator(object):
 
         return region_name
 
+    def _inject_s3_configuration(self, config_kwargs, scoped_config,
+                                 client_config):
+        s3_configuration = None
+
+        # Check the scoped config first
+        if scoped_config is not None:
+            s3_configuration = scoped_config.get('s3')
+
+        # Next specfic client config values takes precedence over
+        # specific values in the scoped config.
+        if client_config is not None:
+            if client_config.s3 is not None:
+                if s3_configuration is None:
+                    s3_configuration = client_config.s3
+                else:
+                    # The current s3_configuration dictionary may be
+                    # from a source that only should be read from so
+                    # we want to be safe and just make a copy of it to modify
+                    # before it actually gets updated.
+                    s3_configuration = s3_configuration.copy()
+                    s3_configuration.update(client_config.s3)
+
+        config_kwargs['s3'] = s3_configuration
+
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,
                          scoped_config, client_config):
@@ -218,6 +245,11 @@ class ClientCreator(object):
             config_kwargs.update(
                 connect_timeout=client_config.connect_timeout,
                 read_timeout=client_config.read_timeout)
+
+        # Add any additional s3 configuration for client
+        self._inject_s3_configuration(
+            config_kwargs, scoped_config, client_config)
+
         new_config = Config(**config_kwargs)
 
         endpoint_creator = EndpointCreator(self._endpoint_resolver,
@@ -307,9 +339,29 @@ class BaseClient(object):
         self.meta = ClientMeta(event_emitter, self._client_config,
                                endpoint.host, service_model,
                                self._PY_TO_OP_NAME)
+        self._register_handlers()
+
+    def _register_handlers(self):
+        # Register the handler required to sign requests.
         self.meta.events.register('request-created.%s' %
-                                  service_model.endpoint_prefix,
+                                  self.meta.service_model.endpoint_prefix,
                                   self._sign_request)
+
+        # If the virtual host addressing style is being forced,
+        # switch the default fix_s3_host handler for the more general
+        # switch_to_virtual_host_style handler that does not have opt out
+        # cases (other than throwing an error if the name is DNS incompatible)
+        if self.meta.config.s3 is None:
+            s3_addressing_style = None
+        else:
+            s3_addressing_style = self.meta.config.s3.get('addressing_style')
+
+        if s3_addressing_style == 'path':
+            self.meta.events.unregister('before-sign.s3', fix_s3_host)
+        elif s3_addressing_style == 'virtual':
+            self.meta.events.unregister('before-sign.s3', fix_s3_host)
+            self.meta.events.register(
+                'before-sign.s3', switch_to_virtual_host_style)
 
     @property
     def _service_model(self):
@@ -541,23 +593,61 @@ class ClientMeta(object):
 class Config(object):
     """Advanced configuration for Botocore clients.
 
-    This class allows you to configure:
+    :type region_name: str
+    :param region_name: The region to use in instantiating the client
 
-        * Region name
-        * Signature version
-        * User agent
-        * User agent extra
-        * Connect timeout
-        * Read timeout
+    :type signature_version: str
+    :param signature_version: The signature version when signing requests.
 
+    :type user_agent: str
+    :param user_agent: The value to use in the User-Agent header.
+
+    :type user_agent_extra: str
+    :param user_agent_extra: The value to append to the current User-Agent
+        header value.
+
+    :type connect_timeout: int
+    :param connect_timeout: The time in seconds till a timeout exception is
+        thrown when attempting to make a connection.
+
+    :type read_timeout: int
+    :param read_timeout: The time in seconds till a timeout exception is
+        thrown when attempting to read from a connection.
+
+    :type s3: dict
+    :param s3: A dictionary of s3 specific configurations.
+        Valid keys are:
+            * 'addressing_style' -- Refers to the style in which to address
+              s3 endpoints. Values must be a string that equals:
+                  * auto -- Addressing style is chosen for user. Depending
+                            on the configuration of client, the endpoint
+                            may be addressed in the virtual or the path
+                            style. Note that this is the default behavior if
+                            no style is specified.
+                  * virtual -- Addressing style is always virtual. The name of
+                               the bucket must be DNS compatible or an
+                               exception will be thrown. Endpoints will be
+                               addressed as such: mybucket.s3.amazonaws.com
+                  * path -- Addressing style is always by path. Endpoints will
+                            be addressed as such: s3.amazonaws.com/mybucket
     """
     def __init__(self, region_name=None, signature_version=None,
                  user_agent=None, user_agent_extra=None,
                  connect_timeout=DEFAULT_TIMEOUT,
-                 read_timeout=DEFAULT_TIMEOUT):
+                 read_timeout=DEFAULT_TIMEOUT,
+                 s3=None):
         self.region_name = region_name
         self.signature_version = signature_version
         self.user_agent = user_agent
         self.user_agent_extra = user_agent_extra
         self.connect_timeout = connect_timeout
         self.read_timeout = read_timeout
+        self._validate_s3_configuration(s3)
+        self.s3 = s3
+
+    def _validate_s3_configuration(self, s3):
+        if s3 is not None:
+            addressing_style = s3.get('addressing_style')
+            if addressing_style not in ['virtual', 'auto', 'path', None]:
+                raise InvalidS3AddressingStyleError(
+                    s3_addressing_style=addressing_style)
