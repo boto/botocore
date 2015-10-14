@@ -472,6 +472,15 @@ def check_openssl_supports_tls_version_1_2(**kwargs):
         pass
 
 
+def change_get_to_post(request, **kwargs):
+    # This is useful when we need to change a potentially large GET request
+    # into a POST with x-www-form-urlencoded encoding.
+    if request.method == 'GET' and '?' in request.url:
+        request.headers['Content-Type'] = 'application/x-www-form-urlencoded'
+        request.method = 'POST'
+        request.url, request.data = request.url.split('?', 1)
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -539,6 +548,9 @@ BUILTIN_HANDLERS = [
     ('before-parameter-build.route53', fix_route53_ids),
     ('before-parameter-build.glacier', inject_account_id),
 
+    # Cloudsearchdomain search operation will be sent by HTTP POST
+    ('request-created.cloudsearchdomain.Search',
+     change_get_to_post),
     # Glacier documentation customizations
     ('docs.*.glacier.*.complete-section',
      AutoPopulatedParam('accountId', 'Note: this parameter is set to "-" by \
