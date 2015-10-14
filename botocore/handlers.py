@@ -300,6 +300,17 @@ def copy_snapshot_encrypted(params, request_signer, **kwargs):
     params['PresignedUrl'] = presigned_url
 
 
+def json_encode_policies(params, model, **kwargs):
+    input_shape = model.input_shape
+    if input_shape is not None:
+        for member_name, member_shape in input_shape.members.items():
+            param = params.get(member_name)
+            if member_shape.name == 'policyDocumentType' and \
+                    param is not None and \
+                    isinstance(param, dict):
+                params[member_name] = json.dumps(param)
+
+
 def json_decode_policies(parsed, model, **kwargs):
     # Any time an IAM operation returns a policy document
     # it is a string that is json that has been urlencoded,
@@ -538,6 +549,7 @@ BUILTIN_HANDLERS = [
      base64_encode_user_data),
     ('before-parameter-build.route53', fix_route53_ids),
     ('before-parameter-build.glacier', inject_account_id),
+    ('before-parameter-build.iam', json_encode_policies),
 
     # Glacier documentation customizations
     ('docs.*.glacier.*.complete-section',
