@@ -43,6 +43,7 @@ from botocore.utils import instance_cache
 from botocore.utils import merge_dicts
 from botocore.utils import get_service_module_name
 from botocore.utils import percent_encode_sequence
+from botocore.utils import operation_looks_paginated
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
 
@@ -884,5 +885,92 @@ class TestPercentEncodeSequence(unittest.TestCase):
             'k1=a&k1=list&k2=another&k2=list')
 
 
-if __name__ == '__main__':
-    unittest.main()
+class TestOperationLooksPaginated(unittest.TestCase):
+    def setUp(self):
+        self.service_json_model = {
+            'metadata': {
+                'apiVersion': '2014-01-01',
+                'endpointPrefix': 'myservice',
+                'signatureVersion': 'v4',
+                'serviceFullName': 'AWS MyService',
+                'protocol': 'query'
+            },
+            'operations': {
+                'SampleOperation': {
+                    'name': 'SampleOperation',
+                    'input': {'shape': 'SampleOperationInput'},
+                    'output': {'shape': 'SampleOperationOutput'}
+                }
+            },
+            'shapes': {
+                'SampleOperationInput': {
+                    'type': 'structure',
+                    'members': {
+                        'Marker': {'shape': 'string'}
+                    }
+                },
+                'SampleOperationOutput': {
+                    'type': 'structure',
+                    'members': {
+                        'Marker': {'shape': 'string'}
+                    }
+                },
+                'string': {'type': 'string'}
+            }
+        }
+        self.service_model = ServiceModel(self.service_json_model)
+
+    def test_params_in_input_and_output(self):
+        operation_model = self.service_model.operation_model('SampleOperation')
+        self.assertTrue(operation_looks_paginated(operation_model))
+
+    def test_param_only_in_input(self):
+        self.service_json_model['shapes']['SampleOperationOutput'][
+            'members'].pop('Marker')
+        self.service_model = ServiceModel(self.service_json_model)
+        operation_model = self.service_model.operation_model('SampleOperation')
+        self.assertTrue(operation_looks_paginated(operation_model))
+
+    def test_param_only_in_output(self):
+        self.service_json_model['shapes']['SampleOperationInput'][
+            'members'].pop('Marker')
+        self.service_model = ServiceModel(self.service_json_model)
+        operation_model = self.service_model.operation_model('SampleOperation')
+        self.assertTrue(operation_looks_paginated(operation_model))
+
+    def test_param_not_in_input_nor_output(self):
+        self.service_json_model['shapes']['SampleOperationInput'][
+            'members'].pop('Marker')
+        self.service_json_model['shapes']['SampleOperationOutput'][
+            'members'].pop('Marker')
+        self.service_model = ServiceModel(self.service_json_model)
+        operation_model = self.service_model.operation_model('SampleOperation')
+        self.assertFalse(operation_looks_paginated(operation_model))
+
+    def test_no_input_shape(self):
+        self.service_json_model['operations']['SampleOperation'].pop('output')
+        self.service_model = ServiceModel(self.service_json_model)
+        operation_model = self.service_model.operation_model('SampleOperation')
+        self.assertTrue(operation_looks_paginated(operation_model))
+
+    def test_no_output_shape(self):
+        self.service_json_model['operations']['SampleOperation'].pop('input')
+        self.service_model = ServiceModel(self.service_json_model)
+        operation_model = self.service_model.operation_model('SampleOperation')
+        self.assertTrue(operation_looks_paginated(operation_model))
+
+    def test_no_input_nor_output_shape(self):
+        self.service_json_model['operations']['SampleOperation'].pop('input')
+        self.service_json_model['operations']['SampleOperation'].pop('output')
+        self.service_model = ServiceModel(self.service_json_model)
+        operation_model = self.service_model.operation_model('SampleOperation')
+        self.assertFalse(operation_looks_paginated(operation_model))
+
+    def test_black_listed_param(self):
+        operation = self.service_json_model['operations'].pop(
+            'SampleOperation')
+        operation['name'] = 'GetObject'
+        self.service_json_model['operations']['GetObject'] = operation
+        self.service_model = ServiceModel(self.service_json_model, 's3')
+        operation_model = self.service_model.operation_model('GetObject')
+        self.assertFalse(operation_looks_paginated(operation_model))
