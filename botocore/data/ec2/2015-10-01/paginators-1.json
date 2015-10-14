@@ -12,16 +12,22 @@
       "limit_key": "MaxResults",
       "result_key": "Reservations"
     },
-    "DescribeReservedInstancesModifications": {
-      "input_token": "NextToken",
-      "output_token": "NextToken",
-      "result_key": "ReservedInstancesModifications"
-    },
     "DescribeReservedInstancesOfferings": {
       "input_token": "NextToken",
       "output_token": "NextToken",
       "limit_key": "MaxResults",
       "result_key": "ReservedInstancesOfferings"
+    },
+    "DescribeReservedInstancesModifications": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "result_key": "ReservedInstancesModifications"
+    },
+    "DescribeSnapshots": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "Snapshots"
     },
     "DescribeSpotPriceHistory": {
       "input_token": "NextToken",
@@ -41,11 +47,11 @@
       "limit_key": "MaxResults",
       "result_key": "VolumeStatuses"
     },
-    "DescribeSnapshots": {
+    "DescribeVolumes": {
       "input_token": "NextToken",
       "output_token": "NextToken",
       "limit_key": "MaxResults",
-      "result_key": "Snapshots"
+      "result_key": "Volumes"
     }
   }
 }
