@@ -150,6 +150,28 @@
           }
         }
       }
+    },
+    "route53": {
+      "__default__": {
+        "policies": {
+          "request_limit_exceeded": {
+            "applies_when": {
+              "response": {
+                "service_error_code": "Throttling",
+                "http_status_code": 400
+              }
+            }
+          },
+          "still_processing": {
+            "applies_when": {
+              "response": {
+                "service_error_code": "PriorRequestNotComplete",
+                "http_status_code": 400
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

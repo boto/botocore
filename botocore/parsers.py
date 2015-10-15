@@ -465,6 +465,11 @@ class BaseJSONParser(ResponseParser):
 
     def _handle_structure(self, shape, value):
         member_shapes = shape.members
+        if value is None:
+            # If the comes across the wire as "null" (None in python),
+            # we should be returning this unchanged, instead of as an
+            # empty dict.
+            return None
         final_parsed = {}
         for member_name in member_shapes:
             member_shape = member_shapes[member_name]
@@ -674,9 +679,16 @@ class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
         #   <RequestId>request-id</RequestId>
         # </ErrorResponse>
         if response['body']:
-            return self._parse_error_from_body(response)
-        else:
-            return self._parse_error_from_http_status(response)
+            # If the body ends up being invalid xml, the xml parser should not
+            # blow up. It should at least try to pull information about the
+            # the error response from other sources like the HTTP status code.
+            try:
+                return self._parse_error_from_body(response)
+            except ResponseParserError as e:
+                LOG.debug(
+                    'Exception caught when parsing error response body:',
+                    exc_info=True)
+        return self._parse_error_from_http_status(response)
 
     def _parse_error_from_http_status(self, response):
         return {
