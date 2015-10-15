@@ -253,10 +253,6 @@ class PageIterator(object):
 
     def build_full_result(self):
         complete_result = {}
-        # Prepopulate the result keys with an empty list.
-        for result_expression in self.result_keys:
-            set_value_from_jmespath(complete_result,
-                                    result_expression.expression, [])
         for response in self:
             page = response
             # We want to try to catch operation object pagination
@@ -277,10 +273,25 @@ class PageIterator(object):
                 # current result key value.  Then we append the current
                 # value onto the existing value, and re-set that value
                 # as the new value.
-                existing_value = result_expression.search(complete_result)
                 result_value = result_expression.search(page)
-                if result_value is not None:
+                if result_value is None:
+                    continue
+                existing_value = result_expression.search(complete_result)
+                if existing_value is None:
+                    # Set the initial result
+                    set_value_from_jmespath(
+                        complete_result, result_expression.expression,
+                        result_value)
+                    continue
+                # Now both result_value and existing_value contain something
+                if isinstance(result_value, list):
                     existing_value.extend(result_value)
+                elif isinstance(result_value, (int, float)):
+                    # Modify the existing result with the sum
+                    set_value_from_jmespath(
+                        complete_result, result_expression.expression,
+                        existing_value + result_value)
+
         merge_dicts(complete_result, self.non_aggregate_part)
         if self.resume_token is not None:
             complete_result['NextToken'] = self.resume_token
