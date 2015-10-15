@@ -171,6 +171,8 @@ class Endpoint(object):
             # lookup issue, 99% of the time this is due to a misconfigured
             # region/endpoint so we'll raise a more specific error message
             # to help users.
+            logger.debug("ConnectionError received when sending HTTP request.",
+                         exc_info=True)
             if self._looks_like_dns_error(e):
                 endpoint_url = e.request.url
                 better_exception = EndpointConnectionError(
