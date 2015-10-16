@@ -432,6 +432,24 @@ def add_glacier_checksums(params, **kwargs):
     body.seek(starting_position)
 
 
+def document_glacier_tree_hash_checksum():
+    doc = '''
+        This is a required field.
+        You can use botocore.util.calculate_tree_hash() to calculate it
+        like this::
+
+            from botocore.utils import calculate_tree_hash
+
+            ...
+
+            client.complete_multipart_upload(
+                checksum=calculate_tree_hash(open('your_file.txt', 'rb')),
+                vaultName=vault_name, uploadId=upload_id,
+                archiveSize=str(fsize))
+        '''
+    return AppendParamDocumentation('checksum', doc).append_documentation
+
+
 def switch_host_machinelearning(request, **kwargs):
     switch_host_with_param(request, 'PredictEndpoint')
 
@@ -556,8 +574,13 @@ BUILTIN_HANDLERS = [
      AutoPopulatedParam('accountId', 'Note: this parameter is set to "-" by \
                          default if no value is not specified.')
      .document_auto_populated_param),
-    ('docs.*.glacier.*.complete-section',
+    ('docs.*.glacier.UploadArchive.complete-section',
      AutoPopulatedParam('checksum').document_auto_populated_param),
+    ('docs.*.glacier.UploadMultipartPart.complete-section',
+     AutoPopulatedParam('checksum').document_auto_populated_param),
+    ('docs.request-params.glacier.CompleteMultipartUpload.complete-section',
+     document_glacier_tree_hash_checksum()),
+
     # UserData base64 encoding documentation customizations
     ('docs.*.ec2.RunInstances.complete-section', document_base64_encoding()),
     ('docs.*.autoscaling.CreateLaunchConfiguration.complete-section',
