@@ -79,6 +79,13 @@ class AWSHTTPConnection(HTTPConnection):
         self._response_received = False
         self._expect_header_set = False
 
+    def close(self):
+        super(AWSHTTPConnection, self).close()
+        # Reset all of our instance state we were tracking.
+        self._response_received = False
+        self._expect_header_set = False
+        self.response_class = self._original_response_cls
+
     def _tunnel(self):
         # Works around a bug in py26 which is fixed in later versions of
         # python. Bug involves hitting an infinite loop if readline() returns
