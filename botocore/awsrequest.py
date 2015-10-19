@@ -80,7 +80,7 @@ class AWSHTTPConnection(HTTPConnection):
         self._expect_header_set = False
 
     def close(self):
-        super(AWSHTTPConnection, self).close()
+        HTTPConnection.close(self)
         # Reset all of our instance state we were tracking.
         self._response_received = False
         self._expect_header_set = False
