@@ -434,6 +434,46 @@ class TestAWSHTTPConnection(unittest.TestCase):
         response = conn.getresponse()
         self.assertEqual(response.status, 200)
 
+    def test_state_reset_on_connection_close(self):
+        # This simulates what urllib3 does with connections
+        # in its connection pool logic.
+        with patch('select.select') as select_mock:
+
+            # First fast fail with a 500 response when we first
+            # send the expect header.
+            s = FakeSocket(b'HTTP/1.1 500 Internal Server Error\r\n')
+            conn = AWSHTTPConnection('s3.amazonaws.com', 443)
+            conn.sock = s
+            select_mock.return_value = ([s], [], [])
+
+            conn.request('GET', '/bucket/foo', b'body',
+                        {'Expect': '100-continue'})
+            response = conn.getresponse()
+            self.assertEqual(response.status, 500)
+
+            # Now what happens in urllib3 is that when the next
+            # request comes along and this conection gets checked
+            # out.  We see that the connection needs to be
+            # reset.  So first the connection is closed.
+            conn.close()
+
+            # And then a new connection is established.
+            new_conn = FakeSocket(
+                b'HTTP/1.1 100 (Continue)\r\n\r\nHTTP/1.1 200 OK\r\n')
+            conn.sock = new_conn
+
+            # And we make a request, we should see the 200 response
+            # that was sent back.
+            select_mock.return_value = ([new_conn], [], [])
+
+            conn.request('GET', '/bucket/foo', b'body',
+                        {'Expect': '100-continue'})
+            response = conn.getresponse()
+            # This should be 200.  If it's a 500 then
+            # the prior response was leaking into our
+            # current response.,
+            self.assertEqual(response.status, 200)
+
 
 class TestPrepareRequestDict(unittest.TestCase):
     def setUp(self):
