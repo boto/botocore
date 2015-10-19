@@ -13,6 +13,8 @@
 
 from itertools import tee
 
+from six import string_types
+
 import jmespath
 from botocore.exceptions import PaginationError
 from botocore.compat import zip
@@ -286,12 +288,11 @@ class PageIterator(object):
                 # Now both result_value and existing_value contain something
                 if isinstance(result_value, list):
                     existing_value.extend(result_value)
-                elif isinstance(result_value, (int, float)):
-                    # Modify the existing result with the sum
+                elif isinstance(result_value, (int, float, string_types)):
+                    # Modify the existing result with the sum or concatenation
                     set_value_from_jmespath(
                         complete_result, result_expression.expression,
                         existing_value + result_value)
-
         merge_dicts(complete_result, self.non_aggregate_part)
         if self.resume_token is not None:
             complete_result['NextToken'] = self.resume_token

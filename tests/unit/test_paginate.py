@@ -677,20 +677,21 @@ class TestIncludeResultKeysOtherThanList(unittest.TestCase):
         self.paginate_config = {
             'output_token': 'Marker',
             'input_token': 'Marker',
-            'result_key': ['ResultKey', 'Count'],
+            'result_key': ['ResultKey', 'Count', 'Log'],
         }
         self.paginator = Paginator(self.method, self.paginate_config)
 
     def test_include_counter_keys(self):
         self.method.side_effect = [
-            {'ResultKey': ['a'], 'Count': 1, 'Marker': 'a'},
-            {'ResultKey': ['b', 'c'], 'Count': 2, 'Marker': 'b'},
-            {'ResultKey': ['d', 'e', 'f'], 'Count': 3},
+            {'ResultKey': ['a'], 'Count': 1, 'Log': 'x', 'Marker': 'a'},
+            {'ResultKey': ['b', 'c'], 'Count': 2, 'Log': 'y', 'Marker': 'b'},
+            {'ResultKey': ['d', 'e', 'f'], 'Count': 3, 'Log': 'z'},
         ]
         pages = self.paginator.paginate()
         expected = {
             'ResultKey': ['a', 'b', 'c', 'd', 'e', 'f'],
             'Count': 6,
+            'Log': 'xyz',
         }
         self.assertEqual(pages.build_full_result(), expected)
 
