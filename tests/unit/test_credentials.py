@@ -604,7 +604,7 @@ class TestCreateCredentialResolver(BaseEnvVar):
 
     def test_no_profile_checks_env_provider(self):
         self.config['profile'] = None
-        self.session._profile = None
+        self.session.profile = None
         resolver = credentials.create_credential_resolver(self.session)
 
         self.assertTrue(
@@ -612,7 +612,7 @@ class TestCreateCredentialResolver(BaseEnvVar):
 
     def test_no_profile_env_provider_is_first(self):
         self.config['profile'] = None
-        self.session._profile = None
+        self.session.profile = None
         resolver = credentials.create_credential_resolver(self.session)
 
         self.assertIsInstance(resolver.providers[0], credentials.EnvProvider)

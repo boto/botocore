@@ -67,7 +67,7 @@ def create_credential_resolver(session):
     # We use ``session.profile`` for EnvProvider rather than
     # ``profile_name`` because it is ``None`` when unset.
     # TODO: Remove use of internal var.  We'll need to rethink this.
-    if session._profile is None:
+    if session.profile is None:
         # No profile has been explicitly set, so we prepend the environment
         # variable provider. That provider, in turn, may set a profile
         # or credentials.
