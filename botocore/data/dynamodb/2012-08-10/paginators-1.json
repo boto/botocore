@@ -11,7 +11,7 @@
       "output_token": "LastEvaluatedKey",
       "limit_key": "Limit",
       "result_key": "Items",
-      "non_aggregate_keys": [
+      "sum_keys": [
         "Count",
         "ScannedCount",
         "ConsumedCapacity"
@@ -22,7 +22,7 @@
       "output_token": "LastEvaluatedKey",
       "limit_key": "Limit",
       "result_key": "Items",
-      "non_aggregate_keys": [
+      "sum_keys": [
         "Count",
         "ScannedCount",
         "ConsumedCapacity"
