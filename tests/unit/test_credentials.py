@@ -581,41 +581,46 @@ class TestCreateCredentialResolver(BaseEnvVar):
         super(TestCreateCredentialResolver, self).setUp()
 
         self.session = mock.Mock()
-        self.config = {
+        self.session_instance_vars = {
             'credentials_file': 'a',
             'legacy_config_file': 'b',
             'config_file': 'c',
             'metadata_service_timeout': 'd',
             'metadata_service_num_attempts': 'e',
-            'profile': 'profilename',
         }
-        self.session.get_config_variable = lambda x: self.config[x]
+        self.fake_env_vars = {}
+        self.session.get_config_variable = self.fake_get_config_variable
+
+    def fake_get_config_variable(self, name, methods=None):
+        if methods == ('instance',):
+            return self.session_instance_vars.get(name)
+        elif methods is not None and 'env' in methods:
+            return self.fake_env_vars.get(name)
 
     def test_create_credential_resolver(self):
         resolver = credentials.create_credential_resolver(self.session)
         self.assertIsInstance(resolver, credentials.CredentialResolver)
 
     def test_explicit_profile_ignores_env_provider(self):
-        self.config['profile'] = 'dev'
+        self.session_instance_vars['profile'] = 'dev'
         resolver = credentials.create_credential_resolver(self.session)
 
         self.assertTrue(
             all(not isinstance(p, EnvProvider) for p in resolver.providers))
 
     def test_no_profile_checks_env_provider(self):
-        self.config['profile'] = None
-        self.session.profile = None
+        # If no profile is provided,
+        self.session_instance_vars.pop('profile', None)
         resolver = credentials.create_credential_resolver(self.session)
-
+        # Then an EnvProvider should be part of our credential lookup chain.
         self.assertTrue(
             any(isinstance(p, EnvProvider) for p in resolver.providers))
 
-    def test_no_profile_env_provider_is_first(self):
-        self.config['profile'] = None
-        self.session.profile = None
+    def test_env_provider_added_if_profile_from_env_set(self):
+        self.fake_env_vars['profile'] = 'profile-from-env'
         resolver = credentials.create_credential_resolver(self.session)
-
-        self.assertIsInstance(resolver.providers[0], credentials.EnvProvider)
+        self.assertTrue(
+            any(isinstance(p, EnvProvider) for p in resolver.providers))
 
 
 if __name__ == "__main__":
