@@ -212,7 +212,8 @@ class QuerySerializer(Serializer):
                 # Replace '.Original' with '.{name}'.
                 list_prefix = '.'.join(prefix.split('.')[:-1] + [name])
         else:
-            list_prefix = '%s.member' % prefix
+            list_name = shape.member.serialization.get('name', 'member')
+            list_prefix = '%s.%s' % (prefix, list_name)
         for i, element in enumerate(value, 1):
             element_prefix = '%s.%s' % (list_prefix, i)
             element_shape = shape.member
@@ -472,7 +473,10 @@ class BaseRestSerializer(Serializer):
         if location == 'uri':
             partitioned['uri_path_kwargs'][key_name] = param_value
         elif location == 'querystring':
-            partitioned['query_string_kwargs'][key_name] = param_value
+            if isinstance(param_value, dict):
+                partitioned['query_string_kwargs'].update(param_value)
+            else:
+                partitioned['query_string_kwargs'][key_name] = param_value
         elif location == 'header':
             shape = shape_members[param_name]
             value = self._convert_header_value(shape, param_value)

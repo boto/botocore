@@ -62,7 +62,7 @@ from botocore.serialize import EC2Serializer, QuerySerializer, \
         JSONSerializer, RestJSONSerializer, RestXMLSerializer
 from botocore.parsers import QueryParser, JSONParser, \
         RestJSONParser, RestXMLParser
-from botocore.utils import parse_timestamp
+from botocore.utils import parse_timestamp, percent_encode_sequence
 from calendar import timegm
 from botocore.compat import urlencode
 
@@ -265,10 +265,10 @@ def assert_equal(first, second, prefix):
 def _serialize_request_description(request_dict):
     if isinstance(request_dict.get('body'), dict):
         # urlencode the request body.
-        encoded = urlencode(request_dict['body']).encode('utf-8')
+        encoded = percent_encode_sequence(request_dict['body']).encode('utf-8')
         request_dict['body'] = encoded
     if isinstance(request_dict.get('query_string'), dict):
-        encoded = urlencode(request_dict.pop('query_string'))
+        encoded = percent_encode_sequence(request_dict.pop('query_string'))
         if encoded:
             # 'requests' automatically handle this, but we in the
             # test runner we need to handle the case where the url_path
