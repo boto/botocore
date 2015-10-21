@@ -138,13 +138,18 @@ class Session(object):
         self.user_agent_name = 'Botocore'
         self.user_agent_version = __version__
         self.user_agent_extra = ''
-        self._profile = profile
+        # The _profile attribute is just used to cache the value
+        # of the current profile to avoid going through the normal
+        # config lookup process each access time.
+        self._profile = None
         self._config = None
         self._credentials = None
         self._profile_map = None
         # This is a dict that stores per session specific config variable
         # overrides via set_config_variable().
         self._session_instance_vars = {}
+        if profile is not None:
+            self._session_instance_vars['profile'] = profile
         self._components = ComponentLocator()
         self._register_components()
 
@@ -235,9 +240,6 @@ class Session(object):
         # Handle all the short circuit special cases first.
         if logical_name not in self.session_var_map:
             return
-        if logical_name == 'profile' and self._profile:
-            return self._profile
-
         # Do the actual lookups.  We need to handle
         # 'instance', 'env', and 'config' locations, in that order.
         value = None
