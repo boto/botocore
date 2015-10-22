@@ -47,7 +47,9 @@ def create_credential_resolver(session):
     metadata_timeout = session.get_config_variable('metadata_service_timeout')
     num_attempts = session.get_config_variable('metadata_service_num_attempts')
 
+    env_provider = EnvProvider()
     providers = [
+        env_provider,
         SharedCredentialProvider(
             creds_filename=credential_file,
             profile_name=profile_name
@@ -64,14 +66,25 @@ def create_credential_resolver(session):
         )
     ]
 
-    # We use ``session.profile`` for EnvProvider rather than
-    # ``profile_name`` because it is ``None`` when unset.
-    # TODO: Remove use of internal var.  We'll need to rethink this.
-    if session._profile is None:
-        # No profile has been explicitly set, so we prepend the environment
-        # variable provider. That provider, in turn, may set a profile
-        # or credentials.
-        providers.insert(0, EnvProvider())
+    explicit_profile = session.get_config_variable('profile',
+                                                   methods=('instance',))
+    if explicit_profile is not None:
+        # An explicitly provided profile will negate an EnvProvider.
+        # We will defer to providers that understand the "profile"
+        # concept to retrieve credentials.
+        # The one edge case if is all three values are provided via
+        # env vars:
+        # export AWS_ACCESS_KEY_ID=foo
+        # export AWS_SECRET_ACCESS_KEY=bar
+        # export AWS_PROFILE=baz
+        # Then, just like our client() calls, the explicit credentials
+        # will take precedence.
+        #
+        # This precedence is enforced by leaving the EnvProvider in the chain.
+        # This means that the only way a "profile" would win is if the
+        # EnvProvider does not return credentials, which is what we want
+        # in this scenario.
+        providers.remove(env_provider)
     else:
         logger.debug('Skipping environment variable credential check'
                      ' because profile name was explicitly set.')
