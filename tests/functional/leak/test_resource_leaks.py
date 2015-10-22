@@ -14,6 +14,13 @@ from tests import BaseClientDriverTest
 
 
 class TestDoesNotLeakMemory(BaseClientDriverTest):
+    # The user doesn't need to have credentials configured
+    # in order to run the functional tests for resource leaks.
+    # If we don't set this value and a user doesn't have creds
+    # configured, each create_client() call will have to go through
+    # the EC2 Instance Metadata provider's timeout, which can add
+    # a substantial amount of time to the total test run time.
+    INJECT_DUMMY_CREDS = True
     # We're making up numbers here, but let's say arbitrarily
     # that the memory can't increase by more than 10MB.
     MAX_GROWTH_BYTES = 10 * 1024 * 1024
