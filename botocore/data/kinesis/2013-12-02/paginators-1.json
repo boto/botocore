@@ -9,7 +9,8 @@
       "non_aggregate_keys": [
         "StreamDescription.StreamARN",
         "StreamDescription.StreamName",
-        "StreamDescription.StreamStatus"
+        "StreamDescription.StreamStatus",
+        "StreamDescription.RetentionPeriodHours"
       ]
     },
     "ListStreams": {
