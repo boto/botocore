@@ -129,8 +129,8 @@ class RequestSigner(object):
         if signature_version is None:
             signature_version = self._signature_version
 
-        key = '{0}.{1}.{2}'.format(signature_version, region_name,
-                                   signing_name)
+        key = '{0}.{1}.{2}.{3}'.format(signature_version, region_name,
+                                       signing_name, kwargs.get('expires'))
         if key in self._cache:
             return self._cache[key]
 
