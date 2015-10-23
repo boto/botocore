@@ -671,7 +671,7 @@ class TestExpressionKeyIterators(unittest.TestCase):
         })
 
 
-class TestIncludeResultKeysOtherThanList(unittest.TestCase):
+class TestIncludeResultKeys(unittest.TestCase):
     def setUp(self):
         self.method = mock.Mock()
         self.paginate_config = {
@@ -681,9 +681,10 @@ class TestIncludeResultKeysOtherThanList(unittest.TestCase):
         }
         self.paginator = Paginator(self.method, self.paginate_config)
 
-    def test_include_counter_keys(self):
+    def test_different_kinds_of_result_key(self):
         self.method.side_effect = [
             {'ResultKey': ['a'], 'Count': 1, 'Log': 'x', 'Marker': 'a'},
+            {'not_a_result_key': 'this page will be ignored', 'Marker': '_'},
             {'ResultKey': ['b', 'c'], 'Count': 2, 'Log': 'y', 'Marker': 'b'},
             {'ResultKey': ['d', 'e', 'f'], 'Count': 3, 'Log': 'z'},
         ]
@@ -693,6 +694,15 @@ class TestIncludeResultKeysOtherThanList(unittest.TestCase):
             'Count': 6,
             'Log': 'xyz',
         }
+        self.assertEqual(pages.build_full_result(), expected)
+
+    def test_result_key_is_missing(self):
+        self.method.side_effect = [
+            {'not_a_result_key': 'this page will be ignored', 'Marker': '_'},
+            {'neither_this_one': 'this page will be ignored, too'},
+        ]
+        pages = self.paginator.paginate()
+        expected = {}
         self.assertEqual(pages.build_full_result(), expected)
 
 
