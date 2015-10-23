@@ -193,6 +193,8 @@ class PageIterator(object):
         # the truncated amount.
         starting_truncation = self._parse_starting_token()[1]
         all_data = primary_result_key.search(parsed)
+        if all_data is None:
+            all_data = []
         set_value_from_jmespath(
             parsed,
             primary_result_key.expression,

@@ -229,6 +229,13 @@ class TestPagination(unittest.TestCase):
         complete = pages.build_full_result()
         self.assertEqual(complete, {'Users': ['User1', 'User2', 'User3']})
 
+    def test_resume_encounters_an_empty_payload(self):
+        response = {"not_a_result_key": "it happens with large starting point"}
+        self.method.return_value = response
+        complete = self.paginator.paginate(
+            PaginationConfig={'StartingToken': 'None___1'}).build_full_result()
+        self.assertEqual(complete, {self.paginate_config['result_key']: []})
+
 
 class TestPaginatorPageSize(unittest.TestCase):
     def setUp(self):
