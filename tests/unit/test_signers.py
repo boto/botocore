@@ -67,13 +67,26 @@ class TestSigner(BaseSignerTest):
                 region_name='region_name')
 
     def test_get_auth_cached(self):
-        auth_cls = mock.Mock()
+        def side_effect(*args, **kwargs):
+            return mock.Mock()
+        auth_cls = mock.Mock(side_effect=side_effect)
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
                              {'v4': auth_cls}):
             auth1 = self.signer.get_auth('service_name', 'region_name')
             auth2 = self.signer.get_auth('service_name', 'region_name')
 
         self.assertEqual(auth1, auth2)
+
+    def test_get_auth_cached_expires(self):
+        def side_effect(*args, **kwargs):
+            return mock.Mock()
+        auth_cls = mock.Mock(side_effect=side_effect)
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
+                             {'v4': auth_cls}):
+            auth1 = self.signer.get_auth('service_name', 'region_name', expires=60)
+            auth2 = self.signer.get_auth('service_name', 'region_name', expires=90)
+
+        self.assertNotEqual(auth1, auth2)
 
     def test_get_auth_signature_override(self):
         auth_cls = mock.Mock()
