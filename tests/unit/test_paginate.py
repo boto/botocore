@@ -567,7 +567,7 @@ class TestMultipleResultKeys(unittest.TestCase):
         # Note that the secondary keys ("Groups") are all truncated because
         # they were in the original (first) response.
         self.assertEqual(complete,
-                         {"Users": ["User2"], "Groups": [],
+                         {"Users": ["User2"],
                           "NextToken": "m1"})
 
 
@@ -613,11 +613,17 @@ class TestMultipleInputKeys(unittest.TestCase):
         complete = pages.build_full_result()
         self.assertEqual(complete,
                          {"Users": ['User4'],
-                          "Groups": [],
                           "NextToken": "m3___m4"})
         self.assertEqual(
             self.method.call_args_list,
             [mock.call(InMarker1='m1', InMarker2='m2')])
+
+    def test_resume_encounters_an_empty_payload(self):
+        response = {"not_a_result_key": "it happens in some service"}
+        self.method.return_value = response
+        complete = self.paginator.paginate(
+            PaginationConfig={'StartingToken': 'None___1'}).build_full_result()
+        self.assertEqual(complete, {})
 
     def test_result_key_exposed_on_paginator(self):
         self.assertEqual(
