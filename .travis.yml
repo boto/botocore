@@ -1,12 +1,26 @@
 language: python
-python:
-  - "2.6"
-  - "2.7"
-  - "3.3"
-  - "3.4"
+matrix:
+    include:
+        - python: "2.6"
+          env: TOXENV=py26-unit
+        - python: "2.6"
+          env: TOXENV=py26-functional
+        - python: "2.7"
+          env: TOXENV=py27-unit
+        - python: "2.7"
+          env: TOXENV=py27-functional
+        - python: "3.3"
+          env: TOXENV=py33-unit
+        - python: "3.3"
+          env: TOXENV=py33-functional
+        - python: "3.4"
+          env: TOXENV=py34-unit
+        - python: "3.4"
+          env: TOXENV=py34-functional
 sudo: false
 install:
-  - python scripts/ci/install
-script: python scripts/ci/run-tests
+    - travis_retry pip install tox coveralls
+script: 
+    - tox
 after_success:
-  - pip install python-coveralls && cd tests && coveralls
+  - cd tests && coveralls
