@@ -336,7 +336,7 @@ class TestS3PostPresigner(BaseSignerTest):
 
 class TestGenerateUrl(unittest.TestCase):
     def setUp(self):
-        self.session = botocore.session.get_session()
+        self.session = botocore.session.get_session({'metadata_service_num_attempts': (None, None, 0, int)})
         self.client = self.session.create_client('s3', region_name='us-east-1')
         self.bucket = 'mybucket'
         self.key = 'mykey'
@@ -420,7 +420,7 @@ class TestGenerateUrl(unittest.TestCase):
 
 class TestGeneratePresignedPost(unittest.TestCase):
     def setUp(self):
-        self.session = botocore.session.get_session()
+        self.session = botocore.session.get_session({'metadata_service_num_attempts': (None, None, 0, int)})
         self.client = self.session.create_client('s3', region_name='us-east-1')
         self.bucket = 'mybucket'
         self.key = 'mykey'
