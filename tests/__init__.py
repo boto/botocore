@@ -134,9 +134,15 @@ class BaseSessionTest(BaseEnvVar):
 
 @skip_unless_has_memory_collection
 class BaseClientDriverTest(unittest.TestCase):
+    INJECT_DUMMY_CREDS = False
+
     def setUp(self):
         self.driver = ClientDriver()
-        self.driver.start()
+        env = None
+        if self.INJECT_DUMMY_CREDS:
+            env = {'AWS_ACCESS_KEY_ID': 'foo',
+                   'AWS_SECRET_ACCESS_KEY': 'bar'}
+        self.driver.start(env=env)
 
     def cmd(self, *args):
         self.driver.cmd(*args)
@@ -184,10 +190,10 @@ class ClientDriver(object):
         mem = self._get_memory_with_ps(self._popen.pid)
         self.memory_samples.append(mem)
 
-    def start(self):
+    def start(self, env=None):
         """Start up the command runner process."""
         self._popen = Popen([sys.executable, self.CLIENT_SERVER],
-                            stdout=PIPE, stdin=PIPE)
+                            stdout=PIPE, stdin=PIPE, env=env)
 
     def stop(self):
         """Shutdown the command runner process."""
