@@ -102,6 +102,9 @@ class TestTransformName(unittest.TestCase):
         self.assertEqual(xform_name('DescribeStorediSCSIVolumes', '-'), 'describe-stored-iscsi-volumes')
         self.assertEqual(xform_name('CreateStorediSCSIVolume', '-'), 'create-stored-iscsi-volume')
 
+    def test_special_case_ends_with_s(self):
+        self.assertEqual(xform_name('GatewayARNs', '-'), 'gateway-arns')
+
 
 class TestValidateJMESPathForSet(unittest.TestCase):
     def setUp(self):
