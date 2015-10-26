@@ -391,6 +391,13 @@ class TestHandlers(BaseSessionTest):
         self.assertEqual(request_dict['headers']['x-amz-glacier-version'],
                          '2012-01-01')
 
+    def test_application_json_header_added(self):
+        request_dict = {
+            'headers': {}
+        }
+        handlers.add_accept_header(None, request_dict)
+        self.assertEqual(request_dict['headers']['Accept'], 'application/json')
+
     def test_glacier_checksums_added(self):
         request_dict = {
             'headers': {},

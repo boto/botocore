@@ -400,6 +400,11 @@ def add_glacier_version(model, params, **kwargs):
         'apiVersion']
 
 
+def add_accept_header(model, params, **kwargs):
+    request_dict = params
+    request_dict['headers']['Accept'] = 'application/json'
+
+
 def add_glacier_checksums(params, **kwargs):
     """Add glacier checksums to the http request.
 
@@ -518,6 +523,7 @@ BUILTIN_HANDLERS = [
     ('before-call.s3.CopyObject', quote_source_header),
     ('before-call.s3', add_expect_header),
     ('before-call.glacier', add_glacier_version),
+    ('before-call.apigateway', add_accept_header),
     ('before-call.glacier.UploadArchive', add_glacier_checksums),
     ('before-call.glacier.UploadMultipartPart', add_glacier_checksums),
     ('before-call.ec2.CopySnapshot', copy_snapshot_encrypted),
