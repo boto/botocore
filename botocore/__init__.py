@@ -31,11 +31,12 @@ log.addHandler(NullHandler())
 _first_cap_regex = re.compile('(.)([A-Z][a-z]+)')
 _number_cap_regex = re.compile('([a-z])([0-9]+)')
 _end_cap_regex = re.compile('([a-z0-9])([A-Z])')
+# The regex below handles the special case where some acryonym
+# name is pluralized, e.g GatewayARNs, ListWebACLs, SomeCNAMEs.
+_special_case_transform = re.compile('[A-Z]{3,}s$')
 # Prepopulate the cache with special cases that don't match
 # our regular transformation.
 _xform_cache = {
-    ('SwapEnvironmentCNAMEs', '_'): 'swap_environment_cnames',
-    ('SwapEnvironmentCNAMEs', '-'): 'swap-environment-cnames',
     ('CreateCachediSCSIVolume', '_'): 'create_cached_iscsi_volume',
     ('CreateCachediSCSIVolume', '-'): 'create-cached-iscsi-volume',
     ('DescribeCachediSCSIVolumes', '_'): 'describe_cached_iscsi_volumes',
@@ -44,10 +45,6 @@ _xform_cache = {
     ('DescribeStorediSCSIVolumes', '-'): 'describe-stored-iscsi-volumes',
     ('CreateStorediSCSIVolume', '_'): 'create_stored_iscsi_volume',
     ('CreateStorediSCSIVolume', '-'): 'create-stored-iscsi-volume',
-    ('NotificationARNs', '_'): 'notification_arns',
-    ('NotificationARNs', '-'): 'notification-arns',
-    ('ListWebACLs', '_'): 'list_web_acls',
-    ('ListWebACLs', '-'): 'list-web-acls',
 }
 ScalarTypes = ('string', 'integer', 'boolean', 'timestamp', 'float', 'double')
 
@@ -70,6 +67,11 @@ def xform_name(name, sep='_', _xform_cache=_xform_cache):
         return name
     key = (name, sep)
     if key not in _xform_cache:
+        if _special_case_transform.search(name) is not None:
+            is_special = _special_case_transform.search(name)
+            matched = is_special.group()
+            # Replace something like ARNs, ACLs with _arns, _acls.
+            name = name[:-len(matched)] + sep + matched.lower()
         s1 = _first_cap_regex.sub(r'\1' + sep + r'\2', name)
         s2 = _number_cap_regex.sub(r'\1' + sep + r'\2', s1)
         transformed = _end_cap_regex.sub(r'\1' + sep + r'\2', s2).lower()
