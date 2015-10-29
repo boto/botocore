@@ -28,6 +28,7 @@ from botocore.vendored.requests.exceptions import ConnectionError
 # Empty params means that the operation will be called with no params.  This is
 # used as a quick verification that we can successfully make calls to services.
 SMOKE_TESTS = {
+ 'apigateway': {'GetRestApis': {}},
  'autoscaling': {'DescribeAccountLimits': {},
                  'DescribeAdjustmentTypes': {}},
  'cloudformation': {'DescribeStacks': {},
@@ -99,6 +100,7 @@ SMOKE_TESTS = {
 # that we get an error response back from the server because
 # we've sent invalid params.
 ERROR_TESTS = {
+    'apigateway': {'GetRestApi': {'restApiId': 'fake-id'}},
     'autoscaling': {'CreateLaunchConfiguration': {
         'LaunchConfigurationName': 'foo',
         'ImageId': 'ami-12345678',
