@@ -308,6 +308,8 @@ class JSONSerializer(Serializer):
     def _serialize(self, serialized, value, shape, key=None):
         method = getattr(self, '_serialize_type_%s' % shape.type_name,
                          self._default_serialize)
+        if 'name' in shape.serialization:
+            key = shape.serialization['name']
         method(serialized, value, shape, key)
 
     def _serialize_type_structure(self, serialized, value, shape, key):
