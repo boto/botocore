@@ -323,6 +323,8 @@ class JSONSerializer(Serializer):
         members = shape.members
         for member_key, member_value in value.items():
             member_shape = members[member_key]
+            if 'name' in member_shape.serialization:
+                member_key = member_shape.serialization['name']
             self._serialize(serialized, member_value, member_shape, member_key)
 
     def _serialize_type_map(self, serialized, value, shape, key):
