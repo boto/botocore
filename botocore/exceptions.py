@@ -19,7 +19,7 @@ class BotoCoreError(Exception):
 
     :ivar msg: The descriptive message associated with the error.
     """
-    fmt = 'An unspecified error occured'
+    fmt = 'An unspecified error occurred'
 
     def __init__(self, **kwargs):
         msg = self.fmt.format(**kwargs)
@@ -50,6 +50,12 @@ class ApiVersionNotFoundError(BotoCoreError):
 class EndpointConnectionError(BotoCoreError):
     fmt = (
         'Could not connect to the endpoint URL: "{endpoint_url}"')
+
+
+class BadStatusLineError(BotoCoreError):
+    fmt = (
+        'Bad status line occurred on endpoint URL: "{endpoint_url}". '
+        'You may consider increasing retry attempts.')
 
 
 class NoCredentialsError(BotoCoreError):
