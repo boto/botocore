@@ -181,7 +181,7 @@ class Endpoint(object):
                 return (None, better_exception)
             elif self._looks_like_bad_status_line(e):
                 better_exception = BadStatusLineError(
-                    endpoint_url=e.request.url, error=e)
+                    endpoint_url=e.request.url, request=e.request)
                 return (None, better_exception)
             else:
                 return (None, e)

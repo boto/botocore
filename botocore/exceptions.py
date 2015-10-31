@@ -11,6 +11,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from botocore.vendored.requests.exceptions import ConnectionError
 
 
 class BotoCoreError(Exception):
@@ -52,10 +53,14 @@ class EndpointConnectionError(BotoCoreError):
         'Could not connect to the endpoint URL: "{endpoint_url}"')
 
 
-class BadStatusLineError(BotoCoreError):
+class BadStatusLineError(ConnectionError):
     fmt = (
         'Bad status line occurred on endpoint URL: "{endpoint_url}". '
         'You may consider increasing retry attempts.')
+    def __init__(self, **kwargs):
+        msg = self.fmt.format(**kwargs)
+        kwargs.pop('endpoint_url')
+        super(BadStatusLineError, self).__init__(msg, **kwargs)
 
 
 class NoCredentialsError(BotoCoreError):
