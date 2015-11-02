@@ -208,7 +208,16 @@ class PageIterator(object):
         for token in self.result_keys:
             if token == primary_result_key:
                 continue
-            set_value_from_jmespath(parsed, token.expression, None)
+            sample = token.search(parsed)
+            if isinstance(sample, list):
+                empty_value = []
+            elif isinstance(sample, string_types):
+                empty_value = ''
+            elif isinstance(sample, (int, float)):
+                empty_value = 0
+            else:
+                empty_value = None
+            set_value_from_jmespath(parsed, token.expression, empty_value)
         return starting_truncation
 
     def _truncate_response(self, parsed, primary_result_key, truncate_amount,

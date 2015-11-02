@@ -567,7 +567,7 @@ class TestMultipleResultKeys(unittest.TestCase):
         # Note that the secondary keys ("Groups") are all truncated because
         # they were in the original (first) response.
         self.assertEqual(complete,
-                         {"Users": ["User2"],
+                         {"Users": ["User2"], "Groups": [],
                           "NextToken": "m1"})
 
 
@@ -613,6 +613,7 @@ class TestMultipleInputKeys(unittest.TestCase):
         complete = pages.build_full_result()
         self.assertEqual(complete,
                          {"Users": ['User4'],
+                          "Groups": [],
                           "NextToken": "m3___m4"})
         self.assertEqual(
             self.method.call_args_list,
