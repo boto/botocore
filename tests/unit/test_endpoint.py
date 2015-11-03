@@ -14,6 +14,7 @@
 from tests import unittest
 
 from mock import Mock, patch
+from nose.tools import assert_equals
 from botocore.vendored.requests import ConnectionError
 
 from botocore.compat import six
@@ -21,6 +22,7 @@ from botocore.awsrequest import AWSRequest
 from botocore.endpoint import Endpoint, DEFAULT_TIMEOUT
 from botocore.endpoint import EndpointCreator
 from botocore.endpoint import PreserveAuthSession
+from botocore.endpoint import create_endpoint_url
 from botocore.exceptions import EndpointConnectionError
 from botocore.exceptions import ConnectionClosedError
 from botocore.exceptions import BaseEndpointResolverError
@@ -35,6 +37,21 @@ def request_dict():
         'method': 'POST',
         'url': 'https://foo.com'
     }
+
+
+def test_creates_endpoints_with_ssl_common_name():
+    config = {'sslCommonName': 'foo.com', 'hostname': 'bar.com'}
+    assert_equals('https://foo.com', create_endpoint_url(config, True))
+
+
+def test_creates_endpoints_with_hostname_when_no_common_name():
+    config = {'hostname': 'bar.com'}
+    assert_equals('https://bar.com', create_endpoint_url(config, True))
+
+
+def test_creates_endpoints_with_http():
+    config = {'hostname': 'bar.com'}
+    assert_equals('http://bar.com', create_endpoint_url(config, False))
 
 
 class RecordStreamResets(six.StringIO):
@@ -254,7 +271,8 @@ class TestEndpointCreator(unittest.TestCase):
 
         self.resolver = Mock()
         self.resolver.construct_endpoint.return_value = {
-            'uri': 'https://endpoint.url', 'properties': {}
+            'hostname': 'endpoint.url',
+            'partiton': 'aws'
         }
         self.creator = EndpointCreator(self.resolver, 'us-west-2', Mock())
 

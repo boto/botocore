@@ -20,6 +20,7 @@ from mock import patch, Mock
 
 from botocore.compat import OrderedDict
 from botocore.handlers import set_list_objects_encoding_type_url
+from botocore.exceptions import UnknownEndpointError
 
 
 class TestS3Addressing(BaseSessionTest):
@@ -205,28 +206,27 @@ class TestS3Addressing(BaseSessionTest):
             'https://s3-us-west-2.amazonaws.com/192.168.5.256/mykeyname')
 
     def test_invalid_endpoint_raises_exception(self):
-        with self.assertRaisesRegexp(ValueError, 'Invalid endpoint'):
+        with self.assertRaisesRegexp(UnknownEndpointError,
+                                     'Unable to construct'):
             self.session.create_client('s3', 'Invalid region')
 
     def test_non_existent_region(self):
         # If I ask for a region that does not
         # exist on a global endpoint, such as:
-        client = self.session.create_client('s3', 'REGION-DOES-NOT-EXIST')
+        client = self.session.create_client('s3', 'us-west-111')
         # Then the default endpoint heuristic will apply and we'll
         # get the region name as specified.
-        self.assertEqual(client.meta.region_name, 'REGION-DOES-NOT-EXIST')
-        # Why not fixed this?  Well backwards compatability for one thing.
-        # The other reason is because it was intended to accomodate this
+        self.assertEqual(client.meta.region_name, 'us-west-111')
+        # Why not fixed this?  Well backwards compatibility for one thing.
+        # The other reason is because it was intended to accommodate this
         # use case.  Let's say I have us-west-2 set as my default region,
         # possibly through an env var or config variable.  Well, by default,
         # we'd make a call like:
         client = self.session.create_client('iam', 'us-west-2')
         # Instead of giving the user an error, we should instead give
-        # them the global endpoint.
-        self.assertEqual(client.meta.region_name, 'us-east-1')
+        # them the partition-global endpoint.
+        self.assertEqual(client.meta.region_name, 'aws-global')
         # But if they request an endpoint that we *do* know about, we use
         # that specific endpoint.
-        client = self.session.create_client('iam', 'us-gov-west-1')
-        self.assertEqual(
-            client.meta.region_name,
-            'us-gov-west-1')
+        client = self.session.create_client('iam', 'aws-us-gov-global')
+        self.assertEqual(client.meta.region_name, 'aws-us-gov-global')

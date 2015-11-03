@@ -138,16 +138,19 @@ class TestCreateClients(unittest.TestCase):
         self.assertTrue(hasattr(client, 'list_buckets'))
 
     def test_client_raises_exception_invalid_region(self):
-        with self.assertRaisesRegexp(ValueError, 'Invalid endpoint'):
-            self.session.create_client('cloudformation',
-                                       region_name='invalid region name')
+        with self.assertRaisesRegexp(
+                ValueError,
+                ('Unable to construct an endpoint for cloudformation in '
+                 'region invalid region name')):
+            self.session.create_client(
+                'cloudformation', region_name='invalid region name')
 
 
 class TestClientErrorMessages(unittest.TestCase):
     def test_region_mentioned_in_invalid_region(self):
         session = botocore.session.get_session()
         client = session.create_client(
-            'cloudformation', region_name='bad-region-name')
+            'cloudformation', region_name='us-east-999')
         with self.assertRaisesRegexp(EndpointConnectionError,
                                      'Could not connect to the endpoint URL'):
             client.list_stacks()

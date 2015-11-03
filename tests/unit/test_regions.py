@@ -1,4 +1,4 @@
-# Copyright 2014 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright 2015 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -10,13 +10,13 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import unittest, BaseSessionTest, create_session
+from tests import unittest, create_session
 
 import mock
 from nose.tools import assert_equals
 
 from botocore import regions
-from botocore.exceptions import UnknownEndpointError
+from botocore.endpoint import create_endpoint_url
 from botocore.exceptions import NoRegionError
 
 
@@ -25,288 +25,424 @@ from botocore.exceptions import NoRegionError
 # and subsequently being used in cert validation.
 # Same thing is needed for rds.
 KNOWN_REGIONS = {
-  "us-east-1": {
-    "cloudformation": "cloudformation.us-east-1.amazonaws.com",
-    "cloudfront": "cloudfront.amazonaws.com",
-    "cloudsearch": "cloudsearch.us-east-1.amazonaws.com",
-    "cloudtrail": "cloudtrail.us-east-1.amazonaws.com",
-    "monitoring": "monitoring.us-east-1.amazonaws.com",
-    "dynamodb": "dynamodb.us-east-1.amazonaws.com",
-    "ec2": "ec2.us-east-1.amazonaws.com",
-    "elasticmapreduce": "elasticmapreduce.us-east-1.amazonaws.com",
-    "elasticache": "elasticache.us-east-1.amazonaws.com",
-    "rds": "rds.amazonaws.com",
-    "route53": "route53.amazonaws.com",
-    "email": "email.us-east-1.amazonaws.com",
-    "sdb": "sdb.amazonaws.com",
-    "sns": "sns.us-east-1.amazonaws.com",
-    "sqs": "queue.amazonaws.com",
-    "s3": "s3.amazonaws.com",
-    "autoscaling": "autoscaling.us-east-1.amazonaws.com",
-    "elasticbeanstalk": "elasticbeanstalk.us-east-1.amazonaws.com",
-    "iam": "iam.amazonaws.com",
-    "importexport": "importexport.amazonaws.com",
-    "sts": "sts.amazonaws.com",
-    "storagegateway": "storagegateway.us-east-1.amazonaws.com",
-    "support": "support.us-east-1.amazonaws.com",
-    "elasticloadbalancing": "elasticloadbalancing.us-east-1.amazonaws.com",
-    "swf": "swf.us-east-1.amazonaws.com",
-    "glacier": "glacier.us-east-1.amazonaws.com",
-    "directconnect": "directconnect.us-east-1.amazonaws.com",
-    "datapipeline": "datapipeline.us-east-1.amazonaws.com",
-    "redshift": "redshift.us-east-1.amazonaws.com",
-    "kinesis": "kinesis.us-east-1.amazonaws.com",
-    "opsworks": "opsworks.us-east-1.amazonaws.com",
-    "elastictranscoder": "elastictranscoder.us-east-1.amazonaws.com",
-  },
-  "us-west-1": {
-    "cloudformation": "cloudformation.us-west-1.amazonaws.com",
-    "cloudfront": "cloudfront.amazonaws.com",
-    "cloudsearch": "cloudsearch.us-west-1.amazonaws.com",
-    "monitoring": "monitoring.us-west-1.amazonaws.com",
-    "dynamodb": "dynamodb.us-west-1.amazonaws.com",
-    "ec2": "ec2.us-west-1.amazonaws.com",
-    "elasticmapreduce": "us-west-1.elasticmapreduce.amazonaws.com",
-    "elasticache": "elasticache.us-west-1.amazonaws.com",
-    "rds": "rds.us-west-1.amazonaws.com",
-    "route53": "route53.amazonaws.com",
-    "sdb": "sdb.us-west-1.amazonaws.com",
-    "sns": "sns.us-west-1.amazonaws.com",
-    "sqs": "us-west-1.queue.amazonaws.com",
-    "s3": "s3-us-west-1.amazonaws.com",
-    "autoscaling": "autoscaling.us-west-1.amazonaws.com",
-    "elasticbeanstalk": "elasticbeanstalk.us-west-1.amazonaws.com",
-    "iam": "iam.amazonaws.com",
-    "importexport": "importexport.amazonaws.com",
-    "sts": "sts.amazonaws.com",
-    "storagegateway": "storagegateway.us-west-1.amazonaws.com",
-    "elasticloadbalancing": "elasticloadbalancing.us-west-1.amazonaws.com",
-    "swf": "swf.us-west-1.amazonaws.com",
-    "glacier": "glacier.us-west-1.amazonaws.com",
-    "directconnect": "directconnect.us-west-1.amazonaws.com",
-    "elastictranscoder": "elastictranscoder.us-west-1.amazonaws.com",
-  },
-  "us-west-2": {
-    "cloudformation": "cloudformation.us-west-2.amazonaws.com",
-    "cloudfront": "cloudfront.amazonaws.com",
-    "cloudsearch": "cloudsearch.us-west-2.amazonaws.com",
-    "cloudtrail": "cloudtrail.us-west-2.amazonaws.com",
-    "monitoring": "monitoring.us-west-2.amazonaws.com",
-    "dynamodb": "dynamodb.us-west-2.amazonaws.com",
-    "ec2": "ec2.us-west-2.amazonaws.com",
-    "elasticmapreduce": "us-west-2.elasticmapreduce.amazonaws.com",
-    "elasticache": "elasticache.us-west-2.amazonaws.com",
-    "rds": "rds.us-west-2.amazonaws.com",
-    "route53": "route53.amazonaws.com",
-    "sdb": "sdb.us-west-2.amazonaws.com",
-    "sns": "sns.us-west-2.amazonaws.com",
-    "sqs": "us-west-2.queue.amazonaws.com",
-    "s3": "s3-us-west-2.amazonaws.com",
-    "autoscaling": "autoscaling.us-west-2.amazonaws.com",
-    "elasticbeanstalk": "elasticbeanstalk.us-west-2.amazonaws.com",
-    "iam": "iam.amazonaws.com",
-    "importexport": "importexport.amazonaws.com",
-    "sts": "sts.amazonaws.com",
-    "storagegateway": "storagegateway.us-west-2.amazonaws.com",
-    "elasticloadbalancing": "elasticloadbalancing.us-west-2.amazonaws.com",
-    "swf": "swf.us-west-2.amazonaws.com",
-    "glacier": "glacier.us-west-2.amazonaws.com",
-    "directconnect": "directconnect.us-west-2.amazonaws.com",
-    "redshift": "redshift.us-west-2.amazonaws.com",
-    "elastictranscoder": "elastictranscoder.us-west-2.amazonaws.com",
-  },
-  "ap-northeast-1": {
-    "cloudformation": "cloudformation.ap-northeast-1.amazonaws.com",
-    "cloudfront": "cloudfront.amazonaws.com",
-    "monitoring": "monitoring.ap-northeast-1.amazonaws.com",
-    "dynamodb": "dynamodb.ap-northeast-1.amazonaws.com",
-    "ec2": "ec2.ap-northeast-1.amazonaws.com",
-    "elasticmapreduce": "ap-northeast-1.elasticmapreduce.amazonaws.com",
-    "elasticache": "elasticache.ap-northeast-1.amazonaws.com",
-    "rds": "rds.ap-northeast-1.amazonaws.com",
-    "route53": "route53.amazonaws.com",
-    "sdb": "sdb.ap-northeast-1.amazonaws.com",
-    "sns": "sns.ap-northeast-1.amazonaws.com",
-    "sqs": "ap-northeast-1.queue.amazonaws.com",
-    "s3": "s3-ap-northeast-1.amazonaws.com",
-    "autoscaling": "autoscaling.ap-northeast-1.amazonaws.com",
-    "elasticbeanstalk": "elasticbeanstalk.ap-northeast-1.amazonaws.com",
-    "iam": "iam.amazonaws.com",
-    "importexport": "importexport.amazonaws.com",
-    "sts": "sts.amazonaws.com",
-    "storagegateway": "storagegateway.ap-northeast-1.amazonaws.com",
-    "elasticloadbalancing": "elasticloadbalancing.ap-northeast-1.amazonaws.com",
-    "swf": "swf.ap-northeast-1.amazonaws.com",
-    "glacier": "glacier.ap-northeast-1.amazonaws.com",
-    "directconnect": "directconnect.ap-northeast-1.amazonaws.com",
-    "redshift": "redshift.ap-northeast-1.amazonaws.com",
-    "elastictranscoder": "elastictranscoder.ap-northeast-1.amazonaws.com",
-  },
-  "ap-southeast-1": {
-    "cloudformation": "cloudformation.ap-southeast-1.amazonaws.com",
-    "cloudfront": "cloudfront.amazonaws.com",
-    "cloudsearch": "cloudsearch.ap-southeast-1.amazonaws.com",
-    "monitoring": "monitoring.ap-southeast-1.amazonaws.com",
-    "dynamodb": "dynamodb.ap-southeast-1.amazonaws.com",
-    "ec2": "ec2.ap-southeast-1.amazonaws.com",
-    "elasticmapreduce": "ap-southeast-1.elasticmapreduce.amazonaws.com",
-    "elasticache": "elasticache.ap-southeast-1.amazonaws.com",
-    "rds": "rds.ap-southeast-1.amazonaws.com",
-    "route53": "route53.amazonaws.com",
-    "sdb": "sdb.ap-southeast-1.amazonaws.com",
-    "sns": "sns.ap-southeast-1.amazonaws.com",
-    "sqs": "ap-southeast-1.queue.amazonaws.com",
-    "s3": "s3-ap-southeast-1.amazonaws.com",
-    "autoscaling": "autoscaling.ap-southeast-1.amazonaws.com",
-    "elasticbeanstalk": "elasticbeanstalk.ap-southeast-1.amazonaws.com",
-    "iam": "iam.amazonaws.com",
-    "importexport": "importexport.amazonaws.com",
-    "sts": "sts.amazonaws.com",
-    "storagegateway": "storagegateway.ap-southeast-1.amazonaws.com",
-    "elasticloadbalancing": "elasticloadbalancing.ap-southeast-1.amazonaws.com",
-    "swf": "swf.ap-southeast-1.amazonaws.com",
-    "directconnect": "directconnect.ap-southeast-1.amazonaws.com",
-    "redshift": "redshift.ap-southeast-1.amazonaws.com",
-    "elastictranscoder": "elastictranscoder.ap-southeast-1.amazonaws.com",
-  },
-  "ap-southeast-2": {
-    "cloudformation": "cloudformation.ap-southeast-2.amazonaws.com",
-    "cloudfront": "cloudfront.amazonaws.com",
-    "monitoring": "monitoring.ap-southeast-2.amazonaws.com",
-    "dynamodb": "dynamodb.ap-southeast-2.amazonaws.com",
-    "ec2": "ec2.ap-southeast-2.amazonaws.com",
-    "elasticmapreduce": "ap-southeast-2.elasticmapreduce.amazonaws.com",
-    "elasticache": "elasticache.ap-southeast-2.amazonaws.com",
-    "rds": "rds.ap-southeast-2.amazonaws.com",
-    "route53": "route53.amazonaws.com",
-    "sdb": "sdb.ap-southeast-2.amazonaws.com",
-    "sns": "sns.ap-southeast-2.amazonaws.com",
-    "sqs": "ap-southeast-2.queue.amazonaws.com",
-    "s3": "s3-ap-southeast-2.amazonaws.com",
-    "autoscaling": "autoscaling.ap-southeast-2.amazonaws.com",
-    "elasticbeanstalk": "elasticbeanstalk.ap-southeast-2.amazonaws.com",
-    "iam": "iam.amazonaws.com",
-    "importexport": "importexport.amazonaws.com",
-    "sts": "sts.amazonaws.com",
-    "storagegateway": "storagegateway.ap-southeast-2.amazonaws.com",
-    "elasticloadbalancing": "elasticloadbalancing.ap-southeast-2.amazonaws.com",
-    "swf": "swf.ap-southeast-2.amazonaws.com",
-    "glacier": "glacier.ap-southeast-2.amazonaws.com",
-    "directconnect": "directconnect.ap-southeast-2.amazonaws.com",
-    "redshift": "redshift.ap-southeast-2.amazonaws.com",
-  },
-  "sa-east-1": {
-    "cloudformation": "cloudformation.sa-east-1.amazonaws.com",
-    "cloudfront": "cloudfront.amazonaws.com",
-    "monitoring": "monitoring.sa-east-1.amazonaws.com",
-    "dynamodb": "dynamodb.sa-east-1.amazonaws.com",
-    "ec2": "ec2.sa-east-1.amazonaws.com",
-    "elasticmapreduce": "sa-east-1.elasticmapreduce.amazonaws.com",
-    "elasticache": "elasticache.sa-east-1.amazonaws.com",
-    "rds": "rds.sa-east-1.amazonaws.com",
-    "route53": "route53.amazonaws.com",
-    "sdb": "sdb.sa-east-1.amazonaws.com",
-    "sns": "sns.sa-east-1.amazonaws.com",
-    "sqs": "sa-east-1.queue.amazonaws.com",
-    "s3": "s3-sa-east-1.amazonaws.com",
-    "autoscaling": "autoscaling.sa-east-1.amazonaws.com",
-    "elasticbeanstalk": "elasticbeanstalk.sa-east-1.amazonaws.com",
-    "iam": "iam.amazonaws.com",
-    "importexport": "importexport.amazonaws.com",
-    "sts": "sts.amazonaws.com",
-    "storagegateway": "storagegateway.sa-east-1.amazonaws.com",
-    "elasticloadbalancing": "elasticloadbalancing.sa-east-1.amazonaws.com",
-    "swf": "swf.sa-east-1.amazonaws.com",
-    "directconnect": "directconnect.sa-east-1.amazonaws.com",
-  },
-  "eu-west-1": {
-    "cloudformation": "cloudformation.eu-west-1.amazonaws.com",
-    "cloudfront": "cloudfront.amazonaws.com",
-    "cloudsearch": "cloudsearch.eu-west-1.amazonaws.com",
-    "monitoring": "monitoring.eu-west-1.amazonaws.com",
-    "dynamodb": "dynamodb.eu-west-1.amazonaws.com",
-    "ec2": "ec2.eu-west-1.amazonaws.com",
-    "elasticmapreduce": "eu-west-1.elasticmapreduce.amazonaws.com",
-    "elasticache": "elasticache.eu-west-1.amazonaws.com",
-    "rds": "rds.eu-west-1.amazonaws.com",
-    "route53": "route53.amazonaws.com",
-    "sdb": "sdb.eu-west-1.amazonaws.com",
-    "sns": "sns.eu-west-1.amazonaws.com",
-    "sqs": "eu-west-1.queue.amazonaws.com",
-    "s3": "s3-eu-west-1.amazonaws.com",
-    "autoscaling": "autoscaling.eu-west-1.amazonaws.com",
-    "elasticbeanstalk": "elasticbeanstalk.eu-west-1.amazonaws.com",
-    "iam": "iam.amazonaws.com",
-    "importexport": "importexport.amazonaws.com",
-    "sts": "sts.amazonaws.com",
-    "storagegateway": "storagegateway.eu-west-1.amazonaws.com",
-    "elasticloadbalancing": "elasticloadbalancing.eu-west-1.amazonaws.com",
-    "swf": "swf.eu-west-1.amazonaws.com",
-    "glacier": "glacier.eu-west-1.amazonaws.com",
-    "directconnect": "directconnect.eu-west-1.amazonaws.com",
-    "redshift": "redshift.eu-west-1.amazonaws.com",
-    "elastictranscoder": "elastictranscoder.eu-west-1.amazonaws.com",
-  },
-  "cn-north-1": {
-    "cloudformation": "cloudformation.cn-north-1.amazonaws.com.cn",
-    "monitoring": "monitoring.cn-north-1.amazonaws.com.cn",
-    "dynamodb": "dynamodb.cn-north-1.amazonaws.com.cn",
-    "ec2": "ec2.cn-north-1.amazonaws.com.cn",
-    "elasticmapreduce": "elasticmapreduce.cn-north-1.amazonaws.com.cn",
-    "elasticache": "elasticache.cn-north-1.amazonaws.com.cn",
-    "rds": "rds.cn-north-1.amazonaws.com.cn",
-    "sns": "sns.cn-north-1.amazonaws.com.cn",
-    "sqs": "cn-north-1.queue.amazonaws.com.cn",
-    "s3": "s3.cn-north-1.amazonaws.com.cn",
-    "autoscaling": "autoscaling.cn-north-1.amazonaws.com.cn",
-    "iam": "iam.cn-north-1.amazonaws.com.cn",
-    "sts": "sts.cn-north-1.amazonaws.com.cn",
-    "storagegateway": "storagegateway.cn-north-1.amazonaws.com.cn",
-    "elasticloadbalancing": "elasticloadbalancing.cn-north-1.amazonaws.com.cn",
-    "swf": "swf.cn-north-1.amazonaws.com.cn",
-    "glacier": "glacier.cn-north-1.amazonaws.com.cn",
-  },
-  "us-gov-west-1": {
-    "monitoring": "monitoring.us-gov-west-1.amazonaws.com",
-    "dynamodb": "dynamodb.us-gov-west-1.amazonaws.com",
-    "ec2": "ec2.us-gov-west-1.amazonaws.com",
-    "elasticmapreduce": "us-gov-west-1.elasticmapreduce.amazonaws.com",
-    "rds": "rds.us-gov-west-1.amazonaws.com",
-    "sns": "sns.us-gov-west-1.amazonaws.com",
-    # The endpoint has been replaced with the name in the common name.
-    "sqs": "us-gov-west-1.queue.amazonaws.com",
-    "s3": "s3-us-gov-west-1.amazonaws.com",
-    "autoscaling": "autoscaling.us-gov-west-1.amazonaws.com",
-    "iam": "iam.us-gov.amazonaws.com",
-    "sts": "sts.us-gov-west-1.amazonaws.com",
-    "elasticloadbalancing": "elasticloadbalancing.us-gov-west-1.amazonaws.com",
-    "swf": "swf.us-gov-west-1.amazonaws.com",
-  },
-  "fips-us-gov-west-1": {
-    "s3": "s3-fips-us-gov-west-1.amazonaws.com"
-  },
-  "eu-central-1": {
-      "elasticmapreduce": "elasticmapreduce.eu-central-1.amazonaws.com",
-  }
+    'ap-northeast-1': {
+        'apigateway': 'apigateway.ap-northeast-1.amazonaws.com',
+        'appstream': 'appstream.ap-northeast-1.amazonaws.com',
+        'autoscaling': 'autoscaling.ap-northeast-1.amazonaws.com',
+        'cloudformation': 'cloudformation.ap-northeast-1.amazonaws.com',
+        'cloudhsm': 'cloudhsm.ap-northeast-1.amazonaws.com',
+        'cloudsearch': 'cloudsearch.ap-northeast-1.amazonaws.com',
+        'cloudtrail': 'cloudtrail.ap-northeast-1.amazonaws.com',
+        'codedeploy': 'codedeploy.ap-northeast-1.amazonaws.com',
+        'cognito-identity': 'cognito-identity.ap-northeast-1.amazonaws.com',
+        'cognito-sync': 'cognito-sync.ap-northeast-1.amazonaws.com',
+        'config': 'config.ap-northeast-1.amazonaws.com',
+        'datapipeline': 'datapipeline.ap-northeast-1.amazonaws.com',
+        'directconnect': 'directconnect.ap-northeast-1.amazonaws.com',
+        'ds': 'ds.ap-northeast-1.amazonaws.com',
+        'dynamodb': 'dynamodb.ap-northeast-1.amazonaws.com',
+        'ec2': 'ec2.ap-northeast-1.amazonaws.com',
+        'ecs': 'ecs.ap-northeast-1.amazonaws.com',
+        'elasticache': 'elasticache.ap-northeast-1.amazonaws.com',
+        'elasticbeanstalk': 'elasticbeanstalk.ap-northeast-1.amazonaws.com',
+        'elasticloadbalancing': 'elasticloadbalancing.ap-northeast-1.amazonaws.com',
+        'elasticmapreduce': 'ap-northeast-1.elasticmapreduce.amazonaws.com',
+        'elastictranscoder': 'elastictranscoder.ap-northeast-1.amazonaws.com',
+        'glacier': 'glacier.ap-northeast-1.amazonaws.com',
+        'iot': 'iot.ap-northeast-1.amazonaws.com',
+        'kinesis': 'kinesis.ap-northeast-1.amazonaws.com',
+        'kms': 'kms.ap-northeast-1.amazonaws.com',
+        'lambda': 'lambda.ap-northeast-1.amazonaws.com',
+        'logs': 'logs.ap-northeast-1.amazonaws.com',
+        'monitoring': 'monitoring.ap-northeast-1.amazonaws.com',
+        'rds': 'rds.ap-northeast-1.amazonaws.com',
+        'redshift': 'redshift.ap-northeast-1.amazonaws.com',
+        's3': 's3-ap-northeast-1.amazonaws.com',
+        'sdb': 'sdb.ap-northeast-1.amazonaws.com',
+        'sns': 'sns.ap-northeast-1.amazonaws.com',
+        'sqs': 'ap-northeast-1.queue.amazonaws.com',
+        'storagegateway': 'storagegateway.ap-northeast-1.amazonaws.com',
+        'streams.dynamodb': 'streams.dynamodb.ap-northeast-1.amazonaws.com',
+        'sts': 'sts.amazonaws.com',
+        'swf': 'swf.ap-northeast-1.amazonaws.com',
+        'workspaces': 'workspaces.ap-northeast-1.amazonaws.com'
+    },
+    'ap-southeast-1': {
+        'autoscaling': 'autoscaling.ap-southeast-1.amazonaws.com',
+        'cloudformation': 'cloudformation.ap-southeast-1.amazonaws.com',
+        'cloudhsm': 'cloudhsm.ap-southeast-1.amazonaws.com',
+        'cloudsearch': 'cloudsearch.ap-southeast-1.amazonaws.com',
+        'cloudtrail': 'cloudtrail.ap-southeast-1.amazonaws.com',
+        'config': 'config.ap-southeast-1.amazonaws.com',
+        'directconnect': 'directconnect.ap-southeast-1.amazonaws.com',
+        'ds': 'ds.ap-southeast-1.amazonaws.com',
+        'dynamodb': 'dynamodb.ap-southeast-1.amazonaws.com',
+        'ec2': 'ec2.ap-southeast-1.amazonaws.com',
+        'elasticache': 'elasticache.ap-southeast-1.amazonaws.com',
+        'elasticbeanstalk': 'elasticbeanstalk.ap-southeast-1.amazonaws.com',
+        'elasticloadbalancing': 'elasticloadbalancing.ap-southeast-1.amazonaws.com',
+        'elasticmapreduce': 'ap-southeast-1.elasticmapreduce.amazonaws.com',
+        'elastictranscoder': 'elastictranscoder.ap-southeast-1.amazonaws.com',
+        'kinesis': 'kinesis.ap-southeast-1.amazonaws.com',
+        'kms': 'kms.ap-southeast-1.amazonaws.com',
+        'logs': 'logs.ap-southeast-1.amazonaws.com',
+        'monitoring': 'monitoring.ap-southeast-1.amazonaws.com',
+        'rds': 'rds.ap-southeast-1.amazonaws.com',
+        'redshift': 'redshift.ap-southeast-1.amazonaws.com',
+        's3': 's3-ap-southeast-1.amazonaws.com',
+        'sdb': 'sdb.ap-southeast-1.amazonaws.com',
+        'sns': 'sns.ap-southeast-1.amazonaws.com',
+        'sqs': 'ap-southeast-1.queue.amazonaws.com',
+        'storagegateway': 'storagegateway.ap-southeast-1.amazonaws.com',
+        'streams.dynamodb': 'streams.dynamodb.ap-southeast-1.amazonaws.com',
+        'sts': 'sts.amazonaws.com',
+        'swf': 'swf.ap-southeast-1.amazonaws.com',
+        'workspaces': 'workspaces.ap-southeast-1.amazonaws.com'
+    },
+    'ap-southeast-2': {
+        'autoscaling': 'autoscaling.ap-southeast-2.amazonaws.com',
+        'cloudformation': 'cloudformation.ap-southeast-2.amazonaws.com',
+        'cloudhsm': 'cloudhsm.ap-southeast-2.amazonaws.com',
+        'cloudsearch': 'cloudsearch.ap-southeast-2.amazonaws.com',
+        'cloudtrail': 'cloudtrail.ap-southeast-2.amazonaws.com',
+        'codedeploy': 'codedeploy.ap-southeast-2.amazonaws.com',
+        'config': 'config.ap-southeast-2.amazonaws.com',
+        'datapipeline': 'datapipeline.ap-southeast-2.amazonaws.com',
+        'directconnect': 'directconnect.ap-southeast-2.amazonaws.com',
+        'ds': 'ds.ap-southeast-2.amazonaws.com',
+        'dynamodb': 'dynamodb.ap-southeast-2.amazonaws.com',
+        'ec2': 'ec2.ap-southeast-2.amazonaws.com',
+        'ecs': 'ecs.ap-southeast-2.amazonaws.com',
+        'elasticache': 'elasticache.ap-southeast-2.amazonaws.com',
+        'elasticbeanstalk': 'elasticbeanstalk.ap-southeast-2.amazonaws.com',
+        'elasticloadbalancing': 'elasticloadbalancing.ap-southeast-2.amazonaws.com',
+        'elasticmapreduce': 'ap-southeast-2.elasticmapreduce.amazonaws.com',
+        'glacier': 'glacier.ap-southeast-2.amazonaws.com',
+        'kinesis': 'kinesis.ap-southeast-2.amazonaws.com',
+        'kms': 'kms.ap-southeast-2.amazonaws.com',
+        'logs': 'logs.ap-southeast-2.amazonaws.com',
+        'monitoring': 'monitoring.ap-southeast-2.amazonaws.com',
+        'rds': 'rds.ap-southeast-2.amazonaws.com',
+        'redshift': 'redshift.ap-southeast-2.amazonaws.com',
+        's3': 's3-ap-southeast-2.amazonaws.com',
+        'sdb': 'sdb.ap-southeast-2.amazonaws.com',
+        'sns': 'sns.ap-southeast-2.amazonaws.com',
+        'sqs': 'ap-southeast-2.queue.amazonaws.com',
+        'storagegateway': 'storagegateway.ap-southeast-2.amazonaws.com',
+        'streams.dynamodb': 'streams.dynamodb.ap-southeast-2.amazonaws.com',
+        'sts': 'sts.amazonaws.com',
+        'swf': 'swf.ap-southeast-2.amazonaws.com',
+        'workspaces': 'workspaces.ap-southeast-2.amazonaws.com'
+    },
+    'aws-us-gov-global': {
+        'iam': 'iam.us-gov.amazonaws.com'
+    },
+    'cn-north-1': {
+        'autoscaling': 'autoscaling.cn-north-1.amazonaws.com.cn',
+        'cloudformation': 'cloudformation.cn-north-1.amazonaws.com.cn',
+        'cloudtrail': 'cloudtrail.cn-north-1.amazonaws.com.cn',
+        'directconnect': 'directconnect.cn-north-1.amazonaws.com.cn',
+        'dynamodb': 'dynamodb.cn-north-1.amazonaws.com.cn',
+        'ec2': 'ec2.cn-north-1.amazonaws.com.cn',
+        'elasticache': 'elasticache.cn-north-1.amazonaws.com.cn',
+        'elasticbeanstalk': 'elasticbeanstalk.cn-north-1.amazonaws.com.cn',
+        'elasticloadbalancing': 'elasticloadbalancing.cn-north-1.amazonaws.com.cn',
+        'elasticmapreduce': 'elasticmapreduce.cn-north-1.amazonaws.com.cn',
+        'glacier': 'glacier.cn-north-1.amazonaws.com.cn',
+        'iam': 'iam.cn-north-1.amazonaws.com.cn',
+        'kinesis': 'kinesis.cn-north-1.amazonaws.com.cn',
+        'monitoring': 'monitoring.cn-north-1.amazonaws.com.cn',
+        'rds': 'rds.cn-north-1.amazonaws.com.cn',
+        's3': 's3.cn-north-1.amazonaws.com.cn',
+        'sns': 'sns.cn-north-1.amazonaws.com.cn',
+        'sqs': 'cn-north-1.queue.amazonaws.com.cn',
+        'storagegateway': 'storagegateway.cn-north-1.amazonaws.com.cn',
+        'streams.dynamodb': 'streams.dynamodb.cn-north-1.amazonaws.com.cn',
+        'sts': 'sts.cn-north-1.amazonaws.com.cn',
+        'swf': 'swf.cn-north-1.amazonaws.com.cn'
+    },
+    'eu-central-1': {
+        'autoscaling': 'autoscaling.eu-central-1.amazonaws.com',
+        'cloudformation': 'cloudformation.eu-central-1.amazonaws.com',
+        'cloudhsm': 'cloudhsm.eu-central-1.amazonaws.com',
+        'cloudsearch': 'cloudsearch.eu-central-1.amazonaws.com',
+        'cloudtrail': 'cloudtrail.eu-central-1.amazonaws.com',
+        'codedeploy': 'codedeploy.eu-central-1.amazonaws.com',
+        'config': 'config.eu-central-1.amazonaws.com',
+        'directconnect': 'directconnect.eu-central-1.amazonaws.com',
+        'dynamodb': 'dynamodb.eu-central-1.amazonaws.com',
+        'ec2': 'ec2.eu-central-1.amazonaws.com',
+        'elasticache': 'elasticache.eu-central-1.amazonaws.com',
+        'elasticbeanstalk': 'elasticbeanstalk.eu-central-1.amazonaws.com',
+        'elasticloadbalancing': 'elasticloadbalancing.eu-central-1.amazonaws.com',
+        'elasticmapreduce': 'elasticmapreduce.eu-central-1.amazonaws.com',
+        'glacier': 'glacier.eu-central-1.amazonaws.com',
+        'kinesis': 'kinesis.eu-central-1.amazonaws.com',
+        'kms': 'kms.eu-central-1.amazonaws.com',
+        'logs': 'logs.eu-central-1.amazonaws.com',
+        'monitoring': 'monitoring.eu-central-1.amazonaws.com',
+        'rds': 'rds.eu-central-1.amazonaws.com',
+        'redshift': 'redshift.eu-central-1.amazonaws.com',
+        's3': 's3.eu-central-1.amazonaws.com',
+        'sns': 'sns.eu-central-1.amazonaws.com',
+        'sqs': 'eu-central-1.queue.amazonaws.com',
+        'storagegateway': 'storagegateway.eu-central-1.amazonaws.com',
+        'streams.dynamodb': 'streams.dynamodb.eu-central-1.amazonaws.com',
+        'sts': 'sts.amazonaws.com',
+        'swf': 'swf.eu-central-1.amazonaws.com'
+    },
+    'eu-west-1': {
+        'apigateway': 'apigateway.eu-west-1.amazonaws.com',
+        'autoscaling': 'autoscaling.eu-west-1.amazonaws.com',
+        'cloudformation': 'cloudformation.eu-west-1.amazonaws.com',
+        'cloudhsm': 'cloudhsm.eu-west-1.amazonaws.com',
+        'cloudsearch': 'cloudsearch.eu-west-1.amazonaws.com',
+        'cloudtrail': 'cloudtrail.eu-west-1.amazonaws.com',
+        'codedeploy': 'codedeploy.eu-west-1.amazonaws.com',
+        'cognito-identity': 'cognito-identity.eu-west-1.amazonaws.com',
+        'cognito-sync': 'cognito-sync.eu-west-1.amazonaws.com',
+        'config': 'config.eu-west-1.amazonaws.com',
+        'datapipeline': 'datapipeline.eu-west-1.amazonaws.com',
+        'directconnect': 'directconnect.eu-west-1.amazonaws.com',
+        'ds': 'ds.eu-west-1.amazonaws.com',
+        'dynamodb': 'dynamodb.eu-west-1.amazonaws.com',
+        'ec2': 'ec2.eu-west-1.amazonaws.com',
+        'ecs': 'ecs.eu-west-1.amazonaws.com',
+        'elasticache': 'elasticache.eu-west-1.amazonaws.com',
+        'elasticbeanstalk': 'elasticbeanstalk.eu-west-1.amazonaws.com',
+        'elasticloadbalancing': 'elasticloadbalancing.eu-west-1.amazonaws.com',
+        'elasticmapreduce': 'eu-west-1.elasticmapreduce.amazonaws.com',
+        'elastictranscoder': 'elastictranscoder.eu-west-1.amazonaws.com',
+        'email': 'email.eu-west-1.amazonaws.com',
+        'glacier': 'glacier.eu-west-1.amazonaws.com',
+        'iot': 'iot.eu-west-1.amazonaws.com',
+        'kinesis': 'kinesis.eu-west-1.amazonaws.com',
+        'kms': 'kms.eu-west-1.amazonaws.com',
+        'lambda': 'lambda.eu-west-1.amazonaws.com',
+        'logs': 'logs.eu-west-1.amazonaws.com',
+        'machinelearning': 'machinelearning.eu-west-1.amazonaws.com',
+        'monitoring': 'monitoring.eu-west-1.amazonaws.com',
+        'rds': 'rds.eu-west-1.amazonaws.com',
+        'redshift': 'redshift.eu-west-1.amazonaws.com',
+        's3': 's3-eu-west-1.amazonaws.com',
+        'sdb': 'sdb.eu-west-1.amazonaws.com',
+        'sns': 'sns.eu-west-1.amazonaws.com',
+        'sqs': 'eu-west-1.queue.amazonaws.com',
+        'ssm': 'ssm.eu-west-1.amazonaws.com',
+        'storagegateway': 'storagegateway.eu-west-1.amazonaws.com',
+        'streams.dynamodb': 'streams.dynamodb.eu-west-1.amazonaws.com',
+        'sts': 'sts.amazonaws.com',
+        'swf': 'swf.eu-west-1.amazonaws.com',
+        'workspaces': 'workspaces.eu-west-1.amazonaws.com'
+    },
+    'fips-us-gov-west-1': {
+        's3': 's3-fips-us-gov-west-1.amazonaws.com'
+    },
+    'local': {
+        'dynamodb': 'localhost:8000'
+    },
+    's3-external-1': {
+        's3': 's3-external-1.amazonaws.com'
+    },
+    'sa-east-1': {
+        'autoscaling': 'autoscaling.sa-east-1.amazonaws.com',
+        'cloudformation': 'cloudformation.sa-east-1.amazonaws.com',
+        'cloudsearch': 'cloudsearch.sa-east-1.amazonaws.com',
+        'cloudtrail': 'cloudtrail.sa-east-1.amazonaws.com',
+        'config': 'config.sa-east-1.amazonaws.com',
+        'directconnect': 'directconnect.sa-east-1.amazonaws.com',
+        'dynamodb': 'dynamodb.sa-east-1.amazonaws.com',
+        'ec2': 'ec2.sa-east-1.amazonaws.com',
+        'elasticache': 'elasticache.sa-east-1.amazonaws.com',
+        'elasticbeanstalk': 'elasticbeanstalk.sa-east-1.amazonaws.com',
+        'elasticloadbalancing': 'elasticloadbalancing.sa-east-1.amazonaws.com',
+        'elasticmapreduce': 'sa-east-1.elasticmapreduce.amazonaws.com',
+        'kms': 'kms.sa-east-1.amazonaws.com',
+        'monitoring': 'monitoring.sa-east-1.amazonaws.com',
+        'rds': 'rds.sa-east-1.amazonaws.com',
+        's3': 's3-sa-east-1.amazonaws.com',
+        'sdb': 'sdb.sa-east-1.amazonaws.com',
+        'sns': 'sns.sa-east-1.amazonaws.com',
+        'sqs': 'sa-east-1.queue.amazonaws.com',
+        'storagegateway': 'storagegateway.sa-east-1.amazonaws.com',
+        'streams.dynamodb': 'streams.dynamodb.sa-east-1.amazonaws.com',
+        'sts': 'sts.amazonaws.com',
+        'swf': 'swf.sa-east-1.amazonaws.com'
+    },
+    'us-east-1': {
+        'apigateway': 'apigateway.us-east-1.amazonaws.com',
+        'appstream': 'appstream.us-east-1.amazonaws.com',
+        'autoscaling': 'autoscaling.us-east-1.amazonaws.com',
+        'cloudformation': 'cloudformation.us-east-1.amazonaws.com',
+        'cloudfront': 'cloudfront.amazonaws.com',
+        'cloudhsm': 'cloudhsm.us-east-1.amazonaws.com',
+        'cloudsearch': 'cloudsearch.us-east-1.amazonaws.com',
+        'cloudtrail': 'cloudtrail.us-east-1.amazonaws.com',
+        'codecommit': 'codecommit.us-east-1.amazonaws.com',
+        'codedeploy': 'codedeploy.us-east-1.amazonaws.com',
+        'codepipeline': 'codepipeline.us-east-1.amazonaws.com',
+        'cognito-identity': 'cognito-identity.us-east-1.amazonaws.com',
+        'cognito-sync': 'cognito-sync.us-east-1.amazonaws.com',
+        'config': 'config.us-east-1.amazonaws.com',
+        'datapipeline': 'datapipeline.us-east-1.amazonaws.com',
+        'directconnect': 'directconnect.us-east-1.amazonaws.com',
+        'ds': 'ds.us-east-1.amazonaws.com',
+        'dynamodb': 'dynamodb.us-east-1.amazonaws.com',
+        'ec2': 'ec2.us-east-1.amazonaws.com',
+        'ecs': 'ecs.us-east-1.amazonaws.com',
+        'elasticache': 'elasticache.us-east-1.amazonaws.com',
+        'elasticbeanstalk': 'elasticbeanstalk.us-east-1.amazonaws.com',
+        'elasticloadbalancing': 'elasticloadbalancing.us-east-1.amazonaws.com',
+        'elasticmapreduce': 'elasticmapreduce.us-east-1.amazonaws.com',
+        'elastictranscoder': 'elastictranscoder.us-east-1.amazonaws.com',
+        'email': 'email.us-east-1.amazonaws.com',
+        'glacier': 'glacier.us-east-1.amazonaws.com',
+        'iam': 'iam.amazonaws.com',
+        'importexport': 'importexport.amazonaws.com',
+        'iot': 'iot.us-east-1.amazonaws.com',
+        'kinesis': 'kinesis.us-east-1.amazonaws.com',
+        'kms': 'kms.us-east-1.amazonaws.com',
+        'lambda': 'lambda.us-east-1.amazonaws.com',
+        'logs': 'logs.us-east-1.amazonaws.com',
+        'machinelearning': 'machinelearning.us-east-1.amazonaws.com',
+        'mobileanalytics': 'mobileanalytics.us-east-1.amazonaws.com',
+        'monitoring': 'monitoring.us-east-1.amazonaws.com',
+        'opsworks': 'opsworks.us-east-1.amazonaws.com',
+        'rds': 'rds.amazonaws.com',
+        'redshift': 'redshift.us-east-1.amazonaws.com',
+        'route53': 'route53.amazonaws.com',
+        'route53domains': 'route53domains.us-east-1.amazonaws.com',
+        's3': 's3.amazonaws.com',
+        'sdb': 'sdb.amazonaws.com',
+        'sns': 'sns.us-east-1.amazonaws.com',
+        'sqs': 'queue.amazonaws.com',
+        'ssm': 'ssm.us-east-1.amazonaws.com',
+        'storagegateway': 'storagegateway.us-east-1.amazonaws.com',
+        'streams.dynamodb': 'streams.dynamodb.us-east-1.amazonaws.com',
+        'sts': 'sts.amazonaws.com',
+        'support': 'support.us-east-1.amazonaws.com',
+        'swf': 'swf.us-east-1.amazonaws.com',
+        'workspaces': 'workspaces.us-east-1.amazonaws.com',
+        'waf': 'waf.amazonaws.com'
+    },
+    'us-gov-west-1': {
+        'autoscaling': 'autoscaling.us-gov-west-1.amazonaws.com',
+        'cloudformation': 'cloudformation.us-gov-west-1.amazonaws.com',
+        'cloudhsm': 'cloudhsm.us-gov-west-1.amazonaws.com',
+        'cloudtrail': 'cloudtrail.us-gov-west-1.amazonaws.com',
+        'dynamodb': 'dynamodb.us-gov-west-1.amazonaws.com',
+        'ec2': 'ec2.us-gov-west-1.amazonaws.com',
+        'elasticache': 'elasticache.us-gov-west-1.amazonaws.com',
+        'elasticloadbalancing': 'elasticloadbalancing.us-gov-west-1.amazonaws.com',
+        'elasticmapreduce': 'elasticmapreduce.us-gov-west-1.amazonaws.com',
+        'glacier': 'glacier.us-gov-west-1.amazonaws.com',
+        'iam': 'iam.us-gov.amazonaws.com',
+        'kms': 'kms.us-gov-west-1.amazonaws.com',
+        'monitoring': 'monitoring.us-gov-west-1.amazonaws.com',
+        'rds': 'rds.us-gov-west-1.amazonaws.com',
+        'redshift': 'redshift.us-gov-west-1.amazonaws.com',
+        's3': 's3-us-gov-west-1.amazonaws.com',
+        'sns': 'sns.us-gov-west-1.amazonaws.com',
+        'sqs': 'us-gov-west-1.queue.amazonaws.com',
+        'sts': 'sts.us-gov-west-1.amazonaws.com',
+        'swf': 'swf.us-gov-west-1.amazonaws.com'
+    },
+    'us-west-1': {
+        'autoscaling': 'autoscaling.us-west-1.amazonaws.com',
+        'cloudformation': 'cloudformation.us-west-1.amazonaws.com',
+        'cloudsearch': 'cloudsearch.us-west-1.amazonaws.com',
+        'cloudtrail': 'cloudtrail.us-west-1.amazonaws.com',
+        'config': 'config.us-west-1.amazonaws.com',
+        'directconnect': 'directconnect.us-west-1.amazonaws.com',
+        'dynamodb': 'dynamodb.us-west-1.amazonaws.com',
+        'ec2': 'ec2.us-west-1.amazonaws.com',
+        'ecs': 'ecs.us-west-1.amazonaws.com',
+        'elasticache': 'elasticache.us-west-1.amazonaws.com',
+        'elasticbeanstalk': 'elasticbeanstalk.us-west-1.amazonaws.com',
+        'elasticloadbalancing': 'elasticloadbalancing.us-west-1.amazonaws.com',
+        'elasticmapreduce': 'us-west-1.elasticmapreduce.amazonaws.com',
+        'elastictranscoder': 'elastictranscoder.us-west-1.amazonaws.com',
+        'glacier': 'glacier.us-west-1.amazonaws.com',
+        'kinesis': 'kinesis.us-west-1.amazonaws.com',
+        'kms': 'kms.us-west-1.amazonaws.com',
+        'logs': 'logs.us-west-1.amazonaws.com',
+        'monitoring': 'monitoring.us-west-1.amazonaws.com',
+        'rds': 'rds.us-west-1.amazonaws.com',
+        's3': 's3-us-west-1.amazonaws.com',
+        'sdb': 'sdb.us-west-1.amazonaws.com',
+        'sns': 'sns.us-west-1.amazonaws.com',
+        'sqs': 'us-west-1.queue.amazonaws.com',
+        'storagegateway': 'storagegateway.us-west-1.amazonaws.com',
+        'streams.dynamodb': 'streams.dynamodb.us-west-1.amazonaws.com',
+        'sts': 'sts.amazonaws.com',
+        'swf': 'swf.us-west-1.amazonaws.com'
+    },
+    'us-west-2': {
+        'apigateway': 'apigateway.us-west-2.amazonaws.com',
+        'autoscaling': 'autoscaling.us-west-2.amazonaws.com',
+        'cloudformation': 'cloudformation.us-west-2.amazonaws.com',
+        'cloudhsm': 'cloudhsm.us-west-2.amazonaws.com',
+        'cloudsearch': 'cloudsearch.us-west-2.amazonaws.com',
+        'cloudtrail': 'cloudtrail.us-west-2.amazonaws.com',
+        'codedeploy': 'codedeploy.us-west-2.amazonaws.com',
+        'codepipeline': 'codepipeline.us-west-2.amazonaws.com',
+        'config': 'config.us-west-2.amazonaws.com',
+        'datapipeline': 'datapipeline.us-west-2.amazonaws.com',
+        'devicefarm': 'devicefarm.us-west-2.amazonaws.com',
+        'directconnect': 'directconnect.us-west-2.amazonaws.com',
+        'ds': 'ds.us-west-2.amazonaws.com',
+        'dynamodb': 'dynamodb.us-west-2.amazonaws.com',
+        'ec2': 'ec2.us-west-2.amazonaws.com',
+        'ecs': 'ecs.us-west-2.amazonaws.com',
+        'elasticache': 'elasticache.us-west-2.amazonaws.com',
+        'elasticbeanstalk': 'elasticbeanstalk.us-west-2.amazonaws.com',
+        'elasticfilesystem': 'elasticfilesystem.us-west-2.amazonaws.com',
+        'elasticloadbalancing': 'elasticloadbalancing.us-west-2.amazonaws.com',
+        'elasticmapreduce': 'us-west-2.elasticmapreduce.amazonaws.com',
+        'elastictranscoder': 'elastictranscoder.us-west-2.amazonaws.com',
+        'email': 'email.us-west-2.amazonaws.com',
+        'glacier': 'glacier.us-west-2.amazonaws.com',
+        'iot': 'iot.us-west-2.amazonaws.com',
+        'kinesis': 'kinesis.us-west-2.amazonaws.com',
+        'kms': 'kms.us-west-2.amazonaws.com',
+        'lambda': 'lambda.us-west-2.amazonaws.com',
+        'logs': 'logs.us-west-2.amazonaws.com',
+        'monitoring': 'monitoring.us-west-2.amazonaws.com',
+        'rds': 'rds.us-west-2.amazonaws.com',
+        'redshift': 'redshift.us-west-2.amazonaws.com',
+        's3': 's3-us-west-2.amazonaws.com',
+        'sdb': 'sdb.us-west-2.amazonaws.com',
+        'sns': 'sns.us-west-2.amazonaws.com',
+        'sqs': 'us-west-2.queue.amazonaws.com',
+        'ssm': 'ssm.us-west-2.amazonaws.com',
+        'storagegateway': 'storagegateway.us-west-2.amazonaws.com',
+        'streams.dynamodb': 'streams.dynamodb.us-west-2.amazonaws.com',
+        'sts': 'sts.amazonaws.com',
+        'swf': 'swf.us-west-2.amazonaws.com',
+        'workspaces': 'workspaces.us-west-2.amazonaws.com'
+    }
 }
 
-def test_known_endpoints():
-    # Verify the actual values from the _endpoints.json file.  While
-    # TestEndpointHeuristics verified the generic functionality given any
-    # endpoints file, this test actually verifies the _endpoints.json against a
-    # fixed list of known endpoints.  This list doesn't need to be kept 100% up
-    # to date, but serves as a basis for regressions as the endpoint heuristics
-    # logic evolves.
+
+def _get_patched_session():
     with mock.patch('os.environ') as environ:
         environ['AWS_ACCESS_KEY_ID'] = 'access_key'
         environ['AWS_SECRET_ACCESS_KEY'] = 'secret_key'
         environ['AWS_CONFIG_FILE'] = 'no-exist-foo'
         session = create_session()
-        resolver = session.get_component('endpoint_resolver')
+    return session
 
+
+def test_known_endpoints():
+    # Verify the actual values from the partition files.  While
+    # TestEndpointHeuristics verified the generic functionality given any
+    # endpoints file, this test actually verifies the partition data against a
+    # fixed list of known endpoints.  This list doesn't need to be kept 100% up
+    # to date, but serves as a basis for regressions as the endpoint data
+    # logic evolves.
+    resolver = _get_patched_session().get_component('endpoint_resolver')
     for region_name, service_dict in KNOWN_REGIONS.items():
         for service_name, endpoint in service_dict.items():
-            endpoint = 'https://%s' % endpoint
             yield (_test_single_service_region, service_name,
                    region_name, endpoint, resolver)
 
@@ -315,161 +451,292 @@ def _test_single_service_region(service_name, region_name,
                                 expected_endpoint, resolver):
     actual_endpoint = resolver.construct_endpoint(
         service_name=service_name, region_name=region_name)
-    assert_equals(actual_endpoint['uri'], expected_endpoint)
+    result = create_endpoint_url(actual_endpoint, True)
+    assert_equals(result, 'https://' + expected_endpoint)
 
 
-class TestEndpointHeuristics(unittest.TestCase):
+# Ensure that all S3 regions use s3v4 instead of v4
+def test_all_s3_endpoints_have_s3v4():
+    session = _get_patched_session()
+    partitions = session.get_available_partitions()
+    resolver = session.get_component('endpoint_resolver')
+    for partition_name in partitions:
+        for endpoint in session.get_available_regions('s3', partition_name):
+            resolved = resolver.construct_endpoint('s3', endpoint)
+            assert 's3v4' in resolved['signatureVersions']
+            assert 'v4' not in resolved['signatureVersions']
 
-    def create_endpoint_resolver(self, rules):
-        return regions.EndpointResolver(rules)
 
-    def test_matches_exact_rule(self):
-        resolver = self.create_endpoint_resolver({
-            'iam': [
-                {'uri': 'https://{service}.us-gov.amazonaws.com',
-                 'constraints': [['region', 'startsWith', 'us-gov']]}
-            ]
-        })
-        endpoint = resolver.construct_endpoint(
-            service_name='iam', region_name='us-gov-1')
-        self.assertEqual(endpoint['uri'], 'https://iam.us-gov.amazonaws.com')
-        self.assertEqual(endpoint['properties'], {})
+class TestEndpointResolverChain(unittest.TestCase):
+    def test_list_endpoints_checks_one_after_another(self):
+        mock_resolver_1 = mock.Mock()
+        mock_resolver_1.list_endpoint_names.return_value = []
+        mock_resolver_2 = mock.Mock()
+        mock_resolver_2.list_endpoint_names.return_value = ['foo', 'bar']
+        mock_resolver_3 = mock.Mock()
+        mock_resolver_3.list_endpoint_names.return_value = []
+        chain = regions.EndpointResolverChain([mock_resolver_1,
+                                               mock_resolver_2,
+                                               mock_resolver_3])
+        self.assertEqual(['foo', 'bar'], chain.list_endpoint_names('a'))
+        # The first in the chain is empty, so it goes to the next.
+        mock_resolver_1.list_endpoint_names.assert_called_once_with(
+            'a', 'aws', False)
+        # The next in the chain returns, so we yield the results.
+        mock_resolver_2.list_endpoint_names.assert_called_once_with(
+            'a', 'aws', False)
+        # The last in the chain should not be called.
+        self.assertEquals(0, mock_resolver_3.call_count)
 
-    def test_no_match_throws_exception(self):
-        resolver = self.create_endpoint_resolver({
-            'iam': [
-                {'uri': 'https://{service}.us-gov.amazonaws.com',
-                 'constraints': [['region', 'startsWith', 'us-gov']]}
-            ]
-        })
-        with self.assertRaises(UnknownEndpointError):
-            resolver.construct_endpoint(service_name='iam',
-                                        region_name='not-us-gov-2')
+    def test_list_endpoints_returns_empty_list_when_none_found(self):
+        mock_resolver_1 = mock.Mock()
+        mock_resolver_1.list_endpoint_names.return_value = []
+        chain = regions.EndpointResolverChain([mock_resolver_1])
+        self.assertEqual([], chain.list_endpoint_names('a'))
+        mock_resolver_1.list_endpoint_names.assert_called_once_with(
+            'a', 'aws', False)
 
-    def test_no_region_throws_specific_error(self):
-        resolver = self.create_endpoint_resolver({
-            'iam': [
-                {'uri': 'https://{service}.us-gov.amazonaws.com',
-                 'constraints': [['region', 'startsWith', 'us-gov']]}
-            ]
-        })
-        with self.assertRaises(NoRegionError):
-            resolver.construct_endpoint(service_name='iam',
-                                        region_name=None)
+    def test_constructs_endpoints_by_checking_each_partition(self):
+        expected = {
+            'hostname': 'foo.bar.com',
+            'partition': '2'
+        }
+        mock_resolver_1 = mock.Mock()
+        mock_resolver_1.construct_endpoint.return_value = None
+        mock_resolver_2 = mock.Mock()
+        mock_resolver_2.construct_endpoint.return_value = expected
+        mock_resolver_3 = mock.Mock()
+        mock_resolver_3.construct_endpoint.return_value = None
+        chain = regions.EndpointResolverChain([mock_resolver_1,
+                                               mock_resolver_2,
+                                               mock_resolver_3])
+        self.assertEqual(expected, chain.construct_endpoint('a', 'b'))
+        mock_resolver_1.construct_endpoint.assert_called_once_with('a', 'b')
+        mock_resolver_2.construct_endpoint.assert_called_once_with('a', 'b')
+        self.assertEquals(0, mock_resolver_3.construct_endpoint.call_count)
 
-    def test_use_default_section_if_no_service_name(self):
-        resolver = self.create_endpoint_resolver({
-            '_default': [
-                {'uri': 'https://{service}.us-gov.amazonaws.com',
-                 'constraints': [['region', 'startsWith', 'us-gov']]}
-            ]
-        })
-        self.assertEqual(
-            resolver.construct_endpoint(service_name='iam',
-                                        region_name='us-gov-1')['uri'],
-            'https://iam.us-gov.amazonaws.com')
+    def test_forwards_partition_only_to_each_in_chain(self):
+        mock_resolver_1 = mock.Mock()
+        mock_resolver_1.construct_endpoint.return_value = None
+        mock_resolver_2 = mock.Mock()
+        mock_resolver_2.construct_endpoint.return_value = None
+        chain = regions.EndpointResolverChain([mock_resolver_1,
+                                               mock_resolver_2])
+        chain.construct_endpoint('a', 'b')
+        mock_resolver_1.construct_endpoint.assert_called_once_with('a', 'b')
+        mock_resolver_2.construct_endpoint.assert_called_once_with('a', 'b')
 
-    def test_use_default_section_if_no_service_rule_matches(self):
-        resolver = self.create_endpoint_resolver({
-            '_default': [
-                {"uri":"{scheme}://{service}.{region}.amazonaws.com",
-                 "constraints": [
-                    ["region", "notEquals", None]
-                ]}
-            ],
-            'iam': [
-                {'uri': 'https://{service}.us-gov.amazonaws.com',
-                 'constraints': [['region', 'startsWith', 'us-gov']]}
-            ]
-        })
-        self.assertEqual(
-            resolver.construct_endpoint(service_name='iam',
-                                        region_name='other-region')['uri'],
-            'https://iam.other-region.amazonaws.com')
+    def test_returns_none_when_not_found(self):
+        mock_resolver_1 = mock.Mock()
+        mock_resolver_1.construct_endpoint.return_value = None
+        chain = regions.EndpointResolverChain([mock_resolver_1])
+        self.assertIsNone(chain.construct_endpoint('a', 'b'))
 
-    def test_matches_last_rule(self):
-        resolver = self.create_endpoint_resolver({
-            "s3":[
-                {
-                    "uri":"{scheme}://s3.amazonaws.com",
-                    "constraints":[
-                        ["region", "oneOf", ["us-east-1", None]]
-                    ]
-                },
-                {
-                    "uri":"{scheme}://{service}-{region}.amazonaws.com.cn",
-                    "constraints":[
-                        ["region", "startsWith", "cn-"]
-                    ]
-                },
-                {
-                    "uri":"{scheme}://{service}-{region}.amazonaws.com",
-                    "constraints": [
-                        ["region", "notEquals", None]
-                    ]
+
+class TestLazyPartitionEndpointResolver(unittest.TestCase):
+    def setUp(self):
+        self.filename = 'partitions/dummy'
+        self.partition_data = {
+            'partition': 'foo',
+            'dnsSuffix': 'amazonaws.foo',
+            'defaults': {
+                'hostname': '{service}.{region}.{dnsSuffix}'
+            },
+            'regions': {
+                'us-east-1': {}
+            },
+            'services': {
+                'ec2': {
+                    'endpoints': {'us-east-1': {}}
                 }
-            ],
-        })
-        self.assertEqual(
-            resolver.construct_endpoint(service_name='s3',
-                                        region_name='us-east-1')['uri'],
-            'https://s3.amazonaws.com')
-        self.assertEqual(
-            resolver.construct_endpoint(service_name='s3',
-                                        region_name=None)['uri'],
-            'https://s3.amazonaws.com')
-        self.assertEqual(
-            resolver.construct_endpoint(service_name='s3',
-                                        region_name='us-west-2')['uri'],
-            'https://s3-us-west-2.amazonaws.com')
-        self.assertEqual(
-            resolver.construct_endpoint(service_name='s3',
-                                        region_name='cn-north-1')['uri'],
-            'https://s3-cn-north-1.amazonaws.com.cn')
+            }
+        }
+        self.loader = mock.Mock()
+        self.loader.load_partition_data.return_value = self.partition_data
 
-    def test_not_starts_with(self):
-        resolver = self.create_endpoint_resolver({
-            'iam': [
-                {'uri': 'https://route53.amazonaws.com',
-                 'constraints': [['region', 'notStartsWith', 'cn-']]}
-            ]
-        })
-        self.assertEqual(
-            resolver.construct_endpoint(service_name='iam',
-                                        region_name='us-east-1')['uri'],
-            'https://route53.amazonaws.com')
+    def test_lazily_loads_and_proxies_list_endpoint_names(self):
+        lazy = regions.LazyPartitionEndpointResolver(
+            self.loader, self.filename)
+        self.assertEquals(0, self.loader.load_partition_data.call_count)
+        result = lazy.list_endpoint_names('ec2', 'foo')
+        self.assertEquals(['us-east-1'], result)
+        self.loader.load_partition_data.assert_called_once_with(self.filename)
 
-    def test_can_add_rule(self):
-        # This shows how a customer could add their own rules.
-        resolver = self.create_endpoint_resolver({
-            'iam': [
-                {'uri': 'https://{service}.us-gov.amazonaws.com',
-                 'constraints': [['region', 'startsWith', 'us-gov']]}
-            ]
-        })
-        resolver.get_rules_for_service('iam').insert(
-            0, {'uri': 'https://my.custom.location',
-                'constraints': [['region', 'equals', 'custom-region']]})
-        self.assertEqual(
-            resolver.construct_endpoint(service_name='iam',
-                                        region_name='custom-region')['uri'],
-            'https://my.custom.location')
+    def test_lazily_loads_and_proxies_partition_data(self):
+        lazy = regions.LazyPartitionEndpointResolver(
+            self.loader, self.filename)
+        self.assertEquals(0, self.loader.load_partition_data.call_count)
+        data = {
+            'partition': 'foo',
+            'hostname': 'ec2.us-east-1.amazonaws.foo',
+            'endpointName': 'us-east-1'
+        }
+        self.assertEquals(data, lazy.construct_endpoint('ec2', 'us-east-1'))
+        self.loader.load_partition_data.assert_called_once_with(self.filename)
 
-    def test_property_bags_returned(self):
-        resolver = self.create_endpoint_resolver({
-            'iam': [
-                {'uri': 'https://{service}.us-gov.amazonaws.com',
-                 'constraints': [['region', 'startsWith', 'us-gov']],
-                 'properties': {
-                     'signatureVersion': 'v4',
-                     'credentialScope': {
-                         'region': 'us-east-1'
-                     }
-                 }}
-            ]
-        })
-        endpoint = resolver.construct_endpoint(
-            service_name='iam', region_name='us-gov-1')
-        self.assertEqual(endpoint['properties'],
-                         {'credentialScope': {'region': 'us-east-1'},
-                          'signatureVersion': 'v4'})
+
+class TestPartitionEndpointResolver(unittest.TestCase):
+    def _template(self):
+        return {
+            'partition': 'aws',
+            'dnsSuffix': 'amazonaws.com',
+            'regionRegex': '^(us|eu)\-\w+$',
+            'defaults': {
+                'hostname': '{service}.{region}.{dnsSuffix}'
+            },
+            'regions': {
+                'us-foo': {'regionName': 'a'},
+                'us-bar': {'regionName': 'b'},
+                'eu-baz': {'regionName': 'd'}
+            },
+            'services': {
+                'ec2': {
+                    'endpoints': {
+                        'us-foo': {},
+                        'us-bar': {},
+                        'eu-baz': {},
+                        'd': {}
+                    }
+                },
+                's3': {
+                    'defaults': {
+                        'sslCommonName': '{service}.{region}.{dnsSuffix}'
+                    },
+                    'endpoints': {
+                        'us-foo': {
+                            'sslCommonName': '{region}.{service}.{dnsSuffix}'
+                        },
+                        'us-bar': {},
+                        'eu-baz': {'hostname': 'foo'}
+                    }
+                },
+                'not-regionalized': {
+                    'isRegionalized': False,
+                    'partitionEndpoint': 'aws',
+                    'endpoints': {
+                        'aws': {'hostname': 'not-regionalized'},
+                        'us-foo': {},
+                        'eu-baz': {}
+                    }
+                },
+                'non-partition': {
+                    'partitionEndpoint': 'aws',
+                    'endpoints': {
+                        'aws': {'hostname': 'host'},
+                        'us-foo': {}
+                    }
+                },
+                'merge': {
+                    'defaults': {
+                        'signatureVersions': ['v2'],
+                        'protocols': ['http']
+                    },
+                    'endpoints': {
+                        'us-foo': {'signatureVersions': ['v4']},
+                        'us-bar': {'protocols': ['https']}
+                    }
+                }
+            }
+        }
+
+    def test_ensures_region_is_not_none(self):
+        with self.assertRaises(NoRegionError):
+            resolver = regions.PartitionEndpointResolver(self._template())
+            resolver.construct_endpoint('foo', None)
+
+    def test_ensures_required_keys_present(self):
+        with self.assertRaises(ValueError):
+            regions.PartitionEndpointResolver({})
+
+    def test_returns_empty_list_when_listing_for_different_partition(self):
+        resolver = regions.PartitionEndpointResolver(self._template())
+        self.assertEquals([], resolver.list_endpoint_names('ec2', 'bar'))
+
+    def test_returns_empty_list_when_no_service_found(self):
+        resolver = regions.PartitionEndpointResolver(self._template())
+        self.assertEquals([], resolver.list_endpoint_names('what?'))
+
+    def test_list_endpoint_names(self):
+        resolver = regions.PartitionEndpointResolver(self._template())
+        result = resolver.list_endpoint_names('ec2', allow_non_regional=True)
+        self.assertEquals(['d', 'eu-baz', 'us-bar', 'us-foo'], sorted(result))
+
+    def test_list_regional_endpoints_only(self):
+        resolver = regions.PartitionEndpointResolver(self._template())
+        result = resolver.list_endpoint_names('ec2', allow_non_regional=False)
+        self.assertEquals(['eu-baz', 'us-bar', 'us-foo'], sorted(result))
+
+    def test_returns_none_when_no_match(self):
+        resolver = regions.PartitionEndpointResolver(self._template())
+        self.assertIsNone(resolver.construct_endpoint('foo', 'baz'))
+
+    def test_constructs_regionalized_endpoints_for_exact_matches(self):
+        resolver = regions.PartitionEndpointResolver(self._template())
+        result = resolver.construct_endpoint('not-regionalized', 'eu-baz')
+        self.assertEquals('not-regionalized.eu-baz.amazonaws.com',
+                          result['hostname'])
+        self.assertEquals('aws', result['partition'])
+        self.assertEquals('eu-baz', result['endpointName'])
+
+    def test_constructs_partition_endpoints_for_real_partition_region(self):
+        resolver = regions.PartitionEndpointResolver(self._template())
+        result = resolver.construct_endpoint('not-regionalized', 'us-bar')
+        self.assertEquals('not-regionalized', result['hostname'])
+        self.assertEquals('aws', result['partition'])
+        self.assertEquals('aws', result['endpointName'])
+
+    def test_constructs_partition_endpoints_for_regex_match(self):
+        resolver = regions.PartitionEndpointResolver(self._template())
+        result = resolver.construct_endpoint('not-regionalized', 'us-abc')
+        self.assertEquals('not-regionalized', result['hostname'])
+
+    def test_constructs_endpoints_for_regex_match(self):
+        resolver = regions.PartitionEndpointResolver(self._template())
+        result = resolver.construct_endpoint('s3', 'us-abc')
+        self.assertEquals('s3.us-abc.amazonaws.com', result['hostname'])
+
+    def test_constructs_endpoints_for_unknown_service_but_known_region(self):
+        resolver = regions.PartitionEndpointResolver(self._template())
+        result = resolver.construct_endpoint('unknown', 'us-foo')
+        self.assertEquals('unknown.us-foo.amazonaws.com', result['hostname'])
+
+    def test_merges_service_keys(self):
+        resolver = regions.PartitionEndpointResolver(self._template())
+        us_foo = resolver.construct_endpoint('merge', 'us-foo')
+        us_bar = resolver.construct_endpoint('merge', 'us-bar')
+        self.assertEquals(['http'], us_foo['protocols'])
+        self.assertEquals(['v4'], us_foo['signatureVersions'])
+        self.assertEquals(['https'], us_bar['protocols'])
+        self.assertEquals(['v2'], us_bar['signatureVersions'])
+
+    def test_gives_hostname_and_common_name_unaltered(self):
+        resolver = regions.PartitionEndpointResolver(self._template())
+        result = resolver.construct_endpoint('s3', 'eu-baz')
+        self.assertEquals('s3.eu-baz.amazonaws.com', result['sslCommonName'])
+        self.assertEquals('foo', result['hostname'])
+
+
+class TestS3CompatEndpointResolver(unittest.TestCase):
+    def test_gives_default_region_when_not_set(self):
+        resolver = mock.Mock()
+        resolver.construct_endpoint.return_value = {'endpointName': 'abc'}
+        s3_resolver = regions.S3CompatResolver(resolver)
+        result = s3_resolver.construct_endpoint('s3', None)
+        self.assertEquals({'endpointName': 'abc'}, result)
+        resolver.construct_endpoint.assert_called_with('s3', 'us-east-1')
+
+    def test_does_not_duplicate_s3v4_signer(self):
+        resolver = mock.Mock()
+        resolver.construct_endpoint.return_value = {
+            'signatureVersions': ['v4', 's3v4']
+        }
+        s3_resolver = regions.S3CompatResolver(resolver)
+        result = s3_resolver.construct_endpoint('s3', None)
+        self.assertEquals(['v4', 's3v4'], result['signatureVersions'])
+
+    def test_proxies_list_call_to_delegate(self):
+        resolver = mock.Mock()
+        resolver.list_endpoint_names.return_value = []
+        s3_resolver = regions.S3CompatResolver(resolver)
+        self.assertEquals([], s3_resolver.list_endpoint_names('s3'))
+        resolver.list_endpoint_names.assert_called_with('s3', 'aws', False)

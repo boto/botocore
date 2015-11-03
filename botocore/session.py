@@ -176,7 +176,9 @@ class Session(object):
     def _register_endpoint_resolver(self):
         self._components.lazy_register_component(
             'endpoint_resolver',
-            lambda:  regions.EndpointResolver(self.get_data('_endpoints')))
+            lambda: regions.create_resolver_from_files(
+                data_loader=self.get_component('data_loader'),
+                partitions=self.get_available_partitions()))
 
     def _register_response_parser_factory(self):
         self._components.register_component('response_parser_factory',
@@ -795,6 +797,35 @@ class Session(object):
             credentials, scoped_config=self.get_scoped_config(),
             client_config=config, api_version=api_version)
         return client
+
+    def get_available_partitions(self):
+        """Lists the available partitions found on disk
+
+        :rtype: list
+        :return: Returns a list of partition names (e.g., ["aws", "aws-cn"])
+        """
+        return self.get_component('data_loader').list_available_partitions()
+
+    def get_available_regions(self, service_name, partition_name='aws',
+                              allow_non_regional=False):
+        """Lists the region and endpoint names of a particular partition.
+
+        :type service_name: string
+        :param service_name: Name of a service to list endpoint for (e.g., s3)
+
+        :type partition_name: string
+        :param partition_name: Name of the partition to limit endpoints to.
+            (e.g., aws for the public AWS endpoints, aws-cn for AWS China
+            endpoints, aws-us-gov for AWS GovCloud (US) Endpoints, etc.
+
+        :type allow_non_regional: bool
+        :param allow_non_regional: Set to True to include endpoints that are
+             not regional endpoints (e.g., s3-external-1,
+             fips-us-gov-west-1, etc).
+        :return: Returns a list of endpoint names (e.g., ["us-east-1"]).
+        """
+        return self.get_component('endpoint_resolver').list_endpoint_names(
+            service_name, partition_name, allow_non_regional)
 
 
 class ComponentLocator(object):

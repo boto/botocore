@@ -23,7 +23,7 @@ from botocore.vendored.requests.exceptions import ConnectionError
 from botocore.vendored import six
 
 from botocore.awsrequest import create_request_object
-from botocore.exceptions import BaseEndpointResolverError
+from botocore.exceptions import UnknownEndpointError
 from botocore.exceptions import EndpointConnectionError
 from botocore.exceptions import ConnectionClosedError
 from botocore.compat import filter_ssl_warnings
@@ -36,6 +36,20 @@ from botocore import parsers
 logger = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 60
 filter_ssl_warnings()
+
+
+def create_endpoint_url(endpoint_config, is_secure):
+    """Creates an endpoint URL based on an endpoint config
+
+    In order to work around SSL issues in Python 2.6, we use the
+    sslCommonName attribute as the host if it is present.
+    """
+    endpoint_url = 'https://' if is_secure else 'http://'
+    if 'sslCommonName' in endpoint_config:
+        endpoint_url += endpoint_config['sslCommonName']
+    else:
+        endpoint_url += endpoint_config['hostname']
+    return endpoint_url
 
 
 def convert_to_response_dict(http_response, operation_model):
@@ -234,40 +248,38 @@ class EndpointCreator(object):
                         response_parser_factory=None, timeout=DEFAULT_TIMEOUT):
         if region_name is None:
             region_name = self._configured_region
-        # Use the endpoint resolver heuristics to build the endpoint url.
-        scheme = 'https' if is_secure else 'http'
-        try:
-            endpoint = self._endpoint_resolver.construct_endpoint(
-                service_model.endpoint_prefix,
-                region_name, scheme=scheme)
-        except BaseEndpointResolverError:
-            if endpoint_url is not None:
-                # If the user provides an endpoint_url, it's ok
-                # if the heuristics didn't find anything.  We use the
-                # user provided endpoint_url.
-                endpoint = {'uri': endpoint_url, 'properties': {}}
-            else:
-                raise
-
         if endpoint_url is not None:
-            # If the user provides an endpoint url, we'll use that
-            # instead of what the heuristics rule gives us.
+            # If the user provides an endpoint url, we'll it as-is.
             final_endpoint_url = endpoint_url
         else:
-            final_endpoint_url = endpoint['uri']
+            # Construct a URI from the scheme and hostname. This will
+            # only resolve and endpoint. It won't override signature
+            # versions, signing names, etc. That logic is all in
+            # ClientCreator. Note that ClientCreator will inject an
+            # endpoint_url into create_endpoint(), so this branch is
+            # typically not invoked unless used directly.
+            final_endpoint_url = self._get_endpoint_from_resolver(
+                service_model, region_name, is_secure)
         if not is_valid_endpoint_url(final_endpoint_url):
             raise ValueError("Invalid endpoint: %s" % final_endpoint_url)
-
-        proxies = self._get_proxies(final_endpoint_url)
-        verify_value = self._get_verify_value(verify)
         return Endpoint(
             final_endpoint_url,
             endpoint_prefix=service_model.endpoint_prefix,
             event_emitter=self._event_emitter,
-            proxies=proxies,
-            verify=verify_value,
+            proxies=self._get_proxies(final_endpoint_url),
+            verify=self._get_verify_value(verify),
             timeout=timeout,
             response_parser_factory=response_parser_factory)
+
+    def _get_endpoint_from_resolver(self, service_model, region_name,
+                                    is_secure):
+        service_name = service_model.endpoint_prefix
+        endpoint = self._endpoint_resolver.construct_endpoint(
+            service_name, region_name)
+        if endpoint:
+            return create_endpoint_url(endpoint, is_secure)
+        raise UnknownEndpointError(
+            service_name=service_name, region_name=region_name)
 
     def _get_proxies(self, url):
         # We could also support getting proxies from a config file,

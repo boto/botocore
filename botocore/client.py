@@ -19,9 +19,11 @@ from botocore import waiter, xform_name
 from botocore.awsrequest import prepare_request_dict
 from botocore.compat import OrderedDict
 from botocore.endpoint import EndpointCreator, DEFAULT_TIMEOUT
+from botocore.endpoint import create_endpoint_url
 from botocore.exceptions import ClientError, DataNotFoundError
 from botocore.exceptions import OperationNotPageableError
 from botocore.exceptions import InvalidS3AddressingStyleError
+from botocore.exceptions import NoRegionError
 from botocore.hooks import first_non_none_response
 from botocore.model import ServiceModel
 from botocore.paginate import Paginator
@@ -106,22 +108,25 @@ class ClientCreator(object):
         self._event_emitter.register('needs-retry.%s' % endpoint_prefix,
                                      handler, unique_id=unique_id)
 
-    def _get_signature_version_and_region(self, service_model, region_name,
-                                          is_secure, scoped_config,
-                                          endpoint_url):
-        # Get endpoint heuristic overrides before creating the
-        # request signer.
-        resolver = self._endpoint_resolver
-        scheme = 'https' if is_secure else 'http'
-        endpoint_config = resolver.construct_endpoint(
-            service_model.endpoint_prefix, region_name, scheme=scheme)
+    def _get_preferred_signature_version(self, versions):
+        # Use signers in the following preference order.
+        preference_order = ['s3', 's3v4', 'v4', 'v2']
+        for preference in preference_order:
+            if preference in versions:
+                return preference
+        # Just use the first one if a preferred signer was not found.
+        return versions[0]
 
-        # Signature version override from endpoint.
+    def _determine_signature_version(self, service_model, scoped_config,
+                                     client_config, endpoint_config):
+        # Determine the signature version based on the user provided values,
+        # the scoped config, the client config, and the resolved endpoint data
+        # We'll use the signature version from the model definition by default.
         signature_version = service_model.signature_version
-        if 'signatureVersion' in endpoint_config.get('properties', {}):
-            signature_version = endpoint_config[
-                'properties']['signatureVersion']
-
+        # Each endpoint can override the required signature versions.
+        if endpoint_config and 'signatureVersions' in endpoint_config:
+            signature_version = self._get_preferred_signature_version(
+                endpoint_config['signatureVersions'])
         # Signature overrides from a configuration file.
         if scoped_config is not None:
             service_config = scoped_config.get(service_model.endpoint_prefix)
@@ -133,39 +138,11 @@ class ClientCreator(object):
                         "to version %s based on config file override.",
                         service_model.endpoint_prefix, override)
                     signature_version = override
-
-        # Determine the region name as well
-        region_name = self._determine_region_name(
-            endpoint_config, region_name, endpoint_url)
-
-        return signature_version, region_name
-
-    def _determine_region_name(self, endpoint_config, region_name=None,
-                               endpoint_url=None):
-        # This is a helper function to determine region name to use.
-        # It will take into account whether the user passes in a region
-        # name, whether there is a rule in the endpoint JSON, or
-        # an endpoint url was provided.
-
-        # We only support the credentialScope.region in the properties
-        # bag right now, so if it's available, it will override the
-        # provided region name.
-        region_name_override = endpoint_config['properties'].get(
-            'credentialScope', {}).get('region')
-
-        if endpoint_url is not None:
-            # If an endpoint_url is provided, do not use region name
-            # override if a region was provided by the user.
-            if region_name is not None:
-                region_name_override = None
-
-        if region_name_override is not None:
-            # Letting the heuristics rule override the region_name
-            # allows for having a default region of something like us-west-2
-            # for IAM, but we still will know to use us-east-1 for sigv4.
-            region_name = region_name_override
-
-        return region_name
+        # Override the signature if the user specifies it in the client
+        # config.
+        if client_config and client_config.signature_version is not None:
+            signature_version = client_config.signature_version
+        return signature_version
 
     def _inject_s3_configuration(self, config_kwargs, scoped_config,
                                  client_config):
@@ -199,37 +176,59 @@ class ClientCreator(object):
         elif scoped_config is not None:
             return scoped_config.get('ca_bundle')
 
-    def _get_client_args(self, service_model, region_name, is_secure,
-                         endpoint_url, verify, credentials,
-                         scoped_config, client_config):
-
-        protocol = service_model.metadata['protocol']
-        serializer = botocore.serialize.create_serializer(
-            protocol, include_validation=True)
-
-        event_emitter = copy.copy(self._event_emitter)
-
-        response_parser = botocore.parsers.create_parser(protocol)
-
-        verify = self._resolve_verify_value(verify, scoped_config)
+    def _determine_region_name(self, region_name, client_config):
         # Determine what region the user provided either via the
-        # region_name argument or the client_config.
+        # region_name argument or the client_config. Note that
+        # endpoint resolvers are responsible for enforcing whether
+        # or not a region is required.
         if region_name is None:
             if client_config and client_config.region_name is not None:
                 region_name = client_config.region_name
+        return region_name
 
-        # Based on what the user provided use the scoped config file
-        # to determine if the region is going to change and what
-        # signature should be used.
-        signature_version, region_name = \
-            self._get_signature_version_and_region(
-                service_model, region_name, is_secure, scoped_config,
-                endpoint_url)
+    def _resolve_endpoint(self, region_name, endpoint_config, endpoint_url,
+                          is_secure):
+        # The signing region will be the same as the region unless it is
+        # overridden in the endpoint's credentialScope metadata.
+        signing_region = region_name
+        if endpoint_config:
+            # If no region was provided (because we were able to extract a
+            # default region from the provider) or if the endpoint_url was not
+            # provided, then set the region and signing region. If the
+            # endpoint_url was provided, and a region was provided, then do
+            # not override the region name or signing region.
+            if endpoint_url is None or region_name is None:
+                region_name = endpoint_config['endpointName']
+                signing_region = region_name
+            if endpoint_url is None:
+                endpoint_url = create_endpoint_url(endpoint_config, is_secure)
+                # credentialScope.region in the endpoint_config will override
+                # the provided region name when signing requests.
+                if 'credentialScope' in endpoint_config:
+                    credential_scope = endpoint_config['credentialScope']
+                    if 'region' in credential_scope:
+                        signing_region = credential_scope['region']
+        if not region_name:
+            raise NoRegionError()
+        return endpoint_url, region_name, signing_region
 
-        # Override the signature if the user specifies it in the client
-        # config.
-        if client_config and client_config.signature_version is not None:
-            signature_version = client_config.signature_version
+    def _get_client_args(self, service_model, region_name, is_secure,
+                         endpoint_url, verify, credentials,
+                         scoped_config, client_config):
+        protocol = service_model.metadata['protocol']
+        serializer = botocore.serialize.create_serializer(
+            protocol, include_validation=True)
+        event_emitter = copy.copy(self._event_emitter)
+        response_parser = botocore.parsers.create_parser(protocol)
+        verify = self._resolve_verify_value(verify, scoped_config)
+        region_name = self._determine_region_name(region_name, client_config)
+        resolver = self._endpoint_resolver
+        endpoint_config = resolver.construct_endpoint(
+            service_model.endpoint_prefix, region_name)
+        endpoint_url, region_name, signing_region = self._resolve_endpoint(
+            region_name, endpoint_config, endpoint_url, is_secure)
+        signature_version = self._determine_signature_version(
+            service_model, scoped_config, client_config, endpoint_config)
 
         # Override the user agent if specified in the client config.
         user_agent = self._user_agent
@@ -239,7 +238,7 @@ class ClientCreator(object):
             if client_config.user_agent_extra is not None:
                 user_agent += ' %s' % client_config.user_agent_extra
 
-        signer = RequestSigner(service_model.service_name, region_name,
+        signer = RequestSigner(service_model.service_name, signing_region,
                                service_model.signing_name,
                                signature_version, credentials,
                                event_emitter)
