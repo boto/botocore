@@ -170,21 +170,37 @@ def sse_md5(params, **kwargs):
     encryption key. This handler does both if the MD5 has not been set by
     the caller.
     """
-    if not _needs_s3_sse_customization(params):
+    _sse_md5(params, 'SSECustomer')
+
+
+def copy_source_sse_md5(params, **kwargs):
+    """
+    S3 server-side encryption requires the encryption key to be sent to the
+    server base64 encoded, as well as a base64-encoded MD5 hash of the
+    encryption key. This handler does both if the MD5 has not been set by
+    the caller specifically if the parameter is for the copy-source sse-c key.
+    """
+    _sse_md5(params, 'CopySourceSSECustomer')
+
+
+def _sse_md5(params, sse_member_prefix='SSECustomer'):
+    if not _needs_s3_sse_customization(params, sse_member_prefix):
         return
-    key_as_bytes = params['SSECustomerKey']
+    sse_key_member = sse_member_prefix + 'Key'
+    sse_md5_member = sse_member_prefix + 'KeyMD5'
+    key_as_bytes = params[sse_key_member]
     if isinstance(key_as_bytes, six.text_type):
         key_as_bytes = key_as_bytes.encode('utf-8')
     key_md5_str = base64.b64encode(
         hashlib.md5(key_as_bytes).digest()).decode('utf-8')
     key_b64_encoded = base64.b64encode(key_as_bytes).decode('utf-8')
-    params['SSECustomerKey'] = key_b64_encoded
-    params['SSECustomerKeyMD5'] = key_md5_str
+    params[sse_key_member] = key_b64_encoded
+    params[sse_md5_member] = key_md5_str
 
 
-def _needs_s3_sse_customization(params):
-    return (params.get('SSECustomerKey') is not None and
-            'SSECustomerKeyMD5' not in params)
+def _needs_s3_sse_customization(params, sse_member_prefix='SSECustomer'):
+    return (params.get(sse_member_prefix+'Key') is not None and
+            sse_member_prefix+'KeyMD5' not in params)
 
 
 def register_retries_for_service(service_data, session,
@@ -545,9 +561,11 @@ BUILTIN_HANDLERS = [
     ('before-parameter-build.s3.GetObject', sse_md5),
     ('before-parameter-build.s3.PutObject', sse_md5),
     ('before-parameter-build.s3.CopyObject', sse_md5),
+    ('before-parameter-build.s3.CopyObject', copy_source_sse_md5),
     ('before-parameter-build.s3.CreateMultipartUpload', sse_md5),
     ('before-parameter-build.s3.UploadPart', sse_md5),
     ('before-parameter-build.s3.UploadPartCopy', sse_md5),
+    ('before-parameter-build.s3.UploadPartCopy', copy_source_sse_md5),
     ('before-parameter-build.ec2.RunInstances', base64_encode_user_data),
     ('before-parameter-build.autoscaling.CreateLaunchConfiguration',
      base64_encode_user_data),
@@ -576,6 +594,10 @@ BUILTIN_HANDLERS = [
     # S3 SSE documentation modifications
     ('docs.*.s3.*.complete-section',
      AutoPopulatedParam('SSECustomerKeyMD5').document_auto_populated_param),
+    # S3 SSE Copy Source documentation modifications
+    ('docs.*.s3.*.complete-section',
+     AutoPopulatedParam(
+        'CopySourceSSECustomerKeyMD5').document_auto_populated_param),
     # The following S3 operations cannot actually accept a ContentMD5
     ('docs.*.s3.*.complete-section',
      HideParamFromOperations(
