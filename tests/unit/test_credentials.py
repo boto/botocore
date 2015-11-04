@@ -55,8 +55,9 @@ def path(filename):
 
 class TestCredentials(BaseEnvVar):
     def test_detect_nonascii_character(self):
-        with self.assertRaises(ValueError):
-            credentials.Credentials('foo\xe2\x80\x99', 'bar')
+        c = credentials.Credentials('foo\xe2\x80\x99', 'bar\xe2\x80\x99')
+        self.assertTrue(isinstance(c.access_key, type(u'u')))
+        self.assertTrue(isinstance(c.secret_key, type(u'u')))
 
 
 class TestRefreshableCredentials(BaseEnvVar):

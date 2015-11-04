@@ -115,9 +115,15 @@ class Credentials(object):
 
     def __init__(self, access_key, secret_key, token=None,
                  method=None):
-        self._assert_ascii(access_key)
-        self._assert_ascii(secret_key)
-
+        if six.PY2:
+            # Keys would sometimes (accidentally) contain non-ascii characters.
+            # It would cause a confusing UnicodeDecodeError in Python 2.
+            # We explicitly convert them into unicode to avoid such error.
+            #
+            # Eventually the service will decide whether to accept the
+            # credential. This also complies with the behavior in Python 3.
+            access_key = access_key.decode('utf-8')
+            secret_key = secret_key.decode('utf-8')
         self.access_key = access_key
         self.secret_key = secret_key
         self.token = token
@@ -125,15 +131,6 @@ class Credentials(object):
         if method is None:
             method = 'explicit'
         self.method = method
-
-    def _assert_ascii(self, s):
-        # Possible Non-ASCII in input, which presumably came from an incorrect
-        # copy-and-paste, would cause confusing UnicodeDecodeError later.
-        # We intercept it here, and provide a meaningful message to customer.
-        try:
-            s.decode('ascii')
-        except UnicodeDecodeError:
-            raise ValueError('Non-ASCII character found in credential: ' + s)
 
 
 class RefreshableCredentials(Credentials):
