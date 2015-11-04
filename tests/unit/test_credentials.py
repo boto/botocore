@@ -53,6 +53,12 @@ def path(filename):
     return os.path.join(os.path.dirname(__file__), 'cfg', filename)
 
 
+class TestCredentials(BaseEnvVar):
+    def test_detect_nonascii_character(self):
+        with self.assertRaises(ValueError):
+            credentials.Credentials('foo\xe2\x80\x99', 'bar')
+
+
 class TestRefreshableCredentials(BaseEnvVar):
     def setUp(self):
         super(TestRefreshableCredentials, self).setUp()
