@@ -822,6 +822,40 @@ class TestSSEKeyParamValidation(BaseS3ClientTest):
                                    SSECustomerKey=key_str)['Body'].read(),
             b'mycontents2')
 
+    def test_make_request_with_sse_copy_source(self):
+        encrypt_key = 'a' * 32
+        other_encrypt_key = 'b' * 32
+
+        # Upload the object using one encrypt key
+        self.client.put_object(
+            Bucket=self.bucket_name, Key='foo.txt',
+            Body=six.BytesIO(b'mycontents'), SSECustomerAlgorithm='AES256',
+            SSECustomerKey=encrypt_key)
+        self.addCleanup(self.client.delete_object,
+                        Bucket=self.bucket_name, Key='foo.txt')
+
+        # Copy the object using the original encryption key as the copy source
+        # and encrypt with a new encryption key.
+        self.client.copy_object(
+            Bucket=self.bucket_name,
+            CopySource=self.bucket_name+'/foo.txt',
+            Key='bar.txt', CopySourceSSECustomerAlgorithm='AES256',
+            CopySourceSSECustomerKey=encrypt_key,
+            SSECustomerAlgorithm='AES256',
+            SSECustomerKey=other_encrypt_key
+        )
+        self.addCleanup(self.client.delete_object,
+                        Bucket=self.bucket_name, Key='bar.txt')
+
+        # Download the object using the new encryption key.
+        # The content should not have changed.
+        self.assertEqual(
+            self.client.get_object(
+                Bucket=self.bucket_name, Key='bar.txt',
+                SSECustomerAlgorithm='AES256',
+                SSECustomerKey=other_encrypt_key)['Body'].read(),
+            b'mycontents')
+
 
 class TestS3UTF8Headers(BaseS3ClientTest):
     def test_can_set_utf_8_headers(self):

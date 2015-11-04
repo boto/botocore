@@ -11,6 +11,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from botocore.vendored.requests.exceptions import ConnectionError
 
 
 class BotoCoreError(Exception):
@@ -19,7 +20,7 @@ class BotoCoreError(Exception):
 
     :ivar msg: The descriptive message associated with the error.
     """
-    fmt = 'An unspecified error occured'
+    fmt = 'An unspecified error occurred'
 
     def __init__(self, **kwargs):
         msg = self.fmt.format(**kwargs)
@@ -50,6 +51,16 @@ class ApiVersionNotFoundError(BotoCoreError):
 class EndpointConnectionError(BotoCoreError):
     fmt = (
         'Could not connect to the endpoint URL: "{endpoint_url}"')
+
+
+class ConnectionClosedError(ConnectionError):
+    fmt = (
+        'Connection was closed before we received a valid response '
+        'from endpoint URL: "{endpoint_url}".')
+    def __init__(self, **kwargs):
+        msg = self.fmt.format(**kwargs)
+        kwargs.pop('endpoint_url')
+        super(ConnectionClosedError, self).__init__(msg, **kwargs)
 
 
 class NoCredentialsError(BotoCoreError):
