@@ -21,6 +21,12 @@ class TestS3Docs(BaseDocsFunctionalTest):
             method_name='put_object',
             param_name='SSECustomerKeyMD5')
 
+    def test_auto_populates_copy_source_sse_customer_key_md5(self):
+        self.assert_is_documented_as_autopopulated_param(
+            service_name='s3',
+            method_name='copy_object',
+            param_name='CopySourceSSECustomerKeyMD5')
+
     def test_hides_content_md5_when_impossible_to_provide(self):
         modified_methods = ['delete_objects', 'put_bucket_acl',
                             'put_bucket_cors', 'put_bucket_lifecycle',
