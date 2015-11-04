@@ -189,6 +189,25 @@ class TestHandlers(BaseSessionTest):
         self.assertEqual(params['SSECustomerKeyMD5'],
                          'N7UdGUp1E+RbVvZSTy1R8g==')
 
+    def test_copy_source_sse_params(self):
+        for op in ['CopyObject', 'UploadPartCopy']:
+            event = 'before-parameter-build.s3.%s' % op
+            params = {'CopySourceSSECustomerKey': b'bar',
+                      'CopySourceSSECustomerAlgorithm': 'AES256'}
+            self.session.emit(event, params=params, model=mock.Mock())
+            self.assertEqual(params['CopySourceSSECustomerKey'], 'YmFy')
+            self.assertEqual(params['CopySourceSSECustomerKeyMD5'],
+                             'N7UdGUp1E+RbVvZSTy1R8g==')
+
+    def test_copy_source_sse_params_as_str(self):
+        event = 'before-parameter-build.s3.CopyObject'
+        params = {'CopySourceSSECustomerKey': 'bar',
+                  'CopySourceSSECustomerAlgorithm': 'AES256'}
+        self.session.emit(event, params=params, model=mock.Mock())
+        self.assertEqual(params['CopySourceSSECustomerKey'], 'YmFy')
+        self.assertEqual(params['CopySourceSSECustomerKeyMD5'],
+                         'N7UdGUp1E+RbVvZSTy1R8g==')
+
     def test_route53_resource_id(self):
         event = 'before-parameter-build.route53.GetHostedZone'
         params = {'Id': '/hostedzone/ABC123',
