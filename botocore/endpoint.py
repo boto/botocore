@@ -25,6 +25,7 @@ from botocore.vendored import six
 from botocore.awsrequest import create_request_object
 from botocore.exceptions import BaseEndpointResolverError
 from botocore.exceptions import EndpointConnectionError
+from botocore.exceptions import ConnectionClosedError
 from botocore.compat import filter_ssl_warnings
 from botocore.utils import is_valid_endpoint_url
 from botocore.hooks import first_non_none_response
@@ -178,6 +179,10 @@ class Endpoint(object):
                 better_exception = EndpointConnectionError(
                     endpoint_url=endpoint_url, error=e)
                 return (None, better_exception)
+            elif self._looks_like_bad_status_line(e):
+                better_exception = ConnectionClosedError(
+                    endpoint_url=e.request.url, request=e.request)
+                return (None, better_exception)
             else:
                 return (None, e)
         except Exception as e:
@@ -195,6 +200,9 @@ class Endpoint(object):
 
     def _looks_like_dns_error(self, e):
         return 'gaierror' in str(e) and e.request is not None
+
+    def _looks_like_bad_status_line(self, e):
+        return 'BadStatusLine' in str(e) and e.request is not None
 
     def _needs_retry(self, attempts, operation_model, response=None,
                      caught_exception=None):
