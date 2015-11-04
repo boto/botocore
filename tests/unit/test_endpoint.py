@@ -22,7 +22,7 @@ from botocore.endpoint import Endpoint, DEFAULT_TIMEOUT
 from botocore.endpoint import EndpointCreator
 from botocore.endpoint import PreserveAuthSession
 from botocore.exceptions import EndpointConnectionError
-from botocore.exceptions import BadStatusLineError
+from botocore.exceptions import ConnectionClosedError
 from botocore.exceptions import BaseEndpointResolverError
 
 
@@ -120,7 +120,8 @@ class TestEndpointFeatures(TestEndpointBase):
         self.http_session.send.side_effect = ConnectionError(
             """'Connection aborted.', BadStatusLine("''",)""",
             request=fake_request)
-        with self.assertRaisesRegexp(BadStatusLineError, 'Bad status line'):
+        with self.assertRaisesRegexp(ConnectionClosedError,
+                                     'Connection was closed'):
             self.endpoint.make_request(self.op, request_dict())
 
 

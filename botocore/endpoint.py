@@ -25,7 +25,7 @@ from botocore.vendored import six
 from botocore.awsrequest import create_request_object
 from botocore.exceptions import BaseEndpointResolverError
 from botocore.exceptions import EndpointConnectionError
-from botocore.exceptions import BadStatusLineError
+from botocore.exceptions import ConnectionClosedError
 from botocore.compat import filter_ssl_warnings
 from botocore.utils import is_valid_endpoint_url
 from botocore.hooks import first_non_none_response
@@ -180,7 +180,7 @@ class Endpoint(object):
                     endpoint_url=endpoint_url, error=e)
                 return (None, better_exception)
             elif self._looks_like_bad_status_line(e):
-                better_exception = BadStatusLineError(
+                better_exception = ConnectionClosedError(
                     endpoint_url=e.request.url, request=e.request)
                 return (None, better_exception)
             else:

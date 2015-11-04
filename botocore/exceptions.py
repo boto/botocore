@@ -53,14 +53,14 @@ class EndpointConnectionError(BotoCoreError):
         'Could not connect to the endpoint URL: "{endpoint_url}"')
 
 
-class BadStatusLineError(ConnectionError):
+class ConnectionClosedError(ConnectionError):
     fmt = (
-        'Bad status line occurred on endpoint URL: "{endpoint_url}". '
-        'You may consider increasing retry attempts.')
+        'Connection was closed before we received a valid response '
+        'from endpoint URL: "{endpoint_url}".')
     def __init__(self, **kwargs):
         msg = self.fmt.format(**kwargs)
         kwargs.pop('endpoint_url')
-        super(BadStatusLineError, self).__init__(msg, **kwargs)
+        super(ConnectionClosedError, self).__init__(msg, **kwargs)
 
 
 class NoCredentialsError(BotoCoreError):
