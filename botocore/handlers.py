@@ -198,9 +198,9 @@ def _sse_md5(params, sse_member_prefix='SSECustomer'):
     params[sse_md5_member] = key_md5_str
 
 
-def _needs_s3_sse_customization(params, sse_member_prefix='SSECustomer'):
-    return (params.get(sse_member_prefix+'Key') is not None and
-            sse_member_prefix+'KeyMD5' not in params)
+def _needs_s3_sse_customization(params, sse_member_prefix):
+    return (params.get(sse_member_prefix + 'Key') is not None and
+            sse_member_prefix + 'KeyMD5' not in params)
 
 
 def register_retries_for_service(service_data, session,
