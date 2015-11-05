@@ -164,6 +164,11 @@ class RefreshableCredentials(Credentials):
         self._expiry_time = expiry_time
         self._time_fetcher = time_fetcher
         self.method = method
+        self.normalize()
+
+    def normalize(self):
+        self._access_key = botocore.compat.unicode(self._access_key, 'utf-8')
+        self._secret_key = botocore.compat.unicode(self._secret_key, 'utf-8')
 
     @classmethod
     def create_from_metadata(cls, metadata, refresh_using, method):
@@ -240,6 +245,7 @@ class RefreshableCredentials(Credentials):
         self.token = data['token']
         self._expiry_time = parse(data['expiry_time'])
         logger.debug("Retrieved credentials will expire at: %s", self._expiry_time)
+        self.normalize()
 
 
 class CredentialProvider(object):

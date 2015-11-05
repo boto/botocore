@@ -60,7 +60,7 @@ class TestCredentials(BaseEnvVar):
         self.assertTrue(isinstance(c.secret_key, type(u'u')))
 
 
-class TestRefreshableCredentials(BaseEnvVar):
+class TestRefreshableCredentials(TestCredentials):
     def setUp(self):
         super(TestRefreshableCredentials, self).setUp()
         self.refresher = mock.Mock()
