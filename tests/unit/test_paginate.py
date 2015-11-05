@@ -570,6 +570,24 @@ class TestMultipleResultKeys(unittest.TestCase):
                          {"Users": ["User2"], "Groups": [],
                           "NextToken": "m1"})
 
+    def test_resume_with_secondary_result_as_string(self):
+        self.method.return_value = {"Users": ["User1", "User2"], "Groups": "a"}
+        pages = self.paginator.paginate(
+            PaginationConfig={'MaxItems': 1, 'StartingToken': "None___1"})
+        complete = pages.build_full_result()
+        # Note that the secondary keys ("Groups") becomes empty string because
+        # they were in the original (first) response.
+        self.assertEqual(complete, {"Users": ["User2"], "Groups": ""})
+
+    def test_resume_with_secondary_result_as_integer(self):
+        self.method.return_value = {"Users": ["User1", "User2"], "Groups": 123}
+        pages = self.paginator.paginate(
+            PaginationConfig={'MaxItems': 1, 'StartingToken': "None___1"})
+        complete = pages.build_full_result()
+        # Note that the secondary keys ("Groups") becomes zero because
+        # they were in the original (first) response.
+        self.assertEqual(complete, {"Users": ["User2"], "Groups": 0})
+
 
 class TestMultipleInputKeys(unittest.TestCase):
     def setUp(self):
