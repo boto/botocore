@@ -23,6 +23,7 @@ from dateutil.parser import parse
 from dateutil.tz import tzlocal
 
 import botocore.config
+import botocore.compat
 from botocore.compat import total_seconds
 from botocore.exceptions import UnknownCredentialError
 from botocore.exceptions import PartialCredentialsError
@@ -115,15 +116,6 @@ class Credentials(object):
 
     def __init__(self, access_key, secret_key, token=None,
                  method=None):
-        if six.PY2:
-            # Keys would sometimes (accidentally) contain non-ascii characters.
-            # It would cause a confusing UnicodeDecodeError in Python 2.
-            # We explicitly convert them into unicode to avoid such error.
-            #
-            # Eventually the service will decide whether to accept the
-            # credential. This also complies with the behavior in Python 3.
-            access_key = access_key.decode('utf-8')
-            secret_key = secret_key.decode('utf-8')
         self.access_key = access_key
         self.secret_key = secret_key
         self.token = token
@@ -131,6 +123,18 @@ class Credentials(object):
         if method is None:
             method = 'explicit'
         self.method = method
+
+        self.normalize()
+
+    def normalize(self):
+        # Keys would sometimes (accidentally) contain non-ascii characters.
+        # It would cause a confusing UnicodeDecodeError in Python 2.
+        # We explicitly convert them into unicode to avoid such error.
+        #
+        # Eventually the service will decide whether to accept the credential.
+        # This also complies with the behavior in Python 3.
+        self.access_key = botocore.compat.unicode(self.access_key, 'utf-8')
+        self.secret_key = botocore.compat.unicode(self.secret_key, 'utf-8')
 
 
 class RefreshableCredentials(Credentials):
