@@ -124,9 +124,9 @@ class Credentials(object):
             method = 'explicit'
         self.method = method
 
-        self.normalize()
+        self._normalize()
 
-    def normalize(self):
+    def _normalize(self):
         # Keys would sometimes (accidentally) contain non-ascii characters.
         # It would cause a confusing UnicodeDecodeError in Python 2.
         # We explicitly convert them into unicode to avoid such error.
@@ -164,9 +164,9 @@ class RefreshableCredentials(Credentials):
         self._expiry_time = expiry_time
         self._time_fetcher = time_fetcher
         self.method = method
-        self.normalize()
+        self._normalize()
 
-    def normalize(self):
+    def _normalize(self):
         self._access_key = botocore.compat.unicode(self._access_key, 'utf-8')
         self._secret_key = botocore.compat.unicode(self._secret_key, 'utf-8')
 
@@ -245,7 +245,7 @@ class RefreshableCredentials(Credentials):
         self.token = data['token']
         self._expiry_time = parse(data['expiry_time'])
         logger.debug("Retrieved credentials will expire at: %s", self._expiry_time)
-        self.normalize()
+        self._normalize()
 
 
 class CredentialProvider(object):
