@@ -112,7 +112,7 @@ else:
         return inspect.getargspec(func)[2]
 
     def ensure_unicode(s, encoding='utf-8', errors='strict'):
-        if type(s) == six.text_type:
+        if isinstance(s, six.text_type):
             return s
         return unicode(s, encoding, errors)
 

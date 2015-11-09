@@ -58,15 +58,14 @@ class TestCredentials(BaseEnvVar):
         c = credentials.Credentials(access, secret)
         self.assertTrue(isinstance(c.access_key, type(u'u')))
         self.assertTrue(isinstance(c.secret_key, type(u'u')))
-        return True
 
     def test_detect_nonascii_character(self):
-        self.assertTrue(self._ensure_credential_is_normalized_as_unicode(
-            'foo\xe2\x80\x99', 'bar\xe2\x80\x99'))
+        self._ensure_credential_is_normalized_as_unicode(
+            'foo\xe2\x80\x99', 'bar\xe2\x80\x99')
 
     def test_unicode_input(self):
-        self.assertTrue(self._ensure_credential_is_normalized_as_unicode(
-            u'foo', u'bar'))
+        self._ensure_credential_is_normalized_as_unicode(
+            u'foo', u'bar')
 
 
 class TestRefreshableCredentials(TestCredentials):
