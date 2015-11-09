@@ -23,6 +23,7 @@ from dateutil.parser import parse
 from dateutil.tz import tzlocal
 
 import botocore.config
+import botocore.compat
 from botocore.compat import total_seconds
 from botocore.exceptions import UnknownCredentialError
 from botocore.exceptions import PartialCredentialsError
@@ -123,6 +124,18 @@ class Credentials(object):
             method = 'explicit'
         self.method = method
 
+        self._normalize()
+
+    def _normalize(self):
+        # Keys would sometimes (accidentally) contain non-ascii characters.
+        # It would cause a confusing UnicodeDecodeError in Python 2.
+        # We explicitly convert them into unicode to avoid such error.
+        #
+        # Eventually the service will decide whether to accept the credential.
+        # This also complies with the behavior in Python 3.
+        self.access_key = botocore.compat.unicode(self.access_key, 'utf-8')
+        self.secret_key = botocore.compat.unicode(self.secret_key, 'utf-8')
+
 
 class RefreshableCredentials(Credentials):
     """
@@ -151,6 +164,11 @@ class RefreshableCredentials(Credentials):
         self._expiry_time = expiry_time
         self._time_fetcher = time_fetcher
         self.method = method
+        self._normalize()
+
+    def _normalize(self):
+        self._access_key = botocore.compat.unicode(self._access_key, 'utf-8')
+        self._secret_key = botocore.compat.unicode(self._secret_key, 'utf-8')
 
     @classmethod
     def create_from_metadata(cls, metadata, refresh_using, method):
@@ -227,6 +245,7 @@ class RefreshableCredentials(Credentials):
         self.token = data['token']
         self._expiry_time = parse(data['expiry_time'])
         logger.debug("Retrieved credentials will expire at: %s", self._expiry_time)
+        self._normalize()
 
 
 class CredentialProvider(object):

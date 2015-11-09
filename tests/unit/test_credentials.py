@@ -53,7 +53,14 @@ def path(filename):
     return os.path.join(os.path.dirname(__file__), 'cfg', filename)
 
 
-class TestRefreshableCredentials(BaseEnvVar):
+class TestCredentials(BaseEnvVar):
+    def test_detect_nonascii_character(self):
+        c = credentials.Credentials('foo\xe2\x80\x99', 'bar\xe2\x80\x99')
+        self.assertTrue(isinstance(c.access_key, type(u'u')))
+        self.assertTrue(isinstance(c.secret_key, type(u'u')))
+
+
+class TestRefreshableCredentials(TestCredentials):
     def setUp(self):
         super(TestRefreshableCredentials, self).setUp()
         self.refresher = mock.Mock()
