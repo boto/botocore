@@ -354,7 +354,7 @@ class BaseClient(object):
         # Register the handler required to sign requests.
         self.meta.events.register('request-created.%s' %
                                   self.meta.service_model.endpoint_prefix,
-                                  self._sign_request)
+                                  self._request_signer.handler)
 
         # If the virtual host addressing style is being forced,
         # switch the default fix_s3_host handler for the more general
@@ -431,11 +431,6 @@ class BaseClient(object):
             request_signer=self._request_signer
         )
         return request_dict
-
-    def _sign_request(self, operation_name=None, request=None, **kwargs):
-        # Sign the request. This fires its own events and will
-        # mutate the request as needed.
-        self._request_signer.sign(operation_name, request)
 
     def get_paginator(self, operation_name):
         """Create a paginator for an operation.
