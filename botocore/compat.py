@@ -60,6 +60,9 @@ if six.PY3:
         # changes when using getargspec with functools.partials.
         return inspect.getfullargspec(func)[2]
 
+    def unicode(s, encoding=None, errors=None):
+        # NOOP in Python 3, because every string is already unicode
+        return s
 
 else:
     from urllib import quote
@@ -107,6 +110,8 @@ else:
 
     def accepts_kwargs(func):
         return inspect.getargspec(func)[2]
+
+    unicode = unicode
 
 try:
     from collections import OrderedDict
