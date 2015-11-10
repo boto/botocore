@@ -58,10 +58,8 @@ class RequestSigner(object):
         self._signature_version = signature_version
         self._credentials = credentials
 
-        self._event_emitter = None
-        if event_emitter is not None:
-            # We need weakref to prevent leaking memory in Python 2.6
-            self._event_emitter = weakref.proxy(event_emitter)
+        # We need weakref to prevent leaking memory in Python 2.6 on Linux 2.6
+        self._event_emitter = weakref.proxy(event_emitter)
 
         # Used to cache auth instances since one request signer
         # can be used for many requests in a single client.

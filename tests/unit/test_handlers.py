@@ -95,7 +95,7 @@ class TestHandlers(BaseSessionTest):
     def test_copy_snapshot_encrypted(self):
         credentials = Credentials('key', 'secret')
         request_signer = RequestSigner(
-            'ec2', 'us-east-1', 'ec2', 'v4', credentials, None)
+            'ec2', 'us-east-1', 'ec2', 'v4', credentials, mock.Mock())
         request_dict = {}
         params = {'SourceRegion': 'us-west-2'}
         request_dict['body'] = params
@@ -121,7 +121,7 @@ class TestHandlers(BaseSessionTest):
 
         credentials = Credentials('key', 'secret')
         request_signer = RequestSigner(
-            'ec2', actual_region, 'ec2', 'v4', credentials, None)
+            'ec2', actual_region, 'ec2', 'v4', credentials, mock.Mock())
         request_dict = {}
         params = {
             'SourceRegion': 'us-west-2',
@@ -456,7 +456,7 @@ class TestHandlers(BaseSessionTest):
     def test_does_not_add_md5_when_v4(self):
         credentials = Credentials('key', 'secret')
         request_signer = RequestSigner(
-            's3', 'us-east-1', 's3', 'v4', credentials, None)
+            's3', 'us-east-1', 's3', 'v4', credentials, mock.Mock())
         request_dict = {'body': b'bar',
                         'url': 'https://s3.us-east-1.amazonaws.com',
                         'method': 'PUT',
@@ -468,7 +468,7 @@ class TestHandlers(BaseSessionTest):
     def test_adds_md5_when_not_v4(self):
         credentials = Credentials('key', 'secret')
         request_signer = RequestSigner(
-            's3', 'us-east-1', 's3', 's3', credentials, None)
+            's3', 'us-east-1', 's3', 's3', credentials, mock.Mock())
         request_dict = {'body': b'bar',
                         'url': 'https://s3.us-east-1.amazonaws.com',
                         'method': 'PUT',
