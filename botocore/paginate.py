@@ -189,14 +189,18 @@ class PageIterator(object):
 
     def _handle_first_request(self, parsed, primary_result_key,
                               starting_truncation):
-        # First we need to slice into the array and only return
-        # the truncated amount.
+        # If the payload is an array or string, we need to slice into it
+        # and only return the truncated amount.
         starting_truncation = self._parse_starting_token()[1]
         all_data = primary_result_key.search(parsed)
+        if isinstance(all_data, (list, string_types)):
+            data = all_data[starting_truncation:]
+        else:
+            data = None
         set_value_from_jmespath(
             parsed,
             primary_result_key.expression,
-            all_data[starting_truncation:]
+            data
         )
         # We also need to truncate any secondary result keys
         # because they were not truncated in the previous last
@@ -204,7 +208,16 @@ class PageIterator(object):
         for token in self.result_keys:
             if token == primary_result_key:
                 continue
-            set_value_from_jmespath(parsed, token.expression, [])
+            sample = token.search(parsed)
+            if isinstance(sample, list):
+                empty_value = []
+            elif isinstance(sample, string_types):
+                empty_value = ''
+            elif isinstance(sample, (int, float)):
+                empty_value = 0
+            else:
+                empty_value = None
+            set_value_from_jmespath(parsed, token.expression, empty_value)
         return starting_truncation
 
     def _truncate_response(self, parsed, primary_result_key, truncate_amount,

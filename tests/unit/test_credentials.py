@@ -53,7 +53,22 @@ def path(filename):
     return os.path.join(os.path.dirname(__file__), 'cfg', filename)
 
 
-class TestRefreshableCredentials(BaseEnvVar):
+class TestCredentials(BaseEnvVar):
+    def _ensure_credential_is_normalized_as_unicode(self, access, secret):
+        c = credentials.Credentials(access, secret)
+        self.assertTrue(isinstance(c.access_key, type(u'u')))
+        self.assertTrue(isinstance(c.secret_key, type(u'u')))
+
+    def test_detect_nonascii_character(self):
+        self._ensure_credential_is_normalized_as_unicode(
+            'foo\xe2\x80\x99', 'bar\xe2\x80\x99')
+
+    def test_unicode_input(self):
+        self._ensure_credential_is_normalized_as_unicode(
+            u'foo', u'bar')
+
+
+class TestRefreshableCredentials(TestCredentials):
     def setUp(self):
         super(TestRefreshableCredentials, self).setUp()
         self.refresher = mock.Mock()
