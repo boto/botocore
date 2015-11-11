@@ -1,0 +1,12 @@
+{
+  "encoding": {
+    "AssumeRolePolicyDocument": {
+      "encoding": "URLJSON",
+      "alias": "AssumeRolePolicy"
+    },
+    "policyDocumentType": {
+      "encoding": "URLJSON",
+      "alias": "Policy"
+    }
+  }
+}

@@ -9,6 +9,7 @@
     "signatureVersion":"v3https",
     "protocol":"rest-xml"
   },
+  "documentation":"<fullname>Amazon Route 53</fullname><p>Amazon Route&nbsp;53 is a scalable Domain Name System (DNS) web service. It provides secure and reliable routing to your infrastructure that uses Amazon Web Services (AWS) products, such as Amazon Elastic Compute Cloud (Amazon EC2), Elastic Load Balancing, or Amazon Simple Storage Service (Amazon S3). You can also use Amazon Route&nbsp;53 to route users to your infrastructure outside of AWS.</p><p>Amazon Route&nbsp;53 is an authoritative DNS service, meaning it translates friendly domains names like www.example.com into IP addresses like 192.0.2.1. Amazon Route&nbsp;53 responds to DNS queries using a global network of authoritative DNS servers, which reduces latency. For a list of the locations of Amazon Route&nbsp;53 DNS servers, see <a class=\"ulink\" href=\"http://aws.amazon.com/route53/#details\" target=\"_blank\">The Amazon Route&nbsp;53 Global Network</a> on the Amazon Route&nbsp;53 detail page.</p>",
   "operations":{
     "AssociateVPCWithHostedZone":{
       "name":"AssociateVPCWithHostedZone",
@@ -2520,7 +2521,6 @@
       "type":"structure",
       "required":[
         "HostedZones",
-        "Marker",
         "IsTruncated",
         "MaxItems"
       ],
@@ -2642,7 +2642,6 @@
       "type":"structure",
       "required":[
         "DelegationSets",
-        "Marker",
         "IsTruncated",
         "MaxItems"
       ],
@@ -2706,8 +2705,7 @@
     "ListTagsForResourcesRequest":{
       "type":"structure",
       "required":[
-        "ResourceType",
-        "ResourceIds"
+        "ResourceType"
       ],
       "members":{
         "ResourceType":{
@@ -2715,10 +2713,6 @@
           "location":"uri",
           "locationName":"ResourceType",
           "documentation":"<p>The type of the resources.</p> <p>- The resource type for health checks is <code>healthcheck</code>.</p> <p>- The resource type for hosted zones is <code>hostedzone</code>.</p>"
-        },
-        "ResourceIds":{
-          "shape":"TagResourceIdList",
-          "documentation":"<p>A complex type that contains the ResourceId element for each resource for which you want to get a list of tags.</p>"
         }
       },
       "documentation":"<p>A complex type containing information about a request for a list of the tags that are associated with up to 10 specified resources.</p>"

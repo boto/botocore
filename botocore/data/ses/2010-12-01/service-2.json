@@ -1576,9 +1576,6 @@
     "IdentityNotificationAttributes":{
       "type":"structure",
       "required":[
-        "BounceTopic",
-        "ComplaintTopic",
-        "DeliveryTopic",
         "ForwardingEnabled"
       ],
       "members":{

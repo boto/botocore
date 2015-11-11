@@ -1,0 +1,8 @@
+{
+  "encoding": {
+    "ConsoleOutput": {
+      "encoding": "Base64",
+      "alias": "Output"
+    }
+  }
+}

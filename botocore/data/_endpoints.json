@@ -60,12 +60,18 @@
       ]
     },
     {
+      "constraints":[
+        ["region", "equals", null]
+      ],
       "uri":"https://sts.amazonaws.com",
       "properties": {
         "credentialScope": {
             "region": "us-east-1"
         }
       }
+    },
+    {
+      "uri":"https://{service}.{region}.amazonaws.com"
     }
   ],
   "s3":[
