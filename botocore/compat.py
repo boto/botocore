@@ -60,7 +60,7 @@ if six.PY3:
         # changes when using getargspec with functools.partials.
         return inspect.getfullargspec(func)[2]
 
-    def unicode(s, encoding=None, errors=None):
+    def ensure_unicode(s, encoding=None, errors=None):
         # NOOP in Python 3, because every string is already unicode
         return s
 
@@ -111,7 +111,10 @@ else:
     def accepts_kwargs(func):
         return inspect.getargspec(func)[2]
 
-    unicode = unicode
+    def ensure_unicode(s, encoding='utf-8', errors='strict'):
+        if isinstance(s, six.text_type):
+            return s
+        return unicode(s, encoding, errors)
 
 try:
     from collections import OrderedDict

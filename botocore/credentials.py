@@ -133,8 +133,8 @@ class Credentials(object):
         #
         # Eventually the service will decide whether to accept the credential.
         # This also complies with the behavior in Python 3.
-        self.access_key = botocore.compat.unicode(self.access_key, 'utf-8')
-        self.secret_key = botocore.compat.unicode(self.secret_key, 'utf-8')
+        self.access_key = botocore.compat.ensure_unicode(self.access_key)
+        self.secret_key = botocore.compat.ensure_unicode(self.secret_key)
 
 
 class RefreshableCredentials(Credentials):
@@ -167,8 +167,8 @@ class RefreshableCredentials(Credentials):
         self._normalize()
 
     def _normalize(self):
-        self._access_key = botocore.compat.unicode(self._access_key, 'utf-8')
-        self._secret_key = botocore.compat.unicode(self._secret_key, 'utf-8')
+        self._access_key = botocore.compat.ensure_unicode(self._access_key)
+        self._secret_key = botocore.compat.ensure_unicode(self._secret_key)
 
     @classmethod
     def create_from_metadata(cls, metadata, refresh_using, method):
