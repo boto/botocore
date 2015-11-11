@@ -83,8 +83,10 @@ class TestSigner(BaseSignerTest):
         auth_cls = mock.Mock(side_effect=side_effect)
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
                              {'v4': auth_cls}):
-            auth1 = self.signer.get_auth('service_name', 'region_name', expires=60)
-            auth2 = self.signer.get_auth('service_name', 'region_name', expires=90)
+            auth1 = self.signer.get_auth('service_name', 'region_name',
+                                         expires=60)
+            auth2 = self.signer.get_auth('service_name', 'region_name',
+                                         expires=90)
 
         self.assertNotEqual(auth1, auth2)
 
