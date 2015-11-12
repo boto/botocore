@@ -453,6 +453,23 @@ def add_glacier_checksums(params, **kwargs):
     body.seek(starting_position)
 
 
+def document_glacier_tree_hash_checksum():
+    doc = '''
+        This is a required field.
+
+        Ideally you will want to compute this value with checksums from
+        previous uploaded parts, using the algorithm described in
+        `Glacier documentation <http://docs.aws.amazon.com/amazonglacier/latest/dev/checksum-calculations.html>`_.
+
+        But if you prefer, you can also use botocore.util.calculate_tree_hash()
+        to compute it from raw file by::
+
+            checksum = calculate_tree_hash(open('your_file.txt', 'rb'))
+
+        '''
+    return AppendParamDocumentation('checksum', doc).append_documentation
+
+
 def switch_host_machinelearning(request, **kwargs):
     switch_host_with_param(request, 'PredictEndpoint')
 
@@ -580,8 +597,13 @@ BUILTIN_HANDLERS = [
      AutoPopulatedParam('accountId', 'Note: this parameter is set to "-" by \
                          default if no value is not specified.')
      .document_auto_populated_param),
-    ('docs.*.glacier.*.complete-section',
+    ('docs.*.glacier.UploadArchive.complete-section',
      AutoPopulatedParam('checksum').document_auto_populated_param),
+    ('docs.*.glacier.UploadMultipartPart.complete-section',
+     AutoPopulatedParam('checksum').document_auto_populated_param),
+    ('docs.request-params.glacier.CompleteMultipartUpload.complete-section',
+     document_glacier_tree_hash_checksum()),
+
     # UserData base64 encoding documentation customizations
     ('docs.*.ec2.RunInstances.complete-section', document_base64_encoding()),
     ('docs.*.autoscaling.CreateLaunchConfiguration.complete-section',
