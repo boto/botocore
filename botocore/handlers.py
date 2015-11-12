@@ -435,17 +435,16 @@ def add_glacier_checksums(params, **kwargs):
 def document_glacier_tree_hash_checksum():
     doc = '''
         This is a required field.
-        You can use botocore.util.calculate_tree_hash() to calculate it
-        like this::
 
-            from botocore.utils import calculate_tree_hash
+        Ideally you will want to compute this value with checksums from
+        previous uploaded parts, using the algorithm described in
+        `Glacier documentation <http://docs.aws.amazon.com/amazonglacier/latest/dev/checksum-calculations.html>`_.
 
-            ...
+        But if you prefer, you can also use botocore.util.calculate_tree_hash()
+        to compute it from raw file by::
 
-            client.complete_multipart_upload(
-                checksum=calculate_tree_hash(open('your_file.txt', 'rb')),
-                vaultName=vault_name, uploadId=upload_id,
-                archiveSize=str(fsize))
+            checksum = calculate_tree_hash(open('your_file.txt', 'rb'))
+
         '''
     return AppendParamDocumentation('checksum', doc).append_documentation
 
