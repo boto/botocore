@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import datetime
+import weakref
 
 import botocore
 import botocore.auth
@@ -56,7 +57,9 @@ class RequestSigner(object):
         self._signing_name = signing_name
         self._signature_version = signature_version
         self._credentials = credentials
-        self._event_emitter = event_emitter
+
+        # We need weakref to prevent leaking memory in Python 2.6 on Linux 2.6
+        self._event_emitter = weakref.proxy(event_emitter)
 
         # Used to cache auth instances since one request signer
         # can be used for many requests in a single client.
@@ -73,6 +76,9 @@ class RequestSigner(object):
     @property
     def signing_name(self):
         return self._signing_name
+
+    def handler(self, operation_name=None, request=None, **kwargs):
+        return self.sign(operation_name, request)
 
     def sign(self, operation_name, request):
         """
