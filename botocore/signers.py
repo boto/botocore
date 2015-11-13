@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import datetime
+import weakref
 
 import botocore
 import botocore.auth
@@ -56,7 +57,9 @@ class RequestSigner(object):
         self._signing_name = signing_name
         self._signature_version = signature_version
         self._credentials = credentials
-        self._event_emitter = event_emitter
+
+        # We need weakref to prevent leaking memory in Python 2.6 on Linux 2.6
+        self._event_emitter = weakref.proxy(event_emitter)
 
         # Used to cache auth instances since one request signer
         # can be used for many requests in a single client.
@@ -73,6 +76,9 @@ class RequestSigner(object):
     @property
     def signing_name(self):
         return self._signing_name
+
+    def handler(self, operation_name=None, request=None, **kwargs):
+        return self.sign(operation_name, request)
 
     def sign(self, operation_name, request):
         """
@@ -129,25 +135,36 @@ class RequestSigner(object):
         if signature_version is None:
             signature_version = self._signature_version
 
-        key = '{0}.{1}.{2}'.format(signature_version, region_name,
-                                   signing_name)
-        if key in self._cache:
-            return self._cache[key]
+        expires = kwargs.get('expires')
+        cache_key = self._get_signer_cache_key(signature_version, region_name,
+                                               signing_name, expires)
+        if cache_key and cache_key in self._cache:
+            return self._cache[cache_key]
 
         cls = botocore.auth.AUTH_TYPE_MAPS.get(signature_version)
         if cls is None:
             raise UnknownSignatureVersionError(
                 signature_version=signature_version)
-        else:
-            kwargs['credentials'] = self._credentials
-            if cls.REQUIRES_REGION:
-                if self._region_name is None:
-                    raise botocore.exceptions.NoRegionError()
-                kwargs['region_name'] = region_name
-                kwargs['service_name'] = signing_name
-            auth = cls(**kwargs)
-            self._cache[key] = auth
-            return auth
+        kwargs['credentials'] = self._credentials
+        if cls.REQUIRES_REGION:
+            if self._region_name is None:
+                raise botocore.exceptions.NoRegionError()
+            kwargs['region_name'] = region_name
+            kwargs['service_name'] = signing_name
+        auth = cls(**kwargs)
+        # Only cache the client if a cache key was created.
+        if cache_key:
+            self._cache[cache_key] = auth
+        return auth
+
+    def _get_signer_cache_key(self, signature_version, region_name,
+                              signing_name, expires):
+        # Do not cache signers with an expires value as the cache hit
+        # ratio will be virtually 0.
+        if expires is not None:
+            return None
+        return '{0}.{1}.{2}'.format(signature_version, region_name,
+                                    signing_name)
 
     def generate_presigned_url(self, request_dict, expires_in=3600,
                                region_name=None):
