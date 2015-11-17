@@ -11,79 +11,187 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import re
-from botocore.vendored.six import string_types
+import numbers
+from botocore.utils import parse_timestamp
+from datetime import datetime
 
 
-class SharedExampleBuilder(object):
-    def __init__(self, params, operation_name, comments=None, is_input=True):
-        self._params = params
-        self._operation_name = operation_name
-        self._comments = comments
-        self._is_input = is_input
+class SharedExampleDocumenter(object):
+    def document_shared_example(self, example, prefix, section,
+                                operation_model):
+        """Documents a single shared example based on its definition.
 
-    def build_example_code(self, prefix=''):
-        if self._is_input:
-            return prefix + self._visit(self._params, '', [], is_param=True)
-        else:
-            return self._visit(self._params, '', [], is_param=False)
+        :param example: The model of the example
 
-    def _visit(self, value, indent, path, is_param=False):
-        if is_param:
-            return self._visit_param(value, indent, path)
+        :param prefix: The prefix to use in the method example.
+
+        :param section: The section to write to.
+
+        :param operation_model: The model of the operation used in the example
+        """
+        section.style.new_paragraph()
+        section.write(example.get('description'))
+        section.style.new_line()
+        self.document_input(section, example, prefix,
+                            operation_model.input_shape)
+        self.document_output(section, example, operation_model.output_shape)
+
+    def document_input(self, section, example, prefix, shape):
+        input_section = section.add_new_section('input')
+        input_section.style.start_codeblock()
+        if prefix is not None:
+            input_section.write(prefix)
+        params = example['input']
+        comments = example.get('comments')
+        if comments:
+            comments = comments.get('input')
+        param_section = input_section.add_new_section('parameters')
+        self._document_params(param_section, params, comments, [], shape)
+        closing_section = input_section.add_new_section('input-close')
+        closing_section.style.new_line()
+        closing_section.style.new_line()
+        closing_section.write('print(response)')
+        closing_section.style.end_codeblock()
+
+    def document_output(self, section, example, shape):
+        output_section = section.add_new_section('output')
+        output_section.writeln('Expected Output:')
+        output_section.style.start_codeblock()
+        params = example.get('output', {})
+
+        # There might not be an output, but we will return metadata anyway
+        params['ResponseMetadata'] = {"...": "..."}
+        comments = example.get('comments')
+        if comments:
+            comments = comments.get('output')
+        self._document_dict(output_section, params, comments, [], shape, True)
+        closing_section = output_section.add_new_section('output-close')
+        closing_section.style.end_codeblock()
+
+    def _document(self, section, value, comments, path, shape):
+        """
+        :param section: The section to add the docs to.
+
+        :param value: The input / output values representing the parameters that
+                      are included in the example.
+
+        :param comments: The dictionary containing all the comments to be
+                         applied to the example.
+
+        :param path: A list describing where the documenter is in traversing the
+                     parameters. This is used to find the equivalent location
+                     in the comments dictionary.
+        """
         if isinstance(value, dict):
-            return self._visit_dict(value, indent, path)
-        if isinstance(value, list):
-            return self._visit_list(value, indent, path)
-        if isinstance(value, string_types):
-            return self._visit_str(value)
+            self._document_dict(section, value, comments, path, shape)
+        elif isinstance(value, list):
+            self._document_list(section, value, comments, path, shape)
+        elif isinstance(value, numbers.Number):
+            self._document_number(section, value, path)
+        elif shape and shape.type_name == 'timestamp':
+            self._document_datetime(section, value, path)
+        else:
+            self._document_str(section, value, path)
 
-        return value
-
-    def _visit_param(self, value, indent, path):
-        lines = ['(']
+    def _document_dict(self, section, value, comments, path, shape,
+                       top_level=False):
+        dict_section = section.add_new_section('dict-value')
+        self._start_nested_value(dict_section, '{')
         for key, val in value.items():
             path.append('.%s' % key)
-            comment = self._apply_comment(path)
-            shape_val = self._visit(val, '    ' + indent, path)
-            lines.append("%s    %s=%s, %s" %
-                         (indent, key, shape_val, comment))
-            path.pop()
-        lines.append('%s)' % indent)
-        return '\n'.join(lines)
+            item_section = dict_section.add_new_section(key)
+            item_section.style.new_line()
+            item_comment = self._get_comment(path, comments)
+            if item_comment:
+                item_section.write(item_comment)
+                item_section.style.new_line()
+            item_section.write("'%s': " % key)
 
-    def _visit_dict(self, value, indent, path):
-        lines = ['{']
+            # Shape could be none if there is no output besides ResponseMetadata
+            item_shape = None
+            if shape:
+                if shape.type_name == 'structure':
+                    item_shape = shape.members.get(key)
+                elif shape.type_name == 'map':
+                    item_shape = shape.value
+            self._document(item_section, val, comments, path, item_shape)
+            path.pop()
+        dict_section_end = dict_section.add_new_section('ending-brace')
+        self._end_nested_value(dict_section_end, '}')
+        if not top_level:
+            dict_section_end.write(',')
+
+    def _document_params(self, section, value, comments, path, shape):
+        param_section = section.add_new_section('param-values')
+        self._start_nested_value(param_section, '(')
         for key, val in value.items():
             path.append('.%s' % key)
-            comment = self._apply_comment(path)
-            shape_val = self._visit(val, '    ' + indent, path)
-            lines.append("%s    '%s': %s, %s" %
-                         (indent, key, shape_val, comment))
-            path.pop()
-        lines.append('%s}' % indent)
-        return '\n'.join(lines)
+            item_section = param_section.add_new_section(key)
+            item_section.style.new_line()
+            item_comment = self._get_comment(path, comments)
+            if item_comment:
+                item_section.write(item_comment)
+                item_section.style.new_line()
+            item_section.write(key + '=')
 
-    def _visit_list(self, value, indent, path):
-        lines = ['[']
+            # Shape could be none if there are no input parameters
+            item_shape = None
+            if shape:
+                item_shape = shape.members.get(key)
+            self._document(item_section, val, comments, path, item_shape)
+            path.pop()
+        param_section_end = param_section.add_new_section('ending-parenthesis')
+        self._end_nested_value(param_section_end, ')')
+
+    def _document_list(self, section, value, comments, path, shape):
+        list_section = section.add_new_section('list-section')
+        self._start_nested_value(list_section, '[')
+        item_shape = shape.member
         for index, val in enumerate(value):
+            item_section = list_section.add_new_section(index)
+            item_section.style.new_line()
             path.append('[%s]' % index)
-            comment = self._apply_comment(path)
-            shape_val = self._visit(val, '    ' + indent, path)
-            lines.append('%s    %s, %s' %
-                         (indent, shape_val, comment))
+            item_comment = self._get_comment(path, comments)
+            if item_comment:
+                item_section.write(item_comment)
+                item_section.style.new_line()
+            self._document(item_section, val, comments, path, item_shape)
             path.pop()
-        lines.append('%s]' % indent)
-        return '\n'.join(lines)
+        list_section_end = list_section.add_new_section('ending-bracket')
+        self._end_nested_value(list_section_end, '],')
 
-    def _visit_str(self, value):
-        return "'%s'" % value
+    def _document_str(self, section, value, path):
+        # We do the string conversion because this might accept a type that
+        # we don't specifically address.
+        section.write("'%s'," % str(value))
 
-    def _apply_comment(self, path):
+    def _document_number(self, section, value, path):
+        section.write("%s," % str(value))
+
+    def _document_datetime(self, section, value, path):
+        datetime_tuple = parse_timestamp(value).timetuple()
+        datetime_str = str(datetime_tuple[0])
+        for i in range(1, len(datetime_tuple)):
+            datetime_str += ", " + str(datetime_tuple[i])
+        section.write("datetime(%s)," % datetime_str)
+
+    def _get_comment(self, path, comments):
         key = re.sub('^\.', '', ''.join(path))
-        if self._comments and key in self._comments:
-            return '# ' + self._comments[key]
+        if comments and key in comments:
+            return '# ' + comments[key]
         else:
             return ''
+
+    def _start_nested_value(self, section, start):
+        section.write(start)
+        section.style.indent()
+        section.style.indent()
+
+    def _end_nested_value(self, section, end):
+        section.style.dedent()
+        section.style.dedent()
+        section.style.new_line()
+        section.write(end)
 
 
 def document_shared_examples(section, operation_model, example_prefix,
@@ -98,41 +206,14 @@ def document_shared_examples(section, operation_model, example_prefix,
 
     :param shared_examples: The shared JSON examples from the model.
     """
-    shared_example_section = section.add_new_section('shared-examples')
-    shared_example_section.style.new_paragraph()
-    shared_example_section.style.bold('Examples')
+    container_section = section.add_new_section('shared-examples')
+    container_section.style.new_paragraph()
+    container_section.style.bold('Examples')
+    documenter = SharedExampleDocumenter()
     for example in shared_examples:
-        shared_example_section.style.new_paragraph()
-        shared_example_section.write(example['description'])
-        shared_example_section.style.new_line()
-        comments = example['comments']
-        request = SharedExampleBuilder(
-            params=example['input'],
-            operation_name=operation_model.name,
-            comments=comments.get('input')).build_example_code(
-            prefix=example_prefix).split('\n')
-        shared_example_section.style.start_codeblock()
-        shared_example_section.write(request.pop(0) + '\n')
-        for line in request:
-            shared_example_section.writeln(line)
-
-        if 'output' in example:
-            shared_example_section.style.new_line()
-            shared_example_section.writeln('print(response)')
-            shared_example_section.style.end_codeblock()
-            shared_example_section.style.new_line()
-            shared_example_section.write('Expected Output:')
-            shared_example_section.style.new_line()
-            response = SharedExampleBuilder(
-                params=example['output'],
-                operation_name=operation_model.name,
-                comments=comments.get('output'),
-                is_input=False).build_example_code().split('\n')
-            response.insert(-1, "    'ResponseMetadata': {...}")
-            shared_example_section.style.start_codeblock()
-            shared_example_section.write(response.pop(0) + '\n')
-            for line in response:
-                shared_example_section.writeln(line)
-            shared_example_section.style.end_codeblock()
-        else:
-            shared_example_section.style.end_codeblock()
+        documenter.document_shared_example(
+            example=example,
+            section=container_section.add_new_section(example['id']),
+            prefix=example_prefix,
+            operation_model=operation_model
+        )

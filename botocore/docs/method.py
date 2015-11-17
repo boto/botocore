@@ -16,7 +16,6 @@ from botocore.docs.params import RequestParamsDocumenter
 from botocore.docs.params import ResponseParamsDocumenter
 from botocore.docs.example import ResponseExampleDocumenter
 from botocore.docs.example import RequestExampleDocumenter
-from botocore.docs.sharedexample import document_shared_examples
 
 
 def get_instance_public_methods(instance):
@@ -126,7 +125,7 @@ def document_model_driven_method(section, method_name, operation_model,
                                  example_prefix=None, include_input=None,
                                  include_output=None, exclude_input=None,
                                  exclude_output=None, document_output=True,
-                                 include_signature=True, shared_examples=None):
+                                 include_signature=True):
     """Documents an individual method
 
     :param section: The section to write to
@@ -162,8 +161,6 @@ def document_model_driven_method(section, method_name, operation_model,
 
     :param include_signature: Whether or not to include the signature.
         It is useful for generating docstrings.
-
-    :param shared_examples: The shared JSON examples from the model. 
     """
     # Add the signature if specified.
     if include_signature:
@@ -238,8 +235,3 @@ def document_model_driven_method(section, method_name, operation_model,
                 include=include_output, exclude=exclude_output)
     else:
         return_section.write(':returns: None')
-
-    # Add the shared examples
-    if shared_examples:
-        document_shared_examples(
-            section, operation_model, example_prefix, shared_examples)

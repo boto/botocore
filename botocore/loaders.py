@@ -94,7 +94,6 @@ version to use.
 
 """
 import os
-import glob
 
 from botocore import BOTOCORE_ROOT
 from botocore.compat import json

@@ -10,28 +10,59 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from botocore.compat import OrderedDict
 from tests.unit.docs import BaseDocsTest
-from botocore.docs.sharedexample import SharedExampleBuilder, \
+from botocore.docs.sharedexample import SharedExampleDocumenter, \
     document_shared_examples
 
 
-class TestDocumentSharedExample(BaseDocsTest):
+class TestDocumentSharedExamples(BaseDocsTest):
     def setUp(self):
-        super(TestDocumentSharedExample, self).setUp()
-        self._examples = [
-            {
+        super(TestDocumentSharedExamples, self).setUp()
+        self.add_shape({
+            "foo": {
+                "type": "string"
+            }
+        })
+        self.add_shape({
+            "nested": {"type": "string"}
+        })
+        self.add_shape({
+            "other": {
+                "type": "structure",
+                "members": {"nested": {"shape": "nested"}}
+            }
+        })
+        self.add_shape({
+            "aloha": {
+                "type": "list",
+                "member": {"shape": "other"}
+            }
+        })
+        self.add_shape_to_params('foo', 'foo')
+        self.add_shape_to_params('aloha', 'aloha')
+        self._examples = [{
                 "id": "sample-id",
                 "title": "sample-title",
                 "description": "Sample Description.",
-                "input": {
-                    "foo": "bar"
-                },
-                "output": {
-                    "bar": "baz"
-                },
+                "input": OrderedDict([
+                    ("aloha", [
+                        "other",
+                        {
+                            "nested": "fun!"
+                        }
+                    ]),
+                    ("foo", "bar"),
+                ]),
+                "output": OrderedDict([
+                    ("foo", "baz"),
+                ]),
                 "comments": {
+                    "input": {
+                        "aloha": "mahalo"
+                    },
                     "output": {
-                        "bar": "Sample Comment"
+                        "foo": "Sample Comment"
                     }
                 }
             }
@@ -46,73 +77,194 @@ class TestDocumentSharedExample(BaseDocsTest):
             "Sample Description.",
             "::",
             "  response = client.foo(",
-            "      foo='bar', ",
+            "      # mahalo",
+            "      aloha=[",
+            "          'other',",
+            "          {",
+            "              'nested': 'fun!',",
+            "          },",
+            "      ],",
+            "      foo='bar',",
             "  )",
             "  print(response)",
             "Expected Output:",
             "::",
             "  {",
-            "      'bar': 'baz', # Sample Comment",
-            "  }"
+            "      # Sample Comment",
+            "      'foo': 'baz',",
+            "      'ResponseMetadata': {",
+            "          '...': '...',",
+            "      },",
+            "  }",
         ])
 
 
-class TestSharedExampleBuilder(BaseDocsTest):
-    def test_is_input(self):
-        builder = SharedExampleBuilder(
-            params={'foo': 'bar'},
-            operation_name='SampleOperation',
-            is_input=True
-        )
-        example = builder.build_example_code()
-        self.assertIn("(\n    foo='bar', \n)", example)
+class TestSharedExampleDocumenter(BaseDocsTest):
+    def setUp(self):
+        super(TestSharedExampleDocumenter, self).setUp()
+        self.documenter = SharedExampleDocumenter()
 
-        example = builder.build_example_code(prefix='sample_operation')
-        self.assertIn("sample_operation(\n    foo='bar', \n)", example)
+    def test_is_input(self):
+        self.add_shape_to_params('foo', 'String')
+        self.documenter.document_shared_example(
+            example={
+                'input': {
+                    'foo': 'bar'
+                }
+            },
+            prefix='foo.bar',
+            section=self.doc_structure,
+            operation_model=self.operation_model
+        )
+        self.assert_contains_lines_in_order([
+            "foo.bar(",
+            "    foo='bar'",
+            ")"
+        ])
 
     def test_dict_example(self):
-        builder = SharedExampleBuilder(
-            params={'foo': {'bar': 'baz'}},
-            operation_name='SampleOperation',
-            is_input=False
+        self.add_shape({
+            'bar': {
+                "type": "structure",
+                "members": {
+                    "bar": {"shape": "String"}
+                }
+            }
+        })
+        self.add_shape_to_params('foo', 'bar')
+        self.documenter.document_shared_example(
+            example={
+                'input': {
+                    'foo': {'bar': 'baz'}
+                }
+            },
+            prefix='foo.bar',
+            section=self.doc_structure,
+            operation_model=self.operation_model
         )
-        example = builder.build_example_code()
-        self.assertIn("'foo': {\n        'bar': 'baz', \n    },", example)
+        self.assert_contains_lines_in_order([
+            "foo.bar(",
+            "    foo={",
+            "        'bar': 'baz',",
+            "    },",
+            ")"
+        ])
 
     def test_list_example(self):
-        builder = SharedExampleBuilder(
-            params={'foo': ['bar']},
-            operation_name='SampleOperation',
-            is_input=False
+        self.add_shape({
+            "foo": {
+                "type": "list",
+                "member": {"shape": "String"}
+            }
+        })
+        self.add_shape_to_params('foo', 'foo')
+        self.documenter.document_shared_example(
+            example={
+                'input': {
+                    'foo': ['bar']
+                }
+            },
+            prefix='foo.bar',
+            section=self.doc_structure,
+            operation_model=self.operation_model
         )
-        example = builder.build_example_code()
-        self.assertIn("'foo': [\n        'bar', \n    ],", example)
+        self.assert_contains_lines_in_order([
+            "foo.bar(",
+            "    foo=[",
+            "        'bar',",
+            "    ],",
+            ")"
+        ])
 
-    def test_string_example(self):
-        builder = SharedExampleBuilder(
-            params={'foo': 'bar'},
-            operation_name='SampleOperation',
-            is_input=False
+    def test_unicode_string_example(self):
+        self.add_shape_to_params('foo', 'String')
+        self.documenter.document_shared_example(
+            example={
+                'input': {
+                    'foo': u'bar'
+                }
+            },
+            prefix='foo.bar',
+            section=self.doc_structure,
+            operation_model=self.operation_model
         )
-        example = builder.build_example_code()
-        self.assertIn("'foo': 'bar'", example)
+        self.assert_contains_lines_in_order([
+            "foo.bar(",
+            "    foo='bar'",
+            ")"
+        ])
 
-        # test unicode string
-        builder = SharedExampleBuilder(
-            params={'foo': u'bar'},
-            operation_name='SampleOperation',
-            is_input=False
+    def test_timestamp_example(self):
+        self.add_shape({
+            'foo': {'type': 'timestamp'}
+        })
+        self.add_shape_to_params('foo', 'foo')
+        self.documenter.document_shared_example(
+            example={
+                'input': {
+                    'foo': 'Fri, 20 Nov 2015 21:13:12 GMT'
+                }
+            },
+            prefix='foo.bar',
+            section=self.doc_structure,
+            operation_model=self.operation_model
         )
-        example = builder.build_example_code()
-        self.assertIn("'foo': 'bar'", example)
+        self.assert_contains_lines_in_order([
+            "foo.bar(",
+            "    foo=datetime(2015, 11, 20, 21, 13, 12, 4, 324, 0)",
+            ")"
+        ])
+
+    def test_map_example(self):
+        self.add_shape({
+            "baz": {"type": "string"}
+        })
+        self.add_shape({
+            'bar': {
+                "type": "map",
+                "key": {"shape": "baz"},
+                "value": {"shape": "baz"}
+            }
+        })
+        self.add_shape_to_params('foo', 'bar')
+        self.documenter.document_shared_example(
+            example={
+                'input': {
+                    'foo': {'bar': 'baz'}
+                }
+            },
+            prefix='foo.bar',
+            section=self.doc_structure,
+            operation_model=self.operation_model
+        )
+        self.assert_contains_lines_in_order([
+            "foo.bar(",
+            "    foo={",
+            "        'bar': 'baz',",
+            "    },",
+            ")"
+        ])
 
     def test_add_comment(self):
-        builder = SharedExampleBuilder(
-            params={'foo': 'bar'},
-            operation_name='SampleOperation',
-            comments={'foo': 'baz'},
-            is_input=False
+        self.add_shape_to_params('foo', 'String')
+        self.documenter.document_shared_example(
+            example={
+                'input': {
+                    'foo': 'bar'
+                },
+                'comments': {
+                    'input': {
+                        'foo': 'baz'
+                    }
+                }
+            },
+            prefix='foo.bar',
+            section=self.doc_structure,
+            operation_model=self.operation_model
         )
-        example = builder.build_example_code()
-        self.assertIn("'foo': 'bar'", example)
-        self.assertIn("# baz", example)
+        self.assert_contains_lines_in_order([
+            "foo.bar(",
+            "    # baz",
+            "    foo='bar',",
+            ")"
+        ])
