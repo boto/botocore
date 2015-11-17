@@ -60,9 +60,9 @@ class Session(object):
     #: are tuples of (<config_name>, <environment variable>, <default value>,
     #: <conversion func>).
     #: The conversion func is a function that takes the configuration value
-    #: as an arugment and returns the converted value.  If this value is
+    #: as an argument and returns the converted value.  If this value is
     #: None, then the configuration value is returned unmodified.  This
-    #: conversion function that be used to type convert config values to
+    #: conversion function can be used to type convert config values to
     #: values other than the default values of strings.
     #: The ``profile`` and ``config_file`` variables should always have a
     #: None value for the first entry in the tuple because it doesn't make
