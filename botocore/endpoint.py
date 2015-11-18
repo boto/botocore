@@ -35,7 +35,6 @@ from botocore import parsers
 
 logger = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 60
-NOT_SET = object()
 filter_ssl_warnings()
 
 
