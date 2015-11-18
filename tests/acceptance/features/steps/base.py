@@ -15,9 +15,9 @@ def _params_from_table(table):
     # They expect:
     #
     #     | name      | department  |
-    #     | Barry     | Beer Cans   |
-    #     | Pudey     | Silly Walks |
-    #     | Two-Lumps | Silly Walks |
+    #     | Barry     | foo         |
+    #     | Pudey     | bar         |
+    #     | Two-Lumps | bar         |
     #
     # Where the first row are headings that indicate the
     # key name you can use to retrieve row values,
@@ -79,16 +79,24 @@ def then_expected_error(context, code):
 
 @then(u'the value at "{}" should be a list')
 def then_expected_type_is_list(context, expression):
-    response = context.response
-    result = jmespath.search(expression, response)
-    assert_is_instance(result, list)
+    # In botocore, if there are no values with an element,
+    # it will not appear in the response dict, so it's actually
+    # ok if the element does not exist (and is not a list).
+    # If an exception happened the test will have already failed,
+    # which makes this step a noop.  We'll just verify
+    # the response is a dict to ensure it made it through
+    # our response parser properly.
+    if not isinstance(context.response, dict):
+        raise AssertionError("Response is not a dict: %s" % context.response)
 
 
 @then(u'the response should contain a "{}"')
 def then_should_contain_key(context, key):
-    if key not in context.response:
-        raise AssertionError("Expected %s in response: %s"
-                             % (key, context.response))
+    # See then_expected_type_is_a_list for more background info.
+    # We really just care that the request succeeded for these
+    # smoke tests.
+    if not isinstance(context.response, dict):
+        raise AssertionError("Response is not a dict: %s" % context.response)
 
 
 @then(u'the error message should contain')
