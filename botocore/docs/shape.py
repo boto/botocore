@@ -19,10 +19,12 @@
 class ShapeDocumenter(object):
     EVENT_NAME = ''
 
-    def __init__(self, service_name, operation_name, event_emitter):
+    def __init__(self, service_name, operation_name, event_emitter,
+                 operation_model=None):
         self._service_name = service_name
         self._operation_name = operation_name
         self._event_emitter = event_emitter
+        self._operation_model = operation_model
 
     def traverse_and_document_shape(self, section, shape, history,
                                     include=None, exclude=None, name=None,

@@ -126,6 +126,9 @@ class ResponseParamsDocumenter(BaseParamsDocumenter):
         if name is not None:
             name_section.style.bold('%s ' % name)
         type_section = section.add_new_section('param-type')
+        if (self._operation_model and
+                self._operation_model.streaming_output_shape == shape):
+            py_type = 'A file-like object with .read([size]) method'
         type_section.style.italics('(%s) -- ' % py_type)
 
         documentation_section = section.add_new_section('param-documentation')
