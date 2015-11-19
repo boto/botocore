@@ -655,3 +655,32 @@ class Config(object):
             if addressing_style not in ['virtual', 'auto', 'path', None]:
                 raise InvalidS3AddressingStyleError(
                     s3_addressing_style=addressing_style)
+
+    def merge(self, other_config):
+        """Merges the config object with another config object
+
+        This will merge in all non-default values from the provided config
+        and return a new config object
+
+        :type other_config: botocore.client.Config
+        :param other config: Another config object to merge with. The values
+            in the provided config object will take precedence in the merging
+
+        :rtype: botocore.client.Config
+        :returns: A config object built from the merged values of both
+            config objects.
+        """
+        # Make a copy of the current attributes in the config object.
+        config_properties = copy.copy(vars(self))
+
+        # Merge the config object's attributes with the other config
+        # object's attributes.
+        for property_key, property_value in vars(other_config).items():
+            if property_key in ['connect_timeout', 'read_timeout']:
+                if property_value != DEFAULT_TIMEOUT:
+                    config_properties[property_key] = property_value
+            elif property_value is not None:
+                config_properties[property_key] = property_value
+
+        # Return a new config object with the merged properties.
+        return Config(**config_properties)

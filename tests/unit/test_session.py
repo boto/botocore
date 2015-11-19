@@ -422,6 +422,35 @@ class TestCreateClient(BaseSessionTest):
             scoped_config=mock.ANY, client_config=config,
             api_version=mock.ANY)
 
+    @mock.patch('botocore.client.ClientCreator')
+    def test_create_client_with_default_client_config(self, client_creator):
+        config = client.Config()
+        self.session.set_default_client_config(config)
+        self.session.create_client('sts')
+
+        client_creator.return_value.create_client.assert_called_with(
+            mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY,
+            scoped_config=mock.ANY, client_config=config,
+            api_version=mock.ANY)
+
+    @mock.patch('botocore.client.ClientCreator')
+    def test_create_client_with_merging_client_configs(self, client_creator):
+        config = client.Config(region_name='us-west-2')
+        other_config = client.Config(region_name='us-east-1')
+        self.session.set_default_client_config(config)
+        self.session.create_client('sts', config=other_config)
+
+        # Grab the client config used in creating the client
+        used_client_config = (
+            client_creator.return_value.create_client.call_args[1][
+                'client_config'])
+        # Check that the client configs were merged
+        self.assertEqual(used_client_config.region_name, 'us-east-1')
+        # Make sure that the client config used is not the default client
+        # config or the one passed in. It should be a new config.
+        self.assertIsNot(used_client_config, config)
+        self.assertIsNot(used_client_config, other_config)
+
     def test_create_client_with_region(self):
         ec2_client = self.session.create_client(
             'ec2', 'us-west-2')
@@ -509,5 +538,11 @@ class TestComponentLocator(unittest.TestCase):
             self.components.get_component('foo')
 
 
-if __name__ == "__main__":
-    unittest.main()
+class TestDefaultClientConfig(BaseSessionTest):
+    def test_new_session_has_no_default_client_config(self):
+        self.assertEqual(self.session.get_default_client_config(), None)
+
+    def test_set_and_get_client_config(self):
+        client_config = client.Config()
+        self.session.set_default_client_config(client_config)
+        self.assertIs(self.session.get_default_client_config(), client_config)
