@@ -19,7 +19,9 @@ class TestStreamingBodyDocumentation(BaseDocsFunctionalTest):
 
     def test_all_streaming_body_are_properly_documented(self):
         for service in self._session.get_available_services():
-            client = self._session.create_client(service)
+            client = self._session.create_client(
+                service, region_name='us-east-1',
+                aws_access_key_id='foo', aws_secret_access_key='bar')
             service_model = client.meta.service_model
             for operation in service_model.operation_names:
                 operation_model = service_model.operation_model(operation)
