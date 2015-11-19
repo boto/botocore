@@ -301,3 +301,16 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
             '\'Bar\': \'string\'',
             '- **Bar** *(string) --*',
         ])
+
+    def test_streaming_body_in_output(self):
+        self.add_shape_to_params('Body', 'Blob')
+        self.json_model['shapes']['Blob'] = {'type': 'blob'}
+        self.json_model['shapes']['SampleOperationInputOutput']['payload'] = \
+            'Body'
+        document_model_driven_method(
+            self.doc_structure, 'foo', self.operation_model,
+            event_emitter=self.event_emitter,
+            method_description='This describes the foo method.',
+            example_prefix='response = client.foo'
+        )
+        self.assert_contains_line('StreamingBody')
