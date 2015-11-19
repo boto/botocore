@@ -67,8 +67,7 @@ class StreamingBody(object):
             raise
 
     def read(self, amt=None):
-        """
-        Read at most amt bytes from the stream.
+        """Read at most amt bytes from the stream.
 
         If the amt argument is omitted, read all data.
         """
