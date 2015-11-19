@@ -67,6 +67,11 @@ class StreamingBody(object):
             raise
 
     def read(self, amt=None):
+        """
+        Read at most amt bytes from the stream.
+
+        If the amt argument is omitted, read all data.
+        """
         chunk = self._raw_stream.read(amt)
         self._amount_read += len(chunk)
         if not chunk or amt is None:
@@ -84,6 +89,7 @@ class StreamingBody(object):
                 expected_bytes=int(self._content_length))
 
     def close(self):
+        """Close the underlying http response stream."""
         self._raw_stream.close()
 
 
