@@ -10,7 +10,6 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import re
 import copy
 import logging
 
@@ -18,6 +17,7 @@ import botocore.serialize
 import botocore.validate
 from botocore import waiter, xform_name
 from botocore.awsrequest import prepare_request_dict
+from botocore.compat import OrderedDict
 from botocore.endpoint import EndpointCreator, DEFAULT_TIMEOUT
 from botocore.exceptions import ClientError, DataNotFoundError
 from botocore.exceptions import OperationNotPageableError
@@ -612,11 +612,13 @@ class Config(object):
 
     :type connect_timeout: int
     :param connect_timeout: The time in seconds till a timeout exception is
-        thrown when attempting to make a connection.
+        thrown when attempting to make a connection. The default is 60
+        seconds.
 
     :type read_timeout: int
     :param read_timeout: The time in seconds till a timeout exception is
-        thrown when attempting to read from a connection.
+        thrown when attempting to read from a connection. The default is
+        60 seconds.
 
     :type s3: dict
     :param s3: A dictionary of s3 specific configurations.
@@ -635,19 +637,63 @@ class Config(object):
                   * path -- Addressing style is always by path. Endpoints will
                             be addressed as such: s3.amazonaws.com/mybucket
     """
-    def __init__(self, region_name=None, signature_version=None,
-                 user_agent=None, user_agent_extra=None,
-                 connect_timeout=DEFAULT_TIMEOUT,
-                 read_timeout=DEFAULT_TIMEOUT,
-                 s3=None):
-        self.region_name = region_name
-        self.signature_version = signature_version
-        self.user_agent = user_agent
-        self.user_agent_extra = user_agent_extra
-        self.connect_timeout = connect_timeout
-        self.read_timeout = read_timeout
-        self._validate_s3_configuration(s3)
-        self.s3 = s3
+    OPTION_DEFAULTS = OrderedDict([
+        ('region_name', None),
+        ('signature_version', None),
+        ('user_agent', None),
+        ('user_agent_extra', None),
+        ('connect_timeout', DEFAULT_TIMEOUT),
+        ('read_timeout', DEFAULT_TIMEOUT),
+        ('s3', None)
+    ])
+
+    def __init__(self, *args, **kwargs):
+        self._user_provided_options = self._record_user_provided_options(
+            args, kwargs)
+
+        # Merge the user_provided options onto the default options
+        config_vars = copy.copy(self.OPTION_DEFAULTS)
+        config_vars.update(self._user_provided_options)
+
+        # Set the attributes based on the config_vars
+        for key, value in config_vars.items():
+            setattr(self, key, value)
+
+        # Validate the s3 options
+        self._validate_s3_configuration(self.s3)
+
+    def _record_user_provided_options(self, args, kwargs):
+        option_order = list(self.OPTION_DEFAULTS)
+        user_provided_options = {}
+
+        # Iterate through the kwargs passed through to the constructor and
+        # map valid keys to the dictionary
+        for key, value in kwargs.items():
+            if key in self.OPTION_DEFAULTS:
+                user_provided_options[key] = value
+            # The key must exist in the available options
+            else:
+                raise TypeError(
+                    'Got unexpected keyword argument \'%s\'' % key)
+
+        # The number of args should not be longer than the allowed
+        # options
+        if len(args) > len(option_order):
+            raise TypeError(
+                'Takes at most %s arguments (%s given)' % (
+                    len(option_order), len(args)))
+
+        # Iterate through the args passed through to the constructor and map
+        # them to appropriate keys.
+        for i, arg in enumerate(args):
+            # If it a kwarg was specified for the arg, then error out
+            if option_order[i] in user_provided_options:
+                raise TypeError(
+                    'Got multiple values for keyword argument \'%s\'' % (
+                        option_order[i]))
+            user_provided_options[option_order[i]] = arg
+
+        return user_provided_options
 
     def _validate_s3_configuration(self, s3):
         if s3 is not None:
@@ -671,16 +717,10 @@ class Config(object):
             config objects.
         """
         # Make a copy of the current attributes in the config object.
-        config_properties = copy.copy(vars(self))
+        config_options = copy.copy(self._user_provided_options)
 
-        # Merge the config object's attributes with the other config
-        # object's attributes.
-        for property_key, property_value in vars(other_config).items():
-            if property_key in ['connect_timeout', 'read_timeout']:
-                if property_value != DEFAULT_TIMEOUT:
-                    config_properties[property_key] = property_value
-            elif property_value is not None:
-                config_properties[property_key] = property_value
+        # Merge in the user provided options from the other config
+        config_options.update(other_config._user_provided_options)
 
         # Return a new config object with the merged properties.
-        return Config(**config_properties)
+        return Config(**config_options)

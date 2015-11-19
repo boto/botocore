@@ -763,11 +763,11 @@ class Session(object):
         default_client_config = self.get_default_client_config()
         # If a config is provided and a default config is set, then
         # use the config resulting from merging the two.
-        if config and default_client_config:
+        if config is not None and default_client_config is not None:
             config = default_client_config.merge(config)
         # If a config was not provided then use the default
         # client config from the session
-        elif default_client_config:
+        elif default_client_config is not None:
             config = default_client_config
 
         if region_name is None:

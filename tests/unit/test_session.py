@@ -414,9 +414,13 @@ class TestCreateClient(BaseSessionTest):
 
     @mock.patch('botocore.client.ClientCreator')
     def test_config_passed_to_client_creator(self, client_creator):
-        config = client.Config()
-        self.session.create_client('sts', config=config)
+        # Make sure there is no default set
+        self.assertEqual(self.session.get_default_client_config(), None)
 
+        # The config passed to the client should be the one that is used
+        # in creating the client.
+        config = client.Config(region_name='us-west-2')
+        self.session.create_client('sts', config=config)
         client_creator.return_value.create_client.assert_called_with(
             mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY,
             scoped_config=mock.ANY, client_config=config,
