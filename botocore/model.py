@@ -321,6 +321,20 @@ class ServiceModel(object):
         self._signature_version = value
 
 
+def get_streaming_body(shape):
+    """Returns the streaming member's shape if any; or None otherwise."""
+    # Conceptually this works on output_shape only.
+    # But input_shape is also acceptable and the result will be None.
+    if shape is None:
+        return None
+    payload = shape.serialization.get('payload')
+    if payload is not None:
+        payload_shape = shape.members[payload]
+        if payload_shape.type_name == 'blob':
+            return payload_shape
+    return None
+
+
 class OperationModel(object):
     def __init__(self, operation_model, service_model, name=None):
         """
@@ -409,20 +423,7 @@ class OperationModel(object):
 
     @CachedProperty
     def has_streaming_output(self):
-        return self.streaming_output_shape is not None
-
-    @CachedProperty
-    def streaming_output_shape(self):
-        """Returns the streaming member's shape if any; or None otherwise"""
-        output_shape = self.output_shape
-        if output_shape is None:
-            return None
-        payload = output_shape.serialization.get('payload')
-        if payload is not None:
-            payload_shape = output_shape.members[payload]
-            if payload_shape.type_name == 'blob':
-                return payload_shape
-        return None
+        return get_streaming_body(self.output_shape) is not None
 
 
 class ShapeResolver(object):

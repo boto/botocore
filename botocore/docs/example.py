@@ -12,9 +12,12 @@
 # language governing permissions and limitations under the License.
 from botocore.docs.shape import ShapeDocumenter
 from botocore.docs.utils import py_default
+from botocore.model import get_streaming_body
 
 
 class BaseExampleDocumenter(ShapeDocumenter):
+    streaming_shape = None
+
     def document_example(self, section, shape, prefix=None, include=None,
                          exclude=None):
         """Generates an example based on a shape
@@ -33,6 +36,7 @@ class BaseExampleDocumenter(ShapeDocumenter):
         :param exclude: The names of the parameters to exclude from
             documentation.
         """
+        self.streaming_shape = get_streaming_body(shape)
         history = []
         section.style.new_line()
         section.style.start_codeblock()
@@ -48,8 +52,7 @@ class BaseExampleDocumenter(ShapeDocumenter):
     def document_shape_default(self, section, shape, history, include=None,
                                exclude=None, **kwargs):
         py_type = py_default(shape.type_name)
-        if (self._operation_model and
-                self._operation_model.streaming_output_shape == shape):
+        if self.streaming_shape == shape:
             py_type = 'StreamingBody()'
         section.write(py_type)
 

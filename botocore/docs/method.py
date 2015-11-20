@@ -217,8 +217,7 @@ def document_model_driven_method(section, method_name, operation_model,
         ResponseExampleDocumenter(
             service_name=operation_model.service_model.service_name,
             operation_name=operation_model.name,
-            event_emitter=event_emitter,
-            operation_model=operation_model).document_example(
+            event_emitter=event_emitter).document_example(
                 return_example_section, operation_model.output_shape,
                 include=include_output, exclude=exclude_output)
 
@@ -231,8 +230,7 @@ def document_model_driven_method(section, method_name, operation_model,
         ResponseParamsDocumenter(
             service_name=operation_model.service_model.service_name,
             operation_name=operation_model.name,
-            event_emitter=event_emitter,
-            operation_model=operation_model).document_params(
+            event_emitter=event_emitter).document_params(
                 return_description_section, operation_model.output_shape,
                 include=include_output, exclude=exclude_output)
     else:
