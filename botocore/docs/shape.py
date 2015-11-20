@@ -23,6 +23,7 @@ class ShapeDocumenter(object):
         self._service_name = service_name
         self._operation_name = operation_name
         self._event_emitter = event_emitter
+        self._context = {}
 
     def traverse_and_document_shape(self, section, shape, history,
                                     include=None, exclude=None, name=None,

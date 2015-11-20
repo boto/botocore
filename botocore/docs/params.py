@@ -16,8 +16,6 @@ from botocore.model import get_streaming_body
 
 
 class BaseParamsDocumenter(ShapeDocumenter):
-    streaming_shape = None
-
     def document_params(self, section, shape, include=None, exclude=None):
         """Fills out the documentation for a section given a model shape.
 
@@ -33,7 +31,7 @@ class BaseParamsDocumenter(ShapeDocumenter):
         :param exclude: The names of the parameters to exclude from
             documentation.
         """
-        self.streaming_shape = get_streaming_body(shape)
+        self._context['streaming_shape'] = get_streaming_body(shape)
         history = []
         self.traverse_and_document_shape(
             section=section, shape=shape, history=history,
@@ -130,7 +128,7 @@ class ResponseParamsDocumenter(BaseParamsDocumenter):
         if name is not None:
             name_section.style.bold('%s ' % name)
         type_section = section.add_new_section('param-type')
-        if self.streaming_shape == shape:
+        if self._context.get('streaming_shape') == shape:
             type_section.write('(:class:`.StreamingBody`) -- ')
         else:
             type_section.style.italics('(%s) -- ' % py_type)
