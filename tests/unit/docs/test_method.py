@@ -313,4 +313,4 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
             method_description='This describes the foo method.',
             example_prefix='response = client.foo'
         )
-        self.assert_contains_line('StreamingBody')
+        self.assert_contains_line('**Body** (:class:`.StreamingBody`)')
