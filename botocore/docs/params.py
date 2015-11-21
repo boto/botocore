@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 from botocore.docs.shape import ShapeDocumenter
 from botocore.docs.utils import py_type_name
-from botocore.model import get_streaming_body
 
 
 class BaseParamsDocumenter(ShapeDocumenter):
@@ -31,7 +30,6 @@ class BaseParamsDocumenter(ShapeDocumenter):
         :param exclude: The names of the parameters to exclude from
             documentation.
         """
-        self._context['streaming_shape'] = get_streaming_body(shape)
         history = []
         self.traverse_and_document_shape(
             section=section, shape=shape, history=history,
