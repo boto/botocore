@@ -563,6 +563,26 @@ class TestHandlers(BaseSessionTest):
     def test_validation_is_noop_if_no_bucket_param_exists(self):
         self.assertIsNone(handlers.validate_bucket_name(params={}))
 
+    def test_set_encoding_type(self):
+        params = {}
+        handlers.set_list_objects_encoding_type_url(params)
+        self.assertEqual(params['EncodingType'], 'url')
+
+        params['EncodingType'] = 'new_value'
+        handlers.set_list_objects_encoding_type_url(params)
+        self.assertEqual(params['EncodingType'], 'new_value')
+
+    def test_decode_list_object(self):
+        parsed = {
+            'Contents': [
+                {
+                    'Key': "%C3%A7%C3%B6s%25asd"
+                }
+            ]
+        }
+        handlers.decode_list_object(parsed)
+        self.assertEqual(parsed['Contents'][0]['Key'], u'\xe7\xf6s%asd')
+
 
 class TestRetryHandlerOrder(BaseSessionTest):
     def get_handler_names(self, responses):

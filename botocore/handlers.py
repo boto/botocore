@@ -22,10 +22,10 @@ import logging
 import xml.etree.cElementTree
 import copy
 import re
-import string
 import warnings
 
-from botocore.compat import urlsplit, urlunsplit, unquote, json, quote, six
+from botocore.compat import urlsplit, urlunsplit, unquote, \
+    json, quote, six, unquote_str
 from botocore.docs.utils import AutoPopulatedParam
 from botocore.docs.utils import HideParamFromOperations
 from botocore.docs.utils import AppendParamDocumentation
@@ -519,6 +519,20 @@ def change_get_to_post(request, **kwargs):
         request.url, request.data = request.url.split('?', 1)
 
 
+def set_list_objects_encoding_type_url(params, **kwargs):
+    if 'EncodingType' not in params:
+        params['EncodingType'] = 'url'
+
+
+def decode_list_object(parsed, **kwargs):
+    # This is needed because we are passing url as the encoding type. Since the
+    # paginator is based on the key, we need to handle it before it can be
+    # round tripped.
+    if 'Contents' in parsed and parsed.get('EncodingType') == 'url':
+        for content in parsed['Contents']:
+            content['Key'] = unquote_str(content['Key'])
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -535,6 +549,7 @@ BUILTIN_HANDLERS = [
 
     ('before-parameter-build.s3', validate_bucket_name),
 
+    ('before-parameter-build.s3.ListObjects', set_list_objects_encoding_type_url),
     ('before-call.s3.PutBucketTagging', calculate_md5),
     ('before-call.s3.PutBucketLifecycle', calculate_md5),
     ('before-call.s3.PutBucketLifecycleConfiguration', calculate_md5),
@@ -588,6 +603,7 @@ BUILTIN_HANDLERS = [
      base64_encode_user_data),
     ('before-parameter-build.route53', fix_route53_ids),
     ('before-parameter-build.glacier', inject_account_id),
+    ('after-call.s3.ListObjects', decode_list_object),
 
     # Cloudsearchdomain search operation will be sent by HTTP POST
     ('request-created.cloudsearchdomain.Search',
