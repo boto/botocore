@@ -11,7 +11,4 @@ Feature: AWS STS
     | Name   | temp            |
     | Policy | {\"temp\":true} |
     Then I expect the response error code to be "MalformedPolicyDocument"
-    And I expect the response error message to include:
-    """
-    Syntax errors in policy.
-    """
+    And I expect the response error to contain a message

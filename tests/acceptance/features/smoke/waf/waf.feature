@@ -14,7 +14,4 @@ Feature: AWS WAF
     | Name        | fake_name   |
     | ChangeToken | fake_token  |
     Then I expect the response error code to be "WAFStaleDataException"
-    And I expect the response error message to include:
-    """
-    The input token is no longer current
-    """
+    And I expect the response error to contain a message

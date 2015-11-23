@@ -12,7 +12,4 @@ Feature: Amazon Elastic Compute Cloud
     {"InstanceIds": ["i-12345678"]}
     """
     Then I expect the response error code to be "InvalidInstanceID.NotFound"
-    And I expect the response error message to include:
-    """
-    The instance ID 'i-12345678' does not exist
-    """
+    And I expect the response error to contain a message
