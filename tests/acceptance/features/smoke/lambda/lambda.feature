@@ -10,7 +10,4 @@ Feature: Amazon Lambda
     When I attempt to call the "Invoke" API with:
     | FunctionName | bogus-function |
     Then I expect the response error code to be "ResourceNotFoundException"
-    And I expect the response error message to include:
-    """
-    Function not found
-    """
+    And I expect the response error to contain a message

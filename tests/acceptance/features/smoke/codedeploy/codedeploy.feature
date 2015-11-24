@@ -10,7 +10,4 @@ Feature: Amazon CodeDeploy
     When I attempt to call the "GetDeployment" API with:
       | deploymentId | d-USUAELQEX |
     Then I expect the response error code to be "DeploymentDoesNotExistException"
-    And I expect the response error message to include:
-    """
-    The deployment d-USUAELQEX could not be found
-    """
+    And I expect the response error to contain a message

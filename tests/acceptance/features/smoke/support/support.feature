@@ -16,7 +16,4 @@ Feature: AWS Support
     | serviceCode       | amazon-dynamodb |
     | severityCode      | low             |
     Then I expect the response error code to be "InvalidParameterValueException"
-    And the error message should contain:
-    """
-    Invalid category code
-    """
+    And the response error contains a message

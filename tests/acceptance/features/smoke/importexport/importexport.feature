@@ -12,7 +12,4 @@ Feature: AWS Import Export
     {"JobType": "Import", "ValidateOnly": false, "Manifest": "invalid-manifest"}
     """
     Then I expect the response error code to be "MalformedManifestException"
-    And I expect the response error message to include:
-    """
-    Your manifest is not well-formed
-    """
+    And I expect the response error to contain a message

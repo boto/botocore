@@ -99,13 +99,8 @@ def then_should_contain_key(context, key):
         raise AssertionError("Response is not a dict: %s" % context.response)
 
 
-@then(u'the error message should contain')
-def then_ignore_me(context, msg):
-    # TODO: These steps will be removed.
-    pass
-
-
-@then(u'I expect the response error message to include')
-def step_impl(context):
-    # TODO: These steps will be removed.
-    pass
+@then(u'I expect the response error to contain a message')
+def then_error_has_message(context):
+    if 'Message' not in context.error_response.response['Error']:
+        raise AssertionError("Message key missing from error response: %s" %
+                             context.error_response.response)

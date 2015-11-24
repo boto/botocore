@@ -10,7 +10,4 @@ Feature: AWS Device Farm
     When I attempt to call the "GetDevice" API with:
     | arn | arn:aws:devicefarm:us-west-2::device:000000000000000000000000fake-arn |
     Then I expect the response error code to be "NotFoundException"
-    And I expect the response error message to include:
-    """
-    No device was found for arn
-    """
+    And I expect the response error to contain a message

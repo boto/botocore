@@ -10,7 +10,4 @@ Feature: Amazon CodeCommit
     When I attempt to call the "ListBranches" API with:
     | repositoryName | fake-repo |
     Then I expect the response error code to be "RepositoryDoesNotExistException"
-    And I expect the response error message to include:
-    """
-    fake-repo does not exist
-    """
+    And I expect the response error to contain a message
