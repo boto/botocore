@@ -2058,7 +2058,7 @@
         },
         "ZipFile":{
           "shape":"Blob",
-          "documentation":"<p>Based64-encoded .zip file containing your packaged source code.</p>"
+          "documentation":"<p>Bytestring of content of the .zip file containing your packaged source code.</p>"
         },
         "S3Bucket":{
           "shape":"S3Bucket",
