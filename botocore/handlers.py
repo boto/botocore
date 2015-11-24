@@ -519,16 +519,20 @@ def change_get_to_post(request, **kwargs):
         request.url, request.data = request.url.split('?', 1)
 
 
-def set_list_objects_encoding_type_url(params, **kwargs):
+def set_list_objects_encoding_type_url(params, context, **kwargs):
     if 'EncodingType' not in params:
+        # We set this context so that we know it wasn't the customer that
+        # requested the encoding.
+        context['EncodingTypeAutoSet'] = True
         params['EncodingType'] = 'url'
 
 
-def decode_list_object(parsed, **kwargs):
+def decode_list_object(parsed, context, **kwargs):
     # This is needed because we are passing url as the encoding type. Since the
     # paginator is based on the key, we need to handle it before it can be
     # round tripped.
-    if 'Contents' in parsed and parsed.get('EncodingType') == 'url':
+    if 'Contents' in parsed and parsed.get('EncodingType') == 'url' and \
+                    context.get('EncodingTypeAutoSet'):
         for content in parsed['Contents']:
             content['Key'] = unquote_str(content['Key'])
 
@@ -549,7 +553,8 @@ BUILTIN_HANDLERS = [
 
     ('before-parameter-build.s3', validate_bucket_name),
 
-    ('before-parameter-build.s3.ListObjects', set_list_objects_encoding_type_url),
+    ('before-parameter-build.s3.ListObjects',
+     set_list_objects_encoding_type_url),
     ('before-call.s3.PutBucketTagging', calculate_md5),
     ('before-call.s3.PutBucketLifecycle', calculate_md5),
     ('before-call.s3.PutBucketLifecycleConfiguration', calculate_md5),

@@ -18,10 +18,8 @@ import os
 from tests import BaseSessionTest
 from mock import patch, Mock
 
-import botocore.session
-from botocore import auth
-from botocore import credentials
-from botocore.exceptions import ServiceNotInRegionError
+from botocore.compat import OrderedDict
+from botocore.handlers import set_list_objects_encoding_type_url
 
 
 class TestS3Addressing(BaseSessionTest):
@@ -35,6 +33,8 @@ class TestS3Addressing(BaseSessionTest):
         self.mock_response.content = ''
         self.mock_response.headers = {}
         self.mock_response.status_code = 200
+        self.session.unregister('before-parameter-build.s3.ListObjects',
+                                set_list_objects_encoding_type_url)
 
     def get_prepared_request(self, operation, params,
                              force_hmacv1=False):
@@ -76,7 +76,8 @@ class TestS3Addressing(BaseSessionTest):
 
     def test_list_objects_unicode_query_string_eu_central_1(self):
         self.region_name = 'eu-central-1'
-        params = {'Bucket': 'safename', 'Marker': u'\xe4\xf6\xfc-01.txt'}
+        params = OrderedDict([('Bucket', 'safename'),
+                             ('Marker', u'\xe4\xf6\xfc-01.txt')])
         prepared_request = self.get_prepared_request('list_objects', params)
         self.assertEqual(
             prepared_request.url,
