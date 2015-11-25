@@ -1170,6 +1170,12 @@ class TestConfig(unittest.TestCase):
         new_config = config.merge(other_config)
         self.assertEqual(new_config.region_name, None)
 
+    def test_merge_overrides_values_even_when_using_default_timeout(self):
+        config = client.Config(read_timeout=30)
+        other_config = client.Config(read_timeout=DEFAULT_TIMEOUT)
+        new_config = config.merge(other_config)
+        self.assertEqual(new_config.read_timeout, DEFAULT_TIMEOUT)
+
     def test_merge_overrides_only_when_user_provided_values(self):
         config = client.Config(
             region_name='us-east-1', signature_version='s3v4')
