@@ -10,7 +10,4 @@ Feature: AWS Data Pipeline
     When I attempt to call the "GetPipelineDefinition" API with:
     | pipelineId | fake-id |
     Then I expect the response error code to be "PipelineNotFoundException"
-    And I expect the response error message to include:
-    """
-    does not exist
-    """
+    And I expect the response error to contain a message

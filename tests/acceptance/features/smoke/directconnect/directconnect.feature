@@ -10,7 +10,4 @@ Feature: AWS Direct Connect
     When I attempt to call the "DescribeConnections" API with:
     | connectionId | fake-connection |
     Then I expect the response error code to be "DirectConnectClientException"
-    And I expect the response error message to include:
-    """
-    Connection ID fake-connection has an invalid format
-    """
+    And I expect the response error to contain a message

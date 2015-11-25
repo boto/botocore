@@ -13,7 +13,4 @@ Feature: Amazon CloudWatch
     | StateValue  | mno |
     | StateReason | xyz |
     Then I expect the response error code to be "ValidationError"
-    And I expect the response error message to include:
-    """
-    failed to satisfy constraint
-    """
+    And I expect the response error to contain a message

@@ -10,7 +10,4 @@ Feature: Amazon EMR
     When I attempt to call the "DescribeCluster" API with:
     | ClusterId | fake_cluster |
     Then I expect the response error code to be "InvalidRequestException"
-    And I expect the response error message to include:
-    """
-    Cluster id 'fake_cluster' is not valid.
-    """
+    And I expect the response error to contain a message

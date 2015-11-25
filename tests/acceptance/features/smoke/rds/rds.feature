@@ -10,7 +10,4 @@ Feature: Amazon RDS
     When I attempt to call the "DescribeDBInstances" API with:
     | DBInstanceIdentifier | fake-id |
     Then I expect the response error code to be "DBInstanceNotFound"
-    And I expect the response error message to include:
-    """
-    DBInstance fake-id not found.
-    """
+    And I expect the response error to contain a message

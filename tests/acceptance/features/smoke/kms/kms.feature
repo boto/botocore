@@ -11,7 +11,4 @@ Feature: Amazon Key Management Service
     | KeyId      | 12345678-1234-1234-1234-123456789012 |
     | PolicyName | fake-policy                          |
     Then I expect the response error code to be "NotFoundException"
-    And I expect the response error message to include:
-    """
-    does not exist
-    """
+    And I expect the response error to contain a message

@@ -12,7 +12,4 @@ Feature: Elastic Load Balancing
     {"LoadBalancerNames": ["fake_load_balancer"]}
     """
     Then I expect the response error code to be "ValidationError"
-    And I expect the response error message to include:
-    """
-    LoadBalancer name cannot contain characters that are not letters, or digits or the dash.
-    """
+    And I expect the response error to contain a message

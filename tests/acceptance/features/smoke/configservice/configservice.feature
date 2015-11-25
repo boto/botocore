@@ -12,7 +12,4 @@ Feature: AWS Config
     | resourceType | fake-type |
     | resourceId   | fake-id   |
     Then I expect the response error code to be "ValidationException"
-    And I expect the response error message to include:
-    """
-    failed to satisfy constraint
-    """
+    And I expect the response error to contain a message
