@@ -507,8 +507,11 @@ class BaseJSONParser(ResponseParser):
         return self._timestamp_parser(value)
 
     def _do_error_parse(self, response, shape):
-        body = json.loads(response['body'].decode(self.DEFAULT_ENCODING))
-        error = {"Error": {}, "ResponseMetadata": {}}
+        if response['body']:
+            body = json.loads(response['body'].decode(self.DEFAULT_ENCODING))
+        else:
+            body = {}
+        error = {"Error": {"Message": None, "Code": None}, "ResponseMetadata": {}}
         # Error responses can have slightly different structures for json.
         # The basic structure is:
         #
