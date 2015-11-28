@@ -202,6 +202,24 @@ class TestResponseMetadataParsed(unittest.TestCase):
                                   'HostId': 'second-id',
                                   'HTTPStatusCode': 200}})
 
+
+    def test_error_response_with_no_body(self):
+        parser = parsers.RestJSONParser()
+        response = b''
+        headers = {'content-length': '0', 'connection': 'keep-alive'}
+        output_shape = None
+        parsed = parser.parse({'body': response, 'headers': headers,
+                               'status_code': 504}, output_shape)
+
+        self.assertIn('Error', parsed)
+        self.assertEqual(parsed['Error'], {
+            'Code': None,
+            'Message': ''
+        })
+        self.assertEqual(parsed['ResponseMetadata'], {
+            'HTTPStatusCode': 504,
+        })
+
     def test_s3_error_response(self):
         body = (
             '<Error>'
