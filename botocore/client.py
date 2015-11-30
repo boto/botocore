@@ -377,9 +377,10 @@ class BaseClient(object):
         return self.meta.service_model
 
     def _make_api_call(self, operation_name, api_params):
+        request_context = {}
         operation_model = self._service_model.operation_model(operation_name)
         request_dict = self._convert_to_request_dict(
-            api_params, operation_model)
+            api_params, operation_model, context=request_context)
         http, parsed_response = self._endpoint.make_request(
             operation_model, request_dict)
 
@@ -388,7 +389,7 @@ class BaseClient(object):
                 endpoint_prefix=self._service_model.endpoint_prefix,
                 operation_name=operation_name),
             http_response=http, parsed=parsed_response,
-            model=operation_model
+            model=operation_model, context=request_context
         )
 
         if http.status_code >= 300:
@@ -396,7 +397,8 @@ class BaseClient(object):
         else:
             return parsed_response
 
-    def _convert_to_request_dict(self, api_params, operation_model):
+    def _convert_to_request_dict(self, api_params, operation_model,
+                                 context=None):
         # Given the API params provided by the user and the operation_model
         # we can serialize the request to a request_dict.
         operation_name = operation_model.name
@@ -408,7 +410,7 @@ class BaseClient(object):
             'provide-client-params.{endpoint_prefix}.{operation_name}'.format(
                 endpoint_prefix=self._service_model.endpoint_prefix,
                 operation_name=operation_name),
-            params=api_params, model=operation_model)
+            params=api_params, model=operation_model, context=context)
         api_params = first_non_none_response(responses, default=api_params)
 
         event_name = (
@@ -417,7 +419,7 @@ class BaseClient(object):
             event_name.format(
                 endpoint_prefix=self._service_model.endpoint_prefix,
                 operation_name=operation_name),
-            params=api_params, model=operation_model)
+            params=api_params, model=operation_model, context=context)
 
         request_dict = self._serializer.serialize_to_request(
             api_params, operation_model)
@@ -428,7 +430,7 @@ class BaseClient(object):
                 endpoint_prefix=self._service_model.endpoint_prefix,
                 operation_name=operation_name),
             model=operation_model, params=request_dict,
-            request_signer=self._request_signer
+            request_signer=self._request_signer, context=context
         )
         return request_dict
 
