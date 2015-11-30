@@ -126,7 +126,10 @@ class ResponseParamsDocumenter(BaseParamsDocumenter):
         if name is not None:
             name_section.style.bold('%s ' % name)
         type_section = section.add_new_section('param-type')
-        type_section.style.italics('(%s) -- ' % py_type)
+        if self._context.get('streaming_shape') == shape:
+            type_section.write('(:class:`.StreamingBody`) -- ')
+        else:
+            type_section.style.italics('(%s) -- ' % py_type)
 
         documentation_section = section.add_new_section('param-documentation')
         if shape.documentation:
