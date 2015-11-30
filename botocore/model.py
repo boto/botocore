@@ -409,15 +409,19 @@ class OperationModel(object):
 
     @CachedProperty
     def has_streaming_output(self):
-        output_shape = self.output_shape
-        if output_shape is None:
-            return False
-        payload = output_shape.serialization.get('payload')
+        return self.get_streaming_output() is not None
+
+    def get_streaming_output(self):
+        """Returns the streaming member's shape if any; or None otherwise."""
+        shape = self.output_shape
+        if shape is None:
+            return None
+        payload = shape.serialization.get('payload')
         if payload is not None:
-            payload_shape = output_shape.members[payload]
+            payload_shape = shape.members[payload]
             if payload_shape.type_name == 'blob':
-                return True
-        return False
+                return payload_shape
+        return None
 
 
 class ShapeResolver(object):
