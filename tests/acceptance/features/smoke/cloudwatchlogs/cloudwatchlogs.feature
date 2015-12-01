@@ -11,7 +11,4 @@ Feature: Amazon CloudWatch Logs
     | logGroupName  | fakegroup  |
     | logStreamName | fakestream |
     Then I expect the response error code to be "ResourceNotFoundException"
-    And I expect the response error message to include:
-    """
-    The specified log group does not exist.
-    """
+    And I expect the response error to contain a message

@@ -10,7 +10,4 @@ Feature: Amazon Glacier
     When I attempt to call the "ListVaults" API with:
     | accountId | abcmnoxyz |
     Then I expect the response error code to be "UnrecognizedClientException"
-    And I expect the response error message to include:
-    """
-    No account found for the given parameters
-    """
+    And I expect the response error to contain a message

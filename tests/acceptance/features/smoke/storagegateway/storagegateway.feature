@@ -10,7 +10,4 @@ Feature: AWS Storage Gateway
     When I attempt to call the "ListVolumes" API with:
     | GatewayARN | fake_gateway_that_meets_the_minimum_length_restriction |
     Then I expect the response error code to be "InvalidGatewayRequestException"
-    And I expect the response error message to include:
-    """
-    Invalid resource fake_gateway_that_meets_the_minimum_length_restriction
-    """
+    And I expect the response error to contain a message

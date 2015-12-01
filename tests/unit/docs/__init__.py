@@ -37,6 +37,8 @@ class BaseDocsTest(unittest.TestCase):
             self.version_dirs, 'waiters-2.json')
         self.paginator_model_file = os.path.join(
             self.version_dirs, 'paginators-1.json')
+        self.example_model_file = os.path.join(
+            self.version_dirs, 'examples-1.json')
 
         self.json_model = {}
         self.nested_json_model = {}
@@ -51,6 +53,9 @@ class BaseDocsTest(unittest.TestCase):
         shutil.rmtree(self.root_dir)
 
     def setup_client(self):
+        with open(self.example_model_file, 'w') as f:
+            json.dump(self.example_json_model, f)
+
         with open(self.waiter_model_file, 'w') as f:
             json.dump(self.waiter_json_model, f)
 
@@ -132,6 +137,25 @@ class BaseDocsTest(unittest.TestCase):
                     "limit_key": "MaxResults",
                     "result_key": "Biz"
                 }
+            }
+        }
+
+        self.example_json_model = {
+            "version": 1,
+            "examples": {
+                "SampleOperation": [{
+                    "id": "sample-id",
+                    "title": "sample-title",
+                    "description": "Sample Description.",
+                    "input": OrderedDict([
+                        ("Biz", "foo"),
+                    ]),
+                    "comments": {
+                        "input": {
+                            "Biz": "bar"
+                        },
+                    }
+                }]
             }
         }
 

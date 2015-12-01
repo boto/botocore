@@ -11,7 +11,4 @@ Feature: Amazon Simple Workflow Service
     When I attempt to call the "DescribeDomain" API with:
     | name | fake_domain |
     Then I expect the response error code to be "UnknownResourceFault"
-    And I expect the response error message to include:
-    """
-    Unknown domain: fake_domain
-    """
+    And I expect the response error to contain a message

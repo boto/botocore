@@ -10,7 +10,4 @@ Feature: AWS Kinesis
     When I attempt to call the "DescribeStream" API with:
     | StreamName | bogus-stream-name |
     Then I expect the response error code to be "ResourceNotFoundException"
-    And I expect the response error message to include:
-    """
-    Stream bogus-stream-name under account
-    """
+    And I expect the response error to contain a message

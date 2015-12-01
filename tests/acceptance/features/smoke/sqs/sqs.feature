@@ -10,7 +10,4 @@ Feature: Amazon Simple Queue Service
     When I attempt to call the "GetQueueUrl" API with:
     | QueueName | fake_queue |
     Then I expect the response error code to be "AWS.SimpleQueueService.NonExistentQueue"
-    And I expect the response error message to include:
-    """
-    The specified queue does not exist for this wsdl version.
-    """
+    And I expect the response error to contain a message

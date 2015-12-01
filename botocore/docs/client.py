@@ -16,11 +16,15 @@ from botocore.docs.utils import get_official_service_name
 from botocore.docs.method import document_custom_method
 from botocore.docs.method import document_model_driven_method
 from botocore.docs.method import get_instance_public_methods
+from botocore.docs.sharedexample import document_shared_examples
 
 
 class ClientDocumenter(object):
-    def __init__(self, client):
+    def __init__(self, client, shared_examples=None):
         self._client = client
+        self._shared_examples = shared_examples
+        if self._shared_examples is None:
+            self._shared_examples = {}
         self._service_name = self._client.meta.service_model.service_name
 
     def document_client(self, section):
@@ -92,9 +96,16 @@ class ClientDocumenter(object):
         operation_name = self._client.meta.method_to_api_mapping[method_name]
         operation_model = service_model.operation_model(operation_name)
 
+        example_prefix = 'response = client.%s' % method_name
         document_model_driven_method(
             section, method_name, operation_model,
             event_emitter=self._client.meta.events,
             method_description=operation_model.documentation,
-            example_prefix='response = client.%s' % method_name
+            example_prefix=example_prefix,
         )
+
+        # Add the shared examples
+        shared_examples = self._shared_examples.get(operation_name)
+        if shared_examples:
+            document_shared_examples(
+                section, operation_model, example_prefix, shared_examples)

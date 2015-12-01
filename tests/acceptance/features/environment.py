@@ -19,9 +19,15 @@ REGION_OVERRIDES = {
     'devicefarm': 'us-west-2',
     'efs': 'us-west-2',
 }
-# These services require subscriptions and
-# may not work on every machine.
-SKIP_SERVICES = set(['efs', 'support'])
+SKIP_SERVICES = set([
+    # efs/support require subscriptions and may not work on every machine.
+    'efs',
+    'support',
+    # sts and importexport are skipped because they do not
+    # work when using temporary credentials.
+    'sts',
+    'importexport',
+])
 
 
 def before_feature(context, feature):

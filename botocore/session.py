@@ -149,6 +149,7 @@ class Session(object):
         self._session_instance_vars = {}
         if profile is not None:
             self._session_instance_vars['profile'] = profile
+        self._client_config = None
         self._components = ComponentLocator()
         self._register_components()
 
@@ -377,6 +378,26 @@ class Session(object):
             except ConfigNotFound:
                 pass
         return self._config
+
+    def get_default_client_config(self):
+        """Retrieves the default config for creating clients
+
+        :rtype: botocore.client.Config
+        :returns: The default client config object when creating clients. If
+            the value is ``None`` then there is no default config object
+            attached to the session.
+        """
+        return self._client_config
+
+    def set_default_client_config(self, client_config):
+        """Sets the default config for creating clients
+
+        :type client_config: botocore.client.Config
+        :param client_config: The default client config object when creating
+            clients. If the value is ``None`` then there is no default config
+            object attached to the session.
+        """
+        self._client_config = client_config
 
     def set_credentials(self, access_key, secret_key, token=None):
         """
@@ -727,15 +748,28 @@ class Session(object):
             the client.  Same semantics as aws_access_key_id above.
 
         :type config: botocore.client.Config
-        :param config: Advanced client configuration options. If region_name
+        :param config: Advanced client configuration options. If a value
             is specified in the client config, its value will take precedence
             over environment variables and configuration values, but not over
-            a region_name value passed explicitly to the method.
+            a value passed explicitly to the method. If a default config
+            object is set on the session, the config object used when creating
+            the client will be the result of calling ``merge()`` on the
+            default config with the config provided to this call.
 
         :rtype: botocore.client.BaseClient
         :return: A botocore client instance
 
         """
+        default_client_config = self.get_default_client_config()
+        # If a config is provided and a default config is set, then
+        # use the config resulting from merging the two.
+        if config is not None and default_client_config is not None:
+            config = default_client_config.merge(config)
+        # If a config was not provided then use the default
+        # client config from the session
+        elif default_client_config is not None:
+            config = default_client_config
+
         if region_name is None:
             if config and config.region_name is not None:
                 region_name = config.region_name

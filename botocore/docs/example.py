@@ -48,6 +48,8 @@ class BaseExampleDocumenter(ShapeDocumenter):
     def document_shape_default(self, section, shape, history, include=None,
                                exclude=None, **kwargs):
         py_type = py_default(shape.type_name)
+        if self._context.get('streaming_shape') == shape:
+            py_type = 'StreamingBody()'
         section.write(py_type)
 
     def document_shape_type_string(self, section, shape, history,
