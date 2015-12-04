@@ -121,7 +121,12 @@
       "uri":"https://route53.amazonaws.com",
       "constraints": [
         ["region", "notStartsWith", "cn-"]
-      ]
+      ],
+      "properties": {
+        "credentialScope": {
+            "region": "us-east-1"
+        }
+      }
     }
   ],
   "waf":[
