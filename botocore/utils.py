@@ -389,18 +389,15 @@ def parse_to_aware_datetime(value):
     return datetime_obj
 
 
-def datetime2timestamp(dt):
+def datetime2timestamp(dt, default_timezone=tzutc()):
     """Calculate the timestamp based on the given datetime instance.
 
-    Naive datetime input will be treated as UTC time rather than local time.
-    Note that this behavior is different from datetime.timestamp() in Python 3.
-    (We want unambiguous UTC to avoid test cases failing on different locale.)
+    The optional default_timezone is only used when dt is a naive datetime.
     """
     epoch = datetime.datetime(1970, 1, 1)
-    if dt.tzinfo:
-        d = dt.replace(tzinfo=None) - dt.utcoffset() - epoch
-    else:
-        d = dt - epoch
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=default_timezone)
+    d = dt.replace(tzinfo=None) - dt.utcoffset() - epoch
     if hasattr(d, "total_seconds"):
         return d.total_seconds()  # Works in Python 2.7+
     return (d.microseconds + (d.seconds + d.days * 24 * 3600) * 10**6) / 10**6
