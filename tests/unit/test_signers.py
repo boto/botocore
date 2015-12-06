@@ -13,6 +13,7 @@
 
 import mock
 import datetime
+import json
 
 import botocore
 import botocore.auth
@@ -253,6 +254,9 @@ class TestSigner(BaseSignerTest):
 class TestCloudfrontSigner(unittest.TestCase):
     def setUp(self):
         self.signer = CloudFrontSigner("MY_KEY_ID", lambda message: b'signed')
+        # It helps but the long string diff will still be slightly different on
+        # Python 2.6/2.7/3.x. We won't soly rely on that anyway, so it's fine.
+        self.maxDiff = None
 
     def test_b64encode(self):
         self.assertEqual(b'dGVzdA__', self.signer._url_b64encode(b'test'))
@@ -262,7 +266,8 @@ class TestCloudfrontSigner(unittest.TestCase):
         expected = (
             '{"Statement":[{"Resource":"foo",'
             '"Condition":{"DateLessThan":{"AWS:EpochTime":1451606400}}}]}')
-        self.assertEqual(policy, expected)
+        self.assertEqual(json.loads(policy), json.loads(expected))
+        self.assertEqual(policy, expected)  # This is to ensure the right order
 
     def test_build_custom_policy(self):
         policy = self.signer.build_policy(
@@ -278,7 +283,8 @@ class TestCloudfrontSigner(unittest.TestCase):
                 '},'
                 '"Resource":"foo"}'
             ']}')
-        self.assertEqual(policy, expected)
+        self.assertEqual(json.loads(policy), json.loads(expected))
+        self.assertEqual(policy, expected)  # This is to ensure the right order
 
     def test_generate_presign_url_with_expire_time(self):
         signed_url = self.signer.generate_presigned_url(
