@@ -17,6 +17,7 @@ import json
 
 import botocore
 import botocore.auth
+from botocore.compat import six, urlparse, parse_qs
 
 from botocore.credentials import Credentials
 from botocore.exceptions import NoRegionError, UnknownSignatureVersionError
@@ -286,6 +287,20 @@ class TestCloudfrontSigner(unittest.TestCase):
         self.assertEqual(json.loads(policy), json.loads(expected))
         self.assertEqual(policy, expected)  # This is to ensure the right order
 
+    def _urlparse(self, url):
+        if isinstance(url, six.binary_type):
+            # Not really necessary, but it helps to reduce noise on Python 2.x
+            url = url.decode('utf8')
+        return dict(urlparse(url)._asdict())  # Needs an unordered dict here
+
+    def assertEqualUrl(self, url1, url2):
+        # We compare long urls by their dictionary parts
+        parts1 = self._urlparse(url1)
+        parts2 = self._urlparse(url2)
+        self.assertEqual(
+            parse_qs(parts1.pop('query')), parse_qs(parts2.pop('query')))
+        self.assertEqual(parts1, parts2)
+
     def test_generate_presign_url_with_expire_time(self):
         signed_url = self.signer.generate_presigned_url(
             'http://test.com/foo.txt',
@@ -293,7 +308,7 @@ class TestCloudfrontSigner(unittest.TestCase):
         expected = (
             'http://test.com/foo.txt?Expires=1451606400&Signature=c2lnbmVk'
             '&Key-Pair-Id=MY_KEY_ID')
-        self.assertEqual(signed_url, expected)
+        self.assertEqualUrl(signed_url, expected)
 
     def test_generate_presign_url_with_custom_policy(self):
         policy = self.signer.build_policy(
@@ -310,7 +325,7 @@ class TestCloudfrontSigner(unittest.TestCase):
                 'wfSwiSXBBZGRyZXNzIjp7IkFXUzpTb3VyY2VJcCI6IjEyLjM0LjU2'
                 'Ljc4LzkifX0sIlJlc291cmNlIjoiZm9vIn1dfQ__'
             '&Signature=c2lnbmVk&Key-Pair-Id=MY_KEY_ID')
-        self.assertEqual(signed_url, expected)
+        self.assertEqualUrl(signed_url, expected)
 
 
 class TestS3PostPresigner(BaseSignerTest):
