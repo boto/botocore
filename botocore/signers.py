@@ -18,6 +18,7 @@ import base64
 
 import botocore
 import botocore.auth
+from botocore.compat import six
 from botocore.awsrequest import create_request_object, prepare_request_dict
 from botocore.exceptions import UnknownSignatureVersionError
 from botocore.exceptions import UnknownClientMethodError
@@ -266,7 +267,7 @@ class CloudFrontSigner(object):
         :type date_less_than: datetime
         :param date_less_than: The URL will expire after the time has passed
 
-        :type policy: bytes
+        :type policy: str
         :param policy: The custom policy, possibly built by self.build_policy()
 
         :rtype: str
@@ -277,6 +278,8 @@ class CloudFrontSigner(object):
             raise ValueError('Need to provide either date_less_than or policy')
         if policy is None and date_less_than is not None:
             policy = self.build_policy(url, date_less_than)
+        if isinstance(policy, six.text_type):
+            policy = policy.encode('utf8')
         if date_less_than is not None:
             params = ['Expires=%s' % int(datetime2timestamp(date_less_than))]
         else:
@@ -304,8 +307,8 @@ class CloudFrontSigner(object):
         :type ip_address: str
         :param ip_address: Use 'x.x.x.x' for an IP, or 'x.x.x.x/x' for a subnet
 
-        :rtype: bytes
-        :return: The policy in a compact binary string.
+        :rtype: str
+        :return: The policy in a compact string.
         """
         if date_greater_than is None and ip_address is None:
             policy = (
@@ -330,7 +333,7 @@ class CloudFrontSigner(object):
                 sort_keys=True,  # Make it stable
                 separators=(',', ':'))
         LOG.debug("CloudFront policy: %s", policy)
-        return policy.encode('utf8')
+        return policy
 
     def _url_b64encode(self, data):
         return base64.b64encode(

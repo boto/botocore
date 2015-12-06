@@ -260,8 +260,8 @@ class TestCloudfrontSigner(unittest.TestCase):
     def test_build_canned_policy(self):
         policy = self.signer.build_policy('foo', datetime.datetime(2016, 1, 1))
         expected = (
-            b'{"Statement":[{"Resource":"foo",'
-            b'"Condition":{"DateLessThan":{"AWS:EpochTime":1451606400}}}]}')
+            '{"Statement":[{"Resource":"foo",'
+            '"Condition":{"DateLessThan":{"AWS:EpochTime":1451606400}}}]}')
         self.assertEqual(policy, expected)
 
     def test_build_custom_policy(self):
@@ -270,14 +270,14 @@ class TestCloudfrontSigner(unittest.TestCase):
             date_greater_than=datetime.datetime(2015, 12, 1),
             ip_address='12.34.56.78/9')
         expected = (
-            b'{"Statement":['
-                b'{"Condition":{'
-                    b'"DateGreaterThan":{"AWS:EpochTime":1448928000},'
-                    b'"DateLessThan":{"AWS:EpochTime":1451606400},'
-                    b'"IpAddress":{"AWS:SourceIp":"12.34.56.78/9"}'
-                b'},'
-                b'"Resource":"foo"}'
-            b']}')
+            '{"Statement":['
+                '{"Condition":{'
+                    '"DateGreaterThan":{"AWS:EpochTime":1448928000},'
+                    '"DateLessThan":{"AWS:EpochTime":1451606400},'
+                    '"IpAddress":{"AWS:SourceIp":"12.34.56.78/9"}'
+                '},'
+                '"Resource":"foo"}'
+            ']}')
         self.assertEqual(policy, expected)
 
     def test_generate_presign_url_with_expire_time(self):
