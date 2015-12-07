@@ -241,9 +241,10 @@ class TestDatetime2Timestamp(unittest.TestCase):
             datetime2timestamp(datetime.datetime(1970, 1, 2)), 86400)
 
     def test_datetime2timestamp_aware(self):
+        tzinfo = tzoffset("BRST", -10800)
         self.assertEqual(
-            datetime2timestamp(datetime.datetime(1970, 1, 2, tzinfo=tzutc())),
-            86400)
+            datetime2timestamp(datetime.datetime(1970, 1, 2, tzinfo=tzinfo)),
+            97200)
 
 
 class TestParseToUTCDatetime(unittest.TestCase):

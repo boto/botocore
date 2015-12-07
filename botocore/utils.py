@@ -389,13 +389,20 @@ def parse_to_aware_datetime(value):
     return datetime_obj
 
 
-def datetime2timestamp(dt, default_timezone=tzutc()):
+def datetime2timestamp(dt, default_timezone=None):
     """Calculate the timestamp based on the given datetime instance.
 
-    The optional default_timezone is only used when dt is a naive datetime.
+    :type dt: datetime
+    :param dt: A datetime object to be converted into timestamp
+    :type default_timezone: tzinfo
+    :param default_timezone: If it is provided as None, we treat it as tzutc().
+                             But it is only used when dt is a naive datetime.
+    :returns: The timestamp
     """
     epoch = datetime.datetime(1970, 1, 1)
     if dt.tzinfo is None:
+        if default_timezone is None:
+            default_timezone = tzutc()
         dt = dt.replace(tzinfo=default_timezone)
     d = dt.replace(tzinfo=None) - dt.utcoffset() - epoch
     if hasattr(d, "total_seconds"):
