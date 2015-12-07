@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 import datetime
 import weakref
-import logging
 import json
 import base64
 
@@ -24,9 +23,6 @@ from botocore.exceptions import UnknownSignatureVersionError
 from botocore.exceptions import UnknownClientMethodError
 from botocore.exceptions import UnsupportedSignatureVersionError
 from botocore.utils import fix_s3_host, datetime2timestamp
-
-
-LOG = logging.getLogger(__name__)
 
 
 class RequestSigner(object):
@@ -254,6 +250,7 @@ class CloudFrontSigner(object):
         :param rsa_signer: An RSA signer.
                Its only input parameter will be the message to be signed,
                and its output will be the signed content as a binary string.
+               The hash algorithm needed by CloudFront is SHA-1.
         """
         self.key_id = key_id
         self.rsa_signer = rsa_signer
@@ -265,7 +262,7 @@ class CloudFrontSigner(object):
         :param url: The URL of the protected object
 
         :type date_less_than: datetime
-        :param date_less_than: The URL will expire after the time has passed
+        :param date_less_than: The URL will expire after that date and time
 
         :type policy: str
         :param policy: The custom policy, possibly built by self.build_policy()
@@ -275,8 +272,10 @@ class CloudFrontSigner(object):
         """
         if (date_less_than is not None and policy is not None
                 or date_less_than is None and policy is None):
-            raise ValueError('Need to provide either date_less_than or policy')
-        if policy is None and date_less_than is not None:
+            e = 'Need to provide either date_less_than or policy, but not both'
+            raise ValueError(e)
+        if date_less_than is not None:
+            # We still need to build a canned policy for signing purpose
             policy = self.build_policy(url, date_less_than)
         if isinstance(policy, six.text_type):
             policy = policy.encode('utf8')
@@ -289,7 +288,11 @@ class CloudFrontSigner(object):
             'Signature=%s' % self._url_b64encode(signature).decode('utf8'),
             'Key-Pair-Id=%s' % self.key_id,
             ])
-        return url + ('&' if '?' in url else '?') + '&'.join(params)
+        return self._build_url(url, params)
+
+    def _build_url(self, base_url, extra_params):
+        separator = '&' if '?' in base_url else '?'
+        return base_url + separator + '&'.join(extra_params)
 
     def build_policy(self, resource, date_less_than,
                      date_greater_than=None, ip_address=None):
@@ -332,10 +335,11 @@ class CloudFrontSigner(object):
                 custom_policy,
                 sort_keys=True,  # Make it stable
                 separators=(',', ':'))
-        LOG.debug("CloudFront policy: %s", policy)
         return policy
 
     def _url_b64encode(self, data):
+        # Required by CloudFront. See also:
+        # http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-linux-openssl.html
         return base64.b64encode(
             data).replace(b'+', b'-').replace(b'=', b'_').replace(b'/', b'~')
 
