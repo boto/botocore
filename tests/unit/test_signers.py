@@ -275,17 +275,17 @@ class TestCloudfrontSigner(unittest.TestCase):
             'foo', datetime.datetime(2016, 1, 1),
             date_greater_than=datetime.datetime(2015, 12, 1),
             ip_address='12.34.56.78/9')
-        expected = (
-            '{"Statement":['
-                '{"Condition":{'
-                    '"DateGreaterThan":{"AWS:EpochTime":1448928000},'
-                    '"DateLessThan":{"AWS:EpochTime":1451606400},'
-                    '"IpAddress":{"AWS:SourceIp":"12.34.56.78/9"}'
-                '},'
-                '"Resource":"foo"}'
-            ']}')
-        self.assertEqual(json.loads(policy), json.loads(expected))
-        self.assertEqual(policy, expected)  # This is to ensure the right order
+        expected = {
+            "Statement": [{
+                "Resource":"foo",
+                "Condition":{
+                    "DateGreaterThan":{"AWS:EpochTime":1448928000},
+                    "DateLessThan":{"AWS:EpochTime":1451606400},
+                    "IpAddress":{"AWS:SourceIp":"12.34.56.78/9"}
+                },
+            }]
+        }
+        self.assertEqual(json.loads(policy), expected)
 
     def _urlparse(self, url):
         if isinstance(url, six.binary_type):
@@ -319,11 +319,11 @@ class TestCloudfrontSigner(unittest.TestCase):
             'http://test.com/index.html?foo=bar', policy=policy)
         expected = (
             'http://test.com/index.html?foo=bar'
-            '&Policy=eyJTdGF0ZW1lbnQiOlt7IkNvbmRpdGlvbiI6eyJEYXRlR3JlY'
-                'XRlclRoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTQ0ODkyODAwMH0sIk'
-                'RhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNDUxNjA2NDA'
-                'wfSwiSXBBZGRyZXNzIjp7IkFXUzpTb3VyY2VJcCI6IjEyLjM0LjU2'
-                'Ljc4LzkifX0sIlJlc291cmNlIjoiZm9vIn1dfQ__'
+            '&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiZm9vIiwiQ29uZ'
+                'Gl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIj'
+                'oxNDUxNjA2NDAwfSwiSXBBZGRyZXNzIjp7IkFXUzpTb3VyY2VJcCI'
+                '6IjEyLjM0LjU2Ljc4LzkifSwiRGF0ZUdyZWF0ZXJUaGFuIjp7IkFX'
+                'UzpFcG9jaFRpbWUiOjE0NDg5MjgwMDB9fX1dfQ__'
             '&Signature=c2lnbmVk&Key-Pair-Id=MY_KEY_ID')
         self.assertEqualUrl(signed_url, expected)
 

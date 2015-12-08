@@ -17,7 +17,7 @@ import base64
 
 import botocore
 import botocore.auth
-from botocore.compat import six
+from botocore.compat import six, OrderedDict
 from botocore.awsrequest import create_request_object, prepare_request_dict
 from botocore.exceptions import UnknownSignatureVersionError
 from botocore.exceptions import UnknownClientMethodError
@@ -313,29 +313,27 @@ class CloudFrontSigner(object):
         :rtype: str
         :return: The policy in a compact string.
         """
-        if date_greater_than is None and ip_address is None:
-            policy = (
-                '{"Statement":[{"Resource":"%s",'
-                '"Condition":{"DateLessThan":{"AWS:EpochTime":%s}}}]}') % (
-                resource, int(datetime2timestamp(date_less_than)))
-        else:
-            # SEE: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-creating-signed-url-custom-policy.html
-            moment = int(datetime2timestamp(date_less_than))
-            condition = {"DateLessThan": {"AWS:EpochTime": moment}}
-            if ip_address:
-                if '/' not in ip_address:
-                    ip_address += '/32'
-                condition["IpAddress"] = {"AWS:SourceIp": ip_address}
-            if date_greater_than:
-                moment = int(datetime2timestamp(date_greater_than))
-                condition["DateGreaterThan"] = {"AWS:EpochTime": moment}
-            custom_policy = {
-                "Statement": [{"Resource": resource, "Condition": condition}]}
-            policy = json.dumps(
-                custom_policy,
-                sort_keys=True,  # Make it stable
-                separators=(',', ':'))
-        return policy
+        # Note:
+        # 1. Order in canned policy is significant. Special care has been taken
+        #    to ensure the output will match the order defined by document.
+        #    There is also a test case in this commit to ensure that order.
+        #    SEE: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-creating-signed-url-canned-policy.html#private-content-canned-policy-creating-policy-statement
+        # 2. Albeit the order in custom policy is not required by CloudFront,
+        #    we still use OrderedDict internally to ensure the result is stable
+        #    and also matches canned policy requirement.
+        #    SEE: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-creating-signed-url-custom-policy.html
+        moment = int(datetime2timestamp(date_less_than))
+        condition = OrderedDict({"DateLessThan": {"AWS:EpochTime": moment}})
+        if ip_address:
+            if '/' not in ip_address:
+                ip_address += '/32'
+            condition["IpAddress"] = {"AWS:SourceIp": ip_address}
+        if date_greater_than:
+            moment = int(datetime2timestamp(date_greater_than))
+            condition["DateGreaterThan"] = {"AWS:EpochTime": moment}
+        ordered_payload = [('Resource', resource), ('Condition', condition)]
+        custom_policy = {"Statement": [OrderedDict(ordered_payload)]}
+        return json.dumps(custom_policy, separators=(',', ':'))
 
     def _url_b64encode(self, data):
         # Required by CloudFront. See also:
