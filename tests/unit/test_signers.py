@@ -13,15 +13,17 @@
 
 import mock
 import datetime
+import json
 
 import botocore
 import botocore.auth
+from botocore.compat import six, urlparse, parse_qs
 
 from botocore.credentials import Credentials
 from botocore.exceptions import NoRegionError, UnknownSignatureVersionError
 from botocore.exceptions import UnknownClientMethodError, ParamValidationError
 from botocore.exceptions import UnsupportedSignatureVersionError
-from botocore.signers import RequestSigner, S3PostPresigner
+from botocore.signers import RequestSigner, S3PostPresigner, CloudFrontSigner
 
 from tests import unittest
 
@@ -248,6 +250,79 @@ class TestSigner(BaseSignerTest):
             'foo', self.credentials, self.emitter)
         with self.assertRaises(UnsupportedSignatureVersionError):
             self.signer.generate_presigned_url({})
+
+
+class TestCloudfrontSigner(unittest.TestCase):
+    def setUp(self):
+        self.signer = CloudFrontSigner("MY_KEY_ID", lambda message: b'signed')
+        # It helps but the long string diff will still be slightly different on
+        # Python 2.6/2.7/3.x. We won't soly rely on that anyway, so it's fine.
+        self.maxDiff = None
+
+    def test_build_canned_policy(self):
+        policy = self.signer.build_policy('foo', datetime.datetime(2016, 1, 1))
+        expected = (
+            '{"Statement":[{"Resource":"foo",'
+            '"Condition":{"DateLessThan":{"AWS:EpochTime":1451606400}}}]}')
+        self.assertEqual(json.loads(policy), json.loads(expected))
+        self.assertEqual(policy, expected)  # This is to ensure the right order
+
+    def test_build_custom_policy(self):
+        policy = self.signer.build_policy(
+            'foo', datetime.datetime(2016, 1, 1),
+            date_greater_than=datetime.datetime(2015, 12, 1),
+            ip_address='12.34.56.78/9')
+        expected = {
+            "Statement": [{
+                "Resource":"foo",
+                "Condition":{
+                    "DateGreaterThan":{"AWS:EpochTime":1448928000},
+                    "DateLessThan":{"AWS:EpochTime":1451606400},
+                    "IpAddress":{"AWS:SourceIp":"12.34.56.78/9"}
+                },
+            }]
+        }
+        self.assertEqual(json.loads(policy), expected)
+
+    def _urlparse(self, url):
+        if isinstance(url, six.binary_type):
+            # Not really necessary, but it helps to reduce noise on Python 2.x
+            url = url.decode('utf8')
+        return dict(urlparse(url)._asdict())  # Needs an unordered dict here
+
+    def assertEqualUrl(self, url1, url2):
+        # We compare long urls by their dictionary parts
+        parts1 = self._urlparse(url1)
+        parts2 = self._urlparse(url2)
+        self.assertEqual(
+            parse_qs(parts1.pop('query')), parse_qs(parts2.pop('query')))
+        self.assertEqual(parts1, parts2)
+
+    def test_generate_presign_url_with_expire_time(self):
+        signed_url = self.signer.generate_presigned_url(
+            'http://test.com/foo.txt',
+            date_less_than=datetime.datetime(2016, 1, 1))
+        expected = (
+            'http://test.com/foo.txt?Expires=1451606400&Signature=c2lnbmVk'
+            '&Key-Pair-Id=MY_KEY_ID')
+        self.assertEqualUrl(signed_url, expected)
+
+    def test_generate_presign_url_with_custom_policy(self):
+        policy = self.signer.build_policy(
+            'foo', datetime.datetime(2016, 1, 1),
+            date_greater_than=datetime.datetime(2015, 12, 1),
+            ip_address='12.34.56.78/9')
+        signed_url = self.signer.generate_presigned_url(
+            'http://test.com/index.html?foo=bar', policy=policy)
+        expected = (
+            'http://test.com/index.html?foo=bar'
+            '&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiZm9vIiwiQ29uZ'
+                'Gl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIj'
+                'oxNDUxNjA2NDAwfSwiSXBBZGRyZXNzIjp7IkFXUzpTb3VyY2VJcCI'
+                '6IjEyLjM0LjU2Ljc4LzkifSwiRGF0ZUdyZWF0ZXJUaGFuIjp7IkFX'
+                'UzpFcG9jaFRpbWUiOjE0NDg5MjgwMDB9fX1dfQ__'
+            '&Signature=c2lnbmVk&Key-Pair-Id=MY_KEY_ID')
+        self.assertEqualUrl(signed_url, expected)
 
 
 class TestS3PostPresigner(BaseSignerTest):

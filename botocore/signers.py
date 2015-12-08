@@ -12,14 +12,17 @@
 # language governing permissions and limitations under the License.
 import datetime
 import weakref
+import json
+import base64
 
 import botocore
 import botocore.auth
+from botocore.compat import six, OrderedDict
 from botocore.awsrequest import create_request_object, prepare_request_dict
 from botocore.exceptions import UnknownSignatureVersionError
 from botocore.exceptions import UnknownClientMethodError
 from botocore.exceptions import UnsupportedSignatureVersionError
-from botocore.utils import fix_s3_host
+from botocore.utils import fix_s3_host, datetime2timestamp
 
 
 class RequestSigner(object):
@@ -211,6 +214,132 @@ class RequestSigner(object):
         request.prepare()
 
         return request.url
+
+
+class CloudFrontSigner(object):
+    '''A signer to create a signed CloudFront URL.
+
+    First you create a cloudfront signer based on a normalized RSA signer::
+
+        import rsa
+        def rsa_signer(message):
+            private_key = open('private_key.pem', 'r').read()
+            return rsa.sign(
+                message,
+                rsa.PrivateKey.load_pkcs1(private_key.encode('utf8')),
+                'SHA-1')  # CloudFront requires SHA-1 hash
+        cf_signer = CloudFrontSigner(key_id, rsa_signer)
+
+    To sign with a canned policy::
+
+        signed_url = cf_signer.generate_signed_url(
+            url, date_less_than=datetime(2015, 12, 1))
+
+    To sign with a custom policy::
+
+        signed_url = cf_signer.generate_signed_url(url, policy=my_policy)
+    '''
+
+    def __init__(self, key_id, rsa_signer):
+        """Create a CloudFrontSigner.
+
+        :type key_id: str
+        :param key_id: The CloudFront Key Pair ID
+
+        :type rsa_signer: callable
+        :param rsa_signer: An RSA signer.
+               Its only input parameter will be the message to be signed,
+               and its output will be the signed content as a binary string.
+               The hash algorithm needed by CloudFront is SHA-1.
+        """
+        self.key_id = key_id
+        self.rsa_signer = rsa_signer
+
+    def generate_presigned_url(self, url, date_less_than=None, policy=None):
+        """Creates a signed CloudFront URL based on given parameters.
+
+        :type url: str
+        :param url: The URL of the protected object
+
+        :type date_less_than: datetime
+        :param date_less_than: The URL will expire after that date and time
+
+        :type policy: str
+        :param policy: The custom policy, possibly built by self.build_policy()
+
+        :rtype: str
+        :return: The signed URL.
+        """
+        if (date_less_than is not None and policy is not None
+                or date_less_than is None and policy is None):
+            e = 'Need to provide either date_less_than or policy, but not both'
+            raise ValueError(e)
+        if date_less_than is not None:
+            # We still need to build a canned policy for signing purpose
+            policy = self.build_policy(url, date_less_than)
+        if isinstance(policy, six.text_type):
+            policy = policy.encode('utf8')
+        if date_less_than is not None:
+            params = ['Expires=%s' % int(datetime2timestamp(date_less_than))]
+        else:
+            params = ['Policy=%s' % self._url_b64encode(policy).decode('utf8')]
+        signature = self.rsa_signer(policy)
+        params.extend([
+            'Signature=%s' % self._url_b64encode(signature).decode('utf8'),
+            'Key-Pair-Id=%s' % self.key_id,
+            ])
+        return self._build_url(url, params)
+
+    def _build_url(self, base_url, extra_params):
+        separator = '&' if '?' in base_url else '?'
+        return base_url + separator + '&'.join(extra_params)
+
+    def build_policy(self, resource, date_less_than,
+                     date_greater_than=None, ip_address=None):
+        """A helper to build policy.
+
+        :type resource: str
+        :param resource: The URL or the stream filename of the protected object
+
+        :type date_less_than: datetime
+        :param date_less_than: The URL will expire after the time has passed
+
+        :type date_greater_than: datetime
+        :param date_greater_than: The URL will not be valid until this time
+
+        :type ip_address: str
+        :param ip_address: Use 'x.x.x.x' for an IP, or 'x.x.x.x/x' for a subnet
+
+        :rtype: str
+        :return: The policy in a compact string.
+        """
+        # Note:
+        # 1. Order in canned policy is significant. Special care has been taken
+        #    to ensure the output will match the order defined by the document.
+        #    There is also a test case to ensure that order.
+        #    SEE: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-creating-signed-url-canned-policy.html#private-content-canned-policy-creating-policy-statement
+        # 2. Albeit the order in custom policy is not required by CloudFront,
+        #    we still use OrderedDict internally to ensure the result is stable
+        #    and also matches canned policy requirement.
+        #    SEE: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-creating-signed-url-custom-policy.html
+        moment = int(datetime2timestamp(date_less_than))
+        condition = OrderedDict({"DateLessThan": {"AWS:EpochTime": moment}})
+        if ip_address:
+            if '/' not in ip_address:
+                ip_address += '/32'
+            condition["IpAddress"] = {"AWS:SourceIp": ip_address}
+        if date_greater_than:
+            moment = int(datetime2timestamp(date_greater_than))
+            condition["DateGreaterThan"] = {"AWS:EpochTime": moment}
+        ordered_payload = [('Resource', resource), ('Condition', condition)]
+        custom_policy = {"Statement": [OrderedDict(ordered_payload)]}
+        return json.dumps(custom_policy, separators=(',', ':'))
+
+    def _url_b64encode(self, data):
+        # Required by CloudFront. See also:
+        # http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-linux-openssl.html
+        return base64.b64encode(
+            data).replace(b'+', b'-').replace(b'=', b'_').replace(b'/', b'~')
 
 
 class S3PostPresigner(object):
