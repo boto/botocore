@@ -315,8 +315,8 @@ class CloudFrontSigner(object):
         """
         # Note:
         # 1. Order in canned policy is significant. Special care has been taken
-        #    to ensure the output will match the order defined by document.
-        #    There is also a test case in this commit to ensure that order.
+        #    to ensure the output will match the order defined by the document.
+        #    There is also a test case to ensure that order.
         #    SEE: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-creating-signed-url-canned-policy.html#private-content-canned-policy-creating-policy-statement
         # 2. Albeit the order in custom policy is not required by CloudFront,
         #    we still use OrderedDict internally to ensure the result is stable
