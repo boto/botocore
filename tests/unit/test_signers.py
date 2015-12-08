@@ -259,9 +259,6 @@ class TestCloudfrontSigner(unittest.TestCase):
         # Python 2.6/2.7/3.x. We won't soly rely on that anyway, so it's fine.
         self.maxDiff = None
 
-    def test_b64encode(self):
-        self.assertEqual(b'dGVzdA__', self.signer._url_b64encode(b'test'))
-
     def test_build_canned_policy(self):
         policy = self.signer.build_policy('foo', datetime.datetime(2016, 1, 1))
         expected = (
