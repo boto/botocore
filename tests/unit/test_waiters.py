@@ -580,8 +580,8 @@ class ServiceWaiterFunctionalTest(BaseEnvVar):
         super(ServiceWaiterFunctionalTest, self).setUp()
         self.data_path = os.path.join(
             os.path.dirname(botocore.__file__), 'data')
-        self.environ['BOTO_DATA_PATH'] = self.data_path
-        self.loader = Loader(self.data_path)
+        self.environ['AWS_DATA_PATH'] = self.data_path
+        self.loader = Loader([self.data_path])
 
     def get_waiter_model(self, service, api_version=None):
         """Get the waiter model for the service."""

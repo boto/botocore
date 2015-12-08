@@ -66,8 +66,6 @@ def create_session(**kwargs):
     # the _LOADER object is used as the loader
     # so that we reused the same models across tests.
     session = botocore.session.Session(**kwargs)
-    data_path = session.get_config_variable('data_path')
-    _LOADER.data_path = data_path or ''
     session.register_component('data_loader', _LOADER)
     session.set_config_variable('credentials_file', 'noexist/foo/botocore')
     return session
