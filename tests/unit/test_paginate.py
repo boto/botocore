@@ -334,6 +334,31 @@ class TestMultipleTokens(unittest.TestCase):
              ])
 
 
+class TestNonStringTokens(unittest.TestCase):
+    def setUp(self):
+        self.method = mock.Mock()
+        # This is something we'd see in s3 pagination.
+        self.paginate_config = {
+            "input_token": ["ExclusiveStartKey"],
+            "output_token": ["LastEvaluatedKey"],
+            "result_key": 'Items',
+        }
+        self.paginator = Paginator(self.method, self.paginate_config)
+
+    def test_dynamo_scan(self):
+        responses = [
+            {"Items": [1], "LastEvaluatedKey": {'foo': 'bar'}},
+            {}
+        ]
+        self.method.side_effect = responses
+        pages = self.paginator.paginate(PaginationConfig={
+            'MaxItems': 3,
+            'StartingToken': "{'hello': 'world'}___3"
+        })
+        pages.build_full_result()
+        self.method.assert_any_call(ExclusiveStartKey={'hello': 'world'})
+
+
 class TestKeyIterators(unittest.TestCase):
     def setUp(self):
         self.method = mock.Mock()

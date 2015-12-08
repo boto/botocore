@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import ast
 from itertools import tee
 
 from six import string_types
@@ -327,7 +328,13 @@ class PageIterator(object):
             if part == 'None':
                 next_token.append(None)
             else:
-                next_token.append(part)
+                try:
+                    # Some services (such as dynamodb) non-string pagination
+                    # tokens, which will fail validation if they aren't
+                    # converted to their proper type.
+                    next_token.append(ast.literal_eval(part))
+                except ValueError:
+                    next_token.append(part)
         return next_token, index
 
 
