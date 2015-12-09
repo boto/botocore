@@ -32,6 +32,7 @@ from botocore.utils import parse_key_val_file_contents
 from botocore.utils import parse_key_val_file
 from botocore.utils import parse_timestamp
 from botocore.utils import parse_to_aware_datetime
+from botocore.utils import datetime2timestamp
 from botocore.utils import CachedProperty
 from botocore.utils import ArgumentGenerator
 from botocore.utils import calculate_tree_hash
@@ -232,6 +233,18 @@ class TestParseTimestamps(unittest.TestCase):
     def test_parse_invalid_timestamp(self):
         with self.assertRaises(ValueError):
             parse_timestamp('invalid date')
+
+
+class TestDatetime2Timestamp(unittest.TestCase):
+    def test_datetime2timestamp_naive(self):
+        self.assertEqual(
+            datetime2timestamp(datetime.datetime(1970, 1, 2)), 86400)
+
+    def test_datetime2timestamp_aware(self):
+        tzinfo = tzoffset("BRST", -10800)
+        self.assertEqual(
+            datetime2timestamp(datetime.datetime(1970, 1, 2, tzinfo=tzinfo)),
+            97200)
 
 
 class TestParseToUTCDatetime(unittest.TestCase):

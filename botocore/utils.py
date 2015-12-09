@@ -389,6 +389,27 @@ def parse_to_aware_datetime(value):
     return datetime_obj
 
 
+def datetime2timestamp(dt, default_timezone=None):
+    """Calculate the timestamp based on the given datetime instance.
+
+    :type dt: datetime
+    :param dt: A datetime object to be converted into timestamp
+    :type default_timezone: tzinfo
+    :param default_timezone: If it is provided as None, we treat it as tzutc().
+                             But it is only used when dt is a naive datetime.
+    :returns: The timestamp
+    """
+    epoch = datetime.datetime(1970, 1, 1)
+    if dt.tzinfo is None:
+        if default_timezone is None:
+            default_timezone = tzutc()
+        dt = dt.replace(tzinfo=default_timezone)
+    d = dt.replace(tzinfo=None) - dt.utcoffset() - epoch
+    if hasattr(d, "total_seconds"):
+        return d.total_seconds()  # Works in Python 2.7+
+    return (d.microseconds + (d.seconds + d.days * 24 * 3600) * 10**6) / 10**6
+
+
 def calculate_sha256(body, as_hex=False):
     """Calculate a sha256 checksum.
 
