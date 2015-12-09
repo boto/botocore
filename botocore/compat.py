@@ -29,6 +29,7 @@ if six.PY3:
     from urllib.parse import urlencode
     from urllib.parse import unquote
     from urllib.parse import unquote_plus
+    from urllib.parse import urlparse
     from urllib.parse import urlsplit
     from urllib.parse import urlunsplit
     from urllib.parse import urljoin
@@ -69,6 +70,7 @@ else:
     from urllib import urlencode
     from urllib import unquote
     from urllib import unquote_plus
+    from urlparse import urlparse
     from urlparse import urlsplit
     from urlparse import urlunsplit
     from urlparse import urljoin
