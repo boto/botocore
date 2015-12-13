@@ -207,13 +207,13 @@ class Loader(object):
         if file_loader is None:
             file_loader = self.FILE_LOADER_CLASS()
         self.file_loader = file_loader
-        if include_default_search_paths:
-            self._search_paths = [self.CUSTOMER_DATA_PATH,
-                                  self.BUILTIN_DATA_PATH]
+        if extra_search_paths is not None:
+            self._search_paths = extra_search_paths
         else:
             self._search_paths = []
-        if extra_search_paths is not None:
-            self._search_paths.extend(extra_search_paths)
+        if include_default_search_paths:
+            self._search_paths.extend([self.CUSTOMER_DATA_PATH,
+                                       self.BUILTIN_DATA_PATH])
 
     @property
     def search_paths(self):
