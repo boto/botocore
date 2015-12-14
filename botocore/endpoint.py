@@ -193,8 +193,8 @@ class Endpoint(object):
                                                  operation_model)
         parser = self._response_parser_factory.create_parser(
             operation_model.metadata['protocol'])
-        return ((http_response, parser.parse(response_dict,
-                                             operation_model.output_shape)),
+        return ((http_response,
+                 parser.parse(response_dict, operation_model.output_shape)),
                 None)
 
     def _looks_like_dns_error(self, e):
