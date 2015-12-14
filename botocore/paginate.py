@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import ast
+import logging
 from itertools import tee
 
 from six import string_types
@@ -20,6 +21,9 @@ import jmespath
 from botocore.exceptions import PaginationError
 from botocore.compat import zip
 from botocore.utils import set_value_from_jmespath, merge_dicts
+
+
+logger = logging.getLogger(__name__)
 
 
 class PaginatorModel(object):
@@ -335,6 +339,8 @@ class PageIterator(object):
                     # converted to their proper type.
                     next_token.append(ast.literal_eval(part))
                 except ValueError:
+                    logger.debug(
+                        "Dict pagination token failed to parse as dict.")
                     next_token.append(part)
             else:
                 next_token.append(part)
