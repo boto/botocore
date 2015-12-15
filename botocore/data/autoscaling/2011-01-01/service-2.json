@@ -1721,7 +1721,9 @@
         "AutoScalingGroupName",
         "AvailabilityZone",
         "LifecycleState",
-        "HealthStatus"
+        "HealthStatus",
+        "LaunchConfigurationName",
+        "ProtectedFromScaleIn"
       ],
       "members":{
         "InstanceId":{
@@ -2605,7 +2607,9 @@
         "InstanceId",
         "AvailabilityZone",
         "LifecycleState",
-        "HealthStatus"
+        "HealthStatus",
+        "LaunchConfigurationName",
+        "ProtectedFromScaleIn"
       ],
       "members":{
         "InstanceId":{
