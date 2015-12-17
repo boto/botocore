@@ -11,14 +11,12 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
+import time
 import datetime
-import functools
 import logging
 import os
+import getpass
 
-from botocore.compat import six
-from six.moves import configparser
 from dateutil.parser import parse
 from dateutil.tz import tzlocal
 
@@ -28,6 +26,8 @@ from botocore.compat import total_seconds
 from botocore.exceptions import UnknownCredentialError
 from botocore.exceptions import PartialCredentialsError
 from botocore.exceptions import ConfigNotFound
+from botocore.exceptions import InvalidConfigError
+from botocore.exceptions import RefreshWithMFAUnsupportedError
 from botocore.utils import InstanceMetadataFetcher, parse_key_val_file
 
 
@@ -51,6 +51,12 @@ def create_credential_resolver(session):
     env_provider = EnvProvider()
     providers = [
         env_provider,
+        AssumeRoleProvider(
+            load_config=lambda: session.full_config,
+            client_creator=session.create_client,
+            cache={},
+            profile_name=profile_name,
+        ),
         SharedCredentialProvider(
             creds_filename=credential_file,
             profile_name=profile_name
@@ -101,6 +107,30 @@ def get_credentials(session):
 
 def _local_now():
     return datetime.datetime.now(tzlocal())
+
+
+def create_assume_role_refresher(client, params):
+    def refresh():
+        response = client.assume_role(**params)
+        credentials = response['Credentials']
+        # We need to normalize the credential names to
+        # the values expected by the refresh creds.
+        return {
+            'access_key': credentials['AccessKeyId'],
+            'secret_key': credentials['SecretAccessKey'],
+            'token': credentials['SessionToken'],
+            'expiry_time': credentials['Expiration'],
+        }
+    return refresh
+
+
+def create_mfa_serial_refresher():
+    def _refresher():
+        # We can explore an option in the future to support
+        # reprompting for MFA, but for now we just error out
+        # when the temp creds expire.
+        raise RefreshWithMFAUnsupportedError()
+    return _refresher
 
 
 class Credentials(object):
@@ -544,6 +574,210 @@ class BotoProvider(CredentialProvider):
                                        method=self.METHOD)
 
 
+class AssumeRoleProvider(CredentialProvider):
+
+    METHOD = 'assume-role'
+    ROLE_CONFIG_VAR = 'role_arn'
+    # Credentials are considered expired (and will be refreshed) once the total
+    # remaining time left until the credentials expires is less than the
+    # EXPIRY_WINDOW.
+    EXPIRY_WINDOW_SECONDS = 60 * 15
+
+    def __init__(self, load_config, client_creator, cache, profile_name,
+                 prompter=getpass.getpass):
+        """
+
+        :type load_config: callable
+        :param load_config: A function that accepts no arguments, and
+            when called, will return the full configuration dictionary
+            for the session (``session.full_config``).
+
+        :type client_creator: callable
+        :param client_creator: A factory function that will create
+            a client when called.  Has the same interface as
+            ``botocore.session.Session.create_client``.
+
+        :type cache: JSONFileCache
+        :param cache: An object that supports ``__getitem__``,
+            ``__setitem__``, and ``__contains__``.  An example
+            of this is the ``JSONFileCache`` class.
+
+        :type profile_name: str
+        :param profile_name: The name of the profile.
+
+        :type prompter: callable
+        :param prompter: A callable that returns input provided
+            by the user (i.e raw_input, getpass.getpass, etc.).
+
+        """
+        #: The cache used to first check for assumed credentials.
+        #: This is checked before making the AssumeRole API
+        #: calls and can be useful if you have short lived
+        #: scripts and you'd like to avoid calling AssumeRole
+        #: until the credentials are expired.
+        self.cache = cache
+        self._load_config = load_config
+        # client_creator is a callable that creates function.
+        # It's basically session.create_client
+        self._client_creator = client_creator
+        self._profile_name = profile_name
+        self._prompter = prompter
+        # The _loaded_config attribute will be populated from the
+        # load_config() function once the configuration is actually
+        # loaded.  The reason we go through all this instead of just
+        # requiring that the loaded_config be passed to us is to that
+        # we can defer configuration loaded until we actually try
+        # to load credentials (as opposed to when the object is
+        # instantiated).
+        self._loaded_config = {}
+
+    def load(self):
+        self._loaded_config = self._load_config()
+        if self._has_assume_role_config_vars():
+            return self._load_creds_via_assume_role()
+
+    def _has_assume_role_config_vars(self):
+        profiles = self._loaded_config.get('profiles', {})
+        return self.ROLE_CONFIG_VAR in profiles.get(self._profile_name, {})
+
+    def _load_creds_via_assume_role(self):
+        # We can get creds in one of two ways:
+        # * It can either be cached on disk from an pre-existing session
+        # * Cache doesn't have the creds (or is expired) so we need to make
+        #   an assume role call to get temporary creds, which we then cache
+        #   for subsequent requests.
+        creds = self._load_creds_from_cache()
+        if creds is not None:
+            logger.debug("Credentials for role retrieved from cache.")
+            return creds
+        else:
+            # We get the Credential used by botocore as well
+            # as the original parsed response from the server.
+            creds, response = self._retrieve_temp_credentials()
+            cache_key = self._create_cache_key()
+            self._write_cached_credentials(response, cache_key)
+            return creds
+
+    def _load_creds_from_cache(self):
+        cache_key = self._create_cache_key()
+        try:
+            from_cache = self.cache[cache_key]
+            if self._is_expired(from_cache):
+                # Don't need to delete the cache entry,
+                # when we refresh via AssumeRole, we'll
+                # update the cache with the new entry.
+                logger.debug("Credentials were found in cache, but they are expired.")
+                return None
+            else:
+                return self._create_creds_from_response(from_cache)
+        except KeyError:
+            return None
+
+    def _is_expired(self, credentials):
+        end_time = parse(credentials['Credentials']['Expiration'])
+        now = datetime.datetime.now(tzlocal())
+        seconds = total_seconds(end_time - now)
+        return seconds < self.EXPIRY_WINDOW_SECONDS
+
+    def _create_cache_key(self):
+        role_config = self._get_role_config_values()
+        # On windows, ':' is not allowed in filenames, so we'll
+        # replace them with '_' instead.
+        role_arn = role_config['role_arn'].replace(':', '_')
+        role_session_name=role_config.get('role_session_name')
+        if role_session_name:
+            cache_key = '%s--%s--%s' % (self._profile_name, role_arn, role_session_name)
+        else:
+            cache_key = '%s--%s' % (self._profile_name, role_arn)
+
+        return cache_key.replace('/', '-')
+
+    def _write_cached_credentials(self, creds, cache_key):
+        self.cache[cache_key] = creds
+
+    def _get_role_config_values(self):
+        # This returns the role related configuration.
+        profiles = self._loaded_config.get('profiles', {})
+        try:
+            source_profile = profiles[self._profile_name]['source_profile']
+            role_arn = profiles[self._profile_name]['role_arn']
+            mfa_serial = profiles[self._profile_name].get('mfa_serial')
+        except KeyError as e:
+            raise PartialCredentialsError(provider=self.METHOD,
+                                          cred_var=str(e))
+        external_id = profiles[self._profile_name].get('external_id')
+        role_session_name = profiles[self._profile_name].get('role_session_name')
+        if source_profile not in profiles:
+            raise InvalidConfigError(
+                error_msg=(
+                    'The source_profile "%s" referenced in '
+                    'the profile "%s" does not exist.' % (
+                        source_profile, self._profile_name)))
+        source_cred_values = profiles[source_profile]
+        return {
+            'role_arn': role_arn,
+            'external_id': external_id,
+            'source_profile': source_profile,
+            'mfa_serial': mfa_serial,
+            'source_cred_values': source_cred_values,
+            'role_session_name': role_session_name
+        }
+
+    def _create_creds_from_response(self, response):
+        config = self._get_role_config_values()
+        if config.get('mfa_serial') is not None:
+            # MFA would require getting a new TokenCode which would require
+            # prompting the user for a new token, so we use a different
+            # refresh_func.
+            refresh_func = create_mfa_serial_refresher()
+        else:
+            refresh_func = create_assume_role_refresher(
+                self._create_client_from_config(config),
+                self._assume_role_base_kwargs(config))
+        return RefreshableCredentials(
+            access_key=response['Credentials']['AccessKeyId'],
+            secret_key=response['Credentials']['SecretAccessKey'],
+            token=response['Credentials']['SessionToken'],
+            method=self.METHOD,
+            expiry_time=parse(response['Credentials']['Expiration']),
+            refresh_using=refresh_func)
+
+    def _create_client_from_config(self, config):
+        source_cred_values = config['source_cred_values']
+        client = self._client_creator(
+            'sts', aws_access_key_id=source_cred_values['aws_access_key_id'],
+            aws_secret_access_key=source_cred_values['aws_secret_access_key'],
+            aws_session_token=source_cred_values.get('aws_session_token'),
+        )
+        return client
+
+    def _retrieve_temp_credentials(self):
+        logger.debug("Retrieving credentials via AssumeRole.")
+        config = self._get_role_config_values()
+        client = self._create_client_from_config(config)
+
+        assume_role_kwargs = self._assume_role_base_kwargs(config)
+        if assume_role_kwargs.get('RoleSessionName') is None:
+            role_session_name = 'AWS-CLI-session-%s' % (int(time.time()))
+            assume_role_kwargs['RoleSessionName'] = role_session_name
+
+        response = client.assume_role(**assume_role_kwargs)
+        creds = self._create_creds_from_response(response)
+        return creds, response
+
+    def _assume_role_base_kwargs(self, config):
+        assume_role_kwargs = {'RoleArn': config['role_arn']}
+        if config['external_id'] is not None:
+            assume_role_kwargs['ExternalId'] = config['external_id']
+        if config['mfa_serial'] is not None:
+            token_code = self._prompter("Enter MFA code: ")
+            assume_role_kwargs['SerialNumber'] = config['mfa_serial']
+            assume_role_kwargs['TokenCode'] = token_code
+        if config['role_session_name'] is not None:
+            assume_role_kwargs['RoleSessionName'] = config['role_session_name']
+        return assume_role_kwargs
+
+
 class CredentialResolver(object):
 
     def __init__(self, providers):
@@ -588,11 +822,7 @@ class CredentialResolver(object):
             you'd like to add to the chain.
         :type cred_instance: A subclass of ``Credentials``
         """
-        try:
-            offset = [p.METHOD for p in self.providers].index(name)
-        except ValueError:
-            raise UnknownCredentialError(name=name)
-
+        offset = self._get_provider_offset(name)
         self.providers.insert(offset + 1, credential_provider)
 
     def remove(self, name):
@@ -609,6 +839,24 @@ class CredentialResolver(object):
 
         offset = available_methods.index(name)
         self.providers.pop(offset)
+
+    def get_provider(self, name):
+        """Return a credential provider by name.
+
+        :type name: str
+        :param name: The name of the provider.
+
+        :raises UnknownCredentialError: Raised if no
+            credential provider by the provided name
+            is found.
+        """
+        return self.providers[self._get_provider_offset(name)]
+
+    def _get_provider_offset(self, name):
+        try:
+            return [p.METHOD for p in self.providers].index(name)
+        except ValueError:
+            raise UnknownCredentialError(name=name)
 
     def load_credentials(self):
         """
