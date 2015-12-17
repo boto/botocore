@@ -18,40 +18,11 @@
         "requestUri":"/"
       },
       "input":{"shape":"CancelCommandRequest"},
-      "output":{
-        "shape":"CancelCommandResult",
-        "documentation":"<p>Whether or not the command was successfully canceled. There is no guarantee that a request can be canceled.</p>"
-      },
+      "output":{"shape":"CancelCommandResult"},
       "errors":[
-        {
-          "shape":"InvalidCommandId",
-          "error":{
-            "code":"InvalidCommandId",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidInstanceId",
-          "documentation":"<p>The instance is not in valid state. Valid states are: Running, Pending, Stopped, Stopping. Invalid states are: Shutting-down and Terminated. </p>",
-          "error":{
-            "code":"InvalidInstanceId",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"DuplicateInstanceId",
-          "documentation":"<p>You cannot specify an instance ID in more than one association.</p>",
-          "error":{
-            "code":"DuplicateInstanceId",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        }
+        {"shape":"InvalidCommandId"},
+        {"shape":"InvalidInstanceId"},
+        {"shape":"DuplicateInstanceId"}
       ],
       "documentation":"<p>Attempts to cancel the command specified by the Command ID. There is no guarantee that the command will be terminated and the underlying process stopped.</p>"
     },
@@ -64,75 +35,13 @@
       "input":{"shape":"CreateAssociationRequest"},
       "output":{"shape":"CreateAssociationResult"},
       "errors":[
-        {
-          "shape":"AssociationAlreadyExists",
-          "documentation":"<p>The specified association already exists.</p>",
-          "error":{
-            "code":"AssociationAlreadyExists",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"AssociationLimitExceeded",
-          "documentation":"<p>You can have at most 2,000 active associations.</p>",
-          "error":{
-            "code":"AssociationLimitExceeded",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InternalServerError",
-          "documentation":"<p>An error occurred on the server side.</p>",
-          "error":{
-            "code":"InternalServerError",
-            "httpStatusCode":500
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidDocument",
-          "documentation":"<p>The specified document does not exist.</p>",
-          "error":{
-            "code":"InvalidDocument",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidInstanceId",
-          "documentation":"<p>The instance is not in valid state. Valid states are: Running, Pending, Stopped, Stopping. Invalid states are: Shutting-down and Terminated. </p>",
-          "error":{
-            "code":"InvalidInstanceId",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"UnsupportedPlatformType",
-          "documentation":"The document does not support the platform type of the given instance ID(s).",
-          "error":{
-            "code":"UnsupportedPlatformType",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidParameters",
-          "documentation":"You must specify values for all required parameters in the SSM document. You can only supply values to parameters defined in the SSM document.",
-          "error":{
-            "code":"InvalidParameters",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        }
+        {"shape":"AssociationAlreadyExists"},
+        {"shape":"AssociationLimitExceeded"},
+        {"shape":"InternalServerError"},
+        {"shape":"InvalidDocument"},
+        {"shape":"InvalidInstanceId"},
+        {"shape":"UnsupportedPlatformType"},
+        {"shape":"InvalidParameters"}
       ],
       "documentation":"<p>Associates the specified SSM document with the specified instance.</p> <p>When you associate an SSM document with an instance, the configuration agent on the instance processes the document and configures the instance as specified.</p> <p>If you associate a document with an instance that already has an associated document, the system throws the AssociationAlreadyExists exception.</p>"
     },
@@ -145,75 +54,13 @@
       "input":{"shape":"CreateAssociationBatchRequest"},
       "output":{"shape":"CreateAssociationBatchResult"},
       "errors":[
-        {
-          "shape":"InternalServerError",
-          "documentation":"<p>An error occurred on the server side.</p>",
-          "error":{
-            "code":"InternalServerError",
-            "httpStatusCode":500
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidDocument",
-          "documentation":"<p>The specified document does not exist.</p>",
-          "error":{
-            "code":"InvalidDocument",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidInstanceId",
-          "documentation":"<p>The instance is not in valid state. Valid states are: Running, Pending, Stopped, Stopping. Invalid states are: Shutting-down and Terminated. </p>",
-          "error":{
-            "code":"InvalidInstanceId",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidParameters",
-          "documentation":"You must specify values for all required parameters in the SSM document. You can only supply values to parameters defined in the SSM document.",
-          "error":{
-            "code":"InvalidParameters",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"DuplicateInstanceId",
-          "documentation":"<p>You cannot specify an instance ID in more than one association.</p>",
-          "error":{
-            "code":"DuplicateInstanceId",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"AssociationLimitExceeded",
-          "documentation":"<p>You can have at most 2,000 active associations.</p>",
-          "error":{
-            "code":"AssociationLimitExceeded",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"UnsupportedPlatformType",
-          "documentation":"The document does not support the platform type of the given instance ID(s).",
-          "error":{
-            "code":"UnsupportedPlatformType",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        }
+        {"shape":"InternalServerError"},
+        {"shape":"InvalidDocument"},
+        {"shape":"InvalidInstanceId"},
+        {"shape":"InvalidParameters"},
+        {"shape":"DuplicateInstanceId"},
+        {"shape":"AssociationLimitExceeded"},
+        {"shape":"UnsupportedPlatformType"}
       ],
       "documentation":"<p>Associates the specified SSM document with the specified instances.</p> <p>When you associate an SSM document with an instance, the configuration agent on the instance processes the document and configures the instance as specified.</p> <p>If you associate a document with an instance that already has an associated document, the system throws the AssociationAlreadyExists exception.</p>"
     },
@@ -226,55 +73,11 @@
       "input":{"shape":"CreateDocumentRequest"},
       "output":{"shape":"CreateDocumentResult"},
       "errors":[
-        {
-          "shape":"DocumentAlreadyExists",
-          "documentation":"<p>The specified SSM document already exists.</p>",
-          "error":{
-            "code":"DocumentAlreadyExists",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"MaxDocumentSizeExceeded",
-          "documentation":"<p>The size limit of an SSM document is 64 KB.</p>",
-          "error":{
-            "code":"MaxDocumentSizeExceeded",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InternalServerError",
-          "documentation":"<p>An error occurred on the server side.</p>",
-          "error":{
-            "code":"InternalServerError",
-            "httpStatusCode":500
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidDocumentContent",
-          "documentation":"<p>The content for the SSM document is not valid.</p>",
-          "error":{
-            "code":"InvalidDocumentContent",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"DocumentLimitExceeded",
-          "documentation":"<p>You can have at most 100 active SSM documents.</p>",
-          "error":{
-            "code":"DocumentLimitExceeded",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        }
+        {"shape":"DocumentAlreadyExists"},
+        {"shape":"MaxDocumentSizeExceeded"},
+        {"shape":"InternalServerError"},
+        {"shape":"InvalidDocumentContent"},
+        {"shape":"DocumentLimitExceeded"}
       ],
       "documentation":"<p>Creates an SSM document.</p> <p>After you create an SSM document, you can use <a>CreateAssociation</a> to associate it with one or more running instances.</p>"
     },
@@ -287,55 +90,11 @@
       "input":{"shape":"DeleteAssociationRequest"},
       "output":{"shape":"DeleteAssociationResult"},
       "errors":[
-        {
-          "shape":"AssociationDoesNotExist",
-          "documentation":"<p>The specified association does not exist.</p>",
-          "error":{
-            "code":"AssociationDoesNotExist",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InternalServerError",
-          "documentation":"<p>An error occurred on the server side.</p>",
-          "error":{
-            "code":"InternalServerError",
-            "httpStatusCode":500
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidDocument",
-          "documentation":"<p>The specified document does not exist.</p>",
-          "error":{
-            "code":"InvalidDocument",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidInstanceId",
-          "documentation":"<p>The instance is not in valid state. Valid states are: Running, Pending, Stopped, Stopping. Invalid states are: Shutting-down and Terminated. </p>",
-          "error":{
-            "code":"InvalidInstanceId",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"TooManyUpdates",
-          "documentation":"<p>There are concurrent updates for a resource that supports one update at a time.</p>",
-          "error":{
-            "code":"TooManyUpdates",
-            "httpStatusCode":429,
-            "senderFault":true
-          },
-          "exception":true
-        }
+        {"shape":"AssociationDoesNotExist"},
+        {"shape":"InternalServerError"},
+        {"shape":"InvalidDocument"},
+        {"shape":"InvalidInstanceId"},
+        {"shape":"TooManyUpdates"}
       ],
       "documentation":"<p>Disassociates the specified SSM document from the specified instance.</p> <p>When you disassociate an SSM document from an instance, it does not change the configuration of the instance. To change the configuration state of an instance after you disassociate a document, you must create a new document with the desired configuration and associate it with the instance.</p>"
     },
@@ -348,35 +107,9 @@
       "input":{"shape":"DeleteDocumentRequest"},
       "output":{"shape":"DeleteDocumentResult"},
       "errors":[
-        {
-          "shape":"InternalServerError",
-          "documentation":"<p>An error occurred on the server side.</p>",
-          "error":{
-            "code":"InternalServerError",
-            "httpStatusCode":500
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidDocument",
-          "documentation":"<p>The specified document does not exist.</p>",
-          "error":{
-            "code":"InvalidDocument",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"AssociatedInstances",
-          "documentation":"<p>You must disassociate an SSM document from all instances before you can delete it.</p>",
-          "error":{
-            "code":"AssociatedInstances",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        }
+        {"shape":"InternalServerError"},
+        {"shape":"InvalidDocument"},
+        {"shape":"AssociatedInstances"}
       ],
       "documentation":"<p>Deletes the SSM document and all instance associations to the document.</p> <p>Before you delete the SSM document, we recommend that you use DeleteAssociation to disassociate all instances that are associated with the document.</p>"
     },
@@ -389,45 +122,10 @@
       "input":{"shape":"DescribeAssociationRequest"},
       "output":{"shape":"DescribeAssociationResult"},
       "errors":[
-        {
-          "shape":"AssociationDoesNotExist",
-          "documentation":"<p>The specified association does not exist.</p>",
-          "error":{
-            "code":"AssociationDoesNotExist",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InternalServerError",
-          "documentation":"<p>An error occurred on the server side.</p>",
-          "error":{
-            "code":"InternalServerError",
-            "httpStatusCode":500
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidDocument",
-          "documentation":"<p>The specified document does not exist.</p>",
-          "error":{
-            "code":"InvalidDocument",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidInstanceId",
-          "documentation":"<p>The instance is not in valid state. Valid states are: Running, Pending, Stopped, Stopping. Invalid states are: Shutting-down and Terminated. </p>",
-          "error":{
-            "code":"InvalidInstanceId",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        }
+        {"shape":"AssociationDoesNotExist"},
+        {"shape":"InternalServerError"},
+        {"shape":"InvalidDocument"},
+        {"shape":"InvalidInstanceId"}
       ],
       "documentation":"<p>Describes the associations for the specified SSM document or instance.</p>"
     },
@@ -440,25 +138,8 @@
       "input":{"shape":"DescribeDocumentRequest"},
       "output":{"shape":"DescribeDocumentResult"},
       "errors":[
-        {
-          "shape":"InternalServerError",
-          "documentation":"<p>An error occurred on the server side.</p>",
-          "error":{
-            "code":"InternalServerError",
-            "httpStatusCode":500
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidDocument",
-          "documentation":"<p>The specified document does not exist.</p>",
-          "error":{
-            "code":"InvalidDocument",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        }
+        {"shape":"InternalServerError"},
+        {"shape":"InvalidDocument"}
       ],
       "documentation":"<p>Describes the specified SSM document.</p>"
     },
@@ -471,55 +152,11 @@
       "input":{"shape":"DescribeInstanceInformationRequest"},
       "output":{"shape":"DescribeInstanceInformationResult"},
       "errors":[
-        {
-          "shape":"InternalServerError",
-          "documentation":"<p>An error occurred on the server side.</p>",
-          "error":{
-            "code":"InternalServerError",
-            "httpStatusCode":500
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidInstanceId",
-          "documentation":"<p>The instance is not in valid state. Valid states are: Running, Pending, Stopped, Stopping. Invalid states are: Shutting-down and Terminated. </p>",
-          "error":{
-            "code":"InvalidInstanceId",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidNextToken",
-          "documentation":"<p>The specified token is not valid.</p>",
-          "error":{
-            "code":"InvalidNextToken",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidInstanceInformationFilterValue",
-          "documentation":"The specified filter value is not valid.",
-          "error":{
-            "code":"InvalidInstanceInformationFilterValue",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidFilterKey",
-          "documentation":"The specified key is not valid.",
-          "error":{
-            "code":"InvalidFilterKey",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        }
+        {"shape":"InternalServerError"},
+        {"shape":"InvalidInstanceId"},
+        {"shape":"InvalidNextToken"},
+        {"shape":"InvalidInstanceInformationFilterValue"},
+        {"shape":"InvalidFilterKey"}
       ],
       "documentation":"Describes one or more of your instances. You can use this to get information about instances like the operating system platform, the SSM agent version, status etc. If you specify one or more instance IDs, it returns information for those instances. If you do not specify instance IDs, it returns information for all your instances. If you specify an instance ID that is not valid or an instance that you do not own, you receive an error."
     },
@@ -532,25 +169,8 @@
       "input":{"shape":"GetDocumentRequest"},
       "output":{"shape":"GetDocumentResult"},
       "errors":[
-        {
-          "shape":"InternalServerError",
-          "documentation":"<p>An error occurred on the server side.</p>",
-          "error":{
-            "code":"InternalServerError",
-            "httpStatusCode":500
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidDocument",
-          "documentation":"<p>The specified document does not exist.</p>",
-          "error":{
-            "code":"InvalidDocument",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        }
+        {"shape":"InternalServerError"},
+        {"shape":"InvalidDocument"}
       ],
       "documentation":"<p>Gets the contents of the specified SSM document.</p>"
     },
@@ -563,25 +183,8 @@
       "input":{"shape":"ListAssociationsRequest"},
       "output":{"shape":"ListAssociationsResult"},
       "errors":[
-        {
-          "shape":"InternalServerError",
-          "documentation":"<p>An error occurred on the server side.</p>",
-          "error":{
-            "code":"InternalServerError",
-            "httpStatusCode":500
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidNextToken",
-          "documentation":"<p>The specified token is not valid.</p>",
-          "error":{
-            "code":"InvalidNextToken",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        }
+        {"shape":"InternalServerError"},
+        {"shape":"InvalidNextToken"}
       ],
       "documentation":"<p>Lists the associations for the specified SSM document or instance.</p>"
     },
@@ -594,45 +197,10 @@
       "input":{"shape":"ListCommandInvocationsRequest"},
       "output":{"shape":"ListCommandInvocationsResult"},
       "errors":[
-        {
-          "shape":"InvalidCommandId",
-          "error":{
-            "code":"InvalidCommandId",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidInstanceId",
-          "documentation":"<p>The instance is not in valid state. Valid states are: Running, Pending, Stopped, Stopping. Invalid states are: Shutting-down and Terminated. </p>",
-          "error":{
-            "code":"InvalidInstanceId",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidFilterKey",
-          "documentation":"The specified key is not valid.",
-          "error":{
-            "code":"InvalidFilterKey",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidNextToken",
-          "documentation":"<p>The specified token is not valid.</p>",
-          "error":{
-            "code":"InvalidNextToken",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        }
+        {"shape":"InvalidCommandId"},
+        {"shape":"InvalidInstanceId"},
+        {"shape":"InvalidFilterKey"},
+        {"shape":"InvalidNextToken"}
       ],
       "documentation":"An invocation is copy of a command sent to a specific instance. A command can apply to one or more instances. A command invocation applies to one instance. For example, if a user executes SendCommand against three instances, then a command invocation is created for each requested instance ID. ListCommandInvocations provide status about command execution."
     },
@@ -645,45 +213,10 @@
       "input":{"shape":"ListCommandsRequest"},
       "output":{"shape":"ListCommandsResult"},
       "errors":[
-        {
-          "shape":"InvalidCommandId",
-          "error":{
-            "code":"InvalidCommandId",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidInstanceId",
-          "documentation":"<p>The instance is not in valid state. Valid states are: Running, Pending, Stopped, Stopping. Invalid states are: Shutting-down and Terminated. </p>",
-          "error":{
-            "code":"InvalidInstanceId",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidFilterKey",
-          "documentation":"The specified key is not valid.",
-          "error":{
-            "code":"InvalidFilterKey",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidNextToken",
-          "documentation":"<p>The specified token is not valid.</p>",
-          "error":{
-            "code":"InvalidNextToken",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        }
+        {"shape":"InvalidCommandId"},
+        {"shape":"InvalidInstanceId"},
+        {"shape":"InvalidFilterKey"},
+        {"shape":"InvalidNextToken"}
       ],
       "documentation":"<p>Lists the commands requested by users of the AWS account.</p>"
     },
@@ -696,35 +229,9 @@
       "input":{"shape":"ListDocumentsRequest"},
       "output":{"shape":"ListDocumentsResult"},
       "errors":[
-        {
-          "shape":"InternalServerError",
-          "documentation":"<p>An error occurred on the server side.</p>",
-          "error":{
-            "code":"InternalServerError",
-            "httpStatusCode":500
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidNextToken",
-          "documentation":"<p>The specified token is not valid.</p>",
-          "error":{
-            "code":"InvalidNextToken",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidFilterKey",
-          "documentation":"The specified key is not valid.",
-          "error":{
-            "code":"InvalidFilterKey",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        }
+        {"shape":"InternalServerError"},
+        {"shape":"InvalidNextToken"},
+        {"shape":"InvalidFilterKey"}
       ],
       "documentation":"<p>Describes one or more of your SSM documents.</p>"
     },
@@ -737,66 +244,12 @@
       "input":{"shape":"SendCommandRequest"},
       "output":{"shape":"SendCommandResult"},
       "errors":[
-        {
-          "shape":"DuplicateInstanceId",
-          "documentation":"<p>You cannot specify an instance ID in more than one association.</p>",
-          "error":{
-            "code":"DuplicateInstanceId",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidInstanceId",
-          "documentation":"<p>The instance is not in valid state. Valid states are: Running, Pending, Stopped, Stopping. Invalid states are: Shutting-down and Terminated. </p>",
-          "error":{
-            "code":"InvalidInstanceId",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidDocument",
-          "documentation":"<p>The specified document does not exist.</p>",
-          "error":{
-            "code":"InvalidDocument",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidOutputFolder",
-          "documentation":"The S3 bucket does not exist.",
-          "error":{
-            "code":"InvalidOutputFolder",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidParameters",
-          "documentation":"You must specify values for all required parameters in the SSM document. You can only supply values to parameters defined in the SSM document.",
-          "error":{
-            "code":"InvalidParameters",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"UnsupportedPlatformType",
-          "documentation":"The document does not support the platform type of the given instance ID(s).",
-          "error":{
-            "code":"UnsupportedPlatformType",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        }
+        {"shape":"DuplicateInstanceId"},
+        {"shape":"InvalidInstanceId"},
+        {"shape":"InvalidDocument"},
+        {"shape":"InvalidOutputFolder"},
+        {"shape":"InvalidParameters"},
+        {"shape":"UnsupportedPlatformType"}
       ],
       "documentation":"Executes commands on one or more remote instances."
     },
@@ -809,65 +262,12 @@
       "input":{"shape":"UpdateAssociationStatusRequest"},
       "output":{"shape":"UpdateAssociationStatusResult"},
       "errors":[
-        {
-          "shape":"InternalServerError",
-          "documentation":"<p>An error occurred on the server side.</p>",
-          "error":{
-            "code":"InternalServerError",
-            "httpStatusCode":500
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidInstanceId",
-          "documentation":"<p>The instance is not in valid state. Valid states are: Running, Pending, Stopped, Stopping. Invalid states are: Shutting-down and Terminated. </p>",
-          "error":{
-            "code":"InvalidInstanceId",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"InvalidDocument",
-          "documentation":"<p>The specified document does not exist.</p>",
-          "error":{
-            "code":"InvalidDocument",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"AssociationDoesNotExist",
-          "documentation":"<p>The specified association does not exist.</p>",
-          "error":{
-            "code":"AssociationDoesNotExist",
-            "httpStatusCode":404,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"StatusUnchanged",
-          "documentation":"<p>The updated status is the same as the current status.</p>",
-          "error":{
-            "code":"StatusUnchanged",
-            "httpStatusCode":400,
-            "senderFault":true
-          },
-          "exception":true
-        },
-        {
-          "shape":"TooManyUpdates",
-          "documentation":"<p>There are concurrent updates for a resource that supports one update at a time.</p>",
-          "error":{
-            "code":"TooManyUpdates",
-            "httpStatusCode":429,
-            "senderFault":true
-          },
-          "exception":true
-        }
+        {"shape":"InternalServerError"},
+        {"shape":"InvalidInstanceId"},
+        {"shape":"InvalidDocument"},
+        {"shape":"AssociationDoesNotExist"},
+        {"shape":"StatusUnchanged"},
+        {"shape":"TooManyUpdates"}
       ],
       "documentation":"<p>Updates the status of the SSM document associated with the specified instance.</p>"
     }
@@ -878,11 +278,6 @@
       "members":{
       },
       "documentation":"<p>You must disassociate an SSM document from all instances before you can delete it.</p>",
-      "error":{
-        "code":"AssociatedInstances",
-        "httpStatusCode":400,
-        "senderFault":true
-      },
       "exception":true
     },
     "Association":{
@@ -904,11 +299,6 @@
       "members":{
       },
       "documentation":"<p>The specified association already exists.</p>",
-      "error":{
-        "code":"AssociationAlreadyExists",
-        "httpStatusCode":400,
-        "senderFault":true
-      },
       "exception":true
     },
     "AssociationDescription":{
@@ -949,11 +339,6 @@
       "members":{
       },
       "documentation":"<p>The specified association does not exist.</p>",
-      "error":{
-        "code":"AssociationDoesNotExist",
-        "httpStatusCode":404,
-        "senderFault":true
-      },
       "exception":true
     },
     "AssociationFilter":{
@@ -998,11 +383,6 @@
       "members":{
       },
       "documentation":"<p>You can have at most 2,000 active associations.</p>",
-      "error":{
-        "code":"AssociationLimitExceeded",
-        "httpStatusCode":400,
-        "senderFault":true
-      },
       "exception":true
     },
     "AssociationList":{
@@ -1221,7 +601,7 @@
       "members":{
         "Name":{
           "shape":"CommandPluginName",
-          "documentation":"The name of the plugin. Must be one of the following: AWS-JoinDirectoryServiceDomain, AWS-InstallApplication, AWS-RunPowerShellScript, AWS-InstallPowerShellModule, AWS-ConfigureCloudWatch."
+          "documentation":"The name of the plugin. Must be one of the following: aws:updateAgent, aws:domainjoin, aws:applications, aws:runPowerShellScript, aws:psmodule, aws:cloudWatch, aws:runShellScript, or aws:updateSSMAgent."
         },
         "Status":{
           "shape":"CommandPluginStatus",
@@ -1354,11 +734,11 @@
         },
         "InstanceId":{
           "shape":"InstanceId",
-          "documentation":"<p>The instance ID.</p>"
+          "documentation":"<p>The Windows Server instance ID.</p>"
         },
         "Parameters":{
           "shape":"Parameters",
-          "documentation":"The parameters for the document’s runtime configuration."
+          "documentation":"The parameters for the documents runtime configuration."
         }
       }
     },
@@ -1448,7 +828,7 @@
         },
         "InstanceId":{
           "shape":"InstanceId",
-          "documentation":"<p>The ID of the instance.</p>"
+          "documentation":"<p>The Windows Server instance ID.</p>"
         }
       }
     },
@@ -1517,11 +897,6 @@
       "members":{
       },
       "documentation":"<p>The specified SSM document already exists.</p>",
-      "error":{
-        "code":"DocumentAlreadyExists",
-        "httpStatusCode":400,
-        "senderFault":true
-      },
       "exception":true
     },
     "DocumentContent":{
@@ -1626,11 +1001,6 @@
       "members":{
       },
       "documentation":"<p>You can have at most 100 active SSM documents.</p>",
-      "error":{
-        "code":"DocumentLimitExceeded",
-        "httpStatusCode":400,
-        "senderFault":true
-      },
       "exception":true
     },
     "DocumentName":{
@@ -1689,11 +1059,6 @@
       "members":{
       },
       "documentation":"<p>You cannot specify an instance ID in more than one association.</p>",
-      "error":{
-        "code":"DuplicateInstanceId",
-        "httpStatusCode":404,
-        "senderFault":true
-      },
       "exception":true
     },
     "FailedCreateAssociation":{
@@ -1868,20 +1233,11 @@
         }
       },
       "documentation":"<p>An error occurred on the server side.</p>",
-      "error":{
-        "code":"InternalServerError",
-        "httpStatusCode":500
-      },
       "exception":true
     },
     "InvalidCommandId":{
       "type":"structure",
       "members":{
-      },
-      "error":{
-        "code":"InvalidCommandId",
-        "httpStatusCode":404,
-        "senderFault":true
       },
       "exception":true
     },
@@ -1894,11 +1250,6 @@
         }
       },
       "documentation":"<p>The specified document does not exist.</p>",
-      "error":{
-        "code":"InvalidDocument",
-        "httpStatusCode":404,
-        "senderFault":true
-      },
       "exception":true
     },
     "InvalidDocumentContent":{
@@ -1910,11 +1261,6 @@
         }
       },
       "documentation":"<p>The content for the SSM document is not valid.</p>",
-      "error":{
-        "code":"InvalidDocumentContent",
-        "httpStatusCode":400,
-        "senderFault":true
-      },
       "exception":true
     },
     "InvalidFilterKey":{
@@ -1922,11 +1268,6 @@
       "members":{
       },
       "documentation":"The specified key is not valid.",
-      "error":{
-        "code":"InvalidFilterKey",
-        "httpStatusCode":400,
-        "senderFault":true
-      },
       "exception":true
     },
     "InvalidInstanceId":{
@@ -1934,11 +1275,6 @@
       "members":{
       },
       "documentation":"<p>The instance is not in valid state. Valid states are: Running, Pending, Stopped, Stopping. Invalid states are: Shutting-down and Terminated. </p>",
-      "error":{
-        "code":"InvalidInstanceId",
-        "httpStatusCode":404,
-        "senderFault":true
-      },
       "exception":true
     },
     "InvalidInstanceInformationFilterValue":{
@@ -1947,11 +1283,6 @@
         "message":{"shape":"String"}
       },
       "documentation":"The specified filter value is not valid.",
-      "error":{
-        "code":"InvalidInstanceInformationFilterValue",
-        "httpStatusCode":400,
-        "senderFault":true
-      },
       "exception":true
     },
     "InvalidNextToken":{
@@ -1959,11 +1290,6 @@
       "members":{
       },
       "documentation":"<p>The specified token is not valid.</p>",
-      "error":{
-        "code":"InvalidNextToken",
-        "httpStatusCode":400,
-        "senderFault":true
-      },
       "exception":true
     },
     "InvalidOutputFolder":{
@@ -1971,11 +1297,6 @@
       "members":{
       },
       "documentation":"The S3 bucket does not exist.",
-      "error":{
-        "code":"InvalidOutputFolder",
-        "httpStatusCode":400,
-        "senderFault":true
-      },
       "exception":true
     },
     "InvalidParameters":{
@@ -1987,11 +1308,6 @@
         }
       },
       "documentation":"You must specify values for all required parameters in the SSM document. You can only supply values to parameters defined in the SSM document.",
-      "error":{
-        "code":"InvalidParameters",
-        "httpStatusCode":400,
-        "senderFault":true
-      },
       "exception":true
     },
     "InvocationTraceOutput":{
@@ -2148,11 +1464,6 @@
       "members":{
       },
       "documentation":"<p>The size limit of an SSM document is 64 KB.</p>",
-      "error":{
-        "code":"MaxDocumentSizeExceeded",
-        "httpStatusCode":400,
-        "senderFault":true
-      },
       "exception":true
     },
     "MaxResults":{
@@ -2269,11 +1580,6 @@
       "members":{
       },
       "documentation":"<p>The updated status is the same as the current status.</p>",
-      "error":{
-        "code":"StatusUnchanged",
-        "httpStatusCode":400,
-        "senderFault":true
-      },
       "exception":true
     },
     "String":{"type":"string"},
@@ -2287,11 +1593,6 @@
       "members":{
       },
       "documentation":"<p>There are concurrent updates for a resource that supports one update at a time.</p>",
-      "error":{
-        "code":"TooManyUpdates",
-        "httpStatusCode":429,
-        "senderFault":true
-      },
       "exception":true
     },
     "UnsupportedPlatformType":{
@@ -2300,11 +1601,6 @@
         "message":{"shape":"String"}
       },
       "documentation":"The document does not support the platform type of the given instance ID(s).",
-      "error":{
-        "code":"UnsupportedPlatformType",
-        "httpStatusCode":400,
-        "senderFault":true
-      },
       "exception":true
     },
     "UpdateAssociationStatusRequest":{
@@ -2343,7 +1639,5 @@
       "pattern":"^[0-9]{1,6}(\\.[0-9]{1,6}){2,3}$"
     }
   },
-  "documentation":"<p>Simple Systems Manager (SSM) is a set of capabilities that can help you manage your Amazon EC2 instances running on Windows. SSM enables you to run scripts or other common administrative tasks on your instances using either SSM Run Command or SSM Config. </p> <p>Run Command extends the server administration capabilities of SSM by offering an on-demand experience for executing commands. You can use pre-defined Amazon SSM documents (formerly called configuration documents) to perform the actions listed later in this section, or you can create your own documents. With these document, you can then remotely configure your instances by sending commands using the AWS command line interface (CLI), AWS Tools for Windows PowerShell, or the <b>Commands</b> page in the Amazon EC2 console. Additionally, because Run Command enables you to execute PowerShell commands or scripts, you can administer your instances remotely using PowerShell as though you were logged on locally to the instance. Run Command reports the status of the command execution for each instance targeted by a command. You can also audit the command execution to understand who executed commands, when, and what changes were made. By switching between different SSM documents, you can quickly configure your instances with different types of commands.</p> <p>SSM Config is a lightweight instance configuration solution. With SSM Config, you can specify a setup configuration for your instances. SSM Config is similar to EC2 User Data, which is another way of running one-time scripts or applying settings during instance launch. SSM Config is an extension of this capability. Using SSM documents, you can specify which actions the system should perform on your instances, including which applications to install, which AWS Directory Service directory to join, which Microsoft PowerShell modules to install, etc. If an instance is missing one or more of these configurations, the system makes those changes. By default, the system checks every five minutes to see if there is a new configuration to apply as defined in a new SSM document. If so, the system updates the instances accordingly. In this way, you can remotely maintain a consistent configuration baseline on your instances. SSM Config is available using the AWS CLI or the AWS Tools for Windows PowerShell.</p> <note> <p>SSM is currently not supported on Linux instances.</p> </note> <p>You can use Run Command and SSM Config to do the following:</p> <ul> <li> <p>Join an AWS Directory Service directory (SSM Config and Run Command)</p> </li> <li> <p>Install, repair, or uninstall software using an MSI package (SSM Config and Run Command)</p> </li> <li> <p>Install PowerShell modules (SSM Config and Run Command)</p> </li> <li> <p>Configure CloudWatch Logs to monitor applications and systems (SSM Config and Run Command)</p> </li> <li> <p>Run PowerShell commands or scripts (Run Command only)</p> </li> <li> <p>Update the EC2Config service (Run Command only)</p> </li> <li> <p>Configure Windows Update settings (Run Command only)</p> </li> </ul> <important> <p>SSM documents run with administrative privilege on Windows instances because the EC2Config service runs in the Local System account. If a user has permission to execute any of the pre-defined SSM documents (any document that begins with AWS-*) then that user also has administrator access to the instance. Delegate access to SSM Config and Run Command judiciously. This becomes extremely important if you create your own SSM documents. Amazon Web Services does not provide guidance about how to create secure SSM documents. You create SSM documents and delegate access to Run Command actions at your own risk. As a security best practice, we recommend that you assign access to \"AWS-*\" documents, especially the AWS-RunPowerShellScript document, to trusted administrators only. You can create low-level SSM documents for low security tasks and delegate access to non-administrators. </p> </important>",
-  "examples":{
-  }
+  "documentation":"<p>Simple Systems Manager (SSM) enables you to remotely manage the configuration of your Amazon EC2 instance. Using SSM, you can run scripts or commands using either EC2 Run Command or SSM Config. (SSM Config is currently available only for Windows instances.) </p> <p/> <b>Run Command</b> <p>Run Command provides an on-demand experience for executing commands. You can use pre-defined Amazon SSM documents to perform the actions listed later in this section, or you can create your own documents. With these documents, you can remotely configure your instances by sending commands using the <b>Commands</b> page in the <a href=\"http://console.aws.amazon.com/ec2/\">Amazon EC2 console</a>, <a href=\"http://docs.aws.amazon.com/powershell/latest/reference/items/Amazon_Simple_Systems_Management_cmdlets.html\">AWS Tools for Windows PowerShell</a>, or the <a href=\"http://docs.aws.amazon.com/cli/latest/reference/ssm/index.html\">AWS CLI</a>.</p> <p>Run Command reports the status of the command execution for each instance targeted by a command. You can also audit the command execution to understand who executed commands, when, and what changes were made. By switching between different SSM documents, you can quickly configure your instances with different types of commands. To get started with Run Command, verify that your environment meets the prerequisites for remotely running commands on EC2 instances (<a href=\"http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/remote-commands-prereq.html\">Linux</a> or <a href=\"http://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/remote-commands-prereq.html\">Windows</a>). </p> <p/> <b>SSM Config</b> <p>SSM Config is a lightweight instance configuration solution. SSM Config is currently only available for Windows instances. With SSM Config, you can specify a setup configuration for your instances. SSM Config is similar to EC2 User Data, which is another way of running one-time scripts or applying settings during instance launch. SSM Config is an extension of this capability. Using SSM documents, you can specify which actions the system should perform on your instances, including which applications to install, which AWS Directory Service directory to join, which Microsoft PowerShell modules to install, etc. If an instance is missing one or more of these configurations, the system makes those changes. By default, the system checks every five minutes to see if there is a new configuration to apply as defined in a new SSM document. If so, the system updates the instances accordingly. In this way, you can remotely maintain a consistent configuration baseline on your instances. SSM Config is available using the AWS CLI or the AWS Tools for Windows PowerShell. For more information, see <a href=\"http://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/ec2-configuration-manage.html\">Managing Windows Instance Configuration</a>.</p> <para>SSM Config and Run Command include the following pre-defined documents.</para> <table> <title>Amazon Pre-defined SSM Documents</title> <tgroup cols=\"3\"> <colspec colname=\"col1\" colnum=\"1\" colwidth=\"1*\"/> <colspec colname=\"col2\" colnum=\"2\" colwidth=\"1*\"/> <colspec colname=\"col3\" colnum=\"3\" colwidth=\"1*\"/> <thead> <row> <entry>Name</entry> <entry>Description</entry> <entry>Platform</entry> </row> </thead> <tbody> <row> <entry> <para>AWS-RunShellScript</para> </entry> <entry> <para>Run shell scripts</para> </entry> <entry> <para>Linux</para> </entry> </row> <row> <entry> <para>AWS-UpdateSSMAgent</para> </entry> <entry> <para>Update the Amazon SSM agent</para> </entry> <entry> <para>Linux</para> </entry> </row> <row> <entry> <para>AWS-JoinDirectoryServiceDomain </para> </entry> <entry> <para>Join an AWS Directory </para> </entry> <entry> <para>Windows</para> </entry> </row> <row> <entry> <para>AWS-RunPowerShellScript</para> </entry> <entry> <para>Run PowerShell commands or scripts</para> </entry> <entry> <para>Windows</para> </entry> </row> <row> <entry> <para>AWS-UpdateEC2Config</para> </entry> <entry> <para>Update the EC2Config service </para> </entry> <entry> <para>Windows</para> </entry> </row> <row> <entry> <para>AWS-ConfigureWindowsUpdate</para> </entry> <entry> <para>Configure Windows Update settings</para> </entry> <entry> <para>Windows</para> </entry> </row> <row> <entry> <para>AWS-InstallApplication</para> </entry> <entry> <para>Install, repair, or uninstall software using an MSI package</para> </entry> <entry> <para>Windows</para> </entry> </row> <row> <entry> <para>AWS-InstallPowerShellModule</para> </entry> <entry> <para>Install PowerShell modules </para> </entry> <entry> <para>Windows</para> </entry> </row> <row> <entry> <para>AWS-ConfigureCloudWatch</para> </entry> <entry> <para>Configure Amazon CloudWatch Logs to monitor applications and systems</para> </entry> <entry> <para>Windows</para> </entry> </row> </tbody> </tgroup> </table> <important> <simpara>The commands or scripts specified in SSM documents run with administrative privilege on your instances because the Amazon SSM agent runs as root on Linux and the EC2Config service runs in the Local System account on Windows. If a user has permission to execute any of the pre-defined SSM documents (any document that begins with AWS-*) then that user also has administrator access to the instance. Delegate access to SSM and Run Command judiciously. This becomes extremely important if you create your own SSM documents. Amazon Web Services does not provide guidance about how to create secure SSM documents. You create SSM documents and delegate access to Run Command at your own risk. As a security best practice, we recommend that you assign access to \"AWS-*\" documents, especially the AWS-RunShellScript document on Linux and the AWS-RunPowerShellScript document on Windows, to trusted administrators only. You can create SSM documents for specific tasks and delegate access to non-administrators.</simpara> </important>"
 }
