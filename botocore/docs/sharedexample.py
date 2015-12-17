@@ -55,7 +55,9 @@ class SharedExampleDocumenter(object):
 
     def document_output(self, section, example, shape):
         output_section = section.add_new_section('output')
-        output_section.writeln('Expected Output:')
+        output_section.style.new_line()
+        output_section.write('Expected Output:')
+        output_section.style.new_line()
         output_section.style.start_codeblock()
         params = example.get('output', {})
 
