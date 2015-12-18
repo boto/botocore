@@ -89,6 +89,7 @@ class ReSTDocument(object):
             try:
                 start = len(self._writes)
                 self.parser.feed(doc_string)
+                self.parser.close()
                 end = len(self._writes)
                 self._last_doc_string = (start, end)
             except Exception:
