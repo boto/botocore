@@ -21,6 +21,7 @@ from botocore.compat import six
 from six.moves import configparser
 from dateutil.parser import parse
 from dateutil.tz import tzlocal
+import time
 
 import botocore.config
 import botocore.compat
@@ -28,6 +29,7 @@ from botocore.compat import total_seconds
 from botocore.exceptions import UnknownCredentialError
 from botocore.exceptions import PartialCredentialsError
 from botocore.exceptions import ConfigNotFound
+from botocore.exceptions import ProfileNotFound
 from botocore.utils import InstanceMetadataFetcher, parse_key_val_file
 
 
@@ -48,10 +50,17 @@ def create_credential_resolver(session):
     metadata_timeout = session.get_config_variable('metadata_service_timeout')
     num_attempts = session.get_config_variable('metadata_service_num_attempts')
 
+    def assume_role(access_key, secret_key, token, role):
+        return session.create_client('sts',
+                                     aws_access_key_id=access_key,
+                                     aws_secret_access_key=secret_key,
+                                     aws_session_token=token).assume_role(**role)['Credentials']
+
     env_provider = EnvProvider()
     providers = [
         env_provider,
         SharedCredentialProvider(
+            assume_role=assume_role,
             creds_filename=credential_file,
             profile_name=profile_name
         ),
@@ -243,7 +252,9 @@ class RefreshableCredentials(Credentials):
         self.access_key = data['access_key']
         self.secret_key = data['secret_key']
         self.token = data['token']
-        self._expiry_time = parse(data['expiry_time'])
+        self._expiry_time = (data['expiry_time']
+                             if isinstance(data['expiry_time'], datetime.datetime)
+                             else parse(data['expiry_time']))
         logger.debug("Retrieved credentials will expire at: %s", self._expiry_time)
         self._normalize()
 
@@ -411,6 +422,8 @@ class OriginalEC2Provider(CredentialProvider):
 class SharedCredentialProvider(CredentialProvider):
     METHOD = 'shared-credentials-file'
 
+    ROLE_ARN = 'role_arn'
+    SOURCE_PROFILE = 'source_profile'
     ACCESS_KEY = 'aws_access_key_id'
     SECRET_KEY = 'aws_secret_access_key'
     # Same deal as the EnvProvider above.  Botocore originally supported
@@ -418,7 +431,9 @@ class SharedCredentialProvider(CredentialProvider):
     # so we support both.
     TOKENS = ['aws_security_token', 'aws_session_token']
 
-    def __init__(self, creds_filename, profile_name=None, ini_parser=None):
+    def __init__(self, assume_role, creds_filename, profile_name=None,
+                 ini_parser=None):
+        self.assume_role = assume_role
         self._creds_filename = creds_filename
         if profile_name is None:
             profile_name = 'default'
@@ -434,6 +449,8 @@ class SharedCredentialProvider(CredentialProvider):
             return None
         if self._profile_name in available_creds:
             config = available_creds[self._profile_name]
+            if self.ROLE_ARN in config:
+                return self._load_assume_role(config, available_creds)
             if self.ACCESS_KEY in config:
                 logger.info("Found credentials in shared credentials file: %s",
                             self._creds_filename)
@@ -447,6 +464,59 @@ class SharedCredentialProvider(CredentialProvider):
         for token_envvar in self.TOKENS:
             if token_envvar in config:
                 return config[token_envvar]
+
+    def _load_assume_role(self, profile_config, all_profiles):
+        creds_profile_config = profile_config
+
+        if self.SOURCE_PROFILE in profile_config:
+            creds_profile_name = profile_config[self.SOURCE_PROFILE]
+
+            if creds_profile_name not in all_profiles:
+                raise ProfileNotFound(profile=creds_profile_name)
+
+            creds_profile_config = all_profiles[creds_profile_name]
+
+        access_key, secret_key = self._extract_creds_from_mapping(
+            creds_profile_config, self.ACCESS_KEY, self.SECRET_KEY)
+        token = self._get_session_token(creds_profile_config)
+
+        role_arn = profile_config[self.ROLE_ARN]
+        role_session_name = profile_config.get('role_session_name')
+        role_external_id = profile_config.get('external_id')
+
+        def assume_role():
+            role_args = {
+                'RoleArn': role_arn,
+                'RoleSessionName': (
+                    role_session_name
+                    if role_session_name
+                    else 'botocore-session-{0}'.format(int(time.time())))
+            }
+
+            if role_external_id:
+                role_args['ExternalId'] = role_external_id
+
+            assumed_role = self.assume_role(access_key,
+                                            secret_key,
+                                            token,
+                                            role_args)
+
+            return {
+                'access_key': assumed_role['AccessKeyId'],
+                'secret_key': assumed_role['SecretAccessKey'],
+                'token': assumed_role['SessionToken'],
+                'expiry_time': assumed_role['Expiration'],
+            }
+
+        credentials = assume_role()
+        return RefreshableCredentials(
+            access_key=credentials['access_key'],
+            secret_key=credentials['secret_key'],
+            token=credentials['token'],
+            expiry_time=credentials['expiry_time'],
+            refresh_using=assume_role,
+            method=self.METHOD,
+        )
 
 
 class ConfigProvider(CredentialProvider):

@@ -224,6 +224,7 @@ class TestSharedCredentialsProvider(BaseEnvVar):
             }
         }
         provider = credentials.SharedCredentialProvider(
+            assume_role=lambda *args: self.fail("unexpected assume role"),
             creds_filename='~/.aws/creds', profile_name='default',
             ini_parser=self.ini_parser)
         creds = provider.load()
@@ -241,6 +242,7 @@ class TestSharedCredentialsProvider(BaseEnvVar):
             }
         }
         provider = credentials.SharedCredentialProvider(
+            assume_role=lambda *args: self.fail("unexpected assume role"),
             creds_filename='~/.aws/creds', profile_name='default',
             ini_parser=self.ini_parser)
         with self.assertRaises(botocore.exceptions.PartialCredentialsError):
@@ -255,6 +257,7 @@ class TestSharedCredentialsProvider(BaseEnvVar):
             }
         }
         provider = credentials.SharedCredentialProvider(
+            assume_role=lambda *args: self.fail("unexpected assume role"),
             creds_filename='~/.aws/creds', profile_name='default',
             ini_parser=self.ini_parser)
         creds = provider.load()
@@ -280,6 +283,7 @@ class TestSharedCredentialsProvider(BaseEnvVar):
         }
         # And we specify a profile_name of 'dev'.
         provider = credentials.SharedCredentialProvider(
+            assume_role=lambda *args: self.fail("unexpected assume role"),
             creds_filename='~/.aws/creds', profile_name='dev',
             ini_parser=self.ini_parser)
         creds = provider.load()
@@ -295,10 +299,129 @@ class TestSharedCredentialsProvider(BaseEnvVar):
         self.ini_parser.side_effect = botocore.exceptions.ConfigNotFound(
             path='foo')
         provider = credentials.SharedCredentialProvider(
+            assume_role=lambda *args: self.fail("unexpected assume role"),
             creds_filename='~/.aws/creds', profile_name='dev',
             ini_parser=self.ini_parser)
         creds = provider.load()
         self.assertIsNone(creds)
+
+    def test_credentials_file_with_assume_role(self):
+        self.ini_parser.return_value = {
+            # Here the user has a 'default' and a 'dev' profile.
+            'default': {
+                'aws_access_key_id': 'a',
+                'aws_secret_access_key': 'b',
+                'aws_session_token': 'c',
+            },
+            'dev': {
+                'aws_access_key_id': 'd',
+                'aws_secret_access_key': 'e',
+                'aws_session_token': 'f',
+                'role_arn': 'g'
+            },
+        }
+
+        def assume_role(access_key, secret_key, token, role):
+            self.assertEqual(access_key, 'd')
+            self.assertEqual(secret_key, 'e')
+            self.assertEqual(token, 'f')
+            self.assertEqual(role['RoleArn'], 'g')
+            self.assertTrue(len(role['RoleSessionName']) > 0)
+
+            return {
+                'AccessKeyId': 'o',
+                'SecretAccessKey': 'p',
+                'SessionToken': 'q',
+                'Expiration': datetime.datetime.now(tzlocal())
+            }
+
+        # And we specify a profile_name of 'dev'.
+        provider = credentials.SharedCredentialProvider(
+            assume_role=assume_role,
+            creds_filename='~/.aws/creds', profile_name='dev',
+            ini_parser=self.ini_parser)
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'o')
+        self.assertEqual(creds.secret_key, 'p')
+        self.assertEqual(creds.token, 'q')
+        self.assertEqual(creds.method, 'shared-credentials-file')
+
+    def test_credentials_file_with_assume_role_source_profile(self):
+        self.ini_parser.return_value = {
+            # Here the user has a 'default' and a 'dev' profile.
+            'default': {
+                'aws_access_key_id': 'a',
+                'aws_secret_access_key': 'b',
+                'aws_session_token': 'c',
+            },
+            'dev': {
+                'source_profile': 'default',
+                'role_arn': 'g'
+            },
+        }
+
+        def assume_role(access_key, secret_key, token, role):
+            self.assertEqual(access_key, 'a')
+            self.assertEqual(secret_key, 'b')
+            self.assertEqual(token, 'c')
+            self.assertEqual(role['RoleArn'], 'g')
+            self.assertTrue(len(role['RoleSessionName']) > 0)
+
+            return {
+                'AccessKeyId': 'o',
+                'SecretAccessKey': 'p',
+                'SessionToken': 'q',
+                'Expiration': datetime.datetime.now(tzlocal())
+            }
+
+        # And we specify a profile_name of 'dev'.
+        provider = credentials.SharedCredentialProvider(
+            assume_role=assume_role,
+            creds_filename='~/.aws/creds', profile_name='dev',
+            ini_parser=self.ini_parser)
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'o')
+        self.assertEqual(creds.secret_key, 'p')
+        self.assertEqual(creds.token, 'q')
+        self.assertEqual(creds.method, 'shared-credentials-file')
+
+    def test_credentials_file_with_assume_role_options(self):
+        self.ini_parser.return_value = {
+            # Here the user has a 'default' and a 'dev' profile.
+            'dev': {
+                'aws_access_key_id': 'd',
+                'aws_secret_access_key': 'e',
+                'aws_session_token': 'f',
+                'role_arn': 'g',
+                'role_session_name': 'h',
+                'external_id': 'i'
+            },
+        }
+
+        def assume_role(access_key, secret_key, token, role):
+            self.assertEqual(role['RoleSessionName'], 'h')
+            self.assertEqual(role['ExternalId'], 'i')
+
+            return {
+                'AccessKeyId': 'o',
+                'SecretAccessKey': 'p',
+                'SessionToken': 'q',
+                'Expiration': datetime.datetime.now(tzlocal())
+            }
+
+        # And we specify a profile_name of 'dev'.
+        provider = credentials.SharedCredentialProvider(
+            assume_role=assume_role,
+            creds_filename='~/.aws/creds', profile_name='dev',
+            ini_parser=self.ini_parser)
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'o')
+        self.assertEqual(creds.secret_key, 'p')
+        self.assertEqual(creds.token, 'q')
+        self.assertEqual(creds.method, 'shared-credentials-file')
 
 
 class TestConfigFileProvider(BaseEnvVar):
