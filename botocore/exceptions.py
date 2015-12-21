@@ -340,3 +340,11 @@ class InvalidS3AddressingStyleError(BotoCoreError):
         'S3 addressing style {s3_addressing_style} is invaild. Valid options '
         'are: \'auto\', \'virtual\', and \'path\''
     )
+
+
+class InvalidConfigError(BotoCoreError):
+    fmt = '{error_msg}'
+
+
+class RefreshWithMFAUnsupportedError(BotoCoreError):
+    fmt = 'Cannot refresh credentials: MFA token required.'
