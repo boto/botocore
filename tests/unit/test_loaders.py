@@ -24,7 +24,7 @@ import contextlib
 
 import mock
 
-from botocore.exceptions import DataNotFoundError, ValidationError
+from botocore.exceptions import DataNotFoundError, UnknownServiceError
 from botocore.loaders import JSONFileLoader
 from botocore.loaders import Loader, create_loader
 
@@ -152,7 +152,10 @@ class TestLoader(BaseEnvVar):
         loader.determine_latest_version = mock.Mock(return_value='2015-03-01')
         loader.list_available_services = mock.Mock(return_value=['baz'])
 
-        with self.assertRaises(ValidationError):
+        # Should have a) the unknown service name and b) list of valid
+        # service names.
+        with self.assertRaisesRegexp(UnknownServiceError,
+                                     'Unknown service.*BAZ.*baz'):
             loader.load_service_model('BAZ', type_name='service-2')
 
     def test_create_loader_parses_data_path(self):
