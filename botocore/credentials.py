@@ -109,6 +109,18 @@ def _local_now():
     return datetime.datetime.now(tzlocal())
 
 
+def _parse_if_needed(value):
+    if isinstance(value, datetime.datetime):
+        return value
+    return parse(value)
+
+
+def _serialize_if_needed(value):
+    if isinstance(value, datetime.datetime):
+        return value.strftime('%Y-%m-%dT%H:%M:%SZ')
+    return value
+
+
 def create_assume_role_refresher(client, params):
     def refresh():
         response = client.assume_role(**params)
@@ -119,7 +131,7 @@ def create_assume_role_refresher(client, params):
             'access_key': credentials['AccessKeyId'],
             'secret_key': credentials['SecretAccessKey'],
             'token': credentials['SessionToken'],
-            'expiry_time': credentials['Expiration'],
+            'expiry_time': _serialize_if_needed(credentials['Expiration']),
         }
     return refresh
 
@@ -739,7 +751,8 @@ class AssumeRoleProvider(CredentialProvider):
             secret_key=response['Credentials']['SecretAccessKey'],
             token=response['Credentials']['SessionToken'],
             method=self.METHOD,
-            expiry_time=parse(response['Credentials']['Expiration']),
+            expiry_time=_parse_if_needed(
+                response['Credentials']['Expiration']),
             refresh_using=refresh_func)
 
     def _create_client_from_config(self, config):
