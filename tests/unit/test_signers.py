@@ -363,7 +363,7 @@ class TestS3PostPresigner(BaseSignerTest):
         self.auth.assert_called_with(
             credentials=self.credentials, region_name='region_name',
             service_name='signing_name')
-        self.add_auth.assert_called_once()
+        self.assertEqual(self.add_auth.call_count, 1)
         ref_request = self.add_auth.call_args[0][0]
         ref_policy = ref_request.context['s3-presign-post-policy']
         self.assertEqual(ref_policy['expiration'], '2014-03-10T18:02:55Z')
@@ -385,7 +385,7 @@ class TestS3PostPresigner(BaseSignerTest):
         self.auth.assert_called_with(
             credentials=self.credentials, region_name='region_name',
             service_name='signing_name')
-        self.add_auth.assert_called_once()
+        self.assertEqual(self.add_auth.call_count, 1)
         ref_request = self.add_auth.call_args[0][0]
         ref_policy = ref_request.context['s3-presign-post-policy']
         self.assertEqual(ref_policy['conditions'], conditions)

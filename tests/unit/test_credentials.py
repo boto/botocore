@@ -701,6 +701,31 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         self.assertEqual(creds.secret_key, 'bar')
         self.assertEqual(creds.token, 'baz')
 
+    def test_assume_role_with_datetime(self):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                # Note the lack of isoformat(), we're using
+                # a datetime.datetime type.  This will ensure
+                # we test both parsing as well as serializing
+                # from a given datetime because the credentials
+                # are immediately expired.
+                'Expiration': datetime.now(tzlocal())
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        provider = credentials.AssumeRoleProvider(
+            self.create_config_loader(),
+            client_creator, cache={}, profile_name='development')
+
+        creds = provider.load()
+
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+
     def test_assume_role_retrieves_from_cache(self):
         date_in_future = datetime.utcnow() + timedelta(seconds=1000)
         utc_timestamp = date_in_future.isoformat() + 'Z'
