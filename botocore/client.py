@@ -381,8 +381,19 @@ class BaseClient(object):
         operation_model = self._service_model.operation_model(operation_name)
         request_dict = self._convert_to_request_dict(
             api_params, operation_model, context=request_context)
-        http, parsed_response = self._endpoint.make_request(
-            operation_model, request_dict)
+
+        handler, event_response = self.meta.events.emit_until_response(
+            'before-call.{endpoint_prefix}.{operation_name}'.format(
+                endpoint_prefix=self._service_model.endpoint_prefix,
+                operation_name=operation_name),
+            model=operation_model, params=request_dict,
+            request_signer=self._request_signer, context=request_context)
+
+        if event_response is not None:
+            http, parsed_response = event_response
+        else:
+            http, parsed_response = self._endpoint.make_request(
+                operation_model, request_dict)
 
         self.meta.events.emit(
             'after-call.{endpoint_prefix}.{operation_name}'.format(
@@ -425,13 +436,6 @@ class BaseClient(object):
             api_params, operation_model)
         prepare_request_dict(request_dict, endpoint_url=self._endpoint.host,
                              user_agent=self._client_config.user_agent)
-        self.meta.events.emit(
-            'before-call.{endpoint_prefix}.{operation_name}'.format(
-                endpoint_prefix=self._service_model.endpoint_prefix,
-                operation_name=operation_name),
-            model=operation_model, params=request_dict,
-            request_signer=self._request_signer, context=context
-        )
         return request_dict
 
     def get_paginator(self, operation_name):
