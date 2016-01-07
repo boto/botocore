@@ -16,6 +16,13 @@
         }
       }
     },
+    "too_many_requests": {
+      "applies_when": {
+        "response": {
+          "http_status_code": 429
+        }
+      }
+    },
     "general_socket_errors": {
       "applies_when": {
         "socket_errors": ["GENERAL_CONNECTION_ERROR"]
@@ -57,7 +64,8 @@
           "service_unavailable": {"$ref": "service_unavailable"},
           "limit_exceeded": {"$ref": "limit_exceeded"},
           "throttling_exception": {"$ref": "throttling_exception"},
-          "throttling": {"$ref": "throttling"}
+          "throttling": {"$ref": "throttling"},
+          "too_many_requests": {"$ref": "too_many_requests"}
       }
     },
     "dynamodb": {
