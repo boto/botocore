@@ -433,6 +433,21 @@ class TestS3Copy(TestS3BaseWithBucket):
             Bucket=self.bucket_name, Key=key_name2)
         self.assertEqual(data['Body'].read().decode('utf-8'), 'foo')
 
+    def test_can_copy_with_dict_form(self):
+        key_name = 'a+b/foo?versionId=abcd'
+        self.create_object(key_name=key_name)
+
+        key_name2 = key_name + 'bar'
+        self.client.copy_object(
+            Bucket=self.bucket_name, Key=key_name2,
+            CopySource={'Bucket': self.bucket_name,
+                        'Key': key_name})
+
+        # Now verify we can retrieve the copied object.
+        data = self.client.get_object(
+            Bucket=self.bucket_name, Key=key_name2)
+        self.assertEqual(data['Body'].read().decode('utf-8'), 'foo')
+
     def test_copy_with_s3_metadata(self):
         key_name = 'foo.txt'
         self.create_object(key_name=key_name)

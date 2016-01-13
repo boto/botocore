@@ -268,8 +268,27 @@ def add_expect_header(model, params, **kwargs):
             params['headers']['Expect'] = '100-continue'
 
 
-def quote_source_header(params, **kwargs):
-    if params['headers'] and 'x-amz-copy-source' in params['headers']:
+def support_dict_copy_source(params, context, **kwargs):
+    source = params.get('CopySource')
+    if source is None or not isinstance(source, dict):
+        return
+    source_dict = params['CopySource']
+    try:
+        bucket = source_dict['Bucket']
+        key = percent_encode(source_dict['Key'], safe=SAFE_CHARS + '/')
+        version_id = source_dict.get('VersionId')
+    except KeyError as e:
+        raise ParamValidationError(
+            report='Missing required parameter: %s' % str(e))
+    params['CopySource'] = '%s/%s' % (bucket, key)
+    if version_id is not None:
+        params['CopySource'] += '?versionId=%s' % version_id
+    context['CopySourceEncoded'] = True
+
+
+def quote_source_header(params, context, **kwargs):
+    if params['headers'] and 'x-amz-copy-source' in params['headers'] and \
+            not context.get('CopySourceEncoded'):
         value = params['headers']['x-amz-copy-source']
         result = VERSION_ID_SUFFIX.search(value)
         if result is None:
@@ -579,6 +598,13 @@ BUILTIN_HANDLERS = [
 
     ('before-call.s3.UploadPartCopy', quote_source_header),
     ('before-call.s3.CopyObject', quote_source_header),
+    ('before-parameter-build.s3.CopyObject',
+     support_dict_copy_source),
+    ('before-parameter-build.s3.UploadPartCopy',
+     support_dict_copy_source),
+
+
+
     ('before-call.s3', add_expect_header),
     ('before-call.glacier', add_glacier_version),
     ('before-call.apigateway', add_accept_header),

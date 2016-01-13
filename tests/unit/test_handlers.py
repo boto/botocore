@@ -67,7 +67,8 @@ class TestHandlers(BaseSessionTest):
             event = 'before-call.s3.%s' % op
             params = {'headers': {'x-amz-copy-source': 'foo++bar.txt'}}
             m = mock.Mock()
-            self.session.emit(event, params=params, model=m)
+            self.session.emit(event, params=params, context={},
+                              model=m)
             self.assertEqual(
                 params['headers']['x-amz-copy-source'], 'foo%2B%2Bbar.txt')
 
@@ -75,7 +76,7 @@ class TestHandlers(BaseSessionTest):
         request = {
             'headers': {'x-amz-copy-source': '/foo/bar++baz?versionId=123'}
         }
-        handlers.quote_source_header(request)
+        handlers.quote_source_header(request, {})
         self.assertEqual(request['headers']['x-amz-copy-source'],
                          '/foo/bar%2B%2Bbaz?versionId=123')
 
@@ -83,7 +84,7 @@ class TestHandlers(BaseSessionTest):
         request = {
             'headers': {'x-amz-copy-source': '/foo/bar++baz?notVersion=foo+'}
         }
-        handlers.quote_source_header(request)
+        handlers.quote_source_header(request, {})
         self.assertEqual(request['headers']['x-amz-copy-source'],
                          '/foo/bar%2B%2Bbaz%3FnotVersion%3Dfoo%2B')
 
@@ -92,15 +93,64 @@ class TestHandlers(BaseSessionTest):
             'headers': {
                 'x-amz-copy-source': '/foo/bar+baz?a=baz+?versionId=a+'}
         }
-        handlers.quote_source_header(request)
+        handlers.quote_source_header(request, {})
         self.assertEqual(request['headers']['x-amz-copy-source'],
                          '/foo/bar%2Bbaz%3Fa%3Dbaz%2B?versionId=a+')
+
+    def test_copy_source_supports_dict(self):
+        context = {}
+        params = {
+            'CopySource': {'Bucket': 'foo', 'Key': 'keyname+'}
+        }
+        handlers.support_dict_copy_source(params, context)
+
+        self.assertTrue(context['CopySourceEncoded'])
+        self.assertEqual(params['CopySource'], 'foo/keyname%2B')
+
+    def test_copy_source_ignored_if_not_dict(self):
+        context = {}
+        params = {
+            'CopySource': 'stringvalue'
+        }
+        handlers.support_dict_copy_source(params, context)
+
+        self.assertNotIn('CopySourceEncoded', context)
+        self.assertEqual(params['CopySource'], 'stringvalue')
+
+    def test_copy_source_supports_optional_version_id(self):
+        context = {}
+        params = {
+            'CopySource': {'Bucket': 'foo',
+                           'Key': 'keyname+',
+                           'VersionId': 'asdf+'}
+        }
+        handlers.support_dict_copy_source(params, context)
+
+        self.assertTrue(context['CopySourceEncoded'])
+        self.assertEqual(params['CopySource'],
+                         # Note, versionId is not url encoded.
+                         'foo/keyname%2B?versionId=asdf+')
+
+    def test_copy_source_has_validation_failure(self):
+        context = {}
+        with self.assertRaisesRegexp(ParamValidationError, 'Key'):
+            handlers.support_dict_copy_source(
+                {'CopySource': {'Bucket': 'foo'}}, context)
+
+    def test_quote_header_noop_when_already_encoded(self):
+        context = {'CopySourceEncoded': True}
+        request = {
+            'headers': {'x-amz-copy-source': '/foo/bar++'},
+        }
+        handlers.quote_source_header(request, context)
+        self.assertEqual(request['headers']['x-amz-copy-source'],
+                         '/foo/bar++')
 
     def test_quote_source_header_needs_no_changes(self):
         request = {
             'headers': {'x-amz-copy-source': '/foo/bar?versionId=123'}
         }
-        handlers.quote_source_header(request)
+        handlers.quote_source_header(request, {})
         self.assertEqual(request['headers']['x-amz-copy-source'],
                          '/foo/bar?versionId=123')
 
@@ -192,7 +242,9 @@ class TestHandlers(BaseSessionTest):
             event = 'before-parameter-build.s3.%s' % op
             params = {'SSECustomerKey': b'bar',
                       'SSECustomerAlgorithm': 'AES256'}
-            self.session.emit(event, params=params, model=mock.Mock())
+            self.session.emit(event, params=params,
+                              context={},
+                              model=mock.Mock())
             self.assertEqual(params['SSECustomerKey'], 'YmFy')
             self.assertEqual(params['SSECustomerKeyMD5'],
                              'N7UdGUp1E+RbVvZSTy1R8g==')
@@ -211,7 +263,9 @@ class TestHandlers(BaseSessionTest):
             event = 'before-parameter-build.s3.%s' % op
             params = {'CopySourceSSECustomerKey': b'bar',
                       'CopySourceSSECustomerAlgorithm': 'AES256'}
-            self.session.emit(event, params=params, model=mock.Mock())
+            self.session.emit(event, params=params,
+                              context={},
+                              model=mock.Mock())
             self.assertEqual(params['CopySourceSSECustomerKey'], 'YmFy')
             self.assertEqual(params['CopySourceSSECustomerKeyMD5'],
                              'N7UdGUp1E+RbVvZSTy1R8g==')
@@ -220,7 +274,9 @@ class TestHandlers(BaseSessionTest):
         event = 'before-parameter-build.s3.CopyObject'
         params = {'CopySourceSSECustomerKey': 'bar',
                   'CopySourceSSECustomerAlgorithm': 'AES256'}
-        self.session.emit(event, params=params, model=mock.Mock())
+        self.session.emit(event, params=params,
+                          context={},
+                          model=mock.Mock())
         self.assertEqual(params['CopySourceSSECustomerKey'], 'YmFy')
         self.assertEqual(params['CopySourceSSECustomerKeyMD5'],
                          'N7UdGUp1E+RbVvZSTy1R8g==')
