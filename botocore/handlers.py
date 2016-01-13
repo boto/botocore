@@ -33,6 +33,7 @@ from botocore.signers import add_generate_presigned_url
 from botocore.signers import add_generate_presigned_post
 from botocore.exceptions import ParamValidationError
 from botocore.exceptions import UnsupportedTLSVersionWarning
+from botocore.utils import percent_encode, SAFE_CHARS
 
 from botocore import retryhandler
 from botocore import utils
@@ -51,6 +52,7 @@ REGISTER_LAST = object()
 # combination of uppercase letters, lowercase letters, numbers, periods
 # (.), hyphens (-), and underscores (_).
 VALID_BUCKET = re.compile('^[a-zA-Z0-9.\-_]{1,255}$')
+VERSION_ID_SUFFIX = re.compile(r'\?versionId=[^\s]+$')
 
 
 def check_for_200_error(response, **kwargs):
@@ -269,13 +271,16 @@ def add_expect_header(model, params, **kwargs):
 def quote_source_header(params, **kwargs):
     if params['headers'] and 'x-amz-copy-source' in params['headers']:
         value = params['headers']['x-amz-copy-source']
-        p = urlsplit(value)
-        # We only want to quote the path.  If the user specified
-        # extra parts, say '?versionId=myversionid' then that part
-        # should not be quoted.
-        quoted = quote(p[2].encode('utf-8'), '/~')
-        final_source = urlunsplit((p[0], p[1], quoted, p[3], p[4]))
-        params['headers']['x-amz-copy-source'] = final_source
+        result = VERSION_ID_SUFFIX.search(value)
+        if result is None:
+            params['headers']['x-amz-copy-source'] = percent_encode(
+                value, safe=SAFE_CHARS + '/')
+        else:
+            # We need to ensure we don't encode the ?versionId sufix.
+            first, version_id = value[:result.start()], value[result.start():]
+            params['headers']['x-amz-copy-source'] = (
+                percent_encode(first, safe=SAFE_CHARS + '/') + version_id
+            )
 
 
 def copy_snapshot_encrypted(params, request_signer, **kwargs):
