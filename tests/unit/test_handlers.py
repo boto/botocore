@@ -71,13 +71,30 @@ class TestHandlers(BaseSessionTest):
             self.assertEqual(
                 params['headers']['x-amz-copy-source'], 'foo%2B%2Bbar.txt')
 
-    def test_only_quote_url_path_not_query_string(self):
+    def test_only_quote_url_path_not_version_id(self):
         request = {
             'headers': {'x-amz-copy-source': '/foo/bar++baz?versionId=123'}
         }
         handlers.quote_source_header(request)
         self.assertEqual(request['headers']['x-amz-copy-source'],
                          '/foo/bar%2B%2Bbaz?versionId=123')
+
+    def test_only_version_id_is_special_cased(self):
+        request = {
+            'headers': {'x-amz-copy-source': '/foo/bar++baz?notVersion=foo+'}
+        }
+        handlers.quote_source_header(request)
+        self.assertEqual(request['headers']['x-amz-copy-source'],
+                         '/foo/bar%2B%2Bbaz%3FnotVersion%3Dfoo%2B')
+
+    def test_copy_source_with_multiple_questions(self):
+        request = {
+            'headers': {
+                'x-amz-copy-source': '/foo/bar+baz?a=baz+?versionId=a+'}
+        }
+        handlers.quote_source_header(request)
+        self.assertEqual(request['headers']['x-amz-copy-source'],
+                         '/foo/bar%2Bbaz%3Fa%3Dbaz%2B?versionId=a+')
 
     def test_quote_source_header_needs_no_changes(self):
         request = {
