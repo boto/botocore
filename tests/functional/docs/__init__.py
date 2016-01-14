@@ -69,11 +69,17 @@ class BaseDocsFunctionalTest(unittest.TestCase):
         return self.get_parameter_document_block(
             param_name, method_contents)
 
+    def get_docstring_for_method(self, service_name, method_name):
+        contents = ServiceDocumenter(
+            service_name, self._session).document_service()
+        method_contents = self.get_method_document_block(
+            method_name, contents)
+        return method_contents
+
     def assert_is_documented_as_autopopulated_param(
             self, service_name, method_name, param_name, doc_string=None):
         contents = ServiceDocumenter(
             service_name, self._session).document_service()
-        # Pick an arbitrary method that uses AccountId.
         method_contents = self.get_method_document_block(
             method_name, contents)
 
