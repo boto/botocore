@@ -297,11 +297,34 @@ def document_copy_source_form(section, event_name, **kwargs):
         )
 
 
-def support_dict_copy_source(params, context, **kwargs):
+def handle_copy_source_param(params, **kwargs):
+    """Convert CopySource param for CopyObject/UploadPartCopy.
+
+    This handler will deal with two cases:
+
+        * CopySource provided as a string.  We'll make a best effort
+          to URL encode the key name as required.  This will require
+          parsing the bucket and version id from the CopySource value
+          and only encoding the key.
+        * CopySource provided as a dict.  In this case we're
+          explicitly given the Bucket, Key, and VersionId so we're
+          able to encode the key and ensure this value is serialized
+          and correctly sent to S3.
+
+    """
     source = params.get('CopySource')
-    if source is None or not isinstance(source, dict):
+    if source is None:
+        # The call will eventually fail but we'll let the
+        # param validator take care of this.  It will
+        # give a better error message.
         return
-    source_dict = params['CopySource']
+    if isinstance(source, six.string_types):
+        params['CopySource'] = _quote_source_header(source)
+    elif isinstance(source, dict):
+        params['CopySource'] = _quote_source_header_from_dict(source)
+
+
+def _quote_source_header_from_dict(source_dict):
     try:
         bucket = source_dict['Bucket']
         key = percent_encode(source_dict['Key'], safe=SAFE_CHARS + '/')
@@ -309,26 +332,19 @@ def support_dict_copy_source(params, context, **kwargs):
     except KeyError as e:
         raise ParamValidationError(
             report='Missing required parameter: %s' % str(e))
-    params['CopySource'] = '%s/%s' % (bucket, key)
+    final =  '%s/%s' % (bucket, key)
     if version_id is not None:
-        params['CopySource'] += '?versionId=%s' % version_id
-    context['CopySourceEncoded'] = True
+        final += '?versionId=%s' % version_id
+    return final
 
 
-def quote_source_header(params, context, **kwargs):
-    if params['headers'] and 'x-amz-copy-source' in params['headers'] and \
-            not context.get('CopySourceEncoded'):
-        value = params['headers']['x-amz-copy-source']
-        result = VERSION_ID_SUFFIX.search(value)
-        if result is None:
-            params['headers']['x-amz-copy-source'] = percent_encode(
-                value, safe=SAFE_CHARS + '/')
-        else:
-            # We need to ensure we don't encode the ?versionId sufix.
-            first, version_id = value[:result.start()], value[result.start():]
-            params['headers']['x-amz-copy-source'] = (
-                percent_encode(first, safe=SAFE_CHARS + '/') + version_id
-            )
+def _quote_source_header(value):
+    result = VERSION_ID_SUFFIX.search(value)
+    if result is None:
+        return percent_encode(value, safe=SAFE_CHARS + '/')
+    else:
+        first, version_id = value[:result.start()], value[result.start():]
+        return percent_encode(first, safe=SAFE_CHARS + '/') + version_id
 
 
 def copy_snapshot_encrypted(params, request_signer, **kwargs):
@@ -625,13 +641,12 @@ BUILTIN_HANDLERS = [
     ('before-call.s3.PutBucketWebsite', conditionally_calculate_md5),
     ('before-call.s3.PutObjectAcl', conditionally_calculate_md5),
 
-    ('before-call.s3.UploadPartCopy', quote_source_header),
-    ('before-call.s3.CopyObject', quote_source_header),
     ('before-parameter-build.s3.CopyObject',
-     support_dict_copy_source),
+     handle_copy_source_param),
     ('before-parameter-build.s3.UploadPartCopy',
-     support_dict_copy_source),
+     handle_copy_source_param),
     ('docs.*.s3.CopyObject.complete-section', document_copy_source_form),
+    ('docs.*.s3.UploadPartCopy.complete-section', document_copy_source_form),
 
     ('before-call.s3', add_expect_header),
     ('before-call.glacier', add_glacier_version),
