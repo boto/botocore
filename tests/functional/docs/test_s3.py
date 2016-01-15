@@ -42,3 +42,18 @@ class TestS3Docs(BaseDocsFunctionalTest):
                 method_name, service_contents)
             self.assertNotIn('ContentMD5=\'string\'',
                              method_contents.decode('utf-8'))
+
+    def test_copy_source_documented_as_union_type(self):
+        content  = self.get_docstring_for_method('s3', 'copy_object')
+        dict_form = (
+            "{'Bucket': 'string', 'Key': 'string', 'VersionId': 'string'}")
+        self.assert_contains_line(
+            "CopySource='string' or %s" % dict_form, content)
+
+    def test_copy_source_param_docs_also_modified(self):
+        content  = self.get_docstring_for_method('s3', 'copy_object')
+        param_docs = self.get_parameter_document_block('CopySource', content)
+        # We don't want to overspecify the test, so I've picked
+        # an arbitrary line from the customized docs.
+        self.assert_contains_line(
+            "You can also provide this value as a dictionary", param_docs)

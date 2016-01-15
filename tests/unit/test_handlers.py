@@ -62,29 +62,58 @@ class TestHandlers(BaseSessionTest):
     def test_disable_signing(self):
         self.assertEqual(handlers.disable_signing(), botocore.UNSIGNED)
 
-    def test_quote_source_header(self):
-        for op in ('UploadPartCopy', 'CopyObject'):
-            event = 'before-call.s3.%s' % op
-            params = {'headers': {'x-amz-copy-source': 'foo++bar.txt'}}
-            m = mock.Mock()
-            self.session.emit(event, params=params, model=m)
-            self.assertEqual(
-                params['headers']['x-amz-copy-source'], 'foo%2B%2Bbar.txt')
-
-    def test_only_quote_url_path_not_query_string(self):
-        request = {
-            'headers': {'x-amz-copy-source': '/foo/bar++baz?versionId=123'}
-        }
-        handlers.quote_source_header(request)
-        self.assertEqual(request['headers']['x-amz-copy-source'],
+    def test_only_quote_url_path_not_version_id(self):
+        params = {'CopySource': '/foo/bar++baz?versionId=123'}
+        handlers.handle_copy_source_param(params)
+        self.assertEqual(params['CopySource'],
                          '/foo/bar%2B%2Bbaz?versionId=123')
 
-    def test_quote_source_header_needs_no_changes(self):
-        request = {
-            'headers': {'x-amz-copy-source': '/foo/bar?versionId=123'}
+    def test_only_version_id_is_special_cased(self):
+        params = {'CopySource': '/foo/bar++baz?notVersion=foo+'}
+        handlers.handle_copy_source_param(params)
+        self.assertEqual(params['CopySource'],
+                         '/foo/bar%2B%2Bbaz%3FnotVersion%3Dfoo%2B')
+
+    def test_copy_source_with_multiple_questions(self):
+        params = {'CopySource': '/foo/bar+baz?a=baz+?versionId=a+'}
+        handlers.handle_copy_source_param(params)
+        self.assertEqual(params['CopySource'],
+                         '/foo/bar%2Bbaz%3Fa%3Dbaz%2B?versionId=a+')
+
+    def test_copy_source_supports_dict(self):
+        params = {
+            'CopySource': {'Bucket': 'foo', 'Key': 'keyname+'}
         }
-        handlers.quote_source_header(request)
-        self.assertEqual(request['headers']['x-amz-copy-source'],
+        handlers.handle_copy_source_param(params)
+        self.assertEqual(params['CopySource'], 'foo/keyname%2B')
+
+    def test_copy_source_ignored_if_not_dict(self):
+        params = {
+            'CopySource': 'stringvalue'
+        }
+        handlers.handle_copy_source_param(params)
+        self.assertEqual(params['CopySource'], 'stringvalue')
+
+    def test_copy_source_supports_optional_version_id(self):
+        params = {
+            'CopySource': {'Bucket': 'foo',
+                           'Key': 'keyname+',
+                           'VersionId': 'asdf+'}
+        }
+        handlers.handle_copy_source_param(params)
+        self.assertEqual(params['CopySource'],
+                         # Note, versionId is not url encoded.
+                         'foo/keyname%2B?versionId=asdf+')
+
+    def test_copy_source_has_validation_failure(self):
+        with self.assertRaisesRegexp(ParamValidationError, 'Key'):
+            handlers.handle_copy_source_param(
+                {'CopySource': {'Bucket': 'foo'}})
+
+    def test_quote_source_header_needs_no_changes(self):
+        params = {'CopySource': '/foo/bar?versionId=123'}
+        handlers.handle_copy_source_param(params)
+        self.assertEqual(params['CopySource'],
                          '/foo/bar?versionId=123')
 
     def test_presigned_url_already_present(self):
