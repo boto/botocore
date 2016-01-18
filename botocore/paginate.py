@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import ast
+import logging
 from itertools import tee
 
 from six import string_types
@@ -19,6 +21,9 @@ import jmespath
 from botocore.exceptions import PaginationError
 from botocore.compat import zip
 from botocore.utils import set_value_from_jmespath, merge_dicts
+
+
+logger = logging.getLogger(__name__)
 
 
 class PaginatorModel(object):
@@ -37,9 +42,10 @@ class PaginatorModel(object):
 class PageIterator(object):
     def __init__(self, method, input_token, output_token, more_results,
                  result_keys, non_aggregate_keys, limit_key, max_items,
-                 starting_token, page_size, op_kwargs):
+                 starting_token, page_size, op_kwargs, op_model):
         self._method = method
         self._op_kwargs = op_kwargs
+        self._op_model = op_model
         self._input_token = input_token
         self._output_token = output_token
         self._more_results = more_results
@@ -323,22 +329,37 @@ class PageIterator(object):
             except ValueError:
                 raise ValueError("Bad starting token: %s" %
                                  self._starting_token)
-        for part in parts:
+        for token_index, part in enumerate(parts):
             if part == 'None':
                 next_token.append(None)
+            elif self._is_dict_token(token_index):
+                try:
+                    # Some services (such as dynamodb) non-string pagination
+                    # tokens, which will fail validation if they aren't
+                    # converted to their proper type.
+                    next_token.append(ast.literal_eval(part))
+                except ValueError:
+                    logger.debug(
+                        "Dict pagination token failed to parse as dict.")
+                    next_token.append(part)
             else:
                 next_token.append(part)
         return next_token, index
 
+    def _is_dict_token(self, token_index):
+        token_type = self._op_model.input_shape.members.get(
+            self._input_token[token_index]).type_name
+        return token_type == 'map' or token_type == 'structure'
 
 
 class Paginator(object):
 
     PAGE_ITERATOR_CLS = PageIterator
 
-    def __init__(self, method, pagination_config):
+    def __init__(self, method, pagination_config, operation_model):
         self._method = method
         self._pagination_cfg = pagination_config
+        self._operation_model = operation_model
         self._output_token = self._get_output_tokens(self._pagination_cfg)
         self._input_token = self._get_input_tokens(self._pagination_cfg)
         self._more_results = self._get_more_results_token(self._pagination_cfg)
@@ -405,7 +426,7 @@ class Paginator(object):
             page_params['MaxItems'],
             page_params['StartingToken'],
             page_params['PageSize'],
-            kwargs)
+            kwargs, self._operation_model)
 
     def _extract_paging_params(self, kwargs):
         pagination_config = kwargs.pop('PaginationConfig', {})

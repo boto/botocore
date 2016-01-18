@@ -15,8 +15,13 @@ from tests import unittest
 from botocore.paginate import Paginator
 from botocore.paginate import PaginatorModel
 from botocore.exceptions import PaginationError
+from botocore.model import ServiceModel
 
 import mock
+
+
+def create_paginator(method, config, model=mock.Mock()):
+    return Paginator(method, config, model)
 
 
 class TestPaginatorModel(unittest.TestCase):
@@ -52,7 +57,7 @@ class TestPagination(unittest.TestCase):
             'input_token': 'NextToken',
             'result_key': 'Foo',
         }
-        self.paginator = Paginator(self.method, self.paginate_config)
+        self.paginator = create_paginator(self.method, self.paginate_config)
 
     def test_result_key_available(self):
         self.assertEqual(
@@ -101,12 +106,12 @@ class TestPagination(unittest.TestCase):
             list(self.paginator.paginate())
 
     def test_next_token_with_or_expression(self):
-        self.pagination_config = {
+        self.paginate_config = {
             'output_token': 'NextToken || NextToken2',
             'input_token': 'NextToken',
             'result_key': 'Foo',
         }
-        self.paginator = Paginator(self.method, self.pagination_config)
+        self.paginator = create_paginator(self.method, self.paginate_config)
         # Verify that despite varying between NextToken and NextToken2
         # we still can extract the right next tokens.
         responses = [
@@ -136,7 +141,7 @@ class TestPagination(unittest.TestCase):
             'input_token': 'NextToken',
             'result_key': 'Foo',
         }
-        self.paginator = Paginator(self.method, self.paginate_config)
+        self.paginator = create_paginator(self.method, self.paginate_config)
         responses = [
             {'Foo': [1], 'IsTruncated': True, 'NextToken': 'token1'},
             {'Foo': [2], 'IsTruncated': True, 'NextToken': 'token2'},
@@ -158,7 +163,7 @@ class TestPagination(unittest.TestCase):
             'input_token': 'NextToken',
             'result_key': 'Bar',
         }
-        self.paginator = Paginator(self.method, self.paginate_config)
+        self.paginator = create_paginator(self.method, self.paginate_config)
         responses = [
             {'Foo': {'IsTruncated': True}, 'NextToken': 'token1'},
             {'Foo': {'IsTruncated': False}, 'NextToken': 'token2'},
@@ -177,7 +182,7 @@ class TestPagination(unittest.TestCase):
             "result_key": "Users",
             "limit_key": "MaxKeys",
         }
-        self.paginator = Paginator(self.method, self.paginate_config)
+        self.paginator = create_paginator(self.method, self.paginate_config)
         responses = [
             {"Users": ["User1"], "Marker": "m1"},
             {"Users": ["User2"], "Marker": "m2"},
@@ -218,7 +223,7 @@ class TestPagination(unittest.TestCase):
             "result_key": "Users",
             "limit_key": "MaxKeys",
         }
-        self.paginator = Paginator(self.method, self.paginate_config)
+        self.paginator = create_paginator(self.method, self.paginate_config)
         responses = [
             {"Users": ["User1"], "Marker": "m1"},
             {"Users": ["User2"], "Marker": "m2"},
@@ -239,7 +244,7 @@ class TestPaginatorPageSize(unittest.TestCase):
             "result_key": ["Users", "Groups"],
             'limit_key': 'MaxKeys',
         }
-        self.paginator = Paginator(self.method, self.paginate_config)
+        self.paginator = create_paginator(self.method, self.paginate_config)
         self.endpoint = mock.Mock()
 
     def test_no_page_size(self):
@@ -271,7 +276,7 @@ class TestPaginatorWithPathExpressions(unittest.TestCase):
             'input_token': 'next_marker',
             'result_key': 'Contents',
         }
-        self.paginator = Paginator(self.method, self.paginate_config)
+        self.paginator = create_paginator(self.method, self.paginate_config)
 
     def test_s3_list_objects(self):
         responses = [
@@ -311,7 +316,7 @@ class TestMultipleTokens(unittest.TestCase):
             "input_token": ["key_marker", "upload_id_marker"],
             "result_key": 'Foo',
         }
-        self.paginator = Paginator(self.method, self.paginate_config)
+        self.paginator = create_paginator(self.method, self.paginate_config)
 
     def test_s3_list_multipart_uploads(self):
         responses = [
@@ -334,6 +339,58 @@ class TestMultipleTokens(unittest.TestCase):
              ])
 
 
+class TestNonStringTokens(unittest.TestCase):
+    def setUp(self):
+        self.method = mock.Mock()
+        # This is something we'd see in dynamodb pagination.
+        self.paginate_config = {
+            "input_token": ["ExclusiveStartKey"],
+            "output_token": ["LastEvaluatedKey"],
+            "result_key": 'Items',
+        }
+        model = {
+            'operations': {
+                'Scan': {
+                    'name': 'Scan',
+                    'input': {'shape': 'ScanInput'}
+                }
+            },
+            'shapes': {
+                'ScanInput': {
+                    'type': 'structure',
+                    'members': {
+                        'ExclusiveStartKey': {
+                            'shape': 'Key'
+                        }
+                    }
+                },
+                'Key': {
+                    'type': 'map',
+                    'key': {'shape': 'StringShape'},
+                    'value': {'shape': 'StringShape'}
+                },
+                'StringShape': {'type': 'string'}
+            }
+        }
+        service_model = ServiceModel(model)
+        operation_model = service_model.operation_model('Scan')
+        self.paginator = create_paginator(
+            self.method, self.paginate_config, operation_model)
+
+    def test_dynamo_scan(self):
+        responses = [
+            {"Items": [1], "LastEvaluatedKey": {'foo': 'bar'}},
+            {}
+        ]
+        self.method.side_effect = responses
+        pages = self.paginator.paginate(PaginationConfig={
+            'MaxItems': 3,
+            'StartingToken': "{'hello': 'world'}___3"
+        })
+        pages.build_full_result()
+        self.method.assert_any_call(ExclusiveStartKey={'hello': 'world'})
+
+
 class TestKeyIterators(unittest.TestCase):
     def setUp(self):
         self.method = mock.Mock()
@@ -343,7 +400,7 @@ class TestKeyIterators(unittest.TestCase):
             "input_token": "Marker",
             "result_key": "Users"
         }
-        self.paginator = Paginator(self.method, self.paginate_config)
+        self.paginator = create_paginator(self.method, self.paginate_config)
 
     def test_result_key_iters(self):
         responses = [
@@ -370,7 +427,7 @@ class TestKeyIterators(unittest.TestCase):
         self.assertEqual(complete, {'Users': ['User1', 'User2', 'User3']})
 
     def test_max_items_can_be_specified(self):
-        paginator = Paginator(self.method, self.paginate_config)
+        paginator = create_paginator(self.method, self.paginate_config)
         responses = [
             {"Users": ["User1"], "Marker": "m1"},
             {"Users": ["User2"], "Marker": "m2"},
@@ -385,7 +442,7 @@ class TestKeyIterators(unittest.TestCase):
     def test_max_items_as_strings(self):
         # Some services (route53) model MaxItems as a string type.
         # We need to be able to handle this case.
-        paginator = Paginator(self.method, self.paginate_config)
+        paginator = create_paginator(self.method, self.paginate_config)
         responses = [
             {"Users": ["User1"], "Marker": "m1"},
             {"Users": ["User2"], "Marker": "m2"},
@@ -399,7 +456,7 @@ class TestKeyIterators(unittest.TestCase):
             {'Users': ['User1'], 'NextToken': 'm1'})
 
     def test_next_token_on_page_boundary(self):
-        paginator = Paginator(self.method, self.paginate_config)
+        paginator = create_paginator(self.method, self.paginate_config)
         responses = [
             {"Users": ["User1"], "Marker": "m1"},
             {"Users": ["User2"], "Marker": "m2"},
@@ -415,7 +472,7 @@ class TestKeyIterators(unittest.TestCase):
         # We're saying we only want 4 items, but notice that the second
         # page of results returns users 4-6 so we have to truncated
         # part of that second page.
-        paginator = Paginator(self.method, self.paginate_config)
+        paginator = create_paginator(self.method, self.paginate_config)
         responses = [
             {"Users": ["User1", "User2", "User3"], "Marker": "m1"},
             {"Users": ["User4", "User5", "User6"], "Marker": "m2"},
@@ -433,7 +490,7 @@ class TestKeyIterators(unittest.TestCase):
         # from test_MaxItems_can_be_specified_truncates_response
         # We got the first 4 users, when we pick up we should get
         # User5 - User7.
-        paginator = Paginator(self.method, self.paginate_config)
+        paginator = create_paginator(self.method, self.paginate_config)
         responses = [
             {"Users": ["User4", "User5", "User6"], "Marker": "m2"},
             {"Users": ["User7"]},
@@ -452,7 +509,7 @@ class TestKeyIterators(unittest.TestCase):
     def test_max_items_exceeds_actual_amount(self):
         # Because MaxItems=10 > number of users (3), we should just return
         # all of the users.
-        paginator = Paginator(self.method, self.paginate_config)
+        paginator = create_paginator(self.method, self.paginate_config)
         responses = [
             {"Users": ["User1"], "Marker": "m1"},
             {"Users": ["User2"], "Marker": "m2"},
@@ -486,7 +543,7 @@ class TestMultipleResultKeys(unittest.TestCase):
             "input_token": "Marker",
             "result_key": ["Users", "Groups"],
         }
-        self.paginator = Paginator(self.method, self.paginate_config)
+        self.paginator = create_paginator(self.method, self.paginate_config)
 
     def test_build_full_result_with_multiple_result_keys(self):
         responses = [
@@ -599,7 +656,7 @@ class TestMultipleInputKeys(unittest.TestCase):
             "input_token": ["InMarker1", "InMarker2"],
             "result_key": ["Users", "Groups"],
         }
-        self.paginator = Paginator(self.method, self.paginate_config)
+        self.paginator = create_paginator(self.method, self.paginate_config)
 
     def test_build_full_result_with_multiple_input_keys(self):
         responses = [
@@ -668,7 +725,7 @@ class TestExpressionKeyIterators(unittest.TestCase):
             "limit_key": "MaxRecords",
             "result_key": "EngineDefaults.Parameters"
         }
-        self.paginator = Paginator(self.method, self.paginate_config)
+        self.paginator = create_paginator(self.method, self.paginate_config)
         self.responses = [
             {"EngineDefaults": {"Parameters": ["One", "Two"]},
              "Marker": "m1"},
@@ -704,7 +761,7 @@ class TestIncludeResultKeys(unittest.TestCase):
             'input_token': 'Marker',
             'result_key': ['ResultKey', 'Count', 'Log'],
         }
-        self.paginator = Paginator(self.method, self.paginate_config)
+        self.paginator = create_paginator(self.method, self.paginate_config)
 
     def test_different_kinds_of_result_key(self):
         self.method.side_effect = [
@@ -742,7 +799,7 @@ class TestIncludeNonResultKeys(unittest.TestCase):
             'result_key': 'ResultKey',
             'non_aggregate_keys': ['NotResultKey'],
         }
-        self.paginator = Paginator(self.method, self.paginate_config)
+        self.paginator = create_paginator(self.method, self.paginate_config)
 
     def test_include_non_aggregate_keys(self):
         self.method.side_effect = [
@@ -761,7 +818,7 @@ class TestIncludeNonResultKeys(unittest.TestCase):
 
     def test_include_with_multiple_result_keys(self):
         self.paginate_config['result_key'] = ['ResultKey1', 'ResultKey2']
-        self.paginator = Paginator(self.method, self.paginate_config)
+        self.paginator = create_paginator(self.method, self.paginate_config)
         self.method.side_effect = [
             {'ResultKey1': ['a', 'b'], 'ResultKey2': ['u', 'v'],
              'NotResultKey': 'a', 'NextToken': 'token1'},
@@ -784,7 +841,7 @@ class TestIncludeNonResultKeys(unittest.TestCase):
         self.paginate_config['non_aggregate_keys'] = [
             'Outer', 'Result.Inner',
         ]
-        self.paginator = Paginator(self.method, self.paginate_config)
+        self.paginator = create_paginator(self.method, self.paginate_config)
         self.method.side_effect = [
             # The non result keys shows hypothetical
             # example.  This doesn't actually happen,
@@ -818,7 +875,7 @@ class TestSearchOverResults(unittest.TestCase):
             'input_token': 'NextToken',
             'result_key': 'Foo',
         }
-        self.paginator = Paginator(self.method, self.paginate_config)
+        self.paginator = create_paginator(self.method, self.paginate_config)
         responses = [
             {'Foo': [{'a': 1}, {'b': 2}],
              'IsTruncated': True, 'NextToken': '1'},
