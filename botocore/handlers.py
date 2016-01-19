@@ -33,6 +33,7 @@ from botocore.signers import add_generate_presigned_url
 from botocore.signers import add_generate_presigned_post
 from botocore.exceptions import ParamValidationError
 from botocore.exceptions import UnsupportedTLSVersionWarning
+from botocore.utils import percent_encode, SAFE_CHARS
 
 from botocore import retryhandler
 from botocore import utils
@@ -51,6 +52,7 @@ REGISTER_LAST = object()
 # combination of uppercase letters, lowercase letters, numbers, periods
 # (.), hyphens (-), and underscores (_).
 VALID_BUCKET = re.compile('^[a-zA-Z0-9.\-_]{1,255}$')
+VERSION_ID_SUFFIX = re.compile(r'\?versionId=[^\s]+$')
 
 
 def check_for_200_error(response, **kwargs):
@@ -266,16 +268,83 @@ def add_expect_header(model, params, **kwargs):
             params['headers']['Expect'] = '100-continue'
 
 
-def quote_source_header(params, **kwargs):
-    if params['headers'] and 'x-amz-copy-source' in params['headers']:
-        value = params['headers']['x-amz-copy-source']
-        p = urlsplit(value)
-        # We only want to quote the path.  If the user specified
-        # extra parts, say '?versionId=myversionid' then that part
-        # should not be quoted.
-        quoted = quote(p[2].encode('utf-8'), '/~')
-        final_source = urlunsplit((p[0], p[1], quoted, p[3], p[4]))
-        params['headers']['x-amz-copy-source'] = final_source
+def document_copy_source_form(section, event_name, **kwargs):
+    if 'request-example' in event_name:
+        parent = section.get_section('structure-value')
+        param_line = parent.get_section('CopySource')
+        value_portion = param_line.get_section('member-value')
+        value_portion.clear_text()
+        value_portion.write("'string' or {'Bucket': 'string', "
+                            "'Key': 'string', 'VersionId': 'string'}")
+    elif 'request-params' in event_name:
+        param_section = section.get_section('CopySource')
+        type_section = param_section.get_section('param-type')
+        type_section.clear_text()
+        type_section.write(':type CopySource: str or dict')
+        doc_section = param_section.get_section('param-documentation')
+        doc_section.clear_text()
+        doc_section.write(
+            "The name of the source bucket, key name of the source object, "
+            "and optional version ID of the source object.  You can either "
+            "provide this value as a string or a dictionary.  The "
+            "string form is {bucket}/{key} or "
+            "{bucket}/{key}?versionId={versionId} if you want to copy a "
+            "specific version.  You can also provide this value as a "
+            "dictionary.  The dictionary format is recommended over "
+            "the string format because it is more explicit.  The dictionary "
+            "format is: {'Bucket': 'bucket', 'Key': 'key', 'VersionId': 'id'}."
+            "  Note that the VersionId key is optional and may be omitted."
+        )
+
+
+def handle_copy_source_param(params, **kwargs):
+    """Convert CopySource param for CopyObject/UploadPartCopy.
+
+    This handler will deal with two cases:
+
+        * CopySource provided as a string.  We'll make a best effort
+          to URL encode the key name as required.  This will require
+          parsing the bucket and version id from the CopySource value
+          and only encoding the key.
+        * CopySource provided as a dict.  In this case we're
+          explicitly given the Bucket, Key, and VersionId so we're
+          able to encode the key and ensure this value is serialized
+          and correctly sent to S3.
+
+    """
+    source = params.get('CopySource')
+    if source is None:
+        # The call will eventually fail but we'll let the
+        # param validator take care of this.  It will
+        # give a better error message.
+        return
+    if isinstance(source, six.string_types):
+        params['CopySource'] = _quote_source_header(source)
+    elif isinstance(source, dict):
+        params['CopySource'] = _quote_source_header_from_dict(source)
+
+
+def _quote_source_header_from_dict(source_dict):
+    try:
+        bucket = source_dict['Bucket']
+        key = percent_encode(source_dict['Key'], safe=SAFE_CHARS + '/')
+        version_id = source_dict.get('VersionId')
+    except KeyError as e:
+        raise ParamValidationError(
+            report='Missing required parameter: %s' % str(e))
+    final =  '%s/%s' % (bucket, key)
+    if version_id is not None:
+        final += '?versionId=%s' % version_id
+    return final
+
+
+def _quote_source_header(value):
+    result = VERSION_ID_SUFFIX.search(value)
+    if result is None:
+        return percent_encode(value, safe=SAFE_CHARS + '/')
+    else:
+        first, version_id = value[:result.start()], value[result.start():]
+        return percent_encode(first, safe=SAFE_CHARS + '/') + version_id
 
 
 def copy_snapshot_encrypted(params, request_signer, **kwargs):
@@ -572,8 +641,13 @@ BUILTIN_HANDLERS = [
     ('before-call.s3.PutBucketWebsite', conditionally_calculate_md5),
     ('before-call.s3.PutObjectAcl', conditionally_calculate_md5),
 
-    ('before-call.s3.UploadPartCopy', quote_source_header),
-    ('before-call.s3.CopyObject', quote_source_header),
+    ('before-parameter-build.s3.CopyObject',
+     handle_copy_source_param),
+    ('before-parameter-build.s3.UploadPartCopy',
+     handle_copy_source_param),
+    ('docs.*.s3.CopyObject.complete-section', document_copy_source_form),
+    ('docs.*.s3.UploadPartCopy.complete-section', document_copy_source_form),
+
     ('before-call.s3', add_expect_header),
     ('before-call.glacier', add_glacier_version),
     ('before-call.apigateway', add_accept_header),
