@@ -16,6 +16,8 @@ from itertools import tee
 from six import string_types
 
 import jmespath
+import json
+import base64
 from botocore.exceptions import PaginationError
 from botocore.compat import zip
 from botocore.utils import set_value_from_jmespath, merge_dicts
@@ -64,8 +66,20 @@ class PageIterator(object):
 
     @resume_token.setter
     def resume_token(self, value):
-        if isinstance(value, list):
-            self._resume_token = '___'.join([str(v) for v in value])
+        if not isinstance(value, dict):
+            raise ValueError("Bad starting token: %s" % value)
+
+        if 'truncate_amount' in value:
+            token_keys = sorted(self._input_token + ['truncate_amount'])
+        else:
+            token_keys = sorted(self._input_token)
+        dict_keys = sorted(value.keys())
+
+        if token_keys == dict_keys:
+            self._resume_token = base64.b64encode(
+                    json.dumps(value).encode('utf-8'))
+        else:
+            raise ValueError("Bad starting token: %s" % value)
 
     @property
     def non_aggregate_part(self):
@@ -74,7 +88,7 @@ class PageIterator(object):
     def __iter__(self):
         current_kwargs = self._op_kwargs
         previous_next_token = None
-        next_token = [None for _ in range(len(self._input_token))]
+        next_token = dict((key, None) for key in self._input_token)
         # The number of items from result_key we've seen so far.
         total_items = 0
         first_request = True
@@ -111,7 +125,7 @@ class PageIterator(object):
                 yield response
                 total_items += num_current_response
                 next_token = self._get_next_token(parsed)
-                if all(t is None for t in next_token):
+                if all(t is None for t in next_token.values()):
                     break
                 if self._max_items is not None and \
                         total_items == self._max_items:
@@ -182,7 +196,7 @@ class PageIterator(object):
             op_kwargs[self._limit_key] = self._page_size
 
     def _inject_token_into_kwargs(self, op_kwargs, next_token):
-        for name, token in zip(self._input_token, next_token):
+        for name, token in next_token.items():
             if token is None or token == 'None':
                 continue
             op_kwargs[name] = token
@@ -243,22 +257,22 @@ class PageIterator(object):
         # However, even though we only kept 1, this is post
         # left truncation so the next starting index should be 2, not 1
         # (left_truncation + amount_to_keep).
-        next_token.append(str(amount_to_keep + starting_truncation))
+        next_token['truncate_amount'] = amount_to_keep + starting_truncation
         self.resume_token = next_token
 
     def _get_next_token(self, parsed):
         if self._more_results is not None:
             if not self._more_results.search(parsed):
-                return [None]
-        next_tokens = []
-        for token in self._output_token:
-            next_token = token.search(parsed)
+                return {}
+        next_tokens = {}
+        for output_token, input_key in zip(self._output_token, self._input_token):
+            next_token = output_token.search(parsed)
             # We do not want to include any empty strings as actual tokens.
             # Treat them as None.
             if next_token:
-                next_tokens.append(next_token)
+                next_tokens[input_key] = next_token
             else:
-                next_tokens.append(None)
+                next_tokens[input_key] = None
         return next_tokens
 
     def result_key_iters(self):
@@ -314,22 +328,19 @@ class PageIterator(object):
     def _parse_starting_token(self):
         if self._starting_token is None:
             return None
-        parts = self._starting_token.split('___')
-        next_token = []
-        index = 0
-        if len(parts) == len(self._input_token) + 1:
-            try:
-                index = int(parts.pop())
-            except ValueError:
-                raise ValueError("Bad starting token: %s" %
-                                 self._starting_token)
-        for part in parts:
-            if part == 'None':
-                next_token.append(None)
-            else:
-                next_token.append(part)
-        return next_token, index
 
+        # The starting token is a dict passed as a base64 encoded string.
+        next_token = self._starting_token
+        try:
+            next_token = json.loads(
+                    base64.b64decode(next_token).decode('utf-8'))
+            index = 0
+            if 'truncate_amount' in next_token:
+                index = next_token.get('truncate_amount')
+                del next_token['truncate_amount']
+        except (ValueError, TypeError):
+            raise ValueError("Bad starting token: %s" % self._starting_token)
+        return next_token, index
 
 
 class Paginator(object):
