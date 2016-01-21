@@ -600,11 +600,22 @@ def decode_list_object(parsed, context, **kwargs):
     # This is needed because we are passing url as the encoding type. Since the
     # paginator is based on the key, we need to handle it before it can be
     # round tripped.
-    if 'Contents' in parsed and parsed.get('EncodingType') == 'url' and \
-                    context.get('EncodingTypeAutoSet'):
-        for content in parsed['Contents']:
-            content['Key'] = unquote_str(content['Key'])
+    if (parsed.get('EncodingType') == 'url' and
+        context.get('EncodingTypeAutoSet')):
 
+        if 'Contents' in parsed:
+            for content in parsed['Contents']:
+                content['Key'] = unquote_str(content['Key'])
+
+        if 'CommonPrefixes' in parsed:
+            for common_prefix in parsed['CommonPrefixes']:
+                common_prefix['Prefix'] = unquote_str(common_prefix['Prefix'])
+
+        for key in ('Marker', 'NextMarker', 'Prefix', 'Delimiter'):
+            try:
+                parsed[key] = unquote_str(parsed[key])
+            except KeyError:
+                pass
 
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
