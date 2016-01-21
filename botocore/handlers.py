@@ -600,11 +600,24 @@ def decode_list_object(parsed, context, **kwargs):
     # This is needed because we are passing url as the encoding type. Since the
     # paginator is based on the key, we need to handle it before it can be
     # round tripped.
-    if 'Contents' in parsed and parsed.get('EncodingType') == 'url' and \
+    #
+    # From the documentation: If you specify encoding-type request parameter,
+    # Amazon S3 includes this element in the response, and returns encoded key
+    # name values in the following response elements:
+    # Delimiter, Marker, Prefix, NextMarker, Key.
+    if parsed.get('EncodingType') == 'url' and \
                     context.get('EncodingTypeAutoSet'):
-        for content in parsed['Contents']:
-            content['Key'] = unquote_str(content['Key'])
-
+        # URL decode top-level keys in the response if present.
+        top_level_keys = ['Delimiter', 'Marker', 'NextMarker']
+        for key in top_level_keys:
+            if key in parsed:
+                parsed[key] = unquote_str(parsed[key])
+        # URL decode nested keys from the response if present.
+        nested_keys = [('Contents', 'Key'), ('CommonPrefixes', 'Prefix')]
+        for (top_key, child_key) in nested_keys:
+            if top_key in parsed:
+                for member in parsed[top_key]:
+                    member[child_key] = unquote_str(member[child_key])
 
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
