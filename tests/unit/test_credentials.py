@@ -112,6 +112,16 @@ class TestRefreshableCredentials(TestCredentials):
         self.assertEqual(self.creds.secret_key, 'ORIGINAL-SECRET')
         self.assertEqual(self.creds.token, 'ORIGINAL-TOKEN')
 
+    def test_get_credentials_set(self):
+        # We need to return a consistent set of credentials to use during the signing process
+        self.mock_time.return_value = (
+            datetime.now(tzlocal()) - timedelta(minutes=60))
+        self.assertTrue(not self.creds.refresh_needed())
+        credential_set = self.creds.get_credential_set()
+        self.assertEqual(credential_set.access_key, 'ORIGINAL-ACCESS')
+        self.assertEqual(credential_set.secret_key, 'ORIGINAL-SECRET')
+        self.assertEqual(credential_set.token, 'ORIGINAL-TOKEN')
+
 
 class TestEnvVar(BaseEnvVar):
 

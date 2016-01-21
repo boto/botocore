@@ -19,7 +19,7 @@ import botocore
 import botocore.auth
 from botocore.compat import six, urlparse, parse_qs
 
-from botocore.credentials import Credentials
+from botocore.credentials import Credentials, RefreshableCredentials
 from botocore.exceptions import NoRegionError, UnknownSignatureVersionError
 from botocore.exceptions import UnknownClientMethodError, ParamValidationError
 from botocore.exceptions import UnsupportedSignatureVersionError
@@ -227,6 +227,44 @@ class TestSigner(BaseSignerTest):
         with self.assertRaises(UnsupportedSignatureVersionError):
             self.signer.generate_presigned_url({})
 
+    def test_signer_with_refreshable_credentials_gets_credential_set(self):
+        self.credentials = mock.Mock()
+        credential_set = Credentials('r_access', 'r_secret', 'r_token')
+        self.credentials.get_credential_set.return_value = credential_set
+
+        self.signer = RequestSigner(
+            'service_name', 'region_name', 'signing_name',
+            'v4', self.credentials, self.emitter)
+
+        auth_cls = mock.Mock()
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
+                             {'v4': auth_cls}):
+            auth = self.signer.get_auth('service_name', 'region_name')
+
+            self.assertEqual(auth, auth_cls.return_value)
+            auth_cls.assert_called_with(
+                credentials=credential_set, service_name='service_name',
+                region_name='region_name')
+
+    def test_signer_with_refreshable_credentials_is_not_cached(self):
+
+        self.credentials = mock.Mock()
+        credential_set = Credentials('r_access', 'r_secret', 'r_token')
+        self.credentials.get_credential_set.return_value = credential_set
+
+        self.signer = RequestSigner(
+            'service_name', 'region_name', 'signing_name',
+            'v4', self.credentials, self.emitter)
+
+        def side_effect(*args, **kwargs):
+            return mock.Mock()
+        auth_cls = mock.Mock(side_effect=side_effect)
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
+                             {'v4': auth_cls}):
+            auth1 = self.signer.get_auth('service_name', 'region_name')
+            auth2 = self.signer.get_auth('service_name', 'region_name')
+
+            self.assertNotEqual(auth1, auth2)
 
 class TestCloudfrontSigner(unittest.TestCase):
     def setUp(self):
