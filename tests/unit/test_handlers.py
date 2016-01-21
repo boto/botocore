@@ -620,15 +620,6 @@ class TestHandlers(BaseSessionTest):
         handlers.decode_list_object(parsed, context={})
         self.assertEqual(parsed['Contents'][0]['Key'], u'%C3%A7%C3%B6s%25asd')
 
-    def test_decode_list_objects_with_common_prefixes(self):
-        parsed = {
-            'CommonPrefixes': [{'Prefix': "%C3%A7%C3%B6s%25%20asd%08+c"}],
-            'EncodingType': 'url',
-        }
-        context = {'EncodingTypeAutoSet': True}
-        handlers.decode_list_object(parsed, context=context)
-        self.assertEqual(parsed['CommonPrefixes'][0]['Prefix'], u'\xe7\xf6s% asd\x08 c')
-
     def test_decode_list_objects_with_marker(self):
         parsed = {
             'Marker': "%C3%A7%C3%B6s%25%20asd%08+c",
@@ -647,14 +638,15 @@ class TestHandlers(BaseSessionTest):
         handlers.decode_list_object(parsed, context=context)
         self.assertEqual(parsed['NextMarker'], u'\xe7\xf6s% asd\x08 c')
 
-    def test_decode_list_objects_with_prefix(self):
+    def test_decode_list_objects_with_common_prefixes(self):
         parsed = {
-            'Prefix': "%C3%A7%C3%B6s%25%20asd%08+c",
+            'CommonPrefixes': [{'Prefix': "%C3%A7%C3%B6s%25%20asd%08+c"}],
             'EncodingType': 'url',
         }
         context = {'EncodingTypeAutoSet': True}
         handlers.decode_list_object(parsed, context=context)
-        self.assertEqual(parsed['Prefix'], u'\xe7\xf6s% asd\x08 c')
+        self.assertEqual(parsed['CommonPrefixes'][0]['Prefix'],
+                         u'\xe7\xf6s% asd\x08 c')
 
     def test_decode_list_objects_with_delimiter(self):
         parsed = {
@@ -664,6 +656,7 @@ class TestHandlers(BaseSessionTest):
         context = {'EncodingTypeAutoSet': True}
         handlers.decode_list_object(parsed, context=context)
         self.assertEqual(parsed['Delimiter'], u'\xe7\xf6s% asd\x08 c')
+
 
 class TestRetryHandlerOrder(BaseSessionTest):
     def get_handler_names(self, responses):
