@@ -18,6 +18,10 @@ import os
 import getpass
 import threading
 from collections import namedtuple
+import re
+import xml.etree.ElementTree as ET
+import base64
+import json
 
 from dateutil.parser import parse
 from dateutil.tz import tzlocal
@@ -25,12 +29,16 @@ from dateutil.tz import tzlocal
 import botocore.config
 import botocore.compat
 from botocore.compat import total_seconds
+from botocore.compat import raw_input
+from botocore.compat import urljoin
 from botocore.exceptions import UnknownCredentialError
 from botocore.exceptions import PartialCredentialsError
 from botocore.exceptions import ConfigNotFound
 from botocore.exceptions import InvalidConfigError
 from botocore.exceptions import RefreshWithMFAUnsupportedError
+from botocore.exceptions import RefreshUnsupportedError
 from botocore.utils import InstanceMetadataFetcher, parse_key_val_file
+import botocore.vendored.requests as requests
 
 
 logger = logging.getLogger(__name__)
@@ -56,6 +64,12 @@ def create_credential_resolver(session):
     providers = [
         env_provider,
         AssumeRoleProvider(
+            load_config=lambda: session.full_config,
+            client_creator=session.create_client,
+            cache={},
+            profile_name=profile_name,
+        ),
+        AssumeRoleWithSamlProvider(
             load_config=lambda: session.full_config,
             client_creator=session.create_client,
             cache={},
@@ -147,6 +161,21 @@ def create_mfa_serial_refresher():
         # when the temp creds expire.
         raise RefreshWithMFAUnsupportedError()
     return _refresher
+
+
+def credential_normalizer(credentials):
+    # We need to normalize the credential names returned from assume_role()
+    # or assume_role_with_saml(), to the values expected by the refresh creds.
+    return {
+        'access_key': credentials['AccessKeyId'],
+        'secret_key': credentials['SecretAccessKey'],
+        'token': credentials['SessionToken'],
+        'expiry_time': _serialize_if_needed(credentials['Expiration']),
+    }
+
+
+def exception_raiser(exception):
+    raise exception()
 
 
 class Credentials(object):
@@ -825,7 +854,7 @@ class AssumeRoleProvider(CredentialProvider):
         role_config = self._get_role_config_values()
         # On windows, ':' is not allowed in filenames, so we'll
         # replace them with '_' instead.
-        role_arn = role_config['role_arn'].replace(':', '_')
+        role_arn = role_config[self.ROLE_CONFIG_VAR].replace(':', '_')
         role_session_name=role_config.get('role_session_name')
         if role_session_name:
             cache_key = '%s--%s--%s' % (self._profile_name, role_arn, role_session_name)
@@ -919,6 +948,127 @@ class AssumeRoleProvider(CredentialProvider):
         if config['role_session_name'] is not None:
             assume_role_kwargs['RoleSessionName'] = config['role_session_name']
         return assume_role_kwargs
+
+
+class AssumeRoleWithSamlProvider(AssumeRoleProvider):
+    METHOD = 'assume-role-with-saml'
+    ROLE_CONFIG_VAR = 'saml_endpoint'
+
+    def _create_cache_key(self):
+        return self._profile_name.replace(':', '_')
+
+    def _get_role_config_values(self):
+        settings = self._loaded_config.get('profiles', {}).get(
+            self._profile_name, {})
+        if 'saml_params' in settings and '_params_list' not in settings:
+            settings['_params_list'] = json.loads(settings['saml_params'])
+        return settings
+
+    def _create_creds_from_response(self, response):
+        config = self._get_role_config_values()
+        need_human_input = any(
+            p for p in config.get('_params_list', []) if 'value' not in p)
+        if need_human_input:
+            # If some parameter(s) would require prompting the user for input,
+            # we use a different refresh_func.
+            # We can explore an option in the future to support reprompting for
+            # input, but for now we just error out when the temp creds expire.
+            refresh_func = lambda: exception_raiser(RefreshUnsupportedError)
+        else:
+            refresh_func = lambda: credential_normalizer(
+                self._create_client().assume_role_with_saml(
+                    **self._assume_role_base_kwargs(config))['Credentials'])
+        return RefreshableCredentials(
+            access_key=response['Credentials']['AccessKeyId'],
+            secret_key=response['Credentials']['SecretAccessKey'],
+            token=response['Credentials']['SessionToken'],
+            method=self.METHOD,
+            expiry_time=_parse_if_needed(
+                response['Credentials']['Expiration']),
+            refresh_using=refresh_func)
+
+    def _create_client(self):
+        return self._client_creator(
+            'sts', aws_access_key_id='dummy', aws_secret_access_key='dummy')
+
+    def _retrieve_temp_credentials(self):
+        logger.debug("Retrieving credentials via AssumeRoleWithSaml.")
+        response = self._create_client().assume_role_with_saml(
+            **self._assume_role_base_kwargs(self._get_role_config_values()))
+        creds = self._create_creds_from_response(response)
+        return creds, response
+
+    def _assume_role_base_kwargs(self, config):
+        assertion = self._get_saml_assertion(
+            config[self.ROLE_CONFIG_VAR],
+            self._input_params(config.get('_params_list', [])))
+        if not assertion:
+            raise ValueError('Login failed')
+        roles = self._get_roles(assertion)
+        if not roles:
+            raise ValueError('Identity provider provides no role.')
+        if len(roles) > 1:
+            logging.debug('TODO: Let user choose one among many roles.')
+        else:
+            role = roles[0]
+        role['SAMLAssertion'] = assertion
+        return role
+
+    def _get_form(self, html, form_xpath='(//form)[0]'):
+        # TODO: Support form_xpath
+        form_snippet = re.search('(<form.+</form>)', html, flags=re.DOTALL)
+        if form_snippet:
+            return ET.fromstring(form_snippet.group(0))
+
+    def _get_saml_assertion(self, login_url, params):
+        login_form = self._get_form(requests.get(login_url).text)
+        if login_form is None:
+            raise ValueError('Login form is not found in %s' % login_url)
+        payload = dict((tag.attrib['name'], tag.attrib.get('value', ''))
+                        for tag in login_form.findall(".//input"))
+        for param in params:
+            if param['field'] in payload:
+                payload[param['field']] = param.get('value', '')
+        aws_form = self._get_form(requests.post(
+            urljoin(login_url, login_form.attrib['action']),
+            data=payload).text)
+        if aws_form is not None:
+            responses = aws_form.findall(".//input[@name='SAMLResponse']")
+            if responses:
+                return responses[0].attrib['value']
+        # Login failed, typically caused by incorrect username and/or password
+
+    def _input_params(self, params):
+        # This implementation collects input from terminal. Suitable for CLI.
+        for param in params:
+            if 'value' in param:
+                continue
+                # So we keep the predefined value as-is.
+                # But then it means user could use this to store password.
+                # We'll probably remove this feature in finalized design.
+            if param.get('type')=='password':
+                input_method = getpass.getpass
+            else:
+                input_method = raw_input
+            prompt = param.get('label', param['field'])  # A good UI needs it
+            param['value'] = input_method('%s: ' % prompt)
+        return params
+
+    def _get_roles(self, assertion):
+        attribute = '{urn:oasis:names:tc:SAML:2.0:assertion}Attribute'
+        attr_value = '{urn:oasis:names:tc:SAML:2.0:assertion}AttributeValue'
+        awsroles = []
+        for attr in ET.fromstring(base64.b64decode(assertion)).iter(attribute):
+            if attr.get('Name')=='https://aws.amazon.com/SAML/Attributes/Role':
+                for value in attr.iter(attr_value):
+                    parts = value.text.split(',')
+                    # Deals with "role_arn,pricipal_arn" or its reversed order
+                    if 'saml-provider' in parts[0]:
+                        role = {'PrincipalArn': parts[0], 'RoleArn': parts[1]}
+                    else:
+                        role = {'PrincipalArn': parts[1], 'RoleArn': parts[0]}
+                    awsroles.append(role)
+        return awsroles
 
 
 class CredentialResolver(object):
