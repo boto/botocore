@@ -100,7 +100,7 @@ class TestLoader(BaseEnvVar):
         search_paths = ['foo', 'bar', 'baz']
 
         class FakeLoader(object):
-            def load_file(self, name):
+            def load_file(self, name, use_ordered_dict=True):
                 expected_ending = os.path.join('bar', 'baz')
                 if name.endswith(expected_ending):
                     return ['loaded data']
@@ -112,7 +112,7 @@ class TestLoader(BaseEnvVar):
 
     def test_data_not_found_raises_exception(self):
         class FakeLoader(object):
-            def load_file(self, name):
+            def load_file(self, name, use_ordered_dict=True):
                 # Returning None indicates that the
                 # loader couldn't find anything.
                 return None
@@ -130,7 +130,7 @@ class TestLoader(BaseEnvVar):
     @mock.patch('os.path.isdir', mock.Mock(return_value=True))
     def test_load_service_model(self):
         class FakeLoader(object):
-            def load_file(self, name):
+            def load_file(self, name, use_ordered_dict=True):
                 return ['loaded data']
 
         loader = Loader(extra_search_paths=['foo'],
@@ -175,7 +175,7 @@ class TestLoader(BaseEnvVar):
                         include_default_search_paths=False)
         result = loader.load_partition_data('test')
         self.assertEquals(result, {})
-        fake_loader.load_file.assert_called_with('foo/partitions/test')
+        fake_loader.load_file.assert_called_with('foo/partitions/test', False)
 
 
 class TestLoadersWithDirectorySearching(BaseEnvVar):

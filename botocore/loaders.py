@@ -140,7 +140,7 @@ class JSONFileLoader(object):
         """
         return os.path.isfile(file_path + '.json')
 
-    def load_file(self, file_path):
+    def load_file(self, file_path, use_ordered_dict=True):
         """Attempt to load the file path.
 
         :type file_path: str
@@ -158,7 +158,10 @@ class JSONFileLoader(object):
         # We specify "utf8" here to ensure the correct behavior.
         with open(full_path, 'rb') as fp:
             payload = fp.read().decode('utf-8')
-            return json.loads(payload, object_pairs_hook=OrderedDict)
+            if use_ordered_dict:
+                return json.loads(payload, object_pairs_hook=OrderedDict)
+            else:
+                return json.loads(payload)
 
 
 def create_loader(search_path_string=None):
@@ -342,7 +345,9 @@ class Loader(object):
         :rtype: dict
         :return: Returns a dict of partition data.
         """
-        return self.load_data(os.sep.join(['partitions', partition_name]))
+        return self.load_data(
+            os.sep.join(['partitions', partition_name]),
+            use_ordered_dict=False)
 
     @instance_cache
     def load_service_model(self, service_name, type_name, api_version=None):
@@ -384,7 +389,7 @@ class Loader(object):
         return self.load_data(full_path)
 
     @instance_cache
-    def load_data(self, name):
+    def load_data(self, name, use_ordered_dict=True):
         """Load data given a data path.
 
         This is a low level method that will search through the various
@@ -396,12 +401,16 @@ class Loader(object):
         :type name: str
         :param name: The data path, i.e ``ec2/2015-03-01/service-2``.
 
+        :type use_ordered_dict: bool
+        :param name: When decoding JSON or JSON like data, specifies whether
+            or not to use an OrderedDict in place of a dict. Defaults to True.
+
         :return: The loaded data.  If no data could be found then
             a DataNotFoundError is raised.
 
         """
         for possible_path in self._potential_locations(name):
-            found = self.file_loader.load_file(possible_path)
+            found = self.file_loader.load_file(possible_path, use_ordered_dict)
             if found is not None:
                 return found
         # We didn't find anything that matched on any path.
