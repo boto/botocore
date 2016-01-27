@@ -467,211 +467,143 @@ def test_all_s3_endpoints_have_s3v4():
             assert 'v4' not in resolved['signatureVersions']
 
 
-class TestEndpointResolverChain(unittest.TestCase):
-    def test_list_endpoints_checks_one_after_another(self):
-        mock_resolver_1 = mock.Mock()
-        mock_resolver_1.list_endpoint_names.return_value = []
-        mock_resolver_2 = mock.Mock()
-        mock_resolver_2.list_endpoint_names.return_value = ['foo', 'bar']
-        mock_resolver_3 = mock.Mock()
-        mock_resolver_3.list_endpoint_names.return_value = []
-        chain = regions.EndpointResolverChain([mock_resolver_1,
-                                               mock_resolver_2,
-                                               mock_resolver_3])
-        self.assertEqual(['foo', 'bar'], chain.list_endpoint_names('a'))
-        # The first in the chain is empty, so it goes to the next.
-        mock_resolver_1.list_endpoint_names.assert_called_once_with(
-            'a', 'aws', False)
-        # The next in the chain returns, so we yield the results.
-        mock_resolver_2.list_endpoint_names.assert_called_once_with(
-            'a', 'aws', False)
-        # The last in the chain should not be called.
-        self.assertEquals(0, mock_resolver_3.call_count)
-
-    def test_list_endpoints_returns_empty_list_when_none_found(self):
-        mock_resolver_1 = mock.Mock()
-        mock_resolver_1.list_endpoint_names.return_value = []
-        chain = regions.EndpointResolverChain([mock_resolver_1])
-        self.assertEqual([], chain.list_endpoint_names('a'))
-        mock_resolver_1.list_endpoint_names.assert_called_once_with(
-            'a', 'aws', False)
-
-    def test_constructs_endpoints_by_checking_each_partition(self):
-        expected = {
-            'hostname': 'foo.bar.com',
-            'partition': '2'
-        }
-        mock_resolver_1 = mock.Mock()
-        mock_resolver_1.construct_endpoint.return_value = None
-        mock_resolver_2 = mock.Mock()
-        mock_resolver_2.construct_endpoint.return_value = expected
-        mock_resolver_3 = mock.Mock()
-        mock_resolver_3.construct_endpoint.return_value = None
-        chain = regions.EndpointResolverChain([mock_resolver_1,
-                                               mock_resolver_2,
-                                               mock_resolver_3])
-        self.assertEqual(expected, chain.construct_endpoint('a', 'b'))
-        mock_resolver_1.construct_endpoint.assert_called_once_with('a', 'b')
-        mock_resolver_2.construct_endpoint.assert_called_once_with('a', 'b')
-        self.assertEquals(0, mock_resolver_3.construct_endpoint.call_count)
-
-    def test_forwards_partition_only_to_each_in_chain(self):
-        mock_resolver_1 = mock.Mock()
-        mock_resolver_1.construct_endpoint.return_value = None
-        mock_resolver_2 = mock.Mock()
-        mock_resolver_2.construct_endpoint.return_value = None
-        chain = regions.EndpointResolverChain([mock_resolver_1,
-                                               mock_resolver_2])
-        chain.construct_endpoint('a', 'b')
-        mock_resolver_1.construct_endpoint.assert_called_once_with('a', 'b')
-        mock_resolver_2.construct_endpoint.assert_called_once_with('a', 'b')
-
-    def test_returns_none_when_not_found(self):
-        mock_resolver_1 = mock.Mock()
-        mock_resolver_1.construct_endpoint.return_value = None
-        chain = regions.EndpointResolverChain([mock_resolver_1])
-        self.assertIsNone(chain.construct_endpoint('a', 'b'))
-
-
-class TestLazyPartitionEndpointResolver(unittest.TestCase):
-    def setUp(self):
-        self.filename = 'partitions/dummy'
-        self.partition_data = {
-            'partition': 'foo',
-            'dnsSuffix': 'amazonaws.foo',
-            'defaults': {
-                'hostname': '{service}.{region}.{dnsSuffix}'
-            },
-            'regions': {
-                'us-east-1': {}
-            },
-            'services': {
-                'ec2': {
-                    'endpoints': {'us-east-1': {}}
-                }
-            }
-        }
-        self.loader = mock.Mock()
-        self.loader.load_partition_data.return_value = self.partition_data
-
-    def test_lazily_loads_and_proxies_list_endpoint_names(self):
-        lazy = regions.LazyPartitionEndpointResolver(
-            self.loader, self.filename)
-        self.assertEquals(0, self.loader.load_partition_data.call_count)
-        result = lazy.list_endpoint_names('ec2', 'foo')
-        self.assertEquals(['us-east-1'], result)
-        self.loader.load_partition_data.assert_called_once_with(self.filename)
-
-    def test_lazily_loads_and_proxies_partition_data(self):
-        lazy = regions.LazyPartitionEndpointResolver(
-            self.loader, self.filename)
-        self.assertEquals(0, self.loader.load_partition_data.call_count)
-        data = {
-            'partition': 'foo',
-            'hostname': 'ec2.us-east-1.amazonaws.foo',
-            'endpointName': 'us-east-1'
-        }
-        self.assertEquals(data, lazy.construct_endpoint('ec2', 'us-east-1'))
-        self.loader.load_partition_data.assert_called_once_with(self.filename)
-
-
-class TestPartitionEndpointResolver(unittest.TestCase):
+class TestEndpointResolver(unittest.TestCase):
     def _template(self):
         return {
-            'partition': 'aws',
-            'dnsSuffix': 'amazonaws.com',
-            'regionRegex': '^(us|eu)\-\w+$',
-            'defaults': {
-                'hostname': '{service}.{region}.{dnsSuffix}'
-            },
-            'regions': {
-                'us-foo': {'regionName': 'a'},
-                'us-bar': {'regionName': 'b'},
-                'eu-baz': {'regionName': 'd'}
-            },
-            'services': {
-                'ec2': {
-                    'endpoints': {
-                        'us-foo': {},
-                        'us-bar': {},
-                        'eu-baz': {},
-                        'd': {}
-                    }
-                },
-                's3': {
+            'partitions': [
+                {
+                    'partition': 'aws',
+                    'dnsSuffix': 'amazonaws.com',
+                    'regionRegex': '^(us|eu)\-\w+$',
                     'defaults': {
-                        'sslCommonName': '{service}.{region}.{dnsSuffix}'
+                        'hostname': '{service}.{region}.{dnsSuffix}'
                     },
-                    'endpoints': {
-                        'us-foo': {
-                            'sslCommonName': '{region}.{service}.{dnsSuffix}'
+                    'regions': {
+                        'us-foo': {'regionName': 'a'},
+                        'us-bar': {'regionName': 'b'},
+                        'eu-baz': {'regionName': 'd'}
+                    },
+                    'services': {
+                        'ec2': {
+                            'endpoints': {
+                                'us-foo': {},
+                                'us-bar': {},
+                                'eu-baz': {},
+                                'd': {}
+                            }
                         },
-                        'us-bar': {},
-                        'eu-baz': {'hostname': 'foo'}
+                        's3': {
+                            'defaults': {
+                                'sslCommonName': \
+                                    '{service}.{region}.{dnsSuffix}'
+                            },
+                            'endpoints': {
+                                'us-foo': {
+                                    'sslCommonName': \
+                                        '{region}.{service}.{dnsSuffix}'
+                                },
+                                'us-bar': {},
+                                'eu-baz': {'hostname': 'foo'}
+                            }
+                        },
+                        'not-regionalized': {
+                            'isRegionalized': False,
+                            'partitionEndpoint': 'aws',
+                            'endpoints': {
+                                'aws': {'hostname': 'not-regionalized'},
+                                'us-foo': {},
+                                'eu-baz': {}
+                            }
+                        },
+                        'non-partition': {
+                            'partitionEndpoint': 'aws',
+                            'endpoints': {
+                                'aws': {'hostname': 'host'},
+                                'us-foo': {}
+                            }
+                        },
+                        'merge': {
+                            'defaults': {
+                                'signatureVersions': ['v2'],
+                                'protocols': ['http']
+                            },
+                            'endpoints': {
+                                'us-foo': {'signatureVersions': ['v4']},
+                                'us-bar': {'protocols': ['https']}
+                            }
+                        }
                     }
                 },
-                'not-regionalized': {
-                    'isRegionalized': False,
-                    'partitionEndpoint': 'aws',
-                    'endpoints': {
-                        'aws': {'hostname': 'not-regionalized'},
-                        'us-foo': {},
-                        'eu-baz': {}
-                    }
-                },
-                'non-partition': {
-                    'partitionEndpoint': 'aws',
-                    'endpoints': {
-                        'aws': {'hostname': 'host'},
-                        'us-foo': {}
-                    }
-                },
-                'merge': {
+                {
+                    'partition': 'foo',
+                    'dnsSuffix': 'foo.com',
+                    'regionRegex': '^(foo)\-\w+$',
                     'defaults': {
-                        'signatureVersions': ['v2'],
-                        'protocols': ['http']
+                        'hostname': '{service}.{region}.{dnsSuffix}',
+                        'protocols': ['http'],
+                        'foo': 'bar'
                     },
-                    'endpoints': {
-                        'us-foo': {'signatureVersions': ['v4']},
-                        'us-bar': {'protocols': ['https']}
+                    'regions': {
+                        'foo-1': {'regionName': '1'},
+                        'foo-2': {'regionName': '2'},
+                        'foo-3': {'regionName': '3'}
+                    },
+                    'services': {
+                        'ec2': {
+                            'endpoints': {
+                                'foo-1': {
+                                    'foo': 'baz'
+                                },
+                                'foo-2': {},
+                                'foo-3': {}
+                            }
+                        }
                     }
                 }
-            }
+            ]
         }
 
     def test_ensures_region_is_not_none(self):
         with self.assertRaises(NoRegionError):
-            resolver = regions.PartitionEndpointResolver(self._template())
+            resolver = regions.EndpointResolver(self._template())
             resolver.construct_endpoint('foo', None)
 
     def test_ensures_required_keys_present(self):
         with self.assertRaises(ValueError):
-            regions.PartitionEndpointResolver({})
+            regions.EndpointResolver({})
 
     def test_returns_empty_list_when_listing_for_different_partition(self):
-        resolver = regions.PartitionEndpointResolver(self._template())
-        self.assertEquals([], resolver.list_endpoint_names('ec2', 'bar'))
+        resolver = regions.EndpointResolver(self._template())
+        self.assertEquals([], resolver.get_available_endpoints('ec2', 'bar'))
 
     def test_returns_empty_list_when_no_service_found(self):
-        resolver = regions.PartitionEndpointResolver(self._template())
-        self.assertEquals([], resolver.list_endpoint_names('what?'))
+        resolver = regions.EndpointResolver(self._template())
+        self.assertEquals([], resolver.get_available_endpoints('what?'))
 
-    def test_list_endpoint_names(self):
-        resolver = regions.PartitionEndpointResolver(self._template())
-        result = resolver.list_endpoint_names('ec2', allow_non_regional=True)
+    def test_gets_endpoint_names(self):
+        resolver = regions.EndpointResolver(self._template())
+        result = resolver.get_available_endpoints(
+            'ec2', allow_non_regional=True)
         self.assertEquals(['d', 'eu-baz', 'us-bar', 'us-foo'], sorted(result))
 
+    def test_gets_endpoint_names_for_partition(self):
+        resolver = regions.EndpointResolver(self._template())
+        result = resolver.get_available_endpoints(
+            'ec2', allow_non_regional=True, partition_name='foo')
+        self.assertEquals(['foo-1', 'foo-2', 'foo-3'], sorted(result))
+
     def test_list_regional_endpoints_only(self):
-        resolver = regions.PartitionEndpointResolver(self._template())
-        result = resolver.list_endpoint_names('ec2', allow_non_regional=False)
+        resolver = regions.EndpointResolver(self._template())
+        result = resolver.get_available_endpoints(
+            'ec2', allow_non_regional=False)
         self.assertEquals(['eu-baz', 'us-bar', 'us-foo'], sorted(result))
 
     def test_returns_none_when_no_match(self):
-        resolver = regions.PartitionEndpointResolver(self._template())
+        resolver = regions.EndpointResolver(self._template())
         self.assertIsNone(resolver.construct_endpoint('foo', 'baz'))
 
     def test_constructs_regionalized_endpoints_for_exact_matches(self):
-        resolver = regions.PartitionEndpointResolver(self._template())
+        resolver = regions.EndpointResolver(self._template())
         result = resolver.construct_endpoint('not-regionalized', 'eu-baz')
         self.assertEquals('not-regionalized.eu-baz.amazonaws.com',
                           result['hostname'])
@@ -679,29 +611,29 @@ class TestPartitionEndpointResolver(unittest.TestCase):
         self.assertEquals('eu-baz', result['endpointName'])
 
     def test_constructs_partition_endpoints_for_real_partition_region(self):
-        resolver = regions.PartitionEndpointResolver(self._template())
+        resolver = regions.EndpointResolver(self._template())
         result = resolver.construct_endpoint('not-regionalized', 'us-bar')
         self.assertEquals('not-regionalized', result['hostname'])
         self.assertEquals('aws', result['partition'])
         self.assertEquals('aws', result['endpointName'])
 
     def test_constructs_partition_endpoints_for_regex_match(self):
-        resolver = regions.PartitionEndpointResolver(self._template())
+        resolver = regions.EndpointResolver(self._template())
         result = resolver.construct_endpoint('not-regionalized', 'us-abc')
         self.assertEquals('not-regionalized', result['hostname'])
 
-    def test_constructs_endpoints_for_regex_match(self):
-        resolver = regions.PartitionEndpointResolver(self._template())
+    def test_constructs_endpoints_for_regionalized_regex_match(self):
+        resolver = regions.EndpointResolver(self._template())
         result = resolver.construct_endpoint('s3', 'us-abc')
         self.assertEquals('s3.us-abc.amazonaws.com', result['hostname'])
 
     def test_constructs_endpoints_for_unknown_service_but_known_region(self):
-        resolver = regions.PartitionEndpointResolver(self._template())
+        resolver = regions.EndpointResolver(self._template())
         result = resolver.construct_endpoint('unknown', 'us-foo')
         self.assertEquals('unknown.us-foo.amazonaws.com', result['hostname'])
 
     def test_merges_service_keys(self):
-        resolver = regions.PartitionEndpointResolver(self._template())
+        resolver = regions.EndpointResolver(self._template())
         us_foo = resolver.construct_endpoint('merge', 'us-foo')
         us_bar = resolver.construct_endpoint('merge', 'us-bar')
         self.assertEquals(['http'], us_foo['protocols'])
@@ -709,8 +641,20 @@ class TestPartitionEndpointResolver(unittest.TestCase):
         self.assertEquals(['https'], us_bar['protocols'])
         self.assertEquals(['v2'], us_bar['signatureVersions'])
 
+    def test_merges_partition_default_keys_with_no_overwrite(self):
+        resolver = regions.EndpointResolver(self._template())
+        resolved = resolver.construct_endpoint('ec2', 'foo-1')
+        self.assertEquals('baz', resolved['foo'])
+        self.assertEquals(['http'], resolved['protocols'])
+
+    def test_merges_partition_default_keys_with_overwrite(self):
+        resolver = regions.EndpointResolver(self._template())
+        resolved = resolver.construct_endpoint('ec2', 'foo-2')
+        self.assertEquals('bar', resolved['foo'])
+        self.assertEquals(['http'], resolved['protocols'])
+
     def test_gives_hostname_and_common_name_unaltered(self):
-        resolver = regions.PartitionEndpointResolver(self._template())
+        resolver = regions.EndpointResolver(self._template())
         result = resolver.construct_endpoint('s3', 'eu-baz')
         self.assertEquals('s3.eu-baz.amazonaws.com', result['sslCommonName'])
         self.assertEquals('foo', result['hostname'])
@@ -736,7 +680,7 @@ class TestS3CompatEndpointResolver(unittest.TestCase):
 
     def test_proxies_list_call_to_delegate(self):
         resolver = mock.Mock()
-        resolver.list_endpoint_names.return_value = []
+        resolver.get_available_endpoints.return_value = []
         s3_resolver = regions.S3CompatResolver(resolver)
-        self.assertEquals([], s3_resolver.list_endpoint_names('s3'))
-        resolver.list_endpoint_names.assert_called_with('s3', 'aws', False)
+        self.assertEquals([], s3_resolver.get_available_endpoints('s3'))
+        resolver.get_available_endpoints.assert_called_with('s3')

@@ -23,22 +23,7 @@ from botocore.exceptions import NoRegionError
 
 LOG = logging.getLogger(__name__)
 DEFAULT_URI_TEMPLATE = '{service}.{region}.{dnsSuffix}'
-
-
-def create_resolver_from_files(data_loader, partitions):
-    """Creates an endpoint resolver from a list of partitions
-
-    The first partition in the list will be eagerly loaded, and the remaining
-    partitions will be lazily loaded. The returned resolver will also account
-    for S3 specific customizations.
-    """
-    if not partitions:
-        raise ValueError('Must provide one or more partition files')
-    eager_loaded_data = data_loader.load_partition_data(partitions[0])
-    resolvers = [PartitionEndpointResolver(eager_loaded_data)]
-    for name in partitions[1:]:
-        resolvers.append(LazyPartitionEndpointResolver(data_loader, name))
-    return S3CompatResolver(EndpointResolverChain(resolvers))
+DEFAULT_SERVICE_DATA = {'endpoints': {}}
 
 
 class BaseEndpointResolver(object):
@@ -70,8 +55,15 @@ class BaseEndpointResolver(object):
         """
         raise NotImplementedError
 
-    def list_endpoint_names(self, service_name, partition_name='aws',
-                            allow_non_regional=False):
+    def get_available_partitions(self):
+        """Lists the partitions available to the endpoint resolver.
+
+        :return: Returns a list of partition names (e.g., ["aws", "aws-cn"]).
+        """
+        raise NotImplementedError
+
+    def get_available_endpoints(self, service_name, partition_name='aws',
+                                allow_non_regional=False):
         """Lists the endpoint names of a particular partition.
 
         :type service_name: string
@@ -86,7 +78,7 @@ class BaseEndpointResolver(object):
         :param allow_non_regional: Set to True to include endpoints that are
              not regional endpoints (e.g., s3-external-1,
              fips-us-gov-west-1, etc).
-        :return: Returns an iterable of endpoint names (e.g., us-east-1).
+        :return: Returns a list of endpoint names (e.g., ["us-east-1"]).
         """
         raise NotImplementedError
 
@@ -100,10 +92,11 @@ class S3CompatResolver(BaseEndpointResolver):
     def __init__(self, endpoint_resolver):
         self._proxy = endpoint_resolver
 
-    def list_endpoint_names(self, service_name, partition_name='aws',
-                            allow_non_regional=False):
-        return self._proxy.list_endpoint_names(
-            service_name, partition_name, allow_non_regional)
+    def get_available_partitions(self):
+        return self._proxy.get_available_partitions()
+
+    def get_available_endpoints(self, *args, **kwargs):
+        return self._proxy.get_available_endpoints(*args, **kwargs)
 
     def construct_endpoint(self, service_name, region_name):
         # Use us-east-1 as the default region for S3.
@@ -112,88 +105,56 @@ class S3CompatResolver(BaseEndpointResolver):
         return self._proxy.construct_endpoint(service_name, region_name)
 
 
-class EndpointResolverChain(BaseEndpointResolver):
-    """Resolves endpoints using a chain of endpoint resolvers"""
-    def __init__(self, endpoint_resolvers):
-        self.endpoint_resolvers = endpoint_resolvers
-
-    def list_endpoint_names(self, service_name, partition_name='aws',
-                            allow_non_regional=False):
-        for resolver in self.endpoint_resolvers:
-            endpoints = resolver.list_endpoint_names(
-                service_name, partition_name, allow_non_regional)
-            if endpoints:
-                return endpoints
-        return []
-
-    def construct_endpoint(self, service_name, region_name):
-        for resolver in self.endpoint_resolvers:
-            endpoint = resolver.construct_endpoint(service_name, region_name)
-            if endpoint:
-                return endpoint
-        return None
-
-
-class LazyPartitionEndpointResolver(object):
-    """Lazily instantiates and proxies calls to a PartitionEndpointResolver"""
-    def __init__(self, data_loader, partition_name):
-        self.partition_name = partition_name
-        self._data_loader = data_loader
-        self._proxy = None
-
-    def _load(self):
-        if not self._proxy:
-            LOG.debug('Lazy loading partition file: %s', self.partition_name)
-            data = self._data_loader.load_partition_data(self.partition_name)
-            self._proxy = PartitionEndpointResolver(data)
-        return self._proxy
-
-    def list_endpoint_names(self, service_name, partition_name='aws',
-                            allow_non_regional=False):
-        return self._load().list_endpoint_names(
-            service_name, partition_name, allow_non_regional)
-
-    def construct_endpoint(self, service_name, region_name):
-        return self._load().construct_endpoint(service_name, region_name)
-
-
-class PartitionEndpointResolver(BaseEndpointResolver):
+class EndpointResolver(BaseEndpointResolver):
     """Resolves endpoints based on partition endpoint metadata"""
-    def __init__(self, partition_data):
+    def __init__(self, endpoint_data):
         """
-        :param partition_data: A dict of partition data.
+        :param endpoint_data: A dict of partition data.
         """
-        self._default_service_data = {'endpoints': {}}
-        required = ['partition', 'regions', 'services', 'dnsSuffix']
-        for key in required:
-            if key not in partition_data:
-                raise ValueError('Missing %s in partition data' % key)
-        self._partition = partition_data
-        self._regexp = None
+        if 'partitions' not in endpoint_data:
+            raise ValueError('Missing "partitions" in endpoint data')
+        self._endpoint_data = endpoint_data
 
-    def list_endpoint_names(self, service_name, partition_name='aws',
-                            allow_non_regional=False):
+    def get_available_partitions(self):
         result = []
-        if self._partition['partition'] == partition_name:
-            services = self._partition['services']
-            if service_name in services:
-                for endpoint_name in services[service_name]['endpoints']:
-                    if allow_non_regional \
-                            or endpoint_name in self._partition['regions']:
-                        result.append(endpoint_name)
+        for partition in self._endpoint_data['partitions']:
+            result.append(partition['partition'])
+        return result
+
+    def get_available_endpoints(self, service_name, partition_name='aws',
+                                allow_non_regional=False):
+        result = []
+        for partition in self._endpoint_data['partitions']:
+            if partition['partition'] != partition_name:
+                continue
+            services = partition['services']
+            if service_name not in services:
+                continue
+            for endpoint_name in services[service_name]['endpoints']:
+                if allow_non_regional or endpoint_name in partition['regions']:
+                    result.append(endpoint_name)
         return result
 
     def construct_endpoint(self, service_name, region_name):
         if region_name is None:
             raise NoRegionError()
+        # Iterate over each partition until a match is found.
+        for partition in self._endpoint_data['partitions']:
+            result = self._endpoint_for_partition(
+                partition, service_name, region_name)
+            if result:
+                return result
+
+    def _endpoint_for_partition(self, partition, service_name, region_name):
         # Get the service from the partition, or an empty template.
-        service_data = self._partition['services'].get(
-            service_name, self._default_service_data)
+        service_data = partition['services'].get(
+            service_name, DEFAULT_SERVICE_DATA)
         # Attempt to resolve the exact region for this partition.
         if region_name in service_data['endpoints']:
-            return self._resolve(service_name, service_data, region_name)
+            return self._resolve(
+                partition, service_name, service_data, region_name)
         # Check to see if the endpoint provided is valid for the partition.
-        if self._region_match(region_name):
+        if self._region_match(partition, region_name):
             # Use the partition endpoint if set and not regionalized.
             partition_endpoint = service_data.get('partitionEndpoint')
             is_regionalized = service_data.get('isRegionalized', True)
@@ -201,31 +162,33 @@ class PartitionEndpointResolver(BaseEndpointResolver):
                 LOG.debug('Using partition endpoint for %s, %s: %s',
                           service_name, region_name, partition_endpoint)
                 return self._resolve(
-                    service_name, service_data, partition_endpoint)
+                    partition, service_name, service_data, partition_endpoint)
             LOG.debug('Creating a regex based endpoint for %s, %s',
                       service_name, region_name)
-            return self._resolve(service_name, service_data, region_name)
+            return self._resolve(
+                partition, service_name, service_data, region_name)
 
-    def _region_match(self, region_name):
-        if region_name in self._partition['regions']:
+    def _region_match(self, partition, region_name):
+        if region_name in partition['regions']:
             return True
-        if not self._regexp and self._partition.get('regionRegex'):
-            self._regexp = re.compile(self._partition['regionRegex'])
-        return self._regexp and self._regexp.match(region_name)
+        if 'regionRegex' in partition:
+            return re.compile(partition['regionRegex']).match(region_name)
+        return False
 
-    def _resolve(self, service_name, service_data, endpoint_name):
+    def _resolve(self, partition, service_name, service_data, endpoint_name):
         result = service_data['endpoints'].get(endpoint_name, {})
-        result['partition'] = self._partition['partition']
+        result['partition'] = partition['partition']
         result['endpointName'] = endpoint_name
         # Merge in the service defaults then the partition defaults.
         self._merge_keys(service_data.get('defaults', {}), result)
-        self._merge_keys(self._partition.get('defaults', {}), result)
+        self._merge_keys(partition.get('defaults', {}), result)
         hostname = result.get('hostname', DEFAULT_URI_TEMPLATE)
         result['hostname'] = self._expand_template(
-            result['hostname'], service_name, endpoint_name)
+            partition, result['hostname'], service_name, endpoint_name)
         if 'sslCommonName' in result:
             result['sslCommonName'] = self._expand_template(
-                result['sslCommonName'], service_name, endpoint_name)
+                partition, result['sslCommonName'], service_name,
+                endpoint_name)
         return result
 
     def _merge_keys(self, from_data, result):
@@ -233,7 +196,8 @@ class PartitionEndpointResolver(BaseEndpointResolver):
             if key not in result:
                 result[key] = from_data[key]
 
-    def _expand_template(self, template, service_name, endpoint_name):
+    def _expand_template(self, partition, template, service_name,
+                         endpoint_name):
         return template.format(
             service=service_name, region=endpoint_name,
-            dnsSuffix=self._partition['dnsSuffix'])
+            dnsSuffix=partition['dnsSuffix'])

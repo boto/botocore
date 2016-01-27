@@ -17,7 +17,7 @@ by botocore.  This can include:
 
     * Service models (e.g. the model for EC2, S3, DynamoDB, etc.)
     * Other models associated with a service (pagination, waiters)
-    * Non service-specific config (Partition data, retry config)
+    * Non service-specific config (Endpoint data, retry config)
 
 Loading a module is broken down into several steps:
 
@@ -315,39 +315,6 @@ class Loader(object):
         if not known_api_versions:
             raise DataNotFoundError(data_path=service_name)
         return sorted(known_api_versions)
-
-    @instance_cache
-    def list_available_partitions(self):
-        """Lists the available partitions found in your search path
-
-        :rtype: list
-        :return: Returns a list of partition names (e.g., ["aws", "aws-cn"])
-        """
-        result_set = set()
-        for path in self.search_paths:
-            partition_dir = os.sep.join([path, 'partitions'])
-            if os.path.isdir(partition_dir):
-                for filename in os.listdir(partition_dir):
-                    if filename.endswith('.json'):
-                        # Push only the partition name (e.g., "aws")
-                        basename = os.path.basename(filename)
-                        result_set.add(os.path.splitext(basename)[0])
-        # Convert to a sorted list for a predictable order.
-        return sorted(result_set)
-
-    @instance_cache
-    def load_partition_data(self, partition_name):
-        """Loads partition data from disk.
-
-        :type partition_name: str
-        :param partition_name: Name of a partition to load (e.g., "aws")
-
-        :rtype: dict
-        :return: Returns a dict of partition data.
-        """
-        return self.load_data(
-            os.sep.join(['partitions', partition_name]),
-            use_ordered_dict=False)
 
     @instance_cache
     def load_service_model(self, service_name, type_name, api_version=None):

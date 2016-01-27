@@ -30,7 +30,7 @@ from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.loaders import create_loader
 from botocore.parsers import ResponseParserFactory
-from botocore import regions
+from botocore.regions import EndpointResolver, S3CompatResolver
 from botocore.model import ServiceModel
 from botocore import paginate
 from botocore import waiter
@@ -174,11 +174,12 @@ class Session(object):
             lambda:  create_loader(self.get_config_variable('data_path')))
 
     def _register_endpoint_resolver(self):
+        def create_default_resolver():
+            loader = self.get_component('data_loader')
+            endpoints = loader.load_data('endpoints', use_ordered_dict=False)
+            return S3CompatResolver(EndpointResolver(endpoints))
         self._components.lazy_register_component(
-            'endpoint_resolver',
-            lambda: regions.create_resolver_from_files(
-                data_loader=self.get_component('data_loader'),
-                partitions=self.get_available_partitions()))
+            'endpoint_resolver', create_default_resolver)
 
     def _register_response_parser_factory(self):
         self._components.register_component('response_parser_factory',
@@ -804,7 +805,8 @@ class Session(object):
         :rtype: list
         :return: Returns a list of partition names (e.g., ["aws", "aws-cn"])
         """
-        return self.get_component('data_loader').list_available_partitions()
+        resolver = self.get_component('endpoint_resolver')
+        return resolver.get_available_partitions()
 
     def get_available_regions(self, service_name, partition_name='aws',
                               allow_non_regional=False):
@@ -824,7 +826,8 @@ class Session(object):
              fips-us-gov-west-1, etc).
         :return: Returns a list of endpoint names (e.g., ["us-east-1"]).
         """
-        return self.get_component('endpoint_resolver').list_endpoint_names(
+        resolver = self.get_component('endpoint_resolver')
+        return resolver.get_available_endpoints(
             service_name, partition_name, allow_non_regional)
 
 

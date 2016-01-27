@@ -324,14 +324,14 @@ class TestSessionConfigurationVars(BaseSessionTest):
 
 class TestSessionPartitionFiles(BaseSessionTest):
     def test_lists_partitions_on_disk(self):
-        mock_loader = mock.Mock()
-        mock_loader.list_available_partitions.return_value = ['foo']
-        self.session.register_component('data_loader', mock_loader)
+        mock_resolver = mock.Mock()
+        mock_resolver.get_available_partitions.return_value = ['foo']
+        self.session.register_component('endpoint_resolver', mock_resolver)
         self.assertEquals(['foo'], self.session.get_available_partitions())
 
     def test_proxies_list_endpoints_to_resolver(self):
         resolver = mock.Mock()
-        resolver.list_endpoint_names.return_value = ['a', 'b']
+        resolver.get_available_endpoints.return_value = ['a', 'b']
         self.session.register_component('endpoint_resolver', resolver)
         self.session.get_available_regions('foo', 'bar', True)
 

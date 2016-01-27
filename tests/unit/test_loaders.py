@@ -166,17 +166,6 @@ class TestLoader(BaseEnvVar):
         self.assertIn('bar', loader.search_paths)
         self.assertIn('baz', loader.search_paths)
 
-    @mock.patch('os.path.isdir', mock.Mock(return_value=True))
-    def test_loads_partition_data_from_nested_directory(self):
-        fake_loader = mock.Mock()
-        fake_loader.load_file.return_value = {}
-        loader = Loader(extra_search_paths=['foo'],
-                        file_loader=fake_loader,
-                        include_default_search_paths=False)
-        result = loader.load_partition_data('test')
-        self.assertEquals(result, {})
-        fake_loader.load_file.assert_called_with('foo/partitions/test', False)
-
 
 class TestLoadersWithDirectorySearching(BaseEnvVar):
     def setUp(self):
@@ -278,15 +267,3 @@ class TestLoadersWithDirectorySearching(BaseEnvVar):
                              '2014-10-01')
             self.assertEqual(loader.determine_latest_version('ec2', 'service-1'),
                              '2015-03-01')
-
-    def test_lists_partitions(self):
-        loader = Loader()
-        pattern = os.sep.join([loader.BUILTIN_DATA_PATH,
-                               'partitions', '*.json'])
-        pattern = os.path.expandvars(pattern)
-        files = glob.glob(pattern)
-        files = [os.path.splitext(os.path.basename(f))[0] for f in files]
-        files = sorted(files)
-        # Ensure that the partitions found in the partitions dir are
-        # present when calling list_available_partitions
-        self.assertEquals(files, loader.list_available_partitions())
