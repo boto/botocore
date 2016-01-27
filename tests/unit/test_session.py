@@ -18,7 +18,6 @@ import os
 import logging
 import tempfile
 import shutil
-import glob
 
 import mock
 

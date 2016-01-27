@@ -21,7 +21,6 @@
 
 import os
 import contextlib
-import glob
 
 import mock
 
@@ -100,7 +99,7 @@ class TestLoader(BaseEnvVar):
         search_paths = ['foo', 'bar', 'baz']
 
         class FakeLoader(object):
-            def load_file(self, name, use_ordered_dict=True):
+            def load_file(self, name):
                 expected_ending = os.path.join('bar', 'baz')
                 if name.endswith(expected_ending):
                     return ['loaded data']
@@ -112,7 +111,7 @@ class TestLoader(BaseEnvVar):
 
     def test_data_not_found_raises_exception(self):
         class FakeLoader(object):
-            def load_file(self, name, use_ordered_dict=True):
+            def load_file(self, name):
                 # Returning None indicates that the
                 # loader couldn't find anything.
                 return None
@@ -130,7 +129,7 @@ class TestLoader(BaseEnvVar):
     @mock.patch('os.path.isdir', mock.Mock(return_value=True))
     def test_load_service_model(self):
         class FakeLoader(object):
-            def load_file(self, name, use_ordered_dict=True):
+            def load_file(self, name):
                 return ['loaded data']
 
         loader = Loader(extra_search_paths=['foo'],

@@ -19,11 +19,10 @@ from botocore import waiter, xform_name
 from botocore.awsrequest import prepare_request_dict
 from botocore.compat import OrderedDict
 from botocore.endpoint import EndpointCreator, DEFAULT_TIMEOUT
-from botocore.endpoint import create_endpoint_url
 from botocore.exceptions import ClientError, DataNotFoundError
 from botocore.exceptions import OperationNotPageableError
 from botocore.exceptions import InvalidS3AddressingStyleError
-from botocore.exceptions import NoRegionError
+from botocore.exceptions import NoRegionError, UnknownEndpointError
 from botocore.hooks import first_non_none_response
 from botocore.model import ServiceModel
 from botocore.paginate import Paginator
@@ -108,42 +107,6 @@ class ClientCreator(object):
         self._event_emitter.register('needs-retry.%s' % endpoint_prefix,
                                      handler, unique_id=unique_id)
 
-    def _get_preferred_signature_version(self, versions):
-        # Use signers in the following preference order.
-        preference_order = ['s3', 's3v4', 'v4', 'v2']
-        for preference in preference_order:
-            if preference in versions:
-                return preference
-        # Just use the first one if a preferred signer was not found.
-        return versions[0]
-
-    def _determine_signature_version(self, service_model, scoped_config,
-                                     client_config, endpoint_config):
-        # Determine the signature version based on the user provided values,
-        # the scoped config, the client config, and the resolved endpoint data
-        # We'll use the signature version from the model definition by default.
-        signature_version = service_model.signature_version
-        # Each endpoint can override the required signature versions.
-        if endpoint_config and 'signatureVersions' in endpoint_config:
-            signature_version = self._get_preferred_signature_version(
-                endpoint_config['signatureVersions'])
-        # Signature overrides from a configuration file.
-        if scoped_config is not None:
-            service_config = scoped_config.get(service_model.endpoint_prefix)
-            if service_config is not None and isinstance(service_config, dict):
-                override = service_config.get('signature_version')
-                if override:
-                    logger.debug(
-                        "Switching signature version for service %s "
-                        "to version %s based on config file override.",
-                        service_model.endpoint_prefix, override)
-                    signature_version = override
-        # Override the signature if the user specifies it in the client
-        # config.
-        if client_config and client_config.signature_version is not None:
-            signature_version = client_config.signature_version
-        return signature_version
-
     def _inject_s3_configuration(self, config_kwargs, scoped_config,
                                  client_config):
         s3_configuration = None
@@ -176,59 +139,20 @@ class ClientCreator(object):
         elif scoped_config is not None:
             return scoped_config.get('ca_bundle')
 
-    def _determine_region_name(self, region_name, client_config):
-        # Determine what region the user provided either via the
-        # region_name argument or the client_config. Note that
-        # endpoint resolvers are responsible for enforcing whether
-        # or not a region is required.
-        if region_name is None:
-            if client_config and client_config.region_name is not None:
-                region_name = client_config.region_name
-        return region_name
-
-    def _resolve_endpoint(self, region_name, endpoint_config, endpoint_url,
-                          is_secure):
-        # The signing region will be the same as the region unless it is
-        # overridden in the endpoint's credentialScope metadata.
-        signing_region = region_name
-        if endpoint_config:
-            # If no region was provided (because we were able to extract a
-            # default region from the provider) or if the endpoint_url was not
-            # provided, then set the region and signing region. If the
-            # endpoint_url was provided, and a region was provided, then do
-            # not override the region name or signing region.
-            if endpoint_url is None or region_name is None:
-                region_name = endpoint_config['endpointName']
-                signing_region = region_name
-            if endpoint_url is None:
-                endpoint_url = create_endpoint_url(endpoint_config, is_secure)
-                # credentialScope.region in the endpoint_config will override
-                # the provided region name when signing requests.
-                if 'credentialScope' in endpoint_config:
-                    credential_scope = endpoint_config['credentialScope']
-                    if 'region' in credential_scope:
-                        signing_region = credential_scope['region']
-        if not region_name:
-            raise NoRegionError()
-        return endpoint_url, region_name, signing_region
-
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,
                          scoped_config, client_config):
+        service_name = service_model.endpoint_prefix
         protocol = service_model.metadata['protocol']
         serializer = botocore.serialize.create_serializer(
             protocol, include_validation=True)
         event_emitter = copy.copy(self._event_emitter)
         response_parser = botocore.parsers.create_parser(protocol)
         verify = self._resolve_verify_value(verify, scoped_config)
-        region_name = self._determine_region_name(region_name, client_config)
-        resolver = self._endpoint_resolver
-        endpoint_config = resolver.construct_endpoint(
-            service_model.endpoint_prefix, region_name)
-        endpoint_url, region_name, signing_region = self._resolve_endpoint(
-            region_name, endpoint_config, endpoint_url, is_secure)
-        signature_version = self._determine_signature_version(
-            service_model, scoped_config, client_config, endpoint_config)
+        endpoint_bridge = ClientEndpointBridge(
+            self._endpoint_resolver, scoped_config, client_config)
+        endpoint_config = endpoint_bridge.resolve(
+            service_name, region_name, endpoint_url, is_secure)
 
         # Override the user agent if specified in the client config.
         user_agent = self._user_agent
@@ -238,16 +162,16 @@ class ClientCreator(object):
             if client_config.user_agent_extra is not None:
                 user_agent += ' %s' % client_config.user_agent_extra
 
-        signer = RequestSigner(service_model.service_name, signing_region,
-                               service_model.signing_name,
-                               signature_version, credentials,
-                               event_emitter)
+        signer = RequestSigner(
+            service_name, endpoint_config['signing_region'], service_name,
+            endpoint_config['signature_version'], credentials, event_emitter)
 
         # Create a new client config to be passed to the client based
         # on the final values. We do not want the user to be able
         # to try to modify an existing client with a client config.
         config_kwargs = dict(
-            region_name=region_name, signature_version=signature_version,
+            region_name=endpoint_config['region_name'],
+            signature_version=endpoint_config['signature_version'],
             user_agent=user_agent)
         if client_config is not None:
             config_kwargs.update(
@@ -259,12 +183,10 @@ class ClientCreator(object):
             config_kwargs, scoped_config, client_config)
 
         new_config = Config(**config_kwargs)
-
-        endpoint_creator = EndpointCreator(self._endpoint_resolver,
-                                           region_name, event_emitter)
+        endpoint_creator = EndpointCreator(event_emitter)
         endpoint = endpoint_creator.create_endpoint(
-            service_model, region_name, is_secure=is_secure,
-            endpoint_url=endpoint_url, verify=verify,
+            service_model, region_name=endpoint_config['region_name'],
+            endpoint_url=endpoint_config['endpoint_url'], verify=verify,
             response_parser_factory=self._response_parser_factory,
             timeout=(new_config.connect_timeout, new_config.read_timeout))
 
@@ -322,6 +244,144 @@ class ClientCreator(object):
         )
         _api_call.__doc__ = docstring
         return _api_call
+
+
+class ClientEndpointBridge(object):
+    """Bridges endpoint data and client creation
+
+    This class handles taking out the relevant arguments from the endpoint
+    resolver and determining which values to use, taking into account any
+    client configuration options and scope configuration options.
+
+    This class also handles determining what, if any, region to use if no
+    explicit region setting is provided. For example, Amazon S3 client will
+    utilize "us-east-1" by default if no region can be resolved."""
+
+    SIGNATURE_PRECEDENCE = ['s3', 's3v4', 'v4', 'v2']
+    DEFAULT_ENDPOINT = '{service}.{region}.amazonaws.com'
+
+    def __init__(self, endpoint_resolver, scoped_config,
+                 client_config, default_endpoint=None):
+        self.endpoint_resolver = endpoint_resolver
+        self.scoped_config = scoped_config
+        self.client_config = client_config
+        self.default_endpoint = default_endpoint or self.DEFAULT_ENDPOINT
+
+    def resolve(self, service_name, region_name=None, endpoint_url=None,
+                is_secure=True):
+        region_name = self._check_default_region(service_name, region_name)
+        resolved = self.endpoint_resolver.construct_endpoint(
+            service_name, region_name)
+        if resolved:
+            return self._create_endpoint(
+                resolved, service_name, region_name, endpoint_url, is_secure)
+        else:
+            return self._assume_endpoint(service_name, region_name,
+                                         endpoint_url, is_secure)
+
+    def _check_default_region(self, service_name, region_name):
+        if region_name is not None:
+            return region_name
+        # Use the client_config region if no explicit region was provided.
+        if self.client_config and self.client_config.region_name is not None:
+            return self.client_config.region_name
+        # Use us-east-1 as the default region for S3.
+        if service_name == 's3':
+            return 'us-east-1'
+        # We require a region for everything except S3, so we must fail.
+        raise NoRegionError()
+
+    def _create_endpoint(self, resolved, service_name, region_name,
+                         endpoint_url, is_secure):
+        region_name, signing_region = self._pick_region_values(
+            resolved, region_name, endpoint_url)
+        if endpoint_url is None:
+            # Use the sslCommonName over the hostname for Python 2.6 compat.
+            hostname = resolved.get('sslCommonName', resolved.get('hostname'))
+            endpoint_url = self._make_url(hostname, is_secure)
+        signature_version = self._resolve_signature_version(
+            service_name, resolved)
+        return self._create_result(
+            service_name=service_name, region_name=region_name,
+            signing_region=signing_region, endpoint_url=endpoint_url,
+            metadata=resolved, signature_version=signature_version)
+
+    def _assume_endpoint(self, service_name, region_name, endpoint_url,
+                         is_secure):
+        if endpoint_url is None:
+            # Expand the default hostname URI template.
+            hostname = self.default_endpoint.format(
+                service=service_name, region=region_name)
+            endpoint_url = self._make_url(hostname, is_secure)
+        logger.debug('Assuming an endpoint for %s, %s: %s',
+                     service_name, region_name, endpoint_url)
+        # We still want to allow the user to provide an explicit version.
+        signature_version = self._resolve_signature_version(service_name, {})
+        return self._create_result(
+            service_name=service_name, region_name=region_name,
+            signing_region=region_name, signature_version=signature_version,
+            endpoint_url=endpoint_url, metadata={})
+
+    def _create_result(self, service_name, region_name, signing_region,
+                       endpoint_url, signature_version, metadata):
+        return {
+            'service_name': service_name,
+            'region_name': region_name,
+            'signing_region': signing_region,
+            'endpoint_url': endpoint_url,
+            'signature_version': signature_version,
+            'metadata': metadata
+        }
+
+    def _make_url(self, hostname, is_secure):
+        endpoint_url = 'https://' if is_secure else 'http://'
+        return endpoint_url + hostname
+
+    def _pick_region_values(self, resolved, region_name, endpoint_url):
+        signing_region = region_name
+        if endpoint_url is None:
+            # Do not use the region name or signing name from the resolved
+            # endpoint if the user explicitly provides an endpoint_url. This
+            # would happen if we resolve to an endpoint where the service has
+            # a "defaults" section that overrides all endpoint with a single
+            # hostname and credentialScope. This has been the case historically
+            # for how STS has worked. The only way to resolve an STS endpoint
+            # was to provide a region_name and an endpoint_url. In that case,
+            # we would still resolve an endpoint, but we would not use the
+            # resolved endpointName or signingRegion because we want to allow
+            # custom endpoints.
+            region_name = resolved['endpointName']
+            signing_region = region_name
+            if 'credentialScope' in resolved:
+                credential_scope = resolved['credentialScope']
+                if 'region' in credential_scope:
+                    signing_region = credential_scope['region']
+        return region_name, signing_region
+
+    def _resolve_signature_version(self, service_name, resolved):
+        # Client config overrides everything.
+        client = self.client_config
+        if client and client.signature_version is not None:
+            return client.signature_version
+        # Scoped config overrides picking from the endpoint metadata.
+        scoped = self.scoped_config
+        if scoped is not None:
+            service_config = scoped.get(service_name)
+            if service_config is not None and isinstance(service_config, dict):
+                version = service_config.get('signature_version')
+                if version:
+                    logger.debug(
+                        "Switching signature version for service %s "
+                        "to version %s based on config file override.",
+                        service_name, version)
+                    return version
+        # Pick a signature version from the endpoint metadata if present.
+        if 'signatureVersions' in resolved:
+            for preference in self.SIGNATURE_PRECEDENCE:
+                if preference in resolved['signatureVersions']:
+                    return preference
+        # Finally, assume version 4 if nothing else is found.
+        return 'v4'
 
 
 class BaseClient(object):

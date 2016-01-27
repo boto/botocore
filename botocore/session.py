@@ -30,7 +30,7 @@ from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.loaders import create_loader
 from botocore.parsers import ResponseParserFactory
-from botocore.regions import EndpointResolver, S3CompatResolver
+from botocore.regions import EndpointResolver
 from botocore.model import ServiceModel
 from botocore import paginate
 from botocore import waiter
@@ -176,8 +176,8 @@ class Session(object):
     def _register_endpoint_resolver(self):
         def create_default_resolver():
             loader = self.get_component('data_loader')
-            endpoints = loader.load_data('endpoints', use_ordered_dict=False)
-            return S3CompatResolver(EndpointResolver(endpoints))
+            endpoints = loader.load_data('endpoints')
+            return EndpointResolver(endpoints)
         self._components.lazy_register_component(
             'endpoint_resolver', create_default_resolver)
 

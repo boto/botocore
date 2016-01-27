@@ -83,28 +83,6 @@ class BaseEndpointResolver(object):
         raise NotImplementedError
 
 
-class S3CompatResolver(BaseEndpointResolver):
-    """Adds S3 specific customizations to an endpoint resolver.
-
-    This resolver proxies to another resolver and sets a default region
-    of us-east-1 for "s3".
-    """
-    def __init__(self, endpoint_resolver):
-        self._proxy = endpoint_resolver
-
-    def get_available_partitions(self):
-        return self._proxy.get_available_partitions()
-
-    def get_available_endpoints(self, *args, **kwargs):
-        return self._proxy.get_available_endpoints(*args, **kwargs)
-
-    def construct_endpoint(self, service_name, region_name):
-        # Use us-east-1 as the default region for S3.
-        if service_name == 's3' and region_name is None:
-            region_name = 'us-east-1'
-        return self._proxy.construct_endpoint(service_name, region_name)
-
-
 class EndpointResolver(BaseEndpointResolver):
     """Resolves endpoints based on partition endpoint metadata"""
     def __init__(self, endpoint_data):

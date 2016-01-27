@@ -16,7 +16,7 @@ import mock
 from nose.tools import assert_equals
 
 from botocore import regions
-from botocore.endpoint import create_endpoint_url
+from botocore.client import ClientEndpointBridge
 from botocore.exceptions import NoRegionError
 
 
@@ -449,10 +449,10 @@ def test_known_endpoints():
 
 def _test_single_service_region(service_name, region_name,
                                 expected_endpoint, resolver):
-    actual_endpoint = resolver.construct_endpoint(
-        service_name=service_name, region_name=region_name)
-    result = create_endpoint_url(actual_endpoint, True)
-    assert_equals(result, 'https://' + expected_endpoint)
+    bridge = ClientEndpointBridge(resolver, None, None)
+    result = bridge.resolve(service_name, region_name)
+    expected = 'https://%s' % expected_endpoint
+    assert_equals(result['endpoint_url'], expected)
 
 
 # Ensure that all S3 regions use s3v4 instead of v4
@@ -658,29 +658,3 @@ class TestEndpointResolver(unittest.TestCase):
         result = resolver.construct_endpoint('s3', 'eu-baz')
         self.assertEquals('s3.eu-baz.amazonaws.com', result['sslCommonName'])
         self.assertEquals('foo', result['hostname'])
-
-
-class TestS3CompatEndpointResolver(unittest.TestCase):
-    def test_gives_default_region_when_not_set(self):
-        resolver = mock.Mock()
-        resolver.construct_endpoint.return_value = {'endpointName': 'abc'}
-        s3_resolver = regions.S3CompatResolver(resolver)
-        result = s3_resolver.construct_endpoint('s3', None)
-        self.assertEquals({'endpointName': 'abc'}, result)
-        resolver.construct_endpoint.assert_called_with('s3', 'us-east-1')
-
-    def test_does_not_duplicate_s3v4_signer(self):
-        resolver = mock.Mock()
-        resolver.construct_endpoint.return_value = {
-            'signatureVersions': ['v4', 's3v4']
-        }
-        s3_resolver = regions.S3CompatResolver(resolver)
-        result = s3_resolver.construct_endpoint('s3', None)
-        self.assertEquals(['v4', 's3v4'], result['signatureVersions'])
-
-    def test_proxies_list_call_to_delegate(self):
-        resolver = mock.Mock()
-        resolver.get_available_endpoints.return_value = []
-        s3_resolver = regions.S3CompatResolver(resolver)
-        self.assertEquals([], s3_resolver.get_available_endpoints('s3'))
-        resolver.get_available_endpoints.assert_called_with('s3')

@@ -14,7 +14,6 @@ import os
 from tests import unittest
 
 import mock
-from collections import OrderedDict
 
 import botocore.session
 
@@ -66,8 +65,3 @@ class TestLoaderBasicFunctionality(unittest.TestCase):
         data = self.loader.load_data(
             os.path.join('ec2', api_version, 'service-2'))
         self.assertIn('metadata', data)
-
-    def test_can_load_partition_data(self):
-        partitions = self.loader.list_available_partitions()
-        data = self.loader.load_partition_data(partitions[0])
-        self.assertNotIsInstance(data, OrderedDict)
