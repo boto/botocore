@@ -18,6 +18,7 @@ import time
 import threading
 
 from botocore.vendored.requests.sessions import Session
+from botocore.vendored.requests.adapters import HTTPAdapter
 from botocore.vendored.requests.utils import get_environ_proxies
 from botocore.vendored.requests.exceptions import ConnectionError
 from botocore.vendored import six
@@ -69,6 +70,19 @@ def convert_to_response_dict(http_response, operation_model):
 
 
 class PreserveAuthSession(Session):
+    def __init__(self, http_adapter=None):
+        super(PreserveAuthSession, self).__init__()
+
+        if http_adapter and not isinstance(http_adapter, HTTPAdapter):
+            raise ValueError("http_adapter")
+
+        # register the http_adapter given by the user to be used
+        # instead of the default ones registered by the requests package
+        if http_adapter:
+            logger.debug('Registering a customized HTTPAdapter')
+            self.mount('http://', http_adapter)
+            self.mount('https://', http_adapter)
+
     def rebuild_auth(self, prepared_request, response):
         pass
 
@@ -86,7 +100,7 @@ class Endpoint(object):
 
     def __init__(self, host, endpoint_prefix,
                  event_emitter, proxies=None, verify=True,
-                 timeout=DEFAULT_TIMEOUT, response_parser_factory=None):
+                 timeout=DEFAULT_TIMEOUT, response_parser_factory=None, http_adapter=None):
         self._endpoint_prefix = endpoint_prefix
         self._event_emitter = event_emitter
         self.host = host
@@ -94,7 +108,7 @@ class Endpoint(object):
         if proxies is None:
             proxies = {}
         self.proxies = proxies
-        self.http_session = PreserveAuthSession()
+        self.http_session = PreserveAuthSession(http_adapter=http_adapter)
         self.timeout = timeout
         logger.debug('Setting %s timeout as %s', endpoint_prefix, self.timeout)
         self._lock = threading.Lock()
@@ -231,7 +245,8 @@ class EndpointCreator(object):
 
     def create_endpoint(self, service_model, region_name=None, is_secure=True,
                         endpoint_url=None, verify=None,
-                        response_parser_factory=None, timeout=DEFAULT_TIMEOUT):
+                        response_parser_factory=None, timeout=DEFAULT_TIMEOUT,
+                        http_adapter=None):
         if region_name is None:
             region_name = self._configured_region
         # Use the endpoint resolver heuristics to build the endpoint url.
@@ -267,7 +282,8 @@ class EndpointCreator(object):
             proxies=proxies,
             verify=verify_value,
             timeout=timeout,
-            response_parser_factory=response_parser_factory)
+            response_parser_factory=response_parser_factory,
+            http_adapter=http_adapter)
 
     def _get_proxies(self, url):
         # We could also support getting proxies from a config file,

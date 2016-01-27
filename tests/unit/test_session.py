@@ -424,7 +424,7 @@ class TestCreateClient(BaseSessionTest):
         client_creator.return_value.create_client.assert_called_with(
             mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY,
             scoped_config=mock.ANY, client_config=config,
-            api_version=mock.ANY)
+            api_version=mock.ANY, http_adapter=mock.ANY)
 
     @mock.patch('botocore.client.ClientCreator')
     def test_create_client_with_default_client_config(self, client_creator):
@@ -435,7 +435,7 @@ class TestCreateClient(BaseSessionTest):
         client_creator.return_value.create_client.assert_called_with(
             mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY,
             scoped_config=mock.ANY, client_config=config,
-            api_version=mock.ANY)
+            api_version=mock.ANY, http_adapter=mock.ANY)
 
     @mock.patch('botocore.client.ClientCreator')
     def test_create_client_with_merging_client_configs(self, client_creator):
@@ -480,6 +480,16 @@ class TestCreateClient(BaseSessionTest):
     def test_create_client_no_region_and_no_client_config(self):
         ec2_client = self.session.create_client('ec2')
         self.assertEqual(ec2_client.meta.region_name, 'moon-west-1')
+
+    @mock.patch('botocore.client.ClientCreator')
+    def test_create_client_with_http_adapter(self, client_creator):
+        http_adapter = mock.Mock()
+        self.session.create_client('ec2', http_adapter=http_adapter)
+
+        client_creator.return_value.create_client.assert_called_with(
+            mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY,
+            scoped_config=mock.ANY, client_config=mock.ANY,
+            api_version=mock.ANY, http_adapter=http_adapter)
 
 
 class TestComponentLocator(unittest.TestCase):
