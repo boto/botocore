@@ -293,6 +293,15 @@ class BaseXMLResponseParser(ResponseParser):
             if member_node is not None:
                 parsed[member_name] = self._parse_shape(
                     member_shape, member_node)
+            elif member_shape.serialization.get('xmlAttribute'):
+                attribs = {}
+                location_name = member_shape.serialization['name']
+                for key, value in node.attrib.items():
+                    new_key = self._namespace_re.sub(
+                        location_name.split(':')[0] + ':', key)
+                    attribs[new_key] = value
+                if location_name in attribs:
+                    parsed[member_name] = attribs[location_name]
         return parsed
 
     def _member_key_name(self, shape, member_name):
