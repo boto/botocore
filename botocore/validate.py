@@ -34,7 +34,7 @@ def validate_parameters(params, shape):
 
     :param params: The user provided input parameters.
 
-    :type shape: botoore.model.Shape
+    :type shape: botocore.model.Shape
     :param shape: The schema which the input parameters should
         adhere to.
 
