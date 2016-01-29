@@ -163,8 +163,10 @@ class ClientCreator(object):
                 user_agent += ' %s' % client_config.user_agent_extra
 
         signer = RequestSigner(
-            service_name, endpoint_config['signing_region'], service_name,
-            endpoint_config['signature_version'], credentials, event_emitter)
+            service_name, endpoint_config['signing_region'],
+            endpoint_config['signing_name'],
+            endpoint_config['signature_version'],
+            credentials, event_emitter)
 
         # Create a new client config to be passed to the client based
         # on the final values. We do not want the user to be able
@@ -301,10 +303,12 @@ class ClientEndpointBridge(object):
             endpoint_url = self._make_url(hostname, is_secure)
         signature_version = self._resolve_signature_version(
             service_name, resolved)
+        signing_name = self._resolve_signing_name(service_name, resolved)
         return self._create_result(
             service_name=service_name, region_name=region_name,
-            signing_region=signing_region, endpoint_url=endpoint_url,
-            metadata=resolved, signature_version=signature_version)
+            signing_region=signing_region, signing_name=signing_name,
+            endpoint_url=endpoint_url, metadata=resolved,
+            signature_version=signature_version)
 
     def _assume_endpoint(self, service_name, region_name, endpoint_url,
                          is_secure):
@@ -319,15 +323,18 @@ class ClientEndpointBridge(object):
         signature_version = self._resolve_signature_version(service_name, {})
         return self._create_result(
             service_name=service_name, region_name=region_name,
-            signing_region=region_name, signature_version=signature_version,
-            endpoint_url=endpoint_url, metadata={})
+            signing_region=region_name, signing_name=service_name,
+            signature_version=signature_version, endpoint_url=endpoint_url,
+            metadata={})
 
     def _create_result(self, service_name, region_name, signing_region,
-                       endpoint_url, signature_version, metadata):
+                       signing_name, endpoint_url, signature_version,
+                       metadata):
         return {
             'service_name': service_name,
             'region_name': region_name,
             'signing_region': signing_region,
+            'signing_name': signing_name,
             'endpoint_url': endpoint_url,
             'signature_version': signature_version,
             'metadata': metadata
@@ -336,6 +343,12 @@ class ClientEndpointBridge(object):
     def _make_url(self, hostname, is_secure):
         endpoint_url = 'https://' if is_secure else 'http://'
         return endpoint_url + hostname
+
+    def _resolve_signing_name(self, service_name, resolved):
+        if 'credentialScope' in resolved \
+                and 'service' in resolved['credentialScope']:
+            return resolved['credentialScope']['service']
+        return service_name
 
     def _pick_region_values(self, resolved, region_name, endpoint_url):
         signing_region = region_name
@@ -352,10 +365,9 @@ class ClientEndpointBridge(object):
             # custom endpoints.
             region_name = resolved['endpointName']
             signing_region = region_name
-            if 'credentialScope' in resolved:
-                credential_scope = resolved['credentialScope']
-                if 'region' in credential_scope:
-                    signing_region = credential_scope['region']
+            if 'credentialScope' in resolved \
+                    and 'region' in resolved['credentialScope']:
+                signing_region = resolved['credentialScope']['region']
         return region_name, signing_region
 
     def _resolve_signature_version(self, service_name, resolved):
