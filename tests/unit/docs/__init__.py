@@ -71,7 +71,8 @@ class BaseDocsTest(unittest.TestCase):
         endpoint_resolver.construct_endpoint.return_value = {
             'hostname': 'foo.us-east-1',
             'partition': 'aws',
-            'endpointName': 'us-east-1'
+            'endpointName': 'us-east-1',
+            'signatureVersions': ['v4']
         }
 
         self.creator = ClientCreator(

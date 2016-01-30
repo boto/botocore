@@ -23,6 +23,7 @@ from botocore.exceptions import ClientError, DataNotFoundError
 from botocore.exceptions import OperationNotPageableError
 from botocore.exceptions import InvalidS3AddressingStyleError
 from botocore.exceptions import NoRegionError, UnknownEndpointError
+from botocore.exceptions import UnknownSignatureVersionError
 from botocore.hooks import first_non_none_response
 from botocore.model import ServiceModel
 from botocore.paginate import Paginator
@@ -320,7 +321,8 @@ class ClientEndpointBridge(object):
         logger.debug('Assuming an endpoint for %s, %s: %s',
                      service_name, region_name, endpoint_url)
         # We still want to allow the user to provide an explicit version.
-        signature_version = self._resolve_signature_version(service_name, {})
+        signature_version = self._resolve_signature_version(
+            service_name, {'signatureVersions': ['v4']})
         return self._create_result(
             service_name=service_name, region_name=region_name,
             signing_region=region_name, signing_name=service_name,
@@ -392,8 +394,8 @@ class ClientEndpointBridge(object):
             for preference in self.SIGNATURE_PRECEDENCE:
                 if preference in resolved['signatureVersions']:
                     return preference
-        # Finally, assume version 4 if nothing else is found.
-        return 'v4'
+        raise UnknownSignatureVersionError(
+            signature_version=resolved.get('signatureVersions'))
 
 
 class BaseClient(object):

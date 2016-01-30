@@ -10,6 +10,9 @@
         "hostname": "{service}.{region}.{dnsSuffix}",
         "protocols": [
           "https"
+        ],
+        "signatureVersions": [
+          "v4"
         ]
       },
       "regions": {
@@ -830,6 +833,9 @@
         "hostname": "{service}.{region}.{dnsSuffix}",
         "protocols": [
           "https"
+        ],
+        "signatureVersions": [
+          "v4"
         ]
       },
       "regions": {
@@ -1031,6 +1037,9 @@
         "hostname": "{service}.{region}.{dnsSuffix}",
         "protocols": [
           "https"
+        ],
+        "signatureVersions": [
+          "v4"
         ]
       },
       "regions": {
