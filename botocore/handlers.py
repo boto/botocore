@@ -23,6 +23,7 @@ import xml.etree.cElementTree
 import copy
 import re
 import warnings
+import io
 
 from botocore.compat import urlsplit, urlunsplit, unquote, \
     json, quote, six, unquote_str
@@ -619,6 +620,21 @@ def decode_list_object(parsed, context, **kwargs):
                 for member in parsed[top_key]:
                     member[child_key] = unquote_str(member[child_key])
 
+
+def wrap_string_bodies(request, **kwargs):
+    # There was an issue where young buckets would fail to PUT  when
+    # virtual host addressing was used and when the body was a string of a
+    # few MB. This was because urllib3 will send the body as a separate
+    # request on file-like objects, but not on strings. S3 sends back a
+    # redirect after the initial request. When we're using two requests,
+    # we see the redirect before sending the body. When using small strings,
+    # S3 will redirect it for us. But when using long strings, we will
+    # continue sending data until S3 closes the connection on us, resulting
+    # in an exception. The workaround, then, is to wrap string bodies in a
+    # StringIO object, which is treated as a file.
+    if isinstance(request.data, six.string_types):
+        request.data = io.StringIO(request.data.decode('utf-8'))
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -736,5 +752,7 @@ BUILTIN_HANDLERS = [
           'PutBucketLifecycle', 'PutBucketLogging', 'PutBucketNotification',
           'PutBucketPolicy', 'PutBucketReplication', 'PutBucketRequestPayment',
           'PutBucketTagging', 'PutBucketVersioning', 'PutBucketWebsite',
-          'PutObjectAcl']).hide_param)
+          'PutObjectAcl']).hide_param),
+
+    ('request-created', wrap_string_bodies, REGISTER_LAST),
 ]

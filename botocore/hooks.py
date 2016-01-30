@@ -259,7 +259,6 @@ class HierarchicalEmitter(BaseEventHooks):
         self._register_section(event_name, handler, unique_id,
                                unique_id_uses_count, section=_LAST)
 
-
     def _register_section(self, event_name, handler, unique_id,
                           unique_id_uses_count, section):
         if unique_id is not None:

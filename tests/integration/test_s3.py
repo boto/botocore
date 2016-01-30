@@ -1016,6 +1016,14 @@ class TestS3VirtualAddressing(TestAutoS3Addressing):
         self.addressing_style = 'virtual'
         self.client = self.create_client()
 
+    def test_can_make_bucket_and_put_large_object(self):
+        bucket_name = self.create_bucket(self.region)
+        body = "*" * (5 * (1024 ** 2))
+        response = self.client.put_object(
+            Bucket=bucket_name, Key='foo', Body=body)
+        self.assertEqual(
+            response['ResponseMetadata']['HTTPStatusCode'], 200)
+
 
 class TestS3PathAddressing(TestAutoS3Addressing):
     def setUp(self):
