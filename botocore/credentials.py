@@ -21,7 +21,6 @@ from collections import namedtuple
 import re
 import xml.etree.ElementTree as ET
 import base64
-import json
 
 from dateutil.parser import parse
 from dateutil.tz import tzlocal
@@ -29,8 +28,11 @@ from dateutil.tz import tzlocal
 import botocore.config
 import botocore.compat
 from botocore.compat import total_seconds
-from botocore.compat import raw_input
 from botocore.compat import urljoin
+from botocore.compat import six
+from six import StringIO
+from six.moves.html_entities import name2codepoint
+from six.moves import input as raw_input
 from botocore.exceptions import UnknownCredentialError
 from botocore.exceptions import PartialCredentialsError
 from botocore.exceptions import ConfigNotFound
@@ -63,13 +65,13 @@ def create_credential_resolver(session):
     env_provider = EnvProvider()
     providers = [
         env_provider,
-        AssumeRoleProvider(
+        AssumeRoleWithSamlProvider(
             load_config=lambda: session.full_config,
             client_creator=session.create_client,
             cache={},
             profile_name=profile_name,
         ),
-        AssumeRoleWithSamlProvider(
+        AssumeRoleProvider(
             load_config=lambda: session.full_config,
             client_creator=session.create_client,
             cache={},
@@ -748,7 +750,7 @@ class BotoProvider(CredentialProvider):
 class AssumeRoleProvider(CredentialProvider):
 
     METHOD = 'assume-role'
-    ROLE_CONFIG_VAR = 'role_arn'
+    DISTINCTION_VAR = 'role_arn'
     # Credentials are considered expired (and will be refreshed) once the total
     # remaining time left until the credentials expires is less than the
     # EXPIRY_WINDOW.
@@ -809,7 +811,7 @@ class AssumeRoleProvider(CredentialProvider):
 
     def _has_assume_role_config_vars(self):
         profiles = self._loaded_config.get('profiles', {})
-        return self.ROLE_CONFIG_VAR in profiles.get(self._profile_name, {})
+        return self.DISTINCTION_VAR in profiles.get(self._profile_name, {})
 
     def _load_creds_via_assume_role(self):
         # We can get creds in one of two ways:
@@ -854,7 +856,7 @@ class AssumeRoleProvider(CredentialProvider):
         role_config = self._get_role_config_values()
         # On windows, ':' is not allowed in filenames, so we'll
         # replace them with '_' instead.
-        role_arn = role_config[self.ROLE_CONFIG_VAR].replace(':', '_')
+        role_arn = role_config['role_arn'].replace(':', '_')
         role_session_name=role_config.get('role_session_name')
         if role_session_name:
             cache_key = '%s--%s--%s' % (self._profile_name, role_arn, role_session_name)
@@ -950,25 +952,37 @@ class AssumeRoleProvider(CredentialProvider):
         return assume_role_kwargs
 
 
+def _role_selector(role_arn, roles):
+    """Given a roles list in the form of [{"RoleArn": "...", ...}, ...],
+    return the item which matches the role_arn, or None otherwise"""
+    chosen = [r for r in roles if r['RoleArn']==role_arn]
+    return chosen[0] if chosen else None
+
+
 class AssumeRoleWithSamlProvider(AssumeRoleProvider):
     METHOD = 'assume-role-with-saml'
-    ROLE_CONFIG_VAR = 'saml_endpoint'
+    DISTINCTION_VAR = 'saml_endpoint'
+
+    def __init__(self, load_config, client_creator, cache, profile_name,
+                 role_selector=_role_selector,
+                 password_prompter=getpass.getpass,
+                 username_prompter=raw_input):
+        super(AssumeRoleWithSamlProvider, self).__init__(
+            load_config, client_creator, cache, profile_name)
+        self.username_prompter = username_prompter
+        self.password_prompter = password_prompter
+        self.role_selector = role_selector
 
     def _create_cache_key(self):
         return self._profile_name.replace(':', '_')
 
     def _get_role_config_values(self):
-        settings = self._loaded_config.get('profiles', {}).get(
+        return self._loaded_config.get('profiles', {}).get(
             self._profile_name, {})
-        if 'saml_params' in settings and '_params_list' not in settings:
-            settings['_params_list'] = json.loads(settings['saml_params'])
-        return settings
 
     def _create_creds_from_response(self, response):
         config = self._get_role_config_values()
-        need_human_input = any(
-            p for p in config.get('_params_list', []) if 'value' not in p)
-        if need_human_input:
+        if config.get('saml_authentication_type') in ['form']:
             # If some parameter(s) would require prompting the user for input,
             # we use a different refresh_func.
             # We can explore an option in the future to support reprompting for
@@ -988,6 +1002,8 @@ class AssumeRoleWithSamlProvider(AssumeRoleProvider):
             refresh_using=refresh_func)
 
     def _create_client(self):
+        # sts.assume_role_with_saml() requires no access keys,
+        # but we still need a pair of dummy values here to break recursion.
         return self._client_creator(
             'sts', aws_access_key_id='dummy', aws_secret_access_key='dummy')
 
@@ -999,62 +1015,36 @@ class AssumeRoleWithSamlProvider(AssumeRoleProvider):
         return creds, response
 
     def _assume_role_base_kwargs(self, config):
-        assertion = self._get_saml_assertion(
-            config[self.ROLE_CONFIG_VAR],
-            self._input_params(config.get('_params_list', [])))
-        if not assertion:
-            raise ValueError('Login failed')
-        roles = self._get_roles(assertion)
-        if not roles:
-            raise ValueError('Identity provider provides no role.')
-        if len(roles) > 1:
-            logging.debug('TODO: Let user choose one among many roles.')
+        if config.get('saml_authentication_type')=='form':
+            if not config.get('saml_username'):
+                config['saml_username'] = self.username_prompter("Username: ")
+            mapping = {
+                "adfs": {
+                    "username": "ctl00$ContentPlaceHolder1$UsernameTextBox",
+                    "password": "ctl00$ContentPlaceHolder1$PasswordTextBox"},
+                }.get(config.get('saml_provider'),
+                      {"username": "username", "password": "password"})
+            assertion = SamlFormsBasedAuthenticator().authenticate(
+                config['saml_endpoint'],
+                {mapping["username"]: config['saml_username'],
+                 mapping["password"]: self.password_prompter("Password: ")},
+                verify=config.get('saml_verify_ssl') != 'false')
         else:
-            role = roles[0]
+            raise ValueError("Unsupported saml_authentication_type: %s"
+                             % config.get('saml_authentication_type'))
+        if not assertion:
+            raise ValueError('Login failed: SAML assertion not found')
+        idp_roles = self._parse_roles(assertion)
+        if not idp_roles:
+            raise ValueError('Identity provider provides no role.')
+        role = self.role_selector(config.get('role_arn'), idp_roles)
+        if not role:
+            raise ValueError('Unable to choose role "%s" from %s' % (
+                config.get('role_arn'), [r['RoleArn'] for r in idp_roles]))
         role['SAMLAssertion'] = assertion
         return role
 
-    def _get_form(self, html, form_xpath='(//form)[0]'):
-        # TODO: Support form_xpath
-        form_snippet = re.search('(<form.+</form>)', html, flags=re.DOTALL)
-        if form_snippet:
-            return ET.fromstring(form_snippet.group(0))
-
-    def _get_saml_assertion(self, login_url, params):
-        login_form = self._get_form(requests.get(login_url).text)
-        if login_form is None:
-            raise ValueError('Login form is not found in %s' % login_url)
-        payload = dict((tag.attrib['name'], tag.attrib.get('value', ''))
-                        for tag in login_form.findall(".//input"))
-        for param in params:
-            if param['field'] in payload:
-                payload[param['field']] = param.get('value', '')
-        aws_form = self._get_form(requests.post(
-            urljoin(login_url, login_form.attrib['action']),
-            data=payload).text)
-        if aws_form is not None:
-            responses = aws_form.findall(".//input[@name='SAMLResponse']")
-            if responses:
-                return responses[0].attrib['value']
-        # Login failed, typically caused by incorrect username and/or password
-
-    def _input_params(self, params):
-        # This implementation collects input from terminal. Suitable for CLI.
-        for param in params:
-            if 'value' in param:
-                continue
-                # So we keep the predefined value as-is.
-                # But then it means user could use this to store password.
-                # We'll probably remove this feature in finalized design.
-            if param.get('type')=='password':
-                input_method = getpass.getpass
-            else:
-                input_method = raw_input
-            prompt = param.get('label', param['field'])  # A good UI needs it
-            param['value'] = input_method('%s: ' % prompt)
-        return params
-
-    def _get_roles(self, assertion):
+    def _parse_roles(self, assertion):
         attribute = '{urn:oasis:names:tc:SAML:2.0:assertion}Attribute'
         attr_value = '{urn:oasis:names:tc:SAML:2.0:assertion}AttributeValue'
         awsroles = []
@@ -1069,6 +1059,35 @@ class AssumeRoleWithSamlProvider(AssumeRoleProvider):
                         role = {'PrincipalArn': parts[1], 'RoleArn': parts[0]}
                     awsroles.append(role)
         return awsroles
+
+
+class SamlFormsBasedAuthenticator(object):
+    def authenticate(self, endpoint, params, verify=True):
+        login_form = self._get_form(requests.get(endpoint, verify=verify).text)
+        if login_form is None:
+            raise ValueError('Login form is not found in %s' % endpoint)
+        payload = dict((tag.attrib['name'], tag.attrib.get('value', ''))
+                       for tag in login_form.findall(".//input"))
+        for field, value in params.items():
+            if field in payload:
+                payload[field] = value
+        response_form = self._get_form(requests.post(
+            urljoin(endpoint, login_form.attrib.get('action', '')),
+            data=payload, verify=verify).text)
+        if response_form is not None:
+            responses = response_form.findall(".//input[@name='SAMLResponse']")
+            if responses:
+                return responses[0].attrib['value']
+        # Login failed, typically caused by incorrect username and/or password
+        return None
+
+    def _get_form(self, html):
+        form_snippet = re.search('(<form.+</form>)', html, flags=re.DOTALL)
+        if form_snippet:
+            p = ET.XMLParser()
+            p.parser.UseForeignDTD(True)
+            p.entity.update((x, unichr(i)) for x, i in name2codepoint.items())
+            return ET.parse(StringIO(form_snippet.group(0)), p).getroot()
 
 
 class CredentialResolver(object):

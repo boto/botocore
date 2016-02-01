@@ -42,7 +42,6 @@ if six.PY3:
     from itertools import zip_longest
     file_type = _IOBase
     zip = zip
-    raw_input = input
 
     # In python3, unquote takes a str() object, url decodes it,
     # then takes the bytestring and decodes it to utf-8.
@@ -91,8 +90,6 @@ else:
     from itertools import izip_longest as zip_longest
     from httplib import HTTPResponse
     from base64 import encodestring as encodebytes
-
-    raw_input = raw_input
 
     class HTTPHeaders(Message):
 
