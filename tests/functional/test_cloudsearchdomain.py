@@ -32,4 +32,4 @@ class TestCloudsearchdomain(BaseSessionTest):
             self.assertEqual(
                 sent_request.headers.get('Content-Type'),
                 b'application/x-www-form-urlencoded')
-            self.assertIn('q=foo', sent_request.body)
+            self.assertIn('q=foo', sent_request.body.getvalue())
