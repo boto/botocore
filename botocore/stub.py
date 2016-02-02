@@ -223,6 +223,11 @@ class Stubber(object):
         expected_params = self._pop_and_assert_expected_call_order(
             model, params, self._expected_params_queue)
         if expected_params is not None and params != expected_params:
+            # We are in failure mode at this point. Since this call is
+            # invoked first, we want to pop off the response queue as well
+            # so the two queues stay in sync since the result queue will
+            # never get its result popped off for this client call.
+            self._queue.popleft()
             raise StubResponseError(
                 operation_name=model.name,
                 reason='Expected parameters: %s, but received: %s' % (

@@ -103,3 +103,18 @@ class TestStubber(unittest.TestCase):
         # The second call should throw an error for unexpected parameters
         with self.assertRaisesRegexp(StubResponseError, 'Expected parameters'):
             self.client.list_objects(Bucket='foo')
+
+    def test_can_assert_no_pending_responses_when_expect_params_fail(self):
+        service_response = {}
+        expected_params = {'Bucket': 'bar'}
+
+        self.stubber.add_response(
+            'list_objects', service_response, expected_params)
+
+        # Throw an error for unexpected parameters
+        with self.assertRaises(StubResponseError):
+            self.client.list_objects(Bucket='foo')
+
+        # The stubber should not have any responses queued up because the
+        # queue up response failed on parameter validation.
+        self.stubber.assert_no_pending_responses()
