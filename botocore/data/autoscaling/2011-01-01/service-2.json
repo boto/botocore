@@ -1957,7 +1957,6 @@
         "AvailabilityZone",
         "LifecycleState",
         "HealthStatus",
-        "LaunchConfigurationName",
         "ProtectedFromScaleIn"
       ],
       "members":{
