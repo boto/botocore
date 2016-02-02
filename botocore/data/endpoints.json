@@ -218,7 +218,10 @@
             "protocols": [
               "https",
               "mqqt"
-            ]
+            ],
+            "credentialScope": {
+              "service": "iotdata"
+            }
           },
           "endpoints": {
             "us-east-1": {},
@@ -453,6 +456,11 @@
           }
         },
         "iot": {
+          "defaults": {
+            "credentialScope": {
+              "service": "execute-api"
+            }
+          },
           "endpoints": {
             "us-east-1": {},
             "us-west-2": {},
@@ -744,7 +752,10 @@
             "protocols": [
               "http",
               "https"
-            ]
+            ],
+            "credentialScope": {
+              "service": "dynamodb"
+            }
           },
           "endpoints": {
             "us-east-1": {},
@@ -1010,7 +1021,10 @@
             "protocols": [
               "http",
               "https"
-            ]
+            ],
+            "credentialScope": {
+              "service": "dynamodb"
+            }
           },
           "endpoints": {
             "cn-north-1": {}

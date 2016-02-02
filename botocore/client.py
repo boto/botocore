@@ -16,6 +16,7 @@ import logging
 import botocore.serialize
 import botocore.validate
 from botocore import waiter, xform_name
+from botocore.auth import AUTH_TYPE_MAPS
 from botocore.awsrequest import prepare_request_dict
 from botocore.compat import OrderedDict
 from botocore.endpoint import EndpointCreator, DEFAULT_TIMEOUT
@@ -151,7 +152,8 @@ class ClientCreator(object):
         response_parser = botocore.parsers.create_parser(protocol)
         verify = self._resolve_verify_value(verify, scoped_config)
         endpoint_bridge = ClientEndpointBridge(
-            self._endpoint_resolver, scoped_config, client_config)
+            self._endpoint_resolver, scoped_config, client_config,
+            service_model.metadata.get('signingName'))
         endpoint_config = endpoint_bridge.resolve(
             service_name, region_name, endpoint_url, is_secure)
 
@@ -263,8 +265,10 @@ class ClientEndpointBridge(object):
     SIGNATURE_PRECEDENCE = ['s3', 's3v4', 'v4', 'v2']
     DEFAULT_ENDPOINT = '{service}.{region}.amazonaws.com'
 
-    def __init__(self, endpoint_resolver, scoped_config,
-                 client_config, default_endpoint=None):
+    def __init__(self, endpoint_resolver, scoped_config=None,
+                 client_config=None, default_endpoint=None,
+                 service_signing_name=None):
+        self.service_signing_name = service_signing_name
         self.endpoint_resolver = endpoint_resolver
         self.scoped_config = scoped_config
         self.client_config = client_config
@@ -347,9 +351,14 @@ class ClientEndpointBridge(object):
         return endpoint_url + hostname
 
     def _resolve_signing_name(self, service_name, resolved):
+        # CredentialScope overrides everything else.
         if 'credentialScope' in resolved \
                 and 'service' in resolved['credentialScope']:
             return resolved['credentialScope']['service']
+        # Use the signingName from the model if present.
+        if self.service_signing_name:
+            return self.service_signing_name
+        # Just assume is the same as the service name.
         return service_name
 
     def _pick_region_values(self, resolved, region_name, endpoint_url):
@@ -391,9 +400,20 @@ class ClientEndpointBridge(object):
                     return version
         # Pick a signature version from the endpoint metadata if present.
         if 'signatureVersions' in resolved:
-            for preference in self.SIGNATURE_PRECEDENCE:
-                if preference in resolved['signatureVersions']:
-                    return preference
+            potential_versions = resolved['signatureVersions']
+            if service_name == 's3':
+                # We currently prefer s3 over s3v4.
+                if 's3' in potential_versions:
+                    return 's3'
+                elif 's3v4' in potential_versions:
+                    return 's3v4'
+            if 'v4' in potential_versions:
+                return 'v4'
+            # Now just iterate over the signature versions in order until we
+            # find the first one that is known to Botocore.
+            for known in AUTH_TYPE_MAPS:
+                if known in potential_versions:
+                    return known
         raise UnknownSignatureVersionError(
             signature_version=resolved.get('signatureVersions'))
 

@@ -1224,7 +1224,7 @@ class TestClientEndpointBridge(unittest.TestCase):
     def test_guesses_endpoint_as_last_resort(self):
         resolver = mock.Mock()
         resolver.construct_endpoint.return_value = None
-        bridge = ClientEndpointBridge(resolver, None, None)
+        bridge = ClientEndpointBridge(resolver)
         resolved = bridge.resolve('myservice', region_name='guess')
         self.assertEqual('guess', resolved['region_name'])
         self.assertEqual('guess', resolved['signing_region'])
@@ -1239,7 +1239,7 @@ class TestClientEndpointBridge(unittest.TestCase):
         resolver.construct_endpoint.return_value = {
             'partition': 'aws', 'hostname': 's3.amazonaws.com',
             'endpointName': 'us-east-1', 'signatureVersions': ['s3', 's3v4']}
-        bridge = ClientEndpointBridge(resolver, None, None)
+        bridge = ClientEndpointBridge(resolver)
         resolved = bridge.resolve('s3')
         self.assertEqual('us-east-1', resolved['region_name'])
         self.assertEqual('us-east-1', resolved['signing_region'])
@@ -1247,7 +1247,7 @@ class TestClientEndpointBridge(unittest.TestCase):
                          resolved['endpoint_url'])
 
     def test_requires_a_region(self):
-        bridge = ClientEndpointBridge(mock.Mock(), None, None)
+        bridge = ClientEndpointBridge(mock.Mock())
         with self.assertRaises(NoRegionError):
             bridge.resolve('myservice')
 
@@ -1256,7 +1256,7 @@ class TestClientEndpointBridge(unittest.TestCase):
         resolver.construct_endpoint.return_value = None
         client_config = mock.Mock()
         client_config.region_name = 'us-foo-bar'
-        bridge = ClientEndpointBridge(resolver, None, client_config)
+        bridge = ClientEndpointBridge(resolver, client_config=client_config)
         resolved = bridge.resolve('test')
         self.assertEqual('us-foo-bar', resolved['region_name'])
         self.assertEqual('us-foo-bar', resolved['signing_region'])
@@ -1266,7 +1266,7 @@ class TestClientEndpointBridge(unittest.TestCase):
     def test_can_guess_endpoint_and_use_given_endpoint_url(self):
         resolver = mock.Mock()
         resolver.construct_endpoint.return_value = None
-        bridge = ClientEndpointBridge(resolver, None, None)
+        bridge = ClientEndpointBridge(resolver)
         resolved = bridge.resolve(
             'test', 'guess', endpoint_url='http://test.com')
         self.assertEqual('guess', resolved['region_name'])
@@ -1278,7 +1278,7 @@ class TestClientEndpointBridge(unittest.TestCase):
         resolver.construct_endpoint.return_value = {
             'partition': 'aws', 'hostname': 'do-not-use-this',
             'endpointName': 'us-west-2', 'signatureVersions': ['v2']}
-        bridge = ClientEndpointBridge(resolver, None, None)
+        bridge = ClientEndpointBridge(resolver)
         resolved = bridge.resolve(
             'ec2', 'us-west-2', endpoint_url='https://foo')
         self.assertEqual('us-west-2', resolved['region_name'])
@@ -1292,7 +1292,7 @@ class TestClientEndpointBridge(unittest.TestCase):
             'partition': 'aws', 'hostname': 'do-not-use-this',
             'signatureVersions': ['v4'], 'sslCommonName': 'common-name.com',
             'endpointName': 'us-west-2'}
-        bridge = ClientEndpointBridge(resolver, None, None)
+        bridge = ClientEndpointBridge(resolver)
         resolved = bridge.resolve('myservice', 'us-west-2')
         self.assertEqual('us-west-2', resolved['region_name'])
         self.assertEqual('us-west-2', resolved['signing_region'])
@@ -1304,7 +1304,7 @@ class TestClientEndpointBridge(unittest.TestCase):
             'partition': 'aws', 'hostname': 'host.com',
             'signatureVersions': ['v4'],
             'endpointName': 'us-foo-baz'}
-        bridge = ClientEndpointBridge(resolver, None, None)
+        bridge = ClientEndpointBridge(resolver)
         resolved = bridge.resolve('myservice', 'us-foo-baz', is_secure=False)
         self.assertEqual('http://host.com', resolved['endpoint_url'])
 
@@ -1314,7 +1314,7 @@ class TestClientEndpointBridge(unittest.TestCase):
             'partition': 'aws', 'hostname': 'host.com',
             'signatureVersions': ['v4'],
             'endpointName': 'us-foo-baz'}
-        bridge = ClientEndpointBridge(resolver, None, None)
+        bridge = ClientEndpointBridge(resolver)
         resolved = bridge.resolve('myservice', 'us-foo-baz', is_secure=False)
         self.assertEqual('http://host.com', resolved['endpoint_url'])
 
@@ -1327,7 +1327,7 @@ class TestClientEndpointBridge(unittest.TestCase):
             'signatureVersions': ['v4'],
             'credentialScope': {'region': 'override'}
         }
-        bridge = ClientEndpointBridge(resolver, None, None)
+        bridge = ClientEndpointBridge(resolver)
         resolved = bridge.resolve('myservice', 'us-foo-baz')
         self.assertEqual('us-foo-baz', resolved['region_name'])
         self.assertEqual('override', resolved['signing_region'])
@@ -1341,7 +1341,7 @@ class TestClientEndpointBridge(unittest.TestCase):
             'signatureVersions': ['v4'],
             'credentialScope': {'region': 'override'}
         }
-        bridge = ClientEndpointBridge(resolver, None, None)
+        bridge = ClientEndpointBridge(resolver)
         resolved = bridge.resolve('myservice', 'us-foo-baz',
                                   endpoint_url='https://override.com')
         self.assertEqual('us-foo-baz', resolved['region_name'])
@@ -1353,7 +1353,7 @@ class TestClientEndpointBridge(unittest.TestCase):
         resolver.construct_endpoint.return_value = {
             'partition': 'aws', 'hostname': 'host.com',
             'signatureVersions': ['v4'], 'endpointName': 'override'}
-        bridge = ClientEndpointBridge(resolver, None, None)
+        bridge = ClientEndpointBridge(resolver)
         resolved = bridge.resolve('myservice', 'will-not-be-there')
         self.assertEqual('override', resolved['region_name'])
         self.assertEqual('override', resolved['signing_region'])
@@ -1366,7 +1366,7 @@ class TestClientEndpointBridge(unittest.TestCase):
             'endpointName': 'us-west-2', 'signatureVersions': ['v2']}
         client_config = mock.Mock()
         client_config.signature_version = 's3'
-        bridge = ClientEndpointBridge(resolver, None, client_config)
+        bridge = ClientEndpointBridge(resolver, client_config=client_config)
         resolved = bridge.resolve('test', 'us-west-2')
         self.assertEqual('s3', resolved['signature_version'])
 
@@ -1375,7 +1375,7 @@ class TestClientEndpointBridge(unittest.TestCase):
         resolver.construct_endpoint.return_value = None
         client_config = mock.Mock()
         client_config.signature_version = 's3v4'
-        bridge = ClientEndpointBridge(resolver, None, client_config)
+        bridge = ClientEndpointBridge(resolver, client_config=client_config)
         resolved = bridge.resolve('test', 'us-west-2')
         self.assertEqual('s3v4', resolved['signature_version'])
 
@@ -1386,33 +1386,64 @@ class TestClientEndpointBridge(unittest.TestCase):
             'endpointName': 'us-west-2', 'signatureVersions': ['v2']}
         scoped_config = mock.Mock()
         scoped_config.get.return_value = {'signature_version': 's3'}
-        bridge = ClientEndpointBridge(resolver, scoped_config, None)
+        bridge = ClientEndpointBridge(resolver, scoped_config)
         resolved = bridge.resolve('test', 'us-west-2')
         self.assertEqual('s3', resolved['signature_version'])
 
-    def test_uses_signature_versions_endpoint_metadata(self):
+    def test_uses_s3_over_s3v4_for_s3(self):
         resolver = mock.Mock()
         resolver.construct_endpoint.return_value = {
-            'partition': 'aws',
-            'hostname': 'test.com',
-            'endpointName': 'us-west-2',
-            'signatureVersions': ['v2', 'v4']
-        }
-        bridge = ClientEndpointBridge(resolver, None, None)
+            'partition': 'aws', 'hostname': 'test.com',
+            'endpointName': 'us-west-2', 'signatureVersions': ['s3v4', 's3']}
+        bridge = ClientEndpointBridge(resolver)
+        resolved = bridge.resolve('s3', 'us-west-2')
+        self.assertEqual('s3', resolved['signature_version'])
+
+    def test_uses_s3v4_over_others_for_s3(self):
+        resolver = mock.Mock()
+        resolver.construct_endpoint.return_value = {
+            'partition': 'aws', 'hostname': 'test.com',
+            'endpointName': 'us-west-2', 'signatureVersions': ['s3v4', 'v4']}
+        bridge = ClientEndpointBridge(resolver)
+        resolved = bridge.resolve('s3', 'us-west-2')
+        self.assertEqual('s3v4', resolved['signature_version'])
+
+    def test_uses_v4_over_other_signers(self):
+        resolver = mock.Mock()
+        resolver.construct_endpoint.return_value = {
+            'partition': 'aws', 'hostname': 'test',
+            'signatureVersions': ['v2', 'v4'], 'endpointName': 'us-west-2'}
+        bridge = ClientEndpointBridge(resolver)
         resolved = bridge.resolve('test', 'us-west-2')
         self.assertEqual('v4', resolved['signature_version'])
 
-    def test_uses_v4_if_all_else_fails(self):
+    def test_uses_known_signers_from_list_of_signature_versions(self):
         resolver = mock.Mock()
         resolver.construct_endpoint.return_value = {
-            'partition': 'aws',
-            'hostname': 'do-not-use-this',
-            'signatureVersions': ['v4'],
-            'endpointName': 'us-west-2'
-        }
-        bridge = ClientEndpointBridge(resolver, None, None)
+            'partition': 'aws', 'hostname': 'test',
+            'signatureVersions': ['foo', 'baz', 'v3https'],
+            'endpointName': 'us-west-2'}
+        bridge = ClientEndpointBridge(resolver)
         resolved = bridge.resolve('test', 'us-west-2')
-        self.assertEqual('v4', resolved['signature_version'])
+        self.assertEqual('v3https', resolved['signature_version'])
+
+    def test_raises_when_signature_version_is_unknown(self):
+        resolver = mock.Mock()
+        resolver.construct_endpoint.return_value = {
+            'partition': 'aws', 'hostname': 'test',
+            'endpointName': 'us-west-2', 'signatureVersions': ['foo']}
+        bridge = ClientEndpointBridge(resolver)
+        with self.assertRaises(UnknownSignatureVersionError):
+            bridge.resolve('test', 'us-west-2')
+
+    def test_raises_when_signature_version_is_not_found(self):
+        resolver = mock.Mock()
+        resolver.construct_endpoint.return_value = {
+            'partition': 'aws', 'hostname': 'test',
+            'endpointName': 'us-west-2'}
+        bridge = ClientEndpointBridge(resolver)
+        with self.assertRaises(UnknownSignatureVersionError):
+            bridge.resolve('test', 'us-west-2')
 
     def test_uses_service_name_as_signing_name(self):
         resolver = mock.Mock()
@@ -1420,7 +1451,7 @@ class TestClientEndpointBridge(unittest.TestCase):
             'partition': 'aws', 'hostname': 'test',
             'signatureVersions': ['v4'],
             'endpointName': 'us-west-2'}
-        bridge = ClientEndpointBridge(resolver, None, None)
+        bridge = ClientEndpointBridge(resolver)
         resolved = bridge.resolve('test', 'us-west-2')
         self.assertEqual('test', resolved['signing_name'])
 
@@ -1433,24 +1464,16 @@ class TestClientEndpointBridge(unittest.TestCase):
             'signatureVersions': ['v4'],
             'credentialScope': {'service': 'override'}
         }
-        bridge = ClientEndpointBridge(resolver, None, None)
+        bridge = ClientEndpointBridge(resolver)
         resolved = bridge.resolve('test', 'us-west-2')
         self.assertEqual('override', resolved['signing_name'])
 
-    def test_raises_when_signature_version_is_unknown(self):
+    def test_uses_service_signing_name_when_present_and_no_cred_scope(self):
         resolver = mock.Mock()
         resolver.construct_endpoint.return_value = {
             'partition': 'aws', 'hostname': 'test',
-            'endpointName': 'us-west-2', 'signatureVersions': ['foo']}
-        bridge = ClientEndpointBridge(resolver, None, None)
-        with self.assertRaises(UnknownSignatureVersionError):
-            bridge.resolve('test', 'us-west-2')
-
-    def test_raises_when_signature_version_is_not_found(self):
-        resolver = mock.Mock()
-        resolver.construct_endpoint.return_value = {
-            'partition': 'aws', 'hostname': 'test',
+            'signatureVersions': ['v4'],
             'endpointName': 'us-west-2'}
-        bridge = ClientEndpointBridge(resolver, None, None)
-        with self.assertRaises(UnknownSignatureVersionError):
-            bridge.resolve('test', 'us-west-2')
+        bridge = ClientEndpointBridge(resolver, service_signing_name='foo')
+        resolved = bridge.resolve('test', 'us-west-2')
+        self.assertEqual('foo', resolved['signing_name'])
