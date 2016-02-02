@@ -73,10 +73,6 @@ def range_check(name, value, shape, error_type, errors):
         min_allowed = shape.metadata['min']
         if value < min_allowed:
             failed = True
-    if 'max' in shape.metadata:
-        max_allowed = shape.metadata['max']
-        if value > max_allowed:
-            failed = True
     if failed:
         errors.report(name, error_type, param=value,
                       valid_range=[min_allowed, max_allowed])
