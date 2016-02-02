@@ -972,7 +972,9 @@ class AssumeRoleWithSamlProvider(AssumeRoleProvider):
         self.role_selector = role_selector
 
     def _create_cache_key(self):
-        return self._profile_name.replace(':', '_')
+        role_arn = self._get_role_config_values().get('role_arn')
+        cache_key = "%s--%s" % (self._profile_name, role_arn)
+        return cache_key.replace(':', '_').replace('/', '-')
 
     def _get_role_config_values(self):
         return self._loaded_config.get('profiles', {}).get(
@@ -1013,7 +1015,7 @@ class AssumeRoleWithSamlProvider(AssumeRoleProvider):
         return creds, response
 
     def _assume_role_base_kwargs(self, config):
-        if config.get('saml_authentication_type')=='form':
+        if config.get('saml_authentication_type') == 'form':
             if not config.get('saml_username'):
                 config['saml_username'] = self.username_prompter("Username: ")
             mapping = {
