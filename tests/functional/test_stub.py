@@ -17,6 +17,7 @@ import botocore
 import botocore.session
 from botocore.stub import Stubber
 from botocore.exceptions import StubResponseError, ClientError
+from botocore.exceptions import ParamValidationError
 import botocore.client
 import botocore.retryhandler
 import botocore.translate
@@ -104,17 +105,31 @@ class TestStubber(unittest.TestCase):
         with self.assertRaisesRegexp(StubResponseError, 'Expected parameters'):
             self.client.list_objects(Bucket='foo')
 
-    def test_can_assert_no_pending_responses_when_expect_params_fail(self):
+    def test_can_continue_to_call_after_expected_params_fail(self):
         service_response = {}
         expected_params = {'Bucket': 'bar'}
 
         self.stubber.add_response(
             'list_objects', service_response, expected_params)
 
+        self.stubber.activate()
         # Throw an error for unexpected parameters
         with self.assertRaises(StubResponseError):
             self.client.list_objects(Bucket='foo')
 
-        # The stubber should not have any responses queued up because the
-        # queue up response failed on parameter validation.
+        # The stubber should still have the responses queued up
+        # even though the original parameters did not match the expected ones.
+        self.client.list_objects(Bucket='bar')
         self.stubber.assert_no_pending_responses()
+
+    def test_still_relies_on_param_validation_with_expected_params(self):
+        service_response = {}
+        expected_params = {'Buck': 'bar'}
+
+        self.stubber.add_response(
+            'list_objects', service_response, expected_params)
+
+        self.stubber.activate()
+        # Throw an error for invalid parameters
+        with self.assertRaises(ParamValidationError):
+            self.client.list_objects(Buck='bar')

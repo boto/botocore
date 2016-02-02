@@ -70,7 +70,6 @@ class Stubber(object):
         self._event_id = 'boto_stubber'
         self._expected_params_event_id = 'boto_stubber_expected_params'
         self._queue = deque()
-        self._expected_params_queue = deque()
 
     def activate(self):
         """
@@ -136,18 +135,12 @@ class Stubber(object):
         self._validate_response(operation_name, service_response)
 
         # Add the service_response to the queue for returning responses
-        response = (operation_name, (http_response, service_response))
+        response = {
+            'operation_name': operation_name,
+            'response': (http_response, service_response),
+            'expected_params': expected_params
+        }
         self._queue.append(response)
-
-        # Add the expected_params to the queue for checking parameters
-        # passed to the client call. If no expected_params were provided,
-        # fill the queue with the value None indicating do not check the
-        # parameters because none were provided.
-        if expected_params is None:
-            self._expected_params_queue.append((operation_name, None))
-        else:
-            self._expected_params_queue.append(
-                (operation_name, expected_params))
 
     def add_client_error(self, method, service_error_code='',
                          service_message='', http_status_code=400):
@@ -183,13 +176,14 @@ class Stubber(object):
         }
 
         operation_name = self.client.meta.method_to_api_mapping.get(method)
-        response = (operation_name, (http_response, parsed_response))
+        # Note that we do not allow for expected_params in the
+        # adding errors into the queue yet.
+        response = {
+            'operation_name': operation_name,
+            'response': (http_response, parsed_response),
+            'expected_params': None
+        }
         self._queue.append(response)
-        # Add a noop value to the expected_params_queue to make sure it stays
-        # in sync with the non-failure responses with expected params added
-        # to the queue. Expected parameters is something we can add support
-        # for later for errors if requested.
-        self._expected_params_queue.append((operation_name, None))
 
     def assert_no_pending_responses(self):
         """
@@ -200,34 +194,28 @@ class Stubber(object):
             raise AssertionError(
                 "%d responses remaining in queue." % remaining)
 
-    def _pop_and_assert_expected_call_order(self, model, params, queue):
-        if not queue:
+    def _assert_expected_call_order(self, model, params):
+        if not self._queue:
             raise StubResponseError(
                 operation_name=model.name,
                 reason='Unexpected API Call: called with parameters %s' %
                        params)
 
-        name, val = queue.popleft()
+        name = self._queue[0]['operation_name']
         if name != model.name:
             raise StubResponseError(
                 operation_name=model.name,
                 reason='Operation mismatch: found response for %s.' % name)
 
-        return val
-
     def _get_response_handler(self, model, params, **kwargs):
-        return self._pop_and_assert_expected_call_order(
-            model, params, self._queue)
+        self._assert_expected_call_order(model, params)
+        # Pop off the entire response once everything has been validated
+        return self._queue.popleft()['response']
 
     def _assert_expected_params(self, model, params, **kwargs):
-        expected_params = self._pop_and_assert_expected_call_order(
-            model, params, self._expected_params_queue)
+        self._assert_expected_call_order(model, params)
+        expected_params = self._queue[0]['expected_params']
         if expected_params is not None and params != expected_params:
-            # We are in failure mode at this point. Since this call is
-            # invoked first, we want to pop off the response queue as well
-            # so the two queues stay in sync since the result queue will
-            # never get its result popped off for this client call.
-            self._queue.popleft()
             raise StubResponseError(
                 operation_name=model.name,
                 reason='Expected parameters: %s, but received: %s' % (
