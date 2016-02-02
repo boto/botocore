@@ -53,8 +53,53 @@ class TestStubber(unittest.TestCase):
     def test_client_error_response(self):
         error_code = "AccessDenied"
         error_message = "Access Denied"
-        self.stubber.add_client_error('list_objects', error_code, error_message)
+        self.stubber.add_client_error(
+            'list_objects', error_code, error_message)
         self.stubber.activate()
 
         with self.assertRaises(ClientError):
+            self.client.list_objects(Bucket='foo')
+
+    def test_expected_params_success(self):
+        service_response = {}
+        expected_params = {'Bucket': 'foo'}
+        self.stubber.add_response(
+            'list_objects', service_response, expected_params)
+        self.stubber.activate()
+        # This should be called successfully with no errors being thrown
+        # for mismatching expected params.
+        response = self.client.list_objects(Bucket='foo')
+        self.assertEqual(response, service_response)
+
+    def test_expected_params_fail(self):
+        service_response = {}
+        expected_params = {'Bucket': 'bar'}
+        self.stubber.add_response(
+            'list_objects', service_response, expected_params)
+        self.stubber.activate()
+        # This should call should raise an for mismatching expected params.
+        with self.assertRaises(StubResponseError):
+            self.client.list_objects(Bucket='foo')
+
+    def test_expected_params_mixed_with_errors_responses(self):
+        # Add an error response
+        error_code = "AccessDenied"
+        error_message = "Access Denied"
+        self.stubber.add_client_error(
+            'list_objects', error_code, error_message)
+
+        # Add a response with incorrect expected params
+        service_response = {}
+        expected_params = {'Bucket': 'bar'}
+        self.stubber.add_response(
+            'list_objects', service_response, expected_params)
+
+        self.stubber.activate()
+
+        # The first call should throw and error as expected.
+        with self.assertRaises(ClientError):
+            self.client.list_objects(Bucket='foo')
+
+        # The second call should throw an error for unexpected parameters
+        with self.assertRaisesRegexp(StubResponseError, 'Expected parameters'):
             self.client.list_objects(Bucket='foo')

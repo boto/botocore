@@ -51,14 +51,22 @@ class TestStubber(unittest.TestCase):
         self.event_emitter = mock.Mock()
         self.client.meta.events = self.event_emitter
         self.stubber.activate()
-        self.assertTrue(self.event_emitter.register.called)
+        # This just ensures that we register at the correct event
+        # and nothing more
+        self.event_emitter.register_first.assert_called_with(
+            'before-parameter-build.*.*', mock.ANY, unique_id=mock.ANY)
+        self.event_emitter.register.assert_called_with(
+            'before-call.*.*', mock.ANY, unique_id=mock.ANY)
 
     def test_stubber_unregisters_events(self):
         self.event_emitter = mock.Mock()
         self.client.meta.events = self.event_emitter
         self.stubber.activate()
         self.stubber.deactivate()
-        self.assertTrue(self.event_emitter.unregister.called)
+        self.event_emitter.unregister.assert_any_call(
+            'before-parameter-build.*.*', mock.ANY, unique_id=mock.ANY)
+        self.event_emitter.unregister.assert_any_call(
+            'before-call.*.*', mock.ANY, unique_id=mock.ANY)
 
     def test_add_response(self):
         response = {'foo': 'bar'}
@@ -100,7 +108,8 @@ class TestStubber(unittest.TestCase):
             {}, output_shape)
 
         # Make sure service response hasn't been mutated
-        self.assertEqual(service_response, {'ResponseMetadata': {'foo': 'bar'}})
+        self.assertEqual(
+            service_response, {'ResponseMetadata': {'foo': 'bar'}})
 
     def test_validates_on_empty_output_shape(self):
         service_model = ServiceModel({
