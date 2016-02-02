@@ -1046,9 +1046,10 @@ class AssumeRoleWithSamlProvider(AssumeRoleProvider):
         attribute = '{urn:oasis:names:tc:SAML:2.0:assertion}Attribute'
         attr_value = '{urn:oasis:names:tc:SAML:2.0:assertion}AttributeValue'
         awsroles = []
-        for attr in ET.fromstring(base64.b64decode(assertion)).iter(attribute):
+        root = ET.fromstring(base64.b64decode(assertion))
+        for attr in root.getiterator(attribute):
             if attr.get('Name')=='https://aws.amazon.com/SAML/Attributes/Role':
-                for value in attr.iter(attr_value):
+                for value in attr.getiterator(attr_value):
                     parts = value.text.split(',')
                     # Deals with "role_arn,pricipal_arn" or its reversed order
                     if 'saml-provider' in parts[0]:
@@ -1073,11 +1074,18 @@ class SamlFormsBasedAuthenticator(object):
             urljoin(endpoint, login_form.attrib.get('action', '')),
             data=payload, verify=verify).text)
         if response_form is not None:
-            responses = response_form.findall(".//input[@name='SAMLResponse']")
-            if responses:
-                return responses[0].attrib['value']
+            return self._get_value_of_first_tag(
+                response_form, 'input', 'name', 'SAMLResponse')
         # Login failed, typically caused by incorrect username and/or password
         return None
+
+    def _get_value_of_first_tag(self, root, tag, attr, trait):
+        ## This is backported from the following Python 2.7+ implementation:
+        # found = root.findall(".//tag[@attr='trait']")
+        # return found[0].attrib.get('value') if found else None
+        for element in root.findall(tag):
+            if element.attrib.get(attr)==trait:
+                return element.attrib.get('value')
 
     def _get_form(self, html):
         form_snippet = re.search('(<form.+</form>)', html, flags=re.DOTALL)
