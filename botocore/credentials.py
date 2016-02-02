@@ -1064,6 +1064,15 @@ class AssumeRoleWithSamlProvider(AssumeRoleProvider):
 
 class SamlFormsBasedAuthenticator(object):
     def authenticate(self, endpoint, params, verify=True):
+        """Handle the forms-based authentication.
+
+        :param endpoint: The url of the web page containing the login form
+        :param params: A dictionary containing user input to be filled in form.
+                       Such as {"username": "joe", "password": "secret"}
+                       Its key names would need to match those fields in form,
+                       and the values are from user input.
+        :param verify: Turn on/off SSL verification. Keep it True when on prod.
+        """
         login_form = self._get_form(requests.get(endpoint, verify=verify).text)
         if login_form is None:
             raise ValueError('Login form is not found in %s' % endpoint)
@@ -1086,7 +1095,7 @@ class SamlFormsBasedAuthenticator(object):
         # found = root.findall(".//tag[@attr='trait']")
         # return found[0].attrib.get('value') if found else None
         for element in root.findall(tag):
-            if element.attrib.get(attr)==trait:
+            if element.attrib.get(attr) == trait:
                 return element.attrib.get('value')
 
     def _get_form(self, html):
