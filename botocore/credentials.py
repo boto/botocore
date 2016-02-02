@@ -30,8 +30,6 @@ import botocore.compat
 from botocore.compat import total_seconds
 from botocore.compat import urljoin
 from botocore.compat import six
-from six import StringIO
-from six.moves.html_entities import name2codepoint
 from six.moves import input as raw_input
 from botocore.exceptions import UnknownCredentialError
 from botocore.exceptions import PartialCredentialsError
@@ -1084,10 +1082,15 @@ class SamlFormsBasedAuthenticator(object):
     def _get_form(self, html):
         form_snippet = re.search('(<form.+</form>)', html, flags=re.DOTALL)
         if form_snippet:
-            p = ET.XMLParser()
-            p.parser.UseForeignDTD(True)
-            p.entity.update((x, unichr(i)) for x, i in name2codepoint.items())
-            return ET.parse(StringIO(form_snippet.group(0)), p).getroot()
+            # To handle &nbsp;, on Python 2 we can use an undocumented parser:
+            #   ET.XMLParser().parser.UseForeignDTD(True)
+            # but it won't work on Python 3.
+            # So we use a pure XML way to handle it, for now.
+            return ET.fromstring(
+                '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" [
+                <!ENTITY nbsp ' '>
+                ]>''' + form_snippet.group(0))
 
 
 class CredentialResolver(object):

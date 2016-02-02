@@ -1025,7 +1025,7 @@ class TestSamlFormsBasedAuthenticator(unittest.TestCase):
 class TestAssumeRoleWithSamlProvider(unittest.TestCase):
     GET = 'botocore.credentials.requests.get'
     POST = 'botocore.credentials.requests.post'
-    assertion = base64.b64encode("""<?xml version="1.0" encoding="UTF-8"?>
+    assertion = base64.b64encode(b"""<?xml version="1.0" encoding="UTF-8"?>
         <saml2p:Response xmlns:saml2p="urn:oasis:names:tc:SAML:2.0:protocol">
         <saml2:Assertion xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">
             <saml2:Attribute Name="https://aws.amazon.com/SAML/Attributes/Role">
@@ -1043,7 +1043,7 @@ class TestAssumeRoleWithSamlProvider(unittest.TestCase):
             'botocore.credentials.requests.post',
             return_value=mock.Mock(
                 text='<form><input name="SAMLResponse" value="%s"/></form>'
-                    % self.assertion))
+                    % self.assertion.decode('utf-8')))
         self._post = patcher.start()
         self.addCleanup(patcher.stop)
 
