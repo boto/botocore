@@ -1007,7 +1007,7 @@ class TestSamlGenericFormsBasedAuthenticator(unittest.TestCase):
         self.authenticator = credentials.SamlGenericFormsBasedAuthenticator()
 
     @mock.patch(GET, return_value=mock.Mock(text='<html>wrong way</html>'))
-    def test_login_form_not_exist(self, _get):
+    def test_login_form_not_exist(self, patched_get):
         with self.assertRaises(botocore.exceptions.SamlError):
             if self.authenticator.is_suitable(self.profile):
                 self.authenticator.authenticate(
@@ -1015,18 +1015,18 @@ class TestSamlGenericFormsBasedAuthenticator(unittest.TestCase):
 
     @mock.patch(POST, return_value=mock.Mock(text='<html>login failed</html>'))
     @mock.patch(GET, return_value=mock.Mock(text=login_form))
-    def test_no_saml_assertion(self, _get, _post):
+    def test_no_saml_assertion(self, patched_get, patched_post):
         self.assertTrue(self.authenticator.is_suitable(self.profile))
         self.assertIsNone(self.authenticator.authenticate(
             self.profile, lambda prompt: 'joe', lambda prompt: 'secret'))
-        _post.assert_called_with(
+        patched_post.assert_called_with(
             "http://notexist.com/login", verify=True,
             data={'foo': 'bar', 'username': 'joe', 'password': 'secret'})
 
     @mock.patch(POST, return_value=mock.Mock(
         text='<form><input name="SAMLResponse" value="assertion"/></form>'))
     @mock.patch(GET, return_value=mock.Mock(text=login_form))
-    def test_got_saml_assertion(self, _get, _post):
+    def test_got_saml_assertion(self, patched_get, patched_post):
         self.assertEqual("assertion", self.authenticator.authenticate(
             self.profile, lambda prompt: 'joe', lambda prompt: 'secret'))
 
@@ -1053,7 +1053,7 @@ class TestAssumeRoleWithSamlProvider(unittest.TestCase):
             return_value=mock.Mock(
                 text='<form><input name="SAMLResponse" value="%s"/></form>'
                     % self.assertion.decode('utf-8')))
-        self._post = patcher.start()
+        self.patched_post = patcher.start()
         self.addCleanup(patcher.stop)
 
     def create_client_creator(self, with_response=None):
@@ -1084,7 +1084,7 @@ class TestAssumeRoleWithSamlProvider(unittest.TestCase):
 
     @mock.patch(GET, return_value=mock.Mock(
         text='<form><input name="username"/><input name="password"/></form>'))
-    def test_assume_role_with_okta(self, _get):
+    def test_assume_role_with_okta(self, patched_get):
         profile = {
             'saml_endpoint': 'http://example.com/login.asp',
             'saml_authentication_type': 'form',
@@ -1093,12 +1093,12 @@ class TestAssumeRoleWithSamlProvider(unittest.TestCase):
             'role_arn': 'arn:aws:iam::123456789012:role/joe',
         }
         self.load_cred(profile)
-        self._post.assert_called_with(
+        self.patched_post.assert_called_with(
             'http://example.com/login.asp',
             data={'username': 'joe', 'password': 'secret'}, verify=True)
 
     @mock.patch(GET, return_value=mock.Mock(text=adfs_login_form))
-    def test_assume_role_with_adfs(self, _get):
+    def test_assume_role_with_adfs(self, patched_get):
         profile = {
             'saml_endpoint': 'http://example.com/login.asp',
             'saml_authentication_type': 'form',
@@ -1107,13 +1107,13 @@ class TestAssumeRoleWithSamlProvider(unittest.TestCase):
             'role_arn': 'arn:aws:iam::123456789012:role/joe',
         }
         self.load_cred(profile)
-        self._post.assert_called_with(
+        self.patched_post.assert_called_with(
             'http://example.com/login.asp', verify=True,
             data={'ctl00$ContentPlaceHolder1$UsernameTextBox': 'joe',
                   'ctl00$ContentPlaceHolder1$PasswordTextBox': 'secret'})
 
     @mock.patch(GET, return_value=mock.Mock(text=adfs_login_form))
-    def test_unmatch_role(self, _get):
+    def test_unmatch_role(self, patched_get):
         profile = {
             'saml_endpoint': 'http://example.com/login.asp',
             'saml_authentication_type': 'form',
