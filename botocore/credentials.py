@@ -966,7 +966,20 @@ class AssumeRoleWithSamlProvider(AssumeRoleProvider):
                  password_prompter=getpass.getpass,
                  username_prompter=raw_input,
                  authenticators=None):
-        """
+        """To initiate an AssumeRoleWithSamlProvider.
+
+        :type role_selector: callable
+        :param role_selector: A function to choose a role based on both
+            user configuration and the roles allowed by IdP.
+
+        :type password_prompter: callable
+        :param password_prompter: A callable that receives a prompt for user,
+            and then returns a password provided by the user, such as getpass()
+
+        :type username_prompter: callable
+        :param username_prompter: A callable that receives a prompt for user,
+            and then returns the username provided by the user, such as input()
+
         :type authenticators: list
         :param authenticators: A list of authenticators, which are instances
             with an is_suitable() method and an authenticate() method.
