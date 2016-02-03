@@ -992,7 +992,6 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
 
 
 class TestSamlGenericFormsBasedAuthenticator(unittest.TestCase):
-    authenticator = credentials.SamlGenericFormsBasedAuthenticator()
     login_form = '''<html><form action="login">
         <div>The &nbsp; in the form will not confuse our parser.</div>
         <input name="foo" value="bar"/>
@@ -1003,6 +1002,9 @@ class TestSamlGenericFormsBasedAuthenticator(unittest.TestCase):
     profile = {
         'saml_endpoint': 'http://notexist.com',
         'saml_authentication_type': 'form',}
+
+    def setUp(self):
+        self.authenticator = credentials.SamlGenericFormsBasedAuthenticator()
 
     @mock.patch(GET, return_value=mock.Mock(text='<html>wrong way</html>'))
     def test_login_form_not_exist(self, _get):
