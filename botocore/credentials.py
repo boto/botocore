@@ -24,13 +24,12 @@ import base64
 
 from dateutil.parser import parse
 from dateutil.tz import tzlocal
+from six.moves import input as raw_input
 
 import botocore.config
 import botocore.compat
 from botocore.compat import total_seconds
 from botocore.compat import urljoin
-from botocore.compat import six
-from six.moves import input as raw_input
 from botocore.exceptions import UnknownCredentialError
 from botocore.exceptions import PartialCredentialsError
 from botocore.exceptions import ConfigNotFound
@@ -176,6 +175,15 @@ def credential_normalizer(credentials):
 
 def exception_raiser(exception):
     raise exception()
+
+
+def _role_selector(role_arn, roles):
+    """Select a role based on pre-configured role_arn and IdP roles list.
+
+    Given a roles list in the form of [{"RoleArn": "...", ...}, ...],
+    return the item which matches the role_arn, or None otherwise"""
+    chosen = [r for r in roles if r['RoleArn'] == role_arn]
+    return chosen[0] if chosen else None
 
 
 class Credentials(object):
@@ -950,13 +958,6 @@ class AssumeRoleProvider(CredentialProvider):
         return assume_role_kwargs
 
 
-def _role_selector(role_arn, roles):
-    """Given a roles list in the form of [{"RoleArn": "...", ...}, ...],
-    return the item which matches the role_arn, or None otherwise"""
-    chosen = [r for r in roles if r['RoleArn']==role_arn]
-    return chosen[0] if chosen else None
-
-
 class AssumeRoleWithSamlProvider(AssumeRoleProvider):
     METHOD = 'assume-role-with-saml'
     DISTINCTION_VAR = 'saml_endpoint'
@@ -990,9 +991,12 @@ class AssumeRoleWithSamlProvider(AssumeRoleProvider):
         self.username_prompter = username_prompter
         self.password_prompter = password_prompter
         self.role_selector = role_selector
-        self.authenticators = authenticators or [
-            SamlAdfsFormsBasedAuthenticator(),
-            SamlGenericFormsBasedAuthenticator()]
+        if authenticators is not None:
+            self.authenticators = authenticators
+        else:
+            self.authenticators = [
+                SamlAdfsFormsBasedAuthenticator(),
+                SamlGenericFormsBasedAuthenticator()]
 
     def _create_cache_key(self):
         role_arn = self._get_role_config_values().get('role_arn')
@@ -1066,7 +1070,8 @@ class AssumeRoleWithSamlProvider(AssumeRoleProvider):
         awsroles = []
         root = ET.fromstring(base64.b64decode(assertion))
         for attr in root.getiterator(attribute):
-            if attr.get('Name')=='https://aws.amazon.com/SAML/Attributes/Role':
+            if attr.get('Name') == \
+                    'https://aws.amazon.com/SAML/Attributes/Role':
                 for value in attr.getiterator(attr_value):
                     parts = value.text.split(',')
                     # Deals with "role_arn,pricipal_arn" or its reversed order
@@ -1080,7 +1085,12 @@ class AssumeRoleWithSamlProvider(AssumeRoleProvider):
 
 class SamlAuthenticator(object):
     def is_suitable(self, config):
-        """Return True if this instance intends to perform authentication"""
+        """Return True if this instance intends to perform authentication.
+
+        :type config: dict
+        :param config: It is the profile dictionary loaded from user's profile,
+            i.e. {'saml_endpoint': 'https://...', 'saml_provider': '...', ...}
+        """
         raise NotImplemented()
 
     def authenticate(self, config, username_prompter, password_prompter):
@@ -1119,9 +1129,9 @@ class SamlGenericFormsBasedAuthenticator(SamlAuthenticator):
         return None
 
     def _get_value_of_first_tag(self, root, tag, attr, trait):
-        ## This is backported from the following Python 2.7+ implementation:
-        # found = root.findall(".//tag[@attr='trait']")
-        # return found[0].attrib.get('value') if found else None
+        # This is backported from the following Python 2.7+ implementation:
+        #   found = root.findall(".//tag[@attr='trait']")
+        #   return found[0].attrib.get('value') if found else None
         for element in root.findall(tag):
             if element.attrib.get(attr) == trait:
                 return element.attrib.get('value')
