@@ -36,7 +36,7 @@ from botocore.exceptions import PartialCredentialsError
 from botocore.exceptions import ConfigNotFound
 from botocore.exceptions import InvalidConfigError
 from botocore.exceptions import RefreshWithMFAUnsupportedError
-from botocore.exceptions import RefreshUnsupportedError
+from botocore.exceptions import RefreshUnsupportedError, SamlError
 from botocore.utils import InstanceMetadataFetcher, parse_key_val_file
 import botocore.vendored.requests as requests
 
@@ -1036,13 +1036,13 @@ class AssumeRoleWithSamlProvider(AssumeRoleProvider):
             raise ValueError("Unsupported saml_authentication_type: %s"
                              % config.get('saml_authentication_type'))
         if not assertion:
-            raise ValueError('Login failed: SAML assertion not found')
+            raise SamlError(detail='Login failed: SAML assertion not found')
         idp_roles = self._parse_roles(assertion)
         if not idp_roles:
-            raise ValueError('Identity provider provides no role.')
+            raise SamlError(detail='Identity provider provides no role.')
         role = self.role_selector(config.get('role_arn'), idp_roles)
         if not role:
-            raise ValueError('Unable to choose role "%s" from %s' % (
+            raise SamlError(detail='Unable to choose role "%s" from %s' % (
                 config.get('role_arn'), [r['RoleArn'] for r in idp_roles]))
         role['SAMLAssertion'] = assertion
         return role
@@ -1086,11 +1086,10 @@ class SamlGenericFormsBasedAuthenticator(SamlAuthenticator):
         verify = config.get('saml_verify_ssl') != 'false'
         if not config.get('saml_username'):
             config['saml_username'] = username_prompter("Username: ")
-        login_form = self._get_form(requests.get(
-            config['saml_endpoint'], verify=verify).text)
+        endpoint = config['saml_endpoint']
+        login_form = self._get_form(requests.get(endpoint, verify=verify).text)
         if login_form is None:
-            raise ValueError(
-                'Login form is not found in %s' % config['saml_endpoint'])
+            raise SamlError(detail='Login form is not found in %s' % endpoint)
         payload = dict((tag.attrib['name'], tag.attrib.get('value', ''))
                        for tag in login_form.findall(".//input"))
         if self.username_field in payload:
@@ -1098,8 +1097,7 @@ class SamlGenericFormsBasedAuthenticator(SamlAuthenticator):
         if self.password_field in payload:
             payload[self.password_field] = password_prompter("Password: ")
         response_form = self._get_form(requests.post(
-            urljoin(
-                config['saml_endpoint'], login_form.attrib.get('action', '')),
+            urljoin(endpoint, login_form.attrib.get('action', '')),
             data=payload, verify=verify).text)
         if response_form is not None:
             return self._get_value_of_first_tag(

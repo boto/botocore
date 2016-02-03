@@ -1006,7 +1006,7 @@ class TestSamlGenericFormsBasedAuthenticator(unittest.TestCase):
 
     @mock.patch(GET, return_value=mock.Mock(text='<html>wrong way</html>'))
     def test_login_form_not_exist(self, _get):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(botocore.exceptions.SamlError):
             if self.authenticator.is_suitable(self.profile):
                 self.authenticator.authenticate(
                     self.profile, lambda prompt: 'foo', lambda prompt: 'bar')
@@ -1075,7 +1075,7 @@ class TestAssumeRoleWithSamlProvider(unittest.TestCase):
             username_prompter=lambda prompt: 'joe',
             password_prompter=lambda prompt: 'secret')
         creds = provider.load()
-        with self.assertRaises(credentials.RefreshUnsupportedError):
+        with self.assertRaises(botocore.exceptions.RefreshUnsupportedError):
             # access_key is a property that will refresh credentials.
             # Forms-based SAML authentication will currently raise an exception
             creds.access_key
@@ -1119,7 +1119,7 @@ class TestAssumeRoleWithSamlProvider(unittest.TestCase):
             'saml_username': 'joe',
             'role_arn': 'arn:aws:iam::123456789012:role/does_not_match',
         }
-        with self.assertRaises(ValueError):
+        with self.assertRaises(botocore.exceptions.SamlError):
             self.load_cred(profile)
 
 

@@ -371,3 +371,7 @@ class RefreshUnsupportedError(BotoCoreError):
 
 class RefreshWithMFAUnsupportedError(BotoCoreError):
     fmt = 'Cannot refresh credentials: MFA token required.'
+
+
+class SamlError(BotoCoreError):
+    fmt = 'A SAML error occurred: {detail}'
