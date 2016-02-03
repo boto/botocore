@@ -991,7 +991,7 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
             provider.load()
 
 
-class TestSamlGenericFormsBasedAuthenticator(unittest.TestCase):
+class TestSAMLGenericFormsBasedAuthenticator(unittest.TestCase):
     login_form = '''<html><form action="login">
         <div>The &nbsp; in the form will not confuse our parser.</div>
         <input name="foo" value="bar"/>
@@ -1004,7 +1004,7 @@ class TestSamlGenericFormsBasedAuthenticator(unittest.TestCase):
         'saml_authentication_type': 'form',}
 
     def setUp(self):
-        self.authenticator = credentials.SamlGenericFormsBasedAuthenticator()
+        self.authenticator = credentials.SAMLGenericFormsBasedAuthenticator()
 
     @mock.patch(GET, return_value=mock.Mock(text='<html>wrong way</html>'))
     def test_login_form_not_exist(self, patched_get):
@@ -1031,7 +1031,7 @@ class TestSamlGenericFormsBasedAuthenticator(unittest.TestCase):
             self.profile, lambda prompt: 'joe', lambda prompt: 'secret'))
 
 
-class TestAssumeRoleWithSamlProvider(unittest.TestCase):
+class TestAssumeRoleWithSAMLProvider(unittest.TestCase):
     GET = 'botocore.credentials.requests.get'
     POST = 'botocore.credentials.requests.post'
     assertion = base64.b64encode(b"""<?xml version="1.0" encoding="UTF-8"?>
@@ -1071,7 +1071,7 @@ class TestAssumeRoleWithSamlProvider(unittest.TestCase):
         return mock.Mock(return_value=client)
 
     def load_cred(self, profile):
-        provider = credentials.AssumeRoleWithSamlProvider(
+        provider = credentials.AssumeRoleWithSAMLProvider(
             lambda: {'profiles': {'saml': profile}},
             self.create_client_creator(), cache={}, profile_name='saml',
             username_prompter=lambda prompt: 'joe',

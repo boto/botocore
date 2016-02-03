@@ -62,7 +62,7 @@ def create_credential_resolver(session):
     env_provider = EnvProvider()
     providers = [
         env_provider,
-        AssumeRoleWithSamlProvider(
+        AssumeRoleWithSAMLProvider(
             load_config=lambda: session.full_config,
             client_creator=session.create_client,
             cache={},
@@ -958,7 +958,7 @@ class AssumeRoleProvider(CredentialProvider):
         return assume_role_kwargs
 
 
-class AssumeRoleWithSamlProvider(AssumeRoleProvider):
+class AssumeRoleWithSAMLProvider(AssumeRoleProvider):
     METHOD = 'assume-role-with-saml'
     DISTINCTION_VAR = 'saml_endpoint'
 
@@ -967,7 +967,7 @@ class AssumeRoleWithSamlProvider(AssumeRoleProvider):
                  password_prompter=getpass.getpass,
                  username_prompter=raw_input,
                  authenticators=None):
-        """To initiate an AssumeRoleWithSamlProvider.
+        """To initiate an AssumeRoleWithSAMLProvider.
 
         :type role_selector: callable
         :param role_selector: A function to choose a role based on both
@@ -986,7 +986,7 @@ class AssumeRoleWithSamlProvider(AssumeRoleProvider):
             with an is_suitable() method and an authenticate() method.
             You can use it to add your own implementation for 3rd party IdP.
         """
-        super(AssumeRoleWithSamlProvider, self).__init__(
+        super(AssumeRoleWithSAMLProvider, self).__init__(
             load_config, client_creator, cache, profile_name)
         self.username_prompter = username_prompter
         self.password_prompter = password_prompter
@@ -995,8 +995,8 @@ class AssumeRoleWithSamlProvider(AssumeRoleProvider):
             self.authenticators = authenticators
         else:
             self.authenticators = [
-                SamlAdfsFormsBasedAuthenticator(),
-                SamlGenericFormsBasedAuthenticator()]
+                SAMLAdfsFormsBasedAuthenticator(),
+                SAMLGenericFormsBasedAuthenticator()]
 
     def _create_cache_key(self):
         role_arn = self._get_role_config_values().get('role_arn')
@@ -1082,7 +1082,7 @@ class AssumeRoleWithSamlProvider(AssumeRoleProvider):
         return awsroles
 
 
-class SamlAuthenticator(object):
+class SAMLAuthenticator(object):
     def is_suitable(self, config):
         """Return True if this instance intends to perform authentication.
 
@@ -1097,7 +1097,7 @@ class SamlAuthenticator(object):
         raise NotImplemented()
 
 
-class SamlGenericFormsBasedAuthenticator(SamlAuthenticator):
+class SAMLGenericFormsBasedAuthenticator(SAMLAuthenticator):
     username_field = 'username'
     password_field = 'password'
 
@@ -1151,7 +1151,7 @@ class SamlGenericFormsBasedAuthenticator(SamlAuthenticator):
                 ]>''' + form_snippet.group(0))
 
 
-class SamlAdfsFormsBasedAuthenticator(SamlGenericFormsBasedAuthenticator):
+class SAMLAdfsFormsBasedAuthenticator(SAMLGenericFormsBasedAuthenticator):
     username_field = 'ctl00$ContentPlaceHolder1$UsernameTextBox'
     password_field = 'ctl00$ContentPlaceHolder1$PasswordTextBox'
 
