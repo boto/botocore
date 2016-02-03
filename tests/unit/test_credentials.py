@@ -1008,10 +1008,10 @@ class TestSamlGenericFormsBasedAuthenticator(unittest.TestCase):
 
     @mock.patch(GET, return_value=mock.Mock(text='<html>wrong way</html>'))
     def test_login_form_not_exist(self, patched_get):
-        with self.assertRaises(botocore.exceptions.SamlError):
-            if self.authenticator.is_suitable(self.profile):
-                self.authenticator.authenticate(
-                    self.profile, lambda prompt: 'foo', lambda prompt: 'bar')
+        self.assertTrue(self.authenticator.is_suitable(self.profile))
+        with self.assertRaisesRegexp(botocore.exceptions.SamlError, 'form'):
+            self.authenticator.authenticate(
+                self.profile, lambda prompt: 'foo', lambda prompt: 'bar')
 
     @mock.patch(POST, return_value=mock.Mock(text='<html>login failed</html>'))
     @mock.patch(GET, return_value=mock.Mock(text=login_form))
@@ -1121,7 +1121,8 @@ class TestAssumeRoleWithSamlProvider(unittest.TestCase):
             'saml_username': 'joe',
             'role_arn': 'arn:aws:iam::123456789012:role/does_not_match',
         }
-        with self.assertRaises(botocore.exceptions.SamlError):
+        with self.assertRaisesRegexp(botocore.exceptions.SamlError,
+                                     'Unable to choose role'):
             self.load_cred(profile)
 
 

@@ -1053,10 +1053,9 @@ class AssumeRoleWithSamlProvider(AssumeRoleProvider):
             raise ValueError("Unsupported saml_authentication_type: %s"
                              % config.get('saml_authentication_type'))
         if not assertion:
-            raise SamlError(detail='Login failed: SAML assertion not found')
+            raise SamlError(
+                detail='Failed to login at %s' % config['saml_endpoint'])
         idp_roles = self._parse_roles(assertion)
-        if not idp_roles:
-            raise SamlError(detail='Identity provider provides no role.')
         role = self.role_selector(config.get('role_arn'), idp_roles)
         if not role:
             raise SamlError(detail='Unable to choose role "%s" from %s' % (
@@ -1125,7 +1124,8 @@ class SamlGenericFormsBasedAuthenticator(SamlAuthenticator):
         if response_form is not None:
             return self._get_value_of_first_tag(
                 response_form, 'input', 'name', 'SAMLResponse')
-        # Login failed, typically caused by incorrect username and/or password
+        # Login failed, typically caused by incorrect username and/or password.
+        # The error page format is not defined in SAML.
         return None
 
     def _get_value_of_first_tag(self, root, tag, attr, trait):
