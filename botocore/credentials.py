@@ -964,12 +964,22 @@ class AssumeRoleWithSamlProvider(AssumeRoleProvider):
     def __init__(self, load_config, client_creator, cache, profile_name,
                  role_selector=_role_selector,
                  password_prompter=getpass.getpass,
-                 username_prompter=raw_input):
+                 username_prompter=raw_input,
+                 authenticators=None):
+        """
+        :type authenticators: list
+        :param authenticators: A list of authenticators, which are instances
+            with an is_suitable() method and an authenticate() method.
+            You can use it to add your own implementation for 3rd party IdP.
+        """
         super(AssumeRoleWithSamlProvider, self).__init__(
             load_config, client_creator, cache, profile_name)
         self.username_prompter = username_prompter
         self.password_prompter = password_prompter
         self.role_selector = role_selector
+        self.authenticators = authenticators or [
+            SamlAdfsFormsBasedAuthenticator(),
+            SamlGenericFormsBasedAuthenticator()]
 
     def _create_cache_key(self):
         role_arn = self._get_role_config_values().get('role_arn')
@@ -1015,20 +1025,13 @@ class AssumeRoleWithSamlProvider(AssumeRoleProvider):
         return creds, response
 
     def _assume_role_base_kwargs(self, config):
-        if config.get('saml_authentication_type') == 'form':
-            if not config.get('saml_username'):
-                config['saml_username'] = self.username_prompter("Username: ")
-            mapping = {
-                "adfs": {
-                    "username": "ctl00$ContentPlaceHolder1$UsernameTextBox",
-                    "password": "ctl00$ContentPlaceHolder1$PasswordTextBox"},
-                }.get(config.get('saml_provider'),
-                      {"username": "username", "password": "password"})
-            assertion = SamlFormsBasedAuthenticator().authenticate(
-                config['saml_endpoint'],
-                {mapping["username"]: config['saml_username'],
-                 mapping["password"]: self.password_prompter("Password: ")},
-                verify=config.get('saml_verify_ssl') != 'false')
+        assertion = None
+        for authenticator in self.authenticators:
+            if authenticator.is_suitable(config):
+                assertion = authenticator.authenticate(
+                    config=config, username_prompter=self.username_prompter,
+                    password_prompter=self.password_prompter)
+                break
         else:
             raise ValueError("Unsupported saml_authentication_type: %s"
                              % config.get('saml_authentication_type'))
@@ -1062,27 +1065,41 @@ class AssumeRoleWithSamlProvider(AssumeRoleProvider):
         return awsroles
 
 
-class SamlFormsBasedAuthenticator(object):
-    def authenticate(self, endpoint, params, verify=True):
-        """Handle the forms-based authentication.
+class SamlAuthenticator(object):
+    def is_suitable(self, config):
+        """Return True if this instance intends to perform authentication"""
+        raise NotImplemented()
 
-        :param endpoint: The url of the web page containing the login form
-        :param params: A dictionary containing user input to be filled in form.
-                       Such as {"username": "joe", "password": "secret"}
-                       Its key names would need to match those fields in form,
-                       and the values are from user input.
-        :param verify: Turn on/off SSL verification. Keep it True when on prod.
-        """
-        login_form = self._get_form(requests.get(endpoint, verify=verify).text)
+    def authenticate(self, config, username_prompter, password_prompter):
+        """Returns SAML assertion when login succeeds, or None otherwise"""
+        raise NotImplemented()
+
+
+class SamlGenericFormsBasedAuthenticator(SamlAuthenticator):
+    username_field = 'username'
+    password_field = 'password'
+
+    def is_suitable(self, config):
+        return config.get('saml_authentication_type') == 'form'
+
+    def authenticate(self, config, username_prompter, password_prompter):
+        verify = config.get('saml_verify_ssl') != 'false'
+        if not config.get('saml_username'):
+            config['saml_username'] = username_prompter("Username: ")
+        login_form = self._get_form(requests.get(
+            config['saml_endpoint'], verify=verify).text)
         if login_form is None:
-            raise ValueError('Login form is not found in %s' % endpoint)
+            raise ValueError(
+                'Login form is not found in %s' % config['saml_endpoint'])
         payload = dict((tag.attrib['name'], tag.attrib.get('value', ''))
                        for tag in login_form.findall(".//input"))
-        for field, value in params.items():
-            if field in payload:
-                payload[field] = value
+        if self.username_field in payload:
+            payload[self.username_field] = config['saml_username']
+        if self.password_field in payload:
+            payload[self.password_field] = password_prompter("Password: ")
         response_form = self._get_form(requests.post(
-            urljoin(endpoint, login_form.attrib.get('action', '')),
+            urljoin(
+                config['saml_endpoint'], login_form.attrib.get('action', '')),
             data=payload, verify=verify).text)
         if response_form is not None:
             return self._get_value_of_first_tag(
@@ -1099,6 +1116,7 @@ class SamlFormsBasedAuthenticator(object):
                 return element.attrib.get('value')
 
     def _get_form(self, html):
+        # Scrape a form from html page, and return it as an elementtree element
         form_snippet = re.search('(<form.+</form>)', html, flags=re.DOTALL)
         if form_snippet:
             # To handle &nbsp;, on Python 2 we can use an undocumented parser:
@@ -1110,6 +1128,15 @@ class SamlFormsBasedAuthenticator(object):
                 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" [
                 <!ENTITY nbsp ' '>
                 ]>''' + form_snippet.group(0))
+
+
+class SamlAdfsFormsBasedAuthenticator(SamlGenericFormsBasedAuthenticator):
+    username_field = 'ctl00$ContentPlaceHolder1$UsernameTextBox'
+    password_field = 'ctl00$ContentPlaceHolder1$PasswordTextBox'
+
+    def is_suitable(self, config):
+        return (config.get('saml_authentication_type') == 'form'
+                and config.get('saml_provider') == 'adfs')
 
 
 class CredentialResolver(object):

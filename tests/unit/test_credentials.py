@@ -991,35 +991,42 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
             provider.load()
 
 
-class TestSamlFormsBasedAuthenticator(unittest.TestCase):
-    authenticator = credentials.SamlFormsBasedAuthenticator()
+class TestSamlGenericFormsBasedAuthenticator(unittest.TestCase):
+    authenticator = credentials.SamlGenericFormsBasedAuthenticator()
     login_form = '''<html><form action="login">
         <div>The &nbsp; in the form will not confuse our parser.</div>
-        <input name="foo" value="bar"/><input name="user"/><input name="pass"/>
+        <input name="foo" value="bar"/>
+        <input name="username"/><input name="password"/>
         </form></html>'''
     GET = 'botocore.credentials.requests.get'
     POST = 'botocore.credentials.requests.post'
+    profile = {
+        'saml_endpoint': 'http://notexist.com',
+        'saml_authentication_type': 'form',}
 
     @mock.patch(GET, return_value=mock.Mock(text='<html>wrong way</html>'))
     def test_login_form_not_exist(self, _get):
         with self.assertRaises(ValueError):
-            self.authenticator.authenticate('http://notexist.com', {})
+            if self.authenticator.is_suitable(self.profile):
+                self.authenticator.authenticate(
+                    self.profile, lambda prompt: 'foo', lambda prompt: 'bar')
 
     @mock.patch(POST, return_value=mock.Mock(text='<html>login failed</html>'))
     @mock.patch(GET, return_value=mock.Mock(text=login_form))
     def test_no_saml_assertion(self, _get, _post):
+        self.assertTrue(self.authenticator.is_suitable(self.profile))
         self.assertIsNone(self.authenticator.authenticate(
-            'http://example.com', {"user": "joe", "pass": "secret"}))
+            self.profile, lambda prompt: 'joe', lambda prompt: 'secret'))
         _post.assert_called_with(
-            "http://example.com/login",
-            data={'foo': 'bar', 'user': 'joe', 'pass': 'secret'}, verify=True)
+            "http://notexist.com/login", verify=True,
+            data={'foo': 'bar', 'username': 'joe', 'password': 'secret'})
 
     @mock.patch(POST, return_value=mock.Mock(
         text='<form><input name="SAMLResponse" value="assertion"/></form>'))
     @mock.patch(GET, return_value=mock.Mock(text=login_form))
     def test_got_saml_assertion(self, _get, _post):
         self.assertEqual("assertion", self.authenticator.authenticate(
-            'http://example.com', {"user": "joe", "pass": "secret"}))
+            self.profile, lambda prompt: 'joe', lambda prompt: 'secret'))
 
 
 class TestAssumeRoleWithSamlProvider(unittest.TestCase):
