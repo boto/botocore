@@ -1106,7 +1106,7 @@ class SamlGenericFormsBasedAuthenticator(SamlAuthenticator):
         return config.get('saml_authentication_type') == 'form'
 
     def authenticate(self, config, username_prompter, password_prompter):
-        verify = config.get('saml_verify_ssl') != 'false'
+        verify = True
         if not config.get('saml_username'):
             config['saml_username'] = username_prompter("Username: ")
         endpoint = config['saml_endpoint']
