@@ -353,6 +353,10 @@ class InvalidS3AddressingStyleError(BotoCoreError):
     )
 
 
+class StubResponseError(BotoCoreError):
+    fmt = 'Error getting response stub for operation {operation_name}: {reason}'
+
+
 class InvalidConfigError(BotoCoreError):
     fmt = '{error_msg}'
 
