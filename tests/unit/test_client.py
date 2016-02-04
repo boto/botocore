@@ -1246,11 +1246,6 @@ class TestClientEndpointBridge(unittest.TestCase):
         self.assertEqual('https://s3.amazonaws.com',
                          resolved['endpoint_url'])
 
-    def test_requires_a_region(self):
-        bridge = ClientEndpointBridge(mock.Mock())
-        with self.assertRaises(NoRegionError):
-            bridge.resolve('myservice')
-
     def test_uses_region_from_client_config_if_available(self):
         resolver = mock.Mock()
         resolver.construct_endpoint.return_value = None

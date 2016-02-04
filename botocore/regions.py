@@ -28,7 +28,7 @@ DEFAULT_SERVICE_DATA = {'endpoints': {}}
 
 class BaseEndpointResolver(object):
     """Resolves regions and endpoints. Must be subclassed."""
-    def construct_endpoint(self, service_name, region_name):
+    def construct_endpoint(self, service_name, region_name=None):
         """Resolves an endpoint for a service and region combination.
 
         :type service_name: string
@@ -37,6 +37,8 @@ class BaseEndpointResolver(object):
 
         :type region_name: string
         :param region_name: Region/endpoint name to resolve (e.g., us-east-1)
+            if no region is provided, the first found partition-wide endpoint
+            will be used if available.
 
         :rtype: dict
         :return: Returns a dict containing the following keys:
@@ -113,9 +115,7 @@ class EndpointResolver(BaseEndpointResolver):
                     result.append(endpoint_name)
         return result
 
-    def construct_endpoint(self, service_name, region_name):
-        if region_name is None:
-            raise NoRegionError()
+    def construct_endpoint(self, service_name, region_name=None):
         # Iterate over each partition until a match is found.
         for partition in self._endpoint_data['partitions']:
             result = self._endpoint_for_partition(
@@ -127,6 +127,12 @@ class EndpointResolver(BaseEndpointResolver):
         # Get the service from the partition, or an empty template.
         service_data = partition['services'].get(
             service_name, DEFAULT_SERVICE_DATA)
+        # Use the partition endpoint if no region is supplied.
+        if region_name is None:
+            if 'partitionEndpoint' in service_data:
+                region_name = service_data['partitionEndpoint']
+            else:
+                raise NoRegionError()
         # Attempt to resolve the exact region for this partition.
         if region_name in service_data['endpoints']:
             return self._resolve(

@@ -291,11 +291,6 @@ class ClientEndpointBridge(object):
         # Use the client_config region if no explicit region was provided.
         if self.client_config and self.client_config.region_name is not None:
             return self.client_config.region_name
-        # Use us-east-1 as the default region for S3.
-        if service_name == 's3':
-            return 'us-east-1'
-        # We require a region for everything except S3, so we must fail.
-        raise NoRegionError()
 
     def _create_endpoint(self, resolved, service_name, region_name,
                          endpoint_url, is_secure):
