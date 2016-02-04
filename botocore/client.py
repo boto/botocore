@@ -262,7 +262,6 @@ class ClientEndpointBridge(object):
     explicit region setting is provided. For example, Amazon S3 client will
     utilize "us-east-1" by default if no region can be resolved."""
 
-    SIGNATURE_PRECEDENCE = ['s3', 's3v4', 'v4', 'v2']
     DEFAULT_ENDPOINT = '{service}.{region}.amazonaws.com'
 
     def __init__(self, endpoint_resolver, scoped_config=None,
