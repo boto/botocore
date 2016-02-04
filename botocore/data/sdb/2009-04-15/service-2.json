@@ -561,6 +561,23 @@
       },
       "documentation":"<p></p>"
     },
+    "DeletableAttribute":{
+      "type":"structure",
+      "required":[
+        "Name"
+      ],
+      "members":{
+        "Name":{
+          "shape":"String",
+          "documentation":"The name of the attribute."
+        },
+        "Value":{
+          "shape":"String",
+          "documentation":"The value of the attribute."
+        }
+      },
+      "documentation":"<p></p>"
+    },
     "AttributeDoesNotExist":{
       "type":"structure",
       "members":{
@@ -582,11 +599,11 @@
       },
       "flattened":true
     },
-    "AttributeNameList":{
+    "DeletableAttributeList":{
       "type":"list",
       "member":{
-        "shape":"String",
-        "locationName":"AttributeName"
+        "shape":"DeletableAttribute",
+        "locationName":"Attribute"
       },
       "flattened":true
     },
@@ -603,7 +620,8 @@
         },
         "Items":{
           "shape":"DeletableItemList",
-          "documentation":"A list of items on which to perform the operation."
+          "documentation":"A list of items on which to perform the operation.",
+          "locationName":"Item"
         }
       }
     },
@@ -620,7 +638,8 @@
         },
         "Items":{
           "shape":"ReplaceableItemList",
-          "documentation":"A list of items on which to perform the operation."
+          "documentation":"A list of items on which to perform the operation.",
+          "locationName":"Item"
         }
       }
     },
@@ -643,7 +662,7 @@
           "shape":"String",
           "locationName":"ItemName"
         },
-        "Attributes":{"shape":"AttributeList"}
+        "Attributes":{"shape":"DeletableAttributeList"}
       }
     },
     "DeletableItemList":{
@@ -670,8 +689,9 @@
           "documentation":"The name of the item. Similar to rows on a spreadsheet, items represent individual objects that contain one or more value-attribute pairs."
         },
         "Attributes":{
-          "shape":"AttributeList",
-          "documentation":"A list of Attributes. Similar to columns on a spreadsheet, attributes represent categories of data that can be assigned to items."
+          "shape":"DeletableAttributeList",
+          "documentation":"A list of Attributes. Similar to columns on a spreadsheet, attributes represent categories of data that can be assigned to items.",
+          "locationName":"Attribute"
         },
         "Expected":{
           "shape":"UpdateCondition",
@@ -769,8 +789,8 @@
           "shape":"String",
           "documentation":"The name of the item."
         },
-        "AttributeNames":{
-          "shape":"AttributeNameList",
+        "AttributeName":{
+          "shape":"String",
           "documentation":"The names of the attributes."
         },
         "ConsistentRead":{
@@ -1033,7 +1053,8 @@
         },
         "Attributes":{
           "shape":"ReplaceableAttributeList",
-          "documentation":"The list of attributes."
+          "documentation":"The list of attributes.",
+          "locationName":"Attribute"
         },
         "Expected":{
           "shape":"UpdateCondition",
@@ -1085,7 +1106,8 @@
         },
         "Attributes":{
           "shape":"ReplaceableAttributeList",
-          "documentation":"The list of attributes for a replaceable item."
+          "documentation":"The list of attributes for a replaceable item.",
+          "locationName":"Attribute"
         }
       },
       "documentation":"<p></p>"
