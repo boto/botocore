@@ -38,6 +38,7 @@ from botocore.exceptions import RefreshWithMFAUnsupportedError
 from botocore.exceptions import RefreshUnsupportedError, SamlError
 from botocore.utils import InstanceMetadataFetcher, parse_key_val_file
 import botocore.vendored.requests as requests
+from botocore.client import Config
 
 
 logger = logging.getLogger(__name__)
@@ -1029,10 +1030,8 @@ class AssumeRoleWithSAMLProvider(AssumeRoleProvider):
             refresh_using=refresh_func)
 
     def _create_client(self):
-        # sts.assume_role_with_saml() requires no access keys,
-        # but we still need a pair of dummy values here to break recursion.
         return self._client_creator(
-            'sts', aws_access_key_id='dummy', aws_secret_access_key='dummy')
+            'sts', config=Config(signature_version='unsigned'))
 
     def _retrieve_temp_credentials(self):
         logger.debug("Retrieving credentials via AssumeRoleWithSaml.")
