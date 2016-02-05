@@ -334,6 +334,10 @@ class TestSessionPartitionFiles(BaseSessionTest):
         self.session.register_component('endpoint_resolver', resolver)
         self.session.get_available_regions('foo', 'bar', True)
 
+    def test_provides_empty_list_for_unknown_service_regions(self):
+        regions = self.session.get_available_regions('__foo__')
+        self.assertEqual([], regions)
+
 
 class TestSessionUserAgent(BaseSessionTest):
     def test_can_change_user_agent_name(self):

@@ -26,6 +26,7 @@ import botocore.config
 import botocore.credentials
 import botocore.client
 from botocore.exceptions import ConfigNotFound, ProfileNotFound
+from botocore.exceptions import UnknownServiceError
 from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.loaders import create_loader
@@ -813,7 +814,9 @@ class Session(object):
         """Lists the region and endpoint names of a particular partition.
 
         :type service_name: string
-        :param service_name: Name of a service to list endpoint for (e.g., s3)
+        :param service_name: Name of a service to list endpoint for (e.g., s3).
+            This parameter accepts a service name (e.g., "elb") or endpoint
+            prefix (e.g., "elasticloadbalancing").
 
         :type partition_name: string
         :param partition_name: Name of the partition to limit endpoints to.
@@ -827,8 +830,19 @@ class Session(object):
         :return: Returns a list of endpoint names (e.g., ["us-east-1"]).
         """
         resolver = self.get_component('endpoint_resolver')
-        return resolver.get_available_endpoints(
+        results = resolver.get_available_endpoints(
             service_name, partition_name, allow_non_regional)
+        if results:
+            return results
+        try:
+            # If the service name is not the same as the endpoint_prefix, then
+            # try to determine the endpoint prefix from the service model.
+            service_data = self.get_service_data(service_name)
+            return resolver.get_available_endpoints(
+                service_data['metadata']['endpointPrefix'],
+                partition_name, allow_non_regional)
+        except UnknownServiceError:
+            return []
 
 
 class ComponentLocator(object):
