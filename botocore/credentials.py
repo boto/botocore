@@ -35,7 +35,7 @@ from botocore.exceptions import PartialCredentialsError
 from botocore.exceptions import ConfigNotFound
 from botocore.exceptions import InvalidConfigError
 from botocore.exceptions import RefreshWithMFAUnsupportedError
-from botocore.exceptions import RefreshUnsupportedError, SamlError
+from botocore.exceptions import RefreshUnsupportedError, SAMLError
 from botocore.utils import InstanceMetadataFetcher, parse_key_val_file
 import botocore.vendored.requests as requests
 from botocore.client import Config
@@ -1052,12 +1052,12 @@ class AssumeRoleWithSAMLProvider(AssumeRoleProvider):
             raise ValueError("Unsupported saml_authentication_type: %s"
                              % config.get('saml_authentication_type'))
         if not assertion:
-            raise SamlError(
+            raise SAMLError(
                 detail='Failed to login at %s' % config['saml_endpoint'])
         idp_roles = self._parse_roles(assertion)
         role = self.role_selector(config.get('role_arn'), idp_roles)
         if not role:
-            raise SamlError(detail='Unable to choose role "%s" from %s' % (
+            raise SAMLError(detail='Unable to choose role "%s" from %s' % (
                 config.get('role_arn'), [r['RoleArn'] for r in idp_roles]))
         role['SAMLAssertion'] = assertion
         return role
@@ -1108,7 +1108,7 @@ class SAMLGenericFormsBasedAuthenticator(SAMLAuthenticator):
         endpoint = config['saml_endpoint']
         login_form = self._get_form(requests.get(endpoint, verify=verify).text)
         if login_form is None:
-            raise SamlError(detail='Login form is not found in %s' % endpoint)
+            raise SAMLError(detail='Login form is not found in %s' % endpoint)
         form_action = urljoin(endpoint, login_form.attrib.get('action', ''))
         remind = ''
         if not form_action.lower().startswith('https://'):
