@@ -1105,21 +1105,27 @@ class SAMLGenericFormsBasedAuthenticator(SAMLAuthenticator):
 
     def authenticate(self, config, username_prompter, password_prompter):
         verify = True
-        if not config.get('saml_username'):
-            config['saml_username'] = username_prompter("Username: ")
         endpoint = config['saml_endpoint']
         login_form = self._get_form(requests.get(endpoint, verify=verify).text)
         if login_form is None:
             raise SamlError(detail='Login form is not found in %s' % endpoint)
+        form_action = urljoin(endpoint, login_form.attrib.get('action', ''))
+        remind = ''
+        if not form_action.lower().startswith('https://'):
+            remind = ("Your IdP is not using secure HTTPS connection. "
+                      "Abort if you don't want to proceed.\n")
+            logger.warn(remind)
+        if not config.get('saml_username'):
+            config['saml_username'] = username_prompter(remind + "Username: ")
         payload = dict((tag.attrib['name'], tag.attrib.get('value', ''))
                        for tag in login_form.findall(".//input"))
         if self.username_field in payload:
             payload[self.username_field] = config['saml_username']
         if self.password_field in payload:
-            payload[self.password_field] = password_prompter("Password: ")
+            payload[self.password_field] = password_prompter(
+                remind + "Password: ")
         response_form = self._get_form(requests.post(
-            urljoin(endpoint, login_form.attrib.get('action', '')),
-            data=payload, verify=verify).text)
+            form_action, data=payload, verify=verify).text)
         if response_form is not None:
             return self._get_value_of_first_tag(
                 response_form, 'input', 'name', 'SAMLResponse')
