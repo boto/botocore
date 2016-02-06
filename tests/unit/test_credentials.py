@@ -1000,7 +1000,7 @@ class TestSAMLGenericFormsBasedAuthenticator(unittest.TestCase):
     GET = 'botocore.credentials.requests.get'
     POST = 'botocore.credentials.requests.post'
     profile = {
-        'saml_endpoint': 'http://notexist.com',
+        'saml_endpoint': 'https://notexist.com',
         'saml_authentication_type': 'form',}
 
     def setUp(self):
@@ -1020,7 +1020,7 @@ class TestSAMLGenericFormsBasedAuthenticator(unittest.TestCase):
         self.assertIsNone(self.authenticator.authenticate(
             self.profile, lambda prompt: 'joe', lambda prompt: 'secret'))
         patched_post.assert_called_with(
-            "http://notexist.com/login", verify=True,
+            "https://notexist.com/login", verify=True,
             data={'foo': 'bar', 'username': 'joe', 'password': 'secret'})
 
     @mock.patch(POST, return_value=mock.Mock(
@@ -1086,7 +1086,7 @@ class TestAssumeRoleWithSAMLProvider(unittest.TestCase):
         text='<form><input name="username"/><input name="password"/></form>'))
     def test_assume_role_with_okta(self, patched_get):
         profile = {
-            'saml_endpoint': 'http://example.com/login.asp',
+            'saml_endpoint': 'https://example.com/login.asp',
             'saml_authentication_type': 'form',
             'saml_provider': 'okta',
             'saml_username': 'joe',
@@ -1094,13 +1094,13 @@ class TestAssumeRoleWithSAMLProvider(unittest.TestCase):
         }
         self.load_cred(profile)
         self.patched_post.assert_called_with(
-            'http://example.com/login.asp',
+            'https://example.com/login.asp',
             data={'username': 'joe', 'password': 'secret'}, verify=True)
 
     @mock.patch(GET, return_value=mock.Mock(text=adfs_login_form))
     def test_assume_role_with_adfs(self, patched_get):
         profile = {
-            'saml_endpoint': 'http://example.com/login.asp',
+            'saml_endpoint': 'https://example.com/login.asp',
             'saml_authentication_type': 'form',
             'saml_provider': 'adfs',
             'saml_username': 'joe',
@@ -1108,14 +1108,14 @@ class TestAssumeRoleWithSAMLProvider(unittest.TestCase):
         }
         self.load_cred(profile)
         self.patched_post.assert_called_with(
-            'http://example.com/login.asp', verify=True,
+            'https://example.com/login.asp', verify=True,
             data={'ctl00$ContentPlaceHolder1$UsernameTextBox': 'joe',
                   'ctl00$ContentPlaceHolder1$PasswordTextBox': 'secret'})
 
     @mock.patch(GET, return_value=mock.Mock(text=adfs_login_form))
     def test_unmatch_role(self, patched_get):
         profile = {
-            'saml_endpoint': 'http://example.com/login.asp',
+            'saml_endpoint': 'https://example.com/login.asp',
             'saml_authentication_type': 'form',
             'saml_provider': 'adfs',
             'saml_username': 'joe',

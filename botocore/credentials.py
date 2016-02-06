@@ -1111,20 +1111,16 @@ class SAMLGenericFormsBasedAuthenticator(SAMLAuthenticator):
         if login_form is None:
             raise SAMLError(detail='Login form is not found in %s' % endpoint)
         form_action = urljoin(endpoint, login_form.attrib.get('action', ''))
-        remind = ''
         if not form_action.lower().startswith('https://'):
-            remind = ("Your IdP is not using secure HTTPS connection. "
-                      "Abort if you don't want to proceed.\n")
-            logger.warn(remind)
+            raise SAMLError(detail='Your SAML IdP must use HTTPS connection')
         if not config.get('saml_username'):
-            config['saml_username'] = username_prompter(remind + "Username: ")
+            config['saml_username'] = username_prompter("Username: ")
         payload = dict((tag.attrib['name'], tag.attrib.get('value', ''))
                        for tag in login_form.findall(".//input"))
         if self.username_field in payload:
             payload[self.username_field] = config['saml_username']
         if self.password_field in payload:
-            payload[self.password_field] = password_prompter(
-                remind + "Password: ")
+            payload[self.password_field] = password_prompter("Password: ")
         response_form = self._get_form(requests.post(
             form_action, data=payload, verify=verify).text)
         if response_form is not None:
