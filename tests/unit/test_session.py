@@ -24,7 +24,7 @@ import mock
 import botocore.session
 import botocore.exceptions
 from botocore.model import ServiceModel
-from botocore import client
+from botocore import client, UNSIGNED
 from botocore.hooks import HierarchicalEmitter
 from botocore.waiter import WaiterModel
 from botocore.paginate import PaginatorModel
@@ -412,6 +412,16 @@ class TestCreateClient(BaseSessionTest):
                          "Credential provider was called even though "
                          "explicit credentials were provided to the "
                          "create_client call.")
+
+    def test_credential_provider_not_called_when_signature_unsigned(self):
+        cred_provider = mock.Mock()
+        self.session.register_component('credential_provider', cred_provider)
+        self.session.create_client(
+            'sts', config=client.Config(signature_version=UNSIGNED))
+        self.assertFalse(cred_provider.load_credentials.called,
+                         "Credential provider was called even though "
+                         "explicit UNSIGNED signature_version were provided "
+                         "to the create_client call.")
 
     @mock.patch('botocore.client.ClientCreator')
     def test_config_passed_to_client_creator(self, client_creator):

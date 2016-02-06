@@ -26,6 +26,7 @@ from dateutil.parser import parse
 from dateutil.tz import tzlocal
 from six.moves import input as raw_input
 
+import botocore
 import botocore.config
 import botocore.compat
 from botocore.compat import total_seconds
@@ -1031,7 +1032,7 @@ class AssumeRoleWithSAMLProvider(AssumeRoleProvider):
 
     def _create_client(self):
         return self._client_creator(
-            'sts', config=Config(signature_version='unsigned'))
+            'sts', config=Config(signature_version=botocore.UNSIGNED))
 
     def _retrieve_temp_credentials(self):
         logger.debug("Retrieving credentials via AssumeRoleWithSaml.")
