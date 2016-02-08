@@ -19,7 +19,8 @@ import botocore
 import botocore.auth
 from botocore.compat import six, urlparse, parse_qs
 
-from botocore.credentials import Credentials, RefreshableCredentials
+from botocore.credentials import Credentials
+from botocore.credentials import ReadOnlyCredentials
 from botocore.exceptions import NoRegionError, UnknownSignatureVersionError
 from botocore.exceptions import UnknownClientMethodError, ParamValidationError
 from botocore.exceptions import UnsupportedSignatureVersionError
@@ -36,6 +37,7 @@ class BaseSignerTest(unittest.TestCase):
         self.signer = RequestSigner(
             'service_name', 'region_name', 'signing_name',
             'v4', self.credentials, self.emitter)
+        self.fixed_credentials = self.credentials.get_frozen_credentials()
 
 
 class TestSigner(BaseSignerTest):
@@ -65,7 +67,8 @@ class TestSigner(BaseSignerTest):
 
             self.assertEqual(auth, auth_cls.return_value)
             auth_cls.assert_called_with(
-                credentials=self.credentials, service_name='service_name',
+                credentials=self.fixed_credentials,
+                service_name='service_name',
                 region_name='region_name')
 
     def test_get_auth_signature_override(self):
@@ -77,7 +80,8 @@ class TestSigner(BaseSignerTest):
 
             self.assertEqual(auth, auth_cls.return_value)
             auth_cls.assert_called_with(
-                credentials=self.credentials, service_name='service_name',
+                credentials=self.fixed_credentials,
+                service_name='service_name',
                 region_name='region_name')
 
     def test_get_auth_bad_override(self):
@@ -107,7 +111,7 @@ class TestSigner(BaseSignerTest):
                              {'custom': auth}):
             self.signer.sign('operation_name', request)
 
-        auth.assert_called_with(credentials=self.credentials)
+        auth.assert_called_with(credentials=self.fixed_credentials)
         auth.return_value.add_auth.assert_called_with(request=request)
 
     def test_emits_before_sign(self):
@@ -151,7 +155,7 @@ class TestSigner(BaseSignerTest):
                              {'v4-query': auth}):
             presigned_url = self.signer.generate_presigned_url(request_dict)
         auth.assert_called_with(
-            credentials=self.credentials, region_name='region_name',
+            credentials=self.fixed_credentials, region_name='region_name',
             service_name='signing_name', expires=3600)
         self.assertEqual(presigned_url, 'https://foo.com')
 
@@ -171,7 +175,7 @@ class TestSigner(BaseSignerTest):
             presigned_url = self.signer.generate_presigned_url(
                 request_dict, region_name='us-west-2')
         auth.assert_called_with(
-            credentials=self.credentials, region_name='us-west-2',
+            credentials=self.fixed_credentials, region_name='us-west-2',
             service_name='signing_name', expires=3600)
         self.assertEqual(presigned_url, 'https://foo.com')
 
@@ -191,7 +195,8 @@ class TestSigner(BaseSignerTest):
             presigned_url = self.signer.generate_presigned_url(
                 request_dict, expires_in=900)
         auth.assert_called_with(
-            credentials=self.credentials, region_name='region_name',
+            credentials=self.fixed_credentials,
+            region_name='region_name',
             expires=900, service_name='signing_name')
         self.assertEqual(presigned_url, 'https://foo.com')
 
@@ -215,7 +220,7 @@ class TestSigner(BaseSignerTest):
             presigned_url = self.signer.generate_presigned_url(
                 request_dict, expires_in=900)
         auth.assert_called_with(
-            credentials=self.credentials, region_name='region_name',
+            credentials=self.fixed_credentials, region_name='region_name',
             expires=900, service_name='signing_name')
         self.assertEqual(presigned_url,
                          'https://mybucket.s3.amazonaws.com/myobject')
@@ -228,9 +233,10 @@ class TestSigner(BaseSignerTest):
             self.signer.generate_presigned_url({})
 
     def test_signer_with_refreshable_credentials_gets_credential_set(self):
-        self.credentials = mock.Mock()
-        credential_set = Credentials('r_access', 'r_secret', 'r_token')
-        self.credentials.get_credential_set.return_value = credential_set
+        class FakeCredentials(Credentials):
+            def get_frozen_credentials(self):
+                return ReadOnlyCredentials('foo', 'bar', 'baz')
+        self.credentials = FakeCredentials('a', 'b', 'c')
 
         self.signer = RequestSigner(
             'service_name', 'region_name', 'signing_name',
@@ -240,31 +246,14 @@ class TestSigner(BaseSignerTest):
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
                              {'v4': auth_cls}):
             auth = self.signer.get_auth('service_name', 'region_name')
-
             self.assertEqual(auth, auth_cls.return_value)
+            # Note we're called with 'foo', 'bar', 'baz', and *not*
+            # 'a', 'b', 'c'.
             auth_cls.assert_called_with(
-                credentials=credential_set, service_name='service_name',
+                credentials=ReadOnlyCredentials('foo', 'bar', 'baz'),
+                service_name='service_name',
                 region_name='region_name')
 
-    def test_signer_with_refreshable_credentials_is_not_cached(self):
-
-        self.credentials = mock.Mock()
-        credential_set = Credentials('r_access', 'r_secret', 'r_token')
-        self.credentials.get_credential_set.return_value = credential_set
-
-        self.signer = RequestSigner(
-            'service_name', 'region_name', 'signing_name',
-            'v4', self.credentials, self.emitter)
-
-        def side_effect(*args, **kwargs):
-            return mock.Mock()
-        auth_cls = mock.Mock(side_effect=side_effect)
-        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
-                             {'v4': auth_cls}):
-            auth1 = self.signer.get_auth('service_name', 'region_name')
-            auth2 = self.signer.get_auth('service_name', 'region_name')
-
-            self.assertNotEqual(auth1, auth2)
 
 class TestCloudfrontSigner(unittest.TestCase):
     def setUp(self):
@@ -357,6 +346,7 @@ class TestS3PostPresigner(BaseSignerTest):
         self.auth.REQUIRES_REGION = True
         self.add_auth = mock.Mock()
         self.auth.return_value.add_auth = self.add_auth
+        self.fixed_credentials = self.credentials.get_frozen_credentials()
 
         self.datetime_patch = mock.patch('botocore.signers.datetime')
         self.datetime_mock = self.datetime_patch.start()
@@ -375,7 +365,7 @@ class TestS3PostPresigner(BaseSignerTest):
             post_form_args = self.signer.generate_presigned_post(
                 self.request_dict)
         self.auth.assert_called_with(
-            credentials=self.credentials, region_name='region_name',
+            credentials=self.fixed_credentials, region_name='region_name',
             service_name='signing_name')
         self.assertEqual(self.add_auth.call_count, 1)
         ref_request = self.add_auth.call_args[0][0]
@@ -397,7 +387,7 @@ class TestS3PostPresigner(BaseSignerTest):
             self.signer.generate_presigned_post(
                 self.request_dict, conditions=conditions)
         self.auth.assert_called_with(
-            credentials=self.credentials, region_name='region_name',
+            credentials=self.fixed_credentials, region_name='region_name',
             service_name='signing_name')
         self.assertEqual(self.add_auth.call_count, 1)
         ref_request = self.add_auth.call_args[0][0]
@@ -410,7 +400,7 @@ class TestS3PostPresigner(BaseSignerTest):
             self.signer.generate_presigned_post(
                 self.request_dict, region_name='foo')
         self.auth.assert_called_with(
-            credentials=self.credentials, region_name='foo',
+            credentials=self.fixed_credentials, region_name='foo',
             service_name='signing_name')
 
     def test_generate_presigned_post_fixes_s3_host(self):
@@ -424,7 +414,7 @@ class TestS3PostPresigner(BaseSignerTest):
             post_form_args = self.signer.generate_presigned_post(
                 self.request_dict)
         self.auth.assert_called_with(
-            credentials=self.credentials, region_name='region_name',
+            credentials=self.fixed_credentials, region_name='region_name',
             service_name='signing_name')
         self.assertEqual(post_form_args['url'],
                          'https://mybucket.s3.amazonaws.com/')

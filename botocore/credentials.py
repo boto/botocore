@@ -16,6 +16,8 @@ import datetime
 import logging
 import os
 import getpass
+import threading
+from collections import namedtuple
 
 from dateutil.parser import parse
 from dateutil.tz import tzlocal
@@ -32,6 +34,8 @@ from botocore.utils import InstanceMetadataFetcher, parse_key_val_file
 
 
 logger = logging.getLogger(__name__)
+ReadOnlyCredentials = namedtuple('ReadOnlyCredentials',
+                                 ['access_key', 'secret_key', 'token'])
 
 
 def create_credential_resolver(session):
@@ -178,6 +182,11 @@ class Credentials(object):
         self.access_key = botocore.compat.ensure_unicode(self.access_key)
         self.secret_key = botocore.compat.ensure_unicode(self.secret_key)
 
+    def get_frozen_credentials(self):
+        return ReadOnlyCredentials(self.access_key,
+                                   self.secret_key,
+                                   self.token)
+
 
 class RefreshableCredentials(Credentials):
     """
@@ -205,6 +214,7 @@ class RefreshableCredentials(Credentials):
         self._token = token
         self._expiry_time = expiry_time
         self._time_fetcher = time_fetcher
+        self._refresh_lock = threading.RLock()
         self.method = method
         self._normalize()
 
@@ -271,11 +281,12 @@ class RefreshableCredentials(Credentials):
         return True
 
     def _refresh(self):
-        if not self.refresh_needed():
-            return
+        with self._refresh_lock:
+            if not self.refresh_needed():
+                return
 
-        metadata = self._refresh_using()
-        self._set_from_data(metadata)
+            metadata = self._refresh_using()
+            self._set_from_data(metadata)
 
     @staticmethod
     def _expiry_datetime(time_str):
@@ -289,9 +300,45 @@ class RefreshableCredentials(Credentials):
         logger.debug("Retrieved credentials will expire at: %s", self._expiry_time)
         self._normalize()
 
-    def get_credential_set(self):
-        self._refresh()
-        return Credentials(self._access_key, self._secret_key, token=self._token)
+    def get_frozen_credentials(self):
+        """Return immutable credentials.
+
+        The ``access_key``, ``secret_key``, and ``token`` properties
+        on this class will always check and refresh credentials if
+        needed before returning the particular credentials.
+
+        This has an edge case where you can get inconsistent
+        credentials.  Image this:
+
+            # Current creds are "t1"
+            tmp.access_key  ---> expired? no, so return t1.access_key
+            # ---- time is now expired, creds need refreshing to "t2" ----
+            tmp.secret_key  ---> expired? yes, refresh and return t2.secret_key
+
+        This means we're using the access key from t1 with the secret key
+        from t2.  To fix this issue, you can request a frozen credential object
+        which is guaranteed not to change.
+
+        The frozen credentials returned from this method should be used
+        immediately and then discarded.  The typical usage pattern would
+        be::
+
+            creds = RefreshableCredentials(...)
+            some_code = SomeSignerObject()
+            # I'm about to sign the request.
+            # The frozen credentials are only used for the
+            # duration of generate_presigned_url and will be
+            # immediately thrown away.
+            request = some_code.sign_some_request(
+                with_credentials=creds.get_frozen_credentials())
+            print("Signed request:", request)
+
+        """
+        with self._refresh_lock:
+            self._refresh()
+            return ReadOnlyCredentials(self._access_key,
+                                    self._secret_key,
+                                    self._token)
 
 
 class CredentialProvider(object):
