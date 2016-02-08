@@ -176,7 +176,7 @@ class Stubber(object):
         }
 
         operation_name = self.client.meta.method_to_api_mapping.get(method)
-        # Note that we do not allow for expected_params in the
+        # Note that we do not allow for expected_params while
         # adding errors into the queue yet.
         response = {
             'operation_name': operation_name,
