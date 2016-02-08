@@ -118,12 +118,13 @@ class RequestSigner(object):
             signature_version=signature_version, request_signer=self)
 
         if signature_version != botocore.UNSIGNED:
-            signer = self.get_auth_instance(self._signing_name, self._region_name,
-                                    signature_version)
+            signer = self.get_auth_instance(self._signing_name,
+                                            self._region_name,
+                                            signature_version)
             signer.add_auth(request=request)
 
-    def get_auth_instance(self, signing_name, region_name, signature_version=None,
-                          **kwargs):
+    def get_auth_instance(self, signing_name, region_name,
+                          signature_version=None, **kwargs):
         """
         Get an auth instance which can be used to sign a request
         using the given signature version.
