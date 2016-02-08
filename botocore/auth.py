@@ -11,7 +11,6 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
 import base64
 import datetime
 from hashlib import sha256
@@ -44,6 +43,9 @@ EMPTY_SHA256_HASH = (
 PAYLOAD_BUFFER = 1024 * 1024
 ISO8601 = '%Y-%m-%dT%H:%M:%SZ'
 SIGV4_TIMESTAMP = '%Y%m%dT%H%M%SZ'
+SIGNED_HEADERS_BLACKLIST = [
+    'expect'
+]
 
 
 class BaseSigner(object):
@@ -170,7 +172,8 @@ class SigV4Auth(BaseSigner):
         split = urlsplit(request.url)
         for name, value in request.headers.items():
             lname = name.lower()
-            header_map[lname] = value
+            if lname not in SIGNED_HEADERS_BLACKLIST:
+                header_map[lname] = value
         if 'host' not in header_map:
             header_map['host'] = split.netloc
         return header_map
@@ -510,8 +513,9 @@ class S3SigV4PostAuth(SigV4Auth):
 class HmacV1Auth(BaseSigner):
 
     # List of Query String Arguments of Interest
-    QSAOfInterest = ['acl', 'cors', 'defaultObjectAcl', 'location', 'logging',
-                     'partNumber', 'policy', 'requestPayment', 'torrent',
+    QSAOfInterest = ['accelerate', 'acl', 'cors', 'defaultObjectAcl',
+                     'location', 'logging', 'partNumber', 'policy',
+                     'requestPayment', 'torrent',
                      'versioning', 'versionId', 'versions', 'website',
                      'uploads', 'uploadId', 'response-content-type',
                      'response-content-language', 'response-expires',
