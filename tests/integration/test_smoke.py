@@ -60,6 +60,7 @@ SMOKE_TESTS = {
  'elb': {'DescribeLoadBalancers': {}},
  'emr': {'ListClusters': {}},
  'es': {'ListDomainNames': {}},
+ 'gamelift': {'ListBuilds': {}},
  'glacier': {'ListVaults': {}},
  'iam': {'ListUsers': {}},
  # Does not work with session credentials so
@@ -145,6 +146,7 @@ ERROR_TESTS = {
     'elastictranscoder': {'ReadJob': {'Id': 'fake'}},
     'emr': {'DescribeCluster': {'ClusterId': 'fake'}},
     'es': {'DescribeElasticsearchDomain': {'DomainName': 'not-a-domain'}},
+    'gamelift': {'DescribeBuild': {'BuildId': 'fake-build-id'}},
     'glacier': {'ListVaults': {'accountId': 'fake'}},
     'iam': {'GetUser': {'UserName': 'fake'}},
     'importexport': {'CreateJob': {

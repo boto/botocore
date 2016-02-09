@@ -34,7 +34,7 @@ def validate_parameters(params, shape):
 
     :param params: The user provided input parameters.
 
-    :type shape: botoore.model.Shape
+    :type shape: botocore.model.Shape
     :param shape: The schema which the input parameters should
         adhere to.
 
@@ -72,10 +72,6 @@ def range_check(name, value, shape, error_type, errors):
     if 'min' in shape.metadata:
         min_allowed = shape.metadata['min']
         if value < min_allowed:
-            failed = True
-    if 'max' in shape.metadata:
-        max_allowed = shape.metadata['max']
-        if value > max_allowed:
             failed = True
     if failed:
         errors.report(name, error_type, param=value,
