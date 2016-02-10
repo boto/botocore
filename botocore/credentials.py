@@ -289,6 +289,10 @@ class RefreshableCredentials(Credentials):
         logger.debug("Retrieved credentials will expire at: %s", self._expiry_time)
         self._normalize()
 
+    def get_credential_set(self):
+        self._refresh()
+        return Credentials(self._access_key, self._secret_key, token=self._token)
+
 
 class CredentialProvider(object):
 
