@@ -203,7 +203,12 @@ class RefreshableCredentials(Credentials):
     :ivar session: The ``Session`` the credentials were created for. Useful for
         subclasses.
     """
-    refresh_timeout = 15 * 60
+    # The time at which we'll attempt to refresh, but not
+    # block if someone else is refreshing.
+    _advisory_refresh_timeout = 15 * 60
+    # The time at which all threads will block waiting for
+    # refreshed credentials.
+    _mandatory_refresh_timeout = 10 * 60
 
     def __init__(self, access_key, secret_key, token,
                  expiry_time, refresh_using, method,
@@ -214,8 +219,10 @@ class RefreshableCredentials(Credentials):
         self._token = token
         self._expiry_time = expiry_time
         self._time_fetcher = time_fetcher
-        self._refresh_lock = threading.RLock()
+        self._refresh_lock = threading.Lock()
         self.method = method
+        self._frozen_credentials = ReadOnlyCredentials(
+            access_key, secret_key, token)
         self._normalize()
 
     def _normalize(self):
@@ -265,28 +272,67 @@ class RefreshableCredentials(Credentials):
         delta = self._expiry_time - self._time_fetcher()
         return total_seconds(delta)
 
-    def refresh_needed(self):
+    def refresh_needed(self, refresh_in=None):
+        """Check if a refresh is needed.
+
+        A refresh is needed if the expiry time associated
+        with the temporary credentials is less than the
+        provided ``refresh_in``.  If ``time_delta`` is not
+        provided, ``self.advisory_refresh_needed`` will be used.
+
+        For example, if your temporary credentials expire
+        in 10 minutes and the provided ``refresh_in`` is
+        ``15 * 60``, then this function will return ``True``.
+
+        :type refresh_in: int
+        :param refresh_in: The number of seconds before the
+            credentials expire in which refresh attempts should
+            be made.
+
+        :return: True if refresh neeeded, False otherwise.
+
+        """
         if self._expiry_time is None:
             # No expiration, so assume we don't need to refresh.
             return False
 
+        if refresh_in is None:
+            refresh_in = self._advisory_refresh_timeout
         # The credentials should be refreshed if they're going to expire
         # in less than 5 minutes.
-        if self._seconds_remaining() >= self.refresh_timeout:
+        if self._seconds_remaining() >= refresh_in:
             # There's enough time left. Don't refresh.
             return False
-
-        # Assume the worst & refresh.
         logger.debug("Credentials need to be refreshed.")
         return True
 
     def _refresh(self):
-        with self._refresh_lock:
-            if not self.refresh_needed():
-                return
+        if not self.refresh_needed(self._advisory_refresh_timeout):
+            return
 
-            metadata = self._refresh_using()
-            self._set_from_data(metadata)
+        if self._refresh_lock.acquire(False):
+            try:
+                if not self.refresh_needed(self._advisory_refresh_timeout):
+                    return
+                self._protected_refresh()
+                return
+            finally:
+                self._refresh_lock.release()
+        elif self.refresh_needed(self._mandatory_refresh_timeout):
+            # If we're within the mandatory refresh window,
+            # we must block until we get refreshed credentials.
+            with self._refresh_lock:
+                if not self.refresh_needed(self._mandatory_refresh_timeout):
+                    return
+                self._protected_refresh()
+
+    def _protected_refresh(self):
+        # This method should only be called if you've acquired
+        # the self._refresh_lock.
+        metadata = self._refresh_using()
+        self._set_from_data(metadata)
+        self._frozen_credentials = ReadOnlyCredentials(
+            self._access_key, self._secret_key, self._token)
 
     @staticmethod
     def _expiry_datetime(time_str):
@@ -334,11 +380,8 @@ class RefreshableCredentials(Credentials):
             print("Signed request:", request)
 
         """
-        with self._refresh_lock:
-            self._refresh()
-            return ReadOnlyCredentials(self._access_key,
-                                    self._secret_key,
-                                    self._token)
+        self._refresh()
+        return self._frozen_credentials
 
 
 class CredentialProvider(object):
