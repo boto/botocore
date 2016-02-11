@@ -200,8 +200,6 @@ class RefreshableCredentials(Credentials):
     :ivar token: The security token, valid only for session credentials.
     :ivar method: A string which identifies where the credentials
         were found.
-    :ivar session: The ``Session`` the credentials were created for. Useful for
-        subclasses.
     """
     # The time at which we'll attempt to refresh, but not
     # block if someone else is refreshing.
@@ -306,15 +304,28 @@ class RefreshableCredentials(Credentials):
         logger.debug("Credentials need to be refreshed.")
         return True
 
+    def _is_expired(self):
+        # Checks if the current credentials are expired.
+        return self.refresh_needed(refresh_in=0)
+
     def _refresh(self):
+        # In the common case where we don't need a refresh, we
+        # can immediately exit and not require acquiring the
+        # refresh lock.
         if not self.refresh_needed(self._advisory_refresh_timeout):
             return
 
+        # acquire() doesn't accept kwargs, but False is indicating
+        # that we should not block if we can't acquire the lock.
+        # If we aren't able to acquire the lock, we'll trigger
+        # the else clause.
         if self._refresh_lock.acquire(False):
             try:
                 if not self.refresh_needed(self._advisory_refresh_timeout):
                     return
-                self._protected_refresh()
+                mandatory_refresh = self.refresh_needed(
+                    self._mandatory_refresh_timeout)
+                self._protected_refresh(mandatory=mandatory_refresh)
                 return
             finally:
                 self._refresh_lock.release()
@@ -324,13 +335,32 @@ class RefreshableCredentials(Credentials):
             with self._refresh_lock:
                 if not self.refresh_needed(self._mandatory_refresh_timeout):
                     return
-                self._protected_refresh()
+                self._protected_refresh(mandatory=True)
 
-    def _protected_refresh(self):
-        # This method should only be called if you've acquired
+    def _protected_refresh(self, mandatory):
+        # precondition: this method should only be called if you've acquired
         # the self._refresh_lock.
-        metadata = self._refresh_using()
+        try:
+            metadata = self._refresh_using()
+        except Exception as e:
+            # If anything at all goes wrong during credential refresh,
+            # we'll log a warning.
+            if mandatory:
+                raise
+            logger.warning("Refreshing temporary credentials failed "
+                           "during advisory refresh period.",
+                           exc_info=True)
+            return
         self._set_from_data(metadata)
+        if self._is_expired():
+            # We tried to refresh credentials but for whatever
+            # reason, our refreshing function returned credentials
+            # that are still expired.  In this scenario, the only
+            # thing we can do is let the user know.
+            msg = ("Credentials were refreshed, but the "
+                   "refreshed credentials are still expired.")
+            logger.warning(msg)
+            raise RuntimeError(msg)
         self._frozen_credentials = ReadOnlyCredentials(
             self._access_key, self._secret_key, self._token)
 
