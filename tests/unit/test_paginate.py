@@ -322,11 +322,11 @@ class TestMultipleTokens(unittest.TestCase):
     def test_s3_list_multipart_uploads(self):
         responses = [
             {"Foo": [1], "ListBucketResults": {"NextKeyMarker": "key1",
-             "NextUploadIdMarker": "up1"}},
+                                               "NextUploadIdMarker": "up1"}},
             {"Foo": [2], "ListBucketResults": {"NextKeyMarker": "key2",
-             "NextUploadIdMarker": "up2"}},
+                                               "NextUploadIdMarker": "up2"}},
             {"Foo": [3], "ListBucketResults": {"NextKeyMarker": "key3",
-             "NextUploadIdMarker": "up3"}},
+                                               "NextUploadIdMarker": "up3"}},
             {}
         ]
         self.method.side_effect = responses
@@ -431,7 +431,8 @@ class TestKeyIterators(unittest.TestCase):
             {"Users": ["User7"]},
         ]
         self.method.side_effect = responses
-        expected_token = encode_token({"Marker": "m1", "truncate_amount": 1})
+        expected_token = encode_token(
+            {"Marker": "m1", "boto_truncate_amount": 1})
         self.assertEqual(
             paginator.paginate(
                 PaginationConfig={'MaxItems': 4}).build_full_result(),
@@ -449,7 +450,8 @@ class TestKeyIterators(unittest.TestCase):
             {"Users": ["User7"]},
         ]
         self.method.side_effect = responses
-        starting_token = encode_token({"Marker": "m1", "truncate_amount": 1})
+        starting_token = encode_token(
+            {"Marker": "m1", "boto_truncate_amount": 1})
         pagination_config = {'StartingToken': starting_token}
         self.assertEqual(
             paginator.paginate(
@@ -554,7 +556,8 @@ class TestMultipleResultKeys(unittest.TestCase):
         pages = self.paginator.paginate(
             PaginationConfig={'MaxItems': 1})
         complete = pages.build_full_result()
-        expected_token = encode_token({"Marker": None, "truncate_amount": 1})
+        expected_token = encode_token(
+            {"Marker": None, "boto_truncate_amount": 1})
         self.assertEqual(complete,
                          {"Users": ["User1"], "Groups": ["Group1", "Group2"],
                           "NextToken": expected_token})
@@ -572,7 +575,8 @@ class TestMultipleResultKeys(unittest.TestCase):
             {"Users": ["User4"], "Groups": ["Group4"]},
         ]
         self.method.side_effect = responses
-        starting_token = encode_token({"Marker": None, "truncate_amount": 1})
+        starting_token = encode_token(
+            {"Marker": None, "boto_truncate_amount": 1})
         pages = self.paginator.paginate(
             PaginationConfig={'MaxItems': 1,
                               'StartingToken': starting_token})
@@ -586,7 +590,8 @@ class TestMultipleResultKeys(unittest.TestCase):
 
     def test_resume_with_secondary_result_as_string(self):
         self.method.return_value = {"Users": ["User1", "User2"], "Groups": "a"}
-        starting_token = encode_token({"Marker": None, "truncate_amount": 1})
+        starting_token = encode_token(
+            {"Marker": None, "boto_truncate_amount": 1})
         pages = self.paginator.paginate(
             PaginationConfig={'MaxItems': 1, 'StartingToken': starting_token})
         complete = pages.build_full_result()
@@ -596,7 +601,8 @@ class TestMultipleResultKeys(unittest.TestCase):
 
     def test_resume_with_secondary_result_as_integer(self):
         self.method.return_value = {"Users": ["User1", "User2"], "Groups": 123}
-        starting_token = encode_token({"Marker": None, "truncate_amount": 1})
+        starting_token = encode_token(
+            {"Marker": None, "boto_truncate_amount": 1})
         pages = self.paginator.paginate(
             PaginationConfig={'MaxItems': 1, 'StartingToken': starting_token})
         complete = pages.build_full_result()
@@ -630,7 +636,7 @@ class TestMultipleInputKeys(unittest.TestCase):
             PaginationConfig={'MaxItems': 3})
         complete = pages.build_full_result()
         expected_token = encode_token(
-                {"InMarker1": "m1", "InMarker2": "m2", "truncate_amount": 1})
+            {"InMarker1": "m1", "InMarker2": "m2", "boto_truncate_amount": 1})
         self.assertEqual(complete,
                          {"Users": ['User1', 'User2', 'User3'],
                           "Groups": ['Group1', 'Group2'],
@@ -644,13 +650,13 @@ class TestMultipleInputKeys(unittest.TestCase):
         ]
         self.method.side_effect = responses
         starting_token = encode_token(
-                {"InMarker1": "m1", "InMarker2": "m2", "truncate_amount": 1})
+            {"InMarker1": "m1", "InMarker2": "m2", "boto_truncate_amount": 1})
         pages = self.paginator.paginate(
             PaginationConfig={'MaxItems': 1,
                               'StartingToken': starting_token})
         complete = pages.build_full_result()
         expected_token = encode_token(
-                {"InMarker1": "m3", "InMarker2": "m4"})
+            {"InMarker1": "m3", "InMarker2": "m4"})
         self.assertEqual(complete,
                          {"Users": ['User4'],
                           "Groups": [],
@@ -662,9 +668,10 @@ class TestMultipleInputKeys(unittest.TestCase):
     def test_resume_encounters_an_empty_payload(self):
         response = {"not_a_result_key": "it happens in some service"}
         self.method.return_value = response
-        starting_token = encode_token({"Marker": None, "truncate_amount": 1})
-        complete = self.paginator\
-            .paginate(PaginationConfig={'StartingToken': starting_token})\
+        starting_token = encode_token(
+            {"Marker": None, "boto_truncate_amount": 1})
+        complete = self.paginator \
+            .paginate(PaginationConfig={'StartingToken': starting_token}) \
             .build_full_result()
         self.assertEqual(complete, {})
 

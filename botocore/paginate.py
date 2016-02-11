@@ -69,15 +69,15 @@ class PageIterator(object):
         if not isinstance(value, dict):
             raise ValueError("Bad starting token: %s" % value)
 
-        if 'truncate_amount' in value:
-            token_keys = sorted(self._input_token + ['truncate_amount'])
+        if 'boto_truncate_amount' in value:
+            token_keys = sorted(self._input_token + ['boto_truncate_amount'])
         else:
             token_keys = sorted(self._input_token)
         dict_keys = sorted(value.keys())
 
         if token_keys == dict_keys:
             self._resume_token = base64.b64encode(
-                    json.dumps(value).encode('utf-8'))
+                json.dumps(value).encode('utf-8'))
         else:
             raise ValueError("Bad starting token: %s" % value)
 
@@ -114,7 +114,7 @@ class PageIterator(object):
             truncate_amount = 0
             if self._max_items is not None:
                 truncate_amount = (total_items + num_current_response) \
-                    - self._max_items
+                                  - self._max_items
             if truncate_amount > 0:
                 self._truncate_response(parsed, primary_result_key,
                                         truncate_amount, starting_truncation,
@@ -128,13 +128,13 @@ class PageIterator(object):
                 if all(t is None for t in next_token.values()):
                     break
                 if self._max_items is not None and \
-                        total_items == self._max_items:
+                                total_items == self._max_items:
                     # We're on a page boundary so we can set the current
                     # next token to be the resume token.
                     self.resume_token = next_token
                     break
                 if previous_next_token is not None and \
-                        previous_next_token == next_token:
+                                previous_next_token == next_token:
                     message = ("The same next token was received "
                                "twice: %s" % next_token)
                     raise PaginationError(message=message)
@@ -257,7 +257,8 @@ class PageIterator(object):
         # However, even though we only kept 1, this is post
         # left truncation so the next starting index should be 2, not 1
         # (left_truncation + amount_to_keep).
-        next_token['truncate_amount'] = amount_to_keep + starting_truncation
+        next_token['boto_truncate_amount'] = \
+            amount_to_keep + starting_truncation
         self.resume_token = next_token
 
     def _get_next_token(self, parsed):
@@ -265,7 +266,8 @@ class PageIterator(object):
             if not self._more_results.search(parsed):
                 return {}
         next_tokens = {}
-        for output_token, input_key in zip(self._output_token, self._input_token):
+        for output_token, input_key in \
+                zip(self._output_token, self._input_token):
             next_token = output_token.search(parsed)
             # We do not want to include any empty strings as actual tokens.
             # Treat them as None.
@@ -333,18 +335,17 @@ class PageIterator(object):
         next_token = self._starting_token
         try:
             next_token = json.loads(
-                    base64.b64decode(next_token).decode('utf-8'))
+                base64.b64decode(next_token).decode('utf-8'))
             index = 0
-            if 'truncate_amount' in next_token:
-                index = next_token.get('truncate_amount')
-                del next_token['truncate_amount']
+            if 'boto_truncate_amount' in next_token:
+                index = next_token.get('boto_truncate_amount')
+                del next_token['boto_truncate_amount']
         except (ValueError, TypeError):
             raise ValueError("Bad starting token: %s" % self._starting_token)
         return next_token, index
 
 
 class Paginator(object):
-
     PAGE_ITERATOR_CLS = PageIterator
 
     def __init__(self, method, pagination_config):
@@ -433,7 +434,6 @@ class Paginator(object):
         }
 
 
-
 class ResultKeyIterator(object):
     """Iterates over the results of paginated responses.
 
@@ -447,6 +447,7 @@ class ResultKeyIterator(object):
         the result key.
 
     """
+
     def __init__(self, pages_iterator, result_key):
         self._pages_iterator = pages_iterator
         self.result_key = result_key
