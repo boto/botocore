@@ -304,6 +304,10 @@ class IntegerRefresher(credentials.RefreshableCredentials):
         }
 
     def _seconds_later(self, num_seconds):
+        # We need to guarantee at *least* num_seconds.
+        # Because this doesn't handle subsecond precision
+        # we'll round up to the next second.
+        num_seconds += 1
         t = self._current_datetime() + datetime.timedelta(seconds=num_seconds)
         return self._to_timestamp(t)
 
