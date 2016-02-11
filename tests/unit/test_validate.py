@@ -234,18 +234,16 @@ class TestValidateRanges(BaseTestValidate):
             ]
         )
 
-    def test_greater_than_range(self):
-        self.assert_has_validation_errors(
+    def test_does_not_validate_greater_than_range(self):
+        errors = self.get_validation_error_message(
             given_shapes=self.shapes,
             input_params={
                 'Int': 100000000,
                 'Long': 100000000,
             },
-            errors=[
-                'Invalid range for parameter Int',
-                'Invalid range for parameter Long',
-            ]
         )
+        error_msg = errors.generate_report()
+        self.assertEqual(error_msg, '')
 
     def test_within_range(self):
         errors = self.get_validation_error_message(
@@ -265,16 +263,15 @@ class TestValidateRanges(BaseTestValidate):
             ]
         )
 
-    def test_string_max_length_contraint(self):
-        self.assert_has_validation_errors(
+    def test_does_not_validate_string_max_length_contraint(self):
+        errors = self.get_validation_error_message(
             given_shapes=self.shapes,
             input_params={
                 'String': 'more than ten characters',
             },
-            errors=[
-                'Invalid length for parameter String',
-            ]
         )
+        error_msg = errors.generate_report()
+        self.assertEqual(error_msg, '')
 
     def test_list_min_length_constraint(self):
         self.assert_has_validation_errors(
@@ -287,16 +284,15 @@ class TestValidateRanges(BaseTestValidate):
             ]
         )
 
-    def test_list_max_length_constraint(self):
-        self.assert_has_validation_errors(
+    def test_does_not_validate_list_max_length_constraint(self):
+        errors = self.get_validation_error_message(
             given_shapes=self.shapes,
             input_params={
                 'List': ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'],
             },
-            errors=[
-                'Invalid length for parameter List',
-            ]
         )
+        error_msg = errors.generate_report()
+        self.assertEqual(error_msg, '')
 
     def test_only_min_value_specified(self):
         # min anx max don't have to both be provided.
@@ -312,16 +308,16 @@ class TestValidateRanges(BaseTestValidate):
             ]
         )
 
-    def test_only_max_value_specified(self):
-        self.assert_has_validation_errors(
+    def test_does_not_validate_max_when_only_max_value_specified(self):
+        errors = self.get_validation_error_message(
             given_shapes=self.shapes,
             input_params={
                 'OnlyMax': 'more than ten characters',
             },
-            errors=[
-                'Invalid length for parameter OnlyMax',
-            ]
         )
+        error_msg = errors.generate_report()
+        self.assertEqual(error_msg, '')
+
 
 class TestValidateMapType(BaseTestValidate):
     def setUp(self):
