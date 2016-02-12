@@ -323,9 +323,9 @@ class RefreshableCredentials(Credentials):
             try:
                 if not self.refresh_needed(self._advisory_refresh_timeout):
                     return
-                mandatory_refresh = self.refresh_needed(
+                is_mandatory_refresh = self.refresh_needed(
                     self._mandatory_refresh_timeout)
-                self._protected_refresh(mandatory=mandatory_refresh)
+                self._protected_refresh(is_mandatory=is_mandatory_refresh)
                 return
             finally:
                 self._refresh_lock.release()
@@ -335,28 +335,34 @@ class RefreshableCredentials(Credentials):
             with self._refresh_lock:
                 if not self.refresh_needed(self._mandatory_refresh_timeout):
                     return
-                self._protected_refresh(mandatory=True)
+                self._protected_refresh(is_mandatory=True)
 
-    def _protected_refresh(self, mandatory):
+    def _protected_refresh(self, is_mandatory):
         # precondition: this method should only be called if you've acquired
         # the self._refresh_lock.
         try:
             metadata = self._refresh_using()
         except Exception as e:
-            # If anything at all goes wrong during credential refresh,
-            # we'll log a warning.
-            if mandatory:
-                raise
+            period_name = 'mandatory' if is_mandatory else 'advisory'
             logger.warning("Refreshing temporary credentials failed "
-                           "during advisory refresh period.",
-                           exc_info=True)
+                           "during %s refresh period.",
+                           period_name, exc_info=True)
+            if is_mandatory:
+                # If this is a mandatory refresh, then
+                # all errors that occur when we attempt to refresh
+                # credentials are propagated back to the user.
+                raise
+            # Otherwise we'll just return.
+            # The end result will be that we'll use the current
+            # set of temporary credentials we have.
             return
         self._set_from_data(metadata)
         if self._is_expired():
-            # We tried to refresh credentials but for whatever
+            # We successfully refreshed credentials but for whatever
             # reason, our refreshing function returned credentials
             # that are still expired.  In this scenario, the only
-            # thing we can do is let the user know.
+            # thing we can do is let the user know and raise
+            # an exception.
             msg = ("Credentials were refreshed, but the "
                    "refreshed credentials are still expired.")
             logger.warning(msg)
@@ -384,7 +390,7 @@ class RefreshableCredentials(Credentials):
         needed before returning the particular credentials.
 
         This has an edge case where you can get inconsistent
-        credentials.  Image this:
+        credentials.  Imagine this:
 
             # Current creds are "t1"
             tmp.access_key  ---> expired? no, so return t1.access_key
