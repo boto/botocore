@@ -617,7 +617,7 @@
         },
         "Runtime":{
           "shape":"Runtime",
-          "documentation":"<p>The runtime environment for the Lambda function you are uploading. </p>"
+          "documentation":"<p>The runtime environment for the Lambda function you are uploading. Supported runtimes are \"java\", \"nodejs\" and \"python2.7\".</p>"
         },
         "Role":{
           "shape":"RoleArn",
