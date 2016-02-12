@@ -33,8 +33,29 @@ class TestCredentialRefreshRaces(unittest.TestCase):
             thread.start()
         for thread in threads:
             thread.join()
-        for triple in collected:
-            self.assertTrue(triple[0] == triple[1] == triple[2], triple)
+        for creds in collected:
+            # During testing, the refresher uses it's current
+            # refresh count as the values for the access, secret, and
+            # token value.  This means that at any given point in time,
+            # the credentials should be something like:
+            #
+            # ReadOnlyCredentials('1', '1', '1')
+            # ReadOnlyCredentials('2', '2', '2')
+            # ...
+            # ReadOnlyCredentials('30', '30', '30')
+            #
+            # This makes it really easy to verify we see a consistent
+            # set of credentials from the same time period.  We just
+            # check if all the credential values are the same.  If
+            # we ever see something like:
+            #
+            # ReadOnlyCredentials('1', '2', '1')
+            #
+            # We fail.  This is because we're using the access_key
+            # from the first refresh ('1'), the secret key from
+            # the second refresh ('2'), and the token from the
+            # first refresh ('1').
+            self.assertTrue(creds[0] == creds[1] == creds[2], creds)
 
     def test_has_no_race_conditions(self):
         creds = IntegerRefresher(
