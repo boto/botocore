@@ -40,18 +40,24 @@ class RequestSigner(object):
 
     :type service_name: string
     :param service_name: Name of the service, e.g. ``S3``
+
     :type region_name: string
     :param region_name: Name of the service region, e.g. ``us-east-1``
+
     :type signing_name: string
     :param signing_name: Service signing name. This is usually the
                          same as the service name, but can differ. E.g.
                          ``emr`` vs. ``elasticmapreduce``.
+
     :type signature_version: string
     :param signature_version: Signature name like ``v4``.
+
     :type credentials: :py:class:`~botocore.credentials.Credentials`
     :param credentials: User credentials with which to sign requests.
+
     :type event_emitter: :py:class:`~botocore.hooks.BaseEventHooks`
     :param event_emitter: Extension mechanism to fire events.
+
     """
     def __init__(self, service_name, region_name, signing_name,
                  signature_version, credentials, event_emitter):
@@ -63,10 +69,6 @@ class RequestSigner(object):
 
         # We need weakref to prevent leaking memory in Python 2.6 on Linux 2.6
         self._event_emitter = weakref.proxy(event_emitter)
-
-        # Used to cache auth instances since one request signer
-        # can be used for many requests in a single client.
-        self._cache = {}
 
     @property
     def region_name(self):
@@ -81,11 +83,14 @@ class RequestSigner(object):
         return self._signing_name
 
     def handler(self, operation_name=None, request=None, **kwargs):
+        # This is typically hooked up to the "request-created" event
+        # from a client's event emitter.  When a new request is created
+        # this method is invoked to sign the request.
+        # Don't call this method directly.
         return self.sign(operation_name, request)
 
     def sign(self, operation_name, request):
-        """
-        Sign a request before it goes out over the wire.
+        """Sign a request before it goes out over the wire.
 
         :type operation_name: string
         :param operation_name: The name of the current operation, e.g.
@@ -112,14 +117,14 @@ class RequestSigner(object):
             region_name=self._region_name,
             signature_version=signature_version, request_signer=self)
 
-        # Sign the request if the signature version isn't None or blank
         if signature_version != botocore.UNSIGNED:
-            signer = self.get_auth(self._signing_name, self._region_name,
-                                    signature_version)
+            signer = self.get_auth_instance(self._signing_name,
+                                            self._region_name,
+                                            signature_version)
             signer.add_auth(request=request)
 
-    def get_auth(self, signing_name, region_name, signature_version=None,
-                 **kwargs):
+    def get_auth_instance(self, signing_name, region_name,
+                          signature_version=None, **kwargs):
         """
         Get an auth instance which can be used to sign a request
         using the given signature version.
@@ -128,21 +133,18 @@ class RequestSigner(object):
         :param signing_name: Service signing name. This is usually the
                              same as the service name, but can differ. E.g.
                              ``emr`` vs. ``elasticmapreduce``.
+
         :type region_name: string
         :param region_name: Name of the service region, e.g. ``us-east-1``
+
         :type signature_version: string
         :param signature_version: Signature name like ``v4``.
+
         :rtype: :py:class:`~botocore.auth.BaseSigner`
         :return: Auth instance to sign a request.
         """
         if signature_version is None:
             signature_version = self._signature_version
-
-        expires = kwargs.get('expires')
-        cache_key = self._get_signer_cache_key(signature_version, region_name,
-                                               signing_name, expires)
-        if cache_key and cache_key in self._cache:
-            return self._cache[cache_key]
 
         cls = botocore.auth.AUTH_TYPE_MAPS.get(signature_version)
         if cls is None:
@@ -155,19 +157,10 @@ class RequestSigner(object):
             kwargs['region_name'] = region_name
             kwargs['service_name'] = signing_name
         auth = cls(**kwargs)
-        # Only cache the client if a cache key was created.
-        if cache_key:
-            self._cache[cache_key] = auth
         return auth
 
-    def _get_signer_cache_key(self, signature_version, region_name,
-                              signing_name, expires):
-        # Do not cache signers with an expires value as the cache hit
-        # ratio will be virtually 0.
-        if expires is not None:
-            return None
-        return '{0}.{1}.{2}'.format(signature_version, region_name,
-                                    signing_name)
+    # Alias get_auth for backwards compatibility.
+    get_auth = get_auth_instance
 
     def generate_presigned_url(self, request_dict, expires_in=3600,
                                region_name=None):
@@ -200,7 +193,7 @@ class RequestSigner(object):
 
         signature_type = signature_version.split('-', 1)[0]
         try:
-            auth = self.get_auth(**kwargs)
+            auth = self.get_auth_instance(**kwargs)
         except UnknownSignatureVersionError:
             raise UnsupportedSignatureVersionError(
                 signature_version=signature_type)
@@ -423,7 +416,7 @@ class S3PostPresigner(object):
         signature_type = signature_version.split('-', 1)[0]
 
         try:
-            auth = self._request_signer.get_auth(**kwargs)
+            auth = self._request_signer.get_auth_instance(**kwargs)
         except UnknownSignatureVersionError:
             raise UnsupportedSignatureVersionError(
                 signature_version=signature_type)
