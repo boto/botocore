@@ -105,6 +105,39 @@ class TestStyle(unittest.TestCase):
         self.assertEqual(style.doc.getvalue(),
                          six.b('::\n\n  foobar\n\n\n'))
 
+    def test_list(self):
+        style = ReSTStyle(ReSTDocument())
+        style.li('foo')
+        self.assertEqual(style.doc.getvalue(), six.b('\n* foo\n'))
+
+    def test_docstring_list_does_not_insert_space(self):
+        style = ReSTStyle(ReSTDocument())
+        style.start_li(source='HTMLParser')
+        self.assertEqual(style.doc.getvalue(), six.b('\n*'))
+
+    def test_non_top_level_lists_are_indented(self):
+        style = ReSTStyle(ReSTDocument())
+
+        # Start the top level list
+        style.start_ul()
+
+        # Write one list element
+        style.start_li(source='HTMLParser')
+        style.doc.handle_data(' foo')
+        style.end_li()
+
+        self.assertEqual(style.doc.getvalue(), "\n\n* foo\n")
+
+        # Start the nested list
+        style.start_ul()
+
+        # Write an element to the nested list
+        style.start_li(source='HTMLParser')
+        style.doc.handle_data(' bar')
+        style.end_li()
+
+        self.assertEqual(style.doc.getvalue(), "\n\n* foo\n\n  \n  * bar\n  ")
+
     def test_toctree_html(self):
         style = ReSTStyle(ReSTDocument())
         style.doc.target = 'html'

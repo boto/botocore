@@ -70,14 +70,13 @@ class ReSTStyle(BaseStyle):
         BaseStyle.__init__(self, doc, indent_width)
         self.do_p = True
         self.a_href = None
+        self.list_depth = 0
 
     def new_paragraph(self):
-        if self.do_p:
-            self.doc.write('\n\n%s' % self.spaces())
+        self.doc.write('\n\n%s' % self.spaces())
 
     def new_line(self):
-        if self.do_p:
-            self.doc.write('\n%s' % self.spaces())
+        self.doc.write('\n%s' % self.spaces())
 
     def _start_inline(self, markup):
         self.doc.write(markup)
@@ -93,13 +92,13 @@ class ReSTStyle(BaseStyle):
         self.doc.push_write(last_write.rstrip(' '))
         self.doc.write(markup + ' ')
 
-    def start_bold(self, attrs=None):
+    def start_bold(self, attrs=None, **kwargs):
         self._start_inline('**')
 
     def end_bold(self):
         self._end_inline('**')
 
-    def start_b(self, attrs=None):
+    def start_b(self, attrs=None, **kwargs):
         self.doc.do_translation = True
         self.start_bold(attrs)
 
@@ -107,7 +106,7 @@ class ReSTStyle(BaseStyle):
         self.doc.do_translation = False
         self.end_bold()
 
-    def bold(self, s):
+    def bold(self, s, **kwargs):
         if s:
             self.start_bold()
             self.doc.write(s)
@@ -133,7 +132,7 @@ class ReSTStyle(BaseStyle):
     def h3(self, s):
         self._heading(s, '-')
 
-    def start_italics(self, attrs=None):
+    def start_italics(self, attrs=None, **kwargs):
         self._start_inline('*')
 
     def end_italics(self):
@@ -145,7 +144,7 @@ class ReSTStyle(BaseStyle):
             self.doc.write(s)
             self.end_italics()
 
-    def start_p(self, attrs=None):
+    def start_p(self, attrs=None, **kwargs):
         if self.do_p:
             self.doc.write('\n\n%s' % self.spaces())
 
@@ -153,7 +152,7 @@ class ReSTStyle(BaseStyle):
         if self.do_p:
             self.doc.write('\n\n%s' % self.spaces())
 
-    def start_code(self, attrs=None):
+    def start_code(self, attrs=None, **kwargs):
         self.doc.do_translation = True
         self._start_inline('``')
 
@@ -167,7 +166,7 @@ class ReSTStyle(BaseStyle):
             self.doc.write(s)
             self.end_code()
 
-    def start_note(self, attrs=None):
+    def start_note(self, attrs=None, **kwargs):
         self.new_paragraph()
         self.doc.write('.. note::')
         self.indent()
@@ -177,7 +176,7 @@ class ReSTStyle(BaseStyle):
         self.dedent()
         self.new_paragraph()
 
-    def start_important(self, attrs=None):
+    def start_important(self, attrs=None, **kwargs):
         self.new_paragraph()
         self.doc.write('.. warning::')
         self.indent()
@@ -187,7 +186,7 @@ class ReSTStyle(BaseStyle):
         self.dedent()
         self.new_paragraph()
 
-    def start_a(self, attrs=None):
+    def start_a(self, attrs=None, **kwargs):
         if attrs:
             for attr_key, attr_value in attrs:
                 if attr_key == 'href':
@@ -237,7 +236,7 @@ class ReSTStyle(BaseStyle):
             self.a_href = None
         self.doc.write(' ')
 
-    def start_i(self, attrs=None):
+    def start_i(self, attrs=None, **kwargs):
         self.doc.do_translation = True
         self.start_italics()
 
@@ -245,10 +244,17 @@ class ReSTStyle(BaseStyle):
         self.doc.do_translation = False
         self.end_italics()
 
-    def start_li(self, attrs=None):
+    def start_li(self, attrs=None, **kwargs):
         self.new_line()
         self.do_p = False
-        self.doc.write('* ')
+
+        # The HTML doc strings we get have spaces after opening tags, so adding
+        # another space here would be extraneous. More importantly, it messes up
+        source = kwargs.get('source')
+        if source == 'HTMLParser':
+            self.doc.write('*')
+        else:
+            self.doc.write('* ')
 
     def end_li(self):
         self.do_p = True
@@ -257,35 +263,43 @@ class ReSTStyle(BaseStyle):
     def li(self, s):
         if s:
             self.start_li()
-            self.doc.writeln(s)
+            self.doc.write(s)
             self.end_li()
 
-    def start_ul(self, attrs=None):
-        self.new_paragraph()
+    def start_ul(self, attrs=None, **kwargs):
+        if self.list_depth != 0:
+            # The first level list should not be indented, but all subsequent
+            # lists should.
+            self.indent()
+        self.list_depth += 1
+        self.new_line()
 
     def end_ul(self):
-        self.new_paragraph()
+        self.list_depth -= 1
+        if self.list_depth != 0:
+            self.dedent()
+        self.new_line()
 
-    def start_ol(self, attrs=None):
+    def start_ol(self, attrs=None, **kwargs):
         # TODO: Need to control the bullets used for LI items
         self.new_paragraph()
 
     def end_ol(self):
         self.new_paragraph()
 
-    def start_examples(self, attrs=None):
+    def start_examples(self, attrs=None, **kwargs):
         self.doc.keep_data = False
 
     def end_examples(self):
         self.doc.keep_data = True
 
-    def start_fullname(self, attrs=None):
+    def start_fullname(self, attrs=None, **kwargs):
         self.doc.keep_data = False
 
     def end_fullname(self):
         self.doc.keep_data = True
 
-    def start_codeblock(self, attrs=None):
+    def start_codeblock(self, attrs=None, **kwargs):
         self.doc.write('::')
         self.indent()
         self.new_paragraph()
