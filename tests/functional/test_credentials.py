@@ -82,7 +82,7 @@ class TestCredentialRefreshRaces(unittest.TestCase):
                                               creds.refresh_counter,
                                               (end - start)))
 
-    def test_no_race_for_immediate_expiration(self):
+    def test_no_race_for_immediate_advisory_expiration(self):
         creds = IntegerRefresher(
             creds_last_for=1,
             advisory_refresh=1,

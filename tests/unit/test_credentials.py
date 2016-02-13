@@ -1000,7 +1000,7 @@ class TestRefreshLogic(unittest.TestCase):
             advisory_refresh=3)
         temp = creds.get_frozen_credentials()
         self.assertEqual(
-            temp, credentials.ReadOnlyCredentials('2', '2', '2'))
+            temp, credentials.ReadOnlyCredentials('1', '1', '1'))
 
     def test_advisory_refresh_needed(self):
         creds = IntegerRefresher(
@@ -1011,7 +1011,7 @@ class TestRefreshLogic(unittest.TestCase):
             advisory_refresh=5)
         temp = creds.get_frozen_credentials()
         self.assertEqual(
-            temp, credentials.ReadOnlyCredentials('2', '2', '2'))
+            temp, credentials.ReadOnlyCredentials('1', '1', '1'))
 
     def test_refresh_fails_is_not_an_error_during_advisory_period(self):
         fail_refresh = mock.Mock(side_effect=Exception("refresh failed"))
@@ -1029,7 +1029,7 @@ class TestRefreshLogic(unittest.TestCase):
         # the exception and return the current set of credentials
         # (generation '1').
         self.assertEqual(
-            temp, credentials.ReadOnlyCredentials('1', '1', '1'))
+            temp, credentials.ReadOnlyCredentials('0', '0', '0'))
 
     def test_exception_propogated_on_error_during_mandatory_period(self):
         fail_refresh = mock.Mock(side_effect=Exception("refresh failed"))

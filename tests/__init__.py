@@ -282,7 +282,7 @@ class IntegerRefresher(credentials.RefreshableCredentials):
         if refresh_function is None:
             refresh_function = self._do_refresh
         super(IntegerRefresher, self).__init__(
-            '1', '1', '1', expires_in,
+            '0', '0', '0', expires_in,
             refresh_function, 'INTREFRESH')
         self.creds_last_for = creds_last_for
         self.refresh_counter = 0
