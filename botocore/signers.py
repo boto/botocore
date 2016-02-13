@@ -150,7 +150,7 @@ class RequestSigner(object):
         if cls is None:
             raise UnknownSignatureVersionError(
                 signature_version=signature_version)
-        kwargs['credentials'] = self._credentials
+        kwargs['credentials'] = self._credentials.get_frozen_credentials()
         if cls.REQUIRES_REGION:
             if self._region_name is None:
                 raise botocore.exceptions.NoRegionError()
