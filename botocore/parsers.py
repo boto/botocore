@@ -507,21 +507,18 @@ class BaseJSONParser(ResponseParser):
         return self._timestamp_parser(value)
 
     def _do_error_parse(self, response, shape):
-        if response['body']:
-            body = json.loads(response['body'].decode(self.DEFAULT_ENCODING))
-        else:
-            body = {}
-        error = {"Error": {"Message": None, "Code": None}, "ResponseMetadata": {}}
+        body = self._parse_body_as_json(response['body'])
+        error = {"Error": {"Message": '', "Code": ''}, "ResponseMetadata": {}}
         # Error responses can have slightly different structures for json.
         # The basic structure is:
         #
         # {"__type":"ConnectClientException",
         #  "message":"The error message."}
-        # Code, Type
 
         # The error message can either come in the 'message' or 'Message' key
         # so we need to check for both.
-        error['Error']['Message'] = body.get('message', body.get('Message'))
+        error['Error']['Message'] = body.get('message',
+                                             body.get('Message', ''))
         code = body.get('__type')
         if code is not None:
             # code has a couple forms as well:
@@ -538,6 +535,13 @@ class BaseJSONParser(ResponseParser):
             parsed.setdefault('ResponseMetadata', {})['RequestId'] = (
                 headers['x-amzn-requestid'])
 
+    def _parse_body_as_json(self, body_contents):
+        if not body_contents:
+            return {}
+        body = body_contents.decode(self.DEFAULT_ENCODING)
+        original_parsed = json.loads(body)
+        return original_parsed
+
 
 class JSONParser(BaseJSONParser):
     """Response parse for the "json" protocol."""
@@ -547,8 +551,7 @@ class JSONParser(BaseJSONParser):
         # to richer types (blobs, timestamps, etc.
         parsed = {}
         if shape is not None:
-            body = response['body'].decode(self.DEFAULT_ENCODING)
-            original_parsed = json.loads(body)
+            original_parsed = self._parse_body_as_json(response['body'])
             parsed = self._parse_shape(shape, original_parsed)
         self._inject_response_metadata(parsed, response['headers'])
         return parsed
@@ -646,17 +649,17 @@ class BaseRestParser(ResponseParser):
 class RestJSONParser(BaseRestParser, BaseJSONParser):
 
     def _initial_body_parse(self, body_contents):
-        if not body_contents:
-            return {}
-        body = body_contents.decode(self.DEFAULT_ENCODING)
-        original_parsed = json.loads(body)
-        return original_parsed
+        return self._parse_body_as_json(body_contents)
 
     def _do_error_parse(self, response, shape):
-        body = self._initial_body_parse(response['body'])
         error = super(RestJSONParser, self)._do_error_parse(response, shape)
-        error['Error']['Message'] = body.get('message',
-                                             body.get('Message', ''))
+        self._inject_error_code(error, response)
+        return error
+
+    def _inject_error_code(self, error, response):
+        # The "Code" value can come from either a response
+        # header or a value in the JSON body.
+        body = self._initial_body_parse(response['body'])
         if 'x-amzn-errortype' in response['headers']:
             code = response['headers']['x-amzn-errortype']
             # Could be:
@@ -666,7 +669,6 @@ class RestJSONParser(BaseRestParser, BaseJSONParser):
         elif 'code' in body or 'Code' in body:
             error['Error']['Code'] = body.get(
                 'code', body.get('Code', ''))
-        return error
 
 
 class RestXMLParser(BaseRestParser, BaseXMLResponseParser):

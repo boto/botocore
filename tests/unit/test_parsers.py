@@ -510,7 +510,7 @@ class TestParseErrorResponses(unittest.TestCase):
 
         self.assertIn('Error', parsed)
         self.assertEqual(parsed['Error'], {
-            'Code': None,
+            'Code': '',
             'Message': ''
         })
         self.assertEqual(parsed['ResponseMetadata'], {
