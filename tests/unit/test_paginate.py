@@ -15,6 +15,7 @@ from tests import unittest
 from botocore.paginate import Paginator
 from botocore.paginate import PaginatorModel
 from botocore.exceptions import PaginationError
+from botocore.compat import six
 
 import mock
 import base64
@@ -22,7 +23,7 @@ import json
 
 
 def encode_token(token):
-    return base64.b64encode(json.dumps(token).encode('utf-8'))
+    return base64.b64encode(json.dumps(token).encode('utf-8')).decode('utf-8')
 
 
 class TestPaginatorModel(unittest.TestCase):
@@ -84,6 +85,25 @@ class TestPagination(unittest.TestCase):
         self.assertEqual(self.method.call_args_list,
                          [mock.call(), mock.call(NextToken='token1'),
                           mock.call(NextToken='token2')])
+
+    def test_next_token_is_string(self):
+        self.paginate_config = {
+            "output_token": "Marker",
+            "input_token": "Marker",
+            "result_key": "Users",
+            "limit_key": "MaxKeys",
+        }
+        self.paginator = Paginator(self.method, self.paginate_config)
+        responses = [
+            {"Users": ["User1"], "Marker": "m1"},
+            {"Users": ["User2"], "Marker": "m2"},
+            {"Users": ["User3"]}
+        ]
+        self.method.side_effect = responses
+        result = self.paginator.paginate(PaginationConfig={'MaxItems': 1})
+        result = result.build_full_result()
+        token = result.get('NextToken')
+        self.assertIsInstance(token, six.string_types)
 
     def test_any_passed_in_args_are_unmodified(self):
         responses = [{'NextToken': 'token1'},
