@@ -252,6 +252,12 @@ class TestS3Objects(TestS3BaseWithBucket):
             Bucket=self.bucket_name, Key='foobarbaz')
         self.assertEqual(data['Body'].read().decode('utf-8'), 'body contents')
 
+    def test_can_put_large_string_body_on_new_bucket(self):
+        body = '*' * (5 * (1024 ** 2))
+        response = self.client.put_object(
+            Bucket=self.bucket_name, Key='foo', Body=body)
+        self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 200)
+
     def test_get_object_stream_wrapper(self):
         self.create_object('foobarbaz', body='body contents')
         response = self.client.get_object(
