@@ -77,7 +77,7 @@ class PageIterator(object):
 
         if token_keys == dict_keys:
             self._resume_token = base64.b64encode(
-                json.dumps(value).encode('utf-8'))
+                json.dumps(value).encode('utf-8')).decode('utf-8')
         else:
             raise ValueError("Bad starting token: %s" % value)
 
