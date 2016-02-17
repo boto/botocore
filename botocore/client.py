@@ -191,14 +191,6 @@ class ClientCreator(object):
 
         config_kwargs['s3'] = s3_configuration
 
-    def _resolve_verify_value(self, provided_verify_value, scoped_config):
-        # If a user provides a value for "verify" then we don't do anything.
-        # We always use explicit values provided.
-        if provided_verify_value is not None:
-            return provided_verify_value
-        elif scoped_config is not None:
-            return scoped_config.get('ca_bundle')
-
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,
                          scoped_config, client_config):
@@ -211,7 +203,6 @@ class ClientCreator(object):
 
         response_parser = botocore.parsers.create_parser(protocol)
 
-        verify = self._resolve_verify_value(verify, scoped_config)
         # Determine what region the user provided either via the
         # region_name argument or the client_config.
         if region_name is None:
