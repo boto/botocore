@@ -16,13 +16,13 @@ import json
 import datetime
 import dateutil.tz
 
-from botocore.validate import ParamValidationDecorator
 from tests import unittest
 
 from botocore.model import ServiceModel
 from botocore import serialize
 from botocore.compat import six
 from botocore.serialize import Serializer
+from botocore.validate import ParamValidationDecorator
 
 
 class BaseModelWithBlob(unittest.TestCase):
