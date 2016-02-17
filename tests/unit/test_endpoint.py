@@ -15,6 +15,7 @@ from tests import unittest
 
 from mock import Mock, patch
 from botocore.vendored.requests import ConnectionError
+from botocore.vendored.requests.adapters import HTTPAdapter
 
 from botocore.compat import six
 from botocore.awsrequest import AWSRequest
@@ -315,6 +316,32 @@ class TestEndpointCreator(unittest.TestCase):
             self.service_model, 'us-west-2', verify='/path/cacerts.pem')
         # /path/cacerts.pem wins over the value from the env var.
         self.assertEqual(endpoint.verify, '/path/cacerts.pem')
+
+    @patch("botocore.endpoint.Session.mount")
+    def test_create_endpoint_with_http_adapter(self, mount_patched):
+        class MyHTTPAdapter(HTTPAdapter):
+            pass
+
+        my_adapter = MyHTTPAdapter()
+
+        endpoint = self.creator.create_endpoint(
+            self.service_model, http_adapter=my_adapter)
+
+        # First Session mounts the HTTP and HTTPs for the
+        # default adapter, then PreserveAuthSession override
+        # these values by our adapter
+        self.assertEqual(mount_patched.call_count, 4)
+
+        call_args = mount_patched.call_args_list
+        self.assertEqual(call_args[2][0], ('http://', my_adapter))
+        self.assertEqual(call_args[3][0], ('https://', my_adapter))
+
+    @patch("botocore.endpoint.Session.mount")
+    def test_create_endpoint_with_invalid_http_adapter(self, mount_patched):
+        with self.assertRaises(ValueError):
+            endpoint = self.creator.create_endpoint(
+                self.service_model, http_adapter=object())
+
 
 class TestAWSSession(unittest.TestCase):
     def test_auth_header_preserved_from_s3_redirects(self):

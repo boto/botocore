@@ -690,7 +690,7 @@ class Session(object):
     def create_client(self, service_name, region_name=None, api_version=None,
                       use_ssl=True, verify=None, endpoint_url=None,
                       aws_access_key_id=None, aws_secret_access_key=None,
-                      aws_session_token=None, config=None):
+                      aws_session_token=None, config=None, http_adapter=None):
         """Create a botocore client.
 
         :type service_name: string
@@ -756,6 +756,12 @@ class Session(object):
             the client will be the result of calling ``merge()`` on the
             default config with the config provided to this call.
 
+        :type http_adapter: botocore.vendored.requests.adapters.HttpAdapter
+        :param http_adapter: Give an alternative HttpAdapter instance to use
+            instead the default one. The default one fixes a set of parameters
+            such as `pool_connections`, `pool_maxsize` that can be customized
+            with other values.
+
         :rtype: botocore.client.BaseClient
         :return: A botocore client instance
 
@@ -793,7 +799,7 @@ class Session(object):
         client = client_creator.create_client(
             service_name, region_name, use_ssl, endpoint_url, verify,
             credentials, scoped_config=self.get_scoped_config(),
-            client_config=config, api_version=api_version)
+            client_config=config, api_version=api_version, http_adapter=http_adapter)
         return client
 
 

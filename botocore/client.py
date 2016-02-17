@@ -54,12 +54,13 @@ class ClientCreator(object):
                       endpoint_url=None, verify=None,
                       credentials=None, scoped_config=None,
                       api_version=None,
-                      client_config=None):
+                      client_config=None,
+                      http_adapter=None):
         service_model = self._load_service_model(service_name, api_version)
         cls = self._create_client_class(service_name, service_model)
         client_args = self._get_client_args(
             service_model, region_name, is_secure, endpoint_url,
-            verify, credentials, scoped_config, client_config)
+            verify, credentials, scoped_config, client_config, http_adapter)
         return cls(**client_args)
 
     def create_client_class(self, service_name, api_version=None):
@@ -201,7 +202,7 @@ class ClientCreator(object):
 
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,
-                         scoped_config, client_config):
+                         scoped_config, client_config, http_adapter):
 
         protocol = service_model.metadata['protocol']
         serializer = botocore.serialize.create_serializer(
@@ -267,7 +268,8 @@ class ClientCreator(object):
             service_model, region_name, is_secure=is_secure,
             endpoint_url=endpoint_url, verify=verify,
             response_parser_factory=self._response_parser_factory,
-            timeout=(new_config.connect_timeout, new_config.read_timeout))
+            timeout=(new_config.connect_timeout, new_config.read_timeout),
+            http_adapter=http_adapter)
 
         return {
             'serializer': serializer,
