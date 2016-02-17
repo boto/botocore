@@ -356,7 +356,7 @@ class TestInstanceCreation(unittest.TestCase):
                 },
                 'StringTestType': {
                     'type': 'string',
-                    'min': 12
+                    'min': 15
                 }
             }
         }
@@ -369,12 +369,12 @@ class TestInstanceCreation(unittest.TestCase):
         self.assertIsInstance(request_serializer, Serializer)
 
         try:
-            self._serialize_valid_parameter(request_serializer)
+            self._assert_serialize_valid_parameter(request_serializer)
         except ParamValidationError as e:
             self.fail("Shouldn't fail serializing valid parameter without validation")
 
         try:
-            self._serialize_invalid_parameter(request_serializer)
+            self._assert_serialize_invalid_parameter(request_serializer)
         except ParamValidationError as e:
             self.fail("Shouldn't fail serializing invalid parameter without validation")
 
@@ -385,23 +385,29 @@ class TestInstanceCreation(unittest.TestCase):
         self.assertIsInstance(request_serializer, ParamValidationDecorator)
 
         try:
-            self._serialize_valid_parameter(request_serializer)
+            self._assert_serialize_valid_parameter(request_serializer)
         except ParamValidationError as e:
             self.fail("Shouldn't fail serializing valid parameter with validation")
 
         try:
-            self._serialize_invalid_parameter(request_serializer)
+            self._assert_serialize_invalid_parameter(request_serializer)
             self.fail("Should have failed serializing invalid parameter with validation")
         except ParamValidationError as e:
             pass
 
-    def _serialize_valid_parameter(self, request_serializer):
-        request_serializer.serialize_to_request(
-            {'Timestamp': 'valid_string'},
+    def _assert_serialize_valid_parameter(self, request_serializer):
+        valid_string = 'valid_string_with_min_15_chars'
+        request = request_serializer.serialize_to_request(
+            {'Timestamp': valid_string},
             self.service_model.operation_model('TestOperation'))
 
-    def _serialize_invalid_parameter(self, request_serializer):
-        request_serializer.serialize_to_request(
-            {'Timestamp': 'invalid'},
+        self.assertEqual(request['body']['Timestamp'], valid_string)
+
+    def _assert_serialize_invalid_parameter(self, request_serializer):
+        invalid_string = 'short string'
+        request = request_serializer.serialize_to_request(
+            {'Timestamp': invalid_string},
             self.service_model.operation_model('TestOperation'))
+
+        self.assertEqual(request['body']['Timestamp'], invalid_string)
 
