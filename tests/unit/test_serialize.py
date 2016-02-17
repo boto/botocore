@@ -15,7 +15,6 @@ import base64
 import json
 import datetime
 import dateutil.tz
-
 from tests import unittest
 
 from botocore.model import ServiceModel
