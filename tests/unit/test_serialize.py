@@ -20,6 +20,7 @@ from tests import unittest
 from botocore.model import ServiceModel
 from botocore import serialize
 from botocore.compat import six
+from botocore.exceptions import ParamValidationError
 from botocore.serialize import Serializer
 from botocore.validate import ParamValidationDecorator
 
@@ -350,11 +351,12 @@ class TestInstanceCreation(unittest.TestCase):
                 'InputShape': {
                     'type': 'structure',
                     'members': {
-                        'Timestamp': {'shape': 'TimestampType'},
+                        'Timestamp': {'shape': 'StringTestType'},
                     }
                 },
-                'TimestampType': {
-                    'type': 'timestamp',
+                'StringTestType': {
+                    'type': 'string',
+                    'min': 12
                 }
             }
         }
@@ -366,10 +368,40 @@ class TestInstanceCreation(unittest.TestCase):
 
         self.assertIsInstance(request_serializer, Serializer)
 
+        try:
+            self._serialize_valid_parameter(request_serializer)
+        except ParamValidationError as e:
+            self.fail("Shouldn't fail serializing valid parameter without validation")
+
+        try:
+            self._serialize_invalid_parameter(request_serializer)
+        except ParamValidationError as e:
+            self.fail("Shouldn't fail serializing invalid parameter without validation")
+
     def test_instantiate_with_validation(self):
         request_serializer = serialize.create_serializer(
             self.service_model.metadata['protocol'], True)
 
         self.assertIsInstance(request_serializer, ParamValidationDecorator)
 
+        try:
+            self._serialize_valid_parameter(request_serializer)
+        except ParamValidationError as e:
+            self.fail("Shouldn't fail serializing valid parameter with validation")
+
+        try:
+            self._serialize_invalid_parameter(request_serializer)
+            self.fail("Should have failed serializing invalid parameter with validation")
+        except ParamValidationError as e:
+            pass
+
+    def _serialize_valid_parameter(self, request_serializer):
+        request_serializer.serialize_to_request(
+            {'Timestamp': 'valid_string'},
+            self.service_model.operation_model('TestOperation'))
+
+    def _serialize_invalid_parameter(self, request_serializer):
+        request_serializer.serialize_to_request(
+            {'Timestamp': 'invalid'},
+            self.service_model.operation_model('TestOperation'))
 
