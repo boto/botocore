@@ -15,11 +15,14 @@ import base64
 import json
 import datetime
 import dateutil.tz
+
+from botocore.validate import ParamValidationDecorator
 from tests import unittest
 
 from botocore.model import ServiceModel
 from botocore import serialize
 from botocore.compat import six
+from botocore.serialize import Serializer
 
 
 class BaseModelWithBlob(unittest.TestCase):
@@ -327,3 +330,47 @@ class TestJSONTimestampSerialization(unittest.TestCase):
         body = json.loads(self.serialize_to_request(
             {'Timestamp': '1970-01-01'})['body'].decode('utf-8'))
         self.assertEqual(body['Timestamp'], 0)
+
+
+class TestInstanceCreation(unittest.TestCase):
+    def setUp(self):
+        self.model = {
+            'metadata': {'protocol': 'query', 'apiVersion': '2014-01-01'},
+            'documentation': '',
+            'operations': {
+                'TestOperation': {
+                    'name': 'TestOperation',
+                    'http': {
+                        'method': 'POST',
+                        'requestUri': '/',
+                    },
+                    'input': {'shape': 'InputShape'},
+                }
+            },
+            'shapes': {
+                'InputShape': {
+                    'type': 'structure',
+                    'members': {
+                        'Timestamp': {'shape': 'TimestampType'},
+                    }
+                },
+                'TimestampType': {
+                    'type': 'timestamp',
+                }
+            }
+        }
+        self.service_model = ServiceModel(self.model)
+
+    def test_instantiate_without_validation(self):
+        request_serializer = serialize.create_serializer(
+            self.service_model.metadata['protocol'], False)
+
+        self.assertIsInstance(request_serializer, Serializer)
+
+    def test_instantiate_with_validation(self):
+        request_serializer = serialize.create_serializer(
+            self.service_model.metadata['protocol'], True)
+
+        self.assertIsInstance(request_serializer, ParamValidationDecorator)
+
+
