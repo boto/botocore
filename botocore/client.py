@@ -197,7 +197,7 @@ class ClientCreator(object):
 
         protocol = service_model.metadata['protocol']
         serializer = botocore.serialize.create_serializer(
-            protocol, include_validation=True)
+            protocol, client_config.parameter_validation if client_config else None)
 
         event_emitter = copy.copy(self._event_emitter)
 
@@ -641,6 +641,7 @@ class Config(object):
         ('user_agent_extra', None),
         ('connect_timeout', DEFAULT_TIMEOUT),
         ('read_timeout', DEFAULT_TIMEOUT),
+        ('parameter_validation', True),
         ('s3', None)
     ])
 
