@@ -22,7 +22,6 @@ from botocore import hooks
 from botocore.credentials import Credentials
 from botocore.exceptions import ParamValidationError
 from botocore.exceptions import InvalidS3AddressingStyleError
-from botocore.serialize import Serializer
 from botocore import exceptions
 from botocore.compat import six
 
