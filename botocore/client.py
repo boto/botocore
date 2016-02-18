@@ -196,8 +196,9 @@ class ClientCreator(object):
                          scoped_config, client_config):
 
         protocol = service_model.metadata['protocol']
+        parameter_validation = client_config.parameter_validation if client_config else True
         serializer = botocore.serialize.create_serializer(
-            protocol, client_config.parameter_validation if client_config else None)
+            protocol, parameter_validation)
 
         event_emitter = copy.copy(self._event_emitter)
 
