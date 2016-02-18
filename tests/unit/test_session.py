@@ -40,6 +40,7 @@ class BaseSessionTest(unittest.TestCase):
             'data_path': ('data_path', 'FOO_DATA_PATH', None, None),
             'config_file': (None, 'FOO_CONFIG_FILE', None, None),
             'credentials_file': (None, None, '/tmp/nowhere', None),
+            'ca_bundle': ('foo_ca_bundle', 'FOO_AWS_CA_BUNDLE', None, None),
         }
         self.environ = {}
         self.environ_patch = mock.patch('os.environ', self.environ)
@@ -422,7 +423,8 @@ class TestCreateClient(BaseSessionTest):
         config = client.Config(region_name='us-west-2')
         self.session.create_client('sts', config=config)
         client_creator.return_value.create_client.assert_called_with(
-            mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY,
+            service_name=mock.ANY, region_name=mock.ANY, is_secure=mock.ANY,
+            endpoint_url=mock.ANY, verify=mock.ANY, credentials=mock.ANY,
             scoped_config=mock.ANY, client_config=config,
             api_version=mock.ANY)
 
@@ -433,7 +435,8 @@ class TestCreateClient(BaseSessionTest):
         self.session.create_client('sts')
 
         client_creator.return_value.create_client.assert_called_with(
-            mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY,
+            service_name=mock.ANY, region_name=mock.ANY, is_secure=mock.ANY,
+            endpoint_url=mock.ANY, verify=mock.ANY, credentials=mock.ANY,
             scoped_config=mock.ANY, client_config=config,
             api_version=mock.ANY)
 
@@ -480,6 +483,58 @@ class TestCreateClient(BaseSessionTest):
     def test_create_client_no_region_and_no_client_config(self):
         ec2_client = self.session.create_client('ec2')
         self.assertEqual(ec2_client.meta.region_name, 'moon-west-1')
+
+    @mock.patch('botocore.client.ClientCreator')
+    def test_create_client_with_ca_bundle_from_config(self, client_creator):
+        with temporary_file('w') as f:
+            del self.environ['FOO_PROFILE']
+            self.environ['FOO_CONFIG_FILE'] = f.name
+            self.session = create_session(session_vars=self.env_vars)
+            f.write('[default]\n')
+            f.write('foo_ca_bundle=config-certs.pem\n')
+            f.flush()
+
+            self.session.create_client('ec2', 'us-west-2')
+            call_kwargs = client_creator.return_value.\
+                create_client.call_args[1]
+            self.assertEqual(call_kwargs['verify'], 'config-certs.pem')
+
+    @mock.patch('botocore.client.ClientCreator')
+    def test_create_client_with_ca_bundle_from_env_var(self, client_creator):
+        self.environ['FOO_AWS_CA_BUNDLE'] = 'env-certs.pem'
+        self.session.create_client('ec2', 'us-west-2')
+        call_kwargs = client_creator.return_value.create_client.call_args[1]
+        self.assertEqual(call_kwargs['verify'], 'env-certs.pem')
+
+    @mock.patch('botocore.client.ClientCreator')
+    def test_create_client_with_verify_param(self, client_creator):
+        self.session.create_client(
+            'ec2', 'us-west-2', verify='verify-certs.pem')
+        call_kwargs = client_creator.return_value.create_client.call_args[1]
+        self.assertEqual(call_kwargs['verify'], 'verify-certs.pem')
+
+    @mock.patch('botocore.client.ClientCreator')
+    def test_create_client_verify_param_overrides_all(self, client_creator):
+        with temporary_file('w') as f:
+            # Set the ca cert using the config file
+            del self.environ['FOO_PROFILE']
+            self.environ['FOO_CONFIG_FILE'] = f.name
+            self.session = create_session(session_vars=self.env_vars)
+            f.write('[default]\n')
+            f.write('foo_ca_bundle=config-certs.pem\n')
+            f.flush()
+
+            # Set the ca cert with an environment variable
+            self.environ['FOO_AWS_CA_BUNDLE'] = 'env-certs.pem'
+
+            # Set the ca cert using the verify parameter
+            self.session.create_client(
+                'ec2', 'us-west-2', verify='verify-certs.pem')
+            call_kwargs = client_creator.return_value.\
+                create_client.call_args[1]
+            # The verify parameter should override all the other
+            # configurations
+            self.assertEqual(call_kwargs['verify'], 'verify-certs.pem')
 
 
 class TestComponentLocator(unittest.TestCase):
