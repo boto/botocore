@@ -770,11 +770,19 @@ class Session(object):
         elif default_client_config is not None:
             config = default_client_config
 
+        # Figure out the user-provided region based on the various
+        # configuration options.
         if region_name is None:
             if config and config.region_name is not None:
                 region_name = config.region_name
             else:
                 region_name = self.get_config_variable('region')
+
+        # Figure out the verify value base on the various
+        # configuration options.
+        if verify is None:
+            verify = self.get_config_variable('ca_bundle')
+
         loader = self.get_component('data_loader')
         event_emitter = self.get_component('event_emitter')
         response_parser_factory = self.get_component(
@@ -791,8 +799,9 @@ class Session(object):
             loader, endpoint_resolver, self.user_agent(), event_emitter,
             retryhandler, translate, response_parser_factory)
         client = client_creator.create_client(
-            service_name, region_name, use_ssl, endpoint_url, verify,
-            credentials, scoped_config=self.get_scoped_config(),
+            service_name=service_name, region_name=region_name,
+            is_secure=use_ssl, endpoint_url=endpoint_url, verify=verify,
+            credentials=credentials, scoped_config=self.get_scoped_config(),
             client_config=config, api_version=api_version)
         return client
 
