@@ -145,6 +145,21 @@ class TestS3BaseWithBucket(BaseS3ClientTest):
         self.fail("Expected to see %s uploads, instead saw: %s" % (
             num_uploads, amount_seen))
 
+    def create_client(self):
+        # Even though the default signature_version is s3,
+        # we're being explicit in case this ever changes.
+        client_config = Config(signature_version='s3')
+        return self.session.create_client('s3', self.region,
+                                          config=client_config)
+
+    def assert_can_put_object(self, body):
+        client = self.create_client()
+        response = client.put_object(
+            Bucket=self.bucket_name, Key='foo',
+            Body=body)
+        self.assert_status_code(response, 200)
+        self.addCleanup(client.delete_object, Bucket=self.bucket_name, Key='foo')
+
 
 class TestS3Buckets(TestS3BaseWithBucket):
     def setUp(self):
@@ -254,9 +269,7 @@ class TestS3Objects(TestS3BaseWithBucket):
 
     def test_can_put_large_string_body_on_new_bucket(self):
         body = '*' * (5 * (1024 ** 2))
-        response = self.client.put_object(
-            Bucket=self.bucket_name, Key='foo', Body=body)
-        self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 200)
+        self.assert_can_put_object(body)
 
     def test_get_object_stream_wrapper(self):
         self.create_object('foobarbaz', body='body contents')
@@ -920,21 +933,7 @@ class TestS3UTF8Headers(BaseS3ClientTest):
 
 class TestSupportedPutObjectBodyTypes(TestS3BaseWithBucket):
 
-    def create_client(self):
-        # Even though the default signature_version is s3,
-        # we're being explicit in case this ever changes.
-        client_config = Config(signature_version='s3')
-        return self.session.create_client('s3', self.region,
-                                          config=client_config)
 
-    def assert_can_put_object(self, body):
-        client = self.create_client()
-        response = client.put_object(
-            Bucket=self.bucket_name, Key='foo',
-            Body=body)
-        self.assert_status_code(response, 200)
-        self.addCleanup(client.delete_object, Bucket=self.bucket_name,
-                        Key='foo')
 
     def test_can_put_unicode_content(self):
         self.assert_can_put_object(body=u'\u2713')
