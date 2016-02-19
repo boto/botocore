@@ -126,7 +126,7 @@ class TestStyle(unittest.TestCase):
         style.doc.handle_data(' foo')
         style.end_li()
 
-        self.assertEqual(style.doc.getvalue(), "\n\n* foo\n")
+        self.assertEqual(style.doc.getvalue(), six.b("\n\n* foo\n"))
 
         # Start the nested list
         style.start_ul()
@@ -136,7 +136,8 @@ class TestStyle(unittest.TestCase):
         style.doc.handle_data(' bar')
         style.end_li()
 
-        self.assertEqual(style.doc.getvalue(), "\n\n* foo\n\n  \n  * bar\n  ")
+        self.assertEqual(style.doc.getvalue(),
+                         six.b("\n\n* foo\n\n  \n  * bar\n  "))
 
     def test_toctree_html(self):
         style = ReSTStyle(ReSTDocument())
@@ -156,7 +157,7 @@ class TestStyle(unittest.TestCase):
         style.tocitem('foo')
         style.tocitem('bar')
         self.assertEqual(style.doc.getvalue(),
-                         six.b('\n\n\n* foo\n\n\n* bar\n\n'))
+                         six.b('\n\n* foo\n\n* bar\n'))
 
     def test_hidden_toctree_html(self):
         style = ReSTStyle(ReSTDocument())
