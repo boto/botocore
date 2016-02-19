@@ -65,6 +65,13 @@ if six.PY3:
         # NOOP in Python 3, because every string is already unicode
         return s
 
+    def ensure_bytes(s, encoding='utf-8', errors='strict'):
+        if isinstance(s, str):
+            return s.encode(encoding, errors)
+        if isinstance(s, bytes):
+            return s
+        raise ValueError("Expected str or bytes, received %s." % type(s))
+
 else:
     from urllib import quote
     from urllib import urlencode
@@ -117,6 +124,13 @@ else:
         if isinstance(s, six.text_type):
             return s
         return unicode(s, encoding, errors)
+
+    def ensure_bytes(s, encoding='utf-8', errors='strict'):
+        if isinstance(s, unicode):
+            return s.encode(encoding, errors)
+        if isinstance(s, str):
+            return s
+        raise ValueError("Expected str or unicode, received %s." % type(s))
 
 try:
     from collections import OrderedDict

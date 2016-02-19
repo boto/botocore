@@ -942,6 +942,10 @@ class TestSupportedPutObjectBodyTypes(TestS3BaseWithBucket):
     def test_can_put_non_ascii_bytes(self):
         self.assert_can_put_object(body=u'\u2713'.encode('utf-8'))
 
+    def test_can_put_arbitrary_binary_data(self):
+        body = os.urandom(5 * (1024 ** 2))
+        self.assert_can_put_object(body)
+
     def test_can_put_binary_file(self):
         tempdir = self.make_tempdir()
         filename = os.path.join(tempdir, 'foo')
