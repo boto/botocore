@@ -13,7 +13,8 @@
 import copy
 from collections import deque
 from botocore.validate import validate_parameters
-from botocore.exceptions import ParamValidationError, StubResponseError
+from botocore.exceptions import ParamValidationError, \
+    StubResponseError, StubAssertionError
 from botocore.vendored.requests.models import Response
 
 
@@ -216,10 +217,10 @@ class Stubber(object):
         self._assert_expected_call_order(model, params)
         expected_params = self._queue[0]['expected_params']
         if expected_params is not None and params != expected_params:
-            raise StubResponseError(
+            raise StubAssertionError(
                 operation_name=model.name,
                 reason='Expected parameters: %s, but received: %s' % (
-                    params, expected_params))
+                    expected_params, params))
 
     def _validate_response(self, operation_name, service_response):
         service_model = self.client.meta.service_model
