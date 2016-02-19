@@ -16,6 +16,7 @@ from tests import BaseSessionTest
 import base64
 import mock
 import copy
+import os
 
 import botocore
 import botocore.session
@@ -656,6 +657,37 @@ class TestHandlers(BaseSessionTest):
         context = {'EncodingTypeAutoSet': True}
         handlers.decode_list_object(parsed, context=context)
         self.assertEqual(parsed['Delimiter'], u'\xe7\xf6s% asd\x08 c')
+
+
+class TestConvertStringBodyToFileLikeObject(BaseSessionTest):
+    def assert_converts_to_file_like_object_with_bytes(self, body, body_bytes):
+        params = {'Body': body}
+        handlers.convert_body_to_file_like_object(params)
+        self.assertTrue(hasattr(params['Body'], 'read'))
+        contents = params['Body'].read()
+        self.assertIsInstance(contents, six.binary_type)
+        self.assertEqual(contents, body_bytes)
+
+    def test_string(self):
+        self.assert_converts_to_file_like_object_with_bytes('foo', b'foo')
+
+    def test_binary(self):
+        body = os.urandom(500)
+        body_bytes = body
+        self.assert_converts_to_file_like_object_with_bytes(body, body_bytes)
+
+    def test_file(self):
+        body = six.StringIO()
+        params = {'Body': body}
+        handlers.convert_body_to_file_like_object(params)
+        self.assertEqual(params['Body'], body)
+
+    def test_unicode(self):
+        self.assert_converts_to_file_like_object_with_bytes(u'bar', b'bar')
+
+    def test_non_ascii_characters(self):
+        self.assert_converts_to_file_like_object_with_bytes(
+            u'\u2713', b'\xe2\x9c\x93')
 
 
 class TestRetryHandlerOrder(BaseSessionTest):

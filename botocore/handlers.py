@@ -25,7 +25,7 @@ import re
 import warnings
 
 from botocore.compat import urlsplit, urlunsplit, unquote, \
-    json, quote, six, unquote_str
+    json, quote, six, unquote_str, ensure_bytes
 from botocore.docs.utils import AutoPopulatedParam
 from botocore.docs.utils import HideParamFromOperations
 from botocore.docs.utils import AppendParamDocumentation
@@ -619,11 +619,24 @@ def decode_list_object(parsed, context, **kwargs):
                 for member in parsed[top_key]:
                     member[child_key] = unquote_str(member[child_key])
 
+
+def convert_body_to_file_like_object(params, **kwargs):
+    if 'Body' in params:
+        if isinstance(params['Body'], six.string_types):
+            params['Body'] = six.BytesIO(ensure_bytes(params['Body']))
+        elif isinstance(params['Body'], six.binary_type):
+            params['Body'] = six.BytesIO(params['Body'])
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
 
 BUILTIN_HANDLERS = [
+    ('before-parameter-build.s3.UploadPart',
+     convert_body_to_file_like_object, REGISTER_LAST),
+    ('before-parameter-build.s3.PutObject',
+     convert_body_to_file_like_object, REGISTER_LAST),
     ('creating-client-class', add_generate_presigned_url),
     ('creating-client-class.s3', add_generate_presigned_post),
     ('creating-client-class.iot-data', check_openssl_supports_tls_version_1_2),
