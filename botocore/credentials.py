@@ -29,6 +29,9 @@ from six.moves import input as raw_input
 import botocore
 import botocore.config
 import botocore.compat
+from botocore.compat import six
+from six.moves.html_parser import HTMLParser
+from botocore.compat import escape
 from botocore.compat import total_seconds
 from botocore.compat import urljoin
 from botocore.exceptions import UnknownCredentialError
@@ -1097,6 +1100,38 @@ class SAMLAuthenticator(object):
         raise NotImplemented()
 
 
+class FormParser(HTMLParser):
+    def __init__(self):
+        HTMLParser.__init__(self)
+        self.forms = []
+        self._current_form = None
+
+    def handle_starttag(self, tag, attrs):
+        if tag == 'form':
+            self._current_form = dict(attrs)
+        if tag == 'input' and self._current_form is not None:
+            self._current_form.setdefault('_fields', []).append(dict(attrs))
+
+    def handle_endtag(self, tag):
+        if tag == 'form' and self._current_form is not None:
+            self.forms.append(self._current_form)
+            self._current_form = None
+
+    def _dict2str(self, d):
+        # When input contains things like "&amp;", HTMLParser will unescape it.
+        # But we need to use escape() here to nullify the default behavior,
+        # so that the output will be suitable to be fed into an ET later.
+        return ' '.join(sorted(
+            '%s="%s"' % (k, escape(v)) for k, v in d.items()))
+
+    def form2str(self, index=0):
+        form = dict(self.forms[index])  # Will raise exception if out of bound
+        fields = form.pop('_fields', [])
+        return '<form %s>%s</form>' % (
+            self._dict2str(form),
+            ''.join('<input %s/>' % self._dict2str(f) for f in fields))
+
+
 class SAMLGenericFormsBasedAuthenticator(SAMLAuthenticator):
     username_field = 'username'
     password_field = 'password'
@@ -1139,7 +1174,7 @@ class SAMLGenericFormsBasedAuthenticator(SAMLAuthenticator):
             if element.attrib.get(attr) == trait:
                 return element.attrib.get('value')
 
-    def _get_form(self, html):
+    def _get_form_by_regex(self, html):
         # Scrape a form from html page, and return it as an elementtree element
         form_snippet = re.search('(<form.+</form>)', html, flags=re.DOTALL)
         if form_snippet:
@@ -1152,6 +1187,17 @@ class SAMLGenericFormsBasedAuthenticator(SAMLAuthenticator):
                 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" [
                 <!ENTITY nbsp ' '>
                 ]>''' + form_snippet.group(0))
+
+    def _get_form_by_html_parser(self, html):
+        # Scrape a form from html page, and return it as an elementtree element
+        p = FormParser()
+        p.feed(html)
+        if p.forms:
+            return ET.fromstring(p.form2str())
+
+    def _get_form(self, html):
+        # You can choose different method in subclass if needed.
+        return self._get_form_by_html_parser(html)
 
 
 class SAMLAdfsFormsBasedAuthenticator(SAMLGenericFormsBasedAuthenticator):

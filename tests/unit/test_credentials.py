@@ -991,6 +991,28 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
             provider.load()
 
 
+class TestFormParser(unittest.TestCase):
+    def test_form2str(self):
+        html_input = '''
+            <input type="button" value="nameless button at outside of form"/>
+            <form action="/path/login/?foo=foo&amp;bar=bar">
+            <div>The &nbsp; in the form will not confuse our parser.</div>
+            <input name="foo" value="bar&amp;baz"/>
+            <input name="username"/><input name="password"/>
+            </form>
+            <input type="button" value="nameless button at outside of form"/>
+            </html>
+            '''
+        html_output = (
+            '<form action="/path/login/?foo=foo&amp;bar=bar">'
+            '<input name="foo" value="bar&amp;baz"/>'
+            '<input name="username"/><input name="password"/>'
+            '</form>')
+        p = credentials.FormParser()
+        p.feed(html_input)
+        self.assertEqual(p.form2str(), html_output)
+
+
 class TestSAMLGenericFormsBasedAuthenticator(unittest.TestCase):
     login_form = '''<html><form action="login">
         <div>The &nbsp; in the form will not confuse our parser.</div>
