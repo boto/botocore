@@ -70,6 +70,7 @@ class ReSTStyle(BaseStyle):
         BaseStyle.__init__(self, doc, indent_width)
         self.do_p = True
         self.a_href = None
+        self.list_depth = 0
 
     def new_paragraph(self):
         self.doc.write('\n\n%s' % self.spaces())
@@ -259,16 +260,28 @@ class ReSTStyle(BaseStyle):
             self.end_li()
 
     def start_ul(self, attrs=None):
+        if self.list_depth != 0:
+            self.indent()
+        self.list_depth += 1
         self.new_paragraph()
 
     def end_ul(self):
+        self.list_depth -= 1
+        if self.list_depth != 0:
+            self.dedent()
         self.new_paragraph()
 
     def start_ol(self, attrs=None):
         # TODO: Need to control the bullets used for LI items
+        if self.list_depth != 0:
+            self.indent()
+        self.list_depth += 1
         self.new_paragraph()
 
     def end_ol(self):
+        self.list_depth -= 1
+        if self.list_depth != 0:
+            self.dedent()
         self.new_paragraph()
 
     def start_examples(self, attrs=None):
