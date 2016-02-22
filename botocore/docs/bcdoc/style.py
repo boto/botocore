@@ -72,12 +72,10 @@ class ReSTStyle(BaseStyle):
         self.a_href = None
 
     def new_paragraph(self):
-        if self.do_p:
-            self.doc.write('\n\n%s' % self.spaces())
+        self.doc.write('\n\n%s' % self.spaces())
 
     def new_line(self):
-        if self.do_p:
-            self.doc.write('\n%s' % self.spaces())
+        self.doc.write('\n%s' % self.spaces())
 
     def _start_inline(self, markup):
         self.doc.write(markup)

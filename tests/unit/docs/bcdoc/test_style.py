@@ -241,3 +241,12 @@ class TestStyle(unittest.TestCase):
         )
         style.write_py_doc_string(docstring)
         self.assertEqual(style.doc.getvalue(), six.b(docstring + '\n'))
+
+    def test_new_line(self):
+        style = ReSTStyle(ReSTDocument())
+        style.new_line()
+        self.assertEqual(style.doc.getvalue(), six.b('\n'))
+
+        style.do_p = False
+        style.new_line()
+        self.assertEqual(style.doc.getvalue(), six.b('\n\n'))
