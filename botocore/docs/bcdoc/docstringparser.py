@@ -29,7 +29,7 @@ class DocStringParser(html_parser.HTMLParser):
     def handle_starttag(self, tag, attrs):
         handler_name = 'start_%s' % tag
         if hasattr(self.doc.style, handler_name):
-            getattr(self.doc.style, handler_name)(attrs)
+            getattr(self.doc.style, handler_name)(attrs, source='HTMLParser')
         else:
             self.unhandled_tags.append(tag)
 
