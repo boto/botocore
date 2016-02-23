@@ -357,6 +357,10 @@ class StubResponseError(BotoCoreError):
     fmt = 'Error getting response stub for operation {operation_name}: {reason}'
 
 
+class StubAssertionError(StubResponseError, AssertionError):
+    fmt = 'Error getting response stub for operation {operation_name}: {reason}'
+
+
 class InvalidConfigError(BotoCoreError):
     fmt = '{error_msg}'
 

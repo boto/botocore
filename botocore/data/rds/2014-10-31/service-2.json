@@ -126,10 +126,9 @@
         {"shape":"DBSnapshotAlreadyExistsFault"},
         {"shape":"DBSnapshotNotFoundFault"},
         {"shape":"InvalidDBSnapshotStateFault"},
-        {"shape":"SnapshotQuotaExceededFault"},
-        {"shape":"KMSKeyNotAccessibleFault"}
+        {"shape":"SnapshotQuotaExceededFault"}
       ],
-      "documentation":"<p> Copies the specified DBSnapshot. The source DB snapshot must be in the \"available\" state. </p> <p>If you are copying from a shared manual DB snapshot, the <code>SourceDBSnapshotIdentifier</code> must be the ARN of the shared DB snapshot.</p>"
+      "documentation":"<p> Copies the specified DB Snapshot. The source DB snapshot must be in the \"available\" state. </p> <p>If you are copying from a shared manual DB snapshot, the <code>SourceDBSnapshotIdentifier</code> must be the ARN of the shared DB snapshot.</p>"
     },
     "CopyOptionGroup":{
       "name":"CopyOptionGroup",
@@ -239,8 +238,7 @@
         {"shape":"DBClusterNotFoundFault"},
         {"shape":"StorageTypeNotSupportedFault"},
         {"shape":"AuthorizationNotFoundFault"},
-        {"shape":"KMSKeyNotAccessibleFault"},
-        {"shape":"DomainNotFoundFault"}
+        {"shape":"KMSKeyNotAccessibleFault"}
       ],
       "documentation":"<p> Creates a new DB instance. </p>"
     },
@@ -1055,8 +1053,7 @@
         {"shape":"DBUpgradeDependencyFailureFault"},
         {"shape":"StorageTypeNotSupportedFault"},
         {"shape":"AuthorizationNotFoundFault"},
-        {"shape":"CertificateNotFoundFault"},
-        {"shape":"DomainNotFoundFault"}
+        {"shape":"CertificateNotFoundFault"}
       ],
       "documentation":"<p> Modify settings for a DB instance. You can change one or more database configuration parameters by specifying these parameters and the new values in the request. </p>"
     },
@@ -1093,7 +1090,7 @@
         {"shape":"InvalidDBSnapshotStateFault"},
         {"shape":"SharedSnapshotQuotaExceededFault"}
       ],
-      "documentation":"<p>Adds an attribute and values to, or removes an attribute and values from a manual DB snapshot.</p> <p>To share a manual DB snapshot with other AWS accounts, specify <code>restore</code> as the <code>AttributeName</code> and use the <code>ValuesToAdd</code> parameter to add a list of the AWS account ids that are authorized to retore the manual DB snapshot. Uses the value <code>all</code> to make the manual DB snapshot public and can by copied or restored by all AWS accounts. Do not add the <code>all</code> value for any manual DB snapshots that contain private information that you do not want to be available to all AWS accounts.</p> <p>To view which AWS accounts have access to copy or restore a manual DB snapshot, or whether a manual DB snapshot public or private, use the <a>DescribeDBSnapshotAttributes</a> API.</p> <p>If the manual DB snapshot is encrypted, it cannot be shared.</p>"
+      "documentation":"<p>Adds an attribute and values to, or removes an attribute and values from a manual DB snapshot.</p> <p>To share a manual DB snapshot with other AWS accounts, specify <code>restore</code> as the <code>AttributeName</code> and use the <code>ValuesToAdd</code> parameter to add a list of the AWS account ids that are authorized to restore the manual DB snapshot. Uses the value <code>all</code> to make the manual DB snapshot public and can by copied or restored by all AWS accounts. Do not add the <code>all</code> value for any manual DB snapshots that contain private information that you do not want to be available to all AWS accounts.</p> <p>To view which AWS accounts have access to copy or restore a manual DB snapshot, or whether a manual DB snapshot public or private, use the <a>DescribeDBSnapshotAttributes</a> API.</p> <p>If the manual DB snapshot is encrypted, it cannot be shared.</p>"
     },
     "ModifyDBSubnetGroup":{
       "name":"ModifyDBSubnetGroup",
@@ -1360,8 +1357,7 @@
         {"shape":"StorageTypeNotSupportedFault"},
         {"shape":"AuthorizationNotFoundFault"},
         {"shape":"KMSKeyNotAccessibleFault"},
-        {"shape":"DBSecurityGroupNotFoundFault"},
-        {"shape":"DomainNotFoundFault"}
+        {"shape":"DBSecurityGroupNotFoundFault"}
       ],
       "documentation":"<p>Creates a new DB instance from a DB snapshot. The target database is created from the source database restore point with the most of original configuration with the default security group and the default DB parameter group. By default, the new DB instance is created as a single-AZ deployment except when the instance is a SQL Server instance that has an option group that is associated with mirroring; in this case, the instance becomes a mirrored AZ deployment and not a single-AZ deployment. </p> <p>If your intent is to replace your original DB instance with the new, restored DB instance, then rename your original DB instance before you call the RestoreDBInstanceFromDBSnapshot action. RDS does not allow two DB instances with the same name. Once you have renamed your original DB instance with a different identifier, then you can pass the original name of the DB instance as the DBInstanceIdentifier in the call to the RestoreDBInstanceFromDBSnapshot action. The result is that you will replace the original DB instance with the DB instance created from the snapshot.</p> <p>If you are restoring from a shared manual DB snapshot, the <code>DBSnapshotIdentifier</code> must be the ARN of the shared DB snapshot.</p>"
     },
@@ -1394,8 +1390,7 @@
         {"shape":"StorageTypeNotSupportedFault"},
         {"shape":"AuthorizationNotFoundFault"},
         {"shape":"KMSKeyNotAccessibleFault"},
-        {"shape":"DBSecurityGroupNotFoundFault"},
-        {"shape":"DomainNotFoundFault"}
+        {"shape":"DBSecurityGroupNotFoundFault"}
       ],
       "documentation":"<p> Restores a DB instance to an arbitrary point in time. You can restore to any point in time before the time identified by the LatestRestorableTime property. You can restore to a point up to the number of days specified by the BackupRetentionPeriod property.</p> <p> The target database is created with most of the original configuration, but in a system-selected availability zone, with the default security group, the default subnet group, and the default DB parameter group. By default, the new DB instance is created as a single-AZ deployment except when the instance is a SQL Server instance that has an option group that is associated with mirroring; in this case, the instance becomes a mirrored deployment and not a single-AZ deployment. </p>"
     },
@@ -1782,7 +1777,7 @@
         },
         "KmsKeyId":{
           "shape":"String",
-          "documentation":"<p>The AWS Key Management Service (AWS KMS) key identifier for an encrypted DB snapshot. The KMS key identifier is the Amazon Resource Name (ARN) for the KMS encryption key. </p> <p>If you copy an unencrypted DB snapshot and specify a value for the <code>KmsKeyId</code> parameter, Amazon RDS encrypts the target DB snapshot using the specified KMS encryption key.</p> <p>If you copy an encrypted DB snapshot, you must specify a value for <code>KmsKeyId</code>, because the target DB snapshot must also be encrypted. The specified KMS encryption key is used to encrypt the target DB snapshot. It doesn't need to be the same encryption key used to encrypt the source DB snapshot.</p> <p>If you copy a DB snapshot using the same AWS account that owns the KMS encryption key used to encrypt the target DB snapshot, you can use the KMS key alias instead of the ARN for the KMS encryption key.</p>"
+          "documentation":"<p>The AWS Key Management Service (AWS KMS) key identifier for an encrypted DB snapshot. The KMS key identifier is the Amazon Resource Name (ARN) or the KMS key alias for the KMS encryption key. </p> <p>If you copy an unencrypted DB snapshot and specify a value for the <code>KmsKeyId</code> parameter, Amazon RDS encrypts the target DB snapshot using the specified KMS encryption key.</p> <p>If you copy an encrypted DB snapshot from your AWS account, you can specify a value for <code>KmsKeyId</code> to encrypt the copy with a new KMS encryption key. If you don't specify a value for <code>KmsKeyId</code> then the copy of the DB snapshot is encrypted with the same KMS key as the source DB snapshot. </p> <p>If you copy an encrypted DB snapshot that is shared from another AWS account, then you must specify a value for <code>KmsKeyId</code>.</p>"
         },
         "Tags":{"shape":"TagList"},
         "CopyTags":{
@@ -1867,7 +1862,7 @@
         },
         "DBSubnetGroupName":{
           "shape":"String",
-          "documentation":"<p>A DB subnet group to associate with this DB cluster. </p>"
+          "documentation":"<p>A DB subnet group to associate with this DB cluster. </p> <p>Constraints: Must contain no more than 255 alphanumeric characters, periods, underscores, spaces, or hyphens. Must not be default.</p> + <p>Example: <code>mySubnetgroup</code></p>"
         },
         "Engine":{
           "shape":"String",
@@ -1901,7 +1896,15 @@
           "shape":"String",
           "documentation":"<p>The weekly time range during which system maintenance can occur, in Universal Coordinated Time (UTC). </p> <p> Format: <code>ddd:hh24:mi-ddd:hh24:mi</code></p> <p>Default: A 30-minute window selected at random from an 8-hour block of time per region, occurring on a random day of the week. To see the time blocks available, see <a href=\"http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AdjustingTheMaintenanceWindow.html\"> Adjusting the Preferred Maintenance Window</a> in the <i>Amazon RDS User Guide.</i> </p> <p>Valid Days: Mon, Tue, Wed, Thu, Fri, Sat, Sun</p> <p>Constraints: Minimum 30-minute window.</p>"
         },
-        "Tags":{"shape":"TagList"}
+        "Tags":{"shape":"TagList"},
+        "StorageEncrypted":{
+          "shape":"BooleanOptional",
+          "documentation":"<p>Specifies whether the DB cluster is encrypted.</p>"
+        },
+        "KmsKeyId":{
+          "shape":"String",
+          "documentation":"<p>The KMS key identifier for an encrypted DB cluster.</p> <p>The KMS key identifier is the Amazon Resource Name (ARN) for the KMS encryption key. If you are creating a DB cluster with the same AWS account that owns the KMS encryption key used to encrypt the new DB cluster, then you can use the KMS key alias instead of the ARN for the KM encryption key.</p> <p>If the <code>StorageEncrypted</code> parameter is true, and you do not specify a value for the <code>KmsKeyId</code> parameter, then Amazon RDS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region.</p>"
+        }
       },
       "documentation":"<p/>"
     },
@@ -2047,7 +2050,7 @@
         },
         "EngineVersion":{
           "shape":"String",
-          "documentation":"<p> The version number of the database engine to use. </p> <p> The following are the database engines and major and minor versions that are available with Amazon RDS. Not every database engine is available for every AWS region. </p> <p><b>MySQL</b></p> <ul> <li><b>Version 5.1 (Only available in the following regions: ap-northeast-1, ap-southeast-1, ap-southeast-2, eu-west-1, sa-east-1, us-west-1, us-west-2):</b> <code> 5.1.73a | 5.1.73b</code></li> <li><b>Version 5.5 (Only available in the following regions: ap-northeast-1, ap-southeast-1, ap-southeast-2, eu-west-1, sa-east-1, us-west-1, us-west-2):</b> <code> 5.5.40 | 5.5.40a</code></li> <li><b>Version 5.5 (Available in all regions):</b> <code> 5.5.40b | 5.5.41 | 5.5.42</code></li> <li><b>Version 5.6 (Available in all regions):</b> <code> 5.6.19a | 5.6.19b | 5.6.21 | 5.6.21b | 5.6.22 | 5.6.23</code></li> </ul> <p><b>MariaDB</b></p> <ul> <li><b>Version 10.0 (Available in all regions except AWS GovCloud (US) Region (us-gov-west-1)):</b> <code> 10.0.17 </code></li> </ul> <p><b>Oracle Database Enterprise Edition (oracle-ee)</b></p> <ul> <li><b>Version 11.2 (Only available in the following regions: ap-northeast-1, ap-southeast-1, ap-southeast-2, eu-west-1, sa-east-1, us-west-1, us-west-2):</b> <code> 11.2.0.2.v3 | 11.2.0.2.v4 | 11.2.0.2.v5 | 11.2.0.2.v6 | 11.2.0.2.v7</code></li> <li><b>Version 11.2 (Available in all regions):</b> <code> 11.2.0.3.v1 | 11.2.0.3.v2 | 11.2.0.3.v3 | 11.2.0.4.v1 | 11.2.0.4.v3 | 11.2.0.4.v4</code></li> <li><b>Version 12.1 (Available in all regions):</b> <code>12.1.0.1.v1 | 12.1.0.1.v2 | 12.1.0.2.v1 </code></li> </ul> <p><b>Oracle Database Standard Edition (oracle-se)</b></p> <ul> <li><b>Version 11.2 (Only available in the following regions: us-west-1):</b> <code> 11.2.0.2.v3 | 11.2.0.2.v4 | 11.2.0.2.v5 | 11.2.0.2.v6 | 11.2.0.2.v7</code></li> <li><b>Version 11.2 (Only available in the following regions: eu-central-1, us-west-1):</b> <code> 11.2.0.3.v1 | 11.2.0.3.v2 | 11.2.0.3.v3 | 11.2.0.4.v1 | 11.2.0.4.v3 | 11.2.0.4.v4</code></li> <li><b>Version 12.1 (Only available in the following regions: eu-central-1, us-west-1):</b> <code>12.1.0.1.v1 | 12.1.0.1.v2</code></li> </ul> <p><b>Oracle Database Standard Edition One (oracle-se1)</b></p> <ul> <li><b>Version 11.2 (Only available in the following regions: us-west-1):</b> <code> 11.2.0.2.v3 | 11.2.0.2.v4 | 11.2.0.2.v5 | 11.2.0.2.v6 | 11.2.0.2.v7</code></li> <li><b>Version 11.2 (Only available in the following regions: eu-central-1, us-west-1):</b> <code> 11.2.0.3.v1 | 11.2.0.3.v2 | 11.2.0.3.v3 | 11.2.0.4.v1 | 11.2.0.4.v3 | 11.2.0.4.v4</code></li> <li><b>Version 12.1 (Only available in the following regions: eu-central-1, us-west-1):</b> <code> 12.1.0.1.v1 | 12.1.0.1.v2</code></li> </ul> <p><b>PostgreSQL</b></p> <ul> <li><b>Version 9.3 (Only available in the following regions: ap-northeast-1, ap-southeast-1, ap-southeast-2, eu-west-1, sa-east-1, us-west-1, us-west-2):</b> <code> 9.3.1 | 9.3.2</code></li> <li><b>Version 9.3 (Available in all regions):</b> <code> 9.3.3 | 9.3.5 | 9.3.6 | 9.3.9 | 9.3.10</code></li> <li><b>Version 9.4 (Available in all regions):</b> <code> 9.4.1 | 9.4.4 | 9.4.5</code></li> </ul> <p><b>Microsoft SQL Server Enterprise Edition (sqlserver-ee)</b></p> <ul> <li><b>Version 10.50 (Available in all regions):</b> <code> 10.50.2789.0.v1</code></li> <li><b>Version 10.50 (Available in all regions):</b> <code> 10.50.6000.34.v1</code></li> <li><b>Version 11.00 (Available in all regions):</b> <code> 11.00.2100.60.v1</code></li> <li><b>Version 11.00 (Available in all regions):</b> <code> 11.00.5058.0.v1</code></li> </ul> <p><b>Microsoft SQL Server Express Edition (sqlserver-ex)</b></p> <ul> <li><b>Version 10.50 (Available in all regions):</b> <code> 10.50.2789.0.v1</code></li> <li><b>Version 10.50 (Available in all regions):</b> <code> 10.50.6000.34.v1</code></li> <li><b>Version 11.00 (Available in all regions):</b> <code> 11.00.2100.60.v1</code></li> <li><b>Version 11.00 (Available in all regions):</b> <code> 11.00.5058.0.v1</code></li> <li><b>Version 12.00 (Available in all regions):</b> <code> 12.00.4422.0.v1</code></li> </ul> <p><b>Microsoft SQL Server Standard Edition (sqlserver-se)</b></p> <ul> <li><b>Version 10.50 (Available in all regions):</b> <code> 10.50.2789.0.v1</code></li> <li><b>Version 10.50 (Available in all regions):</b> <code> 10.50.6000.34.v1</code></li> <li><b>Version 11.00 (Available in all regions):</b> <code> 11.00.2100.60.v1</code></li> <li><b>Version 11.00 (Available in all regions):</b> <code> 11.00.5058.0.v1</code></li> <li><b>Version 12.00 (Available in all regions):</b> <code> 12.00.4422.0.v1</code></li> </ul> <p><b>Microsoft SQL Server Web Edition (sqlserver-web)</b></p> <ul> <li><b>Version 10.50 (Available in all regions):</b> <code> 10.50.2789.0.v1</code></li> <li><b>Version 10.50 (Available in all regions):</b> <code> 10.50.6000.34.v1</code></li> <li><b>Version 11.00 (Available in all regions):</b> <code> 11.00.2100.60.v1</code></li> <li><b>Version 11.00 (Available in all regions):</b> <code> 11.00.5058.0.v1</code></li> <li><b>Version 12.00 (Available in all regions):</b> <code> 12.00.4422.0.v1</code></li> </ul>"
+          "documentation":"<p> The version number of the database engine to use. </p> <p> The following are the database engines and major and minor versions that are available with Amazon RDS. Not every database engine is available for every AWS region. </p> <p><b>MySQL</b></p> <ul> <li><b>Version 5.1 (Only available in the following regions: ap-northeast-1, ap-southeast-1, ap-southeast-2, eu-west-1, sa-east-1, us-west-1, us-west-2):</b> <code> 5.1.73a | 5.1.73b</code></li> <li><b>Version 5.5 (Only available in the following regions: ap-northeast-1, ap-southeast-1, ap-southeast-2, eu-west-1, sa-east-1, us-west-1, us-west-2):</b> <code> 5.5.40 | 5.5.40a</code></li> <li><b>Version 5.5 (Available in all regions):</b> <code> 5.5.40b | 5.5.41 | 5.5.42</code></li> <li><b>Version 5.6 (Available in all regions):</b> <code> 5.6.19a | 5.6.19b | 5.6.21 | 5.6.21b | 5.6.22 | 5.6.23</code></li> <li><b>Version 5.7 (Available in all regions):</b> <code> 5.7.10</code></li> </ul> <p><b>MariaDB</b></p> <ul> <li><b>Version 10.0 (Available in all regions except AWS GovCloud (US) Region (us-gov-west-1)):</b> <code> 10.0.17 </code></li> </ul> <p><b>Oracle Database Enterprise Edition (oracle-ee)</b></p> <ul> <li><b>Version 11.2 (Only available in the following regions: ap-northeast-1, ap-southeast-1, ap-southeast-2, eu-west-1, sa-east-1, us-west-1, us-west-2):</b> <code> 11.2.0.2.v3 | 11.2.0.2.v4 | 11.2.0.2.v5 | 11.2.0.2.v6 | 11.2.0.2.v7</code></li> <li><b>Version 11.2 (Available in all regions):</b> <code> 11.2.0.3.v1 | 11.2.0.3.v2 | 11.2.0.3.v3 | 11.2.0.4.v1 | 11.2.0.4.v3 | 11.2.0.4.v4</code></li> <li><b>Version 12.1 (Available in all regions):</b> <code>12.1.0.1.v1 | 12.1.0.1.v2 | 12.1.0.2.v1 </code></li> </ul> <p><b>Oracle Database Standard Edition (oracle-se)</b></p> <ul> <li><b>Version 11.2 (Only available in the following regions: us-west-1):</b> <code> 11.2.0.2.v3 | 11.2.0.2.v4 | 11.2.0.2.v5 | 11.2.0.2.v6 | 11.2.0.2.v7</code></li> <li><b>Version 11.2 (Only available in the following regions: eu-central-1, us-west-1):</b> <code> 11.2.0.3.v1 | 11.2.0.3.v2 | 11.2.0.3.v3 | 11.2.0.4.v1 | 11.2.0.4.v3 | 11.2.0.4.v4</code></li> <li><b>Version 12.1 (Only available in the following regions: eu-central-1, us-west-1):</b> <code>12.1.0.1.v1 | 12.1.0.1.v2</code></li> </ul> <p><b>Oracle Database Standard Edition One (oracle-se1)</b></p> <ul> <li><b>Version 11.2 (Only available in the following regions: us-west-1):</b> <code> 11.2.0.2.v3 | 11.2.0.2.v4 | 11.2.0.2.v5 | 11.2.0.2.v6 | 11.2.0.2.v7</code></li> <li><b>Version 11.2 (Only available in the following regions: eu-central-1, us-west-1):</b> <code> 11.2.0.3.v1 | 11.2.0.3.v2 | 11.2.0.3.v3 | 11.2.0.4.v1 | 11.2.0.4.v3 | 11.2.0.4.v4</code></li> <li><b>Version 12.1 (Only available in the following regions: eu-central-1, us-west-1):</b> <code> 12.1.0.1.v1 | 12.1.0.1.v2</code></li> </ul> <p><b>PostgreSQL</b></p> <ul> <li><b>Version 9.3 (Only available in the following regions: ap-northeast-1, ap-southeast-1, ap-southeast-2, eu-west-1, sa-east-1, us-west-1, us-west-2):</b> <code> 9.3.1 | 9.3.2</code></li> <li><b>Version 9.3 (Available in all regions):</b> <code> 9.3.3 | 9.3.5 | 9.3.6 | 9.3.9 | 9.3.10</code></li> <li><b>Version 9.4 (Available in all regions):</b> <code> 9.4.1 | 9.4.4 | 9.4.5</code></li> </ul> <p><b>Microsoft SQL Server Enterprise Edition (sqlserver-ee)</b></p> <ul> <li><b>Version 10.50 (Available in all regions):</b> <code> 10.50.2789.0.v1</code></li> <li><b>Version 10.50 (Available in all regions):</b> <code> 10.50.6000.34.v1</code></li> <li><b>Version 11.00 (Available in all regions):</b> <code> 11.00.2100.60.v1</code></li> <li><b>Version 11.00 (Available in all regions):</b> <code> 11.00.5058.0.v1</code></li> </ul> <p><b>Microsoft SQL Server Express Edition (sqlserver-ex)</b></p> <ul> <li><b>Version 10.50 (Available in all regions):</b> <code> 10.50.2789.0.v1</code></li> <li><b>Version 10.50 (Available in all regions):</b> <code> 10.50.6000.34.v1</code></li> <li><b>Version 11.00 (Available in all regions):</b> <code> 11.00.2100.60.v1</code></li> <li><b>Version 11.00 (Available in all regions):</b> <code> 11.00.5058.0.v1</code></li> <li><b>Version 12.00 (Available in all regions):</b> <code> 12.00.4422.0.v1</code></li> </ul> <p><b>Microsoft SQL Server Standard Edition (sqlserver-se)</b></p> <ul> <li><b>Version 10.50 (Available in all regions):</b> <code> 10.50.2789.0.v1</code></li> <li><b>Version 10.50 (Available in all regions):</b> <code> 10.50.6000.34.v1</code></li> <li><b>Version 11.00 (Available in all regions):</b> <code> 11.00.2100.60.v1</code></li> <li><b>Version 11.00 (Available in all regions):</b> <code> 11.00.5058.0.v1</code></li> <li><b>Version 12.00 (Available in all regions):</b> <code> 12.00.4422.0.v1</code></li> </ul> <p><b>Microsoft SQL Server Web Edition (sqlserver-web)</b></p> <ul> <li><b>Version 10.50 (Available in all regions):</b> <code> 10.50.2789.0.v1</code></li> <li><b>Version 10.50 (Available in all regions):</b> <code> 10.50.6000.34.v1</code></li> <li><b>Version 11.00 (Available in all regions):</b> <code> 11.00.2100.60.v1</code></li> <li><b>Version 11.00 (Available in all regions):</b> <code> 11.00.5058.0.v1</code></li> <li><b>Version 12.00 (Available in all regions):</b> <code> 12.00.4422.0.v1</code></li> </ul>"
         },
         "AutoMinorVersionUpgrade":{
           "shape":"BooleanOptional",
@@ -2098,7 +2101,6 @@
           "shape":"String",
           "documentation":"<p> The KMS key identifier for an encrypted DB instance. </p> <p>The KMS key identifier is the Amazon Resource Name (ARN) for the KMS encryption key. If you are creating a DB instance with the same AWS account that owns the KMS encryption key used to encrypt the new DB instance, then you can use the KMS key alias instead of the ARN for the KM encryption key.</p> <p>If the <code>StorageEncrypted</code> parameter is true, and you do not specify a value for the <code>KmsKeyId</code> parameter, then Amazon RDS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region.</p>"
         },
-        "Domain":{"shape":"String"},
         "CopyTagsToSnapshot":{
           "shape":"BooleanOptional",
           "documentation":"<p>True to copy all tags from the DB instance to snapshots of the DB instance; otherwise false. The default is false.</p>"
@@ -2110,8 +2112,7 @@
         "MonitoringRoleArn":{
           "shape":"String",
           "documentation":"<p>The ARN for the IAM role that permits RDS to send enhanced monitoring metrics to CloudWatch Logs. For example, <code>arn:aws:iam:123456789012:role/emaccess</code>. For information on creating a monitoring role, go to <a href=\"http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html#USER_Monitoring.OS.IAMRole\">To create an IAM role for Amazon RDS Enhanced Monitoring</a>.</p> <p>If <code>MonitoringInterval</code> is set to a value other than 0, then you must supply a <code>MonitoringRoleArn</code> value.</p>"
-        },
-        "DomainIAMRoleName":{"shape":"String"}
+        }
       },
       "documentation":"<p/>"
     },
@@ -2161,7 +2162,7 @@
         "Tags":{"shape":"TagList"},
         "DBSubnetGroupName":{
           "shape":"String",
-          "documentation":"<p> Specifies a DB subnet group for the DB instance. The new DB instance will be created in the VPC associated with the DB subnet group. If no DB subnet group is specified, then the new DB instance is not created in a VPC. </p> <p>Constraints:</p> <ul> <li>Can only be specified if the source DB instance identifier specifies a DB instance in another region.</li> <li>The specified DB subnet group must be in the same region in which the operation is running.</li> <li> All Read Replicas in one region that are created from the same source DB instance must either: <ul><li>Specify DB subnet groups from the same VPC. All these Read Replicas will be created in the same VPC.</li><li>Not specify a DB subnet group. All these Read Replicas will be created outside of any VPC.</li></ul></li> </ul>"
+          "documentation":"<p> Specifies a DB subnet group for the DB instance. The new DB instance will be created in the VPC associated with the DB subnet group. If no DB subnet group is specified, then the new DB instance is not created in a VPC. </p> <p>Constraints:</p> <ul> <li>Can only be specified if the source DB instance identifier specifies a DB instance in another region.</li> <li>The specified DB subnet group must be in the same region in which the operation is running.</li> <li> All Read Replicas in one region that are created from the same source DB instance must either: <ul><li>Specify DB subnet groups from the same VPC. All these Read Replicas will be created in the same VPC.</li><li>Not specify a DB subnet group. All these Read Replicas will be created outside of any VPC.</li></ul></li> </ul> <p>Constraints: Must contain no more than 255 alphanumeric characters, periods, underscores, spaces, or hyphens. Must not be default.</p> <p>Example: <code>mySubnetgroup</code></p>"
         },
         "StorageType":{
           "shape":"String",
@@ -2283,7 +2284,7 @@
       "members":{
         "DBSubnetGroupName":{
           "shape":"String",
-          "documentation":"<p> The name for the DB subnet group. This value is stored as a lowercase string. </p> <p>Constraints: Must contain no more than 255 alphanumeric characters, periods, underscores, or hyphens. Must not be default.</p> <p>Example: <code>mySubnetgroup</code></p>"
+          "documentation":"<p> The name for the DB subnet group. This value is stored as a lowercase string. </p> <p>Constraints: Must contain no more than 255 alphanumeric characters, periods, underscores, spaces, or hyphens. Must not be default.</p> <p>Example: <code>mySubnetgroup</code></p>"
         },
         "DBSubnetGroupDescription":{
           "shape":"String",
@@ -2473,6 +2474,18 @@
         "HostedZoneId":{
           "shape":"String",
           "documentation":"<p>Specifies the ID that Amazon Route 53 assigns when you create a hosted zone.</p>"
+        },
+        "StorageEncrypted":{
+          "shape":"Boolean",
+          "documentation":"<p>Specifies whether the DB cluster is encrypted.</p>"
+        },
+        "KmsKeyId":{
+          "shape":"String",
+          "documentation":"<p>If <code>StorageEncrypted</code> is true, the KMS key identifier for the encrypted DB cluster.</p>"
+        },
+        "DbClusterResourceId":{
+          "shape":"String",
+          "documentation":"<p>The region-unique, immutable identifier for the DB cluster. This identifier is found in AWS CloudTrail log entries whenever the KMS key for the DB cluster is accessed. </p>"
         }
       },
       "documentation":"<p>Contains the result of a successful invocation of the following actions: </p> <ul> <li> <a>CreateDBCluster</a> </li> <li> <a>DeleteDBCluster</a> </li> <li> <a>FailoverDBCluster</a> </li> <li> <a>ModifyDBCluster</a> </li> <li> <a>RestoreDBClusterFromSnapshot</a> </li> </ul> <p>This data type is used as a response element in the <a>DescribeDBClusters</a> action.</p>",
@@ -2720,6 +2733,14 @@
         "PercentProgress":{
           "shape":"Integer",
           "documentation":"<p>Specifies the percentage of the estimated data that has been transferred. </p>"
+        },
+        "StorageEncrypted":{
+          "shape":"Boolean",
+          "documentation":"<p>Specifies whether the DB cluster snapshot is encrypted.</p>"
+        },
+        "KmsKeyId":{
+          "shape":"String",
+          "documentation":"<p>If <code>StorageEncrypted</code> is true, the KMS key identifier for the encrypted DB cluster snapshot.</p>"
         }
       },
       "documentation":"<p>Contains the result of a successful invocation of the following actions: </p> <ul> <li> <a>CreateDBClusterSnapshot</a> </li> <li> <a>DeleteDBClusterSnapshot</a> </li> </ul> <p>This data type is used as a response element in the <a>DescribeDBClusterSnapshots</a> action.</p>",
@@ -2988,7 +3009,6 @@
           "shape":"String",
           "documentation":"<p>The identifier of the CA certificate for this DB instance.</p>"
         },
-        "DomainMemberships":{"shape":"DomainMembershipList"},
         "CopyTagsToSnapshot":{
           "shape":"Boolean",
           "documentation":"<p>Specifies whether tags are copied from the DB instance to snapshots of the DB instance.</p>"
@@ -3530,7 +3550,7 @@
       "members":{
         "DBSubnetGroupName":{
           "shape":"String",
-          "documentation":"<p> Specifies the name of the DB subnet group. </p>"
+          "documentation":"<p> The name of the DB subnet group. </p>"
         },
         "DBSubnetGroupDescription":{
           "shape":"String",
@@ -3780,7 +3800,7 @@
       "members":{
         "DBSubnetGroupName":{
           "shape":"String",
-          "documentation":"<p> The name of the database subnet group to delete. </p> <note>You cannot delete the default subnet group.</note> <p> Constraints: </p> <ul> <li>Must be 1 to 255 alphanumeric characters</li> <li>First character must be a letter</li> <li>Cannot end with a hyphen or contain two consecutive hyphens</li> </ul>"
+          "documentation":"<p> The name of the database subnet group to delete. </p> <note>You cannot delete the default subnet group.</note> <p>Constraints: Must contain no more than 255 alphanumeric characters, periods, underscores, spaces, or hyphens. Must not be default.</p> <p>Example: <code>mySubnetgroup</code></p>"
         }
       },
       "documentation":"<p/>"
@@ -4562,33 +4582,6 @@
       },
       "documentation":"<p/>"
     },
-    "DomainMembership":{
-      "type":"structure",
-      "members":{
-        "Domain":{"shape":"String"},
-        "Status":{"shape":"String"},
-        "FQDN":{"shape":"String"},
-        "IAMRoleName":{"shape":"String"}
-      }
-    },
-    "DomainMembershipList":{
-      "type":"list",
-      "member":{
-        "shape":"DomainMembership",
-        "locationName":"DomainMembership"
-      }
-    },
-    "DomainNotFoundFault":{
-      "type":"structure",
-      "members":{
-      },
-      "error":{
-        "code":"DomainNotFoundFault",
-        "httpStatusCode":404,
-        "senderFault":true
-      },
-      "exception":true
-    },
     "Double":{"type":"double"},
     "DownloadDBLogFilePortionDetails":{
       "type":"structure",
@@ -5347,7 +5340,6 @@
           "shape":"String",
           "documentation":"<p> Indicates the certificate that needs to be associated with the instance. </p>"
         },
-        "Domain":{"shape":"String"},
         "CopyTagsToSnapshot":{
           "shape":"BooleanOptional",
           "documentation":"<p>True to copy all tags from the DB instance to snapshots of the DB instance; otherwise false. The default is false.</p>"
@@ -5362,13 +5354,12 @@
         },
         "PubliclyAccessible":{
           "shape":"BooleanOptional",
-          "documentation":"<p>True to make the DB instance Internet-facing with a publicly resolvable DNS name, which resolves to a public IP address. False to make the DB instance internal with a DNS name that resolves to a private IP address. </p> <p><code>PubliclyAccessible</code> only applies to DB instances in a VPC. The DB instance must be part of a public subnet and <code>PubliclyAccessible</code> must be true in order for it to be publicly accessible. </p> <p>Changes to the <code>PubliclyAccessible</code> parameter are applied immediately regardless of the value of the <code>ApplyImmediately</code> parameter.</p> <p> Default: false </p>"
+          "documentation":"<p>Boolean value that indicates if the DB instance has a publicly resolvable DNS name. Set to <code>True</code> to make the DB instance Internet-facing with a publicly resolvable DNS name, which resolves to a public IP address. Set to <code>False</code> to make the DB instance internal with a DNS name that resolves to a private IP address. </p> <p><code>PubliclyAccessible</code> only applies to DB instances in a VPC. The DB instance must be part of a public subnet and <code>PubliclyAccessible</code> must be true in order for it to be publicly accessible. </p> <p>Changes to the <code>PubliclyAccessible</code> parameter are applied immediately regardless of the value of the <code>ApplyImmediately</code> parameter.</p> <p> Default: false </p>"
         },
         "MonitoringRoleArn":{
           "shape":"String",
           "documentation":"<p>The ARN for the IAM role that permits RDS to send enhanced monitoring metrics to CloudWatch Logs. For example, <code>arn:aws:iam:123456789012:role/emaccess</code>. For information on creating a monitoring role, go to <a href=\"http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html#USER_Monitoring.OS.IAMRole\">To create an IAM role for Amazon RDS Enhanced Monitoring</a>.</p> <p>If <code>MonitoringInterval</code> is set to a value other than 0, then you must supply a <code>MonitoringRoleArn</code> value.</p>"
-        },
-        "DomainIAMRoleName":{"shape":"String"}
+        }
       },
       "documentation":"<p/>"
     },
@@ -5433,7 +5424,7 @@
       "members":{
         "DBSubnetGroupName":{
           "shape":"String",
-          "documentation":"<p> The name for the DB subnet group. This value is stored as a lowercase string. </p> <p>Constraints: Must contain no more than 255 alphanumeric characters or hyphens. Must not be \"Default\".</p> <p>Example: <code>mySubnetgroup</code></p>"
+          "documentation":"<p> The name for the DB subnet group. This value is stored as a lowercase string. </p> <p>Constraints: Must contain no more than 255 alphanumeric characters, periods, underscores, spaces, or hyphens. Must not be \"default\".</p> <p>Example: <code>mySubnetgroup</code></p>"
         },
         "DBSubnetGroupDescription":{
           "shape":"String",
@@ -6582,7 +6573,7 @@
         },
         "DBSubnetGroupName":{
           "shape":"String",
-          "documentation":"<p>The name of the DB subnet group to use for the new DB cluster. </p>"
+          "documentation":"<p>The name of the DB subnet group to use for the new DB cluster. </p> <p>Constraints: Must contain no more than 255 alphanumeric characters, periods, underscores, spaces, or hyphens. Must not be default.</p> <p>Example: <code>mySubnetgroup</code></p>"
         },
         "DatabaseName":{
           "shape":"String",
@@ -6599,6 +6590,10 @@
         "Tags":{
           "shape":"TagList",
           "documentation":"<p>The tags to be assigned to the restored DB cluster. </p>"
+        },
+        "KmsKeyId":{
+          "shape":"String",
+          "documentation":"<p>The KMS key identifier to use when restoring an encrypted DB cluster from an encrypted DB cluster snapshot.</p> <p>The KMS key identifier is the Amazon Resource Name (ARN) for the KMS encryption key. If you are restoring a DB cluster with the same AWS account that owns the KMS encryption key used to encrypt the new DB cluster, then you can use the KMS key alias instead of the ARN for the KMS encryption key.</p> <p>If you do not specify a value for the <code>KmsKeyId</code> parameter, then the following will occur:</p> <ul> <li>If the DB cluster snapshot is encrypted, then the restored DB cluster is encrypted using the KMS key that was used to encrypt the DB cluster snapshot.</li> <li>If the DB cluster snapshot is not encrypted, then the restored DB cluster is not encrypted.</li> </ul> <p>If <code>SnapshotIdentifier</code> refers to a DB cluster snapshot that is not encrypted, and you specify a value for the <code>KmsKeyId</code> parameter, then the restore request is rejected.</p>"
         }
       },
       "documentation":"<p/>"
@@ -6638,7 +6633,7 @@
         },
         "DBSubnetGroupName":{
           "shape":"String",
-          "documentation":"<p> The DB subnet group name to use for the new DB cluster. </p>"
+          "documentation":"<p> The DB subnet group name to use for the new DB cluster. </p> <p>Constraints: Must contain no more than 255 alphanumeric characters, periods, underscores, spaces, or hyphens. Must not be default.</p> <p>Example: <code>mySubnetgroup</code></p>"
         },
         "OptionGroupName":{
           "shape":"String",
@@ -6648,7 +6643,11 @@
           "shape":"VpcSecurityGroupIdList",
           "documentation":"<p> A lst of VPC security groups that the new DB cluster belongs to. </p>"
         },
-        "Tags":{"shape":"TagList"}
+        "Tags":{"shape":"TagList"},
+        "KmsKeyId":{
+          "shape":"String",
+          "documentation":"<p>The KMS key identifier to use when restoring an encrypted DB cluster from an encrypted DB cluster.</p> <p>The KMS key identifier is the Amazon Resource Name (ARN) for the KMS encryption key. If you are restoring a DB cluster with the same AWS account that owns the KMS encryption key used to encrypt the new DB cluster, then you can use the KMS key alias instead of the ARN for the KMS encryption key.</p> <p>You can restore to a new DB cluster and encrypt the new DB cluster with a KMS key that is different than the KMS key used to encrypt the source DB cluster. The new DB cluster will be encrypted with the KMS key identified by the <code>KmsKeyId</code> parameter.</p> <p>If you do not specify a value for the <code>KmsKeyId</code> parameter, then the following will occur:</p> <ul> <li>If the DB cluster is encrypted, then the restored DB cluster is encrypted using the KMS key that was used to encrypt the source DB cluster.</li> </ul> <li>If the DB cluster is not encrypted, then the restored DB cluster is not encrypted.</li> <p>If <code>DBClusterIdentifier</code> refers to a DB cluster that is note encrypted, then the restore request is rejected.</p>"
+        }
       },
       "documentation":"<p/>"
     },
@@ -6687,7 +6686,7 @@
         },
         "DBSubnetGroupName":{
           "shape":"String",
-          "documentation":"<p> The DB subnet group name to use for the new instance. </p>"
+          "documentation":"<p> The DB subnet group name to use for the new instance. </p> <p>Constraints: Must contain no more than 255 alphanumeric characters, periods, underscores, spaces, or hyphens. Must not be default.</p> <p>Example: <code>mySubnetgroup</code></p>"
         },
         "MultiAZ":{
           "shape":"BooleanOptional",
@@ -6734,12 +6733,10 @@
           "shape":"String",
           "documentation":"<p> The password for the given ARN from the Key Store in order to access the device. </p>"
         },
-        "Domain":{"shape":"String"},
         "CopyTagsToSnapshot":{
           "shape":"BooleanOptional",
           "documentation":"<p>True to copy all tags from the restored DB instance to snapshots of the DB instance; otherwise false. The default is false.</p>"
-        },
-        "DomainIAMRoleName":{"shape":"String"}
+        }
       },
       "documentation":"<p/>"
     },
@@ -6786,7 +6783,7 @@
         },
         "DBSubnetGroupName":{
           "shape":"String",
-          "documentation":"<p> The DB subnet group name to use for the new instance. </p>"
+          "documentation":"<p> The DB subnet group name to use for the new instance. </p> <p>Constraints: Must contain no more than 255 alphanumeric characters, periods, underscores, spaces, or hyphens. Must not be default.</p> <p>Example: <code>mySubnetgroup</code></p>"
         },
         "MultiAZ":{
           "shape":"BooleanOptional",
@@ -6810,7 +6807,7 @@
         },
         "Engine":{
           "shape":"String",
-          "documentation":"<p> The database engine to use for the new instance. </p> <p>Default: The same as source</p> <p>Constraint: Must be compatible with the engine of the source</p> <p> Valid Values: <code>MySQL</code> | <code>mariadb</code> | <code>oracle-se1</code> | <code>oracle-se</code> | <code>oracle-ee</code> | <code>sqlserver-ee</code> | <code>sqlserver-se</code> | <code>sqlserver-ex</code> | <code>sqlserver-web</code> | <code>postgres</code>| <code>aurora</code></p>"
+          "documentation":"<p> The database engine to use for the new instance. </p> <p>Default: The same as source</p> <p>Constraint: Must be compatible with the engine of the source</p> <p> Valid Values: <code>MySQL</code> | <code>mariadb</code> | <code>oracle-se1</code> | <code>oracle-se</code> | <code>oracle-ee</code> | <code>sqlserver-ee</code> | <code>sqlserver-se</code> | <code>sqlserver-ex</code> | <code>sqlserver-web</code> | <code>postgres</code> | <code>aurora</code></p>"
         },
         "Iops":{
           "shape":"IntegerOptional",
@@ -6836,9 +6833,7 @@
         "TdeCredentialPassword":{
           "shape":"String",
           "documentation":"<p> The password for the given ARN from the Key Store in order to access the device. </p>"
-        },
-        "Domain":{"shape":"String"},
-        "DomainIAMRoleName":{"shape":"String"}
+        }
       },
       "documentation":"<p/>"
     },
