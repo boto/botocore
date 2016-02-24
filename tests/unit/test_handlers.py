@@ -199,45 +199,6 @@ class TestHandlers(BaseSessionTest):
         # object is None.  We need to handle this case.
         handlers.check_for_200_error(None)
 
-    def test_sse_params(self):
-        for op in ('HeadObject', 'GetObject', 'PutObject', 'CopyObject',
-                   'CreateMultipartUpload', 'UploadPart', 'UploadPartCopy'):
-            event = 'before-parameter-build.s3.%s' % op
-            params = {'SSECustomerKey': b'bar',
-                      'SSECustomerAlgorithm': 'AES256'}
-            self.session.emit(event, params=params, model=mock.Mock())
-            self.assertEqual(params['SSECustomerKey'], 'YmFy')
-            self.assertEqual(params['SSECustomerKeyMD5'],
-                             'N7UdGUp1E+RbVvZSTy1R8g==')
-
-    def test_sse_params_as_str(self):
-        event = 'before-parameter-build.s3.PutObject'
-        params = {'SSECustomerKey': 'bar',
-                  'SSECustomerAlgorithm': 'AES256'}
-        self.session.emit(event, params=params, model=mock.Mock())
-        self.assertEqual(params['SSECustomerKey'], 'YmFy')
-        self.assertEqual(params['SSECustomerKeyMD5'],
-                         'N7UdGUp1E+RbVvZSTy1R8g==')
-
-    def test_copy_source_sse_params(self):
-        for op in ['CopyObject', 'UploadPartCopy']:
-            event = 'before-parameter-build.s3.%s' % op
-            params = {'CopySourceSSECustomerKey': b'bar',
-                      'CopySourceSSECustomerAlgorithm': 'AES256'}
-            self.session.emit(event, params=params, model=mock.Mock())
-            self.assertEqual(params['CopySourceSSECustomerKey'], 'YmFy')
-            self.assertEqual(params['CopySourceSSECustomerKeyMD5'],
-                             'N7UdGUp1E+RbVvZSTy1R8g==')
-
-    def test_copy_source_sse_params_as_str(self):
-        event = 'before-parameter-build.s3.CopyObject'
-        params = {'CopySourceSSECustomerKey': 'bar',
-                  'CopySourceSSECustomerAlgorithm': 'AES256'}
-        self.session.emit(event, params=params, model=mock.Mock())
-        self.assertEqual(params['CopySourceSSECustomerKey'], 'YmFy')
-        self.assertEqual(params['CopySourceSSECustomerKeyMD5'],
-                         'N7UdGUp1E+RbVvZSTy1R8g==')
-
     def test_route53_resource_id(self):
         event = 'before-parameter-build.route53.GetHostedZone'
         params = {'Id': '/hostedzone/ABC123',
@@ -712,17 +673,6 @@ class BaseMD5Test(BaseSessionTest):
 
 
 class TestSSEMD5(BaseMD5Test):
-    def test_sse_md5(self):
-        key = 'SSECustomerKey'
-        params = {key: b'foo'}
-        handlers.sse_md5(params)
-        self.assertEqual(params[key + 'MD5'], 'Zm9v')
-
-        key = 'CopySourceSSECustomerKey'
-        params = {key: b'foo'}
-        handlers.copy_source_sse_md5(params)
-        self.assertEqual(params[key + 'MD5'], 'Zm9v')
-
     def test_raises_error_when_md5_unavailable(self):
         self.set_md5_available(False)
 
@@ -731,6 +681,41 @@ class TestSSEMD5(BaseMD5Test):
 
         with self.assertRaises(MD5UnavailableError):
             handlers.copy_source_sse_md5({'CopySourceSSECustomerKey': b'foo'})
+
+    def test_sse_params(self):
+        for op in ('HeadObject', 'GetObject', 'PutObject', 'CopyObject',
+                   'CreateMultipartUpload', 'UploadPart', 'UploadPartCopy'):
+            event = 'before-parameter-build.s3.%s' % op
+            params = {'SSECustomerKey': b'bar',
+                      'SSECustomerAlgorithm': 'AES256'}
+            self.session.emit(event, params=params, model=mock.Mock())
+            self.assertEqual(params['SSECustomerKey'], 'YmFy')
+            self.assertEqual(params['SSECustomerKeyMD5'], 'Zm9v')
+
+    def test_sse_params_as_str(self):
+        event = 'before-parameter-build.s3.PutObject'
+        params = {'SSECustomerKey': 'bar',
+                  'SSECustomerAlgorithm': 'AES256'}
+        self.session.emit(event, params=params, model=mock.Mock())
+        self.assertEqual(params['SSECustomerKey'], 'YmFy')
+        self.assertEqual(params['SSECustomerKeyMD5'], 'Zm9v')
+
+    def test_copy_source_sse_params(self):
+        for op in ['CopyObject', 'UploadPartCopy']:
+            event = 'before-parameter-build.s3.%s' % op
+            params = {'CopySourceSSECustomerKey': b'bar',
+                      'CopySourceSSECustomerAlgorithm': 'AES256'}
+            self.session.emit(event, params=params, model=mock.Mock())
+            self.assertEqual(params['CopySourceSSECustomerKey'], 'YmFy')
+            self.assertEqual(params['CopySourceSSECustomerKeyMD5'], 'Zm9v')
+
+    def test_copy_source_sse_params_as_str(self):
+        event = 'before-parameter-build.s3.CopyObject'
+        params = {'CopySourceSSECustomerKey': 'bar',
+                  'CopySourceSSECustomerAlgorithm': 'AES256'}
+        self.session.emit(event, params=params, model=mock.Mock())
+        self.assertEqual(params['CopySourceSSECustomerKey'], 'YmFy')
+        self.assertEqual(params['CopySourceSSECustomerKeyMD5'], 'Zm9v')
 
 
 class TestAddMD5(BaseMD5Test):

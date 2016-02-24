@@ -87,14 +87,14 @@ class TestEnsureBytes(unittest.TestCase):
 class TestGetMD5(unittest.TestCase):
     def test_available(self):
         md5 = mock.Mock()
-        with mock.patch('botocore.compat.MD5_AVAILABLE', True), \
-             mock.patch('hashlib.md5', mock.Mock(return_value=md5)):
-            self.assertEqual(get_md5(), md5)
+        with mock.patch('botocore.compat.MD5_AVAILABLE', True):
+            with mock.patch('hashlib.md5', mock.Mock(return_value=md5)):
+                self.assertEqual(get_md5(), md5)
 
     def test_unavailable_raises_error(self):
-        with mock.patch('botocore.compat.MD5_AVAILABLE', False), \
-             self.assertRaises(MD5UnavailableError):
-            get_md5(raise_error_if_unavailable=True)
+        with mock.patch('botocore.compat.MD5_AVAILABLE', False):
+            with self.assertRaises(MD5UnavailableError):
+                get_md5(raise_error_if_unavailable=True)
 
     def test_unavailable_returns_null(self):
         with mock.patch('botocore.compat.MD5_AVAILABLE', False):
