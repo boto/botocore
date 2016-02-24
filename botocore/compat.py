@@ -237,3 +237,17 @@ def total_seconds(delta):
     day_in_seconds = delta.days * 24 * 3600.0
     micro_in_seconds = delta.microseconds / 10.0**6
     return day_in_seconds + delta.seconds + micro_in_seconds
+
+
+def md5_available():
+    """
+    Checks to see if md5 is available on this system. A given system might not
+    have access to it for various reasons, such as FIPS mode being enabled.
+    :return: True if md5 is available. False if not.
+    """
+    try:
+        import hashlib
+        hashlib.md5()
+        return True
+    except:
+        return False

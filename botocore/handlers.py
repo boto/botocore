@@ -25,13 +25,13 @@ import re
 import warnings
 
 from botocore.compat import urlsplit, urlunsplit, unquote, \
-    json, quote, six, unquote_str, ensure_bytes
+    json, quote, six, unquote_str, ensure_bytes, md5_available
 from botocore.docs.utils import AutoPopulatedParam
 from botocore.docs.utils import HideParamFromOperations
 from botocore.docs.utils import AppendParamDocumentation
 from botocore.signers import add_generate_presigned_url
 from botocore.signers import add_generate_presigned_post
-from botocore.exceptions import ParamValidationError
+from botocore.exceptions import ParamValidationError, MD5UnavailableError
 from botocore.exceptions import UnsupportedTLSVersionWarning
 from botocore.utils import percent_encode, SAFE_CHARS
 
@@ -122,6 +122,9 @@ def json_decode_template_body(parsed, **kwargs):
 
 
 def calculate_md5(params, **kwargs):
+    if not md5_available():
+        raise MD5UnavailableError()
+
     request_dict = params
     if request_dict['body'] and 'Content-MD5' not in params['headers']:
         body = request_dict['body']
@@ -150,7 +153,7 @@ def _calculate_md5_from_file(fileobj):
 def conditionally_calculate_md5(params, **kwargs):
     """Only add a Content-MD5 when not using sigv4"""
     signer = kwargs['request_signer']
-    if signer.signature_version not in ['v4', 's3v4']:
+    if signer.signature_version not in ['v4', 's3v4'] and md5_available():
         calculate_md5(params, **kwargs)
 
 
@@ -188,6 +191,9 @@ def copy_source_sse_md5(params, **kwargs):
 def _sse_md5(params, sse_member_prefix='SSECustomer'):
     if not _needs_s3_sse_customization(params, sse_member_prefix):
         return
+    if not md5_available():
+        raise MD5UnavailableError()
+
     sse_key_member = sse_member_prefix + 'Key'
     sse_md5_member = sse_member_prefix + 'KeyMD5'
     key_as_bytes = params[sse_key_member]
