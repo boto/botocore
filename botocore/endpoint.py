@@ -37,6 +37,12 @@ logger = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 60
 filter_ssl_warnings()
 
+try:
+    from botocore.vendored.requests.packages.urllib3.contrib import pyopenssl
+    pyopenssl.extract_from_urllib3()
+except ImportError:
+    pass
+
 
 def convert_to_response_dict(http_response, operation_model):
     """Convert an HTTP response object to a request dict.
