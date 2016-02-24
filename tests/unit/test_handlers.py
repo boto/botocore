@@ -690,13 +690,25 @@ class BaseMD5Test(BaseSessionTest):
         self.md5_object = mock.Mock()
         self.md5_digest = mock.Mock(return_value=b'foo')
         self.md5_object.digest = self.md5_digest
-        self.md5_builder = mock.Mock(return_value=self.md5_object)
-        self.md5_patch = mock.patch('hashlib.md5', self.md5_builder)
+        md5_builder = mock.Mock(return_value=self.md5_object)
+        self.md5_patch = mock.patch('hashlib.md5', md5_builder)
         self.md5_patch.start()
+        self._md5_available_patch = None
+        self.set_md5_available()
 
     def tearDown(self):
         super(BaseMD5Test, self).tearDown()
         self.md5_patch.stop()
+        if self._md5_available_patch:
+            self._md5_available_patch.stop()
+
+    def set_md5_available(self, is_available=True):
+        if self._md5_available_patch:
+            self._md5_available_patch.stop()
+
+        self._md5_available_patch = \
+            mock.patch('botocore.compat.MD5_AVAILABLE', is_available)
+        self._md5_available_patch.start()
 
 
 class TestSSEMD5(BaseMD5Test):
@@ -712,7 +724,7 @@ class TestSSEMD5(BaseMD5Test):
         self.assertEqual(params[key + 'MD5'], 'Zm9v')
 
     def test_raises_error_when_md5_unavailable(self):
-        self.md5_builder.side_effect = ValueError()
+        self.set_md5_available(False)
 
         with self.assertRaises(MD5UnavailableError):
             handlers.sse_md5({'SSECustomerKey': b'foo'})
@@ -755,10 +767,11 @@ class TestAddMD5(BaseMD5Test):
                         'method': 'PUT',
                         'headers': {}}
 
-        self.md5_builder.side_effect = ValueError()
-        handlers.conditionally_calculate_md5(
-            request_dict, request_signer=request_signer)
-        self.assertFalse('Content-MD5' in request_dict['headers'])
+        self.set_md5_available(False)
+        with mock.patch('botocore.handlers.MD5_AVAILABLE', False):
+            handlers.conditionally_calculate_md5(
+                request_dict, request_signer=request_signer)
+            self.assertFalse('Content-MD5' in request_dict['headers'])
 
     def test_add_md5_raises_error_when_md5_unavailable(self):
         credentials = Credentials('key', 'secret')
@@ -769,7 +782,7 @@ class TestAddMD5(BaseMD5Test):
                         'method': 'PUT',
                         'headers': {}}
 
-        self.md5_builder.side_effect = ValueError()
+        self.set_md5_available(False)
         with self.assertRaises(MD5UnavailableError):
             handlers.calculate_md5(
                 request_dict, request_signer=request_signer)

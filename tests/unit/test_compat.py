@@ -14,8 +14,9 @@
 import datetime
 import mock
 
+from botocore.exceptions import MD5UnavailableError
 from botocore.compat import (
-    total_seconds, unquote_str, six, ensure_bytes, md5_available
+    total_seconds, unquote_str, six, ensure_bytes, get_md5
 )
 
 from tests import BaseEnvVar, unittest
@@ -83,12 +84,18 @@ class TestEnsureBytes(unittest.TestCase):
             ensure_bytes(value)
 
 
-class TestMD5Available(unittest.TestCase):
+class TestGetMD5(unittest.TestCase):
     def test_available(self):
-        with mock.patch('hashlib.md5'):
-            self.assertTrue(md5_available())
+        md5 = mock.Mock()
+        with mock.patch('botocore.compat.MD5_AVAILABLE', True), \
+             mock.patch('hashlib.md5', mock.Mock(return_value=md5)):
+            self.assertEqual(get_md5(), md5)
 
-    def test_unavailable(self):
-        with mock.patch('hashlib.md5') as md5:
-            md5.side_effect = ValueError()
-            self.assertFalse(md5_available())
+    def test_unavailable_raises_error(self):
+        with mock.patch('botocore.compat.MD5_AVAILABLE', False), \
+             self.assertRaises(MD5UnavailableError):
+            get_md5(raise_error_if_unavailable=True)
+
+    def test_unavailable_returns_null(self):
+        with mock.patch('botocore.compat.MD5_AVAILABLE', False):
+            self.assertFalse(get_md5(raise_error_if_unavailable=False))

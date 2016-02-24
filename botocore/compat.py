@@ -16,9 +16,14 @@ import datetime
 import sys
 import inspect
 import warnings
+import hashlib
+import logging
 
 from botocore.vendored import six
+from botocore.exceptions import MD5UnavailableError
 from botocore.vendored.requests.packages.urllib3 import exceptions
+
+logger = logging.getLogger(__name__)
 
 
 if six.PY3:
@@ -239,15 +244,31 @@ def total_seconds(delta):
     return day_in_seconds + delta.seconds + micro_in_seconds
 
 
-def md5_available():
+# Checks to see if md5 is available on this system. A given system might not
+# have access to it for various reasons, such as FIPS mode being enabled.
+try:
+    hashlib.md5()
+    MD5_AVAILABLE = True
+except ValueError:
+    MD5_AVAILABLE = False
+
+
+def get_md5(raise_error_if_unavailable=True, *args, **kwargs):
     """
-    Checks to see if md5 is available on this system. A given system might not
-    have access to it for various reasons, such as FIPS mode being enabled.
-    :return: True if md5 is available. False if not.
+    Attempts to get an md5 hashing object.
+
+    :param raise_error_if_unavailable: raise an error if md5 is unavailable on
+        this system. If False, None will be returned if it is unavailable.
+    :type raise_error_if_unavailable: bool
+    :param args: Args to pass to the MD5 constructor
+    :param kwargs: Key word arguments to pass to the MD5 constructor
+    :return: An MD5 hashing object if available. If it is unavailable, None
+        is returned if raise_error_if_unavailable is set to False.
     """
-    try:
-        import hashlib
-        hashlib.md5()
-        return True
-    except:
-        return False
+    if MD5_AVAILABLE:
+        return hashlib.md5(*args, **kwargs)
+    elif raise_error_if_unavailable:
+        raise MD5UnavailableError()
+    else:
+        logging.debug("This system does not support MD5 generation.")
+        return None
