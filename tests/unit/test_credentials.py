@@ -14,6 +14,7 @@
 from datetime import datetime, timedelta
 import mock
 import os
+import base64
 
 from dateutil.tz import tzlocal
 
@@ -988,6 +989,163 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         # source_profile is required, we shoudl get an error.
         with self.assertRaises(botocore.exceptions.InvalidConfigError):
             provider.load()
+
+
+class TestFormParser(unittest.TestCase):
+    def test_form2str(self):
+        html_input = '''
+            <input type="button" value="nameless button at outside of form"/>
+            <form action="/path/login/?foo=foo&amp;bar=bar">
+            <div>The &nbsp; in the form will not confuse our parser.</div>
+            <input name="foo" value="bar&amp;baz"/>
+            <input name="username"/><input name="password"/>
+            </form>
+            <input type="button" value="nameless button at outside of form"/>
+            </html>
+            '''
+        html_output = (
+            '<form action="/path/login/?foo=foo&amp;bar=bar">'
+            '<input name="foo" value="bar&amp;baz"/>'
+            '<input name="username"/><input name="password"/>'
+            '</form>')
+        p = credentials.FormParser()
+        p.feed(html_input)
+        self.assertEqual(p.form2str(), html_output)
+
+
+class TestSAMLGenericFormsBasedAuthenticator(unittest.TestCase):
+    login_form = '''<html><form action="login">
+        <div>The &nbsp; in the form will not confuse our parser.</div>
+        <input name="foo" value="bar"/>
+        <input name="username"/><input name="password"/>
+        </form></html>'''
+    GET = 'botocore.credentials.requests.get'
+    POST = 'botocore.credentials.requests.post'
+    profile = {
+        'saml_endpoint': 'https://notexist.com',
+        'saml_authentication_type': 'form',}
+
+    def setUp(self):
+        self.authenticator = credentials.SAMLGenericFormsBasedAuthenticator()
+
+    @mock.patch(GET, return_value=mock.Mock(text='<html>wrong way</html>'))
+    def test_login_form_not_exist(self, patched_get):
+        self.assertTrue(self.authenticator.is_suitable(self.profile))
+        with self.assertRaisesRegexp(botocore.exceptions.SAMLError, 'form'):
+            self.authenticator.authenticate(
+                self.profile, lambda prompt: 'foo', lambda prompt: 'bar')
+
+    @mock.patch(POST, return_value=mock.Mock(text='<html>login failed</html>'))
+    @mock.patch(GET, return_value=mock.Mock(text=login_form))
+    def test_no_saml_assertion(self, patched_get, patched_post):
+        self.assertTrue(self.authenticator.is_suitable(self.profile))
+        self.assertIsNone(self.authenticator.authenticate(
+            self.profile, lambda prompt: 'joe', lambda prompt: 'secret'))
+        patched_post.assert_called_with(
+            "https://notexist.com/login", verify=True,
+            data={'foo': 'bar', 'username': 'joe', 'password': 'secret'})
+
+    @mock.patch(POST, return_value=mock.Mock(
+        text='<form><input name="SAMLResponse" value="assertion"/></form>'))
+    @mock.patch(GET, return_value=mock.Mock(text=login_form))
+    def test_got_saml_assertion(self, patched_get, patched_post):
+        self.assertEqual("assertion", self.authenticator.authenticate(
+            self.profile, lambda prompt: 'joe', lambda prompt: 'secret'))
+
+
+class TestAssumeRoleWithSAMLProvider(unittest.TestCase):
+    GET = 'botocore.credentials.requests.get'
+    POST = 'botocore.credentials.requests.post'
+    assertion = base64.b64encode(b"""<?xml version="1.0" encoding="UTF-8"?>
+        <saml2p:Response xmlns:saml2p="urn:oasis:names:tc:SAML:2.0:protocol">
+        <saml2:Assertion xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">
+            <saml2:Attribute Name="https://aws.amazon.com/SAML/Attributes/Role">
+                <saml2:AttributeValue>arn:aws:iam::123456789012:saml-provider/Example,arn:aws:iam::123456789012:role/joe</saml2:AttributeValue>
+                <saml2:AttributeValue>arn:aws:iam::123456789012:saml-provider/Example,arn:aws:iam::123456789012:role/ray</saml2:AttributeValue>
+            </saml2:Attribute>
+        </saml2:Assertion>
+        </saml2p:Response>""")
+    adfs_login_form = '''<form>
+        <input name="ctl00$ContentPlaceHolder1$UsernameTextBox"/>
+        <input name="ctl00$ContentPlaceHolder1$PasswordTextBox"/></form>'''
+
+    def setUp(self):
+        patcher = mock.patch(
+            'botocore.credentials.requests.post',
+            return_value=mock.Mock(
+                text='<form><input name="SAMLResponse" value="%s"/></form>'
+                    % self.assertion.decode('utf-8')))
+        self.patched_post = patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def create_client_creator(self, with_response=None):
+        # Create a mock sts client that returns a specific response
+        # for assume_role_with_saml.
+        client = mock.Mock()
+        client.assume_role_with_saml.return_value = with_response or {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': datetime.now(tzlocal()).isoformat(),
+            },
+        }
+        return mock.Mock(return_value=client)
+
+    def load_cred(self, profile):
+        provider = credentials.AssumeRoleWithSAMLProvider(
+            lambda: {'profiles': {'saml': profile}},
+            self.create_client_creator(), cache={}, profile_name='saml',
+            username_prompter=lambda prompt: 'joe',
+            password_prompter=lambda prompt: 'secret')
+        creds = provider.load()
+        with self.assertRaises(botocore.exceptions.RefreshUnsupportedError):
+            # access_key is a property that will refresh credentials.
+            # Forms-based SAML authentication will currently raise an exception
+            creds.access_key
+
+    @mock.patch(GET, return_value=mock.Mock(
+        text='<form><input name="username"/><input name="password"/></form>'))
+    def test_assume_role_with_okta(self, patched_get):
+        profile = {
+            'saml_endpoint': 'https://example.com/login.asp',
+            'saml_authentication_type': 'form',
+            'saml_provider': 'okta',
+            'saml_username': 'joe',
+            'role_arn': 'arn:aws:iam::123456789012:role/joe',
+        }
+        self.load_cred(profile)
+        self.patched_post.assert_called_with(
+            'https://example.com/login.asp',
+            data={'username': 'joe', 'password': 'secret'}, verify=True)
+
+    @mock.patch(GET, return_value=mock.Mock(text=adfs_login_form))
+    def test_assume_role_with_adfs(self, patched_get):
+        profile = {
+            'saml_endpoint': 'https://example.com/login.asp',
+            'saml_authentication_type': 'form',
+            'saml_provider': 'adfs',
+            'saml_username': 'joe',
+            'role_arn': 'arn:aws:iam::123456789012:role/joe',
+        }
+        self.load_cred(profile)
+        self.patched_post.assert_called_with(
+            'https://example.com/login.asp', verify=True,
+            data={'ctl00$ContentPlaceHolder1$UsernameTextBox': 'joe',
+                  'ctl00$ContentPlaceHolder1$PasswordTextBox': 'secret'})
+
+    @mock.patch(GET, return_value=mock.Mock(text=adfs_login_form))
+    def test_unmatch_role(self, patched_get):
+        profile = {
+            'saml_endpoint': 'https://example.com/login.asp',
+            'saml_authentication_type': 'form',
+            'saml_provider': 'adfs',
+            'saml_username': 'joe',
+            'role_arn': 'arn:aws:iam::123456789012:role/does_not_match',
+        }
+        with self.assertRaisesRegexp(botocore.exceptions.SAMLError,
+                                     'Unable to choose role'):
+            self.load_cred(profile)
 
 
 class TestRefreshLogic(unittest.TestCase):
