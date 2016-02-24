@@ -254,6 +254,25 @@ class TestSigner(BaseSignerTest):
                 service_name='service_name',
                 region_name='region_name')
 
+    def test_no_credentials_case_is_forwarded_to_signer(self):
+        # If no credentials are given to the RequestSigner, we should
+        # forward that fact on to the Auth class and let them handle
+        # the error (which they already do).
+        self.credentials = None
+        self.signer = RequestSigner(
+            'service_name', 'region_name', 'signing_name',
+            'v4', self.credentials, self.emitter)
+        auth_cls = mock.Mock()
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
+                             {'v4': auth_cls}):
+            auth = self.signer.get_auth_instance(
+                'service_name', 'region_name', 'v4')
+            auth_cls.assert_called_with(
+                service_name='service_name',
+                region_name='region_name',
+                credentials=None,
+            )
+
 
 class TestCloudfrontSigner(unittest.TestCase):
     def setUp(self):

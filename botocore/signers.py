@@ -150,7 +150,14 @@ class RequestSigner(object):
         if cls is None:
             raise UnknownSignatureVersionError(
                 signature_version=signature_version)
-        kwargs['credentials'] = self._credentials.get_frozen_credentials()
+        # If there's no credentials provided (i.e credentials is None),
+        # then we'll pass a value of "None" over to the auth classes,
+        # which already handle the cases where no credentials have
+        # been provided.
+        frozen_credentials = None
+        if self._credentials is not None:
+            frozen_credentials = self._credentials.get_frozen_credentials()
+        kwargs['credentials'] = frozen_credentials
         if cls.REQUIRES_REGION:
             if self._region_name is None:
                 raise botocore.exceptions.NoRegionError()
