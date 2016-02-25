@@ -20,7 +20,7 @@ import os
 
 import botocore
 import botocore.session
-from botocore.exceptions import ParamValidationError
+from botocore.exceptions import ParamValidationError, MD5UnavailableError
 from botocore.awsrequest import AWSRequest
 from botocore.compat import quote, six
 from botocore.model import OperationModel, ServiceModel
@@ -198,45 +198,6 @@ class TestHandlers(BaseSessionTest):
         # A 500 response can raise an exception, which means the response
         # object is None.  We need to handle this case.
         handlers.check_for_200_error(None)
-
-    def test_sse_params(self):
-        for op in ('HeadObject', 'GetObject', 'PutObject', 'CopyObject',
-                   'CreateMultipartUpload', 'UploadPart', 'UploadPartCopy'):
-            event = 'before-parameter-build.s3.%s' % op
-            params = {'SSECustomerKey': b'bar',
-                      'SSECustomerAlgorithm': 'AES256'}
-            self.session.emit(event, params=params, model=mock.Mock())
-            self.assertEqual(params['SSECustomerKey'], 'YmFy')
-            self.assertEqual(params['SSECustomerKeyMD5'],
-                             'N7UdGUp1E+RbVvZSTy1R8g==')
-
-    def test_sse_params_as_str(self):
-        event = 'before-parameter-build.s3.PutObject'
-        params = {'SSECustomerKey': 'bar',
-                  'SSECustomerAlgorithm': 'AES256'}
-        self.session.emit(event, params=params, model=mock.Mock())
-        self.assertEqual(params['SSECustomerKey'], 'YmFy')
-        self.assertEqual(params['SSECustomerKeyMD5'],
-                         'N7UdGUp1E+RbVvZSTy1R8g==')
-
-    def test_copy_source_sse_params(self):
-        for op in ['CopyObject', 'UploadPartCopy']:
-            event = 'before-parameter-build.s3.%s' % op
-            params = {'CopySourceSSECustomerKey': b'bar',
-                      'CopySourceSSECustomerAlgorithm': 'AES256'}
-            self.session.emit(event, params=params, model=mock.Mock())
-            self.assertEqual(params['CopySourceSSECustomerKey'], 'YmFy')
-            self.assertEqual(params['CopySourceSSECustomerKeyMD5'],
-                             'N7UdGUp1E+RbVvZSTy1R8g==')
-
-    def test_copy_source_sse_params_as_str(self):
-        event = 'before-parameter-build.s3.CopyObject'
-        params = {'CopySourceSSECustomerKey': 'bar',
-                  'CopySourceSSECustomerAlgorithm': 'AES256'}
-        self.session.emit(event, params=params, model=mock.Mock())
-        self.assertEqual(params['CopySourceSSECustomerKey'], 'YmFy')
-        self.assertEqual(params['CopySourceSSECustomerKeyMD5'],
-                         'N7UdGUp1E+RbVvZSTy1R8g==')
 
     def test_route53_resource_id(self):
         event = 'before-parameter-build.route53.GetHostedZone'
@@ -509,60 +470,7 @@ class TestHandlers(BaseSessionTest):
         handlers.switch_host_with_param(request, 'PredictEndpoint')
         self.assertEqual(request.url, new_endpoint)
 
-    def test_does_not_add_md5_when_v4(self):
-        credentials = Credentials('key', 'secret')
-        request_signer = RequestSigner(
-            's3', 'us-east-1', 's3', 'v4', credentials, mock.Mock())
-        request_dict = {'body': b'bar',
-                        'url': 'https://s3.us-east-1.amazonaws.com',
-                        'method': 'PUT',
-                        'headers': {}}
-        handlers.conditionally_calculate_md5(request_dict,
-                                             request_signer=request_signer)
-        self.assertTrue('Content-MD5' not in request_dict['headers'])
 
-    def test_does_not_add_md5_when_s3v4(self):
-        credentials = Credentials('key', 'secret')
-        request_signer = RequestSigner(
-            's3', 'us-east-1', 's3', 's3v4', credentials, mock.Mock())
-        request_dict = {'body': b'bar',
-                        'url': 'https://s3.us-east-1.amazonaws.com',
-                        'method': 'PUT',
-                        'headers': {}}
-        handlers.conditionally_calculate_md5(request_dict,
-                                             request_signer=request_signer)
-        self.assertTrue('Content-MD5' not in request_dict['headers'])
-
-    def test_adds_md5_when_not_v4(self):
-        credentials = Credentials('key', 'secret')
-        request_signer = RequestSigner(
-            's3', 'us-east-1', 's3', 's3', credentials, mock.Mock())
-        request_dict = {'body': b'bar',
-                        'url': 'https://s3.us-east-1.amazonaws.com',
-                        'method': 'PUT',
-                        'headers': {}}
-        handlers.conditionally_calculate_md5(request_dict,
-                                             request_signer=request_signer)
-        self.assertTrue('Content-MD5' in request_dict['headers'])
-
-    def test_adds_md5_with_file_like_body(self):
-        request_dict = {
-            'body': six.BytesIO(b'foobar'),
-            'headers': {}
-        }
-        handlers.calculate_md5(request_dict)
-        self.assertEqual(request_dict['headers']['Content-MD5'],
-                         'OFj2IjCsPJFfMAxmQxLGPw==')
-
-    def test_adds_md5_with_bytes_object(self):
-        request_dict = {
-            'body': b'foobar',
-            'headers': {}
-        }
-        handlers.calculate_md5(request_dict)
-        self.assertEqual(
-            request_dict['headers']['Content-MD5'],
-            'OFj2IjCsPJFfMAxmQxLGPw==')
 
     def test_invalid_char_in_bucket_raises_exception(self):
         params = {
@@ -735,3 +643,164 @@ class TestRetryHandlerOrder(BaseSessionTest):
         self.assertTrue(s3_200_handler < general_retry_handler,
                         "S3 200 error handler was supposed to be before "
                         "the general retry handler, but it was not.")
+
+
+class BaseMD5Test(BaseSessionTest):
+    def setUp(self, **environ):
+        super(BaseMD5Test, self).setUp(**environ)
+        self.md5_object = mock.Mock()
+        self.md5_digest = mock.Mock(return_value=b'foo')
+        self.md5_object.digest = self.md5_digest
+        md5_builder = mock.Mock(return_value=self.md5_object)
+        self.md5_patch = mock.patch('hashlib.md5', md5_builder)
+        self.md5_patch.start()
+        self._md5_available_patch = None
+        self.set_md5_available()
+
+    def tearDown(self):
+        super(BaseMD5Test, self).tearDown()
+        self.md5_patch.stop()
+        if self._md5_available_patch:
+            self._md5_available_patch.stop()
+
+    def set_md5_available(self, is_available=True):
+        if self._md5_available_patch:
+            self._md5_available_patch.stop()
+
+        self._md5_available_patch = \
+            mock.patch('botocore.compat.MD5_AVAILABLE', is_available)
+        self._md5_available_patch.start()
+
+
+class TestSSEMD5(BaseMD5Test):
+    def test_raises_error_when_md5_unavailable(self):
+        self.set_md5_available(False)
+
+        with self.assertRaises(MD5UnavailableError):
+            handlers.sse_md5({'SSECustomerKey': b'foo'})
+
+        with self.assertRaises(MD5UnavailableError):
+            handlers.copy_source_sse_md5({'CopySourceSSECustomerKey': b'foo'})
+
+    def test_sse_params(self):
+        for op in ('HeadObject', 'GetObject', 'PutObject', 'CopyObject',
+                   'CreateMultipartUpload', 'UploadPart', 'UploadPartCopy'):
+            event = 'before-parameter-build.s3.%s' % op
+            params = {'SSECustomerKey': b'bar',
+                      'SSECustomerAlgorithm': 'AES256'}
+            self.session.emit(event, params=params, model=mock.Mock())
+            self.assertEqual(params['SSECustomerKey'], 'YmFy')
+            self.assertEqual(params['SSECustomerKeyMD5'], 'Zm9v')
+
+    def test_sse_params_as_str(self):
+        event = 'before-parameter-build.s3.PutObject'
+        params = {'SSECustomerKey': 'bar',
+                  'SSECustomerAlgorithm': 'AES256'}
+        self.session.emit(event, params=params, model=mock.Mock())
+        self.assertEqual(params['SSECustomerKey'], 'YmFy')
+        self.assertEqual(params['SSECustomerKeyMD5'], 'Zm9v')
+
+    def test_copy_source_sse_params(self):
+        for op in ['CopyObject', 'UploadPartCopy']:
+            event = 'before-parameter-build.s3.%s' % op
+            params = {'CopySourceSSECustomerKey': b'bar',
+                      'CopySourceSSECustomerAlgorithm': 'AES256'}
+            self.session.emit(event, params=params, model=mock.Mock())
+            self.assertEqual(params['CopySourceSSECustomerKey'], 'YmFy')
+            self.assertEqual(params['CopySourceSSECustomerKeyMD5'], 'Zm9v')
+
+    def test_copy_source_sse_params_as_str(self):
+        event = 'before-parameter-build.s3.CopyObject'
+        params = {'CopySourceSSECustomerKey': 'bar',
+                  'CopySourceSSECustomerAlgorithm': 'AES256'}
+        self.session.emit(event, params=params, model=mock.Mock())
+        self.assertEqual(params['CopySourceSSECustomerKey'], 'YmFy')
+        self.assertEqual(params['CopySourceSSECustomerKeyMD5'], 'Zm9v')
+
+
+class TestAddMD5(BaseMD5Test):
+    def test_does_not_add_md5_when_v4(self):
+        credentials = Credentials('key', 'secret')
+        request_signer = RequestSigner(
+            's3', 'us-east-1', 's3', 'v4', credentials, mock.Mock())
+        request_dict = {'body': b'bar',
+                        'url': 'https://s3.us-east-1.amazonaws.com',
+                        'method': 'PUT',
+                        'headers': {}}
+        handlers.conditionally_calculate_md5(request_dict,
+                                             request_signer=request_signer)
+        self.assertTrue('Content-MD5' not in request_dict['headers'])
+
+    def test_does_not_add_md5_when_s3v4(self):
+        credentials = Credentials('key', 'secret')
+        request_signer = RequestSigner(
+            's3', 'us-east-1', 's3', 's3v4', credentials, mock.Mock())
+        request_dict = {'body': b'bar',
+                        'url': 'https://s3.us-east-1.amazonaws.com',
+                        'method': 'PUT',
+                        'headers': {}}
+        handlers.conditionally_calculate_md5(request_dict,
+                                             request_signer=request_signer)
+        self.assertTrue('Content-MD5' not in request_dict['headers'])
+
+    def test_conditional_does_not_add_when_md5_unavailable(self):
+        credentials = Credentials('key', 'secret')
+        request_signer = RequestSigner(
+            's3', 'us-east-1', 's3', 's3', credentials, mock.Mock())
+        request_dict = {'body': b'bar',
+                        'url': 'https://s3.us-east-1.amazonaws.com',
+                        'method': 'PUT',
+                        'headers': {}}
+
+        self.set_md5_available(False)
+        with mock.patch('botocore.handlers.MD5_AVAILABLE', False):
+            handlers.conditionally_calculate_md5(
+                request_dict, request_signer=request_signer)
+            self.assertFalse('Content-MD5' in request_dict['headers'])
+
+    def test_add_md5_raises_error_when_md5_unavailable(self):
+        credentials = Credentials('key', 'secret')
+        request_signer = RequestSigner(
+            's3', 'us-east-1', 's3', 's3', credentials, mock.Mock())
+        request_dict = {'body': b'bar',
+                        'url': 'https://s3.us-east-1.amazonaws.com',
+                        'method': 'PUT',
+                        'headers': {}}
+
+        self.set_md5_available(False)
+        with self.assertRaises(MD5UnavailableError):
+            handlers.calculate_md5(
+                request_dict, request_signer=request_signer)
+
+    def test_adds_md5_when_not_v4(self):
+        credentials = Credentials('key', 'secret')
+        request_signer = RequestSigner(
+            's3', 'us-east-1', 's3', 's3', credentials, mock.Mock())
+        request_dict = {'body': b'bar',
+                        'url': 'https://s3.us-east-1.amazonaws.com',
+                        'method': 'PUT',
+                        'headers': {}}
+        handlers.conditionally_calculate_md5(request_dict,
+                                             request_signer=request_signer)
+        self.assertTrue('Content-MD5' in request_dict['headers'])
+
+    def test_add_md5_with_file_like_body(self):
+        request_dict = {
+            'body': six.BytesIO(b'foobar'),
+            'headers': {}
+        }
+        self.md5_digest.return_value = b'8X\xf6"0\xac<\x91_0\x0cfC\x12\xc6?'
+        handlers.calculate_md5(request_dict)
+        self.assertEqual(request_dict['headers']['Content-MD5'],
+                         'OFj2IjCsPJFfMAxmQxLGPw==')
+
+    def test_add_md5_with_bytes_object(self):
+        request_dict = {
+            'body': b'foobar',
+            'headers': {}
+        }
+        self.md5_digest.return_value = b'8X\xf6"0\xac<\x91_0\x0cfC\x12\xc6?'
+        handlers.calculate_md5(request_dict)
+        self.assertEqual(
+            request_dict['headers']['Content-MD5'],
+            'OFj2IjCsPJFfMAxmQxLGPw==')

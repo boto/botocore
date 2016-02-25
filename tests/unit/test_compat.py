@@ -12,8 +12,12 @@
 # language governing permissions and limitations under the License.
 
 import datetime
+import mock
 
-from botocore.compat import total_seconds, unquote_str, six, ensure_bytes
+from botocore.exceptions import MD5UnavailableError
+from botocore.compat import (
+    total_seconds, unquote_str, six, ensure_bytes, get_md5
+)
 
 from tests import BaseEnvVar, unittest
 
@@ -78,3 +82,16 @@ class TestEnsureBytes(unittest.TestCase):
         value = 500
         with self.assertRaises(ValueError):
             ensure_bytes(value)
+
+
+class TestGetMD5(unittest.TestCase):
+    def test_available(self):
+        md5 = mock.Mock()
+        with mock.patch('botocore.compat.MD5_AVAILABLE', True):
+            with mock.patch('hashlib.md5', mock.Mock(return_value=md5)):
+                self.assertEqual(get_md5(), md5)
+
+    def test_unavailable_raises_error(self):
+        with mock.patch('botocore.compat.MD5_AVAILABLE', False):
+            with self.assertRaises(MD5UnavailableError):
+                get_md5()
