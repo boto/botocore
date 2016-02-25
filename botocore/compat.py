@@ -253,7 +253,7 @@ except ValueError:
     MD5_AVAILABLE = False
 
 
-def get_md5(raise_error_if_unavailable=True, *args, **kwargs):
+def get_md5(*args, **kwargs):
     """
     Attempts to get an md5 hashing object.
 
@@ -267,8 +267,5 @@ def get_md5(raise_error_if_unavailable=True, *args, **kwargs):
     """
     if MD5_AVAILABLE:
         return hashlib.md5(*args, **kwargs)
-    elif raise_error_if_unavailable:
-        raise MD5UnavailableError()
     else:
-        logging.debug("This system does not support MD5 generation.")
-        return None
+        raise MD5UnavailableError()

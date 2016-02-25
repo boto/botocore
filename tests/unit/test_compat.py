@@ -94,8 +94,4 @@ class TestGetMD5(unittest.TestCase):
     def test_unavailable_raises_error(self):
         with mock.patch('botocore.compat.MD5_AVAILABLE', False):
             with self.assertRaises(MD5UnavailableError):
-                get_md5(raise_error_if_unavailable=True)
-
-    def test_unavailable_returns_null(self):
-        with mock.patch('botocore.compat.MD5_AVAILABLE', False):
-            self.assertFalse(get_md5(raise_error_if_unavailable=False))
+                get_md5()
