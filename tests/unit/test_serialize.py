@@ -362,40 +362,7 @@ class TestInstanceCreation(unittest.TestCase):
         }
         self.service_model = ServiceModel(self.model)
 
-    def test_instantiate_without_validation(self):
-        request_serializer = serialize.create_serializer(
-            self.service_model.metadata['protocol'], False)
-
-        self.assertIsInstance(request_serializer, Serializer)
-
-        try:
-            self._assert_serialize_valid_parameter(request_serializer)
-        except ParamValidationError as e:
-            self.fail("Shouldn't fail serializing valid parameter without validation")
-
-        try:
-            self._assert_serialize_invalid_parameter(request_serializer)
-        except ParamValidationError as e:
-            self.fail("Shouldn't fail serializing invalid parameter without validation")
-
-    def test_instantiate_with_validation(self):
-        request_serializer = serialize.create_serializer(
-            self.service_model.metadata['protocol'], True)
-
-        self.assertIsInstance(request_serializer, ParamValidationDecorator)
-
-        try:
-            self._assert_serialize_valid_parameter(request_serializer)
-        except ParamValidationError as e:
-            self.fail("Shouldn't fail serializing valid parameter with validation")
-
-        try:
-            self._assert_serialize_invalid_parameter(request_serializer)
-            self.fail("Should have failed serializing invalid parameter with validation")
-        except ParamValidationError as e:
-            pass
-
-    def _assert_serialize_valid_parameter(self, request_serializer):
+    def assert_serialize_valid_parameter(self, request_serializer):
         valid_string = 'valid_string_with_min_15_chars'
         request = request_serializer.serialize_to_request(
             {'Timestamp': valid_string},
@@ -403,7 +370,7 @@ class TestInstanceCreation(unittest.TestCase):
 
         self.assertEqual(request['body']['Timestamp'], valid_string)
 
-    def _assert_serialize_invalid_parameter(self, request_serializer):
+    def assert_serialize_invalid_parameter(self, request_serializer):
         invalid_string = 'short string'
         request = request_serializer.serialize_to_request(
             {'Timestamp': invalid_string},
@@ -411,3 +378,27 @@ class TestInstanceCreation(unittest.TestCase):
 
         self.assertEqual(request['body']['Timestamp'], invalid_string)
 
+    def test_instantiate_without_validation(self):
+        request_serializer = serialize.create_serializer(
+            self.service_model.metadata['protocol'], False)
+
+        try:
+            self.assert_serialize_valid_parameter(request_serializer)
+        except ParamValidationError as e:
+            self.fail("Shouldn't fail serializing valid parameter without validation")
+
+        try:
+            self.assert_serialize_invalid_parameter(request_serializer)
+        except ParamValidationError as e:
+            self.fail("Shouldn't fail serializing invalid parameter without validation")
+
+    def test_instantiate_with_validation(self):
+        request_serializer = serialize.create_serializer(
+            self.service_model.metadata['protocol'], True)
+        try:
+            self.assert_serialize_valid_parameter(request_serializer)
+        except ParamValidationError as e:
+            self.fail("Shouldn't fail serializing valid parameter with validation")
+
+        with self.assertRaises(ParamValidationError):
+            self.assert_serialize_invalid_parameter(request_serializer)
