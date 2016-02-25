@@ -17,7 +17,6 @@ This module contains builtin handlers for events emitted by botocore.
 """
 
 import base64
-import hashlib
 import logging
 import xml.etree.cElementTree
 import copy
@@ -25,7 +24,7 @@ import re
 import warnings
 
 from botocore.compat import urlsplit, urlunsplit, unquote, \
-    json, quote, six, unquote_str, ensure_bytes
+    json, quote, six, unquote_str, ensure_bytes, get_md5, MD5_AVAILABLE
 from botocore.docs.utils import AutoPopulatedParam
 from botocore.docs.utils import HideParamFromOperations
 from botocore.docs.utils import AppendParamDocumentation
@@ -134,13 +133,13 @@ def calculate_md5(params, **kwargs):
 
 
 def _calculate_md5_from_bytes(body_bytes):
-    md5 = hashlib.md5(body_bytes)
+    md5 = get_md5(body_bytes)
     return md5.digest()
 
 
 def _calculate_md5_from_file(fileobj):
     start_position = fileobj.tell()
-    md5 = hashlib.md5()
+    md5 = get_md5()
     for chunk in iter(lambda: fileobj.read(1024 * 1024), b''):
         md5.update(chunk)
     fileobj.seek(start_position)
@@ -150,7 +149,7 @@ def _calculate_md5_from_file(fileobj):
 def conditionally_calculate_md5(params, **kwargs):
     """Only add a Content-MD5 when not using sigv4"""
     signer = kwargs['request_signer']
-    if signer.signature_version not in ['v4', 's3v4']:
+    if signer.signature_version not in ['v4', 's3v4'] and MD5_AVAILABLE:
         calculate_md5(params, **kwargs)
 
 
@@ -188,13 +187,14 @@ def copy_source_sse_md5(params, **kwargs):
 def _sse_md5(params, sse_member_prefix='SSECustomer'):
     if not _needs_s3_sse_customization(params, sse_member_prefix):
         return
+
     sse_key_member = sse_member_prefix + 'Key'
     sse_md5_member = sse_member_prefix + 'KeyMD5'
     key_as_bytes = params[sse_key_member]
     if isinstance(key_as_bytes, six.text_type):
         key_as_bytes = key_as_bytes.encode('utf-8')
     key_md5_str = base64.b64encode(
-        hashlib.md5(key_as_bytes).digest()).decode('utf-8')
+        get_md5(key_as_bytes).digest()).decode('utf-8')
     key_b64_encoded = base64.b64encode(key_as_bytes).decode('utf-8')
     params[sse_key_member] = key_b64_encoded
     params[sse_md5_member] = key_md5_str

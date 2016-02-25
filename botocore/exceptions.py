@@ -367,3 +367,7 @@ class InvalidConfigError(BotoCoreError):
 
 class RefreshWithMFAUnsupportedError(BotoCoreError):
     fmt = 'Cannot refresh credentials: MFA token required.'
+
+
+class MD5UnavailableError(BotoCoreError):
+    fmt = "This system does not support MD5 generation."
