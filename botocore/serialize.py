@@ -62,7 +62,8 @@ def create_serializer(protocol_name, include_validation=True):
     serializer = SERIALIZERS[protocol_name]()
     if include_validation:
         validator = validate.ParamValidator()
-    return validate.ParamValidationDecorator(validator, serializer)
+        serializer = validate.ParamValidationDecorator(validator, serializer)
+    return serializer
 
 
 class Serializer(object):
