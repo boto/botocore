@@ -196,8 +196,9 @@ class ClientCreator(object):
                          scoped_config, client_config):
 
         protocol = service_model.metadata['protocol']
+        parameter_validation = client_config.parameter_validation if client_config else True
         serializer = botocore.serialize.create_serializer(
-            protocol, include_validation=True)
+            protocol, parameter_validation)
 
         event_emitter = copy.copy(self._event_emitter)
 
@@ -617,6 +618,10 @@ class Config(object):
         thrown when attempting to read from a connection. The default is
         60 seconds.
 
+    :type parameter_validation: str
+    :param parameter_validation: Whether parameter validation should occur
+        when serializing requests. The default is True.
+
     :type s3: dict
     :param s3: A dictionary of s3 specific configurations.
         Valid keys are:
@@ -641,6 +646,7 @@ class Config(object):
         ('user_agent_extra', None),
         ('connect_timeout', DEFAULT_TIMEOUT),
         ('read_timeout', DEFAULT_TIMEOUT),
+        ('parameter_validation', True),
         ('s3', None)
     ])
 
