@@ -1160,7 +1160,7 @@ class TestBaseAssumeRoleCredentialProvider(unittest.TestCase):
         self.assertNotIn(':', cache_key)
         self.assertIn('foo-role', cache_key)
         self.assertIn('mysession', cache_key)
-        self.assertTrue(cache_key.endswith(sha256('').hexdigest()))
+        self.assertTrue(cache_key.endswith(sha256(''.encode()).hexdigest()))
 
     def test_cache_key_with_policy(self):
         response = {
@@ -1194,7 +1194,9 @@ class TestBaseAssumeRoleCredentialProvider(unittest.TestCase):
         self.assertNotIn(':', cache_key)
         self.assertIn('foo-role', cache_key)
         self.assertIn('mysession', cache_key)
-        self.assertTrue(cache_key.endswith(sha256(policy_json).hexdigest()))
+        self.assertTrue(
+            cache_key.endswith(sha256(policy_json.encode()).hexdigest())
+        )
 
     def test_assume_role_in_cache_but_expired(self):
         expired_creds = datetime.utcnow().replace(tzinfo=tzutc())

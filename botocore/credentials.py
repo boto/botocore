@@ -846,7 +846,7 @@ class BaseAssumeRoleProvider(CredentialProvider):
         # replace them with '_' instead.
         role_arn = self._role_arn.replace(':', '_')
         role_session_name=self._role_session_name
-        policy_hash = sha256(self._policy or '').hexdigest()
+        policy_hash = sha256((self._policy or '').encode()).hexdigest()
         cache_key = '%s--%s--%s' % (role_arn, role_session_name, policy_hash)
         return cache_key
 
