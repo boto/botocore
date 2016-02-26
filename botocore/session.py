@@ -909,6 +909,42 @@ class Session(object):
             pass
         return results
 
+    def assume_role(
+        self, role_arn, role_session_name,
+        policy=None, duration=900, cache={}, external_id=None,
+        mfa_serial=None, mfa_token_prompter=None
+    ):
+        """
+        Create a new session that uses assumed role credentials
+        :param role_arn:
+        :param role_session_name:
+        :param policy:
+        :param duration:
+        :param cache:
+        :param external_id:
+        :param mfa_serial:
+        :param mfa_token_prompter:
+        :return:
+        """
+        provider = botocore.credentials.BaseAssumeRoleProvider(
+            self.create_client,
+            cache,
+            role_arn,
+            role_session_name,
+            policy,
+            duration,
+            external_id,
+            mfa_serial,
+            mfa_token_prompter
+        )
+
+        role_session = Session()
+        role_session.register_component(
+            'credential_provider',
+            botocore.credentials.CredentialResolver([provider])
+        )
+        return role_session
+
 
 class ComponentLocator(object):
     """Service locator for session components."""
