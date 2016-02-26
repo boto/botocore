@@ -67,7 +67,7 @@ def create_credential_resolver(session):
         #         profile_name=profile_name,
         # ),
         BaseAssumeRoleProvider.from_config(
-            session.create_client('sts'),
+            session.create_client,
             {},
             session.full_config,
             profile_name,
@@ -917,7 +917,7 @@ class BaseAssumeRoleProvider(CredentialProvider):
         :return:
         """
         profiles = config.get('profiles', {})
-        profile = profiles[profile_name]
+        profile = profiles.get(profile_name, {})
         if 'role_arn' in profile:
             try:
                 source_profile = profile['source_profile']
