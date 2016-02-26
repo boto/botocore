@@ -18,9 +18,11 @@ import os
 import getpass
 import threading
 from collections import namedtuple
+from copy import deepcopy
+from hashlib import sha256
 
 from dateutil.parser import parse
-from dateutil.tz import tzlocal
+from dateutil.tz import tzlocal, tzutc
 
 import botocore.configloader
 import botocore.compat
@@ -58,11 +60,18 @@ def create_credential_resolver(session):
     env_provider = EnvProvider()
     providers = [
         env_provider,
-        AssumeRoleProvider(
-            load_config=lambda: session.full_config,
-            client_creator=session.create_client,
-            cache={},
-            profile_name=profile_name,
+        # AssumeRoleProvider(
+        #         load_config=lambda: session.full_config,
+        #         client_creator=session.create_client,
+        #         cache={},
+        #         profile_name=profile_name,
+        # ),
+        BaseAssumeRoleProvider.from_config(
+            session.create_client('sts'),
+            {},
+            session.full_config,
+            profile_name,
+            getpass.getpass
         ),
         SharedCredentialProvider(
             creds_filename=credential_file,
@@ -152,6 +161,10 @@ def create_mfa_serial_refresher():
     return _refresher
 
 
+def _utcnow():
+    return datetime.datetime.utcnow().replace(tzinfo=tzutc())
+
+
 class Credentials(object):
     """
     Holds the credentials needed to authenticate requests.
@@ -196,13 +209,15 @@ class RefreshableCredentials(Credentials):
     Holds the credentials needed to authenticate requests. In addition, it
     knows how to refresh itself.
 
-    :ivar refresh_timeout: How long a given set of credentials are valid for.
-        Useful for credentials fetched over the network.
     :ivar access_key: The access key part of the credentials.
     :ivar secret_key: The secret key part of the credentials.
     :ivar token: The security token, valid only for session credentials.
     :ivar method: A string which identifies where the credentials
         were found.
+    :ivar advisory_refresh_timeout: Time after which one thread will block
+        and attempt to refresh.
+    :ivar mandatory_refresh_timeout: Time after which all threads will block
+        while one attempts to refresh.
     """
     # The time at which we'll attempt to refresh, but not
     # block if someone else is refreshing.
@@ -213,13 +228,17 @@ class RefreshableCredentials(Credentials):
 
     def __init__(self, access_key, secret_key, token,
                  expiry_time, refresh_using, method,
-                 time_fetcher=_local_now):
+                 time_fetcher=_local_now,
+                 advisory_refresh_timeout=900,
+                 mandatory_refresh_timeout=600):
         self._refresh_using = refresh_using
         self._access_key = access_key
         self._secret_key = secret_key
         self._token = token
         self._expiry_time = expiry_time
         self._time_fetcher = time_fetcher
+        self._advisory_refresh_timeout = advisory_refresh_timeout
+        self._mandatory_refresh_timeout = mandatory_refresh_timeout
         self._refresh_lock = threading.Lock()
         self.method = method
         self._frozen_credentials = ReadOnlyCredentials(
@@ -459,7 +478,7 @@ class CredentialProvider(object):
         ``access_key/secret_key/token`` themselves.
 
         :returns: Whether credentials were found & set
-        :rtype: boolean
+        :rtype: Credentials
         """
         return True
 
@@ -733,6 +752,223 @@ class BotoProvider(CredentialProvider):
                                        method=self.METHOD)
 
 
+class BaseAssumeRoleProvider(CredentialProvider):
+
+    METHOD = 'assume-role'
+    # Credentials are considered expired (and will be refreshed) once the total
+    # remaining time left until the credentials expires is less than the
+    # EXPIRY_WINDOW.
+    EXPIRY_WINDOW_SECONDS = 120
+
+    def __init__(
+            self, client_creator, cache, role_arn, role_session_name,
+            policy=None, duration=None, external_id=None,
+            mfa_serial=None, mfa_token_prompter=None
+    ):
+        """
+
+        :param client_creator: A session.create_client method
+        :param cache: An object with __getitem__ __setitem__ and __contains__
+        :param role_arn: ARN of the role to be assumed
+        :param role_session_name: session name to use for the assumed role
+        :param policy: role policy to use for the assumed role
+        :param duration: duration for which the temporary credentials are valid
+        :param external_id: external id to use for the assumed role
+        :param mfa_serial: mfa serial number to use for the assumed role
+        :param mfa_token_prompter: method that takes a string and returns user-supplied mfa token
+        :return:
+        """
+        self.client_creator = client_creator
+        self._role_arn = role_arn
+        self._role_session_name = role_session_name
+        self.cache = cache
+        self._policy = policy
+        self._duration = duration
+        self._external_id = external_id
+        self._mfa_serial = mfa_serial
+        self.mfa_token_prompter = mfa_token_prompter
+
+    def load(self):
+        cache_key = self._create_cache_key()
+        response = self._load_from_cache(cache_key)
+        if response is None or self._is_expired(response):
+            response = self._assume_role()
+            self._write_to_cache(cache_key, response)
+        return self._create_creds_from_response(response)
+
+    def _load_from_cache(self, cache_key):
+        response = deepcopy(self.cache.get(cache_key))
+        if response is not None:
+            credentials = response['Credentials']
+            credentials['Expiration'] = parse(credentials['Expiration'])
+        return response
+
+    def _write_to_cache(self, cache_key, response):
+        response = deepcopy(response)
+        credentials = response['Credentials']
+        credentials['Expiration'] = credentials['Expiration'].isoformat()
+        self.cache[cache_key] = response
+
+    def _is_expired(self, credentials):
+        end_time = parse(credentials['Credentials']['Expiration'])
+        now = datetime.datetime.now(tzlocal())
+        seconds = total_seconds(end_time - now)
+        return seconds < self.EXPIRY_WINDOW_SECONDS
+
+    def _assume_role(self):
+        kwargs = self._assume_role_kwargs()
+        return self.client_creator('sts').assume_role(**kwargs)
+
+    def _assume_role_kwargs(self):
+        assume_role_kwargs = {
+            'RoleArn': self._role_arn,
+            'RoleSessionName': self._role_session_name
+        }
+        if self._duration is not None:
+            assume_role_kwargs['DurationSeconds'] = self._duration
+        if self._external_id is not None:
+            assume_role_kwargs['ExternalId'] = self._external_id
+        if self._mfa_serial is not None:
+            token_code = self.mfa_token_prompter("Enter MFA code: ")
+            assume_role_kwargs['SerialNumber'] = self._mfa_serial
+            assume_role_kwargs['TokenCode'] = token_code
+        return assume_role_kwargs
+
+    def _create_cache_key(self):
+        # On windows, ':' is not allowed in filenames, so we'll
+        # replace them with '_' instead.
+        role_arn = self._role_arn.replace(':', '_')
+        role_session_name=self._role_session_name
+        policy_hash = sha256(self._policy or '').hexdigest()
+        cache_key = '%s--%s--%s' % (role_arn, role_session_name, policy_hash)
+        return cache_key
+
+    def _create_creds_from_response(self, response):
+
+        credentials = RefreshableCredentials(
+            access_key=response['Credentials']['AccessKeyId'],
+            secret_key=response['Credentials']['SecretAccessKey'],
+            token=response['Credentials']['SessionToken'],
+            method=self.METHOD,
+            expiry_time=response['Credentials']['Expiration'],
+            refresh_using=self._refresh_credentials,
+            time_fetcher=_utcnow,
+            advisory_refresh_timeout=60,
+            mandatory_refresh_timeout=5
+        )
+        # refresh the credentials if they expire in the next 60 seconds
+        credentials.refresh_timeout = 60
+        return credentials
+
+    def _refresh_credentials(self):
+        """
+        refresh factory method given to RefreshableCredentials
+        :return:
+        """
+        cache_key = self._create_cache_key()
+        response = self._assume_role()
+        self._write_to_cache(cache_key, response)
+        credentials = response['Credentials']
+        # We need to normalize the credential names to
+        # the values expected by the refresh creds.
+        return {
+            'access_key': credentials['AccessKeyId'],
+            'secret_key': credentials['SecretAccessKey'],
+            'token': credentials['SessionToken'],
+            'expiry_time': credentials['Expiration'].isoformat(),
+        }
+
+    @staticmethod
+    def wrap_client_creator(client_creator, with_provider):
+        """
+
+        :param client_creator: A session.create_client method
+        :param with_provider:
+        :type with_provider: CredentialProvider
+        :return:
+        """
+        def creator(*args, **kwargs):
+            credentials = with_provider.load()
+            return client_creator(
+                *args,
+                aws_access_key_id=credentials.access_key,
+                aws_secret_access_key=credentials.secret_key,
+                aws_session_token=credentials.token,
+                **kwargs
+            )
+        return creator
+
+    @classmethod
+    def from_config(
+            cls, client_creator, cache, config, profile_name,
+            mfa_token_prompter=None, top=True
+    ):
+        """
+        create a recursive assumed role credential provider
+        :param client_creator:
+        :param cache:
+        :param config:
+        :param profile_name:
+        :param mfa_token_prompter:
+        :param top:
+        :return:
+        """
+        profiles = config.get('profiles', {})
+        profile = profiles[profile_name]
+        if 'role_arn' in profile:
+            try:
+                source_profile = profile['source_profile']
+            except KeyError as e:
+                raise PartialCredentialsError(
+                    provider=cls.METHOD,
+                    cred_var=str(e)
+                )
+
+            if source_profile not in profiles:
+                raise InvalidConfigError(
+                    error_msg=(
+                        'The source_profile "%s" referenced in '
+                        'the profile "%s" does not exist.' % (
+                            source_profile, profile_name
+                        )
+                    )
+                )
+            source_client_creator = cls.from_config(
+                client_creator,
+                cache,
+                config,
+                source_profile,
+                mfa_token_prompter,
+                False
+            )
+            provider = cls(
+                source_client_creator,
+                cache,
+                profile['role_arn'],
+                profile.get('role_session_name'),
+                profile.get('role_policy'),
+                profile.get('role_duration'),
+                profile.get('external_id'),
+                profile.get('mfa_serial'),
+                mfa_token_prompter
+            )
+        else:
+            provider = CredentialProvider()
+            if top:
+                # the selected profile does not use an assumed role
+                provider.load = lambda: None
+            else:
+                credentials = Credentials(
+                        profile['aws_access_key_id'],
+                        profile['aws_secret_access_key'],
+                        profile.get('aws_session_token')
+                )
+                provider.load = lambda: credentials
+        if top:
+            return provider
+        return cls.wrap_client_creator(client_creator, provider)
+
+
 class AssumeRoleProvider(CredentialProvider):
 
     METHOD = 'assume-role'
@@ -854,6 +1090,7 @@ class AssumeRoleProvider(CredentialProvider):
         return cache_key.replace('/', '-')
 
     def _write_cached_credentials(self, creds, cache_key):
+        # todo: why does this not raise a JSON seriliazation error in the awscli when Expiration is a datetime?
         self.cache[cache_key] = creds
 
     def _get_role_config_values(self):
