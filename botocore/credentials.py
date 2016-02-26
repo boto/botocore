@@ -759,6 +759,8 @@ class BaseAssumeRoleProvider(CredentialProvider):
     # remaining time left until the credentials expires is less than the
     # EXPIRY_WINDOW.
     EXPIRY_WINDOW_SECONDS = 120
+    # todo: this should be injected by the awscli
+    DEFAULT_SESSION_NAME = 'AWS-CLI-session-%s' % (int(time.time()))
 
     def __init__(
             self, client_creator, cache, role_arn, role_session_name,
@@ -810,7 +812,7 @@ class BaseAssumeRoleProvider(CredentialProvider):
         self.cache[cache_key] = response
 
     def _is_expired(self, credentials):
-        end_time = parse(credentials['Credentials']['Expiration'])
+        end_time = credentials['Credentials']['Expiration']
         now = datetime.datetime.now(tzlocal())
         seconds = total_seconds(end_time - now)
         return seconds < self.EXPIRY_WINDOW_SECONDS
@@ -829,7 +831,8 @@ class BaseAssumeRoleProvider(CredentialProvider):
         if self._external_id is not None:
             assume_role_kwargs['ExternalId'] = self._external_id
         if self._mfa_serial is not None:
-            token_code = self.mfa_token_prompter("Enter MFA code: ")
+            prompt = 'Enter MFA code (%s): ' % self._mfa_serial
+            token_code = self.mfa_token_prompter(prompt)
             assume_role_kwargs['SerialNumber'] = self._mfa_serial
             assume_role_kwargs['TokenCode'] = token_code
         return assume_role_kwargs
@@ -945,7 +948,7 @@ class BaseAssumeRoleProvider(CredentialProvider):
                 source_client_creator,
                 cache,
                 profile['role_arn'],
-                profile.get('role_session_name'),
+                profile.get('role_session_name', cls.DEFAULT_SESSION_NAME),
                 profile.get('role_policy'),
                 profile.get('role_duration'),
                 profile.get('external_id'),
