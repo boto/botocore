@@ -19,6 +19,7 @@ import getpass
 import threading
 from collections import namedtuple
 from copy import deepcopy
+from functools import partial
 from hashlib import sha256
 
 from dateutil.parser import parse
@@ -66,12 +67,15 @@ def create_credential_resolver(session):
         #         cache={},
         #         profile_name=profile_name,
         # ),
-        BaseAssumeRoleProvider.from_config(
-            session.create_client,
-            {},
-            session.full_config,
-            profile_name,
-            getpass.getpass
+        LazyAssumeRoleProvider(
+            partial(
+                BaseAssumeRoleProvider.from_config,
+                client_creator=session.create_client,
+                cache={},
+                config=session.full_config,
+                profile_name=profile_name,
+                mfa_token_prompter=getpass.getpass
+            )
         ),
         SharedCredentialProvider(
             creds_filename=credential_file,
@@ -903,8 +907,8 @@ class BaseAssumeRoleProvider(CredentialProvider):
 
     @classmethod
     def from_config(
-            cls, client_creator, cache, config, profile_name,
-            mfa_token_prompter=None, top=True
+            cls, client_creator=None, cache=None, config=None,
+            profile_name=None, mfa_token_prompter=None, top=True
     ):
         """
         create a recursive assumed role credential provider
@@ -970,6 +974,31 @@ class BaseAssumeRoleProvider(CredentialProvider):
         if top:
             return provider
         return cls.wrap_client_creator(client_creator, provider)
+
+
+class LazyAssumeRoleProvider(CredentialProvider):
+
+    def __init__(self, provider_factory):
+        self._provider_factory = provider_factory
+        self._provider = None
+
+    def load(self):
+        if self._provider is None:
+            self._provider = self._provider_factory()
+        return self._provider.load()
+
+    def update(self, **kwargs):
+        """
+        Rebinds keword arguments accepted by the provider factory
+        :param kwargs:
+        :return:
+        """
+        if self._provider is not None:
+            raise RuntimeError(
+                'The provider factory cannot be updated '
+                'after the provider has been created'
+            )
+        self._provider = partial(self._provider, **kwargs)
 
 
 class AssumeRoleProvider(CredentialProvider):
