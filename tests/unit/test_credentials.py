@@ -1070,6 +1070,10 @@ class TestBaseAssumeRoleCredentialProvider(unittest.TestCase):
                 'longterm': {
                     'aws_access_key_id': 'akid',
                     'aws_secret_access_key': 'skid',
+                },
+                'proxied': {
+                    'role_arn': 'proxiedrole',
+                    'source_profile': 'development'
                 }
             }
         }
@@ -1104,6 +1108,7 @@ class TestBaseAssumeRoleCredentialProvider(unittest.TestCase):
         )
 
         creds = provider.load()
+        client_creator.assert_called_once_with('sts')
         client_creator.return_value.assume_role.assert_called_with(
             RoleArn=role,
             RoleSessionName=session
@@ -1134,7 +1139,8 @@ class TestBaseAssumeRoleCredentialProvider(unittest.TestCase):
         cache_key = provider._create_cache_key()
         cache[cache_key] = cached_creds
         creds = provider.load()
-        self.assertFalse(client_creator.return_value.called)
+        client_creator.assert_not_called()
+        client_creator.return_value.assert_not_called()
         self.assertEqual(creds.access_key, 'foo-cached')
         self.assertEqual(creds.secret_key, 'bar-cached')
         self.assertEqual(creds.token, 'baz-cached')
@@ -1157,6 +1163,8 @@ class TestBaseAssumeRoleCredentialProvider(unittest.TestCase):
             'mysession'
         )
         cache_key = provider._create_cache_key()
+        client_creator.assert_not_called()
+        client_creator.return_value.assert_not_called()
         self.assertNotIn(':', cache_key)
         self.assertIn('foo-role', cache_key)
         self.assertIn('mysession', cache_key)
@@ -1231,7 +1239,8 @@ class TestBaseAssumeRoleCredentialProvider(unittest.TestCase):
         cache[cache_key] = cache_creds
 
         creds = provider.load()
-        client_creator.return_value.assume_role.assert_called_with(
+        client_creator.assert_called_once_with('sts')
+        client_creator.return_value.assume_role.assert_called_once_with(
             RoleArn=role,
             RoleSessionName=session
         )
@@ -1259,6 +1268,7 @@ class TestBaseAssumeRoleCredentialProvider(unittest.TestCase):
             external_id=external_id
         )
         creds = provider.load()
+        client_creator.assert_called_once_with('sts')
         client_creator.return_value.assume_role.assert_called_with(
             RoleArn=role,
             RoleSessionName=session,
@@ -1291,7 +1301,8 @@ class TestBaseAssumeRoleCredentialProvider(unittest.TestCase):
         )
         creds = provider.load()
         prompter.assert_called_once_with('Enter MFA code (myserial): ')
-        client_creator.return_value.assume_role.assert_called_with(
+        client_creator.assert_called_once_with('sts')
+        client_creator.return_value.assume_role.assert_called_once_with(
             RoleArn=role,
             RoleSessionName=session,
             SerialNumber=mfa_serial,
@@ -1343,31 +1354,29 @@ class TestBaseAssumeRoleCredentialProvider(unittest.TestCase):
             mfa_token_prompter=prompter
         )
         creds = provider.load()
+        client_creator.assert_called_once_with('sts')
         client_creator.return_value.assume_role.assert_has_calls(
             [expired_call]
         )
         self.assertEqual(creds.access_key, 'foo1')
         self.assertEqual(creds.secret_key, 'bar1')
         self.assertEqual(creds.token, 'baz1')
-
+        client_creator.assert_has_calls([mock.call('sts')] * 2)
         client_creator.return_value.assume_role.assert_has_calls(
             [expired_call, refreshed_call]
         )
 
     def test_from_config_no_role_arn_is_noop(self):
-        self.fake_config['profiles']['development'] = {
-            'aws_access_key_id': 'foo',
-            'aws_secret_access_key': 'bar',
-        }
         client_creator = self.create_client_creator()
         provider = credentials.BaseAssumeRoleProvider.from_config(
             client_creator,
             {},
             self.fake_config,
-            profile_name='development'
+            profile_name='longterm'
         )
         creds = provider.load()
-        self.assertFalse(client_creator.return_value.assume_role.called)
+        client_creator.assert_not_called()
+        client_creator.return_value.assume_role.assert_not_called()
         self.assertIsNone(creds)
 
     def test_from_config_source_profile_not_provided(self):
@@ -1393,6 +1402,67 @@ class TestBaseAssumeRoleCredentialProvider(unittest.TestCase):
                 self.fake_config,
                 profile_name='development'
             )
+
+    def test_from_config_recurses(self):
+        dev = {
+            'Credentials': {
+                'AccessKeyId': 'devaccess',
+                'SecretAccessKey': 'devsecret',
+                'SessionToken': 'devtoken',
+                'Expiration': self.some_future_time(),
+            },
+        }
+        proxied = {
+            'Credentials': {
+                'AccessKeyId': 'proxiedaccess',
+                'SecretAccessKey': 'proxiedsecret',
+                'SessionToken': 'proxiedtoken',
+                'Expiration': self.some_future_time(),
+            },
+        }
+        profiles = self.fake_config['profiles']
+        longterm = profiles['longterm']
+        lt_client = mock.call(
+            'sts',
+            aws_access_key_id=longterm['aws_access_key_id'],
+            aws_secret_access_key=longterm['aws_secret_access_key'],
+            aws_session_token=longterm.get('aws_session_token')
+        )
+        dev_client = mock.call(
+            'sts',
+            aws_access_key_id=dev['Credentials']['AccessKeyId'],
+            aws_secret_access_key=dev['Credentials']['SecretAccessKey'],
+            aws_session_token=dev['Credentials']['SessionToken']
+        )
+        dev_assume = mock.call(
+            RoleArn=profiles['development']['role_arn'],
+            RoleSessionName=credentials.BaseAssumeRoleProvider.DEFAULT_SESSION_NAME
+        )
+        proxied_assume = mock.call(
+            RoleArn=profiles['proxied']['role_arn'],
+            RoleSessionName=credentials.BaseAssumeRoleProvider.DEFAULT_SESSION_NAME
+        )
+        client_creator = self.create_client_creator(
+            dev,
+            proxied
+        )
+        provider = credentials.BaseAssumeRoleProvider.from_config(
+            client_creator,
+            {},
+            self.fake_config,
+            profile_name='proxied'
+        )
+        creds = provider.load()
+        client_creator.assert_has_calls(
+            [lt_client, dev_client]
+        )
+        client_creator.return_value.assume_role.assert_has_calls(
+            [dev_assume, proxied_assume]
+        )
+
+        self.assertEqual(creds.access_key, 'proxiedaccess')
+        self.assertEqual(creds.secret_key, 'proxiedsecret')
+        self.assertEqual(creds.token, 'proxiedtoken')
 
 
 class TestRefreshLogic(unittest.TestCase):
