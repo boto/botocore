@@ -12,6 +12,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from datetime import datetime, timedelta
+from functools import partial
 from hashlib import sha256
 import mock
 import os
@@ -1463,6 +1464,137 @@ class TestBaseAssumeRoleCredentialProvider(unittest.TestCase):
         self.assertEqual(creds.access_key, 'proxiedaccess')
         self.assertEqual(creds.secret_key, 'proxiedsecret')
         self.assertEqual(creds.token, 'proxiedtoken')
+
+
+class TestLazyAssumeRoleCredentialProvider(unittest.TestCase):
+
+    def setUp(self):
+        self.fake_config = {
+            'profiles': {
+                'development': {
+                    'role_arn': 'myrole',
+                    'source_profile': 'longterm',
+                },
+                'longterm': {
+                    'aws_access_key_id': 'akid',
+                    'aws_secret_access_key': 'skid',
+                },
+                'proxied': {
+                    'role_arn': 'proxiedrole',
+                    'source_profile': 'development'
+                }
+            }
+        }
+
+    def create_client_creator(self, *with_response):
+        # Create a mock sts client that returns a specific response
+        # for assume_role.
+        client = mock.Mock()
+        client.assume_role.side_effect = with_response
+        return mock.Mock(return_value=client)
+
+    def some_future_time(self):
+        timeobj = datetime.utcnow().replace(tzinfo=tzutc())
+        return timeobj + timedelta(minutes=15)
+
+    def test_load_lazy_loads(self):
+        inner_provider = mock.Mock()
+        inner_provider.load.return_value = object()
+        provider_factory = mock.Mock(return_value=inner_provider)
+        kwargs = dict(
+            client_creator=mock.Mock(),
+            cache={},
+            config=self.fake_config,
+            profile_name='development'
+        )
+        provider = credentials.LazyAssumeRoleProvider(
+            partial(provider_factory, **kwargs)
+        )
+
+        provider_factory.assert_not_called()
+        inner_provider.load.assert_not_called()
+
+        creds = provider.load()
+
+        provider_factory.assert_called_once_with(**kwargs)
+        inner_provider.load.assert_called_once_with()
+        self.assertIs(creds, inner_provider.load.return_value)
+
+    def test_update_rebinds_keyword_args(self):
+        initial_cache = object()
+        updated_cache = object()
+        inner_provider = mock.Mock()
+        inner_provider.load.return_value = object()
+        provider_factory = mock.Mock(return_value=inner_provider)
+        kwargs = dict(
+            client_creator=mock.Mock(),
+            cache=initial_cache,
+            config=self.fake_config,
+            profile_name='development'
+        )
+        provider = credentials.LazyAssumeRoleProvider(
+            partial(provider_factory, **kwargs)
+        )
+        provider.update(cache=updated_cache)
+
+        provider_factory.assert_not_called()
+        inner_provider.load.assert_not_called()
+
+        creds = provider.load()
+
+        provider_factory.assert_called_once_with(
+            **dict(kwargs, cache=updated_cache)
+        )
+        inner_provider.load.assert_called_once_with()
+        self.assertIs(creds, inner_provider.load.return_value)
+
+    def test_load_no_role_arn_is_noop(self):
+        client_creator = self.create_client_creator()
+        provider = credentials.LazyAssumeRoleProvider(
+            partial(
+                credentials.BaseAssumeRoleProvider.from_config,
+                client_creator=client_creator,
+                cache={},
+                config=self.fake_config,
+                profile_name='longterm'
+            )
+        )
+        creds = provider.load()
+        client_creator.assert_not_called()
+        client_creator.return_value.assume_role.assert_not_called()
+        self.assertIsNone(creds)
+
+    def test_load_source_profile_not_provided(self):
+        del self.fake_config['profiles']['development']['source_profile']
+        client_creator = self.create_client_creator()
+        provider = credentials.LazyAssumeRoleProvider(
+            partial(
+                credentials.BaseAssumeRoleProvider.from_config,
+                client_creator=client_creator,
+                cache={},
+                config=self.fake_config,
+                profile_name='development'
+            )
+        )
+        with self.assertRaises(botocore.exceptions.PartialCredentialsError):
+            provider.load()
+
+    def test_load_source_profile_does_not_exist(self):
+        dev_profile = self.fake_config['profiles']['development']
+        dev_profile['source_profile'] = 'does-not-exist'
+        client_creator = self.create_client_creator()
+        provider = credentials.LazyAssumeRoleProvider(
+            partial(
+                credentials.BaseAssumeRoleProvider.from_config,
+                client_creator=client_creator,
+                cache={},
+                config=self.fake_config,
+                profile_name='development'
+            )
+        )
+        # source_profile is required, we should get an error.
+        with self.assertRaises(botocore.exceptions.InvalidConfigError):
+            provider.load()
 
 
 class TestRefreshLogic(unittest.TestCase):

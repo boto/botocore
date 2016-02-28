@@ -998,7 +998,7 @@ class LazyAssumeRoleProvider(CredentialProvider):
                 'The provider factory cannot be updated '
                 'after the provider has been created'
             )
-        self._provider = partial(self._provider, **kwargs)
+        self._provider_factory = partial(self._provider_factory, **kwargs)
 
 
 class AssumeRoleProvider(CredentialProvider):
