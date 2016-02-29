@@ -663,6 +663,9 @@
             "protocols": [
               "http",
               "https"
+            ],
+            "signatureVersions": [
+              "v2"
             ]
           },
           "endpoints": {
