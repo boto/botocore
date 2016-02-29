@@ -191,27 +191,21 @@ class ClientCreator(object):
 
         config_kwargs['s3'] = s3_configuration
 
-    def _resolve_verify_value(self, provided_verify_value, scoped_config):
-        # If a user provides a value for "verify" then we don't do anything.
-        # We always use explicit values provided.
-        if provided_verify_value is not None:
-            return provided_verify_value
-        elif scoped_config is not None:
-            return scoped_config.get('ca_bundle')
-
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,
                          scoped_config, client_config):
 
         protocol = service_model.metadata['protocol']
+        parameter_validation = True
+        if client_config:
+            parameter_validation = client_config.parameter_validation
         serializer = botocore.serialize.create_serializer(
-            protocol, include_validation=True)
+            protocol, parameter_validation)
 
         event_emitter = copy.copy(self._event_emitter)
 
         response_parser = botocore.parsers.create_parser(protocol)
 
-        verify = self._resolve_verify_value(verify, scoped_config)
         # Determine what region the user provided either via the
         # region_name argument or the client_config.
         if region_name is None:
@@ -626,6 +620,12 @@ class Config(object):
         thrown when attempting to read from a connection. The default is
         60 seconds.
 
+    :type parameter_validation: bool
+    :param parameter_validation: Whether parameter validation should occur
+        when serializing requests. The default is True.  You can disable
+        parameter validation for performance reasons.  Otherwise, it's
+        recommended to leave parameter validation enabled.
+
     :type s3: dict
     :param s3: A dictionary of s3 specific configurations.
         Valid keys are:
@@ -650,6 +650,7 @@ class Config(object):
         ('user_agent_extra', None),
         ('connect_timeout', DEFAULT_TIMEOUT),
         ('read_timeout', DEFAULT_TIMEOUT),
+        ('parameter_validation', True),
         ('s3', None)
     ])
 

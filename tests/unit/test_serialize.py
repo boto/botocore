@@ -20,6 +20,9 @@ from tests import unittest
 from botocore.model import ServiceModel
 from botocore import serialize
 from botocore.compat import six
+from botocore.exceptions import ParamValidationError
+from botocore.serialize import Serializer
+from botocore.validate import ParamValidationDecorator
 
 
 class BaseModelWithBlob(unittest.TestCase):
@@ -327,3 +330,75 @@ class TestJSONTimestampSerialization(unittest.TestCase):
         body = json.loads(self.serialize_to_request(
             {'Timestamp': '1970-01-01'})['body'].decode('utf-8'))
         self.assertEqual(body['Timestamp'], 0)
+
+
+class TestInstanceCreation(unittest.TestCase):
+    def setUp(self):
+        self.model = {
+            'metadata': {'protocol': 'query', 'apiVersion': '2014-01-01'},
+            'documentation': '',
+            'operations': {
+                'TestOperation': {
+                    'name': 'TestOperation',
+                    'http': {
+                        'method': 'POST',
+                        'requestUri': '/',
+                    },
+                    'input': {'shape': 'InputShape'},
+                }
+            },
+            'shapes': {
+                'InputShape': {
+                    'type': 'structure',
+                    'members': {
+                        'Timestamp': {'shape': 'StringTestType'},
+                    }
+                },
+                'StringTestType': {
+                    'type': 'string',
+                    'min': 15
+                }
+            }
+        }
+        self.service_model = ServiceModel(self.model)
+
+    def assert_serialize_valid_parameter(self, request_serializer):
+        valid_string = 'valid_string_with_min_15_chars'
+        request = request_serializer.serialize_to_request(
+            {'Timestamp': valid_string},
+            self.service_model.operation_model('TestOperation'))
+
+        self.assertEqual(request['body']['Timestamp'], valid_string)
+
+    def assert_serialize_invalid_parameter(self, request_serializer):
+        invalid_string = 'short string'
+        request = request_serializer.serialize_to_request(
+            {'Timestamp': invalid_string},
+            self.service_model.operation_model('TestOperation'))
+
+        self.assertEqual(request['body']['Timestamp'], invalid_string)
+
+    def test_instantiate_without_validation(self):
+        request_serializer = serialize.create_serializer(
+            self.service_model.metadata['protocol'], False)
+
+        try:
+            self.assert_serialize_valid_parameter(request_serializer)
+        except ParamValidationError as e:
+            self.fail("Shouldn't fail serializing valid parameter without validation")
+
+        try:
+            self.assert_serialize_invalid_parameter(request_serializer)
+        except ParamValidationError as e:
+            self.fail("Shouldn't fail serializing invalid parameter without validation")
+
+    def test_instantiate_with_validation(self):
+        request_serializer = serialize.create_serializer(
+            self.service_model.metadata['protocol'], True)
+        try:
+            self.assert_serialize_valid_parameter(request_serializer)
+        except ParamValidationError as e:
+            self.fail("Shouldn't fail serializing valid parameter with validation")
+
+        with self.assertRaises(ParamValidationError):
+            self.assert_serialize_invalid_parameter(request_serializer)

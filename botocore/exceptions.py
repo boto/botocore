@@ -357,9 +357,17 @@ class StubResponseError(BotoCoreError):
     fmt = 'Error getting response stub for operation {operation_name}: {reason}'
 
 
+class StubAssertionError(StubResponseError, AssertionError):
+    fmt = 'Error getting response stub for operation {operation_name}: {reason}'
+
+
 class InvalidConfigError(BotoCoreError):
     fmt = '{error_msg}'
 
 
 class RefreshWithMFAUnsupportedError(BotoCoreError):
     fmt = 'Cannot refresh credentials: MFA token required.'
+
+
+class MD5UnavailableError(BotoCoreError):
+    fmt = "This system does not support MD5 generation."
