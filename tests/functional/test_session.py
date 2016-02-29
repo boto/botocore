@@ -89,3 +89,11 @@ class TestSession(unittest.TestCase):
 
             self.assertEqual(creds.access_key, 'env_var_akid')
             self.assertEqual(creds.secret_key, 'env_var_sak')
+
+    def test_provides_available_regions_for_same_endpoint_prefix(self):
+        regions = self.session.get_available_regions('s3')
+        self.assertTrue(regions)
+
+    def test_provides_available_regions_for_different_endpoint_prefix(self):
+        regions = self.session.get_available_regions('elb')
+        self.assertTrue(regions)

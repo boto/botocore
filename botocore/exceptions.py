@@ -125,7 +125,7 @@ class NoRegionError(BaseEndpointResolverError):
     fmt = 'You must specify a region.'
 
 
-class UnknownEndpointError(BaseEndpointResolverError):
+class UnknownEndpointError(BaseEndpointResolverError, ValueError):
     """
     Could not construct an endpoint.
 
