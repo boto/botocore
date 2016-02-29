@@ -839,19 +839,16 @@ class Session(object):
         :return: Returns a list of endpoint names (e.g., ["us-east-1"]).
         """
         resolver = self.get_component('endpoint_resolver')
-        results = resolver.get_available_endpoints(
-            service_name, partition_name, allow_non_regional)
-        if results:
-            return results
+        results = []
         try:
-            # If the service name is not the same as the endpoint_prefix, then
-            # try to determine the endpoint prefix from the service model.
             service_data = self.get_service_data(service_name)
-            return resolver.get_available_endpoints(
-                service_data['metadata']['endpointPrefix'],
-                partition_name, allow_non_regional)
+            endpoint_prefix = service_data['metadata'].get(
+                'endpointPrefix', service_name)
+            results = resolver.get_available_endpoints(
+                endpoint_prefix, partition_name, allow_non_regional)
         except UnknownServiceError:
-            return []
+            pass
+        return results
 
 
 class ComponentLocator(object):

@@ -97,3 +97,9 @@ class TestSession(unittest.TestCase):
     def test_provides_available_regions_for_different_endpoint_prefix(self):
         regions = self.session.get_available_regions('elb')
         self.assertTrue(regions)
+
+    def test_does_not_provide_regions_for_mismatch_service_name(self):
+        # elb's endpoint prefix is elasticloadbalancing, but users should
+        # still be using the service name when getting regions
+        regions = self.session.get_available_regions('elasticloadbalancing')
+        self.assertEqual(regions, [])
