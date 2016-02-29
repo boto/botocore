@@ -17,7 +17,7 @@ by botocore.  This can include:
 
     * Service models (e.g. the model for EC2, S3, DynamoDB, etc.)
     * Other models associated with a service (pagination, waiters)
-    * Non service-specific config (Endpoint heuristics, retry config)
+    * Non service-specific config (Endpoint data, retry config)
 
 Loading a module is broken down into several steps:
 
