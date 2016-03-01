@@ -803,6 +803,7 @@ class BaseAssumeRoleProvider(CredentialProvider):
         return self._create_creds_from_response(response)
 
     def _load_from_cache(self, cache_key):
+        # TODO: cache tranformations should be handled by the cache
         response = deepcopy(self.cache.get(cache_key))
         if response is not None:
             credentials = response['Credentials']
@@ -810,6 +811,7 @@ class BaseAssumeRoleProvider(CredentialProvider):
         return response
 
     def _write_to_cache(self, cache_key, response):
+        # TODO: cache tranformations should be handled by the cache
         response = deepcopy(response)
         credentials = response['Credentials']
         credentials['Expiration'] = credentials['Expiration'].isoformat()
