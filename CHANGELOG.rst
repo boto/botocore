@@ -10,6 +10,7 @@ Next Release (TBD)
 * feature:``DynamoDB``: Add support for DescribeLimits.
 * feature:``APIGateway``: Add support for TestInvokeAuthorizer and
   FlushStageAuthorizersCache operations.
+* feature:``CloudSearchDomain``: Add support for stats.
 
 1.3.28 - (2016-02-18)
 ---------------------
