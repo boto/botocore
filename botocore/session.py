@@ -913,7 +913,7 @@ class Session(object):
             mfa_token_prompter
         )
 
-        role_session = botocore.session.Session()
+        role_session = Session()
         role_session.register_component(
             'credential_provider',
             botocore.credentials.CredentialResolver([provider])
