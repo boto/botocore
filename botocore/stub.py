@@ -25,7 +25,8 @@ class Stubber(object):
     If operations are called out of order, or are called with no remaining
     queued responses, an error will be raised.
 
-    Example::
+    **Example:**
+    ::
         import datetime
         import botocore.session
         from botocore.stub import Stubber
@@ -115,9 +116,9 @@ class Stubber(object):
         :type service_response: dict
 
         :param expected_params: A dictionary of the expected parameters to
-            be called for the provided service_response. The parameters match
+            be called for the provided service response. The parameters match
             the names of keyword arguments passed to that client call. If
-            any of the parameters differ a StubResponseError is thrown.
+            any of the parameters differ a ``StubResponseError`` is thrown.
         """
         self._add_response(method, service_response, expected_params)
 
@@ -146,13 +147,13 @@ class Stubber(object):
     def add_client_error(self, method, service_error_code='',
                          service_message='', http_status_code=400):
         """
-        Adds a ClientError to the response queue.
+        Adds a ``ClientError`` to the response queue.
 
         :param method: The name of the service method to return the error on.
         :type method: str
 
         :param service_error_code: The service error code to return,
-                                   e.g. NoSuchBucket
+                                   e.g. ``NoSuchBucket``
         :type service_error_code: str
 
         :param service_message: The service message to return, e.g.
