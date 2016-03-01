@@ -7,6 +7,7 @@ Next Release (TBD)
 * feature:Regions: Add ability to list regions and endpoints for services in
   a partition.
   (`issue 812 <https://github.com/boto/botocore/pull/812>`__)
+* feature:``DynamoDB``: Add support for DescribeLimits.
 
 1.3.28 - (2016-02-18)
 ---------------------
