@@ -18,6 +18,12 @@
       "limit_key": "MaxRecords",
       "result_key": "LaunchConfigurations"
     },
+    "DescribeLoadBalancers": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxRecords",
+      "result_key": "LoadBalancers"
+    },
     "DescribeNotificationConfigurations": {
       "input_token": "NextToken",
       "output_token": "NextToken",
