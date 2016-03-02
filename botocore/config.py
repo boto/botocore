@@ -52,19 +52,21 @@ class Config(object):
     :type s3: dict
     :param s3: A dictionary of s3 specific configurations.
         Valid keys are:
-            * 'addressing_style' -- Refers to the style in which to address
-              s3 endpoints. Values must be a string that equals:
-                  * auto -- Addressing style is chosen for user. Depending
-                            on the configuration of client, the endpoint
-                            may be addressed in the virtual or the path
-                            style. Note that this is the default behavior if
-                            no style is specified.
-                  * virtual -- Addressing style is always virtual. The name of
-                               the bucket must be DNS compatible or an
-                               exception will be thrown. Endpoints will be
-                               addressed as such: mybucket.s3.amazonaws.com
-                  * path -- Addressing style is always by path. Endpoints will
-                            be addressed as such: s3.amazonaws.com/mybucket
+
+        * 'addressing_style' -- Refers to the style in which to address
+          s3 endpoints. Values must be a string that equals:
+
+          * auto -- Addressing style is chosen for user. Depending
+            on the configuration of client, the endpoint may be addressed in
+            the virtual or the path style. Note that this is the default
+            behavior if no style is specified.
+
+          * virtual -- Addressing style is always virtual. The name of the
+            bucket must be DNS compatible or an exception will be thrown.
+            Endpoints will be addressed as such: mybucket.s3.amazonaws.com
+
+          * path -- Addressing style is always by path. Endpoints will be
+            addressed as such: s3.amazonaws.com/mybucket
     """
     OPTION_DEFAULTS = OrderedDict([
         ('region_name', None),
