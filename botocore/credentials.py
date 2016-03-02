@@ -22,7 +22,7 @@ from collections import namedtuple
 from dateutil.parser import parse
 from dateutil.tz import tzlocal
 
-import botocore.config
+import botocore.configloader
 import botocore.compat
 from botocore.compat import total_seconds
 from botocore.exceptions import UnknownCredentialError
@@ -596,7 +596,7 @@ class SharedCredentialProvider(CredentialProvider):
             profile_name = 'default'
         self._profile_name = profile_name
         if ini_parser is None:
-            ini_parser = botocore.config.raw_config_parse
+            ini_parser = botocore.configloader.raw_config_parse
         self._ini_parser = ini_parser
 
     def load(self):
@@ -644,7 +644,7 @@ class ConfigProvider(CredentialProvider):
         self._config_filename = config_filename
         self._profile_name = profile_name
         if config_parser is None:
-            config_parser = botocore.config.load_config
+            config_parser = botocore.configloader.load_config
         self._config_parser = config_parser
 
     def load(self):
@@ -687,7 +687,7 @@ class BotoProvider(CredentialProvider):
         if environ is None:
             environ = os.environ
         if ini_parser is None:
-            ini_parser = botocore.config.raw_config_parse
+            ini_parser = botocore.configloader.raw_config_parse
         self._environ = environ
         self._ini_parser = ini_parser
 

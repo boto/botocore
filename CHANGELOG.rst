@@ -2,6 +2,10 @@
 CHANGELOG
 =========
 
+Next Release (TBD)
+------------------
+* feature:Config: Moved Config to its own class to boost import speed
+
 1.4.0 - (2016-03-01)
 --------------------
 * feature:Regions: Add ability to list regions and endpoints for services in

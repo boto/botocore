@@ -1,5 +1,4 @@
-# Copyright (c) 2012-2013 Mitch Garnaat http://garnaat.org/
-# Copyright 2012-2014 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright 2016 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -11,231 +10,147 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import os
-import shlex
 import copy
+from botocore.compat import OrderedDict
 
-from botocore.compat import six
-from six.moves import configparser
-
-import botocore.exceptions
+from botocore.endpoint import DEFAULT_TIMEOUT
+from botocore.exceptions import InvalidS3AddressingStyleError
 
 
-def multi_file_load_config(*filenames):
-    """Load and combine multiple INI configs with profiles.
+class Config(object):
+    """Advanced configuration for Botocore clients.
 
-    This function will take a list of filesnames and return
-    a single dictionary that represents the merging of the loaded
-    config files.
+    :type region_name: str
+    :param region_name: The region to use in instantiating the client
 
-    If any of the provided filenames does not exist, then that file
-    is ignored.  It is therefore ok to provide a list of filenames,
-    some of which may not exist.
+    :type signature_version: str
+    :param signature_version: The signature version when signing requests.
 
-    Configuration files are **not** deep merged, only the top level
-    keys are merged.  The filenames should be passed in order of
-    precedence.  The first config file has precedence over the
-    second config file, which has precedence over the third config file,
-    etc.  The only exception to this is that the "profiles" key is
-    merged to combine profiles from multiple config files into a
-    single profiles mapping.  However, if a profile is defined in
-    multiple config files, then the config file with the highest
-    precedence is used.  Profile values themselves are not merged.
-    For example::
+    :type user_agent: str
+    :param user_agent: The value to use in the User-Agent header.
 
-        FileA              FileB                FileC
-        [foo]             [foo]                 [bar]
-        a=1               a=2                   a=3
-                          b=2
+    :type user_agent_extra: str
+    :param user_agent_extra: The value to append to the current User-Agent
+        header value.
 
-        [bar]             [baz]                [profile a]
-        a=2               a=3                  region=e
+    :type connect_timeout: int
+    :param connect_timeout: The time in seconds till a timeout exception is
+        thrown when attempting to make a connection. The default is 60
+        seconds.
 
-        [profile a]       [profile b]          [profile c]
-        region=c          region=d             region=f
+    :type read_timeout: int
+    :param read_timeout: The time in seconds till a timeout exception is
+        thrown when attempting to read from a connection. The default is
+        60 seconds.
 
-    The final result of ``multi_file_load_config(FileA, FileB, FileC)``
-    would be::
+    :type parameter_validation: bool
+    :param parameter_validation: Whether parameter validation should occur
+        when serializing requests. The default is True.  You can disable
+        parameter validation for performance reasons.  Otherwise, it's
+        recommended to leave parameter validation enabled.
 
-        {"foo": {"a": 1}, "bar": {"a": 2}, "baz": {"a": 3},
-        "profiles": {"a": {"region": "c"}}, {"b": {"region": d"}},
-                    {"c": {"region": "f"}}}
-
-    Note that the "foo" key comes from A, even though it's defined in both
-    FileA and FileB.  Because "foo" was defined in FileA first, then the values
-    for "foo" from FileA are used and the values for "foo" from FileB are
-    ignored.  Also note where the profiles originate from.  Profile "a"
-    comes FileA, profile "b" comes from FileB, and profile "c" comes
-    from FileC.
-
+    :type s3: dict
+    :param s3: A dictionary of s3 specific configurations.
+        Valid keys are:
+            * 'addressing_style' -- Refers to the style in which to address
+              s3 endpoints. Values must be a string that equals:
+                  * auto -- Addressing style is chosen for user. Depending
+                            on the configuration of client, the endpoint
+                            may be addressed in the virtual or the path
+                            style. Note that this is the default behavior if
+                            no style is specified.
+                  * virtual -- Addressing style is always virtual. The name of
+                               the bucket must be DNS compatible or an
+                               exception will be thrown. Endpoints will be
+                               addressed as such: mybucket.s3.amazonaws.com
+                  * path -- Addressing style is always by path. Endpoints will
+                            be addressed as such: s3.amazonaws.com/mybucket
     """
-    configs = []
-    profiles = []
-    for filename in filenames:
-        try:
-            loaded = load_config(filename)
-        except botocore.exceptions.ConfigNotFound:
-            continue
-        profiles.append(loaded.pop('profiles'))
-        configs.append(loaded)
-    merged_config = _merge_list_of_dicts(configs)
-    merged_profiles = _merge_list_of_dicts(profiles)
-    merged_config['profiles'] = merged_profiles
-    return merged_config
+    OPTION_DEFAULTS = OrderedDict([
+        ('region_name', None),
+        ('signature_version', None),
+        ('user_agent', None),
+        ('user_agent_extra', None),
+        ('connect_timeout', DEFAULT_TIMEOUT),
+        ('read_timeout', DEFAULT_TIMEOUT),
+        ('parameter_validation', True),
+        ('s3', None)
+    ])
 
+    def __init__(self, *args, **kwargs):
+        self._user_provided_options = self._record_user_provided_options(
+            args, kwargs)
 
-def _merge_list_of_dicts(list_of_dicts):
-    merged_dicts = {}
-    for single_dict in list_of_dicts:
-        for key, value in single_dict.items():
-            if key not in merged_dicts:
-                merged_dicts[key] = value
-    return merged_dicts
+        # Merge the user_provided options onto the default options
+        config_vars = copy.copy(self.OPTION_DEFAULTS)
+        config_vars.update(self._user_provided_options)
 
+        # Set the attributes based on the config_vars
+        for key, value in config_vars.items():
+            setattr(self, key, value)
 
-def load_config(config_filename):
-    """Parse a INI config with profiles.
+        # Validate the s3 options
+        self._validate_s3_configuration(self.s3)
 
-    This will parse an INI config file and map top level profiles
-    into a top level "profile" key.
+    def _record_user_provided_options(self, args, kwargs):
+        option_order = list(self.OPTION_DEFAULTS)
+        user_provided_options = {}
 
-    If you want to parse an INI file and map all section names to
-    top level keys, use ``raw_config_parse`` instead.
+        # Iterate through the kwargs passed through to the constructor and
+        # map valid keys to the dictionary
+        for key, value in kwargs.items():
+            if key in self.OPTION_DEFAULTS:
+                user_provided_options[key] = value
+            # The key must exist in the available options
+            else:
+                raise TypeError(
+                    'Got unexpected keyword argument \'%s\'' % key)
 
-    """
-    parsed = raw_config_parse(config_filename)
-    return build_profile_map(parsed)
+        # The number of args should not be longer than the allowed
+        # options
+        if len(args) > len(option_order):
+            raise TypeError(
+                'Takes at most %s arguments (%s given)' % (
+                    len(option_order), len(args)))
 
+        # Iterate through the args passed through to the constructor and map
+        # them to appropriate keys.
+        for i, arg in enumerate(args):
+            # If it a kwarg was specified for the arg, then error out
+            if option_order[i] in user_provided_options:
+                raise TypeError(
+                    'Got multiple values for keyword argument \'%s\'' % (
+                        option_order[i]))
+            user_provided_options[option_order[i]] = arg
 
-def raw_config_parse(config_filename):
-    """Returns the parsed INI config contents.
+        return user_provided_options
 
-    Each section name is a top level key.
+    def _validate_s3_configuration(self, s3):
+        if s3 is not None:
+            addressing_style = s3.get('addressing_style')
+            if addressing_style not in ['virtual', 'auto', 'path', None]:
+                raise InvalidS3AddressingStyleError(
+                    s3_addressing_style=addressing_style)
 
-    :returns: A dict with keys for each profile found in the config
-        file and the value of each key being a dict containing name
-        value pairs found in that profile.
+    def merge(self, other_config):
+        """Merges the config object with another config object
 
-    :raises: ConfigNotFound, ConfigParseError
-    """
-    config = {}
-    path = config_filename
-    if path is not None:
-        path = os.path.expandvars(path)
-        path = os.path.expanduser(path)
-        if not os.path.isfile(path):
-            raise botocore.exceptions.ConfigNotFound(path=path)
-        cp = configparser.RawConfigParser()
-        try:
-            cp.read(path)
-        except configparser.Error:
-            raise botocore.exceptions.ConfigParseError(path=path)
-        else:
-            for section in cp.sections():
-                config[section] = {}
-                for option in cp.options(section):
-                    config_value = cp.get(section, option)
-                    if config_value.startswith('\n'):
-                        # Then we need to parse the inner contents as
-                        # hierarchical.  We support a single level
-                        # of nesting for now.
-                        try:
-                            config_value = _parse_nested(config_value)
-                        except ValueError:
-                            raise botocore.exceptions.ConfigParseError(
-                                path=path)
-                    config[section][option] = config_value
-    return config
+        This will merge in all non-default values from the provided config
+        and return a new config object
 
+        :type other_config: botocore.config.Config
+        :param other config: Another config object to merge with. The values
+            in the provided config object will take precedence in the merging
 
-def _parse_nested(config_value):
-    # Given a value like this:
-    # \n
-    # foo = bar
-    # bar = baz
-    # We need to parse this into
-    # {'foo': 'bar', 'bar': 'baz}
-    parsed = {}
-    for line in config_value.splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        # The caller will catch ValueError
-        # and raise an appropriate error
-        # if this fails.
-        key, value = line.split('=', 1)
-        parsed[key.strip()] = value.strip()
-    return parsed
+        :rtype: botocore.client.Config
+        :returns: A config object built from the merged values of both
+            config objects.
+        """
+        # Make a copy of the current attributes in the config object.
+        config_options = copy.copy(self._user_provided_options)
 
+        # Merge in the user provided options from the other config
+        config_options.update(other_config._user_provided_options)
 
-def build_profile_map(parsed_ini_config):
-    """Convert the parsed INI config into a profile map.
-
-    The config file format requires that every profile except the
-    default to be prepended with "profile", e.g.::
-
-        [profile test]
-        aws_... = foo
-        aws_... = bar
-
-        [profile bar]
-        aws_... = foo
-        aws_... = bar
-
-        # This is *not* a profile
-        [preview]
-        otherstuff = 1
-
-        # Neither is this
-        [foobar]
-        morestuff = 2
-
-    The build_profile_map will take a parsed INI config file where each top
-    level key represents a section name, and convert into a format where all
-    the profiles are under a single top level "profiles" key, and each key in
-    the sub dictionary is a profile name.  For example, the above config file
-    would be converted from::
-
-        {"profile test": {"aws_...": "foo", "aws...": "bar"},
-         "profile bar": {"aws...": "foo", "aws...": "bar"},
-         "preview": {"otherstuff": ...},
-         "foobar": {"morestuff": ...},
-         }
-
-    into::
-
-        {"profiles": {"test": {"aws_...": "foo", "aws...": "bar"},
-                      "bar": {"aws...": "foo", "aws...": "bar"},
-         "preview": {"otherstuff": ...},
-         "foobar": {"morestuff": ...},
-        }
-
-    If there are no profiles in the provided parsed INI contents, then
-    an empty dict will be the value associated with the ``profiles`` key.
-
-    .. note::
-
-        This will not mutate the passed in parsed_ini_config.  Instead it will
-        make a deepcopy and return that value.
-
-    """
-    parsed_config = copy.deepcopy(parsed_ini_config)
-    profiles = {}
-    final_config = {}
-    for key, values in parsed_config.items():
-        if key.startswith("profile"):
-            try:
-                parts = shlex.split(key)
-            except ValueError:
-                continue
-            if len(parts) == 2:
-                profiles[parts[1]] = values
-        elif key == 'default':
-            # default section is special and is considered a profile
-            # name but we don't require you use 'profile "default"'
-            # as a section.
-            profiles[key] = values
-        else:
-            final_config[key] = values
-    final_config['profiles'] = profiles
-    return final_config
+        # Return a new config object with the merged properties.
+        return Config(**config_options)

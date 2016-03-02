@@ -15,14 +15,14 @@
 from tests import unittest, BaseEnvVar
 import os
 import botocore.exceptions
-from botocore.config import raw_config_parse, load_config
+from botocore.configloader import raw_config_parse, load_config
 
 
 def path(filename):
     return os.path.join(os.path.dirname(__file__), 'cfg', filename)
 
 
-class TestConfig(BaseEnvVar):
+class TestConfigLoader(BaseEnvVar):
 
     def test_config_not_found(self):
         with self.assertRaises(botocore.exceptions.ConfigNotFound):

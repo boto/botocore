@@ -22,7 +22,7 @@ import os
 import platform
 
 from botocore import __version__
-import botocore.config
+import botocore.configloader
 import botocore.credentials
 import botocore.client
 from botocore.exceptions import ConfigNotFound, ProfileNotFound
@@ -362,7 +362,7 @@ class Session(object):
         if self._config is None:
             try:
                 config_file = self.get_config_variable('config_file')
-                self._config = botocore.config.load_config(config_file)
+                self._config = botocore.configloader.load_config(config_file)
             except ConfigNotFound:
                 self._config = {'profiles': {}}
             try:
@@ -372,7 +372,7 @@ class Session(object):
                 # can validate the user is not referring to a nonexistent
                 # profile.
                 cred_file = self.get_config_variable('credentials_file')
-                cred_profiles = botocore.config.raw_config_parse(cred_file)
+                cred_profiles = botocore.configloader.raw_config_parse(cred_file)
                 for profile in cred_profiles:
                     cred_vars = cred_profiles[profile]
                     if profile not in self._config['profiles']:
