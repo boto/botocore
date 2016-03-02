@@ -900,9 +900,6 @@ class AssumeRoleProvider(CredentialProvider):
         client = self._create_client_from_config(config)
 
         assume_role_kwargs = self._assume_role_base_kwargs(config)
-        if assume_role_kwargs.get('RoleSessionName') is None:
-            role_session_name = 'AWS-CLI-session-%s' % (int(time.time()))
-            assume_role_kwargs['RoleSessionName'] = role_session_name
 
         response = client.assume_role(**assume_role_kwargs)
         creds = self._create_creds_from_response(response)
@@ -918,6 +915,9 @@ class AssumeRoleProvider(CredentialProvider):
             assume_role_kwargs['TokenCode'] = token_code
         if config['role_session_name'] is not None:
             assume_role_kwargs['RoleSessionName'] = config['role_session_name']
+        else:
+            role_session_name = 'AWS-CLI-session-%s' % (int(time.time()))
+            assume_role_kwargs['RoleSessionName'] = role_session_name
         return assume_role_kwargs
 
 
