@@ -144,7 +144,6 @@ class Config(object):
         :param other config: Another config object to merge with. The values
             in the provided config object will take precedence in the merging
 
-        :rtype: botocore.client.Config
         :returns: A config object built from the merged values of both
             config objects.
         """
