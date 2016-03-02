@@ -13,7 +13,7 @@
 from tests import unittest, mock, BaseSessionTest
 
 import botocore.session
-from botocore.client import Config
+from botocore.config import Config
 from botocore.exceptions import ParamValidationError
 
 

@@ -31,7 +31,7 @@ import botocore.session
 import botocore.auth
 import botocore.credentials
 import botocore.vendored.requests as requests
-from botocore.client import Config
+from botocore.config import Config
 
 
 def random_bucketname():

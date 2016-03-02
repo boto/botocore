@@ -12,7 +12,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
+import botocore.config
 from tests import unittest, create_session, temporary_file
 import os
 import logging
@@ -438,7 +438,7 @@ class TestCreateClient(BaseSessionTest):
 
         # The config passed to the client should be the one that is used
         # in creating the client.
-        config = client.Config(region_name='us-west-2')
+        config = botocore.config.Config(region_name='us-west-2')
         self.session.create_client('sts', config=config)
         client_creator.return_value.create_client.assert_called_with(
             service_name=mock.ANY, region_name=mock.ANY, is_secure=mock.ANY,
@@ -448,7 +448,7 @@ class TestCreateClient(BaseSessionTest):
 
     @mock.patch('botocore.client.ClientCreator')
     def test_create_client_with_default_client_config(self, client_creator):
-        config = client.Config()
+        config = botocore.config.Config()
         self.session.set_default_client_config(config)
         self.session.create_client('sts')
 
@@ -460,8 +460,8 @@ class TestCreateClient(BaseSessionTest):
 
     @mock.patch('botocore.client.ClientCreator')
     def test_create_client_with_merging_client_configs(self, client_creator):
-        config = client.Config(region_name='us-west-2')
-        other_config = client.Config(region_name='us-east-1')
+        config = botocore.config.Config(region_name='us-west-2')
+        other_config = botocore.config.Config(region_name='us-east-1')
         self.session.set_default_client_config(config)
         self.session.create_client('sts', config=other_config)
 
@@ -482,7 +482,7 @@ class TestCreateClient(BaseSessionTest):
         self.assertEqual(ec2_client.meta.region_name, 'us-west-2')
 
     def test_create_client_with_region_and_client_config(self):
-        config = client.Config()
+        config = botocore.config.Config()
         # Use a client config with no region configured.
         ec2_client = self.session.create_client(
             'ec2', region_name='us-west-2', config=config)
@@ -620,6 +620,6 @@ class TestDefaultClientConfig(BaseSessionTest):
         self.assertEqual(self.session.get_default_client_config(), None)
 
     def test_set_and_get_client_config(self):
-        client_config = client.Config()
+        client_config = botocore.config.Config()
         self.session.set_default_client_config(client_config)
         self.assertIs(self.session.get_default_client_config(), client_config)
