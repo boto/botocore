@@ -28,6 +28,7 @@ from botocore.vendored.requests.exceptions import ConnectionError
 # Empty params means that the operation will be called with no params.  This is
 # used as a quick verification that we can successfully make calls to services.
 SMOKE_TESTS = {
+ 'acm': {'ListCertificates': {}},
  'apigateway': {'GetRestApis': {}},
  'autoscaling': {'DescribeAccountLimits': {},
                  'DescribeAdjustmentTypes': {}},
@@ -40,6 +41,9 @@ SMOKE_TESTS = {
                  'ListDomainNames': {}},
  'cloudtrail': {'DescribeTrails': {}},
  'cloudwatch': {'ListMetrics': {}},
+ 'codecommit': {'ListRepositories': {}},
+ 'codedeploy': {'ListApplications': {}},
+ 'codepipeline': {'ListActionTypes': {}},
  'codedeploy': {'ListApplications': {}},
  'codecommit': {'ListRepositories': {}},
  'cognito-identity': {'ListIdentityPools': {'MaxResults': 1}},
@@ -53,6 +57,7 @@ SMOKE_TESTS = {
  'dynamodbstreams': {'ListStreams': {}},
  'ec2': {'DescribeRegions': {},
          'DescribeInstances': {}},
+  'ecr': {'DescribeRepositories': {}},
  'ecs': {'DescribeClusters': {}},
  'elasticache': {'DescribeCacheClusters': {}},
  'elasticbeanstalk': {'DescribeApplications': {}},
@@ -60,6 +65,8 @@ SMOKE_TESTS = {
  'elb': {'DescribeLoadBalancers': {}},
  'emr': {'ListClusters': {}},
  'es': {'ListDomainNames': {}},
+ 'events': {'ListRules': {}},
+  'firehose': {'ListDeliveryStreams': {}},
  'gamelift': {'ListBuilds': {}},
  'glacier': {'ListVaults': {}},
  'iam': {'ListUsers': {}},
@@ -67,6 +74,8 @@ SMOKE_TESTS = {
  # importexport tests are not run.
  #'importexport': {'ListJobs': {}},
  'importexport': {},
+ 'inspector': {'DescribeCrossAccountAccessRole': {}},
+ 'iot': {'DescribeEndpoint': {}},
  'kinesis': {'ListStreams': {}},
  'kms': {'ListKeys': {}},
  'lambda': {'ListFunctions': {}},
@@ -190,6 +199,7 @@ REGION = 'us-east-1'
 REGION_OVERRIDES = {
     'devicefarm': 'us-west-2',
     'efs': 'us-west-2',
+    'inspector': 'us-west-2',
 }
 
 
