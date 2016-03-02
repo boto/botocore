@@ -46,7 +46,7 @@ class BaseSessionTest(unittest.TestCase):
         self.environ_patch = mock.patch('os.environ', self.environ)
         self.environ_patch.start()
         self.environ['FOO_PROFILE'] = 'foo'
-        self.environ['FOO_REGION'] = 'moon-west-1'
+        self.environ['FOO_REGION'] = 'us-west-11'
         data_path = os.path.join(os.path.dirname(__file__), 'data')
         self.environ['FOO_DATA_PATH'] = data_path
         config_path = os.path.join(os.path.dirname(__file__), 'cfg',
@@ -108,7 +108,7 @@ class SessionTest(BaseSessionTest):
     def test_profile(self):
         self.assertEqual(self.session.get_config_variable('profile'), 'foo')
         self.assertEqual(self.session.get_config_variable('region'),
-                         'moon-west-1')
+                         'us-west-11')
         self.session.get_config_variable('profile') == 'default'
         saved_region = self.environ['FOO_REGION']
         del self.environ['FOO_REGION']
@@ -322,6 +322,24 @@ class TestSessionConfigurationVars(BaseSessionTest):
         self.assertEqual(self.session.get_config_variable('foobar'), 'default')
 
 
+class TestSessionPartitionFiles(BaseSessionTest):
+    def test_lists_partitions_on_disk(self):
+        mock_resolver = mock.Mock()
+        mock_resolver.get_available_partitions.return_value = ['foo']
+        self.session.register_component('endpoint_resolver', mock_resolver)
+        self.assertEquals(['foo'], self.session.get_available_partitions())
+
+    def test_proxies_list_endpoints_to_resolver(self):
+        resolver = mock.Mock()
+        resolver.get_available_endpoints.return_value = ['a', 'b']
+        self.session.register_component('endpoint_resolver', resolver)
+        self.session.get_available_regions('foo', 'bar', True)
+
+    def test_provides_empty_list_for_unknown_service_regions(self):
+        regions = self.session.get_available_regions('__foo__')
+        self.assertEqual([], regions)
+
+
 class TestSessionUserAgent(BaseSessionTest):
     def test_can_change_user_agent_name(self):
         self.session.user_agent_name = 'something-else'
@@ -482,7 +500,7 @@ class TestCreateClient(BaseSessionTest):
 
     def test_create_client_no_region_and_no_client_config(self):
         ec2_client = self.session.create_client('ec2')
-        self.assertEqual(ec2_client.meta.region_name, 'moon-west-1')
+        self.assertEqual(ec2_client.meta.region_name, 'us-west-11')
 
     @mock.patch('botocore.client.ClientCreator')
     def test_create_client_with_ca_bundle_from_config(self, client_creator):

@@ -23,7 +23,7 @@ from botocore.vendored.requests.exceptions import ConnectionError
 from botocore.vendored import six
 
 from botocore.awsrequest import create_request_object
-from botocore.exceptions import BaseEndpointResolverError
+from botocore.exceptions import UnknownEndpointError
 from botocore.exceptions import EndpointConnectionError
 from botocore.exceptions import ConnectionClosedError
 from botocore.compat import filter_ssl_warnings
@@ -230,48 +230,20 @@ class Endpoint(object):
 
 
 class EndpointCreator(object):
-    def __init__(self, endpoint_resolver, configured_region, event_emitter):
-        self._endpoint_resolver = endpoint_resolver
-        self._configured_region = configured_region
+    def __init__(self, event_emitter):
         self._event_emitter = event_emitter
 
-    def create_endpoint(self, service_model, region_name=None, is_secure=True,
-                        endpoint_url=None, verify=None,
-                        response_parser_factory=None, timeout=DEFAULT_TIMEOUT):
-        if region_name is None:
-            region_name = self._configured_region
-        # Use the endpoint resolver heuristics to build the endpoint url.
-        scheme = 'https' if is_secure else 'http'
-        try:
-            endpoint = self._endpoint_resolver.construct_endpoint(
-                service_model.endpoint_prefix,
-                region_name, scheme=scheme)
-        except BaseEndpointResolverError:
-            if endpoint_url is not None:
-                # If the user provides an endpoint_url, it's ok
-                # if the heuristics didn't find anything.  We use the
-                # user provided endpoint_url.
-                endpoint = {'uri': endpoint_url, 'properties': {}}
-            else:
-                raise
-
-        if endpoint_url is not None:
-            # If the user provides an endpoint url, we'll use that
-            # instead of what the heuristics rule gives us.
-            final_endpoint_url = endpoint_url
-        else:
-            final_endpoint_url = endpoint['uri']
-        if not is_valid_endpoint_url(final_endpoint_url):
-            raise ValueError("Invalid endpoint: %s" % final_endpoint_url)
-
-        proxies = self._get_proxies(final_endpoint_url)
-        verify_value = self._get_verify_value(verify)
+    def create_endpoint(self, service_model, region_name, endpoint_url,
+                        verify=None, response_parser_factory=None,
+                        timeout=DEFAULT_TIMEOUT):
+        if not is_valid_endpoint_url(endpoint_url):
+            raise ValueError("Invalid endpoint: %s" % endpoint_url)
         return Endpoint(
-            final_endpoint_url,
+            endpoint_url,
             endpoint_prefix=service_model.endpoint_prefix,
             event_emitter=self._event_emitter,
-            proxies=proxies,
-            verify=verify_value,
+            proxies=self._get_proxies(endpoint_url),
+            verify=self._get_verify_value(verify),
             timeout=timeout,
             response_parser_factory=response_parser_factory)
 

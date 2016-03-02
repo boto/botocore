@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.4.0 - (2016-03-01)
+--------------------
+* feature:Regions: Add ability to list regions and endpoints for services in
+  a partition.
+  (`issue 812 <https://github.com/boto/botocore/pull/812>`__)
+* feature:``DynamoDB``: Add support for DescribeLimits.
+* feature:``APIGateway``: Add support for TestInvokeAuthorizer and
+  FlushStageAuthorizersCache operations.
+* feature:``CloudSearchDomain``: Add support for stats.
+
 1.3.28 - (2016-02-18)
 ---------------------
 * feature:``StorageGateway``: Added support for user-supplied barcodes.
