@@ -71,6 +71,8 @@ def normalize_url_path(path):
 
 def remove_dot_segments(url):
     # RFC 3986, section 5.2.4 "Remove Dot Segments"
+    # Also, AWS services require consecutive slashes to be removed,
+    # so that's done here as well
     input_url = url.split('/')
     output_list = []
     for x in input_url:
@@ -81,8 +83,6 @@ def remove_dot_segments(url):
             else:
                 output_list.append(x)
     first = '/' if url[0] == '/' else ''
-    # This doesn't seem to be in the RFC but AWS auth services require
-    # consecutive slashes to be removed:
     last = '/' if url[-1] == '/' and len(output_list) > 0 else ''
     return first + '/'.join(output_list) + last
 
