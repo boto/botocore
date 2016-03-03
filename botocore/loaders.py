@@ -341,7 +341,7 @@ class Loader(object):
         """
         # Wrapper around the load_data.  This will calculate the path
         # to call load_data with.
-        known_services = self.list_available_services('service-2')
+        known_services = self.list_available_services(type_name)
         if service_name not in known_services:
             raise UnknownServiceError(
                 service_name=service_name,
