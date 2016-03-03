@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.4.1 - (2016-03-03)
+--------------------
+* feature:Config: Moved Config to its own class to boost import speed
+* feature:``EC2``: Add support for VPC peering with security groups.
+* feature:``DirectoryService``: Add SNS event notification support
+
 1.4.0 - (2016-03-01)
 --------------------
 * feature:Regions: Add ability to list regions and endpoints for services in

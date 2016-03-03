@@ -18,24 +18,21 @@ import botocore.validate
 from botocore import waiter, xform_name
 from botocore.auth import AUTH_TYPE_MAPS
 from botocore.awsrequest import prepare_request_dict
-from botocore.compat import OrderedDict
-from botocore.endpoint import EndpointCreator, DEFAULT_TIMEOUT
+from botocore.config import Config
+from botocore.docs.docstring import ClientMethodDocstring
+from botocore.docs.docstring import PaginatorDocstring
+from botocore.endpoint import EndpointCreator
 from botocore.exceptions import ClientError, DataNotFoundError
 from botocore.exceptions import OperationNotPageableError
-from botocore.exceptions import InvalidS3AddressingStyleError
-from botocore.exceptions import NoRegionError, UnknownEndpointError
 from botocore.exceptions import UnknownSignatureVersionError
 from botocore.hooks import first_non_none_response
 from botocore.model import ServiceModel
 from botocore.paginate import Paginator
 from botocore.signers import RequestSigner
 from botocore.utils import CachedProperty
-from botocore.utils import get_service_module_name
 from botocore.utils import fix_s3_host
+from botocore.utils import get_service_module_name
 from botocore.utils import switch_to_virtual_host_style
-from botocore.docs.docstring import ClientMethodDocstring
-from botocore.docs.docstring import PaginatorDocstring
-
 
 logger = logging.getLogger(__name__)
 
@@ -680,142 +677,3 @@ class ClientMeta(object):
     @property
     def method_to_api_mapping(self):
         return self._method_to_api_mapping
-
-
-class Config(object):
-    """Advanced configuration for Botocore clients.
-
-    :type region_name: str
-    :param region_name: The region to use in instantiating the client
-
-    :type signature_version: str
-    :param signature_version: The signature version when signing requests.
-
-    :type user_agent: str
-    :param user_agent: The value to use in the User-Agent header.
-
-    :type user_agent_extra: str
-    :param user_agent_extra: The value to append to the current User-Agent
-        header value.
-
-    :type connect_timeout: int
-    :param connect_timeout: The time in seconds till a timeout exception is
-        thrown when attempting to make a connection. The default is 60
-        seconds.
-
-    :type read_timeout: int
-    :param read_timeout: The time in seconds till a timeout exception is
-        thrown when attempting to read from a connection. The default is
-        60 seconds.
-
-    :type parameter_validation: bool
-    :param parameter_validation: Whether parameter validation should occur
-        when serializing requests. The default is True.  You can disable
-        parameter validation for performance reasons.  Otherwise, it's
-        recommended to leave parameter validation enabled.
-
-    :type s3: dict
-    :param s3: A dictionary of s3 specific configurations.
-        Valid keys are:
-            * 'addressing_style' -- Refers to the style in which to address
-              s3 endpoints. Values must be a string that equals:
-                  * auto -- Addressing style is chosen for user. Depending
-                            on the configuration of client, the endpoint
-                            may be addressed in the virtual or the path
-                            style. Note that this is the default behavior if
-                            no style is specified.
-                  * virtual -- Addressing style is always virtual. The name of
-                               the bucket must be DNS compatible or an
-                               exception will be thrown. Endpoints will be
-                               addressed as such: mybucket.s3.amazonaws.com
-                  * path -- Addressing style is always by path. Endpoints will
-                            be addressed as such: s3.amazonaws.com/mybucket
-    """
-    OPTION_DEFAULTS = OrderedDict([
-        ('region_name', None),
-        ('signature_version', None),
-        ('user_agent', None),
-        ('user_agent_extra', None),
-        ('connect_timeout', DEFAULT_TIMEOUT),
-        ('read_timeout', DEFAULT_TIMEOUT),
-        ('parameter_validation', True),
-        ('s3', None)
-    ])
-
-    def __init__(self, *args, **kwargs):
-        self._user_provided_options = self._record_user_provided_options(
-            args, kwargs)
-
-        # Merge the user_provided options onto the default options
-        config_vars = copy.copy(self.OPTION_DEFAULTS)
-        config_vars.update(self._user_provided_options)
-
-        # Set the attributes based on the config_vars
-        for key, value in config_vars.items():
-            setattr(self, key, value)
-
-        # Validate the s3 options
-        self._validate_s3_configuration(self.s3)
-
-    def _record_user_provided_options(self, args, kwargs):
-        option_order = list(self.OPTION_DEFAULTS)
-        user_provided_options = {}
-
-        # Iterate through the kwargs passed through to the constructor and
-        # map valid keys to the dictionary
-        for key, value in kwargs.items():
-            if key in self.OPTION_DEFAULTS:
-                user_provided_options[key] = value
-            # The key must exist in the available options
-            else:
-                raise TypeError(
-                    'Got unexpected keyword argument \'%s\'' % key)
-
-        # The number of args should not be longer than the allowed
-        # options
-        if len(args) > len(option_order):
-            raise TypeError(
-                'Takes at most %s arguments (%s given)' % (
-                    len(option_order), len(args)))
-
-        # Iterate through the args passed through to the constructor and map
-        # them to appropriate keys.
-        for i, arg in enumerate(args):
-            # If it a kwarg was specified for the arg, then error out
-            if option_order[i] in user_provided_options:
-                raise TypeError(
-                    'Got multiple values for keyword argument \'%s\'' % (
-                        option_order[i]))
-            user_provided_options[option_order[i]] = arg
-
-        return user_provided_options
-
-    def _validate_s3_configuration(self, s3):
-        if s3 is not None:
-            addressing_style = s3.get('addressing_style')
-            if addressing_style not in ['virtual', 'auto', 'path', None]:
-                raise InvalidS3AddressingStyleError(
-                    s3_addressing_style=addressing_style)
-
-    def merge(self, other_config):
-        """Merges the config object with another config object
-
-        This will merge in all non-default values from the provided config
-        and return a new config object
-
-        :type other_config: botocore.client.Config
-        :param other config: Another config object to merge with. The values
-            in the provided config object will take precedence in the merging
-
-        :rtype: botocore.client.Config
-        :returns: A config object built from the merged values of both
-            config objects.
-        """
-        # Make a copy of the current attributes in the config object.
-        config_options = copy.copy(self._user_provided_options)
-
-        # Merge in the user provided options from the other config
-        config_options.update(other_config._user_provided_options)
-
-        # Return a new config object with the merged properties.
-        return Config(**config_options)
