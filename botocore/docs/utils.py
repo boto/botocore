@@ -191,8 +191,9 @@ class HideUnusedShapeMember(object):
             .get_section('member-value').get_section('structure-value')
         if self.member_name not in section.available_sections:
             return
-        if section.available_sections[-2] == self.member_name and \
-                'ending' in section.available_sections[-1]:
+        sections = section.available_sections
+        if len(sections) >= 3 and sections[-2] == self.member_name and \
+                'ending' in sections[-1]:
             # The member is the last documented member, so we need to go back
             # to delete the previous trailing comma and newline
             previous_member_name = section.available_sections[-3]
