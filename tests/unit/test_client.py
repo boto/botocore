@@ -1269,7 +1269,8 @@ class TestClientEndpointBridge(unittest.TestCase):
         resolver = mock.Mock()
         resolver.construct_endpoint.return_value = {
             'partition': 'aws', 'hostname': 's3.amazonaws.com',
-            'endpointName': 'us-east-1', 'signatureVersions': ['s3', 's3v4']}
+            'endpointName': 'us-east-1', 'signatureVersions': ['s3', 's3v4'],
+            'protocols': ['https']}
         bridge = ClientEndpointBridge(resolver)
         resolved = bridge.resolve('s3')
         self.assertEqual('us-east-1', resolved['region_name'])
@@ -1317,7 +1318,7 @@ class TestClientEndpointBridge(unittest.TestCase):
         resolver.construct_endpoint.return_value = {
             'partition': 'aws', 'hostname': 'do-not-use-this',
             'signatureVersions': ['v4'], 'sslCommonName': 'common-name.com',
-            'endpointName': 'us-west-2'}
+            'endpointName': 'us-west-2', 'protocols': ['https']}
         bridge = ClientEndpointBridge(resolver)
         resolved = bridge.resolve('myservice', 'us-west-2')
         self.assertEqual('us-west-2', resolved['region_name'])
@@ -1377,13 +1378,32 @@ class TestClientEndpointBridge(unittest.TestCase):
     def test_resolved_region_overrides_region_when_no_endpoint_url(self):
         resolver = mock.Mock()
         resolver.construct_endpoint.return_value = {
-            'partition': 'aws', 'hostname': 'host.com',
-            'signatureVersions': ['v4'], 'endpointName': 'override'}
+            'partition': 'aws',
+            'hostname': 'host.com',
+            'signatureVersions': ['v4'],
+            'endpointName': 'override',
+            'protocols': ['https'],
+        }
         bridge = ClientEndpointBridge(resolver)
         resolved = bridge.resolve('myservice', 'will-not-be-there')
         self.assertEqual('override', resolved['region_name'])
         self.assertEqual('override', resolved['signing_region'])
         self.assertEqual('https://host.com', resolved['endpoint_url'])
+
+    def test_does_not_use_https_if_not_available(self):
+        resolver = mock.Mock()
+        resolver.construct_endpoint.return_value = {
+            'partition': 'aws',
+            'hostname': 'host.com',
+            'signatureVersions': ['v4'],
+            'endpointName': 'foo',
+            # Note: http, not https
+            'protocols': ['http'],
+        }
+        bridge = ClientEndpointBridge(resolver)
+        resolved = bridge.resolve('myservice')
+        # We should resolve to http://, not https://
+        self.assertEqual('http://host.com', resolved['endpoint_url'])
 
     def test_uses_signature_version_from_client_config(self):
         resolver = mock.Mock()

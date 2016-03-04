@@ -291,7 +291,8 @@ class ClientEndpointBridge(object):
         if endpoint_url is None:
             # Use the sslCommonName over the hostname for Python 2.6 compat.
             hostname = resolved.get('sslCommonName', resolved.get('hostname'))
-            endpoint_url = self._make_url(hostname, is_secure)
+            endpoint_url = self._make_url(hostname, is_secure,
+                                          resolved.get('protocols', []))
         signature_version = self._resolve_signature_version(
             service_name, resolved)
         signing_name = self._resolve_signing_name(service_name, resolved)
@@ -307,7 +308,8 @@ class ClientEndpointBridge(object):
             # Expand the default hostname URI template.
             hostname = self.default_endpoint.format(
                 service=service_name, region=region_name)
-            endpoint_url = self._make_url(hostname, is_secure)
+            endpoint_url = self._make_url(hostname, is_secure,
+                                          ['http', 'https'])
         logger.debug('Assuming an endpoint for %s, %s: %s',
                      service_name, region_name, endpoint_url)
         # We still want to allow the user to provide an explicit version.
@@ -333,9 +335,12 @@ class ClientEndpointBridge(object):
             'metadata': metadata
         }
 
-    def _make_url(self, hostname, is_secure):
-        endpoint_url = 'https://' if is_secure else 'http://'
-        return endpoint_url + hostname
+    def _make_url(self, hostname, is_secure, supported_protocols):
+        if is_secure and 'https' in supported_protocols:
+            scheme ='https'
+        else:
+            scheme = 'http'
+        return '%s://%s' % (scheme, hostname)
 
     def _resolve_signing_name(self, service_name, resolved):
         # CredentialScope overrides everything else.
