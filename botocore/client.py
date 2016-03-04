@@ -145,7 +145,7 @@ class ClientCreator(object):
         response_parser = botocore.parsers.create_parser(protocol)
         endpoint_bridge = ClientEndpointBridge(
             self._endpoint_resolver, scoped_config, client_config,
-            service_model.metadata.get('signingName'))
+            service_signing_name=service_model.metadata.get('signingName'))
         endpoint_config = endpoint_bridge.resolve(
             service_name, region_name, endpoint_url, is_secure)
 
@@ -313,9 +313,10 @@ class ClientEndpointBridge(object):
         # We still want to allow the user to provide an explicit version.
         signature_version = self._resolve_signature_version(
             service_name, {'signatureVersions': ['v4']})
+        signing_name = self._resolve_signing_name(service_name, resolved={})
         return self._create_result(
             service_name=service_name, region_name=region_name,
-            signing_region=region_name, signing_name=service_name,
+            signing_region=region_name, signing_name=signing_name,
             signature_version=signature_version, endpoint_url=endpoint_url,
             metadata={})
 
