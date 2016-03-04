@@ -28,7 +28,16 @@ class BotoCoreError(Exception):
         self.kwargs = kwargs
 
 
-class UnknownServiceError(BotoCoreError):
+class DataNotFoundError(BotoCoreError):
+    """
+    The data associated with a particular path could not be loaded.
+
+    :ivar path: The data path that the user attempted to load.
+    """
+    fmt = 'Unable to load data for: {data_path}'
+
+
+class UnknownServiceError(DataNotFoundError):
     """Raised when trying to load data for an unknown service.
 
     :ivar service_name: The name of the unknown service.
@@ -37,15 +46,6 @@ class UnknownServiceError(BotoCoreError):
     fmt = (
         "Unknown service: '{service_name}'. Valid service names are: "
         "{known_service_names}")
-
-
-class DataNotFoundError(BotoCoreError):
-    """
-    The data associated with a particular path could not be loaded.
-
-    :ivar path: The data path that the user attempted to load.
-    """
-    fmt = 'Unable to load data for: {data_path}'
 
 
 class ApiVersionNotFoundError(BotoCoreError):
