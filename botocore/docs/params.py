@@ -104,6 +104,18 @@ class BaseParamsDocumenter(ShapeDocumenter):
                 members[param.name] = param
         return members
 
+    def _document_non_top_level_param_type(self, type_section, shape):
+        special_py_type = self._get_special_py_type_name(shape)
+        py_type = py_type_name(shape.type_name)
+
+        type_format = '(%s) -- '
+        if special_py_type is not None:
+            # Special type can reference a linked class.
+            # Italicizing it blows away the link.
+            type_section.write(type_format % special_py_type)
+        else:
+            type_section.style.italics(type_format % py_type)
+
     def _start_nested_param(self, section):
         section.style.indent()
         section.style.new_line()
@@ -120,16 +132,12 @@ class ResponseParamsDocumenter(BaseParamsDocumenter):
 
 
     def _add_member_documentation(self, section, shape, name=None, **kwargs):
-        py_type = py_type_name(shape.type_name)
         name_section = section.add_new_section('param-name')
         name_section.write('- ')
         if name is not None:
             name_section.style.bold('%s ' % name)
         type_section = section.add_new_section('param-type')
-        if self._context.get('streaming_shape') == shape:
-            type_section.write('(:class:`.StreamingBody`) -- ')
-        else:
-            type_section.style.italics('(%s) -- ' % py_type)
+        self._document_non_top_level_param_type(type_section, shape)
 
         documentation_section = section.add_new_section('param-documentation')
         if shape.documentation:
@@ -169,7 +177,9 @@ class RequestParamsDocumenter(BaseParamsDocumenter):
     def _add_member_documentation(self, section, shape, name=None,
                                   is_top_level_param=False, is_required=False,
                                   **kwargs):
-        py_type = py_type_name(shape.type_name)
+        py_type = self._get_special_py_type_name(shape)
+        if py_type is None:
+            py_type = py_type_name(shape.type_name)
         if is_top_level_param:
             type_section = section.add_new_section('param-type')
             type_section.write(':type %s: %s' % (name, py_type))
@@ -184,7 +194,7 @@ class RequestParamsDocumenter(BaseParamsDocumenter):
             if name is not None:
                 name_section.style.bold('%s ' % name)
             type_section = section.add_new_section('param-type')
-            type_section.style.italics('(%s) -- ' % py_type)
+            self._document_non_top_level_param_type(type_section, shape)
 
         if is_required:
             is_required_section = section.add_new_section('is-required')

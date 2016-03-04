@@ -408,12 +408,21 @@ class OperationModel(object):
             self._operation_model['output'])
 
     @CachedProperty
+    def has_streaming_input(self):
+        return self.get_streaming_input() is not None
+
+    @CachedProperty
     def has_streaming_output(self):
         return self.get_streaming_output() is not None
 
+    def get_streaming_input(self):
+        return self._get_streaming_body(self.input_shape)
+
     def get_streaming_output(self):
+        return self._get_streaming_body(self.output_shape)
+
+    def _get_streaming_body(self, shape):
         """Returns the streaming member's shape if any; or None otherwise."""
-        shape = self.output_shape
         if shape is None:
             return None
         payload = shape.serialization.get('payload')
