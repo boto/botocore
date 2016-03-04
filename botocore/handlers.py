@@ -25,9 +25,9 @@ import warnings
 
 from botocore.compat import urlsplit, urlunsplit, unquote, \
     json, quote, six, unquote_str, ensure_bytes, get_md5, MD5_AVAILABLE
-from botocore.docs.utils import AutoPopulatedParam
-from botocore.docs.utils import HideParamFromOperations
-from botocore.docs.utils import AppendParamDocumentation
+from botocore.docs.utils import (
+    AutoPopulatedParam, HideParamFromOperations,
+    HideUnusedShapeMember, AppendParamDocumentation)
 from botocore.signers import add_generate_presigned_url
 from botocore.signers import add_generate_presigned_post
 from botocore.exceptions import ParamValidationError
@@ -749,5 +749,7 @@ BUILTIN_HANDLERS = [
           'PutBucketLifecycle', 'PutBucketLogging', 'PutBucketNotification',
           'PutBucketPolicy', 'PutBucketReplication', 'PutBucketRequestPayment',
           'PutBucketTagging', 'PutBucketVersioning', 'PutBucketWebsite',
-          'PutObjectAcl']).hide_param)
+          'PutObjectAcl']).hide_param),
+    ('docs.*.iam.CreateUser.complete-section',
+     HideUnusedShapeMember('User', 'PasswordLastUsed').hide_member)
 ]
