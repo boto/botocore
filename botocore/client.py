@@ -144,8 +144,8 @@ class ClientCreator(object):
         event_emitter = copy.copy(self._event_emitter)
         response_parser = botocore.parsers.create_parser(protocol)
         endpoint_bridge = ClientEndpointBridge(
-            self._endpoint_resolver, scoped_config, client_config,
-            service_model.metadata.get('signingName'))
+            self._endpoint_resolver, scoped_config=scoped_config, client_config=client_config,
+            service_signing_name=service_model.metadata.get('signingName'))
         endpoint_config = endpoint_bridge.resolve(
             service_name, region_name, endpoint_url, is_secure)
 
