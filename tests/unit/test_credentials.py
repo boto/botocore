@@ -691,7 +691,10 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         # Create a mock sts client that returns a specific response
         # for assume_role.
         client = mock.Mock()
-        client.assume_role.return_value = with_response
+        if isinstance(with_response, list):
+            client.assume_role.side_effect = with_response
+        else:
+            client.assume_role.return_value = with_response
         return mock.Mock(return_value=client)
 
     def some_future_time(self):
@@ -919,6 +922,49 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         client.assume_role.assert_called_with(
             RoleArn='myrole', RoleSessionName=mock.ANY, SerialNumber='mfa',
             TokenCode='token-code')
+
+    def test_assume_role_populates_session_name_on_refresh(self):
+        responses = [{
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                # We're creating an expiry time in the past so as
+                # soon as we try to access the credentials, the
+                # refresh behavior will be triggered.
+                'Expiration': (
+                    datetime.now(tzlocal()) -
+                    timedelta(seconds=100)).isoformat(),
+            },
+        }, {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': (
+                    datetime.now(tzlocal()) + timedelta(seconds=100)
+                ).isoformat(),
+            }
+        }]
+        client_creator = self.create_client_creator(with_response=responses)
+        provider = credentials.AssumeRoleProvider(
+            self.create_config_loader(), client_creator,
+            cache={}, profile_name='development',
+            prompter=mock.Mock(return_value='token-code'))
+
+        # This will trigger the first assume_role() call.  It returns
+        # credentials that are expired and will trigger a refresh.
+        creds = provider.load()
+        # This will trigger the second assume_role() call because
+        # a refresh is needed.
+        creds.get_frozen_credentials()
+        client = client_creator.return_value
+        assume_role_calls = client.assume_role.call_args_list
+        self.assertEqual(len(assume_role_calls), 2, assume_role_calls)
+        # The args should be identical.  That is, the second
+        # assume_role call should have the exact same args as the
+        # initial assume_role call.
+        self.assertEqual(assume_role_calls[0], assume_role_calls[1])
 
     def test_assume_role_mfa_cannot_refresh_credentials(self):
         # Note: we should look into supporting optional behavior

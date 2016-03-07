@@ -22,7 +22,7 @@ from collections import namedtuple
 from dateutil.parser import parse
 from dateutil.tz import tzlocal
 
-import botocore.config
+import botocore.configloader
 import botocore.compat
 from botocore.compat import total_seconds
 from botocore.exceptions import UnknownCredentialError
@@ -596,7 +596,7 @@ class SharedCredentialProvider(CredentialProvider):
             profile_name = 'default'
         self._profile_name = profile_name
         if ini_parser is None:
-            ini_parser = botocore.config.raw_config_parse
+            ini_parser = botocore.configloader.raw_config_parse
         self._ini_parser = ini_parser
 
     def load(self):
@@ -644,7 +644,7 @@ class ConfigProvider(CredentialProvider):
         self._config_filename = config_filename
         self._profile_name = profile_name
         if config_parser is None:
-            config_parser = botocore.config.load_config
+            config_parser = botocore.configloader.load_config
         self._config_parser = config_parser
 
     def load(self):
@@ -687,7 +687,7 @@ class BotoProvider(CredentialProvider):
         if environ is None:
             environ = os.environ
         if ini_parser is None:
-            ini_parser = botocore.config.raw_config_parse
+            ini_parser = botocore.configloader.raw_config_parse
         self._environ = environ
         self._ini_parser = ini_parser
 
@@ -900,9 +900,6 @@ class AssumeRoleProvider(CredentialProvider):
         client = self._create_client_from_config(config)
 
         assume_role_kwargs = self._assume_role_base_kwargs(config)
-        if assume_role_kwargs.get('RoleSessionName') is None:
-            role_session_name = 'AWS-CLI-session-%s' % (int(time.time()))
-            assume_role_kwargs['RoleSessionName'] = role_session_name
 
         response = client.assume_role(**assume_role_kwargs)
         creds = self._create_creds_from_response(response)
@@ -918,6 +915,9 @@ class AssumeRoleProvider(CredentialProvider):
             assume_role_kwargs['TokenCode'] = token_code
         if config['role_session_name'] is not None:
             assume_role_kwargs['RoleSessionName'] = config['role_session_name']
+        else:
+            role_session_name = 'AWS-CLI-session-%s' % (int(time.time()))
+            assume_role_kwargs['RoleSessionName'] = role_session_name
         return assume_role_kwargs
 
 

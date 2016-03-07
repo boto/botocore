@@ -123,6 +123,20 @@
         }
       }
     },
+    "kinesis": {
+      "DescribeStream": {
+        "policies": {
+          "request_limit_exceeded": {
+            "applies_when": {
+              "response": {
+                "service_error_code": "LimitExceededException",
+                "http_status_code": 400
+              }
+            }
+          }
+        }
+      }
+    },
     "sqs": {
       "__default__": {
         "policies": {

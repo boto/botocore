@@ -10,7 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
+import botocore.config
 from tests import unittest
 
 import botocore
@@ -26,7 +26,7 @@ import botocore.translate
 class TestStubber(unittest.TestCase):
     def setUp(self):
         session = botocore.session.get_session()
-        config = botocore.client.Config(signature_version=botocore.UNSIGNED)
+        config = botocore.config.Config(signature_version=botocore.UNSIGNED)
         self.client = session.create_client('s3', config=config)
 
         self.stubber = Stubber(self.client)
