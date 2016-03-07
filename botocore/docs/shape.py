@@ -85,14 +85,14 @@ class ShapeDocumenter(object):
 
     def _get_special_py_default(self, shape):
         special_defaults = {
-            'streaming_input_shape': 'b\'bytes\'|SeekableStream()',
+            'streaming_input_shape': 'b\'bytes\'|file',
             'streaming_output_shape': 'StreamingBody()'
         }
         return self._get_value_for_special_type(shape, special_defaults)
 
     def _get_special_py_type_name(self, shape):
         special_type_names = {
-            'streaming_input_shape': 'bytes or SeekableStream',
+            'streaming_input_shape': 'bytes or seekable file-like object',
             'streaming_output_shape': ':class:`.StreamingBody`'
         }
         return self._get_value_for_special_type(shape, special_type_names)

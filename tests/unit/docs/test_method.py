@@ -328,6 +328,7 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
             example_prefix='response = client.foo'
         )
         # The line in the example
-        self.assert_contains_line('Body=b\'bytes\'|SeekableStream()')
+        self.assert_contains_line('Body=b\'bytes\'|file')
         # The line in the parameter description
-        self.assert_contains_line(':type Body: bytes or SeekableStream')
+        self.assert_contains_line(
+            ':type Body: bytes or seekable file-like object')
