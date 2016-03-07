@@ -1,7 +1,24 @@
 {
     "version": 2,
     "waiters": {
-        "StackAvailable": {
+        "StackExists": {
+            "delay": 5,
+            "operation": "DescribeStacks",
+            "maxAttempts": 20,
+            "acceptors": [
+                {
+                    "matcher": "status",
+                    "expected": 200,
+                    "state": "success"
+                },
+                {
+                    "matcher": "error",
+                    "expected": "ValidationError",
+                    "state": "retry"
+                }
+            ]
+        },
+        "StackCreateComplete": {
             "delay": 30,
             "maxAttempts": 120,
             "operation": "DescribeStacks",
@@ -55,43 +72,13 @@
                     "state": "failure"
                 },
                 {
-                    "argument": "Stacks[].StackStatus",
-                    "expected": "UPDATE_COMPLETE",
-                    "matcher": "pathAll",
-                    "state": "success"
-                },
-                {
-                    "argument": "Stacks[].StackStatus",
-                    "expected": "UPDATE_ROLLBACK_COMPLETE",
-                    "matcher": "pathAny",
-                    "state": "failure"
-                },
-                {
-                    "argument": "Stacks[].StackStatus",
-                    "expected": "UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS",
-                    "matcher": "pathAny",
-                    "state": "failure"
-                },
-                {
-                    "argument": "Stacks[].StackStatus",
-                    "expected": "UPDATE_ROLLBACK_FAILED",
-                    "matcher": "pathAny",
-                    "state": "failure"
-                },
-                {
-                    "argument": "Stacks[].StackStatus",
-                    "expected": "UPDATE_ROLLBACK_IN_PROGRESS",
-                    "matcher": "pathAny",
-                    "state": "failure"
-                },
-                {
                     "expected": "ValidationError",
                     "matcher": "error",
                     "state": "failure"
                 }
             ]
         },
-        "StackDeleted": {
+        "StackDeleteComplete": {
             "delay": 30,
             "maxAttempts": 120,
             "operation": "DescribeStacks",
@@ -189,6 +176,48 @@
                     "argument": "Stacks[].StackStatus",
                     "expected": "UPDATE_ROLLBACK_IN_PROGRESS",
                     "matcher": "pathAny",
+                    "state": "failure"
+                }
+            ]
+        },
+        "StackUpdateComplete": {
+            "delay": 30,
+            "maxAttempts": 120,
+            "operation": "DescribeStacks",
+            "acceptors": [
+                {
+                    "argument": "Stacks[].StackStatus",
+                    "expected": "UPDATE_COMPLETE",
+                    "matcher": "pathAll",
+                    "state": "success"
+                },
+                {
+                    "argument": "Stacks[].StackStatus",
+                    "expected": "UPDATE_ROLLBACK_COMPLETE",
+                    "matcher": "pathAny",
+                    "state": "failure"
+                },
+                {
+                    "argument": "Stacks[].StackStatus",
+                    "expected": "UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS",
+                    "matcher": "pathAny",
+                    "state": "failure"
+                },
+                {
+                    "argument": "Stacks[].StackStatus",
+                    "expected": "UPDATE_ROLLBACK_FAILED",
+                    "matcher": "pathAny",
+                    "state": "failure"
+                },
+                {
+                    "argument": "Stacks[].StackStatus",
+                    "expected": "UPDATE_ROLLBACK_IN_PROGRESS",
+                    "matcher": "pathAny",
+                    "state": "failure"
+                },
+                {
+                    "expected": "ValidationError",
+                    "matcher": "error",
                     "state": "failure"
                 }
             ]
