@@ -628,6 +628,79 @@ def convert_body_to_file_like_object(params, **kwargs):
             params['Body'] = six.BytesIO(params['Body'])
 
 
+def _add_parameter_aliases(handler_list):
+    # Mapping of original parameter to parameter alias.
+    # The key is <service>.<operation>.parameter
+    # The first part of the key is used for event registration.
+    # The last part is the original parameter name and the value is the
+    # alias to expose in documentation.
+    aliases = {
+        'ec2.*.Filter': 'Filters',
+        'logs.CreateExportTask.from': 'fromTime',
+        'cloudsearchdomain.Search.return': 'returnFields'
+    }
+
+    for original, new_name in aliases.items():
+        event_portion, original_name = original.rsplit('.', 1)
+        parameter_alias = ParameterAlias(original_name, new_name)
+
+        # Add the handlers to the list of handlers.
+        # One handler is to handle when users provide the alias.
+        # The other handler is to update the documentation to show only
+        # the alias.
+        handler_for_parameter_build = (
+            'before-parameter-build.' + event_portion,
+            parameter_alias.alias_parameter_in_call)
+        handler_for_docs = (
+            'docs.*.' + event_portion + '.complete-section',
+            parameter_alias.alias_parameter_in_documentation)
+        handler_list.append(handler_for_parameter_build)
+        handler_list.append(handler_for_docs)
+
+
+class ParameterAlias(object):
+    def __init__(self, original_name, alias_name):
+        self._original_name = original_name
+        self._alias_name = alias_name
+
+    def alias_parameter_in_call(self, params, model, **kwargs):
+        if model.input_shape:
+            # Only consider accepting the alias if it is modeled in the
+            # input shape.
+            if self._original_name in model.input_shape.members:
+                if self._alias_name in params:
+                    # Remove the alias parameter value and use the old name
+                    # instead.
+                    params[self._original_name] = params.pop(self._alias_name)
+
+    def alias_parameter_in_documentation(self, event_name, section, **kwargs):
+        if event_name.startswith('docs.request-params'):
+            if self._original_name not in section.available_sections:
+                return
+            # Replace the name for parameter type
+            param_section = section.get_section(self._original_name)
+            param_type_section = param_section.get_section('param-type')
+            self._replace_content(param_type_section)
+
+            # Replace the name for the parameter description
+            param_name_section = param_section.get_section('param-name')
+            self._replace_content(param_name_section)
+        elif event_name.startswith('docs.request-example'):
+            section = section.get_section('structure-value')
+            if self._original_name not in section.available_sections:
+                return
+            # Replace the name for the example
+            param_section = section.get_section(self._original_name)
+            self._replace_content(param_section)
+
+    def _replace_content(self, section):
+        content = section.getvalue().decode('utf-8')
+        updated_content = content.replace(
+            self._original_name, self._alias_name)
+        section.clear_text()
+        section.write(updated_content)
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -751,3 +824,4 @@ BUILTIN_HANDLERS = [
           'PutBucketTagging', 'PutBucketVersioning', 'PutBucketWebsite',
           'PutObjectAcl']).hide_param)
 ]
+_add_parameter_aliases(BUILTIN_HANDLERS)

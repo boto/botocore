@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import BaseSessionTest
+from tests import unittest, BaseSessionTest
 
 import base64
 import mock
@@ -23,7 +23,12 @@ import botocore.session
 from botocore.exceptions import ParamValidationError, MD5UnavailableError
 from botocore.awsrequest import AWSRequest
 from botocore.compat import quote, six
+from botocore.docs.bcdoc.restdoc import DocumentStructure
+from botocore.docs.params import RequestParamsDocumenter
+from botocore.docs.example import RequestExampleDocumenter
+from botocore.hooks import HierarchicalEmitter
 from botocore.model import OperationModel, ServiceModel
+from botocore.model import DenormalizedStructureBuilder
 from botocore.signers import RequestSigner
 from botocore.credentials import Credentials
 from botocore import handlers
@@ -275,10 +280,9 @@ class TestHandlers(BaseSessionTest):
     def test_run_instances_userdata(self):
         user_data = 'This is a test'
         b64_user_data = base64.b64encode(six.b(user_data)).decode('utf-8')
-        event = 'before-parameter-build.ec2.RunInstances'
         params = dict(ImageId='img-12345678',
                       MinCount=1, MaxCount=5, UserData=user_data)
-        self.session.emit(event, params=params)
+        handlers.base64_encode_user_data(params=params)
         result = {'ImageId': 'img-12345678',
                   'MinCount': 1,
                   'MaxCount': 5,
@@ -291,10 +295,9 @@ class TestHandlers(BaseSessionTest):
         # user data.
         user_data = b'\xc7\xa9This is a test'
         b64_user_data = base64.b64encode(user_data).decode('utf-8')
-        event = 'before-parameter-build.ec2.RunInstances'
         params = dict(ImageId='img-12345678',
                       MinCount=1, MaxCount=5, UserData=user_data)
-        self.session.emit(event, params=params)
+        handlers.base64_encode_user_data(params=params)
         result = {'ImageId': 'img-12345678',
                   'MinCount': 1,
                   'MaxCount': 5,
@@ -804,3 +807,77 @@ class TestAddMD5(BaseMD5Test):
         self.assertEqual(
             request_dict['headers']['Content-MD5'],
             'OFj2IjCsPJFfMAxmQxLGPw==')
+
+
+class TestParameterAlias(unittest.TestCase):
+    def setUp(self):
+        self.original_name = 'original'
+        self.alias_name = 'alias'
+        self.parameter_alias = handlers.ParameterAlias(
+            self.original_name, self.alias_name)
+
+        self.operation_model = mock.Mock()
+        request_shape = DenormalizedStructureBuilder().with_members(
+            {self.original_name: {'type': 'string'}}).build_model()
+        self.operation_model.input_shape = request_shape
+        self.sample_section = DocumentStructure('')
+        self.event_emitter = HierarchicalEmitter()
+
+    def test_alias_parameter_in_call(self):
+        value = 'value'
+        params = {self.alias_name: value}
+        self.parameter_alias.alias_parameter_in_call(
+            params, self.operation_model)
+        self.assertEqual(params, {self.original_name: value})
+
+    def test_alias_parameter_in_call_does_not_touch_original(self):
+        value = 'value'
+        params = {self.original_name: value}
+        self.parameter_alias.alias_parameter_in_call(
+            params, self.operation_model)
+        self.assertEqual(params, {self.original_name: value})
+
+    def test_does_not_alias_parameter_for_no_input_shape(self):
+        value = 'value'
+        params = {self.alias_name: value}
+        self.operation_model.input_shape = None
+        self.parameter_alias.alias_parameter_in_call(
+            params, self.operation_model)
+        self.assertEqual(params, {self.alias_name: value})
+
+    def test_does_not_alias_parameter_for_not_modeled_member(self):
+        value = 'value'
+        params = {self.alias_name: value}
+
+        request_shape = DenormalizedStructureBuilder().with_members(
+            {'foo': {'type': 'string'}}).build_model()
+        self.operation_model.input_shape = request_shape
+        self.parameter_alias.alias_parameter_in_call(
+            params, self.operation_model)
+        self.assertEqual(params, {self.alias_name: value})
+
+    def test_alias_parameter_in_documentation_request_params(self):
+        RequestParamsDocumenter(
+            'myservice', 'myoperation', self.event_emitter).document_params(
+                self.sample_section, self.operation_model.input_shape)
+        self.parameter_alias.alias_parameter_in_documentation(
+            'docs.request-params.myservice.myoperation.complete-section',
+            self.sample_section
+        )
+        contents = self.sample_section.flush_structure().decode('utf-8')
+        self.assertIn(':type ' + self.alias_name + ':',  contents)
+        self.assertIn(':param ' + self.alias_name + ':',  contents)
+        self.assertNotIn(':type ' + self.original_name + ':',  contents)
+        self.assertNotIn(':param ' + self.original_name + ':',  contents)
+
+    def test_alias_parameter_in_documentation_request_example(self):
+        RequestExampleDocumenter(
+            'myservice', 'myoperation', self.event_emitter).document_example(
+                self.sample_section, self.operation_model.input_shape)
+        self.parameter_alias.alias_parameter_in_documentation(
+            'docs.request-example.myservice.myoperation.complete-section',
+            self.sample_section
+        )
+        contents = self.sample_section.flush_structure().decode('utf-8')
+        self.assertIn(self.alias_name + '=',  contents)
+        self.assertNotIn(self.original_name + '=', contents)
