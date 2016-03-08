@@ -183,20 +183,38 @@ class TestOperationModelFromService(unittest.TestCase):
         output_shape = operation.output_shape
         self.assertIsNone(output_shape)
 
-    def test_streaming_output_for_operation(self):
+
+class TestOperationModelStreamingTypes(unittest.TestCase):
+    def setUp(self):
+        super(TestOperationModelStreamingTypes, self).setUp()
         self.model = {
             'metadata': {'protocol': 'query', 'endpointPrefix': 'foo'},
             'documentation': '',
             'operations': {
                 'OperationName': {
                     'name': 'OperationName',
+                    'input': {
+                        'shape': 'OperationRequest',
+                    },
                     'output': {
-                        'shape': 'OperationNameResponse',
+                        'shape': 'OperationResponse',
                     },
                 }
             },
             'shapes': {
-                'OperationNameResponse': {
+                'OperationRequest': {
+                    'type': 'structure',
+                    'members': {
+                        'String': {
+                            'shape': 'stringType',
+                        },
+                        "Body": {
+                            'shape': 'blobType',
+                        }
+                    },
+                    'payload': 'Body'
+                },
+                'OperationResponse': {
                     'type': 'structure',
                     'members': {
                         'String': {
@@ -216,39 +234,35 @@ class TestOperationModelFromService(unittest.TestCase):
                 }
             }
         }
+
+    def remove_payload(self, type):
+        self.model['shapes']['Operation' + type].pop('payload')
+
+    def test_streaming_input_for_operation(self):
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertTrue(operation.has_streaming_input)
+        self.assertEqual(operation.get_streaming_input().name, 'blobType')
+
+    def test_not_streaming_input_for_operation(self):
+        self.remove_payload('Request')
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertFalse(operation.has_streaming_input)
+        self.assertEqual(operation.get_streaming_input(), None)
+
+    def test_streaming_output_for_operation(self):
         service_model = model.ServiceModel(self.model)
         operation = service_model.operation_model('OperationName')
         self.assertTrue(operation.has_streaming_output)
+        self.assertEqual(operation.get_streaming_output().name, 'blobType')
 
-    def test_payload_thats_not_streaming(self):
-        self.model = {
-            'metadata': {'protocol': 'query', 'endpointPrefix': 'foo'},
-            'operations': {
-                'OperationName': {
-                    'name': 'OperationName',
-                    'output': {
-                        'shape': 'OperationNameResponse',
-                    },
-                }
-            },
-            'shapes': {
-                'OperationNameResponse': {
-                    'type': 'structure',
-                    'members': {
-                        'String': {
-                            'shape': 'stringType',
-                        },
-                    },
-                    'payload': 'String'
-                },
-                'stringType': {
-                    'type': 'string',
-                },
-            }
-        }
+    def test_not_streaming_output_for_operation(self):
+        self.remove_payload('Response')
         service_model = model.ServiceModel(self.model)
         operation = service_model.operation_model('OperationName')
         self.assertFalse(operation.has_streaming_output)
+        self.assertEqual(operation.get_streaming_output(), None)
 
 
 class TestDeepMerge(unittest.TestCase):
