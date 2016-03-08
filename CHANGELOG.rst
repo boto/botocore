@@ -2,6 +2,22 @@
 CHANGELOG
 =========
 
+1.4.2 - (2016-03-08)
+--------------------
+* feature:``ACM``: Update model to latest version
+* feature:``CodeCommit``: Update model to latest version
+* feature:``Config``: Update model to latest version
+* feature:``DeviceFarm``: Update model to latest version
+* feature:``DirectConnect``: Update model to latest version
+* feature:``Events``: Update model to latest version
+* bugfix:``DynamoDB Local``: Fix issue when using the ``local``
+  region with ``dynamodb``
+  (`issue 819 <https://github.com/boto/botocore/pull/819>`__)
+* bugfix:``CloudSearchDomain``: Fix issue when signing requests
+  for ``cloudsearchdomain``
+  (`boto3 issue 538 <https://github.com/boto/boto3/issues/538>`__)
+
+
 1.4.1 - (2016-03-03)
 --------------------
 * feature:Config: Moved Config to its own class to boost import speed
