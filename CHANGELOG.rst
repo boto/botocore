@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.4.3 - (2016-03-10)
+--------------------
+* feature:``GameLift``: Update model to latest version
+* feature:``IAM``: Update model to latest version
+* feature:``Redshift``: Update model to latest version
+
 1.4.2 - (2016-03-08)
 --------------------
 * feature:``ACM``: Update model to latest version
