@@ -648,14 +648,16 @@ def _add_parameter_aliases(handler_list):
         # One handler is to handle when users provide the alias.
         # The other handler is to update the documentation to show only
         # the alias.
-        handler_for_parameter_build = (
+        parameter_build_event_handler_tuple = (
             'before-parameter-build.' + event_portion,
-            parameter_alias.alias_parameter_in_call)
-        handler_for_docs = (
+            parameter_alias.alias_parameter_in_call,
+            REGISTER_FIRST
+        )
+        docs_event_handler_tuple = (
             'docs.*.' + event_portion + '.complete-section',
             parameter_alias.alias_parameter_in_documentation)
-        handler_list.append(handler_for_parameter_build)
-        handler_list.append(handler_for_docs)
+        handler_list.append(parameter_build_event_handler_tuple)
+        handler_list.append(docs_event_handler_tuple)
 
 
 class ParameterAlias(object):
