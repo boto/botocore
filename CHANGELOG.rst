@@ -5,6 +5,7 @@ CHANGELOG
 1.4.4 - (2016-03-15)
 --------------------
 * feature:``DMS``: Added support for AWS Database Migration Service
+* feature:``SES``: Added support for white-labeling
 
 1.4.3 - (2016-03-10)
 --------------------
