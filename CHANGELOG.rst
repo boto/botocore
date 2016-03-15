@@ -7,6 +7,7 @@ CHANGELOG
 * feature:``DMS``: Added support for AWS Database Migration Service
 * feature:``SES``: Added support for white-labeling
 * feature:``CodeDeploy``: Added support for BatchGetDeploymentGroups
+* feature:``endpoints``: Updated endpoints.json to latest version
 
 1.4.3 - (2016-03-10)
 --------------------
