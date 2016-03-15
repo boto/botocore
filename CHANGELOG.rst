@@ -2,6 +2,10 @@
 CHANGELOG
 =========
 
+1.4.4 - (2016-03-15)
+--------------------
+* feature:``DMS``: Added support for AWS Database Migration Service
+
 1.4.3 - (2016-03-10)
 --------------------
 * feature:``GameLift``: Update model to latest version
