@@ -80,6 +80,7 @@ class Session(object):
         'data_path': ('data_path', 'AWS_DATA_PATH', None, None),
         'config_file': (None, 'AWS_CONFIG_FILE', '~/.aws/config', None),
         'ca_bundle': ('ca_bundle', 'AWS_CA_BUNDLE', None, None),
+        'api_versions': ('api_versions', None, {}, None),
 
         # This is the shared credentials file amongst sdks.
         'credentials_file': (None, 'AWS_SHARED_CREDENTIALS_FILE',
@@ -786,6 +787,10 @@ class Session(object):
         # configuration options.
         if verify is None:
             verify = self.get_config_variable('ca_bundle')
+
+        if api_version is None:
+            api_version = self.get_config_variable('api_versions').get(
+                service_name, None)
 
         loader = self.get_component('data_loader')
         event_emitter = self.get_component('event_emitter')
