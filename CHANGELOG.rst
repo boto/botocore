@@ -4,11 +4,18 @@ CHANGELOG
 
 1.4.5 - (2016-03-17)
 --------------------
+* feature:``MeteringMarketplace``: The AWS Marketplace Metering Service enables
+  sellers to price their products along new pricing dimensions. After a
+  integrating their product with the AWS Marketplace Metering Service, that
+  product will emit an hourly record capturing the usage of any single pricing
+  dimension. Buyers can easily subscribe to software priced by this new
+  dimension on the AWS Marketplace website and only pay for what they use.
 * feature:``S3``: Added support for delete marker and abort multipart upload
   lifecycle configuration.
 * feature:``IOT``: Added support for Amazon Elasticsearch Service and
   Amazon Cloudwatch actions for the AWS IoT rules engine.
 * feature:``CloudHSM``: Added support for tagging resources.
+
 
 1.4.4 - (2016-03-15)
 --------------------
