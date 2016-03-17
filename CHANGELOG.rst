@@ -8,6 +8,7 @@ CHANGELOG
   lifecycle configuration.
 * feature:``IOT``: Added support for Amazon Elasticsearch Service and
   Amazon Cloudwatch actions for the AWS IoT rules engine.
+* feature:``CloudHSM``: Added support for tagging resources.
 
 1.4.4 - (2016-03-15)
 --------------------
