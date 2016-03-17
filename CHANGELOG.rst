@@ -2,6 +2,11 @@
 CHANGELOG
 =========
 
+1.4.5 - (2016-03-17)
+--------------------
+* feature:``S3``: Added support for delete marker and abort multipart upload
+  lifecycle configuration.
+
 1.4.4 - (2016-03-15)
 --------------------
 * feature:``DMS``: Added support for AWS Database Migration Service
