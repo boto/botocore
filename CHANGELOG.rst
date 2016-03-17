@@ -6,6 +6,8 @@ CHANGELOG
 --------------------
 * feature:``S3``: Added support for delete marker and abort multipart upload
   lifecycle configuration.
+* feature:``IOT``: Added support for Amazon Elasticsearch Service and
+  Amazon Cloudwatch actions for the AWS IoT rules engine.
 
 1.4.4 - (2016-03-15)
 --------------------
