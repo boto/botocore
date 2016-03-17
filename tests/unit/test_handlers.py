@@ -21,6 +21,7 @@ import os
 import botocore
 import botocore.session
 from botocore.exceptions import ParamValidationError, MD5UnavailableError
+from botocore.exceptions import AliasConflictParameterError
 from botocore.awsrequest import AWSRequest
 from botocore.compat import quote, six
 from botocore.docs.bcdoc.restdoc import DocumentStructure
@@ -829,6 +830,15 @@ class TestParameterAlias(unittest.TestCase):
         self.parameter_alias.alias_parameter_in_call(
             params, self.operation_model)
         self.assertEqual(params, {self.original_name: value})
+
+    def test_alias_parameter_and_original_in_call(self):
+        params = {
+            self.original_name: 'orginal_value',
+            self.alias_name: 'alias_value'
+        }
+        with self.assertRaises(AliasConflictParameterError):
+            self.parameter_alias.alias_parameter_in_call(
+                params, self.operation_model)
 
     def test_alias_parameter_in_call_does_not_touch_original(self):
         value = 'value'

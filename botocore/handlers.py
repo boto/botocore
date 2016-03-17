@@ -31,6 +31,7 @@ from botocore.docs.utils import AppendParamDocumentation
 from botocore.signers import add_generate_presigned_url
 from botocore.signers import add_generate_presigned_post
 from botocore.exceptions import ParamValidationError
+from botocore.exceptions import AliasConflictParameterError
 from botocore.exceptions import UnsupportedTLSVersionWarning
 from botocore.utils import percent_encode, SAFE_CHARS
 
@@ -671,6 +672,12 @@ class ParameterAlias(object):
             # input shape.
             if self._original_name in model.input_shape.members:
                 if self._alias_name in params:
+                    if self._original_name in params:
+                        raise AliasConflictParameterError(
+                            original=self._original_name,
+                            alias=self._alias_name,
+                            operation=model.name
+                        )
                     # Remove the alias parameter value and use the old name
                     # instead.
                     params[self._original_name] = params.pop(self._alias_name)
