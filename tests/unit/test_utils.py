@@ -64,6 +64,9 @@ class TestURINormalization(unittest.TestCase):
         self.assertEqual(remove_dot_segments('/.'), '/')
         self.assertEqual(remove_dot_segments('/.foo'), '/.foo')
         self.assertEqual(remove_dot_segments('/..foo'), '/..foo')
+        self.assertEqual(remove_dot_segments(''), '')
+        self.assertEqual(remove_dot_segments('/a/b/c/./../../g'), '/a/g')
+        self.assertEqual(remove_dot_segments('mid/content=5/../6'), 'mid/6')
         # I don't think this is RFC compliant...
         self.assertEqual(remove_dot_segments('//foo//'), '/foo/')
 

@@ -73,6 +73,8 @@ def remove_dot_segments(url):
     # RFC 3986, section 5.2.4 "Remove Dot Segments"
     # Also, AWS services require consecutive slashes to be removed,
     # so that's done here as well
+    if not url:
+        return ''
     input_url = url.split('/')
     output_list = []
     for x in input_url:
@@ -82,8 +84,15 @@ def remove_dot_segments(url):
                     output_list.pop()
             else:
                 output_list.append(x)
-    first = '/' if url[0] == '/' else ''
-    last = '/' if url[-1] == '/' and len(output_list) > 0 else ''
+
+    if url[0] == '/':
+        first = '/'
+    else:
+        first = ''
+    if url[-1] == '/' and output_list:
+        last = '/'
+    else:
+        last = ''
     return first + '/'.join(output_list) + last
 
 
