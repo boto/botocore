@@ -441,11 +441,11 @@ def base64_encode_user_data(params, **kwargs):
             params['UserData']).decode('utf-8')
 
 
-def document_base64_encoding():
+def document_base64_encoding(param):
     description = ('**This value will be base64 encoded automatically. Do '
                    'not base64 encode this value prior to performing the '
                    'operation.**')
-    append = AppendParamDocumentation('UserData', description)
+    append = AppendParamDocumentation(param, description)
     return append.append_documentation
 
 
@@ -726,9 +726,10 @@ BUILTIN_HANDLERS = [
      document_glacier_tree_hash_checksum()),
 
     # UserData base64 encoding documentation customizations
-    ('docs.*.ec2.RunInstances.complete-section', document_base64_encoding()),
+    ('docs.*.ec2.RunInstances.complete-section',
+     document_base64_encoding('UserData')),
     ('docs.*.autoscaling.CreateLaunchConfiguration.complete-section',
-     document_base64_encoding()),
+     document_base64_encoding('UserData')),
     # EC2 CopySnapshot documentation customizations
     ('docs.*.ec2.CopySnapshot.complete-section',
      AutoPopulatedParam('PresignedUrl').document_auto_populated_param),
@@ -741,6 +742,9 @@ BUILTIN_HANDLERS = [
     ('docs.*.s3.*.complete-section',
      AutoPopulatedParam(
         'CopySourceSSECustomerKeyMD5').document_auto_populated_param),
+    # Add base64 information to Lambda
+    ('docs.*.lambda.UpdateFunctionCode.complete-section',
+     document_base64_encoding('ZipFile')),
     # The following S3 operations cannot actually accept a ContentMD5
     ('docs.*.s3.*.complete-section',
      HideParamFromOperations(
