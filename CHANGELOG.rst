@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.4.6 - (2016-03-22)
+--------------------
+* feature:``DeviceFarm``: Add support to pay a flat monthly fee for
+  unlimited testing of your Android and iOS apps with AWS Device Farm device
+  slots
+* feature:``RDS``: Add support for customizing the order in which Aurora
+  Replicas are promoted to primary instance during a failover
+* bugfix:Signature Version 4: Fix issue when calculating signature version 4
+  signature for certain urls
+  (`issue 827 <https://github.com/boto/botocore/pull/827>`__)
+
+
 1.4.5 - (2016-03-17)
 --------------------
 * feature:``MeteringMarketplace``: The AWS Marketplace Metering Service enables
