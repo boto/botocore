@@ -52,6 +52,12 @@ def create_credential_resolver(session):
     metadata_timeout = session.get_config_variable('metadata_service_timeout')
     num_attempts = session.get_config_variable('metadata_service_num_attempts')
 
+    instanceMetadataProvider=InstanceMetadataProvider(
+            iam_role_fetcher=InstanceMetadataFetcher(
+                timeout=metadata_timeout,
+                num_attempts=num_attempts)
+        )
+
     env_provider = EnvProvider()
     providers = [
         env_provider,
@@ -60,6 +66,7 @@ def create_credential_resolver(session):
             client_creator=session.create_client,
             cache={},
             profile_name=profile_name,
+            fallback_cred_provider=instanceMetadataProvider
         ),
         SharedCredentialProvider(
             creds_filename=credential_file,
@@ -70,11 +77,7 @@ def create_credential_resolver(session):
         ConfigProvider(config_filename=config_file, profile_name=profile_name),
         OriginalEC2Provider(),
         BotoProvider(),
-        InstanceMetadataProvider(
-            iam_role_fetcher=InstanceMetadataFetcher(
-                timeout=metadata_timeout,
-                num_attempts=num_attempts)
-        )
+        instanceMetadataProvider
     ]
 
     explicit_profile = session.get_config_variable('profile',
@@ -726,7 +729,7 @@ class AssumeRoleProvider(CredentialProvider):
     EXPIRY_WINDOW_SECONDS = 60 * 15
 
     def __init__(self, load_config, client_creator, cache, profile_name,
-                 prompter=getpass.getpass):
+                 prompter=getpass.getpass, fallback_cred_provider=None):
         """
 
         :type load_config: callable
@@ -764,6 +767,7 @@ class AssumeRoleProvider(CredentialProvider):
         self._client_creator = client_creator
         self._profile_name = profile_name
         self._prompter = prompter
+        self._fallback_cred_provider = fallback_cred_provider
         # The _loaded_config attribute will be populated from the
         # load_config() function once the configuration is actually
         # loaded.  The reason we go through all this instead of just
@@ -774,6 +778,7 @@ class AssumeRoleProvider(CredentialProvider):
         self._loaded_config = {}
 
     def load(self):
+        logger.debug("Attempting load from assume role provider")
         self._loaded_config = self._load_config()
         if self._has_assume_role_config_vars():
             return self._load_creds_via_assume_role()
@@ -840,30 +845,48 @@ class AssumeRoleProvider(CredentialProvider):
     def _get_role_config_values(self):
         # This returns the role related configuration.
         profiles = self._loaded_config.get('profiles', {})
-        try:
-            source_profile = profiles[self._profile_name]['source_profile']
-            role_arn = profiles[self._profile_name]['role_arn']
-            mfa_serial = profiles[self._profile_name].get('mfa_serial')
-        except KeyError as e:
-            raise PartialCredentialsError(provider=self.METHOD,
-                                          cred_var=str(e))
-        external_id = profiles[self._profile_name].get('external_id')
-        role_session_name = profiles[self._profile_name].get('role_session_name')
+        role_profile=profiles[self._profile_name];
+        
+        source_profile = role_profile.get('source_profile')
+        role_arn = role_profile['role_arn']
+        mfa_serial = role_profile.get('mfa_serial')
+        external_id = role_profile.get('external_id')
+        role_session_name = role_profile.get('role_session_name')
+        
+        return {
+            'role_arn': role_arn,
+            'external_id': external_id,
+            'source_profile': source_profile,
+            'mfa_serial': mfa_serial,
+            'role_session_name': role_session_name
+        }
+
+        
+    def _get_source_profile_credentials(self,source_profile):
+        profiles = self._loaded_config.get('profiles', {})
+        if source_profile == None :
+            if self._fallback_cred_provider == None:
+                raise PartialCredentialsError(provider=self.METHOD,
+                    cred_var="source_profile")
+            else:
+                logger.debug("Source profile missing. Loading from fallback provider")
+                return self._fallback_cred_provider.load()
+
         if source_profile not in profiles:
             raise InvalidConfigError(
                 error_msg=(
                     'The source_profile "%s" referenced in '
                     'the profile "%s" does not exist.' % (
                         source_profile, self._profile_name)))
-        source_cred_values = profiles[source_profile]
-        return {
-            'role_arn': role_arn,
-            'external_id': external_id,
-            'source_profile': source_profile,
-            'mfa_serial': mfa_serial,
-            'source_cred_values': source_cred_values,
-            'role_session_name': role_session_name
-        }
+
+        access_key_id=profiles[source_profile]['aws_access_key_id']
+        secret_key=profiles[source_profile]['aws_secret_access_key']
+        session_token=profiles[source_profile].get('aws_session_token')
+        return Credentials(
+            access_key=access_key_id,
+            secret_key=secret_key,
+            token=session_token)
+
 
     def _create_creds_from_response(self, response):
         config = self._get_role_config_values()
@@ -886,11 +909,12 @@ class AssumeRoleProvider(CredentialProvider):
             refresh_using=refresh_func)
 
     def _create_client_from_config(self, config):
-        source_cred_values = config['source_cred_values']
+        source_profile=config['source_profile'];
+        creds=self._get_source_profile_credentials(source_profile);
         client = self._client_creator(
-            'sts', aws_access_key_id=source_cred_values['aws_access_key_id'],
-            aws_secret_access_key=source_cred_values['aws_secret_access_key'],
-            aws_session_token=source_cred_values.get('aws_session_token'),
+            'sts', aws_access_key_id=creds.access_key,
+            aws_secret_access_key=creds.secret_key,
+            aws_session_token=creds.token,
         )
         return client
 
