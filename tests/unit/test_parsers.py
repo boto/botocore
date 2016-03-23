@@ -655,6 +655,6 @@ def _assert_parses_generic_error(parser):
         'body': body, 'headers': {}, 'status_code': 503}, None)
     assert_equal(
         parsed,
-        {'Error': {'Code': '', 'Message': ''},
+        {'Error': {'Code': '503', 'Message': 'Service Unavailable'},
          'ResponseMetadata': {'HTTPStatusCode': 503}}
     )

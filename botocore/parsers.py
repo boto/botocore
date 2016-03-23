@@ -237,7 +237,9 @@ class ResponseParser(object):
         LOG.debug("Received a non protocol specific error response from the "
                   "service, unable to populate error code and message.")
         return {
-            'Error': {'Code': '', 'Message': ''},
+            'Error': {'Code': str(response['status_code']),
+                      'Message': six.moves.http_client.responses.get(
+                          response['status_code'], '')},
             'ResponseMetadata': {},
         }
 
