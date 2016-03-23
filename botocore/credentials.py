@@ -52,7 +52,7 @@ def create_credential_resolver(session):
     metadata_timeout = session.get_config_variable('metadata_service_timeout')
     num_attempts = session.get_config_variable('metadata_service_num_attempts')
 
-    instanceMetadataProvider=InstanceMetadataProvider(
+    instance_metadata_provider=InstanceMetadataProvider(
             iam_role_fetcher=InstanceMetadataFetcher(
                 timeout=metadata_timeout,
                 num_attempts=num_attempts)
@@ -66,7 +66,7 @@ def create_credential_resolver(session):
             client_creator=session.create_client,
             cache={},
             profile_name=profile_name,
-            fallback_cred_provider=instanceMetadataProvider
+            fallback_cred_provider=instance_metadata_provider
         ),
         SharedCredentialProvider(
             creds_filename=credential_file,
@@ -77,7 +77,7 @@ def create_credential_resolver(session):
         ConfigProvider(config_filename=config_file, profile_name=profile_name),
         OriginalEC2Provider(),
         BotoProvider(),
-        instanceMetadataProvider
+        instance_metadata_provider
     ]
 
     explicit_profile = session.get_config_variable('profile',
