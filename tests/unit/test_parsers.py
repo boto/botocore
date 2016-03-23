@@ -14,6 +14,7 @@ from tests import unittest
 import datetime
 
 from dateutil.tz import tzutc
+from nose.tools import assert_equal
 
 from botocore import parsers
 from botocore import model
@@ -635,3 +636,25 @@ class TestParseErrorResponses(unittest.TestCase):
         # Even though there's no <Message /> we should
         # still populate an empty string.
         self.assertEqual(error['Message'], '')
+
+
+def test_can_handle_generic_error_message():
+    # There are times when you can get a service to respond with a generic
+    # html error page.  We should be able to handle this case.
+    for parser_cls in parsers.PROTOCOL_PARSERS.values():
+        yield _assert_parses_generic_error, parser_cls()
+
+
+def _assert_parses_generic_error(parser):
+    # There are times when you can get a service to respond with a generic
+    # html error page.  We should be able to handle this case.
+    body =  (
+        '<html><body><b>Http/1.1 Service Unavailable</b></body></html>'
+    ).encode('utf-8')
+    parsed = parser.parse({
+        'body': body, 'headers': {}, 'status_code': 503}, None)
+    assert_equal(
+        parsed,
+        {'Error': {'Code': '', 'Message': ''},
+         'ResponseMetadata': {'HTTPStatusCode': 503}}
+    )
