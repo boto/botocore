@@ -483,7 +483,7 @@ class BaseRestSerializer(Serializer):
         elif location == 'header':
             shape = shape_members[param_name]
             value = self._convert_header_value(shape, param_value)
-            partitioned['headers'][key_name] = value
+            partitioned['headers'][key_name] = str(value)
         elif location == 'headers':
             # 'headers' is a bit of an oddball.  The ``key_name``
             # is actually really a prefix for the header names:
