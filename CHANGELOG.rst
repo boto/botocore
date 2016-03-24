@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.4.7 - (2016-03-24)
+--------------------
+* feature:``ElastiCache``: Update client to latest version
+* feature:``RDS``: Update client to latest version
+* feature:``StorageGateway``: Update client to latest version
+* bugfix: Handle case where error response from proxy is received
+  (`issue 850 <https://github.com/boto/botocore/pull/850`__)
+
 1.4.6 - (2016-03-22)
 --------------------
 * feature:``DeviceFarm``: Add support to pay a flat monthly fee for
