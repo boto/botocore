@@ -75,7 +75,7 @@ class TestS3GetBucketLifecycle(BaseS3OperationTest):
             '		</NoncurrentVersionTransition>'
             '	</Rule>'
             '</LifecycleConfiguration>'
-        )
+        ).encode('utf-8')
         http_response.headers = {}
         self.http_session_send_mock.return_value = http_response
         s3 = self.session.create_client('s3')
@@ -115,7 +115,7 @@ class TestS3PutObject(BaseS3OperationTest):
             'ETag: "a6d856bc171fc6aa1b236680856094e2"\r\n'
             'Content-Length: 0\r\n'
             'Server: AmazonS3\r\n'
-        )
+        ).encode('utf-8')
         http_500_response = mock.Mock()
         http_500_response.status_code = 500
         http_500_response.content = non_xml_content
