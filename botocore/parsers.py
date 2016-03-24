@@ -203,7 +203,10 @@ class ResponseParser(object):
         LOG.debug('Response headers: %s', response['headers'])
         LOG.debug('Response body:\n%s', response['body'])
         if response['status_code'] >= 301:
-            parsed = self._do_error_parse(response, shape)
+            if self._is_generic_error_response(response):
+                parsed = self._do_generic_error_parse(response)
+            else:
+                parsed = self._do_error_parse(response, shape)
         else:
             parsed = self._do_parse(response, shape)
         # Inject HTTPStatusCode key in the response metadata if the
@@ -212,6 +215,33 @@ class ResponseParser(object):
             parsed['ResponseMetadata']['HTTPStatusCode'] = (
                 response['status_code'])
         return parsed
+
+    def _is_generic_error_response(self, response):
+        # There are times when a service will respond with a generic
+        # error response such as:
+        # '<html><body><b>Http/1.1 Service Unavailable</b></body></html>'
+        #
+        # This can also happen if you're going through a proxy.
+        # In this case the protocol specific _do_error_parse will either
+        # fail to parse the response (in the best case) or silently succeed
+        # and treat the HTML above as an XML response and return
+        # non sensical parsed data.
+        # To prevent this case from happening we first need to check
+        # whether or not this response looks like the generic response.
+        if response['status_code'] >= 500:
+            return response['body'].strip().startswith(b'<html>')
+
+    def _do_generic_error_parse(self, response):
+        # There's not really much we can do when we get a generic
+        # html response.
+        LOG.debug("Received a non protocol specific error response from the "
+                  "service, unable to populate error code and message.")
+        return {
+            'Error': {'Code': str(response['status_code']),
+                      'Message': six.moves.http_client.responses.get(
+                          response['status_code'], '')},
+            'ResponseMetadata': {},
+        }
 
     def _do_parse(self, response, shape):
         raise NotImplementedError("%s._do_parse" % self.__class__.__name__)
