@@ -353,7 +353,8 @@ class PageIterator(object):
         This handles parsing of old style starting tokens, and attempts to
         coerce them into the new style.
         """
-        log.debug("Attempting to fall back to old starting token parser.")
+        log.debug("Attempting to fall back to old starting token parser. For "
+                  "token: %s" % self._starting_token)
         if self._starting_token is None:
             return None
 
