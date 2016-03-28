@@ -165,6 +165,43 @@ class HideParamFromOperations(object):
             section.delete_section(self._parameter_name)
 
 
+class HideUnusedShapeMember(object):
+    def __init__(self, shape_name, member_name):
+        self.shape_name = shape_name
+        self.member_name = member_name
+
+    def hide_member(self, event_name, section, **kwargs):
+        if 'example' in event_name:
+            self._hide_example(section)
+        else:
+            self._hide_param(section)
+
+    def _hide_param(self, section):
+        if self.shape_name not in section.available_sections:
+            return
+        section = section.get_section(self.shape_name)
+        if self.member_name in section.available_sections:
+            section.delete_section(self.member_name)
+
+    def _hide_example(self, section):
+        section = section.get_section('structure-value')
+        if self.shape_name not in section.available_sections:
+            return
+        section = section.get_section(self.shape_name)\
+            .get_section('member-value').get_section('structure-value')
+        if self.member_name not in section.available_sections:
+            return
+        sections = section.available_sections
+        if len(sections) >= 3 and sections[-2] == self.member_name and \
+                'ending' in sections[-1]:
+            # The member is the last documented member, so we need to go back
+            # to delete the previous trailing comma and newline
+            previous_member_name = section.available_sections[-3]
+            previous_section = section.get_section(previous_member_name)
+            previous_section.delete_section('ending-comma')
+        section.delete_section(self.member_name)
+
+
 class AppendParamDocumentation(object):
     """Appends documentation to a specific parameter"""
     def __init__(self, parameter_name, doc_string):

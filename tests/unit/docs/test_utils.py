@@ -19,6 +19,7 @@ from botocore.docs.utils import py_default
 from botocore.docs.utils import get_official_service_name
 from botocore.docs.utils import AutoPopulatedParam
 from botocore.docs.utils import HideParamFromOperations
+from botocore.docs.utils import HideUnusedShapeMember
 from botocore.docs.utils import AppendParamDocumentation
 
 
@@ -203,6 +204,86 @@ class TestHideParamFromOperations(BaseDocsTest):
             'docs.request-example.s3.SampleOperation.complete-section',
             self.doc_structure)
         self.assert_not_contains_line(example)
+
+
+class TestHideUnusedShapeMember(BaseDocsTest):
+    def setUp(self):
+        super(TestHideUnusedShapeMember, self).setUp()
+        self.shape = "MyShape"
+        self.member = "MyMember"
+        self.hider = HideUnusedShapeMember(self.shape, self.member)
+
+    def test_hides_member_from_doc_string(self):
+        shape_section = self.doc_structure.add_new_section(self.shape)
+        shape_signature = ':param %s: ' % self.shape
+        shape_section.write(shape_signature)
+        member_section = shape_section.add_new_section(self.member)
+        member_signature = ':param %s: ' % self.member
+        member_section.write(member_signature)
+        self.assert_contains_line(shape_signature)
+        self.assert_contains_line(member_signature)
+        self.hider.hide_member(
+            'docs.response-params.s3.SampleOperation.complete-section',
+            self.doc_structure)
+        self.assert_contains_line(shape_signature)
+        self.assert_not_contains_line(member_signature)
+
+    def test_hides_member_from_example(self):
+        shape_section = self.doc_structure\
+            .add_new_section('structure-value')\
+            .add_new_section(self.shape)
+        shape_signature = ':%s: {' % self.shape
+        shape_section.write(shape_signature)
+        shape_section = shape_section\
+            .add_new_section('member-value')\
+            .add_new_section('structure-value')
+        member_section = shape_section.add_new_section(self.member)
+        member_signature = '    %s: \'string\'' % self.member
+        member_section.write(member_signature)
+        ending_section = shape_section.add_new_section('ending-bracket')
+        ending_section.write('}')
+        self.assert_contains_lines_in_order([
+            shape_signature, member_signature, '}'
+        ])
+        self.assert_contains_line(member_signature)
+        self.hider.hide_member(
+            'docs.response-example.s3.SampleOperation.complete-section',
+            self.doc_structure)
+        self.assert_contains_lines_in_order([
+            shape_signature, '}'
+        ])
+        self.assert_not_contains_line(member_signature)
+
+    def test_hides_member_from_example_and_removes_trailing_comma(self):
+        shape_section = self.doc_structure\
+            .add_new_section('structure-value')\
+            .add_new_section(self.shape)
+        shape_signature = ':%s: {' % self.shape
+        shape_section.write(shape_signature)
+        shape_section = shape_section\
+            .add_new_section('member-value')\
+            .add_new_section('structure-value')
+        other_member = shape_section.add_new_section('OtherMember')
+        other_member_signature = '    %s: \'string\''
+        other_member.write(other_member_signature)
+        other_member.add_new_section('ending-comma').write(',\n')
+        member_section = shape_section.add_new_section(self.member)
+        member_signature = '    %s: \'string\'' % self.member
+        member_section.write(member_signature)
+        shape_section.add_new_section('ending-bracket').write('}')
+        self.assert_contains_lines_in_order([
+            shape_signature, other_member_signature, ',\n',
+            member_signature, '}'
+        ])
+        self.assert_contains_line(member_signature)
+        self.hider.hide_member(
+            'docs.response-example.s3.SampleOperation.complete-section',
+            self.doc_structure)
+        self.assert_contains_lines_in_order([
+            shape_signature, other_member_signature, '}'
+        ])
+        self.assert_not_contains_line(member_signature)
+        self.assert_not_contains_line(member_signature)
 
 
 class TestAppendParamDocumentation(BaseDocsTest):
