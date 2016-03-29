@@ -2,6 +2,29 @@
 CHANGELOG
 =========
 
+1.4.8 - (2016-03-29)
+--------------------
+* feature:``ACM``: Update client to latest version
+* feature:``CloudFormation``: Update client to latest version
+* feature:``CodeDeploy``: Update client to latest version
+* feature:``DMS``: Update client to latest version
+* feature:``ElastiCache``: Update client to latest version
+* feature:``Elastic Beanstalk``: Update client to latest version
+* feature:``Redshift``: Update client to latest version
+* feature:``WAF``: Update client to latest version
+* bugfix:Pagintor: Fix regression when providing a starting token
+  for a paginator
+  (`issue 849 <https://github.com/boto/botocore/pull/849>`__)
+* bugfix:Response Parsing: Handle case when generic HTML error
+  response is received
+  (`issue 850 <https://github.com/boto/botocore/pull/850>`__)
+* bugfix:Request serialization: Handle case when non str values
+  are provided for header values when using signature version 4
+  (`issue 852 <https://github.com/boto/botocore/pull/852>`__)
+* bugfix:Retry: Retry HTTP responses with status code 502
+  (`issue 853 <https://github.com/boto/botocore/pull/853>`__)
+
+
 1.4.7 - (2016-03-24)
 --------------------
 * feature:``ElastiCache``: Update client to latest version
