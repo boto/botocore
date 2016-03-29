@@ -18,9 +18,13 @@ from six import string_types
 import jmespath
 import json
 import base64
+import logging
 from botocore.exceptions import PaginationError
 from botocore.compat import zip
 from botocore.utils import set_value_from_jmespath, merge_dicts
+
+
+log = logging.getLogger(__name__)
 
 
 class PaginatorModel(object):
@@ -341,8 +345,43 @@ class PageIterator(object):
                 index = next_token.get('boto_truncate_amount')
                 del next_token['boto_truncate_amount']
         except (ValueError, TypeError):
-            raise ValueError("Bad starting token: %s" % self._starting_token)
+            next_token, index = self._parse_starting_token_deprecated()
         return next_token, index
+
+    def _parse_starting_token_deprecated(self):
+        """
+        This handles parsing of old style starting tokens, and attempts to
+        coerce them into the new style.
+        """
+        log.debug("Attempting to fall back to old starting token parser. For "
+                  "token: %s" % self._starting_token)
+        if self._starting_token is None:
+            return None
+
+        parts = self._starting_token.split('___')
+        next_token = []
+        index = 0
+        if len(parts) == len(self._input_token) + 1:
+            try:
+                index = int(parts.pop())
+            except ValueError:
+                raise ValueError("Bad starting token: %s" %
+                                 self._starting_token)
+        for part in parts:
+            if part == 'None':
+                next_token.append(None)
+            else:
+                next_token.append(part)
+        return self._convert_deprecated_starting_token(next_token), index
+
+    def _convert_deprecated_starting_token(self, deprecated_token):
+        """
+        This attempts to convert a deprecated starting token into the new
+        style.
+        """
+        if len(deprecated_token) != len(self._input_token):
+            raise ValueError("Bad starting token: %s" % self._starting_token)
+        return dict(zip(self._input_token, deprecated_token))
 
 
 class Paginator(object):

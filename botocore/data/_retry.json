@@ -35,6 +35,13 @@
         }
       }
     },
+    "bad_gateway": {
+      "applies_when": {
+        "response": {
+          "http_status_code": 502
+        }
+      }
+    },
     "service_unavailable": {
       "applies_when": {
         "response": {

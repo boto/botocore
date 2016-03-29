@@ -206,3 +206,21 @@ class TestPathHostStyle(BaseS3AddressingStyle):
             request_sent = mock_send.call_args[0][0]
             self.assertEqual(
                 'https://foo.amazonaws.com/mybucket/mykey', request_sent.url)
+
+
+class TestCanSendIntegerHeaders(BaseSessionTest):
+
+    def test_int_values_with_sigv4(self):
+        s3 = self.session.create_client(
+            's3', config=Config(signature_version='s3v4'))
+        with mock.patch('botocore.endpoint.Session.send') as mock_send:
+            mock_send.return_value = mock.Mock(status_code=200,
+                                               content=b'',
+                                               headers={})
+            s3.upload_part(Bucket='foo', Key='bar', Body=b'foo',
+                           UploadId='bar', PartNumber=1, ContentLength=3)
+            headers = mock_send.call_args[0][0].headers
+            # Verify that the request integer value of 3 has been converted to
+            # string '3'.  This also means we've made it pass the signer which
+            # expects string values in order to sign properly.
+            self.assertEqual(headers['Content-Length'], '3')
