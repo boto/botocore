@@ -4080,6 +4080,12 @@
           "shape":"RequestPayer",
           "location":"header",
           "locationName":"x-amz-request-payer"
+        },
+        "VersionId":{
+          "shape":"ObjectVersionId",
+          "documentation":"VersionId used to reference a specific version of the object.",
+          "location":"querystring",
+          "locationName":"versionId"
         }
       },
       "payload":"AccessControlPolicy"
