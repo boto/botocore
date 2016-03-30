@@ -229,7 +229,8 @@ class ResponseParser(object):
         # To prevent this case from happening we first need to check
         # whether or not this response looks like the generic response.
         if response['status_code'] >= 500:
-            return response['body'].strip().startswith(b'<html>')
+            body = response['body'].strip()
+            return body.startswith(b'<html>') or not body
 
     def _do_generic_error_parse(self, response):
         # There's not really much we can do when we get a generic
