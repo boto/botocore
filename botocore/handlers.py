@@ -450,6 +450,38 @@ def document_base64_encoding(param):
     return append.append_documentation
 
 
+def validate_ascii_metadata(params, **kwargs):
+    """Verify S3 Metadata only contains ascii characters.
+
+    From: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html
+
+    "Amazon S3 stores user-defined metadata in lowercase. Each name, value pair
+    must conform to US-ASCII when using REST and UTF-8 when using SOAP or
+    browser-based uploads via POST."
+
+    """
+    metadata = params.get('Metadata')
+    if not metadata or not isinstance(metadata, dict):
+        # We have to at least type check the metadata as a dict type
+        # because this handler is called before param validation.
+        # We'll go ahead and return because the param validator will
+        # give a descriptive error message for us.
+        # We might need a post-param validation event.
+        return
+    for key, value in metadata.items():
+        try:
+            key.encode('ascii')
+            value.encode('ascii')
+        except UnicodeEncodeError as e:
+            error_msg = (
+                'Non ascii characters found in S3 metadata '
+                'for key "%s", value: "%s".  \nS3 metadata can only '
+                'contain ASCII characters. ' % (key, value)
+            )
+            raise ParamValidationError(
+                report=error_msg)
+
+
 def fix_route53_ids(params, model, **kwargs):
     """
     Check for and split apart Route53 resource IDs, setting
@@ -753,6 +785,10 @@ BUILTIN_HANDLERS = [
      handle_copy_source_param),
     ('before-parameter-build.s3.UploadPartCopy',
      handle_copy_source_param),
+    ('before-parameter-build.s3.CopyObject', validate_ascii_metadata),
+    ('before-parameter-build.s3.PutObject', validate_ascii_metadata),
+    ('before-parameter-build.s3.CreateMultipartUpload',
+     validate_ascii_metadata),
     ('docs.*.s3.CopyObject.complete-section', document_copy_source_form),
     ('docs.*.s3.UploadPartCopy.complete-section', document_copy_source_form),
 
