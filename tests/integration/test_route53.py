@@ -15,9 +15,10 @@ import unittest
 import itertools
 
 import botocore.session
+from botocore.exceptions import ClientError
 
 
-class TestRDSPagination(unittest.TestCase):
+class TestRoute53Pagination(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
         self.client = self.session.create_client('route53', 'us-west-2')
@@ -28,6 +29,22 @@ class TestRDSPagination(unittest.TestCase):
         paginator = self.client.get_paginator('list_hosted_zones')
         results = list(paginator.paginate(PaginationConfig={'MaxItems': '1'}))
         self.assertTrue(len(results) >= 0)
+
+    def test_paginate_with_deprecated_paginator_and_limited_input_tokens(self):
+        paginator = self.client.get_paginator('list_resource_record_sets')
+
+        # We're making sure the paginator gets set without failing locally, so
+        # a ClientError is acceptable. In this case, the Hosted Zone specified
+        # does not exist.
+        with self.assertRaises(ClientError):
+            results = list(paginator.paginate(
+                PaginationConfig={
+                    'MaxItems': '1',
+                    'StartingToken': 'my.domain.name.'
+                },
+                HostedZoneId="foo"
+            ))
+            self.assertTrue(len(results) >= 0)
 
 
 if __name__ == '__main__':

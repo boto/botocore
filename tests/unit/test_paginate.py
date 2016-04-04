@@ -978,6 +978,50 @@ class TestDeprecatedStartingToken(unittest.TestCase):
         }
         self.assert_pagination_result(expected, pagination_config)
 
+    def test_deprecated_starting_token_without_all_input_set_to_none(self):
+        responses = [
+            {
+                "Users": ["User1", "User2"],
+                "Groups": ["Group1"],
+                "Marker1": "m1",
+                "Marker2": "m2"
+            },
+            {
+                "Users": ["User3", "User4"],
+                "Groups": ["Group2"],
+                "Marker1": "m3",
+                "Marker2": "m4"
+            },
+            {
+                "Users": ["User5"],
+                "Groups": ["Group3"]
+            }
+        ]
+        self.method.side_effect = responses
+        pagination_config = {'StartingToken': 'm0'}
+        expected = {
+            'Groups': ['Group2', 'Group3'],
+            'Users': ['User1', 'User2', 'User3', 'User4', 'User5']
+        }
+        self.assert_pagination_result(
+            expected, pagination_config, multiple_tokens=True)
+
+    def test_deprecated_starting_token_rejects_too_many_input_tokens(self):
+        responses = [
+            {"Users": ["User1"], "Marker": "m2"},
+            {"Users": ["User2"], "Marker": "m3"},
+            {"Users": ["User3"]},
+        ]
+        self.method.side_effect = responses
+        pagination_config = {'StartingToken': 'm1___m4___0'}
+        expected = {'Users': ['User1', 'User2', 'User3']}
+
+        paginator = self.create_paginator()
+        with self.assertRaises(ValueError):
+            actual = paginator.paginate(
+                PaginationConfig=pagination_config).build_full_result()
+            self.assertEqual(actual, expected)
+
 
 if __name__ == '__main__':
     unittest.main()
