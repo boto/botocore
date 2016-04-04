@@ -14,6 +14,7 @@ from tests import unittest
 import datetime
 
 from dateutil.tz import tzutc
+from nose.tools import assert_equal
 
 from botocore import parsers
 from botocore import model
@@ -510,8 +511,8 @@ class TestParseErrorResponses(unittest.TestCase):
 
         self.assertIn('Error', parsed)
         self.assertEqual(parsed['Error'], {
-            'Code': '',
-            'Message': ''
+            'Code': '504',
+            'Message': 'Gateway Timeout'
         })
         self.assertEqual(parsed['ResponseMetadata'], {
             'HTTPStatusCode': 504,
@@ -635,3 +636,26 @@ class TestParseErrorResponses(unittest.TestCase):
         # Even though there's no <Message /> we should
         # still populate an empty string.
         self.assertEqual(error['Message'], '')
+
+
+def test_can_handle_generic_error_message():
+    # There are times when you can get a service to respond with a generic
+    # html error page.  We should be able to handle this case.
+    for parser_cls in parsers.PROTOCOL_PARSERS.values():
+        generic_html_body =  (
+            '<html><body><b>Http/1.1 Service Unavailable</b></body></html>'
+        ).encode('utf-8')
+        empty_body = b''
+        yield _assert_parses_generic_error, parser_cls(), generic_html_body
+        yield _assert_parses_generic_error, parser_cls(), empty_body
+
+
+def _assert_parses_generic_error(parser, body):
+    # There are times when you can get a service to respond with a generic
+    # html error page.  We should be able to handle this case.
+    parsed = parser.parse({
+        'body': body, 'headers': {}, 'status_code': 503}, None)
+    assert_equal(
+        parsed['Error'],
+        {'Code': '503', 'Message': 'Service Unavailable'})
+    assert_equal(parsed['ResponseMetadata']['HTTPStatusCode'], 503)

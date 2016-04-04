@@ -402,3 +402,41 @@ class TestInstanceCreation(unittest.TestCase):
 
         with self.assertRaises(ParamValidationError):
             self.assert_serialize_invalid_parameter(request_serializer)
+
+
+class TestHeaderSerialization(BaseModelWithBlob):
+    def setUp(self):
+        self.model = {
+            'metadata': {'protocol': 'rest-xml', 'apiVersion': '2014-01-01'},
+            'documentation': '',
+            'operations': {
+                'TestOperation': {
+                    'name': 'TestOperation',
+                    'http': {
+                        'method': 'POST',
+                        'requestUri': '/',
+                    },
+                    'input': {'shape': 'InputShape'},
+                }
+            },
+            'shapes': {
+                'InputShape': {
+                    'type': 'structure',
+                    'members': {
+                        'ContentLength': {
+                            'shape': 'Integer',
+                            'location': 'header',
+                            'locationName': 'Content-Length'
+                        },
+                    }
+                },
+                'Integer': {
+                    'type': 'integer'
+                },
+            }
+        }
+        self.service_model = ServiceModel(self.model)
+
+    def test_always_serialized_as_str(self):
+        request = self.serialize_to_request({'ContentLength': 100})
+        self.assertEqual(request['headers']['Content-Length'], '100')

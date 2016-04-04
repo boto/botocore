@@ -13,6 +13,7 @@
 from tests import unittest
 
 import botocore.session
+from botocore import exceptions
 
 
 class TestApigateway(unittest.TestCase):
@@ -22,7 +23,15 @@ class TestApigateway(unittest.TestCase):
 
         # Create a resoruce to use with this client.
         self.api_name = 'mytestapi'
-        self.api_id = self.client.create_rest_api(name=self.api_name)['id']
+        self.api_id = self.create_rest_api_or_skip()
+
+    def create_rest_api_or_skip(self):
+        try:
+            api_id = self.client.create_rest_api(name=self.api_name)['id']
+        except exceptions.ClientError as e:
+            if e.response['Error']['Code'] == 'TooManyRequestsException':
+                raise unittest.SkipTest("Hit API gateway throttle limit, skipping test.")
+        return api_id
 
     def tearDown(self):
         self.client.delete_rest_api(restApiId=self.api_id)

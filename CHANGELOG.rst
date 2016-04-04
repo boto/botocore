@@ -2,6 +2,49 @@
 CHANGELOG
 =========
 
+1.4.8 - (2016-03-29)
+--------------------
+* feature:``ACM``: Update client to latest version
+* feature:``CloudFormation``: Update client to latest version
+* feature:``CodeDeploy``: Update client to latest version
+* feature:``DMS``: Update client to latest version
+* feature:``ElastiCache``: Update client to latest version
+* feature:``Elastic Beanstalk``: Update client to latest version
+* feature:``Redshift``: Update client to latest version
+* feature:``WAF``: Update client to latest version
+* bugfix:Pagintor: Fix regression when providing a starting token
+  for a paginator
+  (`issue 849 <https://github.com/boto/botocore/pull/849>`__)
+* bugfix:Response Parsing: Handle case when generic HTML error
+  response is received
+  (`issue 850 <https://github.com/boto/botocore/pull/850>`__)
+* bugfix:Request serialization: Handle case when non str values
+  are provided for header values when using signature version 4
+  (`issue 852 <https://github.com/boto/botocore/pull/852>`__)
+* bugfix:Retry: Retry HTTP responses with status code 502
+  (`issue 853 <https://github.com/boto/botocore/pull/853>`__)
+
+
+1.4.7 - (2016-03-24)
+--------------------
+* feature:``ElastiCache``: Update client to latest version
+* feature:``RDS``: Update client to latest version
+* feature:``StorageGateway``: Update client to latest version
+* bugfix: Handle case where error response from proxy is received
+  (`issue 850 <https://github.com/boto/botocore/pull/850`__)
+
+1.4.6 - (2016-03-22)
+--------------------
+* feature:``DeviceFarm``: Add support to pay a flat monthly fee for
+  unlimited testing of your Android and iOS apps with AWS Device Farm device
+  slots
+* feature:``RDS``: Add support for customizing the order in which Aurora
+  Replicas are promoted to primary instance during a failover
+* bugfix:Signature Version 4: Fix issue when calculating signature version 4
+  signature for certain urls
+  (`issue 827 <https://github.com/boto/botocore/pull/827>`__)
+
+
 1.4.5 - (2016-03-17)
 --------------------
 * feature:``MeteringMarketplace``: The AWS Marketplace Metering Service enables

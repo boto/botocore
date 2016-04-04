@@ -41,7 +41,7 @@ class SharedExampleDocumenter(object):
         input_section.style.start_codeblock()
         if prefix is not None:
             input_section.write(prefix)
-        params = example['input']
+        params = example.get('input', {})
         comments = example.get('comments')
         if comments:
             comments = comments.get('input')

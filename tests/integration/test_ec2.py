@@ -66,6 +66,19 @@ class TestEC2Pagination(unittest.TestCase):
             # page.
             self.assertEqual(len(reserved_inst_offer), 1)
 
+    def test_can_fall_back_to_old_starting_token(self):
+        # Using an operation that we know will paginate.
+        paginator = self.client.get_paginator(
+            'describe_reserved_instances_offerings')
+        pages = paginator.paginate(PaginationConfig={'NextToken': 'None___1'})
+
+        try:
+            results = list(itertools.islice(pages, 0, 3))
+            self.assertEqual(len(results), 3)
+            self.assertTrue(results[0]['NextToken'] != results[1]['NextToken'])
+        except ValueError:
+            self.fail("Old style paginator failed.")
+
 
 @attr('slow')
 class TestCopySnapshotCustomization(unittest.TestCase):
