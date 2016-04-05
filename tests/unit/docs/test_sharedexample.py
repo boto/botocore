@@ -176,6 +176,19 @@ class TestSharedExampleDocumenter(BaseDocsTest):
             ")"
         ])
 
+    def test_can_handle_no_input_key(self):
+        self.add_shape_to_params('foo', 'String')
+        self.documenter.document_shared_example(
+            example={},
+            prefix='foo.bar',
+            section=self.doc_structure,
+            operation_model=self.operation_model
+        )
+        self.assert_contains_lines_in_order([
+            "foo.bar(",
+            ")"
+        ])
+
     def test_unicode_string_example(self):
         self.add_shape_to_params('foo', 'String')
         self.documenter.document_shared_example(

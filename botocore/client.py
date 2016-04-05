@@ -113,6 +113,14 @@ class ClientCreator(object):
         # Check the scoped config first
         if scoped_config is not None:
             s3_configuration = scoped_config.get('s3')
+            # Until we have proper validation of the config file (including
+            # nested types), we have to account for the fact that the s3
+            # key could be parsed as a string, e.g 's3 = foo'.
+            # In the case we'll ignore the key for now.
+            if not isinstance(s3_configuration, dict):
+                logger.debug("The s3 config key is not a dictionary type, "
+                             "ignoring its value of: %s", s3_configuration)
+                s3_configuration = None
 
         # Next specfic client config values takes precedence over
         # specific values in the scoped config.
