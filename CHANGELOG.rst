@@ -2,6 +2,10 @@
 CHANGELOG
 =========
 
+1.4.9 - (2016-03-29)
+--------------------
+* feature:``APIGateway``: Added support for API Import
+
 1.4.8 - (2016-03-29)
 --------------------
 * feature:``ACM``: Update client to latest version
