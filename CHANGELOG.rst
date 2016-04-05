@@ -11,6 +11,16 @@ CHANGELOG
   about the credentials used to make the API call. The details include name and
   account, as well as the type of entity making the call, such as an IAM user
   vs. federated user.
+* feature:``S3``: Added support for VersionId in PutObjectAcl
+  (`issue 856 <https://github.com/boto/botocore/pull/856>`__)
+* bugfix:``S3``: Add validation to enforce S3 metadata only contains ASCII.
+  (`issue 861 <https://github.com/boto/botocore/pull/861>`__)
+* bugfix:Exceptions: Consistently parse errors with no body
+  (`issue 859 <https://github.com/boto/botocore/pull/859>`__)
+* bugfix:Config: Handle case where S3 config key is not a dict
+  (`issue 858 <https://github.com/boto/botocore/pull/858>`__)
+* bugfix:Examples: Account for empty input shape in examples
+  (`issue 855 <https://github.com/boto/botocore/pull/855>`__)
 
 1.4.8 - (2016-03-29)
 --------------------
