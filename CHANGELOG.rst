@@ -7,6 +7,10 @@ CHANGELOG
 * feature:``APIGateway``: Added support for API Import
 * feature:``Route53``: Added support for metric-based health checks and regional
   health checks.
+* feature:``STS``: Added support for GetCallerIdentity, which returns details
+  about the credentials used to make the API call. The details include name and
+  account, as well as the type of entity making the call, such as an IAM user
+  vs. federated user.
 
 1.4.8 - (2016-03-29)
 --------------------
