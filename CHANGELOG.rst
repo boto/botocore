@@ -5,6 +5,8 @@ CHANGELOG
 1.4.9 - (2016-03-29)
 --------------------
 * feature:``APIGateway``: Added support for API Import
+* feature:``Route53``: Added support for metric-based health checks and regional
+  health checks.
 
 1.4.8 - (2016-03-29)
 --------------------
