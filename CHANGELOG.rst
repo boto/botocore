@@ -2,7 +2,12 @@
 CHANGELOG
 =========
 
-1.4.9 - (2016-03-29)
+1.4.10 - (2016-04-07)
+---------------------
+* feature:``Lambda``: Added support for setting the function runtime as
+  nodejs4.3, as well as updating function configuration to set the runtime.
+
+1.4.9 - (2016-04-05)
 --------------------
 * feature:``APIGateway``: Added support for API Import
 * feature:``Route53``: Added support for metric-based health checks and regional
