@@ -8,6 +8,10 @@ CHANGELOG
   nodejs4.3, as well as updating function configuration to set the runtime.
 * feature:``DS``: Added support for Directory Service Conditional Forwarder
   APIs.
+* feature:``Elasticbeanstalk``: Adds support for three additional elements
+  in AWS Elasticbeanstalk's DescribeInstancesHealthResponse: Deployment,
+  AvailabilityZone, and InstanceType. Additionally adds support for increased
+  EnvironmentName length from 23 to 40.
 
 1.4.9 - (2016-04-05)
 --------------------
