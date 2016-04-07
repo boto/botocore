@@ -379,8 +379,15 @@ class PageIterator(object):
         This attempts to convert a deprecated starting token into the new
         style.
         """
-        if len(deprecated_token) != len(self._input_token):
+        len_deprecated_token = len(deprecated_token)
+        len_input_token = len(self._input_token)
+        if len_deprecated_token > len_input_token:
             raise ValueError("Bad starting token: %s" % self._starting_token)
+        elif len_deprecated_token < len_input_token:
+            log.debug("Old format starting token does not contain all input "
+                      "tokens. Setting the rest, in order, as None.")
+            for i in range(len_input_token - len_deprecated_token):
+                deprecated_token.append(None)
         return dict(zip(self._input_token, deprecated_token))
 
 
