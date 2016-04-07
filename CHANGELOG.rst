@@ -6,6 +6,8 @@ CHANGELOG
 ---------------------
 * feature:``Lambda``: Added support for setting the function runtime as
   nodejs4.3, as well as updating function configuration to set the runtime.
+* feature:``DS``: Added support for Directory Service Conditional Forwarder
+  APIs.
 
 1.4.9 - (2016-04-05)
 --------------------
