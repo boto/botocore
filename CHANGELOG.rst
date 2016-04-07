@@ -12,6 +12,8 @@ CHANGELOG
   in AWS Elasticbeanstalk's DescribeInstancesHealthResponse: Deployment,
   AvailabilityZone, and InstanceType. Additionally adds support for increased
   EnvironmentName length from 23 to 40.
+* bugfix:Paginator: Allow non-specified input tokens in old starting token
+  format.
 
 1.4.9 - (2016-04-05)
 --------------------
