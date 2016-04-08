@@ -519,8 +519,9 @@ def add_glacier_version(model, params, **kwargs):
 
 
 def add_accept_header(model, params, **kwargs):
-    request_dict = params
-    request_dict['headers']['Accept'] = 'application/json'
+    if params['headers'].get('Accept', None) is None:
+        request_dict = params
+        request_dict['headers']['Accept'] = 'application/json'
 
 
 def add_glacier_checksums(params, **kwargs):
