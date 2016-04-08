@@ -44,6 +44,7 @@ from botocore.utils import instance_cache
 from botocore.utils import merge_dicts
 from botocore.utils import get_service_module_name
 from botocore.utils import percent_encode_sequence
+from botocore.utils import ScopedEventHandler
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
 
@@ -903,6 +904,52 @@ class TestPercentEncodeSequence(unittest.TestCase):
             percent_encode_sequence(
                 OrderedDict([('k1', ['a', 'list']), ('k2', ['another', 'list'])])),
             'k1=a&k1=list&k2=another&k2=list')
+
+
+class TestScopedEventHandler(unittest.TestCase):
+    def setUp(self):
+        self.event_emitter = mock.Mock()
+        self.handler = mock.Mock()
+        self.event_name = 'foo'
+        self.unique_id = 'bar'
+
+    def test_scoped_handler(self):
+        scoped_handler = ScopedEventHandler(
+            self.event_emitter, self.event_name, self.handler, self.unique_id)
+        self.assertEqual(self.event_emitter.register.call_count, 0)
+        with scoped_handler:
+            self.event_emitter.register.assert_called_once_with(
+                self.event_name, self.handler, self.unique_id)
+        self.assertEqual(self.event_emitter.register_first.call_count, 0)
+        self.assertEqual(self.event_emitter.register_last.call_count, 0)
+        self.event_emitter.unregister.assert_called_once_with(
+            self.event_name, self.handler, self.unique_id)
+
+    def test_scoped_handler_register_first(self):
+        scoped_handler = ScopedEventHandler(
+            self.event_emitter, self.event_name, self.handler,
+            self.unique_id, 'first')
+        self.assertEqual(self.event_emitter.register_first.call_count, 0)
+        with scoped_handler:
+            self.event_emitter.register_first.assert_called_once_with(
+                self.event_name, self.handler, self.unique_id)
+        self.assertEqual(self.event_emitter.register.call_count, 0)
+        self.assertEqual(self.event_emitter.register_last.call_count, 0)
+        self.event_emitter.unregister.assert_called_once_with(
+            self.event_name, self.handler, self.unique_id)
+
+    def test_scoped_handler_register_last(self):
+        scoped_handler = ScopedEventHandler(
+            self.event_emitter, self.event_name, self.handler,
+            self.unique_id, 'last')
+        self.assertEqual(self.event_emitter.register_last.call_count, 0)
+        with scoped_handler:
+            self.event_emitter.register_last.assert_called_once_with(
+                self.event_name, self.handler, self.unique_id)
+        self.assertEqual(self.event_emitter.register.call_count, 0)
+        self.assertEqual(self.event_emitter.register_first.call_count, 0)
+        self.event_emitter.unregister.assert_called_once_with(
+            self.event_name, self.handler, self.unique_id)
 
 
 if __name__ == '__main__':

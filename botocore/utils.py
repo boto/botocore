@@ -754,3 +754,42 @@ def instance_cache(func):
         self._instance_cache[cache_key] = result
         return result
     return _cache_guard
+
+
+class ScopedEventHandler(object):
+    """ Register a callback for the duration of a scope. """
+
+    def __init__(self, event_emitter, event_name, handler, unique_id=None,
+                 register_type=None):
+        """
+        :param event_emitter: The event emitter to register against
+        :param event_name: The name of the event to register
+        :param handler: The handler to register on the event
+        :param unique_id: A unique identifier for the event
+        :param register_type: A string representing the register order. Valid
+            values are 'first', and 'last'. Omit this parameter for normal
+            registration.
+        :type register_type: str
+        """
+        self._event_emitter = event_emitter
+        self._event_name = event_name
+        self._handler = handler
+        self._unique_id = unique_id
+        self._register_type = register_type
+        if self._register_type is not None:
+            self._register_type = self._register_type.lower()
+
+    def __enter__(self):
+        if self._register_type == 'first':
+            self._event_emitter.register_first(
+                self._event_name, self._handler, self._unique_id)
+        elif self._register_type == 'last':
+            self._event_emitter.register_last(
+                self._event_name, self._handler, self._unique_id)
+        else:
+            self._event_emitter.register(
+                self._event_name, self._handler, self._unique_id)
+
+    def __exit__(self, exc_type, exc_val, traceback):
+        self._event_emitter.unregister(
+            self._event_name, self._handler, self._unique_id)
