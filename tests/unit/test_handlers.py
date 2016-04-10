@@ -412,6 +412,13 @@ class TestHandlers(BaseSessionTest):
         handlers.add_accept_header(None, request_dict)
         self.assertEqual(request_dict['headers']['Accept'], 'application/json')
 
+    def test_accept_header_not_added_if_present(self):
+        request_dict = {
+            'headers': {'Accept': 'application/yaml'}
+        }
+        handlers.add_accept_header(None, request_dict)
+        self.assertEqual(request_dict['headers']['Accept'], 'application/yaml')
+
     def test_glacier_checksums_added(self):
         request_dict = {
             'headers': {},
@@ -516,6 +523,27 @@ class TestHandlers(BaseSessionTest):
 
     def test_validation_is_noop_if_no_bucket_param_exists(self):
         self.assertIsNone(handlers.validate_bucket_name(params={}))
+
+    def test_validate_non_ascii_metadata_values(self):
+        with self.assertRaises(ParamValidationError):
+            handlers.validate_ascii_metadata({'Metadata': {'foo': u'\u2713'}})
+
+    def test_validate_non_ascii_metadata_keys(self):
+        with self.assertRaises(ParamValidationError):
+            handlers.validate_ascii_metadata(
+                {'Metadata': {u'\u2713': 'bar'}})
+
+    def test_validate_non_triggered_when_no_md_specified(self):
+        original = {'NotMetadata': ''}
+        copied = original.copy()
+        handlers.validate_ascii_metadata(copied)
+        self.assertEqual(original, copied)
+
+    def test_validation_passes_when_all_ascii_chars(self):
+        original = {'Metadata': {'foo': 'bar'}}
+        copied = original.copy()
+        handlers.validate_ascii_metadata(original)
+        self.assertEqual(original, copied)
 
     def test_set_encoding_type(self):
         params = {}

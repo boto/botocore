@@ -2,6 +2,39 @@
 CHANGELOG
 =========
 
+1.4.10 - (2016-04-07)
+---------------------
+* feature:``Lambda``: Added support for setting the function runtime as
+  nodejs4.3, as well as updating function configuration to set the runtime.
+* feature:``DS``: Added support for Directory Service Conditional Forwarder
+  APIs.
+* feature:``Elasticbeanstalk``: Adds support for three additional elements
+  in AWS Elasticbeanstalk's DescribeInstancesHealthResponse: Deployment,
+  AvailabilityZone, and InstanceType. Additionally adds support for increased
+  EnvironmentName length from 23 to 40.
+* bugfix:Paginator: Allow non-specified input tokens in old starting token
+  format.
+
+1.4.9 - (2016-04-05)
+--------------------
+* feature:``APIGateway``: Added support for API Import
+* feature:``Route53``: Added support for metric-based health checks and regional
+  health checks.
+* feature:``STS``: Added support for GetCallerIdentity, which returns details
+  about the credentials used to make the API call. The details include name and
+  account, as well as the type of entity making the call, such as an IAM user
+  vs. federated user.
+* feature:``S3``: Added support for VersionId in PutObjectAcl
+  (`issue 856 <https://github.com/boto/botocore/pull/856>`__)
+* bugfix:``S3``: Add validation to enforce S3 metadata only contains ASCII.
+  (`issue 861 <https://github.com/boto/botocore/pull/861>`__)
+* bugfix:Exceptions: Consistently parse errors with no body
+  (`issue 859 <https://github.com/boto/botocore/pull/859>`__)
+* bugfix:Config: Handle case where S3 config key is not a dict
+  (`issue 858 <https://github.com/boto/botocore/pull/858>`__)
+* bugfix:Examples: Account for empty input shape in examples
+  (`issue 855 <https://github.com/boto/botocore/pull/855>`__)
+
 1.4.8 - (2016-03-29)
 --------------------
 * feature:``ACM``: Update client to latest version

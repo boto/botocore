@@ -40,6 +40,16 @@ class BaseS3OperationTest(BaseSessionTest):
         self.session_send_patch.stop()
 
 
+class TestOnlyAsciiCharsAllowed(BaseS3OperationTest):
+    def test_validates_non_ascii_chars_trigger_validation_error(self):
+        self.http_session_send_mock.return_value = mock.Mock(status_code=200,
+                                                             headers={},
+                                                             content=b'')
+        with self.assertRaises(ParamValidationError):
+            self.client.put_object(Bucket='foo', Key='bar',
+                                Metadata={'goodkey': 'good',
+                                          'non-ascii': u'\u2713'})
+
 class TestS3GetBucketLifecycle(BaseS3OperationTest):
     def test_multiple_transitions_returns_one(self):
         http_response = mock.Mock()

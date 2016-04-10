@@ -54,12 +54,19 @@
         }
       },
       "services": {
+        "acm": {
+          "endpoints": {
+            "us-east-1": {}
+          }
+        },
         "apigateway": {
           "endpoints": {
             "us-east-1": {},
             "us-west-2": {},
             "eu-west-1": {},
-            "ap-northeast-1": {}
+            "ap-northeast-1": {},
+            "ap-southeast-1": {},
+            "eu-central-1": {}
           }
         },
         "appstream": {
@@ -135,6 +142,7 @@
             "us-west-1": {},
             "us-west-2": {},
             "ap-northeast-1": {},
+            "ap-northeast-2": {},
             "ap-southeast-1": {},
             "ap-southeast-2": {},
             "sa-east-1": {},
@@ -200,6 +208,7 @@
             "us-west-1": {},
             "us-west-2": {},
             "ap-northeast-1": {},
+            "ap-northeast-2": {},
             "ap-southeast-1": {},
             "ap-southeast-2": {},
             "sa-east-1": {},
@@ -230,7 +239,8 @@
             "us-east-1": {},
             "us-west-2": {},
             "ap-northeast-1": {},
-            "eu-west-1": {}
+            "eu-west-1": {},
+            "eu-central-1": {}
           }
         },
         "devicefarm": {
@@ -335,6 +345,13 @@
             "eu-central-1": {}
           }
         },
+        "ecr": {
+          "endpoints": {
+            "us-east-1": {},
+            "us-west-2": {},
+            "eu-west-1": {}
+          }
+        },
         "elasticache": {
           "endpoints": {
             "us-east-1": {},
@@ -430,6 +447,36 @@
             "eu-west-1": {}
           }
         },
+        "es": {
+          "endpoints": {
+            "us-east-1": {},
+            "us-west-1": {},
+            "us-west-2": {},
+            "eu-west-1": {},
+            "eu-central-1": {},
+            "ap-southeast-1": {},
+            "ap-southeast-2": {},
+            "ap-northeast-1": {},
+            "ap-northeast-2": {},
+            "sa-east-1": {}
+          }
+        },
+        "events": {
+          "endpoints": {
+            "us-east-1": {},
+            "us-west-2": {},
+            "ap-northeast-1": {},
+            "eu-west-1": {},
+            "eu-central-1": {}
+          }
+        },
+        "firehose": {
+          "endpoints": {
+            "us-east-1": {},
+            "us-west-2": {},
+            "eu-west-1": {}
+          }
+        },
         "gamelift": {
           "endpoints": {
             "us-east-1": {},
@@ -490,7 +537,8 @@
             "us-east-1": {},
             "us-west-2": {},
             "ap-northeast-1": {},
-            "eu-west-1": {}
+            "eu-west-1": {},
+            "eu-central-1": {}
           }
         },
         "kinesis": {
@@ -503,7 +551,8 @@
             "ap-southeast-1": {},
             "ap-southeast-2": {},
             "eu-west-1": {},
-            "eu-central-1": {}
+            "eu-central-1": {},
+            "sa-east-1": {}
           }
         },
         "kms": {
@@ -530,12 +579,6 @@
           }
         },
         "logs": {
-          "defaults": {
-            "protocols": [
-              "http",
-              "https"
-            ]
-          },
           "endpoints": {
             "us-east-1": {},
             "us-west-1": {},
@@ -545,7 +588,8 @@
             "ap-southeast-1": {},
             "ap-southeast-2": {},
             "eu-west-1": {},
-            "eu-central-1": {}
+            "eu-central-1": {},
+            "sa-east-1": {}
           }
         },
         "machinelearning": {
@@ -557,6 +601,12 @@
         "marketplacecommerceanalytics": {
           "endpoints": {
             "us-east-1": {}
+          }
+        },
+        "metering.marketplace": {
+          "endpoints": {
+            "us-east-1": {},
+            "us-west-2": {}
           }
         },
         "mobileanalytics": {
@@ -608,6 +658,7 @@
         "redshift": {
           "endpoints": {
             "us-east-1": {},
+            "us-west-1": {},
             "us-west-2": {},
             "ap-northeast-1": {},
             "ap-northeast-2": {},
