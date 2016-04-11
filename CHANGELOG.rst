@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.4.11 - (2016-04-11)
+---------------------
+
+* feature:``IoT``: Add methods for managing CA certificates.
+* bugfix:``EC2``: Fix issues with checking an incorrect error code in waiters.
+* bugfix:Accept Header: Fix issue in overriding Accept header for API Gateway.
+
 1.4.10 - (2016-04-07)
 ---------------------
 * feature:``Lambda``: Added support for setting the function runtime as

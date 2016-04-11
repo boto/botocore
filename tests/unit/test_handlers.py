@@ -412,6 +412,13 @@ class TestHandlers(BaseSessionTest):
         handlers.add_accept_header(None, request_dict)
         self.assertEqual(request_dict['headers']['Accept'], 'application/json')
 
+    def test_accept_header_not_added_if_present(self):
+        request_dict = {
+            'headers': {'Accept': 'application/yaml'}
+        }
+        handlers.add_accept_header(None, request_dict)
+        self.assertEqual(request_dict['headers']['Accept'], 'application/yaml')
+
     def test_glacier_checksums_added(self):
         request_dict = {
             'headers': {},
