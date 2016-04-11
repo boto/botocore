@@ -38,6 +38,19 @@
         }
       ]
     },
+    "ConsoleOutputAvailable": {
+      "operation": "GetConsoleOutput",
+      "maxAttempts": 40,
+      "delay": 15,
+      "acceptors": [
+        {
+          "state": "success",
+          "matcher": "path",
+          "argument": "length(Output || '') > `0`",
+          "expected": true
+        }
+      ]
+    },
     "ConversionTaskCancelled": {
       "delay": 15,
       "operation": "DescribeConversionTasks",
