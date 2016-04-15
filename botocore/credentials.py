@@ -121,7 +121,7 @@ def _parse_if_needed(value):
 
 def _serialize_if_needed(value):
     if isinstance(value, datetime.datetime):
-        return value.strftime('%Y-%m-%dT%H:%M:%SZ')
+        return value.strftime('%Y-%m-%dT%H:%M:%S%Z')
     return value
 
 
