@@ -1,0 +1,5 @@
+{
+  "category": "CodeCommit", 
+  "type": "feature", 
+  "description": "Add paginators for CodeCommit (`#881 <https://github.com/boto/botocore/issues/881>`__)"
+}
