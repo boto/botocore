@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``CodeDeploy``",
+    "description": "Added support for setting up triggers for a deployment group.",
+    "type": "feature"
+  },
+  {
+    "category": "SSL",
+    "description": "Fixed issue where AWS_CA_BUNDLE was not being used.",
+    "type": "bugfix"
+  }
+]
