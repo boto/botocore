@@ -53,6 +53,12 @@ class Config(object):
     :param s3: A dictionary of s3 specific configurations.
         Valid keys are:
 
+        * 'use_accelerate_endpoint' -- Refers to whether to use the S3
+          Accelerate endpoint. The value must be a boolean. If True, the
+          client will use the S3 Accelerate endpoint. If the S3 Accelerate
+          endpoint is being used then the addressing style will always
+          be virtual.
+
         * 'addressing_style' -- Refers to the style in which to address
           s3 endpoints. Values must be a string that equals:
 
