@@ -1,5 +1,0 @@
-{
-  "category": "CognitoIdentityProvider", 
-  "type": "feature", 
-  "description": "Add support for new service, CognitoIdedentityProvider"
-}
