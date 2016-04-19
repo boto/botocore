@@ -41,6 +41,7 @@ RESTRICTED_REGIONS = [
     'us-gov-west-1',
     'fips-us-gov-west-1',
 ]
+S3_ACCELERATE_ENDPOINT = 's3-accelerate.amazonaws.com'
 
 
 class _RetriesExceededError(Exception):
@@ -754,3 +755,43 @@ def instance_cache(func):
         self._instance_cache[cache_key] = result
         return result
     return _cache_guard
+
+
+def switch_host_s3_accelerate(request, operation_name, **kwargs):
+    """Switches the current s3 endpoint with an S3 Accelerate endpoint"""
+
+    # Note that when registered the switching of the s3 host happens
+    # before it gets changed to virtual. So we are not concerned with ensuring
+    # that the bucket name is translated to the virtual style here and we
+    # can hard code the Accelerate endpoint.
+    endpoint = 'https://' + S3_ACCELERATE_ENDPOINT
+    if operation_name in ['ListBuckets', 'CreateBucket', 'DeleteBucket']:
+        return
+    _switch_hosts(request, endpoint,  use_new_scheme=False)
+
+
+def switch_host_with_param(request, param_name):
+    """Switches the host using a parameter value from a JSON request body"""
+    request_json = json.loads(request.data.decode('utf-8'))
+    if request_json.get(param_name):
+        new_endpoint = request_json[param_name]
+        _switch_hosts(request, new_endpoint)
+
+
+def _switch_hosts(request, new_endpoint, use_new_scheme=True):
+    new_endpoint_components = urlsplit(new_endpoint)
+    original_endpoint = request.url
+    original_endpoint_components = urlsplit(original_endpoint)
+    scheme = original_endpoint_components.scheme
+    if use_new_scheme:
+        scheme = new_endpoint_components.scheme
+    final_endpoint_components = (
+        scheme,
+        new_endpoint_components.netloc,
+        original_endpoint_components.path,
+        original_endpoint_components.query,
+        ''
+    )
+    final_endpoint = urlunsplit(final_endpoint_components)
+    logger.debug('Updating URI from %s to %s' % (request.url, final_endpoint))
+    request.url = final_endpoint
