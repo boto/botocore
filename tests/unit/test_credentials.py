@@ -15,10 +15,10 @@ from datetime import datetime, timedelta
 import mock
 import os
 
-from dateutil.tz import tzlocal
+from dateutil.tz import tzlocal, tzutc
 
 from botocore import credentials
-from botocore.credentials import EnvProvider
+from botocore.credentials import EnvProvider, create_assume_role_refresher
 import botocore.exceptions
 import botocore.session
 from tests import unittest, BaseEnvVar, IntegerRefresher
@@ -745,6 +745,23 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         self.assertEqual(creds.access_key, 'foo')
         self.assertEqual(creds.secret_key, 'bar')
         self.assertEqual(creds.token, 'baz')
+
+    def test_assume_role_refresher_serializes_datetime(self):
+        client = mock.Mock()
+        time_zone = tzutc()
+        expiration = datetime(
+            year=2016, month=11, day=6, hour=1, minute=30, tzinfo=time_zone)
+        client.assume_role.return_value = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': expiration,
+            }
+        }
+        refresh = create_assume_role_refresher(client, {})
+        expiry_time = refresh()['expiry_time']
+        self.assertEqual(expiry_time, '2016-11-06T01:30:00UTC')
 
     def test_assume_role_retrieves_from_cache(self):
         date_in_future = datetime.utcnow() + timedelta(seconds=1000)

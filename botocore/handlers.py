@@ -23,8 +23,8 @@ import copy
 import re
 import warnings
 
-from botocore.compat import urlsplit, urlunsplit, unquote, \
-    json, quote, six, unquote_str, ensure_bytes, get_md5, MD5_AVAILABLE
+from botocore.compat import unquote, json, six, unquote_str, \
+    ensure_bytes, get_md5, MD5_AVAILABLE
 from botocore.docs.utils import AutoPopulatedParam
 from botocore.docs.utils import HideParamFromOperations
 from botocore.docs.utils import AppendParamDocumentation
@@ -34,6 +34,7 @@ from botocore.exceptions import ParamValidationError
 from botocore.exceptions import AliasConflictParameterError
 from botocore.exceptions import UnsupportedTLSVersionWarning
 from botocore.utils import percent_encode, SAFE_CHARS
+from botocore.utils import switch_host_with_param
 
 from botocore import retryhandler
 from botocore import utils
@@ -577,24 +578,6 @@ def switch_host_machinelearning(request, **kwargs):
     switch_host_with_param(request, 'PredictEndpoint')
 
 
-def switch_host_with_param(request, param_name):
-    request_json = json.loads(request.data.decode('utf-8'))
-    if request_json.get(param_name):
-        new_endpoint = request_json[param_name]
-        new_endpoint_components = urlsplit(new_endpoint)
-        original_endpoint = request.url
-        original_endpoint_components = urlsplit(original_endpoint)
-        final_endpoint_components = (
-            new_endpoint_components.scheme,
-            new_endpoint_components.netloc,
-            original_endpoint_components.path,
-            original_endpoint_components.query,
-            ''
-        )
-        final_endpoint = urlunsplit(final_endpoint_components)
-        request.url = final_endpoint
-
-
 def check_openssl_supports_tls_version_1_2(**kwargs):
     import ssl
     try:
@@ -812,6 +795,21 @@ BUILTIN_HANDLERS = [
         disable_signing),
     ('choose-signer.sts.AssumeRoleWithSAML', disable_signing),
     ('choose-signer.sts.AssumeRoleWithWebIdentity', disable_signing),
+    ('choose-signer.cognito-idp.ConfirmSignUp', disable_signing),
+    ('choose-signer.cognito-idp.VerifyUserAttribute', disable_signing),
+    ('choose-signer.cognito-idp.ForgotPassword', disable_signing),
+    ('choose-signer.cognito-idp.SignUp', disable_signing),
+    ('choose-signer.cognito-idp.UpdateUserAttributes', disable_signing),
+    ('choose-signer.cognito-idp.ConfirmForgotPassword', disable_signing),
+    ('choose-signer.cognito-idp.ResendConfirmationCode', disable_signing),
+    ('choose-signer.cognito-idp.GetUserAttributeVerificationCode', disable_signing),
+    ('choose-signer.cognito-idp.GetUser', disable_signing),
+    ('choose-signer.cognito-idp.ChangePassword', disable_signing),
+    ('choose-signer.cognito-idp.GetOpenIdConfiguration', disable_signing),
+    ('choose-signer.cognito-idp.DeleteUser', disable_signing),
+    ('choose-signer.cognito-idp.SetUserSettings', disable_signing),
+    ('choose-signer.cognito-idp.GetJWKS', disable_signing),
+    ('choose-signer.cognito-idp.DeleteUserAttributes', disable_signing),
     ('before-sign.s3', utils.fix_s3_host),
     ('before-parameter-build.s3.HeadObject', sse_md5),
     ('before-parameter-build.s3.GetObject', sse_md5),

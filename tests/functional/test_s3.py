@@ -234,3 +234,51 @@ class TestCanSendIntegerHeaders(BaseSessionTest):
             # string '3'.  This also means we've made it pass the signer which
             # expects string values in order to sign properly.
             self.assertEqual(headers['Content-Length'], '3')
+
+
+class TestS3Accelerate(BaseS3AddressingStyle):
+    def assert_uses_accelerate_endpoint_correctly(
+            self, client, expecting_https=True):
+        # The host should be s3-accelerate.amazonaws.com
+        expected_endpoint = (
+            'https://mybucket.s3-accelerate.amazonaws.com/mykey')
+        if not expecting_https:
+            expected_endpoint = (
+                'http://mybucket.s3-accelerate.amazonaws.com/mykey')
+
+        with mock.patch('botocore.endpoint.Session.send') \
+                as mock_send:
+            mock_send.return_value = self.http_response
+            client.put_object(Bucket='mybucket', Key='mykey', Body='mybody')
+            request_sent = mock_send.call_args[0][0]
+            self.assertEqual(expected_endpoint, request_sent.url)
+
+    def test_s3_accelerate_with_config(self):
+        s3 = self.session.create_client(
+            's3', config=Config(s3={'use_accelerate_endpoint': True}))
+        self.assert_uses_accelerate_endpoint_correctly(s3)
+
+    def test_s3_accelerate_using_https_endpoint(self):
+        s3 = self.session.create_client(
+            's3', endpoint_url='https://s3-accelerate.amazonaws.com')
+        self.assert_uses_accelerate_endpoint_correctly(s3)
+
+    def test_s3_accelerate_using_http_endpoint(self):
+        s3 = self.session.create_client(
+            's3', endpoint_url='http://s3-accelerate.amazonaws.com')
+        self.assert_uses_accelerate_endpoint_correctly(s3, False)
+
+    def test_s3_accelerate_with_no_ssl(self):
+        s3 = self.session.create_client(
+            's3', config=Config(s3={'use_accelerate_endpoint': True}),
+            use_ssl=False)
+        self.assert_uses_accelerate_endpoint_correctly(s3, False)
+
+    def test_s3_accelerate_even_with_virtual_specified(self):
+        s3 = self.session.create_client(
+            's3', config=Config(
+                s3={'use_accelerate_endpoint': True,
+                    'addressing_style': 'path'}))
+        # Even if path is specified as the addressing style, use virtual
+        # because path style will **not** work with S3 Accelerate
+        self.assert_uses_accelerate_endpoint_correctly(s3)

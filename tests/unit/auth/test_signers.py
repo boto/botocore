@@ -319,6 +319,17 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
         cqs = self.auth.canonical_query_string(request)
         self.assertEqual('marker=%C3%A4%C3%B6%C3%BC-01.txt&prefix=', cqs)
 
+    def test_blacklist_expect_headers(self):
+        request = AWSRequest()
+        request.url = 'https://s3.amazonaws.com/bucket/foo'
+        request.method = 'PUT'
+        request.headers['expect'] = '100-Continue'
+        credentials = botocore.credentials.Credentials('access_key',
+                                                       'secret_key')
+        auth = botocore.auth.S3SigV4Auth(credentials, 's3', 'us-east-1')
+        auth.add_auth(request)
+        self.assertNotIn('expect', request.headers['Authorization'])
+
 
 class TestSigV4(unittest.TestCase):
     def setUp(self):

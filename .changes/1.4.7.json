@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``RDS``",
+    "description": "Update client to latest version",
+    "type": "feature"
+  },
+  {
+    "category": "``StorageGateway``",
+    "description": "Update client to latest version",
+    "type": "feature"
+  },
+  {
+    "category": "Proxy",
+    "description": "Handle case where error response from proxy is received (`issue 850 <https://github.com/boto/botocore/pull/850`__)",
+    "type": "bugfix"
+  }
+]
