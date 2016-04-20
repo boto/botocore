@@ -44,7 +44,8 @@ PAYLOAD_BUFFER = 1024 * 1024
 ISO8601 = '%Y-%m-%dT%H:%M:%SZ'
 SIGV4_TIMESTAMP = '%Y%m%dT%H%M%SZ'
 SIGNED_HEADERS_BLACKLIST = [
-    'expect'
+    'expect',
+    'user-agent'
 ]
 
 
