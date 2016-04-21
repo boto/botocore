@@ -44,6 +44,7 @@ from botocore.utils import instance_cache
 from botocore.utils import merge_dicts
 from botocore.utils import get_service_module_name
 from botocore.utils import percent_encode_sequence
+from botocore.utils import switch_host_s3_accelerate
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
 
@@ -903,6 +904,40 @@ class TestPercentEncodeSequence(unittest.TestCase):
             percent_encode_sequence(
                 OrderedDict([('k1', ['a', 'list']), ('k2', ['another', 'list'])])),
             'k1=a&k1=list&k2=another&k2=list')
+
+
+class TestSwitchHostS3Accelerate(unittest.TestCase):
+    def setUp(self):
+        self.original_url = 'https://s3.amazonaws.com/foo/key.txt'
+        self.request = AWSRequest(
+            method='PUT', headers={},
+            url=self.original_url
+        )
+
+    def test_switch_host(self):
+        switch_host_s3_accelerate(self.request, 'PutObject')
+        self.assertEqual(
+            self.request.url,
+            'https://s3-accelerate.amazonaws.com/foo/key.txt')
+
+    def test_do_not_switch_black_listed_operations(self):
+        # It should not get switched for ListBuckets, DeleteBucket, and
+        # CreateBucket
+        blacklist_ops = [
+            'ListBuckets',
+            'DeleteBucket',
+            'CreateBucket'
+        ]
+        for op_name in blacklist_ops:
+            switch_host_s3_accelerate(self.request, 'ListBuckets')
+            self.assertEqual(self.request.url, self.original_url)
+
+    def test_uses_original_endpoint_scheme(self):
+        self.request.url = 'http://s3.amazonaws.com/foo/key.txt'
+        switch_host_s3_accelerate(self.request, 'PutObject')
+        self.assertEqual(
+            self.request.url,
+            'http://s3-accelerate.amazonaws.com/foo/key.txt')
 
 
 if __name__ == '__main__':

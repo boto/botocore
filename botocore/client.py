@@ -33,6 +33,9 @@ from botocore.utils import CachedProperty
 from botocore.utils import fix_s3_host
 from botocore.utils import get_service_module_name
 from botocore.utils import switch_to_virtual_host_style
+from botocore.utils import switch_host_s3_accelerate
+from botocore.utils import S3_ACCELERATE_ENDPOINT
+
 
 logger = logging.getLogger(__name__)
 
@@ -110,7 +113,7 @@ class ClientCreator(object):
                                  client_config):
         s3_configuration = None
 
-        # Check the scoped config first
+        # Check the scoped config first.
         if scoped_config is not None:
             s3_configuration = scoped_config.get('s3')
             # Until we have proper validation of the config file (including
@@ -121,6 +124,19 @@ class ClientCreator(object):
                 logger.debug("The s3 config key is not a dictionary type, "
                              "ignoring its value of: %s", s3_configuration)
                 s3_configuration = None
+            # Convert logic for s3 accelerate options in the scoped config
+            # so that the various strings map to the appropriate boolean value.
+            if s3_configuration and \
+                    'use_accelerate_endpoint' in s3_configuration:
+                # Make sure any further modifications to the s3 section will
+                # not affect the scoped config by making a copy of it.
+                s3_configuration = s3_configuration.copy()
+                # Normalize on different possible values of True
+                if s3_configuration['use_accelerate_endpoint'] in [
+                        True, 'True', 'true']:
+                    s3_configuration['use_accelerate_endpoint'] = True
+                else:
+                    s3_configuration['use_accelerate_endpoint'] = False
 
         # Next specfic client config values takes precedence over
         # specific values in the scoped config.
@@ -449,21 +465,47 @@ class BaseClient(object):
                                   self.meta.service_model.endpoint_prefix,
                                   self._request_signer.handler)
 
+        self._register_s3_specific_handlers()
+
+    def _register_s3_specific_handlers(self):
+        # Register all of the s3 specific handlers
+        if self.meta.config.s3 is None:
+            s3_addressing_style = None
+            s3_accelerate = None
+        else:
+            s3_addressing_style = self.meta.config.s3.get('addressing_style')
+            s3_accelerate = self.meta.config.s3.get('use_accelerate_endpoint')
+
+        # Enable accelerate if the configuration is set to to true or the
+        # endpoint being used matches one of the Accelerate endpoints.
+        if s3_accelerate or S3_ACCELERATE_ENDPOINT in self._endpoint.host:
+            # Amazon S3 accelerate is being used then always use the virtual
+            # style of addressing because it is required.
+            self._force_virtual_style_s3_addressing()
+            # Also make sure that the hostname gets switched to
+            # s3-accelerate.amazonaws.com
+            self.meta.events.register_first(
+                'request-created.s3', switch_host_s3_accelerate)
+        elif s3_addressing_style:
+            # Otherwise go ahead with the style the user may have specified.
+            if s3_addressing_style == 'path':
+                self._force_path_style_s3_addressing()
+            elif s3_addressing_style == 'virtual':
+                self._force_virtual_style_s3_addressing()
+
+    def _force_path_style_s3_addressing(self):
+        # Do not try to modify the host if path is specified. The
+        # ``fix_s3_host`` usually switches the addresing style to virtual.
+        self.meta.events.unregister('before-sign.s3', fix_s3_host)
+
+    def _force_virtual_style_s3_addressing(self):
         # If the virtual host addressing style is being forced,
         # switch the default fix_s3_host handler for the more general
         # switch_to_virtual_host_style handler that does not have opt out
         # cases (other than throwing an error if the name is DNS incompatible)
-        if self.meta.config.s3 is None:
-            s3_addressing_style = None
-        else:
-            s3_addressing_style = self.meta.config.s3.get('addressing_style')
-
-        if s3_addressing_style == 'path':
-            self.meta.events.unregister('before-sign.s3', fix_s3_host)
-        elif s3_addressing_style == 'virtual':
-            self.meta.events.unregister('before-sign.s3', fix_s3_host)
-            self.meta.events.register(
-                'before-sign.s3', switch_to_virtual_host_style)
+        self.meta.events.unregister('before-sign.s3', fix_s3_host)
+        self.meta.events.register(
+            'before-sign.s3', switch_to_virtual_host_style)
 
     @property
     def _service_model(self):
