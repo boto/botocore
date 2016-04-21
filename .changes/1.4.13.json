@@ -1,0 +1,17 @@
+[
+  {
+    "category": "EMR", 
+    "description": "Add support for smart targeted resize feature", 
+    "type": "feature"
+  }, 
+  {
+    "category": "IOT", 
+    "description": "Add SQL RulesEngine version support", 
+    "type": "feature"
+  }, 
+  {
+    "category": "ACM", 
+    "description": "Add tagging support for ACM", 
+    "type": "feature"
+  }
+]
