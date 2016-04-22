@@ -26,7 +26,7 @@ import botocore.configloader
 import botocore.credentials
 import botocore.client
 from botocore.exceptions import ConfigNotFound, ProfileNotFound
-from botocore.exceptions import UnknownServiceError
+from botocore.exceptions import UnknownServiceError, ServiceNotInRegionError
 from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.loaders import create_loader
@@ -761,6 +761,9 @@ class Session(object):
             the client will be the result of calling ``merge()`` on the
             default config with the config provided to this call.
 
+        :raise ServiceNotInRegionError: Raised if the requested service is not
+            available in the specified region.
+
         :rtype: botocore.client.BaseClient
         :return: A botocore client instance
 
@@ -804,6 +807,8 @@ class Session(object):
         else:
             credentials = self.get_credentials()
         endpoint_resolver = self.get_component('endpoint_resolver')
+        if region_name not in endpoint_resolver.get_available_endpoints(service_name):
+            raise ServiceNotInRegionError(service_name=service_name, region_name=region_name)
         client_creator = botocore.client.ClientCreator(
             loader, endpoint_resolver, self.user_agent(), event_emitter,
             retryhandler, translate, response_parser_factory)
