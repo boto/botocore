@@ -53,12 +53,15 @@ class ClientCreator(object):
         self._retry_handler_factory = retry_handler_factory
         self._retry_config_translator = retry_config_translator
         self._response_parser_factory = response_parser_factory
+        self._retry_config = {}
 
     def create_client(self, service_name, region_name, is_secure=True,
                       endpoint_url=None, verify=None,
                       credentials=None, scoped_config=None,
                       api_version=None,
                       client_config=None):
+        if client_config:
+            self._retry_config = client_config.retry_config
         service_model = self._load_service_model(service_name, api_version)
         cls = self._create_client_class(service_name, service_model)
         endpoint_bridge = ClientEndpointBridge(
@@ -102,6 +105,15 @@ class ClientCreator(object):
         original_config = self._loader.load_data('_retry')
         if not original_config:
             return
+        # We can reset some values in config over Api.
+        if self._retry_config:
+            conf = original_config['retry']['__default__']
+            if 'max_attempts' in self._retry_config:
+                conf['max_attempts'] = self._retry_config['max_attempts']
+            if 'base' in self._retry_config:
+                conf['delay']['base'] = self._retry_config['base']
+            if 'growth_factor' in self._retry_config:
+                conf['delay']['growth_factor'] = self._retry_config['growth_factor']
 
         retry_config = self._retry_config_translator.build_retry_config(
             endpoint_prefix, original_config.get('retry', {}),
