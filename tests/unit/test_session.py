@@ -503,6 +503,11 @@ class TestCreateClient(BaseSessionTest):
         ec2_client = self.session.create_client('ec2')
         self.assertEqual(ec2_client.meta.region_name, 'us-west-11')
 
+    def test_create_client_for_service_not_in_region_raises_exception(self):
+        with self.assertRaises(botocore.exceptions.ServiceNotInRegionError):
+            route53domains_client = self.session.create_client(
+                'route53domains', region_name='eu-west-1')
+
     @mock.patch('botocore.client.ClientCreator')
     def test_create_client_with_ca_bundle_from_config(self, client_creator):
         with temporary_file('w') as f:
