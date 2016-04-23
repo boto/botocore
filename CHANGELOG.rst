@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.4.13
+======
+
+* feature:EMR: Add support for smart targeted resize feature
+* feature:IOT: Add SQL RulesEngine version support
+* feature:ACM: Add tagging support for ACM
+
+
 1.4.12
 ======
 

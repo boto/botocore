@@ -1,0 +1,5 @@
+{
+  "category": "``aws kinesis``", 
+  "type": "bugfix", 
+  "description": "Fix issue where \"EnhancedMonitoring\" was not displayed when running ``aws kinesis describe-stream`` (`#1929 <https://github.com/aws/aws-cli/issues/1929>`__)"
+}
