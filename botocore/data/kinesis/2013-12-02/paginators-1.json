@@ -10,7 +10,8 @@
         "StreamDescription.StreamARN",
         "StreamDescription.StreamName",
         "StreamDescription.StreamStatus",
-        "StreamDescription.RetentionPeriodHours"
+        "StreamDescription.RetentionPeriodHours",
+        "StreamDescription.EnhancedMonitoring"
       ]
     },
     "ListStreams": {

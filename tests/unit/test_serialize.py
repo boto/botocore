@@ -440,3 +440,56 @@ class TestHeaderSerialization(BaseModelWithBlob):
     def test_always_serialized_as_str(self):
         request = self.serialize_to_request({'ContentLength': 100})
         self.assertEqual(request['headers']['Content-Length'], '100')
+
+
+class TestRestXMLUnicodeSerialization(unittest.TestCase):
+    def setUp(self):
+        self.model = {
+            'metadata': {'protocol': 'rest-xml', 'apiVersion': '2014-01-01'},
+            'documentation': '',
+            'operations': {
+                'TestOperation': {
+                    'name': 'TestOperation',
+                    'http': {
+                        'method': 'POST',
+                        'requestUri': '/',
+                    },
+                    'input': {'shape': 'InputShape'},
+                }
+            },
+            'shapes': {
+                'InputShape': {
+                    'type': 'structure',
+                    'members': {
+                        'Foo': {
+                            'shape': 'FooShape',
+                            'locationName': 'Foo'
+                        },
+                    },
+                    'payload': 'Foo'
+                },
+                'FooShape': {
+                    'type': 'list',
+                    'member': {'shape': 'StringShape'}
+                },
+                'StringShape': {
+                    'type': 'string',
+                }
+            }
+        }
+        self.service_model = ServiceModel(self.model)
+
+    def serialize_to_request(self, input_params):
+        request_serializer = serialize.create_serializer(
+            self.service_model.metadata['protocol'])
+        return request_serializer.serialize_to_request(
+            input_params, self.service_model.operation_model('TestOperation'))
+
+    def test_restxml_serializes_unicode(self):
+        params = {
+            'Foo': [u'\u65e5\u672c\u8a9e\u3067\u304a\uff4b']
+        }
+        try:
+            self.serialize_to_request(params)
+        except UnicodeEncodeError:
+            self.fail("RestXML serializer failed to serialize unicode text.")
