@@ -333,8 +333,11 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
     def test_blacklist_expect_headers(self):
         self._test_blacklist_header('expect', '100-continue')
 
-    def test_blacklist_headers(self):
+    def test_blacklist_user_agent(self):
         self._test_blacklist_header('user-agent', 'botocore/1.4.11')
+
+    def test_blacklist_content_type(self):
+        self._test_blacklist_header('content-type', 'application/json')
 
 
 class TestSigV4(unittest.TestCase):

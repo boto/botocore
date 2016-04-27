@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "description": "Do not sign content-type. Fixes boto/boto3`#610 <https://github.com/boto/botocore/issues/610>`__.",
+  "category": "Signer"
+}
