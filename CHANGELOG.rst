@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.4.15
+======
+
+* feature:``route53domains``: Update route53domains client to latest version
+* feature:``opsworks``: Update opsworks client to latest version
+
+
 1.4.14
 ======
 
