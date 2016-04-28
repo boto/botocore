@@ -49,6 +49,13 @@
         }
       }
     },
+    "gateway_timeout": {
+      "applies_when": {
+        "response": {
+          "http_status_code": 504
+        }
+      }
+    },
     "limit_exceeded": {
       "applies_when": {
         "response": {
@@ -68,7 +75,9 @@
       "policies": {
           "general_socket_errors": {"$ref": "general_socket_errors"},
           "general_server_error": {"$ref": "general_server_error"},
+          "bad_gateway": {"$ref": "bad_gateway"},
           "service_unavailable": {"$ref": "service_unavailable"},
+          "gateway_timeout": {"$ref": "gateway_timeout"},
           "limit_exceeded": {"$ref": "limit_exceeded"},
           "throttling_exception": {"$ref": "throttling_exception"},
           "throttling": {"$ref": "throttling"},
