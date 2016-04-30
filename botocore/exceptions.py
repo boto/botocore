@@ -23,8 +23,10 @@ class BotoCoreError(Exception):
     """
     fmt = 'An unspecified error occurred'
 
-    def __init__(self, **kwargs):
-        msg = self.fmt.format(**kwargs)
+    def __init__(self, msg=None, **kwargs):
+        # The  msg parameter is to ensure this class remains picklable
+        if not msg:
+            msg = self.fmt.format(**kwargs)
         Exception.__init__(self, msg)
         self.kwargs = kwargs
 
@@ -69,8 +71,11 @@ class ConnectionClosedError(ConnectionError):
     fmt = (
         'Connection was closed before we received a valid response '
         'from endpoint URL: "{endpoint_url}".')
-    def __init__(self, **kwargs):
-        msg = self.fmt.format(**kwargs)
+
+    def __init__(self, msg=None, **kwargs):
+        # The msg parameter is to ensure this class remains picklable
+        if not msg:
+            msg = self.fmt.format(**kwargs)
         kwargs.pop('endpoint_url')
         super(ConnectionClosedError, self).__init__(msg, **kwargs)
 
@@ -331,12 +336,30 @@ class ClientError(Exception):
         'An error occurred ({error_code}) when calling the {operation_name} '
         'operation: {error_message}')
 
-    def __init__(self, error_response, operation_name):
-        msg = self.MSG_TEMPLATE.format(
-            error_code=error_response['Error'].get('Code', 'Unknown'),
-            error_message=error_response['Error'].get('Message', 'Unknown'),
-            operation_name=operation_name)
-        super(ClientError, self).__init__(msg)
+    def __init__(self, *args, **kwargs):
+        # The logic is complicated to support pickling
+        if 1 > len(args) > 2:
+            raise TypeError('__init__ takes 2 positional arguments but {} were '
+                            'given'.format(len(args)))
+
+        error_response = kwargs.pop('error_response', None)
+        operation_name = kwargs.pop('operation_name', None)
+
+        if len(args) == 2:
+            error_response = args[0]
+            operation_name = args[1]
+
+        if operation_name:
+            # two ways to get here, two positional, or one pos and one keyword
+            msg = self.MSG_TEMPLATE.format(
+                error_code=error_response['Error'].get('Code', 'Unknown'),
+                error_message=error_response['Error'].get('Message', 'Unknown'),
+                operation_name=operation_name)
+        else:
+            # from unpickling
+            msg = args[0]
+
+        super(ClientError, self).__init__(msg, **kwargs)
         self.response = error_response
 
 
