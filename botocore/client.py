@@ -154,6 +154,11 @@ class ClientCreator(object):
 
         config_kwargs['s3'] = s3_configuration
 
+    def _conditionally_unregister_fix_s3_host(self, endpoint_url, emitter):
+        # If the user is providing a custom endpoint, we should not alter it.
+        if endpoint_url is not None:
+            emitter.unregister('before-sign.s3', fix_s3_host)
+
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,
                          scoped_config, client_config):
@@ -202,6 +207,7 @@ class ClientCreator(object):
         # Add any additional s3 configuration for client
         self._inject_s3_configuration(
             config_kwargs, scoped_config, client_config)
+        self._conditionally_unregister_fix_s3_host(endpoint_url, event_emitter)
 
         new_config = Config(**config_kwargs)
         endpoint_creator = EndpointCreator(event_emitter)
