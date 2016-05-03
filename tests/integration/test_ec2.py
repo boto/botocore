@@ -16,7 +16,7 @@ import itertools
 from nose.plugins.attrib import attr
 
 import botocore.session
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, WaiterError
 
 
 class TestEC2(unittest.TestCase):
@@ -36,6 +36,20 @@ class TestEC2(unittest.TestCase):
         # on error.
         with self.assertRaises(ClientError):
             self.client.get_console_output(InstanceId='i-12345')
+
+
+class TestEC2Waiter(unittest.TestCase):
+    def setUp(self):
+        self.session = botocore.session.get_session()
+        self.client = self.session.create_client(
+            'ec2', region_name='us-west-2')
+
+    def test_instance_wait_error(self):
+        """Test that InstanceExists can handle a nonexistent instance."""
+        waiter = self.client.get_waiter('instance_exists')
+        waiter.config.max_attempts = 1
+        with self.assertRaises(WaiterError):
+            waiter.wait(InstanceIds=['i-12345'])
 
 
 class TestEC2Pagination(unittest.TestCase):
