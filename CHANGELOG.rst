@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.4.16
+======
+
+* feature:``inspector``: Update inspector client to latest version
+* feature:``codepipeline``: Update codepipeline client to latest version
+* feature:``opsworks``: Add InstanceRegistered waiter
+* feature:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+
+
 1.4.15
 ======
 
