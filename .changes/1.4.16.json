@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``inspector``", 
+    "description": "Update inspector client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``codepipeline``", 
+    "description": "Update codepipeline client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``opsworks``", 
+    "description": "Add InstanceRegistered waiter", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``elasticbeanstalk``", 
+    "description": "Update elasticbeanstalk client to latest version", 
+    "type": "feature"
+  }
+]
