@@ -132,13 +132,13 @@ class PageIterator(object):
                 if all(t is None for t in next_token.values()):
                     break
                 if self._max_items is not None and \
-                                total_items == self._max_items:
+                        total_items == self._max_items:
                     # We're on a page boundary so we can set the current
                     # next token to be the resume token.
                     self.resume_token = next_token
                     break
                 if previous_next_token is not None and \
-                                previous_next_token == next_token:
+                        previous_next_token == next_token:
                     message = ("The same next token was received "
                                "twice: %s" % next_token)
                     raise PaginationError(message=message)

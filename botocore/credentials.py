@@ -379,7 +379,8 @@ class RefreshableCredentials(Credentials):
         self.secret_key = data['secret_key']
         self.token = data['token']
         self._expiry_time = parse(data['expiry_time'])
-        logger.debug("Retrieved credentials will expire at: %s", self._expiry_time)
+        logger.debug("Retrieved credentials will expire at: %s",
+                     self._expiry_time)
         self._normalize()
 
     def get_frozen_credentials(self):
@@ -472,7 +473,8 @@ class InstanceMetadataProvider(CredentialProvider):
         metadata = fetcher.retrieve_iam_role_credentials()
         if not metadata:
             return None
-        logger.info('Found credentials from IAM Role: %s', metadata['role_name'])
+        logger.info('Found credentials from IAM Role: %s',
+                    metadata['role_name'])
         # We manually set the data here, since we already made the request &
         # have it. When the expiry is hit, the credentials will auto-refresh
         # themselves.
@@ -611,7 +613,7 @@ class SharedCredentialProvider(CredentialProvider):
                             self._creds_filename)
                 access_key, secret_key = self._extract_creds_from_mapping(
                     config, self.ACCESS_KEY, self.SECRET_KEY)
-                token =  self._get_session_token(config)
+                token = self._get_session_token(config)
                 return Credentials(access_key, secret_key, token,
                                    method=self.METHOD)
 
@@ -665,7 +667,7 @@ class ConfigProvider(CredentialProvider):
                     profile_config, self.ACCESS_KEY, self.SECRET_KEY)
                 token = self._get_session_token(profile_config)
                 return Credentials(access_key, secret_key, token,
-                                method=self.METHOD)
+                                   method=self.METHOD)
         else:
             return None
 
@@ -808,7 +810,8 @@ class AssumeRoleProvider(CredentialProvider):
                 # Don't need to delete the cache entry,
                 # when we refresh via AssumeRole, we'll
                 # update the cache with the new entry.
-                logger.debug("Credentials were found in cache, but they are expired.")
+                logger.debug(
+                    "Credentials were found in cache, but they are expired.")
                 return None
             else:
                 return self._create_creds_from_response(from_cache)
@@ -826,9 +829,10 @@ class AssumeRoleProvider(CredentialProvider):
         # On windows, ':' is not allowed in filenames, so we'll
         # replace them with '_' instead.
         role_arn = role_config['role_arn'].replace(':', '_')
-        role_session_name=role_config.get('role_session_name')
+        role_session_name = role_config.get('role_session_name')
         if role_session_name:
-            cache_key = '%s--%s--%s' % (self._profile_name, role_arn, role_session_name)
+            cache_key = '%s--%s--%s' % (self._profile_name, role_arn,
+                                        role_session_name)
         else:
             cache_key = '%s--%s' % (self._profile_name, role_arn)
 
@@ -848,7 +852,8 @@ class AssumeRoleProvider(CredentialProvider):
             raise PartialCredentialsError(provider=self.METHOD,
                                           cred_var=str(e))
         external_id = profiles[self._profile_name].get('external_id')
-        role_session_name = profiles[self._profile_name].get('role_session_name')
+        role_session_name = \
+            profiles[self._profile_name].get('role_session_name')
         if source_profile not in profiles:
             raise InvalidConfigError(
                 error_msg=(
@@ -933,8 +938,8 @@ class CredentialResolver(object):
 
     def insert_before(self, name, credential_provider):
         """
-        Inserts a new instance of ``CredentialProvider`` into the chain that will
-        be tried before an existing one.
+        Inserts a new instance of ``CredentialProvider`` into the chain that
+        will be tried before an existing one.
 
         :param name: The short name of the credentials you'd like to insert the
             new credentials before. (ex. ``env`` or ``config``). Existing names
@@ -976,7 +981,7 @@ class CredentialResolver(object):
         :type name: string
         """
         available_methods = [p.METHOD for p in self.providers]
-        if not name in available_methods:
+        if name not in available_methods:
             # It's not present. Fail silently.
             return
 
