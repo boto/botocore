@@ -1031,7 +1031,7 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         creds = provider.load()
         self.assertIsNone(creds)
 
-    def test_source_profile_not_provided(self):
+    def test_source_profile_not_provided_with_no_fallback_provider(self):
         del self.fake_config['profiles']['development']['source_profile']
         provider = credentials.AssumeRoleProvider(
             self.create_config_loader(),
@@ -1040,6 +1040,47 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         # source_profile is required, we shoudl get an error.
         with self.assertRaises(botocore.exceptions.PartialCredentialsError):
             provider.load()
+
+    def test_source_profile_not_provided_but_has_fallback_provider(self):
+        del self.fake_config['profiles']['development']['source_profile']
+
+        fallback_creds=credentials.Credentials(
+            access_key='access-fallback',
+            secret_key='secret-fallback',
+            token='token-fallback')
+
+        mock_fallback_provider=mock.Mock()
+        mock_fallback_provider.load.return_value=fallback_creds
+        
+        ten_min_from_now=datetime.now(tzlocal()) + timedelta(minutes=10)
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'AKI',
+                'SecretAccessKey': 'SAK',
+                'SessionToken': 'ST',
+                'Expiration':  ten_min_from_now.isoformat()
+            },
+        }
+        client = mock.Mock()
+        client.assume_role.return_value = response
+        def side_effect_of_create_client(*args,**kwargs):
+            self.assertEqual(args[0],'sts')
+            self.assertEqual(kwargs['aws_access_key_id'],'access-fallback')
+            self.assertEqual(kwargs['aws_secret_access_key'],'secret-fallback')
+            self.assertEqual(kwargs['aws_session_token'],'token-fallback')
+            return client;
+        
+        client_creator=mock.Mock(side_effect=side_effect_of_create_client)
+    
+        provider = credentials.AssumeRoleProvider(
+            self.create_config_loader(),
+            client_creator, cache={}, profile_name='development', 
+            fallback_cred_provider=mock_fallback_provider)
+
+        creds=provider.load()
+        self.assertEqual(creds.access_key, 'AKI')
+        self.assertEqual(creds.secret_key, 'SAK')
+        self.assertEqual(creds.token, 'ST')
 
     def test_source_profile_does_not_exist(self):
         dev_profile = self.fake_config['profiles']['development']
