@@ -270,8 +270,8 @@ class CloudFrontSigner(object):
         :rtype: str
         :return: The signed URL.
         """
-        if (date_less_than is not None and policy is not None
-                or date_less_than is None and policy is None):
+        if (date_less_than is not None and policy is not None or
+                date_less_than is None and policy is None):
             e = 'Need to provide either date_less_than or policy, but not both'
             raise ValueError(e)
         if date_less_than is not None:
