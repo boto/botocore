@@ -603,6 +603,7 @@ def is_valid_endpoint_url(endpoint_url):
         re.IGNORECASE)
     return allowed.match(hostname)
 
+
 def check_dns_name(bucket_name):
     """
     Check to see if the ``bucket_name`` complies with the

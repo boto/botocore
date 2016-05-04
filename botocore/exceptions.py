@@ -69,6 +69,7 @@ class ConnectionClosedError(ConnectionError):
     fmt = (
         'Connection was closed before we received a valid response '
         'from endpoint URL: "{endpoint_url}".')
+
     def __init__(self, **kwargs):
         msg = self.fmt.format(**kwargs)
         kwargs.pop('endpoint_url')

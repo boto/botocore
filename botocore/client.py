@@ -361,7 +361,7 @@ class ClientEndpointBridge(object):
 
     def _make_url(self, hostname, is_secure, supported_protocols):
         if is_secure and 'https' in supported_protocols:
-            scheme ='https'
+            scheme = 'https'
         else:
             scheme = 'http'
         return '%s://%s' % (scheme, hostname)
