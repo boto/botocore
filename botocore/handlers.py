@@ -334,7 +334,7 @@ def _quote_source_header_from_dict(source_dict):
     except KeyError as e:
         raise ParamValidationError(
             report='Missing required parameter: %s' % str(e))
-    final =  '%s/%s' % (bucket, key)
+    final = '%s/%s' % (bucket, key)
     if version_id is not None:
         final += '?versionId=%s' % version_id
     return final
@@ -802,7 +802,8 @@ BUILTIN_HANDLERS = [
     ('choose-signer.cognito-idp.UpdateUserAttributes', disable_signing),
     ('choose-signer.cognito-idp.ConfirmForgotPassword', disable_signing),
     ('choose-signer.cognito-idp.ResendConfirmationCode', disable_signing),
-    ('choose-signer.cognito-idp.GetUserAttributeVerificationCode', disable_signing),
+    ('choose-signer.cognito-idp.GetUserAttributeVerificationCode',
+     disable_signing),
     ('choose-signer.cognito-idp.GetUser', disable_signing),
     ('choose-signer.cognito-idp.ChangePassword', disable_signing),
     ('choose-signer.cognito-idp.GetOpenIdConfiguration', disable_signing),
@@ -832,8 +833,8 @@ BUILTIN_HANDLERS = [
      change_get_to_post),
     # Glacier documentation customizations
     ('docs.*.glacier.*.complete-section',
-     AutoPopulatedParam('accountId', 'Note: this parameter is set to "-" by \
-                         default if no value is not specified.')
+     AutoPopulatedParam('accountId', 'Note: this parameter is set to "-" by'
+                        'default if no value is not specified.')
      .document_auto_populated_param),
     ('docs.*.glacier.UploadArchive.complete-section',
      AutoPopulatedParam('checksum').document_auto_populated_param),

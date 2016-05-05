@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.4.17
+======
+
+* feature:``kms``: Update kms client to latest version
+* feature:``sts``: Update sts client to latest version
+* feature:``apigateway``: Update apigateway client to latest version
+* feature:``ecs``: Update ecs client to latest version
+* feature:``s3``: Update s3 client to latest version
+* feature:``cloudtrail``: Update cloudtrail client to latest version
+
+
 1.4.16
 ======
 
