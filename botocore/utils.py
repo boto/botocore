@@ -648,7 +648,7 @@ def fix_s3_host(request, signature_version, region_name, **kwargs):
         return
     try:
         switch_to_virtual_host_style(
-            request, signature_version, 's3.amazonaws.com')
+            request, signature_version, None)
     except InvalidDNSNameError as e:
         bucket_name = e.kwargs['bucket_name']
         logger.debug('Not changing URI, bucket is not DNS compatible: %s',
