@@ -225,6 +225,16 @@ class TestAWSPreparedRequest(unittest.TestCase):
             self.prepared_request.headers['Transfer-Encoding'],
             'chunked')
 
+    def test_stream_content_length_set(self):
+        class Stream(object):
+            def __iter__(self):
+                return self
+
+        self.prepared_request.headers['Content-Length'] = 10
+        self.prepared_request.prepare_body(data=Stream(), files=None)
+        self.assertNotIn('Transfer-Encoding', self.prepared_request.headers)
+        self.assertEqual(self.prepared_request.headers['Content-Length'], 10)
+
 
 class TestAWSHTTPConnection(unittest.TestCase):
     def create_tunneled_connection(self, url, port, response):

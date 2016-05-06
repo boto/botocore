@@ -423,6 +423,8 @@ class AWSPreparedRequest(models.PreparedRequest):
             raise UnseekableStreamError(stream_object=self.body)
 
     def prepare_body(self, data, files, json=None):
+        caller_set_tencoding = 'Transfer-Encoding' in self.headers
+
         """Prepares the given HTTP body data."""
         super(AWSPreparedRequest, self).prepare_body(data, files, json)
 
@@ -443,6 +445,12 @@ class AWSPreparedRequest(models.PreparedRequest):
                 # AWS Services so remove it if it is added.
                 if 'Transfer-Encoding' in self.headers:
                     self.headers.pop('Transfer-Encoding')
+
+        elif not caller_set_tencoding and 'Transfer-Encoding' in self.headers:
+            # Both Content-Length and Transfer-Encoding were set; we remove
+            # the Transfer-Encoding in this case, as the caller set
+            # Content-Length
+            self.headers.pop('Transfer-Encoding')
 
 HTTPSConnectionPool.ConnectionCls = AWSHTTPSConnection
 HTTPConnectionPool.ConnectionCls = AWSHTTPConnection
