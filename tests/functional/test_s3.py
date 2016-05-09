@@ -155,6 +155,17 @@ class BaseS3AddressingStyle(BaseSessionTest):
         self.http_response.content = b''
 
 
+class TestCustomEndpointUrl(BaseS3AddressingStyle):
+    def test_provided_endpoint_url_is_not_mutated(self):
+        s3 = self.session.create_client('s3', endpoint_url='https://foo.com')
+        with mock.patch('botocore.endpoint.Session.send') as mock_send:
+            mock_send.return_value = self.http_response
+            s3.put_object(Bucket='mybucket', Key='mykey', Body='mybody')
+            request_sent = mock_send.call_args[0][0]
+            self.assertEqual(
+                'https://foo.com/mybucket/mykey', request_sent.url)
+
+
 class TestVirtualHostStyle(BaseS3AddressingStyle):
     def test_default_endpoint_for_virtual_addressing(self):
         s3 = self.session.create_client(
