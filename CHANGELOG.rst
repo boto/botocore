@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.4.18
+======
+
+* feature:``storagegateway``: Update storagegateway client to latest version
+* feature:``directconnect``: Update directconnect client to latest version
+* feature:``emr``: Update emr client to latest version
+* feature:``sqs``: Update sqs client to latest version
+* feature:``iam``: Update iam client to latest version
+
+
 1.4.17
 ======
 
