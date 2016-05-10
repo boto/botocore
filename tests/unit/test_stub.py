@@ -68,6 +68,23 @@ class TestStubber(unittest.TestCase):
         self.event_emitter.unregister.assert_any_call(
             'before-call.*.*', mock.ANY, unique_id=mock.ANY)
 
+    def test_context_manager(self):
+        self.event_emitter = mock.Mock()
+        self.client.meta.events = self.event_emitter
+
+        with self.stubber:
+            # Ensure events are registered in context
+            self.event_emitter.register_first.assert_called_with(
+                'before-parameter-build.*.*', mock.ANY, unique_id=mock.ANY)
+            self.event_emitter.register.assert_called_with(
+                'before-call.*.*', mock.ANY, unique_id=mock.ANY)
+
+        # Ensure events are no longer registered once we leave the context
+        self.event_emitter.unregister.assert_any_call(
+            'before-parameter-build.*.*', mock.ANY, unique_id=mock.ANY)
+        self.event_emitter.unregister.assert_any_call(
+            'before-call.*.*', mock.ANY, unique_id=mock.ANY)
+
     def test_add_response(self):
         response = {'foo': 'bar'}
         self.stubber.add_response('foo', response)
