@@ -45,7 +45,6 @@ class PageIterator(object):
                  result_keys, non_aggregate_keys, limit_key, max_items,
                  starting_token, page_size, op_kwargs):
         self._method = method
-        self._op_kwargs = op_kwargs
         self._input_token = input_token
         self._output_token = output_token
         self._more_results = more_results
@@ -472,6 +471,10 @@ class Paginator(object):
             max_items = int(max_items)
         page_size = pagination_config.get('PageSize', None)
         if page_size is not None:
+            if self._pagination_cfg.get('limit_key', None) is None:
+                raise PaginationError(
+                    message="PageSize parameter is not supported for the "
+                            "pagination interface for this operation.")
             page_size = int(page_size)
         return {
             'MaxItems': max_items,
