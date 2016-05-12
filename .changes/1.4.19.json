@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``ssm``", 
+    "description": "Update ssm client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``discovery``", 
+    "description": "Update discovery client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``cloudformation``", 
+    "description": "Update cloudformation client to latest version", 
+    "type": "feature"
+  }
+]
