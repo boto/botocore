@@ -16,7 +16,7 @@ from tests import unittest, random_chars
 from nose.plugins.attrib import attr
 
 import botocore.session
-from botocore.client import ClientError
+from botocore.exceptions import ClientError, WaiterError
 
 
 # This is the same test as above, except using the client interface.
@@ -52,3 +52,17 @@ class TestCanGetWaitersThroughClientInterface(unittest.TestCase):
         # If we have at least one waiter in the list, we know that we have
         # actually loaded the waiters and this test has passed.
         self.assertTrue(len(client.waiter_names) > 0)
+
+
+class TestMatchersWithErrors(unittest.TestCase):
+    def setUp(self):
+        self.session = botocore.session.get_session()
+        self.client = self.session.create_client(
+            'ec2', region_name='us-west-2')
+
+    def test_dont_search_on_error_responses(self):
+        """Test that InstanceExists can handle a nonexistent instance."""
+        waiter = self.client.get_waiter('instance_exists')
+        waiter.config.max_attempts = 1
+        with self.assertRaises(WaiterError):
+            waiter.wait(InstanceIds=['i-12345'])
