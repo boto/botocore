@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.4.19
+======
+
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``ssm``: Update ssm client to latest version
+* feature:``discovery``: Update discovery client to latest version
+* feature:``cloudformation``: Update cloudformation client to latest version
+
+
 1.4.18
 ======
 

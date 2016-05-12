@@ -286,6 +286,14 @@ class TestPaginatorPageSize(unittest.TestCase):
         pages._inject_starting_params(extracted_kwargs)
         self.assertEqual(extracted_kwargs, ref_kwargs)
 
+    def test_page_size_incorrectly_provided(self):
+        kwargs = {'arg1': 'foo', 'arg2': 'bar',
+                  'PaginationConfig': {'PageSize': 5}}
+        del self.paginate_config['limit_key']
+
+        with self.assertRaises(PaginationError):
+            self.paginator.paginate(**kwargs)
+
 
 class TestPaginatorWithPathExpressions(unittest.TestCase):
     def setUp(self):

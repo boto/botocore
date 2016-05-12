@@ -38,6 +38,14 @@ class TestStubber(unittest.TestCase):
         response = self.client.list_objects(Bucket='foo')
         self.assertEqual(response, service_response)
 
+    def test_context_manager_returns_response(self):
+        service_response = {'ResponseMetadata': {'foo': 'bar'}}
+        self.stubber.add_response('list_objects', service_response)
+
+        with self.stubber:
+            response = self.client.list_objects(Bucket='foo')
+        self.assertEqual(response, service_response)
+
     def test_activated_stubber_errors_with_no_registered_stubs(self):
         self.stubber.activate()
         with self.assertRaises(StubResponseError):
