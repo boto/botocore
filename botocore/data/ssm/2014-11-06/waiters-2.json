@@ -14,7 +14,7 @@
         },
         {
           "matcher": "error",
-          "expected": "InvalidInstanceIDNotFound",
+          "expected": "InvalidCommandId",
           "state": "retry"
         }
       ]
