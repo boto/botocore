@@ -7,9 +7,8 @@
       "operation": "DescribeInstances",
       "acceptors": [
         {
-          "matcher": "path",
-          "expected": true,
-          "argument": "length(Reservations[]) > `0`",
+          "matcher": "status",
+          "expected": 200,
           "state": "success"
         },
         {
