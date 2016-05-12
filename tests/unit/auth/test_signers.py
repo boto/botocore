@@ -285,6 +285,14 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
         self.request.method = 'PUT'
         self.request.url = 'https://s3.eu-central-1.amazonaws.com/'
 
+        self.client_config = mock.Mock()
+        self.s3_config = {}
+        self.client_config.s3 = self.s3_config
+
+        self.request.context = {
+            'client_config': self.client_config
+        }
+
     def test_resign_with_content_hash(self):
         self.auth.add_auth(self.request)
         original_auth = self.request.headers['Authorization']
@@ -349,6 +357,47 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
         auth = self.request.headers['Authorization']
         self.assertIn(new_signing_region, auth)
         self.assertNotIn(original_signing_region, auth)
+
+    def test_uses_sha256_if_config_value_is_true(self):
+        self.client_config.s3['payload_signing_enabled'] = True
+        self.auth.add_auth(self.request)
+        sha_header = self.request.headers['X-Amz-Content-SHA256']
+        self.assertNotEqual(sha_header, 'UNSIGNED-PAYLOAD')
+
+    def test_does_not_use_sha256_if_config_value_is_false(self):
+        self.client_config.s3['payload_signing_enabled'] = False
+        self.auth.add_auth(self.request)
+        sha_header = self.request.headers['X-Amz-Content-SHA256']
+        self.assertEqual(sha_header, 'UNSIGNED-PAYLOAD')
+
+    def test_uses_sha256_if_md5_unset(self):
+        self.request.context['has_streaming_input'] = True
+        self.auth.add_auth(self.request)
+        sha_header = self.request.headers['X-Amz-Content-SHA256']
+        self.assertNotEqual(sha_header, 'UNSIGNED-PAYLOAD')
+
+    def test_uses_sha256_if_not_https(self):
+        self.request.context['has_streaming_input'] = True
+        self.request.headers.add_header('Content-MD5', 'foo')
+        self.request.url = 'http://s3.amazonaws.com/bucket'
+        self.auth.add_auth(self.request)
+        sha_header = self.request.headers['X-Amz-Content-SHA256']
+        self.assertNotEqual(sha_header, 'UNSIGNED-PAYLOAD')
+
+    def test_uses_sha256_if_not_streaming_upload(self):
+        self.request.context['has_streaming_input'] = False
+        self.request.headers.add_header('Content-MD5', 'foo')
+        self.request.url = 'http://s3.amazonaws.com/bucket'
+        self.auth.add_auth(self.request)
+        sha_header = self.request.headers['X-Amz-Content-SHA256']
+        self.assertNotEqual(sha_header, 'UNSIGNED-PAYLOAD')
+
+    def test_does_not_use_sha256_if_md5_set(self):
+        self.request.context['has_streaming_input'] = True
+        self.request.headers.add_header('Content-MD5', 'foo')
+        self.auth.add_auth(self.request)
+        sha_header = self.request.headers['X-Amz-Content-SHA256']
+        self.assertEqual(sha_header, 'UNSIGNED-PAYLOAD')
 
 
 class TestSigV4(unittest.TestCase):

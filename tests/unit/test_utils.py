@@ -1100,6 +1100,14 @@ class TestS3RegionRedirector(unittest.TestCase):
             request_dict, response, self.operation)
         self.assertIsNone(redirect_response)
 
+    def test_does_not_redirect_if_None_response(self):
+        request_dict = {'url': 'https://us-west-2.amazonaws.com/foo',
+                        'context': {'signing': {'bucket': 'foo'}}}
+        response = None
+        redirect_response = self.redirector.redirect_from_error(
+            request_dict, response, self.operation)
+        self.assertIsNone(redirect_response)
+
     def test_get_region_from_response(self):
         response = (None, {
             'Error': {
@@ -1129,9 +1137,30 @@ class TestS3RegionRedirector(unittest.TestCase):
         region = self.redirector.get_bucket_region('foo', response)
         self.assertEqual(region, 'eu-central-1')
 
-    def test_get_region_from_head_bucket(self):
+    def test_get_region_from_head_bucket_error(self):
         self.set_client_response_headers(
             {'x-amz-bucket-region': 'eu-central-1'})
+        response = (None, {
+            'Error': {
+                'Code': 'PermanentRedirect',
+                'Endpoint': 'foo.eu-central-1.amazonaws.com',
+                'Bucket': 'foo',
+            },
+            'ResponseMetadata': {
+                'HTTPHeaders': {}
+            }
+        })
+        region = self.redirector.get_bucket_region('foo', response)
+        self.assertEqual(region, 'eu-central-1')
+
+    def test_get_region_from_head_bucket_success(self):
+        success_response = {
+            'ResponseMetadata': {
+                'HTTPHeaders': {'x-amz-bucket-region': 'eu-central-1'}
+            }
+        }
+        self.client.head_bucket.side_effect = None
+        self.client.head_bucket.return_value = success_response
         response = (None, {
             'Error': {
                 'Code': 'PermanentRedirect',

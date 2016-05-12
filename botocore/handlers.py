@@ -148,10 +148,9 @@ def _calculate_md5_from_file(fileobj):
     return md5.digest()
 
 
-def conditionally_calculate_md5(params, **kwargs):
-    """Only add a Content-MD5 when not using sigv4"""
-    signer = kwargs['request_signer']
-    if signer.signature_version not in ['v4', 's3v4'] and MD5_AVAILABLE:
+def conditionally_calculate_md5(params, context, request_signer, **kwargs):
+    """Only add a Content-MD5 if the system supports it."""
+    if MD5_AVAILABLE:
         calculate_md5(params, **kwargs)
 
 

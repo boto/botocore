@@ -822,13 +822,6 @@ class S3RegionRedirector(object):
         emitter.register('before-parameter-build.s3',
                          self.redirect_from_cache)
 
-    def unregister(self, event_emitter=None):
-        emitter = event_emitter or self._client.meta.events
-        emitter.unregister('needs-retry.s3', self.redirect_from_error)
-        emitter.unregister('before-call.s3', self.set_request_url)
-        emitter.unregister('before-parameter-build.s3',
-                           self.redirect_from_cache)
-
     def redirect_from_error(self, request_dict, response, operation, **kwargs):
         """
         An S3 request sent to the wrong region will return an error that

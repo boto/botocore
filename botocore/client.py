@@ -130,21 +130,16 @@ class ClientCreator(object):
                 logger.debug("The s3 config key is not a dictionary type, "
                              "ignoring its value of: %s", s3_configuration)
                 s3_configuration = None
-            # Convert logic for s3 accelerate options in the scoped config
-            # so that the various strings map to the appropriate boolean value.
-            if s3_configuration and \
-                    'use_accelerate_endpoint' in s3_configuration:
-                # Make sure any further modifications to the s3 section will
-                # not affect the scoped config by making a copy of it.
-                s3_configuration = s3_configuration.copy()
-                # Normalize on different possible values of True
-                if s3_configuration['use_accelerate_endpoint'] in [
-                        True, 'True', 'true']:
-                    s3_configuration['use_accelerate_endpoint'] = True
-                else:
-                    s3_configuration['use_accelerate_endpoint'] = False
 
-        # Next specfic client config values takes precedence over
+            # Convert logic for several s3 keys in the scoped config
+            # so that the various strings map to the appropriate boolean value.
+            if s3_configuration:
+                boolean_keys = ['use_accelerate_endpoint',
+                                'payload_signing_enabled']
+                s3_configuration = self._convert_config_to_bool(
+                    s3_configuration, boolean_keys)
+
+        # Next specific client config values takes precedence over
         # specific values in the scoped config.
         if client_config is not None:
             if client_config.s3 is not None:
@@ -159,6 +154,19 @@ class ClientCreator(object):
                     s3_configuration.update(client_config.s3)
 
         config_kwargs['s3'] = s3_configuration
+
+    def _convert_config_to_bool(self, config_dict, keys):
+        # Make sure any further modifications to this section of the config
+        # will not affect the scoped config by making a copy of it.
+        config_copy = config_dict.copy()
+        present_keys = [k for k in keys if k in config_copy]
+        for key in present_keys:
+            # Normalize on different possible values of True
+            if config_copy[key] in [True, 'True', 'true']:
+                config_copy[key] = True
+            else:
+                config_copy[key] = False
+        return config_copy
 
     def _conditionally_unregister_fix_s3_host(self, endpoint_url, emitter):
         # If the user is providing a custom endpoint, we should not alter it.
@@ -530,8 +538,12 @@ class BaseClient(object):
         return self.meta.service_model
 
     def _make_api_call(self, operation_name, api_params):
-        request_context = {'client_region': self.meta.region_name}
         operation_model = self._service_model.operation_model(operation_name)
+        request_context = {
+            'client_region': self.meta.region_name,
+            'client_config': self.meta.config,
+            'has_streaming_input': operation_model.has_streaming_input
+        }
         request_dict = self._convert_to_request_dict(
             api_params, operation_model, context=request_context)
 

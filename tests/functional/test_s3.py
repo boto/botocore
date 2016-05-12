@@ -14,6 +14,7 @@ from tests import unittest, mock, BaseSessionTest
 
 import botocore.session
 from botocore.config import Config
+from botocore.compat import six
 from botocore.exceptions import ParamValidationError, ClientError
 from botocore.stub import Stubber
 
@@ -47,9 +48,9 @@ class TestOnlyAsciiCharsAllowed(BaseS3OperationTest):
                                                              headers={},
                                                              content=b'')
         with self.assertRaises(ParamValidationError):
-            self.client.put_object(Bucket='foo', Key='bar',
-                                Metadata={'goodkey': 'good',
-                                          'non-ascii': u'\u2713'})
+            self.client.put_object(
+                Bucket='foo', Key='bar', Metadata={
+                    'goodkey': 'good', 'non-ascii': u'\u2713'})
 
 
 class TestS3GetBucketLifecycle(BaseS3OperationTest):
@@ -146,6 +147,56 @@ class TestS3PutObject(BaseS3OperationTest):
         # The first response should have been retried even though the xml is
         # invalid and eventually return the 200 response.
         self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 200)
+
+
+class TestS3SigV4(BaseS3OperationTest):
+    def setUp(self):
+        super(TestS3SigV4, self).setUp()
+        self.client = self.session.create_client(
+            's3', self.region, config=Config(signature_version='s3v4'))
+        self.response_mock = mock.Mock()
+        self.response_mock.content = b''
+        self.response_mock.headers = {}
+        self.response_mock.status_code = 200
+        self.http_session_send_mock.return_value = self.response_mock
+
+    def get_sent_headers(self):
+        return self.http_session_send_mock.mock_calls[0][1][0].headers
+
+    def test_content_md5_set(self):
+        self.client.put_object(Bucket='foo', Key='bar', Body='baz')
+        self.assertIn('content-md5', self.get_sent_headers())
+
+    def test_content_sha256_set_if_config_value_is_true(self):
+        config = Config(signature_version='s3v4', s3={
+            'payload_signing_enabled': True
+        })
+        self.client = self.session.create_client(
+            's3', self.region, config=config)
+        self.client.put_object(Bucket='foo', Key='bar', Body='baz')
+        sent_headers = self.get_sent_headers()
+        sha_header = sent_headers.get('x-amz-content-sha256')
+        self.assertNotEqual(sha_header, b'UNSIGNED-PAYLOAD')
+
+    def test_content_sha256_not_set_if_config_value_is_false(self):
+        config = Config(signature_version='s3v4', s3={
+            'payload_signing_enabled': False
+        })
+        self.client = self.session.create_client(
+            's3', self.region, config=config)
+        self.client.put_object(Bucket='foo', Key='bar', Body='baz')
+        sent_headers = self.get_sent_headers()
+        sha_header = sent_headers.get('x-amz-content-sha256')
+        self.assertEqual(sha_header, b'UNSIGNED-PAYLOAD')
+
+    def test_content_sha256_set_if_md5_is_unavailable(self):
+        with mock.patch('botocore.auth.MD5_AVAILABLE', False):
+            with mock.patch('botocore.handlers.MD5_AVAILABLE', False):
+                self.client.put_object(Bucket='foo', Key='bar', Body='baz')
+        sent_headers = self.get_sent_headers()
+        unsigned = 'UNSIGNED-PAYLOAD'
+        self.assertNotEqual(sent_headers['x-amz-content-sha256'], unsigned)
+        self.assertNotIn('content-md5', sent_headers)
 
 
 class BaseS3AddressingStyle(BaseSessionTest):
