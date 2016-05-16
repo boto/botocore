@@ -123,6 +123,11 @@ class TestOperationModelFromService(unittest.TestCase):
         self.assertEqual(operation.name, 'Foo')
         self.assertEqual(operation.wire_name, 'OperationName')
 
+    def test_operation_name_in_repr(self):
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertIn('OperationName', repr(operation))
+
     def test_name_and_wire_name_defaults_to_same_value(self):
         service_model = model.ServiceModel(self.model)
         operation = model.OperationModel(

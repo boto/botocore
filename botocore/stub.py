@@ -63,6 +63,37 @@ class Stubber(object):
 
         service_response = s3.list_objects(Bucket='test-bucket')
         assert service_response == response
+
+
+    This class can also be called as a context manager, which will handle
+    activation / deactivation for you.
+
+    **Example:**
+    ::
+        import datetime
+        import botocore.session
+        from botocore.stub import Stubber
+
+
+        s3 = botocore.session.get_session().create_client('s3')
+
+        response = {
+            "Owner": {
+                "ID": "foo",
+                "DisplayName": "bar"
+            },
+            "Buckets": [{
+                "CreationDate": datetime.datetime(2016, 1, 20, 22, 9),
+                "Name": "baz"
+            }]
+        }
+
+
+        with Stubber(s3) as stubber:
+            stubber.add_response('list_buckets', response, {})
+            service_response = s3.list_buckets()
+
+        assert service_response == response
     """
     def __init__(self, client):
         """
@@ -72,6 +103,13 @@ class Stubber(object):
         self._event_id = 'boto_stubber'
         self._expected_params_event_id = 'boto_stubber_expected_params'
         self._queue = deque()
+
+    def __enter__(self):
+        self.activate()
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        self.deactivate()
 
     def activate(self):
         """
