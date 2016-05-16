@@ -28,7 +28,8 @@ class TestEC2(unittest.TestCase):
     def test_can_make_request(self):
         # Basic smoke test to ensure we can talk to ec2.
         result = self.client.describe_availability_zones()
-        zones = list(sorted(a['ZoneName'] for a in result['AvailabilityZones']))
+        zones = list(
+            sorted(a['ZoneName'] for a in result['AvailabilityZones']))
         self.assertEqual(zones, ['us-west-2a', 'us-west-2b', 'us-west-2c'])
 
     def test_get_console_output_handles_error(self):

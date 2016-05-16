@@ -1,0 +1,5 @@
+{
+  "category": "Waiters", 
+  "type": "bugfix", 
+  "description": "Fix ``JMESPathTypeError`` exception being raised (`#906 <https://github.com/boto/botocore/issues/906>`__, `#907 <https://github.com/boto/botocore/issues/907>`__)"
+}
