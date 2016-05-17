@@ -1,0 +1,5 @@
+{
+  "type": "feature",
+  "description": "Add missing paginators. Fixes `#919 <https://github.com/boto/botocore/issues/919>`__.",
+  "category": "iam"
+}
