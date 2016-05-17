@@ -1,0 +1,5 @@
+{
+  "type": "feature",
+  "description": "Add paginator for ListObjectsV2",
+  "category": "s3"
+}
