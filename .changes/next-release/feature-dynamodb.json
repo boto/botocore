@@ -1,5 +1,0 @@
-{
-  "category": "``dynamodb``", 
-  "type": "feature", 
-  "description": "Update dynamodb client to latest version"
-}
