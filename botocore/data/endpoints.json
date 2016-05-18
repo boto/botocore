@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 3,
   "partitions": [
     {
       "partition": "aws",
@@ -67,6 +67,23 @@
             "ap-northeast-1": {},
             "ap-southeast-1": {},
             "eu-central-1": {}
+          }
+        },
+        "application-autoscaling": {
+          "defaults": {
+            "hostname": "autoscaling.{region}.amazonaws.com",
+            "credentialScope": {
+              "service": "application-autoscaling"
+            },
+            "protocols": [
+              "http",
+              "https"
+            ]
+          },
+          "endpoints": {
+            "us-east-1": {},
+            "us-west-2": {},
+            "eu-west-1": {}
           }
         },
         "appstream": {
@@ -195,6 +212,13 @@
             "ap-northeast-1": {}
           }
         },
+        "cognito-idp": {
+          "endpoints": {
+            "us-east-1": {},
+            "eu-west-1": {},
+            "ap-northeast-1": {}
+          }
+        },
         "cognito-sync": {
           "endpoints": {
             "us-east-1": {},
@@ -260,6 +284,11 @@
             "sa-east-1": {},
             "eu-west-1": {},
             "eu-central-1": {}
+          }
+        },
+        "discovery": {
+          "endpoints": {
+            "us-west-2": {}
           }
         },
         "dms": {
@@ -522,9 +551,22 @@
             "aws-global": {
               "hostname": "importexport.amazonaws.com",
               "signatureVersions": [
-                "v2"
-              ]
+                "v2",
+                "v4"
+              ],
+              "credentialScope": {
+                "service": "IngestionService",
+                "region": "us-east-1"
+              }
             }
+          }
+        },
+        "inspector": {
+          "endpoints": {
+            "us-west-2": {},
+            "us-east-1": {},
+            "eu-west-1": {},
+            "ap-northeast-1": {}
           }
         },
         "iot": {
@@ -537,6 +579,7 @@
             "us-east-1": {},
             "us-west-2": {},
             "ap-northeast-1": {},
+            "ap-southeast-1": {},
             "eu-west-1": {},
             "eu-central-1": {}
           }
@@ -665,7 +708,8 @@
             "ap-southeast-1": {},
             "ap-southeast-2": {},
             "eu-west-1": {},
-            "eu-central-1": {}
+            "eu-central-1": {},
+            "sa-east-1": {}
           }
         },
         "route53": {
@@ -687,6 +731,7 @@
         },
         "s3": {
           "partitionEndpoint": "us-east-1",
+          "isRegionalized": true,
           "defaults": {
             "protocols": [
               "http",
