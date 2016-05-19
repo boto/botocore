@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.4.22
+======
+
+* feature:``firehose``: Update firehose client to latest version
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``ecs``: Update ecs client to latest version
+
+
 1.4.21
 ======
 
