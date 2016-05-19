@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``firehose``", 
+    "description": "Update firehose client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``ecs``", 
+    "description": "Update ecs client to latest version", 
+    "type": "feature"
+  }
+]
