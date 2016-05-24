@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.4.23
+======
+
+* feature:``rds``: Update rds client to latest version
+* feature:``ec2``: Update ec2 client to latest version
+
+
 1.4.22
 ======
 
