@@ -12,6 +12,8 @@
 # language governing permissions and limitations under the License.
 import copy
 from collections import deque
+from pprint import pformat
+
 from botocore.validate import validate_parameters
 from botocore.exceptions import ParamValidationError, \
     StubResponseError, StubAssertionError
@@ -238,8 +240,8 @@ class Stubber(object):
         if not self._queue:
             raise StubResponseError(
                 operation_name=model.name,
-                reason='Unexpected API Call: called with parameters %s' %
-                       params)
+                reason=('Unexpected API Call: called with parameters:\n%s' %
+                        pformat(params)))
 
         name = self._queue[0]['operation_name']
         if name != model.name:
@@ -258,8 +260,8 @@ class Stubber(object):
         if expected_params is not None and params != expected_params:
             raise StubAssertionError(
                 operation_name=model.name,
-                reason='Expected parameters: %s, but received: %s' % (
-                    expected_params, params))
+                reason='Expected parameters:\n%s,\nbut received:\n%s' % (
+                    pformat(expected_params), pformat(params)))
 
     def _validate_response(self, operation_name, service_response):
         service_model = self.client.meta.service_model
