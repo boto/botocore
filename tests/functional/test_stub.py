@@ -48,8 +48,14 @@ class TestStubber(unittest.TestCase):
 
     def test_activated_stubber_errors_with_no_registered_stubs(self):
         self.stubber.activate()
-        with self.assertRaises(StubResponseError):
-            self.client.list_objects(Bucket='foo')
+        # Params one per line for readability.
+        with self.assertRaisesRegexp(StubResponseError,
+                                     "'Bucket': 'asdfasdfasdfasdf',\n"):
+            self.client.list_objects(
+                Bucket='asdfasdfasdfasdf',
+                Delimiter='asdfasdfasdfasdf',
+                Prefix='asdfasdfasdfasdf',
+                EncodingType='url')
 
     def test_stubber_errors_when_stubs_are_used_up(self):
         self.stubber.add_response('list_objects', {})
@@ -87,7 +93,8 @@ class TestStubber(unittest.TestCase):
             'list_objects', service_response, expected_params)
         self.stubber.activate()
         # This should call should raise an for mismatching expected params.
-        with self.assertRaises(StubResponseError):
+        with self.assertRaisesRegexp(StubResponseError,
+                                     "{'Bucket': 'bar'},\n"):
             self.client.list_objects(Bucket='foo')
 
     def test_expected_params_mixed_with_errors_responses(self):
