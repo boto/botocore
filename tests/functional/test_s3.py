@@ -343,3 +343,25 @@ class TestRegionRedirect(BaseS3OperationTest):
         fixed_url = ('https://foo.s3.eu-central-1.amazonaws.com'
                      '/?encoding-type=url')
         self.assertEqual(calls[1].url, fixed_url)
+
+    def test_region_redirect_cache(self):
+        self.http_session_send_mock.side_effect = [
+            self.redirect_response, self.success_response,
+            self.success_response]
+
+        first_response = self.client.list_objects(Bucket='foo')
+        self.assertEqual(
+            first_response['ResponseMetadata']['HTTPStatusCode'], 200)
+        second_response = self.client.list_objects(Bucket='foo')
+        self.assertEqual(
+            second_response['ResponseMetadata']['HTTPStatusCode'], 200)
+
+        self.assertEqual(self.http_session_send_mock.call_count, 3)
+        calls = [c[0][0] for c in self.http_session_send_mock.call_args_list]
+        initial_url = 'https://foo.s3.amazonaws.com/?encoding-type=url'
+        self.assertEqual(calls[0].url, initial_url)
+
+        fixed_url = ('https://foo.s3.eu-central-1.amazonaws.com'
+                     '/?encoding-type=url')
+        self.assertEqual(calls[1].url, fixed_url)
+        self.assertEqual(calls[2].url, fixed_url)

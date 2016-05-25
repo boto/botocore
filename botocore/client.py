@@ -527,7 +527,7 @@ class BaseClient(object):
             'before-call.{endpoint_prefix}.{operation_name}'.format(
                 endpoint_prefix=self._service_model.endpoint_prefix,
                 operation_name=operation_name),
-            model=operation_model, params=request_dict,
+            model=operation_model, params=request_dict, cache=self._cache,
             request_signer=self._request_signer, context=request_context)
 
         if event_response is not None:
@@ -540,7 +540,7 @@ class BaseClient(object):
             'after-call.{endpoint_prefix}.{operation_name}'.format(
                 endpoint_prefix=self._service_model.endpoint_prefix,
                 operation_name=operation_name),
-            http_response=http, parsed=parsed_response,
+            http_response=http, parsed=parsed_response, cache=self._cache,
             model=operation_model, context=request_context
         )
 
@@ -571,7 +571,8 @@ class BaseClient(object):
             event_name.format(
                 endpoint_prefix=self._service_model.endpoint_prefix,
                 operation_name=operation_name),
-            params=api_params, model=operation_model, context=context)
+            params=api_params, model=operation_model, context=context,
+            cache=self._cache)
 
         request_dict = self._serializer.serialize_to_request(
             api_params, operation_model)

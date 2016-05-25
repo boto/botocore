@@ -57,9 +57,12 @@ VERSION_ID_SUFFIX = re.compile(r'\?versionId=[^\s]+$')
 
 
 def s3_redirect_region(request_dict, response, context, **kwargs):
-    # An S3 request sent to the wrong region will return an error that contains
-    # the endpoint the request should be sent to. This handler will
-    # automatically redirect requests sent to the wrong region.
+    """
+    An S3 request sent to the wrong region will return an error that contains
+    the endpoint the request should be sent to. This handler will add the
+    redirect information to the signing context and then redirect the
+    request.
+    """
     error = response[1].get('Error', {})
     if error.get('Code') != 'PermanentRedirect':
         return
@@ -67,20 +70,59 @@ def s3_redirect_region(request_dict, response, context, **kwargs):
     new_region = error['Endpoint'].split('.')[-3]
     logger.debug("Redirecting to region %s" % new_region)
 
-    params = request_dict['url'].split('?')
-    new_url = 'https://' + error['Endpoint'] + '/'
-    if len(params) > 1:
-        new_url += '?' + params[1]
-    request_dict['url'] = new_url
-    request_dict['url_path'] = '/'
-
     if context is None:
         context = {}
     context['signing'] = {
-        'region': new_region
+        'region': new_region,
+        'bucket': error['Bucket'],
+        'endpoint': error['Endpoint']
     }
 
+    s3_redirect_request(request_dict, context)
+
     return 0
+
+
+def s3_redirect_request(params, context, **kwargs):
+    """
+    This handler alters the url and url_path in a request_dict according to the
+    endpoint set in the signing context.
+    """
+    endpoint = context.get('signing', {}).get('endpoint', None)
+    if endpoint is None:
+        return
+
+    url_params = params['url'].split('?')
+    new_url = 'https://' + endpoint + '/'
+    if len(url_params) > 1:
+        new_url += '?' + url_params[1]
+    params['url'] = new_url
+    params['url_path'] = '/'
+
+
+def s3_cache_bucket_signing_context(context, cache, **kwargs):
+    """
+    This handler adds bucket signing contexts to the client cache in order to
+    prevent having to redirect multiple requests.
+    """
+    if 'bucket_locations' not in cache:
+        cache['bucket_locations'] = {}
+
+    signing_context = context.get('signing', {})
+    bucket_name = signing_context.get('bucket', None)
+    if bucket_name is not None:
+        cache['bucket_locations'][bucket_name] = signing_context
+
+
+def s3_get_bucket_signing_context_from_cache(params, context, cache, **kwargs):
+    """
+    This handler retrieves a given bucket's signing context from the cache
+    and adds it into the request context.
+    """
+    bucket = params.get('Bucket')
+    signing_context = cache.get('bucket_locations', {}).get(bucket, None)
+    if signing_context is not None:
+        context['signing'] = signing_context
 
 
 def check_for_200_error(response, **kwargs):
@@ -792,6 +834,9 @@ BUILTIN_HANDLERS = [
     ('before-call.s3.PutBucketWebsite', conditionally_calculate_md5),
     ('before-call.s3.PutObjectAcl', conditionally_calculate_md5),
     ('needs-retry.s3', s3_redirect_region),
+    ('before-parameter-build.s3', s3_get_bucket_signing_context_from_cache),
+    ('after-call.s3', s3_cache_bucket_signing_context),
+    ('before-call.s3', s3_redirect_request),
 
     ('before-parameter-build.s3.CopyObject',
      handle_copy_source_param),

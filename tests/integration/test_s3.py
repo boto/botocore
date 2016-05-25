@@ -1057,3 +1057,14 @@ class TestS3RegionRedirect(BaseS3ClientTest):
                 response['ResponseMetadata']['HTTPStatusCode'], 200)
         except ClientError:
             self.fail("S3 client failed to redirect to the proper region.")
+
+    def test_region_redirects_multiple_requests(self):
+        try:
+            response = self.client.list_objects(Bucket=self.bucket)
+            self.assertEqual(
+                response['ResponseMetadata']['HTTPStatusCode'], 200)
+            second_response = self.client.list_objects(Bucket=self.bucket)
+            self.assertEqual(
+                second_response['ResponseMetadata']['HTTPStatusCode'], 200)
+        except ClientError:
+            self.fail("S3 client failed to redirect to the proper region.")
