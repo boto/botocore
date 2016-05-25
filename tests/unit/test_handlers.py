@@ -661,7 +661,8 @@ class TestRetryHandlerOrder(BaseSessionTest):
         responses = self.session.emit(
             'needs-retry.s3.CopyObject',
             response=(mock.Mock(), mock.Mock()), endpoint=mock.Mock(),
-            operation=operation, attempts=1, caught_exception=None)
+            operation=operation, attempts=1, caught_exception=None,
+            context=None, request_dict={})
         # This is implementation specific, but we're trying to verify that
         # the check_for_200_error is before any of the retry logic in
         # botocore.retryhandlers.
@@ -720,7 +721,8 @@ class TestSSEMD5(BaseMD5Test):
             event = 'before-parameter-build.s3.%s' % op
             params = {'SSECustomerKey': b'bar',
                       'SSECustomerAlgorithm': 'AES256'}
-            self.session.emit(event, params=params, model=mock.Mock())
+            self.session.emit(
+                event, params=params, model=mock.Mock(), context={}, cache={})
             self.assertEqual(params['SSECustomerKey'], 'YmFy')
             self.assertEqual(params['SSECustomerKeyMD5'], 'Zm9v')
 
@@ -728,7 +730,8 @@ class TestSSEMD5(BaseMD5Test):
         event = 'before-parameter-build.s3.PutObject'
         params = {'SSECustomerKey': 'bar',
                   'SSECustomerAlgorithm': 'AES256'}
-        self.session.emit(event, params=params, model=mock.Mock())
+        self.session.emit(
+            event, params=params, model=mock.Mock(), context={}, cache={})
         self.assertEqual(params['SSECustomerKey'], 'YmFy')
         self.assertEqual(params['SSECustomerKeyMD5'], 'Zm9v')
 
@@ -737,7 +740,8 @@ class TestSSEMD5(BaseMD5Test):
             event = 'before-parameter-build.s3.%s' % op
             params = {'CopySourceSSECustomerKey': b'bar',
                       'CopySourceSSECustomerAlgorithm': 'AES256'}
-            self.session.emit(event, params=params, model=mock.Mock())
+            self.session.emit(
+                event, params=params, model=mock.Mock(), context={}, cache={})
             self.assertEqual(params['CopySourceSSECustomerKey'], 'YmFy')
             self.assertEqual(params['CopySourceSSECustomerKeyMD5'], 'Zm9v')
 
@@ -745,7 +749,8 @@ class TestSSEMD5(BaseMD5Test):
         event = 'before-parameter-build.s3.CopyObject'
         params = {'CopySourceSSECustomerKey': 'bar',
                   'CopySourceSSECustomerAlgorithm': 'AES256'}
-        self.session.emit(event, params=params, model=mock.Mock())
+        self.session.emit(
+            event, params=params, model=mock.Mock(), context={}, cache={})
         self.assertEqual(params['CopySourceSSECustomerKey'], 'YmFy')
         self.assertEqual(params['CopySourceSSECustomerKeyMD5'], 'Zm9v')
 
@@ -919,3 +924,137 @@ class TestParameterAlias(unittest.TestCase):
         contents = self.sample_section.flush_structure().decode('utf-8')
         self.assertIn(self.alias_name + '=',  contents)
         self.assertNotIn(self.original_name + '=', contents)
+
+
+class TestS3Redirect(unittest.TestCase):
+    def test_redirect_region_on_incorrect_error(self):
+        context = {}
+        request_dict = {}
+        service_response = ((), {'Error': {'Code': 'BucketNotFound'}})
+        response = handlers.s3_redirect_region(
+            request_dict, service_response, context)
+        self.assertIsNone(response)
+        self.assertFalse(context)
+        self.assertFalse(request_dict)
+
+    def test_redirect_region(self):
+        signing_region = 'eu-central-1'
+        context = {}
+        request_dict = {
+            'url': 'https://s3-us-west-2.amazonaws.com/foo',
+            'url_path': '/foo'
+        }
+        service_response = ((), {
+            'Error': {
+                'Code': 'PermanentRedirect',
+                'Message': 'The bucket you are attempting to access must be '
+                           'addressed using the specified endpoint. Please '
+                           'send all future requests to this endpoint.',
+                'Bucket': 'foo',
+                'Endpoint': 'foo.s3.eu-central-1.amazonaws.com'
+            }
+        })
+        response = handlers.s3_redirect_region(
+            request_dict, service_response, context)
+
+        # The response should be 0 so that there is no waiting for the 'retry'
+        self.assertEqual(response, 0)
+
+        # The signing region should be added to the context
+        self.assertIn('signing', context)
+        self.assertEqual(context['signing']['region'], signing_region)
+
+        # The request url and url_path should have been updated
+        self.assertEqual(request_dict['url'],
+                         'https://foo.s3.eu-central-1.amazonaws.com/')
+        self.assertEqual(request_dict['url_path'], '/')
+
+    def test_redirect_request(self):
+        context = {
+            'signing': {
+                'region': 'eu-central-1',
+                'bucket': 'foo',
+                'endpoint': 'foo.s3.eu-central-1.amazonaws.com'
+            }
+        }
+        request_dict = {
+            'url': 'https://s3-us-west-2.amazonaws.com/foo',
+            'url_path': '/foo'
+        }
+
+        handlers.s3_redirect_request(request_dict, context)
+        self.assertEqual(request_dict['url'],
+                         'https://foo.s3.eu-central-1.amazonaws.com/')
+        self.assertEqual(request_dict['url_path'], '/')
+
+    def test_redirect_request_sets_url_params(self):
+        context = {
+            'signing': {
+                'region': 'eu-central-1',
+                'bucket': 'foo',
+                'endpoint': 'foo.s3.eu-central-1.amazonaws.com'
+            }
+        }
+        request_dict = {
+            'url': 'https://s3-us-west-2.amazonaws.com/foo?encoding-type=url',
+            'url_path': '/foo'
+        }
+        handlers.s3_redirect_request(request_dict, context)
+
+        self.assertEqual(
+            request_dict['url'],
+            'https://foo.s3.eu-central-1.amazonaws.com/?encoding-type=url')
+
+    def test_redirect_region_does_not_redirect_without_signing_context(self):
+        context = {}
+        request_dict = {
+            'url': 'https://s3-us-west-2.amazonaws.com/foo',
+            'url_path': '/foo'
+        }
+
+        handlers.s3_redirect_request(request_dict, context)
+        self.assertEqual(request_dict['url'],
+                         'https://s3-us-west-2.amazonaws.com/foo')
+        self.assertEqual(request_dict['url_path'], '/foo')
+
+    def test_cache_bucket_signing_context(self):
+        context = {
+            'signing': {
+                'region': 'eu-central-1',
+                'bucket': 'foo',
+                'endpiont': 'foo.s3.eu-central-1.amazonaws.com'
+            }
+        }
+        cache = {}
+        handlers.s3_cache_bucket_signing_context(context, cache)
+
+        cached_context = cache.get('bucket_locations', {}).get('foo')
+        self.assertEqual(cached_context, context['signing'])
+
+    def test_does_not_cache_without_signing_context(self):
+        context = {}
+        cache = {}
+        handlers.s3_cache_bucket_signing_context(context, cache)
+        self.assertFalse(cache.get('bucket_locations', None))
+
+    def test_retrieve_signing_context_from_cache(self):
+        context = {}
+        signing_context = {
+            'region': 'eu-central-1',
+            'bucket': 'foo',
+            'endpiont': 'foo.s3.eu-central-1.amazonaws.com'
+        }
+        cache = {'bucket_locations': {'foo': signing_context}}
+        params = {'Bucket': 'foo'}
+        handlers.s3_get_bucket_signing_context_from_cache(
+            params, context, cache)
+
+        self.assertEqual(context.get('signing'), signing_context)
+
+    def test_does_not_set_signing_context_if_not_in_cache(self):
+        context = {}
+        cache = {}
+        params = {'Bucket': 'foo'}
+        handlers.s3_get_bucket_signing_context_from_cache(
+            params, context, cache)
+        self.assertNotIn('signing', context)

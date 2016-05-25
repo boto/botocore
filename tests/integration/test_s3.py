@@ -32,6 +32,7 @@ import botocore.auth
 import botocore.credentials
 import botocore.vendored.requests as requests
 from botocore.config import Config
+from botocore.exceptions import ClientError
 
 
 def random_bucketname():
@@ -1033,5 +1034,37 @@ class TestS3PathAddressing(TestAutoS3Addressing):
         self.client = self.create_client()
 
 
-if __name__ == '__main__':
-    unittest.main()
+class TestS3RegionRedirect(BaseS3ClientTest):
+    def setUp(self):
+        super(TestS3RegionRedirect, self).setUp()
+        self.bucket_region = 'eu-central-1'
+        self.client_region = 'us-west-2'
+
+        # Need to set the client for bucket creation
+        self.client = self.session.create_client(
+            's3', region_name=self.bucket_region,
+            config=Config(signature_version='s3v4'))
+        self.bucket = self.create_bucket(self.bucket_region)
+
+        self.client = self.session.create_client(
+            's3', region_name=self.client_region,
+            config=Config(signature_version='s3v4'))
+
+    def test_region_redirects(self):
+        try:
+            response = self.client.list_objects(Bucket=self.bucket)
+            self.assertEqual(
+                response['ResponseMetadata']['HTTPStatusCode'], 200)
+        except ClientError:
+            self.fail("S3 client failed to redirect to the proper region.")
+
+    def test_region_redirects_multiple_requests(self):
+        try:
+            response = self.client.list_objects(Bucket=self.bucket)
+            self.assertEqual(
+                response['ResponseMetadata']['HTTPStatusCode'], 200)
+            second_response = self.client.list_objects(Bucket=self.bucket)
+            self.assertEqual(
+                second_response['ResponseMetadata']['HTTPStatusCode'], 200)
+        except ClientError:
+            self.fail("S3 client failed to redirect to the proper region.")
