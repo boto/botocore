@@ -159,6 +159,22 @@ class TestStubber(unittest.TestCase):
         self.assertEqual(response[1]['Error']['Message'], service_message)
         self.assertEqual(response[1]['Error']['Code'], error_code)
 
+    def test_get_client_error_with_extra_keys(self):
+        error_code = "foo"
+        error_message = "bar"
+        error_meta = {
+            "Endpoint": "https://foo.bar.baz",
+        }
+        self.stubber.add_client_error(
+            'foo', error_code, error_message,
+            http_status_code=301,
+            service_error_meta=error_meta)
+        with self.stubber:
+            response = self.emit_get_response_event()
+        error = response[1]['Error']
+        self.assertIn('Endpoint', error)
+        self.assertEqual(error['Endpoint'], "https://foo.bar.baz")
+
     def test_get_response_errors_with_no_stubs(self):
         self.stubber.activate()
         with self.assertRaises(StubResponseError):

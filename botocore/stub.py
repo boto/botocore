@@ -185,7 +185,8 @@ class Stubber(object):
         self._queue.append(response)
 
     def add_client_error(self, method, service_error_code='',
-                         service_message='', http_status_code=400):
+                         service_message='', http_status_code=400,
+                         service_error_meta=None):
         """
         Adds a ``ClientError`` to the response queue.
 
@@ -202,6 +203,10 @@ class Stubber(object):
 
         :param http_status_code: The HTTP status code to return, e.g. 404, etc
         :type http_status_code: int
+
+        :param service_error_meta: Additional keys to be added to the
+            service Error
+        :type service_error_meta: dict
         """
         http_response = Response()
         http_response.status_code = http_status_code
@@ -216,6 +221,9 @@ class Stubber(object):
                 'Code': service_error_code
             }
         }
+
+        if service_error_meta is not None:
+            parsed_response['Error'].update(service_error_meta)
 
         operation_name = self.client.meta.method_to_api_mapping.get(method)
         # Note that we do not allow for expected_params while
