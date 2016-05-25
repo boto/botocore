@@ -154,7 +154,8 @@ class SigV4Auth(BaseSigner):
         # We initialize these value here so the unit tests can have
         # valid values.  But these will get overriden in ``add_auth``
         # later for real requests.
-        self._region_name = region_name
+        self._signing_region = region_name
+        self._default_signing_region = region_name
         self._service_name = service_name
 
     def _sign(self, key, msg, hex=False):
@@ -274,7 +275,7 @@ class SigV4Auth(BaseSigner):
     def scope(self, request):
         scope = [self.credentials.access_key]
         scope.append(request.context['timestamp'][0:8])
-        scope.append(self._region_name)
+        scope.append(self._signing_region)
         scope.append(self._service_name)
         scope.append('aws4_request')
         return '/'.join(scope)
@@ -282,7 +283,7 @@ class SigV4Auth(BaseSigner):
     def credential_scope(self, request):
         scope = []
         scope.append(request.context['timestamp'][0:8])
-        scope.append(self._region_name)
+        scope.append(self._signing_region)
         scope.append(self._service_name)
         scope.append('aws4_request')
         return '/'.join(scope)
@@ -303,7 +304,7 @@ class SigV4Auth(BaseSigner):
         key = self.credentials.secret_key
         k_date = self._sign(('AWS4' + key).encode('utf-8'),
                             request.context['timestamp'][0:8])
-        k_region = self._sign(k_date, self._region_name)
+        k_region = self._sign(k_date, self._signing_region)
         k_service = self._sign(k_region, self._service_name)
         k_signing = self._sign(k_service, 'aws4_request')
         return self._sign(k_signing, string_to_sign, hex=True)
@@ -311,6 +312,9 @@ class SigV4Auth(BaseSigner):
     def add_auth(self, request):
         if self.credentials is None:
             raise NoCredentialsError
+        signing_context = request.context.get('signing', {})
+        self._signing_region = signing_context.get(
+            'region', self._default_signing_region)
         datetime_now = datetime.datetime.utcnow()
         request.context['timestamp'] = datetime_now.strftime(SIGV4_TIMESTAMP)
         # This could be a retry.  Make sure the previous

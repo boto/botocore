@@ -661,7 +661,8 @@ class TestRetryHandlerOrder(BaseSessionTest):
         responses = self.session.emit(
             'needs-retry.s3.CopyObject',
             response=(mock.Mock(), mock.Mock()), endpoint=mock.Mock(),
-            operation=operation, attempts=1, caught_exception=None)
+            operation=operation, attempts=1, caught_exception=None,
+            context=None, request_dict={})
         # This is implementation specific, but we're trying to verify that
         # the check_for_200_error is before any of the retry logic in
         # botocore.retryhandlers.
@@ -919,3 +920,70 @@ class TestParameterAlias(unittest.TestCase):
         contents = self.sample_section.flush_structure().decode('utf-8')
         self.assertIn(self.alias_name + '=',  contents)
         self.assertNotIn(self.original_name + '=', contents)
+
+
+class TestS3RedirectRegion(unittest.TestCase):
+    def test_does_not_redirect_if_error_not_permanentredirect(self):
+        context = {}
+        request_dict = {}
+        service_response = ((), {'Error': {'Code': 'BucketNotFound'}})
+        response = handlers.s3_redirect_region(
+            request_dict, service_response, context)
+        self.assertIsNone(response)
+        self.assertFalse(context)
+        self.assertFalse(request_dict)
+
+    def test_redirect_region(self):
+        signing_region = 'eu-central-1'
+        context = {'signing': {'region': signing_region}}
+        request_dict = {
+            'url': 'https://s3-us-west-2.amazonaws.com/foo',
+            'url_path': '/foo'
+        }
+        service_response = ((), {
+            'Error': {
+                'Code': 'PermanentRedirect',
+                'Message': 'The bucket you are attempting to access must be '
+                           'addressed using the specified endpoint. Please '
+                           'send all future requests to this endpoint.',
+                'Bucket': 'foo',
+                'Endpoint': 'foo.s3.eu-central-1.amazonaws.com'
+            }
+        })
+        response = handlers.s3_redirect_region(
+            request_dict, service_response, context)
+
+        # The response should be 0 so that there is no waiting for the 'retry'
+        self.assertEqual(response, 0)
+
+        # The signing region should be added to the context
+        self.assertIn('signing', context)
+        self.assertEqual(context['signing']['region'], signing_region)
+
+        # The request url and url_path should have been updated
+        self.assertEqual(request_dict['url'],
+                         'https://foo.s3.eu-central-1.amazonaws.com/')
+        self.assertEqual(request_dict['url_path'], '/')
+
+    def test_redirect_sets_url_params(self):
+        signing_region = 'eu-central-1'
+        context = {'signing': {'region': signing_region}}
+        request_dict = {
+            'url': 'https://s3-us-west-2.amazonaws.com/foo?encoding-type=url',
+            'url_path': '/foo'
+        }
+        service_response = ((), {
+            'Error': {
+                'Code': 'PermanentRedirect',
+                'Message': 'The bucket you are attempting to access must be '
+                           'addressed using the specified endpoint. Please '
+                           'send all future requests to this endpoint.',
+                'Bucket': 'foo',
+                'Endpoint': 'foo.s3.eu-central-1.amazonaws.com'
+            }
+        })
+        handlers.s3_redirect_region(request_dict, service_response, context)
+
+        self.assertEqual(
+            request_dict['url'],
+            'https://foo.s3.eu-central-1.amazonaws.com/?encoding-type=url')

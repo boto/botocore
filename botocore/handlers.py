@@ -56,6 +56,33 @@ VALID_BUCKET = re.compile('^[a-zA-Z0-9.\-_]{1,255}$')
 VERSION_ID_SUFFIX = re.compile(r'\?versionId=[^\s]+$')
 
 
+def s3_redirect_region(request_dict, response, context, **kwargs):
+    # An S3 request sent to the wrong region will return an error that contains
+    # the endpoint the request should be sent to. This handler will
+    # automatically redirect requests sent to the wrong region.
+    error = response[1].get('Error', {})
+    if error.get('Code') != 'PermanentRedirect':
+        return
+
+    new_region = error['Endpoint'].split('.')[-3]
+    logger.debug("Redirecting to region %s" % new_region)
+
+    params = request_dict['url'].split('?')
+    new_url = 'https://' + error['Endpoint'] + '/'
+    if len(params) > 1:
+        new_url += '?' + params[1]
+    request_dict['url'] = new_url
+    request_dict['url_path'] = '/'
+
+    if context is None:
+        context = {}
+    context['signing'] = {
+        'region': new_region
+    }
+
+    return 0
+
+
 def check_for_200_error(response, **kwargs):
     # From: http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectCOPY.html
     # There are two opportunities for a copy request to return an error. One
@@ -764,6 +791,7 @@ BUILTIN_HANDLERS = [
     ('before-call.s3.PutBucketVersioning', conditionally_calculate_md5),
     ('before-call.s3.PutBucketWebsite', conditionally_calculate_md5),
     ('before-call.s3.PutObjectAcl', conditionally_calculate_md5),
+    ('needs-retry.s3', s3_redirect_region),
 
     ('before-parameter-build.s3.CopyObject',
      handle_copy_source_param),
