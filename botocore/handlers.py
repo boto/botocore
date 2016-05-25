@@ -97,7 +97,13 @@ def s3_redirect_request(params, context, **kwargs):
     if len(url_params) > 1:
         new_url += '?' + url_params[1]
     params['url'] = new_url
-    params['url_path'] = '/'
+
+    bucket_name = context['signing']['bucket']
+    path_parts = params['url_path'].split('/')
+    if path_parts[0] == bucket_name:
+        del path_parts[0]
+
+    params['url_path'] = '/' + '/'.join(path_parts)
 
 
 def s3_cache_bucket_signing_context(context, cache, **kwargs):
