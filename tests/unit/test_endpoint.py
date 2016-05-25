@@ -125,6 +125,13 @@ class TestEndpointFeatures(TestEndpointBase):
                                      'Connection was closed'):
             self.endpoint.make_request(self.op, request_dict())
 
+    def test_make_request_with_context(self):
+        context = {'signing': {'region': 'us-west-2'}}
+        with patch('botocore.endpoint.Endpoint.prepare_request') as prepare:
+            self.endpoint.make_request(self.op, request_dict(), context)
+        request = prepare.call_args[0][0]
+        self.assertEqual(request.context['signing']['region'], 'us-west-2')
+
 
 class TestRetryInterface(TestEndpointBase):
     def setUp(self):

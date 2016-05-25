@@ -534,7 +534,7 @@ class BaseClient(object):
             http, parsed_response = event_response
         else:
             http, parsed_response = self._endpoint.make_request(
-                operation_model, request_dict)
+                operation_model, request_dict, request_context)
 
         self.meta.events.emit(
             'after-call.{endpoint_prefix}.{operation_name}'.format(

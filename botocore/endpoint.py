@@ -111,13 +111,15 @@ class Endpoint(object):
     def __repr__(self):
         return '%s(%s)' % (self._endpoint_prefix, self.host)
 
-    def make_request(self, operation_model, request_dict):
+    def make_request(self, operation_model, request_dict, context=None):
         logger.debug("Making request for %s (verify_ssl=%s) with params: %s",
                      operation_model, self.verify, request_dict)
-        return self._send_request(request_dict, operation_model)
+        return self._send_request(request_dict, operation_model, context)
 
-    def create_request(self, params, operation_model=None):
+    def create_request(self, params, operation_model=None, context=None):
         request = create_request_object(params)
+        if context is not None:
+            request.context.update(context)
         if operation_model:
             event_name = 'request-created.{endpoint_prefix}.{op_name}'.format(
                 endpoint_prefix=self._endpoint_prefix,
@@ -137,13 +139,13 @@ class Endpoint(object):
         self._encode_headers(request.headers)
         return request.prepare()
 
-    def _send_request(self, request_dict, operation_model):
+    def _send_request(self, request_dict, operation_model, context=None):
         attempts = 1
-        request = self.create_request(request_dict, operation_model)
+        request = self.create_request(request_dict, operation_model, context)
         success_response, exception = self._get_response(
             request, operation_model, attempts)
-        while self._needs_retry(attempts, operation_model,
-                                success_response, exception):
+        while self._needs_retry(attempts, operation_model, request_dict,
+                                context, success_response, exception):
             attempts += 1
             # If there is a stream associated with the request, we need
             # to reset it before attempting to send the request again.
@@ -152,7 +154,7 @@ class Endpoint(object):
             request.reset_stream()
             # Create a new request when retried (including a new signature).
             request = self.create_request(
-                request_dict, operation_model=operation_model)
+                request_dict, operation_model, context)
             success_response, exception = self._get_response(
                 request, operation_model, attempts)
         if exception is not None:
@@ -209,14 +211,15 @@ class Endpoint(object):
     def _looks_like_bad_status_line(self, e):
         return 'BadStatusLine' in str(e) and e.request is not None
 
-    def _needs_retry(self, attempts, operation_model, response=None,
-                     caught_exception=None):
+    def _needs_retry(self, attempts, operation_model, request_dict, context,
+                     response=None, caught_exception=None):
         event_name = 'needs-retry.%s.%s' % (self._endpoint_prefix,
                                             operation_model.name)
         responses = self._event_emitter.emit(
             event_name, response=response, endpoint=self,
             operation=operation_model, attempts=attempts,
-            caught_exception=caught_exception)
+            caught_exception=caught_exception, request_dict=request_dict,
+            context=context)
         handler_response = first_non_none_response(responses)
         if handler_response is None:
             return False
