@@ -2,6 +2,39 @@
 CHANGELOG
 =========
 
+1.4.23
+======
+
+* feature:``rds``: Update rds client to latest version
+* feature:``ec2``: Update ec2 client to latest version
+
+
+1.4.22
+======
+
+* feature:``firehose``: Update firehose client to latest version
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``ecs``: Update ecs client to latest version
+
+
+1.4.21
+======
+
+* feature:``application-autoscaling``: Adds support for Application Auto Scaling. Application Auto Scaling is a general purpose Auto Scaling service for supported elastic AWS resources. With Application Auto Scaling, you can automatically scale your AWS resources, with an experience similar to that of Auto Scaling.
+* feature:endpoints: Updated endpoints.json to latest.
+
+
+1.4.20
+======
+
+* feature:``dynamodb``: Update dynamodb client to latest version
+* bugfix:Waiters: Fix ``JMESPathTypeError`` exception being raised (`#906 <https://github.com/boto/botocore/issues/906>`__, `#907 <https://github.com/boto/botocore/issues/907>`__)
+* feature:``workspaces``: Update workspaces client to latest version
+* feature:s3: Add paginator for ListObjectsV2
+* feature:``discovery``: Update discovery client to latest version
+* feature:iam: Add missing paginators. Fixes `#919 <https://github.com/boto/botocore/issues/919>`__.
+
+
 1.4.19
 ======
 
