@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.4.24
+======
+
+* feature:``elasticache``: Update elasticache client to latest version
+
+
 1.4.23
 ======
 
