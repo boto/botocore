@@ -1,0 +1,5 @@
+{
+  "category": "Stubber",
+  "description": "Allow adding additional keys to the service error response.",
+  "type": "feature"
+}
