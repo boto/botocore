@@ -14,7 +14,8 @@ from tests import unittest, mock, BaseSessionTest
 
 import botocore.session
 from botocore.config import Config
-from botocore.exceptions import ParamValidationError
+from botocore.exceptions import ParamValidationError, ClientError
+from botocore.stub import Stubber
 
 
 class TestS3BucketValidation(unittest.TestCase):
@@ -49,6 +50,7 @@ class TestOnlyAsciiCharsAllowed(BaseS3OperationTest):
             self.client.put_object(Bucket='foo', Key='bar',
                                 Metadata={'goodkey': 'good',
                                           'non-ascii': u'\u2713'})
+
 
 class TestS3GetBucketLifecycle(BaseS3OperationTest):
     def test_multiple_transitions_returns_one(self):
@@ -293,3 +295,80 @@ class TestS3Accelerate(BaseS3AddressingStyle):
         # Even if path is specified as the addressing style, use virtual
         # because path style will **not** work with S3 Accelerate
         self.assert_uses_accelerate_endpoint_correctly(s3)
+
+
+class TestRegionRedirect(BaseS3OperationTest):
+    def setUp(self):
+        super(TestRegionRedirect, self).setUp()
+        self.client = self.session.create_client(
+            's3', 'us-west-2', config=Config(signature_version='s3v4'))
+
+        self.redirect_response = mock.Mock()
+        self.redirect_response.headers = {
+            'x-amz-bucket-region': 'eu-central-1'
+        }
+        self.redirect_response.status_code = 301
+        self.redirect_response.content = (
+            b'<?xml version="1.0" encoding="UTF-8"?>\n'
+            b'<Error>'
+            b'    <Code>PermanentRedirect</Code>'
+            b'    <Message>The bucket you are attempting to access must be '
+            b'        addressed using the specified endpoint. Please send all '
+            b'        future requests to this endpoint.'
+            b'    </Message>'
+            b'    <Bucket>foo</Bucket>'
+            b'    <Endpoint>foo.s3.eu-central-1.amazonaws.com</Endpoint>'
+            b'</Error>')
+
+        self.success_response = mock.Mock()
+        self.success_response.headers = {}
+        self.success_response.status_code = 200
+        self.success_response.content = (
+            b'<?xml version="1.0" encoding="UTF-8"?>\n'
+            b'<ListBucketResult>'
+            b'    <Name>foo</Name>'
+            b'    <Prefix></Prefix>'
+            b'    <Marker></Marker>'
+            b'    <MaxKeys>1000</MaxKeys>'
+            b'    <EncodingType>url</EncodingType>'
+            b'    <IsTruncated>false</IsTruncated>'
+            b'</ListBucketResult>')
+
+    def test_region_redirect(self):
+        self.http_session_send_mock.side_effect = [
+            self.redirect_response, self.success_response]
+        response = self.client.list_objects(Bucket='foo')
+        self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 200)
+        self.assertEqual(self.http_session_send_mock.call_count, 2)
+
+        calls = [c[0][0] for c in self.http_session_send_mock.call_args_list]
+        initial_url = ('https://s3-us-west-2.amazonaws.com/foo'
+                       '?encoding-type=url')
+        self.assertEqual(calls[0].url, initial_url)
+
+        fixed_url = ('https://s3.eu-central-1.amazonaws.com/foo'
+                     '?encoding-type=url')
+        self.assertEqual(calls[1].url, fixed_url)
+
+    def test_region_redirect_cache(self):
+        self.http_session_send_mock.side_effect = [
+            self.redirect_response, self.success_response,
+            self.success_response]
+
+        first_response = self.client.list_objects(Bucket='foo')
+        self.assertEqual(
+            first_response['ResponseMetadata']['HTTPStatusCode'], 200)
+        second_response = self.client.list_objects(Bucket='foo')
+        self.assertEqual(
+            second_response['ResponseMetadata']['HTTPStatusCode'], 200)
+
+        self.assertEqual(self.http_session_send_mock.call_count, 3)
+        calls = [c[0][0] for c in self.http_session_send_mock.call_args_list]
+        initial_url = ('https://s3-us-west-2.amazonaws.com/foo'
+                       '?encoding-type=url')
+        self.assertEqual(calls[0].url, initial_url)
+
+        fixed_url = ('https://s3.eu-central-1.amazonaws.com/foo'
+                     '?encoding-type=url')
+        self.assertEqual(calls[1].url, fixed_url)
+        self.assertEqual(calls[2].url, fixed_url)

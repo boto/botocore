@@ -138,6 +138,7 @@ class TestHandlers(BaseSessionTest):
         request_dict['url'] = 'https://ec2.us-east-1.amazonaws.com'
         request_dict['method'] = 'POST'
         request_dict['headers'] = {}
+        request_dict['context'] = {}
 
         handlers.copy_snapshot_encrypted(request_dict, request_signer)
 
@@ -166,6 +167,7 @@ class TestHandlers(BaseSessionTest):
         request_dict['url'] = 'https://ec2.us-west-1.amazonaws.com'
         request_dict['method'] = 'POST'
         request_dict['headers'] = {}
+        request_dict['context'] = {}
 
         # The user provides us-east-1, but we will override this to
         # endpoint.region_name, of 'us-west-1' in this case.
