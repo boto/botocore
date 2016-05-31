@@ -336,6 +336,20 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
     def test_blacklist_headers(self):
         self._test_blacklist_header('user-agent', 'botocore/1.4.11')
 
+    def test_context_sets_signing_region(self):
+        original_signing_region = 'eu-central-1'
+        new_signing_region = 'us-west-2'
+        self.auth.add_auth(self.request)
+        auth = self.request.headers['Authorization']
+        self.assertIn(original_signing_region, auth)
+        self.assertNotIn(new_signing_region, auth)
+
+        self.request.context = {'signing': {'region': new_signing_region}}
+        self.auth.add_auth(self.request)
+        auth = self.request.headers['Authorization']
+        self.assertIn(new_signing_region, auth)
+        self.assertNotIn(original_signing_region, auth)
+
 
 class TestSigV4(unittest.TestCase):
     def setUp(self):
@@ -685,6 +699,7 @@ class BaseS3PresignPostTest(unittest.TestCase):
         self.request.context['s3-presign-post-fields'] = self.fields
         self.request.context['s3-presign-post-policy'] = self.policy
 
+
 class TestS3SigV2Post(BaseS3PresignPostTest):
     def setUp(self):
         super(TestS3SigV2Post, self).setUp()
@@ -735,6 +750,7 @@ class TestS3SigV2Post(BaseS3PresignPostTest):
             result_fields['policy']).decode('utf-8'))
         self.assertEqual(result_policy['conditions'], [])
         self.assertIn('signature', result_fields)
+
 
 class TestS3SigV4Post(BaseS3PresignPostTest):
     def setUp(self):
