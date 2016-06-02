@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.4.25
+======
+
+* feature:Stubber: Allow adding additional keys to the service error response.
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``application-autoscaling``: Update application-autoscaling client to latest version
+
+
 1.4.24
 ======
 
