@@ -1327,6 +1327,13 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(new_config.region_name, 'us-west-2')
         self.assertEqual(new_config.signature_version, 's3v4')
 
+    def test_boolean_conversion(self):
+        config = botocore.config.Config(parameter_validation='True')
+        self.assertEqual(config.parameter_validation, True)
+
+        config = botocore.config.Config(parameter_validation='False')
+        self.assertEqual(config.parameter_validation, False)
+
 
 class TestClientEndpointBridge(unittest.TestCase):
     def test_guesses_endpoint_as_last_resort(self):

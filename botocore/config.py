@@ -93,12 +93,32 @@ class Config(object):
         config_vars = copy.copy(self.OPTION_DEFAULTS)
         config_vars.update(self._user_provided_options)
 
+        # All args come in as strings, so it is useful to convert them to other
+        # data types if necessary. i.e. to 'True' to True
+        config_vars = self._preprocess_config(config_vars)
+
         # Set the attributes based on the config_vars
         for key, value in config_vars.items():
             setattr(self, key, value)
 
         # Validate the s3 options
         self._validate_s3_configuration(self.s3)
+
+    def _preprocess_config(self, config_vars):
+        for key, value in config_vars.items():
+            if isinstance(value, str):
+                config_vars[key] = self._string_to_boolean(value)
+            elif isinstance(value, dict):
+                config_vars[key] = self._preprocess_config(value)
+        return config_vars
+
+    def _string_to_boolean(self, value):
+        lower_value = value.lower()
+        if lower_value == 'true':
+            return True
+        elif lower_value == 'false':
+            return False
+        return value
 
     def _record_user_provided_options(self, args, kwargs):
         option_order = list(self.OPTION_DEFAULTS)
