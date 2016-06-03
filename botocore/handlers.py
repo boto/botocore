@@ -424,6 +424,9 @@ def parse_get_bucket_location(parsed, http_response, **kwargs):
     # The "parsed" passed in only has the ResponseMetadata
     # filled out.  This handler will fill in the LocationConstraint
     # value.
+    if 'LocationConstraint' in parsed:
+        # Response already set - a stub?
+        return
     response_body = http_response.content
     parser = xml.etree.cElementTree.XMLParser(
         target=xml.etree.cElementTree.TreeBuilder(),
