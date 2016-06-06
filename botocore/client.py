@@ -165,8 +165,12 @@ class ClientCreator(object):
         service_name = service_model.endpoint_prefix
         protocol = service_model.metadata['protocol']
         parameter_validation = True
-        if client_config:
-            parameter_validation = client_config.parameter_validation
+        if client_config and not client_config.parameter_validation:
+            parameter_validation = False
+        elif scoped_config:
+            raw_value = str(scoped_config.get('parameter_validation', ''))
+            if raw_value.lower() == 'false':
+                parameter_validation = False
         serializer = botocore.serialize.create_serializer(
             protocol, parameter_validation)
 
