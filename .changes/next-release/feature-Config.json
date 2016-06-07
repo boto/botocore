@@ -1,5 +1,0 @@
-{
-  "category": "Config", 
-  "type": "feature", 
-  "description": "Add ``parameter_validation`` option in config file to disable parameter validation when making API calls (`#905 <https://github.com/boto/botocore/issues/905>`__)"
-}

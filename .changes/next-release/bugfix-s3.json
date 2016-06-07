@@ -1,5 +1,0 @@
-{
-  "category": "s3",
-  "description": "Make the stubber work with get_bucket_location",
-  "type": "bugfix"
-}
