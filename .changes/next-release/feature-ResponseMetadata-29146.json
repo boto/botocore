@@ -1,0 +1,5 @@
+{
+  "type": "feature",
+  "description": "Add http response headers to the response metadata.",
+  "category": "ResponseMetadata"
+}
