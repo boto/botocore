@@ -65,6 +65,7 @@ def _test_parsed_response(xmlfile, response_body, operation_model, expected):
     parsed = parser.parse(response, operation_model.output_shape)
     parsed = _convert_bytes_to_str(parsed)
     expected['ResponseMetadata']['HTTPStatusCode'] = response['status_code']
+    expected['ResponseMetadata']['HTTPHeaders'] = response['headers']
 
     d2 = parsed
     d1 = expected

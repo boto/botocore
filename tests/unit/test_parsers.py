@@ -63,7 +63,8 @@ class TestResponseMetadataParsed(unittest.TestCase):
         self.assertEqual(
             parsed, {'Str': 'myname',
                      'ResponseMetadata': {'RequestId': 'request-id',
-                                          'HTTPStatusCode': 200}})
+                                          'HTTPStatusCode': 200,
+                                          'HTTPHeaders': {}}})
 
     def test_response_metadata_parsed_for_ec2(self):
         parser = parsers.EC2QueryParser()
@@ -92,7 +93,8 @@ class TestResponseMetadataParsed(unittest.TestCase):
         self.assertEqual(
             parsed, {'Str': 'myname',
                      'ResponseMetadata': {'RequestId': 'request-id',
-                                          'HTTPStatusCode': 200}})
+                                          'HTTPStatusCode': 200,
+                                          'HTTPHeaders': {}}})
 
     def test_response_metadata_on_normal_request(self):
         parser = parsers.JSONParser()
@@ -117,7 +119,8 @@ class TestResponseMetadataParsed(unittest.TestCase):
         self.assertEqual(
             parsed, {'Str': 'mystring',
                      'ResponseMetadata': {'RequestId': 'request-id',
-                                          'HTTPStatusCode': 200}})
+                                          'HTTPStatusCode': 200,
+                                          'HTTPHeaders': headers}})
 
     def test_response_metadata_on_rest_response(self):
         parser = parsers.RestJSONParser()
@@ -142,7 +145,8 @@ class TestResponseMetadataParsed(unittest.TestCase):
         self.assertEqual(
             parsed, {'Str': 'mystring',
                      'ResponseMetadata': {'RequestId': 'request-id',
-                                          'HTTPStatusCode': 200}})
+                                          'HTTPStatusCode': 200,
+                                          'HTTPHeaders': headers}})
 
     def test_response_metadata_from_s3_response(self):
         # Even though s3 is a rest-xml service, it's response metadata
@@ -160,7 +164,8 @@ class TestResponseMetadataParsed(unittest.TestCase):
             parsed,
             {'ResponseMetadata': {'RequestId': 'request-id',
                                   'HostId': 'second-id',
-                                  'HTTPStatusCode': 200}})
+                                  'HTTPStatusCode': 200,
+                                  'HTTPHeaders': headers}})
 
 
 class TestResponseParsingDatetimes(unittest.TestCase):
@@ -249,7 +254,8 @@ class TestHandlesNoOutputShape(unittest.TestCase):
         self.assertEqual(
             parsed,
             {'ResponseMetadata': {'RequestId': 'request-id',
-                                  'HTTPStatusCode': 200}})
+                                  'HTTPStatusCode': 200,
+                                  'HTTPHeaders': headers}})
 
     def test_empty_rest_xml_response(self):
         # This is the format used by cloudfront, route53.
@@ -262,7 +268,8 @@ class TestHandlesNoOutputShape(unittest.TestCase):
         self.assertEqual(
             parsed,
             {'ResponseMetadata': {'RequestId': 'request-id',
-                                  'HTTPStatusCode': 200}})
+                                  'HTTPStatusCode': 200,
+                                  'HTTPHeaders': headers}})
 
     def test_empty_query_response(self):
         body = (
@@ -280,7 +287,8 @@ class TestHandlesNoOutputShape(unittest.TestCase):
         self.assertEqual(
             parsed,
             {'ResponseMetadata': {'RequestId': 'request-id',
-                                  'HTTPStatusCode': 200}})
+                                  'HTTPStatusCode': 200,
+                                  'HTTPHeaders': {}}})
 
     def test_empty_json_response(self):
         headers = {'x-amzn-requestid': 'request-id'}
@@ -293,7 +301,8 @@ class TestHandlesNoOutputShape(unittest.TestCase):
         self.assertEqual(
             parsed,
             {'ResponseMetadata': {'RequestId': 'request-id',
-                                  'HTTPStatusCode': 200}})
+                                  'HTTPStatusCode': 200,
+                                  'HTTPHeaders': headers}})
 
 
 class TestHandlesInvalidXMLResponses(unittest.TestCase):
@@ -439,7 +448,8 @@ class TestParseErrorResponses(unittest.TestCase):
         })
         self.assertEqual(parsed['ResponseMetadata'], {
             'RequestId': 'abc-123',
-            'HTTPStatusCode': 500
+            'HTTPStatusCode': 500,
+            'HTTPHeaders': {}
         })
 
     def test_can_parser_ec2_errors(self):
@@ -516,6 +526,7 @@ class TestParseErrorResponses(unittest.TestCase):
         })
         self.assertEqual(parsed['ResponseMetadata'], {
             'HTTPStatusCode': 504,
+            'HTTPHeaders': headers
         })
 
     def test_s3_error_response(self):
@@ -547,6 +558,7 @@ class TestParseErrorResponses(unittest.TestCase):
             'RequestId': 'request-id',
             'HostId': 'second-id',
             'HTTPStatusCode': 400,
+            'HTTPHeaders': headers
         })
 
     def test_s3_error_response_with_no_body(self):
@@ -571,6 +583,7 @@ class TestParseErrorResponses(unittest.TestCase):
             'RequestId': 'request-id',
             'HostId': 'second-id',
             'HTTPStatusCode': 404,
+            'HTTPHeaders': headers
         })
 
     def test_can_parse_glacier_error_response(self):
