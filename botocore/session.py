@@ -98,6 +98,7 @@ class Session(object):
         'metadata_service_num_attempts': (
             'metadata_service_num_attempts',
             'AWS_METADATA_SERVICE_NUM_ATTEMPTS', 1, int),
+        'parameter_validation': ('parameter_validation', None, True, None),
     }
 
     #: The default format string to use when configuring the botocore logger.

@@ -610,6 +610,13 @@ class TestHandlers(BaseSessionTest):
         handlers.decode_list_object(parsed, context=context)
         self.assertEqual(parsed['Delimiter'], u'\xe7\xf6s% asd\x08 c')
 
+    def test_get_bucket_location_optional(self):
+        # This handler should no-op if another hook (i.e. stubber) has already
+        # filled in response
+        response = {"LocationConstraint": "eu-west-1"}
+        handlers.parse_get_bucket_location(response, None),
+        self.assertEqual(response["LocationConstraint"], "eu-west-1")
+
 
 class TestConvertStringBodyToFileLikeObject(BaseSessionTest):
     def assert_converts_to_file_like_object_with_bytes(self, body, body_bytes):

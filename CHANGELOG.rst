@@ -2,6 +2,24 @@
 CHANGELOG
 =========
 
+1.4.26
+======
+
+* feature:Config: Add ``parameter_validation`` option in config file to disable parameter validation when making API calls (`#905 <https://github.com/boto/botocore/issues/905>`__)
+* feature:``dynamodbstreams``: Update dynamodbstreams client to latest version
+* bugfix:s3: Make the stubber work with get_bucket_location
+* feature:``iot``: Update iot client to latest version
+* feature:``machinelearning``: Update machinelearning client to latest version
+
+
+1.4.25
+======
+
+* feature:Stubber: Allow adding additional keys to the service error response.
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``application-autoscaling``: Update application-autoscaling client to latest version
+
+
 1.4.24
 ======
 
