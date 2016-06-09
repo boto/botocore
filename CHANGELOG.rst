@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.4.27
+======
+
+* feature:Stubber: Allow certain paramters to be ignored by specifying stub.ANY. Resolves `#931 <https://github.com/boto/botocore/issues/931>`__
+* feature:``s3``: Update s3 client to latest version
+
+
 1.4.26
 ======
 

@@ -20,6 +20,9 @@ from botocore.exceptions import ParamValidationError, \
 from botocore.vendored.requests.models import Response
 
 
+ANY = object()
+
+
 class Stubber(object):
     """
     This class will allow you to stub out requests so you don't have to hit
@@ -96,6 +99,50 @@ class Stubber(object):
             service_response = s3.list_buckets()
 
         assert service_response == response
+
+
+    If you have an input paramter that is a randomly generated value, or you
+    otherwise don't care about its value, you can use stub.ANY to ignore it in
+    validation.
+
+    **Example:**
+    ::
+        import datetime
+        import botocore.session
+        from botocore.stub import Stubber, ANY
+
+
+        s3 = botocore.session.get_session().create_client('s3')
+        stubber = Stubber(s3)
+
+        response = {
+            'IsTruncated': False,
+            'Name': 'test-bucket',
+            'MaxKeys': 1000, 'Prefix': '',
+            'Contents': [{
+                'Key': 'test.txt',
+                'ETag': '"abc123"',
+                'StorageClass': 'STANDARD',
+                'LastModified': datetime.datetime(2016, 1, 20, 22, 9),
+                'Owner': {'ID': 'abc123', 'DisplayName': 'myname'},
+                'Size': 14814
+            }],
+            'EncodingType': 'url',
+            'ResponseMetadata': {
+                'RequestId': 'abc123',
+                'HTTPStatusCode': 200,
+                'HostId': 'abc123'
+            },
+            'Marker': ''
+        }
+
+        expected_params = {'Bucket': ANY}
+        stubber.add_response('list_objects', response, expected_params)
+
+        with stubber:
+            service_response = s3.list_objects(Bucket='test-bucket')
+
+        assert service_response == response
     """
     def __init__(self, client):
         """
@@ -159,6 +206,8 @@ class Stubber(object):
             be called for the provided service response. The parameters match
             the names of keyword arguments passed to that client call. If
             any of the parameters differ a ``StubResponseError`` is thrown.
+            You can use stub.ANY to indicate a particular parameter to ignore
+            in validation. stub.ANY is only valid for top level params.
         """
         self._add_response(method, service_response, expected_params)
 
@@ -265,7 +314,22 @@ class Stubber(object):
     def _assert_expected_params(self, model, params, **kwargs):
         self._assert_expected_call_order(model, params)
         expected_params = self._queue[0]['expected_params']
-        if expected_params is not None and params != expected_params:
+        if expected_params is None:
+            return
+
+        # Validate the parameters are equal
+        for param, value in expected_params.items():
+            if value is ANY:
+                continue
+            elif param not in params or \
+                    expected_params[param] != params[param]:
+                raise StubAssertionError(
+                    operation_name=model.name,
+                    reason='Expected parameters:\n%s,\nbut received:\n%s' % (
+                        pformat(expected_params), pformat(params)))
+
+        # Ensure there are no extra params hanging around
+        if expected_params.keys() != params.keys():
             raise StubAssertionError(
                 operation_name=model.name,
                 reason='Expected parameters:\n%s,\nbut received:\n%s' % (
