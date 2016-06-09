@@ -1,5 +1,0 @@
-{
-  "category": "Stubber",
-  "type": "feature",
-  "description": "Allow certain paramters to be ignored by specifying stub.ANY. Resolves `#931 <https://github.com/boto/botocore/issues/931>`__"
-}
