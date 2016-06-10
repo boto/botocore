@@ -1,0 +1,5 @@
+{
+  "category": "Stubber", 
+  "type": "bugfix", 
+  "description": "Fix regression in comparing multiple expected parameters"
+}

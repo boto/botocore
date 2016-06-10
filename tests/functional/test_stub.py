@@ -194,3 +194,20 @@ class TestStubber(unittest.TestCase):
         # Throw an error for invalid parameters
         with self.assertRaises(StubAssertionError):
             self.client.list_objects(Buck='bar')
+
+    def test_many_expected_params(self):
+        service_response = {}
+        expected_params = {
+            'Bucket': 'mybucket',
+            'Prefix': 'myprefix',
+            'Delimiter': '/',
+            'EncodingType': 'url'
+        }
+        self.stubber.add_response(
+            'list_objects', service_response, expected_params)
+        try:
+            with self.stubber:
+                self.client.list_objects(**expected_params)
+        except StubAssertionError:
+            self.fail(
+                "Stubber inappropriately raised error for same parameters.")

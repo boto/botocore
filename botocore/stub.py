@@ -329,7 +329,7 @@ class Stubber(object):
                         pformat(expected_params), pformat(params)))
 
         # Ensure there are no extra params hanging around
-        if expected_params.keys() != params.keys():
+        if sorted(expected_params.keys()) != sorted(params.keys()):
             raise StubAssertionError(
                 operation_name=model.name,
                 reason='Expected parameters:\n%s,\nbut received:\n%s' % (
