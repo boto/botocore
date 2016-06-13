@@ -550,7 +550,7 @@ class TestHandlers(BaseSessionTest):
         context = {}
         handlers.set_list_objects_encoding_type_url(params, context=context)
         self.assertEqual(params['EncodingType'], 'url')
-        self.assertTrue(context['EncodingTypeAutoSet'])
+        self.assertTrue(context['encoding_type_auto_set'])
 
         params['EncodingType'] = 'new_value'
         handlers.set_list_objects_encoding_type_url(params, context={})
@@ -561,7 +561,7 @@ class TestHandlers(BaseSessionTest):
             'Contents': [{'Key': "%C3%A7%C3%B6s%25asd%08"}],
             'EncodingType': 'url',
         }
-        context = {'EncodingTypeAutoSet': True}
+        context = {'encoding_type_auto_set': True}
         handlers.decode_list_object(parsed, context=context)
         self.assertEqual(parsed['Contents'][0]['Key'], u'\xe7\xf6s%asd\x08')
 
@@ -578,7 +578,7 @@ class TestHandlers(BaseSessionTest):
             'Marker': "%C3%A7%C3%B6s%25%20asd%08+c",
             'EncodingType': 'url',
         }
-        context = {'EncodingTypeAutoSet': True}
+        context = {'encoding_type_auto_set': True}
         handlers.decode_list_object(parsed, context=context)
         self.assertEqual(parsed['Marker'], u'\xe7\xf6s% asd\x08 c')
 
@@ -587,7 +587,7 @@ class TestHandlers(BaseSessionTest):
             'NextMarker': "%C3%A7%C3%B6s%25%20asd%08+c",
             'EncodingType': 'url',
         }
-        context = {'EncodingTypeAutoSet': True}
+        context = {'encoding_type_auto_set': True}
         handlers.decode_list_object(parsed, context=context)
         self.assertEqual(parsed['NextMarker'], u'\xe7\xf6s% asd\x08 c')
 
@@ -596,7 +596,7 @@ class TestHandlers(BaseSessionTest):
             'CommonPrefixes': [{'Prefix': "%C3%A7%C3%B6s%25%20asd%08+c"}],
             'EncodingType': 'url',
         }
-        context = {'EncodingTypeAutoSet': True}
+        context = {'encoding_type_auto_set': True}
         handlers.decode_list_object(parsed, context=context)
         self.assertEqual(parsed['CommonPrefixes'][0]['Prefix'],
                          u'\xe7\xf6s% asd\x08 c')
@@ -606,7 +606,7 @@ class TestHandlers(BaseSessionTest):
             'Delimiter': "%C3%A7%C3%B6s%25%20asd%08+c",
             'EncodingType': 'url',
         }
-        context = {'EncodingTypeAutoSet': True}
+        context = {'encoding_type_auto_set': True}
         handlers.decode_list_object(parsed, context=context)
         self.assertEqual(parsed['Delimiter'], u'\xe7\xf6s% asd\x08 c')
 
