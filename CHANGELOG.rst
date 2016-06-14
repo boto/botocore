@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.4.28
+======
+
+* feature:``cloudtrail``: Update cloudtrail client to latest version
+* feature:``acm``: Update acm client to latest version
+* bugfix:Stubber: Fix regression in comparing multiple expected parameters
+* feature:``rds``: Update rds client to latest version
+* feature:``ses``: Update ses client to latest version
+
+
 1.4.27
 ======
 
