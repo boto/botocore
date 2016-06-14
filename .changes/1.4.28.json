@@ -1,0 +1,27 @@
+[
+  {
+    "category": "``cloudtrail``", 
+    "description": "Update cloudtrail client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``acm``", 
+    "description": "Update acm client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "Stubber", 
+    "description": "Fix regression in comparing multiple expected parameters", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``rds``", 
+    "description": "Update rds client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``ses``", 
+    "description": "Update ses client to latest version", 
+    "type": "feature"
+  }
+]
