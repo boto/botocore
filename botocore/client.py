@@ -178,6 +178,15 @@ class ClientCreator(object):
             return
         S3RegionRedirector(endpoint_bridge, client).register()
 
+    def _get_default_s3_region(self, service_name, endpoint_bridge):
+        # If a user is providing a custom URL, the endpoint resolver will
+        # refuse to infer a signing region. If we want to default to s3v4,
+        # we have to account for this.
+        if service_name == 's3':
+            endpoint = endpoint_bridge.resolve('s3')
+            return endpoint['signing_region'], endpoint['region_name']
+        return None
+
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,
                          scoped_config, client_config, endpoint_bridge):
@@ -206,8 +215,14 @@ class ClientCreator(object):
             if client_config.user_agent_extra is not None:
                 user_agent += ' %s' % client_config.user_agent_extra
 
+        signing_region = endpoint_config['signing_region']
+        endpoint_region_name = endpoint_config['region_name']
+        if signing_region is None and endpoint_region_name is None:
+            signing_region, endpoint_region_name = \
+                self._get_default_s3_region(service_name, endpoint_bridge)
+
         signer = RequestSigner(
-            service_name, endpoint_config['signing_region'],
+            service_name, signing_region,
             endpoint_config['signing_name'],
             endpoint_config['signature_version'],
             credentials, event_emitter)
@@ -216,7 +231,7 @@ class ClientCreator(object):
         # on the final values. We do not want the user to be able
         # to try to modify an existing client with a client config.
         config_kwargs = dict(
-            region_name=endpoint_config['region_name'],
+            region_name=endpoint_region_name,
             signature_version=endpoint_config['signature_version'],
             user_agent=user_agent)
         if client_config is not None:
@@ -232,7 +247,7 @@ class ClientCreator(object):
         new_config = Config(**config_kwargs)
         endpoint_creator = EndpointCreator(event_emitter)
         endpoint = endpoint_creator.create_endpoint(
-            service_model, region_name=endpoint_config['region_name'],
+            service_model, region_name=endpoint_region_name,
             endpoint_url=endpoint_config['endpoint_url'], verify=verify,
             response_parser_factory=self._response_parser_factory,
             timeout=(new_config.connect_timeout, new_config.read_timeout))
@@ -444,11 +459,11 @@ class ClientEndpointBridge(object):
         if 'signatureVersions' in resolved:
             potential_versions = resolved['signatureVersions']
             if service_name == 's3':
-                # We currently prefer s3 over s3v4.
-                if 's3' in potential_versions:
-                    return 's3'
-                elif 's3v4' in potential_versions:
+                # We currently prefer s3v4 over s3.
+                if 's3v4' in potential_versions:
                     return 's3v4'
+                elif 's3' in potential_versions:
+                    return 's3'
             if 'v4' in potential_versions:
                 return 'v4'
             # Now just iterate over the signature versions in order until we
