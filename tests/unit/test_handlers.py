@@ -47,6 +47,12 @@ class TestHandlers(BaseSessionTest):
         handlers.decode_console_output(parsed)
         self.assertEqual(parsed['Output'], 1)
 
+    def test_get_console_output_bad_unicode_errors(self):
+        original = base64.b64encode(b'before\xffafter').decode('utf-8')
+        parsed = {'Output': original}
+        handlers.decode_console_output(parsed)
+        self.assertEqual(parsed['Output'], u'before\ufffdafter')
+
     def test_noop_if_output_key_does_not_exist(self):
         original = {'foo': 'bar'}
         parsed = original.copy()

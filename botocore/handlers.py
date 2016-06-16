@@ -99,7 +99,11 @@ def _looks_like_special_case_error(http_response):
 def decode_console_output(parsed, **kwargs):
     if 'Output' in parsed:
         try:
-            value = base64.b64decode(six.b(parsed['Output'])).decode('utf-8')
+            # We're using 'replace' for errors because it is
+            # possible that console output contains non string
+            # chars we can't utf-8 decode.
+            value = base64.b64decode(six.b(parsed['Output'])).decode(
+                'utf-8', 'replace')
             parsed['Output'] = value
         except (ValueError, TypeError, AttributeError):
             logger.debug('Error decoding base64', exc_info=True)
