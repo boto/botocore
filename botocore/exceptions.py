@@ -93,6 +93,18 @@ class PartialCredentialsError(BotoCoreError):
     fmt = 'Partial credentials found in {provider}, missing: {cred_var}'
 
 
+class CredentialRetrievalError(BotoCoreError):
+    """
+    Error attempting to retrieve credentials from a remote source.
+
+    :ivar provider: The name of the credential provider.
+    :ivar error_msg: The msg explaning why credentials could not be
+        retrieved.
+
+    """
+    fmt = 'Error when retrieving credentials from {provider}: {error_msg}'
+
+
 class UnknownSignatureVersionError(BotoCoreError):
     """
     Requested Signature Version is not known.
@@ -387,3 +399,7 @@ class RefreshWithMFAUnsupportedError(BotoCoreError):
 
 class MD5UnavailableError(BotoCoreError):
     fmt = "This system does not support MD5 generation."
+
+
+class MetadataRetrievalError(BotoCoreError):
+    fmt = "Error retrieving metadata: {error_msg}"

@@ -19,11 +19,13 @@ import six
 import mock
 
 from botocore import xform_name
-from botocore.compat import OrderedDict
+from botocore.compat import OrderedDict, json
 from botocore.awsrequest import AWSRequest
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
-from botocore.exceptions import InvalidDNSNameError, ClientError
+from botocore.exceptions import ClientError
+from botocore.exceptions import InvalidDNSNameError, MetadataRetrievalError
 from botocore.model import ServiceModel
+from botocore.vendored import requests
 from botocore.utils import remove_dot_segments
 from botocore.utils import normalize_url_path
 from botocore.utils import validate_jmespath_for_set
@@ -46,6 +48,7 @@ from botocore.utils import get_service_module_name
 from botocore.utils import percent_encode_sequence
 from botocore.utils import switch_host_s3_accelerate
 from botocore.utils import S3RegionRedirector
+from botocore.utils import ContainerMetadataFetcher
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
 
@@ -1173,3 +1176,119 @@ class TestS3RegionRedirector(unittest.TestCase):
         })
         region = self.redirector.get_bucket_region('foo', response)
         self.assertEqual(region, 'eu-central-1')
+
+
+class TestContainerMetadataFetcher(unittest.TestCase):
+    def setUp(self):
+        self.responses = []
+        self.http = mock.Mock()
+        self.sleep = mock.Mock()
+
+    def create_fetcher(self):
+        return ContainerMetadataFetcher(self.http, sleep=self.sleep)
+
+    def fake_response(self, status_code, body):
+        response = mock.Mock()
+        response.status_code = status_code
+        response.content = body
+        return response
+
+    def set_http_responses_to(self, *responses):
+        http_responses = []
+        for response in responses:
+            if isinstance(response, Exception):
+                # Simulating an error condition.
+                http_response = response
+            elif hasattr(response, 'status_code'):
+                # It's a precreated fake_response.
+                http_response = response
+            else:
+                http_response = self.fake_response(
+                    status_code=200, body=json.dumps(response))
+            http_responses.append(http_response)
+        self.http.get.side_effect = http_responses
+
+    def test_can_retrieve_uri(self):
+        json_body =  {
+            "AccessKeyId" : "a",
+            "SecretAccessKey" : "b",
+            "Token" : "c",
+            "Expiration" : "d"
+        }
+        self.set_http_responses_to(json_body)
+
+        fetcher = self.create_fetcher()
+        response = fetcher.retrieve_uri('/foo?id=1')
+
+        self.assertEqual(response, json_body)
+        # Ensure we made calls to the right endpoint.
+        self.http.get.assert_called_with(
+            'http://169.254.170.2/foo?id=1',
+            headers={'Accept': 'application/json'},
+            timeout=fetcher.TIMEOUT_SECONDS,
+        )
+
+    def test_can_retry_requests(self):
+        success_response = {
+            "AccessKeyId" : "a",
+            "SecretAccessKey" : "b",
+            "Token" : "c",
+            "Expiration" : "d"
+        }
+        self.set_http_responses_to(
+            # First response is a connection error, should
+            # be retried.
+            requests.ConnectionError(),
+            # Second response is the successful JSON response
+            # with credentials.
+            success_response,
+        )
+        fetcher = self.create_fetcher()
+        response = fetcher.retrieve_uri('/foo?id=1')
+        self.assertEqual(response, success_response)
+
+    def test_propagates_credential_error_on_http_errors(self):
+        self.set_http_responses_to(
+            # In this scenario, we never get a successful response.
+            requests.ConnectionError(),
+            requests.ConnectionError(),
+            requests.ConnectionError(),
+            requests.ConnectionError(),
+            requests.ConnectionError(),
+        )
+        # As a result, we expect an appropriate error to be raised.
+        fetcher = self.create_fetcher()
+        with self.assertRaises(MetadataRetrievalError):
+            fetcher.retrieve_uri('/foo?id=1')
+        self.assertEqual(self.http.get.call_count, fetcher.RETRY_ATTEMPTS)
+
+    def test_error_raised_on_non_200_response(self):
+        self.set_http_responses_to(
+            self.fake_response(status_code=404, body='Error not found'),
+            self.fake_response(status_code=404, body='Error not found'),
+            self.fake_response(status_code=404, body='Error not found'),
+        )
+        fetcher = self.create_fetcher()
+        with self.assertRaises(MetadataRetrievalError):
+            fetcher.retrieve_uri('/foo?id=1')
+        # Should have tried up to RETRY_ATTEMPTS.
+        self.assertEqual(self.http.get.call_count, fetcher.RETRY_ATTEMPTS)
+
+    def test_error_raised_on_no_json_response(self):
+        # If the service returns a sucess response but with a body that
+        # does not contain JSON, we should still retry up to RETRY_ATTEMPTS,
+        # but after exhausting retries we propagate the exception.
+        self.set_http_responses_to(
+            self.fake_response(status_code=200, body='Not JSON'),
+            self.fake_response(status_code=200, body='Not JSON'),
+            self.fake_response(status_code=200, body='Not JSON'),
+        )
+        fetcher = self.create_fetcher()
+        with self.assertRaises(MetadataRetrievalError):
+            fetcher.retrieve_uri('/foo?id=1')
+        # Should have tried up to RETRY_ATTEMPTS.
+        self.assertEqual(self.http.get.call_count, fetcher.RETRY_ATTEMPTS)
+
+
+if __name__ == '__main__':
+    unittest.main()
