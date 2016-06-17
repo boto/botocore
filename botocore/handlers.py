@@ -612,7 +612,7 @@ def set_list_objects_encoding_type_url(params, context, **kwargs):
     if 'EncodingType' not in params:
         # We set this context so that we know it wasn't the customer that
         # requested the encoding.
-        context['EncodingTypeAutoSet'] = True
+        context['encoding_type_auto_set'] = True
         params['EncodingType'] = 'url'
 
 
@@ -626,7 +626,7 @@ def decode_list_object(parsed, context, **kwargs):
     # name values in the following response elements:
     # Delimiter, Marker, Prefix, NextMarker, Key.
     if parsed.get('EncodingType') == 'url' and \
-                    context.get('EncodingTypeAutoSet'):
+                    context.get('encoding_type_auto_set'):
         # URL decode top-level keys in the response if present.
         top_level_keys = ['Delimiter', 'Marker', 'NextMarker']
         for key in top_level_keys:
