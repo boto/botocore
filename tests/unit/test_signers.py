@@ -149,7 +149,8 @@ class TestSigner(BaseSignerTest):
             'url': 'https://foo.com',
             'body': b'',
             'url_path': '/',
-            'method': 'GET'
+            'method': 'GET',
+            'context': {}
         }
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
                              {'v4-query': auth}):
@@ -168,7 +169,8 @@ class TestSigner(BaseSignerTest):
             'url': 'https://foo.com',
             'body': b'',
             'url_path': '/',
-            'method': 'GET'
+            'method': 'GET',
+            'context': {}
         }
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
                              {'v4-query': auth}):
@@ -188,7 +190,8 @@ class TestSigner(BaseSignerTest):
             'url': 'https://foo.com',
             'body': b'',
             'url_path': '/',
-            'method': 'GET'
+            'method': 'GET',
+            'context': {}
         }
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
                              {'v4-query': auth}):
@@ -213,7 +216,8 @@ class TestSigner(BaseSignerTest):
             'url': 'https://s3.amazonaws.com/mybucket/myobject',
             'body': b'',
             'url_path': '/',
-            'method': 'GET'
+            'method': 'GET',
+            'context': {}
         }
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
                              {'s3-query': auth}):
@@ -359,7 +363,8 @@ class TestS3PostPresigner(BaseSignerTest):
             'url': 'https://s3.amazonaws.com/mybucket',
             'body': b'',
             'url_path': '/',
-            'method': 'POST'
+            'method': 'POST',
+            'context': {}
         }
         self.auth = mock.Mock()
         self.auth.REQUIRES_REGION = True
@@ -471,7 +476,8 @@ class TestGenerateUrl(unittest.TestCase):
             'headers': {},
             'query_string': {},
             'url_path': u'/mybucket/mykey',
-            'method': u'GET'}
+            'method': u'GET',
+            'context': {}}
         self.generate_url_mock.assert_called_with(
             request_dict=ref_request_dict, expires_in=3600)
 
@@ -490,7 +496,8 @@ class TestGenerateUrl(unittest.TestCase):
             'headers': {},
             'query_string': {u'response-content-disposition': disposition},
             'url_path': u'/mybucket/mykey',
-            'method': u'GET'}
+            'method': u'GET',
+            'context': {}}
         self.generate_url_mock.assert_called_with(
             request_dict=ref_request_dict, expires_in=3600)
 
@@ -512,7 +519,8 @@ class TestGenerateUrl(unittest.TestCase):
             'headers': {},
             'query_string': {},
             'url_path': u'/mybucket/mykey',
-            'method': u'GET'}
+            'method': u'GET',
+            'context': {}}
         self.generate_url_mock.assert_called_with(
             request_dict=ref_request_dict, expires_in=20)
 
@@ -526,7 +534,8 @@ class TestGenerateUrl(unittest.TestCase):
             'headers': {},
             'query_string': {},
             'url_path': u'/mybucket/mykey',
-            'method': u'PUT'}
+            'method': u'PUT',
+            'context': {}}
         self.generate_url_mock.assert_called_with(
             request_dict=ref_request_dict, expires_in=3600)
 
