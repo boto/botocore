@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.4.29
+======
+
+* feature:ResponseMetadata: Add http response headers to the response metadata.
+* feature:``codepipeline``: Update codepipeline client to latest version
+* feature:s3: Automatically redirect S3 sigv4 requests sent to the wrong region.
+* feature:``opsworks``: Update opsworks client to latest version
+* feature:s3: Use MD5 to sign S3 bodies by default.
+* bugfix:EC2: Replace chars in the EC2 console output we can't decode with replacement chars.  We were previously returning either the decoded content or the original base64 encoded content.  We now will consistently return decoded output, any any chars we can't decode are substituted with a replacement char. (`#953 <https://github.com/boto/botocore/issues/953>`__)
+
+
 1.4.28
 ======
 
