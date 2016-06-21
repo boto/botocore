@@ -34,7 +34,8 @@ def request_dict():
         'url_path': '/',
         'query_string': '',
         'method': 'POST',
-        'url': 'https://example.com'
+        'url': 'https://example.com',
+        'context': {}
     }
 
 
@@ -124,6 +125,14 @@ class TestEndpointFeatures(TestEndpointBase):
         with self.assertRaisesRegexp(ConnectionClosedError,
                                      'Connection was closed'):
             self.endpoint.make_request(self.op, request_dict())
+
+    def test_make_request_with_context(self):
+        r = request_dict()
+        r['context'] = {'signing': {'region': 'us-west-2'}}
+        with patch('botocore.endpoint.Endpoint.prepare_request') as prepare:
+            self.endpoint.make_request(self.op, r)
+        request = prepare.call_args[0][0]
+        self.assertEqual(request.context['signing']['region'], 'us-west-2')
 
 
 class TestRetryInterface(TestEndpointBase):

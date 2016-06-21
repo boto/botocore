@@ -99,7 +99,11 @@ def _looks_like_special_case_error(http_response):
 def decode_console_output(parsed, **kwargs):
     if 'Output' in parsed:
         try:
-            value = base64.b64decode(six.b(parsed['Output'])).decode('utf-8')
+            # We're using 'replace' for errors because it is
+            # possible that console output contains non string
+            # chars we can't utf-8 decode.
+            value = base64.b64decode(six.b(parsed['Output'])).decode(
+                'utf-8', 'replace')
             parsed['Output'] = value
         except (ValueError, TypeError, AttributeError):
             logger.debug('Error decoding base64', exc_info=True)
@@ -148,10 +152,9 @@ def _calculate_md5_from_file(fileobj):
     return md5.digest()
 
 
-def conditionally_calculate_md5(params, **kwargs):
-    """Only add a Content-MD5 when not using sigv4"""
-    signer = kwargs['request_signer']
-    if signer.signature_version not in ['v4', 's3v4'] and MD5_AVAILABLE:
+def conditionally_calculate_md5(params, context, request_signer, **kwargs):
+    """Only add a Content-MD5 if the system supports it."""
+    if MD5_AVAILABLE:
         calculate_md5(params, **kwargs)
 
 

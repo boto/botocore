@@ -14,7 +14,9 @@ from tests import unittest, mock, BaseSessionTest
 
 import botocore.session
 from botocore.config import Config
-from botocore.exceptions import ParamValidationError
+from botocore.compat import six
+from botocore.exceptions import ParamValidationError, ClientError
+from botocore.stub import Stubber
 
 
 class TestS3BucketValidation(unittest.TestCase):
@@ -46,9 +48,10 @@ class TestOnlyAsciiCharsAllowed(BaseS3OperationTest):
                                                              headers={},
                                                              content=b'')
         with self.assertRaises(ParamValidationError):
-            self.client.put_object(Bucket='foo', Key='bar',
-                                Metadata={'goodkey': 'good',
-                                          'non-ascii': u'\u2713'})
+            self.client.put_object(
+                Bucket='foo', Key='bar', Metadata={
+                    'goodkey': 'good', 'non-ascii': u'\u2713'})
+
 
 class TestS3GetBucketLifecycle(BaseS3OperationTest):
     def test_multiple_transitions_returns_one(self):
@@ -144,6 +147,56 @@ class TestS3PutObject(BaseS3OperationTest):
         # The first response should have been retried even though the xml is
         # invalid and eventually return the 200 response.
         self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 200)
+
+
+class TestS3SigV4(BaseS3OperationTest):
+    def setUp(self):
+        super(TestS3SigV4, self).setUp()
+        self.client = self.session.create_client(
+            's3', self.region, config=Config(signature_version='s3v4'))
+        self.response_mock = mock.Mock()
+        self.response_mock.content = b''
+        self.response_mock.headers = {}
+        self.response_mock.status_code = 200
+        self.http_session_send_mock.return_value = self.response_mock
+
+    def get_sent_headers(self):
+        return self.http_session_send_mock.mock_calls[0][1][0].headers
+
+    def test_content_md5_set(self):
+        self.client.put_object(Bucket='foo', Key='bar', Body='baz')
+        self.assertIn('content-md5', self.get_sent_headers())
+
+    def test_content_sha256_set_if_config_value_is_true(self):
+        config = Config(signature_version='s3v4', s3={
+            'payload_signing_enabled': True
+        })
+        self.client = self.session.create_client(
+            's3', self.region, config=config)
+        self.client.put_object(Bucket='foo', Key='bar', Body='baz')
+        sent_headers = self.get_sent_headers()
+        sha_header = sent_headers.get('x-amz-content-sha256')
+        self.assertNotEqual(sha_header, b'UNSIGNED-PAYLOAD')
+
+    def test_content_sha256_not_set_if_config_value_is_false(self):
+        config = Config(signature_version='s3v4', s3={
+            'payload_signing_enabled': False
+        })
+        self.client = self.session.create_client(
+            's3', self.region, config=config)
+        self.client.put_object(Bucket='foo', Key='bar', Body='baz')
+        sent_headers = self.get_sent_headers()
+        sha_header = sent_headers.get('x-amz-content-sha256')
+        self.assertEqual(sha_header, b'UNSIGNED-PAYLOAD')
+
+    def test_content_sha256_set_if_md5_is_unavailable(self):
+        with mock.patch('botocore.auth.MD5_AVAILABLE', False):
+            with mock.patch('botocore.handlers.MD5_AVAILABLE', False):
+                self.client.put_object(Bucket='foo', Key='bar', Body='baz')
+        sent_headers = self.get_sent_headers()
+        unsigned = 'UNSIGNED-PAYLOAD'
+        self.assertNotEqual(sent_headers['x-amz-content-sha256'], unsigned)
+        self.assertNotIn('content-md5', sent_headers)
 
 
 class BaseS3AddressingStyle(BaseSessionTest):
@@ -293,3 +346,80 @@ class TestS3Accelerate(BaseS3AddressingStyle):
         # Even if path is specified as the addressing style, use virtual
         # because path style will **not** work with S3 Accelerate
         self.assert_uses_accelerate_endpoint_correctly(s3)
+
+
+class TestRegionRedirect(BaseS3OperationTest):
+    def setUp(self):
+        super(TestRegionRedirect, self).setUp()
+        self.client = self.session.create_client(
+            's3', 'us-west-2', config=Config(signature_version='s3v4'))
+
+        self.redirect_response = mock.Mock()
+        self.redirect_response.headers = {
+            'x-amz-bucket-region': 'eu-central-1'
+        }
+        self.redirect_response.status_code = 301
+        self.redirect_response.content = (
+            b'<?xml version="1.0" encoding="UTF-8"?>\n'
+            b'<Error>'
+            b'    <Code>PermanentRedirect</Code>'
+            b'    <Message>The bucket you are attempting to access must be '
+            b'        addressed using the specified endpoint. Please send all '
+            b'        future requests to this endpoint.'
+            b'    </Message>'
+            b'    <Bucket>foo</Bucket>'
+            b'    <Endpoint>foo.s3.eu-central-1.amazonaws.com</Endpoint>'
+            b'</Error>')
+
+        self.success_response = mock.Mock()
+        self.success_response.headers = {}
+        self.success_response.status_code = 200
+        self.success_response.content = (
+            b'<?xml version="1.0" encoding="UTF-8"?>\n'
+            b'<ListBucketResult>'
+            b'    <Name>foo</Name>'
+            b'    <Prefix></Prefix>'
+            b'    <Marker></Marker>'
+            b'    <MaxKeys>1000</MaxKeys>'
+            b'    <EncodingType>url</EncodingType>'
+            b'    <IsTruncated>false</IsTruncated>'
+            b'</ListBucketResult>')
+
+    def test_region_redirect(self):
+        self.http_session_send_mock.side_effect = [
+            self.redirect_response, self.success_response]
+        response = self.client.list_objects(Bucket='foo')
+        self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 200)
+        self.assertEqual(self.http_session_send_mock.call_count, 2)
+
+        calls = [c[0][0] for c in self.http_session_send_mock.call_args_list]
+        initial_url = ('https://s3-us-west-2.amazonaws.com/foo'
+                       '?encoding-type=url')
+        self.assertEqual(calls[0].url, initial_url)
+
+        fixed_url = ('https://s3.eu-central-1.amazonaws.com/foo'
+                     '?encoding-type=url')
+        self.assertEqual(calls[1].url, fixed_url)
+
+    def test_region_redirect_cache(self):
+        self.http_session_send_mock.side_effect = [
+            self.redirect_response, self.success_response,
+            self.success_response]
+
+        first_response = self.client.list_objects(Bucket='foo')
+        self.assertEqual(
+            first_response['ResponseMetadata']['HTTPStatusCode'], 200)
+        second_response = self.client.list_objects(Bucket='foo')
+        self.assertEqual(
+            second_response['ResponseMetadata']['HTTPStatusCode'], 200)
+
+        self.assertEqual(self.http_session_send_mock.call_count, 3)
+        calls = [c[0][0] for c in self.http_session_send_mock.call_args_list]
+        initial_url = ('https://s3-us-west-2.amazonaws.com/foo'
+                       '?encoding-type=url')
+        self.assertEqual(calls[0].url, initial_url)
+
+        fixed_url = ('https://s3.eu-central-1.amazonaws.com/foo'
+                     '?encoding-type=url')
+        self.assertEqual(calls[1].url, fixed_url)
+        self.assertEqual(calls[2].url, fixed_url)
