@@ -303,11 +303,11 @@ class Waiter(object):
                 # transition to the failure state if an error
                 # response was received.
                 if 'Error' in response:
-                    # Transition to the failure state, which we can
-                    # just handle here by raising an exception.
-                    raise WaiterError(
-                        name=self.name,
-                        reason=response['Error'].get('Message', 'Unknown'))
+                    # This was a ClientError that was not handled in an
+                    # acceptor. Raise a ClientError again
+                    raise ClientError(
+                        error_response=response,
+                        operation_name=self.config.operation)
             if current_state == 'success':
                 logger.debug("Waiting complete, waiter matched the "
                              "success state.")

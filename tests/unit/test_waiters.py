@@ -358,7 +358,7 @@ class TestWaitersObjects(unittest.TestCase):
             for_operation=operation_method
         )
         waiter = Waiter('MyWaiter', config, operation_method)
-        with self.assertRaises(WaiterError):
+        with self.assertRaises(ClientError):
             waiter.wait()
 
     def test_unspecified_errors_propagate_error_code(self):
@@ -378,7 +378,7 @@ class TestWaitersObjects(unittest.TestCase):
         )
         waiter = Waiter('MyWaiter', config, operation_method)
 
-        with self.assertRaisesRegexp(WaiterError, error_message):
+        with self.assertRaisesRegexp(ClientError, error_message):
             waiter.wait()
 
     def test_waiter_transitions_to_failure_state(self):
