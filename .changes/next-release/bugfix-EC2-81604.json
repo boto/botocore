@@ -1,5 +1,0 @@
-{
-  "category": "EC2", 
-  "type": "bugfix", 
-  "description": "Replace chars in the EC2 console output we can't decode with replacement chars.  We were previously returning either the decoded content or the original base64 encoded content.  We now will consistently return decoded output, any any chars we can't decode are substituted with a replacement char. (`#953 <https://github.com/boto/botocore/issues/953>`__)"
-}

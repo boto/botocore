@@ -1,5 +1,0 @@
-{
-  "description": "Use MD5 to sign S3 bodies by default.",
-  "type": "feature",
-  "category": "s3"
-}

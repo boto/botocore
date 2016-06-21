@@ -1,0 +1,32 @@
+[
+  {
+    "category": "ResponseMetadata", 
+    "description": "Add http response headers to the response metadata.", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``codepipeline``", 
+    "description": "Update codepipeline client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "s3", 
+    "description": "Automatically redirect S3 sigv4 requests sent to the wrong region.", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``opsworks``", 
+    "description": "Update opsworks client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "s3", 
+    "description": "Use MD5 to sign S3 bodies by default.", 
+    "type": "feature"
+  }, 
+  {
+    "category": "EC2", 
+    "description": "Replace chars in the EC2 console output we can't decode with replacement chars.  We were previously returning either the decoded content or the original base64 encoded content.  We now will consistently return decoded output, any any chars we can't decode are substituted with a replacement char. (`#953 <https://github.com/boto/botocore/issues/953>`__)", 
+    "type": "bugfix"
+  }
+]
