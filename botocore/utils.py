@@ -632,6 +632,15 @@ def check_dns_name(bucket_name):
     return True
 
 
+def switch_to_s3_sigv2_presigner(signature_version, signing_name, **kwargs):
+    if signing_name != 's3' or signature_version is botocore.UNSIGNED:
+        return
+
+    for suffix in ['-query', '-presign-post']:
+        if signature_version.endswith(suffix):
+            return 's3' + suffix
+
+
 def fix_s3_host(request, signature_version, region_name, **kwargs):
     """
     This handler looks at S3 requests just before they are signed.

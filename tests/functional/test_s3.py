@@ -446,3 +446,19 @@ class TestGeneratePresigned(BaseS3OperationTest):
             'url': 'https://foo.s3.amazonaws.com/'
         }
         self.assertEqual(parts, expected)
+
+    def test_default_presign_uses_sigv2(self):
+        url = self.client.generate_presigned_url(ClientMethod='list_buckets')
+        self.assertNotIn('Algorithm=AWS4-HMAC-SHA256', url)
+
+    def test_sigv4_presign(self):
+        config = Config(signature_version='s3v4')
+        client = self.session.create_client('s3', self.region, config=config)
+        url = client.generate_presigned_url(ClientMethod='list_buckets')
+        self.assertIn('Algorithm=AWS4-HMAC-SHA256', url)
+
+    def test_sigv2_presign(self):
+        config = Config(signature_version='s3')
+        client = self.session.create_client('s3', self.region, config=config)
+        url = client.generate_presigned_url(ClientMethod='list_buckets')
+        self.assertNotIn('Algorithm=AWS4-HMAC-SHA256', url)
