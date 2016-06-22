@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.4.30
+======
+
+* bugfix:AssumeRole: Fix regression introduced in `#920 <https://github.com/boto/botocore/issues/920>`__ where assume role responses error out when attempting to cache a response. (`#961 <https://github.com/boto/botocore/issues/961>`__)
+
+
 1.4.29
 ======
 
