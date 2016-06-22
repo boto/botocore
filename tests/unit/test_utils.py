@@ -522,6 +522,9 @@ class TestIsValidEndpointURL(unittest.TestCase):
     def test_cannot_have_spaces(self):
         self.assertFalse(is_valid_endpoint_url('https://my invalid name/'))
 
+    def test_can_have_underscores(self):
+        self.assertTrue(is_valid_endpoint_url('https://foo_bar/'))
+
     def test_missing_scheme(self):
         self.assertFalse(is_valid_endpoint_url('foo.bar.com'))
 
