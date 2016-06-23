@@ -339,6 +339,7 @@ class ClientError(Exception):
             operation_name=operation_name)
         super(ClientError, self).__init__(msg)
         self.response = error_response
+        self.operation_name = operation_name
 
 
 class UnsupportedTLSVersionWarning(Warning):
