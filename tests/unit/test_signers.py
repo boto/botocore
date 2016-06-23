@@ -25,6 +25,7 @@ from botocore.exceptions import NoRegionError, UnknownSignatureVersionError
 from botocore.exceptions import UnknownClientMethodError, ParamValidationError
 from botocore.exceptions import UnsupportedSignatureVersionError
 from botocore.signers import RequestSigner, S3PostPresigner, CloudFrontSigner
+from botocore.config import Config
 
 from tests import unittest
 
@@ -112,7 +113,7 @@ class TestSigner(BaseSignerTest):
             self.signer.sign('operation_name', request)
 
         auth.assert_called_with(credentials=self.fixed_credentials)
-        auth.return_value.add_auth.assert_called_with(request=request)
+        auth.return_value.add_auth.assert_called_with(request)
 
     def test_emits_before_sign(self):
         request = mock.Mock()
@@ -140,6 +141,62 @@ class TestSigner(BaseSignerTest):
 
         auth.assert_not_called()
 
+    def test_generate_url_emits_choose_signer(self):
+        request_dict = {
+            'headers': {},
+            'url': 'https://foo.com',
+            'body': b'',
+            'url_path': '/',
+            'method': 'GET',
+            'context': {}
+        }
+
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
+                             {'v4': mock.Mock()}):
+            self.signer.generate_presigned_url(request_dict, 'operation_name')
+
+        self.emitter.emit_until_response.assert_called_with(
+            'choose-signer.service_name.operation_name',
+            signing_name='signing_name', region_name='region_name',
+            signature_version='v4-query')
+
+    def test_generate_url_choose_signer_override(self):
+        request_dict = {
+            'headers': {},
+            'url': 'https://foo.com',
+            'body': b'',
+            'url_path': '/',
+            'method': 'GET',
+            'context': {}
+        }
+        auth = mock.Mock()
+        auth.REQUIRES_REGION = False
+        self.emitter.emit_until_response.return_value = (None, 'custom')
+
+        auth_types_map = {'custom': mock.Mock(), 'custom-query': auth}
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types_map):
+            self.signer.generate_presigned_url(request_dict, 'operation_name')
+
+        auth.assert_called_with(credentials=self.fixed_credentials,
+                                expires=3600)
+
+    def test_generate_url_unsigned(self):
+        request_dict = {
+            'headers': {},
+            'url': 'https://foo.com',
+            'body': b'',
+            'url_path': '/',
+            'method': 'GET',
+            'context': {}
+        }
+        self.emitter.emit_until_response.return_value = (
+            None, botocore.UNSIGNED)
+
+        url = self.signer.generate_presigned_url(
+            request_dict, 'operation_name')
+
+        self.assertEqual(url, 'https://foo.com')
+
     def test_generate_presigned_url(self):
         auth = mock.Mock()
         auth.REQUIRES_REGION = True
@@ -154,7 +211,8 @@ class TestSigner(BaseSignerTest):
         }
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
                              {'v4-query': auth}):
-            presigned_url = self.signer.generate_presigned_url(request_dict)
+            presigned_url = self.signer.generate_presigned_url(
+                request_dict, operation_name='operation_name')
         auth.assert_called_with(
             credentials=self.fixed_credentials, region_name='region_name',
             service_name='signing_name', expires=3600)
@@ -175,7 +233,8 @@ class TestSigner(BaseSignerTest):
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
                              {'v4-query': auth}):
             presigned_url = self.signer.generate_presigned_url(
-                request_dict, region_name='us-west-2')
+                request_dict, operation_name='operation_name',
+                region_name='us-west-2')
         auth.assert_called_with(
             credentials=self.fixed_credentials, region_name='us-west-2',
             service_name='signing_name', expires=3600)
@@ -196,21 +255,14 @@ class TestSigner(BaseSignerTest):
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
                              {'v4-query': auth}):
             presigned_url = self.signer.generate_presigned_url(
-                request_dict, expires_in=900)
+                request_dict, operation_name='operation_name', expires_in=900)
         auth.assert_called_with(
             credentials=self.fixed_credentials,
             region_name='region_name',
             expires=900, service_name='signing_name')
         self.assertEqual(presigned_url, 'https://foo.com')
 
-    def test_generate_presigned_url_fixes_s3_host(self):
-        self.signer = RequestSigner(
-            'service_name', 'region_name', 'signing_name',
-            's3', self.credentials, self.emitter)
-
-        auth = mock.Mock()
-        auth.REQUIRES_REGION = True
-
+    def test_presigned_url_throws_unsupported_signature_error(self):
         request_dict = {
             'headers': {},
             'url': 'https://s3.amazonaws.com/mybucket/myobject',
@@ -219,22 +271,12 @@ class TestSigner(BaseSignerTest):
             'method': 'GET',
             'context': {}
         }
-        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
-                             {'s3-query': auth}):
-            presigned_url = self.signer.generate_presigned_url(
-                request_dict, expires_in=900)
-        auth.assert_called_with(
-            credentials=self.fixed_credentials, region_name='region_name',
-            expires=900, service_name='signing_name')
-        self.assertEqual(presigned_url,
-                         'https://mybucket.s3.amazonaws.com/myobject')
-
-    def test_presigned_url_throws_unsupported_signature_error(self):
         self.signer = RequestSigner(
             'service_name', 'region_name', 'signing_name',
             'foo', self.credentials, self.emitter)
         with self.assertRaises(UnsupportedSignatureVersionError):
-            self.signer.generate_presigned_url({})
+            self.signer.generate_presigned_url(
+                request_dict, operation_name='foo')
 
     def test_signer_with_refreshable_credentials_gets_credential_set(self):
         class FakeCredentials(Credentials):
@@ -276,6 +318,126 @@ class TestSigner(BaseSignerTest):
                 region_name='region_name',
                 credentials=None,
             )
+
+    def test_sign_with_signing_type_standard(self):
+        auth = mock.Mock()
+        post_auth = mock.Mock()
+        query_auth = mock.Mock()
+        request = mock.Mock()
+        auth_types = {
+            'v4-presign-post': post_auth,
+            'v4-query': query_auth,
+            'v4': auth
+        }
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
+            self.signer.sign('operation_name', request,
+                             signing_type='standard')
+        self.assertFalse(post_auth.called)
+        self.assertFalse(query_auth.called)
+        auth.assert_called_with(
+            credentials=ReadOnlyCredentials('key', 'secret', None),
+            service_name='signing_name',
+            region_name='region_name'
+        )
+
+    def test_sign_with_signing_type_presign_url(self):
+        auth = mock.Mock()
+        post_auth = mock.Mock()
+        query_auth = mock.Mock()
+        request = mock.Mock()
+        auth_types = {
+            'v4-presign-post': post_auth,
+            'v4-query': query_auth,
+            'v4': auth
+        }
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
+            self.signer.sign('operation_name', request,
+                             signing_type='presign-url')
+        self.assertFalse(post_auth.called)
+        self.assertFalse(auth.called)
+        query_auth.assert_called_with(
+            credentials=ReadOnlyCredentials('key', 'secret', None),
+            service_name='signing_name',
+            region_name='region_name'
+        )
+
+    def test_sign_with_signing_type_presign_post(self):
+        auth = mock.Mock()
+        post_auth = mock.Mock()
+        query_auth = mock.Mock()
+        request = mock.Mock()
+        auth_types = {
+            'v4-presign-post': post_auth,
+            'v4-query': query_auth,
+            'v4': auth
+        }
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
+            self.signer.sign('operation_name', request,
+                             signing_type='presign-post')
+        self.assertFalse(auth.called)
+        self.assertFalse(query_auth.called)
+        post_auth.assert_called_with(
+            credentials=ReadOnlyCredentials('key', 'secret', None),
+            service_name='signing_name',
+            region_name='region_name'
+        )
+
+    def test_sign_with_region_name(self):
+        request = mock.Mock()
+        auth = mock.Mock()
+        auth_types = {
+            'v4': auth
+        }
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
+            self.signer.sign('operation_name', request, region_name='foo')
+        auth.assert_called_with(
+            credentials=ReadOnlyCredentials('key', 'secret', None),
+            service_name='signing_name',
+            region_name='foo'
+        )
+
+    def test_sign_with_expires_in(self):
+        request = mock.Mock()
+        auth = mock.Mock()
+        auth_types = {
+            'v4': auth
+        }
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
+            self.signer.sign('operation_name', request, expires_in=2)
+        auth.assert_called_with(
+            credentials=ReadOnlyCredentials('key', 'secret', None),
+            service_name='signing_name',
+            region_name='region_name',
+            expires=2
+        )
+
+    def test_unknown_signer_raises_unknown_on_standard(self):
+        request = mock.Mock()
+        auth = mock.Mock()
+        auth_types = {
+            'v4': auth
+        }
+        self.emitter.emit_until_response.return_value = (None, 'custom')
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
+            with self.assertRaises(UnknownSignatureVersionError):
+                self.signer.sign('operation_name', request,
+                                 signing_type='standard')
+
+    def test_unknown_signer_raises_unsupported_when_not_standard(self):
+        request = mock.Mock()
+        auth = mock.Mock()
+        auth_types = {
+            'v4': auth
+        }
+        self.emitter.emit_until_response.return_value = (None, 'custom')
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
+            with self.assertRaises(UnsupportedSignatureVersionError):
+                self.signer.sign('operation_name', request,
+                                 signing_type='presign-url')
+
+            with self.assertRaises(UnsupportedSignatureVersionError):
+                self.signer.sign('operation_name', request,
+                                 signing_type='presign-post')
 
 
 class TestCloudfrontSigner(unittest.TestCase):
@@ -401,6 +563,63 @@ class TestS3PostPresigner(BaseSignerTest):
                          'https://s3.amazonaws.com/mybucket')
         self.assertEqual(post_form_args['fields'], {})
 
+    def test_generate_presigned_post_emits_choose_signer(self):
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
+                             {'s3v4-presign-post': self.auth}):
+            self.signer.generate_presigned_post(self.request_dict)
+        self.emitter.emit_until_response.assert_called_with(
+            'choose-signer.service_name.PutObject',
+            signing_name='signing_name', region_name='region_name',
+            signature_version='s3v4-presign-post')
+
+    def test_generate_presigned_post_choose_signer_override(self):
+        auth = mock.Mock()
+        self.emitter.emit_until_response.return_value = (None, 'custom')
+        auth_types = {
+            's3v4-presign-post': self.auth,
+            'custom-presign-post': auth
+        }
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
+            self.signer.generate_presigned_post(self.request_dict)
+        auth.assert_called_with(
+            credentials=self.fixed_credentials, region_name='region_name',
+            service_name='signing_name')
+
+    def test_generate_presigne_post_choose_signer_override_known(self):
+        auth = mock.Mock()
+        self.emitter.emit_until_response.return_value = (
+            None, 's3v4-presign-post')
+        auth_types = {
+            's3v4-presign-post': self.auth,
+            'custom-presign-post': auth
+        }
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
+            self.signer.generate_presigned_post(self.request_dict)
+        self.auth.assert_called_with(
+            credentials=self.fixed_credentials, region_name='region_name',
+            service_name='signing_name')
+
+    def test_generate_presigned_post_bad_signer_raises_error(self):
+        auth = mock.Mock()
+        self.emitter.emit_until_response.return_value = (None, 's3-query')
+        auth_types = {
+            's3v4-presign-post': self.auth,
+            's3-query': auth
+        }
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
+            with self.assertRaises(UnsupportedSignatureVersionError):
+                self.signer.generate_presigned_post(self.request_dict)
+
+    def test_generate_unsigned_post(self):
+        self.emitter.emit_until_response.return_value = (
+            None, botocore.UNSIGNED)
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
+                             {'s3v4-presign-post': self.auth}):
+            post_form_args = self.signer.generate_presigned_post(
+                self.request_dict)
+        expected = {'fields': {}, 'url': 'https://s3.amazonaws.com/mybucket'}
+        self.assertEqual(post_form_args, expected)
+
     def test_generate_presigned_post_with_conditions(self):
         conditions = [
             {'bucket': 'mybucket'},
@@ -427,29 +646,21 @@ class TestS3PostPresigner(BaseSignerTest):
             credentials=self.fixed_credentials, region_name='foo',
             service_name='signing_name')
 
-    def test_generate_presigned_post_fixes_s3_host(self):
-        self.request_signer = RequestSigner(
-            'service_name', 'region_name', 'signing_name',
-            's3', self.credentials, self.emitter)
-        self.signer = S3PostPresigner(self.request_signer)
-
-        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
-                             {'s3-presign-post': self.auth}):
-            post_form_args = self.signer.generate_presigned_post(
-                self.request_dict)
-        self.auth.assert_called_with(
-            credentials=self.fixed_credentials, region_name='region_name',
-            service_name='signing_name')
-        self.assertEqual(post_form_args['url'],
-                         'https://mybucket.s3.amazonaws.com/')
-
     def test_presigned_post_throws_unsupported_signature_error(self):
+        request_dict = {
+            'headers': {},
+            'url': 'https://s3.amazonaws.com/mybucket/myobject',
+            'body': b'',
+            'url_path': '/',
+            'method': 'POST',
+            'context': {}
+        }
         self.request_signer = RequestSigner(
             'service_name', 'region_name', 'signing_name',
             'foo', self.credentials, self.emitter)
         self.signer = S3PostPresigner(self.request_signer)
         with self.assertRaises(UnsupportedSignatureVersionError):
-            self.signer.generate_presigned_post({})
+            self.signer.generate_presigned_post(request_dict)
 
 
 class TestGenerateUrl(unittest.TestCase):
@@ -479,7 +690,8 @@ class TestGenerateUrl(unittest.TestCase):
             'method': u'GET',
             'context': {}}
         self.generate_url_mock.assert_called_with(
-            request_dict=ref_request_dict, expires_in=3600)
+            request_dict=ref_request_dict, expires_in=3600,
+            operation_name='GetObject')
 
     def test_generate_presigned_url_with_query_string(self):
         disposition = 'attachment; filename="download.jpg"'
@@ -499,7 +711,8 @@ class TestGenerateUrl(unittest.TestCase):
             'method': u'GET',
             'context': {}}
         self.generate_url_mock.assert_called_with(
-            request_dict=ref_request_dict, expires_in=3600)
+            request_dict=ref_request_dict, expires_in=3600,
+            operation_name='GetObject')
 
     def test_generate_presigned_url_unknown_method_name(self):
         with self.assertRaises(UnknownClientMethodError):
@@ -522,7 +735,8 @@ class TestGenerateUrl(unittest.TestCase):
             'method': u'GET',
             'context': {}}
         self.generate_url_mock.assert_called_with(
-            request_dict=ref_request_dict, expires_in=20)
+            request_dict=ref_request_dict, expires_in=20,
+            operation_name='GetObject')
 
     def test_generate_presigned_url_override_http_method(self):
         self.client.generate_presigned_url(
@@ -537,7 +751,8 @@ class TestGenerateUrl(unittest.TestCase):
             'method': u'PUT',
             'context': {}}
         self.generate_url_mock.assert_called_with(
-            request_dict=ref_request_dict, expires_in=3600)
+            request_dict=ref_request_dict, expires_in=3600,
+            operation_name='GetObject')
 
 
 class TestGeneratePresignedPost(unittest.TestCase):

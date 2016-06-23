@@ -423,3 +423,26 @@ class TestRegionRedirect(BaseS3OperationTest):
                      '?encoding-type=url')
         self.assertEqual(calls[1].url, fixed_url)
         self.assertEqual(calls[2].url, fixed_url)
+
+
+class TestGeneratePresigned(BaseS3OperationTest):
+    def test_generate_unauthed_url(self):
+        config = Config(signature_version=botocore.UNSIGNED)
+        client = self.session.create_client('s3', self.region, config=config)
+        url = client.generate_presigned_url(
+            ClientMethod='get_object',
+            Params={
+                'Bucket': 'foo',
+                'Key': 'bar'
+            })
+        self.assertEqual(url, 'https://foo.s3.amazonaws.com/bar')
+
+    def test_generate_unauthed_post(self):
+        config = Config(signature_version=botocore.UNSIGNED)
+        client = self.session.create_client('s3', self.region, config=config)
+        parts = client.generate_presigned_post(Bucket='foo', Key='bar')
+        expected = {
+            'fields': {'key': 'bar'},
+            'url': 'https://foo.s3.amazonaws.com/'
+        }
+        self.assertEqual(parts, expected)

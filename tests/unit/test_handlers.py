@@ -137,8 +137,9 @@ class TestHandlers(BaseSessionTest):
 
     def test_copy_snapshot_encrypted(self):
         credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
         request_signer = RequestSigner(
-            'ec2', 'us-east-1', 'ec2', 'v4', credentials, mock.Mock())
+            'ec2', 'us-east-1', 'ec2', 'v4', credentials, event_emitter)
         request_dict = {}
         params = {'SourceRegion': 'us-west-2'}
         request_dict['body'] = params
@@ -164,8 +165,9 @@ class TestHandlers(BaseSessionTest):
         actual_region = 'us-west-1'
 
         credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
         request_signer = RequestSigner(
-            'ec2', actual_region, 'ec2', 'v4', credentials, mock.Mock())
+            'ec2', actual_region, 'ec2', 'v4', credentials, event_emitter)
         request_dict = {}
         params = {
             'SourceRegion': 'us-west-2',

@@ -24,6 +24,7 @@ from six import string_types, text_type
 import dateutil.parser
 from dateutil.tz import tzlocal, tzutc
 
+import botocore
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.exceptions import InvalidDNSNameError, ClientError
 from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
@@ -645,7 +646,8 @@ def fix_s3_host(request, signature_version, region_name, **kwargs):
     """
     # By default we do not use virtual hosted style addressing when
     # signed with signature version 4.
-    if signature_version in ['s3v4', 'v4']:
+    if signature_version is not botocore.UNSIGNED and \
+            's3v4' in signature_version:
         return
     elif not _allowed_region(region_name):
         return
