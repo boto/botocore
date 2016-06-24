@@ -1,0 +1,5 @@
+{
+  "category": "RequestSigner",
+  "type": "bugfix",
+  "description": "`RequestSigner.generate_presigned_url` now requires the operation name to be passed in. This does not affect using `generate_presigned_url` through a client."
+}

@@ -386,7 +386,8 @@ def copy_snapshot_encrypted(params, request_signer, **kwargs):
     request_dict_copy['method'] = 'GET'
     request_dict_copy['headers'] = {}
     presigned_url = request_signer.generate_presigned_url(
-        request_dict_copy, region_name=source_region)
+        request_dict_copy, region_name=source_region,
+        operation_name='CopySnapshot')
     params['PresignedUrl'] = presigned_url
 
 
