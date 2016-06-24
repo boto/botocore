@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.4.31
+======
+
+* bugfix:RequestSigner: `RequestSigner.generate_presigned_url` now requires the operation name to be passed in. This does not affect using `generate_presigned_url` through a client.
+* feature:``rds``: Update rds client to latest version
+* feature:``directconnect``: Update directconnect client to latest version
+* feature:RequestSigner: Allow `botocore.UNSIGNED` to be used with `generate_presigned_url` and `generate_presigned_post`.
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``cognito-identity``: Update cognito-identity client to latest version
+* feature:``iam``: Update iam client to latest version
+
+
 1.4.30
 ======
 
