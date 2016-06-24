@@ -1,5 +1,0 @@
-{
-  "type": "feature",
-  "description": "Allow `botocore.UNSIGNED` to be used with `generate_presigned_url` and `generate_presigned_post`.",
-  "category": "RequestSigner"
-}
