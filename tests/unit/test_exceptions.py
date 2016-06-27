@@ -20,3 +20,8 @@ def test_client_error_can_handle_missing_code_or_message():
     response = {'Error': {}}
     expect = 'An error occurred (Unknown) when calling the blackhole operation: Unknown'
     assert_equals(str(exceptions.ClientError(response, 'blackhole')), expect)
+
+def test_client_error_has_operation_name_set():
+    response = {'Error': {}}
+    exception = exceptions.ClientError(response, 'blackhole')
+    assert_equals(exception.operation_name, 'blackhole')
