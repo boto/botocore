@@ -34,7 +34,7 @@ from botocore.utils import fix_s3_host
 from botocore.utils import get_service_module_name
 from botocore.utils import switch_to_virtual_host_style
 from botocore.utils import switch_host_s3_accelerate
-from botocore.utils import switch_to_s3_sigv2_presigner
+from botocore.utils import get_sigv2_if_presigning_s3_request
 from botocore.utils import S3_ACCELERATE_ENDPOINT
 from botocore.utils import S3RegionRedirector
 
@@ -297,7 +297,7 @@ class ClientCreator(object):
             return
 
         event_emitter.register(
-            'choose-signer.s3', switch_to_s3_sigv2_presigner)
+            'choose-signer.s3', get_sigv2_if_presigning_s3_request)
 
     def _create_methods(self, service_model):
         op_dict = {}

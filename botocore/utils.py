@@ -632,7 +632,21 @@ def check_dns_name(bucket_name):
     return True
 
 
-def switch_to_s3_sigv2_presigner(signature_version, signing_name, **kwargs):
+def get_sigv2_if_presigning_s3_request(signature_version, signing_name,
+                                       **kwargs):
+    """
+    Returns the 's3' (sigv2) signer if presigning an s3 request. This is
+    intended to be used to set the default signature version for the signer
+    to sigv2.
+
+    :type signature_version: str
+    :param signature_version: The current client signature version.
+
+    :type signing_name: str
+    :param signing_name: The signing name of the service.
+
+    :return: 's3' if the request is an s3 presign request, None otherwise
+    """
     if signing_name != 's3' or signature_version is botocore.UNSIGNED:
         return
 

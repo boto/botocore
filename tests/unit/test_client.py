@@ -1362,7 +1362,7 @@ class TestS3Client(BaseClientTest):
         for call in calls:
             self.assertFalse(
                 call[0] == 'choose-signer' and
-                call[1] == utils.switch_to_s3_sigv2_presigner)
+                call[1] == utils.get_sigv2_if_presigning_s3_request)
 
     def test_endpoint_url_still_resolves_region(self):
         creator = self.create_client_creator()
@@ -1377,7 +1377,7 @@ class TestS3Client(BaseClientTest):
             service_name='s3', region_name=None,
             credentials=self.credentials)
         self.event_emitter.register.assert_any_call(
-            'choose-signer.s3', utils.switch_to_s3_sigv2_presigner)
+            'choose-signer.s3', utils.get_sigv2_if_presigning_s3_request)
 
     def test_presign_default_not_set_if_signature_version_configured(self):
         creator = self.create_client_creator(event_emitter=self.event_emitter)
