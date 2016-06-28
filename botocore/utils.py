@@ -16,9 +16,7 @@ import datetime
 import hashlib
 import binascii
 import functools
-import threading
-
-from collections import MutableMapping
+import weakref
 
 from six import string_types, text_type
 import dateutil.parser
@@ -815,7 +813,10 @@ class S3RegionRedirector(object):
         self._cache = cache
         if self._cache is None:
             self._cache = {}
-        self._client = client
+
+        # This needs to be a weak ref in order to prevent memory leaks on
+        # python 2.6
+        self._client = weakref.proxy(client)
 
     def register(self, event_emitter=None):
         emitter = event_emitter or self._client.meta.events

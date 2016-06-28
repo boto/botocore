@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.4.32
+======
+
+* bugfix:S3: Fixed a bug where the S3 region redirector was potentially causing a memory leak on python 2.6.
+* feature:``s3``: Update s3 client to latest version
+
+
 1.4.31
 ======
 
