@@ -800,7 +800,10 @@
               ]
             },
             "ap-south-1": {
-              "hostname": "s3-ap-south-1.amazonaws.com"
+              "hostname": "s3-ap-south-1.amazonaws.com",
+              "signatureVersions": [
+                "s3v4"
+              ]
             },
             "ap-southeast-1": {
               "hostname": "s3-ap-southeast-1.amazonaws.com"
