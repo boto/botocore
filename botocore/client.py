@@ -34,7 +34,6 @@ from botocore.utils import fix_s3_host
 from botocore.utils import get_service_module_name
 from botocore.utils import switch_to_virtual_host_style
 from botocore.utils import switch_host_s3_accelerate
-from botocore.utils import get_sigv2_if_presigning_s3_request
 from botocore.utils import S3_ACCELERATE_ENDPOINT
 from botocore.utils import S3RegionRedirector
 
@@ -179,15 +178,6 @@ class ClientCreator(object):
             return
         S3RegionRedirector(endpoint_bridge, client).register()
 
-    def _get_default_s3_region(self, service_name, endpoint_bridge):
-        # If a user is providing a custom URL, the endpoint resolver will
-        # refuse to infer a signing region. If we want to default to s3v4,
-        # we have to account for this.
-        if service_name == 's3':
-            endpoint = endpoint_bridge.resolve('s3')
-            return endpoint['signing_region'], endpoint['region_name']
-        return None, None
-
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,
                          scoped_config, client_config, endpoint_bridge):
@@ -216,14 +206,8 @@ class ClientCreator(object):
             if client_config.user_agent_extra is not None:
                 user_agent += ' %s' % client_config.user_agent_extra
 
-        signing_region = endpoint_config['signing_region']
-        endpoint_region_name = endpoint_config['region_name']
-        if signing_region is None and endpoint_region_name is None:
-            signing_region, endpoint_region_name = \
-                self._get_default_s3_region(service_name, endpoint_bridge)
-
         signer = RequestSigner(
-            service_name, signing_region,
+            service_name, endpoint_config['signing_region'],
             endpoint_config['signing_name'],
             endpoint_config['signature_version'],
             credentials, event_emitter)
@@ -232,7 +216,7 @@ class ClientCreator(object):
         # on the final values. We do not want the user to be able
         # to try to modify an existing client with a client config.
         config_kwargs = dict(
-            region_name=endpoint_region_name,
+            region_name=endpoint_config['region_name'],
             signature_version=endpoint_config['signature_version'],
             user_agent=user_agent)
         if client_config is not None:
@@ -244,15 +228,11 @@ class ClientCreator(object):
         self._inject_s3_configuration(
             config_kwargs, scoped_config, client_config)
         self._conditionally_unregister_fix_s3_host(endpoint_url, event_emitter)
-        self._set_s3_presign_signature_verion(
-            service_name, endpoint_bridge.endpoint_resolver,
-            client_config, scoped_config, event_emitter, signing_region,
-            endpoint_config['metadata'])
 
         new_config = Config(**config_kwargs)
         endpoint_creator = EndpointCreator(event_emitter)
         endpoint = endpoint_creator.create_endpoint(
-            service_model, region_name=endpoint_region_name,
+            service_model, region_name=endpoint_config['region_name'],
             endpoint_url=endpoint_config['endpoint_url'], verify=verify,
             response_parser_factory=self._response_parser_factory,
             timeout=(new_config.connect_timeout, new_config.read_timeout))
@@ -267,37 +247,6 @@ class ClientCreator(object):
             'loader': self._loader,
             'client_config': new_config
         }
-
-    def _set_s3_presign_signature_verion(
-            self, service_name, endpoint_resolver, client_config,
-            scoped_config, event_emitter, region_name, endpoint_metadata):
-        if service_name != 's3':
-            return
-
-        # This will return the manually configured signature version, or None
-        # if none was manually set. If a customer manually sets the signature
-        # version, we always want to use what they set.
-        provided_signature_version = _get_configured_signature_version(
-            service_name, client_config, scoped_config)
-        if provided_signature_version is not None:
-            return
-
-        # Check to see if the region is a region that we know about. If we
-        # don't know about a region, then we can safely assume it's a new
-        # region that is sigv4 only, since all new S3 regions only allow sigv4.
-        regions = endpoint_resolver.get_available_endpoints(
-            service_name, endpoint_metadata.get('partition'))
-        if region_name not in regions:
-            return
-
-        # If it is a region we know about, we want to default to sigv2, so here
-        # we check to see if it is available.
-        signature_versions = endpoint_metadata.get('signatureVersions')
-        if 's3' not in signature_versions:
-            return
-
-        event_emitter.register(
-            'choose-signer.s3', get_sigv2_if_presigning_s3_request)
 
     def _create_methods(self, service_model):
         op_dict = {}
@@ -475,17 +424,32 @@ class ClientEndpointBridge(object):
         return region_name, signing_region
 
     def _resolve_signature_version(self, service_name, resolved):
-        configured_version = _get_configured_signature_version(
-            service_name, self.client_config, self.scoped_config)
-        if configured_version is not None:
-            return configured_version
-
+        # Client config overrides everything.
+        client = self.client_config
+        if client and client.signature_version is not None:
+            return client.signature_version
+        # Scoped config overrides picking from the endpoint metadata.
+        scoped = self.scoped_config
+        if scoped is not None:
+            service_config = scoped.get(service_name)
+            if service_config is not None and isinstance(service_config, dict):
+                version = service_config.get('signature_version')
+                if version:
+                    logger.debug(
+                        "Switching signature version for service %s "
+                        "to version %s based on config file override.",
+                        service_name, version)
+                    return version
         # Pick a signature version from the endpoint metadata if present.
         if 'signatureVersions' in resolved:
             potential_versions = resolved['signatureVersions']
             if service_name == 's3':
-                return 's3v4'
-            elif 'v4' in potential_versions:
+                # We currently prefer s3 over s3v4.
+                if 's3' in potential_versions:
+                    return 's3'
+                elif 's3v4' in potential_versions:
+                    return 's3v4'
+            if 'v4' in potential_versions:
                 return 'v4'
             # Now just iterate over the signature versions in order until we
             # find the first one that is known to Botocore.
@@ -494,36 +458,6 @@ class ClientEndpointBridge(object):
                     return known
         raise UnknownSignatureVersionError(
             signature_version=resolved.get('signatureVersions'))
-
-
-def _get_configured_signature_version(service_name, client_config,
-                                      scoped_config):
-    """
-    Gets the manually configured signature version.
-
-    :returns: the customer configured signature version, or None if no
-        signature version was configured.
-    """
-    # Client config overrides everything.
-    client = client_config
-    if client and client.signature_version is not None:
-        return client.signature_version
-
-    # Scoped config overrides picking from the endpoint metadata.
-    scoped = scoped_config
-    if scoped is not None:
-        # A given service may have service specific configuration in the
-        # config file, so we need to check there as well.
-        service_config = scoped.get(service_name)
-        if service_config is not None and isinstance(service_config, dict):
-            version = service_config.get('signature_version')
-            if version:
-                logger.debug(
-                    "Switching signature version for service %s "
-                    "to version %s based on config file override.",
-                    service_name, version)
-                return version
-    return None
 
 
 class BaseClient(object):
