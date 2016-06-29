@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.4.33
+======
+
+* feature:``sns``: Update sns client to latest version
+* feature:``route53``: Update route53 client to latest version
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``gamelift``: Update gamelift client to latest version
+* feature:``efs``: Update efs client to latest version
+* feature:``iot``: Update iot client to latest version
+
+
 1.4.32
 ======
 

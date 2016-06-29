@@ -371,7 +371,11 @@ class TestS3Objects(TestS3BaseWithBucket):
     def test_thread_safe_auth(self):
         self.auth_paths = []
         self.session.register('before-sign', self.increment_auth)
-        self.client = self.session.create_client('s3', self.region)
+        # This test depends on auth_path, which is only added in virtual host
+        # style requests.
+        config = Config(s3={'addressing_style': 'virtual'})
+        self.client = self.session.create_client('s3', self.region,
+                                                 config=config)
         self.create_object(key_name='foo1')
         threads = []
         for i in range(10):
