@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.4.34
+======
+
+* feature:``dms``: Update dms client to latest version
+* feature:``ssm``: Update ssm client to latest version
+
+
 1.4.33
 ======
 
