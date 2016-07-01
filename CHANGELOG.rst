@@ -2,6 +2,77 @@
 CHANGELOG
 =========
 
+1.4.34
+======
+
+* feature:``dms``: Update dms client to latest version
+* feature:``ssm``: Update ssm client to latest version
+
+
+1.4.33
+======
+
+* feature:``sns``: Update sns client to latest version
+* feature:``route53``: Update route53 client to latest version
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``gamelift``: Update gamelift client to latest version
+* feature:``efs``: Update efs client to latest version
+* feature:``iot``: Update iot client to latest version
+
+
+1.4.32
+======
+
+* bugfix:S3: Fixed a bug where the S3 region redirector was potentially causing a memory leak on python 2.6.
+* feature:``s3``: Update s3 client to latest version
+
+
+1.4.31
+======
+
+* bugfix:RequestSigner: `RequestSigner.generate_presigned_url` now requires the operation name to be passed in. This does not affect using `generate_presigned_url` through a client.
+* feature:``rds``: Update rds client to latest version
+* feature:``directconnect``: Update directconnect client to latest version
+* feature:RequestSigner: Allow `botocore.UNSIGNED` to be used with `generate_presigned_url` and `generate_presigned_post`.
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``cognito-identity``: Update cognito-identity client to latest version
+* feature:``iam``: Update iam client to latest version
+
+
+1.4.30
+======
+
+* bugfix:AssumeRole: Fix regression introduced in `#920 <https://github.com/boto/botocore/issues/920>`__ where assume role responses error out when attempting to cache a response. (`#961 <https://github.com/boto/botocore/issues/961>`__)
+
+
+1.4.29
+======
+
+* feature:ResponseMetadata: Add http response headers to the response metadata.
+* feature:``codepipeline``: Update codepipeline client to latest version
+* feature:s3: Automatically redirect S3 sigv4 requests sent to the wrong region.
+* feature:``opsworks``: Update opsworks client to latest version
+* feature:s3: Use MD5 to sign S3 bodies by default.
+* bugfix:EC2: Replace chars in the EC2 console output we can't decode with replacement chars.  We were previously returning either the decoded content or the original base64 encoded content.  We now will consistently return decoded output, any any chars we can't decode are substituted with a replacement char. (`#953 <https://github.com/boto/botocore/issues/953>`__)
+
+
+1.4.28
+======
+
+* feature:``cloudtrail``: Update cloudtrail client to latest version
+* feature:``acm``: Update acm client to latest version
+* bugfix:Stubber: Fix regression in comparing multiple expected parameters
+* feature:``rds``: Update rds client to latest version
+* feature:``ses``: Update ses client to latest version
+
+
+1.4.27
+======
+
+* feature:Stubber: Allow certain paramters to be ignored by specifying stub.ANY. Resolves `#931 <https://github.com/boto/botocore/issues/931>`__
+* feature:``s3``: Update s3 client to latest version
+
+
 1.4.26
 ======
 

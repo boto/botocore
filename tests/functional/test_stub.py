@@ -15,8 +15,10 @@ from tests import unittest
 
 import botocore
 import botocore.session
+import botocore.stub as stub
 from botocore.stub import Stubber
-from botocore.exceptions import StubResponseError, ClientError
+from botocore.exceptions import StubResponseError, ClientError, \
+    StubAssertionError
 from botocore.exceptions import ParamValidationError
 import botocore.client
 import botocore.retryhandler
@@ -148,3 +150,64 @@ class TestStubber(unittest.TestCase):
         # Throw an error for invalid parameters
         with self.assertRaises(ParamValidationError):
             self.client.list_objects(Buck='bar')
+
+    def test_any_ignores_param_for_validation(self):
+        service_response = {}
+        expected_params = {'Bucket': stub.ANY}
+
+        self.stubber.add_response(
+            'list_objects', service_response, expected_params)
+        self.stubber.add_response(
+            'list_objects', service_response, expected_params)
+
+        try:
+            with self.stubber:
+                self.client.list_objects(Bucket='foo')
+                self.client.list_objects(Bucket='bar')
+        except StubAssertionError:
+            self.fail("stub.ANY failed to ignore parameter for validation.")
+
+    def test_mixed_any_and_concrete_params(self):
+        service_response = {}
+        expected_params = {'Bucket': stub.ANY, 'Key': 'foo.txt'}
+
+        self.stubber.add_response(
+            'head_object', service_response, expected_params)
+        self.stubber.add_response(
+            'head_object', service_response, expected_params)
+
+        try:
+            with self.stubber:
+                self.client.head_object(Bucket='foo', Key='foo.txt')
+                self.client.head_object(Bucket='bar', Key='foo.txt')
+        except StubAssertionError:
+            self.fail("stub.ANY failed to ignore parameter for validation.")
+
+    def test_none_param(self):
+        service_response = {}
+        expected_params = {'Buck': None}
+
+        self.stubber.add_response(
+            'list_objects', service_response, expected_params)
+
+        self.stubber.activate()
+        # Throw an error for invalid parameters
+        with self.assertRaises(StubAssertionError):
+            self.client.list_objects(Buck='bar')
+
+    def test_many_expected_params(self):
+        service_response = {}
+        expected_params = {
+            'Bucket': 'mybucket',
+            'Prefix': 'myprefix',
+            'Delimiter': '/',
+            'EncodingType': 'url'
+        }
+        self.stubber.add_response(
+            'list_objects', service_response, expected_params)
+        try:
+            with self.stubber:
+                self.client.list_objects(**expected_params)
+        except StubAssertionError:
+            self.fail(
+                "Stubber inappropriately raised error for same parameters.")

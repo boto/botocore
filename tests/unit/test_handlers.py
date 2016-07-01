@@ -24,6 +24,7 @@ from botocore.exceptions import ParamValidationError, MD5UnavailableError
 from botocore.exceptions import AliasConflictParameterError
 from botocore.awsrequest import AWSRequest
 from botocore.compat import quote, six
+from botocore.config import Config
 from botocore.docs.bcdoc.restdoc import DocumentStructure
 from botocore.docs.params import RequestParamsDocumenter
 from botocore.docs.example import RequestExampleDocumenter
@@ -46,6 +47,12 @@ class TestHandlers(BaseSessionTest):
         parsed = {'Output': 1}
         handlers.decode_console_output(parsed)
         self.assertEqual(parsed['Output'], 1)
+
+    def test_get_console_output_bad_unicode_errors(self):
+        original = base64.b64encode(b'before\xffafter').decode('utf-8')
+        parsed = {'Output': original}
+        handlers.decode_console_output(parsed)
+        self.assertEqual(parsed['Output'], u'before\ufffdafter')
 
     def test_noop_if_output_key_does_not_exist(self):
         original = {'foo': 'bar'}
@@ -130,14 +137,16 @@ class TestHandlers(BaseSessionTest):
 
     def test_copy_snapshot_encrypted(self):
         credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
         request_signer = RequestSigner(
-            'ec2', 'us-east-1', 'ec2', 'v4', credentials, mock.Mock())
+            'ec2', 'us-east-1', 'ec2', 'v4', credentials, event_emitter)
         request_dict = {}
         params = {'SourceRegion': 'us-west-2'}
         request_dict['body'] = params
         request_dict['url'] = 'https://ec2.us-east-1.amazonaws.com'
         request_dict['method'] = 'POST'
         request_dict['headers'] = {}
+        request_dict['context'] = {}
 
         handlers.copy_snapshot_encrypted(request_dict, request_signer)
 
@@ -156,8 +165,9 @@ class TestHandlers(BaseSessionTest):
         actual_region = 'us-west-1'
 
         credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
         request_signer = RequestSigner(
-            'ec2', actual_region, 'ec2', 'v4', credentials, mock.Mock())
+            'ec2', actual_region, 'ec2', 'v4', credentials, event_emitter)
         request_dict = {}
         params = {
             'SourceRegion': 'us-west-2',
@@ -166,6 +176,7 @@ class TestHandlers(BaseSessionTest):
         request_dict['url'] = 'https://ec2.us-west-1.amazonaws.com'
         request_dict['method'] = 'POST'
         request_dict['headers'] = {}
+        request_dict['context'] = {}
 
         # The user provides us-east-1, but we will override this to
         # endpoint.region_name, of 'us-west-1' in this case.
@@ -550,7 +561,7 @@ class TestHandlers(BaseSessionTest):
         context = {}
         handlers.set_list_objects_encoding_type_url(params, context=context)
         self.assertEqual(params['EncodingType'], 'url')
-        self.assertTrue(context['EncodingTypeAutoSet'])
+        self.assertTrue(context['encoding_type_auto_set'])
 
         params['EncodingType'] = 'new_value'
         handlers.set_list_objects_encoding_type_url(params, context={})
@@ -561,7 +572,7 @@ class TestHandlers(BaseSessionTest):
             'Contents': [{'Key': "%C3%A7%C3%B6s%25asd%08"}],
             'EncodingType': 'url',
         }
-        context = {'EncodingTypeAutoSet': True}
+        context = {'encoding_type_auto_set': True}
         handlers.decode_list_object(parsed, context=context)
         self.assertEqual(parsed['Contents'][0]['Key'], u'\xe7\xf6s%asd\x08')
 
@@ -578,7 +589,7 @@ class TestHandlers(BaseSessionTest):
             'Marker': "%C3%A7%C3%B6s%25%20asd%08+c",
             'EncodingType': 'url',
         }
-        context = {'EncodingTypeAutoSet': True}
+        context = {'encoding_type_auto_set': True}
         handlers.decode_list_object(parsed, context=context)
         self.assertEqual(parsed['Marker'], u'\xe7\xf6s% asd\x08 c')
 
@@ -587,7 +598,7 @@ class TestHandlers(BaseSessionTest):
             'NextMarker': "%C3%A7%C3%B6s%25%20asd%08+c",
             'EncodingType': 'url',
         }
-        context = {'EncodingTypeAutoSet': True}
+        context = {'encoding_type_auto_set': True}
         handlers.decode_list_object(parsed, context=context)
         self.assertEqual(parsed['NextMarker'], u'\xe7\xf6s% asd\x08 c')
 
@@ -596,7 +607,7 @@ class TestHandlers(BaseSessionTest):
             'CommonPrefixes': [{'Prefix': "%C3%A7%C3%B6s%25%20asd%08+c"}],
             'EncodingType': 'url',
         }
-        context = {'EncodingTypeAutoSet': True}
+        context = {'encoding_type_auto_set': True}
         handlers.decode_list_object(parsed, context=context)
         self.assertEqual(parsed['CommonPrefixes'][0]['Prefix'],
                          u'\xe7\xf6s% asd\x08 c')
@@ -606,7 +617,7 @@ class TestHandlers(BaseSessionTest):
             'Delimiter': "%C3%A7%C3%B6s%25%20asd%08+c",
             'EncodingType': 'url',
         }
-        context = {'EncodingTypeAutoSet': True}
+        context = {'encoding_type_auto_set': True}
         handlers.decode_list_object(parsed, context=context)
         self.assertEqual(parsed['Delimiter'], u'\xe7\xf6s% asd\x08 c')
 
@@ -758,7 +769,14 @@ class TestSSEMD5(BaseMD5Test):
 
 
 class TestAddMD5(BaseMD5Test):
-    def test_does_not_add_md5_when_v4(self):
+    def get_context(self, s3_config=None):
+        if s3_config is None:
+            s3_config = {}
+        return {
+            'client_config': Config(s3=s3_config)
+        }
+
+    def test_adds_md5_when_v4(self):
         credentials = Credentials('key', 'secret')
         request_signer = RequestSigner(
             's3', 'us-east-1', 's3', 'v4', credentials, mock.Mock())
@@ -766,11 +784,12 @@ class TestAddMD5(BaseMD5Test):
                         'url': 'https://s3.us-east-1.amazonaws.com',
                         'method': 'PUT',
                         'headers': {}}
-        handlers.conditionally_calculate_md5(request_dict,
-                                             request_signer=request_signer)
-        self.assertTrue('Content-MD5' not in request_dict['headers'])
+        context = self.get_context()
+        handlers.conditionally_calculate_md5(
+            request_dict, request_signer=request_signer, context=context)
+        self.assertTrue('Content-MD5' in request_dict['headers'])
 
-    def test_does_not_add_md5_when_s3v4(self):
+    def test_adds_md5_when_s3v4(self):
         credentials = Credentials('key', 'secret')
         request_signer = RequestSigner(
             's3', 'us-east-1', 's3', 's3v4', credentials, mock.Mock())
@@ -778,9 +797,10 @@ class TestAddMD5(BaseMD5Test):
                         'url': 'https://s3.us-east-1.amazonaws.com',
                         'method': 'PUT',
                         'headers': {}}
-        handlers.conditionally_calculate_md5(request_dict,
-                                             request_signer=request_signer)
-        self.assertTrue('Content-MD5' not in request_dict['headers'])
+        context = self.get_context({'payload_signing_enabled': False})
+        handlers.conditionally_calculate_md5(
+            request_dict, request_signer=request_signer, context=context)
+        self.assertTrue('Content-MD5' in request_dict['headers'])
 
     def test_conditional_does_not_add_when_md5_unavailable(self):
         credentials = Credentials('key', 'secret')
@@ -791,10 +811,11 @@ class TestAddMD5(BaseMD5Test):
                         'method': 'PUT',
                         'headers': {}}
 
+        context = self.get_context()
         self.set_md5_available(False)
         with mock.patch('botocore.handlers.MD5_AVAILABLE', False):
             handlers.conditionally_calculate_md5(
-                request_dict, request_signer=request_signer)
+                request_dict, request_signer=request_signer, context=context)
             self.assertFalse('Content-MD5' in request_dict['headers'])
 
     def test_add_md5_raises_error_when_md5_unavailable(self):
@@ -811,7 +832,7 @@ class TestAddMD5(BaseMD5Test):
             handlers.calculate_md5(
                 request_dict, request_signer=request_signer)
 
-    def test_adds_md5_when_not_v4(self):
+    def test_adds_md5_when_s3v2(self):
         credentials = Credentials('key', 'secret')
         request_signer = RequestSigner(
             's3', 'us-east-1', 's3', 's3', credentials, mock.Mock())
@@ -819,8 +840,9 @@ class TestAddMD5(BaseMD5Test):
                         'url': 'https://s3.us-east-1.amazonaws.com',
                         'method': 'PUT',
                         'headers': {}}
-        handlers.conditionally_calculate_md5(request_dict,
-                                             request_signer=request_signer)
+        context = self.get_context()
+        handlers.conditionally_calculate_md5(
+            request_dict, request_signer=request_signer, context=context)
         self.assertTrue('Content-MD5' in request_dict['headers'])
 
     def test_add_md5_with_file_like_body(self):
