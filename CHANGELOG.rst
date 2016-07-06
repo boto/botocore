@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.4.35
+======
+
+* feature:``iam``: Update iam client to latest version
+* feature:``codepipeline``: Update codepipeline client to latest version
+* feature:``efs``: Update efs client to latest version
+
+
 1.4.34
 ======
 
