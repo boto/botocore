@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.4.36
+======
+
+* feature:``servicecatalog``: Update servicecatalog client to latest version
+* feature:``opsworks``: Update opsworks client to latest version
+* feature:``ds``: Update ds client to latest version
+* feature:``config``: Update config client to latest version
+
+
 1.4.35
 ======
 

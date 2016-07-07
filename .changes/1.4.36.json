@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``servicecatalog``", 
+    "description": "Update servicecatalog client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``opsworks``", 
+    "description": "Update opsworks client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``ds``", 
+    "description": "Update ds client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``config``", 
+    "description": "Update config client to latest version", 
+    "type": "feature"
+  }
+]
