@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``dms``", 
+    "description": "Update dms client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``ecs``", 
+    "description": "Update ecs client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "Credential Provider", 
+    "description": "Add support for ECS metadata credential provider.", 
+    "type": "Feature"
+  }, 
+  {
+    "category": "``rds``", 
+    "description": "Update rds client to latest version", 
+    "type": "feature"
+  }
+]

@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.4.37
+======
+
+* feature:``dms``: Update dms client to latest version
+* feature:``ecs``: Update ecs client to latest version
+* Feature:Credential Provider: Add support for ECS metadata credential provider.
+* feature:``rds``: Update rds client to latest version
+
+
 1.4.36
 ======
 

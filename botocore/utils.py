@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import re
+import time
 import logging
 import datetime
 import hashlib
@@ -25,6 +26,7 @@ from dateutil.tz import tzlocal, tzutc
 import botocore
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.exceptions import InvalidDNSNameError, ClientError
+from botocore.exceptions import MetadataRetrievalError
 from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
 from botocore.vendored import requests
 from botocore.compat import OrderedDict
@@ -44,6 +46,7 @@ RESTRICTED_REGIONS = [
     'fips-us-gov-west-1',
 ]
 S3_ACCELERATE_ENDPOINT = 's3-accelerate.amazonaws.com'
+RETRYABLE_HTTP_ERRORS = (requests.Timeout, requests.ConnectionError)
 
 
 class _RetriesExceededError(Exception):
@@ -154,7 +157,7 @@ class InstanceMetadataFetcher(object):
         for i in range(num_attempts):
             try:
                 response = requests.get(url, timeout=timeout)
-            except (requests.Timeout, requests.ConnectionError) as e:
+            except RETRYABLE_HTTP_ERRORS as e:
                 logger.debug("Caught exception while trying to retrieve "
                              "credentials: %s", e, exc_info=True)
             else:
@@ -932,3 +935,62 @@ class S3RegionRedirector(object):
             context['signing'] = signing_context
         else:
             context['signing'] = {'bucket': bucket}
+
+
+class ContainerMetadataFetcher(object):
+
+    TIMEOUT_SECONDS = 2
+    RETRY_ATTEMPTS = 3
+    SLEEP_TIME = 1
+    IP_ADDRESS = '169.254.170.2'
+
+    def __init__(self, session=None, sleep=time.sleep):
+        if session is None:
+            session = requests.Session()
+        self._session = session
+        self._sleep = sleep
+
+    def retrieve_uri(self, relative_uri):
+        """Retrieve JSON metadata from ECS metadata.
+
+        :type relative_uri: str
+        :param relative_uri: A relative URI, e.g "/foo/bar?id=123"
+
+        :return: The parsed JSON response.
+
+        """
+        full_url = self._full_url(relative_uri)
+        headers = {'Accept': 'application/json'}
+        attempts = 0
+        while True:
+            try:
+                return self._get_response(full_url, headers, self.TIMEOUT_SECONDS)
+            except MetadataRetrievalError as e:
+                logger.debug("Received error when attempting to retrieve "
+                             "ECS metadata: %s", e, exc_info=True)
+                self._sleep(self.SLEEP_TIME)
+                attempts += 1
+                if attempts >= self.RETRY_ATTEMPTS:
+                    raise
+
+    def _get_response(self, full_url, headers, timeout):
+        try:
+            response = self._session.get(full_url, headers=headers,
+                                         timeout=timeout)
+            if response.status_code != 200:
+                raise MetadataRetrievalError(
+                    error_msg="Received non 200 response (%s) from ECS metadata: %s"
+                    % (response.status_code, response.content))
+            try:
+                return json.loads(response.content)
+            except ValueError:
+                raise MetadataRetrievalError(
+                    error_msg=("Unable to parse JSON returned from "
+                               "ECS metadata: %s" % response.content))
+        except RETRYABLE_HTTP_ERRORS as e:
+            error_msg = ("Received error when attempting to retrieve "
+                         "ECS metadata: %s" % e)
+            raise MetadataRetrievalError(error_msg=error_msg)
+
+    def _full_url(self, relative_uri):
+        return 'http://%s%s' % (self.IP_ADDRESS, relative_uri)
