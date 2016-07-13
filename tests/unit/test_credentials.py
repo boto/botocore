@@ -18,6 +18,7 @@ import os
 from dateutil.tz import tzlocal, tzutc
 
 from botocore import credentials
+from botocore.utils import ContainerMetadataFetcher
 from botocore.credentials import EnvProvider, create_assume_role_refresher
 import botocore.exceptions
 import botocore.session
@@ -1141,3 +1142,106 @@ class TestRefreshLogic(unittest.TestCase):
             # Because credentials are actually expired, any
             # failure to refresh should be propagated.
             creds.get_frozen_credentials()
+
+
+class TestContainerProvider(BaseEnvVar):
+    def test_noop_if_env_var_is_not_set(self):
+        # The 'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI' env var
+        # is not present as an env var.
+        environ = {}
+        provider = credentials.ContainerProvider(environ)
+        creds = provider.load()
+        self.assertIsNone(creds)
+
+    def test_retrieve_from_provider_if_env_var_present(self):
+        environ = {
+            'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI': '/latest/credentials?id=foo'
+        }
+        fetcher = mock.Mock(spec=ContainerMetadataFetcher)
+        timeobj = datetime.now(tzlocal())
+        timestamp = (timeobj + timedelta(hours=24)).isoformat()
+        fetcher.retrieve_uri.return_value = {
+            "AccessKeyId" : "access_key",
+            "SecretAccessKey" : "secret_key",
+            "Token" : "token",
+            "Expiration" : timestamp,
+        }
+        provider = credentials.ContainerProvider(environ, fetcher)
+        creds = provider.load()
+
+        fetcher.retrieve_uri.assert_called_with('/latest/credentials?id=foo')
+        self.assertEqual(creds.access_key, 'access_key')
+        self.assertEqual(creds.secret_key, 'secret_key')
+        self.assertEqual(creds.token, 'token')
+        self.assertEqual(creds.method, 'container-role')
+
+    def test_creds_refresh_when_needed(self):
+        environ = {
+            'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI': '/latest/credentials?id=foo'
+        }
+        fetcher = mock.Mock(spec=credentials.ContainerMetadataFetcher)
+        timeobj = datetime.now(tzlocal())
+        expired_timestamp = (timeobj - timedelta(hours=23)).isoformat()
+        future_timestamp = (timeobj + timedelta(hours=1)).isoformat()
+        fetcher.retrieve_uri.side_effect = [
+            {
+                "AccessKeyId" : "access_key_old",
+                "SecretAccessKey" : "secret_key_old",
+                "Token" : "token_old",
+                "Expiration" : expired_timestamp,
+            },
+            {
+                "AccessKeyId" : "access_key_new",
+                "SecretAccessKey" : "secret_key_new",
+                "Token" : "token_new",
+                "Expiration" : future_timestamp,
+            }
+        ]
+        provider = credentials.ContainerProvider(environ, fetcher)
+        creds = provider.load()
+        frozen_creds = creds.get_frozen_credentials()
+        self.assertEqual(frozen_creds.access_key, 'access_key_new')
+        self.assertEqual(frozen_creds.secret_key, 'secret_key_new')
+        self.assertEqual(frozen_creds.token, 'token_new')
+
+    def test_http_error_propagated(self):
+        environ = {
+            'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI': '/latest/credentials?id=foo'
+        }
+        fetcher = mock.Mock(spec=credentials.ContainerMetadataFetcher)
+        timeobj = datetime.now(tzlocal())
+        expired_timestamp = (timeobj - timedelta(hours=23)).isoformat()
+        future_timestamp = (timeobj + timedelta(hours=1)).isoformat()
+        exception = botocore.exceptions.CredentialRetrievalError
+        fetcher.retrieve_uri.side_effect = exception(provider='ecs-role',
+                                                     error_msg='fake http error')
+        with self.assertRaises(exception):
+            provider = credentials.ContainerProvider(environ, fetcher)
+            creds = provider.load()
+
+    def test_http_error_propagated_on_refresh(self):
+        # We should ensure errors are still propagated even in the
+        # case of a failed refresh.
+        environ = {
+            'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI': '/latest/credentials?id=foo'
+        }
+        fetcher = mock.Mock(spec=credentials.ContainerMetadataFetcher)
+        timeobj = datetime.now(tzlocal())
+        expired_timestamp = (timeobj - timedelta(hours=23)).isoformat()
+        http_exception = botocore.exceptions.MetadataRetrievalError
+        raised_exception = botocore.exceptions.CredentialRetrievalError
+        fetcher.retrieve_uri.side_effect = [
+            {
+                "AccessKeyId" : "access_key_old",
+                "SecretAccessKey" : "secret_key_old",
+                "Token" : "token_old",
+                "Expiration" : expired_timestamp,
+            },
+            http_exception(error_msg='HTTP connection timeout')
+        ]
+        provider = credentials.ContainerProvider(environ, fetcher)
+        # First time works with no issues.
+        creds = provider.load()
+        # Second time with a refresh should propagate an error.
+        with self.assertRaises(raised_exception):
+            frozen_creds = creds.get_frozen_credentials()

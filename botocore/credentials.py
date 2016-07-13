@@ -30,7 +30,10 @@ from botocore.exceptions import PartialCredentialsError
 from botocore.exceptions import ConfigNotFound
 from botocore.exceptions import InvalidConfigError
 from botocore.exceptions import RefreshWithMFAUnsupportedError
+from botocore.exceptions import MetadataRetrievalError
+from botocore.exceptions import CredentialRetrievalError
 from botocore.utils import InstanceMetadataFetcher, parse_key_val_file
+from botocore.utils import ContainerMetadataFetcher
 
 
 logger = logging.getLogger(__name__)
@@ -70,6 +73,7 @@ def create_credential_resolver(session):
         ConfigProvider(config_filename=config_file, profile_name=profile_name),
         OriginalEC2Provider(),
         BotoProvider(),
+        ContainerProvider(),
         InstanceMetadataProvider(
             iam_role_fetcher=InstanceMetadataFetcher(
                 timeout=metadata_timeout,
@@ -924,6 +928,57 @@ class AssumeRoleProvider(CredentialProvider):
             role_session_name = 'AWS-CLI-session-%s' % (int(time.time()))
             assume_role_kwargs['RoleSessionName'] = role_session_name
         return assume_role_kwargs
+
+
+class ContainerProvider(CredentialProvider):
+
+    METHOD = 'container-role'
+    ENV_VAR = 'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI'
+
+    def __init__(self, environ=None, fetcher=None):
+        if environ is None:
+            environ = os.environ
+        if fetcher is None:
+            fetcher = ContainerMetadataFetcher()
+        self._environ = environ
+        self._fetcher = fetcher
+
+    def load(self):
+        if self.ENV_VAR not in self._environ:
+            # This cred provider is only triggered if the
+            # self.ENV_VAR is set, which only happens if you opt
+            # into this feature on ECS.
+            return None
+        return self._retrieve_or_fail(self._environ[self.ENV_VAR])
+
+    def _retrieve_or_fail(self, relative_uri):
+        fetcher = self._create_fetcher(relative_uri)
+        creds = fetcher()
+        return RefreshableCredentials(
+            access_key=creds['access_key'],
+            secret_key=creds['secret_key'],
+            token=creds['token'],
+            method=self.METHOD,
+            expiry_time=_parse_if_needed(creds['expiry_time']),
+            refresh_using=fetcher,
+        )
+
+    def _create_fetcher(self, relative_uri):
+        def fetch_creds():
+            try:
+                response = self._fetcher.retrieve_uri(relative_uri)
+            except MetadataRetrievalError as e:
+                logger.debug("Error retrieving ECS metadata: %s", e,
+                             exc_info=True)
+                raise CredentialRetrievalError(provider=self.METHOD,
+                                               error_msg=str(e))
+            return {
+                'access_key': response['AccessKeyId'],
+                'secret_key': response['SecretAccessKey'],
+                'token': response['Token'],
+                'expiry_time': response['Expiration'],
+            }
+        return fetch_creds
 
 
 class CredentialResolver(object):
