@@ -484,18 +484,20 @@ class TestPrepareRequestDict(unittest.TestCase):
             'headers': {},
             'method': u'GET',
             'query_string': '',
-            'url_path': '/'
+            'url_path': '/',
+            'context': {}
         }
 
     def prepare_base_request_dict(self, request_dict, endpoint_url=None,
-                                  user_agent=None):
+                                  user_agent=None, context=None):
         self.base_request_dict.update(request_dict)
+        context = context or {}
         if user_agent is None:
             user_agent = self.user_agent
         if endpoint_url is None:
             endpoint_url = self.endpoint_url
         prepare_request_dict(self.base_request_dict, endpoint_url=endpoint_url,
-                             user_agent=user_agent)
+                             user_agent=user_agent, context=context)
 
     def test_prepare_request_dict_for_get(self):
         request_dict = {
@@ -519,6 +521,11 @@ class TestPrepareRequestDict(unittest.TestCase):
         self.prepare_base_request_dict(
             request_dict, endpoint_url='https://s3.amazonaws.com')
         self.assertNotIn('User-Agent', self.base_request_dict['headers'])
+
+    def test_prepare_request_dict_with_context(self):
+        context = {'foo': 'bar'}
+        self.prepare_base_request_dict({}, context=context)
+        self.assertEqual(self.base_request_dict['context'], context)
 
     def test_query_string_serialized_to_url(self):
         request_dict = {
@@ -591,7 +598,8 @@ class TestCreateRequestObject(unittest.TestCase):
             'url_path': u'/mybucket',
             'headers': {u'User-Agent': u'my-agent'},
             'body': u'my body',
-            'url': u'https://s3.amazonaws.com/mybucket?prefix=foo'
+            'url': u'https://s3.amazonaws.com/mybucket?prefix=foo',
+            'context': {'signing': {'region': 'us-west-2'}}
         }
 
     def test_create_request_object(self):
@@ -599,6 +607,7 @@ class TestCreateRequestObject(unittest.TestCase):
         self.assertEqual(request.method, self.request_dict['method'])
         self.assertEqual(request.url, self.request_dict['url'])
         self.assertEqual(request.data, self.request_dict['body'])
+        self.assertEqual(request.context, self.request_dict['context'])
         self.assertIn('User-Agent', request.headers)
 
 

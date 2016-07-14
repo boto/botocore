@@ -12,12 +12,37 @@
 # language governing permissions and limitations under the License.
 from tests import unittest
 import datetime
+import collections
 
 from dateutil.tz import tzutc
 from nose.tools import assert_equal
 
 from botocore import parsers
 from botocore import model
+from botocore.compat import json
+
+
+# HTTP responses will typically return a custom HTTP
+# dict.  We want to ensure we're able to work with any
+# kind of mutable mapping implementation.
+class CustomHeaderDict(collections.MutableMapping):
+    def __init__(self, original_dict):
+        self._d = original_dict
+
+    def __getitem__(self, item):
+        return self._d[item]
+
+    def __setitem__(self, item, value):
+        self._d[item] = value
+
+    def __delitem__(self, item):
+        del self._d[item]
+
+    def __iter__(self):
+        return iter(self._d)
+
+    def __len__(self):
+        return len(self._d)
 
 
 # These tests contain botocore specific tests that either
@@ -63,7 +88,8 @@ class TestResponseMetadataParsed(unittest.TestCase):
         self.assertEqual(
             parsed, {'Str': 'myname',
                      'ResponseMetadata': {'RequestId': 'request-id',
-                                          'HTTPStatusCode': 200}})
+                                          'HTTPStatusCode': 200,
+                                          'HTTPHeaders': {}}})
 
     def test_response_metadata_parsed_for_ec2(self):
         parser = parsers.EC2QueryParser()
@@ -92,7 +118,8 @@ class TestResponseMetadataParsed(unittest.TestCase):
         self.assertEqual(
             parsed, {'Str': 'myname',
                      'ResponseMetadata': {'RequestId': 'request-id',
-                                          'HTTPStatusCode': 200}})
+                                          'HTTPStatusCode': 200,
+                                          'HTTPHeaders': {}}})
 
     def test_response_metadata_on_normal_request(self):
         parser = parsers.JSONParser()
@@ -117,7 +144,8 @@ class TestResponseMetadataParsed(unittest.TestCase):
         self.assertEqual(
             parsed, {'Str': 'mystring',
                      'ResponseMetadata': {'RequestId': 'request-id',
-                                          'HTTPStatusCode': 200}})
+                                          'HTTPStatusCode': 200,
+                                          'HTTPHeaders': headers}})
 
     def test_response_metadata_on_rest_response(self):
         parser = parsers.RestJSONParser()
@@ -142,7 +170,8 @@ class TestResponseMetadataParsed(unittest.TestCase):
         self.assertEqual(
             parsed, {'Str': 'mystring',
                      'ResponseMetadata': {'RequestId': 'request-id',
-                                          'HTTPStatusCode': 200}})
+                                          'HTTPStatusCode': 200,
+                                          'HTTPHeaders': headers}})
 
     def test_response_metadata_from_s3_response(self):
         # Even though s3 is a rest-xml service, it's response metadata
@@ -160,7 +189,61 @@ class TestResponseMetadataParsed(unittest.TestCase):
             parsed,
             {'ResponseMetadata': {'RequestId': 'request-id',
                                   'HostId': 'second-id',
-                                  'HTTPStatusCode': 200}})
+                                  'HTTPStatusCode': 200,
+                                  'HTTPHeaders': headers}})
+
+
+class TestHeaderResponseInclusion(unittest.TestCase):
+    def create_parser(self):
+        return parsers.JSONParser()
+
+    def create_arbitary_output_shape(self):
+        output_shape = model.StructureShape(
+            'OutputShape',
+            {
+                'type': 'structure',
+                'members': {
+                    'Str': {
+                        'shape': 'StringType',
+                    }
+                }
+            },
+            model.ShapeResolver({'StringType': {'type': 'string'}})
+        )
+        return output_shape
+
+    def test_can_add_errors_into_response(self):
+        parser = self.create_parser()
+        headers = {
+            'x-amzn-requestid': 'request-id',
+            'Header1': 'foo',
+            'Header2': 'bar',
+        }
+        output_shape = self.create_arbitary_output_shape()
+        parsed = parser.parse(
+            {'body': b'{}', 'headers': headers,
+             'status_code': 200}, output_shape)
+        # Response headers should be mapped as HTTPHeaders.
+        self.assertEqual(
+            parsed['ResponseMetadata']['HTTPHeaders'], headers)
+
+    def test_can_always_json_serialize_headers(self):
+        parser = self.create_parser()
+        original_headers = {
+            'x-amzn-requestid': 'request-id',
+            'Header1': 'foo',
+        }
+        headers = CustomHeaderDict(original_headers)
+        output_shape = self.create_arbitary_output_shape()
+        parsed = parser.parse(
+            {'body': b'{}', 'headers': headers,
+             'status_code': 200}, output_shape)
+        metadata = parsed['ResponseMetadata']
+        # We've had the contract that you can json serialize a
+        # response.  So we want to ensure that despite using a CustomHeaderDict
+        # we can always JSON dumps the response metadata.
+        self.assertEqual(
+            json.loads(json.dumps(metadata))['HTTPHeaders']['Header1'], 'foo')
 
 
 class TestResponseParsingDatetimes(unittest.TestCase):
@@ -249,7 +332,8 @@ class TestHandlesNoOutputShape(unittest.TestCase):
         self.assertEqual(
             parsed,
             {'ResponseMetadata': {'RequestId': 'request-id',
-                                  'HTTPStatusCode': 200}})
+                                  'HTTPStatusCode': 200,
+                                  'HTTPHeaders': headers}})
 
     def test_empty_rest_xml_response(self):
         # This is the format used by cloudfront, route53.
@@ -262,7 +346,8 @@ class TestHandlesNoOutputShape(unittest.TestCase):
         self.assertEqual(
             parsed,
             {'ResponseMetadata': {'RequestId': 'request-id',
-                                  'HTTPStatusCode': 200}})
+                                  'HTTPStatusCode': 200,
+                                  'HTTPHeaders': headers}})
 
     def test_empty_query_response(self):
         body = (
@@ -280,7 +365,8 @@ class TestHandlesNoOutputShape(unittest.TestCase):
         self.assertEqual(
             parsed,
             {'ResponseMetadata': {'RequestId': 'request-id',
-                                  'HTTPStatusCode': 200}})
+                                  'HTTPStatusCode': 200,
+                                  'HTTPHeaders': {}}})
 
     def test_empty_json_response(self):
         headers = {'x-amzn-requestid': 'request-id'}
@@ -293,7 +379,8 @@ class TestHandlesNoOutputShape(unittest.TestCase):
         self.assertEqual(
             parsed,
             {'ResponseMetadata': {'RequestId': 'request-id',
-                                  'HTTPStatusCode': 200}})
+                                  'HTTPStatusCode': 200,
+                                  'HTTPHeaders': headers}})
 
 
 class TestHandlesInvalidXMLResponses(unittest.TestCase):
@@ -439,7 +526,8 @@ class TestParseErrorResponses(unittest.TestCase):
         })
         self.assertEqual(parsed['ResponseMetadata'], {
             'RequestId': 'abc-123',
-            'HTTPStatusCode': 500
+            'HTTPStatusCode': 500,
+            'HTTPHeaders': {}
         })
 
     def test_can_parser_ec2_errors(self):
@@ -516,6 +604,7 @@ class TestParseErrorResponses(unittest.TestCase):
         })
         self.assertEqual(parsed['ResponseMetadata'], {
             'HTTPStatusCode': 504,
+            'HTTPHeaders': headers
         })
 
     def test_s3_error_response(self):
@@ -547,6 +636,7 @@ class TestParseErrorResponses(unittest.TestCase):
             'RequestId': 'request-id',
             'HostId': 'second-id',
             'HTTPStatusCode': 400,
+            'HTTPHeaders': headers
         })
 
     def test_s3_error_response_with_no_body(self):
@@ -571,6 +661,7 @@ class TestParseErrorResponses(unittest.TestCase):
             'RequestId': 'request-id',
             'HostId': 'second-id',
             'HTTPStatusCode': 404,
+            'HTTPHeaders': headers
         })
 
     def test_can_parse_glacier_error_response(self):

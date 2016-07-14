@@ -41,7 +41,12 @@ class TestBucketWithVersions(unittest.TestCase):
         # 1. Create a bucket
         # 2. Enable versioning
         # 3. Put an Object
-        self.client.create_bucket(Bucket=self.bucket_name)
+        self.client.create_bucket(
+            Bucket=self.bucket_name,
+            CreateBucketConfiguration={
+                'LocationConstraint': 'us-west-2'
+            }
+        )
         self.addCleanup(self.client.delete_bucket, Bucket=self.bucket_name)
 
         self.client.put_bucket_versioning(

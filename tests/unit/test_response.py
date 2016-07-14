@@ -10,8 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
 from tests import unittest
+from tests.unit import BaseResponseTest
 import datetime
 
 from dateutil.tz import tzutc
@@ -69,7 +69,7 @@ class TestStreamWrapper(unittest.TestCase):
         self.assertTrue(body.closed)
 
 
-class TestGetResponse(unittest.TestCase):
+class TestGetResponse(BaseResponseTest):
     maxDiff = None
 
     def test_get_response_streaming_ok(self):
@@ -112,10 +112,10 @@ class TestGetResponse(unittest.TestCase):
         service_model = session.get_service_model('s3')
         operation_model = service_model.operation_model('GetObject')
 
-        self.assertEqual(
+        self.assert_response_with_subset_metadata(
             response.get_response(operation_model, http_response)[1],
             {'Error': {'Message': 'Access Denied',
-                       'Code': 'AccessDenied',},
+                       'Code': 'AccessDenied'},
              'ResponseMetadata': {'HostId': 'AAAAAAAAAAAAAAAAAAA',
                                   'RequestId': 'XXXXXXXXXXXXXXXX',
                                   'HTTPStatusCode': 403},
@@ -140,15 +140,20 @@ class TestGetResponse(unittest.TestCase):
         service_model = session.get_service_model('s3')
         operation_model = service_model.operation_model('ListObjects')
 
-        self.assertEqual(
+        self.assert_response_with_subset_metadata(
             response.get_response(operation_model, http_response)[1],
-            { 'ResponseMetadata': {'RequestId': 'XXXXXXXXXXXXXXXX',
-                                   'HostId': 'AAAAAAAAAAAAAAAAAAA',
-                                   'HTTPStatusCode': 403},
-              'Error': {'Message': 'Access Denied',
-                        'Code': 'AccessDenied',}
-              }
-            )
+            {
+                'ResponseMetadata': {
+                    'RequestId': 'XXXXXXXXXXXXXXXX',
+                    'HostId': 'AAAAAAAAAAAAAAAAAAA',
+                    'HTTPStatusCode': 403
+                },
+                'Error': {
+                    'Message': 'Access Denied',
+                    'Code': 'AccessDenied'
+                }
+            })
+
     def test_get_response_nonstreaming_ng(self):
         http_response = Response()
         http_response.headers = {
@@ -167,7 +172,7 @@ class TestGetResponse(unittest.TestCase):
         service_model = session.get_service_model('s3')
         operation_model = service_model.operation_model('ListObjects')
 
-        self.assertEqual(
+        self.assert_response_with_subset_metadata(
             response.get_response(operation_model, http_response)[1],
             {u'Contents': [{u'ETag': '"00000000000000000000000000000000"',
                             u'Key': 'test.png',
