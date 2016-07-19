@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.4.38
+======
+
+* feature:``ssm``: Update ssm client to latest version
+* feature:``devicefarm``: Update devicefarm client to latest version
+
+
 1.4.37
 ======
 
