@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.4.39
+======
+
+* feature:``acm``: Update acm client to latest version
+* feature:``elastictranscoder``: Update elastictranscoder client to latest version
+* feature:``cloudformation``: Update cloudformation client to latest version
+* feature:``config``: Update config client to latest version
+* feature:``application-autoscaling``: Update application-autoscaling client to latest version
+
+
 1.4.38
 ======
 
