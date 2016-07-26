@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.4.40
+======
+
+* feature:``s3``: Update s3 client to latest version
+* feature:codedeploy: Add a waiter to wait on successful deployments.
+* feature:``iot``: Update iot client to latest version
+
+
 1.4.39
 ======
 
