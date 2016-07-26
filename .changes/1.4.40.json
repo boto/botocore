@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``s3``", 
+    "description": "Update s3 client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "codedeploy", 
+    "description": "Add a waiter to wait on successful deployments.", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``iot``", 
+    "description": "Update iot client to latest version", 
+    "type": "feature"
+  }
+]
