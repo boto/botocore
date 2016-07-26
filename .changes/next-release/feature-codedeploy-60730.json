@@ -1,0 +1,5 @@
+{
+  "type": "feature",
+  "description": "Add a waiter to wait on successful deployments.",
+  "category": "codedeploy"
+}
