@@ -1,0 +1,5 @@
+{
+  "description": "S3 region redirector will now honor the orginial url scheme.",
+  "category": "s3",
+  "type": "bugfix"
+}

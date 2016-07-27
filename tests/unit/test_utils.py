@@ -1000,6 +1000,15 @@ class TestS3RegionRedirector(unittest.TestCase):
         self.assertEqual(
             params['url'], 'https://us-west-2.amazonaws.com/foo')
 
+    def test_set_request_url_keeps_old_scheme(self):
+        params = {'url': 'http://us-west-2.amazonaws.com/foo'}
+        context = {'signing': {
+            'endpoint': 'https://eu-central-1.amazonaws.com'
+        }}
+        self.redirector.set_request_url(params, context)
+        self.assertEqual(
+            params['url'], 'http://eu-central-1.amazonaws.com/foo')
+
     def test_sets_signing_context_from_cache(self):
         signing_context = {'endpoint': 'bar'}
         self.cache['foo'] = signing_context
