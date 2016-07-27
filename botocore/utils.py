@@ -922,7 +922,7 @@ class S3RegionRedirector(object):
     def set_request_url(self, params, context, **kwargs):
         endpoint = context.get('signing', {}).get('endpoint', None)
         if endpoint is not None:
-            params['url'] = _get_new_endpoint(params['url'], endpoint)
+            params['url'] = _get_new_endpoint(params['url'], endpoint, False)
 
     def redirect_from_cache(self, params, context, **kwargs):
         """
