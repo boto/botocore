@@ -122,17 +122,3 @@ class TestCredentialPrecedence(BaseEnvVar):
 
             self.assertEqual(credentials.access_key, 'custom1')
             self.assertEqual(credentials.secret_key, 'custom2')
-
-    def test_none_type_credentials(self):
-        # Test to ensure we catch when either access key id or secret are None
-        # and we try to use a client made with those bad credentials
-        s = Session()
-        client = s.create_client('s3', aws_access_key_id=None,
-                                 aws_secret_access_key='secret')
-        with self.assertRaises(botocore.exceptions.NoCredentialsError):
-            client.list_buckets()
-
-        client = s.create_client('s3', aws_access_key_id='access',
-                                 aws_secret_access_key=None)
-        with self.assertRaises(botocore.exceptions.NoCredentialsError):
-            client.list_buckets()
