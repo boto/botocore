@@ -432,6 +432,20 @@ class TestCreateClient(BaseSessionTest):
                          "explicit credentials were provided to the "
                          "create_client call.")
 
+    def test_cred_provider_called_when_partial_creds_provided(self):
+        with self.assertRaises(botocore.exceptions.PartialCredentialsError):
+            self.session.create_client(
+                'sts', 'us-west-2',
+                aws_access_key_id='foo',
+                aws_secret_access_key=None
+            )
+        with self.assertRaises(botocore.exceptions.PartialCredentialsError):
+            self.session.create_client(
+                'sts', 'us-west-2',
+                aws_access_key_id=None,
+                aws_secret_access_key='foo',
+            )
+
     @mock.patch('botocore.client.ClientCreator')
     def test_config_passed_to_client_creator(self, client_creator):
         # Make sure there is no default set
