@@ -26,7 +26,7 @@ class TestConfigLoader(BaseEnvVar):
 
     def test_config_not_found(self):
         with self.assertRaises(botocore.exceptions.ConfigNotFound):
-            loaded_config = raw_config_parse(path('aws_config_notfound'))
+            raw_config_parse(path('aws_config_notfound'))
 
     def test_config_parse_error(self):
         filename = path('aws_config_bad')
@@ -65,7 +65,16 @@ class TestConfigLoader(BaseEnvVar):
     def test_nested_bad_config(self):
         filename = path('aws_config_nested_bad')
         with self.assertRaises(botocore.exceptions.ConfigParseError):
-            loaded_config = load_config(filename)
+            load_config(filename)
+
+    def test_merge_list_of_dicts(self):
+        dict_1 = {'thing': 1}
+        dict_2 = {'other_thing': True}
+        # Based on the logic, if a key already exists, skip it
+        dict_3 = {'other_thing': False}
+        merged_dicts = botocore.configloader._merge_list_of_dicts(
+            [dict_1, dict_2, dict_3])
+        self.assertEqual(merged_dicts, {'thing': 1, 'other_thing': True})
 
 
 if __name__ == "__main__":
