@@ -2,6 +2,20 @@
 CHANGELOG
 =========
 
+1.4.41
+======
+
+* feature:``ds``: Update ds client to latest version
+* feature:``ses``: Update ses client to latest version
+* bugfix:s3: S3 region redirector will now honor the orginial url scheme.
+* feature:``sts``: Update sts client to latest version
+* feature:``cognito-idp``: Update cognito-idp client to latest version
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``es``: Update es client to latest version
+* feature:``apigateway``: Update apigateway client to latest version
+* bugfix:Credentials: Raise error when partial hard coded creds are provided when creating a client.
+
+
 1.4.40
 ======
 

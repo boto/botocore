@@ -130,7 +130,7 @@ def calculate_md5(params, **kwargs):
     request_dict = params
     if request_dict['body'] and 'Content-MD5' not in params['headers']:
         body = request_dict['body']
-        if isinstance(body, bytes):
+        if isinstance(body, (bytes, bytearray)):
             binary_md5 = _calculate_md5_from_bytes(body)
         else:
             binary_md5 = _calculate_md5_from_file(body)
