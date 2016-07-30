@@ -1001,9 +1001,9 @@ class CredentialResolver(object):
             & ordering can be discovered via ``self.available_methods``.
         :type name: string
 
-        :param cred_instance: An instance of the new ``Credentials`` object
+        :param credential_provider: An instance of the new ``Credentials`` object
             you'd like to add to the chain.
-        :type cred_instance: A subclass of ``Credentials``
+        :type credential_provider: A subclass of ``Credentials``
         """
         try:
             offset = [p.METHOD for p in self.providers].index(name)
@@ -1021,9 +1021,9 @@ class CredentialResolver(object):
             & ordering can be discovered via ``self.available_methods``.
         :type name: string
 
-        :param cred_instance: An instance of the new ``Credentials`` object
+        :param credential_provider: An instance of the new ``Credentials`` object
             you'd like to add to the chain.
-        :type cred_instance: A subclass of ``Credentials``
+        :type credential_provider: A subclass of ``Credentials``
         """
         offset = self._get_provider_offset(name)
         self.providers.insert(offset + 1, credential_provider)

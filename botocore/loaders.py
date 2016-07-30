@@ -172,7 +172,7 @@ def create_loader(search_path_string=None):
     This factory function creates a loader given a search string path.
 
     :type search_string_path: str
-    :param search_string_path: The AWS_DATA_PATH value.  A string
+    :param search_path_string: The AWS_DATA_PATH value.  A string
         of data path values separated by the ``os.path.pathsep`` value,
         which is typically ``:`` on POSIX platforms and ``;`` on
         windows.

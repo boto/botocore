@@ -12,13 +12,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import sys
-import xml.etree.cElementTree
 import logging
 
-from botocore import ScalarTypes
-from botocore.hooks import first_non_none_response
-from botocore.compat import json, set_socket_timeout, XMLParseError
+from botocore.compat import set_socket_timeout
 from botocore.exceptions import IncompleteReadError
 from botocore import parsers
 

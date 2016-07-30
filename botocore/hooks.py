@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 import copy
 import logging
-from collections import defaultdict, deque, namedtuple
+from collections import deque, namedtuple
 from botocore.compat import accepts_kwargs, six
 
 logger = logging.getLogger(__name__)
@@ -191,7 +191,6 @@ class HierarchicalEmitter(BaseEventHooks):
         :return: List of (handler, response) tuples from all processed
                  handlers.
         """
-        responses = []
         # Invoke the event handlers from most specific
         # to least specific, each time stripping off a dot.
         handlers_to_call = self._lookup_cache.get(event_name)

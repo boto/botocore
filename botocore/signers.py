@@ -22,7 +22,7 @@ from botocore.awsrequest import create_request_object, prepare_request_dict
 from botocore.exceptions import UnknownSignatureVersionError
 from botocore.exceptions import UnknownClientMethodError
 from botocore.exceptions import UnsupportedSignatureVersionError
-from botocore.utils import fix_s3_host, datetime2timestamp
+from botocore.utils import datetime2timestamp
 
 
 class RequestSigner(object):

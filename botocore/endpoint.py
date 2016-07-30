@@ -23,7 +23,6 @@ from botocore.vendored.requests.exceptions import ConnectionError
 from botocore.vendored import six
 
 from botocore.awsrequest import create_request_object
-from botocore.exceptions import UnknownEndpointError
 from botocore.exceptions import EndpointConnectionError
 from botocore.exceptions import ConnectionClosedError
 from botocore.compat import filter_ssl_warnings

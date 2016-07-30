@@ -15,6 +15,7 @@ import logging
 
 import botocore.serialize
 import botocore.validate
+import botocore.parsers
 from botocore import waiter, xform_name
 from botocore.auth import AUTH_TYPE_MAPS
 from botocore.awsrequest import prepare_request_dict
