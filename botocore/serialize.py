@@ -265,6 +265,7 @@ class EC2Serializer(QuerySerializer):
     to worry about wiring this class up correctly.
 
     """
+
     def _get_serialized_name(self, shape, default_name):
         # Returns the serialized name for the shape if it exists.
         # Otherwise it will return the passed in default_name.
@@ -478,6 +479,9 @@ class BaseRestSerializer(Serializer):
         elif location == 'querystring':
             if isinstance(param_value, dict):
                 partitioned['query_string_kwargs'].update(param_value)
+            elif isinstance(param_value, bool):
+                partitioned['query_string_kwargs'][
+                    key_name] = str(param_value).lower()
             else:
                 partitioned['query_string_kwargs'][key_name] = param_value
         elif location == 'header':

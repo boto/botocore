@@ -773,6 +773,50 @@
     ]
   },
   {
+    "description": "Querystring with boolean",
+    "metadata": {
+      "protocol": "rest-json",
+      "apiVersion": "2014-01-01"
+    },
+    "shapes": {
+      "InputShape": {
+        "type": "structure",
+        "members": {
+            "item" : {
+                "shape": "Boolean",
+                "location": "querystring",
+                "locationName": "item"
+            }
+        }
+      },
+      "Boolean": {
+        "type": "boolean"
+      }
+    },
+    "cases": [
+      {
+        "given": {
+          "http": {
+            "method": "GET",
+            "requestUri": "/path"
+          },
+          "input": {
+            "shape": "InputShape"
+          },
+          "name": "OperationName"
+        },
+        "params": {
+          "item": true
+          },
+        "serialized": {
+          "body": "",
+          "uri": "/path?item=true",
+          "headers": {}
+        }
+      }
+    ]
+  },
+  {
     "description": "String to string maps in querystring",
     "metadata": {
       "protocol": "rest-xml",
