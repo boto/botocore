@@ -1,5 +1,0 @@
-{
-  "category": "Serialization", 
-  "type": "bugfix", 
-  "description": "Account for boolean in query string serialization"
-}

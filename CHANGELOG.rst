@@ -2,6 +2,22 @@
 CHANGELOG
 =========
 
+1.4.42
+======
+
+* bugfix:Serialization: Account for boolean in query string serialization
+* feature:``rds``: Update rds client to latest version
+* feature:``iot``: Update iot client to latest version
+* feature:``ds``: Update ds client to latest version
+* feature:``meteringmarketplace``: Update meteringmarketplace client to latest version
+* feature:``route53domains``: Update route53domains client to latest version
+* feature:``application-autoscaling``: Update application-autoscaling client to latest version
+* feature:``emr``: Update emr client to latest version
+* feature:``cloudwatch``: Update cloudwatch client to latest version
+* feature:``logs``: Update logs client to latest version
+* feature:``machinelearning``: Update machinelearning client to latest version
+
+
 1.4.41
 ======
 
