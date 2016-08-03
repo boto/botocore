@@ -300,14 +300,16 @@ class SigV4Auth(BaseSigner):
         sts.append(sha256(canonical_request.encode('utf-8')).hexdigest())
         return '\n'.join(sts)
 
-    def signature(self, string_to_sign, request):
+    def signing_key(self, request):
         key = self.credentials.secret_key
         k_date = self._sign(('AWS4' + key).encode('utf-8'),
                             request.context['timestamp'][0:8])
         k_region = self._sign(k_date, self._region_name)
         k_service = self._sign(k_region, self._service_name)
-        k_signing = self._sign(k_service, 'aws4_request')
-        return self._sign(k_signing, string_to_sign, hex=True)
+        return self._sign(k_service, 'aws4_request')
+
+    def signature(self, signing_key, string_to_sign, request):
+        return self._sign(signing_key, string_to_sign, hex=True)
 
     def add_auth(self, request):
         if self.credentials is None:
@@ -322,7 +324,8 @@ class SigV4Auth(BaseSigner):
         logger.debug('CanonicalRequest:\n%s', canonical_request)
         string_to_sign = self.string_to_sign(request, canonical_request)
         logger.debug('StringToSign:\n%s', string_to_sign)
-        signature = self.signature(string_to_sign, request)
+        signing_key = self.signing_key(request)
+        signature = self.signature(signing_key, string_to_sign, request)
         logger.debug('Signature:\n%s', signature)
 
         self._inject_signature_to_request(request, signature)
@@ -411,6 +414,186 @@ class S3SigV4Auth(SigV4Auth):
     def _normalize_url_path(self, path):
         # For S3, we do not normalize the path.
         return path
+
+
+class S3SigV4ChunkedAuth(S3SigV4Auth):
+    """
+    Used to implement AWS v4 streaming uploads.
+
+    Documentation:
+    http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-streaming.html
+    """
+
+    # Amazon recommended minimum size
+    CHUNK_LENGTH = 64*1024
+    CHUNK_CHAR_LEN = len(hex(CHUNK_LENGTH)[2:])
+    # 256/4 is the length of the 256 bit SHA signature in hex
+    META_LENGTH = len(';chunk-signature=\r\n\r\n') + 256/4
+
+    class ChunkedUploadWrapper(object):
+        """
+        Wraps a request object's input stream to return upload chunks with
+        their associated signatures.
+        """
+        def __init__(self, seed_signature, signing_key, scope, request):
+            self._last_signature = seed_signature
+            self._signing_key = signing_key
+            self._data = request.data
+            self._closed = False
+            self._data_length = int(
+                request.headers['X-Amz-Decoded-Content-Length'])
+            self._total_length = int(
+                request.headers['Content-Length'])
+            self._timestamp = request.context['timestamp']
+            self._scope = scope
+
+            self._read_chunks = 0
+            self._chunks = self._data_length / S3SigV4ChunkedAuth.CHUNK_LENGTH
+            if self._data_length % S3SigV4ChunkedAuth.CHUNK_LENGTH:
+                self._chunks += 1
+
+        def __getitem__(self, data_range):
+            if self._read_chunks == self._chunks:
+                to_read = 0
+            elif self._read_chunks == self._chunks - 1:
+                to_read = self._data_length - self._read_chunks *\
+                          S3SigV4ChunkedAuth.CHUNK_LENGTH
+            elif self._read_chunks > self._chunks:
+                return ''
+            else:
+                to_read = S3SigV4ChunkedAuth.CHUNK_LENGTH
+
+            data = ''
+            while to_read:
+                new_data = self._data.read(to_read)
+                if not new_data and to_read:
+                    raise RuntimeError('Not enough content')
+                data += new_data
+                to_read -= len(new_data)
+            self._read_chunks += 1
+
+            meta = self._create_chunk_meta(data)
+            logger.debug("Chunk meta: %s" % meta)
+            # NOTE: S3 documentation for streaming uploads omits the trailing
+            # \r\n for each request (two \r\n for the last, 0 payload chunk)
+            return meta + '\r\n' + data + '\r\n'
+
+        def __iter__(self):
+            return self
+
+        def __len__(self):
+            return self._total_length
+
+        def seek(self, pos, flag=0):
+            self._data.seek(pos, flag)
+
+        def _get_chunk_string_to_sign(self, chunk):
+            sts = ['AWS4-HMAC-SHA256-PAYLOAD']
+            sts.append(self._timestamp)
+            sts.append(self._scope)
+            sts.append(self._last_signature)
+            sts.append(EMPTY_SHA256_HASH)
+            sts.append(sha256(chunk).hexdigest())
+            return '\n'.join(sts)
+
+        def _sign_chunk(self, string_to_sign):
+            signature = hmac.new(self._signing_key, string_to_sign, sha256)
+            return signature.hexdigest()
+
+        def _create_chunk_meta(self, chunk):
+            payload = hex(len(chunk))[2:]
+            string_to_sign = self._get_chunk_string_to_sign(chunk)
+            signature = self._sign_chunk(string_to_sign)
+            logger.debug("Chunk string to sign: %s" % string_to_sign)
+            payload += ";chunk-signature=%s" % signature
+            self._last_signature = signature
+            return payload
+
+        def close(self):
+            if self._closed:
+                return
+            self.request.close()
+            self._closed = True
+
+    def _should_sha256_sign_payload(self, request):
+        # This ensures that the parent class will not attempt to sign the
+        # payload
+        return False
+
+    def _modify_request_before_signing(self, request):
+        super(S3SigV4ChunkedAuth, self)._modify_request_before_signing(request)
+        encoding = 'aws-chunked'
+        if 'Content-Encoding' in request.headers:
+            encoding += ',' + request.headers['Content-Encoding']
+        request.headers['Content-Encoding'] = encoding
+
+        try:
+            content_length = len(request.body)
+        except TypeError:
+            if 'Content-Length' not in request.headers:
+                raise ValueError(
+                    'Request must include Content-Length for chunked encoding')
+            content_length = int(request.headers['Content-Length'])
+
+        request.headers['X-Amz-Decoded-Content-Length'] = str(content_length)
+
+        chunks = content_length / self.CHUNK_LENGTH
+        total_length = content_length
+        total_length += chunks * (self.CHUNK_CHAR_LEN + self.META_LENGTH)
+
+        last_chunk_size = content_length % self.CHUNK_LENGTH
+        if last_chunk_size:
+            total_length += len(hex(last_chunk_size)[2:]) + self.META_LENGTH
+
+        # There is always a 0-payload chunk with the final signature
+        total_length += self.META_LENGTH + 1
+
+        del request.headers['Content-Length']
+        request.headers['Content-Length'] = str(total_length)
+
+        # The parent class will stick an UNSIGNED-PAYLOAD value for
+        # X-Amz-Content-SHA256, which we need to remove
+        del request.headers['X-Amz-Content-SHA256']
+        request.headers['X-Amz-Content-SHA256'] = \
+            'STREAMING-AWS4-HMAC-SHA256-PAYLOAD'
+
+    def canonical_request(self, request):
+        cr_parts = [request.method.upper()]
+        path = self._normalize_url_path(urlsplit(request.url).path)
+        cr_parts.append(path)
+        cr_parts.append(self.canonical_query_string(request))
+        headers_to_sign = self.headers_to_sign(request)
+        cr_parts.append(self.canonical_headers(headers_to_sign) + '\n')
+        cr_parts.append(self.signed_headers(headers_to_sign))
+        cr_parts.append('STREAMING-AWS4-HMAC-SHA256-PAYLOAD')
+        return '\n'.join(cr_parts)
+
+    def add_auth(self, request):
+        if self.credentials is None:
+            raise NoCredentialsError
+        signing_context = request.context.get('signing', {})
+        self._region_name = signing_context.get(
+            'region', self._default_region_name)
+
+        datetime_now = datetime.datetime.utcnow()
+        request.context['timestamp'] = datetime_now.strftime(SIGV4_TIMESTAMP)
+        # This could be a retry.  Make sure the previous
+        # authorization header is removed first.
+        self._modify_request_before_signing(request)
+        canonical_request = self.canonical_request(request)
+        logger.debug("Calculating signature using v4 auth.")
+        logger.debug('CanonicalRequest:\n%s', canonical_request)
+        string_to_sign = self.string_to_sign(request, canonical_request)
+        logger.debug('StringToSign:\n%s', string_to_sign)
+        signing_key = self.signing_key(request)
+        seed_signature = self.signature(signing_key, string_to_sign, request)
+        logger.debug('Signature:\n%s', seed_signature)
+
+        self._inject_signature_to_request(request, seed_signature)
+
+        request.data = self.ChunkedUploadWrapper(
+            seed_signature, signing_key, self.credential_scope(request),
+            request)
 
 
 class SigV4QueryAuth(SigV4Auth):
@@ -544,7 +727,9 @@ class S3SigV4PostAuth(SigV4Auth):
         fields['policy'] = base64.b64encode(
             json.dumps(policy).encode('utf-8')).decode('utf-8')
 
-        fields['x-amz-signature'] = self.signature(fields['policy'], request)
+        signing_key = self.signing_key(request)
+        fields['x-amz-signature'] = self.signature(
+            signing_key, fields['policy'], request)
 
         request.context['s3-presign-post-fields'] = fields
         request.context['s3-presign-post-policy'] = policy
@@ -787,6 +972,7 @@ AUTH_TYPE_MAPS = {
     's3-query': HmacV1QueryAuth,
     's3-presign-post': HmacV1PostAuth,
     's3v4': S3SigV4Auth,
+    's3v4-chunked': S3SigV4ChunkedAuth,
     's3v4-query': S3SigV4QueryAuth,
     's3v4-presign-post': S3SigV4PostAuth,
 
