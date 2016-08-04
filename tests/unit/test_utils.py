@@ -19,7 +19,7 @@ import six
 import mock
 
 from botocore import xform_name
-from botocore.compat import OrderedDict, json, ensure_bytes
+from botocore.compat import OrderedDict, json
 from botocore.awsrequest import AWSRequest
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.exceptions import ClientError
@@ -1190,7 +1190,7 @@ class TestContainerMetadataFetcher(unittest.TestCase):
     def fake_response(self, status_code, body):
         response = mock.Mock()
         response.status_code = status_code
-        response.content = ensure_bytes(body)  # requests.Response.content is bytes
+        response.text = body
         return response
 
     def set_http_responses_to(self, *responses):

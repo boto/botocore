@@ -982,7 +982,7 @@ class ContainerMetadataFetcher(object):
                     error_msg="Received non 200 response (%s) from ECS metadata: %s"
                     % (response.status_code, response.text))
             try:
-                return json.loads(response.content.decode('utf-8'))
+                return json.loads(response.text)
             except ValueError:
                 raise MetadataRetrievalError(
                     error_msg=("Unable to parse JSON returned from "
