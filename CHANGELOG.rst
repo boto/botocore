@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.4.43
+======
+
+* feature:``lambda``: Update lambda client to latest version
+* feature:``gamelift``: Update gamelift client to latest version
+* feature:``rds``: Update rds client to latest version
+
+
 1.4.42
 ======
 

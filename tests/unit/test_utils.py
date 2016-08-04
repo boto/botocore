@@ -1199,7 +1199,7 @@ class TestContainerMetadataFetcher(unittest.TestCase):
     def fake_response(self, status_code, body):
         response = mock.Mock()
         response.status_code = status_code
-        response.content = body
+        response.text = body
         return response
 
     def set_http_responses_to(self, *responses):
