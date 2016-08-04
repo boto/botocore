@@ -26,7 +26,7 @@ import botocore.configloader
 import botocore.credentials
 import botocore.client
 from botocore.exceptions import ConfigNotFound, ProfileNotFound
-from botocore.exceptions import UnknownServiceError
+from botocore.exceptions import UnknownServiceError, PartialCredentialsError
 from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.loaders import create_loader
@@ -800,11 +800,17 @@ class Session(object):
         event_emitter = self.get_component('event_emitter')
         response_parser_factory = self.get_component(
             'response_parser_factory')
-        if aws_secret_access_key is not None:
+        if aws_access_key_id is not None and aws_secret_access_key is not None:
             credentials = botocore.credentials.Credentials(
                 access_key=aws_access_key_id,
                 secret_key=aws_secret_access_key,
                 token=aws_session_token)
+        elif self._missing_cred_vars(aws_access_key_id,
+                                     aws_secret_access_key):
+            raise PartialCredentialsError(
+                provider='explicit',
+                cred_var=self._missing_cred_vars(aws_access_key_id,
+                                                 aws_secret_access_key))
         else:
             credentials = self.get_credentials()
         endpoint_resolver = self.get_component('endpoint_resolver')
@@ -817,6 +823,13 @@ class Session(object):
             credentials=credentials, scoped_config=self.get_scoped_config(),
             client_config=config, api_version=api_version)
         return client
+
+    def _missing_cred_vars(self, access_key, secret_key):
+        if access_key is not None and secret_key is None:
+            return 'aws_secret_access_key'
+        if secret_key is not None and access_key is None:
+            return 'aws_access_key_id'
+        return None
 
     def get_available_partitions(self):
         """Lists the available partitions found on disk

@@ -14,11 +14,13 @@
 import os
 import mock
 
+import botocore.exceptions
 from botocore.session import Session
 from tests import BaseEnvVar, temporary_file
 
 
 class TestCredentialPrecedence(BaseEnvVar):
+
     def setUp(self):
         super(TestCredentialPrecedence, self).setUp()
 

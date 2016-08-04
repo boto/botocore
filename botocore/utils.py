@@ -922,7 +922,7 @@ class S3RegionRedirector(object):
     def set_request_url(self, params, context, **kwargs):
         endpoint = context.get('signing', {}).get('endpoint', None)
         if endpoint is not None:
-            params['url'] = _get_new_endpoint(params['url'], endpoint)
+            params['url'] = _get_new_endpoint(params['url'], endpoint, False)
 
     def redirect_from_cache(self, params, context, **kwargs):
         """
@@ -980,13 +980,13 @@ class ContainerMetadataFetcher(object):
             if response.status_code != 200:
                 raise MetadataRetrievalError(
                     error_msg="Received non 200 response (%s) from ECS metadata: %s"
-                    % (response.status_code, response.content))
+                    % (response.status_code, response.text))
             try:
-                return json.loads(response.content)
+                return json.loads(response.text)
             except ValueError:
                 raise MetadataRetrievalError(
                     error_msg=("Unable to parse JSON returned from "
-                               "ECS metadata: %s" % response.content))
+                               "ECS metadata: %s" % response.text))
         except RETRYABLE_HTTP_ERRORS as e:
             error_msg = ("Received error when attempting to retrieve "
                          "ECS metadata: %s" % e)

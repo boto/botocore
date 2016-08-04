@@ -75,7 +75,9 @@ class BaseS3ClientTest(unittest.TestCase):
             }
         response = bucket_client.create_bucket(**bucket_kwargs)
         self.assert_status_code(response, 200)
-        self.addCleanup(recursive_delete, self.client, bucket_name)
+        waiter = bucket_client.get_waiter('bucket_exists')
+        waiter.wait(Bucket=bucket_name)
+        self.addCleanup(recursive_delete, bucket_client, bucket_name)
         return bucket_name
 
     def make_tempdir(self):
