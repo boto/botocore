@@ -230,6 +230,46 @@
           "state": "failure"
         }
       ]
+    },
+    "ChangeSetCreateComplete": {
+      "delay": 5,
+      "operation": "DescribeChangeSet",
+      "description": "Wait until change set status is CREATE_COMPLETE.",
+      "maxAttempts": 20,
+      "acceptors": [
+        {
+          "argument": "Status",
+          "expected": "CREATE_COMPLETE",
+          "matcher": "pathAll",
+          "state": "success"
+        },
+        {
+          "argument": "Status",
+          "expected": "FAILED",
+          "matcher": "pathAny",
+          "state": "failure"
+        }
+      ]
+    },
+    "ChangeSetDeleteComplete": {
+      "delay": 5,
+      "operation": "DescribeChangeSet",
+      "description": "Wait until change set status is DELETE_COMPLETE.",
+      "maxAttempts": 20,
+      "acceptors": [
+        {
+          "argument": "Status",
+          "expected": "DELETE_COMPLETE",
+          "matcher": "pathAll",
+          "state": "success"
+        },
+        {
+          "argument": "Status",
+          "expected": "FAILED",
+          "matcher": "pathAny",
+          "state": "failure"
+        }
+      ]
     }
   }
 }
