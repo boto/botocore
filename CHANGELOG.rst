@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.4.44
+======
+
+* feature:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+* feature:``ecr``: Update ecr client to latest version
+* feature:``cloudfront``: Update cloudfront client to latest version
+
+
 1.4.43
 ======
 
