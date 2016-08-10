@@ -173,6 +173,7 @@ class EndpointResolver(BaseEndpointResolver):
             result['sslCommonName'] = self._expand_template(
                 partition, result['sslCommonName'], service_name,
                 endpoint_name)
+        result['dnsSuffix'] = partition['dnsSuffix']
         return result
 
     def _merge_keys(self, from_data, result):
