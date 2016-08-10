@@ -151,6 +151,7 @@ class ClientArgsCreator(object):
             # so that the various strings map to the appropriate boolean value.
             if s3_configuration:
                 boolean_keys = ['use_accelerate_endpoint',
+                                'use_dualstack_endpoint',
                                 'payload_signing_enabled']
                 s3_configuration = self._convert_config_to_bool(
                     s3_configuration, boolean_keys)

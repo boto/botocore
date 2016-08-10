@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import logging
+import functools
 
 from botocore import waiter, xform_name
 from botocore.auth import AUTH_TYPE_MAPS
@@ -219,10 +220,15 @@ class ClientEndpointBridge(object):
         region_name, signing_region = self._pick_region_values(
             resolved, region_name, endpoint_url)
         if endpoint_url is None:
-            # Use the sslCommonName over the hostname for Python 2.6 compat.
-            hostname = resolved.get('sslCommonName', resolved.get('hostname'))
-            endpoint_url = self._make_url(hostname, is_secure,
-                                          resolved.get('protocols', []))
+            if self._is_s3_dualstack_mode(service_name):
+                endpoint_url = self._create_dualstack_endpoint(
+                    service_name, region_name,
+                    resolved['dnsSuffix'], is_secure)
+            else:
+                # Use the sslCommonName over the hostname for Python 2.6 compat.
+                hostname = resolved.get('sslCommonName', resolved.get('hostname'))
+                endpoint_url = self._make_url(hostname, is_secure,
+                                            resolved.get('protocols', []))
         signature_version = self._resolve_signature_version(
             service_name, resolved)
         signing_name = self._resolve_signing_name(service_name, resolved)
@@ -231,6 +237,35 @@ class ClientEndpointBridge(object):
             signing_region=signing_region, signing_name=signing_name,
             endpoint_url=endpoint_url, metadata=resolved,
             signature_version=signature_version)
+
+    def _is_s3_dualstack_mode(self, service_name):
+        if service_name != 's3':
+            return False
+        # TODO: This normalization logic is duplicated from the
+        # ClientArgsCreator class.  Consolidate everything to
+        # ClientArgsCreator.  _resolve_signature_version also has similarly
+        # duplicated logic.
+        client_config = self.client_config
+        if client_config is not None and client_config.s3 is not None and \
+                'use_dualstack_endpoint' in client_config.s3:
+            # Client config trumps scoped config.
+            return client_config.s3['use_dualstack_endpoint']
+        if self.scoped_config is None:
+            return False
+        enabled = self.scoped_config.get('s3', {}).get(
+            'use_dualstack_endpoint', False)
+        if enabled in [True, 'True', 'true']:
+            return True
+        return False
+
+    def _create_dualstack_endpoint(self, service_name, region_name,
+                                   dns_suffix, is_secure):
+        hostname = '{service}.dualstack.{region}.{dns_suffix}'.format(
+            service=service_name, region=region_name,
+            dns_suffix=dns_suffix)
+        # Dualstack supports http and https so were hardcoding this value for
+        # now.  This can potentially move into the endpoints.json file.
+        return self._make_url(hostname, is_secure, ['http', 'https'])
 
     def _assume_endpoint(self, service_name, region_name, endpoint_url,
                          is_secure):
@@ -378,9 +413,11 @@ class BaseClient(object):
         if self.meta.config.s3 is None:
             s3_addressing_style = None
             s3_accelerate = None
+            s3_dualstack = None
         else:
             s3_addressing_style = self.meta.config.s3.get('addressing_style')
             s3_accelerate = self.meta.config.s3.get('use_accelerate_endpoint')
+            s3_dualstack = self.meta.config.s3.get('use_dualstack_endpoint')
 
         # Enable accelerate if the configuration is set to to true or the
         # endpoint being used matches one of the Accelerate endpoints.
@@ -398,6 +435,11 @@ class BaseClient(object):
                 self._force_path_style_s3_addressing()
             elif s3_addressing_style == 'virtual':
                 self._force_virtual_style_s3_addressing()
+        elif s3_dualstack:
+            self.meta.events.unregister('before-sign.s3', fix_s3_host)
+            self.meta.events.register(
+                'before-sign.s3',
+                functools.partial(fix_s3_host, default_endpoint_url=None))
 
     def _force_path_style_s3_addressing(self):
         # Do not try to modify the host if path is specified. The

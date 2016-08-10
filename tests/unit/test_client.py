@@ -1399,6 +1399,19 @@ class TestConfig(unittest.TestCase):
 
 
 class TestClientEndpointBridge(unittest.TestCase):
+    def setUp(self):
+        self.resolver = mock.Mock()
+        self.boilerplate_response = {
+            'endpointName': 'us-east-1',
+            'hostname': 's3.amazonaws.com',
+            'partition': 'aws',
+            'protocols': ['http', 'https'],
+            'dnsSuffix': 'amazonaws.com',
+            'signatureVersions': ['s3', 's3v4']
+        }
+        self.resolver.construct_endpoint.return_value = \
+                self.boilerplate_response
+
     def test_guesses_endpoint_as_last_resort(self):
         resolver = mock.Mock()
         resolver.construct_endpoint.return_value = None
@@ -1670,3 +1683,50 @@ class TestClientEndpointBridge(unittest.TestCase):
         bridge = ClientEndpointBridge(resolver, service_signing_name='foo')
         resolved = bridge.resolve('test', 'us-west-2')
         self.assertEqual('foo', resolved['signing_name'])
+
+    def test_can_construct_dualstack_endpoint_when_enabled(self):
+        scoped_config = {'s3': {'use_dualstack_endpoint': True}}
+        bridge = ClientEndpointBridge(self.resolver, scoped_config)
+        resolved = bridge.resolve('s3', 'us-east-1')
+        self.assertEqual(
+            resolved['endpoint_url'],
+            'https://s3.dualstack.us-east-1.amazonaws.com')
+
+    def test_can_use_client_config(self):
+        config = botocore.config.Config(s3={'use_dualstack_endpoint': True})
+        bridge = ClientEndpointBridge(self.resolver, client_config=config)
+        resolved = bridge.resolve('s3', 'us-east-1')
+        self.assertEqual(
+            resolved['endpoint_url'],
+            'https://s3.dualstack.us-east-1.amazonaws.com')
+
+    def test_client_config_beats_scoped_config(self):
+        scoped_config = {'s3': {'use_dualstack_endpoint': False}}
+        config = botocore.config.Config(s3={'use_dualstack_endpoint': True})
+        bridge = ClientEndpointBridge(self.resolver, scoped_config,
+                                      client_config=config)
+        resolved = bridge.resolve('s3', 'us-east-1')
+        self.assertEqual(
+            resolved['endpoint_url'],
+            'https://s3.dualstack.us-east-1.amazonaws.com')
+
+    def test_disable_dualstack_explicitly(self):
+        scoped_config = {'s3': {'use_dualstack_endpoint': True}}
+        config = botocore.config.Config(s3={'use_dualstack_endpoint': False})
+        bridge = ClientEndpointBridge(self.resolver, scoped_config,
+                                      client_config=config)
+        resolved = bridge.resolve('s3', 'us-east-1')
+        self.assertEqual(
+            resolved['endpoint_url'],
+            'https://s3.amazonaws.com')
+
+    def test_honors_dns_suffix(self):
+        scoped_config = {'s3': {'use_dualstack_endpoint': True}}
+        self.boilerplate_response['dnsSuffix'] = 'amazonaws.com.cn'
+        self.boilerplate_response['endpointName'] = 'cn-north-1'
+        bridge = ClientEndpointBridge(self.resolver, scoped_config)
+        resolved = bridge.resolve('s3', 'cn-north-1')
+        self.assertEqual(
+            resolved['endpoint_url'],
+            'https://s3.dualstack.cn-north-1.amazonaws.com.cn'
+        )

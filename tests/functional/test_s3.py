@@ -434,6 +434,43 @@ def test_correct_url_used_for_s3():
                    'addressing_style': 'path'},
         expected_url='https://bucket.s3-accelerate.amazonaws.com/key')
 
+    # S3 dual stack endpoints.
+    use_dualstack = {'use_dualstack_endpoint': True}
+    yield t.case(
+        region='us-east-1', bucket='bucket', key='key',
+        s3_config=use_dualstack,
+        # Still default to virtual hosted when possible.
+        expected_url='https://bucket.s3.dualstack.us-east-1.amazonaws.com/key')
+    yield t.case(
+        region='us-west-2', bucket='bucket', key='key',
+        s3_config=use_dualstack,
+        # Still default to virtual hosted when possible.
+        expected_url='https://bucket.s3.dualstack.us-west-2.amazonaws.com/key')
+    # Non DNS compatible buckets use path style for dual stack.
+    yield t.case(
+        region='us-west-2', bucket='bucket.dot', key='key',
+        s3_config=use_dualstack,
+        # Still default to virtual hosted when possible.
+        expected_url='https://s3.dualstack.us-west-2.amazonaws.com/bucket.dot/key')
+    # Supports is_secure (use_ssl=False in create_client()).
+    yield t.case(
+        region='us-west-2', bucket='bucket.dot', key='key', is_secure=False,
+        s3_config=use_dualstack,
+        # Still default to virtual hosted when possible.
+        expected_url='http://s3.dualstack.us-west-2.amazonaws.com/bucket.dot/key')
+
+    # Is path style is requested, we should use it, even if the bucket is
+    # DNS compatible.
+    force_path_style = {
+        'use_dualstack_endpoint': True,
+        'addressing_style': 'path',
+    }
+    yield t.case(
+        region='us-west-2', bucket='bucket', key='key',
+        s3_config=force_path_style,
+        # Still default to virtual hosted when possible.
+        expected_url='https://s3.dualstack.us-west-2.amazonaws.com/bucket/key')
+
 
 class S3AddressingCases(object):
     def __init__(self, verify_function):
@@ -456,7 +493,8 @@ def _verify_expected_endpoint_url(region, bucket, key, s3_config,
     http_response.status_code = 200
     http_response.headers = {}
     http_response.content = b''
-    with mock.patch('os.environ') as environ:
+    environ = {}
+    with mock.patch('os.environ', environ):
         environ['AWS_ACCESS_KEY_ID'] = 'access_key'
         environ['AWS_SECRET_ACCESS_KEY'] = 'secret_key'
         environ['AWS_CONFIG_FILE'] = 'no-exist-foo'
