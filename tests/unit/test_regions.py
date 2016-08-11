@@ -217,3 +217,8 @@ class TestEndpointResolver(unittest.TestCase):
         result = resolver.construct_endpoint('not-regionalized')
         self.assertEquals('not-regionalized', result['hostname'])
         self.assertEquals('aws', result['endpointName'])
+
+    def test_returns_dns_suffix_if_available(self):
+        resolver = regions.EndpointResolver(self._template())
+        result = resolver.construct_endpoint('not-regionalized')
+        self.assertEqual(result['dnsSuffix'], 'amazonaws.com')
