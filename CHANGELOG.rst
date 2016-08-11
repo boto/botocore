@@ -2,19 +2,6 @@
 CHANGELOG
 =========
 
-1.4.45
-======
-
-* feature:``kms``: Update kms client to latest version
-* feature:``kinesisanalytics``: Update kinesisanalytics client to latest version
-* feature:``autoscaling``: Update autoscaling client to latest version
-* feature:``elb``: Update elb client to latest version
-* feature:``ecs``: Update ecs client to latest version
-* feature:s3: Add support for s3 dualstack configuration
-* feature:``snowball``: Update snowball client to latest version
-* feature:``elbv2``: Update elbv2 client to latest version
-
-
 1.4.44
 ======
 

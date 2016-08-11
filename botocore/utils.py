@@ -635,8 +635,7 @@ def check_dns_name(bucket_name):
     return True
 
 
-def fix_s3_host(request, signature_version, region_name,
-                default_endpoint_url='s3.amazonaws.com', **kwargs):
+def fix_s3_host(request, signature_version, region_name, **kwargs):
     """
     This handler looks at S3 requests just before they are signed.
     If there is a bucket name on the path (true for everything except
@@ -655,7 +654,7 @@ def fix_s3_host(request, signature_version, region_name,
         return
     try:
         switch_to_virtual_host_style(
-            request, signature_version, default_endpoint_url)
+            request, signature_version, 's3.amazonaws.com')
     except InvalidDNSNameError as e:
         bucket_name = e.kwargs['bucket_name']
         logger.debug('Not changing URI, bucket is not DNS compatible: %s',

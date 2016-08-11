@@ -593,36 +593,6 @@ class TestFixS3Host(unittest.TestCase):
         # a request for GetBucketLocation.
         self.assertEqual(request.url, original_url)
 
-    def test_can_provide_default_endpoint_url(self):
-        request = AWSRequest(
-            method='PUT', headers={},
-            url='https://s3-us-west-2.amazonaws.com/bucket/key.txt'
-        )
-        region_name = 'us-west-2'
-        signature_version = 's3'
-        fix_s3_host(
-            request=request, signature_version=signature_version,
-            region_name=region_name,
-            default_endpoint_url='foo.s3.amazonaws.com')
-        self.assertEqual(request.url,
-                         'https://bucket.foo.s3.amazonaws.com/key.txt')
-
-    def test_no_endpoint_url_uses_request_url(self):
-        request = AWSRequest(
-            method='PUT', headers={},
-            url='https://s3-us-west-2.amazonaws.com/bucket/key.txt'
-        )
-        region_name = 'us-west-2'
-        signature_version = 's3'
-        fix_s3_host(
-            request=request, signature_version=signature_version,
-            region_name=region_name,
-            # A value of None means use the url in the current request.
-            default_endpoint_url=None,
-        )
-        self.assertEqual(request.url,
-                         'https://bucket.s3-us-west-2.amazonaws.com/key.txt')
-
 
 class TestSwitchToVirtualHostStyle(unittest.TestCase):
     def test_switch_to_virtual_host_style(self):
