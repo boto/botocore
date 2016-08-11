@@ -10,10 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import unittest, mock, BaseSessionTest, create_session
-import os
-import nose
-from nose.tools import assert_equal
+from tests import unittest, mock, BaseSessionTest
 
 import botocore.session
 from botocore.config import Config
@@ -202,6 +199,88 @@ class TestS3SigV4(BaseS3OperationTest):
         self.assertNotIn('content-md5', sent_headers)
 
 
+class BaseS3AddressingStyle(BaseSessionTest):
+    def setUp(self):
+        super(BaseS3AddressingStyle, self).setUp()
+        self.http_response = mock.Mock()
+        self.http_response.status_code = 200
+        self.http_response.headers = {}
+        self.http_response.content = b''
+
+
+class TestCustomEndpointUrl(BaseS3AddressingStyle):
+    def test_provided_endpoint_url_is_not_mutated(self):
+        s3 = self.session.create_client('s3', endpoint_url='https://foo.com')
+        with mock.patch('botocore.endpoint.Session.send') as mock_send:
+            mock_send.return_value = self.http_response
+            s3.put_object(Bucket='mybucket', Key='mykey', Body='mybody')
+            request_sent = mock_send.call_args[0][0]
+            self.assertEqual(
+                'https://foo.com/mybucket/mykey', request_sent.url)
+
+
+class TestVirtualHostStyle(BaseS3AddressingStyle):
+    def test_default_endpoint_for_virtual_addressing(self):
+        s3 = self.session.create_client(
+            's3', config=Config(s3={'addressing_style': 'virtual'}))
+        with mock.patch('botocore.endpoint.Session.send') \
+                as mock_send:
+            mock_send.return_value = self.http_response
+            s3.put_object(Bucket='mybucket', Key='mykey', Body='mybody')
+            request_sent = mock_send.call_args[0][0]
+            self.assertEqual(
+                'https://mybucket.s3.amazonaws.com/mykey', request_sent.url)
+
+    def test_provided_endpoint_url_for_virtual_addressing(self):
+        s3 = self.session.create_client(
+            's3', config=Config(s3={'addressing_style': 'virtual'}),
+            endpoint_url='https://foo.amazonaws.com')
+        with mock.patch('botocore.endpoint.Session.send') \
+                as mock_send:
+            mock_send.return_value = self.http_response
+            s3.put_object(Bucket='mybucket', Key='mykey', Body='mybody')
+            request_sent = mock_send.call_args[0][0]
+            self.assertEqual(
+                'https://mybucket.foo.amazonaws.com/mykey', request_sent.url)
+
+    def test_us_gov_with_virtual_addressing(self):
+        s3 = self.session.create_client(
+            's3', region_name='us-gov-west-1',
+            config=Config(s3={'addressing_style': 'virtual'}))
+        with mock.patch('botocore.endpoint.Session.send') \
+                as mock_send:
+            mock_send.return_value = self.http_response
+            s3.put_object(Bucket='mybucket', Key='mykey', Body='mybody')
+            request_sent = mock_send.call_args[0][0]
+            self.assertEqual(
+                'https://mybucket.s3-us-gov-west-1.amazonaws.com/mykey',
+                request_sent.url)
+
+
+class TestPathHostStyle(BaseS3AddressingStyle):
+    def test_default_endpoint_for_path_addressing(self):
+        s3 = self.session.create_client(
+            's3', config=Config(s3={'addressing_style': 'path'}))
+        with mock.patch('botocore.endpoint.Session.send') \
+                as mock_send:
+            mock_send.return_value = self.http_response
+            s3.put_object(Bucket='mybucket', Key='mykey', Body='mybody')
+            request_sent = mock_send.call_args[0][0]
+            self.assertEqual(
+                'https://s3.amazonaws.com/mybucket/mykey', request_sent.url)
+
+    def test_provided_endpoint_url_for_path_addressing(self):
+        s3 = self.session.create_client(
+            's3', config=Config(s3={'addressing_style': 'path'}),
+            endpoint_url='https://foo.amazonaws.com')
+        with mock.patch('botocore.endpoint.Session.send') \
+                as mock_send:
+            mock_send.return_value = self.http_response
+            s3.put_object(Bucket='mybucket', Key='mykey', Body='mybody')
+            request_sent = mock_send.call_args[0][0]
+            self.assertEqual(
+                'https://foo.amazonaws.com/mybucket/mykey', request_sent.url)
+
 
 class TestCanSendIntegerHeaders(BaseSessionTest):
 
@@ -220,6 +299,53 @@ class TestCanSendIntegerHeaders(BaseSessionTest):
             # expects string values in order to sign properly.
             self.assertEqual(headers['Content-Length'], '3')
 
+
+class TestS3Accelerate(BaseS3AddressingStyle):
+    def assert_uses_accelerate_endpoint_correctly(
+            self, client, expecting_https=True):
+        # The host should be s3-accelerate.amazonaws.com
+        expected_endpoint = (
+            'https://mybucket.s3-accelerate.amazonaws.com/mykey')
+        if not expecting_https:
+            expected_endpoint = (
+                'http://mybucket.s3-accelerate.amazonaws.com/mykey')
+
+        with mock.patch('botocore.endpoint.Session.send') \
+                as mock_send:
+            mock_send.return_value = self.http_response
+            client.put_object(Bucket='mybucket', Key='mykey', Body='mybody')
+            request_sent = mock_send.call_args[0][0]
+            self.assertEqual(expected_endpoint, request_sent.url)
+
+    def test_s3_accelerate_with_config(self):
+        s3 = self.session.create_client(
+            's3', config=Config(s3={'use_accelerate_endpoint': True}))
+        self.assert_uses_accelerate_endpoint_correctly(s3)
+
+    def test_s3_accelerate_using_https_endpoint(self):
+        s3 = self.session.create_client(
+            's3', endpoint_url='https://s3-accelerate.amazonaws.com')
+        self.assert_uses_accelerate_endpoint_correctly(s3)
+
+    def test_s3_accelerate_using_http_endpoint(self):
+        s3 = self.session.create_client(
+            's3', endpoint_url='http://s3-accelerate.amazonaws.com')
+        self.assert_uses_accelerate_endpoint_correctly(s3, False)
+
+    def test_s3_accelerate_with_no_ssl(self):
+        s3 = self.session.create_client(
+            's3', config=Config(s3={'use_accelerate_endpoint': True}),
+            use_ssl=False)
+        self.assert_uses_accelerate_endpoint_correctly(s3, False)
+
+    def test_s3_accelerate_even_with_virtual_specified(self):
+        s3 = self.session.create_client(
+            's3', config=Config(
+                s3={'use_accelerate_endpoint': True,
+                    'addressing_style': 'path'}))
+        # Even if path is specified as the addressing style, use virtual
+        # because path style will **not** work with S3 Accelerate
+        self.assert_uses_accelerate_endpoint_correctly(s3)
 
 
 class TestRegionRedirect(BaseS3OperationTest):
@@ -320,195 +446,3 @@ class TestGeneratePresigned(BaseS3OperationTest):
             'url': 'https://foo.s3.amazonaws.com/'
         }
         self.assertEqual(parts, expected)
-
-
-
-def test_correct_url_used_for_s3():
-    # Test that given various sets of config options and bucket names,
-    # we construct the expect endpoint url.
-    t = S3AddressingCases(_verify_expected_endpoint_url)
-
-    # The default behavior.  DNS compatible buckets
-    yield t.case(region='us-west-2', bucket='bucket', key='key',
-                 expected_url='https://bucket.s3.amazonaws.com/key')
-    yield t.case(region='us-east-1', bucket='bucket', key='key',
-                 expected_url='https://bucket.s3.amazonaws.com/key')
-    yield t.case(region='us-west-1', bucket='bucket', key='key',
-                 expected_url='https://bucket.s3.amazonaws.com/key')
-    yield t.case(region='us-west-1', bucket='bucket', key='key',
-                 is_secure=False,
-                 expected_url='http://bucket.s3.amazonaws.com/key')
-
-    # If you don't have a DNS compatible bucket, we use path style.
-    yield t.case(
-        region='us-west-2', bucket='bucket.dot', key='key',
-        expected_url='https://s3-us-west-2.amazonaws.com/bucket.dot/key')
-    yield t.case(
-        region='us-east-1', bucket='bucket.dot', key='key',
-        expected_url='https://s3.amazonaws.com/bucket.dot/key')
-
-    # Custom endpoint url should always be used.
-    yield t.case(
-        customer_provided_endpoint='https://my-custom-s3/',
-        bucket='foo', key='bar',
-        expected_url='https://my-custom-s3/foo/bar')
-    yield t.case(
-        customer_provided_endpoint='https://my-custom-s3/',
-        bucket='bucket.dots', key='bar',
-        expected_url='https://my-custom-s3/bucket.dots/bar')
-    # Doesn't matter what region you specify, a custom endpoint url always
-    # wins.
-    yield t.case(
-        customer_provided_endpoint='https://my-custom-s3/',
-        region='us-west-2', bucket='foo', key='bar',
-        expected_url='https://my-custom-s3/foo/bar')
-
-    # Explicitly configuring "virtual" addressing_style.
-    virtual_hosting = {'addressing_style': 'virtual'}
-    yield t.case(
-        region='us-east-1', bucket='bucket', key='key',
-        s3_config=virtual_hosting,
-        expected_url='https://bucket.s3.amazonaws.com/key')
-    yield t.case(
-        region='us-west-2', bucket='bucket', key='key',
-        s3_config=virtual_hosting,
-        expected_url='https://bucket.s3-us-west-2.amazonaws.com/key')
-    yield t.case(
-        region='eu-central-1', bucket='bucket', key='key',
-        s3_config=virtual_hosting,
-        expected_url='https://bucket.s3.eu-central-1.amazonaws.com/key')
-    yield t.case(
-        region='us-east-1', bucket='bucket', key='key',
-        s3_config=virtual_hosting,
-        customer_provided_endpoint='https://foo.amazonaws.com',
-        expected_url='https://bucket.foo.amazonaws.com/key')
-
-    # Test us-gov with virtual addressing.
-    yield t.case(
-        region='us-gov-west-1', bucket='bucket', key='key',
-        s3_config=virtual_hosting,
-        expected_url='https://bucket.s3-us-gov-west-1.amazonaws.com/key')
-
-    # Test path style addressing.
-    path_style = {'addressing_style': 'path'}
-    yield t.case(
-        region='us-east-1', bucket='bucket', key='key',
-        s3_config=path_style,
-        expected_url='https://s3.amazonaws.com/bucket/key')
-    yield t.case(
-        region='us-east-1', bucket='bucket', key='key',
-        s3_config=path_style,
-        customer_provided_endpoint='https://foo.amazonaws.com/',
-        expected_url='https://foo.amazonaws.com/bucket/key')
-
-
-    # S3 accelerate
-    use_accelerate = {'use_accelerate_endpoint': True}
-    yield t.case(
-        region='us-east-1', bucket='bucket', key='key',
-        s3_config=use_accelerate,
-        expected_url='https://bucket.s3-accelerate.amazonaws.com/key')
-    yield t.case(
-        # region is ignored with S3 accelerate.
-        region='us-west-2', bucket='bucket', key='key',
-        s3_config=use_accelerate,
-        expected_url='https://bucket.s3-accelerate.amazonaws.com/key')
-    yield t.case(
-        region='us-east-1', bucket='bucket', key='key',
-        customer_provided_endpoint='https://s3-accelerate.amazonaws.com',
-        expected_url='https://bucket.s3-accelerate.amazonaws.com/key')
-    yield t.case(
-        region='us-east-1', bucket='bucket', key='key',
-        customer_provided_endpoint='http://s3-accelerate.amazonaws.com',
-        expected_url='http://bucket.s3-accelerate.amazonaws.com/key')
-    yield t.case(
-        region='us-east-1', bucket='bucket', key='key',
-        s3_config=use_accelerate, is_secure=False,
-        # Note we're using http://  because is_secure=False.
-        expected_url='http://bucket.s3-accelerate.amazonaws.com/key')
-    # Use virtual even if path is specified for s3 accelerate because
-    # path style will not work with S3 accelerate.
-    yield t.case(
-        region='us-east-1', bucket='bucket', key='key',
-        s3_config={'use_accelerate_endpoint': True,
-                   'addressing_style': 'path'},
-        expected_url='https://bucket.s3-accelerate.amazonaws.com/key')
-
-    # S3 dual stack endpoints.
-    use_dualstack = {'use_dualstack_endpoint': True}
-    yield t.case(
-        region='us-east-1', bucket='bucket', key='key',
-        s3_config=use_dualstack,
-        # Still default to virtual hosted when possible.
-        expected_url='https://bucket.s3.dualstack.us-east-1.amazonaws.com/key')
-    yield t.case(
-        region='us-west-2', bucket='bucket', key='key',
-        s3_config=use_dualstack,
-        # Still default to virtual hosted when possible.
-        expected_url='https://bucket.s3.dualstack.us-west-2.amazonaws.com/key')
-    # Non DNS compatible buckets use path style for dual stack.
-    yield t.case(
-        region='us-west-2', bucket='bucket.dot', key='key',
-        s3_config=use_dualstack,
-        # Still default to virtual hosted when possible.
-        expected_url='https://s3.dualstack.us-west-2.amazonaws.com/bucket.dot/key')
-    # Supports is_secure (use_ssl=False in create_client()).
-    yield t.case(
-        region='us-west-2', bucket='bucket.dot', key='key', is_secure=False,
-        s3_config=use_dualstack,
-        # Still default to virtual hosted when possible.
-        expected_url='http://s3.dualstack.us-west-2.amazonaws.com/bucket.dot/key')
-
-    # Is path style is requested, we should use it, even if the bucket is
-    # DNS compatible.
-    force_path_style = {
-        'use_dualstack_endpoint': True,
-        'addressing_style': 'path',
-    }
-    yield t.case(
-        region='us-west-2', bucket='bucket', key='key',
-        s3_config=force_path_style,
-        # Still default to virtual hosted when possible.
-        expected_url='https://s3.dualstack.us-west-2.amazonaws.com/bucket/key')
-
-
-class S3AddressingCases(object):
-    def __init__(self, verify_function):
-        self._verify = verify_function
-
-    def case(self, region=None, bucket='bucket', key='key',
-             s3_config=None, is_secure=True, customer_provided_endpoint=None,
-             expected_url=None):
-        return (
-            self._verify, region, bucket, key, s3_config, is_secure,
-            customer_provided_endpoint, expected_url
-        )
-
-
-def _verify_expected_endpoint_url(region, bucket, key, s3_config,
-                                  is_secure=True,
-                                  customer_provided_endpoint=None,
-                                  expected_url=None):
-    http_response = mock.Mock()
-    http_response.status_code = 200
-    http_response.headers = {}
-    http_response.content = b''
-    environ = {}
-    with mock.patch('os.environ', environ):
-        environ['AWS_ACCESS_KEY_ID'] = 'access_key'
-        environ['AWS_SECRET_ACCESS_KEY'] = 'secret_key'
-        environ['AWS_CONFIG_FILE'] = 'no-exist-foo'
-        session = create_session()
-        session.config_filename = 'no-exist-foo'
-        config = None
-        if s3_config is not None:
-            config = Config(s3=s3_config)
-        s3 = session.create_client('s3', region_name=region, use_ssl=is_secure,
-                                   config=config,
-                                   endpoint_url=customer_provided_endpoint)
-        with mock.patch('botocore.endpoint.Session.send') as mock_send:
-            mock_send.return_value = http_response
-            s3.put_object(Bucket=bucket,
-                          Key=key, Body=b'bar')
-            request_sent = mock_send.call_args[0][0]
-            assert_equal(request_sent.url, expected_url)
