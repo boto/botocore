@@ -13,7 +13,8 @@
 import logging
 import functools
 
-from botocore import waiter, xform_name
+from botocore import waiter, xform_name, errorfactory
+
 from botocore.auth import AUTH_TYPE_MAPS
 from botocore.awsrequest import prepare_request_dict
 from botocore.docs.docstring import ClientMethodDocstring
@@ -492,8 +493,7 @@ class BaseClient(object):
 
         if http.status_code >= 300:
             try:
-                import botocore.errorfactory
-                error_class = getattr(botocore.errorfactory,
+                error_class = getattr(errorfactory,
                                       parsed_response["Error"]["Code"])
             except Exception:
                 error_class = ClientError
