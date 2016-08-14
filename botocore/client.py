@@ -491,7 +491,13 @@ class BaseClient(object):
         )
 
         if http.status_code >= 300:
-            raise ClientError(parsed_response, operation_name)
+            try:
+                import botocore.errorfactory
+                error_class = getattr(botocore.errorfactory,
+                                      parsed_response["Error"]["Code"])
+            except Exception:
+                error_class = ClientError
+            raise error_class(parsed_response, operation_name)
         else:
             return parsed_response
 
