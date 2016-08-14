@@ -419,6 +419,11 @@ class OperationModel(object):
                 if 'idempotencyToken' in shape.metadata and
                 shape.metadata['idempotencyToken']]
 
+    @CachedProperty        
+    def error_shapes(self):
+        shapes = self._operation_model.get("errors", [])
+        return list(self._service_model.resolve_shape_ref(s) for s in shapes)
+
     @CachedProperty
     def has_streaming_input(self):
         return self.get_streaming_input() is not None

@@ -21,6 +21,7 @@ from botocore.docs.docstring import PaginatorDocstring
 from botocore.exceptions import ClientError, DataNotFoundError
 from botocore.exceptions import OperationNotPageableError
 from botocore.exceptions import UnknownSignatureVersionError
+from botocore.errorfactory import ServiceErrorFactory
 from botocore.hooks import first_non_none_response
 from botocore.model import ServiceModel
 from botocore.paginate import Paginator
@@ -490,6 +491,7 @@ class BaseClient(object):
         self.meta = ClientMeta(event_emitter, self._client_config,
                                endpoint.host, service_model,
                                self._PY_TO_OP_NAME, partition)
+        self._error_factory = ServiceErrorFactory(service_model)
         self._register_handlers()
 
     def _register_handlers(self):
@@ -534,7 +536,12 @@ class BaseClient(object):
         )
 
         if http.status_code >= 300:
-            raise ClientError(parsed_response, operation_name)
+            if parsed_response.get("Error", {}).get("Code"):
+                error_code = parsed_response["Error"]["Code"]
+                error_class = self.exceptions._from_code(error_code)
+            else:
+                error_class = ClientError
+            raise error_class(parsed_response, operation_name)
         else:
             return parsed_response
 
@@ -688,6 +695,10 @@ class BaseClient(object):
         # which are the keys in the dict.
         return [xform_name(name) for name in model.waiter_names]
 
+    @CachedProperty
+    def exceptions(self):
+        return self._error_factory
+
 
 class ClientMeta(object):
     """Holds additional client methods.
@@ -710,6 +721,7 @@ class ClientMeta(object):
         self._service_model = service_model
         self._method_to_api_mapping = method_to_api_mapping
         self._partition = partition
+        self._error_factory = ServiceErrorFactory(self._service_model)
 
     @property
     def service_model(self):
@@ -734,3 +746,6 @@ class ClientMeta(object):
     @property
     def partition(self):
         return self._partition
+
+    def exceptions(self):
+        return self._error_factory
