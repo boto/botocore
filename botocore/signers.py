@@ -534,7 +534,7 @@ def generate_presigned_post(self, Bucket, Key, Fields=None, Conditions=None,
     :param Key: Key name, optionally add ${filename} to the end to
         attach the submitted filename. Note that key related conditions and
         fields are filled out for you and should not be included in the
-        ``Fields`` or ``Conditions`` parmater.
+        ``Fields`` or ``Conditions`` parameter.
 
     :type Fields: dict
     :param Fields: A dictionary of prefilled form fields to build on top
