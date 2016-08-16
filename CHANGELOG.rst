@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.4.47
+======
+
+* feature:``elbv2``: Update elbv2 client to latest version
+* feature:``apigateway``: Update apigateway client to latest version
+* feature:``ecs``: Update ecs client to latest version
+* feature:``acm``: Update acm client to latest version
+* feature:``kms``: Update kms client to latest version
+
+
 1.4.45
 ======
 
