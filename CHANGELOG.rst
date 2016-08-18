@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.4.48
+======
+
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``iam``: Update iam client to latest version
+* feature:``workspaces``: Update workspaces client to latest version
+
+
 1.4.47
 ======
 
