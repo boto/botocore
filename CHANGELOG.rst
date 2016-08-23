@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.4.49
+======
+
+* feature:``rds``: Update rds client to latest version
+* feature:``opsworks``: Update opsworks client to latest version
+
+
 1.4.48
 ======
 
