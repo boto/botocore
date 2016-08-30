@@ -2,6 +2,60 @@
 CHANGELOG
 =========
 
+1.4.49
+======
+
+* feature:``rds``: Update rds client to latest version
+* feature:``opsworks``: Update opsworks client to latest version
+
+
+1.4.48
+======
+
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``iam``: Update iam client to latest version
+* feature:``workspaces``: Update workspaces client to latest version
+
+
+1.4.47
+======
+
+* feature:``elbv2``: Update elbv2 client to latest version
+* feature:``apigateway``: Update apigateway client to latest version
+* feature:``ecs``: Update ecs client to latest version
+* feature:``acm``: Update acm client to latest version
+* feature:``kms``: Update kms client to latest version
+
+
+1.4.45
+======
+
+* feature:``kms``: Update kms client to latest version
+* feature:``kinesisanalytics``: Update kinesisanalytics client to latest version
+* feature:``autoscaling``: Update autoscaling client to latest version
+* feature:``elb``: Update elb client to latest version
+* feature:``ecs``: Update ecs client to latest version
+* feature:s3: Add support for s3 dualstack configuration
+* feature:``snowball``: Update snowball client to latest version
+* feature:``elbv2``: Update elbv2 client to latest version
+
+
+1.4.44
+======
+
+* feature:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+* feature:``ecr``: Update ecr client to latest version
+* feature:``cloudfront``: Update cloudfront client to latest version
+
+
+1.4.43
+======
+
+* feature:``lambda``: Update lambda client to latest version
+* feature:``gamelift``: Update gamelift client to latest version
+* feature:``rds``: Update rds client to latest version
+
+
 1.4.42
 ======
 
