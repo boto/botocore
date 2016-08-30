@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.4.50
+======
+
+* feature:``autoscaling``: Update autoscaling client to latest version
+* feature:``codepipeline``: Update codepipeline client to latest version
+* feature:``ssm``: Update ssm client to latest version
+* feature:``cloudfront``: Update cloudfront client to latest version
+* feature:``route53``: Update route53 client to latest version
+
+
 1.4.49
 ======
 
