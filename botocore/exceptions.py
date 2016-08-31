@@ -307,6 +307,10 @@ class WaiterError(BotoCoreError):
     """Waiter failed to reach desired state."""
     fmt = 'Waiter {name} failed: {reason}'
 
+    def __init__(self, name, reason, last_response):
+        super(WaiterError, self).__init__(name=name, reason=reason)
+        self.last_response = last_response
+
 
 class IncompleteReadError(BotoCoreError):
     """HTTP response did not return expected number of bytes."""
