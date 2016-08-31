@@ -43,7 +43,7 @@ def test_retry_info_added_when_present():
         }
     }
     error_msg = str(exceptions.ClientError(response, 'operation'))
-    if '(max_retries=3 reached)' not in error_msg:
+    if '(reached max retries: 3)' not in error_msg:
         raise AssertionError("retry information not inject into error "
                              "message: %s" % error_msg)
 
@@ -58,7 +58,7 @@ def test_retry_info_not_added_if_retry_attempts_not_present():
     # Because RetryAttempts is missing, retry info is not
     # in the error message.
     error_msg = str(exceptions.ClientError(response, 'operation'))
-    if 'max_retries' in error_msg:
+    if 'max retries' in error_msg:
         raise AssertionError("Retry information should not be in exception "
                              "message when retry attempts not in response "
                              "metadata: %s" % error_msg)
