@@ -155,6 +155,12 @@ class Endpoint(object):
                 request_dict, operation_model)
             success_response, exception = self._get_response(
                 request, operation_model, attempts)
+        if success_response is not None and \
+                'ResponseMetadata' in success_response[1]:
+            # We want to share num retries, not num attempts.
+            total_retries = attempts - 1
+            success_response[1]['ResponseMetadata']['RetryAttempts'] = \
+                    total_retries
         if exception is not None:
             raise exception
         else:

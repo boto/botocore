@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.4.51
+======
+
+* feature:``rds``: Update rds client to latest version
+* feature:ResponseMetadata: Add MaxAttemptsReached and RetryAttempts keys to the returned ResonseMetadata dictionary (`#1024 <https://github.com/boto/botocore/issues/1024>`__, `#965 <https://github.com/boto/botocore/issues/965>`__, `#926 <https://github.com/boto/botocore/issues/926>`__)
+* feature:``application-autoscaling``: Update application-autoscaling client to latest version
+* feature:``cognito-idp``: Update cognito-idp client to latest version
+* feature:Waiters: Add last_response attribute to WaiterError (`#1023 <https://github.com/boto/botocore/issues/1023>`__, `#957 <https://github.com/boto/botocore/issues/957>`__)
+* feature:``config``: Update config client to latest version
+* feature:``gamelift``: Update gamelift client to latest version
+
+
 1.4.50
 ======
 
