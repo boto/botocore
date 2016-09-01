@@ -1,0 +1,5 @@
+{
+  "category": "Waiters", 
+  "type": "feature", 
+  "description": "Add last_response attribute to WaiterError (`#1023 <https://github.com/boto/botocore/issues/1023>`__, `#957 <https://github.com/boto/botocore/issues/957>`__)"
+}
