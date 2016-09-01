@@ -140,27 +140,6 @@ class TestRetryInterface(TestEndpointBase):
         super(TestRetryInterface, self).setUp()
         self.retried_on_exception = None
 
-    def max_attempts_retry_handler(self, attempts, **kwargs):
-        # Simulate a max requests of 3.
-        self.total_calls += 1
-        if attempts == 3:
-            return None
-        else:
-            # Returning anything non-None will trigger a retry,
-            # but 0 here is so that time.sleep(0) happens.
-            return 0
-
-    def connection_error_handler(self, attempts, caught_exception, **kwargs):
-        self.total_calls += 1
-        if attempts == 3:
-            return None
-        elif isinstance(caught_exception, ConnectionError):
-            # Returning anything non-None will trigger a retry,
-            # but 0 here is so that time.sleep(0) happens.
-            return 0
-        else:
-            return None
-
     def test_retry_events_are_emitted(self):
         op = Mock()
         op.name = 'DescribeInstances'
@@ -217,6 +196,33 @@ class TestRetryInterface(TestEndpointBase):
                          'request-created.ec2.DescribeInstances')
         self.assertEqual(call_args[3][0][0],
                          'needs-retry.ec2.DescribeInstances')
+
+    def test_retry_attempts_added_to_response_metadata(self):
+        op = Mock(name='DescribeInstances')
+        op.metadata = {'protocol': 'query'}
+        self.event_emitter.emit.side_effect = [
+            [(None, None)],    # Request created.
+            [(None, 0)],       # Check if retry needed. Retry needed.
+            [(None, None)],    # Request created.
+            [(None, None)]     # Check if retry needed. Retry not needed.
+        ]
+        parser = Mock()
+        parser.parse.return_value = {'ResponseMetadata': {}}
+        self.factory.return_value.create_parser.return_value = parser
+        response = self.endpoint.make_request(op, request_dict())
+        self.assertEqual(response[1]['ResponseMetadata']['RetryAttempts'], 1)
+
+    def test_retry_attempts_is_zero_when_not_retried(self):
+        op = Mock(name='DescribeInstances', metadata={'protocol': 'query'})
+        self.event_emitter.emit.side_effect = [
+            [(None, None)],    # Request created.
+            [(None, None)],    # Check if retry needed. Retry needed.
+        ]
+        parser = Mock()
+        parser.parse.return_value = {'ResponseMetadata': {}}
+        self.factory.return_value.create_parser.return_value = parser
+        response = self.endpoint.make_request(op, request_dict())
+        self.assertEqual(response[1]['ResponseMetadata']['RetryAttempts'], 0)
 
 
 class TestS3ResetStreamOnRetry(TestEndpointBase):
