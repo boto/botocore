@@ -235,7 +235,7 @@ class Stubber(object):
 
     def add_client_error(self, method, service_error_code='',
                          service_message='', http_status_code=400,
-                         service_error_meta=None):
+                         service_error_meta=None, expected_params=None):
         """
         Adds a ``ClientError`` to the response queue.
 
@@ -256,6 +256,13 @@ class Stubber(object):
         :param service_error_meta: Additional keys to be added to the
             service Error
         :type service_error_meta: dict
+
+        :param expected_params: A dictionary of the expected parameters to
+            be called for the provided service response. The parameters match
+            the names of keyword arguments passed to that client call. If
+            any of the parameters differ a ``StubResponseError`` is thrown.
+            You can use stub.ANY to indicate a particular parameter to ignore
+            in validation. stub.ANY is only valid for top level params.
         """
         http_response = Response()
         http_response.status_code = http_status_code
@@ -280,7 +287,7 @@ class Stubber(object):
         response = {
             'operation_name': operation_name,
             'response': (http_response, parsed_response),
-            'expected_params': None
+            'expected_params': expected_params
         }
         self._queue.append(response)
 
