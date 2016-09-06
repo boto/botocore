@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.4.52
+======
+
+* feature:``codepipeline``: Update codepipeline client to latest version
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``rds``: Update rds client to latest version
+* feature:``sns``: Update sns client to latest version
+* feature:``ecr``: Update ecr client to latest version
+
+
 1.4.51
 ======
 
