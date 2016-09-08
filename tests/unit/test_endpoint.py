@@ -13,7 +13,7 @@
 
 from tests import unittest
 
-from mock import Mock, patch
+from mock import Mock, patch, sentinel
 from nose.tools import assert_equals
 from botocore.vendored.requests import ConnectionError
 
@@ -133,6 +133,13 @@ class TestEndpointFeatures(TestEndpointBase):
             self.endpoint.make_request(self.op, r)
         request = prepare.call_args[0][0]
         self.assertEqual(request.context['signing']['region'], 'us-west-2')
+
+    def test_can_specify_max_pool_connections(self):
+        endpoint = Endpoint('https://ec2.us-west-2.amazonaws.com', 'ec2',
+                            self.event_emitter, max_pool_connections=50)
+        # We can look in endpoint.http_session.adapters[0]._pool_maxsize,
+        # but that feels like testing too much implementation detail.
+        self.assertEqual(endpoint.max_pool_connections, 50)
 
 
 class TestRetryInterface(TestEndpointBase):
@@ -323,6 +330,14 @@ class TestEndpointCreator(unittest.TestCase):
         # /path/cacerts.pem wins over the value from the env var.
         self.assertEqual(endpoint.verify, '/path/cacerts.pem')
 
+    def test_can_specify_max_pool_conns(self):
+        endpoint = self.creator.create_endpoint(
+            self.service_model, region_name='us-west-2',
+            endpoint_url='https://example.com',
+            max_pool_connections=100
+        )
+        self.assertEqual(endpoint.max_pool_connections, 100)
+
 
 class TestAWSSession(unittest.TestCase):
     def test_auth_header_preserved_from_s3_redirects(self):
@@ -358,3 +373,11 @@ class TestAWSSession(unittest.TestCase):
         self.assertEqual(
             redirected_request.headers['Authorization'],
             'original auth header')
+
+    def test_max_pool_conns_injects_custom_adapter(self):
+        http_adapter_cls = Mock(return_value=sentinel.HTTP_ADAPTER)
+        session = PreserveAuthSession(max_pool_connections=20,
+                                      http_adapter_cls=http_adapter_cls)
+        http_adapter_cls.assert_called_with(pool_maxsize=20)
+        self.assertEqual(session.adapters['https://'], sentinel.HTTP_ADAPTER)
+        self.assertEqual(session.adapters['http://'], sentinel.HTTP_ADAPTER)

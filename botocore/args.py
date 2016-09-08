@@ -69,6 +69,7 @@ class ClientArgsCreator(object):
             service_model, region_name=endpoint_config['region_name'],
             endpoint_url=endpoint_config['endpoint_url'], verify=verify,
             response_parser_factory=self._response_parser_factory,
+            max_pool_connections=new_config.max_pool_connections,
             timeout=(new_config.connect_timeout, new_config.read_timeout))
 
         serializer = botocore.serialize.create_serializer(
@@ -119,7 +120,9 @@ class ClientArgsCreator(object):
         if client_config is not None:
             config_kwargs.update(
                 connect_timeout=client_config.connect_timeout,
-                read_timeout=client_config.read_timeout)
+                read_timeout=client_config.read_timeout,
+                max_pool_connections=client_config.max_pool_connections,
+            )
         s3_config = self.compute_s3_config(scoped_config,
                                            client_config)
         return {
