@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.4.53
+======
+
+* feature:``support``: Update support client to latest version
+* feature:``cloudfront``: Update cloudfront client to latest version
+* feature:``sns``: Update sns client to latest version
+
+
 1.4.52
 ======
 
