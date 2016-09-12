@@ -1,0 +1,5 @@
+{
+  "category": "Config", 
+  "type": "feature", 
+  "description": "Add `max_pool_connections` to client config (`#773 <https://github.com/boto/botocore/issues/773>`__, `#766 <https://github.com/boto/botocore/issues/766>`__, `#1026 <https://github.com/boto/botocore/issues/1026>`__)"
+}
