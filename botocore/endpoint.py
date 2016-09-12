@@ -76,7 +76,7 @@ def convert_to_response_dict(http_response, operation_model):
     return response_dict
 
 
-class PreserveAuthSession(Session):
+class BotocoreHTTPSession(Session):
     """Internal session class used to workaround requests behavior.
 
     This class is intended to be used only by the Endpoint class.
@@ -84,7 +84,7 @@ class PreserveAuthSession(Session):
     """
     def __init__(self, max_pool_connections=MAX_POOL_CONNECTIONS,
                  http_adapter_cls=HTTPAdapter):
-        super(PreserveAuthSession, self).__init__()
+        super(BotocoreHTTPSession, self).__init__()
         # In order to support a user provided "max_pool_connections", we need
         # to recreate the HTTPAdapter and pass in our max_pool_connections
         # value.
@@ -122,7 +122,7 @@ class Endpoint(object):
         if proxies is None:
             proxies = {}
         self.proxies = proxies
-        self.http_session = PreserveAuthSession(
+        self.http_session = BotocoreHTTPSession(
             max_pool_connections=max_pool_connections)
         self.timeout = timeout
         self.max_pool_connections = max_pool_connections

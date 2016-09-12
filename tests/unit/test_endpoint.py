@@ -21,7 +21,7 @@ from botocore.compat import six
 from botocore.awsrequest import AWSRequest
 from botocore.endpoint import Endpoint, DEFAULT_TIMEOUT
 from botocore.endpoint import EndpointCreator
-from botocore.endpoint import PreserveAuthSession
+from botocore.endpoint import BotocoreHTTPSession
 from botocore.exceptions import EndpointConnectionError
 from botocore.exceptions import ConnectionClosedError
 from botocore.exceptions import BaseEndpointResolverError
@@ -361,7 +361,7 @@ class TestAWSSession(unittest.TestCase):
         success_response.raw._original_response = None
         success_response.is_redirect = False
         success_response.status_code = 200
-        session = PreserveAuthSession()
+        session = BotocoreHTTPSession()
         session.send = Mock(return_value=success_response)
 
         list(session.resolve_redirects(
@@ -376,7 +376,7 @@ class TestAWSSession(unittest.TestCase):
 
     def test_max_pool_conns_injects_custom_adapter(self):
         http_adapter_cls = Mock(return_value=sentinel.HTTP_ADAPTER)
-        session = PreserveAuthSession(max_pool_connections=20,
+        session = BotocoreHTTPSession(max_pool_connections=20,
                                       http_adapter_cls=http_adapter_cls)
         http_adapter_cls.assert_called_with(pool_maxsize=20)
         self.assertEqual(session.adapters['https://'], sentinel.HTTP_ADAPTER)
