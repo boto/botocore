@@ -41,7 +41,7 @@
     "ClusterTerminated": {
       "delay": 30,
       "operation": "DescribeCluster",
-      "maxAttempts": 600,
+      "maxAttempts": 60,
       "acceptors": [
         {
           "state": "success",
