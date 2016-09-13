@@ -1,5 +1,0 @@
-{
-  "category": "EC2", 
-  "type": "feature", 
-  "description": "Add `NetworkAclExists` waiter (`#1019 <https://github.com/boto/botocore/issues/1019>`__)"
-}

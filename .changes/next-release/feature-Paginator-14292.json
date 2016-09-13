@@ -1,5 +1,0 @@
-{
-  "category": "Paginator", 
-  "type": "feature", 
-  "description": "Add paginators for Application Auto Scaling service (`#1029 <https://github.com/boto/botocore/issues/1029>`__)"
-}
