@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.4.54
+======
+
+* feature:EC2: Add `NetworkAclExists` waiter (`#1019 <https://github.com/boto/botocore/issues/1019>`__)
+* feature:Paginator: Add paginators for Application Auto Scaling service (`#1029 <https://github.com/boto/botocore/issues/1029>`__)
+* feature:Config: Add `max_pool_connections` to client config (`#773 <https://github.com/boto/botocore/issues/773>`__, `#766 <https://github.com/boto/botocore/issues/766>`__, `#1026 <https://github.com/boto/botocore/issues/1026>`__)
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``servicecatalog``: Update servicecatalog client to latest version
+
+
 1.4.53
 ======
 
