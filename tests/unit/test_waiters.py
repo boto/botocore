@@ -361,6 +361,17 @@ class TestWaitersObjects(unittest.TestCase):
         with self.assertRaises(WaiterError):
             waiter.wait()
 
+    def test_last_response_available_on_waiter_error(self):
+        last_response = {'Error': {'Code': 'UnknownError', 'Message': 'bad error'}}
+        config = self.create_waiter_config()
+        operation_method = mock.Mock()
+        self.client_responses_are(last_response,
+                                  for_operation=operation_method)
+        waiter = Waiter('MyWaiter', config, operation_method)
+        with self.assertRaises(WaiterError) as e:
+            waiter.wait()
+        self.assertEqual(e.exception.last_response, last_response)
+
     def test_unspecified_errors_propagate_error_code(self):
         # If a waiter receives an error response, then the
         # waiter should pass along the error code
