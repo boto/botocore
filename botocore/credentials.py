@@ -32,6 +32,7 @@ from botocore.exceptions import UnknownCredentialError
 from botocore.exceptions import PartialCredentialsError
 from botocore.exceptions import ConfigNotFound
 from botocore.exceptions import InvalidConfigError
+from botocore.exceptions import NoCredentialsError
 from botocore.exceptions import RefreshWithMFAUnsupportedError
 from botocore.exceptions import MetadataRetrievalError
 from botocore.exceptions import CredentialRetrievalError
@@ -59,6 +60,12 @@ def create_credential_resolver(session):
     num_attempts = session.get_config_variable('metadata_service_num_attempts')
 
     env_provider = EnvProvider()
+    container_provider = ContainerProvider()
+    instance_metadata_provider = InstanceMetadataProvider(
+        iam_role_fetcher=InstanceMetadataFetcher(
+            timeout=metadata_timeout,
+            num_attempts=num_attempts)
+    )
     providers = [
         env_provider,
         # AssumeRoleProvider(
@@ -74,7 +81,14 @@ def create_credential_resolver(session):
                 cache={},
                 config=session.full_config,
                 profile_name=profile_name,
-                mfa_token_prompter=getpass.getpass
+                mfa_token_prompter=getpass.getpass,
+                credential_resolver=CredentialResolver(
+                    [
+                        env_provider,
+                        container_provider,
+                        instance_metadata_provider
+                    ]
+                )
             )
         ),
         SharedCredentialProvider(
@@ -86,12 +100,8 @@ def create_credential_resolver(session):
         ConfigProvider(config_filename=config_file, profile_name=profile_name),
         OriginalEC2Provider(),
         BotoProvider(),
-        ContainerProvider(),
-        InstanceMetadataProvider(
-            iam_role_fetcher=InstanceMetadataFetcher(
-                timeout=metadata_timeout,
-                num_attempts=num_attempts)
-        )
+        container_provider,
+        instance_metadata_provider
     ]
 
     explicit_profile = session.get_config_variable('profile',
@@ -767,7 +777,7 @@ class BaseAssumeRoleProvider(CredentialProvider):
     DEFAULT_SESSION_NAME = 'AWS-CLI-session-%s' % (int(time.time()))
 
     def __init__(
-            self, client_creator, cache, role_arn, role_session_name,
+            self, client_creator=None, cache=None, role_arn=None, role_session_name=None,
             policy=None, duration=None, external_id=None,
             mfa_serial=None, mfa_token_prompter=None
     ):
@@ -795,6 +805,8 @@ class BaseAssumeRoleProvider(CredentialProvider):
         self.mfa_token_prompter = mfa_token_prompter
 
     def load(self):
+        if self._role_arn is None:
+            return None
         cache_key = self._create_cache_key()
         response = self._load_from_cache(cache_key)
         if response is None or self._is_expired(response):
@@ -897,7 +909,13 @@ class BaseAssumeRoleProvider(CredentialProvider):
         :return:
         """
         def creator(*args, **kwargs):
-            credentials = with_provider.load()
+            credentials = None
+            if hasattr(with_provider, 'load'):
+                credentials = with_provider.load()
+            elif hasattr(with_provider, 'load_credentials'):
+                credentials = with_provider.load_credentials()
+            if credentials is None:
+                raise NoCredentialsError()
             return client_creator(
                 *args,
                 aws_access_key_id=credentials.access_key,
@@ -910,29 +928,54 @@ class BaseAssumeRoleProvider(CredentialProvider):
     @classmethod
     def from_config(
             cls, client_creator=None, cache=None, config=None,
-            profile_name=None, mfa_token_prompter=None, top=True
+            profile_name=None, mfa_token_prompter=None, top=True,
+            credential_resolver=None
     ):
         """
-        create a recursive assumed role credential provider
+        create a recursive assumed role credential provider.
+
+        recursive calls return a new client_creator which is bound to a
+        CredentialProvider.
+
         :param client_creator:
         :param cache:
         :param config:
         :param profile_name:
         :param mfa_token_prompter:
         :param top:
+        :param credential_resolver:
         :return:
         """
         profiles = config.get('profiles', {})
         profile = profiles.get(profile_name, {})
-        if 'role_arn' in profile:
-            try:
-                source_profile = profile['source_profile']
-            except KeyError as e:
+        role_arn = profile.get('role_arn')
+        if role_arn is None:
+            if top:
+                return cls()
+            else:
+                # this is a source_profile that does not need recursing
+                provider = CredentialProvider()
+                provider.load = lambda: Credentials(
+                    profile['aws_access_key_id'],
+                    profile['aws_secret_access_key'],
+                    profile.get('aws_session_token')
+                )
+                # return a client_creator for the caller's provider
+                return cls.wrap_client_creator(client_creator, provider)
+
+        source_profile = profile.get('source_profile')
+        if source_profile is None:
+            if credential_resolver is None:
                 raise PartialCredentialsError(
                     provider=cls.METHOD,
-                    cred_var=str(e)
+                    cred_var='source_profile'
                 )
-
+            # use the ambient credential_resolver as the provider
+            source_client_creator = cls.wrap_client_creator(
+                client_creator,
+                credential_resolver
+            )
+        else:
             if source_profile not in profiles:
                 raise InvalidConfigError(
                     error_msg=(
@@ -948,33 +991,23 @@ class BaseAssumeRoleProvider(CredentialProvider):
                 config,
                 source_profile,
                 mfa_token_prompter,
-                False
+                False,
+                credential_resolver
             )
-            provider = cls(
-                source_client_creator,
-                cache,
-                profile['role_arn'],
-                profile.get('role_session_name', cls.DEFAULT_SESSION_NAME),
-                profile.get('role_policy'),
-                profile.get('role_duration'),
-                profile.get('external_id'),
-                profile.get('mfa_serial'),
-                mfa_token_prompter
-            )
-        else:
-            provider = CredentialProvider()
-            if top:
-                # the selected profile does not use an assumed role
-                provider.load = lambda: None
-            else:
-                credentials = Credentials(
-                        profile['aws_access_key_id'],
-                        profile['aws_secret_access_key'],
-                        profile.get('aws_session_token')
-                )
-                provider.load = lambda: credentials
+        provider = cls(
+            source_client_creator,
+            cache,
+            profile['role_arn'],
+            profile.get('role_session_name', cls.DEFAULT_SESSION_NAME),
+            profile.get('role_policy'),
+            profile.get('role_duration'),
+            profile.get('external_id'),
+            profile.get('mfa_serial'),
+            mfa_token_prompter
+        )
         if top:
             return provider
+        # return a client_creator for the caller's provider
         return cls.wrap_client_creator(client_creator, provider)
 
 
