@@ -13,7 +13,7 @@
 import logging
 import functools
 
-from botocore import waiter, xform_name, errorfactory
+from botocore import waiter, xform_name
 from botocore.auth import AUTH_TYPE_MAPS
 from botocore.awsrequest import prepare_request_dict
 from botocore.docs.docstring import ClientMethodDocstring
@@ -21,6 +21,7 @@ from botocore.docs.docstring import PaginatorDocstring
 from botocore.exceptions import ClientError, DataNotFoundError
 from botocore.exceptions import OperationNotPageableError
 from botocore.exceptions import UnknownSignatureVersionError
+from botocore.errorfactory import ServiceErrorFactory
 from botocore.hooks import first_non_none_response
 from botocore.model import ServiceModel
 from botocore.paginate import Paginator
@@ -497,7 +498,13 @@ class BaseClient(object):
                     error_code = error_code.replace(".", "")
                 if not error_code[0].isalpha():
                     error_code = "ClientError" + error_code
-                error_class = getattr(errorfactory, error_code)
+                error_class = getattr(self.meta.exceptions, error_code, None)
+                if error_class is None:
+                    if not error_code.endswith("Exception"):
+                        error_class = getattr(self.meta.exceptions,
+                                              error_code + "Exception")
+                    else:
+                        raise AttributeError(error_code)
             except Exception:
                 error_class = ClientError
             raise error_class(parsed_response, operation_name)
@@ -675,6 +682,7 @@ class ClientMeta(object):
         self._endpoint_url = endpoint_url
         self._service_model = service_model
         self._method_to_api_mapping = method_to_api_mapping
+        self._error_factory = ServiceErrorFactory(self._service_model)
 
     @property
     def service_model(self):
@@ -695,3 +703,7 @@ class ClientMeta(object):
     @property
     def method_to_api_mapping(self):
         return self._method_to_api_mapping
+
+    @property
+    def exceptions(self):
+        return self._error_factory
