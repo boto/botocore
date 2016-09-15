@@ -287,7 +287,7 @@ class Stubber(object):
         response = {
             'operation_name': operation_name,
             'response': (http_response, parsed_response),
-            'expected_params': expected_params
+            'expected_params': expected_params,
         }
         self._queue.append(response)
 
