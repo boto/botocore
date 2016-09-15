@@ -1,3 +1,5 @@
+import sys
+
 from nose.tools import assert_equals, assert_true
 
 from botocore.exceptions import ClientError
@@ -21,5 +23,7 @@ def test_errorfactory():
         }
     }
     factory = ServiceErrorFactory(ServiceModel(model))
-    assert_equals(dir(factory), ['NoSuchResourceException'])
+    members = dir(factory)
+    if sys.version_info > (2, 6):
+        assert_equals(members, ['NoSuchResourceException'])
     assert_true(issubclass(factory.NoSuchResourceException, ClientError))
