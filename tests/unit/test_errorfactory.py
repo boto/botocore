@@ -24,6 +24,7 @@ def test_errorfactory():
     }
     factory = ServiceErrorFactory(ServiceModel(model))
     members = dir(factory)
-    if sys.version_info > (2, 6):
+    if sys.version_info >= (2, 7):
         assert_equals(members, ['NoSuchResourceException'])
     assert_true(issubclass(factory.NoSuchResourceException, ClientError))
+    assert_true(issubclass(factory.Foo, ClientError))

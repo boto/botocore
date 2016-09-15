@@ -498,13 +498,7 @@ class BaseClient(object):
                     error_code = error_code.replace(".", "")
                 if not error_code[0].isalpha():
                     error_code = "ClientError" + error_code
-                error_class = getattr(self.meta.exceptions, error_code, None)
-                if error_class is None:
-                    if not error_code.endswith("Exception"):
-                        error_class = getattr(self.meta.exceptions,
-                                              error_code + "Exception")
-                    else:
-                        raise AttributeError(error_code)
+                error_class = getattr(self.meta.exceptions, error_code)
             except Exception:
                 error_class = ClientError
             raise error_class(parsed_response, operation_name)
