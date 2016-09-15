@@ -503,12 +503,13 @@ class ArgumentGenerator(object):
     """Generate sample input based on a shape model.
 
     This class contains a ``generate_skeleton`` method that will take
-    an input shape (created from ``botocore.model``) and generate
-    a sample dictionary corresponding to the input shape.
+    an input/output shape (created from ``botocore.model``) and generate
+    a sample dictionary corresponding to the input/output shape.
 
-    The specific values used are place holder values. For strings an
-    empty string is used, for numbers 0 or 0.0 is used.  The intended
-    usage of this class is to generate the *shape* of the input structure.
+    The specific values used are place holder values. For strings either an
+    empty string or the member name can be used, for numbers 0 or 0.0 is used.
+    The intended usage of this class is to generate the *shape* of the input
+    structure.
 
     This can be useful for operations that have complex input shapes.
     This allows a user to just fill in the necessary data instead of
@@ -524,8 +525,9 @@ class ArgumentGenerator(object):
         print("Sample input for dynamodb.CreateTable: %s" % sample_input)
 
     """
-    def __init__(self):
-        pass
+    def __init__(self, use_member_names=False):
+        self._use_member_names = use_member_names
+        self._max_stack_depth = 1
 
     def generate_skeleton(self, shape):
         """Generate a sample input.
@@ -540,7 +542,7 @@ class ArgumentGenerator(object):
         stack = []
         return self._generate_skeleton(shape, stack)
 
-    def _generate_skeleton(self, shape, stack):
+    def _generate_skeleton(self, shape, stack, name=''):
         stack.append(shape.name)
         try:
             if shape.type_name == 'structure':
@@ -550,6 +552,8 @@ class ArgumentGenerator(object):
             elif shape.type_name == 'map':
                 return self._generate_type_map(shape, stack)
             elif shape.type_name == 'string':
+                if self._use_member_names:
+                    return name
                 return ''
             elif shape.type_name in ['integer', 'long']:
                 return 0
@@ -565,8 +569,8 @@ class ArgumentGenerator(object):
             return {}
         skeleton = OrderedDict()
         for member_name, member_shape in shape.members.items():
-            skeleton[member_name] = self._generate_skeleton(member_shape,
-                                                            stack)
+            skeleton[member_name] = self._generate_skeleton(
+                member_shape, stack, name=member_name)
         return skeleton
 
     def _generate_type_list(self, shape, stack):
