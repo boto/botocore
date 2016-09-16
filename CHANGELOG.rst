@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.4.55
+======
+
+* feature:``iot``: Update iot client to latest version
+* feature:``rds``: Update rds client to latest version
+
+
 1.4.54
 ======
 
