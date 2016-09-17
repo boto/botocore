@@ -20,6 +20,7 @@ import copy
 import logging
 import os
 import platform
+import threading
 
 from botocore import __version__
 import botocore.configloader
@@ -157,6 +158,7 @@ class Session(object):
         self._client_config = None
         self._components = ComponentLocator()
         self._register_components()
+        self._lock = threading.Lock()
 
     def _register_components(self):
         self._register_credential_provider()
@@ -769,6 +771,16 @@ class Session(object):
         :return: A botocore client instance
 
         """
+        with self._lock:
+            return self._create_client(
+                service_name, region_name, api_version, use_ssl, verify,
+                endpoint_url, aws_access_key_id, aws_secret_access_key,
+                aws_session_token, config)
+
+    def _create_client(self, service_name, region_name=None, api_version=None,
+                       use_ssl=True, verify=None, endpoint_url=None,
+                       aws_access_key_id=None, aws_secret_access_key=None,
+                       aws_session_token=None, config=None):
         default_client_config = self.get_default_client_config()
         # If a config is provided and a default config is set, then
         # use the config resulting from merging the two.
