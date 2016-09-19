@@ -527,7 +527,6 @@ class ArgumentGenerator(object):
     """
     def __init__(self, use_member_names=False):
         self._use_member_names = use_member_names
-        self._max_stack_depth = 1
 
     def generate_skeleton(self, shape):
         """Generate a sample input.
