@@ -80,6 +80,21 @@ class StreamingBody(object):
             self._verify_content_length()
         return chunk
 
+    def readlines(self, delimiter='\n'):
+        """Generator that streams lines. The default delimiter
+        is the newline character.
+
+        If the delimiter argument is specified, it will
+        override the default.
+        """
+        line_buffer = ''
+        for byte in self.read():
+            byte = line_buffer + str(byte)
+            lines = byte.split(delimiter)
+            line_buffer = lines.pop()
+            for line in lines:
+                yield line
+
     def _verify_content_length(self):
         # See: https://github.com/kennethreitz/requests/issues/1855
         # Basically, our http library doesn't do this for us, so we have

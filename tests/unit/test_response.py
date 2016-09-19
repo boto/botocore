@@ -46,6 +46,13 @@ class TestStreamWrapper(unittest.TestCase):
         stream = response.StreamingBody(body, content_length=10)
         self.assertEqual(stream.read(), b'1234567890')
 
+    def test_streaming_wrapper_generates_line_streams(self):
+        body = six.BytesIO(b'1234567890\n1234567890')
+        stream = response.StreamingBody(body, content_length=21)
+        lines = stream.readlines()
+        for line in lines:
+            self.assertEqual(line, b'1234567890')
+
     def test_streaming_body_with_invalid_length(self):
         body = six.BytesIO(b'123456789')
         stream = response.StreamingBody(body, content_length=10)
