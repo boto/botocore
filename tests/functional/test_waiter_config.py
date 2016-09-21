@@ -10,9 +10,10 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from nose.tools import assert_equals
+import jmespath
 
 import botocore.session
+from botocore.utils import ArgumentGenerator
 
 
 def test_lint_waiter_configs():
@@ -21,11 +22,23 @@ def test_lint_waiter_configs():
         client = session.create_client(service_name, 'us-east-1')
         service_model = client.meta.service_model
         for waiter_name in client.waiter_names:
-            waiter = client.get_waiter(waiter_name)
-            yield _lint_single_waiter, waiter, service_model
+            yield _lint_single_waiter, client, waiter_name, service_model
 
 
-def _lint_single_waiter(waiter, service_model):
+def _lint_single_waiter(client, waiter_name, service_model):
+    try:
+        waiter = client.get_waiter(waiter_name)
+        # The 'acceptors' property is dynamic and will create
+        # the acceptor configs when first accessed.  This is still
+        # considered a failure to construct the waiter which is
+        # why it's in this try/except block.
+        # This catches things like:
+        # * jmespath expression compiles
+        # * matcher has a known value
+        acceptors = waiter.config.acceptors
+    except Exception as e:
+        raise AssertionError("Could not create waiter '%s': %s"
+                             % (waiter_name, e))
     operation_name = waiter.config.operation
     # Needs to reference an existing operation name.
     if operation_name not in service_model.operation_names:
@@ -35,8 +48,38 @@ def _lint_single_waiter(waiter, service_model):
     if not waiter.config.acceptors:
         raise AssertionError("Waiter config must have at least "
                              "one acceptor state: %s" % waiter.name)
-    # Additional things to add:
-    # 1. Verify the error acceptors correspond to a 'code' in the model
-    # 2. Verify JMESPath expressions can resolve to something in
-    #    the response.
+    op_model = service_model.operation_model(operation_name)
+    for acceptor in acceptors:
+        _validate_acceptor(acceptor, op_model, waiter.name)
 
+
+def _validate_acceptor(acceptor, op_model, waiter_name):
+    if acceptor.matcher.startswith('path'):
+        expression = acceptor.argument
+        # The JMESPath expression should have the potential to match something
+        # in the response shape.
+        output_shape = op_model.output_shape
+        assert output_shape is not None, (
+            "Waiter '%s' has JMESPath expression with no output shape: %s"
+            % (waiter_name, op_model))
+        # We want to check if the JMESPath expression makes sense.
+        # To do this, we'll generate sample output and evaluate the
+        # JMESPath expression against the output.  We'll then
+        # check a few things about this returned search result.
+        search_result = _search_jmespath_expression(expression, op_model)
+        if not search_result:
+            raise AssertionError("JMESPath expression did not match "
+                                 "anything for waiter '%s': %s"
+                                 % (waiter_name, expression))
+        if acceptor.matcher in ['pathAll', 'pathAny']:
+            assert isinstance(search_result, list), \
+                    ("Attempted to use '%s' matcher in waiter '%s' "
+                     "with non list result in JMESPath expression: %s"
+                     % (acceptor.matcher, waiter_name, expression))
+
+
+def _search_jmespath_expression(expression, op_model):
+    arg_gen = ArgumentGenerator(use_member_names=True)
+    sample_output = arg_gen.generate_skeleton(op_model.output_shape)
+    search_result = jmespath.search(expression, sample_output)
+    return search_result

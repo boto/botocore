@@ -301,7 +301,7 @@
       "acceptors": [
         {
           "expected": true,
-          "matcher": "pathAll",
+          "matcher": "path",
           "state": "success",
           "argument": "length(KeyPairs[].KeyName) > `0`"
         },
@@ -345,6 +345,24 @@
           "state": "retry",
           "matcher": "error",
           "expected": "NatGatewayNotFound"
+        }
+      ]
+    },
+    "NetworkAclExists": {
+      "operation": "DescribeNetworkAcls",
+      "delay": 20,
+      "maxAttempts": 10,
+      "acceptors": [
+        {
+          "matcher": "path",
+          "expected": true,
+          "argument": "length(NetworkAcls[]) > `0`",
+          "state": "success"
+        },
+        {
+          "expected": "InvalidNetworkAclID.NotFound",
+          "matcher": "error",
+          "state": "retry"
         }
       ]
     },

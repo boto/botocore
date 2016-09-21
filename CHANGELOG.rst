@@ -2,6 +2,98 @@
 CHANGELOG
 =========
 
+1.4.56
+======
+
+* feature:``redshift``: Update redshift client to latest version
+* feature:Stubber: Add ability to specify expected params when using `add_client_error` (`#1025 <https://github.com/boto/botocore/issues/1025>`__)
+* feature:``emr``: Update emr client to latest version
+* feature:``codedeploy``: Update codedeploy client to latest version
+* feature:``rds``: Update rds client to latest version
+
+
+1.4.55
+======
+
+* feature:``iot``: Update iot client to latest version
+* feature:``rds``: Update rds client to latest version
+
+
+1.4.54
+======
+
+* feature:EC2: Add `NetworkAclExists` waiter (`#1019 <https://github.com/boto/botocore/issues/1019>`__)
+* feature:Paginator: Add paginators for Application Auto Scaling service (`#1029 <https://github.com/boto/botocore/issues/1029>`__)
+* feature:Config: Add `max_pool_connections` to client config (`#773 <https://github.com/boto/botocore/issues/773>`__, `#766 <https://github.com/boto/botocore/issues/766>`__, `#1026 <https://github.com/boto/botocore/issues/1026>`__)
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``servicecatalog``: Update servicecatalog client to latest version
+
+
+1.4.53
+======
+
+* feature:``support``: Update support client to latest version
+* feature:``cloudfront``: Update cloudfront client to latest version
+* feature:``sns``: Update sns client to latest version
+
+
+1.4.52
+======
+
+* feature:``codepipeline``: Update codepipeline client to latest version
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``rds``: Update rds client to latest version
+* feature:``sns``: Update sns client to latest version
+* feature:``ecr``: Update ecr client to latest version
+
+
+1.4.51
+======
+
+* feature:``rds``: Update rds client to latest version
+* feature:ResponseMetadata: Add MaxAttemptsReached and RetryAttempts keys to the returned ResonseMetadata dictionary (`#1024 <https://github.com/boto/botocore/issues/1024>`__, `#965 <https://github.com/boto/botocore/issues/965>`__, `#926 <https://github.com/boto/botocore/issues/926>`__)
+* feature:``application-autoscaling``: Update application-autoscaling client to latest version
+* feature:``cognito-idp``: Update cognito-idp client to latest version
+* feature:Waiters: Add last_response attribute to WaiterError (`#1023 <https://github.com/boto/botocore/issues/1023>`__, `#957 <https://github.com/boto/botocore/issues/957>`__)
+* feature:``config``: Update config client to latest version
+* feature:``gamelift``: Update gamelift client to latest version
+
+
+1.4.50
+======
+
+* feature:``autoscaling``: Update autoscaling client to latest version
+* feature:``codepipeline``: Update codepipeline client to latest version
+* feature:``ssm``: Update ssm client to latest version
+* feature:``cloudfront``: Update cloudfront client to latest version
+* feature:``route53``: Update route53 client to latest version
+
+
+1.4.49
+======
+
+* feature:``rds``: Update rds client to latest version
+* feature:``opsworks``: Update opsworks client to latest version
+
+
+1.4.48
+======
+
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``iam``: Update iam client to latest version
+* feature:``workspaces``: Update workspaces client to latest version
+
+
+1.4.47
+======
+
+* feature:``elbv2``: Update elbv2 client to latest version
+* feature:``apigateway``: Update apigateway client to latest version
+* feature:``ecs``: Update ecs client to latest version
+* feature:``acm``: Update acm client to latest version
+* feature:``kms``: Update kms client to latest version
+
+
 1.4.45
 ======
 

@@ -13,7 +13,7 @@
 import copy
 from botocore.compat import OrderedDict
 
-from botocore.endpoint import DEFAULT_TIMEOUT
+from botocore.endpoint import DEFAULT_TIMEOUT, MAX_POOL_CONNECTIONS
 from botocore.exceptions import InvalidS3AddressingStyleError
 
 
@@ -48,6 +48,11 @@ class Config(object):
         when serializing requests. The default is True.  You can disable
         parameter validation for performance reasons.  Otherwise, it's
         recommended to leave parameter validation enabled.
+
+    :type max_pool_connections: int
+    :param max_pool_connections: The maximum number of connections to
+        keep in a connection pool.  If this value is not set, the default
+        value of 10 is used.
 
     :type s3: dict
     :param s3: A dictionary of s3 specific configurations.
@@ -86,6 +91,7 @@ class Config(object):
         ('connect_timeout', DEFAULT_TIMEOUT),
         ('read_timeout', DEFAULT_TIMEOUT),
         ('parameter_validation', True),
+        ('max_pool_connections', MAX_POOL_CONNECTIONS),
         ('s3', None)
     ])
 
