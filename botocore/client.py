@@ -492,14 +492,14 @@ class BaseClient(object):
         )
 
         if http.status_code >= 300:
-            try:
+            if parsed_response.get("Error", {}).get("Code"):
                 error_code = parsed_response["Error"]["Code"]
                 if "." in error_code:
                     error_code = error_code.replace(".", "")
                 if not error_code[0].isalpha():
-                    error_code = "ClientError" + error_code
+                    error_class = ClientError
                 error_class = getattr(self.meta.exceptions, error_code)
-            except Exception:
+            else:
                 error_class = ClientError
             raise error_class(parsed_response, operation_name)
         else:

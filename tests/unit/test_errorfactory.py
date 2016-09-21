@@ -28,3 +28,4 @@ def test_errorfactory():
         assert_equals(members, ['NoSuchResourceException'])
     assert_true(issubclass(factory.NoSuchResourceException, ClientError))
     assert_true(issubclass(factory.Foo, ClientError))
+    assert_true(factory.ClientError is ClientError)

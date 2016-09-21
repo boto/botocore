@@ -74,8 +74,10 @@ class TestStubber(unittest.TestCase):
             'list_objects', error_code, error_message)
         self.stubber.activate()
 
-        with self.assertRaises(ClientError):
+        with self.assertRaises(ClientError) as e:
             self.client.list_objects(Bucket='foo')
+
+        self.assertEqual(e.exception.__class__.__name__, "AccessDenied")
 
     def test_expected_params_success(self):
         service_response = {}
