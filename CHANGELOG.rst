@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.4.56
+======
+
+* feature:``redshift``: Update redshift client to latest version
+* feature:Stubber: Add ability to specify expected params when using `add_client_error` (`#1025 <https://github.com/boto/botocore/issues/1025>`__)
+* feature:``emr``: Update emr client to latest version
+* feature:``codedeploy``: Update codedeploy client to latest version
+* feature:``rds``: Update rds client to latest version
+
+
 1.4.55
 ======
 
