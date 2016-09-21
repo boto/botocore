@@ -35,4 +35,8 @@ class ServiceErrorFactory:
         return getattr(self, attr)
 
     def __dir__(self):
-        return list(self._error_shapes)
+        return list(str(shape) for shape in self._error_shapes)
+
+    @property
+    def __members__(self):
+        return self.__dir__()
