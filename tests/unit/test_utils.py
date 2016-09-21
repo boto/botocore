@@ -366,6 +366,23 @@ class TestArgumentGenerator(unittest.TestCase):
             }
         )
 
+    def test_will_use_member_names_for_string_values(self):
+        self.arg_generator = ArgumentGenerator(use_member_names=True)
+        self.assert_skeleton_from_model_is(
+            model={
+                'A': {'type': 'string'},
+                'B': {'type': 'integer'},
+                'C': {'type': 'float'},
+                'D': {'type': 'boolean'},
+            },
+            generated_skeleton={
+                'A': 'A',
+                'B': 0,
+                'C': 0.0,
+                'D': True,
+            }
+        )
+
     def test_generate_nested_structure(self):
         self.assert_skeleton_from_model_is(
             model={

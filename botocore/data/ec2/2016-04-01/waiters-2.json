@@ -301,7 +301,7 @@
       "acceptors": [
         {
           "expected": true,
-          "matcher": "pathAll",
+          "matcher": "path",
           "state": "success",
           "argument": "length(KeyPairs[].KeyName) > `0`"
         },
