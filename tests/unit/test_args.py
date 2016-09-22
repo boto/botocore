@@ -143,12 +143,13 @@ class TestCreateClientArgs(unittest.TestCase):
             {
                 'region_name': None, 'signature_version': 's3v4',
                 'endpoint_url': 'http://other.com/', 'signing_name': 's3',
-                'signing_region': None
+                'signing_region': None, 'metadata': {}
             },
             {
                 'region_name': 'us-west-2', 'signature_version': 's3v4',
                 'enpoint_url': 'https://s3-us-west-2.amazonaws.com',
-                'signing_name': 's3', 'signing_region': 'us-west-2'
+                'signing_name': 's3', 'signing_region': 'us-west-2',
+                'metadata': {}
             }
         ]
         client_args = self.args_create.get_client_args(
@@ -168,7 +169,7 @@ class TestCreateClientArgs(unittest.TestCase):
         bridge.resolve.side_effect = [{
             'region_name': None, 'signature_version': 'v4',
             'endpoint_url': 'http://other.com/', 'signing_name': 'ec2',
-            'signing_region': None
+            'signing_region': None, 'metadata': {}
         }]
         client_args = self.args_create.get_client_args(
             service_model, 'us-west-2', True, 'http://other.com/', True, None,
