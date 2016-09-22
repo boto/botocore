@@ -41,7 +41,7 @@ class TestS3Addressing(BaseSessionTest):
                              force_hmacv1=False):
         if force_hmacv1:
             self.session.register('choose-signer', self.enable_hmacv1)
-        with patch('botocore.endpoint.PreserveAuthSession') as \
+        with patch('botocore.endpoint.BotocoreHTTPSession') as \
                 mock_http_session:
             mock_send = mock_http_session.return_value.send
             mock_send.return_value = self.mock_response
