@@ -453,11 +453,7 @@ class ClientEndpointBridge(object):
         if 'signatureVersions' in resolved:
             potential_versions = resolved['signatureVersions']
             if service_name == 's3':
-                # We currently prefer s3 over s3v4.
-                if 's3' in potential_versions:
-                    return 's3'
-                elif 's3v4' in potential_versions:
-                    return 's3v4'
+                return 's3v4'
             if 'v4' in potential_versions:
                 return 'v4'
             # Now just iterate over the signature versions in order until we
