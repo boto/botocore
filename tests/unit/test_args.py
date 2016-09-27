@@ -104,3 +104,23 @@ class TestCreateClientArgs(unittest.TestCase):
                 client_config=None),
             {'use_dualstack_endpoint': True}
         )
+
+    def test_max_pool_from_client_config_forwarded_to_endpoint_creator(self):
+        args_create = args.ClientArgsCreator(mock.Mock(), None, None, None)
+        config = botocore.config.Config(max_pool_connections=20)
+        service_model = mock.Mock()
+        service_model.metadata = {'protocol': 'query'}
+        bridge = mock.Mock()
+        bridge.resolve.return_value = {
+            'region_name': 'us-west-2', 'signature_version': 'v4',
+            'endpoint_url': 'https://ec2/',
+            'signing_name': 'ec2', 'signing_region': 'us-west-2'}
+        with mock.patch('botocore.args.EndpointCreator') as m:
+            args_create.get_client_args(
+                service_model, 'us-west-2', True, 'https://ec2/', True,
+                None, {}, config, bridge)
+            m.return_value.create_endpoint.assert_called_with(
+                mock.ANY, endpoint_url='https://ec2/', region_name='us-west-2',
+                response_parser_factory=None, timeout=(60, 60), verify=True,
+                max_pool_connections=20
+            )

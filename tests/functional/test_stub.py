@@ -77,6 +77,27 @@ class TestStubber(unittest.TestCase):
         with self.assertRaises(ClientError):
             self.client.list_objects(Bucket='foo')
 
+    def test_can_add_expected_params_to_client_error(self):
+        self.stubber.add_client_error(
+            'list_objects', 'Error', 'error',
+            expected_params={'Bucket': 'foo'}
+        )
+        self.stubber.activate()
+        with self.assertRaises(ClientError):
+            self.client.list_objects(Bucket='foo')
+
+    def test_can_expected_param_fails_in_client_error(self):
+        self.stubber.add_client_error(
+            'list_objects', 'Error', 'error',
+            expected_params={'Bucket': 'foo'}
+        )
+        self.stubber.activate()
+        # We expect an AssertionError instead of a ClientError
+        # because we're calling the operation with the wrong
+        # param value.
+        with self.assertRaises(AssertionError):
+            self.client.list_objects(Bucket='wrong-argument-value')
+
     def test_expected_params_success(self):
         service_response = {}
         expected_params = {'Bucket': 'foo'}
