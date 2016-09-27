@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.4.57
+======
+
+* feature:``cloudformation``: Update cloudformation client to latest version
+* feature:``codepipeline``: Update codepipeline client to latest version
+* feature:``kms``: Update kms client to latest version
+* feature:``efs``: Update efs client to latest version
+
+
 1.4.56
 ======
 
