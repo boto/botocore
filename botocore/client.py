@@ -496,9 +496,10 @@ class BaseClient(object):
                 error_code = parsed_response["Error"]["Code"]
                 if "." in error_code:
                     error_code = error_code.replace(".", "")
-                if not error_code[0].isalpha():
+                if error_code.isdigit():
                     error_class = ClientError
-                error_class = getattr(self.meta.exceptions, error_code)
+                else:
+                    error_class = getattr(self.meta.exceptions, error_code)
             else:
                 error_class = ClientError
             raise error_class(parsed_response, operation_name)
