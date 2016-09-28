@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``cloudformation``", 
+    "description": "Update cloudformation client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``codepipeline``", 
+    "description": "Update codepipeline client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``kms``", 
+    "description": "Update kms client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``efs``", 
+    "description": "Update efs client to latest version", 
+    "type": "feature"
+  }
+]
