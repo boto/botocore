@@ -2,6 +2,23 @@
 CHANGELOG
 =========
 
+1.4.58
+======
+
+* feature:``snowball``: Update snowball client to latest version
+* feature:``s3``: Update s3 client to latest version
+* feature:``ec2``: Update ec2 client to latest version
+
+
+1.4.57
+======
+
+* feature:``cloudformation``: Update cloudformation client to latest version
+* feature:``codepipeline``: Update codepipeline client to latest version
+* feature:``kms``: Update kms client to latest version
+* feature:``efs``: Update efs client to latest version
+
+
 1.4.56
 ======
 
