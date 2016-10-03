@@ -11,6 +11,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import pickle
 from nose.tools import assert_equals
 
 from botocore import exceptions
@@ -47,6 +48,26 @@ def test_retry_info_added_when_present():
         raise AssertionError("retry information not inject into error "
                              "message: %s" % error_msg)
 
+def test_waiter_error_is_pickleable():
+    exception = exceptions.WaiterError('object_available', 'timeout', {})
+    exception2 = pickle.loads(pickle.dumps(exception))
+
+    assert_equals(exception.__repr__(), exception2.__repr__())
+    assert_equals(str(exception), str(exception2))
+    assert_equals(type(exception), type(exception2))
+    assert_equals(exception.kwargs, exception2.kwargs)
+
+def test_client_error_is_pickleable():
+    response = {'Error': {}}
+
+    exception = exceptions.ClientError(response, 'blackhole')
+    exception2 = pickle.loads(pickle.dumps(exception))
+
+    assert_equals(exception.__repr__(), exception2.__repr__())
+    assert_equals(str(exception), str(exception2))
+    assert_equals(type(exception), type(exception2))
+    assert_equals(exception.response, exception2.response)
+    assert_equals(exception.operation_name, exception2.operation_name)
 
 def test_retry_info_not_added_if_retry_attempts_not_present():
     response = {
