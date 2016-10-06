@@ -500,7 +500,7 @@ class BaseClient(object):
                 if error_code.isdigit():
                     error_class = ClientError
                 else:
-                    error_class = getattr(self.exceptions, error_code)
+                    error_class = self.exceptions._from_code(error_code)
             else:
                 error_class = ClientError
             raise error_class(parsed_response, operation_name)

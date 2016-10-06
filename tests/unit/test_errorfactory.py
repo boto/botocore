@@ -1,4 +1,4 @@
-from nose.tools import assert_true, assert_equals
+from nose.tools import assert_true, assert_equals, assert_raises
 
 from botocore.exceptions import ClientError
 from botocore.errorfactory import ServiceErrorFactory
@@ -16,7 +16,10 @@ def test_errorfactory():
         'shapes': {
             'NoSuchResourceException': {
                 'type': 'structure',
-                'members': {}
+                'members': {},
+                'error': {
+                    'code': 'NoSuchResource'
+                }
             }
         }
     }
@@ -25,3 +28,7 @@ def test_errorfactory():
     assert_true(issubclass(factory.NoSuchResourceException, ClientError))
     assert_true(issubclass(factory.Foo, ClientError))
     assert_true(factory.ClientError is ClientError)
+    assert_raises(AttributeError, getattr, factory, "_foo")
+    assert_true(issubclass(factory._from_code("NoSuchResource"),
+                           factory.NoSuchResourceException))
+    assert_raises(KeyError, factory._from_code, "NoSuchResourceException")

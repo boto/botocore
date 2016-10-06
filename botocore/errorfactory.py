@@ -23,6 +23,21 @@ class ServiceErrorFactory(object):
                 shapes[shape.name] = shape
         return shapes
 
+    @CachedProperty
+    def _error_shapes_by_code(self):
+        shapes = {}
+        for shape in self._error_shapes.values():
+            if shape._shape_model.get("error", {}).get("code"):
+                shapes[shape._shape_model["error"]["code"]] = shape
+        return shapes
+
+    def _from_code(self, code):
+        if code in self._error_shapes_by_code:
+            return getattr(self, self._error_shapes_by_code[code].name)
+        elif not self._error_shapes_by_code:
+            return getattr(self, code)
+        raise KeyError(code)
+
     def __getattr__(self, attr):
         if attr.startswith("_"):
             raise AttributeError(attr)
