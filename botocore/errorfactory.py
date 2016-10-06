@@ -7,7 +7,7 @@ from botocore.exceptions import ClientError
 logger = logging.getLogger(__name__)
 
 
-class ServiceErrorFactory:
+class ServiceErrorFactory(object):
     ClientError = ClientError
 
     def __init__(self, service_model):
@@ -36,7 +36,3 @@ class ServiceErrorFactory:
 
     def __dir__(self):
         return list(str(shape) for shape in self._error_shapes)
-
-    @property
-    def __members__(self):
-        return self.__dir__()

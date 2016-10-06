@@ -399,6 +399,7 @@ class BaseClient(object):
         self.meta = ClientMeta(event_emitter, self._client_config,
                                endpoint.host, service_model,
                                self._PY_TO_OP_NAME)
+        self._error_factory = ServiceErrorFactory(service_model)
         self._register_handlers()
 
     def _register_handlers(self):
@@ -499,7 +500,7 @@ class BaseClient(object):
                 if error_code.isdigit():
                     error_class = ClientError
                 else:
-                    error_class = getattr(self.meta.exceptions, error_code)
+                    error_class = getattr(self.exceptions, error_code)
             else:
                 error_class = ClientError
             raise error_class(parsed_response, operation_name)
@@ -656,6 +657,10 @@ class BaseClient(object):
         # which are the keys in the dict.
         return [xform_name(name) for name in model.waiter_names]
 
+    @CachedProperty
+    def exceptions(self):
+        return self._error_factory
+
 
 class ClientMeta(object):
     """Holds additional client methods.
@@ -677,7 +682,6 @@ class ClientMeta(object):
         self._endpoint_url = endpoint_url
         self._service_model = service_model
         self._method_to_api_mapping = method_to_api_mapping
-        self._error_factory = ServiceErrorFactory(self._service_model)
 
     @property
     def service_model(self):
@@ -698,7 +702,3 @@ class ClientMeta(object):
     @property
     def method_to_api_mapping(self):
         return self._method_to_api_mapping
-
-    @property
-    def exceptions(self):
-        return self._error_factory

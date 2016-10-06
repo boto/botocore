@@ -1,4 +1,4 @@
-from nose.tools import assert_true
+from nose.tools import assert_true, assert_equals
 
 from botocore.exceptions import ClientError
 from botocore.errorfactory import ServiceErrorFactory
@@ -21,7 +21,7 @@ def test_errorfactory():
         }
     }
     factory = ServiceErrorFactory(ServiceModel(model))
-    assert_true('NoSuchResourceException' in dir(factory))
+    assert_equals(dir(factory), ['NoSuchResourceException'])
     assert_true(issubclass(factory.NoSuchResourceException, ClientError))
     assert_true(issubclass(factory.Foo, ClientError))
     assert_true(factory.ClientError is ClientError)

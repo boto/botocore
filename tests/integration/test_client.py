@@ -160,7 +160,7 @@ class TestClientErrorMessages(unittest.TestCase):
     def test_client_error_factory(self):
         session = botocore.session.get_session()
         client = session.create_client('iam', region_name='us-east-1')
-        with self.assertRaisesRegexp(client.meta.exceptions.NoSuchEntity,
+        with self.assertRaisesRegexp(client.exceptions.NoSuchEntity,
                                      'The role with name NonexistentIAMRole cannot be found'):
             client.get_role(RoleName="NonexistentIAMRole")
 
