@@ -1,0 +1,5 @@
+{
+  "category": "Client Meta", 
+  "type": "feature", 
+  "description": "Add partition to client meta object (`#1027 <https://github.com/boto/botocore/issues/1027>`__)"
+}

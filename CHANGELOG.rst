@@ -2,6 +2,25 @@
 CHANGELOG
 =========
 
+1.4.60
+======
+
+* feature:``opsworks``: Update opsworks client to latest version
+* feature:``devicefarm``: Update devicefarm client to latest version
+* feature:``kms``: Update kms client to latest version
+* feature:``s3``: Update s3 client to latest version
+* feature:``waf``: Update waf client to latest version
+* feature:``cognito-idp``: Update cognito-idp client to latest version
+
+
+1.4.58
+======
+
+* feature:``snowball``: Update snowball client to latest version
+* feature:``s3``: Update s3 client to latest version
+* feature:``ec2``: Update ec2 client to latest version
+
+
 1.4.57
 ======
 

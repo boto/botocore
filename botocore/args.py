@@ -50,6 +50,7 @@ class ClientArgsCreator(object):
         protocol = final_args['protocol']
         config_kwargs = final_args['config_kwargs']
         s3_config = final_args['s3_config']
+        partition = endpoint_config['metadata'].get('partition', None)
 
         event_emitter = copy.copy(self._event_emitter)
         signer = RequestSigner(
@@ -83,7 +84,8 @@ class ClientArgsCreator(object):
             'request_signer': signer,
             'service_model': service_model,
             'loader': self._loader,
-            'client_config': new_config
+            'client_config': new_config,
+            'partition': partition
         }
 
     def compute_client_args(self, service_model, client_config,
