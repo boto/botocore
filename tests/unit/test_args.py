@@ -114,7 +114,8 @@ class TestCreateClientArgs(unittest.TestCase):
         bridge.resolve.return_value = {
             'region_name': 'us-west-2', 'signature_version': 'v4',
             'endpoint_url': 'https://ec2/',
-            'signing_name': 'ec2', 'signing_region': 'us-west-2'}
+            'signing_name': 'ec2', 'signing_region': 'us-west-2',
+            'metadata': {}}
         with mock.patch('botocore.args.EndpointCreator') as m:
             args_create.get_client_args(
                 service_model, 'us-west-2', True, 'https://ec2/', True,
