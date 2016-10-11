@@ -322,7 +322,6 @@ class TestGeneratePresigned(BaseS3OperationTest):
         self.assertEqual(parts, expected)
 
 
-
 def test_correct_url_used_for_s3():
     # Test that given various sets of config options and bucket names,
     # we construct the expect endpoint url.
@@ -401,7 +400,6 @@ def test_correct_url_used_for_s3():
         customer_provided_endpoint='https://foo.amazonaws.com/',
         expected_url='https://foo.amazonaws.com/bucket/key')
 
-
     # S3 accelerate
     use_accelerate = {'use_accelerate_endpoint': True}
     yield t.case(
@@ -445,19 +443,22 @@ def test_correct_url_used_for_s3():
         region='us-west-2', bucket='bucket', key='key',
         s3_config=use_dualstack,
         # Still default to virtual hosted when possible.
-        expected_url='https://bucket.s3.dualstack.us-west-2.amazonaws.com/key')
+        expected_url=(
+            'https://bucket.s3.dualstack.us-west-2.amazonaws.com/key'))
     # Non DNS compatible buckets use path style for dual stack.
     yield t.case(
         region='us-west-2', bucket='bucket.dot', key='key',
         s3_config=use_dualstack,
         # Still default to virtual hosted when possible.
-        expected_url='https://s3.dualstack.us-west-2.amazonaws.com/bucket.dot/key')
+        expected_url=(
+            'https://s3.dualstack.us-west-2.amazonaws.com/bucket.dot/key'))
     # Supports is_secure (use_ssl=False in create_client()).
     yield t.case(
         region='us-west-2', bucket='bucket.dot', key='key', is_secure=False,
         s3_config=use_dualstack,
         # Still default to virtual hosted when possible.
-        expected_url='http://s3.dualstack.us-west-2.amazonaws.com/bucket.dot/key')
+        expected_url=(
+            'http://s3.dualstack.us-west-2.amazonaws.com/bucket.dot/key'))
 
     # Is path style is requested, we should use it, even if the bucket is
     # DNS compatible.
@@ -470,6 +471,49 @@ def test_correct_url_used_for_s3():
         s3_config=force_path_style,
         # Still default to virtual hosted when possible.
         expected_url='https://s3.dualstack.us-west-2.amazonaws.com/bucket/key')
+
+    # Accelerate + dual stack
+    use_accelerate_dualstack = {
+        'use_accelerate_endpoint': True,
+        'use_dualstack_endpoint': True,
+    }
+    yield t.case(
+        region='us-east-1', bucket='bucket', key='key',
+        s3_config=use_accelerate_dualstack,
+        expected_url=(
+            'https://bucket.s3-accelerate.dualstack.amazonaws.com/key'))
+    yield t.case(
+        # region is ignored with S3 accelerate.
+        region='us-west-2', bucket='bucket', key='key',
+        s3_config=use_accelerate_dualstack,
+        expected_url=(
+            'https://bucket.s3-accelerate.dualstack.amazonaws.com/key'))
+    yield t.case(
+        region='us-east-1', bucket='bucket', key='key',
+        s3_config=use_dualstack,
+        customer_provided_endpoint='https://s3-accelerate.amazonaws.com',
+        expected_url=(
+            'https://bucket.s3-accelerate.dualstack.amazonaws.com/key'))
+    yield t.case(
+        region='us-east-1', bucket='bucket', key='key',
+        s3_config=use_dualstack,
+        customer_provided_endpoint='http://s3-accelerate.amazonaws.com',
+        expected_url=(
+            'http://bucket.s3-accelerate.dualstack.amazonaws.com/key'))
+    yield t.case(
+        region='us-east-1', bucket='bucket', key='key',
+        s3_config=use_accelerate_dualstack, is_secure=False,
+        # Note we're using http://  because is_secure=False.
+        expected_url=(
+            'http://bucket.s3-accelerate.dualstack.amazonaws.com/key'))
+    # Use virtual even if path is specified for s3 accelerate because
+    # path style will not work with S3 accelerate.
+    use_accelerate_dualstack['addressing_style'] = 'path'
+    yield t.case(
+        region='us-east-1', bucket='bucket', key='key',
+        s3_config=use_accelerate_dualstack,
+        expected_url=(
+            'https://bucket.s3-accelerate.dualstack.amazonaws.com/key'))
 
 
 class S3AddressingCases(object):

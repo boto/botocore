@@ -29,9 +29,9 @@ from botocore.utils import fix_s3_host
 from botocore.utils import get_service_module_name
 from botocore.utils import switch_to_virtual_host_style
 from botocore.utils import switch_host_s3_accelerate
-from botocore.utils import S3_ACCELERATE_ENDPOINT
 from botocore.utils import S3RegionRedirector
 from botocore.args import ClientArgsCreator
+from botocore.compat import urlsplit
 # Keep this imported.  There's pre-existing code that uses
 # "from botocore.client import Config".
 from botocore.config import Config
@@ -421,7 +421,7 @@ class BaseClient(object):
 
         # Enable accelerate if the configuration is set to to true or the
         # endpoint being used matches one of the Accelerate endpoints.
-        if s3_accelerate or S3_ACCELERATE_ENDPOINT in self._endpoint.host:
+        if s3_accelerate or self._is_accelerate_endpoint(self._endpoint.host):
             # Amazon S3 accelerate is being used then always use the virtual
             # style of addressing because it is required.
             self._force_virtual_style_s3_addressing()
@@ -435,11 +435,17 @@ class BaseClient(object):
                 self._force_path_style_s3_addressing()
             elif s3_addressing_style == 'virtual':
                 self._force_virtual_style_s3_addressing()
-        elif s3_dualstack:
+        # This can't be an elif because we need it to work along with
+        # accelerate.
+        if s3_dualstack and not s3_addressing_style:
             self.meta.events.unregister('before-sign.s3', fix_s3_host)
             self.meta.events.register(
                 'before-sign.s3',
                 functools.partial(fix_s3_host, default_endpoint_url=None))
+
+    def _is_accelerate_endpoint(self, url):
+        parts = urlsplit(url).netloc.split('.')
+        return any(part == 's3-accelerate' for part in parts)
 
     def _force_path_style_s3_addressing(self):
         # Do not try to modify the host if path is specified. The

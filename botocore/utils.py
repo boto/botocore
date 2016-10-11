@@ -46,6 +46,7 @@ RESTRICTED_REGIONS = [
     'fips-us-gov-west-1',
 ]
 S3_ACCELERATE_ENDPOINT = 's3-accelerate.amazonaws.com'
+S3_ACCELERATE_DUALSTACK_ENDPOINT = 's3-accelerate.dualstack.amazonaws.com'
 RETRYABLE_HTTP_ERRORS = (requests.Timeout, requests.ConnectionError)
 
 
@@ -775,7 +776,17 @@ def switch_host_s3_accelerate(request, operation_name, **kwargs):
     # before it gets changed to virtual. So we are not concerned with ensuring
     # that the bucket name is translated to the virtual style here and we
     # can hard code the Accelerate endpoint.
-    endpoint = 'https://' + S3_ACCELERATE_ENDPOINT
+    s3_config = request.context['client_config'].s3
+    if s3_config is None:
+        s3_config = {}
+    dualstack = s3_config.get('use_dualstack_endpoint', False)
+    if dualstack:
+        endpoint = S3_ACCELERATE_DUALSTACK_ENDPOINT
+    else:
+        endpoint = S3_ACCELERATE_ENDPOINT
+
+    endpoint = 'https://' + endpoint
+
     if operation_name in ['ListBuckets', 'CreateBucket', 'DeleteBucket']:
         return
     _switch_hosts(request, endpoint,  use_new_scheme=False)
