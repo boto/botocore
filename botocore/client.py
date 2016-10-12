@@ -495,9 +495,7 @@ class BaseClient(object):
         if http.status_code >= 300:
             if parsed_response.get("Error", {}).get("Code"):
                 error_code = parsed_response["Error"]["Code"]
-                if "." in error_code:
-                    error_code = error_code.replace(".", "")
-                if error_code.isdigit():
+                if error_code.isdigit() or not self.exceptions._error_shapes:
                     error_class = ClientError
                 else:
                     error_class = self.exceptions._from_code(error_code)
