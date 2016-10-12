@@ -25,11 +25,11 @@ from botocore.hooks import first_non_none_response
 from botocore.model import ServiceModel
 from botocore.paginate import Paginator
 from botocore.utils import CachedProperty
-from botocore.utils import fix_s3_host
 from botocore.utils import get_service_module_name
-from botocore.utils import switch_to_virtual_host_style
 from botocore.utils import switch_host_s3_accelerate
 from botocore.utils import S3RegionRedirector
+from botocore.utils import fix_s3_host
+from botocore.utils import switch_to_virtual_host_style
 from botocore.args import ClientArgsCreator
 from botocore.compat import urlsplit
 # Keep this imported.  There's pre-existing code that uses
@@ -67,7 +67,7 @@ class ClientCreator(object):
             service_model, region_name, is_secure, endpoint_url,
             verify, credentials, scoped_config, client_config, endpoint_bridge)
         service_client = cls(**client_args)
-        self._create_s3_redirector(service_client, endpoint_bridge)
+        self._register_s3_events(service_client, endpoint_bridge, endpoint_url)
         return service_client
 
     def create_client_class(self, service_name, api_version=None):
@@ -114,10 +114,73 @@ class ClientCreator(object):
         self._event_emitter.register('needs-retry.%s' % endpoint_prefix,
                                      handler, unique_id=unique_id)
 
-    def _create_s3_redirector(self, client, endpoint_bridge):
+    def _register_s3_events(self, client, endpoint_bridge, endpoint_url):
         if client.meta.service_model.service_name != 's3':
             return
         S3RegionRedirector(endpoint_bridge, client).register()
+        self._set_s3_addressing_style(
+            endpoint_url, client.meta.config.s3, client.meta.events)
+        # Enable accelerate if the configuration is set to to true or the
+        # endpoint being used matches one of the accelerate endpoints.
+        if self._is_s3_accelerate(endpoint_url, client.meta.config.s3):
+            # Also make sure that the hostname gets switched to
+            # s3-accelerate.amazonaws.com
+            client.meta.events.register_first(
+                'request-created.s3', switch_host_s3_accelerate)
+
+    def _set_s3_addressing_style(self, endpoint_url, s3_config, event_emitter):
+        if s3_config is None:
+            s3_config = {}
+
+        style = self._get_s3_addressing_style(endpoint_url, s3_config)
+        handler = self._get_s3_addressing_handler(
+            endpoint_url, s3_config, style)
+        if handler is not None:
+            event_emitter.register('before-sign.s3', handler)
+
+    def _get_s3_addressing_style(self, endpoint_url, s3_config):
+        # Use virtual host style addressing if accelerate is enabled or if
+        # the given endpoint url is an accelerate endpoint.
+        accelerate = s3_config.get('use_accelerate_endpoint', False)
+        if accelerate or self._is_s3_accelerate(endpoint_url, s3_config):
+            return 'virtual'
+
+        # If a particular style is configured, use it.
+        configured_style = s3_config.get('addressing_style')
+        if configured_style:
+            return configured_style
+
+    def _get_s3_addressing_handler(self, endpoint_url, s3_config, style):
+        # If virtual host style was configured, use it regardless of whether
+        # or not the bucket looks dns compatible.
+        if style == 'virtual':
+            return switch_to_virtual_host_style
+
+        # If path style is configured, no additional steps are needed. If
+        # endpoint_url was specified, don't default to virtual. We could
+        # potentially default provided endpoint urls to virtual hosted
+        # style, but for now it is avoided.
+        if style == 'path' or endpoint_url is not None:
+            return None
+
+        # For dual stack mode, we need to clear the default endpoint url in
+        # order to use the existing netloc if the bucket is dns compatible.
+        if s3_config.get('use_dualstack_endpoint', False):
+            return functools.partial(
+                fix_s3_host, default_endpoint_url=None)
+
+        # By default, try to use virtual style with path fallback.
+        return fix_s3_host
+
+    def _is_s3_accelerate(self, endpoint_url, s3_config):
+        if s3_config is not None and s3_config.get('use_accelerate_endpoint'):
+            return True
+
+        if endpoint_url is None:
+            return False
+
+        parts = urlsplit(endpoint_url).netloc.split('.')
+        return any(part == 's3-accelerate' for part in parts)
 
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,
@@ -405,61 +468,6 @@ class BaseClient(object):
         self.meta.events.register('request-created.%s' %
                                   self.meta.service_model.endpoint_prefix,
                                   self._request_signer.handler)
-
-        self._register_s3_specific_handlers()
-
-    def _register_s3_specific_handlers(self):
-        # Register all of the s3 specific handlers
-        if self.meta.config.s3 is None:
-            s3_addressing_style = None
-            s3_accelerate = None
-            s3_dualstack = None
-        else:
-            s3_addressing_style = self.meta.config.s3.get('addressing_style')
-            s3_accelerate = self.meta.config.s3.get('use_accelerate_endpoint')
-            s3_dualstack = self.meta.config.s3.get('use_dualstack_endpoint')
-
-        # Enable accelerate if the configuration is set to to true or the
-        # endpoint being used matches one of the Accelerate endpoints.
-        if s3_accelerate or self._is_accelerate_endpoint(self._endpoint.host):
-            # Amazon S3 accelerate is being used then always use the virtual
-            # style of addressing because it is required.
-            self._force_virtual_style_s3_addressing()
-            # Also make sure that the hostname gets switched to
-            # s3-accelerate.amazonaws.com
-            self.meta.events.register_first(
-                'request-created.s3', switch_host_s3_accelerate)
-        elif s3_addressing_style:
-            # Otherwise go ahead with the style the user may have specified.
-            if s3_addressing_style == 'path':
-                self._force_path_style_s3_addressing()
-            elif s3_addressing_style == 'virtual':
-                self._force_virtual_style_s3_addressing()
-        # This can't be an elif because we need it to work along with
-        # accelerate.
-        if s3_dualstack and not s3_addressing_style:
-            self.meta.events.unregister('before-sign.s3', fix_s3_host)
-            self.meta.events.register(
-                'before-sign.s3',
-                functools.partial(fix_s3_host, default_endpoint_url=None))
-
-    def _is_accelerate_endpoint(self, url):
-        parts = urlsplit(url).netloc.split('.')
-        return any(part == 's3-accelerate' for part in parts)
-
-    def _force_path_style_s3_addressing(self):
-        # Do not try to modify the host if path is specified. The
-        # ``fix_s3_host`` usually switches the addresing style to virtual.
-        self.meta.events.unregister('before-sign.s3', fix_s3_host)
-
-    def _force_virtual_style_s3_addressing(self):
-        # If the virtual host addressing style is being forced,
-        # switch the default fix_s3_host handler for the more general
-        # switch_to_virtual_host_style handler that does not have opt out
-        # cases (other than throwing an error if the name is DNS incompatible)
-        self.meta.events.unregister('before-sign.s3', fix_s3_host)
-        self.meta.events.register(
-            'before-sign.s3', switch_to_virtual_host_style)
 
     @property
     def _service_model(self):
