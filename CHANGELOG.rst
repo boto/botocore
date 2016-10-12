@@ -2,6 +2,21 @@
 CHANGELOG
 =========
 
+1.4.61
+======
+
+* feature:``ecr``: Update ecr client to latest version
+* feature:``cloudfront``: Update cloudfront client to latest version
+* feature:``codedeploy``: Update codedeploy client to latest version
+* feature:``sns``: Update sns client to latest version
+* feature:``apigateway``: Update apigateway client to latest version
+* feature:Client Meta: Add partition to client meta object (`#1027 <https://github.com/boto/botocore/issues/1027>`__)
+* feature:``elasticache``: Update elasticache client to latest version
+* feature:``kms``: Update kms client to latest version
+* feature:``rds``: Update rds client to latest version
+* feature:``gamelift``: Update gamelift client to latest version
+
+
 1.4.60
 ======
 
