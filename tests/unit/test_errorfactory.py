@@ -31,4 +31,3 @@ def test_errorfactory():
     assert_raises(AttributeError, getattr, factory, "_foo")
     assert_true(issubclass(factory._from_code("NoSuchResource"),
                            factory.NoSuchResourceException))
-    assert_raises(KeyError, factory._from_code, "NoSuchResourceException")

@@ -31,9 +31,8 @@ class ServiceErrorFactory(object):
     def _from_code(self, code):
         if code in self._error_shapes_by_code:
             return getattr(self, self._error_shapes_by_code[code].name)
-        elif not self._error_shapes_by_code:
-            return getattr(self, code)
-        raise KeyError(code)
+        else:
+            return getattr(self, code, ClientError)
 
     def __getattr__(self, attr):
         if attr.startswith("_"):
