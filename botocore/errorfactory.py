@@ -1,10 +1,7 @@
-import logging
 import threading
 
 from botocore.utils import CachedProperty
 from botocore.exceptions import ClientError
-
-logger = logging.getLogger(__name__)
 
 
 class ServiceErrorFactory(object):
@@ -42,8 +39,7 @@ class ServiceErrorFactory(object):
         if attr.startswith("_"):
             raise AttributeError(attr)
         if attr not in self._error_shapes:
-            msg = 'Error "{0}" was not found in the service model'
-            logger.warning(msg.format(attr))
+            raise AttributeError(attr)
         with self._lock:
             if attr not in self.__dict__:
                 setattr(self, attr, type(attr, (ClientError, ), {}))
