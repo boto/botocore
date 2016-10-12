@@ -1015,19 +1015,6 @@ class TestSwitchHostS3Accelerate(unittest.TestCase):
             self.request.url,
             'https://s3-accelerate.dualstack.amazonaws.com/foo/key.txt')
 
-    def test_does_not_use_dualstack_unless_explicitly_enabled(self):
-        self.client_config.s3 = {'use_dualstack_endpoint': False}
-        self.original_url = 'https://s3.dualstack.amazonaws.com/foo/key.txt'
-        self.request = AWSRequest(
-            method='PUT', headers={},
-            url=self.original_url
-        )
-        self.request.context['client_config'] = self.client_config
-        switch_host_s3_accelerate(self.request, 'PutObject')
-        self.assertEqual(
-            self.request.url,
-            'https://s3-accelerate.amazonaws.com/foo/key.txt')
-
 
 class TestS3RegionRedirector(unittest.TestCase):
     def setUp(self):

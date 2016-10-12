@@ -488,18 +488,13 @@ def test_correct_url_used_for_s3():
         s3_config=use_accelerate_dualstack,
         expected_url=(
             'https://bucket.s3-accelerate.dualstack.amazonaws.com/key'))
+    # Only s3-accelerate overrides a customer endpoint
     yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config=use_dualstack,
         customer_provided_endpoint='https://s3-accelerate.amazonaws.com',
         expected_url=(
-            'https://bucket.s3-accelerate.dualstack.amazonaws.com/key'))
-    yield t.case(
-        region='us-east-1', bucket='bucket', key='key',
-        s3_config=use_dualstack,
-        customer_provided_endpoint='http://s3-accelerate.amazonaws.com',
-        expected_url=(
-            'http://bucket.s3-accelerate.dualstack.amazonaws.com/key'))
+            'https://bucket.s3-accelerate.amazonaws.com/key'))
     yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config=use_accelerate_dualstack, is_secure=False,
