@@ -387,7 +387,7 @@ class BaseClient(object):
 
     def __init__(self, serializer, endpoint, response_parser,
                  event_emitter, request_signer, service_model, loader,
-                 client_config):
+                 client_config, partition):
         self._serializer = serializer
         self._endpoint = endpoint
         self._response_parser = response_parser
@@ -397,7 +397,7 @@ class BaseClient(object):
         self._client_config = client_config
         self.meta = ClientMeta(event_emitter, self._client_config,
                                endpoint.host, service_model,
-                               self._PY_TO_OP_NAME)
+                               self._PY_TO_OP_NAME, partition)
         self._register_handlers()
 
     def _register_handlers(self):
@@ -660,12 +660,13 @@ class ClientMeta(object):
     """
 
     def __init__(self, events, client_config, endpoint_url, service_model,
-                 method_to_api_mapping):
+                 method_to_api_mapping, partition):
         self.events = events
         self._client_config = client_config
         self._endpoint_url = endpoint_url
         self._service_model = service_model
         self._method_to_api_mapping = method_to_api_mapping
+        self._partition = partition
 
     @property
     def service_model(self):
@@ -686,3 +687,7 @@ class ClientMeta(object):
     @property
     def method_to_api_mapping(self):
         return self._method_to_api_mapping
+
+    @property
+    def partition(self):
+        return self._partition
