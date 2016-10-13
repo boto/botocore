@@ -46,6 +46,7 @@ RESTRICTED_REGIONS = [
     'fips-us-gov-west-1',
 ]
 RETRYABLE_HTTP_ERRORS = (requests.Timeout, requests.ConnectionError)
+S3_ACCELERATE_WHITELIST = ['dualstack']
 
 
 class _RetriesExceededError(Exception):
@@ -774,10 +775,12 @@ def switch_host_s3_accelerate(request, operation_name, **kwargs):
     # before it gets changed to virtual. So we are not concerned with ensuring
     # that the bucket name is translated to the virtual style here and we
     # can hard code the Accelerate endpoint.
-    whitelist = ['dualstack', 'amazonaws', 'com']
     parts = urlsplit(request.url).netloc.split('.')
-    parts = [p for p in parts if p in whitelist]
-    endpoint = 'https://s3-accelerate.' + '.'.join(parts)
+    parts = [p for p in parts if p in S3_ACCELERATE_WHITELIST]
+    endpoint = 'https://s3-accelerate.'
+    if len(parts) > 0:
+        endpoint += '.'.join(parts) + '.'
+    endpoint += 'amazonaws.com'
 
     if operation_name in ['ListBuckets', 'CreateBucket', 'DeleteBucket']:
         return

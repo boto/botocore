@@ -30,6 +30,7 @@ from botocore.utils import switch_host_s3_accelerate
 from botocore.utils import S3RegionRedirector
 from botocore.utils import fix_s3_host
 from botocore.utils import switch_to_virtual_host_style
+from botocore.utils import S3_ACCELERATE_WHITELIST
 from botocore.args import ClientArgsCreator
 from botocore.compat import urlsplit
 # Keep this imported.  There's pre-existing code that uses
@@ -180,7 +181,7 @@ class ClientCreator(object):
         return fix_s3_host
 
     def _is_s3_accelerate(self, endpoint_url, s3_config):
-        # Accelerate has been explicitly configured
+        # Accelerate has been explicitly configured.
         if s3_config is not None and s3_config.get('use_accelerate_endpoint'):
             return True
 
@@ -194,24 +195,21 @@ class ClientCreator(object):
         if not netloc.endswith('amazonaws.com'):
             return False
 
-        # The first part of the url should always be s3-accelerate
+        # The first part of the url should always be s3-accelerate.
         parts = netloc.split('.')
         if parts[0] != 's3-accelerate':
             return False
 
-        # There should not be more than two components between 's3-accelerate'
-        # and 'amazonaws.com'
+        # Url parts between 's3-accelerate' and 'amazonaws.com' which
+        # represent different url features.
         feature_parts = parts[1:-2]
-        if len(feature_parts) > 2:
-            return False
 
-        # There should be no duplicates
+        # There should be no duplicate url parts.
         if len(feature_parts) != len(set(feature_parts)):
             return False
 
-        # Remaining parts must be in the whitelist.
-        whitelist = ['dualstack']
-        return all(p in whitelist for p in feature_parts)
+        # Remaining parts must all be in the whitelist.
+        return all(p in S3_ACCELERATE_WHITELIST for p in feature_parts)
 
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,
