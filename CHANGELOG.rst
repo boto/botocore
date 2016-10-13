@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.4.62
+======
+
+* feature:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* feature:``acm``: Update acm client to latest version
+* feature:``gamelift``: Update gamelift client to latest version
+
+
 1.4.61
 ======
 
