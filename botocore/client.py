@@ -132,9 +132,10 @@ class ClientCreator(object):
         if s3_config is None:
             s3_config = {}
 
-        style = self._get_s3_addressing_style(endpoint_url, s3_config)
+        addressing_style = self._get_s3_addressing_style(
+            endpoint_url, s3_config)
         handler = self._get_s3_addressing_handler(
-            endpoint_url, s3_config, style)
+            endpoint_url, s3_config, addressing_style)
         if handler is not None:
             event_emitter.register('before-sign.s3', handler)
 
@@ -145,22 +146,23 @@ class ClientCreator(object):
         if accelerate or self._is_s3_accelerate(endpoint_url, s3_config):
             return 'virtual'
 
-        # If a particular style is configured, use it.
-        configured_style = s3_config.get('addressing_style')
-        if configured_style:
-            return configured_style
+        # If a particular addressing style is configured, use it.
+        configured_addressing_style = s3_config.get('addressing_style')
+        if configured_addressing_style:
+            return configured_addressing_style
 
-    def _get_s3_addressing_handler(self, endpoint_url, s3_config, style):
+    def _get_s3_addressing_handler(self, endpoint_url, s3_config,
+                                   addressing_style):
         # If virtual host style was configured, use it regardless of whether
         # or not the bucket looks dns compatible.
-        if style == 'virtual':
+        if addressing_style == 'virtual':
             return switch_to_virtual_host_style
 
         # If path style is configured, no additional steps are needed. If
         # endpoint_url was specified, don't default to virtual. We could
         # potentially default provided endpoint urls to virtual hosted
         # style, but for now it is avoided.
-        if style == 'path' or endpoint_url is not None:
+        if addressing_style == 'path' or endpoint_url is not None:
             return None
 
         # For dual stack mode, we need to clear the default endpoint url in
