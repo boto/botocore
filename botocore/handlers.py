@@ -818,7 +818,6 @@ BUILTIN_HANDLERS = [
     ('choose-signer.cognito-idp.SetUserSettings', disable_signing),
     ('choose-signer.cognito-idp.GetJWKS', disable_signing),
     ('choose-signer.cognito-idp.DeleteUserAttributes', disable_signing),
-    ('before-sign.s3', utils.fix_s3_host),
     ('before-parameter-build.s3.HeadObject', sse_md5),
     ('before-parameter-build.s3.GetObject', sse_md5),
     ('before-parameter-build.s3.PutObject', sse_md5),
