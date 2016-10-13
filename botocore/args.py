@@ -20,7 +20,6 @@ import copy
 import logging
 
 import botocore.serialize
-from botocore.utils import fix_s3_host
 from botocore.signers import RequestSigner
 from botocore.config import Config
 from botocore.endpoint import EndpointCreator
@@ -59,10 +58,7 @@ class ClientArgsCreator(object):
             endpoint_config['signature_version'],
             credentials, event_emitter)
 
-        # Add any additional s3 configuration for client
         config_kwargs['s3'] = s3_config
-        self._conditionally_unregister_fix_s3_host(endpoint_url, event_emitter)
-
         new_config = Config(**config_kwargs)
         endpoint_creator = EndpointCreator(event_emitter)
 
@@ -176,11 +172,6 @@ class ClientArgsCreator(object):
                     s3_configuration.update(client_config.s3)
 
         return s3_configuration
-
-    def _conditionally_unregister_fix_s3_host(self, endpoint_url, emitter):
-        # If the user is providing a custom endpoint, we should not alter it.
-        if endpoint_url is not None:
-            emitter.unregister('before-sign.s3', fix_s3_host)
 
     def _convert_config_to_bool(self, config_dict, keys):
         # Make sure any further modifications to this section of the config
