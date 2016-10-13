@@ -156,6 +156,7 @@ class ClientCreator(object):
         # If virtual host style was configured, use it regardless of whether
         # or not the bucket looks dns compatible.
         if addressing_style == 'virtual':
+            logger.debug("Using S3 virtual host style addressing.")
             return switch_to_virtual_host_style
 
         # If path style is configured, no additional steps are needed. If
@@ -163,7 +164,11 @@ class ClientCreator(object):
         # potentially default provided endpoint urls to virtual hosted
         # style, but for now it is avoided.
         if addressing_style == 'path' or endpoint_url is not None:
+            logger.debug("Using S3 path style addressing.")
             return None
+
+        logger.debug("Defaulting to S3 virtual host style addressing with "
+                     "path style addressing fallback.")
 
         # For dual stack mode, we need to clear the default endpoint url in
         # order to use the existing netloc if the bucket is dns compatible.
@@ -175,14 +180,38 @@ class ClientCreator(object):
         return fix_s3_host
 
     def _is_s3_accelerate(self, endpoint_url, s3_config):
+        # Accelerate has been explicitly configured
         if s3_config is not None and s3_config.get('use_accelerate_endpoint'):
             return True
 
+        # Accelerate mode is turned on automatically if an endpoint url is
+        # provided that matches the accelerate scheme.
         if endpoint_url is None:
             return False
 
-        parts = urlsplit(endpoint_url).netloc.split('.')
-        return any(part == 's3-accelerate' for part in parts)
+        # Accelerate is only valid for Amazon endpoints.
+        netloc = urlsplit(endpoint_url).netloc
+        if not netloc.endswith('amazonaws.com'):
+            return False
+
+        # The first part of the url should always be s3-accelerate
+        parts = netloc.split('.')
+        if parts[0] != 's3-accelerate':
+            return False
+
+        # There should not be more than two components between 's3-accelerate'
+        # and 'amazonaws.com'
+        feature_parts = parts[1:-2]
+        if len(feature_parts) > 2:
+            return False
+
+        # There should be no duplicates
+        if len(feature_parts) != len(set(feature_parts)):
+            return False
+
+        # Remaining parts must be in the whitelist.
+        whitelist = ['dualstack']
+        return all(p in whitelist for p in feature_parts)
 
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,

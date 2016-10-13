@@ -411,6 +411,7 @@ def test_correct_url_used_for_s3():
         region='us-west-2', bucket='bucket', key='key',
         s3_config=use_accelerate,
         expected_url='https://bucket.s3-accelerate.amazonaws.com/key')
+    # Provided endpoints still get recognized as accelerate endpoints.
     yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         customer_provided_endpoint='https://s3-accelerate.amazonaws.com',
@@ -424,6 +425,21 @@ def test_correct_url_used_for_s3():
         s3_config=use_accelerate, is_secure=False,
         # Note we're using http://  because is_secure=False.
         expected_url='http://bucket.s3-accelerate.amazonaws.com/key')
+    yield t.case(
+        region='us-east-1', bucket='bucket', key='key',
+        # s3-accelerate must be the first part of the url.
+        customer_provided_endpoint='https://foo.s3-accelerate.amazonaws.com',
+        expected_url='https://foo.s3-accelerate.amazonaws.com/bucket/key')
+    yield t.case(
+        region='us-east-1', bucket='bucket', key='key',
+        # The endpoint must be an Amazon endpoint.
+        customer_provided_endpoint='https://s3-accelerate.notamazon.com',
+        expected_url='https://s3-accelerate.notamazon.com/bucket/key')
+    yield t.case(
+        region='us-east-1', bucket='bucket', key='key',
+        # Extra components must be whitelisted.
+        customer_provided_endpoint='https://s3-accelerate.foo.amazonaws.com',
+        expected_url='https://s3-accelerate.foo.amazonaws.com/bucket/key')
     # Use virtual even if path is specified for s3 accelerate because
     # path style will not work with S3 accelerate.
     yield t.case(
@@ -483,18 +499,47 @@ def test_correct_url_used_for_s3():
         expected_url=(
             'https://bucket.s3-accelerate.dualstack.amazonaws.com/key'))
     yield t.case(
-        # region is ignored with S3 accelerate.
+        # Region is ignored with S3 accelerate.
         region='us-west-2', bucket='bucket', key='key',
         s3_config=use_accelerate_dualstack,
         expected_url=(
             'https://bucket.s3-accelerate.dualstack.amazonaws.com/key'))
-    # Only s3-accelerate overrides a customer endpoint
+    # Only s3-accelerate overrides a customer endpoint.
     yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config=use_dualstack,
         customer_provided_endpoint='https://s3-accelerate.amazonaws.com',
         expected_url=(
             'https://bucket.s3-accelerate.amazonaws.com/key'))
+    yield t.case(
+        region='us-east-1', bucket='bucket', key='key',
+        # Dualstack is whitelisted.
+        customer_provided_endpoint=(
+            'https://s3-accelerate.dualstack.amazonaws.com'),
+        expected_url=(
+            'https://bucket.s3-accelerate.dualstack.amazonaws.com/key'))
+    yield t.case(
+        region='us-east-1', bucket='bucket', key='key',
+        # Even whitelisted parts cannot be duplicated.
+        customer_provided_endpoint=(
+            'https://s3-accelerate.dualstack.dualstack.amazonaws.com'),
+        expected_url=(
+            'https://s3-accelerate.dualstack.dualstack'
+            '.amazonaws.com/bucket/key'))
+    yield t.case(
+        region='us-east-1', bucket='bucket', key='key',
+        # More than two extra parts is not allowed.
+        customer_provided_endpoint=(
+            'https://s3-accelerate.dualstack.dualstack.dualstack'
+            '.amazonaws.com'),
+        expected_url=(
+            'https://s3-accelerate.dualstack.dualstack.dualstack.amazonaws.com'
+            '/bucket/key'))
+    yield t.case(
+        region='us-east-1', bucket='bucket', key='key',
+        # Extra components must be whitelisted.
+        customer_provided_endpoint='https://s3-accelerate.foo.amazonaws.com',
+        expected_url='https://s3-accelerate.foo.amazonaws.com/bucket/key')
     yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config=use_accelerate_dualstack, is_secure=False,
