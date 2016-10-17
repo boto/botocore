@@ -4,17 +4,34 @@
 # binary package not from the CWD.
 
 import os
+import sys
 from subprocess import check_call
 
 _dname = os.path.dirname
 
 REPO_ROOT = _dname(_dname(_dname(os.path.abspath(__file__))))
-os.chdir(os.path.join(REPO_ROOT, 'tests'))
 
 
-def run(command):
-    return check_call(command, shell=True)
+def main():
+    os.chdir(os.path.join(REPO_ROOT, 'tests'))
 
+    command = [
+        'nosetests',
+        '--with-coverage',
+        '--cover-erase',
+        '--cover-package', 'botocore',
+        '--cover-xml',
+        '--with-xunit',
+        '-v',
+    ]
 
-run('nosetests --with-coverage --cover-erase --cover-package botocore '
-    '--with-xunit --cover-xml -v unit/ functional/')
+    extra_args = sys.argv[1:]
+    if extra_args:
+        command.extend(extra_args)
+    else:
+        command.extend(['unit/', 'functional/'])
+
+    return check_call(' '.join(command), shell=True)
+
+if __name__ == '__main__':
+    main()
