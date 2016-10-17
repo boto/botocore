@@ -164,6 +164,7 @@ class Stubber(object):
         :param client: The client to add your stubs to.
         """
         self.client = client
+        self._requests = []
         self._event_id = 'boto_stubber'
         self._expected_params_event_id = 'boto_stubber_expected_params'
         self._queue = deque()
@@ -315,6 +316,25 @@ class Stubber(object):
             raise AssertionError(
                 "%d responses remaining in queue." % remaining)
 
+    @property
+    def requests(self):
+        """
+        A list of StubRequests made through this stubber in the order they were
+        made. This can be used to perform partial checking of the parameters
+        used, which can be useful when testing very large service calls.
+
+        **Example:**
+
+        ::
+            stubber.add_response('foo', {})
+
+            with stubber:
+                service.foo(A=1, Lot=2, Of=3, Parameters=4)
+            assert service.requests[-1].operation_name == 'foo'
+            assert service.requests[-1].params['A'] == 1
+        """
+        return self._requests
+
     def _assert_expected_call_order(self, model, params):
         if not self._queue:
             raise StubResponseError(
@@ -335,6 +355,13 @@ class Stubber(object):
 
     def _assert_expected_params(self, model, params, **kwargs):
         self._assert_expected_call_order(model, params)
+
+        self.requests.append(StubRequest(
+            service_name=self.client.meta.service_model.service_name,
+            operation_name=model.name,
+            params=params,
+        ))
+
         expected_params = self._queue[0]['expected_params']
         if expected_params is None:
             return
@@ -374,3 +401,26 @@ class Stubber(object):
             raise ParamValidationError(
                 report=(
                     "Service response should only contain ResponseMetadata."))
+
+
+class StubRequest(object):
+    """
+    A tracked request that was made to a stubbed client. Has two attributes,
+    ``operation_name`` and ``params``.
+    """
+    def __init__(self, service_name, operation_name, params):
+        self._service_name = service_name
+        self._operation_name = operation_name
+        self._params = params
+
+    @property
+    def service_name(self):
+        return self._service_name
+
+    @property
+    def operation_name(self):
+        return self._operation_name
+
+    @property
+    def params(self):
+        return self._params

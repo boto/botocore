@@ -270,3 +270,56 @@ class TestStubber(unittest.TestCase):
         except StubAssertionError:
             self.fail(
                 "Stubber inappropriately raised error for same parameters.")
+
+    def test_requests_one(self):
+        self.stubber.add_response('list_objects', {})
+        with self.stubber:
+            self.client.list_objects(Bucket='mybucket', EncodingType='url')
+        self.assertEqual(len(self.stubber.requests), 1)
+        request = self.stubber.requests[0]
+        self.assertEqual(request.service_name, 's3')
+        self.assertEqual(request.operation_name, 'ListObjects')
+        self.assertEqual(
+            request.params,
+            {'Bucket': 'mybucket', 'EncodingType': 'url'},
+        )
+
+    def test_requests_two(self):
+        self.stubber.add_response('list_objects', {})
+        self.stubber.add_response('list_objects', {})
+        with self.stubber:
+            self.client.list_objects(Bucket='foo')
+            self.client.list_objects(Bucket='bar')
+        self.assertEqual(len(self.stubber.requests), 2)
+        self.assertEqual(self.stubber.requests[0].params['Bucket'], 'foo')
+        self.assertEqual(self.stubber.requests[1].params['Bucket'], 'bar')
+
+    def test_request_service_name_is_read_only(self):
+        self.stubber.add_response('list_objects', {})
+        with self.stubber:
+            self.client.list_objects(Bucket='mybucket', EncodingType='url')
+        self.assertEqual(len(self.stubber.requests), 1)
+        request = self.stubber.requests[0]
+
+        with self.assertRaises(AttributeError):
+            request.service_name = 'foo'
+
+    def test_request_operation_name_is_read_only(self):
+        self.stubber.add_response('list_objects', {})
+        with self.stubber:
+            self.client.list_objects(Bucket='mybucket', EncodingType='url')
+        self.assertEqual(len(self.stubber.requests), 1)
+        request = self.stubber.requests[0]
+
+        with self.assertRaises(AttributeError):
+            request.operation_name = 'foo'
+
+    def test_request_params_is_read_only(self):
+        self.stubber.add_response('list_objects', {})
+        with self.stubber:
+            self.client.list_objects(Bucket='mybucket', EncodingType='url')
+        self.assertEqual(len(self.stubber.requests), 1)
+        request = self.stubber.requests[0]
+
+        with self.assertRaises(AttributeError):
+            request.params = 1
