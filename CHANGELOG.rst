@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.4.63
+======
+
+* feature:``route53``: Update route53 client to latest version
+* feature:regions: Add support us-east-2
+
+
 1.4.62
 ======
 
