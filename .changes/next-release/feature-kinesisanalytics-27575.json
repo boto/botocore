@@ -1,0 +1,5 @@
+{
+  "category": "``kinesisanalytics``", 
+  "type": "feature", 
+  "description": "Update kinesisanalytics client to latest version"
+}
