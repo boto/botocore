@@ -90,7 +90,7 @@ class StreamingBody(object):
         line_buffer = ''
         BUFFER_SIZE = 2**14 # 16k
         for byte in self.read():
-            line_buffer = line_buffer + byte
+            line_buffer = line_buffer + str(byte)
             # Where possible accumulate BUFFER_SIZE bytes before performing
             # Split and yield
             if len(line_buffer) >= BUFFER_SIZE:
