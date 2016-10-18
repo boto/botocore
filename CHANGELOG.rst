@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.4.64
+======
+
+* feature:``cloudfront``: Update cloudfront client to latest version
+* feature:``iot``: Update iot client to latest version
+* feature:``config``: Update config client to latest version
+* feature:``rds``: Update rds client to latest version
+* feature:``kinesisanalytics``: Update kinesisanalytics client to latest version
+
+
 1.4.63
 ======
 
