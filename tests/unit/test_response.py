@@ -46,6 +46,28 @@ class TestStreamWrapper(unittest.TestCase):
         stream = response.StreamingBody(body, content_length=10)
         self.assertEqual(stream.read(), b'1234567890')
 
+    def test_streaming_wrapper_generates_line_streams(self):
+        body = six.BytesIO(b'1234567890\n1234567890')
+        stream = response.StreamingBody(body, content_length=21)
+        lines = stream.readlines()
+        result_count = 0
+        for line in lines:
+            result_count = result_count + 1
+            self.assertEqual(line, b'1234567890')
+        self.assertEqual(result_count, 2)
+
+    def test_streaming_wrapper_generates_long_line_streams(self):
+        body = six.BytesIO(b'1234567890\n' * 9000)
+        stream = response.StreamingBody(body, content_length=(9000*11))
+        lines = stream.readlines()
+        result_count = 0
+        for line in lines:
+            result_count = result_count + 1
+            # last line terminates with newline and returns valid empty string
+            self.assertIn(line, [b'1234567890', b''])
+        # 9000 rows plus 1 empty string after final delimiter
+        self.assertEqual(result_count, 9001)
+
     def test_streaming_body_with_invalid_length(self):
         body = six.BytesIO(b'123456789')
         stream = response.StreamingBody(body, content_length=10)
