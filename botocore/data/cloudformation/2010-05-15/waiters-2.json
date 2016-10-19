@@ -55,6 +55,12 @@
           "state": "failure"
         },
         {
+          "argument": "Stacks[].StackStatus",
+          "expected": "ROLLBACK_COMPLETE",
+          "matcher": "pathAny",
+          "state": "failure"
+        },
+        {
           "expected": "ValidationError",
           "matcher": "error",
           "state": "failure"
