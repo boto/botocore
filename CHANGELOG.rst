@@ -2,6 +2,57 @@
 CHANGELOG
 =========
 
+1.4.64
+======
+
+* feature:``cloudfront``: Update cloudfront client to latest version
+* feature:``iot``: Update iot client to latest version
+* feature:``config``: Update config client to latest version
+* feature:``rds``: Update rds client to latest version
+* feature:``kinesisanalytics``: Update kinesisanalytics client to latest version
+
+
+1.4.63
+======
+
+* feature:``route53``: Update route53 client to latest version
+* feature:regions: Add support us-east-2
+
+
+1.4.62
+======
+
+* feature:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* feature:``acm``: Update acm client to latest version
+* feature:``gamelift``: Update gamelift client to latest version
+
+
+1.4.61
+======
+
+* feature:``ecr``: Update ecr client to latest version
+* feature:``cloudfront``: Update cloudfront client to latest version
+* feature:``codedeploy``: Update codedeploy client to latest version
+* feature:``sns``: Update sns client to latest version
+* feature:``apigateway``: Update apigateway client to latest version
+* feature:Client Meta: Add partition to client meta object (`#1027 <https://github.com/boto/botocore/issues/1027>`__)
+* feature:``elasticache``: Update elasticache client to latest version
+* feature:``kms``: Update kms client to latest version
+* feature:``rds``: Update rds client to latest version
+* feature:``gamelift``: Update gamelift client to latest version
+
+
+1.4.60
+======
+
+* feature:``opsworks``: Update opsworks client to latest version
+* feature:``devicefarm``: Update devicefarm client to latest version
+* feature:``kms``: Update kms client to latest version
+* feature:``s3``: Update s3 client to latest version
+* feature:``waf``: Update waf client to latest version
+* feature:``cognito-idp``: Update cognito-idp client to latest version
+
+
 1.4.58
 ======
 

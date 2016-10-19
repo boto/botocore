@@ -44,19 +44,7 @@
         },
         {
           "argument": "Stacks[].StackStatus",
-          "expected": "DELETE_IN_PROGRESS",
-          "matcher": "pathAny",
-          "state": "failure"
-        },
-        {
-          "argument": "Stacks[].StackStatus",
           "expected": "DELETE_FAILED",
-          "matcher": "pathAny",
-          "state": "failure"
-        },
-        {
-          "argument": "Stacks[].StackStatus",
-          "expected": "ROLLBACK_COMPLETE",
           "matcher": "pathAny",
           "state": "failure"
         },
@@ -68,7 +56,7 @@
         },
         {
           "argument": "Stacks[].StackStatus",
-          "expected": "ROLLBACK_IN_PROGRESS",
+          "expected": "ROLLBACK_COMPLETE",
           "matcher": "pathAny",
           "state": "failure"
         },
@@ -104,67 +92,13 @@
         },
         {
           "argument": "Stacks[].StackStatus",
-          "expected": "CREATE_COMPLETE",
-          "matcher": "pathAny",
-          "state": "failure"
-        },
-        {
-          "argument": "Stacks[].StackStatus",
           "expected": "CREATE_FAILED",
           "matcher": "pathAny",
           "state": "failure"
         },
         {
           "argument": "Stacks[].StackStatus",
-          "expected": "CREATE_IN_PROGRESS",
-          "matcher": "pathAny",
-          "state": "failure"
-        },
-        {
-          "argument": "Stacks[].StackStatus",
-          "expected": "ROLLBACK_COMPLETE",
-          "matcher": "pathAny",
-          "state": "failure"
-        },
-        {
-          "argument": "Stacks[].StackStatus",
           "expected": "ROLLBACK_FAILED",
-          "matcher": "pathAny",
-          "state": "failure"
-        },
-        {
-          "argument": "Stacks[].StackStatus",
-          "expected": "ROLLBACK_IN_PROGRESS",
-          "matcher": "pathAny",
-          "state": "failure"
-        },
-        {
-          "argument": "Stacks[].StackStatus",
-          "expected": "UPDATE_COMPLETE",
-          "matcher": "pathAny",
-          "state": "failure"
-        },
-        {
-          "argument": "Stacks[].StackStatus",
-          "expected": "UPDATE_COMPLETE_CLEANUP_IN_PROGRESS",
-          "matcher": "pathAny",
-          "state": "failure"
-        },
-        {
-          "argument": "Stacks[].StackStatus",
-          "expected": "UPDATE_IN_PROGRESS",
-          "matcher": "pathAny",
-          "state": "failure"
-        },
-        {
-          "argument": "Stacks[].StackStatus",
-          "expected": "UPDATE_ROLLBACK_COMPLETE",
-          "matcher": "pathAny",
-          "state": "failure"
-        },
-        {
-          "argument": "Stacks[].StackStatus",
-          "expected": "UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS",
           "matcher": "pathAny",
           "state": "failure"
         },
@@ -202,27 +136,15 @@
         },
         {
           "argument": "Stacks[].StackStatus",
-          "expected": "UPDATE_ROLLBACK_COMPLETE",
-          "matcher": "pathAny",
-          "state": "failure"
-        },
-        {
-          "argument": "Stacks[].StackStatus",
           "expected": "UPDATE_ROLLBACK_FAILED",
           "matcher": "pathAny",
           "state": "failure"
         },
         {
-          "argument": "Stacks[].StackStatus",
-          "expected": "UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS",
+          "expected": "UPDATE_ROLLBACK_COMPLETE",
           "matcher": "pathAny",
-          "state": "failure"
-        },
-        {
-          "argument": "Stacks[].StackStatus",
-          "expected": "UPDATE_ROLLBACK_IN_PROGRESS",
-          "matcher": "pathAny",
-          "state": "failure"
+          "state": "failure",
+          "argument": "Stacks[].StackStatus"
         },
         {
           "expected": "ValidationError",

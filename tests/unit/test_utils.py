@@ -51,6 +51,7 @@ from botocore.utils import S3RegionRedirector
 from botocore.utils import ContainerMetadataFetcher
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
+from botocore.config import Config
 
 
 class TestURINormalization(unittest.TestCase):
@@ -973,6 +974,8 @@ class TestSwitchHostS3Accelerate(unittest.TestCase):
             method='PUT', headers={},
             url=self.original_url
         )
+        self.client_config = Config()
+        self.request.context['client_config'] = self.client_config
 
     def test_switch_host(self):
         switch_host_s3_accelerate(self.request, 'PutObject')
@@ -989,7 +992,7 @@ class TestSwitchHostS3Accelerate(unittest.TestCase):
             'CreateBucket'
         ]
         for op_name in blacklist_ops:
-            switch_host_s3_accelerate(self.request, 'ListBuckets')
+            switch_host_s3_accelerate(self.request, op_name)
             self.assertEqual(self.request.url, self.original_url)
 
     def test_uses_original_endpoint_scheme(self):
@@ -998,6 +1001,19 @@ class TestSwitchHostS3Accelerate(unittest.TestCase):
         self.assertEqual(
             self.request.url,
             'http://s3-accelerate.amazonaws.com/foo/key.txt')
+
+    def test_uses_dualstack(self):
+        self.client_config.s3 = {'use_dualstack_endpoint': True}
+        self.original_url = 'https://s3.dualstack.amazonaws.com/foo/key.txt'
+        self.request = AWSRequest(
+            method='PUT', headers={},
+            url=self.original_url
+        )
+        self.request.context['client_config'] = self.client_config
+        switch_host_s3_accelerate(self.request, 'PutObject')
+        self.assertEqual(
+            self.request.url,
+            'https://s3-accelerate.dualstack.amazonaws.com/foo/key.txt')
 
 
 class TestS3RegionRedirector(unittest.TestCase):

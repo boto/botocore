@@ -3291,6 +3291,7 @@
         },
         "RequestPayer":{
           "shape":"RequestPayer",
+          "documentation":"Confirms that the requester knows that she or he will be charged for the list objects request. Bucket owners need not specify this parameter in their requests.",
           "location":"header",
           "locationName":"x-amz-request-payer"
         }
@@ -3403,6 +3404,7 @@
         },
         "RequestPayer":{
           "shape":"RequestPayer",
+          "documentation":"Confirms that the requester knows that she or he will be charged for the list objects request in V2 style. Bucket owners need not specify this parameter in their requests.",
           "location":"header",
           "locationName":"x-amz-request-payer"
         }
