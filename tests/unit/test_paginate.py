@@ -368,6 +368,54 @@ class TestMultipleTokens(unittest.TestCase):
              ])
 
 
+class TestOptionalTokens(unittest.TestCase):
+    """
+    Tests a paginator with an optional output token.
+
+    The Route53 ListResourceRecordSets paginator includes three output tokens,
+    one of which only appears in certain records. If this gets left in the
+    request params from a previous page, the API will skip over a record.
+
+    """
+    def setUp(self):
+        self.method = mock.Mock()
+        # This is based on Route53 pagination.
+        self.paginate_config = {
+            "output_token": ["NextRecordName",
+                             "NextRecordType",
+                             "NextRecordIdentifier"],
+            "input_token": ["StartRecordName",
+                            "StartRecordType",
+                            "StartRecordIdentifier"],
+            "result_key": 'Foo',
+        }
+        self.paginator = Paginator(self.method, self.paginate_config)
+
+    def test_clean_token(self):
+        responses = [
+            {"Foo": [1],
+             "IsTruncated": True,
+             "NextRecordName": "aaa.example.com",
+             "NextRecordType": "A",
+             "NextRecordIdentifier": "id"},
+            {"Foo": [2],
+             "IsTruncated": True,
+             "NextRecordName": "bbb.example.com",
+             "NextRecordType": "A"},
+            {"Foo": [3],
+             "IsTruncated": False},
+        ]
+        self.method.side_effect = responses
+        list(self.paginator.paginate())
+        self.assertEqual(
+            self.method.call_args_list,
+            [mock.call(),
+             mock.call(StartRecordName='aaa.example.com', StartRecordType='A',
+                       StartRecordIdentifier='id'),
+             mock.call(StartRecordName='bbb.example.com', StartRecordType='A')
+             ])
+
+
 class TestKeyIterators(unittest.TestCase):
     def setUp(self):
         self.method = mock.Mock()
