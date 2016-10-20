@@ -125,6 +125,12 @@ class TestTransformName(unittest.TestCase):
     def test_special_case_ends_with_s(self):
         self.assertEqual(xform_name('GatewayARNs', '-'), 'gateway-arns')
 
+    def test_partial_rename(self):
+        transformed = xform_name('IPV6', '-')
+        self.assertEqual(transformed, 'ipv6')
+        transformed = xform_name('IPV6', '_')
+        self.assertEqual(transformed, 'ipv6')
+
 
 class TestValidateJMESPathForSet(unittest.TestCase):
     def setUp(self):
