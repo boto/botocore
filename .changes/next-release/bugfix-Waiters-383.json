@@ -1,5 +1,0 @@
-{
-  "category": "Waiters", 
-  "type": "bugfix", 
-  "description": "Add back missing fail fail states to cloudformation waiters (`#1056 <https://github.com/boto/botocore/issues/1056>`__)"
-}
