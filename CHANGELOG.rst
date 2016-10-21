@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.4.65
+======
+
+* bugfix:Waiters: Add back missing fail fail states to cloudformation waiters (`#1056 <https://github.com/boto/botocore/issues/1056>`__)
+* feature:``waf``: Update waf client to latest version
+* feature:``budgets``: Update budgets client to latest version
+
+
 1.4.64
 ======
 
