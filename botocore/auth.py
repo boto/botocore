@@ -443,7 +443,8 @@ class SigV4QueryAuth(SigV4Auth):
         # have repeated keys so we know we have single element lists which we
         # can convert back to scalar values.
         query_dict = dict(
-            [(k, v[0]) for k, v in parse_qs(url_parts.query).items()])
+            [(k, v[0]) for k, v in
+             parse_qs(url_parts.query, keep_blank_values=True).items()])
         # The spec is particular about this.  It *has* to be:
         # https://<endpoint>?<operation params>&<auth params>
         # You can't mix the two types of params together, i.e just keep doing
