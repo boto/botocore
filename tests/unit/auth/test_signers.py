@@ -680,6 +680,15 @@ class TestSigV4Presign(BasePresignTest):
         # Verify we encode spaces as '%20, and we don't use '+'.
         self.assertIn('Description=With%20Spaces', request.url)
 
+    def test_presign_with_empty_param_value(self):
+        request = AWSRequest()
+        request.method = 'POST'
+        # actual URL format for creating a multipart upload
+        request.url = 'https://s3.amazonaws.com/mybucket/mykey?uploads'
+        self.auth.add_auth(request)
+        # verify that uploads param is still in URL
+        self.assertIn('uploads', request.url)
+
     def test_s3_sigv4_presign(self):
         auth = botocore.auth.S3SigV4QueryAuth(
             self.credentials, self.service_name, self.region_name, expires=60)
