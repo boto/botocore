@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``sms``", 
+    "description": "Update sms client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``ecs``", 
+    "description": "Update ecs client to latest version", 
+    "type": "feature"
+  }
+]
