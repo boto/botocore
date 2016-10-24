@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.4.66
+======
+
+* feature:``sms``: Update sms client to latest version
+* feature:``ecs``: Update ecs client to latest version
+
+
 1.4.65
 ======
 
