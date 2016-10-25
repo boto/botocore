@@ -24,13 +24,4 @@ class TestCloudFormationDocs(BaseDocsFunctionalTest):
         self.assert_contains_line(
             "TemplateBody: dict", content)
         # Check the specifics of the returned dict
-        self.assert_contains_lines_in_order([
-            '"AWSTemplateFormatVersion" : "version date"',
-            '"Description" : "JSON string"',
-            '"Metadata" : { template metadata }',
-            '"Parameters" : { set of parameters }',
-            '"Mappings" : { set of mappings }',
-            '"Conditions" : { set of conditions }',
-            '"Resources" : { set of resources }',
-            '"Outputs" : { set of outputs }',
-        ], content)
+        self.assert_contains_line('{}', content)

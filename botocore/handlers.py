@@ -592,14 +592,7 @@ def document_cloudformation_get_template_return_type(section, event_name, **kwar
         param_line = parent.get_section('TemplateBody')
         value_portion = param_line.get_section('member-value')
         value_portion.clear_text()
-        value_portion.write('{"AWSTemplateFormatVersion" : "version date", '
-                            '"Description" : "JSON string", '
-                            '"Metadata" : { template metadata }, '
-                            '"Parameters" : { set of parameters }, '
-                            '"Mappings" : { set of mappings }, '
-                            '"Conditions" : { set of conditions }, '
-                            '"Resources" : { set of resources }, '
-                            '"Outputs" : { set of outputs } }')
+        value_portion.write('{}')
         
 
 def switch_host_machinelearning(request, **kwargs):
