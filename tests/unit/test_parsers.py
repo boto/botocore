@@ -618,7 +618,7 @@ class TestParseErrorResponses(unittest.TestCase):
         self.assertIn('Error', parsed)
         self.assertEqual(parsed['Error'], {
             'Code': '413',
-            'Message': response
+            'Message': response.decode('utf-8')
         })
         self.assertEqual(parsed['ResponseMetadata'], {
             'HTTPStatusCode': 413,
@@ -640,7 +640,7 @@ class TestParseErrorResponses(unittest.TestCase):
         self.assertIn('Error', parsed)
         self.assertEqual(parsed['Error'], {
             'Code': '403',
-            'Message': response
+            'Message': response.decode('utf-8')
         })
         self.assertEqual(parsed['ResponseMetadata'], {
             'HTTPStatusCode': 403,
