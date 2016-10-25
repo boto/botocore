@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.4.67
+======
+
+* feature:``elbv2``: Update elbv2 client to latest version
+* feature:``autoscaling``: Update autoscaling client to latest version
+
+
 1.4.66
 ======
 
