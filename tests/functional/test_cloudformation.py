@@ -17,11 +17,11 @@ from botocore.docs.service import ServiceDocumenter
 class TestCloudFormationDocs(BaseDocsFunctionalTest):
     def test_get_template_response_documented_as_dict(self):
         content = self.get_docstring_for_method('cloudformation', 'get_template')
-        # Should not say the return type of template body is a string
+        # String return type should be gone
         self.assert_not_contains_line(
-            "TemplateBody: string", content)
+            "(*string*) --", content)
         # Check for template body returning a dict
         self.assert_contains_line(
-            "TemplateBody: dict", content)
+            "(*dict*) --", content)
         # Check the specifics of the returned dict
         self.assert_contains_line('{}', content)

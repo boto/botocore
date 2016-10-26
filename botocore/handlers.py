@@ -586,14 +586,13 @@ def document_cloudformation_get_template_return_type(section, event_name, **kwar
         template_body_section = section.get_section('TemplateBody')
         type_section = template_body_section.get_section('param-type')
         type_section.clear_text()
-        type_section.write(':type TemplateBody: dict')
+        type_section.write('(*dict*) --')
     elif 'response-example' in event_name:
         parent = section.get_section('structure-value')
         param_line = parent.get_section('TemplateBody')
         value_portion = param_line.get_section('member-value')
         value_portion.clear_text()
         value_portion.write('{}')
-        
 
 def switch_host_machinelearning(request, **kwargs):
     switch_host_with_param(request, 'PredictEndpoint')
