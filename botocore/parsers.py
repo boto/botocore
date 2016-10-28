@@ -209,12 +209,14 @@ class ResponseParser(object):
                 parsed = self._do_error_parse(response, shape)
         else:
             parsed = self._do_parse(response, shape)
-        # Inject HTTPStatusCode key in the response metadata if the
-        # response metadata exists.
-        if isinstance(parsed, dict) and 'ResponseMetadata' in parsed:
-            parsed['ResponseMetadata']['HTTPStatusCode'] = (
-                response['status_code'])
-            parsed['ResponseMetadata']['HTTPHeaders'] = dict(response['headers'])
+
+        # Add ResponseMetadata if it doesn't exist and inject the HTTP
+        # status code and headers from the response.
+        if isinstance(parsed, dict):
+            response_metadata = parsed.get('ResponseMetadata', {})
+            response_metadata['HTTPStatusCode'] = response['status_code']
+            response_metadata['HTTPHeaders'] = dict(response['headers'])
+            parsed['ResponseMetadata'] = response_metadata
         return parsed
 
     def _is_generic_error_response(self, response):
