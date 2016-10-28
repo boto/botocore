@@ -204,6 +204,44 @@ class TestStubber(unittest.TestCase):
         except StubAssertionError:
             self.fail("stub.ANY failed to ignore parameter for validation.")
 
+    def test_nested_any_param(self):
+        service_response = {}
+        expected_params = {
+            'Bucket': 'foo',
+            'Key': 'bar.txt',
+            'Metadata': {
+                'MyMeta': stub.ANY,
+            }
+        }
+
+        self.stubber.add_response(
+            'put_object', service_response, expected_params)
+        self.stubber.add_response(
+            'put_object', service_response, expected_params)
+
+        try:
+            with self.stubber:
+                self.client.put_object(
+                    Bucket='foo',
+                    Key='bar.txt',
+                    Metadata={
+                        'MyMeta': 'Foo',
+                    }
+                )
+                self.client.put_object(
+                    Bucket='foo',
+                    Key='bar.txt',
+                    Metadata={
+                        'MyMeta': 'Bar',
+                    }
+                )
+        except StubAssertionError:
+            self.fail(
+                "stub.ANY failed to ignore nested parameter for validation.")
+
+    def test_ANY_repr(self):
+        self.assertEqual(repr(stub.ANY), '<ANY>')
+
     def test_none_param(self):
         service_response = {}
         expected_params = {'Buck': None}
