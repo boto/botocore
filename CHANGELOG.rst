@@ -2,6 +2,20 @@
 CHANGELOG
 =========
 
+1.4.68
+======
+
+* feature:``cloudformation``: Update cloudformation client to latest version
+* feature:Stub: Made ANY usable for nested parameters
+
+
+1.4.67
+======
+
+* feature:``elbv2``: Update elbv2 client to latest version
+* feature:``autoscaling``: Update autoscaling client to latest version
+
+
 1.4.66
 ======
 

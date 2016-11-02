@@ -581,6 +581,19 @@ def document_glacier_tree_hash_checksum():
     return AppendParamDocumentation('checksum', doc).append_documentation
 
 
+def document_cloudformation_get_template_return_type(section, event_name, **kwargs):
+    if 'response-params' in event_name:
+        template_body_section = section.get_section('TemplateBody')
+        type_section = template_body_section.get_section('param-type')
+        type_section.clear_text()
+        type_section.write('(*dict*) --')
+    elif 'response-example' in event_name:
+        parent = section.get_section('structure-value')
+        param_line = parent.get_section('TemplateBody')
+        value_portion = param_line.get_section('member-value')
+        value_portion.clear_text()
+        value_portion.write('{}')
+
 def switch_host_machinelearning(request, **kwargs):
     switch_host_with_param(request, 'PredictEndpoint')
 
@@ -848,7 +861,10 @@ BUILTIN_HANDLERS = [
      AutoPopulatedParam('checksum').document_auto_populated_param),
     ('docs.request-params.glacier.CompleteMultipartUpload.complete-section',
      document_glacier_tree_hash_checksum()),
-
+    # Cloudformation documentation customizations
+    ('docs.*.cloudformation.GetTemplate.complete-section',
+     document_cloudformation_get_template_return_type),
+    
     # UserData base64 encoding documentation customizations
     ('docs.*.ec2.RunInstances.complete-section',
      document_base64_encoding('UserData')),

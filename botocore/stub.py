@@ -20,7 +20,22 @@ from botocore.exceptions import ParamValidationError, \
 from botocore.vendored.requests.models import Response
 
 
-ANY = object()
+class _ANY(object):
+    """
+    A helper object that compares equal to everything. Copied from
+    unittest.mock
+    """
+
+    def __eq__(self, other):
+        return True
+
+    def __ne__(self, other):
+        return False
+
+    def __repr__(self):
+        return '<ANY>'
+
+ANY = _ANY()
 
 
 class Stubber(object):
@@ -262,7 +277,7 @@ class Stubber(object):
             the names of keyword arguments passed to that client call. If
             any of the parameters differ a ``StubResponseError`` is thrown.
             You can use stub.ANY to indicate a particular parameter to ignore
-            in validation. stub.ANY is only valid for top level params.
+            in validation.
         """
         http_response = Response()
         http_response.status_code = http_status_code
@@ -326,10 +341,7 @@ class Stubber(object):
 
         # Validate the parameters are equal
         for param, value in expected_params.items():
-            if value is ANY:
-                continue
-            elif param not in params or \
-                    expected_params[param] != params[param]:
+            if param not in params or expected_params[param] != params[param]:
                 raise StubAssertionError(
                     operation_name=model.name,
                     reason='Expected parameters:\n%s,\nbut received:\n%s' % (
