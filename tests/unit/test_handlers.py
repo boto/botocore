@@ -348,6 +348,19 @@ class TestHandlers(BaseSessionTest):
         event_emitter.register.assert_called_with(
             'needs-retry.foo', mock.ANY, unique_id='retry-config-foo')
 
+    def test_register_retry_handler_with_missing_config(self):
+        # No config means we should never see any retry events registered.
+        service_data = {'metadata': {'endpointPrefix': 'foo'}}
+        loader = mock.Mock()
+        loader.load_data.return_value = {}
+        event_emitter = mock.Mock()
+        handlers.register_retries_for_service(
+            service_data=service_data, service_name='foo',
+            event_emitter=event_emitter, data_loader=loader)
+
+        for call in event_emitter.register.call_args_list:
+            self.assertNotIn('needs-retry', call[0][0])
+
     def test_get_template_has_error_response(self):
         original = {'Error': {'Code': 'Message'}}
         handler_input = copy.deepcopy(original)

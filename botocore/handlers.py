@@ -232,6 +232,9 @@ def register_retries_for_service(service_data, event_emitter, data_loader,
 
 def _load_retry_config(loader, endpoint_prefix):
     original_config = loader.load_data('_retry')
+    if not original_config:
+        return
+
     retry_config = translate.build_retry_config(
         endpoint_prefix, original_config['retry'],
         original_config.get('definitions', {}))
