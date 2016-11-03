@@ -319,18 +319,16 @@ class TestHandlers(BaseSessionTest):
     def test_register_retry_for_handlers_with_no_endpoint_prefix(self):
         no_endpoint_prefix = {'metadata': {}}
         session = mock.Mock()
-        handlers.register_retries_for_service(service_data=no_endpoint_prefix,
-                                              session=mock.Mock(),
-                                              service_name='foo')
+        handlers.register_retries_for_service(
+            service_data=no_endpoint_prefix, service_name='foo',
+            event_emitter=mock.Mock(), data_loader=mock.Mock())
         self.assertFalse(session.register.called)
 
     def test_register_retry_handlers(self):
         service_data = {
             'metadata': {'endpointPrefix': 'foo'},
         }
-        session = mock.Mock()
         loader = mock.Mock()
-        session.get_component.return_value = loader
         loader.load_data.return_value = {
             'retry': {
                 '__default__': {
@@ -343,11 +341,12 @@ class TestHandlers(BaseSessionTest):
                 },
             },
         }
-        handlers.register_retries_for_service(service_data=service_data,
-                                              session=session,
-                                              service_name='foo')
-        session.register.assert_called_with('needs-retry.foo', mock.ANY,
-                                            unique_id='retry-config-foo')
+        event_emitter = mock.Mock()
+        handlers.register_retries_for_service(
+            service_data=service_data, service_name='foo',
+            event_emitter=event_emitter, data_loader=loader)
+        event_emitter.register.assert_called_with(
+            'needs-retry.foo', mock.ANY, unique_id='retry-config-foo')
 
     def test_get_template_has_error_response(self):
         original = {'Error': {'Code': 'Message'}}

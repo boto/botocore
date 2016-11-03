@@ -210,24 +210,23 @@ def _needs_s3_sse_customization(params, sse_member_prefix):
             sse_member_prefix + 'KeyMD5' not in params)
 
 
-def register_retries_for_service(service_data, session,
+def register_retries_for_service(service_data, event_emitter, data_loader,
                                  service_name, **kwargs):
-    loader = session.get_component('data_loader')
     endpoint_prefix = service_data.get('metadata', {}).get('endpointPrefix')
     if endpoint_prefix is None:
         logger.debug("Not registering retry handlers, could not endpoint "
                      "prefix from model for service %s", service_name)
         return
-    config = _load_retry_config(loader, endpoint_prefix)
+    config = _load_retry_config(data_loader, endpoint_prefix)
     if not config:
         return
     logger.debug("Registering retry handlers for service: %s", service_name)
     handler = retryhandler.create_retry_handler(
         config, endpoint_prefix)
     unique_id = 'retry-config-%s' % endpoint_prefix
-    session.register('needs-retry.%s' % endpoint_prefix,
-                     handler, unique_id=unique_id)
-    _register_for_operations(config, session,
+    event_emitter.register('needs-retry.%s' % endpoint_prefix,
+                           handler, unique_id=unique_id)
+    _register_for_operations(config, event_emitter,
                              service_name=endpoint_prefix)
 
 
@@ -239,7 +238,7 @@ def _load_retry_config(loader, endpoint_prefix):
     return retry_config
 
 
-def _register_for_operations(config, session, service_name):
+def _register_for_operations(config, event_emitter, service_name):
     # There's certainly a tradeoff for registering the retry config
     # for the operations when the service is created.  In practice,
     # there aren't a whole lot of per operation retry configs so
@@ -249,8 +248,8 @@ def _register_for_operations(config, session, service_name):
             continue
         handler = retryhandler.create_retry_handler(config, key)
         unique_id = 'retry-config-%s-%s' % (service_name, key)
-        session.register('needs-retry.%s.%s' % (service_name, key),
-                         handler, unique_id=unique_id)
+        event_emitter.register('needs-retry.%s.%s' % (service_name, key),
+                               handler, unique_id=unique_id)
 
 
 def disable_signing(**kwargs):

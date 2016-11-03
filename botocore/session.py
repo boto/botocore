@@ -517,14 +517,17 @@ class Session(object):
         Retrieve the fully merged data associated with a service.
         """
         data_path = service_name
-        service_data = self.get_component('data_loader').load_service_model(
+        loader = self.get_component('data_loader')
+        service_data = loader.load_service_model(
             data_path,
             type_name='service-2',
             api_version=api_version
         )
         self._events.emit('service-data-loaded.%s' % service_name,
                           service_data=service_data,
-                          service_name=service_name, session=self)
+                          service_name=service_name,
+                          data_loader=loader,
+                          event_emitter=self._events)
         return service_data
 
     def get_available_services(self):
