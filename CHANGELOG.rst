@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.4.70
+======
+
+* feature:``directconnect``: Update directconnect client to latest version
+
+
 1.4.69
 ======
 
