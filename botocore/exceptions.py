@@ -11,6 +11,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from __future__ import unicode_literals
 from botocore.vendored.requests.exceptions import ConnectionError
 
 
@@ -28,7 +29,16 @@ class BotoCoreError(Exception):
         self.kwargs = kwargs
 
 
-class UnknownServiceError(BotoCoreError):
+class DataNotFoundError(BotoCoreError):
+    """
+    The data associated with a particular path could not be loaded.
+
+    :ivar path: The data path that the user attempted to load.
+    """
+    fmt = 'Unable to load data for: {data_path}'
+
+
+class UnknownServiceError(DataNotFoundError):
     """Raised when trying to load data for an unknown service.
 
     :ivar service_name: The name of the unknown service.
@@ -37,15 +47,6 @@ class UnknownServiceError(BotoCoreError):
     fmt = (
         "Unknown service: '{service_name}'. Valid service names are: "
         "{known_service_names}")
-
-
-class DataNotFoundError(BotoCoreError):
-    """
-    The data associated with a particular path could not be loaded.
-
-    :ivar path: The data path that the user attempted to load.
-    """
-    fmt = 'Unable to load data for: {data_path}'
 
 
 class ApiVersionNotFoundError(BotoCoreError):
@@ -68,6 +69,7 @@ class ConnectionClosedError(ConnectionError):
     fmt = (
         'Connection was closed before we received a valid response '
         'from endpoint URL: "{endpoint_url}".')
+
     def __init__(self, **kwargs):
         msg = self.fmt.format(**kwargs)
         kwargs.pop('endpoint_url')
@@ -89,6 +91,18 @@ class PartialCredentialsError(BotoCoreError):
 
     """
     fmt = 'Partial credentials found in {provider}, missing: {cred_var}'
+
+
+class CredentialRetrievalError(BotoCoreError):
+    """
+    Error attempting to retrieve credentials from a remote source.
+
+    :ivar provider: The name of the credential provider.
+    :ivar error_msg: The msg explaning why credentials could not be
+        retrieved.
+
+    """
+    fmt = 'Error when retrieving credentials from {provider}: {error_msg}'
 
 
 class UnknownSignatureVersionError(BotoCoreError):
@@ -125,7 +139,7 @@ class NoRegionError(BaseEndpointResolverError):
     fmt = 'You must specify a region.'
 
 
-class UnknownEndpointError(BaseEndpointResolverError):
+class UnknownEndpointError(BaseEndpointResolverError, ValueError):
     """
     Could not construct an endpoint.
 
@@ -241,6 +255,20 @@ class UnknownParameterError(ValidationError):
     )
 
 
+class AliasConflictParameterError(ValidationError):
+    """
+    Error when an alias is provided for a parameter as well as the original.
+
+    :ivar original: The name of the original parameter.
+    :ivar alias: The name of the alias
+    :ivar operation: The name of the operation.
+    """
+    fmt = (
+        "Parameter '{original}' and its alias '{alias}' were provided "
+        "for operation {operation}.  Only one of them may be used."
+    )
+
+
 class UnknownServiceStyle(BotoCoreError):
     """
     Unknown style of service invocation.
@@ -279,6 +307,10 @@ class WaiterError(BotoCoreError):
     """Waiter failed to reach desired state."""
     fmt = 'Waiter {name} failed: {reason}'
 
+    def __init__(self, name, reason, last_response):
+        super(WaiterError, self).__init__(name=name, reason=reason)
+        self.last_response = last_response
+
 
 class IncompleteReadError(BotoCoreError):
     """HTTP response did not return expected number of bytes."""
@@ -314,15 +346,29 @@ class UnsupportedSignatureVersionError(BotoCoreError):
 class ClientError(Exception):
     MSG_TEMPLATE = (
         'An error occurred ({error_code}) when calling the {operation_name} '
-        'operation: {error_message}')
+        'operation{retry_info}: {error_message}')
 
     def __init__(self, error_response, operation_name):
+        retry_info = self._get_retry_info(error_response)
         msg = self.MSG_TEMPLATE.format(
             error_code=error_response['Error'].get('Code', 'Unknown'),
             error_message=error_response['Error'].get('Message', 'Unknown'),
-            operation_name=operation_name)
+            operation_name=operation_name,
+            retry_info=retry_info,
+        )
         super(ClientError, self).__init__(msg)
         self.response = error_response
+        self.operation_name = operation_name
+
+    def _get_retry_info(self, response):
+        retry_info = ''
+        if 'ResponseMetadata' in response:
+            metadata = response['ResponseMetadata']
+            if metadata.get('MaxAttemptsReached', False):
+                if 'RetryAttempts' in metadata:
+                    retry_info = (' (reached max retries: %s)' %
+                                  metadata['RetryAttempts'])
+        return retry_info
 
 
 class UnsupportedTLSVersionWarning(Warning):
@@ -357,9 +403,21 @@ class StubResponseError(BotoCoreError):
     fmt = 'Error getting response stub for operation {operation_name}: {reason}'
 
 
+class StubAssertionError(StubResponseError, AssertionError):
+    fmt = 'Error getting response stub for operation {operation_name}: {reason}'
+
+
 class InvalidConfigError(BotoCoreError):
     fmt = '{error_msg}'
 
 
 class RefreshWithMFAUnsupportedError(BotoCoreError):
     fmt = 'Cannot refresh credentials: MFA token required.'
+
+
+class MD5UnavailableError(BotoCoreError):
+    fmt = "This system does not support MD5 generation."
+
+
+class MetadataRetrievalError(BotoCoreError):
+    fmt = "Error retrieving metadata: {error_msg}"

@@ -1,6 +1,5 @@
-#!/usr/bin/env
 # Copyright (c) 2012-2013 Mitch Garnaat http://garnaat.org/
-# Copyright 2012-2014 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright 2012-2016 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -16,13 +15,14 @@ from datetime import datetime, timedelta
 import mock
 import os
 
-from dateutil.tz import tzlocal
+from dateutil.tz import tzlocal, tzutc
 
 from botocore import credentials
-from botocore.credentials import EnvProvider
+from botocore.utils import ContainerMetadataFetcher
+from botocore.credentials import EnvProvider, create_assume_role_refresher
 import botocore.exceptions
 import botocore.session
-from tests import unittest, BaseEnvVar
+from tests import unittest, BaseEnvVar, IntegerRefresher
 
 
 # Passed to session to keep it from finding default config file
@@ -72,16 +72,17 @@ class TestRefreshableCredentials(TestCredentials):
     def setUp(self):
         super(TestRefreshableCredentials, self).setUp()
         self.refresher = mock.Mock()
+        self.future_time = datetime.now(tzlocal()) + timedelta(hours=24)
+        self.expiry_time = \
+            datetime.now(tzlocal()) - timedelta(minutes=30)
         self.metadata = {
             'access_key': 'NEW-ACCESS',
             'secret_key': 'NEW-SECRET',
             'token': 'NEW-TOKEN',
-            'expiry_time': '2015-03-07T15:24:46Z',
+            'expiry_time': self.future_time.isoformat(),
             'role_name': 'rolename',
         }
         self.refresher.return_value = self.metadata
-        self.expiry_time = \
-            datetime.now(tzlocal()) - timedelta(minutes=30)
         self.mock_time = mock.Mock()
         self.creds = credentials.RefreshableCredentials(
             'ORIGINAL-ACCESS', 'ORIGINAL-SECRET', 'ORIGINAL-TOKEN',
@@ -111,6 +112,17 @@ class TestRefreshableCredentials(TestCredentials):
         self.assertEqual(self.creds.access_key, 'ORIGINAL-ACCESS')
         self.assertEqual(self.creds.secret_key, 'ORIGINAL-SECRET')
         self.assertEqual(self.creds.token, 'ORIGINAL-TOKEN')
+
+    def test_get_credentials_set(self):
+        # We need to return a consistent set of credentials to use during the
+        # signing process.
+        self.mock_time.return_value = (
+            datetime.now(tzlocal()) - timedelta(minutes=60))
+        self.assertTrue(not self.creds.refresh_needed())
+        credential_set = self.creds.get_frozen_credentials()
+        self.assertEqual(credential_set.access_key, 'ORIGINAL-ACCESS')
+        self.assertEqual(credential_set.secret_key, 'ORIGINAL-SECRET')
+        self.assertEqual(credential_set.token, 'ORIGINAL-TOKEN')
 
 
 class TestEnvVar(BaseEnvVar):
@@ -460,12 +472,14 @@ class TestOriginalEC2Provider(BaseEnvVar):
 
 class TestInstanceMetadataProvider(BaseEnvVar):
     def test_load_from_instance_metadata(self):
+        timeobj = datetime.now(tzlocal())
+        timestamp = (timeobj + timedelta(hours=24)).isoformat()
         fetcher = mock.Mock()
         fetcher.retrieve_iam_role_credentials.return_value = {
             'access_key': 'a',
             'secret_key': 'b',
             'token': 'c',
-            'expiry_time': '2014-04-23T15:24:46Z',
+            'expiry_time': timestamp,
             'role_name': 'myrole',
         }
         provider = credentials.InstanceMetadataProvider(
@@ -678,8 +692,15 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         # Create a mock sts client that returns a specific response
         # for assume_role.
         client = mock.Mock()
-        client.assume_role.return_value = with_response
+        if isinstance(with_response, list):
+            client.assume_role.side_effect = with_response
+        else:
+            client.assume_role.return_value = with_response
         return mock.Mock(return_value=client)
+
+    def some_future_time(self):
+        timeobj = datetime.now(tzlocal())
+        return timeobj + timedelta(hours=24)
 
     def test_assume_role_with_no_cache(self):
         response = {
@@ -687,7 +708,7 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
                 'AccessKeyId': 'foo',
                 'SecretAccessKey': 'bar',
                 'SessionToken': 'baz',
-                'Expiration': datetime.now(tzlocal()).isoformat()
+                'Expiration': self.some_future_time().isoformat()
             },
         }
         client_creator = self.create_client_creator(with_response=response)
@@ -712,7 +733,7 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
                 # we test both parsing as well as serializing
                 # from a given datetime because the credentials
                 # are immediately expired.
-                'Expiration': datetime.now(tzlocal())
+                'Expiration': datetime.now(tzlocal()) + timedelta(hours=20)
             },
         }
         client_creator = self.create_client_creator(with_response=response)
@@ -725,6 +746,23 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         self.assertEqual(creds.access_key, 'foo')
         self.assertEqual(creds.secret_key, 'bar')
         self.assertEqual(creds.token, 'baz')
+
+    def test_assume_role_refresher_serializes_datetime(self):
+        client = mock.Mock()
+        time_zone = tzutc()
+        expiration = datetime(
+            year=2016, month=11, day=6, hour=1, minute=30, tzinfo=time_zone)
+        client.assume_role.return_value = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': expiration,
+            }
+        }
+        refresh = create_assume_role_refresher(client, {})
+        expiry_time = refresh()['expiry_time']
+        self.assertEqual(expiry_time, '2016-11-06T01:30:00UTC')
 
     def test_assume_role_retrieves_from_cache(self):
         date_in_future = datetime.utcnow() + timedelta(seconds=1000)
@@ -802,13 +840,14 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
 
     def test_assume_role_in_cache_but_expired(self):
         expired_creds = datetime.utcnow()
+        valid_creds = expired_creds + timedelta(seconds=60)
         utc_timestamp = expired_creds.isoformat() + 'Z'
         response = {
             'Credentials': {
                 'AccessKeyId': 'foo',
                 'SecretAccessKey': 'bar',
                 'SessionToken': 'baz',
-                'Expiration': utc_timestamp,
+                'Expiration': valid_creds.isoformat() + 'Z',
             },
         }
         client_creator = self.create_client_creator(with_response=response)
@@ -902,6 +941,49 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
             RoleArn='myrole', RoleSessionName=mock.ANY, SerialNumber='mfa',
             TokenCode='token-code')
 
+    def test_assume_role_populates_session_name_on_refresh(self):
+        responses = [{
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                # We're creating an expiry time in the past so as
+                # soon as we try to access the credentials, the
+                # refresh behavior will be triggered.
+                'Expiration': (
+                    datetime.now(tzlocal()) -
+                    timedelta(seconds=100)).isoformat(),
+            },
+        }, {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': (
+                    datetime.now(tzlocal()) + timedelta(seconds=100)
+                ).isoformat(),
+            }
+        }]
+        client_creator = self.create_client_creator(with_response=responses)
+        provider = credentials.AssumeRoleProvider(
+            self.create_config_loader(), client_creator,
+            cache={}, profile_name='development',
+            prompter=mock.Mock(return_value='token-code'))
+
+        # This will trigger the first assume_role() call.  It returns
+        # credentials that are expired and will trigger a refresh.
+        creds = provider.load()
+        # This will trigger the second assume_role() call because
+        # a refresh is needed.
+        creds.get_frozen_credentials()
+        client = client_creator.return_value
+        assume_role_calls = client.assume_role.call_args_list
+        self.assertEqual(len(assume_role_calls), 2, assume_role_calls)
+        # The args should be identical.  That is, the second
+        # assume_role call should have the exact same args as the
+        # initial assume_role call.
+        self.assertEqual(assume_role_calls[0], assume_role_calls[1])
+
     def test_assume_role_mfa_cannot_refresh_credentials(self):
         # Note: we should look into supporting optional behavior
         # in the future that allows for reprompting for credentials.
@@ -972,5 +1054,194 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
             provider.load()
 
 
-if __name__ == "__main__":
-    unittest.main()
+class TestRefreshLogic(unittest.TestCase):
+    def test_mandatory_refresh_needed(self):
+        creds = IntegerRefresher(
+            # These values will immediately trigger
+            # a manadatory refresh.
+            creds_last_for=2,
+            mandatory_refresh=3,
+            advisory_refresh=3)
+        temp = creds.get_frozen_credentials()
+        self.assertEqual(
+            temp, credentials.ReadOnlyCredentials('1', '1', '1'))
+
+    def test_advisory_refresh_needed(self):
+        creds = IntegerRefresher(
+            # These values will immediately trigger
+            # a manadatory refresh.
+            creds_last_for=4,
+            mandatory_refresh=2,
+            advisory_refresh=5)
+        temp = creds.get_frozen_credentials()
+        self.assertEqual(
+            temp, credentials.ReadOnlyCredentials('1', '1', '1'))
+
+    def test_refresh_fails_is_not_an_error_during_advisory_period(self):
+        fail_refresh = mock.Mock(side_effect=Exception("refresh failed"))
+        creds = IntegerRefresher(
+            creds_last_for=5,
+            advisory_refresh=7,
+            mandatory_refresh=3,
+            refresh_function=fail_refresh
+        )
+        temp = creds.get_frozen_credentials()
+        # We should have called the refresh function.
+        self.assertTrue(fail_refresh.called)
+        # The fail_refresh function will raise an exception.
+        # Because we're in the advisory period we'll not propogate
+        # the exception and return the current set of credentials
+        # (generation '1').
+        self.assertEqual(
+            temp, credentials.ReadOnlyCredentials('0', '0', '0'))
+
+    def test_exception_propogated_on_error_during_mandatory_period(self):
+        fail_refresh = mock.Mock(side_effect=Exception("refresh failed"))
+        creds = IntegerRefresher(
+            creds_last_for=5,
+            advisory_refresh=10,
+            # Note we're in the mandatory period now (5 < 7< 10).
+            mandatory_refresh=7,
+            refresh_function=fail_refresh
+        )
+        with self.assertRaisesRegexp(Exception, 'refresh failed'):
+            creds.get_frozen_credentials()
+
+    def test_exception_propogated_on_expired_credentials(self):
+        fail_refresh = mock.Mock(side_effect=Exception("refresh failed"))
+        creds = IntegerRefresher(
+            # Setting this to 0 mean the credentials are immediately
+            # expired.
+            creds_last_for=0,
+            advisory_refresh=10,
+            mandatory_refresh=7,
+            refresh_function=fail_refresh
+        )
+        with self.assertRaisesRegexp(Exception, 'refresh failed'):
+            # Because credentials are actually expired, any
+            # failure to refresh should be propagated.
+            creds.get_frozen_credentials()
+
+    def test_refresh_giving_expired_credentials_raises_exception(self):
+        # This verifies an edge cases where refreshed credentials
+        # still give expired credentials:
+        # 1. We see credentials are expired.
+        # 2. We try to refresh the credentials.
+        # 3. The "refreshed" credentials are still expired.
+        #
+        # In this case, we hard fail and let the user know what
+        # happened.
+        creds = IntegerRefresher(
+            # Negative number indicates that the credentials
+            # have already been expired for 2 seconds, even
+            # on refresh.
+            creds_last_for=-2,
+        )
+        err_msg = 'refreshed credentials are still expired'
+        with self.assertRaisesRegexp(RuntimeError, err_msg):
+            # Because credentials are actually expired, any
+            # failure to refresh should be propagated.
+            creds.get_frozen_credentials()
+
+
+class TestContainerProvider(BaseEnvVar):
+    def test_noop_if_env_var_is_not_set(self):
+        # The 'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI' env var
+        # is not present as an env var.
+        environ = {}
+        provider = credentials.ContainerProvider(environ)
+        creds = provider.load()
+        self.assertIsNone(creds)
+
+    def test_retrieve_from_provider_if_env_var_present(self):
+        environ = {
+            'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI': '/latest/credentials?id=foo'
+        }
+        fetcher = mock.Mock(spec=ContainerMetadataFetcher)
+        timeobj = datetime.now(tzlocal())
+        timestamp = (timeobj + timedelta(hours=24)).isoformat()
+        fetcher.retrieve_uri.return_value = {
+            "AccessKeyId" : "access_key",
+            "SecretAccessKey" : "secret_key",
+            "Token" : "token",
+            "Expiration" : timestamp,
+        }
+        provider = credentials.ContainerProvider(environ, fetcher)
+        creds = provider.load()
+
+        fetcher.retrieve_uri.assert_called_with('/latest/credentials?id=foo')
+        self.assertEqual(creds.access_key, 'access_key')
+        self.assertEqual(creds.secret_key, 'secret_key')
+        self.assertEqual(creds.token, 'token')
+        self.assertEqual(creds.method, 'container-role')
+
+    def test_creds_refresh_when_needed(self):
+        environ = {
+            'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI': '/latest/credentials?id=foo'
+        }
+        fetcher = mock.Mock(spec=credentials.ContainerMetadataFetcher)
+        timeobj = datetime.now(tzlocal())
+        expired_timestamp = (timeobj - timedelta(hours=23)).isoformat()
+        future_timestamp = (timeobj + timedelta(hours=1)).isoformat()
+        fetcher.retrieve_uri.side_effect = [
+            {
+                "AccessKeyId" : "access_key_old",
+                "SecretAccessKey" : "secret_key_old",
+                "Token" : "token_old",
+                "Expiration" : expired_timestamp,
+            },
+            {
+                "AccessKeyId" : "access_key_new",
+                "SecretAccessKey" : "secret_key_new",
+                "Token" : "token_new",
+                "Expiration" : future_timestamp,
+            }
+        ]
+        provider = credentials.ContainerProvider(environ, fetcher)
+        creds = provider.load()
+        frozen_creds = creds.get_frozen_credentials()
+        self.assertEqual(frozen_creds.access_key, 'access_key_new')
+        self.assertEqual(frozen_creds.secret_key, 'secret_key_new')
+        self.assertEqual(frozen_creds.token, 'token_new')
+
+    def test_http_error_propagated(self):
+        environ = {
+            'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI': '/latest/credentials?id=foo'
+        }
+        fetcher = mock.Mock(spec=credentials.ContainerMetadataFetcher)
+        timeobj = datetime.now(tzlocal())
+        expired_timestamp = (timeobj - timedelta(hours=23)).isoformat()
+        future_timestamp = (timeobj + timedelta(hours=1)).isoformat()
+        exception = botocore.exceptions.CredentialRetrievalError
+        fetcher.retrieve_uri.side_effect = exception(provider='ecs-role',
+                                                     error_msg='fake http error')
+        with self.assertRaises(exception):
+            provider = credentials.ContainerProvider(environ, fetcher)
+            creds = provider.load()
+
+    def test_http_error_propagated_on_refresh(self):
+        # We should ensure errors are still propagated even in the
+        # case of a failed refresh.
+        environ = {
+            'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI': '/latest/credentials?id=foo'
+        }
+        fetcher = mock.Mock(spec=credentials.ContainerMetadataFetcher)
+        timeobj = datetime.now(tzlocal())
+        expired_timestamp = (timeobj - timedelta(hours=23)).isoformat()
+        http_exception = botocore.exceptions.MetadataRetrievalError
+        raised_exception = botocore.exceptions.CredentialRetrievalError
+        fetcher.retrieve_uri.side_effect = [
+            {
+                "AccessKeyId" : "access_key_old",
+                "SecretAccessKey" : "secret_key_old",
+                "Token" : "token_old",
+                "Expiration" : expired_timestamp,
+            },
+            http_exception(error_msg='HTTP connection timeout')
+        ]
+        provider = credentials.ContainerProvider(environ, fetcher)
+        # First time works with no issues.
+        creds = provider.load()
+        # Second time with a refresh should propagate an error.
+        with self.assertRaises(raised_exception):
+            frozen_creds = creds.get_frozen_credentials()

@@ -68,6 +68,23 @@ class TestStubber(unittest.TestCase):
         self.event_emitter.unregister.assert_any_call(
             'before-call.*.*', mock.ANY, unique_id=mock.ANY)
 
+    def test_context_manager(self):
+        self.event_emitter = mock.Mock()
+        self.client.meta.events = self.event_emitter
+
+        with self.stubber:
+            # Ensure events are registered in context
+            self.event_emitter.register_first.assert_called_with(
+                'before-parameter-build.*.*', mock.ANY, unique_id=mock.ANY)
+            self.event_emitter.register.assert_called_with(
+                'before-call.*.*', mock.ANY, unique_id=mock.ANY)
+
+        # Ensure events are no longer registered once we leave the context
+        self.event_emitter.unregister.assert_any_call(
+            'before-parameter-build.*.*', mock.ANY, unique_id=mock.ANY)
+        self.event_emitter.unregister.assert_any_call(
+            'before-call.*.*', mock.ANY, unique_id=mock.ANY)
+
     def test_add_response(self):
         response = {'foo': 'bar'}
         self.stubber.add_response('foo', response)
@@ -141,6 +158,22 @@ class TestStubber(unittest.TestCase):
         response = self.emit_get_response_event()
         self.assertEqual(response[1]['Error']['Message'], service_message)
         self.assertEqual(response[1]['Error']['Code'], error_code)
+
+    def test_get_client_error_with_extra_keys(self):
+        error_code = "foo"
+        error_message = "bar"
+        error_meta = {
+            "Endpoint": "https://foo.bar.baz",
+        }
+        self.stubber.add_client_error(
+            'foo', error_code, error_message,
+            http_status_code=301,
+            service_error_meta=error_meta)
+        with self.stubber:
+            response = self.emit_get_response_event()
+        error = response[1]['Error']
+        self.assertIn('Endpoint', error)
+        self.assertEqual(error['Endpoint'], "https://foo.bar.baz")
 
     def test_get_response_errors_with_no_stubs(self):
         self.stubber.activate()

@@ -158,6 +158,22 @@ class TestLoader(BaseEnvVar):
                                      'Unknown service.*BAZ.*baz'):
             loader.load_service_model('BAZ', type_name='service-2')
 
+    def test_load_service_model_uses_provided_type_name(self):
+        loader = Loader(extra_search_paths=['foo'],
+                        file_loader=mock.Mock(),
+                        include_default_search_paths=False)
+        loader.list_available_services = mock.Mock(return_value=['baz'])
+
+        # Should have a) the unknown service name and b) list of valid
+        # service names.
+        provided_type_name = 'not-service-2'
+        with self.assertRaisesRegexp(UnknownServiceError,
+                                     'Unknown service.*BAZ.*baz'):
+            loader.load_service_model(
+                'BAZ', type_name=provided_type_name)
+
+        loader.list_available_services.assert_called_with(provided_type_name)
+
     def test_create_loader_parses_data_path(self):
         search_path = os.pathsep.join(['foo', 'bar', 'baz'])
         loader = create_loader(search_path)

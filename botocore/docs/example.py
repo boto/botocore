@@ -47,7 +47,10 @@ class BaseExampleDocumenter(ShapeDocumenter):
 
     def document_shape_default(self, section, shape, history, include=None,
                                exclude=None, **kwargs):
-        py_type = py_default(shape.type_name)
+        py_type = self._get_special_py_default(shape)
+        if py_type is None:
+            py_type = py_default(shape.type_name)
+
         if self._context.get('streaming_shape') == shape:
             py_type = 'StreamingBody()'
         section.write(py_type)
@@ -157,7 +160,6 @@ class ResponseExampleDocumenter(BaseExampleDocumenter):
 
 class RequestExampleDocumenter(BaseExampleDocumenter):
     EVENT_NAME = 'request-example'
-
 
     def document_shape_type_structure(self, section, shape, history,
                                       include=None, exclude=None, **kwargs):

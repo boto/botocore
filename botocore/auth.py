@@ -11,7 +11,6 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
 import base64
 import datetime
 from hashlib import sha256
@@ -32,6 +31,7 @@ from botocore.compat import urlunsplit
 from botocore.compat import encodebytes
 from botocore.compat import six
 from botocore.compat import json
+from botocore.compat import MD5_AVAILABLE
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +44,10 @@ EMPTY_SHA256_HASH = (
 PAYLOAD_BUFFER = 1024 * 1024
 ISO8601 = '%Y-%m-%dT%H:%M:%SZ'
 SIGV4_TIMESTAMP = '%Y%m%dT%H%M%SZ'
+SIGNED_HEADERS_BLACKLIST = [
+    'expect',
+    'user-agent'
+]
 
 
 class BaseSigner(object):
@@ -170,7 +174,8 @@ class SigV4Auth(BaseSigner):
         split = urlsplit(request.url)
         for name, value in request.headers.items():
             lname = name.lower()
-            header_map[lname] = value
+            if lname not in SIGNED_HEADERS_BLACKLIST:
+                header_map[lname] = value
         if 'host' not in header_map:
             header_map['host'] = split.netloc
         return header_map
@@ -358,12 +363,50 @@ class SigV4Auth(BaseSigner):
 
 
 class S3SigV4Auth(SigV4Auth):
+    def __init__(self, credentials, service_name, region_name):
+        super(S3SigV4Auth, self).__init__(
+            credentials, service_name, region_name)
+        self._default_region_name = region_name
+
+    def add_auth(self, request):
+        # If we ever decide to share auth sessions, this could potentially be
+        # a source of concurrency bugs.
+        signing_context = request.context.get('signing', {})
+        self._region_name = signing_context.get(
+            'region', self._default_region_name)
+        super(S3SigV4Auth, self).add_auth(request)
 
     def _modify_request_before_signing(self, request):
         super(S3SigV4Auth, self)._modify_request_before_signing(request)
         if 'X-Amz-Content-SHA256' in request.headers:
             del request.headers['X-Amz-Content-SHA256']
-        request.headers['X-Amz-Content-SHA256'] = self.payload(request)
+
+        if self._should_sha256_sign_payload(request):
+            request.headers['X-Amz-Content-SHA256'] = self.payload(request)
+        else:
+            request.headers['X-Amz-Content-SHA256'] = 'UNSIGNED-PAYLOAD'
+
+    def _should_sha256_sign_payload(self, request):
+        # S3 allows optional body signing, so to minimize the performance
+        # impact, we opt to not SHA256 sign the body on streaming uploads,
+        # provided that we're on https.
+        client_config = request.context.get('client_config')
+        s3_config = getattr(client_config, 's3', None)
+
+        # The config could be None if it isn't set, or if the customer sets it
+        # to None.
+        if s3_config is None:
+            s3_config = {}
+
+        sign_payload = s3_config.get('payload_signing_enabled', None)
+        if sign_payload is not None:
+            return sign_payload
+
+        if 'Content-MD5' in request.headers and 'https' in request.url and \
+                request.context.get('has_streaming_input', False):
+            return False
+
+        return True
 
     def _normalize_url_path(self, path):
         # For S3, we do not normalize the path.
@@ -510,8 +553,9 @@ class S3SigV4PostAuth(SigV4Auth):
 class HmacV1Auth(BaseSigner):
 
     # List of Query String Arguments of Interest
-    QSAOfInterest = ['acl', 'cors', 'defaultObjectAcl', 'location', 'logging',
-                     'partNumber', 'policy', 'requestPayment', 'torrent',
+    QSAOfInterest = ['accelerate', 'acl', 'cors', 'defaultObjectAcl',
+                     'location', 'logging', 'partNumber', 'policy',
+                     'requestPayment', 'torrent',
                      'versioning', 'versionId', 'versions', 'website',
                      'uploads', 'uploadId', 'response-content-type',
                      'response-content-language', 'response-expires',
@@ -688,7 +732,7 @@ class HmacV1QueryAuth(HmacV1Auth):
         if p[3]:
             # If there was a pre-existing query string, we should
             # add that back before injecting the new query string.
-            new_query_string ='%s&%s' % (p[3], new_query_string)
+            new_query_string = '%s&%s' % (p[3], new_query_string)
         new_url_parts = (p[0], p[1], p[2], new_query_string, p[4])
         request.url = urlunsplit(new_url_parts)
 

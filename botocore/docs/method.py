@@ -176,11 +176,19 @@ def document_model_driven_method(section, method_name, operation_model,
     example_section = section.add_new_section('example')
     example_section.style.new_paragraph()
     example_section.style.bold('Request Syntax')
+
+    context = {
+        'special_shape_types': {
+            'streaming_input_shape': operation_model.get_streaming_input(),
+            'streaming_output_shape': operation_model.get_streaming_output()
+        }
+    }
+
     if operation_model.input_shape:
         RequestExampleDocumenter(
             service_name=operation_model.service_model.service_name,
             operation_name=operation_model.name,
-            event_emitter=event_emitter).document_example(
+            event_emitter=event_emitter, context=context).document_example(
                 example_section, operation_model.input_shape,
                 prefix=example_prefix, include=include_input,
                 exclude=exclude_input)
@@ -195,7 +203,7 @@ def document_model_driven_method(section, method_name, operation_model,
         RequestParamsDocumenter(
             service_name=operation_model.service_model.service_name,
             operation_name=operation_model.name,
-            event_emitter=event_emitter).document_params(
+            event_emitter=event_emitter, context=context).document_params(
                 request_params_section, operation_model.input_shape,
                 include=include_input, exclude=exclude_input)
 
@@ -208,8 +216,6 @@ def document_model_driven_method(section, method_name, operation_model,
         return_section.write(':returns: ')
         return_section.style.indent()
         return_section.style.new_line()
-
-        context = {'streaming_shape': operation_model.get_streaming_output()}
 
         # Add an example return value
         return_example_section = return_section.add_new_section('example')

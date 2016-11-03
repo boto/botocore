@@ -22,15 +22,16 @@ import os
 import platform
 
 from botocore import __version__
-import botocore.config
+import botocore.configloader
 import botocore.credentials
 import botocore.client
 from botocore.exceptions import ConfigNotFound, ProfileNotFound
+from botocore.exceptions import UnknownServiceError, PartialCredentialsError
 from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.loaders import create_loader
 from botocore.parsers import ResponseParserFactory
-from botocore import regions
+from botocore.regions import EndpointResolver
 from botocore.model import ServiceModel
 from botocore import paginate
 from botocore import waiter
@@ -79,6 +80,7 @@ class Session(object):
         'data_path': ('data_path', 'AWS_DATA_PATH', None, None),
         'config_file': (None, 'AWS_CONFIG_FILE', '~/.aws/config', None),
         'ca_bundle': ('ca_bundle', 'AWS_CA_BUNDLE', None, None),
+        'api_versions': ('api_versions', None, {}, None),
 
         # This is the shared credentials file amongst sdks.
         'credentials_file': (None, 'AWS_SHARED_CREDENTIALS_FILE',
@@ -88,12 +90,15 @@ class Session(object):
 
         # This is the number of seconds until we time out a request to
         # the instance metadata service.
-        'metadata_service_timeout': ('metadata_service_timeout',
-                                     'AWS_METADATA_SERVICE_TIMEOUT', 1, int),
+        'metadata_service_timeout': (
+            'metadata_service_timeout',
+            'AWS_METADATA_SERVICE_TIMEOUT', 1, int),
         # This is the number of request attempts we make until we give
         # up trying to retrieve data from the instance metadata service.
-        'metadata_service_num_attempts': ('metadata_service_num_attempts',
-                                          'AWS_METADATA_SERVICE_NUM_ATTEMPTS', 1, int),
+        'metadata_service_num_attempts': (
+            'metadata_service_num_attempts',
+            'AWS_METADATA_SERVICE_NUM_ATTEMPTS', 1, int),
+        'parameter_validation': ('parameter_validation', None, True, None),
     }
 
     #: The default format string to use when configuring the botocore logger.
@@ -174,9 +179,12 @@ class Session(object):
             lambda:  create_loader(self.get_config_variable('data_path')))
 
     def _register_endpoint_resolver(self):
+        def create_default_resolver():
+            loader = self.get_component('data_loader')
+            endpoints = loader.load_data('endpoints')
+            return EndpointResolver(endpoints)
         self._components.lazy_register_component(
-            'endpoint_resolver',
-            lambda:  regions.EndpointResolver(self.get_data('_endpoints')))
+            'endpoint_resolver', create_default_resolver)
 
     def _register_response_parser_factory(self):
         self._components.register_component('response_parser_factory',
@@ -358,7 +366,7 @@ class Session(object):
         if self._config is None:
             try:
                 config_file = self.get_config_variable('config_file')
-                self._config = botocore.config.load_config(config_file)
+                self._config = botocore.configloader.load_config(config_file)
             except ConfigNotFound:
                 self._config = {'profiles': {}}
             try:
@@ -368,7 +376,8 @@ class Session(object):
                 # can validate the user is not referring to a nonexistent
                 # profile.
                 cred_file = self.get_config_variable('credentials_file')
-                cred_profiles = botocore.config.raw_config_parse(cred_file)
+                cred_profiles = botocore.configloader.raw_config_parse(
+                    cred_file)
                 for profile in cred_profiles:
                     cred_vars = cred_profiles[profile]
                     if profile not in self._config['profiles']:
@@ -770,20 +779,38 @@ class Session(object):
         elif default_client_config is not None:
             config = default_client_config
 
+        # Figure out the user-provided region based on the various
+        # configuration options.
         if region_name is None:
             if config and config.region_name is not None:
                 region_name = config.region_name
             else:
                 region_name = self.get_config_variable('region')
+
+        # Figure out the verify value base on the various
+        # configuration options.
+        if verify is None:
+            verify = self.get_config_variable('ca_bundle')
+
+        if api_version is None:
+            api_version = self.get_config_variable('api_versions').get(
+                service_name, None)
+
         loader = self.get_component('data_loader')
         event_emitter = self.get_component('event_emitter')
         response_parser_factory = self.get_component(
             'response_parser_factory')
-        if aws_secret_access_key is not None:
+        if aws_access_key_id is not None and aws_secret_access_key is not None:
             credentials = botocore.credentials.Credentials(
                 access_key=aws_access_key_id,
                 secret_key=aws_secret_access_key,
                 token=aws_session_token)
+        elif self._missing_cred_vars(aws_access_key_id,
+                                     aws_secret_access_key):
+            raise PartialCredentialsError(
+                provider='explicit',
+                cred_var=self._missing_cred_vars(aws_access_key_id,
+                                                 aws_secret_access_key))
         else:
             credentials = self.get_credentials()
         endpoint_resolver = self.get_component('endpoint_resolver')
@@ -791,10 +818,59 @@ class Session(object):
             loader, endpoint_resolver, self.user_agent(), event_emitter,
             retryhandler, translate, response_parser_factory)
         client = client_creator.create_client(
-            service_name, region_name, use_ssl, endpoint_url, verify,
-            credentials, scoped_config=self.get_scoped_config(),
+            service_name=service_name, region_name=region_name,
+            is_secure=use_ssl, endpoint_url=endpoint_url, verify=verify,
+            credentials=credentials, scoped_config=self.get_scoped_config(),
             client_config=config, api_version=api_version)
         return client
+
+    def _missing_cred_vars(self, access_key, secret_key):
+        if access_key is not None and secret_key is None:
+            return 'aws_secret_access_key'
+        if secret_key is not None and access_key is None:
+            return 'aws_access_key_id'
+        return None
+
+    def get_available_partitions(self):
+        """Lists the available partitions found on disk
+
+        :rtype: list
+        :return: Returns a list of partition names (e.g., ["aws", "aws-cn"])
+        """
+        resolver = self.get_component('endpoint_resolver')
+        return resolver.get_available_partitions()
+
+    def get_available_regions(self, service_name, partition_name='aws',
+                              allow_non_regional=False):
+        """Lists the region and endpoint names of a particular partition.
+
+        :type service_name: string
+        :param service_name: Name of a service to list endpoint for (e.g., s3).
+            This parameter accepts a service name (e.g., "elb") or endpoint
+            prefix (e.g., "elasticloadbalancing").
+
+        :type partition_name: string
+        :param partition_name: Name of the partition to limit endpoints to.
+            (e.g., aws for the public AWS endpoints, aws-cn for AWS China
+            endpoints, aws-us-gov for AWS GovCloud (US) Endpoints, etc.
+
+        :type allow_non_regional: bool
+        :param allow_non_regional: Set to True to include endpoints that are
+             not regional endpoints (e.g., s3-external-1,
+             fips-us-gov-west-1, etc).
+        :return: Returns a list of endpoint names (e.g., ["us-east-1"]).
+        """
+        resolver = self.get_component('endpoint_resolver')
+        results = []
+        try:
+            service_data = self.get_service_data(service_name)
+            endpoint_prefix = service_data['metadata'].get(
+                'endpointPrefix', service_name)
+            results = resolver.get_available_endpoints(
+                endpoint_prefix, partition_name, allow_non_regional)
+        except UnknownServiceError:
+            pass
+        return results
 
 
 class ComponentLocator(object):

@@ -191,6 +191,8 @@ class AcceptorConfig(object):
         expected = self.expected
 
         def acceptor_matches(response):
+            if 'Error' in response:
+                return
             return expression.search(response) == expected
         return acceptor_matches
 
@@ -199,6 +201,8 @@ class AcceptorConfig(object):
         expected = self.expected
 
         def acceptor_matches(response):
+            if 'Error' in response:
+                return
             result = expression.search(response)
             if not isinstance(result, list) or not result:
                 # pathAll matcher must result in a list.
@@ -217,6 +221,8 @@ class AcceptorConfig(object):
         expected = self.expected
 
         def acceptor_matches(response):
+            if 'Error' in response:
+                return
             result = expression.search(response)
             if not isinstance(result, list) or not result:
                 # pathAny matcher must result in a list.
@@ -297,11 +303,13 @@ class Waiter(object):
                 # transition to the failure state if an error
                 # response was received.
                 if 'Error' in response:
-                    # Transition to the failure state, which we can
-                    # just handle here by raising an exception.
+                    # Transition to a failure state, which we
+                    # can just handle here by raising an exception.
                     raise WaiterError(
                         name=self.name,
-                        reason=response['Error'].get('Message', 'Unknown'))
+                        reason=response['Error'].get('Message', 'Unknown'),
+                        last_response=response
+                    )
             if current_state == 'success':
                 logger.debug("Waiting complete, waiter matched the "
                              "success state.")
@@ -309,8 +317,13 @@ class Waiter(object):
             if current_state == 'failure':
                 raise WaiterError(
                     name=self.name,
-                    reason='Waiter encountered a terminal failure state')
+                    reason='Waiter encountered a terminal failure state',
+                    last_response=response,
+                )
             if num_attempts >= max_attempts:
-                raise WaiterError(name=self.name,
-                                  reason='Max attempts exceeded')
+                raise WaiterError(
+                    name=self.name,
+                    reason='Max attempts exceeded',
+                    last_response=response
+                )
             time.sleep(sleep_amount)

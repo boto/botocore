@@ -10,28 +10,32 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import copy
 import logging
+import functools
 
-import botocore.serialize
-import botocore.validate
 from botocore import waiter, xform_name
+from botocore.auth import AUTH_TYPE_MAPS
 from botocore.awsrequest import prepare_request_dict
-from botocore.compat import OrderedDict
-from botocore.endpoint import EndpointCreator, DEFAULT_TIMEOUT
+from botocore.docs.docstring import ClientMethodDocstring
+from botocore.docs.docstring import PaginatorDocstring
 from botocore.exceptions import ClientError, DataNotFoundError
 from botocore.exceptions import OperationNotPageableError
-from botocore.exceptions import InvalidS3AddressingStyleError
+from botocore.exceptions import UnknownSignatureVersionError
 from botocore.hooks import first_non_none_response
 from botocore.model import ServiceModel
 from botocore.paginate import Paginator
-from botocore.signers import RequestSigner
 from botocore.utils import CachedProperty
 from botocore.utils import get_service_module_name
+from botocore.utils import switch_host_s3_accelerate
+from botocore.utils import S3RegionRedirector
 from botocore.utils import fix_s3_host
 from botocore.utils import switch_to_virtual_host_style
-from botocore.docs.docstring import ClientMethodDocstring
-from botocore.docs.docstring import PaginatorDocstring
+from botocore.utils import S3_ACCELERATE_WHITELIST
+from botocore.args import ClientArgsCreator
+from botocore.compat import urlsplit
+# Keep this imported.  There's pre-existing code that uses
+# "from botocore.client import Config".
+from botocore.config import Config
 
 
 logger = logging.getLogger(__name__)
@@ -57,10 +61,15 @@ class ClientCreator(object):
                       client_config=None):
         service_model = self._load_service_model(service_name, api_version)
         cls = self._create_client_class(service_name, service_model)
+        endpoint_bridge = ClientEndpointBridge(
+            self._endpoint_resolver, scoped_config, client_config,
+            service_signing_name=service_model.metadata.get('signingName'))
         client_args = self._get_client_args(
             service_model, region_name, is_secure, endpoint_url,
-            verify, credentials, scoped_config, client_config)
-        return cls(**client_args)
+            verify, credentials, scoped_config, client_config, endpoint_bridge)
+        service_client = cls(**client_args)
+        self._register_s3_events(service_client, endpoint_bridge, endpoint_url)
+        return service_client
 
     def create_client_class(self, service_name, api_version=None):
         service_model = self._load_service_model(service_name, api_version)
@@ -106,179 +115,111 @@ class ClientCreator(object):
         self._event_emitter.register('needs-retry.%s' % endpoint_prefix,
                                      handler, unique_id=unique_id)
 
-    def _get_signature_version_and_region(self, service_model, region_name,
-                                          is_secure, scoped_config,
-                                          endpoint_url):
-        # Get endpoint heuristic overrides before creating the
-        # request signer.
-        resolver = self._endpoint_resolver
-        scheme = 'https' if is_secure else 'http'
-        endpoint_config = resolver.construct_endpoint(
-            service_model.endpoint_prefix, region_name, scheme=scheme)
+    def _register_s3_events(self, client, endpoint_bridge, endpoint_url):
+        if client.meta.service_model.service_name != 's3':
+            return
+        S3RegionRedirector(endpoint_bridge, client).register()
+        self._set_s3_addressing_style(
+            endpoint_url, client.meta.config.s3, client.meta.events)
+        # Enable accelerate if the configuration is set to to true or the
+        # endpoint being used matches one of the accelerate endpoints.
+        if self._is_s3_accelerate(endpoint_url, client.meta.config.s3):
+            # Also make sure that the hostname gets switched to
+            # s3-accelerate.amazonaws.com
+            client.meta.events.register_first(
+                'request-created.s3', switch_host_s3_accelerate)
 
-        # Signature version override from endpoint.
-        signature_version = service_model.signature_version
-        if 'signatureVersion' in endpoint_config.get('properties', {}):
-            signature_version = endpoint_config[
-                'properties']['signatureVersion']
+    def _set_s3_addressing_style(self, endpoint_url, s3_config, event_emitter):
+        if s3_config is None:
+            s3_config = {}
 
-        # Signature overrides from a configuration file.
-        if scoped_config is not None:
-            service_config = scoped_config.get(service_model.endpoint_prefix)
-            if service_config is not None and isinstance(service_config, dict):
-                override = service_config.get('signature_version')
-                if override:
-                    logger.debug(
-                        "Switching signature version for service %s "
-                        "to version %s based on config file override.",
-                        service_model.endpoint_prefix, override)
-                    signature_version = override
+        addressing_style = self._get_s3_addressing_style(
+            endpoint_url, s3_config)
+        handler = self._get_s3_addressing_handler(
+            endpoint_url, s3_config, addressing_style)
+        if handler is not None:
+            event_emitter.register('before-sign.s3', handler)
 
-        # Determine the region name as well
-        region_name = self._determine_region_name(
-            endpoint_config, region_name, endpoint_url)
+    def _get_s3_addressing_style(self, endpoint_url, s3_config):
+        # Use virtual host style addressing if accelerate is enabled or if
+        # the given endpoint url is an accelerate endpoint.
+        accelerate = s3_config.get('use_accelerate_endpoint', False)
+        if accelerate or self._is_s3_accelerate(endpoint_url, s3_config):
+            return 'virtual'
 
-        return signature_version, region_name
+        # If a particular addressing style is configured, use it.
+        configured_addressing_style = s3_config.get('addressing_style')
+        if configured_addressing_style:
+            return configured_addressing_style
 
-    def _determine_region_name(self, endpoint_config, region_name=None,
-                               endpoint_url=None):
-        # This is a helper function to determine region name to use.
-        # It will take into account whether the user passes in a region
-        # name, whether there is a rule in the endpoint JSON, or
-        # an endpoint url was provided.
+    def _get_s3_addressing_handler(self, endpoint_url, s3_config,
+                                   addressing_style):
+        # If virtual host style was configured, use it regardless of whether
+        # or not the bucket looks dns compatible.
+        if addressing_style == 'virtual':
+            logger.debug("Using S3 virtual host style addressing.")
+            return switch_to_virtual_host_style
 
-        # We only support the credentialScope.region in the properties
-        # bag right now, so if it's available, it will override the
-        # provided region name.
-        region_name_override = endpoint_config['properties'].get(
-            'credentialScope', {}).get('region')
+        # If path style is configured, no additional steps are needed. If
+        # endpoint_url was specified, don't default to virtual. We could
+        # potentially default provided endpoint urls to virtual hosted
+        # style, but for now it is avoided.
+        if addressing_style == 'path' or endpoint_url is not None:
+            logger.debug("Using S3 path style addressing.")
+            return None
 
-        if endpoint_url is not None:
-            # If an endpoint_url is provided, do not use region name
-            # override if a region was provided by the user.
-            if region_name is not None:
-                region_name_override = None
+        logger.debug("Defaulting to S3 virtual host style addressing with "
+                     "path style addressing fallback.")
 
-        if region_name_override is not None:
-            # Letting the heuristics rule override the region_name
-            # allows for having a default region of something like us-west-2
-            # for IAM, but we still will know to use us-east-1 for sigv4.
-            region_name = region_name_override
+        # For dual stack mode, we need to clear the default endpoint url in
+        # order to use the existing netloc if the bucket is dns compatible.
+        if s3_config.get('use_dualstack_endpoint', False):
+            return functools.partial(
+                fix_s3_host, default_endpoint_url=None)
 
-        return region_name
+        # By default, try to use virtual style with path fallback.
+        return fix_s3_host
 
-    def _inject_s3_configuration(self, config_kwargs, scoped_config,
-                                 client_config):
-        s3_configuration = None
+    def _is_s3_accelerate(self, endpoint_url, s3_config):
+        # Accelerate has been explicitly configured.
+        if s3_config is not None and s3_config.get('use_accelerate_endpoint'):
+            return True
 
-        # Check the scoped config first
-        if scoped_config is not None:
-            s3_configuration = scoped_config.get('s3')
+        # Accelerate mode is turned on automatically if an endpoint url is
+        # provided that matches the accelerate scheme.
+        if endpoint_url is None:
+            return False
 
-        # Next specfic client config values takes precedence over
-        # specific values in the scoped config.
-        if client_config is not None:
-            if client_config.s3 is not None:
-                if s3_configuration is None:
-                    s3_configuration = client_config.s3
-                else:
-                    # The current s3_configuration dictionary may be
-                    # from a source that only should be read from so
-                    # we want to be safe and just make a copy of it to modify
-                    # before it actually gets updated.
-                    s3_configuration = s3_configuration.copy()
-                    s3_configuration.update(client_config.s3)
+        # Accelerate is only valid for Amazon endpoints.
+        netloc = urlsplit(endpoint_url).netloc
+        if not netloc.endswith('amazonaws.com'):
+            return False
 
-        config_kwargs['s3'] = s3_configuration
+        # The first part of the url should always be s3-accelerate.
+        parts = netloc.split('.')
+        if parts[0] != 's3-accelerate':
+            return False
 
-    def _resolve_verify_value(self, provided_verify_value, scoped_config):
-        # If a user provides a value for "verify" then we don't do anything.
-        # We always use explicit values provided.
-        if provided_verify_value is not None:
-            return provided_verify_value
-        elif scoped_config is not None:
-            return scoped_config.get('ca_bundle')
+        # Url parts between 's3-accelerate' and 'amazonaws.com' which
+        # represent different url features.
+        feature_parts = parts[1:-2]
+
+        # There should be no duplicate url parts.
+        if len(feature_parts) != len(set(feature_parts)):
+            return False
+
+        # Remaining parts must all be in the whitelist.
+        return all(p in S3_ACCELERATE_WHITELIST for p in feature_parts)
 
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,
-                         scoped_config, client_config):
-
-        protocol = service_model.metadata['protocol']
-        serializer = botocore.serialize.create_serializer(
-            protocol, include_validation=True)
-
-        event_emitter = copy.copy(self._event_emitter)
-
-        response_parser = botocore.parsers.create_parser(protocol)
-
-        verify = self._resolve_verify_value(verify, scoped_config)
-        # Determine what region the user provided either via the
-        # region_name argument or the client_config.
-        if region_name is None:
-            if client_config and client_config.region_name is not None:
-                region_name = client_config.region_name
-
-        # Based on what the user provided use the scoped config file
-        # to determine if the region is going to change and what
-        # signature should be used.
-        signature_version, region_name = \
-            self._get_signature_version_and_region(
-                service_model, region_name, is_secure, scoped_config,
-                endpoint_url)
-
-        # Override the signature if the user specifies it in the client
-        # config.
-        if client_config and client_config.signature_version is not None:
-            signature_version = client_config.signature_version
-
-        # Override the user agent if specified in the client config.
-        user_agent = self._user_agent
-        if client_config is not None:
-            if client_config.user_agent is not None:
-                user_agent = client_config.user_agent
-            if client_config.user_agent_extra is not None:
-                user_agent += ' %s' % client_config.user_agent_extra
-
-        signer = RequestSigner(service_model.service_name, region_name,
-                               service_model.signing_name,
-                               signature_version, credentials,
-                               event_emitter)
-
-        # Create a new client config to be passed to the client based
-        # on the final values. We do not want the user to be able
-        # to try to modify an existing client with a client config.
-        config_kwargs = dict(
-            region_name=region_name, signature_version=signature_version,
-            user_agent=user_agent)
-        if client_config is not None:
-            config_kwargs.update(
-                connect_timeout=client_config.connect_timeout,
-                read_timeout=client_config.read_timeout)
-
-        # Add any additional s3 configuration for client
-        self._inject_s3_configuration(
-            config_kwargs, scoped_config, client_config)
-
-        new_config = Config(**config_kwargs)
-
-        endpoint_creator = EndpointCreator(self._endpoint_resolver,
-                                           region_name, event_emitter)
-        endpoint = endpoint_creator.create_endpoint(
-            service_model, region_name, is_secure=is_secure,
-            endpoint_url=endpoint_url, verify=verify,
-            response_parser_factory=self._response_parser_factory,
-            timeout=(new_config.connect_timeout, new_config.read_timeout))
-
-        return {
-            'serializer': serializer,
-            'endpoint': endpoint,
-            'response_parser': response_parser,
-            'event_emitter': event_emitter,
-            'request_signer': signer,
-            'service_model': service_model,
-            'loader': self._loader,
-            'client_config': new_config
-        }
+                         scoped_config, client_config, endpoint_bridge):
+        args_creator = ClientArgsCreator(
+            self._event_emitter, self._user_agent,
+            self._response_parser_factory, self._loader)
+        return args_creator.get_client_args(
+            service_model, region_name, is_secure, endpoint_url,
+            verify, credentials, scoped_config, client_config, endpoint_bridge)
 
     def _create_methods(self, service_model):
         op_dict = {}
@@ -325,6 +266,207 @@ class ClientCreator(object):
         return _api_call
 
 
+class ClientEndpointBridge(object):
+    """Bridges endpoint data and client creation
+
+    This class handles taking out the relevant arguments from the endpoint
+    resolver and determining which values to use, taking into account any
+    client configuration options and scope configuration options.
+
+    This class also handles determining what, if any, region to use if no
+    explicit region setting is provided. For example, Amazon S3 client will
+    utilize "us-east-1" by default if no region can be resolved."""
+
+    DEFAULT_ENDPOINT = '{service}.{region}.amazonaws.com'
+
+    def __init__(self, endpoint_resolver, scoped_config=None,
+                 client_config=None, default_endpoint=None,
+                 service_signing_name=None):
+        self.service_signing_name = service_signing_name
+        self.endpoint_resolver = endpoint_resolver
+        self.scoped_config = scoped_config
+        self.client_config = client_config
+        self.default_endpoint = default_endpoint or self.DEFAULT_ENDPOINT
+
+    def resolve(self, service_name, region_name=None, endpoint_url=None,
+                is_secure=True):
+        region_name = self._check_default_region(service_name, region_name)
+        resolved = self.endpoint_resolver.construct_endpoint(
+            service_name, region_name)
+        if resolved:
+            return self._create_endpoint(
+                resolved, service_name, region_name, endpoint_url, is_secure)
+        else:
+            return self._assume_endpoint(service_name, region_name,
+                                         endpoint_url, is_secure)
+
+    def _check_default_region(self, service_name, region_name):
+        if region_name is not None:
+            return region_name
+        # Use the client_config region if no explicit region was provided.
+        if self.client_config and self.client_config.region_name is not None:
+            return self.client_config.region_name
+
+    def _create_endpoint(self, resolved, service_name, region_name,
+                         endpoint_url, is_secure):
+        region_name, signing_region = self._pick_region_values(
+            resolved, region_name, endpoint_url)
+        if endpoint_url is None:
+            if self._is_s3_dualstack_mode(service_name):
+                endpoint_url = self._create_dualstack_endpoint(
+                    service_name, region_name,
+                    resolved['dnsSuffix'], is_secure)
+            else:
+                # Use the sslCommonName over the hostname for Python 2.6 compat.
+                hostname = resolved.get('sslCommonName', resolved.get('hostname'))
+                endpoint_url = self._make_url(hostname, is_secure,
+                                            resolved.get('protocols', []))
+        signature_version = self._resolve_signature_version(
+            service_name, resolved)
+        signing_name = self._resolve_signing_name(service_name, resolved)
+        return self._create_result(
+            service_name=service_name, region_name=region_name,
+            signing_region=signing_region, signing_name=signing_name,
+            endpoint_url=endpoint_url, metadata=resolved,
+            signature_version=signature_version)
+
+    def _is_s3_dualstack_mode(self, service_name):
+        if service_name != 's3':
+            return False
+        # TODO: This normalization logic is duplicated from the
+        # ClientArgsCreator class.  Consolidate everything to
+        # ClientArgsCreator.  _resolve_signature_version also has similarly
+        # duplicated logic.
+        client_config = self.client_config
+        if client_config is not None and client_config.s3 is not None and \
+                'use_dualstack_endpoint' in client_config.s3:
+            # Client config trumps scoped config.
+            return client_config.s3['use_dualstack_endpoint']
+        if self.scoped_config is None:
+            return False
+        enabled = self.scoped_config.get('s3', {}).get(
+            'use_dualstack_endpoint', False)
+        if enabled in [True, 'True', 'true']:
+            return True
+        return False
+
+    def _create_dualstack_endpoint(self, service_name, region_name,
+                                   dns_suffix, is_secure):
+        hostname = '{service}.dualstack.{region}.{dns_suffix}'.format(
+            service=service_name, region=region_name,
+            dns_suffix=dns_suffix)
+        # Dualstack supports http and https so were hardcoding this value for
+        # now.  This can potentially move into the endpoints.json file.
+        return self._make_url(hostname, is_secure, ['http', 'https'])
+
+    def _assume_endpoint(self, service_name, region_name, endpoint_url,
+                         is_secure):
+        if endpoint_url is None:
+            # Expand the default hostname URI template.
+            hostname = self.default_endpoint.format(
+                service=service_name, region=region_name)
+            endpoint_url = self._make_url(hostname, is_secure,
+                                          ['http', 'https'])
+        logger.debug('Assuming an endpoint for %s, %s: %s',
+                     service_name, region_name, endpoint_url)
+        # We still want to allow the user to provide an explicit version.
+        signature_version = self._resolve_signature_version(
+            service_name, {'signatureVersions': ['v4']})
+        signing_name = self._resolve_signing_name(service_name, resolved={})
+        return self._create_result(
+            service_name=service_name, region_name=region_name,
+            signing_region=region_name, signing_name=signing_name,
+            signature_version=signature_version, endpoint_url=endpoint_url,
+            metadata={})
+
+    def _create_result(self, service_name, region_name, signing_region,
+                       signing_name, endpoint_url, signature_version,
+                       metadata):
+        return {
+            'service_name': service_name,
+            'region_name': region_name,
+            'signing_region': signing_region,
+            'signing_name': signing_name,
+            'endpoint_url': endpoint_url,
+            'signature_version': signature_version,
+            'metadata': metadata
+        }
+
+    def _make_url(self, hostname, is_secure, supported_protocols):
+        if is_secure and 'https' in supported_protocols:
+            scheme = 'https'
+        else:
+            scheme = 'http'
+        return '%s://%s' % (scheme, hostname)
+
+    def _resolve_signing_name(self, service_name, resolved):
+        # CredentialScope overrides everything else.
+        if 'credentialScope' in resolved \
+                and 'service' in resolved['credentialScope']:
+            return resolved['credentialScope']['service']
+        # Use the signingName from the model if present.
+        if self.service_signing_name:
+            return self.service_signing_name
+        # Just assume is the same as the service name.
+        return service_name
+
+    def _pick_region_values(self, resolved, region_name, endpoint_url):
+        signing_region = region_name
+        if endpoint_url is None:
+            # Do not use the region name or signing name from the resolved
+            # endpoint if the user explicitly provides an endpoint_url. This
+            # would happen if we resolve to an endpoint where the service has
+            # a "defaults" section that overrides all endpoint with a single
+            # hostname and credentialScope. This has been the case historically
+            # for how STS has worked. The only way to resolve an STS endpoint
+            # was to provide a region_name and an endpoint_url. In that case,
+            # we would still resolve an endpoint, but we would not use the
+            # resolved endpointName or signingRegion because we want to allow
+            # custom endpoints.
+            region_name = resolved['endpointName']
+            signing_region = region_name
+            if 'credentialScope' in resolved \
+                    and 'region' in resolved['credentialScope']:
+                signing_region = resolved['credentialScope']['region']
+        return region_name, signing_region
+
+    def _resolve_signature_version(self, service_name, resolved):
+        # Client config overrides everything.
+        client = self.client_config
+        if client and client.signature_version is not None:
+            return client.signature_version
+        # Scoped config overrides picking from the endpoint metadata.
+        scoped = self.scoped_config
+        if scoped is not None:
+            service_config = scoped.get(service_name)
+            if service_config is not None and isinstance(service_config, dict):
+                version = service_config.get('signature_version')
+                if version:
+                    logger.debug(
+                        "Switching signature version for service %s "
+                        "to version %s based on config file override.",
+                        service_name, version)
+                    return version
+        # Pick a signature version from the endpoint metadata if present.
+        if 'signatureVersions' in resolved:
+            potential_versions = resolved['signatureVersions']
+            if service_name == 's3':
+                # We currently prefer s3 over s3v4.
+                if 's3' in potential_versions:
+                    return 's3'
+                elif 's3v4' in potential_versions:
+                    return 's3v4'
+            if 'v4' in potential_versions:
+                return 'v4'
+            # Now just iterate over the signature versions in order until we
+            # find the first one that is known to Botocore.
+            for known in AUTH_TYPE_MAPS:
+                if known in potential_versions:
+                    return known
+        raise UnknownSignatureVersionError(
+            signature_version=resolved.get('signatureVersions'))
+
+
 class BaseClient(object):
 
     # This is actually reassigned with the py->op_name mapping
@@ -337,7 +479,7 @@ class BaseClient(object):
 
     def __init__(self, serializer, endpoint, response_parser,
                  event_emitter, request_signer, service_model, loader,
-                 client_config):
+                 client_config, partition):
         self._serializer = serializer
         self._endpoint = endpoint
         self._response_parser = response_parser
@@ -347,7 +489,7 @@ class BaseClient(object):
         self._client_config = client_config
         self.meta = ClientMeta(event_emitter, self._client_config,
                                endpoint.host, service_model,
-                               self._PY_TO_OP_NAME)
+                               self._PY_TO_OP_NAME, partition)
         self._register_handlers()
 
     def _register_handlers(self):
@@ -356,29 +498,17 @@ class BaseClient(object):
                                   self.meta.service_model.endpoint_prefix,
                                   self._request_signer.handler)
 
-        # If the virtual host addressing style is being forced,
-        # switch the default fix_s3_host handler for the more general
-        # switch_to_virtual_host_style handler that does not have opt out
-        # cases (other than throwing an error if the name is DNS incompatible)
-        if self.meta.config.s3 is None:
-            s3_addressing_style = None
-        else:
-            s3_addressing_style = self.meta.config.s3.get('addressing_style')
-
-        if s3_addressing_style == 'path':
-            self.meta.events.unregister('before-sign.s3', fix_s3_host)
-        elif s3_addressing_style == 'virtual':
-            self.meta.events.unregister('before-sign.s3', fix_s3_host)
-            self.meta.events.register(
-                'before-sign.s3', switch_to_virtual_host_style)
-
     @property
     def _service_model(self):
         return self.meta.service_model
 
     def _make_api_call(self, operation_name, api_params):
-        request_context = {}
         operation_model = self._service_model.operation_model(operation_name)
+        request_context = {
+            'client_region': self.meta.region_name,
+            'client_config': self.meta.config,
+            'has_streaming_input': operation_model.has_streaming_input
+        }
         request_dict = self._convert_to_request_dict(
             api_params, operation_model, context=request_context)
 
@@ -435,7 +565,8 @@ class BaseClient(object):
         request_dict = self._serializer.serialize_to_request(
             api_params, operation_model)
         prepare_request_dict(request_dict, endpoint_url=self._endpoint.host,
-                             user_agent=self._client_config.user_agent)
+                             user_agent=self._client_config.user_agent,
+                             context=context)
         return request_dict
 
     def get_paginator(self, operation_name):
@@ -572,12 +703,13 @@ class ClientMeta(object):
     """
 
     def __init__(self, events, client_config, endpoint_url, service_model,
-                 method_to_api_mapping):
+                 method_to_api_mapping, partition):
         self.events = events
         self._client_config = client_config
         self._endpoint_url = endpoint_url
         self._service_model = service_model
         self._method_to_api_mapping = method_to_api_mapping
+        self._partition = partition
 
     @property
     def service_model(self):
@@ -599,134 +731,6 @@ class ClientMeta(object):
     def method_to_api_mapping(self):
         return self._method_to_api_mapping
 
-
-class Config(object):
-    """Advanced configuration for Botocore clients.
-
-    :type region_name: str
-    :param region_name: The region to use in instantiating the client
-
-    :type signature_version: str
-    :param signature_version: The signature version when signing requests.
-
-    :type user_agent: str
-    :param user_agent: The value to use in the User-Agent header.
-
-    :type user_agent_extra: str
-    :param user_agent_extra: The value to append to the current User-Agent
-        header value.
-
-    :type connect_timeout: int
-    :param connect_timeout: The time in seconds till a timeout exception is
-        thrown when attempting to make a connection. The default is 60
-        seconds.
-
-    :type read_timeout: int
-    :param read_timeout: The time in seconds till a timeout exception is
-        thrown when attempting to read from a connection. The default is
-        60 seconds.
-
-    :type s3: dict
-    :param s3: A dictionary of s3 specific configurations.
-        Valid keys are:
-            * 'addressing_style' -- Refers to the style in which to address
-              s3 endpoints. Values must be a string that equals:
-                  * auto -- Addressing style is chosen for user. Depending
-                            on the configuration of client, the endpoint
-                            may be addressed in the virtual or the path
-                            style. Note that this is the default behavior if
-                            no style is specified.
-                  * virtual -- Addressing style is always virtual. The name of
-                               the bucket must be DNS compatible or an
-                               exception will be thrown. Endpoints will be
-                               addressed as such: mybucket.s3.amazonaws.com
-                  * path -- Addressing style is always by path. Endpoints will
-                            be addressed as such: s3.amazonaws.com/mybucket
-    """
-    OPTION_DEFAULTS = OrderedDict([
-        ('region_name', None),
-        ('signature_version', None),
-        ('user_agent', None),
-        ('user_agent_extra', None),
-        ('connect_timeout', DEFAULT_TIMEOUT),
-        ('read_timeout', DEFAULT_TIMEOUT),
-        ('s3', None)
-    ])
-
-    def __init__(self, *args, **kwargs):
-        self._user_provided_options = self._record_user_provided_options(
-            args, kwargs)
-
-        # Merge the user_provided options onto the default options
-        config_vars = copy.copy(self.OPTION_DEFAULTS)
-        config_vars.update(self._user_provided_options)
-
-        # Set the attributes based on the config_vars
-        for key, value in config_vars.items():
-            setattr(self, key, value)
-
-        # Validate the s3 options
-        self._validate_s3_configuration(self.s3)
-
-    def _record_user_provided_options(self, args, kwargs):
-        option_order = list(self.OPTION_DEFAULTS)
-        user_provided_options = {}
-
-        # Iterate through the kwargs passed through to the constructor and
-        # map valid keys to the dictionary
-        for key, value in kwargs.items():
-            if key in self.OPTION_DEFAULTS:
-                user_provided_options[key] = value
-            # The key must exist in the available options
-            else:
-                raise TypeError(
-                    'Got unexpected keyword argument \'%s\'' % key)
-
-        # The number of args should not be longer than the allowed
-        # options
-        if len(args) > len(option_order):
-            raise TypeError(
-                'Takes at most %s arguments (%s given)' % (
-                    len(option_order), len(args)))
-
-        # Iterate through the args passed through to the constructor and map
-        # them to appropriate keys.
-        for i, arg in enumerate(args):
-            # If it a kwarg was specified for the arg, then error out
-            if option_order[i] in user_provided_options:
-                raise TypeError(
-                    'Got multiple values for keyword argument \'%s\'' % (
-                        option_order[i]))
-            user_provided_options[option_order[i]] = arg
-
-        return user_provided_options
-
-    def _validate_s3_configuration(self, s3):
-        if s3 is not None:
-            addressing_style = s3.get('addressing_style')
-            if addressing_style not in ['virtual', 'auto', 'path', None]:
-                raise InvalidS3AddressingStyleError(
-                    s3_addressing_style=addressing_style)
-
-    def merge(self, other_config):
-        """Merges the config object with another config object
-
-        This will merge in all non-default values from the provided config
-        and return a new config object
-
-        :type other_config: botocore.client.Config
-        :param other config: Another config object to merge with. The values
-            in the provided config object will take precedence in the merging
-
-        :rtype: botocore.client.Config
-        :returns: A config object built from the merged values of both
-            config objects.
-        """
-        # Make a copy of the current attributes in the config object.
-        config_options = copy.copy(self._user_provided_options)
-
-        # Merge in the user provided options from the other config
-        config_options.update(other_config._user_provided_options)
-
-        # Return a new config object with the merged properties.
-        return Config(**config_options)
+    @property
+    def partition(self):
+        return self._partition

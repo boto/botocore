@@ -22,9 +22,10 @@ import tempfile
 import binascii
 import platform
 import select
+import datetime
 from subprocess import Popen, PIPE
 
-
+from dateutil.tz import tzlocal
 # The unittest module got a significant overhaul
 # in 2.7, so if we're in 2.6 we can use the backported
 # version unittest2.
@@ -36,6 +37,10 @@ else:
 
 import botocore.loaders
 import botocore.session
+from botocore import utils
+from botocore import credentials
+
+
 _LOADER = botocore.loaders.Loader()
 
 
@@ -242,3 +247,74 @@ class ClientDriver(object):
         if result != b'OK':
             raise RuntimeError(
                 "Error from command '%s': %s" % (cmd, result))
+
+
+# This is added to this file because it's used in both
+# the functional and unit tests for cred refresh.
+class IntegerRefresher(credentials.RefreshableCredentials):
+    """Refreshable credentials to help with testing.
+
+    This class makes testing refreshable credentials easier.
+    It has the following functionality:
+
+        * A counter, self.refresh_counter, to indicate how many
+          times refresh was called.
+        * A way to specify how many seconds to make credentials
+          valid.
+        * Configurable advisory/mandatory refresh.
+        * An easy way to check consistency.  Each time creds are
+          refreshed, all the cred values are set to the next
+          incrementing integer.  Frozen credentials should always
+          have this value.
+    """
+
+    _advisory_refresh_timeout = 2
+    _mandatory_refresh_timeout = 1
+    _credentials_expire = 3
+
+    def __init__(self, creds_last_for=_credentials_expire,
+                 advisory_refresh=_advisory_refresh_timeout,
+                 mandatory_refresh=_mandatory_refresh_timeout,
+                 refresh_function=None):
+        expires_in = (
+            self._current_datetime() +
+            datetime.timedelta(seconds=creds_last_for))
+        if refresh_function is None:
+            refresh_function = self._do_refresh
+        super(IntegerRefresher, self).__init__(
+            '0', '0', '0', expires_in,
+            refresh_function, 'INTREFRESH')
+        self.creds_last_for = creds_last_for
+        self.refresh_counter = 0
+        self._advisory_refresh_timeout = advisory_refresh
+        self._mandatory_refresh_timeout = mandatory_refresh
+
+    def _do_refresh(self):
+        self.refresh_counter += 1
+        current = int(self._access_key)
+        next_id = str(current + 1)
+
+        return {
+            'access_key': next_id,
+            'secret_key': next_id,
+            'token': next_id,
+            'expiry_time': self._seconds_later(self.creds_last_for),
+        }
+
+    def _seconds_later(self, num_seconds):
+        # We need to guarantee at *least* num_seconds.
+        # Because this doesn't handle subsecond precision
+        # we'll round up to the next second.
+        num_seconds += 1
+        t = self._current_datetime() + datetime.timedelta(seconds=num_seconds)
+        return self._to_timestamp(t)
+
+    def _to_timestamp(self, datetime_obj):
+        obj = utils.parse_to_aware_datetime(datetime_obj)
+        return obj.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    def _current_timestamp(self):
+        return self._to_timestamp(self._current_datetime())
+
+    def _current_datetime(self):
+        return datetime.datetime.now(tzlocal())

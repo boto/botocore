@@ -69,8 +69,10 @@ class BaseDocsTest(unittest.TestCase):
 
         endpoint_resolver = mock.Mock()
         endpoint_resolver.construct_endpoint.return_value = {
-            'properties': {},
-            'uri': 'http://foo'
+            'hostname': 'foo.us-east-1',
+            'partition': 'aws',
+            'endpointName': 'us-east-1',
+            'signatureVersions': ['v4']
         }
 
         self.creator = ClientCreator(

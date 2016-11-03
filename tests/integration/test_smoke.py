@@ -28,7 +28,12 @@ from botocore.vendored.requests.exceptions import ConnectionError
 # Empty params means that the operation will be called with no params.  This is
 # used as a quick verification that we can successfully make calls to services.
 SMOKE_TESTS = {
+ 'acm': {'ListCertificates': {}},
  'apigateway': {'GetRestApis': {}},
+ 'application-autoscaling': {
+     'DescribeScalableTargets': {
+         'ServiceNamespace': 'ecs'
+     }},
  'autoscaling': {'DescribeAccountLimits': {},
                  'DescribeAdjustmentTypes': {}},
  'cloudformation': {'DescribeStacks': {},
@@ -40,8 +45,9 @@ SMOKE_TESTS = {
                  'ListDomainNames': {}},
  'cloudtrail': {'DescribeTrails': {}},
  'cloudwatch': {'ListMetrics': {}},
- 'codedeploy': {'ListApplications': {}},
  'codecommit': {'ListRepositories': {}},
+ 'codedeploy': {'ListApplications': {}},
+ 'codepipeline': {'ListActionTypes': {}},
  'cognito-identity': {'ListIdentityPools': {'MaxResults': 1}},
  'cognito-sync': {'ListIdentityPoolUsage': {}},
  'config': {'DescribeDeliveryChannels': {}},
@@ -53,6 +59,7 @@ SMOKE_TESTS = {
  'dynamodbstreams': {'ListStreams': {}},
  'ec2': {'DescribeRegions': {},
          'DescribeInstances': {}},
+  'ecr': {'DescribeRepositories': {}},
  'ecs': {'DescribeClusters': {}},
  'elasticache': {'DescribeCacheClusters': {}},
  'elasticbeanstalk': {'DescribeApplications': {}},
@@ -60,6 +67,8 @@ SMOKE_TESTS = {
  'elb': {'DescribeLoadBalancers': {}},
  'emr': {'ListClusters': {}},
  'es': {'ListDomainNames': {}},
+ 'events': {'ListRules': {}},
+  'firehose': {'ListDeliveryStreams': {}},
  'gamelift': {'ListBuilds': {}},
  'glacier': {'ListVaults': {}},
  'iam': {'ListUsers': {}},
@@ -67,6 +76,8 @@ SMOKE_TESTS = {
  # importexport tests are not run.
  #'importexport': {'ListJobs': {}},
  'importexport': {},
+ 'inspector': {'DescribeCrossAccountAccessRole': {}},
+ 'iot': {'DescribeEndpoint': {}},
  'kinesis': {'ListStreams': {}},
  'kms': {'ListKeys': {}},
  'lambda': {'ListFunctions': {}},
@@ -102,6 +113,10 @@ SMOKE_TESTS = {
 # we've sent invalid params.
 ERROR_TESTS = {
     'apigateway': {'GetRestApi': {'restApiId': 'fake-id'}},
+    'application-autoscaling': {
+        'DescribeScalableTargets': {
+            'ServiceNamespace': 'fake-service-namespace'
+        }},
     'autoscaling': {'CreateLaunchConfiguration': {
         'LaunchConfigurationName': 'foo',
         'ImageId': 'ami-12345678',
@@ -190,6 +205,7 @@ REGION = 'us-east-1'
 REGION_OVERRIDES = {
     'devicefarm': 'us-west-2',
     'efs': 'us-west-2',
+    'inspector': 'us-west-2',
 }
 
 

@@ -219,7 +219,8 @@ class BaseChecker(object):
         if response is not None:
             return self._check_response(attempt_number, response)
         elif caught_exception is not None:
-            return self._check_caught_exception(attempt_number, caught_exception)
+            return self._check_caught_exception(
+                attempt_number, caught_exception)
         else:
             raise ValueError("Both response and caught_exception are None.")
 
@@ -250,6 +251,9 @@ class MaxAttemptsDecorator(BaseChecker):
                                           caught_exception)
         if should_retry:
             if attempt_number >= self._max_attempts:
+                # explicitly set MaxAttemptsReached
+                if response is not None and 'ResponseMetadata' in response[1]:
+                    response[1]['ResponseMetadata']['MaxAttemptsReached'] = True
                 logger.debug("Reached the maximum number of retry "
                              "attempts: %s", attempt_number)
                 return False

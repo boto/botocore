@@ -214,6 +214,23 @@ class TestWaiterModel(unittest.TestCase):
         self.assertTrue(
             matches({'Tables': [{"State": "GOOD"}, {"State": "FAIL"}]}))
 
+    def test_waiter_handles_error_responses_with_path_matchers(self):
+        path_any = self.create_acceptor_function(
+            for_config={'state': 'success', 'matcher': 'pathAny',
+                        'argument': 'length(Tables) > `0`',
+                        'expected': True})
+        path_all = self.create_acceptor_function(
+            for_config={'state': 'success', 'matcher': 'pathAll',
+                        'argument': 'length(Tables) > `0`',
+                        'expected': True})
+        path = self.create_acceptor_function(
+            for_config={'state': 'success', 'matcher': 'path',
+                        'argument': 'length(Tables) > `0`',
+                        'expected': True})
+        self.assertFalse(path_any({'Error': {'Code': 'DoesNotExist'}}))
+        self.assertFalse(path_all({'Error': {'Code': 'DoesNotExist'}}))
+        self.assertFalse(path({'Error': {'Code': 'DoesNotExist'}}))
+
     def test_single_waiter_does_not_match_path_all(self):
         matches = self.create_acceptor_function(
             for_config={'state': 'success', 'matcher': 'pathAll',
@@ -343,6 +360,17 @@ class TestWaitersObjects(unittest.TestCase):
         waiter = Waiter('MyWaiter', config, operation_method)
         with self.assertRaises(WaiterError):
             waiter.wait()
+
+    def test_last_response_available_on_waiter_error(self):
+        last_response = {'Error': {'Code': 'UnknownError', 'Message': 'bad error'}}
+        config = self.create_waiter_config()
+        operation_method = mock.Mock()
+        self.client_responses_are(last_response,
+                                  for_operation=operation_method)
+        waiter = Waiter('MyWaiter', config, operation_method)
+        with self.assertRaises(WaiterError) as e:
+            waiter.wait()
+        self.assertEqual(e.exception.last_response, last_response)
 
     def test_unspecified_errors_propagate_error_code(self):
         # If a waiter receives an error response, then the

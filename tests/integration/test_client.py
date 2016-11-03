@@ -41,7 +41,12 @@ class TestBucketWithVersions(unittest.TestCase):
         # 1. Create a bucket
         # 2. Enable versioning
         # 3. Put an Object
-        self.client.create_bucket(Bucket=self.bucket_name)
+        self.client.create_bucket(
+            Bucket=self.bucket_name,
+            CreateBucketConfiguration={
+                'LocationConstraint': 'us-west-2'
+            }
+        )
         self.addCleanup(self.client.delete_bucket, Bucket=self.bucket_name)
 
         self.client.put_bucket_versioning(
@@ -138,16 +143,16 @@ class TestCreateClients(unittest.TestCase):
         self.assertTrue(hasattr(client, 'list_buckets'))
 
     def test_client_raises_exception_invalid_region(self):
-        with self.assertRaisesRegexp(ValueError, 'Invalid endpoint'):
-            self.session.create_client('cloudformation',
-                                       region_name='invalid region name')
+        with self.assertRaisesRegexp(ValueError, ('Invalid endpoint')):
+            self.session.create_client(
+                'cloudformation', region_name='invalid region name')
 
 
 class TestClientErrorMessages(unittest.TestCase):
     def test_region_mentioned_in_invalid_region(self):
         session = botocore.session.get_session()
         client = session.create_client(
-            'cloudformation', region_name='bad-region-name')
+            'cloudformation', region_name='us-east-999')
         with self.assertRaisesRegexp(EndpointConnectionError,
                                      'Could not connect to the endpoint URL'):
             client.list_stacks()

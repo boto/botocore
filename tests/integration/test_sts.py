@@ -35,6 +35,8 @@ class TestSTS(unittest.TestCase):
             'sts', region_name='ap-southeast-1',
             endpoint_url='https://sts.us-west-2.amazonaws.com')
         self.assertEqual(sts.meta.region_name, 'ap-southeast-1')
+        self.assertEqual(sts.meta.endpoint_url,
+                         'https://sts.us-west-2.amazonaws.com')
         # Signing error will be thrown with the incorrect region name included.
         with self.assertRaisesRegexp(ClientError, 'ap-southeast-1') as e:
             sts.get_session_token()

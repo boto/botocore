@@ -12,7 +12,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
+import botocore.config
 from tests import unittest, create_session, temporary_file
 import os
 import logging
@@ -40,12 +40,14 @@ class BaseSessionTest(unittest.TestCase):
             'data_path': ('data_path', 'FOO_DATA_PATH', None, None),
             'config_file': (None, 'FOO_CONFIG_FILE', None, None),
             'credentials_file': (None, None, '/tmp/nowhere', None),
+            'ca_bundle': ('foo_ca_bundle', 'FOO_AWS_CA_BUNDLE', None, None),
+            'api_versions': ('foo_api_versions', None, {}, None)
         }
         self.environ = {}
         self.environ_patch = mock.patch('os.environ', self.environ)
         self.environ_patch.start()
         self.environ['FOO_PROFILE'] = 'foo'
-        self.environ['FOO_REGION'] = 'moon-west-1'
+        self.environ['FOO_REGION'] = 'us-west-11'
         data_path = os.path.join(os.path.dirname(__file__), 'data')
         self.environ['FOO_DATA_PATH'] = data_path
         config_path = os.path.join(os.path.dirname(__file__), 'cfg',
@@ -107,7 +109,7 @@ class SessionTest(BaseSessionTest):
     def test_profile(self):
         self.assertEqual(self.session.get_config_variable('profile'), 'foo')
         self.assertEqual(self.session.get_config_variable('region'),
-                         'moon-west-1')
+                         'us-west-11')
         self.session.get_config_variable('profile') == 'default'
         saved_region = self.environ['FOO_REGION']
         del self.environ['FOO_REGION']
@@ -321,6 +323,24 @@ class TestSessionConfigurationVars(BaseSessionTest):
         self.assertEqual(self.session.get_config_variable('foobar'), 'default')
 
 
+class TestSessionPartitionFiles(BaseSessionTest):
+    def test_lists_partitions_on_disk(self):
+        mock_resolver = mock.Mock()
+        mock_resolver.get_available_partitions.return_value = ['foo']
+        self.session.register_component('endpoint_resolver', mock_resolver)
+        self.assertEquals(['foo'], self.session.get_available_partitions())
+
+    def test_proxies_list_endpoints_to_resolver(self):
+        resolver = mock.Mock()
+        resolver.get_available_endpoints.return_value = ['a', 'b']
+        self.session.register_component('endpoint_resolver', resolver)
+        self.session.get_available_regions('foo', 'bar', True)
+
+    def test_provides_empty_list_for_unknown_service_regions(self):
+        regions = self.session.get_available_regions('__foo__')
+        self.assertEqual([], regions)
+
+
 class TestSessionUserAgent(BaseSessionTest):
     def test_can_change_user_agent_name(self):
         self.session.user_agent_name = 'something-else'
@@ -412,6 +432,20 @@ class TestCreateClient(BaseSessionTest):
                          "explicit credentials were provided to the "
                          "create_client call.")
 
+    def test_cred_provider_called_when_partial_creds_provided(self):
+        with self.assertRaises(botocore.exceptions.PartialCredentialsError):
+            self.session.create_client(
+                'sts', 'us-west-2',
+                aws_access_key_id='foo',
+                aws_secret_access_key=None
+            )
+        with self.assertRaises(botocore.exceptions.PartialCredentialsError):
+            self.session.create_client(
+                'sts', 'us-west-2',
+                aws_access_key_id=None,
+                aws_secret_access_key='foo',
+            )
+
     @mock.patch('botocore.client.ClientCreator')
     def test_config_passed_to_client_creator(self, client_creator):
         # Make sure there is no default set
@@ -419,28 +453,30 @@ class TestCreateClient(BaseSessionTest):
 
         # The config passed to the client should be the one that is used
         # in creating the client.
-        config = client.Config(region_name='us-west-2')
+        config = botocore.config.Config(region_name='us-west-2')
         self.session.create_client('sts', config=config)
         client_creator.return_value.create_client.assert_called_with(
-            mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY,
+            service_name=mock.ANY, region_name=mock.ANY, is_secure=mock.ANY,
+            endpoint_url=mock.ANY, verify=mock.ANY, credentials=mock.ANY,
             scoped_config=mock.ANY, client_config=config,
             api_version=mock.ANY)
 
     @mock.patch('botocore.client.ClientCreator')
     def test_create_client_with_default_client_config(self, client_creator):
-        config = client.Config()
+        config = botocore.config.Config()
         self.session.set_default_client_config(config)
         self.session.create_client('sts')
 
         client_creator.return_value.create_client.assert_called_with(
-            mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY,
+            service_name=mock.ANY, region_name=mock.ANY, is_secure=mock.ANY,
+            endpoint_url=mock.ANY, verify=mock.ANY, credentials=mock.ANY,
             scoped_config=mock.ANY, client_config=config,
             api_version=mock.ANY)
 
     @mock.patch('botocore.client.ClientCreator')
     def test_create_client_with_merging_client_configs(self, client_creator):
-        config = client.Config(region_name='us-west-2')
-        other_config = client.Config(region_name='us-east-1')
+        config = botocore.config.Config(region_name='us-west-2')
+        other_config = botocore.config.Config(region_name='us-east-1')
         self.session.set_default_client_config(config)
         self.session.create_client('sts', config=other_config)
 
@@ -461,7 +497,7 @@ class TestCreateClient(BaseSessionTest):
         self.assertEqual(ec2_client.meta.region_name, 'us-west-2')
 
     def test_create_client_with_region_and_client_config(self):
-        config = client.Config()
+        config = botocore.config.Config()
         # Use a client config with no region configured.
         ec2_client = self.session.create_client(
             'ec2', region_name='us-west-2', config=config)
@@ -479,7 +515,128 @@ class TestCreateClient(BaseSessionTest):
 
     def test_create_client_no_region_and_no_client_config(self):
         ec2_client = self.session.create_client('ec2')
-        self.assertEqual(ec2_client.meta.region_name, 'moon-west-1')
+        self.assertEqual(ec2_client.meta.region_name, 'us-west-11')
+
+    @mock.patch('botocore.client.ClientCreator')
+    def test_create_client_with_ca_bundle_from_config(self, client_creator):
+        with temporary_file('w') as f:
+            del self.environ['FOO_PROFILE']
+            self.environ['FOO_CONFIG_FILE'] = f.name
+            self.session = create_session(session_vars=self.env_vars)
+            f.write('[default]\n')
+            f.write('foo_ca_bundle=config-certs.pem\n')
+            f.flush()
+
+            self.session.create_client('ec2', 'us-west-2')
+            call_kwargs = client_creator.return_value.\
+                create_client.call_args[1]
+            self.assertEqual(call_kwargs['verify'], 'config-certs.pem')
+
+    @mock.patch('botocore.client.ClientCreator')
+    def test_create_client_with_ca_bundle_from_env_var(self, client_creator):
+        self.environ['FOO_AWS_CA_BUNDLE'] = 'env-certs.pem'
+        self.session.create_client('ec2', 'us-west-2')
+        call_kwargs = client_creator.return_value.create_client.call_args[1]
+        self.assertEqual(call_kwargs['verify'], 'env-certs.pem')
+
+    @mock.patch('botocore.client.ClientCreator')
+    def test_create_client_with_verify_param(self, client_creator):
+        self.session.create_client(
+            'ec2', 'us-west-2', verify='verify-certs.pem')
+        call_kwargs = client_creator.return_value.create_client.call_args[1]
+        self.assertEqual(call_kwargs['verify'], 'verify-certs.pem')
+
+    @mock.patch('botocore.client.ClientCreator')
+    def test_create_client_verify_param_overrides_all(self, client_creator):
+        with temporary_file('w') as f:
+            # Set the ca cert using the config file
+            del self.environ['FOO_PROFILE']
+            self.environ['FOO_CONFIG_FILE'] = f.name
+            self.session = create_session(session_vars=self.env_vars)
+            f.write('[default]\n')
+            f.write('foo_ca_bundle=config-certs.pem\n')
+            f.flush()
+
+            # Set the ca cert with an environment variable
+            self.environ['FOO_AWS_CA_BUNDLE'] = 'env-certs.pem'
+
+            # Set the ca cert using the verify parameter
+            self.session.create_client(
+                'ec2', 'us-west-2', verify='verify-certs.pem')
+            call_kwargs = client_creator.return_value.\
+                create_client.call_args[1]
+            # The verify parameter should override all the other
+            # configurations
+            self.assertEqual(call_kwargs['verify'], 'verify-certs.pem')
+
+    @mock.patch('botocore.client.ClientCreator')
+    def test_create_client_use_no_api_version_by_default(self, client_creator):
+        self.session.create_client('myservice', 'us-west-2')
+        call_kwargs = client_creator.return_value.create_client.call_args[1]
+        self.assertEqual(call_kwargs['api_version'], None)
+
+    @mock.patch('botocore.client.ClientCreator')
+    def test_create_client_uses_api_version_from_config(self, client_creator):
+        config_api_version = '2012-01-01'
+        with temporary_file('w') as f:
+            del self.environ['FOO_PROFILE']
+            self.environ['FOO_CONFIG_FILE'] = f.name
+            self.session = create_session(session_vars=self.env_vars)
+            f.write('[default]\n')
+            f.write('foo_api_versions =\n'
+                    '    myservice = %s\n' % config_api_version)
+            f.flush()
+
+            self.session.create_client('myservice', 'us-west-2')
+            call_kwargs = client_creator.return_value.\
+                create_client.call_args[1]
+            self.assertEqual(call_kwargs['api_version'], config_api_version)
+
+    @mock.patch('botocore.client.ClientCreator')
+    def test_can_specify_multiple_versions_from_config(self, client_creator):
+        config_api_version = '2012-01-01'
+        second_config_api_version = '2013-01-01'
+        with temporary_file('w') as f:
+            del self.environ['FOO_PROFILE']
+            self.environ['FOO_CONFIG_FILE'] = f.name
+            self.session = create_session(session_vars=self.env_vars)
+            f.write('[default]\n')
+            f.write('foo_api_versions =\n'
+                    '    myservice = %s\n'
+                    '    myservice2 = %s\n' % (
+                        config_api_version, second_config_api_version)
+            )
+            f.flush()
+
+            self.session.create_client('myservice', 'us-west-2')
+            call_kwargs = client_creator.return_value.\
+                create_client.call_args[1]
+            self.assertEqual(call_kwargs['api_version'], config_api_version)
+
+            self.session.create_client('myservice2', 'us-west-2')
+            call_kwargs = client_creator.return_value.\
+                create_client.call_args[1]
+            self.assertEqual(
+                call_kwargs['api_version'], second_config_api_version)
+
+    @mock.patch('botocore.client.ClientCreator')
+    def test_param_api_version_overrides_config_value(self, client_creator):
+        config_api_version = '2012-01-01'
+        override_api_version = '2014-01-01'
+        with temporary_file('w') as f:
+            del self.environ['FOO_PROFILE']
+            self.environ['FOO_CONFIG_FILE'] = f.name
+            self.session = create_session(session_vars=self.env_vars)
+            f.write('[default]\n')
+            f.write('foo_api_versions =\n'
+                    '    myservice = %s\n' % config_api_version)
+            f.flush()
+
+            self.session.create_client(
+                'myservice', 'us-west-2', api_version=override_api_version)
+            call_kwargs = client_creator.return_value.\
+                create_client.call_args[1]
+            self.assertEqual(call_kwargs['api_version'], override_api_version)
 
 
 class TestComponentLocator(unittest.TestCase):
@@ -547,6 +704,6 @@ class TestDefaultClientConfig(BaseSessionTest):
         self.assertEqual(self.session.get_default_client_config(), None)
 
     def test_set_and_get_client_config(self):
-        client_config = client.Config()
+        client_config = botocore.config.Config()
         self.session.set_default_client_config(client_config)
         self.assertIs(self.session.get_default_client_config(), client_config)

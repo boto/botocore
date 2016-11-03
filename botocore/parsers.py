@@ -203,7 +203,10 @@ class ResponseParser(object):
         LOG.debug('Response headers: %s', response['headers'])
         LOG.debug('Response body:\n%s', response['body'])
         if response['status_code'] >= 301:
-            parsed = self._do_error_parse(response, shape)
+            if self._is_generic_error_response(response):
+                parsed = self._do_generic_error_parse(response)
+            else:
+                parsed = self._do_error_parse(response, shape)
         else:
             parsed = self._do_parse(response, shape)
         # Inject HTTPStatusCode key in the response metadata if the
@@ -211,7 +214,36 @@ class ResponseParser(object):
         if isinstance(parsed, dict) and 'ResponseMetadata' in parsed:
             parsed['ResponseMetadata']['HTTPStatusCode'] = (
                 response['status_code'])
+            parsed['ResponseMetadata']['HTTPHeaders'] = dict(response['headers'])
         return parsed
+
+    def _is_generic_error_response(self, response):
+        # There are times when a service will respond with a generic
+        # error response such as:
+        # '<html><body><b>Http/1.1 Service Unavailable</b></body></html>'
+        #
+        # This can also happen if you're going through a proxy.
+        # In this case the protocol specific _do_error_parse will either
+        # fail to parse the response (in the best case) or silently succeed
+        # and treat the HTML above as an XML response and return
+        # non sensical parsed data.
+        # To prevent this case from happening we first need to check
+        # whether or not this response looks like the generic response.
+        if response['status_code'] >= 500:
+            body = response['body'].strip()
+            return body.startswith(b'<html>') or not body
+
+    def _do_generic_error_parse(self, response):
+        # There's not really much we can do when we get a generic
+        # html response.
+        LOG.debug("Received a non protocol specific error response from the "
+                  "service, unable to populate error code and message.")
+        return {
+            'Error': {'Code': str(response['status_code']),
+                      'Message': six.moves.http_client.responses.get(
+                          response['status_code'], '')},
+            'ResponseMetadata': {},
+        }
 
     def _do_parse(self, response, shape):
         raise NotImplementedError("%s._do_parse" % self.__class__.__name__)
@@ -507,18 +539,18 @@ class BaseJSONParser(ResponseParser):
         return self._timestamp_parser(value)
 
     def _do_error_parse(self, response, shape):
-        body = json.loads(response['body'].decode(self.DEFAULT_ENCODING))
-        error = {"Error": {}, "ResponseMetadata": {}}
+        body = self._parse_body_as_json(response['body'])
+        error = {"Error": {"Message": '', "Code": ''}, "ResponseMetadata": {}}
         # Error responses can have slightly different structures for json.
         # The basic structure is:
         #
         # {"__type":"ConnectClientException",
         #  "message":"The error message."}
-        # Code, Type
 
         # The error message can either come in the 'message' or 'Message' key
         # so we need to check for both.
-        error['Error']['Message'] = body.get('message', body.get('Message'))
+        error['Error']['Message'] = body.get('message',
+                                             body.get('Message', ''))
         code = body.get('__type')
         if code is not None:
             # code has a couple forms as well:
@@ -535,6 +567,13 @@ class BaseJSONParser(ResponseParser):
             parsed.setdefault('ResponseMetadata', {})['RequestId'] = (
                 headers['x-amzn-requestid'])
 
+    def _parse_body_as_json(self, body_contents):
+        if not body_contents:
+            return {}
+        body = body_contents.decode(self.DEFAULT_ENCODING)
+        original_parsed = json.loads(body)
+        return original_parsed
+
 
 class JSONParser(BaseJSONParser):
     """Response parse for the "json" protocol."""
@@ -544,8 +583,7 @@ class JSONParser(BaseJSONParser):
         # to richer types (blobs, timestamps, etc.
         parsed = {}
         if shape is not None:
-            body = response['body'].decode(self.DEFAULT_ENCODING)
-            original_parsed = json.loads(body)
+            original_parsed = self._parse_body_as_json(response['body'])
             parsed = self._parse_shape(shape, original_parsed)
         self._inject_response_metadata(parsed, response['headers'])
         return parsed
@@ -643,17 +681,17 @@ class BaseRestParser(ResponseParser):
 class RestJSONParser(BaseRestParser, BaseJSONParser):
 
     def _initial_body_parse(self, body_contents):
-        if not body_contents:
-            return {}
-        body = body_contents.decode(self.DEFAULT_ENCODING)
-        original_parsed = json.loads(body)
-        return original_parsed
+        return self._parse_body_as_json(body_contents)
 
     def _do_error_parse(self, response, shape):
-        body = self._initial_body_parse(response['body'])
         error = super(RestJSONParser, self)._do_error_parse(response, shape)
-        error['Error']['Message'] = body.get('message',
-                                             body.get('Message', ''))
+        self._inject_error_code(error, response)
+        return error
+
+    def _inject_error_code(self, error, response):
+        # The "Code" value can come from either a response
+        # header or a value in the JSON body.
+        body = self._initial_body_parse(response['body'])
         if 'x-amzn-errortype' in response['headers']:
             code = response['headers']['x-amzn-errortype']
             # Could be:
@@ -663,7 +701,6 @@ class RestJSONParser(BaseRestParser, BaseJSONParser):
         elif 'code' in body or 'Code' in body:
             error['Error']['Code'] = body.get(
                 'code', body.get('Code', ''))
-        return error
 
 
 class RestXMLParser(BaseRestParser, BaseXMLResponseParser):

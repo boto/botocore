@@ -62,7 +62,8 @@ def create_serializer(protocol_name, include_validation=True):
     serializer = SERIALIZERS[protocol_name]()
     if include_validation:
         validator = validate.ParamValidator()
-    return validate.ParamValidationDecorator(validator, serializer)
+        serializer = validate.ParamValidationDecorator(validator, serializer)
+    return serializer
 
 
 class Serializer(object):
@@ -264,6 +265,7 @@ class EC2Serializer(QuerySerializer):
     to worry about wiring this class up correctly.
 
     """
+
     def _get_serialized_name(self, shape, default_name):
         # Returns the serialized name for the shape if it exists.
         # Otherwise it will return the passed in default_name.
@@ -477,12 +479,15 @@ class BaseRestSerializer(Serializer):
         elif location == 'querystring':
             if isinstance(param_value, dict):
                 partitioned['query_string_kwargs'].update(param_value)
+            elif isinstance(param_value, bool):
+                partitioned['query_string_kwargs'][
+                    key_name] = str(param_value).lower()
             else:
                 partitioned['query_string_kwargs'][key_name] = param_value
         elif location == 'header':
             shape = shape_members[param_name]
             value = self._convert_header_value(shape, param_value)
-            partitioned['headers'][key_name] = value
+            partitioned['headers'][key_name] = str(value)
         elif location == 'headers':
             # 'headers' is a bit of an oddball.  The ``key_name``
             # is actually really a prefix for the header names:
@@ -614,7 +619,7 @@ class RestXMLSerializer(BaseRestSerializer):
 
     def _default_serialize(self, xmlnode, params, shape, name):
         node = ElementTree.SubElement(xmlnode, name)
-        node.text = str(params)
+        node.text = six.text_type(params)
 
 
 SERIALIZERS = {

@@ -31,7 +31,8 @@ import botocore.session
 import botocore.auth
 import botocore.credentials
 import botocore.vendored.requests as requests
-from botocore.client import Config
+from botocore.config import Config
+from botocore.exceptions import ClientError
 
 
 def random_bucketname():
@@ -62,7 +63,8 @@ class BaseS3ClientTest(unittest.TestCase):
             status_code
         )
 
-    def create_bucket(self, region_name, bucket_name=None):
+    def create_bucket(self, region_name, bucket_name=None, client=None):
+        bucket_client = client or self.client
         bucket_kwargs = {}
         if bucket_name is None:
             bucket_name = random_bucketname()
@@ -71,9 +73,11 @@ class BaseS3ClientTest(unittest.TestCase):
             bucket_kwargs['CreateBucketConfiguration'] = {
                 'LocationConstraint': region_name,
             }
-        response = self.client.create_bucket(**bucket_kwargs)
+        response = bucket_client.create_bucket(**bucket_kwargs)
         self.assert_status_code(response, 200)
-        self.addCleanup(recursive_delete, self.client, bucket_name)
+        waiter = bucket_client.get_waiter('bucket_exists')
+        waiter.wait(Bucket=bucket_name)
+        self.addCleanup(recursive_delete, bucket_client, bucket_name)
         return bucket_name
 
     def make_tempdir(self):
@@ -144,6 +148,21 @@ class TestS3BaseWithBucket(BaseS3ClientTest):
                 time.sleep(2)
         self.fail("Expected to see %s uploads, instead saw: %s" % (
             num_uploads, amount_seen))
+
+    def create_client(self):
+        # Even though the default signature_version is s3,
+        # we're being explicit in case this ever changes.
+        client_config = Config(signature_version='s3')
+        return self.session.create_client('s3', self.region,
+                                          config=client_config)
+
+    def assert_can_put_object(self, body):
+        client = self.create_client()
+        response = client.put_object(
+            Bucket=self.bucket_name, Key='foo',
+            Body=body)
+        self.assert_status_code(response, 200)
+        self.addCleanup(client.delete_object, Bucket=self.bucket_name, Key='foo')
 
 
 class TestS3Buckets(TestS3BaseWithBucket):
@@ -252,6 +271,10 @@ class TestS3Objects(TestS3BaseWithBucket):
             Bucket=self.bucket_name, Key='foobarbaz')
         self.assertEqual(data['Body'].read().decode('utf-8'), 'body contents')
 
+    def test_can_put_large_string_body_on_new_bucket(self):
+        body = '*' * (5 * (1024 ** 2))
+        self.assert_can_put_object(body)
+
     def test_get_object_stream_wrapper(self):
         self.create_object('foobarbaz', body='body contents')
         response = self.client.get_object(
@@ -350,7 +373,11 @@ class TestS3Objects(TestS3BaseWithBucket):
     def test_thread_safe_auth(self):
         self.auth_paths = []
         self.session.register('before-sign', self.increment_auth)
-        self.client = self.session.create_client('s3', self.region)
+        # This test depends on auth_path, which is only added in virtual host
+        # style requests.
+        config = Config(s3={'addressing_style': 'virtual'})
+        self.client = self.session.create_client('s3', self.region,
+                                                 config=config)
         self.create_object(key_name='foo1')
         threads = []
         for i in range(10):
@@ -914,27 +941,17 @@ class TestS3UTF8Headers(BaseS3ClientTest):
 
 class TestSupportedPutObjectBodyTypes(TestS3BaseWithBucket):
 
-    def create_client(self):
-        # Even though the default signature_version is s3,
-        # we're being explicit in case this ever changes.
-        client_config = Config(signature_version='s3')
-        return self.session.create_client('s3', self.region,
-                                          config=client_config)
 
-    def assert_can_put_object(self, body):
-        client = self.create_client()
-        response = client.put_object(
-            Bucket=self.bucket_name, Key='foo',
-            Body=body)
-        self.assert_status_code(response, 200)
-        self.addCleanup(client.delete_object, Bucket=self.bucket_name,
-                        Key='foo')
 
     def test_can_put_unicode_content(self):
         self.assert_can_put_object(body=u'\u2713')
 
     def test_can_put_non_ascii_bytes(self):
         self.assert_can_put_object(body=u'\u2713'.encode('utf-8'))
+
+    def test_can_put_arbitrary_binary_data(self):
+        body = os.urandom(5 * (1024 ** 2))
+        self.assert_can_put_object(body)
 
     def test_can_put_binary_file(self):
         tempdir = self.make_tempdir()
@@ -1024,5 +1041,67 @@ class TestS3PathAddressing(TestAutoS3Addressing):
         self.client = self.create_client()
 
 
-if __name__ == '__main__':
-    unittest.main()
+class TestRegionRedirect(BaseS3ClientTest):
+    def setUp(self):
+        super(TestRegionRedirect, self).setUp()
+        self.bucket_region = 'eu-central-1'
+        self.client_region = 'us-west-2'
+
+        self.client = self.session.create_client(
+            's3', region_name=self.client_region,
+            config=Config(signature_version='s3v4'))
+
+        self.bucket_client = self.session.create_client(
+            's3', region_name=self.bucket_region,
+            config=Config(signature_version='s3v4')
+        )
+        self.bucket = self.create_bucket(
+            region_name='eu-central-1', client=self.bucket_client)
+
+    def test_region_redirects(self):
+        try:
+            response = self.client.list_objects(Bucket=self.bucket)
+            self.assertEqual(
+                response['ResponseMetadata']['HTTPStatusCode'], 200)
+        except ClientError as e:
+            error = e.response['Error'].get('Code', None)
+            if error == 'PermanentRedirect':
+                self.fail("S3 client failed to redirect to the proper region.")
+
+    def test_region_redirect_sigv2_to_sigv4_raises_error(self):
+        sigv2_client = self.session.create_client(
+            's3', region_name=self.client_region,
+            config=Config(signature_version='s3'))
+
+        msg = 'The authorization mechanism you have provided is not supported.'
+        with self.assertRaisesRegexp(ClientError, msg):
+            sigv2_client.list_objects(Bucket=self.bucket)
+
+    def test_region_redirects_multiple_requests(self):
+        try:
+            response = self.client.list_objects(Bucket=self.bucket)
+            self.assertEqual(
+                response['ResponseMetadata']['HTTPStatusCode'], 200)
+            second_response = self.client.list_objects(Bucket=self.bucket)
+            self.assertEqual(
+                second_response['ResponseMetadata']['HTTPStatusCode'], 200)
+        except ClientError as e:
+            error = e.response['Error'].get('Code', None)
+            if error == 'PermanentRedirect':
+                self.fail("S3 client failed to redirect to the proper region.")
+
+    def test_redirects_head_bucket(self):
+        response = self.client.head_bucket(Bucket=self.bucket)
+        headers = response['ResponseMetadata']['HTTPHeaders']
+        region = headers.get('x-amz-bucket-region')
+        self.assertEqual(region, self.bucket_region)
+
+    def test_redirects_head_object(self):
+        key = 'foo'
+        self.bucket_client.put_object(Bucket=self.bucket, Key=key, Body='bar')
+
+        try:
+            response = self.client.head_object(Bucket=self.bucket, Key=key)
+            self.assertEqual(response.get('ContentLength'), len(key))
+        except ClientError as e:
+            self.fail("S3 Client failed to redirect Head Object: %s" % e)

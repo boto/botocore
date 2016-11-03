@@ -16,11 +16,13 @@ import datetime
 import logging
 import os
 import getpass
+import threading
+from collections import namedtuple
 
 from dateutil.parser import parse
 from dateutil.tz import tzlocal
 
-import botocore.config
+import botocore.configloader
 import botocore.compat
 from botocore.compat import total_seconds
 from botocore.exceptions import UnknownCredentialError
@@ -28,10 +30,15 @@ from botocore.exceptions import PartialCredentialsError
 from botocore.exceptions import ConfigNotFound
 from botocore.exceptions import InvalidConfigError
 from botocore.exceptions import RefreshWithMFAUnsupportedError
+from botocore.exceptions import MetadataRetrievalError
+from botocore.exceptions import CredentialRetrievalError
 from botocore.utils import InstanceMetadataFetcher, parse_key_val_file
+from botocore.utils import ContainerMetadataFetcher
 
 
 logger = logging.getLogger(__name__)
+ReadOnlyCredentials = namedtuple('ReadOnlyCredentials',
+                                 ['access_key', 'secret_key', 'token'])
 
 
 def create_credential_resolver(session):
@@ -66,6 +73,7 @@ def create_credential_resolver(session):
         ConfigProvider(config_filename=config_file, profile_name=profile_name),
         OriginalEC2Provider(),
         BotoProvider(),
+        ContainerProvider(),
         InstanceMetadataProvider(
             iam_role_fetcher=InstanceMetadataFetcher(
                 timeout=metadata_timeout,
@@ -117,7 +125,7 @@ def _parse_if_needed(value):
 
 def _serialize_if_needed(value):
     if isinstance(value, datetime.datetime):
-        return value.strftime('%Y-%m-%dT%H:%M:%SZ')
+        return value.strftime('%Y-%m-%dT%H:%M:%S%Z')
     return value
 
 
@@ -178,6 +186,11 @@ class Credentials(object):
         self.access_key = botocore.compat.ensure_unicode(self.access_key)
         self.secret_key = botocore.compat.ensure_unicode(self.secret_key)
 
+    def get_frozen_credentials(self):
+        return ReadOnlyCredentials(self.access_key,
+                                   self.secret_key,
+                                   self.token)
+
 
 class RefreshableCredentials(Credentials):
     """
@@ -191,10 +204,13 @@ class RefreshableCredentials(Credentials):
     :ivar token: The security token, valid only for session credentials.
     :ivar method: A string which identifies where the credentials
         were found.
-    :ivar session: The ``Session`` the credentials were created for. Useful for
-        subclasses.
     """
-    refresh_timeout = 15 * 60
+    # The time at which we'll attempt to refresh, but not
+    # block if someone else is refreshing.
+    _advisory_refresh_timeout = 15 * 60
+    # The time at which all threads will block waiting for
+    # refreshed credentials.
+    _mandatory_refresh_timeout = 10 * 60
 
     def __init__(self, access_key, secret_key, token,
                  expiry_time, refresh_using, method,
@@ -205,7 +221,10 @@ class RefreshableCredentials(Credentials):
         self._token = token
         self._expiry_time = expiry_time
         self._time_fetcher = time_fetcher
+        self._refresh_lock = threading.Lock()
         self.method = method
+        self._frozen_credentials = ReadOnlyCredentials(
+            access_key, secret_key, token)
         self._normalize()
 
     def _normalize(self):
@@ -255,27 +274,105 @@ class RefreshableCredentials(Credentials):
         delta = self._expiry_time - self._time_fetcher()
         return total_seconds(delta)
 
-    def refresh_needed(self):
+    def refresh_needed(self, refresh_in=None):
+        """Check if a refresh is needed.
+
+        A refresh is needed if the expiry time associated
+        with the temporary credentials is less than the
+        provided ``refresh_in``.  If ``time_delta`` is not
+        provided, ``self.advisory_refresh_needed`` will be used.
+
+        For example, if your temporary credentials expire
+        in 10 minutes and the provided ``refresh_in`` is
+        ``15 * 60``, then this function will return ``True``.
+
+        :type refresh_in: int
+        :param refresh_in: The number of seconds before the
+            credentials expire in which refresh attempts should
+            be made.
+
+        :return: True if refresh neeeded, False otherwise.
+
+        """
         if self._expiry_time is None:
             # No expiration, so assume we don't need to refresh.
             return False
 
+        if refresh_in is None:
+            refresh_in = self._advisory_refresh_timeout
         # The credentials should be refreshed if they're going to expire
         # in less than 5 minutes.
-        if self._seconds_remaining() >= self.refresh_timeout:
+        if self._seconds_remaining() >= refresh_in:
             # There's enough time left. Don't refresh.
             return False
-
-        # Assume the worst & refresh.
         logger.debug("Credentials need to be refreshed.")
         return True
 
+    def _is_expired(self):
+        # Checks if the current credentials are expired.
+        return self.refresh_needed(refresh_in=0)
+
     def _refresh(self):
-        if not self.refresh_needed():
+        # In the common case where we don't need a refresh, we
+        # can immediately exit and not require acquiring the
+        # refresh lock.
+        if not self.refresh_needed(self._advisory_refresh_timeout):
             return
 
-        metadata = self._refresh_using()
+        # acquire() doesn't accept kwargs, but False is indicating
+        # that we should not block if we can't acquire the lock.
+        # If we aren't able to acquire the lock, we'll trigger
+        # the else clause.
+        if self._refresh_lock.acquire(False):
+            try:
+                if not self.refresh_needed(self._advisory_refresh_timeout):
+                    return
+                is_mandatory_refresh = self.refresh_needed(
+                    self._mandatory_refresh_timeout)
+                self._protected_refresh(is_mandatory=is_mandatory_refresh)
+                return
+            finally:
+                self._refresh_lock.release()
+        elif self.refresh_needed(self._mandatory_refresh_timeout):
+            # If we're within the mandatory refresh window,
+            # we must block until we get refreshed credentials.
+            with self._refresh_lock:
+                if not self.refresh_needed(self._mandatory_refresh_timeout):
+                    return
+                self._protected_refresh(is_mandatory=True)
+
+    def _protected_refresh(self, is_mandatory):
+        # precondition: this method should only be called if you've acquired
+        # the self._refresh_lock.
+        try:
+            metadata = self._refresh_using()
+        except Exception as e:
+            period_name = 'mandatory' if is_mandatory else 'advisory'
+            logger.warning("Refreshing temporary credentials failed "
+                           "during %s refresh period.",
+                           period_name, exc_info=True)
+            if is_mandatory:
+                # If this is a mandatory refresh, then
+                # all errors that occur when we attempt to refresh
+                # credentials are propagated back to the user.
+                raise
+            # Otherwise we'll just return.
+            # The end result will be that we'll use the current
+            # set of temporary credentials we have.
+            return
         self._set_from_data(metadata)
+        if self._is_expired():
+            # We successfully refreshed credentials but for whatever
+            # reason, our refreshing function returned credentials
+            # that are still expired.  In this scenario, the only
+            # thing we can do is let the user know and raise
+            # an exception.
+            msg = ("Credentials were refreshed, but the "
+                   "refreshed credentials are still expired.")
+            logger.warning(msg)
+            raise RuntimeError(msg)
+        self._frozen_credentials = ReadOnlyCredentials(
+            self._access_key, self._secret_key, self._token)
 
     @staticmethod
     def _expiry_datetime(time_str):
@@ -286,8 +383,46 @@ class RefreshableCredentials(Credentials):
         self.secret_key = data['secret_key']
         self.token = data['token']
         self._expiry_time = parse(data['expiry_time'])
-        logger.debug("Retrieved credentials will expire at: %s", self._expiry_time)
+        logger.debug("Retrieved credentials will expire at: %s",
+                     self._expiry_time)
         self._normalize()
+
+    def get_frozen_credentials(self):
+        """Return immutable credentials.
+
+        The ``access_key``, ``secret_key``, and ``token`` properties
+        on this class will always check and refresh credentials if
+        needed before returning the particular credentials.
+
+        This has an edge case where you can get inconsistent
+        credentials.  Imagine this:
+
+            # Current creds are "t1"
+            tmp.access_key  ---> expired? no, so return t1.access_key
+            # ---- time is now expired, creds need refreshing to "t2" ----
+            tmp.secret_key  ---> expired? yes, refresh and return t2.secret_key
+
+        This means we're using the access key from t1 with the secret key
+        from t2.  To fix this issue, you can request a frozen credential object
+        which is guaranteed not to change.
+
+        The frozen credentials returned from this method should be used
+        immediately and then discarded.  The typical usage pattern would
+        be::
+
+            creds = RefreshableCredentials(...)
+            some_code = SomeSignerObject()
+            # I'm about to sign the request.
+            # The frozen credentials are only used for the
+            # duration of generate_presigned_url and will be
+            # immediately thrown away.
+            request = some_code.sign_some_request(
+                with_credentials=creds.get_frozen_credentials())
+            print("Signed request:", request)
+
+        """
+        self._refresh()
+        return self._frozen_credentials
 
 
 class CredentialProvider(object):
@@ -342,7 +477,8 @@ class InstanceMetadataProvider(CredentialProvider):
         metadata = fetcher.retrieve_iam_role_credentials()
         if not metadata:
             return None
-        logger.info('Found credentials from IAM Role: %s', metadata['role_name'])
+        logger.info('Found credentials from IAM Role: %s',
+                    metadata['role_name'])
         # We manually set the data here, since we already made the request &
         # have it. When the expiry is hit, the credentials will auto-refresh
         # themselves.
@@ -466,7 +602,7 @@ class SharedCredentialProvider(CredentialProvider):
             profile_name = 'default'
         self._profile_name = profile_name
         if ini_parser is None:
-            ini_parser = botocore.config.raw_config_parse
+            ini_parser = botocore.configloader.raw_config_parse
         self._ini_parser = ini_parser
 
     def load(self):
@@ -481,7 +617,7 @@ class SharedCredentialProvider(CredentialProvider):
                             self._creds_filename)
                 access_key, secret_key = self._extract_creds_from_mapping(
                     config, self.ACCESS_KEY, self.SECRET_KEY)
-                token =  self._get_session_token(config)
+                token = self._get_session_token(config)
                 return Credentials(access_key, secret_key, token,
                                    method=self.METHOD)
 
@@ -514,7 +650,7 @@ class ConfigProvider(CredentialProvider):
         self._config_filename = config_filename
         self._profile_name = profile_name
         if config_parser is None:
-            config_parser = botocore.config.load_config
+            config_parser = botocore.configloader.load_config
         self._config_parser = config_parser
 
     def load(self):
@@ -535,7 +671,7 @@ class ConfigProvider(CredentialProvider):
                     profile_config, self.ACCESS_KEY, self.SECRET_KEY)
                 token = self._get_session_token(profile_config)
                 return Credentials(access_key, secret_key, token,
-                                method=self.METHOD)
+                                   method=self.METHOD)
         else:
             return None
 
@@ -557,7 +693,7 @@ class BotoProvider(CredentialProvider):
         if environ is None:
             environ = os.environ
         if ini_parser is None:
-            ini_parser = botocore.config.raw_config_parse
+            ini_parser = botocore.configloader.raw_config_parse
         self._environ = environ
         self._ini_parser = ini_parser
 
@@ -678,7 +814,8 @@ class AssumeRoleProvider(CredentialProvider):
                 # Don't need to delete the cache entry,
                 # when we refresh via AssumeRole, we'll
                 # update the cache with the new entry.
-                logger.debug("Credentials were found in cache, but they are expired.")
+                logger.debug(
+                    "Credentials were found in cache, but they are expired.")
                 return None
             else:
                 return self._create_creds_from_response(from_cache)
@@ -696,9 +833,10 @@ class AssumeRoleProvider(CredentialProvider):
         # On windows, ':' is not allowed in filenames, so we'll
         # replace them with '_' instead.
         role_arn = role_config['role_arn'].replace(':', '_')
-        role_session_name=role_config.get('role_session_name')
+        role_session_name = role_config.get('role_session_name')
         if role_session_name:
-            cache_key = '%s--%s--%s' % (self._profile_name, role_arn, role_session_name)
+            cache_key = '%s--%s--%s' % (self._profile_name, role_arn,
+                                        role_session_name)
         else:
             cache_key = '%s--%s' % (self._profile_name, role_arn)
 
@@ -718,7 +856,8 @@ class AssumeRoleProvider(CredentialProvider):
             raise PartialCredentialsError(provider=self.METHOD,
                                           cred_var=str(e))
         external_id = profiles[self._profile_name].get('external_id')
-        role_session_name = profiles[self._profile_name].get('role_session_name')
+        role_session_name = \
+            profiles[self._profile_name].get('role_session_name')
         if source_profile not in profiles:
             raise InvalidConfigError(
                 error_msg=(
@@ -770,9 +909,6 @@ class AssumeRoleProvider(CredentialProvider):
         client = self._create_client_from_config(config)
 
         assume_role_kwargs = self._assume_role_base_kwargs(config)
-        if assume_role_kwargs.get('RoleSessionName') is None:
-            role_session_name = 'AWS-CLI-session-%s' % (int(time.time()))
-            assume_role_kwargs['RoleSessionName'] = role_session_name
 
         response = client.assume_role(**assume_role_kwargs)
         creds = self._create_creds_from_response(response)
@@ -788,7 +924,61 @@ class AssumeRoleProvider(CredentialProvider):
             assume_role_kwargs['TokenCode'] = token_code
         if config['role_session_name'] is not None:
             assume_role_kwargs['RoleSessionName'] = config['role_session_name']
+        else:
+            role_session_name = 'AWS-CLI-session-%s' % (int(time.time()))
+            assume_role_kwargs['RoleSessionName'] = role_session_name
         return assume_role_kwargs
+
+
+class ContainerProvider(CredentialProvider):
+
+    METHOD = 'container-role'
+    ENV_VAR = 'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI'
+
+    def __init__(self, environ=None, fetcher=None):
+        if environ is None:
+            environ = os.environ
+        if fetcher is None:
+            fetcher = ContainerMetadataFetcher()
+        self._environ = environ
+        self._fetcher = fetcher
+
+    def load(self):
+        if self.ENV_VAR not in self._environ:
+            # This cred provider is only triggered if the
+            # self.ENV_VAR is set, which only happens if you opt
+            # into this feature on ECS.
+            return None
+        return self._retrieve_or_fail(self._environ[self.ENV_VAR])
+
+    def _retrieve_or_fail(self, relative_uri):
+        fetcher = self._create_fetcher(relative_uri)
+        creds = fetcher()
+        return RefreshableCredentials(
+            access_key=creds['access_key'],
+            secret_key=creds['secret_key'],
+            token=creds['token'],
+            method=self.METHOD,
+            expiry_time=_parse_if_needed(creds['expiry_time']),
+            refresh_using=fetcher,
+        )
+
+    def _create_fetcher(self, relative_uri):
+        def fetch_creds():
+            try:
+                response = self._fetcher.retrieve_uri(relative_uri)
+            except MetadataRetrievalError as e:
+                logger.debug("Error retrieving ECS metadata: %s", e,
+                             exc_info=True)
+                raise CredentialRetrievalError(provider=self.METHOD,
+                                               error_msg=str(e))
+            return {
+                'access_key': response['AccessKeyId'],
+                'secret_key': response['SecretAccessKey'],
+                'token': response['Token'],
+                'expiry_time': response['Expiration'],
+            }
+        return fetch_creds
 
 
 class CredentialResolver(object):
@@ -803,8 +993,8 @@ class CredentialResolver(object):
 
     def insert_before(self, name, credential_provider):
         """
-        Inserts a new instance of ``CredentialProvider`` into the chain that will
-        be tried before an existing one.
+        Inserts a new instance of ``CredentialProvider`` into the chain that
+        will be tried before an existing one.
 
         :param name: The short name of the credentials you'd like to insert the
             new credentials before. (ex. ``env`` or ``config``). Existing names
@@ -846,7 +1036,7 @@ class CredentialResolver(object):
         :type name: string
         """
         available_methods = [p.METHOD for p in self.providers]
-        if not name in available_methods:
+        if name not in available_methods:
             # It's not present. Fail silently.
             return
 
