@@ -84,6 +84,27 @@
           "too_many_requests": {"$ref": "too_many_requests"}
       }
     },
+    "apigateway": {
+      "__default__": {
+        "max_attempts": 10,
+        "delay": {
+          "type": "exponential",
+          "base": 5,
+          "growth_factor": 2
+        }
+      },
+      "policies": {
+          "general_socket_errors": {"$ref": "general_socket_errors"},
+          "general_server_error": {"$ref": "general_server_error"},
+          "bad_gateway": {"$ref": "bad_gateway"},
+          "service_unavailable": {"$ref": "service_unavailable"},
+          "gateway_timeout": {"$ref": "gateway_timeout"},
+          "limit_exceeded": {"$ref": "limit_exceeded"},
+          "throttling_exception": {"$ref": "throttling_exception"},
+          "throttling": {"$ref": "throttling"},
+          "too_many_requests": {"$ref": "too_many_requests"}
+      }
+    },
     "dynamodb": {
       "__default__": {
         "max_attempts": 10,
