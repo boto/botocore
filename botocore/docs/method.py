@@ -180,8 +180,8 @@ def document_model_driven_method(section, method_name, operation_model,
     context = {
         'special_shape_types': {
             'streaming_input_shape': operation_model.get_streaming_input(),
-            'streaming_output_shape': operation_model.get_streaming_output()
-        }
+            'streaming_output_shape': operation_model.get_streaming_output(),
+        },
     }
 
     if operation_model.input_shape:
