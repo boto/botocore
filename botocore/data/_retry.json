@@ -89,7 +89,7 @@
         "max_attempts": 10,
         "delay": {
           "type": "exponential",
-          "base": 5,
+          "base": 0.25,
           "growth_factor": 2
         }
       }
