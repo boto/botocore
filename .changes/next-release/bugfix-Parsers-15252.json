@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "description": "ResponseMetadata will now always be populated, provided the response was able to be parsed into a dict.",
+  "category": "Parsers"
+}

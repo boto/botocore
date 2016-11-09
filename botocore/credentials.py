@@ -245,6 +245,10 @@ class RefreshableCredentials(Credentials):
 
     @property
     def access_key(self):
+        """Warning: Using this property can lead to race conditions if you
+        access another property subsequently along the refresh boundary.
+        Please use get_frozen_credentials instead.
+        """
         self._refresh()
         return self._access_key
 
@@ -254,6 +258,10 @@ class RefreshableCredentials(Credentials):
 
     @property
     def secret_key(self):
+        """Warning: Using this property can lead to race conditions if you
+        access another property subsequently along the refresh boundary.
+        Please use get_frozen_credentials instead.
+        """
         self._refresh()
         return self._secret_key
 
@@ -263,6 +271,10 @@ class RefreshableCredentials(Credentials):
 
     @property
     def token(self):
+        """Warning: Using this property can lead to race conditions if you
+        access another property subsequently along the refresh boundary.
+        Please use get_frozen_credentials instead.
+        """
         self._refresh()
         return self._token
 
