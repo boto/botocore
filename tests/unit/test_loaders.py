@@ -21,12 +21,13 @@
 
 import os
 import contextlib
-
+import copy
 import mock
 
 from botocore.exceptions import DataNotFoundError, UnknownServiceError
 from botocore.loaders import JSONFileLoader
 from botocore.loaders import Loader, create_loader
+from botocore.loaders import ExtrasProcessor
 
 from tests import BaseEnvVar
 
@@ -134,7 +135,8 @@ class TestLoader(BaseEnvVar):
 
         loader = Loader(extra_search_paths=['foo'],
                         file_loader=FakeLoader(),
-                        include_default_search_paths=False)
+                        include_default_search_paths=False,
+                        include_default_extras=False)
         loader.determine_latest_version = mock.Mock(return_value='2015-03-01')
         loader.list_available_services = mock.Mock(return_value=['baz'])
         loaded = loader.load_service_model('baz', type_name='service-2')
@@ -180,6 +182,151 @@ class TestLoader(BaseEnvVar):
         self.assertIn('foo', loader.search_paths)
         self.assertIn('bar', loader.search_paths)
         self.assertIn('baz', loader.search_paths)
+
+
+class TestMergeExtras(BaseEnvVar):
+    def setUp(self):
+        super(TestMergeExtras, self).setUp()
+        self.file_loader = mock.Mock()
+        self.data_loader = Loader(
+            extra_search_paths=['datapath'], file_loader=self.file_loader,
+            include_default_search_paths=False)
+        self.data_loader.determine_latest_version = mock.Mock(
+            return_value='2015-03-01')
+        self.data_loader.list_available_services = mock.Mock(
+            return_value=['myservice'])
+
+        isdir_mock = mock.Mock(return_value=True)
+        self.isdir_patch = mock.patch('os.path.isdir', isdir_mock)
+        self.isdir_patch.start()
+
+    def tearDown(self):
+        super(TestMergeExtras, self).tearDown()
+        self.isdir_patch.stop()
+
+    def test_merge_extras(self):
+        service_data = {'foo': 'service', 'bar': 'service'}
+        sdk_extras = {'merge': {'foo': 'sdk'}}
+        self.file_loader.load_file.side_effect = [service_data, sdk_extras]
+
+        loaded = self.data_loader.load_service_model('myservice', 'service-2')
+        expected = {'foo': 'sdk', 'bar': 'service'}
+        self.assertEqual(loaded, expected)
+
+        call_args = self.file_loader.load_file.call_args_list
+        call_args = [c[0][0] for c in call_args]
+        expected_call_args = [
+            'datapath/myservice/2015-03-01/service-2',
+            'datapath/myservice/2015-03-01/service-2.sdk-extras',
+        ]
+        self.assertEqual(call_args, expected_call_args)
+
+    def test_extras_not_found(self):
+        service_data = {'foo': 'service', 'bar': 'service'}
+        service_data_copy = copy.copy(service_data)
+        self.file_loader.load_file.side_effect = [service_data, None]
+
+        loaded = self.data_loader.load_service_model('myservice', 'service-2')
+        self.assertEqual(loaded, service_data_copy)
+
+    def test_no_merge_in_extras(self):
+        service_data = {'foo': 'service', 'bar': 'service'}
+        service_data_copy = copy.copy(service_data)
+        self.file_loader.load_file.side_effect = [service_data, {}]
+
+        loaded = self.data_loader.load_service_model('myservice', 'service-2')
+        self.assertEqual(loaded, service_data_copy)
+
+    def test_include_default_extras(self):
+        self.data_loader = Loader(
+            extra_search_paths=['datapath'], file_loader=self.file_loader,
+            include_default_search_paths=False,
+            include_default_extras=False)
+        self.data_loader.determine_latest_version = mock.Mock(
+            return_value='2015-03-01')
+        self.data_loader.list_available_services = mock.Mock(
+            return_value=['myservice'])
+
+        service_data = {'foo': 'service', 'bar': 'service'}
+        service_data_copy = copy.copy(service_data)
+        sdk_extras = {'merge': {'foo': 'sdk'}}
+        self.file_loader.load_file.side_effect = [service_data, sdk_extras]
+
+        loaded = self.data_loader.load_service_model('myservice', 'service-2')
+        self.assertEqual(loaded, service_data_copy)
+
+    def test_append_extra_type(self):
+        service_data = {'foo': 'service', 'bar': 'service'}
+        sdk_extras = {'merge': {'foo': 'sdk'}}
+        cli_extras = {'merge': {'cli': True}}
+        self.file_loader.load_file.side_effect = [
+            service_data, sdk_extras, cli_extras]
+
+        self.data_loader.extras_types.append('cli')
+
+        loaded = self.data_loader.load_service_model('myservice', 'service-2')
+        expected = {'foo': 'sdk', 'bar': 'service', 'cli': True}
+        self.assertEqual(loaded, expected)
+
+        call_args = self.file_loader.load_file.call_args_list
+        call_args = [c[0][0] for c in call_args]
+        expected_call_args = [
+            'datapath/myservice/2015-03-01/service-2',
+            'datapath/myservice/2015-03-01/service-2.sdk-extras',
+            'datapath/myservice/2015-03-01/service-2.cli-extras'
+        ]
+        self.assertEqual(call_args, expected_call_args)
+
+    def test_sdk_empty_extras_skipped(self):
+        service_data = {'foo': 'service', 'bar': 'service'}
+        cli_extras = {'merge': {'foo': 'cli'}}
+        self.file_loader.load_file.side_effect = [
+            service_data, None, cli_extras]
+
+        self.data_loader.extras_types.append('cli')
+
+        loaded = self.data_loader.load_service_model('myservice', 'service-2')
+        expected = {'foo': 'cli', 'bar': 'service'}
+        self.assertEqual(loaded, expected)
+
+
+class TestExtrasProcessor(BaseEnvVar):
+    def setUp(self):
+        super(TestExtrasProcessor, self).setUp()
+        self.processor = ExtrasProcessor()
+        self.service_data = {
+            'shapes': {
+                'StringShape': {'type': 'string'},
+            }
+        }
+        self.service_data_copy = copy.deepcopy(self.service_data)
+
+    def test_process_empty_list(self):
+        self.processor.process(self.service_data, [])
+        self.assertEqual(self.service_data, self.service_data_copy)
+
+    def test_process_empty_extras(self):
+        self.processor.process(self.service_data, [{}])
+        self.assertEqual(self.service_data, self.service_data_copy)
+
+    def test_process_merge_key(self):
+        extras = {'merge': {'shapes': {'BooleanShape': {'type': 'boolean'}}}}
+        self.processor.process(self.service_data, [extras])
+        self.assertNotEqual(self.service_data, self.service_data_copy)
+
+        boolean_shape = self.service_data['shapes'].get('BooleanShape')
+        self.assertEqual(boolean_shape, {'type': 'boolean'})
+
+    def test_process_in_order(self):
+        extras = [
+            {'merge': {'shapes': {'BooleanShape': {'type': 'boolean'}}}},
+            {'merge': {'shapes': {'BooleanShape': {'type': 'string'}}}}
+        ]
+        self.processor.process(self.service_data, extras)
+        self.assertNotEqual(self.service_data, self.service_data_copy)
+
+        boolean_shape = self.service_data['shapes'].get('BooleanShape')
+        self.assertEqual(boolean_shape, {'type': 'string'})
 
 
 class TestLoadersWithDirectorySearching(BaseEnvVar):

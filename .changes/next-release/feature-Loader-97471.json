@@ -1,0 +1,5 @@
+{
+  "category": "Loader",
+  "description": "Support loading json extra files.",
+  "type": "feature"
+}
