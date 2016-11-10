@@ -22,6 +22,7 @@ import botocore
 import botocore.session
 from botocore.exceptions import ParamValidationError, MD5UnavailableError
 from botocore.exceptions import AliasConflictParameterError
+from botocore.exceptions import DataNotFoundError
 from botocore.awsrequest import AWSRequest
 from botocore.compat import quote, six
 from botocore.config import Config
@@ -639,6 +640,80 @@ class TestHandlers(BaseSessionTest):
         response = {"LocationConstraint": "eu-west-1"}
         handlers.parse_get_bucket_location(response, None),
         self.assertEqual(response["LocationConstraint"], "eu-west-1")
+
+
+class TestMergeExtra(unittest.TestCase):
+    def setUp(self):
+        self.service_data = {
+            'version': '2.0',
+            'metadata': {
+                'apiVersion': '2016-11-08',
+                'protocol': 'query',
+                'endpointPrefix': 'foo',
+            },
+            'documentation': 'Docs for service',
+            'operations': {
+                'OperationName': {
+                    'http': {
+                        'method': 'POST',
+                        'requestUri': '/',
+                    },
+                    'name': 'OperationName',
+                    'input': {
+                        'shape': 'OperationNameRequest'
+                    },
+                    'documentation': 'Docs for OperationName',
+                }
+            },
+            'shapes': {
+                'OperationNameRequest': {
+                    'type': 'structure',
+                    'members': {
+                        'Arg1': {'shape': 'StringType'},
+                        'Arg2': {'shape': 'StringType'},
+                    }
+                },
+                'StringType': {
+                    'type': 'string',
+                }
+            }
+        }
+        self.loader = mock.Mock()
+
+    def test_merge_extra(self):
+        extra = {
+            'shapes': {
+                'OperationNameRequest': {
+                    'members': {
+                        'Arg3': {'shape': 'StringType'}
+                    }
+                }
+            }
+        }
+        self.loader.load_service_model.return_value = extra
+        handlers.merge_extra(
+            service_name='foo', service_data=self.service_data,
+            data_loader=self.loader)
+
+        args = self.service_data['shapes']['OperationNameRequest']['members']
+        self.assertIn('Arg3', args)
+        self.assertEqual(args['Arg3'], {'shape': 'StringType'})
+
+        call_args = self.loader.load_service_model.call_args[1]
+        self.assertEqual(call_args.get('api_version'), '2016-11-08')
+
+    def test_no_extra_data(self):
+        service_data_copy = copy.deepcopy(self.service_data)
+
+        self.loader.load_service_model.side_effect = DataNotFoundError(
+            data_path='')
+        handlers.merge_extra(
+            service_name='foo', service_data=self.service_data,
+            data_loader=self.loader)
+
+        call_args = self.loader.load_service_model.call_args[1]
+        self.assertEqual(call_args.get('api_version'), '2016-11-08')
+        self.assertEqual(self.service_data, service_data_copy)
 
 
 class TestConvertStringBodyToFileLikeObject(BaseSessionTest):

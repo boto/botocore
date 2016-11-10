@@ -33,8 +33,10 @@ from botocore.signers import add_generate_presigned_post
 from botocore.exceptions import ParamValidationError
 from botocore.exceptions import AliasConflictParameterError
 from botocore.exceptions import UnsupportedTLSVersionWarning
+from botocore.exceptions import DataNotFoundError
 from botocore.utils import percent_encode, SAFE_CHARS
 from botocore.utils import switch_host_with_param
+from botocore.utils import deep_merge
 
 from botocore import retryhandler
 from botocore import utils
@@ -54,6 +56,22 @@ REGISTER_LAST = object()
 # (.), hyphens (-), and underscores (_).
 VALID_BUCKET = re.compile('^[a-zA-Z0-9.\-_]{1,255}$')
 VERSION_ID_SUFFIX = re.compile(r'\?versionId=[^\s]+$')
+
+
+def merge_extra(service_name, service_data, data_loader, **kwargs):
+    """Deeply merges extras-1 into service-2 upon loading service-2.
+
+    These extras files are useful when the sdk needs to make additive
+    changes to a service model which aren't reflected in the wire protocol.
+    """
+    api_version = service_data['metadata'].get('apiVersion')
+
+    try:
+        extra = data_loader.load_service_model(
+            service_name, 'extras-1', api_version=api_version)
+        deep_merge(service_data, extra)
+    except DataNotFoundError:
+        pass
 
 
 def check_for_200_error(response, **kwargs):
@@ -810,6 +828,7 @@ BUILTIN_HANDLERS = [
     ('needs-retry.s3.CompleteMultipartUpload', check_for_200_error,
      REGISTER_FIRST),
     ('service-data-loaded', register_retries_for_service),
+    ('service-data-loaded', merge_extra),
     ('choose-signer.cognito-identity.GetId', disable_signing),
     ('choose-signer.cognito-identity.GetOpenIdToken', disable_signing),
     ('choose-signer.cognito-identity.UnlinkIdentity', disable_signing),
