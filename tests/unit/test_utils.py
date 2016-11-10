@@ -47,6 +47,7 @@ from botocore.utils import merge_dicts
 from botocore.utils import get_service_module_name
 from botocore.utils import percent_encode_sequence
 from botocore.utils import switch_host_s3_accelerate
+from botocore.utils import deep_merge
 from botocore.utils import S3RegionRedirector
 from botocore.utils import ContainerMetadataFetcher
 from botocore.model import DenormalizedStructureBuilder
@@ -1014,6 +1015,54 @@ class TestSwitchHostS3Accelerate(unittest.TestCase):
         self.assertEqual(
             self.request.url,
             'https://s3-accelerate.dualstack.amazonaws.com/foo/key.txt')
+
+
+class TestDeepMerge(unittest.TestCase):
+    def test_simple_merge(self):
+        a = {'key': 'value'}
+        b = {'otherkey': 'othervalue'}
+        deep_merge(a, b)
+
+        expected = {'key': 'value', 'otherkey': 'othervalue'}
+        self.assertEqual(a, expected)
+
+    def test_overrides_value(self):
+        a = {'key': 'value'}
+        b = {'key': 'othervalue'}
+        deep_merge(a, b)
+        self.assertEqual(a, b)
+
+    def test_deep_merge(self):
+        a = {
+            'first': {
+                'second': {
+                    'key': 'value',
+                    'otherkey': 'othervalue'
+                },
+                'key': 'value'
+            }
+        }
+        b = {
+            'first': {
+                'second': {
+                    'otherkey': 'newvalue',
+                    'yetanotherkey': 'yetanothervalue'
+                }
+            }
+        }
+        deep_merge(a, b)
+
+        expected = {
+            'first': {
+                'second': {
+                    'key': 'value',
+                    'otherkey': 'newvalue',
+                    'yetanotherkey': 'yetanothervalue'
+                },
+                'key': 'value'
+            }
+        }
+        self.assertEqual(a, expected)
 
 
 class TestS3RegionRedirector(unittest.TestCase):

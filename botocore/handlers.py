@@ -33,8 +33,10 @@ from botocore.signers import add_generate_presigned_post
 from botocore.exceptions import ParamValidationError
 from botocore.exceptions import AliasConflictParameterError
 from botocore.exceptions import UnsupportedTLSVersionWarning
+from botocore.exceptions import DataNotFoundError
 from botocore.utils import percent_encode, SAFE_CHARS
 from botocore.utils import switch_host_with_param
+from botocore.utils import deep_merge
 
 from botocore import retryhandler
 from botocore import utils
@@ -54,6 +56,22 @@ REGISTER_LAST = object()
 # (.), hyphens (-), and underscores (_).
 VALID_BUCKET = re.compile('^[a-zA-Z0-9.\-_]{1,255}$')
 VERSION_ID_SUFFIX = re.compile(r'\?versionId=[^\s]+$')
+
+
+def merge_extra(service_name, service_data, data_loader, **kwargs):
+    """Deeply merges extras-1 into service-2 upon loading service-2.
+
+    These extras files are useful when the sdk needs to make additive
+    changes to a service model which aren't reflected in the wire protocol.
+    """
+    api_version = service_data['metadata'].get('apiVersion')
+
+    try:
+        extra = data_loader.load_service_model(
+            service_name, 'extras-1', api_version=api_version)
+        deep_merge(service_data, extra)
+    except DataNotFoundError:
+        pass
 
 
 def check_for_200_error(response, **kwargs):
@@ -210,36 +228,38 @@ def _needs_s3_sse_customization(params, sse_member_prefix):
             sse_member_prefix + 'KeyMD5' not in params)
 
 
-def register_retries_for_service(service_data, session,
+def register_retries_for_service(service_data, event_emitter, data_loader,
                                  service_name, **kwargs):
-    loader = session.get_component('data_loader')
     endpoint_prefix = service_data.get('metadata', {}).get('endpointPrefix')
     if endpoint_prefix is None:
         logger.debug("Not registering retry handlers, could not endpoint "
                      "prefix from model for service %s", service_name)
         return
-    config = _load_retry_config(loader, endpoint_prefix)
+    config = _load_retry_config(data_loader, endpoint_prefix)
     if not config:
         return
     logger.debug("Registering retry handlers for service: %s", service_name)
     handler = retryhandler.create_retry_handler(
         config, endpoint_prefix)
     unique_id = 'retry-config-%s' % endpoint_prefix
-    session.register('needs-retry.%s' % endpoint_prefix,
-                     handler, unique_id=unique_id)
-    _register_for_operations(config, session,
+    event_emitter.register('needs-retry.%s' % endpoint_prefix,
+                           handler, unique_id=unique_id)
+    _register_for_operations(config, event_emitter,
                              service_name=endpoint_prefix)
 
 
 def _load_retry_config(loader, endpoint_prefix):
     original_config = loader.load_data('_retry')
+    if not original_config:
+        return
+
     retry_config = translate.build_retry_config(
         endpoint_prefix, original_config['retry'],
         original_config.get('definitions', {}))
     return retry_config
 
 
-def _register_for_operations(config, session, service_name):
+def _register_for_operations(config, event_emitter, service_name):
     # There's certainly a tradeoff for registering the retry config
     # for the operations when the service is created.  In practice,
     # there aren't a whole lot of per operation retry configs so
@@ -249,8 +269,8 @@ def _register_for_operations(config, session, service_name):
             continue
         handler = retryhandler.create_retry_handler(config, key)
         unique_id = 'retry-config-%s-%s' % (service_name, key)
-        session.register('needs-retry.%s.%s' % (service_name, key),
-                         handler, unique_id=unique_id)
+        event_emitter.register('needs-retry.%s.%s' % (service_name, key),
+                               handler, unique_id=unique_id)
 
 
 def disable_signing(**kwargs):
@@ -808,6 +828,7 @@ BUILTIN_HANDLERS = [
     ('needs-retry.s3.CompleteMultipartUpload', check_for_200_error,
      REGISTER_FIRST),
     ('service-data-loaded', register_retries_for_service),
+    ('service-data-loaded', merge_extra),
     ('choose-signer.cognito-identity.GetId', disable_signing),
     ('choose-signer.cognito-identity.GetOpenIdToken', disable_signing),
     ('choose-signer.cognito-identity.UnlinkIdentity', disable_signing),

@@ -88,32 +88,13 @@ class ClientCreator(object):
         return cls
 
     def _load_service_model(self, service_name, api_version=None):
-        json_model = self._loader.load_service_model(service_name, 'service-2',
-                                                     api_version=api_version)
-        service_model = ServiceModel(json_model, service_name=service_name)
-        self._register_retries(service_model)
-        return service_model
-
-    def _register_retries(self, service_model):
-        endpoint_prefix = service_model.endpoint_prefix
-
-        # First, we load the entire retry config for all services,
-        # then pull out just the information we need.
-        original_config = self._loader.load_data('_retry')
-        if not original_config:
-            return
-
-        retry_config = self._retry_config_translator.build_retry_config(
-            endpoint_prefix, original_config.get('retry', {}),
-            original_config.get('definitions', {}))
-
-        logger.debug("Registering retry handlers for service: %s",
-                     service_model.service_name)
-        handler = self._retry_handler_factory.create_retry_handler(
-            retry_config, endpoint_prefix)
-        unique_id = 'retry-config-%s' % endpoint_prefix
-        self._event_emitter.register('needs-retry.%s' % endpoint_prefix,
-                                     handler, unique_id=unique_id)
+        json_model = self._loader.load_service_model(
+            service_name, 'service-2', api_version=api_version)
+        self._event_emitter.emit(
+            'service-data-loaded.%s' % service_name, service_data=json_model,
+            service_name=service_name, data_loader=self._loader,
+            event_emitter=self._event_emitter)
+        return ServiceModel(json_model, service_name=service_name)
 
     def _register_s3_events(self, client, endpoint_bridge, endpoint_url):
         if client.meta.service_model.service_name != 's3':
