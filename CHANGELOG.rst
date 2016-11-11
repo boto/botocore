@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.4.71
+======
+
+* bugfix:Parsers: ResponseMetadata will now always be populated, provided the response was able to be parsed into a dict.
+* feature:``cloudformation``: Update cloudformation client to latest version
+* feature:``logs``: Update logs client to latest version
+
+
 1.4.70
 ======
 
