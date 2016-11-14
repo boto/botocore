@@ -1,0 +1,5 @@
+{
+  "category": "Paginator", 
+  "type": "feature", 
+  "description": "Add paginators for AWS WAF"
+}
