@@ -361,27 +361,8 @@ def _quote_source_header(value):
         return percent_encode(first, safe=SAFE_CHARS + '/') + version_id
 
 
-def inject_presigned_url(event_name, params, request_signer, **kwargs):
-    # If the user does not provide this value, we will automatically
-    # calculate on behalf of the user and inject the PresignedUrl
-    # into the requests.
-    # The params sent in the event don't quite sync up 100% so we're
-    # renaming them here until they can be updated in the event.
-    request_dict = params
-    params = request_dict['body']
-    if 'PresignedUrl' in params:
-        # If the customer provided this value, then there's nothing for
-        # us to do.
-        return
-    destination_region = request_signer._region_name
-    params['DestinationRegion'] = destination_region
-    # The request will be sent to the destination region, so we need
-    # to create an endpoint to the source region and create a presigned
-    # url based on the source endpoint.
-    source_region = params['SourceRegion']
-
-    operation_name = event_name.split('.')[-1]
-
+def _get_cross_region_presigned_url(request_signer, request_dict, model,
+                                    source_region, destination_region):
     # The better way to do this is to actually get the
     # endpoint_resolver and get the endpoint_url given the
     # source region.  In this specific case, we know that
@@ -391,14 +372,56 @@ def inject_presigned_url(event_name, params, request_signer, **kwargs):
     # I think eventually we should try to plumb through something
     # that allows us to resolve endpoints from regions.
     request_dict_copy = copy.deepcopy(request_dict)
+    request_dict_copy['body']['DestinationRegion'] = destination_region
     request_dict_copy['url'] = request_dict['url'].replace(
         destination_region, source_region)
     request_dict_copy['method'] = 'GET'
     request_dict_copy['headers'] = {}
-    presigned_url = request_signer.generate_presigned_url(
+    return request_signer.generate_presigned_url(
         request_dict_copy, region_name=source_region,
-        operation_name=operation_name)
-    params['PresignedUrl'] = presigned_url
+        operation_name=model.name)
+
+
+def _get_presigned_url_source_and_destination_regions(request_signer, params):
+    # Gets the source and destination regions to be used
+    destination_region = request_signer._region_name
+    source_region = params.get('SourceRegion')
+    return source_region, destination_region
+
+
+def inject_presigned_url_ec2(params, request_signer, model, **kwargs):
+    # The customer can still provide this, so we should pass if they do.
+    if 'PresignedUrl' in params['body']:
+        return
+    src, dest = _get_presigned_url_source_and_destination_regions(
+        request_signer, params['body'])
+    url = _get_cross_region_presigned_url(
+        request_signer, params, model, src, dest)
+    params['body']['PresignedUrl'] = url
+    # EC2 Requires that the destination region be sent over the wire in
+    # addition to the source region.
+    params['body']['DestinationRegion'] = dest
+
+
+def inject_presigned_url_rds(params, request_signer, model, **kwargs):
+    # The customer can still provide this, so we should pass if they do.
+    if 'PreSignedUrl' in params['body']:
+        return
+    src, dest = _get_presigned_url_source_and_destination_regions(
+        request_signer, params['body'])
+
+    # SourceRegion is not required for RDS operations, so it's possible that
+    # it isn't set. In that case it's probably a local copy so we don't need
+    # to do anything else.
+    if src is None:
+        return
+    url = _get_cross_region_presigned_url(
+        request_signer, params, model, src, dest)
+    params['body']['PreSignedUrl'] = url
+
+    # Since SourceRegion isn't actually modeled for RDS, it needs to be
+    # removed from the request params before we send the actual request.
+    del params['body']['SourceRegion']
 
 
 def json_decode_policies(parsed, model, **kwargs):
@@ -814,7 +837,11 @@ BUILTIN_HANDLERS = [
     ('before-call.apigateway', add_accept_header),
     ('before-call.glacier.UploadArchive', add_glacier_checksums),
     ('before-call.glacier.UploadMultipartPart', add_glacier_checksums),
-    ('before-call.ec2.CopySnapshot', inject_presigned_url),
+    ('before-call.ec2.CopySnapshot', inject_presigned_url_ec2),
+    ('before-call.rds.CopyDBSnapshot',
+     inject_presigned_url_rds),
+    ('before-call.rds.CreateDBInstanceReadReplica',
+     inject_presigned_url_rds),
     ('request-created.machinelearning.Predict', switch_host_machinelearning),
     ('needs-retry.s3.UploadPartCopy', check_for_200_error, REGISTER_FIRST),
     ('needs-retry.s3.CopyObject', check_for_200_error, REGISTER_FIRST),
