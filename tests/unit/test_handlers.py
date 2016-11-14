@@ -131,11 +131,13 @@ class TestHandlers(BaseSessionTest):
                          '/foo/bar?versionId=123')
 
     def test_presigned_url_already_present(self):
+        event_name = 'before-call.foo.bar'
         params = {'body': {'PresignedUrl': 'https://foo'}}
-        handlers.copy_snapshot_encrypted(params, None)
+        handlers.inject_presigned_url(event_name, params, None)
         self.assertEqual(params['body']['PresignedUrl'], 'https://foo')
 
-    def test_copy_snapshot_encrypted(self):
+    def test_inject_presigned_url(self):
+        event_name = 'before-call.ec2.CopySnapshot'
         credentials = Credentials('key', 'secret')
         event_emitter = HierarchicalEmitter()
         request_signer = RequestSigner(
@@ -148,7 +150,7 @@ class TestHandlers(BaseSessionTest):
         request_dict['headers'] = {}
         request_dict['context'] = {}
 
-        handlers.copy_snapshot_encrypted(request_dict, request_signer)
+        handlers.inject_presigned_url(event_name, request_dict, request_signer)
 
         self.assertIn('https://ec2.us-west-2.amazonaws.com?',
                       params['PresignedUrl'])
@@ -158,11 +160,30 @@ class TestHandlers(BaseSessionTest):
         # region_name of the endpoint object.
         self.assertEqual(params['DestinationRegion'], 'us-east-1')
 
+    def test_use_event_operation_name(self):
+        event_name = 'before-call.myservice.FakeOperation'
+        request_signer = mock.Mock()
+        request_signer._region_name = 'us-east-1'
+        request_dict = {}
+        params = {'SourceRegion': 'us-west-2'}
+        request_dict['body'] = params
+        request_dict['url'] = 'https://myservice.us-east-1.amazonaws.com'
+        request_dict['method'] = 'POST'
+        request_dict['headers'] = {}
+        request_dict['context'] = {}
+
+        handlers.inject_presigned_url(event_name, request_dict, request_signer)
+
+        call_args = request_signer.generate_presigned_url.call_args
+        operation_name = call_args[1].get('operation_name')
+        self.assertEqual(operation_name, 'FakeOperation')
+
     def test_destination_region_always_changed(self):
         # If the user provides a destination region, we will still
         # override the DesinationRegion with the region_name from
         # the endpoint object.
         actual_region = 'us-west-1'
+        event_name = 'before-call.ec2.CopySnapshot'
 
         credentials = Credentials('key', 'secret')
         event_emitter = HierarchicalEmitter()
@@ -180,7 +201,7 @@ class TestHandlers(BaseSessionTest):
 
         # The user provides us-east-1, but we will override this to
         # endpoint.region_name, of 'us-west-1' in this case.
-        handlers.copy_snapshot_encrypted(request_dict, request_signer)
+        handlers.inject_presigned_url(event_name, request_dict, request_signer)
 
         self.assertIn('https://ec2.us-west-2.amazonaws.com?',
                       params['PresignedUrl'])

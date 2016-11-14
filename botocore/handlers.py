@@ -361,8 +361,7 @@ def _quote_source_header(value):
         return percent_encode(first, safe=SAFE_CHARS + '/') + version_id
 
 
-def copy_snapshot_encrypted(params, request_signer, **kwargs):
-    # The presigned URL that facilities copying an encrypted snapshot.
+def inject_presigned_url(event_name, params, request_signer, **kwargs):
     # If the user does not provide this value, we will automatically
     # calculate on behalf of the user and inject the PresignedUrl
     # into the requests.
@@ -381,6 +380,8 @@ def copy_snapshot_encrypted(params, request_signer, **kwargs):
     # url based on the source endpoint.
     source_region = params['SourceRegion']
 
+    operation_name = event_name.split('.')[-1]
+
     # The better way to do this is to actually get the
     # endpoint_resolver and get the endpoint_url given the
     # source region.  In this specific case, we know that
@@ -396,7 +397,7 @@ def copy_snapshot_encrypted(params, request_signer, **kwargs):
     request_dict_copy['headers'] = {}
     presigned_url = request_signer.generate_presigned_url(
         request_dict_copy, region_name=source_region,
-        operation_name='CopySnapshot')
+        operation_name=operation_name)
     params['PresignedUrl'] = presigned_url
 
 
@@ -813,7 +814,7 @@ BUILTIN_HANDLERS = [
     ('before-call.apigateway', add_accept_header),
     ('before-call.glacier.UploadArchive', add_glacier_checksums),
     ('before-call.glacier.UploadMultipartPart', add_glacier_checksums),
-    ('before-call.ec2.CopySnapshot', copy_snapshot_encrypted),
+    ('before-call.ec2.CopySnapshot', inject_presigned_url),
     ('request-created.machinelearning.Predict', switch_host_machinelearning),
     ('needs-retry.s3.UploadPartCopy', check_for_200_error, REGISTER_FIRST),
     ('needs-retry.s3.CopyObject', check_for_200_error, REGISTER_FIRST),
