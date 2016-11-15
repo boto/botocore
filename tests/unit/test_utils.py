@@ -248,6 +248,18 @@ class TestParseTimestamps(unittest.TestCase):
             parse_timestamp('Wed, 02 Oct 2002 13:00:00 GMT'),
             datetime.datetime(2002, 10, 2, 13, 0, tzinfo=tzutc()))
 
+    def test_parse_gmt_in_uk_time(self):
+        # In the UK the time switches from GMT to BST and back as part of
+        # their daylight savings time. time.tzname will therefore report
+        # both time zones. dateutil sees that the time zone is a local time
+        # zone and so parses it as local time, but it ends up being BST
+        # instead of GMT. To remedy this issue we can provide a time zone
+        # context which will enforce GMT == UTC.
+        with mock.patch('time.tzname', ('GMT', 'BST')):
+            self.assertEqual(
+                parse_timestamp('Wed, 02 Oct 2002 13:00:00 GMT'),
+                datetime.datetime(2002, 10, 2, 13, 0, tzinfo=tzutc()))
+
     def test_parse_invalid_timestamp(self):
         with self.assertRaises(ValueError):
             parse_timestamp('invalid date')
