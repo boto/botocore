@@ -118,7 +118,7 @@ class BaseS3ClientTest(unittest.TestCase):
         self.assert_status_code(response, 200)
         waiter = bucket_client.get_waiter('bucket_exists')
         waiter.wait(Bucket=bucket_name)
-        self.addCleanup(clear_out_bucket, bucket_name, region_name)
+        self.addCleanup(clear_out_bucket, bucket_name, region_name, True)
         return bucket_name
 
     def make_tempdir(self):
