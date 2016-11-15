@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.4.73
+======
+
+* feature:``kinesis``: Update kinesis client to latest version
+* feature:``ds``: Update ds client to latest version
+* feature:``elasticache``: Update elasticache client to latest version
+
+
 1.4.72
 ======
 
