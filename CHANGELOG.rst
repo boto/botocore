@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.4.72
+======
+
+* feature:``cognito-idp``: Update cognito-idp client to latest version
+* feature:Paginator: Add paginators for AWS WAF
+
+
 1.4.71
 ======
 
