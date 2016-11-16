@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.4.74
+======
+
+* feature:``route53``: Update route53 client to latest version
+* feature:``servicecatalog``: Update servicecatalog client to latest version
+
+
 1.4.73
 ======
 
