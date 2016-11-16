@@ -2,6 +2,29 @@
 CHANGELOG
 =========
 
+1.4.73
+======
+
+* feature:``kinesis``: Update kinesis client to latest version
+* feature:``ds``: Update ds client to latest version
+* feature:``elasticache``: Update elasticache client to latest version
+
+
+1.4.72
+======
+
+* feature:``cognito-idp``: Update cognito-idp client to latest version
+* feature:Paginator: Add paginators for AWS WAF
+
+
+1.4.71
+======
+
+* bugfix:Parsers: ResponseMetadata will now always be populated, provided the response was able to be parsed into a dict.
+* feature:``cloudformation``: Update cloudformation client to latest version
+* feature:``logs``: Update logs client to latest version
+
+
 1.4.70
 ======
 

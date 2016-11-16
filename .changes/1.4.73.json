@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``kinesis``", 
+    "description": "Update kinesis client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``ds``", 
+    "description": "Update ds client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``elasticache``", 
+    "description": "Update elasticache client to latest version", 
+    "type": "feature"
+  }
+]

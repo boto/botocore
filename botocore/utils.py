@@ -331,7 +331,10 @@ def parse_timestamp(value):
         except (TypeError, ValueError):
             pass
     try:
-        return dateutil.parser.parse(value)
+        # In certain cases, a timestamp marked with GMT can be parsed into a
+        # different time zone, so here we provide a context which will
+        # enforce that GMT == UTC.
+        return dateutil.parser.parse(value, tzinfos={'GMT': tzutc()})
     except (TypeError, ValueError) as e:
         raise ValueError('Invalid timestamp "%s": %s' % (value, e))
 
