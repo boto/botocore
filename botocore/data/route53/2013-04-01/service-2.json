@@ -208,6 +208,26 @@
       ],
       "documentation":"<p>Creates a new version of an existing traffic policy. When you create a new version of a traffic policy, you specify the ID of the traffic policy that you want to update and a JSON-formatted document that describes the new version. You use traffic policies to create multiple DNS resource record sets for one domain name (such as example.com) or one subdomain name (such as www.example.com). You can create a maximum of 1000 versions of a traffic policy. If you reach the limit and need to create another version, you'll need to start a new traffic policy.</p> <p>Send a <code>POST</code> request to the <code>/2013-04-01/trafficpolicy/</code> resource. The request body includes a document with a <code>CreateTrafficPolicyVersionRequest</code> element. The response returns the <code>CreateTrafficPolicyVersionResponse</code> element, which contains information about the new version of the traffic policy.</p>"
     },
+    "CreateVPCAssociationAuthorization":{
+      "name":"CreateVPCAssociationAuthorization",
+      "http":{
+        "method":"POST",
+        "requestUri":"/2013-04-01/hostedzone/{Id}/authorizevpcassociation"
+      },
+      "input":{
+        "shape":"CreateVPCAssociationAuthorizationRequest",
+        "locationName":"CreateVPCAssociationAuthorizationRequest",
+        "xmlNamespace":{"uri":"https://route53.amazonaws.com/doc/2013-04-01/"}
+      },
+      "output":{"shape":"CreateVPCAssociationAuthorizationResponse"},
+      "errors":[
+        {"shape":"NoSuchHostedZone"},
+        {"shape":"InvalidVPCId"},
+        {"shape":"InvalidInput"},
+        {"shape":"TooManyVPCAssociationAuthorizations"}
+      ],
+      "documentation":"<p>Authorizes the AWS account that created a specified VPC to submit an <code>AssociateVPCWithHostedZone</code> request to associate the VPC with a specified hosted zone that was created by a different account.  To submit a <code>CreateVPCAssociationAuthorization</code> request, you must use the account that created the hosted zone. After you authorize the association, use the account that created the VPC to submit an <code>AssociateVPCWithHostedZone</code> request.</p><note><p>If you want to associate multiple VPCs that you created by using one account with a hosted zone that you created by using a different account, you must submit one authorization request for each VPC.</p></note>"
+    },
     "DeleteHealthCheck":{
       "name":"DeleteHealthCheck",
       "http":{
@@ -1478,6 +1498,43 @@
         }
       },
       "documentation":"<p>A complex type that contains the response information for the <code>CreateTrafficPolicyVersion</code> request.</p>"
+    },
+    "CreateVPCAssociationAuthorizationRequest":{
+      "type":"structure",
+      "required":[
+        "HostedZoneId",
+        "VPC"
+      ],
+      "members":{
+        "HostedZoneId":{
+          "shape":"ResourceId",
+          "documentation":"<p>The ID of the private hosted zone that you want to authorize associating a VPC with.</p>",
+          "location":"uri",
+          "locationName":"Id"
+        },
+        "VPC":{
+          "shape":"VPC",
+          "documentation":"<p>A complex type that contains the VPC ID and region for the VPC that you want to authorize associating with your hosted zone.</p>"
+        }
+      },
+      "documentation":"<p>A complex type that contains information about the hosted zone and the VPC that you authorize associating with the hosted zone.</p>"
+    },
+    "CreateVPCAssociationAuthorizationResponse":{
+      "type":"structure",
+      "required":["HostedZoneId","VPC"],
+      "members":{
+        "HostedZoneId":{
+          "shape":"ResourceId",
+          "documentation":"<p>The ID of the private hosted zone that you want to authorize associating a VPC with.</p>",
+          "location":"uri",
+          "locationName":"Id"
+        },
+        "VPC":{
+          "shape":"VPC",
+          "documentation":"<p>A complex type that contains the VPC ID and region for the VPC that you want to authorize associating with your hosted zone.</p>"
+        }
+      },
+      "documentation":"<p>A complex type that contains the response information from the request authorizing the VPC to associate with the hosted zone.</p>"
     },
     "DNSName":{
       "type":"string",
