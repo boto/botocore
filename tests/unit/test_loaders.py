@@ -215,9 +215,10 @@ class TestMergeExtras(BaseEnvVar):
 
         call_args = self.file_loader.load_file.call_args_list
         call_args = [c[0][0] for c in call_args]
+        base_path = os.path.join('datapath', 'myservice', '2015-03-01')
         expected_call_args = [
-            'datapath/myservice/2015-03-01/service-2',
-            'datapath/myservice/2015-03-01/service-2.sdk-extras',
+            os.path.join(base_path, 'service-2'),
+            os.path.join(base_path, 'service-2.sdk-extras')
         ]
         self.assertEqual(call_args, expected_call_args)
 
@@ -270,10 +271,11 @@ class TestMergeExtras(BaseEnvVar):
 
         call_args = self.file_loader.load_file.call_args_list
         call_args = [c[0][0] for c in call_args]
+        base_path = os.path.join('datapath', 'myservice', '2015-03-01')
         expected_call_args = [
-            'datapath/myservice/2015-03-01/service-2',
-            'datapath/myservice/2015-03-01/service-2.sdk-extras',
-            'datapath/myservice/2015-03-01/service-2.cli-extras'
+            os.path.join(base_path, 'service-2'),
+            os.path.join(base_path, 'service-2.sdk-extras'),
+            os.path.join(base_path, 'service-2.cli-extras')
         ]
         self.assertEqual(call_args, expected_call_args)
 
