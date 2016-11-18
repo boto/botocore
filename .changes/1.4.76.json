@@ -1,0 +1,27 @@
+[
+  {
+    "category": "``application-autoscaling``", 
+    "description": "Update application-autoscaling client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``elastictranscoder``", 
+    "description": "Update elastictranscoder client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``lambda``", 
+    "description": "Update lambda client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``emr``", 
+    "description": "Update emr client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``gamelift``", 
+    "description": "Update gamelift client to latest version", 
+    "type": "feature"
+  }
+]
