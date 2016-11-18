@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.4.75
+======
+
+* feature:Loader: Support loading json extra files.
+* feature:``meteringmarketplace``: Update meteringmarketplace client to latest version
+* feature:``cloudwatch``: Update cloudwatch client to latest version
+* feature:``apigateway``: Update apigateway client to latest version
+* feature:``sqs``: Update sqs client to latest version
+
+
 1.4.74
 ======
 
