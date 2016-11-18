@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.4.76
+======
+
+* feature:``application-autoscaling``: Update application-autoscaling client to latest version
+* feature:``elastictranscoder``: Update elastictranscoder client to latest version
+* feature:``lambda``: Update lambda client to latest version
+* feature:``emr``: Update emr client to latest version
+* feature:``gamelift``: Update gamelift client to latest version
+
+
 1.4.75
 ======
 
