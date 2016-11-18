@@ -130,12 +130,65 @@ class TestHandlers(BaseSessionTest):
         self.assertEqual(params['CopySource'],
                          '/foo/bar?versionId=123')
 
-    def test_presigned_url_already_present(self):
+    def test_presigned_url_already_present_ec2(self):
         operation_model = mock.Mock()
         operation_model.name = 'CopySnapshot'
         params = {'body': {'PresignedUrl': 'https://foo'}}
-        handlers.inject_presigned_url_ec2(params, None, operation_model)
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'ec2', 'us-east-1', 'ec2', 'v4', credentials, event_emitter)
+        handlers.inject_presigned_url_ec2(
+            params, request_signer, operation_model)
         self.assertEqual(params['body']['PresignedUrl'], 'https://foo')
+
+    def test_presigned_url_with_source_region_ec2(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopySnapshot'
+        params = {
+            'body': {
+                'PresignedUrl': 'https://foo',
+                'SourceRegion': 'us-east-1'
+            }
+        }
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'ec2', 'us-east-1', 'ec2', 'v4', credentials, event_emitter)
+        handlers.inject_presigned_url_ec2(
+            params, request_signer, operation_model)
+        self.assertEqual(params['body']['PresignedUrl'], 'https://foo')
+        self.assertEqual(params['body']['SourceRegion'], 'us-east-1')
+
+    def test_presigned_url_already_present_rds(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopyDBSnapshot'
+        params = {'body': {'PreSignedUrl': 'https://foo'}}
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+        handlers.inject_presigned_url_rds(
+            params, request_signer, operation_model)
+        self.assertEqual(params['body']['PreSignedUrl'], 'https://foo')
+
+    def test_presigned_url_with_source_region_rds(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopyDBSnapshot'
+        params = {
+            'body': {
+                'PreSignedUrl': 'https://foo',
+                'SourceRegion': 'us-east-1'
+            }
+        }
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+        handlers.inject_presigned_url_rds(
+            params, request_signer, operation_model)
+        self.assertEqual(params['body']['PreSignedUrl'], 'https://foo')
+        self.assertNotIn('SourceRegion', params['body'])
 
     def test_inject_presigned_url_ec2(self):
         operation_model = mock.Mock()
@@ -253,6 +306,29 @@ class TestHandlers(BaseSessionTest):
             'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
         request_dict = {}
         params = {'SourceRegion': 'us-west-2'}
+        request_dict['body'] = params
+        request_dict['url'] = 'https://rds.us-east-1.amazonaws.com'
+        request_dict['method'] = 'POST'
+        request_dict['headers'] = {}
+        request_dict['context'] = {}
+
+        handlers.inject_presigned_url_rds(
+            params=request_dict,
+            request_signer=request_signer,
+            model=operation_model
+        )
+
+        self.assertNotIn('SourceRegion', params)
+
+    def test_source_region_removed_when_presigned_url_provided_for_rds(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopyDBSnapshot'
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+        request_dict = {}
+        params = {'SourceRegion': 'us-west-2', 'PreSignedUrl': 'https://foo'}
         request_dict['body'] = params
         request_dict['url'] = 'https://rds.us-east-1.amazonaws.com'
         request_dict['method'] = 'POST'
