@@ -563,6 +563,8 @@ class ArgumentGenerator(object):
                 return 0.0
             elif shape.type_name == 'boolean':
                 return True
+            elif shape.type_name == 'timestamp':
+                return datetime.datetime(1970, 1, 1, 0, 0, 0)
         finally:
             stack.pop()
 
