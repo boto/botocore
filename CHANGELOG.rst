@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.4.77
+======
+
+* feature:``cloudtrail``: Update cloudtrail client to latest version
+* feature:``ecs``: Update ecs client to latest version
+
+
 1.4.76
 ======
 
