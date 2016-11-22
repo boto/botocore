@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.4.78
+======
+
+* feature:``s3``: Update s3 client to latest version
+* feature:``glacier``: Update glacier client to latest version
+* feature:``cloudformation``: Update cloudformation client to latest version
+* feature:``route53``: Update route53 client to latest version
+
+
 1.4.77
 ======
 
