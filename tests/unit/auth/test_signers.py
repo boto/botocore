@@ -715,6 +715,48 @@ class TestSigV4Presign(BasePresignTest):
         self.assertEqual(
             query_string['X-Amz-Security-Token'], 'security-token')
 
+    def test_presign_where_body_is_json_bytes(self):
+        request = AWSRequest()
+        request.method = 'GET'
+        request.url = 'https://myservice.us-east-1.amazonaws.com/'
+        request.data = b'{"Param": "value"}'
+        self.auth.add_auth(request)
+        query_string = self.get_parsed_query_string(request)
+        expected_query_string = {
+            'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
+            'X-Amz-Credential': (
+                'access_key/20140101/myregion/myservice/aws4_request'),
+            'X-Amz-Expires': '60',
+            'X-Amz-Date': '20140101T000000Z',
+            'X-Amz-Signature': (
+                '8e1d372d168d532313ce6df8f64a7dc51d'
+                'e6f312a9cfba6e5b345d8a771e839c'),
+            'X-Amz-SignedHeaders': 'host',
+            'Param': 'value'
+        }
+        self.assertEqual(query_string, expected_query_string)
+
+    def test_presign_where_body_is_json_string(self):
+        request = AWSRequest()
+        request.method = 'GET'
+        request.url = 'https://myservice.us-east-1.amazonaws.com/'
+        request.data = '{"Param": "value"}'
+        self.auth.add_auth(request)
+        query_string = self.get_parsed_query_string(request)
+        expected_query_string = {
+            'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
+            'X-Amz-Credential': (
+                'access_key/20140101/myregion/myservice/aws4_request'),
+            'X-Amz-Expires': '60',
+            'X-Amz-Date': '20140101T000000Z',
+            'X-Amz-Signature': (
+                '8e1d372d168d532313ce6df8f64a7dc51d'
+                'e6f312a9cfba6e5b345d8a771e839c'),
+            'X-Amz-SignedHeaders': 'host',
+            'Param': 'value'
+        }
+        self.assertEqual(query_string, expected_query_string)
+
 
 class BaseS3PresignPostTest(unittest.TestCase):
     def setUp(self):

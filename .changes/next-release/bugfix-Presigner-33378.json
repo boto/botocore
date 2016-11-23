@@ -1,0 +1,5 @@
+{
+  "description": "Support presigning rest-json services.",
+  "type": "bugfix",
+  "category": "Presigner"
+}
