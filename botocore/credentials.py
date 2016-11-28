@@ -100,7 +100,6 @@ def create_credential_resolver(session):
         # EnvProvider does not return credentials, which is what we want
         # in this scenario.
         providers.remove(env_provider)
-    else:
         logger.debug('Skipping environment variable credential check'
                      ' because profile name was explicitly set.')
 
