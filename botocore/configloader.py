@@ -106,10 +106,29 @@ def load_config(config_filename):
     return build_profile_map(parsed)
 
 
-def raw_config_parse(config_filename):
+def raw_config_parse(config_filename, parse_subsections=True):
     """Returns the parsed INI config contents.
 
     Each section name is a top level key.
+
+    :param config_filename: The name of the INI file to parse
+
+    :param parse_subsections: If True, parse indented blocks as
+       subsections that represent their own configuration dictionary.
+       For example, if the config file had the contents::
+
+           s3 =
+              signature_version = s3v4
+              addressing_style = path
+
+        The resulting ``raw_config_parse`` would be::
+
+            {'s3': {'signature_version': 's3v4', 'addressing_style': 'path'}}
+
+       If False, do not try to parse subsections and return the indented
+       block as its literal value::
+
+            {'s3': '\nsignature_version = s3v4\naddressing_style = path'}
 
     :returns: A dict with keys for each profile found in the config
         file and the value of each key being a dict containing name
@@ -134,7 +153,7 @@ def raw_config_parse(config_filename):
                 config[section] = {}
                 for option in cp.options(section):
                     config_value = cp.get(section, option)
-                    if config_value.startswith('\n'):
+                    if parse_subsections and config_value.startswith('\n'):
                         # Then we need to parse the inner contents as
                         # hierarchical.  We support a single level
                         # of nesting for now.
