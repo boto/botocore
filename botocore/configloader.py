@@ -113,9 +113,9 @@ def raw_config_parse(config_filename, parse_subsections=True):
 
     :param config_filename: The name of the INI file to parse
 
-    :param parse_subsections: If True, parse subsections: turn the value
-       into a dictionary with keys and values of its own if the entire value
-       is a indented block. For example, if the file had the value::
+    :param parse_subsections: If True, parse indented blocks as
+       subsections that represent their own configuration dictionary.
+       For example, if the config file had the contents::
 
            s3 =
               signature_version = s3v4
@@ -125,8 +125,8 @@ def raw_config_parse(config_filename, parse_subsections=True):
 
             {'s3': {'signature_version': 's3v4', 'addressing_style': 'path'}}
 
-       If False, do not try try to preserve the value and return the literal
-       value::
+       If False, do not try to parse subsections and return the indented
+       block as its literal value::
 
             {'s3': '\nsignature_version = s3v4\naddressing_style = path'}
 
