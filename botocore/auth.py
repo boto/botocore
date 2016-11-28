@@ -22,6 +22,7 @@ from operator import itemgetter
 import functools
 import time
 import calendar
+import json
 
 from botocore.exceptions import NoCredentialsError
 from botocore.utils import normalize_url_path, percent_encode_sequence
@@ -452,11 +453,9 @@ class SigV4QueryAuth(SigV4Auth):
         # percent_encode_sequence(new_query_params)
         operation_params = ''
         if request.data:
-            # We also need to move the body params into the query string.
-            # request.data will be populated, for example, with query services
-            # which normally form encode the params into the body.
-            # This means that request.data is a dict() of the operation params.
-            query_dict.update(request.data)
+            # We also need to move the body params into the query string. To
+            # do this, we first have to convert it to a dict.
+            query_dict.update(self._get_body_as_dict(request))
             request.data = ''
         if query_dict:
             operation_params = percent_encode_sequence(query_dict) + '&'
@@ -473,6 +472,18 @@ class SigV4QueryAuth(SigV4Auth):
         p = url_parts
         new_url_parts = (p[0], p[1], p[2], new_query_string, p[4])
         request.url = urlunsplit(new_url_parts)
+
+    def _get_body_as_dict(self, request):
+        # For query services, request.data is form-encoded and is already a
+        # dict, but for other services such as rest-json it could be a json
+        # string or bytes. In those cases we attempt to load the data as a
+        # dict.
+        data = request.data
+        if isinstance(data, six.binary_type):
+            data = json.loads(data.decode('utf-8'))
+        elif isinstance(data, six.string_types):
+            data = json.loads(data)
+        return data
 
     def _inject_signature_to_request(self, request, signature):
         # Rather than calculating an "Authorization" header, for the query
