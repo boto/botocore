@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.4.79
+======
+
+* bugfix:s3: fixes `#1059 <https://github.com/boto/botocore/issues/1059>`__ (presigned s3v4 URL bug related to blank query parameters being filtered incorrectly)
+* feature:``s3``: Update s3 client to latest version
+* bugfix:Presigner: Support presigning rest-json services.
+
+
 1.4.78
 ======
 
