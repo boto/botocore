@@ -580,8 +580,11 @@ class ArgumentGenerator(object):
     def _generate_type_list(self, shape, stack):
         # For list elements we've arbitrarily decided to
         # return two elements for the skeleton list.
+        name = ''
+        if self._use_member_names:
+            name = shape.member.name
         return [
-            self._generate_skeleton(shape.member, stack),
+            self._generate_skeleton(shape.member, stack, name),
         ]
 
     def _generate_type_map(self, shape, stack):
