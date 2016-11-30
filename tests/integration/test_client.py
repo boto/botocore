@@ -157,6 +157,13 @@ class TestClientErrorMessages(unittest.TestCase):
                                      'Could not connect to the endpoint URL'):
             client.list_stacks()
 
+    def test_client_error_factory(self):
+        session = botocore.session.get_session()
+        client = session.create_client('iam', region_name='us-east-1')
+        with self.assertRaisesRegexp(client.exceptions.NoSuchEntityException,
+                                     'The role with name NonexistentIAMRole cannot be found'):
+            client.get_role(RoleName="NonexistentIAMRole")
+
 
 class TestClientMeta(unittest.TestCase):
     def setUp(self):

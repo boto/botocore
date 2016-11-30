@@ -74,8 +74,10 @@ class TestStubber(unittest.TestCase):
             'list_objects', error_code, error_message)
         self.stubber.activate()
 
-        with self.assertRaises(ClientError):
+        with self.assertRaises(ClientError) as e:
             self.client.list_objects(Bucket='foo')
+
+        self.assertEqual(e.exception.__class__, ClientError)
 
     def test_can_add_expected_params_to_client_error(self):
         self.stubber.add_client_error(

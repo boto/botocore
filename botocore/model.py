@@ -408,6 +408,11 @@ class OperationModel(object):
             self._operation_model['output'])
 
     @CachedProperty
+    def error_shapes(self):
+        shapes = self._operation_model.get("errors", [])
+        return list(self._service_model.resolve_shape_ref(s) for s in shapes)
+
+    @CachedProperty
     def has_streaming_input(self):
         return self.get_streaming_input() is not None
 

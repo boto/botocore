@@ -21,6 +21,7 @@ from botocore.docs.docstring import PaginatorDocstring
 from botocore.exceptions import ClientError, DataNotFoundError
 from botocore.exceptions import OperationNotPageableError
 from botocore.exceptions import UnknownSignatureVersionError
+from botocore.errorfactory import ServiceErrorFactory
 from botocore.hooks import first_non_none_response
 from botocore.model import ServiceModel
 from botocore.paginate import Paginator
@@ -490,6 +491,7 @@ class BaseClient(object):
         self.meta = ClientMeta(event_emitter, self._client_config,
                                endpoint.host, service_model,
                                self._PY_TO_OP_NAME, partition)
+        self._error_factory = ServiceErrorFactory(service_model)
         self._register_handlers()
 
     def _register_handlers(self):
@@ -534,7 +536,12 @@ class BaseClient(object):
         )
 
         if http.status_code >= 300:
-            raise ClientError(parsed_response, operation_name)
+            if parsed_response.get("Error", {}).get("Code"):
+                error_code = parsed_response["Error"]["Code"]
+                error_class = self.exceptions._from_code(error_code)
+            else:
+                error_class = ClientError
+            raise error_class(parsed_response, operation_name)
         else:
             return parsed_response
 
@@ -687,6 +694,10 @@ class BaseClient(object):
         # Waiter configs is a dict, we just want the waiter names
         # which are the keys in the dict.
         return [xform_name(name) for name in model.waiter_names]
+
+    @CachedProperty
+    def exceptions(self):
+        return self._error_factory
 
 
 class ClientMeta(object):
