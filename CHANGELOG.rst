@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.4.80
+======
+
+* feature:``lightsail``: Update lightsail client to latest version
+* feature:``polly``: Update polly client to latest version
+* feature:``snowball``: Update snowball client to latest version
+* feature:``rekognition``: Update rekognition client to latest version
+
+
 1.4.79
 ======
 
