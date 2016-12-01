@@ -1,0 +1,5 @@
+{
+  "category": "parameter", 
+  "type": "feature", 
+  "description": "Automatically inject an idempotency token into parameters marked with the idempotencyToken trait"
+}

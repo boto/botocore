@@ -11,15 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from tests import unittest, mock, BaseSessionTest, create_session
-import os
-import nose
 from nose.tools import assert_equal
 
 import botocore.session
 from botocore.config import Config
-from botocore.compat import six
-from botocore.exceptions import ParamValidationError, ClientError
-from botocore.stub import Stubber
+from botocore.exceptions import ParamValidationError
 
 
 class TestS3BucketValidation(unittest.TestCase):
