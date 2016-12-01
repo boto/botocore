@@ -30,3 +30,9 @@ class TestEc2Docs(BaseDocsFunctionalTest):
             service_name='ec2',
             method_name='copy_snapshot',
             param_name='DestinationRegion')
+
+    def test_idempotency_documented(self):
+        content = self.get_docstring_for_method('ec2', 'purchase_scheduled_instances')
+        # Client token should have had idempotentcy autopopulated doc appended
+        self.assert_contains_line('This field is autopopulated if not provided',
+                                  content)

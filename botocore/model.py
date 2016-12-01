@@ -49,7 +49,8 @@ class Shape(object):
     SERIALIZED_ATTRS = ['locationName', 'queryName', 'flattened', 'location',
                         'payload', 'streaming', 'timestampFormat',
                         'xmlNamespace', 'resultWrapper', 'xmlAttribute']
-    METADATA_ATTRS = ['required', 'min', 'max', 'sensitive', 'enum']
+    METADATA_ATTRS = ['required', 'min', 'max', 'sensitive', 'enum',
+                      'idempotencyToken']
     MAP_TYPE = OrderedDict
 
     def __init__(self, shape_name, shape_model, shape_resolver=None):
@@ -128,6 +129,7 @@ class Shape(object):
             * enum
             * sensitive
             * required
+            * idempotencyToken
 
         :rtype: dict
         :return: Metadata about the shape.
@@ -406,6 +408,16 @@ class OperationModel(object):
             return None
         return self._service_model.resolve_shape_ref(
             self._operation_model['output'])
+
+    @CachedProperty
+    def idempotent_members(self):
+        input_shape = self.input_shape
+        if not input_shape:
+            return []
+
+        return [name for (name, shape) in input_shape.members.items()
+                if 'idempotencyToken' in shape.metadata and
+                shape.metadata['idempotencyToken']]
 
     @CachedProperty
     def has_streaming_input(self):
