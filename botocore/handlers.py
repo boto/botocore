@@ -22,6 +22,7 @@ import xml.etree.cElementTree
 import copy
 import re
 import warnings
+import uuid
 
 from botocore.compat import unquote, json, six, unquote_str, \
     ensure_bytes, get_md5, MD5_AVAILABLE
@@ -107,6 +108,14 @@ def decode_console_output(parsed, **kwargs):
             parsed['Output'] = value
         except (ValueError, TypeError, AttributeError):
             logger.debug('Error decoding base64', exc_info=True)
+
+
+def generate_idempotent_uuid(params, model, **kwargs):
+    for name in model.idempotent_members:
+        if name not in params:
+            params[name] = str(uuid.uuid4())
+            logger.debug("injecting idempotency token (%s) into param '%s'." %
+                         (params[name], name))
 
 
 def decode_quoted_jsondoc(value):
@@ -594,6 +603,7 @@ def document_cloudformation_get_template_return_type(section, event_name, **kwar
         value_portion.clear_text()
         value_portion.write('{}')
 
+
 def switch_host_machinelearning(request, **kwargs):
     switch_host_with_param(request, 'PredictEndpoint')
 
@@ -764,6 +774,8 @@ BUILTIN_HANDLERS = [
     ('after-call.cloudformation.GetTemplate', json_decode_template_body),
     ('after-call.s3.GetBucketLocation', parse_get_bucket_location),
 
+    ('before-parameter-build', generate_idempotent_uuid),
+
     ('before-parameter-build.s3', validate_bucket_name),
 
     ('before-parameter-build.s3.ListObjects',
@@ -864,7 +876,7 @@ BUILTIN_HANDLERS = [
     # Cloudformation documentation customizations
     ('docs.*.cloudformation.GetTemplate.complete-section',
      document_cloudformation_get_template_return_type),
-    
+
     # UserData base64 encoding documentation customizations
     ('docs.*.ec2.RunInstances.complete-section',
      document_base64_encoding('UserData')),

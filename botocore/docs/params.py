@@ -203,5 +203,14 @@ class RequestParamsDocumenter(BaseParamsDocumenter):
                 'param-documentation')
             documentation_section.style.indent()
             documentation_section.include_doc_string(shape.documentation)
+            self._add_special_trait_documentation(documentation_section, shape)
         end_param_section = section.add_new_section('end-param')
         end_param_section.style.new_paragraph()
+
+    def _add_special_trait_documentation(self, section, shape):
+        if 'idempotencyToken' in shape.metadata:
+            self._append_idempotency_documentation(section)
+
+    def _append_idempotency_documentation(self, section):
+        docstring = 'This field is autopopulated if not provided.'
+        section.write(docstring)
