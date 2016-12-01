@@ -2,6 +2,57 @@
 CHANGELOG
 =========
 
+1.4.79
+======
+
+* bugfix:s3: fixes `#1059 <https://github.com/boto/botocore/issues/1059>`__ (presigned s3v4 URL bug related to blank query parameters being filtered incorrectly)
+* feature:``s3``: Update s3 client to latest version
+* bugfix:Presigner: Support presigning rest-json services.
+
+
+1.4.78
+======
+
+* feature:``s3``: Update s3 client to latest version
+* feature:``glacier``: Update glacier client to latest version
+* feature:``cloudformation``: Update cloudformation client to latest version
+* feature:``route53``: Update route53 client to latest version
+
+
+1.4.77
+======
+
+* feature:``cloudtrail``: Update cloudtrail client to latest version
+* feature:``ecs``: Update ecs client to latest version
+
+
+1.4.76
+======
+
+* feature:``application-autoscaling``: Update application-autoscaling client to latest version
+* feature:``elastictranscoder``: Update elastictranscoder client to latest version
+* feature:``lambda``: Update lambda client to latest version
+* feature:``emr``: Update emr client to latest version
+* feature:``gamelift``: Update gamelift client to latest version
+
+
+1.4.75
+======
+
+* feature:Loader: Support loading json extra files.
+* feature:``meteringmarketplace``: Update meteringmarketplace client to latest version
+* feature:``cloudwatch``: Update cloudwatch client to latest version
+* feature:``apigateway``: Update apigateway client to latest version
+* feature:``sqs``: Update sqs client to latest version
+
+
+1.4.74
+======
+
+* feature:``route53``: Update route53 client to latest version
+* feature:``servicecatalog``: Update servicecatalog client to latest version
+
+
 1.4.73
 ======
 

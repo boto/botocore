@@ -16,6 +16,7 @@ This module provides the classes that are used to load models used
 by botocore.  This can include:
 
     * Service models (e.g. the model for EC2, S3, DynamoDB, etc.)
+    * Service model extras which customize the service models
     * Other models associated with a service (pagination, waiters)
     * Non service-specific config (Endpoint data, retry config)
 
@@ -24,6 +25,7 @@ Loading a module is broken down into several steps:
     * Determining the path to load
     * Search the data_path for files to load
     * The mechanics of loading the file
+    * Searching for extras and applying them to the loaded file
 
 The last item is used so that other faster loading mechanism
 besides the default JSON loader can be used.
@@ -75,6 +77,7 @@ this structure for service models::
       |       |-- paginators-1.json
       |       |-- service-2.json
       |       |-- waiters-2.json
+      |       |-- service-2.sdk-extras.json
 
 
 That is:
@@ -92,6 +95,11 @@ the ``version`` key within the model, this version is also part of the filename
 so that code does not need to load the JSON model in order to determine which
 version to use.
 
+The ``sdk-extras`` and similar files represent extra data that needs to be
+applied to the model after it is loaded. Data in these files might represent
+information that doesn't quite fit in the original models, but is still needed
+for the sdk. For instance, additional operation parameters might be added here
+which don't represent the actual service api.
 """
 import os
 import logging
@@ -100,6 +108,7 @@ from botocore import BOTOCORE_ROOT
 from botocore.compat import json
 from botocore.compat import OrderedDict
 from botocore.exceptions import DataNotFoundError, UnknownServiceError
+from botocore.utils import deep_merge
 
 
 logger = logging.getLogger(__name__)
@@ -205,9 +214,11 @@ class Loader(object):
     # For convenience we automatically add ~/.aws/models to the data path.
     CUSTOMER_DATA_PATH = os.path.join(os.path.expanduser('~'),
                                       '.aws', 'models')
+    BUILTIN_EXTRAS_TYPES = ['sdk']
 
     def __init__(self, extra_search_paths=None, file_loader=None,
-                 cache=None, include_default_search_paths=True):
+                 cache=None, include_default_search_paths=True,
+                 include_default_extras=True):
         self._cache = {}
         if file_loader is None:
             file_loader = self.FILE_LOADER_CLASS()
@@ -220,9 +231,19 @@ class Loader(object):
             self._search_paths.extend([self.CUSTOMER_DATA_PATH,
                                        self.BUILTIN_DATA_PATH])
 
+        self._extras_types = []
+        if include_default_extras:
+            self._extras_types.extend(self.BUILTIN_EXTRAS_TYPES)
+
+        self._extras_processor = ExtrasProcessor()
+
     @property
     def search_paths(self):
         return self._search_paths
+
+    @property
+    def extras_types(self):
+        return self._extras_types
 
     @instance_cache
     def list_available_services(self, type_name):
@@ -336,6 +357,10 @@ class Loader(object):
         :param api_version: The API version to load.  If this is not
             provided, then the latest API version will be used.
 
+        :type load_extras: bool
+        :param load_extras: Whether or not to load the tool extras which
+            contain additional data to be added to the model.
+
         :raises: UnknownServiceError if there is no known service with
             the provided service_name.
 
@@ -355,7 +380,24 @@ class Loader(object):
             api_version = self.determine_latest_version(
                 service_name, type_name)
         full_path = os.path.join(service_name, api_version, type_name)
-        return self.load_data(full_path)
+        model = self.load_data(full_path)
+
+        # Load in all the extras
+        extras_data = self._find_extras(service_name, type_name, api_version)
+        self._extras_processor.process(model, extras_data)
+
+        return model
+
+    def _find_extras(self, service_name, type_name, api_version):
+        """Creates an iterator over all the extras data."""
+        for extras_type in self.extras_types:
+            extras_name = '%s.%s-extras' % (type_name, extras_type)
+            full_path = os.path.join(service_name, api_version, extras_name)
+
+            try:
+                yield self.load_data(full_path)
+            except DataNotFoundError:
+                pass
 
     @instance_cache
     def load_data(self, name):
@@ -397,3 +439,23 @@ class Loader(object):
                         yield full_path
                     elif os.path.exists(full_path):
                         yield full_path
+
+
+class ExtrasProcessor(object):
+    """Processes data from extras files into service models."""
+    def process(self, original_model, extra_models):
+        """Processes data from a list of loaded extras files into a model
+
+        :type original_model: dict
+        :param original_model: The service model to load all the extras into.
+
+        :type extra_models: iterable of dict
+        :param extra_models: A list of loaded extras models.
+        """
+        for extras in extra_models:
+            self._process(original_model, extras)
+
+    def _process(self, model, extra_model):
+        """Process a single extras model into a service model."""
+        if 'merge' in extra_model:
+            deep_merge(model, extra_model['merge'])

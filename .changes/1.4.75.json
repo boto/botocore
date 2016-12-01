@@ -1,0 +1,27 @@
+[
+  {
+    "category": "Loader", 
+    "description": "Support loading json extra files.", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``meteringmarketplace``", 
+    "description": "Update meteringmarketplace client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``cloudwatch``", 
+    "description": "Update cloudwatch client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``apigateway``", 
+    "description": "Update apigateway client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``sqs``", 
+    "description": "Update sqs client to latest version", 
+    "type": "feature"
+  }
+]

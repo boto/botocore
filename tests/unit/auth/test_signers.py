@@ -680,6 +680,15 @@ class TestSigV4Presign(BasePresignTest):
         # Verify we encode spaces as '%20, and we don't use '+'.
         self.assertIn('Description=With%20Spaces', request.url)
 
+    def test_presign_with_empty_param_value(self):
+        request = AWSRequest()
+        request.method = 'POST'
+        # actual URL format for creating a multipart upload
+        request.url = 'https://s3.amazonaws.com/mybucket/mykey?uploads'
+        self.auth.add_auth(request)
+        # verify that uploads param is still in URL
+        self.assertIn('uploads', request.url)
+
     def test_s3_sigv4_presign(self):
         auth = botocore.auth.S3SigV4QueryAuth(
             self.credentials, self.service_name, self.region_name, expires=60)
@@ -714,6 +723,48 @@ class TestSigV4Presign(BasePresignTest):
         query_string = self.get_parsed_query_string(request)
         self.assertEqual(
             query_string['X-Amz-Security-Token'], 'security-token')
+
+    def test_presign_where_body_is_json_bytes(self):
+        request = AWSRequest()
+        request.method = 'GET'
+        request.url = 'https://myservice.us-east-1.amazonaws.com/'
+        request.data = b'{"Param": "value"}'
+        self.auth.add_auth(request)
+        query_string = self.get_parsed_query_string(request)
+        expected_query_string = {
+            'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
+            'X-Amz-Credential': (
+                'access_key/20140101/myregion/myservice/aws4_request'),
+            'X-Amz-Expires': '60',
+            'X-Amz-Date': '20140101T000000Z',
+            'X-Amz-Signature': (
+                '8e1d372d168d532313ce6df8f64a7dc51d'
+                'e6f312a9cfba6e5b345d8a771e839c'),
+            'X-Amz-SignedHeaders': 'host',
+            'Param': 'value'
+        }
+        self.assertEqual(query_string, expected_query_string)
+
+    def test_presign_where_body_is_json_string(self):
+        request = AWSRequest()
+        request.method = 'GET'
+        request.url = 'https://myservice.us-east-1.amazonaws.com/'
+        request.data = '{"Param": "value"}'
+        self.auth.add_auth(request)
+        query_string = self.get_parsed_query_string(request)
+        expected_query_string = {
+            'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
+            'X-Amz-Credential': (
+                'access_key/20140101/myregion/myservice/aws4_request'),
+            'X-Amz-Expires': '60',
+            'X-Amz-Date': '20140101T000000Z',
+            'X-Amz-Signature': (
+                '8e1d372d168d532313ce6df8f64a7dc51d'
+                'e6f312a9cfba6e5b345d8a771e839c'),
+            'X-Amz-SignedHeaders': 'host',
+            'Param': 'value'
+        }
+        self.assertEqual(query_string, expected_query_string)
 
 
 class BaseS3PresignPostTest(unittest.TestCase):
