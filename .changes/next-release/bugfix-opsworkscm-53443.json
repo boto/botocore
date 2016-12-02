@@ -1,0 +1,5 @@
+{
+  "category": "opsworks-cm",
+  "description": "Rename opsworkscm to opsworks-cm. Alias opsworkscm to opsworks-cm to preserve backwards compatibility.",
+  "type": "bugfix"
+}

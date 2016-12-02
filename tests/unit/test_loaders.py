@@ -183,6 +183,46 @@ class TestLoader(BaseEnvVar):
         self.assertIn('bar', loader.search_paths)
         self.assertIn('baz', loader.search_paths)
 
+    def test_load_service_model_uses_renames(self):
+        service_model = {'foo': 'bar'}
+        file_loader = mock.Mock()
+        file_loader.load_file.return_value = service_model
+        loader = Loader(file_loader=file_loader, include_default_extras=False)
+        loader.list_available_services = mock.Mock(
+            return_value=['opsworks-cm'])
+        loader.determine_latest_version = mock.Mock(return_value='2015-03-01')
+
+        # Both opsworkscm and opsworks-cm should work because the service
+        # was renamed.
+        response = loader.load_service_model('opsworkscm', 'service-2')
+        self.assertEqual(response, service_model)
+
+        response = loader.load_service_model('opsworks-cm', 'service-2')
+        self.assertEqual(response, service_model)
+
+    def test_determine_latest_version_uses_renames(self):
+        loader = Loader(file_loader=mock.Mock())
+        list_versions = mock.Mock()
+        latest_version = '2015-11-15'
+        list_versions.return_value = [latest_version]
+        loader.list_api_versions = list_versions
+
+        # Both opsworkscm and opsworks-cm should work because the service
+        # was renamed.
+        result = loader.determine_latest_version('opsworkscm', 'service-2')
+        self.assertEqual(result, latest_version)
+
+        result = loader.determine_latest_version('opsworks-cm', 'service-2')
+        self.assertEqual(result, latest_version)
+
+        calls = [call[0] for call in list_versions.call_args_list]
+        self.assertEqual(len(calls), 2)
+
+        # Only opsworks-cm should actually be named.
+        expected = ('opsworks-cm', 'service-2')
+        self.assertEqual(calls[0], expected)
+        self.assertEqual(calls[1], expected)
+
 
 class TestMergeExtras(BaseEnvVar):
     def setUp(self):

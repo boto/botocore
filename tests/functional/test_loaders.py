@@ -38,3 +38,24 @@ class TestLoaderAllowsDataPathOverride(unittest.TestCase):
             new_content = loader.load_data('_retry')
             # This should contain the content we just created.
             self.assertEqual(new_content, {"foo": "bar"})
+
+
+class TestRenameOpsworksCM(unittest.TestCase):
+    def setUp(self):
+        self.loader = loaders.Loader()
+
+    def test_load_service_model(self):
+        first = self.loader.load_service_model('opsworkscm', 'service-2')
+        second = self.loader.load_service_model('opsworks-cm', 'service-2')
+        self.assertEqual(first, second)
+
+    def test_load_api_version(self):
+        first = self.loader.list_api_versions('opsworkscm', 'service-2')
+        second = self.loader.list_api_versions('opsworks-cm', 'service-2')
+        self.assertEqual(first, second)
+
+    def test_determine_latest_api_version(self):
+        first = self.loader.determine_latest_version('opsworkscm', 'service-2')
+        second = self.loader.determine_latest_version(
+            'opsworks-cm', 'service-2')
+        self.assertEqual(first, second)

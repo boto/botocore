@@ -215,10 +215,12 @@ class Loader(object):
     CUSTOMER_DATA_PATH = os.path.join(os.path.expanduser('~'),
                                       '.aws', 'models')
     BUILTIN_EXTRAS_TYPES = ['sdk']
+    BUILTIN_SERVICE_RENAMES = {'opsworkscm': 'opsworks-cm'}
 
     def __init__(self, extra_search_paths=None, file_loader=None,
                  cache=None, include_default_search_paths=True,
-                 include_default_extras=True):
+                 include_default_extras=True,
+                 include_default_service_renames=True):
         self._cache = {}
         if file_loader is None:
             file_loader = self.FILE_LOADER_CLASS()
@@ -234,6 +236,10 @@ class Loader(object):
         self._extras_types = []
         if include_default_extras:
             self._extras_types.extend(self.BUILTIN_EXTRAS_TYPES)
+
+        self._service_renames = {}
+        if include_default_service_renames:
+            self._service_renames.update(self.BUILTIN_SERVICE_RENAMES)
 
         self._extras_processor = ExtrasProcessor()
 
@@ -286,6 +292,15 @@ class Loader(object):
                         break
         return sorted(services)
 
+    def _get_service_name(self, service_name):
+        """Get a service name with renames.
+
+        Some services may need to be renamed without breaking existing
+        customers. This will return the renamed service name if so, or the
+        given service name otherwise.
+        """
+        return self._service_renames.get(service_name, service_name)
+
     @instance_cache
     def determine_latest_version(self, service_name, type_name):
         """Find the latest API version available for a service.
@@ -307,7 +322,8 @@ class Loader(object):
             ``DataNotFoundError`` exception will be raised.
 
         """
-        return max(self.list_api_versions(service_name, type_name))
+        s_name = self._get_service_name(service_name)
+        return max(self.list_api_versions(s_name, type_name))
 
     @instance_cache
     def list_api_versions(self, service_name, type_name):
@@ -324,8 +340,9 @@ class Loader(object):
         :return: A list of API version strings in sorted order.
 
         """
+        s_name = self._get_service_name(service_name)
         known_api_versions = set()
-        for possible_path in self._potential_locations(service_name,
+        for possible_path in self._potential_locations(s_name,
                                                        must_exist=True,
                                                        is_dir=True):
             for dirname in os.listdir(possible_path):
@@ -336,7 +353,7 @@ class Loader(object):
                 if self.file_loader.exists(full_path):
                     known_api_versions.add(dirname)
         if not known_api_versions:
-            raise DataNotFoundError(data_path=service_name)
+            raise DataNotFoundError(data_path=s_name)
         return sorted(known_api_versions)
 
     @instance_cache
@@ -369,21 +386,21 @@ class Loader(object):
 
         :return: The loaded data, as a python type (e.g. dict, list, etc).
         """
+        s_name = self._get_service_name(service_name)
         # Wrapper around the load_data.  This will calculate the path
         # to call load_data with.
         known_services = self.list_available_services(type_name)
-        if service_name not in known_services:
+        if s_name not in known_services:
             raise UnknownServiceError(
-                service_name=service_name,
+                service_name=s_name,
                 known_service_names=', '.join(sorted(known_services)))
         if api_version is None:
-            api_version = self.determine_latest_version(
-                service_name, type_name)
-        full_path = os.path.join(service_name, api_version, type_name)
+            api_version = self.determine_latest_version(s_name, type_name)
+        full_path = os.path.join(s_name, api_version, type_name)
         model = self.load_data(full_path)
 
         # Load in all the extras
-        extras_data = self._find_extras(service_name, type_name, api_version)
+        extras_data = self._find_extras(s_name, type_name, api_version)
         self._extras_processor.process(model, extras_data)
 
         return model

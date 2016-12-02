@@ -1,0 +1,5 @@
+{
+  "type": "feature",
+  "category": "opsworks-cm",
+  "description": "Add waiters for opsworks-cm."
+}
