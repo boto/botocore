@@ -1,28 +1,28 @@
 {
   "pagination": {
     "DescribeComplianceByConfigRule": {
-      "input_token": "nextToken",
-      "output_token": "nextToken",
+      "input_token": "NextToken",
+      "output_token": "NextToken",
       "result_key": "ComplianceByConfigRules"
     },
     "DescribeComplianceByResource": {
-      "input_token": "nextToken",
-      "output_token": "nextToken",
+      "input_token": "NextToken",
+      "output_token": "NextToken",
       "result_key": "ComplianceByResources"
     },
     "DescribeConfigRules": {
-      "input_token": "nextToken",
-      "output_token": "nextToken",
+      "input_token": "NextToken",
+      "output_token": "NextToken",
       "result_key": "ConfigRules"
     },
     "GetComplianceDetailsByConfigRule": {
-      "input_token": "nextToken",
-      "output_token": "nextToken",
+      "input_token": "NextToken",
+      "output_token": "NextToken",
       "result_key": "EvaluationResults"
     },
     "GetComplianceDetailsByResource": {
-      "input_token": "nextToken",
-      "output_token": "nextToken",
+      "input_token": "NextToken",
+      "output_token": "NextToken",
       "result_key": "EvaluationResults"
     },
     "GetResourceConfigHistory": {
