@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.4.83
+======
+
+* feature:``pinpoint``: Update pinpoint client to latest version
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``sts``: Update sts client to latest version
+* feature:``config``: Update config client to latest version
+
+
 1.4.82
 ======
 
