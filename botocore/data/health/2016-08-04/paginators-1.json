@@ -1,0 +1,28 @@
+{
+  "pagination": {
+    "DescribeAffectedEntities": {
+      "limit_key": "maxResults",
+      "input_token": "nextToken",
+      "output_token": "nextPaginationToken",
+      "result_key": "entities"
+    },
+    "DescribeEventAggregates": {
+      "limit_key": "maxResults",
+      "input_token": "nextToken",
+      "output_token": "nextToken",
+      "result_key": "eventAggregates"
+    },
+    "DescribeEventTypes": {
+      "limit_key": "maxResults",
+      "input_token": "nextToken",
+      "output_token": "nextToken",
+      "result_key": "eventTypes"
+    },
+    "DescribeEvents": {
+      "limit_key": "maxResults",
+      "input_token": "nextToken",
+      "output_token": "nextToken",
+      "result_key": "events"
+    }
+  }
+}
