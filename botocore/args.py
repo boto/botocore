@@ -16,6 +16,7 @@ This module (and all function/classes within this module) should be
 considered internal, and *not* a public API.
 
 """
+import os
 import copy
 import logging
 
@@ -107,6 +108,8 @@ class ClientArgsCreator(object):
                 user_agent = client_config.user_agent
             if client_config.user_agent_extra is not None:
                 user_agent += ' %s' % client_config.user_agent_extra
+        if os.environ.get('AWS_EXECUTION_ENV') is not None:
+            user_agent += ' exec-env/%s' % os.environ.get('AWS_EXECUTION_ENV')
 
         # Create a new client config to be passed to the client based
         # on the final values. We do not want the user to be able
