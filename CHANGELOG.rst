@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.4.82
+======
+
+* bugfix:Exceptions: Allow parsing of json error responses with non-json bodies.
+* feature:opsworks-cm: Added waiter for Opsworks CM
+
+
 1.4.81
 ======
 

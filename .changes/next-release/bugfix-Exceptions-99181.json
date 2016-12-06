@@ -1,5 +1,0 @@
-{
-  "description": "Allow parsing of json error responses with non-json bodies.",
-  "type": "bugfix",
-  "category": "Exceptions"
-}
