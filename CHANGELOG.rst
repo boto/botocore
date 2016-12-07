@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.4.84
+======
+
+* feature:``config``: Update config client to latest version
+* feature:health: Add paginators for Health.
+* feature:``sqs``: Update sqs client to latest version
+* feature:``s3``: Update s3 client to latest version
+
+
 1.4.83
 ======
 
