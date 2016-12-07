@@ -472,6 +472,9 @@ class Session(object):
                                           platform.release())
         if self.user_agent_extra:
             base += ' %s' % self.user_agent_extra
+        if os.environ.get('AWS_EXECUTION_ENV') is not None:
+            base += ' exec-env/%s' % os.environ.get('AWS_EXECUTION_ENV')
+
         return base
 
     def get_data(self, data_path):

@@ -355,6 +355,13 @@ class TestSessionUserAgent(BaseSessionTest):
         self.assertTrue(
             self.session.user_agent().endswith('custom-thing/other'))
 
+    def test_execution_env_not_set(self):
+        self.assertFalse(self.session.user_agent().endswith('FooEnv'))
+
+    def test_execution_env_set(self):
+        self.environ['AWS_EXECUTION_ENV'] = 'FooEnv'
+        self.assertTrue(self.session.user_agent().endswith(' exec-env/FooEnv'))
+
 
 class TestConfigLoaderObject(BaseSessionTest):
     def test_config_loader_delegation(self):

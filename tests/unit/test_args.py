@@ -126,31 +126,3 @@ class TestCreateClientArgs(unittest.TestCase):
                 response_parser_factory=None, timeout=(60, 60), verify=True,
                 max_pool_connections=20
             )
-
-
-class TestExecutionEnvAppend(unittest.TestCase):
-    def setUp(self):
-        self.args_create = args.ClientArgsCreator(mock.Mock(),
-                                                  'user-agent prefix',
-                                                  None, None)
-
-    def test_execution_env_append(self):
-        with mock.patch('os.environ.get') as m:
-            m.return_value = 'FooEnv'
-            result = self.args_create.compute_client_args(mock.MagicMock(),
-                                                          None,
-                                                          mock.MagicMock(),
-                                                          'us-west-2',
-                                                          '', False, {})
-            self.assertNotEqual(re.match('.+ exec-env/FooEnv$',
-                                         result['user_agent']), None)
-
-    def test_execution_env_not_set(self):
-        with mock.patch('os.environ.get') as m:
-            m.return_value = None
-            result = self.args_create.compute_client_args(mock.MagicMock(),
-                                                          None,
-                                                          mock.MagicMock(),
-                                                          'us-west-2',
-                                                          '', False, {})
-            self.assertEqual(result['user_agent'], 'user-agent prefix')
