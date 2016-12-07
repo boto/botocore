@@ -763,6 +763,46 @@ class TestParseErrorResponses(unittest.TestCase):
             'HTTPHeaders': headers
         })
 
+    def test_error_response_with_string_body_rest_json(self):
+        parser = parsers.RestJSONParser()
+        response = b'HTTP content length exceeded 1049600 bytes.'
+        headers = {'content-length': '0', 'connection': 'keep-alive'}
+        output_shape = None
+        parsed = parser.parse({'body': response, 'headers': headers,
+                               'status_code': 413}, output_shape)
+
+        self.assertIn('Error', parsed)
+        self.assertEqual(parsed['Error'], {
+            'Code': '413',
+            'Message': response.decode('utf-8')
+        })
+        self.assertEqual(parsed['ResponseMetadata'], {
+            'HTTPStatusCode': 413,
+            'HTTPHeaders': headers
+        })
+
+    def test_error_response_with_xml_body_rest_json(self):
+        parser = parsers.RestJSONParser()
+        response = (
+            '<AccessDeniedException>'
+            '   <Message>Unable to determine service/operation name to be authorized</Message>'
+            '</AccessDeniedException>'
+        ).encode('utf-8')
+        headers = {'content-length': '0', 'connection': 'keep-alive'}
+        output_shape = None
+        parsed = parser.parse({'body': response, 'headers': headers,
+                               'status_code': 403}, output_shape)
+
+        self.assertIn('Error', parsed)
+        self.assertEqual(parsed['Error'], {
+            'Code': '403',
+            'Message': response.decode('utf-8')
+        })
+        self.assertEqual(parsed['ResponseMetadata'], {
+            'HTTPStatusCode': 403,
+            'HTTPHeaders': headers
+        })
+
     def test_s3_error_response(self):
         body = (
             '<Error>'

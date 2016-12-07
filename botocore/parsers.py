@@ -553,7 +553,10 @@ class BaseJSONParser(ResponseParser):
         # so we need to check for both.
         error['Error']['Message'] = body.get('message',
                                              body.get('Message', ''))
-        code = body.get('__type')
+        # if the message did not contain an error code
+        # include the response status code
+        response_code = response.get('status_code')
+        code = body.get('__type', response_code and str(response_code))
         if code is not None:
             # code has a couple forms as well:
             # * "com.aws.dynamodb.vAPI#ProvisionedThroughputExceededException"
@@ -573,8 +576,13 @@ class BaseJSONParser(ResponseParser):
         if not body_contents:
             return {}
         body = body_contents.decode(self.DEFAULT_ENCODING)
-        original_parsed = json.loads(body)
-        return original_parsed
+        try:
+            original_parsed = json.loads(body)
+            return original_parsed
+        except ValueError:
+            # if the body cannot be parsed, include
+            # the literal string as the message
+            return { 'message': body }
 
 
 class JSONParser(BaseJSONParser):

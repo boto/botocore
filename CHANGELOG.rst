@@ -2,6 +2,42 @@
 CHANGELOG
 =========
 
+1.4.83
+======
+
+* feature:``pinpoint``: Update pinpoint client to latest version
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``sts``: Update sts client to latest version
+* feature:``config``: Update config client to latest version
+
+
+1.4.82
+======
+
+* bugfix:Exceptions: Allow parsing of json error responses with non-json bodies.
+* feature:opsworks-cm: Added waiter for Opsworks CM
+
+
+1.4.81
+======
+
+* feature:parameter: Automatically inject an idempotency token into parameters marked with the idempotencyToken trait
+* feature:``appstream``: Update appstream client to latest version
+* feature:``directconnect``: Update directconnect client to latest version
+* feature:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* feature:``shield``: Update shield client to latest version
+* feature:``opsworkscm``: Update opsworkscm client to latest version
+* feature:``lambda``: Update lambda client to latest version
+* feature:``codebuild``: Update codebuild client to latest version
+* feature:``xray``: Update xray client to latest version
+* feature:``stepfunctions``: Update stepfunctions client to latest version
+* feature:``ssm``: Update ssm client to latest version
+* feature:``health``: Update health client to latest version
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``apigateway``: Update apigateway client to latest version
+* feature:``pinpoint``: Update pinpoint client to latest version
+
+
 1.4.80
 ======
 
