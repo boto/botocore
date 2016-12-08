@@ -135,9 +135,11 @@ else:
         return inspect.getargspec(func)[2]
 
     def ensure_text_type(s, encoding='utf-8', errors='strict'):
-        if isinstance(s, basestring):
+        if isinstance(s, six.text_type):
             return s
-        return six.text_type(s)
+        if isinstance(s, six.binary_type):
+            return s.decode(encoding, errors)
+        raise ValueError("Expected str or unicode, received %s." % type(s))
 
     def ensure_unicode(s, encoding='utf-8', errors='strict'):
         if isinstance(s, six.text_type):
