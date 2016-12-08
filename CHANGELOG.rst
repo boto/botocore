@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.4.85
+======
+
+* feature:cloudfront: Add lambda function associations to cache behaviors.
+* feature:rds: Add cluster create data to DBCluster APIs.
+* feature:waf-regional: With this new feature, customers can use AWS WAF directly on Application Load Balancers in a VPC within available regions to protect their websites and web services from malicious attacks such as SQL injection, Cross Site Scripting, bad bots, etc.
+
+
 1.4.84
 ======
 
