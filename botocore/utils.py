@@ -331,7 +331,10 @@ def parse_timestamp(value):
         except (TypeError, ValueError):
             pass
     try:
-        return dateutil.parser.parse(value)
+        # In certain cases, a timestamp marked with GMT can be parsed into a
+        # different time zone, so here we provide a context which will
+        # enforce that GMT == UTC.
+        return dateutil.parser.parse(value, tzinfos={'GMT': tzutc()})
     except (TypeError, ValueError) as e:
         raise ValueError('Invalid timestamp "%s": %s' % (value, e))
 
@@ -560,6 +563,8 @@ class ArgumentGenerator(object):
                 return 0.0
             elif shape.type_name == 'boolean':
                 return True
+            elif shape.type_name == 'timestamp':
+                return datetime.datetime(1970, 1, 1, 0, 0, 0)
         finally:
             stack.pop()
 
@@ -575,8 +580,11 @@ class ArgumentGenerator(object):
     def _generate_type_list(self, shape, stack):
         # For list elements we've arbitrarily decided to
         # return two elements for the skeleton list.
+        name = ''
+        if self._use_member_names:
+            name = shape.member.name
         return [
-            self._generate_skeleton(shape.member, stack),
+            self._generate_skeleton(shape.member, stack, name),
         ]
 
     def _generate_type_map(self, shape, stack):
@@ -818,6 +826,24 @@ def _get_new_endpoint(original_endpoint, new_endpoint, use_new_scheme=True):
     logger.debug('Updating URI from %s to %s' % (
         original_endpoint, final_endpoint))
     return final_endpoint
+
+
+def deep_merge(base, extra):
+    """Deeply two dictionaries, overriding existing keys in the base.
+
+    :param base: The base dictionary which will be merged into.
+    :param extra: The dictionary to merge into the base. Keys from this
+        dictionary will take precedence.
+    """
+    for key in extra:
+        # If the key represents a dict on both given dicts, merge the sub-dicts
+        if key in base and isinstance(base[key], dict)\
+                and isinstance(extra[key], dict):
+            deep_merge(base[key], extra[key])
+            continue
+
+        # Otherwise, set the key on the base to be the value of the extra.
+        base[key] = extra[key]
 
 
 class S3RegionRedirector(object):

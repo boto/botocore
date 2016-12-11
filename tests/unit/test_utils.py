@@ -47,6 +47,7 @@ from botocore.utils import merge_dicts
 from botocore.utils import get_service_module_name
 from botocore.utils import percent_encode_sequence
 from botocore.utils import switch_host_s3_accelerate
+from botocore.utils import deep_merge
 from botocore.utils import S3RegionRedirector
 from botocore.utils import ContainerMetadataFetcher
 from botocore.model import DenormalizedStructureBuilder
@@ -123,6 +124,12 @@ class TestTransformName(unittest.TestCase):
 
     def test_special_case_ends_with_s(self):
         self.assertEqual(xform_name('GatewayARNs', '-'), 'gateway-arns')
+
+    def test_partial_rename(self):
+        transformed = xform_name('IPV6', '-')
+        self.assertEqual(transformed, 'ipv6')
+        transformed = xform_name('IPV6', '_')
+        self.assertEqual(transformed, 'ipv6')
 
 
 class TestValidateJMESPathForSet(unittest.TestCase):
@@ -248,6 +255,18 @@ class TestParseTimestamps(unittest.TestCase):
             parse_timestamp('Wed, 02 Oct 2002 13:00:00 GMT'),
             datetime.datetime(2002, 10, 2, 13, 0, tzinfo=tzutc()))
 
+    def test_parse_gmt_in_uk_time(self):
+        # In the UK the time switches from GMT to BST and back as part of
+        # their daylight savings time. time.tzname will therefore report
+        # both time zones. dateutil sees that the time zone is a local time
+        # zone and so parses it as local time, but it ends up being BST
+        # instead of GMT. To remedy this issue we can provide a time zone
+        # context which will enforce GMT == UTC.
+        with mock.patch('time.tzname', ('GMT', 'BST')):
+            self.assertEqual(
+                parse_timestamp('Wed, 02 Oct 2002 13:00:00 GMT'),
+                datetime.datetime(2002, 10, 2, 13, 0, tzinfo=tzutc()))
+
     def test_parse_invalid_timestamp(self):
         with self.assertRaises(ValueError):
             parse_timestamp('invalid date')
@@ -358,12 +377,14 @@ class TestArgumentGenerator(unittest.TestCase):
                 'B': {'type': 'integer'},
                 'C': {'type': 'float'},
                 'D': {'type': 'boolean'},
+                'E': {'type': 'timestamp'}
             },
             generated_skeleton={
                 'A': '',
                 'B': 0,
                 'C': 0.0,
                 'D': True,
+                'E': datetime.datetime(1970, 1, 1, 0, 0, 0)
             }
         )
 
@@ -383,6 +404,33 @@ class TestArgumentGenerator(unittest.TestCase):
                 'D': True,
             }
         )
+
+    def test_will_use_member_names_for_string_values_of_list(self):
+        self.arg_generator = ArgumentGenerator(use_member_names=True)
+        # We're not using assert_skeleton_from_model_is
+        # because we can't really control the name of strings shapes
+        # being used in the DenormalizedStructureBuilder. We can only
+        # control the name of structures and list shapes.
+        shape_map = ShapeResolver({
+            'InputShape': {
+                'type': 'structure',
+                'members': {
+                    'StringList': {'shape': 'StringList'},
+                }
+            },
+            'StringList': {
+                'type': 'list',
+                'member': {'shape': 'StringType'},
+            },
+            'StringType': {
+                'type': 'string',
+            }
+        })
+        shape = shape_map.get_shape_by_name('InputShape')
+        actual = self.arg_generator.generate_skeleton(shape)
+
+        expected = {'StringList': ['StringType']}
+        self.assertEqual(actual, expected)
 
     def test_generate_nested_structure(self):
         self.assert_skeleton_from_model_is(
@@ -1014,6 +1062,98 @@ class TestSwitchHostS3Accelerate(unittest.TestCase):
         self.assertEqual(
             self.request.url,
             'https://s3-accelerate.dualstack.amazonaws.com/foo/key.txt')
+
+
+class TestDeepMerge(unittest.TestCase):
+    def test_simple_merge(self):
+        a = {'key': 'value'}
+        b = {'otherkey': 'othervalue'}
+        deep_merge(a, b)
+
+        expected = {'key': 'value', 'otherkey': 'othervalue'}
+        self.assertEqual(a, expected)
+
+    def test_merge_list(self):
+        # Lists are treated as opaque data and so no effort should be made to
+        # combine them.
+        a = {'key': ['original']}
+        b = {'key': ['new']}
+        deep_merge(a, b)
+        self.assertEqual(a, {'key': ['new']})
+
+    def test_merge_number(self):
+        # The value from b is always taken
+        a = {'key': 10}
+        b = {'key': 45}
+        deep_merge(a, b)
+        self.assertEqual(a, {'key': 45})
+
+        a = {'key': 45}
+        b = {'key': 10}
+        deep_merge(a, b)
+        self.assertEqual(a, {'key': 10})
+
+    def test_merge_boolean(self):
+        # The value from b is always taken
+        a = {'key': False}
+        b = {'key': True}
+        deep_merge(a, b)
+        self.assertEqual(a, {'key': True})
+
+        a = {'key': True}
+        b = {'key': False}
+        deep_merge(a, b)
+        self.assertEqual(a, {'key': False})
+
+    def test_merge_string(self):
+        a = {'key': 'value'}
+        b = {'key': 'othervalue'}
+        deep_merge(a, b)
+        self.assertEqual(a, {'key': 'othervalue'})
+
+    def test_merge_overrides_value(self):
+        # The value from b is always taken, even when it's a different type
+        a = {'key': 'original'}
+        b = {'key': {'newkey': 'newvalue'}}
+        deep_merge(a, b)
+        self.assertEqual(a, {'key': {'newkey': 'newvalue'}})
+
+        a = {'key': {'anotherkey': 'value'}}
+        b = {'key': 'newvalue'}
+        deep_merge(a, b)
+        self.assertEqual(a, {'key': 'newvalue'})
+
+    def test_deep_merge(self):
+        a = {
+            'first': {
+                'second': {
+                    'key': 'value',
+                    'otherkey': 'othervalue'
+                },
+                'key': 'value'
+            }
+        }
+        b = {
+            'first': {
+                'second': {
+                    'otherkey': 'newvalue',
+                    'yetanotherkey': 'yetanothervalue'
+                }
+            }
+        }
+        deep_merge(a, b)
+
+        expected = {
+            'first': {
+                'second': {
+                    'key': 'value',
+                    'otherkey': 'newvalue',
+                    'yetanotherkey': 'yetanothervalue'
+                },
+                'key': 'value'
+            }
+        }
+        self.assertEqual(a, expected)
 
 
 class TestS3RegionRedirector(unittest.TestCase):

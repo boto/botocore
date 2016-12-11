@@ -3,6 +3,7 @@ aws_access_key_id = foo
 aws_secret_access_key = bar
 s3 =
     signature_version = s3v4
+    addressing_style = path
 cloudwatch =
     signature_version = v4
 region=us-west-2

@@ -2,6 +2,148 @@
 CHANGELOG
 =========
 
+1.4.85
+======
+
+* feature:cloudfront: Add lambda function associations to cache behaviors.
+* feature:rds: Add cluster create data to DBCluster APIs.
+* feature:waf-regional: With this new feature, customers can use AWS WAF directly on Application Load Balancers in a VPC within available regions to protect their websites and web services from malicious attacks such as SQL injection, Cross Site Scripting, bad bots, etc.
+
+
+1.4.84
+======
+
+* feature:``config``: Update config client to latest version
+* feature:health: Add paginators for Health.
+* feature:``sqs``: Update sqs client to latest version
+* feature:``s3``: Update s3 client to latest version
+
+
+1.4.83
+======
+
+* feature:``pinpoint``: Update pinpoint client to latest version
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``sts``: Update sts client to latest version
+* feature:``config``: Update config client to latest version
+
+
+1.4.82
+======
+
+* bugfix:Exceptions: Allow parsing of json error responses with non-json bodies.
+* feature:opsworks-cm: Added waiter for Opsworks CM
+
+
+1.4.81
+======
+
+* feature:parameter: Automatically inject an idempotency token into parameters marked with the idempotencyToken trait
+* feature:``appstream``: Update appstream client to latest version
+* feature:``directconnect``: Update directconnect client to latest version
+* feature:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* feature:``shield``: Update shield client to latest version
+* feature:``opsworkscm``: Update opsworkscm client to latest version
+* feature:``lambda``: Update lambda client to latest version
+* feature:``codebuild``: Update codebuild client to latest version
+* feature:``xray``: Update xray client to latest version
+* feature:``stepfunctions``: Update stepfunctions client to latest version
+* feature:``ssm``: Update ssm client to latest version
+* feature:``health``: Update health client to latest version
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``apigateway``: Update apigateway client to latest version
+* feature:``pinpoint``: Update pinpoint client to latest version
+
+
+1.4.80
+======
+
+* feature:``lightsail``: Update lightsail client to latest version
+* feature:``polly``: Update polly client to latest version
+* feature:``snowball``: Update snowball client to latest version
+* feature:``rekognition``: Update rekognition client to latest version
+
+
+1.4.79
+======
+
+* bugfix:s3: fixes `#1059 <https://github.com/boto/botocore/issues/1059>`__ (presigned s3v4 URL bug related to blank query parameters being filtered incorrectly)
+* feature:``s3``: Update s3 client to latest version
+* bugfix:Presigner: Support presigning rest-json services.
+
+
+1.4.78
+======
+
+* feature:``s3``: Update s3 client to latest version
+* feature:``glacier``: Update glacier client to latest version
+* feature:``cloudformation``: Update cloudformation client to latest version
+* feature:``route53``: Update route53 client to latest version
+
+
+1.4.77
+======
+
+* feature:``cloudtrail``: Update cloudtrail client to latest version
+* feature:``ecs``: Update ecs client to latest version
+
+
+1.4.76
+======
+
+* feature:``application-autoscaling``: Update application-autoscaling client to latest version
+* feature:``elastictranscoder``: Update elastictranscoder client to latest version
+* feature:``lambda``: Update lambda client to latest version
+* feature:``emr``: Update emr client to latest version
+* feature:``gamelift``: Update gamelift client to latest version
+
+
+1.4.75
+======
+
+* feature:Loader: Support loading json extra files.
+* feature:``meteringmarketplace``: Update meteringmarketplace client to latest version
+* feature:``cloudwatch``: Update cloudwatch client to latest version
+* feature:``apigateway``: Update apigateway client to latest version
+* feature:``sqs``: Update sqs client to latest version
+
+
+1.4.74
+======
+
+* feature:``route53``: Update route53 client to latest version
+* feature:``servicecatalog``: Update servicecatalog client to latest version
+
+
+1.4.73
+======
+
+* feature:``kinesis``: Update kinesis client to latest version
+* feature:``ds``: Update ds client to latest version
+* feature:``elasticache``: Update elasticache client to latest version
+
+
+1.4.72
+======
+
+* feature:``cognito-idp``: Update cognito-idp client to latest version
+* feature:Paginator: Add paginators for AWS WAF
+
+
+1.4.71
+======
+
+* bugfix:Parsers: ResponseMetadata will now always be populated, provided the response was able to be parsed into a dict.
+* feature:``cloudformation``: Update cloudformation client to latest version
+* feature:``logs``: Update logs client to latest version
+
+
+1.4.70
+======
+
+* feature:``directconnect``: Update directconnect client to latest version
+
+
 1.4.69
 ======
 

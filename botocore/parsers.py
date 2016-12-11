@@ -209,12 +209,14 @@ class ResponseParser(object):
                 parsed = self._do_error_parse(response, shape)
         else:
             parsed = self._do_parse(response, shape)
-        # Inject HTTPStatusCode key in the response metadata if the
-        # response metadata exists.
-        if isinstance(parsed, dict) and 'ResponseMetadata' in parsed:
-            parsed['ResponseMetadata']['HTTPStatusCode'] = (
-                response['status_code'])
-            parsed['ResponseMetadata']['HTTPHeaders'] = dict(response['headers'])
+
+        # Add ResponseMetadata if it doesn't exist and inject the HTTP
+        # status code and headers from the response.
+        if isinstance(parsed, dict):
+            response_metadata = parsed.get('ResponseMetadata', {})
+            response_metadata['HTTPStatusCode'] = response['status_code']
+            response_metadata['HTTPHeaders'] = dict(response['headers'])
+            parsed['ResponseMetadata'] = response_metadata
         return parsed
 
     def _is_generic_error_response(self, response):
@@ -551,7 +553,10 @@ class BaseJSONParser(ResponseParser):
         # so we need to check for both.
         error['Error']['Message'] = body.get('message',
                                              body.get('Message', ''))
-        code = body.get('__type')
+        # if the message did not contain an error code
+        # include the response status code
+        response_code = response.get('status_code')
+        code = body.get('__type', response_code and str(response_code))
         if code is not None:
             # code has a couple forms as well:
             # * "com.aws.dynamodb.vAPI#ProvisionedThroughputExceededException"
@@ -571,8 +576,13 @@ class BaseJSONParser(ResponseParser):
         if not body_contents:
             return {}
         body = body_contents.decode(self.DEFAULT_ENCODING)
-        original_parsed = json.loads(body)
-        return original_parsed
+        try:
+            original_parsed = json.loads(body)
+            return original_parsed
+        except ValueError:
+            # if the body cannot be parsed, include
+            # the literal string as the message
+            return { 'message': body }
 
 
 class JSONParser(BaseJSONParser):

@@ -62,6 +62,23 @@ class TestConfigLoader(BaseEnvVar):
         self.assertEqual(config['s3']['signature_version'], 's3v4')
         self.assertEqual(config['cloudwatch']['signature_version'], 'v4')
 
+    def test_nested_hierarchy_with_no_subsection_parsing(self):
+        filename = path('aws_config_nested')
+        raw_config = raw_config_parse(filename, False)['default']
+        self.assertEqual(raw_config['aws_access_key_id'], 'foo')
+        self.assertEqual(raw_config['region'], 'us-west-2')
+        # Specifying False for pase_subsections in raw_config_parse
+        # will make sure that indented sections such as singature_version
+        # will not be treated as another subsection but rather
+        # its literal value.
+        self.assertEqual(
+            raw_config['cloudwatch'], '\nsignature_version = v4')
+        self.assertEqual(
+            raw_config['s3'],
+            '\nsignature_version = s3v4'
+            '\naddressing_style = path'
+        )
+
     def test_nested_bad_config(self):
         filename = path('aws_config_nested_bad')
         with self.assertRaises(botocore.exceptions.ConfigParseError):
