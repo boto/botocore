@@ -14,7 +14,6 @@
 import botocore.config
 from tests import unittest
 import mock
-import re
 
 from botocore import args
 from botocore.config import Config
