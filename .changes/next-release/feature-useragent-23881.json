@@ -1,5 +1,0 @@
-{
-  "category": "user-agent", 
-  "type": "feature", 
-  "description": "Default user agent now includes the environment variable $AWS_EXECUTION_ENVIRONMENT"
-}

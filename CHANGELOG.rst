@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.4.87
+======
+
+* feature:``ssm``: Update ssm client to latest version
+* feature:user-agent: Default user agent now includes the environment variable $AWS_EXECUTION_ENVIRONMENT
+* bugfix:Python 3.6: Adds compatibility with the new Python 3.6 HTTPConnection.
+* bugfix:sigv4: Do not sign x-amzn-trace-id as it can be mutated along the way.
+* feature:``cognito-idp``: Update cognito-idp client to latest version
+
+
 1.4.86
 ======
 
