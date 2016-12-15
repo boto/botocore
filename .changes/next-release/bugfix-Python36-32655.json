@@ -1,5 +1,0 @@
-{
-  "type": "bugfix",
-  "category": "Python 3.6",
-  "description": "Adds compatibility with the new Python 3.6 HTTPConnection."
-}
