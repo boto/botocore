@@ -448,7 +448,7 @@ class Session(object):
         Return a string suitable for use as a User-Agent header.
         The string will be of the form:
 
-        <agent_name>/<agent_version> Python/<py_ver> <plat_name>/<plat_ver>
+        <agent_name>/<agent_version> Python/<py_ver> <plat_name>/<plat_ver> <exec_env>
 
         Where:
 
@@ -460,6 +460,7 @@ class Session(object):
          - py_ver is the version of the Python interpreter beng used.
          - plat_name is the name of the platform (e.g. Darwin)
          - plat_ver is the version of the platform
+         - exec_env is exec-env/$AWS_EXECUTION_ENV
 
         If ``user_agent_extra`` is not empty, then this value will be
         appended to the end of the user agent string.
@@ -470,8 +471,11 @@ class Session(object):
                                           platform.python_version(),
                                           platform.system(),
                                           platform.release())
+        if os.environ.get('AWS_EXECUTION_ENV') is not None:
+            base += ' exec-env/%s' % os.environ.get('AWS_EXECUTION_ENV')
         if self.user_agent_extra:
             base += ' %s' % self.user_agent_extra
+
         return base
 
     def get_data(self, data_path):

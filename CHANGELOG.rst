@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.4.86
+======
+
+* feature:``dms``: Update dms client to latest version
+* feature:``rds``: Update rds client to latest version
+* feature:``logs``: Update logs client to latest version
+* feature:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+* feature:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* feature:``sts``: Update sts client to latest version
+* feature:``batch``: Update batch client to latest version
+
+
 1.4.85
 ======
 

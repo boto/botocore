@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "sigv4",
+  "description": "Do not sign x-amzn-trace-id as it can be mutated along the way."
+}
