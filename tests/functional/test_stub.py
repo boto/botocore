@@ -17,8 +17,10 @@ import botocore
 import botocore.session
 import botocore.stub as stub
 from botocore.stub import Stubber
-from botocore.exceptions import StubResponseError, ClientError, \
-    StubAssertionError
+from botocore.exceptions import ClientError
+from botocore.exceptions import NoSuchBucketError
+from botocore.exceptions import StubResponseError
+from botocore.exceptions import StubAssertionError
 from botocore.exceptions import ParamValidationError
 import botocore.client
 import botocore.retryhandler
@@ -75,6 +77,16 @@ class TestStubber(unittest.TestCase):
         self.stubber.activate()
 
         with self.assertRaises(ClientError):
+            self.client.list_objects(Bucket='foo')
+
+    def test_client_error_response__no_such_bucket(self):
+        error_code = 'NoSuchBucket'
+        error_message = "An error message"
+        self.stubber.add_client_error(
+            'list_objects', error_code, error_message)
+        self.stubber.activate()
+
+        with self.assertRaises(NoSuchBucketError):
             self.client.list_objects(Bucket='foo')
 
     def test_can_add_expected_params_to_client_error(self):

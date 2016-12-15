@@ -17,6 +17,7 @@ from tests import unittest, random_chars
 
 import botocore.session
 from botocore.client import ClientError
+from botocore.client import NoSuchBucketError
 from botocore.compat import six
 from botocore.exceptions import EndpointConnectionError
 from six import StringIO
@@ -35,6 +36,10 @@ class TestBucketWithVersions(unittest.TestCase):
         for version in versions['Versions']:
             version_ids.append(version['VersionId'])
         return version_ids
+
+    def test_delete_non_existent_bucket(self):
+        with self.assertRaises(NoSuchBucketError):
+            self.client.delete_bucket(Bucket='name_of_no_existent_bucket')
 
     def test_create_versioned_bucket(self):
         # Verifies we can:
