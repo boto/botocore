@@ -116,9 +116,15 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
             method_description='This describes the foo method.',
             example_prefix='response = client.foo'
         )
+        cross_ref_link = (
+            'See also: `AWS API Documentation '
+            '<http://docs.aws.amazon.com/goto/WebAPI'
+            '/myservice-2014-01-01/SampleOperation>'
+        )
         self.assert_contains_lines_in_order([
             '.. py:method:: foo(**kwargs)',
             '  This describes the foo method.',
+            cross_ref_link,
             '  **Request Syntax**',
             '  ::',
             '    response = client.foo(',
