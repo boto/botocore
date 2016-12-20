@@ -18,6 +18,9 @@ from botocore.docs.example import ResponseExampleDocumenter
 from botocore.docs.example import RequestExampleDocumenter
 
 
+AWS_DOC_BASE = 'https://docs.aws.amazon.com/goto/WebAPI'
+
+
 def get_instance_public_methods(instance):
     """Retrieves an objects public methods
 
@@ -171,6 +174,15 @@ def document_model_driven_method(section, method_name, operation_model,
     # Add the description for the method.
     method_intro_section = section.add_new_section('method-intro')
     method_intro_section.include_doc_string(method_description)
+    service_uid = operation_model.service_model.metadata.get('uid')
+    if service_uid is not None:
+        method_intro_section.style.new_paragraph()
+        method_intro_section.write("See also: ")
+        link = '%s/%s/%s' % (AWS_DOC_BASE, service_uid,
+                             operation_model.name)
+        method_intro_section.style.external_link(title="AWS API Documentation",
+                                                 link=link)
+        method_intro_section.writeln('')
 
     # Add the example section.
     example_section = section.add_new_section('example')
