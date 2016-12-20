@@ -47,7 +47,7 @@ class BaseDocsTest(unittest.TestCase):
         self.events = HierarchicalEmitter()
         self.setup_client()
         self.doc_name = 'MyDoc'
-        self.doc_structure = DocumentStructure(self.doc_name)
+        self.doc_structure = DocumentStructure(self.doc_name, target='html')
 
     def tearDown(self):
         shutil.rmtree(self.root_dir)
@@ -90,6 +90,7 @@ class BaseDocsTest(unittest.TestCase):
                 'endpointPrefix': 'myservice',
                 'signatureVersion': 'v4',
                 'serviceFullName': 'AWS MyService',
+                'uid': 'myservice-2014-01-01',
                 'protocol': 'query'
             },
             'operations': {
