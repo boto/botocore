@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.4.88
+======
+
+* feature:``discovery``: Update discovery client to latest version
+* feature:``cognito-identity``: Update cognito-identity client to latest version
+* feature:``inspector``: Update inspector client to latest version
+* feature:``sqs``: Update sqs client to latest version
+* feature:``cloudformation``: Update cloudformation client to latest version
+
+
 1.4.87
 ======
 
