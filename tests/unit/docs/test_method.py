@@ -118,7 +118,7 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
         )
         cross_ref_link = (
             'See also: `AWS API Documentation '
-            '<http://docs.aws.amazon.com/goto/WebAPI'
+            '<https://docs.aws.amazon.com/goto/WebAPI'
             '/myservice-2014-01-01/SampleOperation>'
         )
         self.assert_contains_lines_in_order([

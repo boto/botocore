@@ -18,7 +18,7 @@ from botocore.docs.example import ResponseExampleDocumenter
 from botocore.docs.example import RequestExampleDocumenter
 
 
-AWS_DOC_BASE = 'http://docs.aws.amazon.com/goto/WebAPI'
+AWS_DOC_BASE = 'https://docs.aws.amazon.com/goto/WebAPI'
 
 
 def get_instance_public_methods(instance):
