@@ -188,6 +188,14 @@ class TestOperationModelFromService(unittest.TestCase):
         output_shape = operation.output_shape
         self.assertIsNone(output_shape)
 
+    def test_error_shapes(self):
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        # OperationName only has a NoSuchResourceException
+        self.assertEqual(len(operation.error_shapes), 1)
+        self.assertEqual(
+            operation.error_shapes[0].name, 'NoSuchResourceException')
+
 
 class TestOperationModelStreamingTypes(unittest.TestCase):
     def setUp(self):

@@ -109,7 +109,11 @@ class TestCreateClientArgs(unittest.TestCase):
         args_create = args.ClientArgsCreator(mock.Mock(), None, None, None)
         config = botocore.config.Config(max_pool_connections=20)
         service_model = mock.Mock()
-        service_model.metadata = {'protocol': 'query'}
+        service_model.metadata = {
+            'serviceFullName': 'MyService',
+            'protocol': 'query'
+        }
+        service_model.operation_names = []
         bridge = mock.Mock()
         bridge.resolve.return_value = {
             'region_name': 'us-west-2', 'signature_version': 'v4',

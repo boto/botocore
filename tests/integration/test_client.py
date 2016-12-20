@@ -148,21 +148,36 @@ class TestCreateClients(unittest.TestCase):
                 'cloudformation', region_name='invalid region name')
 
 
-class TestClientErrorMessages(unittest.TestCase):
+class TestClientErrors(unittest.TestCase):
+    def setUp(self):
+        self.session = botocore.session.get_session()
+
     def test_region_mentioned_in_invalid_region(self):
-        session = botocore.session.get_session()
-        client = session.create_client(
+        client = self.session.create_client(
             'cloudformation', region_name='us-east-999')
         with self.assertRaisesRegexp(EndpointConnectionError,
                                      'Could not connect to the endpoint URL'):
             client.list_stacks()
 
-    def test_client_error_factory(self):
-        session = botocore.session.get_session()
-        client = session.create_client('iam', region_name='us-east-1')
-        with self.assertRaisesRegexp(client.exceptions.NoSuchEntityException,
-                                     'The role with name NonexistentIAMRole cannot be found'):
+    def test_client_modeled_exception(self):
+        client = self.session.create_client(
+            'dynamodb', region_name='us-west-2')
+        with self.assertRaises(client.exceptions.ResourceNotFoundException):
+            client.describe_table(TableName="NonexistentTable")
+
+    def test_client_modeleded_exception_with_differing_code(self):
+        client = self.session.create_client('iam', region_name='us-west-2')
+        # The NoSuchEntityException should be rasied on NoSuchEntity error
+        # code.
+        with self.assertRaises(client.exceptions.NoSuchEntityException):
             client.get_role(RoleName="NonexistentIAMRole")
+
+    def test_raises_general_client_error_for_non_modeled_exception(self):
+        client = self.session.create_client('ec2', region_name='us-west-2')
+        try:
+            client.describe_regions(DryRun=True)
+        except client.exceptions.ClientError as e:
+            self.assertIs(e.__class__, ClientError)
 
 
 class TestClientMeta(unittest.TestCase):

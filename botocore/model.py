@@ -50,7 +50,7 @@ class Shape(object):
                         'payload', 'streaming', 'timestampFormat',
                         'xmlNamespace', 'resultWrapper', 'xmlAttribute']
     METADATA_ATTRS = ['required', 'min', 'max', 'sensitive', 'enum',
-                      'idempotencyToken']
+                      'idempotencyToken', 'error']
     MAP_TYPE = OrderedDict
 
     def __init__(self, shape_name, shape_model, shape_resolver=None):
@@ -419,7 +419,7 @@ class OperationModel(object):
                 if 'idempotencyToken' in shape.metadata and
                 shape.metadata['idempotencyToken']]
 
-    @CachedProperty        
+    @CachedProperty
     def error_shapes(self):
         shapes = self._operation_model.get("errors", [])
         return list(self._service_model.resolve_shape_ref(s) for s in shapes)
