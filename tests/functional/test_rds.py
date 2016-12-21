@@ -29,7 +29,11 @@ class TestRDSPresign(unittest.TestCase):
         }
         with mock.patch('botocore.endpoint.Session.send') as _send:
             _send.return_value = mock.Mock(
-                status_code=200, headers={}, content=b'{}')
+                status_code=200, headers={}, content=(
+                    b'<CopyDBSnapshotResponse>'
+                    b'<CopyDBSnapshotResult></CopyDBSnapshotResult>'
+                    b'</CopyDBSnapshotResponse>'
+                ))
             self.client.copy_db_snapshot(**params)
             sent_request = _send.call_args[0][0]
 
