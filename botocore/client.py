@@ -479,7 +479,7 @@ class BaseClient(object):
 
     def __init__(self, serializer, endpoint, response_parser,
                  event_emitter, request_signer, service_model, loader,
-                 client_config, partition, exceptions):
+                 client_config, partition, exceptions_factory):
         self._serializer = serializer
         self._endpoint = endpoint
         self._response_parser = response_parser
@@ -490,7 +490,8 @@ class BaseClient(object):
         self.meta = ClientMeta(event_emitter, self._client_config,
                                endpoint.host, service_model,
                                self._PY_TO_OP_NAME, partition)
-        self._exceptions = exceptions
+        self._exceptions_factory = exceptions_factory
+        self._exceptions = None
         self._register_handlers()
 
     def _register_handlers(self):
@@ -693,7 +694,13 @@ class BaseClient(object):
 
     @property
     def exceptions(self):
+        if self._exceptions is None:
+            self._exceptions = self._load_exceptions()
         return self._exceptions
+
+    def _load_exceptions(self):
+        return self._exceptions_factory.create_client_exceptions(
+            self._service_model)
 
 
 class ClientMeta(object):

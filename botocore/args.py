@@ -73,8 +73,7 @@ class ClientArgsCreator(object):
         serializer = botocore.serialize.create_serializer(
             protocol, parameter_validation)
         response_parser = botocore.parsers.create_parser(protocol)
-        exceptions = ClientExceptionsFactory().create_client_exceptions(
-            service_model)
+        exceptions_factory = ClientExceptionsFactory()
         return {
             'serializer': serializer,
             'endpoint': endpoint,
@@ -85,7 +84,7 @@ class ClientArgsCreator(object):
             'loader': self._loader,
             'client_config': new_config,
             'partition': partition,
-            'exceptions': exceptions
+            'exceptions_factory': exceptions_factory
         }
 
     def compute_client_args(self, service_model, client_config,
