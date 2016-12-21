@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.4.90
+======
+
+* feature:``rds``: Update rds client to latest version
+* feature:``ecr``: Update ecr client to latest version
+
+
 1.4.89
 ======
 
