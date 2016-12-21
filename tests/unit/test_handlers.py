@@ -130,12 +130,69 @@ class TestHandlers(BaseSessionTest):
         self.assertEqual(params['CopySource'],
                          '/foo/bar?versionId=123')
 
-    def test_presigned_url_already_present(self):
+    def test_presigned_url_already_present_ec2(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopySnapshot'
         params = {'body': {'PresignedUrl': 'https://foo'}}
-        handlers.copy_snapshot_encrypted(params, None)
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'ec2', 'us-east-1', 'ec2', 'v4', credentials, event_emitter)
+        handlers.inject_presigned_url_ec2(
+            params, request_signer, operation_model)
         self.assertEqual(params['body']['PresignedUrl'], 'https://foo')
 
-    def test_copy_snapshot_encrypted(self):
+    def test_presigned_url_with_source_region_ec2(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopySnapshot'
+        params = {
+            'body': {
+                'PresignedUrl': 'https://foo',
+                'SourceRegion': 'us-east-1'
+            }
+        }
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'ec2', 'us-east-1', 'ec2', 'v4', credentials, event_emitter)
+        handlers.inject_presigned_url_ec2(
+            params, request_signer, operation_model)
+        self.assertEqual(params['body']['PresignedUrl'], 'https://foo')
+        self.assertEqual(params['body']['SourceRegion'], 'us-east-1')
+
+    def test_presigned_url_already_present_rds(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopyDBSnapshot'
+        params = {'body': {'PreSignedUrl': 'https://foo'}}
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+        handlers.inject_presigned_url_rds(
+            params, request_signer, operation_model)
+        self.assertEqual(params['body']['PreSignedUrl'], 'https://foo')
+
+    def test_presigned_url_with_source_region_rds(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopyDBSnapshot'
+        params = {
+            'body': {
+                'PreSignedUrl': 'https://foo',
+                'SourceRegion': 'us-east-1'
+            }
+        }
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+        handlers.inject_presigned_url_rds(
+            params, request_signer, operation_model)
+        self.assertEqual(params['body']['PreSignedUrl'], 'https://foo')
+        self.assertNotIn('SourceRegion', params['body'])
+
+    def test_inject_presigned_url_ec2(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopySnapshot'
         credentials = Credentials('key', 'secret')
         event_emitter = HierarchicalEmitter()
         request_signer = RequestSigner(
@@ -148,21 +205,45 @@ class TestHandlers(BaseSessionTest):
         request_dict['headers'] = {}
         request_dict['context'] = {}
 
-        handlers.copy_snapshot_encrypted(request_dict, request_signer)
+        handlers.inject_presigned_url_ec2(
+            request_dict, request_signer, operation_model)
 
         self.assertIn('https://ec2.us-west-2.amazonaws.com?',
                       params['PresignedUrl'])
         self.assertIn('X-Amz-Signature',
                       params['PresignedUrl'])
+        self.assertIn('DestinationRegion', params['PresignedUrl'])
         # We should also populate the DestinationRegion with the
         # region_name of the endpoint object.
         self.assertEqual(params['DestinationRegion'], 'us-east-1')
+
+    def test_use_event_operation_name(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'FakeOperation'
+        request_signer = mock.Mock()
+        request_signer._region_name = 'us-east-1'
+        request_dict = {}
+        params = {'SourceRegion': 'us-west-2'}
+        request_dict['body'] = params
+        request_dict['url'] = 'https://myservice.us-east-1.amazonaws.com'
+        request_dict['method'] = 'POST'
+        request_dict['headers'] = {}
+        request_dict['context'] = {}
+
+        handlers.inject_presigned_url_ec2(
+            request_dict, request_signer, operation_model)
+
+        call_args = request_signer.generate_presigned_url.call_args
+        operation_name = call_args[1].get('operation_name')
+        self.assertEqual(operation_name, 'FakeOperation')
 
     def test_destination_region_always_changed(self):
         # If the user provides a destination region, we will still
         # override the DesinationRegion with the region_name from
         # the endpoint object.
         actual_region = 'us-west-1'
+        operation_model = mock.Mock()
+        operation_model.name = 'CopySnapshot'
 
         credentials = Credentials('key', 'secret')
         event_emitter = HierarchicalEmitter()
@@ -180,7 +261,8 @@ class TestHandlers(BaseSessionTest):
 
         # The user provides us-east-1, but we will override this to
         # endpoint.region_name, of 'us-west-1' in this case.
-        handlers.copy_snapshot_encrypted(request_dict, request_signer)
+        handlers.inject_presigned_url_ec2(
+            request_dict, request_signer, operation_model)
 
         self.assertIn('https://ec2.us-west-2.amazonaws.com?',
                       params['PresignedUrl'])
@@ -188,6 +270,142 @@ class TestHandlers(BaseSessionTest):
         # Always use the DestinationRegion from the endpoint, regardless of
         # whatever value the user provides.
         self.assertEqual(params['DestinationRegion'], actual_region)
+
+    def test_inject_presigned_url_rds(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopyDBSnapshot'
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+        request_dict = {}
+        params = {'SourceRegion': 'us-west-2'}
+        request_dict['body'] = params
+        request_dict['url'] = 'https://rds.us-east-1.amazonaws.com'
+        request_dict['method'] = 'POST'
+        request_dict['headers'] = {}
+        request_dict['context'] = {}
+
+        handlers.inject_presigned_url_rds(
+            request_dict, request_signer, operation_model)
+
+        self.assertIn('https://rds.us-west-2.amazonaws.com?',
+                      params['PreSignedUrl'])
+        self.assertIn('X-Amz-Signature',
+                      params['PreSignedUrl'])
+        self.assertIn('DestinationRegion', params['PreSignedUrl'])
+        # We should not populate the destination region for rds
+        self.assertNotIn('DestinationRegion', params)
+
+    def test_source_region_removed(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopyDBSnapshot'
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+        request_dict = {}
+        params = {'SourceRegion': 'us-west-2'}
+        request_dict['body'] = params
+        request_dict['url'] = 'https://rds.us-east-1.amazonaws.com'
+        request_dict['method'] = 'POST'
+        request_dict['headers'] = {}
+        request_dict['context'] = {}
+
+        handlers.inject_presigned_url_rds(
+            params=request_dict,
+            request_signer=request_signer,
+            model=operation_model
+        )
+
+        self.assertNotIn('SourceRegion', params)
+
+    def test_source_region_removed_when_presigned_url_provided_for_rds(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopyDBSnapshot'
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+        request_dict = {}
+        params = {'SourceRegion': 'us-west-2', 'PreSignedUrl': 'https://foo'}
+        request_dict['body'] = params
+        request_dict['url'] = 'https://rds.us-east-1.amazonaws.com'
+        request_dict['method'] = 'POST'
+        request_dict['headers'] = {}
+        request_dict['context'] = {}
+
+        handlers.inject_presigned_url_rds(
+            params=request_dict,
+            request_signer=request_signer,
+            model=operation_model
+        )
+
+        self.assertNotIn('SourceRegion', params)
+
+    def test_dest_region_removed(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopyDBSnapshot'
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+        request_dict = {}
+        params = {'SourceRegion': 'us-west-2'}
+        request_dict['body'] = params
+        request_dict['url'] = 'https://rds.us-east-1.amazonaws.com'
+        request_dict['method'] = 'POST'
+        request_dict['headers'] = {}
+        request_dict['context'] = {}
+
+        handlers.inject_presigned_url_rds(
+            params=request_dict,
+            request_signer=request_signer,
+            model=operation_model
+        )
+
+        self.assertNotIn('DestinationRegion', params)
+
+    def test_presigned_url_already_present_for_rds(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopyDBSnapshot'
+        params = {'body': {'PresignedUrl': 'https://foo'}}
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+        handlers.inject_presigned_url_rds(
+            params=params,
+            request_signer=request_signer,
+            model=operation_model
+        )
+        self.assertEqual(params['body']['PresignedUrl'], 'https://foo')
+
+    def test_presigned_url_casing_changed_for_rds(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopyDBSnapshot'
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+        request_dict = {}
+        params = {'SourceRegion': 'us-west-2'}
+        request_dict['body'] = params
+        request_dict['url'] = 'https://rds.us-east-1.amazonaws.com'
+        request_dict['method'] = 'POST'
+        request_dict['headers'] = {}
+        request_dict['context'] = {}
+
+        handlers.inject_presigned_url_rds(
+            params=request_dict,
+            request_signer=request_signer,
+            model=operation_model
+        )
+
+        self.assertNotIn('PresignedUrl', params)
+        self.assertIn('https://rds.us-west-2.amazonaws.com?',
+                      params['PreSignedUrl'])
+        self.assertIn('X-Amz-Signature', params['PreSignedUrl'])
 
     def test_500_status_code_set_for_200_response(self):
         http_response = mock.Mock()
