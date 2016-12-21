@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.4.89
+======
+
+* feature:``storagegateway``: Update storagegateway client to latest version
+* feature:``firehose``: Update firehose client to latest version
+* feature:``route53``: Update route53 client to latest version
+
+
 1.4.88
 ======
 
