@@ -1,0 +1,27 @@
+[
+  {
+    "category": "``iam``", 
+    "description": "Update iam client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``apigateway``", 
+    "description": "Update apigateway client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``ds``", 
+    "description": "Update ds client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``elasticbeanstalk``", 
+    "description": "Update elasticbeanstalk client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``kms``", 
+    "description": "Update kms client to latest version", 
+    "type": "feature"
+  }
+]
