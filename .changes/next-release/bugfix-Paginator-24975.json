@@ -1,0 +1,5 @@
+{
+  "category": "Paginator", 
+  "type": "bugfix", 
+  "description": "Fix a paginator bug involving optional tokens (`#1057 <https://github.com/boto/botocore/issues/1057>`__)"
+}
