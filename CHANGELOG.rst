@@ -2,6 +2,23 @@
 CHANGELOG
 =========
 
+1.4.91
+======
+
+* feature:``iam``: Update iam client to latest version
+* feature:``apigateway``: Update apigateway client to latest version
+* feature:``ds``: Update ds client to latest version
+* feature:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* feature:``kms``: Update kms client to latest version
+
+
+1.4.90
+======
+
+* feature:``rds``: Update rds client to latest version
+* feature:``ecr``: Update ecr client to latest version
+
+
 1.4.89
 ======
 
