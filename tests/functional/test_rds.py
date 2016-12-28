@@ -13,15 +13,13 @@
 import mock
 
 import botocore.session
-from tests import unittest
+from tests import BaseSessionTest
 
 
-class TestRDSPresign(unittest.TestCase):
-    def setUp(self):
-        self.session = botocore.session.get_session()
-        self.client = self.session.create_client('rds', 'us-west-2')
+class TestRDSPresign(BaseSessionTest):
 
     def test_inject_presigned_url(self):
+        client = self.session.create_client('rds', 'us-west-2')
         params = {
             'SourceDBSnapshotIdentifier': 'source-db',
             'TargetDBSnapshotIdentifier': 'target-db',
@@ -34,7 +32,7 @@ class TestRDSPresign(unittest.TestCase):
                     b'<CopyDBSnapshotResult></CopyDBSnapshotResult>'
                     b'</CopyDBSnapshotResponse>'
                 ))
-            self.client.copy_db_snapshot(**params)
+            client.copy_db_snapshot(**params)
             sent_request = _send.call_args[0][0]
 
         self.assertIn('PreSignedUrl', sent_request.body)
