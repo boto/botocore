@@ -29,8 +29,17 @@ _CREDENTIAL_ENV_VARS = [
 
 
 def setup_package():
+    # We're using a random uuid to ensure we're pointing
+    # AWS_CONFIG_FILE and other env vars at a filename that
+    # does not exist.
     random_file = str(uuid.uuid4())
     for varname in _CONFIG_FILE_ENV_VARS:
+        # The reason we're doing this is to ensure we don't automatically pick
+        # up any credentials a developer might have configured on their local
+        # machine.  Travis will not have any credentials available, so without
+        # this fixture setup, it's possible to have all the tests pass on your
+        # local machine (if you have credentials configured) but still fail on
+        # travis.
         os.environ[varname] = random_file
     for credvar in _CREDENTIAL_ENV_VARS:
         os.environ.pop(credvar, None)
