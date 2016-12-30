@@ -200,9 +200,10 @@ class PageIterator(object):
 
     def _inject_token_into_kwargs(self, op_kwargs, next_token):
         for name, token in next_token.items():
-            if token is None or token == 'None':
-                continue
-            op_kwargs[name] = token
+            if (token is not None) and (token != 'None'):
+                op_kwargs[name] = token
+            elif name in op_kwargs:
+                del op_kwargs[name]
 
     def _handle_first_request(self, parsed, primary_result_key,
                               starting_truncation):
