@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.4.92
+======
+
+* feature:``codedeploy``: Update codedeploy client to latest version
+* bugfix:Paginator: Fix a paginator bug involving optional tokens (`#1057 <https://github.com/boto/botocore/issues/1057>`__)
+* feature:``ecs``: Update ecs client to latest version
+
+
 1.4.91
 ======
 
