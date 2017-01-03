@@ -88,7 +88,8 @@ class TestConfigLoader(BaseEnvVar):
     def test_multi_file_load(self):
         filenames = [path('aws_config_other'),
                      path('aws_config'),
-                     path('aws_third_config')]
+                     path('aws_third_config'),
+                     path('aws_config_notfound')]
         loaded_config = multi_file_load_config(*filenames)
         config = loaded_config['profiles']['default']
         self.assertEqual(config['aws_access_key_id'], 'other_foo')
