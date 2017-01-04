@@ -38,7 +38,9 @@ class TestServiceModel(unittest.TestCase):
                          'endpointPrefix': 'endpoint-prefix'},
             'documentation': 'Documentation value',
             'operations': {},
-            'shapes': {}
+            'shapes': {
+                'StringShape': {'type': 'string'}
+            }
         }
         self.service_model = model.ServiceModel(self.model)
 
@@ -65,6 +67,9 @@ class TestServiceModel(unittest.TestCase):
     def test_documentation_exposed_as_property(self):
         self.assertEqual(self.service_model.documentation,
                          'Documentation value')
+
+    def test_shape_names(self):
+        self.assertEqual(self.service_model.shape_names, ['StringShape'])
 
 
 class TestOperationModelFromService(unittest.TestCase):

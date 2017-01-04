@@ -69,24 +69,19 @@ class ClientExceptionsFactory(object):
     def _create_client_exceptions(self, service_model):
         cls_props = {}
         code_to_exception = {}
-        for op_name in service_model.operation_names:
-            op_model = service_model.operation_model(op_name)
-            for shape in op_model.error_shapes:
+        for shape_name in service_model.shape_names:
+            shape = service_model.shape_for(shape_name)
+            if shape.metadata.get('exception', False):
                 exception_name = str(shape.name)
-                # An exception can be in multiple operations.
-                # So as an optimization, only create a new class and
-                # add it to the class properties if has not been included
-                # already.
-                if exception_name not in cls_props:
-                    exception_cls = type(exception_name, (ClientError,), {})
-                    code = shape.metadata.get("error", {}).get("code")
-                    cls_props[exception_name] = exception_cls
-                    if code:
-                        code_to_exception[code] = exception_cls
-                    else:
-                        # Use the exception name if there is no explicit code
-                        # modeled
-                        code_to_exception[exception_name] = exception_cls
+                exception_cls = type(exception_name, (ClientError,), {})
+                code = shape.metadata.get("error", {}).get("code")
+                cls_props[exception_name] = exception_cls
+                if code:
+                    code_to_exception[code] = exception_cls
+                else:
+                    # Use the exception name if there is no explicit code
+                    # modeled
+                    code_to_exception[exception_name] = exception_cls
         cls_name = str(get_service_module_name(service_model) + 'Exceptions')
         client_exceptions_cls = type(
             cls_name, (BaseClientExceptions,), cls_props)
