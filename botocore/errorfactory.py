@@ -17,7 +17,7 @@ from botocore.utils import get_service_module_name
 class BaseClientExceptions(object):
     ClientError = ClientError
 
-    def __init__(self, code_to_exception=None):
+    def __init__(self, code_to_exception):
         """Base class for exceptions object on a client
 
         :type code_to_exception: dict
@@ -26,8 +26,6 @@ class BaseClientExceptions(object):
             error code.
         """
         self._code_to_exception = code_to_exception
-        if code_to_exception is None:
-            self._code_to_exception = {}
 
     def from_code(self, error_code):
         """Retrieves the error class based on the error code
@@ -44,6 +42,15 @@ class BaseClientExceptions(object):
             modeled exceptions then return a generic ClientError.
         """
         return self._code_to_exception.get(error_code, self.ClientError)
+
+    def __getattr__(self, name):
+        exception_cls_names = [
+            exception_cls.__name__ for exception_cls
+            in self._code_to_exception.values()
+        ]
+        raise AttributeError(
+            '%r object has no attribute %r. Valid exceptions are: %s' % (
+                self, name, ', '.join(exception_cls_names)))
 
 
 class ClientExceptionsFactory(object):

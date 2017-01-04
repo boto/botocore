@@ -36,6 +36,13 @@ class TestBaseClientExceptions(unittest.TestCase):
         self.assertIs(
             self.exceptions.from_code('SomeUnknownErrorCode'), ClientError)
 
+    def test_gettattr_message(self):
+        exception_cls = type('MyException', (ClientError,), {})
+        self.code_to_exception['MyExceptionCode'] = exception_cls
+        with self.assertRaisesRegexp(
+                AttributeError, 'Valid exceptions are: MyException'):
+            self.exceptions.SomeUnmodeledError
+
 
 class TestClientExceptionsFactory(unittest.TestCase):
     def setUp(self):
