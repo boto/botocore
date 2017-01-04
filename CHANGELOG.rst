@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+1.4.93
+======
+
+* feature:``rds``: Update rds client to latest version
+* feature:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+* feature:``config``: Update config client to latest version
+* feature:``iam``: Update iam client to latest version
+* feature:``lambda``: Update lambda client to latest version
+* feature:``dynamodbstreams``: Update dynamodbstreams client to latest version
+* feature:``efs``: Update efs client to latest version
+* feature:``rekognition``: Update rekognition client to latest version
+
+
 1.4.92
 ======
 
