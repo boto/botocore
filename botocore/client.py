@@ -19,6 +19,7 @@ from botocore.awsrequest import prepare_request_dict
 from botocore.docs.docstring import ClientMethodDocstring
 from botocore.docs.docstring import PaginatorDocstring
 from botocore.exceptions import ClientError, DataNotFoundError
+from botocore.exceptions import NoSuchBucketError
 from botocore.exceptions import OperationNotPageableError
 from botocore.exceptions import UnknownSignatureVersionError
 from botocore.hooks import first_non_none_response
@@ -502,6 +503,14 @@ class BaseClient(object):
     def _service_model(self):
         return self.meta.service_model
 
+    @staticmethod
+    def raise_client_error(parsed_response, operation_name):
+        error_code = parsed_response['Error'].get('Code')
+        if error_code == 'NoSuchBucket':
+            raise NoSuchBucketError(parsed_response, operation_name)
+
+        raise ClientError(parsed_response, operation_name)
+
     def _make_api_call(self, operation_name, api_params):
         operation_model = self._service_model.operation_model(operation_name)
         request_context = {
@@ -534,7 +543,7 @@ class BaseClient(object):
         )
 
         if http.status_code >= 300:
-            raise ClientError(parsed_response, operation_name)
+            self.raise_client_error(parsed_response, operation_name)
         else:
             return parsed_response
 
