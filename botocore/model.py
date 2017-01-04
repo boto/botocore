@@ -50,7 +50,7 @@ class Shape(object):
                         'payload', 'streaming', 'timestampFormat',
                         'xmlNamespace', 'resultWrapper', 'xmlAttribute']
     METADATA_ATTRS = ['required', 'min', 'max', 'sensitive', 'enum',
-                      'idempotencyToken']
+                      'idempotencyToken', 'error', 'exception']
     MAP_TYPE = OrderedDict
 
     def __init__(self, shape_name, shape_model, shape_resolver=None):
@@ -243,6 +243,10 @@ class ServiceModel(object):
     def resolve_shape_ref(self, shape_ref):
         return self._shape_resolver.resolve_shape_ref(shape_ref)
 
+    @CachedProperty
+    def shape_names(self):
+        return list(self._service_description.get('shapes', {}))
+
     @instance_cache
     def operation_model(self, operation_name):
         try:
@@ -418,6 +422,11 @@ class OperationModel(object):
         return [name for (name, shape) in input_shape.members.items()
                 if 'idempotencyToken' in shape.metadata and
                 shape.metadata['idempotencyToken']]
+
+    @CachedProperty
+    def error_shapes(self):
+        shapes = self._operation_model.get("errors", [])
+        return list(self._service_model.resolve_shape_ref(s) for s in shapes)
 
     @CachedProperty
     def has_streaming_input(self):

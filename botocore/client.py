@@ -45,7 +45,7 @@ class ClientCreator(object):
     """Creates client objects for a service."""
     def __init__(self, loader, endpoint_resolver, user_agent, event_emitter,
                  retry_handler_factory, retry_config_translator,
-                 response_parser_factory=None):
+                 response_parser_factory=None, exceptions_factory=None):
         self._loader = loader
         self._endpoint_resolver = endpoint_resolver
         self._user_agent = user_agent
@@ -53,6 +53,7 @@ class ClientCreator(object):
         self._retry_handler_factory = retry_handler_factory
         self._retry_config_translator = retry_config_translator
         self._response_parser_factory = response_parser_factory
+        self._exceptions_factory = exceptions_factory
 
     def create_client(self, service_name, region_name, is_secure=True,
                       endpoint_url=None, verify=None,
@@ -216,7 +217,8 @@ class ClientCreator(object):
                          scoped_config, client_config, endpoint_bridge):
         args_creator = ClientArgsCreator(
             self._event_emitter, self._user_agent,
-            self._response_parser_factory, self._loader)
+            self._response_parser_factory, self._loader,
+            self._exceptions_factory)
         return args_creator.get_client_args(
             service_model, region_name, is_secure, endpoint_url,
             verify, credentials, scoped_config, client_config, endpoint_bridge)
@@ -479,7 +481,7 @@ class BaseClient(object):
 
     def __init__(self, serializer, endpoint, response_parser,
                  event_emitter, request_signer, service_model, loader,
-                 client_config, partition):
+                 client_config, partition, exceptions_factory):
         self._serializer = serializer
         self._endpoint = endpoint
         self._response_parser = response_parser
@@ -490,6 +492,8 @@ class BaseClient(object):
         self.meta = ClientMeta(event_emitter, self._client_config,
                                endpoint.host, service_model,
                                self._PY_TO_OP_NAME, partition)
+        self._exceptions_factory = exceptions_factory
+        self._exceptions = None
         self._register_handlers()
 
     def _register_handlers(self):
@@ -534,7 +538,9 @@ class BaseClient(object):
         )
 
         if http.status_code >= 300:
-            raise ClientError(parsed_response, operation_name)
+            error_code = parsed_response.get("Error", {}).get("Code")
+            error_class = self.exceptions.from_code(error_code)
+            raise error_class(parsed_response, operation_name)
         else:
             return parsed_response
 
@@ -687,6 +693,16 @@ class BaseClient(object):
         # Waiter configs is a dict, we just want the waiter names
         # which are the keys in the dict.
         return [xform_name(name) for name in model.waiter_names]
+
+    @property
+    def exceptions(self):
+        if self._exceptions is None:
+            self._exceptions = self._load_exceptions()
+        return self._exceptions
+
+    def _load_exceptions(self):
+        return self._exceptions_factory.create_client_exceptions(
+            self._service_model)
 
 
 class ClientMeta(object):
