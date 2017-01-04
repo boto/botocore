@@ -27,6 +27,7 @@ import botocore.credentials
 import botocore.client
 from botocore.exceptions import ConfigNotFound, ProfileNotFound
 from botocore.exceptions import UnknownServiceError, PartialCredentialsError
+from botocore.errorfactory import ClientExceptionsFactory
 from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.loaders import create_loader
@@ -155,6 +156,7 @@ class Session(object):
         if profile is not None:
             self._session_instance_vars['profile'] = profile
         self._client_config = None
+        self._exceptions_factory = ClientExceptionsFactory()
         self._components = ComponentLocator()
         self._register_components()
 
@@ -820,7 +822,8 @@ class Session(object):
         endpoint_resolver = self.get_component('endpoint_resolver')
         client_creator = botocore.client.ClientCreator(
             loader, endpoint_resolver, self.user_agent(), event_emitter,
-            retryhandler, translate, response_parser_factory)
+            retryhandler, translate, response_parser_factory,
+            self._exceptions_factory)
         client = client_creator.create_client(
             service_name=service_name, region_name=region_name,
             is_secure=use_ssl, endpoint_url=endpoint_url, verify=verify,

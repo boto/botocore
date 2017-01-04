@@ -47,6 +47,9 @@ class BaseClientExceptions(object):
 
 
 class ClientExceptionsFactory(object):
+    def __init__(self):
+        self._client_exceptions_cache = {}
+
     def create_client_exceptions(self, service_model):
         """Creates a ClientExceptions object for the particular service client
 
@@ -57,6 +60,13 @@ class ClientExceptionsFactory(object):
         :returns: The exceptions object of a client that can be used
             to grab the various different modeled exceptions.
         """
+        service_name = service_model.service_name
+        if service_name not in self._client_exceptions_cache:
+            client_exceptions = self._create_client_exceptions(service_model)
+            self._client_exceptions_cache[service_name] = client_exceptions
+        return self._client_exceptions_cache[service_name]
+
+    def _create_client_exceptions(self, service_model):
         cls_props = {}
         code_to_exception = {}
         for op_name in service_model.operation_names:

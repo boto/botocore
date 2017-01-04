@@ -45,7 +45,7 @@ class ClientCreator(object):
     """Creates client objects for a service."""
     def __init__(self, loader, endpoint_resolver, user_agent, event_emitter,
                  retry_handler_factory, retry_config_translator,
-                 response_parser_factory=None):
+                 response_parser_factory=None, exceptions_factory=None):
         self._loader = loader
         self._endpoint_resolver = endpoint_resolver
         self._user_agent = user_agent
@@ -53,6 +53,7 @@ class ClientCreator(object):
         self._retry_handler_factory = retry_handler_factory
         self._retry_config_translator = retry_config_translator
         self._response_parser_factory = response_parser_factory
+        self._exceptions_factory = exceptions_factory
 
     def create_client(self, service_name, region_name, is_secure=True,
                       endpoint_url=None, verify=None,
@@ -216,7 +217,8 @@ class ClientCreator(object):
                          scoped_config, client_config, endpoint_bridge):
         args_creator = ClientArgsCreator(
             self._event_emitter, self._user_agent,
-            self._response_parser_factory, self._loader)
+            self._response_parser_factory, self._loader,
+            self._exceptions_factory)
         return args_creator.get_client_args(
             service_model, region_name, is_secure, endpoint_url,
             verify, credentials, scoped_config, client_config, endpoint_bridge)

@@ -167,7 +167,7 @@ class TestClientErrors(unittest.TestCase):
 
     def test_client_modeleded_exception_with_differing_code(self):
         client = self.session.create_client('iam', region_name='us-west-2')
-        # The NoSuchEntityException should be rasied on NoSuchEntity error
+        # The NoSuchEntityException should be raised on NoSuchEntity error
         # code.
         with self.assertRaises(client.exceptions.NoSuchEntityException):
             client.get_role(RoleName="NonexistentIAMRole")
@@ -178,6 +178,14 @@ class TestClientErrors(unittest.TestCase):
             client.describe_regions(DryRun=True)
         except client.exceptions.ClientError as e:
             self.assertIs(e.__class__, ClientError)
+
+    def test_can_catch_client_exceptions_across_two_different_clients(self):
+        client = self.session.create_client(
+            'dynamodb', region_name='us-west-2')
+        client2 = self.session.create_client(
+            'dynamodb', region_name='us-west-2')
+        with self.assertRaises(client2.exceptions.ResourceNotFoundException):
+            client.describe_table(TableName="NonexistentTable")
 
 
 class TestClientMeta(unittest.TestCase):

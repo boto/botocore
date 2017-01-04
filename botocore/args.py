@@ -23,7 +23,6 @@ import botocore.serialize
 from botocore.signers import RequestSigner
 from botocore.config import Config
 from botocore.endpoint import EndpointCreator
-from botocore.errorfactory import ClientExceptionsFactory
 
 
 logger = logging.getLogger(__name__)
@@ -31,11 +30,12 @@ logger = logging.getLogger(__name__)
 
 class ClientArgsCreator(object):
     def __init__(self, event_emitter, user_agent, response_parser_factory,
-                 loader):
+                 loader, exceptions_factory):
         self._event_emitter = event_emitter
         self._user_agent = user_agent
         self._response_parser_factory = response_parser_factory
         self._loader = loader
+        self._exceptions_factory = exceptions_factory
 
     def get_client_args(self, service_model, region_name, is_secure,
                         endpoint_url, verify, credentials, scoped_config,
@@ -73,7 +73,6 @@ class ClientArgsCreator(object):
         serializer = botocore.serialize.create_serializer(
             protocol, parameter_validation)
         response_parser = botocore.parsers.create_parser(protocol)
-        exceptions_factory = ClientExceptionsFactory()
         return {
             'serializer': serializer,
             'endpoint': endpoint,
@@ -84,7 +83,7 @@ class ClientArgsCreator(object):
             'loader': self._loader,
             'client_config': new_config,
             'partition': partition,
-            'exceptions_factory': exceptions_factory
+            'exceptions_factory': self._exceptions_factory
         }
 
     def compute_client_args(self, service_model, client_config,
