@@ -156,7 +156,6 @@ class Session(object):
         if profile is not None:
             self._session_instance_vars['profile'] = profile
         self._client_config = None
-        self._exceptions_factory = ClientExceptionsFactory()
         self._components = ComponentLocator()
         self._register_components()
 
@@ -166,6 +165,7 @@ class Session(object):
         self._register_endpoint_resolver()
         self._register_event_emitter()
         self._register_response_parser_factory()
+        self._register_exceptions_factory()
 
     def _register_event_emitter(self):
         self._components.register_component('event_emitter', self._events)
@@ -191,6 +191,10 @@ class Session(object):
     def _register_response_parser_factory(self):
         self._components.register_component('response_parser_factory',
                                             ResponseParserFactory())
+
+    def _register_exceptions_factory(self):
+        self._components.register_component(
+            'exceptions_factory', ClientExceptionsFactory())
 
     def _register_builtin_handlers(self, events):
         for spec in handlers.BUILTIN_HANDLERS:
@@ -820,10 +824,11 @@ class Session(object):
         else:
             credentials = self.get_credentials()
         endpoint_resolver = self.get_component('endpoint_resolver')
+        exceptions_factory = self.get_component('exceptions_factory')
         client_creator = botocore.client.ClientCreator(
             loader, endpoint_resolver, self.user_agent(), event_emitter,
             retryhandler, translate, response_parser_factory,
-            self._exceptions_factory)
+            exceptions_factory)
         client = client_creator.create_client(
             service_name=service_name, region_name=region_name,
             is_secure=use_ssl, endpoint_url=endpoint_url, verify=verify,
