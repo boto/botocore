@@ -38,7 +38,9 @@ class TestServiceModel(unittest.TestCase):
                          'endpointPrefix': 'endpoint-prefix'},
             'documentation': 'Documentation value',
             'operations': {},
-            'shapes': {}
+            'shapes': {
+                'StringShape': {'type': 'string'}
+            }
         }
         self.service_model = model.ServiceModel(self.model)
 
@@ -65,6 +67,9 @@ class TestServiceModel(unittest.TestCase):
     def test_documentation_exposed_as_property(self):
         self.assertEqual(self.service_model.documentation,
                          'Documentation value')
+
+    def test_shape_names(self):
+        self.assertEqual(self.service_model.shape_names, ['StringShape'])
 
 
 class TestOperationModelFromService(unittest.TestCase):
@@ -187,6 +192,14 @@ class TestOperationModelFromService(unittest.TestCase):
         operation = service_model.operation_model('OperationName')
         output_shape = operation.output_shape
         self.assertIsNone(output_shape)
+
+    def test_error_shapes(self):
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        # OperationName only has a NoSuchResourceException
+        self.assertEqual(len(operation.error_shapes), 1)
+        self.assertEqual(
+            operation.error_shapes[0].name, 'NoSuchResourceException')
 
 
 class TestOperationModelStreamingTypes(unittest.TestCase):

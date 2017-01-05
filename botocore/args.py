@@ -30,11 +30,12 @@ logger = logging.getLogger(__name__)
 
 class ClientArgsCreator(object):
     def __init__(self, event_emitter, user_agent, response_parser_factory,
-                 loader):
+                 loader, exceptions_factory):
         self._event_emitter = event_emitter
         self._user_agent = user_agent
         self._response_parser_factory = response_parser_factory
         self._loader = loader
+        self._exceptions_factory = exceptions_factory
 
     def get_client_args(self, service_model, region_name, is_secure,
                         endpoint_url, verify, credentials, scoped_config,
@@ -81,7 +82,8 @@ class ClientArgsCreator(object):
             'service_model': service_model,
             'loader': self._loader,
             'client_config': new_config,
-            'partition': partition
+            'partition': partition,
+            'exceptions_factory': self._exceptions_factory
         }
 
     def compute_client_args(self, service_model, client_config,
