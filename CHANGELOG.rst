@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.5.0
+=====
+
+* feature:Exceptions: Add modeled exceptions on client via ``Client.exceptions`` property
+* feature:``dynamodb``: Update dynamodb client to latest version
+* feature:``config``: Update config client to latest version
+* feature:``cur``: Update cur client to latest version
+* feature:``elasticache``: Update elasticache client to latest version
+
+
 1.4.93
 ======
 
