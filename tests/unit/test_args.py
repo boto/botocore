@@ -21,7 +21,7 @@ from botocore.config import Config
 
 class TestCreateClientArgs(unittest.TestCase):
     def setUp(self):
-        self.args_create = args.ClientArgsCreator(None, None, None, None)
+        self.args_create = args.ClientArgsCreator(None, None, None, None, None)
 
     def test_compute_s3_configuration(self):
         scoped_config = {}
@@ -106,10 +106,15 @@ class TestCreateClientArgs(unittest.TestCase):
         )
 
     def test_max_pool_from_client_config_forwarded_to_endpoint_creator(self):
-        args_create = args.ClientArgsCreator(mock.Mock(), None, None, None)
+        args_create = args.ClientArgsCreator(
+            mock.Mock(), None, None, None, None)
         config = botocore.config.Config(max_pool_connections=20)
         service_model = mock.Mock()
-        service_model.metadata = {'protocol': 'query'}
+        service_model.metadata = {
+            'serviceFullName': 'MyService',
+            'protocol': 'query'
+        }
+        service_model.operation_names = []
         bridge = mock.Mock()
         bridge.resolve.return_value = {
             'region_name': 'us-west-2', 'signature_version': 'v4',
