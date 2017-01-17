@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.5.1
+=====
+
+* feature:``glacier``: Update glacier client to latest version
+* feature:``dynamodb``: Update dynamodb client to latest version
+* feature:``route53``: Update route53 client to latest version
+* feature:``polly``: Update polly client to latest version
+* feature:``rekognition``: Update rekognition client to latest version
+
+
 1.5.0
 =====
 
