@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.5.2
+=====
+
+* feature:``rds``: Update rds client to latest version
+
+
 1.5.1
 =====
 
