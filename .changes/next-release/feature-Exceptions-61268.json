@@ -1,5 +1,0 @@
-{
-  "category": "Exceptions",
-  "description": "Add modeled exceptions on client via ``Client.exceptions`` property",
-  "type": "feature"
-}

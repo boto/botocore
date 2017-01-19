@@ -1,0 +1,27 @@
+[
+  {
+    "category": "Exceptions", 
+    "description": "Add modeled exceptions on client via ``Client.exceptions`` property", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``dynamodb``", 
+    "description": "Update dynamodb client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``config``", 
+    "description": "Update config client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``cur``", 
+    "description": "Update cur client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``elasticache``", 
+    "description": "Update elasticache client to latest version", 
+    "type": "feature"
+  }
+]
