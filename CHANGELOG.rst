@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.5.4
+=====
+
+* feature:``health``: Update health client to latest version
+* feature:``acm``: Update acm client to latest version
+
+
 1.5.3
 =====
 
