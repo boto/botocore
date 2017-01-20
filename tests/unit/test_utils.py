@@ -1420,6 +1420,41 @@ class TestContainerMetadataFetcher(unittest.TestCase):
             http_responses.append(http_response)
         self.http.get.side_effect = http_responses
 
+    def assert_can_retrieve_metadata_from(self, full_uri):
+        response_body = {'foo': 'bar'}
+        self.set_http_responses_to(response_body)
+        fetcher = self.create_fetcher()
+        response = fetcher.retrieve_full_uri(full_uri)
+        self.assertEqual(response, response_body)
+        self.http.get.assert_called_with(
+            full_uri, headers={'Accept': 'application/json'},
+            timeout=fetcher.TIMEOUT_SECONDS,
+        )
+
+    def assert_host_is_not_allowed(self, full_uri):
+        response_body = {'foo': 'bar'}
+        self.set_http_responses_to(response_body)
+        fetcher = self.create_fetcher()
+        with self.assertRaisesRegexp(ValueError, 'Unsupported host'):
+            fetcher.retrieve_full_uri(full_uri)
+        self.assertFalse(self.http.get.called)
+
+    def test_can_specify_extra_headers_are_merged(self):
+        headers = {
+            # The 'Accept' header will override the
+            # default Accept header of application/json.
+            'Accept': 'application/not-json',
+            'X-Other-Header': 'foo',
+        }
+        self.set_http_responses_to({'foo': 'bar'})
+        fetcher = self.create_fetcher()
+        response = fetcher.retrieve_full_uri(
+            'http://localhost', headers)
+        self.http.get.assert_called_with(
+            'http://localhost', headers=headers,
+            timeout=fetcher.TIMEOUT_SECONDS,
+        )
+
     def test_can_retrieve_uri(self):
         json_body =  {
             "AccessKeyId" : "a",
@@ -1500,6 +1535,40 @@ class TestContainerMetadataFetcher(unittest.TestCase):
             fetcher.retrieve_uri('/foo?id=1')
         # Should have tried up to RETRY_ATTEMPTS.
         self.assertEqual(self.http.get.call_count, fetcher.RETRY_ATTEMPTS)
+
+    def test_can_retrieve_full_uri_with_fixed_ip(self):
+        self.assert_can_retrieve_metadata_from(
+            'http://%s/foo?id=1' % ContainerMetadataFetcher.IP_ADDRESS)
+
+    def test_localhost_http_is_allowed(self):
+        self.assert_can_retrieve_metadata_from('http://localhost/foo')
+
+    def test_localhost_with_port_http_is_allowed(self):
+        self.assert_can_retrieve_metadata_from('http://localhost:8000/foo')
+
+    def test_localhost_https_is_allowed(self):
+        self.assert_can_retrieve_metadata_from('https://localhost/foo')
+
+    def test_can_use_127_ip_addr(self):
+        self.assert_can_retrieve_metadata_from('https://127.0.0.1/foo')
+
+    def test_can_use_127_ip_addr_with_port(self):
+        self.assert_can_retrieve_metadata_from('https://127.0.0.1:8080/foo')
+
+    def test_link_local_http_is_not_allowed(self):
+        self.assert_host_is_not_allowed('http://169.254.0.1/foo')
+
+    def test_link_local_https_is_not_allowed(self):
+        self.assert_host_is_not_allowed('https://169.254.0.1/foo')
+
+    def test_non_link_local_nonallowed_url(self):
+        self.assert_host_is_not_allowed('http://169.1.2.3/foo')
+
+    def test_error_raised_on_nonallowed_url(self):
+        self.assert_host_is_not_allowed('http://somewhere.com/foo')
+
+    def test_external_host_not_allowed_if_https(self):
+        self.assert_host_is_not_allowed('https://somewhere.com/foo')
 
 
 if __name__ == '__main__':
