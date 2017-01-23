@@ -1,0 +1,13 @@
+{
+  "merge": {
+    "pagination": {
+      "ListParts": {
+        "non_aggregate_keys": [
+          "Initiator",
+          "Owner",
+          "StorageClass"
+        ]
+      }
+    }
+  }
+}

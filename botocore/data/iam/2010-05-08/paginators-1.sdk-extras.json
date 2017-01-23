@@ -1,0 +1,11 @@
+{
+  "merge": {
+    "pagination": {
+      "GetGroup": {
+        "non_aggregate_keys": [
+          "Group"
+        ]
+      }
+    }
+  }
+}
