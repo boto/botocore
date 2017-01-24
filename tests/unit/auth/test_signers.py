@@ -341,6 +341,10 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
     def test_blacklist_expect_headers(self):
         self._test_blacklist_header('expect', '100-continue')
 
+    def test_blacklist_trace_id(self):
+        self._test_blacklist_header('x-amzn-trace-id',
+                                    'Root=foo;Parent=bar;Sampleid=1')
+
     def test_blacklist_headers(self):
         self._test_blacklist_header('user-agent', 'botocore/1.4.11')
 

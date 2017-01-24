@@ -118,7 +118,7 @@ class AWSHTTPConnection(HTTPConnection):
             if line in (b'\r\n', b'\n', b''):
                 break
 
-    def _send_request(self, method, url, body, headers):
+    def _send_request(self, method, url, body, headers, *args, **kwargs):
         self._response_received = False
         if headers.get('Expect', b'') == b'100-continue':
             self._expect_header_set = True
@@ -126,7 +126,7 @@ class AWSHTTPConnection(HTTPConnection):
             self._expect_header_set = False
             self.response_class = self._original_response_cls
         rval = HTTPConnection._send_request(
-            self, method, url, body, headers)
+            self, method, url, body, headers, *args, **kwargs)
         self._expect_header_set = False
         return rval
 
@@ -143,7 +143,7 @@ class AWSHTTPConnection(HTTPConnection):
         msg = b"\r\n".join(bytes_buffer)
         return msg
 
-    def _send_output(self, message_body=None):
+    def _send_output(self, message_body=None, *args, **kwargs):
         self._buffer.extend((b"", b""))
         msg = self._convert_to_bytes(self._buffer)
         del self._buffer[:]
@@ -448,6 +448,7 @@ class AWSPreparedRequest(models.PreparedRequest):
                 # AWS Services so remove it if it is added.
                 if 'Transfer-Encoding' in self.headers:
                     self.headers.pop('Transfer-Encoding')
+
 
 HTTPSConnectionPool.ConnectionCls = AWSHTTPSConnection
 HTTPConnectionPool.ConnectionCls = AWSHTTPConnection

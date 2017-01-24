@@ -2,6 +2,156 @@
 CHANGELOG
 =========
 
+1.5.4
+=====
+
+* feature:``health``: Update health client to latest version
+* feature:``acm``: Update acm client to latest version
+
+
+1.5.3
+=====
+
+* feature:``ec2``: Update ec2 client to latest version
+
+
+1.5.2
+=====
+
+* feature:``rds``: Update rds client to latest version
+
+
+1.5.1
+=====
+
+* feature:``glacier``: Update glacier client to latest version
+* feature:``dynamodb``: Update dynamodb client to latest version
+* feature:``route53``: Update route53 client to latest version
+* feature:``polly``: Update polly client to latest version
+* feature:``rekognition``: Update rekognition client to latest version
+
+
+1.5.0
+=====
+
+* feature:Exceptions: Add modeled exceptions on client via ``Client.exceptions`` property
+* feature:``dynamodb``: Update dynamodb client to latest version
+* feature:``config``: Update config client to latest version
+* feature:``cur``: Update cur client to latest version
+* feature:``elasticache``: Update elasticache client to latest version
+
+
+1.4.93
+======
+
+* feature:``rds``: Update rds client to latest version
+* feature:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+* feature:``config``: Update config client to latest version
+* feature:``iam``: Update iam client to latest version
+* feature:``lambda``: Update lambda client to latest version
+* feature:``dynamodbstreams``: Update dynamodbstreams client to latest version
+* feature:``efs``: Update efs client to latest version
+* feature:``rekognition``: Update rekognition client to latest version
+
+
+1.4.92
+======
+
+* feature:``codedeploy``: Update codedeploy client to latest version
+* bugfix:Paginator: Fix a paginator bug involving optional tokens (`#1057 <https://github.com/boto/botocore/issues/1057>`__)
+* feature:``ecs``: Update ecs client to latest version
+
+
+1.4.91
+======
+
+* feature:``iam``: Update iam client to latest version
+* feature:``apigateway``: Update apigateway client to latest version
+* feature:``ds``: Update ds client to latest version
+* feature:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* feature:``kms``: Update kms client to latest version
+
+
+1.4.90
+======
+
+* feature:``rds``: Update rds client to latest version
+* feature:``ecr``: Update ecr client to latest version
+
+
+1.4.89
+======
+
+* feature:``storagegateway``: Update storagegateway client to latest version
+* feature:``firehose``: Update firehose client to latest version
+* feature:``route53``: Update route53 client to latest version
+
+
+1.4.88
+======
+
+* feature:``discovery``: Update discovery client to latest version
+* feature:``cognito-identity``: Update cognito-identity client to latest version
+* feature:``inspector``: Update inspector client to latest version
+* feature:``sqs``: Update sqs client to latest version
+* feature:``cloudformation``: Update cloudformation client to latest version
+
+
+1.4.87
+======
+
+* feature:``ssm``: Update ssm client to latest version
+* feature:user-agent: Default user agent now includes the environment variable $AWS_EXECUTION_ENVIRONMENT
+* bugfix:Python 3.6: Adds compatibility with the new Python 3.6 HTTPConnection.
+* bugfix:sigv4: Do not sign x-amzn-trace-id as it can be mutated along the way.
+* feature:``cognito-idp``: Update cognito-idp client to latest version
+
+
+1.4.86
+======
+
+* feature:``dms``: Update dms client to latest version
+* feature:``rds``: Update rds client to latest version
+* feature:``logs``: Update logs client to latest version
+* feature:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+* feature:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* feature:``sts``: Update sts client to latest version
+* feature:``batch``: Update batch client to latest version
+
+
+1.4.85
+======
+
+* feature:cloudfront: Add lambda function associations to cache behaviors.
+* feature:rds: Add cluster create data to DBCluster APIs.
+* feature:waf-regional: With this new feature, customers can use AWS WAF directly on Application Load Balancers in a VPC within available regions to protect their websites and web services from malicious attacks such as SQL injection, Cross Site Scripting, bad bots, etc.
+
+
+1.4.84
+======
+
+* feature:``config``: Update config client to latest version
+* feature:health: Add paginators for Health.
+* feature:``sqs``: Update sqs client to latest version
+* feature:``s3``: Update s3 client to latest version
+
+
+1.4.83
+======
+
+* feature:``pinpoint``: Update pinpoint client to latest version
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``sts``: Update sts client to latest version
+* feature:``config``: Update config client to latest version
+
+
+1.4.82
+======
+
+* bugfix:Exceptions: Allow parsing of json error responses with non-json bodies.
+* feature:opsworks-cm: Added waiter for Opsworks CM
+
+
 1.4.81
 ======
 
