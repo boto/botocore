@@ -6,17 +6,17 @@
       "limit_key": "MaxResults",
       "result_key": "ScalableTargets"
     },
-    "DescribeScalingActivities": {
-      "input_token": "NextToken",
-      "output_token": "NextToken",
-      "limit_key": "MaxResults",
-      "result_key": "ScalingActivities"
-    },
     "DescribeScalingPolicies": {
       "input_token": "NextToken",
       "output_token": "NextToken",
       "limit_key": "MaxResults",
       "result_key": "ScalingPolicies"
+    },
+    "DescribeScalingActivities": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "ScalingActivities"
     }
   }
 }

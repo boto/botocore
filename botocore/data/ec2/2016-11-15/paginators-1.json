@@ -2,61 +2,61 @@
   "pagination": {
     "DescribeInstanceStatus": {
       "input_token": "NextToken",
-      "output_token": "NextToken",
       "limit_key": "MaxResults",
+      "output_token": "NextToken",
       "result_key": "InstanceStatuses"
     },
     "DescribeInstances": {
       "input_token": "NextToken",
-      "output_token": "NextToken",
       "limit_key": "MaxResults",
+      "output_token": "NextToken",
       "result_key": "Reservations"
-    },
-    "DescribeReservedInstancesOfferings": {
-      "input_token": "NextToken",
-      "output_token": "NextToken",
-      "limit_key": "MaxResults",
-      "result_key": "ReservedInstancesOfferings"
     },
     "DescribeReservedInstancesModifications": {
       "input_token": "NextToken",
       "output_token": "NextToken",
       "result_key": "ReservedInstancesModifications"
     },
+    "DescribeReservedInstancesOfferings": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "ReservedInstancesOfferings"
+    },
     "DescribeSnapshots": {
       "input_token": "NextToken",
-      "output_token": "NextToken",
       "limit_key": "MaxResults",
+      "output_token": "NextToken",
       "result_key": "Snapshots"
     },
     "DescribeSpotFleetRequests": {
       "input_token": "NextToken",
-      "output_token": "NextToken",
       "limit_key": "MaxResults",
+      "output_token": "NextToken",
       "result_key": "SpotFleetRequestConfigs"
     },
     "DescribeSpotPriceHistory": {
       "input_token": "NextToken",
-      "output_token": "NextToken",
       "limit_key": "MaxResults",
+      "output_token": "NextToken",
       "result_key": "SpotPriceHistory"
     },
     "DescribeTags": {
       "input_token": "NextToken",
-      "output_token": "NextToken",
       "limit_key": "MaxResults",
+      "output_token": "NextToken",
       "result_key": "Tags"
     },
     "DescribeVolumeStatus": {
       "input_token": "NextToken",
-      "output_token": "NextToken",
       "limit_key": "MaxResults",
+      "output_token": "NextToken",
       "result_key": "VolumeStatuses"
     },
     "DescribeVolumes": {
       "input_token": "NextToken",
-      "output_token": "NextToken",
       "limit_key": "MaxResults",
+      "output_token": "NextToken",
       "result_key": "Volumes"
     }
   }
