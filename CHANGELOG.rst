@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.5.5
+=====
+
+* feature:``codebuild``: Update codebuild client to latest version
+* feature:``ecs``: Update ecs client to latest version
+* feature:``codecommit``: Update codecommit client to latest version
+
+
 1.5.4
 =====
 
