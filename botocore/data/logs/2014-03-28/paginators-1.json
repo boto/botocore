@@ -38,6 +38,12 @@
         "events",
         "searchedLogStreams"
       ]
+    },
+    "GetLogEvents": {
+      "input_token": "nextToken",
+      "output_token": "nextForwardToken",
+      "limit_key": "limit",
+      "result_key": "events"
     }
   }
 }
