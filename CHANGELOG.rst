@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.5.7
+=====
+
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``clouddirectory``: Update clouddirectory client to latest version
+* feature:``codedeploy``: Update codedeploy client to latest version
+* feature:``rds``: Update rds client to latest version
+
+
 1.5.6
 =====
 

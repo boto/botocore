@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``clouddirectory``", 
+    "description": "Update clouddirectory client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``codedeploy``", 
+    "description": "Update codedeploy client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``rds``", 
+    "description": "Update rds client to latest version", 
+    "type": "feature"
+  }
+]
