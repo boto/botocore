@@ -14,3 +14,17 @@ botocore package is the foundation for the
 `boto3 <https://github.com/boto/boto3>`__.
 
 `Documentation <https://botocore.readthedocs.io/en/latest/>`__
+
+
+Getting Help
+------------
+
+We use GitHub issues for tracking bugs and feature requests and have limited
+bandwidth to address them. Please use these community resources for getting
+help. Please note many of the same resources available for ``boto3`` are
+applicable for ``botocore``:
+
+* Ask a question on `Stack Overflow <https://stackoverflow.com/>`__ and tag it with `boto3 <https://stackoverflow.com/questions/tagged/boto3>`__
+* Come join the AWS Python community chat on `gitter <https://gitter.im/boto/boto3>`__
+* Open a support ticket with `AWS Support <https://console.aws.amazon.com/support/home#/>`__
+* If it turns out that you may have found a bug, please `open an issue <https://github.com/boto/botocore/issues/new>`__
