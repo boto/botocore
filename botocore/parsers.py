@@ -215,7 +215,8 @@ class ResponseParser(object):
         if isinstance(parsed, dict):
             response_metadata = parsed.get('ResponseMetadata', {})
             response_metadata['HTTPStatusCode'] = response['status_code']
-            response_metadata['HTTPHeaders'] = dict(response['headers'])
+            response_metadata['HTTPHeaders'] = dict(
+                (k.lower(), v) for k, v in response['headers'].items())
             parsed['ResponseMetadata'] = response_metadata
         return parsed
 

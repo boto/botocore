@@ -373,7 +373,7 @@ class TestHeaderResponseInclusion(unittest.TestCase):
         headers = {
             'x-amzn-requestid': 'request-id',
             'Header1': 'foo',
-            'Header2': 'bar',
+            'HEADER2': 'bar',
         }
         output_shape = self.create_arbitary_output_shape()
         parsed = parser.parse(
@@ -381,13 +381,18 @@ class TestHeaderResponseInclusion(unittest.TestCase):
              'status_code': 200}, output_shape)
         # Response headers should be mapped as HTTPHeaders.
         self.assertEqual(
-            parsed['ResponseMetadata']['HTTPHeaders'], headers)
+            parsed['ResponseMetadata']['HTTPHeaders'],
+            {
+                'x-amzn-requestid': 'request-id',
+                'header1': 'foo',
+                'header2': 'bar',
+            })
 
     def test_can_always_json_serialize_headers(self):
         parser = self.create_parser()
         original_headers = {
             'x-amzn-requestid': 'request-id',
-            'Header1': 'foo',
+            'header1': 'foo',
         }
         headers = CustomHeaderDict(original_headers)
         output_shape = self.create_arbitary_output_shape()
@@ -399,7 +404,7 @@ class TestHeaderResponseInclusion(unittest.TestCase):
         # response.  So we want to ensure that despite using a CustomHeaderDict
         # we can always JSON dumps the response metadata.
         self.assertEqual(
-            json.loads(json.dumps(metadata))['HTTPHeaders']['Header1'], 'foo')
+            json.loads(json.dumps(metadata))['HTTPHeaders']['header1'], 'foo')
 
 
 class TestResponseParsingDatetimes(unittest.TestCase):
