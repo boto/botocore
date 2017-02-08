@@ -13,7 +13,7 @@
 import re
 import numbers
 from botocore.utils import parse_timestamp
-from datetime import datetime
+from botocore.compat import six
 
 
 class SharedExampleDocumenter(object):
@@ -165,7 +165,7 @@ class SharedExampleDocumenter(object):
     def _document_str(self, section, value, path):
         # We do the string conversion because this might accept a type that
         # we don't specifically address.
-        section.write("'%s'," % str(value))
+        section.write(u"'%s'," % six.text_type(value))
 
     def _document_number(self, section, value, path):
         section.write("%s," % str(value))

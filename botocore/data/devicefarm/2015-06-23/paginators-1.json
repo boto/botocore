@@ -54,6 +54,24 @@
       "input_token": "nextToken",
       "output_token": "nextToken",
       "result_key": "uploads"
+    },
+    "GetOfferingStatus": {
+      "input_token": "nextToken",
+      "output_token": "nextToken",
+      "result_key": [
+        "current",
+        "nextPeriod"
+      ]
+    },
+    "ListOfferingTransactions": {
+      "input_token": "nextToken",
+      "output_token": "nextToken",
+      "result_key": "offeringTransactions"
+    },
+    "ListOfferings": {
+      "input_token": "nextToken",
+      "output_token": "nextToken",
+      "result_key": "offerings"
     }
   }
 }

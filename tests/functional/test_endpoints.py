@@ -28,7 +28,8 @@ SERVICE_RENAMES = {
     'meteringmarketplace': 'metering.marketplace',
     'opsworkscm': 'opsworks-cm',
     'ses': 'email',
-    'stepfunctions': 'states'
+    'stepfunctions': 'states',
+    'lex-runtime': 'runtime.lex',
 }
 
 

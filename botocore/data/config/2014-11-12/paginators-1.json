@@ -28,7 +28,8 @@
     "GetResourceConfigHistory": {
       "input_token": "nextToken",
       "output_token": "nextToken",
-      "result_key": "configurationItems"
+      "result_key": "configurationItems",
+      "limit_key": "limit"
     },
     "ListDiscoveredResources": {
       "input_token": "nextToken",
