@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.5.8
+=====
+
+* feature:``lex-runtime``: Update lex-runtime client to latest version
+* feature:Paginator: Added paginators for multiple services
+
+
 1.5.7
 =====
 
