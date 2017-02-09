@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.5.9
+=====
+
+* feature:``rekognition``: Update rekognition client to latest version
+* feature:``ec2``: Update ec2 client to latest version
+
+
 1.5.8
 =====
 
