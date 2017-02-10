@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.5.10
+======
+
+* feature:``storagegateway``: Update storagegateway client to latest version
+* feature:Waiter: Adds several new waiters.
+* feature:``clouddirectory``: Update clouddirectory client to latest version
+* feature:``lex-runtime``: Update lex-runtime client to latest version
+
+
 1.5.9
 =====
 

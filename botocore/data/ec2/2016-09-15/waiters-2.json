@@ -281,6 +281,24 @@
         }
       ]
     },
+    "KeyPairExists": {
+      "operation": "DescribeKeyPairs",
+      "delay": 5,
+      "maxAttempts": 6,
+      "acceptors": [
+        {
+          "expected": true,
+          "matcher": "path",
+          "state": "success",
+          "argument": "length(KeyPairs[].KeyName) > `0`"
+        },
+        {
+          "expected": "InvalidKeyPair.NotFound",
+          "matcher": "error",
+          "state": "retry"
+        }
+      ]
+    },
     "NatGatewayAvailable": {
       "operation": "DescribeNatGateways",
       "delay": 15,
