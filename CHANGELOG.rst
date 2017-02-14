@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.5.11
+======
+
+* feature:``ec2``: Update ec2 client to latest version
+
+
 1.5.10
 ======
 
