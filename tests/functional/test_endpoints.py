@@ -10,6 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import os
+import json
 from nose.tools import assert_equal
 from botocore.session import get_session
 
@@ -31,6 +33,32 @@ SERVICE_RENAMES = {
     'stepfunctions': 'states',
     'lex-runtime': 'runtime.lex',
 }
+
+BLACKLIST = [
+    'mobileanalytics',
+]
+
+
+def test_endpoint_matches_service():
+    backwards_renames = dict((v, k) for k, v in SERVICE_RENAMES.items())
+    session = get_session()
+    loader = session.get_component('data_loader')
+    expected_services = set(loader.list_available_services('service-2'))
+
+    pdir = os.path.dirname
+    endpoints_path = os.path.join(pdir(pdir(pdir(__file__))),
+                                  'botocore', 'data', 'endpoints.json')
+    with open(endpoints_path, 'r') as f:
+        data = json.loads(f.read())
+    for partition in data['partitions']:
+        for service in partition['services'].keys():
+            service = backwards_renames.get(service, service)
+            if service not in BLACKLIST:
+                yield _assert_endpoint_is_service, service, expected_services
+
+
+def _assert_endpoint_is_service(service, expected_services):
+    assert service in expected_services
 
 
 def test_service_name_matches_endpoint_prefix():
