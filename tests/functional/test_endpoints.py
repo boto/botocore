@@ -40,8 +40,7 @@ BLACKLIST = [
 
 
 def test_endpoint_matches_service():
-    backwards_renames = {v: k for k, v in SERVICE_RENAMES.items()}
-
+    backwards_renames = dict((v, k) for k, v in SERVICE_RENAMES.items())
     session = get_session()
     loader = session.get_component('data_loader')
     expected_services = set(loader.list_available_services('service-2'))
@@ -54,9 +53,8 @@ def test_endpoint_matches_service():
     for partition in data['partitions']:
         for service in partition['services'].keys():
             service = backwards_renames.get(service, service)
-            if service in BLACKLIST:
-                continue
-            yield _assert_endpoint_is_service, service, expected_services
+            if service not in BLACKLIST:
+                yield _assert_endpoint_is_service, service, expected_services
 
 
 def _assert_endpoint_is_service(service, expected_services):
