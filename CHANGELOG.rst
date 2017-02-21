@@ -2,6 +2,31 @@
 CHANGELOG
 =========
 
+1.5.14
+======
+
+* api-change:``directconnect``: Update directconnect client to latest version
+
+
+1.5.13
+======
+
+* api-change:``config``: Update config client to latest version
+* api-change:``cognito-identity``: Update cognito-identity client to latest version
+
+
+1.5.12
+======
+
+* feature:``kms``: Update kms client to latest version
+
+
+1.5.11
+======
+
+* feature:``ec2``: Update ec2 client to latest version
+
+
 1.5.10
 ======
 
