@@ -57,6 +57,19 @@ def skip_unless_has_memory_collection(cls):
     return cls
 
 
+def skip_if_windows(reason):
+    """Decorator to skip tests that should not be run on windows.
+    Example usage:
+        @skip_if_windows("Not valid")
+        def test_some_non_windows_stuff(self):
+            self.assertEqual(...)
+    """
+    def decorator(func):
+        return unittest.skipIf(
+            platform.system() not in ['Darwin', 'Linux'], reason)(func)
+    return decorator
+
+
 def random_chars(num_chars):
     """Returns random hex characters.
 
