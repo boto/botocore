@@ -14,19 +14,13 @@
 # language governing permissions and limitations under the License.
 from tests import unittest, BaseEnvVar
 import os
-import mock
-
 import botocore.exceptions
 from botocore.configloader import raw_config_parse, load_config, \
     multi_file_load_config
-from botocore.compat import six
 
 
 def path(filename):
-    directory = os.path.join(os.path.dirname(__file__), 'cfg')
-    if isinstance(filename, six.binary_type):
-        directory = six.b(directory)
-    return os.path.join(directory, filename)
+    return os.path.join(os.path.dirname(__file__), 'cfg', filename)
 
 
 class TestConfigLoader(BaseEnvVar):
@@ -108,20 +102,6 @@ class TestConfigLoader(BaseEnvVar):
         self.assertEqual(third_config['aws_access_key_id'], 'third_fie')
         self.assertEqual(third_config['aws_secret_access_key'], 'third_baz')
         self.assertEqual(third_config['aws_security_token'], 'third_fiebaz')
-
-    def test_unicode_bytes_path_not_found(self):
-        with self.assertRaises(botocore.exceptions.ConfigNotFound):
-            with mock.patch('sys.getfilesystemencoding') as encoding:
-                encoding.return_value = 'utf-8'
-                load_config(path(b'\xe2\x9c\x93'))
-
-    def test_unicode_bytes_path(self):
-        filename = path(b'aws_config_unicode\xe2\x9c\x93')
-        with mock.patch('sys.getfilesystemencoding') as encoding:
-            encoding.return_value = 'utf-8'
-            loaded_config = load_config(filename)
-        self.assertIn('default', loaded_config['profiles'])
-        self.assertIn('personal', loaded_config['profiles'])
 
 
 if __name__ == "__main__":
