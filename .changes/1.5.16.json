@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``clouddirectory``", 
+    "description": "Update clouddirectory client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``gamelift``", 
+    "description": "Update gamelift client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``elasticbeanstalk``", 
+    "description": "Update elasticbeanstalk client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``route53``", 
+    "description": "Update route53 client to latest version", 
+    "type": "api-change"
+  }
+]
