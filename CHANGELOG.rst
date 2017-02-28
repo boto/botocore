@@ -2,6 +2,21 @@
 CHANGELOG
 =========
 
+1.5.19
+======
+
+* api-change:``waf``: Update waf client to latest version
+* api-change:``mturk``: Update mturk client to latest version
+* api-change:``iam``: Update iam client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``waf-regional``: Update waf-regional client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``dynamodbstreams``: Update dynamodbstreams client to latest version
+
+
 1.5.18
 ======
 
