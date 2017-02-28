@@ -32,6 +32,7 @@ SERVICE_RENAMES = {
     'ses': 'email',
     'stepfunctions': 'states',
     'lex-runtime': 'runtime.lex',
+    'mturk': 'mturk-requester',
 }
 
 BLACKLIST = [
