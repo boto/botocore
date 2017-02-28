@@ -1,0 +1,5 @@
+{
+  "category": "``dynamodbstreams``", 
+  "type": "api-change", 
+  "description": "Update dynamodbstreams client to latest version"
+}
