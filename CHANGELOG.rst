@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.5.20
+======
+
+* api-change:``budgets``: Update budgets client to latest version
+* api-change:``cloudtrail``: Update cloudtrail client to latest version
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+
+
 1.5.19
 ======
 
