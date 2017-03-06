@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``budgets``", 
+    "description": "Update budgets client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cloudtrail``", 
+    "description": "Update cloudtrail client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``opsworkscm``", 
+    "description": "Update opsworkscm client to latest version", 
+    "type": "api-change"
+  }
+]
