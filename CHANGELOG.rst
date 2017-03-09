@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.5.23
+======
+
+* api-change:``clouddirectory``: Update clouddirectory client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+
+
 1.5.22
 ======
 
