@@ -2,6 +2,27 @@
 CHANGELOG
 =========
 
+1.5.22
+======
+
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``workdocs``: Update workdocs client to latest version
+
+
+1.5.21
+======
+
+* api-change:``rds``: Update rds client to latest version
+
+
+1.5.20
+======
+
+* api-change:``budgets``: Update budgets client to latest version
+* api-change:``cloudtrail``: Update cloudtrail client to latest version
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+
+
 1.5.19
 ======
 

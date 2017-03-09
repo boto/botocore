@@ -839,6 +839,10 @@ BUILTIN_HANDLERS = [
     ('before-call.glacier.UploadArchive', add_glacier_checksums),
     ('before-call.glacier.UploadMultipartPart', add_glacier_checksums),
     ('before-call.ec2.CopySnapshot', inject_presigned_url_ec2),
+    ('before-call.rds.CopyDBClusterSnapshot',
+     inject_presigned_url_rds),
+    ('before-call.rds.CreateDBCluster',
+     inject_presigned_url_rds),
     ('before-call.rds.CopyDBSnapshot',
      inject_presigned_url_rds),
     ('before-call.rds.CreateDBInstanceReadReplica',
@@ -911,6 +915,17 @@ BUILTIN_HANDLERS = [
      document_base64_encoding('UserData')),
     ('docs.*.autoscaling.CreateLaunchConfiguration.complete-section',
      document_base64_encoding('UserData')),
+
+    # RDS PresignedUrl documentation customizations
+    ('docs.*.rds.CopyDBClusterSnapshot.complete-section',
+     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
+    ('docs.*.rds.CreateDBCluster.complete-section',
+     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
+    ('docs.*.rds.CopyDBSnapshot.complete-section',
+     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
+    ('docs.*.rds.CreateDBInstanceReadReplica.complete-section',
+     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
+
     # EC2 CopySnapshot documentation customizations
     ('docs.*.ec2.CopySnapshot.complete-section',
      AutoPopulatedParam('PresignedUrl').document_auto_populated_param),
