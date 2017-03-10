@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.5.24
+======
+
+* api-change:``codedeploy``: Update codedeploy client to latest version
+* api-change:``emr``: Update emr client to latest version
+
+
 1.5.23
 ======
 
