@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.5.26
+======
+
+* api-change:``budgets``: Update budgets client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+* api-change:``events``: Update events client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
 1.5.25
 ======
 
