@@ -945,6 +945,8 @@ class ContainerProvider(CredentialProvider):
 
     METHOD = 'container-role'
     ENV_VAR = 'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI'
+    ENV_VAR_FULL = 'AWS_CONTAINER_CREDENTIALS_FULL_URI'
+    ENV_VAR_AUTH_TOKEN = 'AWS_CONTAINER_AUTHORIZATION_TOKEN'
 
     def __init__(self, environ=None, fetcher=None):
         if environ is None:
@@ -955,15 +957,18 @@ class ContainerProvider(CredentialProvider):
         self._fetcher = fetcher
 
     def load(self):
-        if self.ENV_VAR not in self._environ:
-            # This cred provider is only triggered if the
-            # self.ENV_VAR is set, which only happens if you opt
-            # into this feature on ECS.
-            return None
-        return self._retrieve_or_fail(self._environ[self.ENV_VAR])
+        # This cred provider is only triggered if the self.ENV_VAR is set,
+        # which only happens if you opt into this feature.
+        if self.ENV_VAR in self._environ or self.ENV_VAR_FULL in self._environ:
+            return self._retrieve_or_fail()
 
-    def _retrieve_or_fail(self, relative_uri):
-        fetcher = self._create_fetcher(relative_uri)
+    def _retrieve_or_fail(self):
+        if self._provided_relative_uri():
+            full_uri = self._fetcher.full_url(self._environ[self.ENV_VAR])
+        else:
+            full_uri = self._environ[self.ENV_VAR_FULL]
+        headers = self._build_headers()
+        fetcher = self._create_fetcher(full_uri, headers)
         creds = fetcher()
         return RefreshableCredentials(
             access_key=creds['access_key'],
@@ -974,12 +979,21 @@ class ContainerProvider(CredentialProvider):
             refresh_using=fetcher,
         )
 
-    def _create_fetcher(self, relative_uri):
+    def _build_headers(self):
+        headers = {}
+        auth_token = self._environ.get(self.ENV_VAR_AUTH_TOKEN)
+        if auth_token is not None:
+            return {
+                'Authorization': auth_token
+            }
+
+    def _create_fetcher(self, full_uri, headers):
         def fetch_creds():
             try:
-                response = self._fetcher.retrieve_uri(relative_uri)
+                response = self._fetcher.retrieve_full_uri(
+                    full_uri, headers=headers)
             except MetadataRetrievalError as e:
-                logger.debug("Error retrieving ECS metadata: %s", e,
+                logger.debug("Error retrieving container metadata: %s", e,
                              exc_info=True)
                 raise CredentialRetrievalError(provider=self.METHOD,
                                                error_msg=str(e))
@@ -990,6 +1004,9 @@ class ContainerProvider(CredentialProvider):
                 'expiry_time': response['Expiration'],
             }
         return fetch_creds
+
+    def _provided_relative_uri(self):
+        return self.ENV_VAR in self._environ
 
 
 class CredentialResolver(object):
