@@ -20,5 +20,5 @@ class TestIamDocs(BaseDocsFunctionalTest):
             '- **AssumeRolePolicyDocument** *(dict) --*',
             content)
         self.assert_contains_line(
-            "'AssumeRolePolicyDocument': { ... }",
+            "'AssumeRolePolicyDocument': ...",
             content)

@@ -282,26 +282,6 @@ def add_expect_header(model, params, **kwargs):
             params['headers']['Expect'] = '100-continue'
 
 
-def change_iam_assumerolepolicydocument_type(section, event_name, **kwargs):
-    if 'response-params' in event_name:
-        role_section = section.get_section('Role')
-        policy_document_section = role_section.get_section(
-            'AssumeRolePolicyDocument')
-        type_section = policy_document_section.get_section('param-type')
-        type_section.clear_text()
-        type_section.write('*(dict) --*')
-    elif 'response-example' in event_name:
-        parent = section.get_section('structure-value')
-        role = parent.get_section('Role')
-        role_member = role.get_section('member-value')
-        role_structure = role_member.get_section('structure-value')
-        assume_role_policy_document = role_structure.get_section(
-            'AssumeRolePolicyDocument')
-        value = assume_role_policy_document.get_section('member-value')
-        value.clear_text()
-        value.write('{ ... }')
-
-
 def document_copy_source_form(section, event_name, **kwargs):
     if 'request-example' in event_name:
         parent = section.get_section('structure-value')
@@ -814,8 +794,6 @@ BUILTIN_HANDLERS = [
     ('creating-client-class.s3', add_generate_presigned_post),
     ('creating-client-class.iot-data', check_openssl_supports_tls_version_1_2),
     ('after-call.iam', json_decode_policies),
-    ('docs.*.iam.GetRole.complete-section',
-     change_iam_assumerolepolicydocument_type),
     ('after-call.ec2.GetConsoleOutput', decode_console_output),
     ('after-call.cloudformation.GetTemplate', json_decode_template_body),
     ('after-call.s3.GetBucketLocation', parse_get_bucket_location),

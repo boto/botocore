@@ -16,6 +16,21 @@
 # ``traverse_and_document_shape`` method called directly. It should be
 # inherited from a Documenter class with the appropriate methods
 # and attributes.
+
+# Some shapes have their types remapped for before being exposed to the
+# user for convenience. A common example would be a shape that has a string
+# type being remapped to a dictionary because the string is simply a serialized
+# json object. This dictionary overrides a particular shape's documented type.
+# In addition shape names are not unique between services, there are over 2200
+# duplicated shape names between services, so this mapping needs to take into
+# account which service the shape being remapped belongs to.
+SHAPE_TYPE_REMAPPINGS = {
+    'iam': {
+        'policyDocumentType': 'dict'
+    }
+}
+
+
 class ShapeDocumenter(object):
     EVENT_NAME = ''
 
@@ -55,6 +70,10 @@ class ShapeDocumenter(object):
 
         :param is_required: If the shape is a required member.
         """
+        if self._service_name in SHAPE_TYPE_REMAPPINGS:
+            shape_remappings = SHAPE_TYPE_REMAPPINGS[self._service_name]
+            if shape.name in shape_remappings:
+                shape.type_name = shape_remappings[shape.name]
         param_type = shape.type_name
         if shape.name in history:
             self.document_recursive_shape(section, shape, name=name)
