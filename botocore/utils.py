@@ -979,12 +979,40 @@ class ContainerMetadataFetcher(object):
     RETRY_ATTEMPTS = 3
     SLEEP_TIME = 1
     IP_ADDRESS = '169.254.170.2'
+    _ALLOWED_HOSTS = [IP_ADDRESS, 'localhost', '127.0.0.1']
 
     def __init__(self, session=None, sleep=time.sleep):
         if session is None:
             session = requests.Session()
         self._session = session
         self._sleep = sleep
+
+    def retrieve_full_uri(self, full_url, headers=None):
+        """Retrieve JSON metadata from container metadata.
+
+        :type full_url: str
+        :param full_url: The full URL of the metadata service.
+            This should include the scheme as well, e.g
+            "http://localhost:123/foo"
+
+        """
+        self._validate_allowed_url(full_url)
+        return self._retrieve_credentials(full_url, headers)
+
+    def _validate_allowed_url(self, full_url):
+        parsed = botocore.compat.urlparse(full_url)
+        is_whitelisted_host = self._check_if_whitelisted_host(
+            parsed.hostname)
+        if not is_whitelisted_host:
+            raise ValueError(
+                "Unsupported host '%s'.  Can only "
+                "retrieve metadata from these hosts: %s" %
+                (parsed.hostname, ', '.join(self._ALLOWED_HOSTS)))
+
+    def _check_if_whitelisted_host(self, host):
+        if host in self._ALLOWED_HOSTS:
+            return True
+        return False
 
     def retrieve_uri(self, relative_uri):
         """Retrieve JSON metadata from ECS metadata.
@@ -995,15 +1023,20 @@ class ContainerMetadataFetcher(object):
         :return: The parsed JSON response.
 
         """
-        full_url = self._full_url(relative_uri)
+        full_url = self.full_url(relative_uri)
+        return self._retrieve_credentials(full_url)
+
+    def _retrieve_credentials(self, full_url, extra_headers=None):
         headers = {'Accept': 'application/json'}
+        if extra_headers is not None:
+            headers.update(extra_headers)
         attempts = 0
         while True:
             try:
                 return self._get_response(full_url, headers, self.TIMEOUT_SECONDS)
             except MetadataRetrievalError as e:
                 logger.debug("Received error when attempting to retrieve "
-                             "ECS metadata: %s", e, exc_info=True)
+                             "container metadata: %s", e, exc_info=True)
                 self._sleep(self.SLEEP_TIME)
                 attempts += 1
                 if attempts >= self.RETRY_ATTEMPTS:
@@ -1028,5 +1061,5 @@ class ContainerMetadataFetcher(object):
                          "ECS metadata: %s" % e)
             raise MetadataRetrievalError(error_msg=error_msg)
 
-    def _full_url(self, relative_uri):
+    def full_url(self, relative_uri):
         return 'http://%s%s' % (self.IP_ADDRESS, relative_uri)
