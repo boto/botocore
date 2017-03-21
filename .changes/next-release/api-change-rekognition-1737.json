@@ -1,5 +1,0 @@
-{
-  "category": "``rekognition``", 
-  "type": "api-change", 
-  "description": "Update rekognition client to latest version"
-}
