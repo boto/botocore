@@ -1153,14 +1153,22 @@ class TestContainerProvider(BaseEnvVar):
         creds = provider.load()
         self.assertIsNone(creds)
 
+    def full_url(self, url):
+        return 'http://%s%s' % (ContainerMetadataFetcher.IP_ADDRESS, url)
+
+    def create_fetcher(self):
+        fetcher = mock.Mock(spec=ContainerMetadataFetcher)
+        fetcher.full_url = self.full_url
+        return fetcher
+
     def test_retrieve_from_provider_if_env_var_present(self):
         environ = {
             'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI': '/latest/credentials?id=foo'
         }
-        fetcher = mock.Mock(spec=ContainerMetadataFetcher)
+        fetcher = self.create_fetcher()
         timeobj = datetime.now(tzlocal())
         timestamp = (timeobj + timedelta(hours=24)).isoformat()
-        fetcher.retrieve_uri.return_value = {
+        fetcher.retrieve_full_uri.return_value = {
             "AccessKeyId" : "access_key",
             "SecretAccessKey" : "secret_key",
             "Token" : "token",
@@ -1169,7 +1177,8 @@ class TestContainerProvider(BaseEnvVar):
         provider = credentials.ContainerProvider(environ, fetcher)
         creds = provider.load()
 
-        fetcher.retrieve_uri.assert_called_with('/latest/credentials?id=foo')
+        fetcher.retrieve_full_uri.assert_called_with(
+            self.full_url('/latest/credentials?id=foo'), headers=None)
         self.assertEqual(creds.access_key, 'access_key')
         self.assertEqual(creds.secret_key, 'secret_key')
         self.assertEqual(creds.token, 'token')
@@ -1183,7 +1192,7 @@ class TestContainerProvider(BaseEnvVar):
         timeobj = datetime.now(tzlocal())
         expired_timestamp = (timeobj - timedelta(hours=23)).isoformat()
         future_timestamp = (timeobj + timedelta(hours=1)).isoformat()
-        fetcher.retrieve_uri.side_effect = [
+        fetcher.retrieve_full_uri.side_effect = [
             {
                 "AccessKeyId" : "access_key_old",
                 "SecretAccessKey" : "secret_key_old",
@@ -1213,7 +1222,7 @@ class TestContainerProvider(BaseEnvVar):
         expired_timestamp = (timeobj - timedelta(hours=23)).isoformat()
         future_timestamp = (timeobj + timedelta(hours=1)).isoformat()
         exception = botocore.exceptions.CredentialRetrievalError
-        fetcher.retrieve_uri.side_effect = exception(provider='ecs-role',
+        fetcher.retrieve_full_uri.side_effect = exception(provider='ecs-role',
                                                      error_msg='fake http error')
         with self.assertRaises(exception):
             provider = credentials.ContainerProvider(environ, fetcher)
@@ -1230,7 +1239,7 @@ class TestContainerProvider(BaseEnvVar):
         expired_timestamp = (timeobj - timedelta(hours=23)).isoformat()
         http_exception = botocore.exceptions.MetadataRetrievalError
         raised_exception = botocore.exceptions.CredentialRetrievalError
-        fetcher.retrieve_uri.side_effect = [
+        fetcher.retrieve_full_uri.side_effect = [
             {
                 "AccessKeyId" : "access_key_old",
                 "SecretAccessKey" : "secret_key_old",
@@ -1245,3 +1254,50 @@ class TestContainerProvider(BaseEnvVar):
         # Second time with a refresh should propagate an error.
         with self.assertRaises(raised_exception):
             frozen_creds = creds.get_frozen_credentials()
+
+    def test_can_use_full_url(self):
+        environ = {
+            'AWS_CONTAINER_CREDENTIALS_FULL_URI': 'http://localhost/foo'
+        }
+        fetcher = self.create_fetcher()
+        timeobj = datetime.now(tzlocal())
+        timestamp = (timeobj + timedelta(hours=24)).isoformat()
+        fetcher.retrieve_full_uri.return_value = {
+            "AccessKeyId" : "access_key",
+            "SecretAccessKey" : "secret_key",
+            "Token" : "token",
+            "Expiration" : timestamp,
+        }
+        provider = credentials.ContainerProvider(environ, fetcher)
+        creds = provider.load()
+
+        fetcher.retrieve_full_uri.assert_called_with('http://localhost/foo',
+                                                     headers=None)
+        self.assertEqual(creds.access_key, 'access_key')
+        self.assertEqual(creds.secret_key, 'secret_key')
+        self.assertEqual(creds.token, 'token')
+        self.assertEqual(creds.method, 'container-role')
+
+    def test_can_pass_basic_auth_token(self):
+        environ = {
+            'AWS_CONTAINER_CREDENTIALS_FULL_URI': 'http://localhost/foo',
+            'AWS_CONTAINER_AUTHORIZATION_TOKEN': 'Basic auth-token',
+        }
+        fetcher = self.create_fetcher()
+        timeobj = datetime.now(tzlocal())
+        timestamp = (timeobj + timedelta(hours=24)).isoformat()
+        fetcher.retrieve_full_uri.return_value = {
+            "AccessKeyId" : "access_key",
+            "SecretAccessKey" : "secret_key",
+            "Token" : "token",
+            "Expiration" : timestamp,
+        }
+        provider = credentials.ContainerProvider(environ, fetcher)
+        creds = provider.load()
+
+        fetcher.retrieve_full_uri.assert_called_with(
+            'http://localhost/foo', headers={'Authorization': 'Basic auth-token'})
+        self.assertEqual(creds.access_key, 'access_key')
+        self.assertEqual(creds.secret_key, 'secret_key')
+        self.assertEqual(creds.token, 'token')
+        self.assertEqual(creds.method, 'container-role')
