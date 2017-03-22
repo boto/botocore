@@ -238,6 +238,10 @@ class SigV4Auth(BaseSigner):
         return ';'.join(l)
 
     def payload(self, request):
+        if not self._should_sha256_sign_payload(request):
+            # When payload signing is disabled, we use this static string in
+            # place of the payload checksum.
+            return 'UNSIGNED-PAYLOAD'
         if request.body and hasattr(request.body, 'seek'):
             position = request.body.tell()
             read_chunksize = functools.partial(request.body.read,
@@ -254,6 +258,16 @@ class SigV4Auth(BaseSigner):
             return sha256(request.body).hexdigest()
         else:
             return EMPTY_SHA256_HASH
+
+    def _should_sha256_sign_payload(self, request):
+        # Payloads will always be signed over insecure connections.
+        if not request.url.startswith('https'):
+            return True
+
+        # Certain operations may have payload signing disabled by default.
+        # Since we don't have access to the operation model, we pass in this
+        # bit of metadata through the request context.
+        return request.context.get('payload_signing_enabled', True)
 
     def canonical_request(self, request):
         cr = [request.method.upper()]
@@ -383,10 +397,7 @@ class S3SigV4Auth(SigV4Auth):
         if 'X-Amz-Content-SHA256' in request.headers:
             del request.headers['X-Amz-Content-SHA256']
 
-        if self._should_sha256_sign_payload(request):
-            request.headers['X-Amz-Content-SHA256'] = self.payload(request)
-        else:
-            request.headers['X-Amz-Content-SHA256'] = 'UNSIGNED-PAYLOAD'
+        request.headers['X-Amz-Content-SHA256'] = self.payload(request)
 
     def _should_sha256_sign_payload(self, request):
         # S3 allows optional body signing, so to minimize the performance
@@ -400,15 +411,27 @@ class S3SigV4Auth(SigV4Auth):
         if s3_config is None:
             s3_config = {}
 
+        # The explicit configuration takes precedence over any implicit
+        # configuration.
         sign_payload = s3_config.get('payload_signing_enabled', None)
         if sign_payload is not None:
             return sign_payload
 
-        if 'Content-MD5' in request.headers and 'https' in request.url and \
-                request.context.get('has_streaming_input', False):
+        # We require that both content-md5 be present and https be enabled
+        # to implicitly disable body signing. The combination of TLS and
+        # content-md5 is sufficiently secure and durable for us to be
+        # confident in the request without body signing.
+        if not request.url.startswith('https') or \
+                'Content-MD5' not in request.headers:
+            return True
+
+        # If the input is streaming we disable body signing by default.
+        if request.context.get('has_streaming_input', False):
             return False
 
-        return True
+        # If the S3-specific checks had no results, delegate to the generic
+        # checks.
+        return super(S3SigV4Auth, self)._should_sha256_sign_payload(request)
 
     def _normalize_url_path(self, path):
         # For S3, we do not normalize the path.
