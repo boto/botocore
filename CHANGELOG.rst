@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.5.28
+======
+
+* api-change:``discovery``: Update discovery client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+
+
 1.5.27
 ======
 
