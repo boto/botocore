@@ -1,0 +1,5 @@
+{
+  "description": "Fix a bug in loading config files from paths that contain non-ascii characters. Fixes aws/aws-cli`#2395 <https://github.com/boto/botocore/issues/2395>`__",
+  "category": "config",
+  "type": "bugfix"
+}
