@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.5.29
+======
+
+* api-change:``cloudtrail``: Update cloudtrail client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+
+
 1.5.28
 ======
 

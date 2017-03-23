@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``cloudtrail``", 
+    "description": "Update cloudtrail client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``application-autoscaling``", 
+    "description": "Update application-autoscaling client to latest version", 
+    "type": "api-change"
+  }
+]
