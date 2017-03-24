@@ -56,7 +56,6 @@ import copy
 from dateutil.tz import tzutc
 
 from botocore.compat import json, OrderedDict
-from botocore.awsrequest import AWSRequest
 from botocore.model import ServiceModel, OperationModel
 from botocore.serialize import EC2Serializer, QuerySerializer, \
         JSONSerializer, RestJSONSerializer, RestXMLSerializer
@@ -64,7 +63,6 @@ from botocore.parsers import QueryParser, JSONParser, \
         RestJSONParser, RestXMLParser
 from botocore.utils import parse_timestamp, percent_encode_sequence
 from calendar import timegm
-from botocore.compat import urlencode
 
 from nose.tools import assert_equal as _assert_equal
 
@@ -90,6 +88,7 @@ PROTOCOL_PARSERS = {
 PROTOCOL_TEST_BLACKLIST = [
     'Idempotency token auto fill'
 ]
+
 
 def test_compliance():
     for full_path in _walk_files():
@@ -218,7 +217,7 @@ def _output_failure_message(protocol_type, case, actual_parsed, error):
         "Response              : %s\n"
         "Expected serialization: %s\n"
         "Actual serialization  : %s\n"
-        "Assertion message     : %s\n"  % (
+        "Assertion message     : %s\n" % (
             case['description'], case['suite_id'],
             case['test_id'], protocol_type,
             j(case['given']), j(case['response']),
@@ -235,7 +234,7 @@ def _input_failure_message(protocol_type, case, actual_request, error):
         "Params                : %s\n"
         "Expected serialization: %s\n"
         "Actual serialization  : %s\n"
-        "Assertion message     : %s\n"  % (
+        "Assertion message     : %s\n" % (
             case['description'], case['suite_id'],
             case['test_id'], protocol_type,
             j(case['given']), j(case['params']),
@@ -246,8 +245,9 @@ def _input_failure_message(protocol_type, case, actual_request, error):
 def _try_json_dump(obj):
     try:
         return json.dumps(obj)
-    except (ValueError, TypeError) as e:
+    except (ValueError, TypeError):
         return str(obj)
+
 
 def assert_equal(first, second, prefix):
     # A better assert equals.  It allows you to just provide
@@ -260,7 +260,7 @@ def assert_equal(first, second, prefix):
                 prefix,
                 json.dumps(first, indent=2),
                 json.dumps(second, indent=2))
-        except (ValueError, TypeError) as e:
+        except (ValueError, TypeError):
             better = "%s (actual != expected)\n%s !=\n%s" % (
                 prefix, first, second)
         raise AssertionError(better)
