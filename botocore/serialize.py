@@ -515,6 +515,11 @@ class BaseRestSerializer(Serializer):
             datetime_obj = parse_to_aware_datetime(value)
             timestamp = calendar.timegm(datetime_obj.utctimetuple())
             return self._timestamp_rfc822(timestamp)
+        elif shape.type_name == 'string' and\
+             shape.serialization.get('jsonvalue'):
+            # Serialize with no spaces after separators to save space in
+            # the header.
+            return self._get_base64(json.dumps(value, separators=(',',':')))
         else:
             return value
 

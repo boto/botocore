@@ -677,7 +677,11 @@ class BaseRestParser(ResponseParser):
                 # The key name inserted into the parsed hash
                 # strips off the prefix.
                 name = header_name[len(prefix):]
-                parsed[name] = headers[header_name]
+                value = headers[header_name]
+                if shape.type_name == 'string' and \
+                   shape.serialization.get('jsonvalue'):
+                    value = json.loads(base64.b64decode(value))
+                parsed[name] = value
         return parsed
 
     def _initial_body_parse(self, body_contents):
@@ -697,6 +701,13 @@ class RestJSONParser(BaseRestParser, BaseJSONParser):
         error = super(RestJSONParser, self)._do_error_parse(response, shape)
         self._inject_error_code(error, response)
         return error
+
+    def _handle_string(self, shape, value):
+        parsed = value
+        if shape.serialization.get('jsonvalue'):
+            decoded = base64.b64decode(value).decode('utf-8')
+            parsed = json.loads(decoded)
+        return parsed
 
     def _inject_error_code(self, error, response):
         # The "Code" value can come from either a response

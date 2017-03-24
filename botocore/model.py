@@ -48,7 +48,8 @@ class Shape(object):
     # the attributes that should be moved.
     SERIALIZED_ATTRS = ['locationName', 'queryName', 'flattened', 'location',
                         'payload', 'streaming', 'timestampFormat',
-                        'xmlNamespace', 'resultWrapper', 'xmlAttribute']
+                        'xmlNamespace', 'resultWrapper', 'xmlAttribute',
+                        'jsonvalue']
     METADATA_ATTRS = ['required', 'min', 'max', 'sensitive', 'enum',
                       'idempotencyToken', 'error', 'exception']
     MAP_TYPE = OrderedDict
@@ -103,6 +104,7 @@ class Shape(object):
             * xmlNamespace
             * resultWrapper
             * xmlAttribute
+            * jsonvalue
 
         :rtype: dict
         :return: Serialization information about the shape.

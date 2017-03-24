@@ -87,12 +87,16 @@ PROTOCOL_PARSERS = {
     'rest-json': RestJSONParser,
     'rest-xml': RestXMLParser,
 }
-
+PROTOCOL_TEST_BLACKLIST = [
+    'Idempotency token auto fill'
+]
 
 def test_compliance():
     for full_path in _walk_files():
         if full_path.endswith('.json'):
             for model, case, basename in _load_cases(full_path):
+                if model.get('description') in PROTOCOL_TEST_BLACKLIST:
+                    continue
                 if 'params' in case:
                     yield _test_input, model, case, basename
                 elif 'response' in case:
