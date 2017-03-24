@@ -519,7 +519,7 @@ class BaseRestSerializer(Serializer):
              shape.serialization.get('jsonvalue'):
             # Serialize with no spaces after separators to save space in
             # the header.
-            return self._get_base64(json.dumps(value, separators=(',',':')))
+            return self._get_base64(json.dumps(value, separators=(',', ':')))
         else:
             return value
 

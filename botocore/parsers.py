@@ -678,9 +678,6 @@ class BaseRestParser(ResponseParser):
                 # strips off the prefix.
                 name = header_name[len(prefix):]
                 value = headers[header_name]
-                if shape.type_name == 'string' and \
-                   shape.serialization.get('jsonvalue'):
-                    value = json.loads(base64.b64decode(value))
                 parsed[name] = value
         return parsed
 
@@ -704,8 +701,9 @@ class RestJSONParser(BaseRestParser, BaseJSONParser):
 
     def _handle_string(self, shape, value):
         parsed = value
-        if shape.serialization.get('jsonvalue'):
-            decoded = base64.b64decode(value).decode('utf-8')
+        if shape.serialization.get('location') =='header' and \
+           shape.serialization.get('jsonvalue'):
+            decoded = base64.b64decode(value).decode(self.DEFAULT_ENCODING)
             parsed = json.loads(decoded)
         return parsed
 
