@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``ssm``", 
+    "description": "Update ssm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "config", 
+    "description": "Fix a bug in loading config files from paths that contain non-ascii characters. Fixes aws/aws-cli`#2395 <https://github.com/boto/botocore/issues/2395>`__", 
+    "type": "bugfix"
+  }
+]
