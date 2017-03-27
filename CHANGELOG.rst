@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.5.30
+======
+
+* api-change:``ssm``: Update ssm client to latest version
+* bugfix:config: Fix a bug in loading config files from paths that contain non-ascii characters. Fixes aws/aws-cli`#2395 <https://github.com/boto/botocore/issues/2395>`__
+
+
 1.5.29
 ======
 
