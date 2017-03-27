@@ -677,8 +677,7 @@ class BaseRestParser(ResponseParser):
                 # The key name inserted into the parsed hash
                 # strips off the prefix.
                 name = header_name[len(prefix):]
-                value = headers[header_name]
-                parsed[name] = value
+                parsed[name] = headers[header_name]
         return parsed
 
     def _initial_body_parse(self, body_contents):
