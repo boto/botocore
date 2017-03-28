@@ -2,6 +2,38 @@
 CHANGELOG
 =========
 
+1.5.30
+======
+
+* api-change:``ssm``: Update ssm client to latest version
+* bugfix:config: Fix a bug in loading config files from paths that contain non-ascii characters. Fixes aws/aws-cli`#2395 <https://github.com/boto/botocore/issues/2395>`__
+
+
+1.5.29
+======
+
+* api-change:``cloudtrail``: Update cloudtrail client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+
+
+1.5.28
+======
+
+* api-change:``discovery``: Update discovery client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+
+
+1.5.27
+======
+
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``directconnect``: Update directconnect client to latest version
+* enhancement:Credentials: Add support for localhost when using container credential provider (`#1160 <https://github.com/boto/botocore/issues/1160>`__)
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
 1.5.26
 ======
 
