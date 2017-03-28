@@ -13,6 +13,15 @@
 from collections import namedtuple
 
 
+def get_shape_special_type_name(shape):
+    if hasattr(shape, 'serialization') and \
+       shape.serialization.get('jsonvalue') and \
+       shape.serialization.get('location') == 'header' and \
+       shape.type_name == 'string':
+        return 'jsonvalue_header'
+    return None
+
+
 def py_type_name(type_name):
     """Get the Python type name for a given model type.
 

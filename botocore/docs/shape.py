@@ -16,6 +16,9 @@
 # ``traverse_and_document_shape`` method called directly. It should be
 # inherited from a Documenter class with the appropriate methods
 # and attributes.
+from botocore.docs.utils import get_shape_special_type_name
+
+
 class ShapeDocumenter(object):
     EVENT_NAME = ''
 
@@ -85,6 +88,7 @@ class ShapeDocumenter(object):
 
     def _get_special_py_default(self, shape):
         special_defaults = {
+            'jsonvalue_header': '{...}|[...]|123|"string"',
             'streaming_input_shape': 'b\'bytes\'|file',
             'streaming_output_shape': 'StreamingBody()'
         }
@@ -92,12 +96,16 @@ class ShapeDocumenter(object):
 
     def _get_special_py_type_name(self, shape):
         special_type_names = {
+            'jsonvalue_header': 'string|dict|list|integer|float',
             'streaming_input_shape': 'bytes or seekable file-like object',
             'streaming_output_shape': ':class:`.StreamingBody`'
         }
         return self._get_value_for_special_type(shape, special_type_names)
 
     def _get_value_for_special_type(self, shape, special_type_map):
+        special_type = get_shape_special_type_name(shape)
+        if special_type:
+            return special_type_map[special_type]
         for special_type, marked_shape in self._context[
                 'special_shape_types'].items():
             if special_type in special_type_map:
