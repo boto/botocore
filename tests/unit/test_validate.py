@@ -113,7 +113,7 @@ class TestValidateJSONValueTrait(BaseTestValidate):
         errors = self.get_validation_error_message(
             given_shapes=self.shapes,
             input_params={
-                'json': {'data': [1, 2.3, '3'], 'unicode': u'\2713'}
+                'json': {'data': [1, 2.3, '3'], 'unicode': u'\u2713'}
             })
         error_msg = errors.generate_report()
         self.assertEqual(error_msg, '')

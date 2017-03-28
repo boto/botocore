@@ -687,6 +687,14 @@ class BaseRestParser(ResponseParser):
         # of parsing.
         raise NotImplementedError("_initial_body_parse")
 
+    def _handle_string(self, shape, value):
+        parsed = value
+        if shape.serialization.get('location') =='header' and \
+           shape.serialization.get('jsonvalue'):
+            decoded = base64.b64decode(value).decode(self.DEFAULT_ENCODING)
+            parsed = json.loads(decoded)
+        return parsed
+
 
 class RestJSONParser(BaseRestParser, BaseJSONParser):
 
@@ -697,14 +705,6 @@ class RestJSONParser(BaseRestParser, BaseJSONParser):
         error = super(RestJSONParser, self)._do_error_parse(response, shape)
         self._inject_error_code(error, response)
         return error
-
-    def _handle_string(self, shape, value):
-        parsed = value
-        if shape.serialization.get('location') =='header' and \
-           shape.serialization.get('jsonvalue'):
-            decoded = base64.b64decode(value).decode(self.DEFAULT_ENCODING)
-            parsed = json.loads(decoded)
-        return parsed
 
     def _inject_error_code(self, error, response):
         # The "Code" value can come from either a response
@@ -789,6 +789,11 @@ class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
         default = {'Error': {'Message': '', 'Code': ''}}
         merge_dicts(default, parsed)
         return default
+
+    @_text_content
+    def _handle_string(self, shape, text):
+        text = super(RestXMLParser, self)._handle_string(shape, text)
+        return text
 
 
 PROTOCOL_PARSERS = {

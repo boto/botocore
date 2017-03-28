@@ -177,9 +177,8 @@ class ParamValidator(object):
         # a json string.
         try:
             json.dumps(params)
-        except TypeError as e:
-            errors.report(name, 'unable to encode to json',
-                          type_error=e)
+        except (ValueError, TypeError) as e:
+            errors.report(name, 'unable to encode to json', type_error=e)
 
     @type_check(valid_types=(dict,))
     def _validate_structure(self, params, shape, errors, name):
