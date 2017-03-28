@@ -839,15 +839,14 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
             response)
 
     def test_assume_role_in_cache_but_expired(self):
-        expired_creds = datetime.utcnow()
-        valid_creds = expired_creds + timedelta(seconds=60)
-        utc_timestamp = expired_creds.isoformat() + 'Z'
+        expired_creds = datetime.now(tzlocal())
+        valid_creds = expired_creds + timedelta(hours=1)
         response = {
             'Credentials': {
                 'AccessKeyId': 'foo',
                 'SecretAccessKey': 'bar',
                 'SessionToken': 'baz',
-                'Expiration': valid_creds.isoformat() + 'Z',
+                'Expiration': valid_creds,
             },
         }
         client_creator = self.create_client_creator(with_response=response)
@@ -857,7 +856,7 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
                     'AccessKeyId': 'foo-cached',
                     'SecretAccessKey': 'bar-cached',
                     'SessionToken': 'baz-cached',
-                    'Expiration': utc_timestamp,
+                    'Expiration': expired_creds,
                 }
             }
         }
