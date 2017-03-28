@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.5.31
+======
+
+* api-change:``batch``: Update batch client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.5.30
 ======
 
