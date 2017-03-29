@@ -521,6 +521,17 @@ class TestSigV4(unittest.TestCase):
         payload = auth.payload(request)
         self.assertEqual(payload, 'UNSIGNED-PAYLOAD')
 
+    def test_content_sha256_set_if_payload_signing_disabled(self):
+        request = AWSRequest()
+        request.data = six.BytesIO(u'\u2713'.encode('utf-8'))
+        request.url = 'https://amazonaws.com'
+        request.context['payload_signing_enabled'] = False
+        request.method = 'PUT'
+        auth = self.create_signer()
+        auth.add_auth(request)
+        sha_header = request.headers['X-Amz-Content-SHA256']
+        self.assertEqual(sha_header, 'UNSIGNED-PAYLOAD')
+
 
 class TestSigV4Resign(BaseTestWithFixedDate):
 

@@ -41,8 +41,7 @@ class TestLex(BaseSessionTest):
                 self.client.post_content(**params)
                 request = _send.call_args[0][0]
 
-        # The payload signature is not directly part of the request. Instead
-        # it gets added to the string to sign, and then part of the
+        # The payload gets added to the string to sign, and then part of the
         # signature. The signature will be part of the authorization header.
         # Since we don't have direct access to the payload signature,
         # we compare the authorization instead.
@@ -51,8 +50,11 @@ class TestLex(BaseSessionTest):
         expected_authorization = (
             b'AWS4-HMAC-SHA256 '
             b'Credential=access_key/20170322/us-west-2/lex/aws4_request, '
-            b'SignedHeaders=content-type;host;x-amz-date, '
-            b'Signature='
-            b'6e75dba6a3dbe4881a26998456046b5552108fec0b97c02bb34e24f24cff510c'
+            b'SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date,'
+            b' Signature='
+            b'7f93fde5c36163dce6ee116fcfebab13474ab903782fea04c00bb1dedc3fc4cc'
         )
         self.assertEqual(authorization, expected_authorization)
+
+        content_header = request.headers.get('x-amz-content-sha256')
+        self.assertEqual(content_header, b'UNSIGNED-PAYLOAD')

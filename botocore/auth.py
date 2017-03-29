@@ -50,6 +50,7 @@ SIGNED_HEADERS_BLACKLIST = [
     'user-agent',
     'x-amzn-trace-id',
 ]
+UNSIGNED_PAYLOAD = 'UNSIGNED-PAYLOAD'
 
 
 class BaseSigner(object):
@@ -241,7 +242,7 @@ class SigV4Auth(BaseSigner):
         if not self._should_sha256_sign_payload(request):
             # When payload signing is disabled, we use this static string in
             # place of the payload checksum.
-            return 'UNSIGNED-PAYLOAD'
+            return UNSIGNED_PAYLOAD
         if request.body and hasattr(request.body, 'seek'):
             position = request.body.tell()
             read_chunksize = functools.partial(request.body.read,
@@ -359,6 +360,11 @@ class SigV4Auth(BaseSigner):
             if 'X-Amz-Security-Token' in request.headers:
                 del request.headers['X-Amz-Security-Token']
             request.headers['X-Amz-Security-Token'] = self.credentials.token
+
+        if not request.context.get('payload_signing_enabled', True):
+            if 'X-Amz-Content-SHA256' in request.headers:
+                del request.headers['X-Amz-Content-SHA256']
+            request.headers['X-Amz-Content-SHA256'] = UNSIGNED_PAYLOAD
 
     def _set_necessary_date_headers(self, request):
         # The spec allows for either the Date _or_ the X-Amz-Date value to be
@@ -537,7 +543,7 @@ class S3SigV4QueryAuth(SigV4QueryAuth):
         # "You don't include a payload hash in the Canonical Request, because
         # when you create a presigned URL, you don't know anything about the
         # payload. Instead, you use a constant string "UNSIGNED-PAYLOAD".
-        return "UNSIGNED-PAYLOAD"
+        return UNSIGNED_PAYLOAD
 
 
 class S3SigV4PostAuth(SigV4Auth):
