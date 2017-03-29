@@ -88,7 +88,7 @@ class ShapeDocumenter(object):
 
     def _get_special_py_default(self, shape):
         special_defaults = {
-            'jsonvalue_header': '{...}|[...]|123|"string"',
+            'jsonvalue_header': '{...}|[...]|123|123.4|\'string\'|True|None',
             'streaming_input_shape': 'b\'bytes\'|file',
             'streaming_output_shape': 'StreamingBody()'
         }
@@ -96,7 +96,7 @@ class ShapeDocumenter(object):
 
     def _get_special_py_type_name(self, shape):
         special_type_names = {
-            'jsonvalue_header': 'string|dict|list|integer|float',
+            'jsonvalue_header': 'JSON serializable',
             'streaming_input_shape': 'bytes or seekable file-like object',
             'streaming_output_shape': ':class:`.StreamingBody`'
         }
