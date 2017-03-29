@@ -14,6 +14,16 @@ from collections import namedtuple
 
 
 def get_shape_special_type_name(shape):
+    """Get the python special type name for a modeled shape if there is one.
+       If one is not found shape.type_name will be used.
+
+    :type shape: botocore.shape
+    :param shape: Shape to be inspected for a special type.
+
+    :return: A string with the new special type name if there is one, or None
+             otherwise.
+    :rtype: string|None
+    """
     if hasattr(shape, 'serialization') and \
        shape.serialization.get('jsonvalue') and \
        shape.serialization.get('location') == 'header' and \

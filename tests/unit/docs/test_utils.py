@@ -20,6 +20,45 @@ from botocore.docs.utils import get_official_service_name
 from botocore.docs.utils import AutoPopulatedParam
 from botocore.docs.utils import HideParamFromOperations
 from botocore.docs.utils import AppendParamDocumentation
+from botocore.docs.utils import get_shape_special_type_name
+
+
+class TestGetSpecialTypeName(unittest.TestCase):
+    def test_non_jsonvalue_shape(self):
+        shape = mock.Mock()
+        shape.serialization = {
+            'location': 'header'
+        }
+        shape.type_name = 'string'
+        self.assertEqual(None, get_shape_special_type_name(shape))
+
+    def test_non_header_jsonvalue_shape(self):
+        shape = mock.Mock()
+        shape.serialization = {
+            'jsonvalue': True
+        }
+        shape.type_name = 'string'
+        self.assertEqual(None, get_shape_special_type_name(shape))
+
+
+    def test_non_string_jsonvalue_shape(self):
+        shape = mock.Mock()
+        shape.serialization = {
+            'location': 'header',
+            'jsonvalue': True
+        }
+        shape.type_name = 'integer'
+        self.assertEqual(None, get_shape_special_type_name(shape))
+
+    def test_json_value_header(self):
+        shape = mock.Mock()
+        shape.serialization = {
+            'jsonvalue': True,
+            'location': 'header'
+        }
+        shape.type_name = 'string'
+        self.assertEqual('jsonvalue_header',
+                         get_shape_special_type_name(shape))
 
 
 class TestPythonTypeName(unittest.TestCase):
