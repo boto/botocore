@@ -19,6 +19,7 @@ import json
 from datetime import datetime
 
 from botocore.utils import parse_to_aware_datetime
+from botocore.utils import is_json_value_header
 from botocore.exceptions import ParamValidationError
 
 
@@ -159,9 +160,7 @@ class ParamValidator(object):
         return errors
 
     def _check_special_validation_cases(self, shape):
-        if shape.serialization.get('jsonvalue') and\
-           shape.type_name == 'string' and \
-           shape.serialization.get('location') == 'header':
+        if is_json_value_header(shape):
             return self._validate_jsonvalue_string
 
     def _validate(self, params, shape, errors, name):
