@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.5.32
+======
+
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``resourcegroupstaggingapi``: Update resourcegroupstaggingapi client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``config``: Update config client to latest version
+
+
 1.5.31
 ======
 
