@@ -20,7 +20,6 @@ from botocore.docs.utils import get_official_service_name
 from botocore.docs.utils import AutoPopulatedParam
 from botocore.docs.utils import HideParamFromOperations
 from botocore.docs.utils import AppendParamDocumentation
-from botocore.docs.utils import get_shape_special_type_name
 
 
 class TestPythonTypeName(unittest.TestCase):

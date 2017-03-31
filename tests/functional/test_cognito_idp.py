@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 import mock
 
-from nose.tools import assert_not_in
+from nose.tools import assert_false
 
 from tests import create_session
 
@@ -105,4 +105,7 @@ class UnsignedOperationTestCase(object):
             operation(**self._parameters)
             request = _send.call_args[0][0]
 
-        assert_not_in('authorization', request.headers)
+        assert_false(
+            'authorization' in request.headers,
+            'authorization header found in unsigned operation'
+        )
