@@ -834,7 +834,7 @@ class AssumeRoleProvider(CredentialProvider):
             return None
 
     def _is_expired(self, credentials):
-        end_time = parse(credentials['Credentials']['Expiration'])
+        end_time = _parse_if_needed(credentials['Credentials']['Expiration'])
         now = datetime.datetime.now(tzlocal())
         seconds = total_seconds(end_time - now)
         return seconds < self.EXPIRY_WINDOW_SECONDS

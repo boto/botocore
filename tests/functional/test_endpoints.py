@@ -33,6 +33,7 @@ SERVICE_RENAMES = {
     'stepfunctions': 'states',
     'lex-runtime': 'runtime.lex',
     'mturk': 'mturk-requester',
+    'resourcegroupstaggingapi': 'tagging'
 }
 
 BLACKLIST = [
