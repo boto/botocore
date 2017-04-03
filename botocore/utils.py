@@ -54,6 +54,21 @@ class _RetriesExceededError(Exception):
     pass
 
 
+def is_json_value_header(shape):
+    """Determines if the provided shape is the special header type jsonvalue.
+
+    :type shape: botocore.shape
+    :param shape: Shape to be inspected for the jsonvalue trait.
+
+    :return: True if this type is a jsonvalue, False otherwise
+    :rtype: Bool
+    """
+    return (hasattr(shape, 'serialization') and
+            shape.serialization.get('jsonvalue', False) and
+            shape.serialization.get('location') == 'header' and
+            shape.type_name == 'string')
+
+
 def get_service_module_name(service_model):
     """Returns the module name for a service
 

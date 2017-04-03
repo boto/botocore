@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.5.34
+======
+
+* api-change:``lex-runtime``: Update lex-runtime client to latest version
+
+
 1.5.33
 ======
 
