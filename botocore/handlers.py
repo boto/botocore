@@ -97,6 +97,39 @@ def _looks_like_special_case_error(http_response):
     return False
 
 
+def set_operation_specific_signer(context, signing_name, **kwargs):
+    """ Choose the operation-specific signer.
+
+    Individual operations may have a different auth type than the service as a
+    whole. This will most often manifest as operations that should not be
+    authenticated at all, but can include other auth modes such as sigv4
+    without body signing.
+    """
+    auth_type = context.get('auth_type')
+
+    # Auth type will be None if the operation doesn't have a configured auth
+    # type.
+    if not auth_type:
+        return
+
+    # Auth type will be the string value 'none' if the operation should not
+    # be signed at all.
+    if auth_type == 'none':
+        return botocore.UNSIGNED
+
+    if auth_type.startswith('v4'):
+        signature_version = 'v4'
+        if signing_name == 's3':
+            signature_version = 's3v4'
+
+        # If the operation needs an unsigned body, we set additional context
+        # allowing the signer to be aware of this.
+        if auth_type == 'v4-unsigned-body':
+            context['payload_signing_enabled'] = False
+
+        return signature_version
+
+
 def decode_console_output(parsed, **kwargs):
     if 'Output' in parsed:
         try:
@@ -860,22 +893,7 @@ BUILTIN_HANDLERS = [
         disable_signing),
     ('choose-signer.sts.AssumeRoleWithSAML', disable_signing),
     ('choose-signer.sts.AssumeRoleWithWebIdentity', disable_signing),
-    ('choose-signer.cognito-idp.ConfirmSignUp', disable_signing),
-    ('choose-signer.cognito-idp.VerifyUserAttribute', disable_signing),
-    ('choose-signer.cognito-idp.ForgotPassword', disable_signing),
-    ('choose-signer.cognito-idp.SignUp', disable_signing),
-    ('choose-signer.cognito-idp.UpdateUserAttributes', disable_signing),
-    ('choose-signer.cognito-idp.ConfirmForgotPassword', disable_signing),
-    ('choose-signer.cognito-idp.ResendConfirmationCode', disable_signing),
-    ('choose-signer.cognito-idp.GetUserAttributeVerificationCode',
-     disable_signing),
-    ('choose-signer.cognito-idp.GetUser', disable_signing),
-    ('choose-signer.cognito-idp.ChangePassword', disable_signing),
-    ('choose-signer.cognito-idp.GetOpenIdConfiguration', disable_signing),
-    ('choose-signer.cognito-idp.DeleteUser', disable_signing),
-    ('choose-signer.cognito-idp.SetUserSettings', disable_signing),
-    ('choose-signer.cognito-idp.GetJWKS', disable_signing),
-    ('choose-signer.cognito-idp.DeleteUserAttributes', disable_signing),
+    ('choose-signer', set_operation_specific_signer),
     ('before-parameter-build.s3.HeadObject', sse_md5),
     ('before-parameter-build.s3.GetObject', sse_md5),
     ('before-parameter-build.s3.PutObject', sse_md5),

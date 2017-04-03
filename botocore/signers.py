@@ -117,7 +117,8 @@ class RequestSigner(object):
         if region_name is None:
             region_name = self._region_name
 
-        signature_version = self._choose_signer(operation_name, signing_type)
+        signature_version = self._choose_signer(
+            operation_name, signing_type, request.context)
 
         # Allow mutating request before signing
         self._event_emitter.emit(
@@ -146,7 +147,7 @@ class RequestSigner(object):
 
             auth.add_auth(request)
 
-    def _choose_signer(self, operation_name, signing_type):
+    def _choose_signer(self, operation_name, signing_type, context):
         """
         Allow setting the signature version via the choose-signer event.
         A value of `botocore.UNSIGNED` means no signing will be performed.
@@ -170,7 +171,7 @@ class RequestSigner(object):
         handler, response = self._event_emitter.emit_until_response(
             'choose-signer.{0}.{1}'.format(self._service_name, operation_name),
             signing_name=self._signing_name, region_name=self._region_name,
-            signature_version=signature_version)
+            signature_version=signature_version, context=context)
 
         if response is not None:
             signature_version = response

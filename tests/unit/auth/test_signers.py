@@ -391,7 +391,7 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
     def test_uses_sha256_if_not_streaming_upload(self):
         self.request.context['has_streaming_input'] = False
         self.request.headers.add_header('Content-MD5', 'foo')
-        self.request.url = 'http://s3.amazonaws.com/bucket'
+        self.request.url = 'https://s3.amazonaws.com/bucket'
         self.auth.add_auth(self.request)
         sha_header = self.request.headers['X-Amz-Content-SHA256']
         self.assertNotEqual(sha_header, 'UNSIGNED-PAYLOAD')
@@ -402,6 +402,28 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
         self.auth.add_auth(self.request)
         sha_header = self.request.headers['X-Amz-Content-SHA256']
         self.assertEqual(sha_header, 'UNSIGNED-PAYLOAD')
+
+    def test_does_not_use_sha256_if_context_config_set(self):
+        self.request.context['payload_signing_enabled'] = False
+        self.request.headers.add_header('Content-MD5', 'foo')
+        self.auth.add_auth(self.request)
+        sha_header = self.request.headers['X-Amz-Content-SHA256']
+        self.assertEqual(sha_header, 'UNSIGNED-PAYLOAD')
+
+    def test_sha256_if_context_set_on_http(self):
+        self.request.context['payload_signing_enabled'] = False
+        self.request.headers.add_header('Content-MD5', 'foo')
+        self.request.url = 'http://s3.amazonaws.com/bucket'
+        self.auth.add_auth(self.request)
+        sha_header = self.request.headers['X-Amz-Content-SHA256']
+        self.assertNotEqual(sha_header, 'UNSIGNED-PAYLOAD')
+
+    def test_sha256_if_context_set_without_md5(self):
+        self.request.context['payload_signing_enabled'] = False
+        self.request.url = 'https://s3.amazonaws.com/bucket'
+        self.auth.add_auth(self.request)
+        sha_header = self.request.headers['X-Amz-Content-SHA256']
+        self.assertNotEqual(sha_header, 'UNSIGNED-PAYLOAD')
 
 
 class TestSigV4(unittest.TestCase):
@@ -473,6 +495,7 @@ class TestSigV4(unittest.TestCase):
     def test_payload_is_binary_file(self):
         request = AWSRequest()
         request.data = six.BytesIO(u'\u2713'.encode('utf-8'))
+        request.url = 'https://amazonaws.com'
         auth = self.create_signer()
         payload = auth.payload(request)
         self.assertEqual(
@@ -482,11 +505,32 @@ class TestSigV4(unittest.TestCase):
     def test_payload_is_bytes_type(self):
         request = AWSRequest()
         request.data = u'\u2713'.encode('utf-8')
+        request.url = 'https://amazonaws.com'
         auth = self.create_signer()
         payload = auth.payload(request)
         self.assertEqual(
             payload,
             '1dabba21cdad44541f6b15796f8d22978fc7ea10c46aeceeeeb66c23b3ac7604')
+
+    def test_payload_not_signed_if_disabled_in_context(self):
+        request = AWSRequest()
+        request.data = u'\u2713'.encode('utf-8')
+        request.url = 'https://amazonaws.com'
+        request.context['payload_signing_enabled'] = False
+        auth = self.create_signer()
+        payload = auth.payload(request)
+        self.assertEqual(payload, 'UNSIGNED-PAYLOAD')
+
+    def test_content_sha256_set_if_payload_signing_disabled(self):
+        request = AWSRequest()
+        request.data = six.BytesIO(u'\u2713'.encode('utf-8'))
+        request.url = 'https://amazonaws.com'
+        request.context['payload_signing_enabled'] = False
+        request.method = 'PUT'
+        auth = self.create_signer()
+        auth.add_auth(request)
+        sha_header = request.headers['X-Amz-Content-SHA256']
+        self.assertEqual(sha_header, 'UNSIGNED-PAYLOAD')
 
 
 class TestSigV4Resign(BaseTestWithFixedDate):
