@@ -140,8 +140,7 @@ class TestValidateJSONValueTrait(BaseTestValidate):
                 'json': {'date': datetime(2017, 4, 27, 0, 0)}
             },
             errors=[
-                ('Invalid parameter json must be json serializable: datetime'
-                 '.datetime(2017, 4, 27, 0, 0) is not JSON serializable')
+                ('Invalid parameter json must be json serializable: ')
             ])
 
 
