@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.5.35
+======
+
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+
+
 1.5.34
 ======
 
