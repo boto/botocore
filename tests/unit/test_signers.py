@@ -100,7 +100,7 @@ class TestSigner(BaseSignerTest):
         self.emitter.emit_until_response.assert_called_with(
             'choose-signer.service_name.operation_name',
             signing_name='signing_name', region_name='region_name',
-            signature_version='v4')
+            signature_version='v4', context=mock.ANY)
 
     def test_choose_signer_override(self):
         request = mock.Mock()
@@ -158,7 +158,20 @@ class TestSigner(BaseSignerTest):
         self.emitter.emit_until_response.assert_called_with(
             'choose-signer.service_name.operation_name',
             signing_name='signing_name', region_name='region_name',
-            signature_version='v4-query')
+            signature_version='v4-query', context=mock.ANY)
+
+    def test_choose_signer_passes_context(self):
+        request = mock.Mock()
+        request.context = {'foo': 'bar'}
+
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
+                             {'v4': mock.Mock()}):
+            self.signer.sign('operation_name', request)
+
+        self.emitter.emit_until_response.assert_called_with(
+            'choose-signer.service_name.operation_name',
+            signing_name='signing_name', region_name='region_name',
+            signature_version='v4', context={'foo': 'bar'})
 
     def test_generate_url_choose_signer_override(self):
         request_dict = {
@@ -570,7 +583,7 @@ class TestS3PostPresigner(BaseSignerTest):
         self.emitter.emit_until_response.assert_called_with(
             'choose-signer.service_name.PutObject',
             signing_name='signing_name', region_name='region_name',
-            signature_version='s3v4-presign-post')
+            signature_version='s3v4-presign-post', context=mock.ANY)
 
     def test_generate_presigned_post_choose_signer_override(self):
         auth = mock.Mock()

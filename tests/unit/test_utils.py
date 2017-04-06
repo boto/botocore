@@ -26,6 +26,7 @@ from botocore.exceptions import ClientError
 from botocore.exceptions import InvalidDNSNameError, MetadataRetrievalError
 from botocore.model import ServiceModel
 from botocore.vendored import requests
+from botocore.utils import is_json_value_header
 from botocore.utils import remove_dot_segments
 from botocore.utils import normalize_url_path
 from botocore.utils import validate_jmespath_for_set
@@ -53,6 +54,48 @@ from botocore.utils import ContainerMetadataFetcher
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
 from botocore.config import Config
+
+
+class TestIsJSONValueHeader(unittest.TestCase):
+    def test_no_serialization_section(self):
+        shape = mock.Mock()
+        shape.type_name = 'string'
+        self.assertFalse(is_json_value_header(shape))
+
+    def test_non_jsonvalue_shape(self):
+        shape = mock.Mock()
+        shape.serialization = {
+            'location': 'header'
+        }
+        shape.type_name = 'string'
+        self.assertFalse(is_json_value_header(shape))
+
+    def test_non_header_jsonvalue_shape(self):
+        shape = mock.Mock()
+        shape.serialization = {
+            'jsonvalue': True
+        }
+        shape.type_name = 'string'
+        self.assertFalse(is_json_value_header(shape))
+
+    def test_non_string_jsonvalue_shape(self):
+        shape = mock.Mock()
+        shape.serialization = {
+            'location': 'header',
+            'jsonvalue': True
+        }
+        shape.type_name = 'integer'
+        self.assertFalse(is_json_value_header(shape))
+
+    def test_json_value_header(self):
+        shape = mock.Mock()
+        shape.serialization = {
+            'jsonvalue': True,
+            'location': 'header'
+        }
+        shape.type_name = 'string'
+        self.assertTrue(is_json_value_header(shape))
+
 
 
 class TestURINormalization(unittest.TestCase):

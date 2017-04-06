@@ -94,6 +94,56 @@ class TestValidateRequiredParams(BaseTestValidate):
             errors=['Unknown parameter'])
 
 
+class TestValidateJSONValueTrait(BaseTestValidate):
+    def test_accepts_jsonvalue_string(self):
+        self.shapes = {
+            'Input': {
+                'type': 'structure',
+                'members': {
+                    'json': {
+                        'shape': 'StrType',
+                        'jsonvalue': True,
+                        'location': 'header',
+                        'locationName': 'header-name'
+                    }
+                }
+            },
+            'StrType': {'type': 'string'}
+        }
+        errors = self.get_validation_error_message(
+            given_shapes=self.shapes,
+            input_params={
+                'json': {'data': [1, 2.3, '3'], 'unicode': u'\u2713'}
+            })
+        error_msg = errors.generate_report()
+        self.assertEqual(error_msg, '')
+
+    def test_validate_jsonvalue_string(self):
+        self.shapes = {
+            'Input': {
+                'type': 'structure',
+                'members': {
+                    'json': {
+                        'shape': 'StrType',
+                        'jsonvalue': True,
+                        'location': 'header',
+                        'locationName': 'header-name'
+                    }
+                }
+            },
+            'StrType': {'type': 'string'}
+        }
+
+        self.assert_has_validation_errors(
+            given_shapes=self.shapes,
+            input_params={
+                'json': {'date': datetime(2017, 4, 27, 0, 0)}
+            },
+            errors=[
+                ('Invalid parameter json must be json serializable: ')
+            ])
+
+
 class TestValidateTypes(BaseTestValidate):
     def setUp(self):
         self.shapes = {

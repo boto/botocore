@@ -846,6 +846,50 @@ class TestHandlers(BaseSessionTest):
         handlers.parse_get_bucket_location(response, None),
         self.assertEqual(response["LocationConstraint"], "eu-west-1")
 
+    def test_set_operation_specific_signer_no_auth_type(self):
+        signing_name = 'myservice'
+        context = {'auth_type': None}
+        response = handlers.set_operation_specific_signer(
+            context=context, signing_name=signing_name)
+        self.assertIsNone(response)
+
+    def test_set_operation_specific_signer_unsigned(self):
+        signing_name = 'myservice'
+        context = {'auth_type': 'none'}
+        response = handlers.set_operation_specific_signer(
+            context=context, signing_name=signing_name)
+        self.assertEqual(response, botocore.UNSIGNED)
+
+    def test_set_operation_specific_signer_v4(self):
+        signing_name = 'myservice'
+        context = {'auth_type': 'v4'}
+        response = handlers.set_operation_specific_signer(
+            context=context, signing_name=signing_name)
+        self.assertEqual(response, 'v4')
+
+    def test_set_operation_specific_signer_s3v4(self):
+        signing_name = 's3'
+        context = {'auth_type': 'v4'}
+        response = handlers.set_operation_specific_signer(
+            context=context, signing_name=signing_name)
+        self.assertEqual(response, 's3v4')
+
+    def test_set_operation_specific_signer_v4_unsinged_payload(self):
+        signing_name = 'myservice'
+        context = {'auth_type': 'v4-unsigned-body'}
+        response = handlers.set_operation_specific_signer(
+            context=context, signing_name=signing_name)
+        self.assertEqual(response, 'v4')
+        self.assertEqual(context.get('payload_signing_enabled'), False)
+
+    def test_set_operation_specific_signer_s3v4_unsigned_payload(self):
+        signing_name = 's3'
+        context = {'auth_type': 'v4-unsigned-body'}
+        response = handlers.set_operation_specific_signer(
+            context=context, signing_name=signing_name)
+        self.assertEqual(response, 's3v4')
+        self.assertEqual(context.get('payload_signing_enabled'), False)
+
 
 class TestConvertStringBodyToFileLikeObject(BaseSessionTest):
     def assert_converts_to_file_like_object_with_bytes(self, body, body_bytes):

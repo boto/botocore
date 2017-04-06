@@ -2,6 +2,30 @@
 CHANGELOG
 =========
 
+1.5.37
+======
+
+* api-change:``elbv2``: Update elbv2 client to latest version
+
+
+1.5.36
+======
+
+* api-change:``elasticache``: Update elasticache client to latest version
+
+
+1.5.35
+======
+
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+
+
+1.5.34
+======
+
+* api-change:``lex-runtime``: Update lex-runtime client to latest version
+
+
 1.5.33
 ======
 
