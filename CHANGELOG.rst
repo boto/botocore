@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.5.37
+======
+
+* api-change:``elbv2``: Update elbv2 client to latest version
+
+
 1.5.36
 ======
 
