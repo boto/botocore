@@ -1,0 +1,7 @@
+[
+  {
+    "category": "``redshift``", 
+    "description": "Update redshift client to latest version", 
+    "type": "api-change"
+  }
+]

@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.5.38
+======
+
+* api-change:``redshift``: Update redshift client to latest version
+
+
 1.5.37
 ======
 
