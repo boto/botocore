@@ -319,10 +319,18 @@ def percent_encode(input_str, safe=SAFE_CHARS):
     producing a percent encoded string, this function deals only with
     taking a string (not a dict/sequence) and percent encoding it.
 
+    If given the binary type, will simply URL encode it. If given the
+    text type, will produce the binary type by UTF-8 encoding the
+    text. If given something else, will convert it to the the text type
+    first.
     """
+    # If its not a binary or text string, make it a text string.
     if not isinstance(input_str, string_types):
         input_str = text_type(input_str)
-    return quote(text_type(input_str).encode('utf-8'), safe=safe)
+    # If it's not bytes, make it bytes by UTF-8 encoding it.
+    if not isinstance(input_str, binary_type):
+        input_str = input_str.encode('utf-8')
+    return quote(input_str, safe=safe)
 
 
 def parse_timestamp(value):
