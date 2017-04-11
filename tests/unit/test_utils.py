@@ -47,6 +47,7 @@ from botocore.utils import instance_cache
 from botocore.utils import merge_dicts
 from botocore.utils import get_service_module_name
 from botocore.utils import percent_encode_sequence
+from botocore.utils import percent_encode
 from botocore.utils import switch_host_s3_accelerate
 from botocore.utils import deep_merge
 from botocore.utils import S3RegionRedirector
@@ -1057,6 +1058,27 @@ class TestPercentEncodeSequence(unittest.TestCase):
                              ('k2', ['another', 'list'])])),
             'k1=a&k1=list&k2=another&k2=list')
 
+class TestPercentEncode(unittest.TestCase):
+    def test_percent_encode_obj(self):
+        self.assertEqual(percent_encode(1), '1')
+
+    def test_percent_encode_text(self):
+        self.assertEqual(percent_encode(u''), '')
+        self.assertEqual(percent_encode(u'a'), 'a')
+        self.assertEqual(percent_encode(u'\u0000'), '%00')
+        # Codepoint > 0x7f
+        self.assertEqual(percent_encode(u'\u2603'), '%E2%98%83')
+        # Codepoint > 0xffff
+        self.assertEqual(percent_encode(u'\U0001f32e'), '%F0%9F%8C%AE')
+
+    def test_percent_encode_bytes(self):
+        self.assertEqual(percent_encode(b''), '')
+        self.assertEqual(percent_encode(b'a'), u'a')
+        self.assertEqual(percent_encode(b'\x00'), u'%00')
+        # UTF-8 Snowman
+        self.assertEqual(percent_encode(b'\xe2\x98\x83'), '%E2%98%83')
+        # Arbitrary bytes (not valid UTF-8).
+        self.assertEqual(percent_encode(b'\x80\x00'), '%80%00')
 
 class TestSwitchHostS3Accelerate(unittest.TestCase):
     def setUp(self):
