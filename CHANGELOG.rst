@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.5.39
+======
+
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``batch``: Update batch client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``opsworks``: Update opsworks client to latest version
+
+
 1.5.38
 ======
 
