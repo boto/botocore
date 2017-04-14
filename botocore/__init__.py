@@ -45,6 +45,8 @@ _xform_cache = {
     ('DescribeStorediSCSIVolumes', '-'): 'describe-stored-iscsi-volumes',
     ('CreateStorediSCSIVolume', '_'): 'create_stored_iscsi_volume',
     ('CreateStorediSCSIVolume', '-'): 'create-stored-iscsi-volume',
+    ('ListHITsForQualificationType', '_'): 'list_hits_for_qualification_type',
+    ('ListHITsForQualificationType', '-'): 'list-hits-for-qualification-type',
 }
 # The items in this dict represent partial renames to apply globally to all
 # services which might have a matching argument or operation. This way a
