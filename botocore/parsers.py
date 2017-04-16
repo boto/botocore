@@ -297,7 +297,7 @@ class BaseXMLResponseParser(ResponseParser):
                     val_name = self._parse_shape(value_shape, single_pair)
                 else:
                     raise ResponseParserError("Unknown tag: %s" % tag_name)
-            parsed[key_name] = val_name
+                parsed[key_name] = val_name
         return parsed
 
     def _node_tag(self, node):
