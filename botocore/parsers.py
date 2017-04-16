@@ -288,6 +288,8 @@ class BaseXMLResponseParser(ResponseParser):
         if shape.serialization.get('flattened') and not isinstance(node, list):
             node = [node]
         for keyval_node in node:
+            key_name = None
+            val_name = None
             for single_pair in keyval_node:
                 # Within each <entry> there's a <key> and a <value>
                 tag_name = self._node_tag(single_pair)
@@ -297,7 +299,8 @@ class BaseXMLResponseParser(ResponseParser):
                     val_name = self._parse_shape(value_shape, single_pair)
                 else:
                     raise ResponseParserError("Unknown tag: %s" % tag_name)
-            parsed[key_name] = val_name
+            if key_name is not None and val_name is not None:
+                parsed[key_name] = val_name
         return parsed
 
     def _node_tag(self, node):
