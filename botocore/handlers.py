@@ -927,6 +927,11 @@ BUILTIN_HANDLERS = [
     # Cloudsearchdomain search operation will be sent by HTTP POST
     ('request-created.cloudsearchdomain.Search',
      change_get_to_post),
+
+    ('docs.response-params.s3.GetObject.*', AppendParamDocumentation(
+     'Body', 'It will actually be a file-like object with a read() method.'
+     ).append_documentation),
+
     # Glacier documentation customizations
     ('docs.*.glacier.*.complete-section',
      AutoPopulatedParam('accountId', 'Note: this parameter is set to "-" by'
