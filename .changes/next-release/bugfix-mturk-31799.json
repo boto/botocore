@@ -1,5 +1,0 @@
-{
-  "type": "bugfix",
-  "description": "Fix naming on list_hits_for_qualification_type for mturk. The old method name will still be supported.",
-  "category": "mturk"
-}
