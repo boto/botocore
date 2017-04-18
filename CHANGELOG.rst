@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.5.40
+======
+
+* bugfix:mturk: Fix naming on list_hits_for_qualification_type for mturk. The old method name will still be supported.
+* api-change:``lambda``: Update lambda client to latest version
+
+
 1.5.39
 ======
 
