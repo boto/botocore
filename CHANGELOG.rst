@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+1.5.41
+======
+
+* api-change:``codestar``: Update codestar client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``iam``: Update iam client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+* api-change:``polly``: Update polly client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.5.40
 ======
 
