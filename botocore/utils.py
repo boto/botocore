@@ -19,7 +19,6 @@ import binascii
 import functools
 import weakref
 
-from six import string_types, text_type
 import dateutil.parser
 from dateutil.tz import tzlocal, tzutc
 
@@ -29,7 +28,7 @@ from botocore.exceptions import InvalidDNSNameError, ClientError
 from botocore.exceptions import MetadataRetrievalError
 from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
 from botocore.vendored import requests
-from botocore.compat import OrderedDict
+from botocore.compat import OrderedDict, six
 
 
 logger = logging.getLogger(__name__)
@@ -320,9 +319,9 @@ def percent_encode(input_str, safe=SAFE_CHARS):
     taking a string (not a dict/sequence) and percent encoding it.
 
     """
-    if not isinstance(input_str, string_types):
-        input_str = text_type(input_str)
-    return quote(text_type(input_str).encode('utf-8'), safe=safe)
+    if not isinstance(input_str, six.string_types):
+        input_str = six.text_type(input_str)
+    return quote(six.text_type(input_str).encode('utf-8'), safe=safe)
 
 
 def parse_timestamp(value):
