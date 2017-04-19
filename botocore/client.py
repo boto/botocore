@@ -496,6 +496,19 @@ class BaseClient(object):
         self._exceptions = None
         self._register_handlers()
 
+    def __getattr__(self, item):
+        event_name = 'getattr.%s.%s' % (self._service_model.service_name, item)
+        handler, event_response = self.meta.events.emit_until_response(
+            event_name, client=self)
+
+        if event_response is not None:
+            return event_response
+
+        raise AttributeError(
+            "'%s' object has no attribute '%s'" % (
+                self.__class__.__name__, item)
+        )
+
     def _register_handlers(self):
         # Register the handler required to sign requests.
         self.meta.events.register('request-created.%s' %

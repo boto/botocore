@@ -814,11 +814,25 @@ class ParameterAlias(object):
         section.write(updated_content)
 
 
+class ClientMethodAlias(object):
+    def __init__(self, actual_name):
+        """ Aliases a non-extant method to an existing method.
+
+        :param actual_name: The name of the method that actually exists on
+            the client.
+        """
+        self._actual = actual_name
+
+    def __call__(self, client, **kwargs):
+        return getattr(client, self._actual)
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
 
 BUILTIN_HANDLERS = [
+    ('getattr.mturk.list_hi_ts_for_qualification_type',
+     ClientMethodAlias('list_hits_for_qualification_type')),
     ('before-parameter-build.s3.UploadPart',
      convert_body_to_file_like_object, REGISTER_LAST),
     ('before-parameter-build.s3.PutObject',

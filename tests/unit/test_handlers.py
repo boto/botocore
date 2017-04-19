@@ -1221,3 +1221,13 @@ class TestParameterAlias(unittest.TestCase):
         contents = self.sample_section.flush_structure().decode('utf-8')
         self.assertIn(self.alias_name + '=',  contents)
         self.assertNotIn(self.original_name + '=', contents)
+
+
+class TestCommandAlias(unittest.TestCase):
+    def test_command_alias(self):
+        alias = handlers.ClientMethodAlias('foo')
+        client = mock.Mock()
+        client.foo.return_value = 'bar'
+
+        response = alias(client=client)()
+        self.assertEqual(response, 'bar')
