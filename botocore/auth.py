@@ -239,7 +239,7 @@ class SigV4Auth(BaseSigner):
         #
         # The Trimall function removes excess white space before and after
         # values, and converts sequential spaces to a single space.
-        return ' '.join(value.strip().split())
+        return ' '.join(value.split())
 
     def signed_headers(self, headers_to_sign):
         l = ['%s' % n.lower().strip() for n in set(headers_to_sign)]
