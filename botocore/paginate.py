@@ -13,7 +13,7 @@
 
 from itertools import tee
 
-from six import string_types
+from botocore.compat import six
 
 import jmespath
 import json
@@ -211,7 +211,7 @@ class PageIterator(object):
         # and only return the truncated amount.
         starting_truncation = self._parse_starting_token()[1]
         all_data = primary_result_key.search(parsed)
-        if isinstance(all_data, (list, string_types)):
+        if isinstance(all_data, (list, six.string_types)):
             data = all_data[starting_truncation:]
         else:
             data = None
@@ -229,7 +229,7 @@ class PageIterator(object):
             sample = token.search(parsed)
             if isinstance(sample, list):
                 empty_value = []
-            elif isinstance(sample, string_types):
+            elif isinstance(sample, six.string_types):
                 empty_value = ''
             elif isinstance(sample, (int, float)):
                 empty_value = 0
@@ -321,7 +321,7 @@ class PageIterator(object):
                 # Now both result_value and existing_value contain something
                 if isinstance(result_value, list):
                     existing_value.extend(result_value)
-                elif isinstance(result_value, (int, float, string_types)):
+                elif isinstance(result_value, (int, float, six.string_types)):
                     # Modify the existing result with the sum or concatenation
                     set_value_from_jmespath(
                         complete_result, result_expression.expression,
