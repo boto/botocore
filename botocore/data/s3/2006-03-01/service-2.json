@@ -5791,7 +5791,7 @@
           "shape":"ExpirationStatus",
           "documentation":"If 'Enabled', the rule is currently being applied. If 'Disabled', the rule is not currently being applied."
         },
-        "Transition":{"shape":"Transition"},
+        "Transition":{"shape":"TransitionList"},
         "NoncurrentVersionTransition":{"shape":"NoncurrentVersionTransition"},
         "NoncurrentVersionExpiration":{"shape":"NoncurrentVersionExpiration"},
         "AbortIncompleteMultipartUpload":{"shape":"AbortIncompleteMultipartUpload"}
