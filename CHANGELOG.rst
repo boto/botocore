@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.5.42
+======
+
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``directconnect``: Update directconnect client to latest version
+* api-change:``devicefarm``: Update devicefarm client to latest version
+* api-change:``kms``: Update kms client to latest version
+* api-change:``route53domains``: Update route53domains client to latest version
+
+
 1.5.41
 ======
 
