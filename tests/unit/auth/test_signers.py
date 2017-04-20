@@ -532,6 +532,20 @@ class TestSigV4(unittest.TestCase):
         sha_header = request.headers['X-Amz-Content-SHA256']
         self.assertEqual(sha_header, 'UNSIGNED-PAYLOAD')
 
+    def test_collapse_multiple_spaces(self):
+        auth = self.create_signer()
+        original = HTTPHeaders()
+        original['foo'] = 'double  space'
+        headers = auth.canonical_headers(original)
+        self.assertEqual(headers, 'foo:double space')
+
+    def test_trims_leading_trailing_spaces(self):
+        auth = self.create_signer()
+        original = HTTPHeaders()
+        original['foo'] = '  leading  and  trailing  '
+        headers = auth.canonical_headers(original)
+        self.assertEqual(headers, 'foo:leading and trailing')
+
 
 class TestSigV4Resign(BaseTestWithFixedDate):
 
