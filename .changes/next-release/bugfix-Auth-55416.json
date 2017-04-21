@@ -1,0 +1,5 @@
+{
+  "category": "Auth", 
+  "type": "bugfix", 
+  "description": "Fix bug in Signature Version 4 signer when a header value has consecutive spaces"
+}

@@ -889,6 +889,14 @@ class TestS3SigV4Client(BaseS3ClientTest):
         # Make sure the upload id is as expected.
         self.assertEqual(response['Uploads'][0]['UploadId'], upload_id)
 
+    def test_can_add_double_space_metadata(self):
+        # Ensure we get no sigv4 errors when we send
+        # metadata with consecutive spaces.
+        response = self.client.put_object(
+            Bucket=self.bucket_name, Key='foo.txt',
+            Body=b'foobar', Metadata={'foo': '  multi    spaces  '})
+        self.assert_status_code(response, 200)
+
 
 class TestSSEKeyParamValidation(BaseS3ClientTest):
     def test_make_request_with_sse(self):
