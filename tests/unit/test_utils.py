@@ -17,6 +17,7 @@ import datetime
 import six
 
 import mock
+from nose.tools import assert_equal
 
 from botocore import xform_name
 from botocore.compat import OrderedDict, json
@@ -1600,6 +1601,10 @@ class TestContainerMetadataFetcher(unittest.TestCase):
             fetcher.retrieve_uri('/foo?id=1')
         # Should have tried up to RETRY_ATTEMPTS.
         self.assertEqual(self.http.get.call_count, fetcher.RETRY_ATTEMPTS)
+        
+
+def test_killing_codecov():
+    yield assert_equal, u'\u2713', u'\u2713'
 
     def test_can_retrieve_full_uri_with_fixed_ip(self):
         self.assert_can_retrieve_metadata_from(
