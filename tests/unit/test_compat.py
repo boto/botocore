@@ -16,7 +16,7 @@ import mock
 
 from botocore.exceptions import MD5UnavailableError
 from botocore.compat import (
-    total_seconds, unquote_str, six, ensure_bytes, get_md5
+    total_seconds, unquote_str, six, ensure_bytes, get_md5, ensure_text_type
 )
 
 from tests import BaseEnvVar, unittest
@@ -82,6 +82,37 @@ class TestEnsureBytes(unittest.TestCase):
         value = 500
         with self.assertRaises(ValueError):
             ensure_bytes(value)
+
+
+class TestEnsureText(unittest.TestCase):
+    def test_string(self):
+        value = 'foo'
+        response = ensure_text_type(value)
+        self.assertIsInstance(response, six.text_type)
+        self.assertEqual(response, 'foo')
+
+    def test_binary(self):
+        value = b'bar'
+        response = ensure_text_type(value)
+        self.assertIsInstance(response, six.text_type)
+        self.assertEqual(response, 'bar')
+
+    def test_unicode(self):
+        value = u'baz'
+        response = ensure_text_type(value)
+        self.assertIsInstance(response, six.text_type)
+        self.assertEqual(response, 'baz')
+
+    def test_non_ascii(self):
+        value = b'\xe2\x9c\x93'
+        response = ensure_text_type(value)
+        self.assertIsInstance(response, six.text_type)
+        self.assertEqual(response, u'\u2713')
+
+    def test_non_string_or_bytes_raises_error(self):
+        value = 500
+        with self.assertRaises(ValueError):
+            ensure_text_type(value)
 
 
 class TestGetMD5(unittest.TestCase):

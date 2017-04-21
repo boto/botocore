@@ -68,6 +68,13 @@ if six.PY3:
         # changes when using getargspec with functools.partials.
         return inspect.getfullargspec(func)[2]
 
+    def ensure_text_type(s, encoding='utf-8', errors='strict'):
+        if isinstance(s, str):
+            return s
+        if isinstance(s, bytes):
+            return s.decode(encoding, errors)
+        raise ValueError("Expected str or bytes, recieved %s." % type(s))
+
     def ensure_unicode(s, encoding=None, errors=None):
         # NOOP in Python 3, because every string is already unicode
         return s
@@ -126,6 +133,13 @@ else:
 
     def accepts_kwargs(func):
         return inspect.getargspec(func)[2]
+
+    def ensure_text_type(s, encoding='utf-8', errors='strict'):
+        if isinstance(s, six.text_type):
+            return s
+        if isinstance(s, six.binary_type):
+            return s.decode(encoding, errors)
+        raise ValueError("Expected str or unicode, received %s." % type(s))
 
     def ensure_unicode(s, encoding='utf-8', errors='strict'):
         if isinstance(s, six.text_type):
