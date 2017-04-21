@@ -228,10 +228,18 @@ class SigV4Auth(BaseSigner):
         headers = []
         sorted_header_names = sorted(set(headers_to_sign))
         for key in sorted_header_names:
-            value = ','.join(v.strip() for v in
+            value = ','.join(self._header_value(v) for v in
                              sorted(headers_to_sign.get_all(key)))
             headers.append('%s:%s' % (key, value))
         return '\n'.join(headers)
+
+    def _header_value(self, value):
+        # From the sigv4 docs:
+        # Lowercase(HeaderName) + ':' + Trimall(HeaderValue)
+        #
+        # The Trimall function removes excess white space before and after
+        # values, and converts sequential spaces to a single space.
+        return ' '.join(value.split())
 
     def signed_headers(self, headers_to_sign):
         l = ['%s' % n.lower().strip() for n in set(headers_to_sign)]
