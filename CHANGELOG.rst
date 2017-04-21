@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.5.43
+======
+
+* api-change:``appstream``: Update appstream client to latest version
+* bugfix:Auth: Fix bug in Signature Version 4 signer when a header value has consecutive spaces
+* api-change:``kinesis``: Update kinesis client to latest version
+
+
 1.5.42
 ======
 
