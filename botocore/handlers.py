@@ -639,7 +639,7 @@ def document_glacier_tree_hash_checksum():
         previous uploaded parts, using the algorithm described in
         `Glacier documentation <http://docs.aws.amazon.com/amazonglacier/latest/dev/checksum-calculations.html>`_.
 
-        But if you prefer, you can also use botocore.util.calculate_tree_hash()
+        But if you prefer, you can also use botocore.utils.calculate_tree_hash()
         to compute it from raw file by::
 
             checksum = calculate_tree_hash(open('your_file.txt', 'rb'))
