@@ -1,5 +1,5 @@
 {
-  "type": "feature",
+  "type": "enhancement",
   "category": "rds",
   "description": "Add rds database presigner."
 }
