@@ -449,6 +449,43 @@ class TestSigner(BaseSignerTest):
             expires=2
         )
 
+    def test_sign_with_custom_signing_name(self):
+        request = mock.Mock()
+        auth = mock.Mock()
+        auth_types = {
+            'v4': auth
+        }
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS, auth_types):
+            self.signer.sign('operation_name', request, signing_name='foo')
+        auth.assert_called_with(
+            credentials=ReadOnlyCredentials('key', 'secret', None),
+            service_name='foo',
+            region_name='region_name'
+        )
+
+    def test_presign_with_custom_signing_name(self):
+        auth = mock.Mock()
+        auth.REQUIRES_REGION = True
+
+        request_dict = {
+            'headers': {},
+            'url': 'https://foo.com',
+            'body': b'',
+            'url_path': '/',
+            'method': 'GET',
+            'context': {}
+        }
+        with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
+                             {'v4-query': auth}):
+            presigned_url = self.signer.generate_presigned_url(
+                request_dict, operation_name='operation_name',
+                signing_name='foo')
+        auth.assert_called_with(
+            credentials=self.fixed_credentials,
+            region_name='region_name',
+            expires=3600, service_name='foo')
+        self.assertEqual(presigned_url, 'https://foo.com')
+
     def test_unknown_signer_raises_unknown_on_standard(self):
         request = mock.Mock()
         auth = mock.Mock()

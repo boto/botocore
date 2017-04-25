@@ -90,7 +90,7 @@ class RequestSigner(object):
         return self.sign(operation_name, request)
 
     def sign(self, operation_name, request, region_name=None,
-             signing_type='standard', expires_in=None):
+             signing_type='standard', expires_in=None, signing_name=None):
         """Sign a request before it goes out over the wire.
 
         :type operation_name: string
@@ -113,9 +113,15 @@ class RequestSigner(object):
         :type expires_in: int
         :param expires_in: The number of seconds the presigned url is valid
             for. This parameter is only valid for signing type 'presign-url'.
+
+        :type signing_name: str
+        :param signing_name: The name to use for the service when signing.
         """
         if region_name is None:
             region_name = self._region_name
+
+        if signing_name is None:
+            signing_name = self._signing_name
 
         signature_version = self._choose_signer(
             operation_name, signing_type, request.context)
@@ -123,13 +129,13 @@ class RequestSigner(object):
         # Allow mutating request before signing
         self._event_emitter.emit(
             'before-sign.{0}.{1}'.format(self._service_name, operation_name),
-            request=request, signing_name=self._signing_name,
+            request=request, signing_name=signing_name,
             region_name=self._region_name,
             signature_version=signature_version, request_signer=self)
 
         if signature_version != botocore.UNSIGNED:
             kwargs = {
-                'signing_name': self._signing_name,
+                'signing_name': signing_name,
                 'region_name': region_name,
                 'signature_version': signature_version
             }
@@ -230,7 +236,8 @@ class RequestSigner(object):
     get_auth = get_auth_instance
 
     def generate_presigned_url(self, request_dict, operation_name,
-                               expires_in=3600, region_name=None):
+                               expires_in=3600, region_name=None,
+                               signing_name=None):
         """Generates a presigned url
 
         :type request_dict: dict
@@ -247,11 +254,14 @@ class RequestSigner(object):
         :type region_name: string
         :param region_name: The region name to sign the presigned url.
 
+        :type signing_name: str
+        :param signing_name: The name to use for the service when signing.
+
         :returns: The presigned url
         """
         request = create_request_object(request_dict)
         self.sign(operation_name, request, region_name,
-                  'presign-url', expires_in)
+                  'presign-url', expires_in, signing_name)
 
         request.prepare()
         return request.url
