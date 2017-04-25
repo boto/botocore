@@ -932,8 +932,8 @@ class TestGenerateDBAuthToken(BaseSignerTest):
             '&DBUser=someusername&X-Amz-Algorithm=AWS4-HMAC-SHA256'
             '&X-Amz-Date=20161107T173933Z&X-Amz-SignedHeaders=host'
             '&X-Amz-Expires=900&X-Amz-Credential=akid%2F20161107%2F'
-            'us-east-1%2Frds%2Faws4_request&X-Amz-Signature=ea7966c64f14d5b15e'
-            '102033607ed74a0b8068c220d0385eeee9340db2cb4115'
+            'us-east-1%2Frds-db%2Faws4_request&X-Amz-Signature'
+            '=d1138cdbc0ca63eec012ec0fc6c2267e03642168f5884a7795320d4c18374c61'
         )
         self.assert_url_equal(result, expected_result)
 

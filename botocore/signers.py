@@ -443,7 +443,7 @@ def generate_db_auth_token(self, DBHostname, Port, DBUsername, Region=None):
     prepare_request_dict(request_dict, endpoint_url)
     presigned_url = self._request_signer.generate_presigned_url(
         operation_name='connect', request_dict=request_dict,
-        region_name=region, expires_in=900
+        region_name=region, expires_in=900, signing_name='rds-db'
     )
     return presigned_url[len(scheme):]
 
