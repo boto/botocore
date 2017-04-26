@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.5.44
+======
+
+* enhancement:rds: Add rds database presigner.
+* api-change:``rds``: Update rds client to latest version
+
+
 1.5.43
 ======
 
