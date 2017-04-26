@@ -909,6 +909,8 @@ class TestGeneratePresignedPost(unittest.TestCase):
 
 
 class TestGenerateDBAuthToken(BaseSignerTest):
+    maxDiff = None
+    
     def setUp(self):
         self.session = botocore.session.get_session()
         self.client = self.session.create_client(
@@ -935,7 +937,11 @@ class TestGenerateDBAuthToken(BaseSignerTest):
             'us-east-1%2Frds-db%2Faws4_request&X-Amz-Signature'
             '=d1138cdbc0ca63eec012ec0fc6c2267e03642168f5884a7795320d4c18374c61'
         )
-        self.assert_url_equal(result, expected_result)
+
+        # A scheme needs to be appended to the beginning or urlsplit may fail
+        # on certain systems.
+        self.assert_url_equal(
+            'https://' + result, 'https://' + expected_result)
 
     def test_custom_region(self):
         hostname = 'host.us-east-1.rds.amazonaws.com'
