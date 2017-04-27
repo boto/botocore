@@ -839,7 +839,7 @@ def _get_new_endpoint(original_endpoint, new_endpoint, use_new_scheme=True):
         scheme = new_endpoint_components.scheme
     final_endpoint_components = (
         scheme,
-        new_endpoint_components.netloc,
+        original_endpoint_components.netloc,
         original_endpoint_components.path,
         original_endpoint_components.query,
         ''
