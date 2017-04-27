@@ -662,7 +662,7 @@ class HmacV1Auth(BaseSigner):
         if len(nv) == 1:
             return nv
         else:
-            return (nv[0], unquote(nv[1]))
+            return (nv[0], unquote(nv[1].encode('ascii')).decode('utf-8'))
 
     def canonical_resource(self, split, auth_path=None):
         # don't include anything after the first ? in the resource...
