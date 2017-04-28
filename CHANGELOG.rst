@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.5.45
+======
+
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``snowball``: Update snowball client to latest version
+* api-change:``sqs``: Update sqs client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+* bugfix:Paginator: Fixes bug where pagination would fail if the pagination token contained bytes.
+* api-change:``rds``: Update rds client to latest version
+
+
 1.5.44
 ======
 

@@ -1,5 +1,0 @@
-{
-  "category": "``sqs``", 
-  "type": "api-change", 
-  "description": "Update sqs client to latest version"
-}
