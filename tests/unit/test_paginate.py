@@ -14,16 +14,57 @@
 from tests import unittest
 from botocore.paginate import Paginator
 from botocore.paginate import PaginatorModel
+from botocore.paginate import TokenDecoder
+from botocore.paginate import TokenEncoder
 from botocore.exceptions import PaginationError
 from botocore.compat import six
 
 import mock
-import base64
-import json
 
 
 def encode_token(token):
-    return base64.b64encode(json.dumps(token).encode('utf-8')).decode('utf-8')
+    return TokenEncoder().encode(token)
+
+
+class TestTokenDecoder(unittest.TestCase):
+    def setUp(self):
+        self.decoder = TokenDecoder()
+
+    def test_decode(self):
+        token = 'eyJmb28iOiAiYmFyIn0='
+        expected = {'foo': 'bar'}
+        self.assertEqual(self.decoder.decode(token), expected)
+
+    def test_decode_with_bytes(self):
+        token = (
+            'eyJib3RvX2VuY29kZWRfa2V5cyI6IFtbImZvbyJdXSwgImZvbyI6ICJZbUZ5In0='
+        )
+        expected = {'foo': b'bar'}
+        self.assertEqual(self.decoder.decode(token), expected)
+
+    def test_decode_with_nested_bytes(self):
+        token = (
+            'eyJmb28iOiB7ImJhciI6ICJZbUY2In0sICJib3RvX2VuY29kZWRfa2V5cyI6'
+            'IFtbImZvbyIsICJiYXIiXV19'
+        )
+        expected = {'foo': {'bar': b'baz'}}
+        self.assertEqual(self.decoder.decode(token), expected)
+
+    def test_decode_with_listed_bytes(self):
+        token = (
+            'eyJib3RvX2VuY29kZWRfa2V5cyI6IFtbImZvbyIsICJiYXIiLCAxXV0sICJmb28i'
+            'OiB7ImJhciI6IFsiYmF6IiwgIlltbHUiXX19'
+        )
+        expected = {'foo': {'bar': ['baz', b'bin']}}
+        self.assertEqual(self.decoder.decode(token), expected)
+
+    def test_decode_with_multiple_bytes_values(self):
+        token = (
+            'eyJib3RvX2VuY29kZWRfa2V5cyI6IFtbImZvbyIsICJiaW4iXSwgWyJmb28iLCAi'
+            'YmFyIl1dLCAiZm9vIjogeyJiaW4iOiAiWW1GdCIsICJiYXIiOiAiWW1GNiJ9fQ=='
+        )
+        expected = {'foo': {'bar': b'baz', 'bin': b'bam'}}
+        self.assertEqual(self.decoder.decode(token), expected)
 
 
 class TestPaginatorModel(unittest.TestCase):
@@ -333,6 +374,176 @@ class TestPaginatorWithPathExpressions(unittest.TestCase):
             [mock.call(),
              mock.call(next_marker='token1'),
              mock.call(next_marker='Last')])
+
+
+class TestBinaryTokens(unittest.TestCase):
+    def setUp(self):
+        self.method = mock.Mock()
+        self.paginate_config = {
+            "output_token": "Marker",
+            "input_token": "Marker",
+            "result_key": "Users"
+        }
+        self.paginator = Paginator(self.method, self.paginate_config)
+
+    def test_build_full_result_with_bytes(self):
+        responses = [
+            {"Users": ["User1", "User2"], "Marker": b'\xff'},
+            {"Users": ["User3", "User4"], "Marker": b'\xfe'},
+            {"Users": ["User5"]}
+        ]
+        self.method.side_effect = responses
+        pages = self.paginator.paginate(PaginationConfig={'MaxItems': 3})
+        complete = pages.build_full_result()
+        expected_token = encode_token({
+            "Marker": b'\xff', "boto_truncate_amount": 1,
+        })
+        expected_response = {
+            "Users": ["User1", "User2", "User3"],
+            "NextToken": expected_token
+        }
+        self.assertEqual(complete, expected_response)
+
+    def test_build_full_result_with_nested_bytes(self):
+        responses = [
+            {"Users": ["User1", "User2"], "Marker": {'key': b'\xff'}},
+            {"Users": ["User3", "User4"], "Marker": {'key': b'\xfe'}},
+            {"Users": ["User5"]}
+        ]
+        self.method.side_effect = responses
+        pages = self.paginator.paginate(PaginationConfig={'MaxItems': 3})
+        complete = pages.build_full_result()
+        expected_token = encode_token({
+            "Marker": {'key': b'\xff'}, "boto_truncate_amount": 1,
+        })
+        expected_response = {
+            "Users": ["User1", "User2", "User3"],
+            "NextToken": expected_token
+        }
+        self.assertEqual(complete, expected_response)
+
+    def test_build_full_result_with_listed_bytes(self):
+        responses = [
+            {"Users": ["User1", "User2"], "Marker": {'key': ['foo', b'\xff']}},
+            {"Users": ["User3", "User4"], "Marker": {'key': ['foo', b'\xfe']}},
+            {"Users": ["User5"]}
+        ]
+        self.method.side_effect = responses
+        pages = self.paginator.paginate(PaginationConfig={'MaxItems': 3})
+        complete = pages.build_full_result()
+        expected_token = encode_token({
+            "Marker": {'key': ['foo', b'\xff']}, "boto_truncate_amount": 1,
+        })
+        expected_response = {
+            "Users": ["User1", "User2", "User3"],
+            "NextToken": expected_token
+        }
+        self.assertEqual(complete, expected_response)
+
+    def test_build_full_result_with_multiple_bytes_values(self):
+        responses = [
+            {
+                "Users": ["User1", "User2"],
+                "Marker": {'key': b'\xff', 'key2': b'\xef'}
+            },
+            {
+                "Users": ["User3", "User4"],
+                "Marker": {'key': b'\xfe', 'key2': b'\xee'}
+            },
+            {
+                "Users": ["User5"]
+            }
+        ]
+        self.method.side_effect = responses
+        pages = self.paginator.paginate(PaginationConfig={'MaxItems': 3})
+        complete = pages.build_full_result()
+        expected_token = encode_token({
+            "Marker": {'key': b'\xff', 'key2': b'\xef'},
+            "boto_truncate_amount": 1,
+        })
+        expected_response = {
+            "Users": ["User1", "User2", "User3"],
+            "NextToken": expected_token
+        }
+        self.assertEqual(complete, expected_response)
+
+    def test_resume_with_bytes(self):
+        responses = [
+            {"Users": ["User3", "User4"], "Marker": b'\xfe'},
+            {"Users": ["User5"]}
+        ]
+        self.method.side_effect = responses
+        starting_token = encode_token({
+            "Marker": b'\xff', "boto_truncate_amount": 1,
+        })
+        pages = self.paginator.paginate(
+            PaginationConfig={'StartingToken': starting_token})
+        complete = pages.build_full_result()
+        expected_response = {
+            "Users": ["User4", "User5"]
+        }
+        self.assertEqual(complete, expected_response)
+        self.method.assert_any_call(Marker=b'\xff')
+
+    def test_resume_with_nested_bytes(self):
+        responses = [
+            {"Users": ["User3", "User4"], "Marker": {'key': b'\xfe'}},
+            {"Users": ["User5"]}
+        ]
+        self.method.side_effect = responses
+        starting_token = encode_token({
+            "Marker": {'key': b'\xff'}, "boto_truncate_amount": 1,
+        })
+        pages = self.paginator.paginate(
+            PaginationConfig={'StartingToken': starting_token})
+        complete = pages.build_full_result()
+        expected_response = {
+            "Users": ["User4", "User5"]
+        }
+        self.assertEqual(complete, expected_response)
+        self.method.assert_any_call(Marker={'key': b'\xff'})
+
+    def test_resume_with_listed_bytes(self):
+        responses = [
+            {"Users": ["User3", "User4"], "Marker": {'key': ['bar', b'\xfe']}},
+            {"Users": ["User5"]}
+        ]
+        self.method.side_effect = responses
+        starting_token = encode_token({
+            "Marker": {'key': ['foo', b'\xff']}, "boto_truncate_amount": 1,
+        })
+        pages = self.paginator.paginate(
+            PaginationConfig={'StartingToken': starting_token})
+        complete = pages.build_full_result()
+        expected_response = {
+            "Users": ["User4", "User5"]
+        }
+        self.assertEqual(complete, expected_response)
+        self.method.assert_any_call(Marker={'key': ['foo', b'\xff']})
+
+    def test_resume_with_multiple_bytes_values(self):
+        responses = [
+            {
+                "Users": ["User3", "User4"],
+                "Marker": {'key': b'\xfe', 'key2': b'\xee'}
+            },
+            {
+                "Users": ["User5"]
+            }
+        ]
+        self.method.side_effect = responses
+        starting_token = encode_token({
+            "Marker": {'key': b'\xff', 'key2': b'\xef'},
+            "boto_truncate_amount": 1,
+        })
+        pages = self.paginator.paginate(
+            PaginationConfig={'StartingToken': starting_token})
+        complete = pages.build_full_result()
+        expected_response = {
+            "Users": ["User4", "User5"]
+        }
+        self.assertEqual(complete, expected_response)
+        self.method.assert_any_call(Marker={'key': b'\xfe', 'key2': b'\xee'})
 
 
 class TestMultipleTokens(unittest.TestCase):
