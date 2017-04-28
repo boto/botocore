@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "Paginator",
+  "description": "Fixes bug where pagination would fail if the pagination token contained bytes."
+}
