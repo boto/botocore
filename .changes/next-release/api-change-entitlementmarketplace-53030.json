@@ -1,5 +1,5 @@
 {
-  "category": "``entitlement.marketplace``", 
+  "category": "``marketplace-entitlement``", 
   "type": "api-change", 
-  "description": "Update entitlement.marketplace client to latest version"
+  "description": "Update marketplace-entitlement client to latest version"
 }
