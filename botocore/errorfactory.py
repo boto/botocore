@@ -10,12 +10,15 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from botocore.exceptions import ClientError
+import sys
+import types
+
+from botocore import exceptions
 from botocore.utils import get_service_module_name
 
 
 class BaseClientExceptions(object):
-    ClientError = ClientError
+    ClientError = exceptions.ClientError
 
     def __init__(self, code_to_exception):
         """Base class for exceptions object on a client
@@ -73,14 +76,39 @@ class ClientExceptionsFactory(object):
             self._client_exceptions_cache[service_name] = client_exceptions
         return self._client_exceptions_cache[service_name]
 
+    def _create_exception_module(self, service_model):
+        # the new dynamic exceptions module name, e.g. botocore.exceptions.ec2
+        module_name = service_model.service_name
+        import_name = '%s.%s' % (exceptions.__name__, module_name)
+
+        # only set the module if it's not already there
+        def get_module():
+            module = types.ModuleType(module_name)
+            module.__package__ = exceptions.__name__
+            return module
+        module = sys.modules.setdefault(import_name, get_module())
+
+        # setting the ec2 attribute of the botocore.exceptions module as well
+        if not hasattr(exceptions, module_name):
+            setattr(exceptions, module_name, module)
+        return module
+
     def _create_client_exceptions(self, service_model):
         cls_props = {}
         code_to_exception = {}
+        exception_module = self._create_exception_module(service_model)
         for shape_name in service_model.shape_names:
             shape = service_model.shape_for(shape_name)
             if shape.metadata.get('exception', False):
                 exception_name = str(shape.name)
-                exception_cls = type(exception_name, (ClientError,), {})
+                exception_cls = type(
+                    exception_name,
+                    (exceptions.ClientError,),
+                    {'__module__': '%s.%s' %
+                     (exception_module.__package__,
+                      exception_module.__name__)},
+                )
+                setattr(exception_module, exception_name, exception_cls)
                 code = shape.metadata.get("error", {}).get("code")
                 cls_props[exception_name] = exception_cls
                 if code:

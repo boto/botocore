@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import pickle
 from tests import unittest
 
 from botocore.exceptions import ClientError
@@ -104,6 +105,24 @@ class TestClientExceptionsFactory(unittest.TestCase):
         self.assertEqual(
             modeled_exception.__name__, 'ExceptionWithModeledCode')
         self.assertTrue(issubclass(modeled_exception, ClientError))
+
+    def test_can_be_pickled(self):
+        exceptions = self.exceptions_factory.create_client_exceptions(
+            self.service_model)
+        self.assertTrue(hasattr(exceptions, 'ExceptionWithModeledCode'))
+        response = {'Error': {}}
+        exception = exceptions.ExceptionWithModeledCode(response, 'blackhole')
+        pickled = pickle.dumps(exception)
+        unpickled = pickle.loads(pickled)
+        assert exception.args == unpickled.args
+        assert exception.__module__ == 'botocore.exceptions.myservice'
+        # The dynamically created module can also be imported
+        from botocore.exceptions import myservice
+        assert myservice.__package__ == 'botocore.exceptions'
+        assert (
+            myservice.ExceptionWithModeledCode ==
+            exceptions.ExceptionWithModeledCode
+        )
 
     def test_collects_modeled_exceptions_for_all_operations(self):
         exceptions = self.exceptions_factory.create_client_exceptions(

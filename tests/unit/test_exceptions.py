@@ -11,6 +11,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import pickle
+
 from nose.tools import assert_equals
 
 from botocore import exceptions
@@ -39,6 +41,15 @@ def test_client_error_set_correct_operation_name():
     response = {'Error': {}}
     exception = exceptions.ClientError(response, 'blackhole')
     assert_equals(exception.operation_name, 'blackhole')
+
+
+def test_client_error_can_be_pickled():
+    response = {'Error': {}}
+    exception = exceptions.ClientError(response, 'blackhole')
+
+    pickled = pickle.dumps(exception)
+    unpickled = pickle.loads(pickled)
+    assert exception.args == unpickled.args
 
 
 def test_retry_info_added_when_present():

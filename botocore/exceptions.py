@@ -31,6 +31,15 @@ class BotoCoreError(Exception):
         self.msg = msg
         self.kwargs = kwargs
 
+    def __reduce__(self):
+        return (
+            self.__class__,
+            # pass in the message again
+            (self.msg,),
+            # setting self.kwargs again
+            {'args': self.args, 'msg': self.msg, 'kwargs': self.kwargs},
+        )
+
 
 class DataNotFoundError(BotoCoreError):
     """
@@ -372,6 +381,15 @@ class ClientError(BotoCoreError):
                     retry_info = (' (reached max retries: %s)' %
                                   metadata['RetryAttempts'])
         return retry_info
+
+    def __reduce__(self):
+        return (
+            self.__class__,
+            (self.response, self.operation_name),
+            # args is set by the base Exception class
+            # kwargs is set by BotoCoreError
+            {'args': self.args, 'kwargs': self.kwargs},
+        )
 
 
 class UnsupportedTLSVersionWarning(Warning):
