@@ -16,6 +16,13 @@ from nose.tools import assert_equals
 from botocore import exceptions
 
 
+def test_client_error_is_subclass_of_botocoreerror():
+    response = {'Error': {}}
+    exception = exceptions.ClientError(response, 'blackhole')
+
+    assert isinstance(exception, exceptions.BotoCoreError)
+
+
 def test_client_error_can_handle_missing_code_or_message():
     response = {'Error': {}}
     expect = 'An error occurred (Unknown) when calling the blackhole operation: Unknown'

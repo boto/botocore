@@ -23,9 +23,12 @@ class BotoCoreError(Exception):
     """
     fmt = 'An unspecified error occurred'
 
-    def __init__(self, **kwargs):
-        msg = self.fmt.format(**kwargs)
+    def __init__(self, msg=None, **kwargs):
+        # The  msg parameter is to ensure this class remains picklable
+        if not msg:
+            msg = self.fmt.format(**kwargs)
         Exception.__init__(self, msg)
+        self.msg = msg
         self.kwargs = kwargs
 
 
@@ -343,7 +346,7 @@ class UnsupportedSignatureVersionError(BotoCoreError):
     fmt = 'Signature version is not supported: {signature_version}'
 
 
-class ClientError(Exception):
+class ClientError(BotoCoreError):
     MSG_TEMPLATE = (
         'An error occurred ({error_code}) when calling the {operation_name} '
         'operation{retry_info}: {error_message}')
