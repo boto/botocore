@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``marketplace-entitlement``", 
+    "description": "Update marketplace-entitlement client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``lambda``", 
+    "description": "Update lambda client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ecs``", 
+    "description": "Update ecs client to latest version", 
+    "type": "api-change"
+  }
+]
