@@ -508,6 +508,7 @@ class EnvProvider(CredentialProvider):
     # The token can come from either of these env var.
     # AWS_SESSION_TOKEN is what other AWS SDKs have standardized on.
     TOKENS = ['AWS_SECURITY_TOKEN', 'AWS_SESSION_TOKEN']
+    EXPIRY_TIME = 'AWS_CREDENTIAL_EXPIRATION'
 
     def __init__(self, environ=None, mapping=None):
         """
@@ -533,6 +534,7 @@ class EnvProvider(CredentialProvider):
             var_mapping['access_key'] = self.ACCESS_KEY
             var_mapping['secret_key'] = self.SECRET_KEY
             var_mapping['token'] = self.TOKENS
+            var_mapping['expiry_time'] = self.EXPIRY_TIME
         else:
             var_mapping['access_key'] = mapping.get(
                 'access_key', self.ACCESS_KEY)
@@ -542,6 +544,8 @@ class EnvProvider(CredentialProvider):
                 'token', self.TOKENS)
             if not isinstance(var_mapping['token'], list):
                 var_mapping['token'] = [var_mapping['token']]
+            var_mapping['expiry_time'] = mapping.get(
+                'expiry_time', self.EXPIRY_TIME)
         return var_mapping
 
     def load(self):
@@ -550,19 +554,61 @@ class EnvProvider(CredentialProvider):
         """
         if self._mapping['access_key'] in self.environ:
             logger.info('Found credentials in environment variables.')
-            access_key, secret_key = self._extract_creds_from_mapping(
-                self.environ, self._mapping['access_key'],
-                self._mapping['secret_key'])
-            token = self._get_session_token()
-            return Credentials(access_key, secret_key, token,
-                               method=self.METHOD)
+            fetcher = self._create_credentials_fetcher()
+            credentials = fetcher(require_expiry=False)
+
+            expiry_time = credentials['expiry_time']
+            if expiry_time is not None:
+                expiry_time = parse(expiry_time)
+                return RefreshableCredentials(
+                    credentials['access_key'], credentials['secret_key'],
+                    credentials['token'], expiry_time,
+                    refresh_using=fetcher, method=self.METHOD
+                )
+
+            return Credentials(
+                credentials['access_key'], credentials['secret_key'],
+                credentials['token'], method=self.METHOD
+            )
         else:
             return None
 
-    def _get_session_token(self):
-        for token_envvar in self._mapping['token']:
-            if token_envvar in self.environ:
-                return self.environ[token_envvar]
+    def _create_credentials_fetcher(self):
+        mapping = self._mapping
+        method = self.METHOD
+        environ = self.environ
+
+        def fetch_credentials(require_expiry=True):
+            credentials = {}
+
+            access_key = environ.get(mapping['access_key'])
+            if access_key is None:
+                raise PartialCredentialsError(
+                    provider=method, cred_var=mapping['access_key'])
+            credentials['access_key'] = access_key
+
+            secret_key = environ.get(mapping['secret_key'])
+            if secret_key is None:
+                raise PartialCredentialsError(
+                    provider=method, cred_var=mapping['secret_key'])
+            credentials['secret_key'] = secret_key
+
+            token = None
+            for token_env_var in mapping['token']:
+                if token_env_var in environ:
+                    token = environ[token_env_var]
+                    break
+            credentials['token'] = token
+
+            expiry_time = environ.get(mapping['expiry_time'])
+            if require_expiry and expiry_time is None:
+                raise PartialCredentialsError(
+                    provider=method, cred_var=mapping['expiry_time'])
+            credentials['expiry_time'] = expiry_time
+
+            return credentials
+
+        return fetch_credentials
 
 
 class OriginalEC2Provider(CredentialProvider):
