@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.5.47
+======
+
+* api-change:``codestar``: Update codestar client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+* enhancement:Credentials: Add support for environment variable credential expiration.
+
+
 1.5.46
 ======
 
