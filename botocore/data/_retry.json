@@ -125,6 +125,26 @@
         }
       }
     },
+    "elasticmapreduce": {
+      "__default__": {
+        "max_attempts": 10,
+        "delay": {
+          "type": "exponential",
+          "base": 0.8,
+          "growth_factor": 2
+        },
+        "policies": {
+          "request_limit_exceeded": {
+            "applies_when": {
+              "response": {
+                "service_error_code": "ThrottlingException",
+                "http_status_code": 400
+              }
+            }
+          }
+        }
+      }
+    },
     "cloudsearch": {
       "__default__": {
         "policies": {
