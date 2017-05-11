@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.5.48
+======
+
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``elb``: Update elb client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+
+
 1.5.47
 ======
 
