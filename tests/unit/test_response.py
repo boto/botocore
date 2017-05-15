@@ -68,6 +68,26 @@ class TestStreamWrapper(unittest.TestCase):
         stream.close()
         self.assertTrue(body.closed)
 
+    def test_streaming_line_iterator(self):
+        body = six.BytesIO(b'1234567890\n1234567890\n12345')
+        stream = response.StreamingBody(body, content_length=27)
+        lines = iter(stream)
+        self.assertEqual(next(lines), b'1234567890')
+        self.assertEqual(next(lines), b'1234567890')
+        self.assertEqual(next(lines), b'12345')
+        with self.assertRaises(StopIteration):
+            next(lines)
+
+    def test_streaming_line_iterator_ends_newline(self):
+        body = six.BytesIO(b'1234567890\n1234567890\n12345\n')
+        stream = response.StreamingBody(body, content_length=28)
+        lines = iter(stream)
+        self.assertEqual(next(lines), b'1234567890')
+        self.assertEqual(next(lines), b'1234567890')
+        self.assertEqual(next(lines), b'12345')
+        with self.assertRaises(StopIteration):
+            next(lines)
+
 
 class TestGetResponse(BaseResponseTest):
     maxDiff = None

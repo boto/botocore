@@ -80,6 +80,53 @@ class StreamingBody(object):
             self._verify_content_length()
         return chunk
 
+    def __iter__(self):
+        """Return an iterator to yield lines from the raw stream.
+        """
+        # Reading 1024 bytes at a time seems a sane choice [citation needed].
+        # If the user needs to specify something different they can always call
+        # streaming_body.iter_lines(<other-chunk-size>)
+        default_chunk_size = 1024
+        return self.iter_lines(default_chunk_size)
+
+    def iter_lines(self, chunk_size):
+        """Return an iterator to yield lines from the raw stream.
+
+        This is achieved by reading chunk of bytes (of size chunk_size) at a
+        time from the raw stream, and then yielding lines from there.
+        """
+        pending = None
+        for chunk in self._iter_chunks(chunk_size):
+            if pending is not None:
+                chunk = pending + chunk
+
+            lines = chunk.splitlines()
+
+            chunk_ends_with_newline = chunk[-1] == b"\n"
+
+            if lines and lines[-1] and chunk and not chunk_ends_with_newline:
+                # We might be in the 'middle' of a line. Hence we keep the
+                # last line as pending.
+                pending = lines.pop()
+            else:
+                pending = None
+
+            for line in lines:
+                yield line
+
+        if pending is not None:
+            yield pending
+
+    def _iter_chunks(self, chunk_size):
+        """Return an iterator to yield chunks of chunk_size bytes from the raw
+        stream.
+        """
+        while True:
+            current_chunk = self.read(chunk_size)
+            if current_chunk == b"":
+                raise StopIteration()
+            yield current_chunk
+
     def _verify_content_length(self):
         # See: https://github.com/kennethreitz/requests/issues/1855
         # Basically, our http library doesn't do this for us, so we have
