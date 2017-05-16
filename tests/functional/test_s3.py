@@ -41,6 +41,15 @@ class BaseS3OperationTest(BaseSessionTest):
         self.session_send_patch.stop()
 
 
+class TestPaginator(BaseS3OperationTest):
+    def test_non_aggregate_key_exists(self):
+        loader = self.session.get_component('data_loader')
+        page_config = loader.load_service_model(
+            's3', 'paginators-1', '2006-03-01')
+        list_parts_paginator = page_config['pagination']['ListParts']
+        self.assertIn('non_aggregate_keys', list_parts_paginator)
+
+
 class TestOnlyAsciiCharsAllowed(BaseS3OperationTest):
     def test_validates_non_ascii_chars_trigger_validation_error(self):
         self.http_session_send_mock.return_value = mock.Mock(status_code=200,

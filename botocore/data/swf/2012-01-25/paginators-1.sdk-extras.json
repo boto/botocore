@@ -1,0 +1,15 @@
+{
+  "merge": {
+    "pagination": {
+      "PollForDecisionTask": {
+        "non_aggregate_keys": [
+          "taskToken",
+          "startedEventId",
+          "workflowExecution",
+          "workflowType",
+          "previousStartedEventId"
+        ]
+      }
+    }
+  }
+}
