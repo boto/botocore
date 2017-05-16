@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.5.50
+======
+
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+* api-change:``inspector``: Update inspector client to latest version
+* api-change:``kms``: Update kms client to latest version
+
+
 1.5.49
 ======
 
