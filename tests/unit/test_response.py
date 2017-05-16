@@ -71,22 +71,37 @@ class TestStreamWrapper(unittest.TestCase):
     def test_streaming_line_iterator(self):
         body = six.BytesIO(b'1234567890\n1234567890\n12345')
         stream = response.StreamingBody(body, content_length=27)
-        lines = iter(stream)
-        self.assertEqual(next(lines), b'1234567890')
-        self.assertEqual(next(lines), b'1234567890')
-        self.assertEqual(next(lines), b'12345')
-        with self.assertRaises(StopIteration):
-            next(lines)
+        self._assert_lines(
+            iter(stream),
+            [b'1234567890', b'1234567890', b'12345'],
+        )
 
     def test_streaming_line_iterator_ends_newline(self):
         body = six.BytesIO(b'1234567890\n1234567890\n12345\n')
         stream = response.StreamingBody(body, content_length=28)
-        lines = iter(stream)
-        self.assertEqual(next(lines), b'1234567890')
-        self.assertEqual(next(lines), b'1234567890')
-        self.assertEqual(next(lines), b'12345')
+        self._assert_lines(
+            iter(stream),
+            [b'1234567890', b'1234567890', b'12345'],
+        )
+
+    def test_streaming_line_iter_chunk_sizes(self):
+        for chunk_size in range(1, 30):
+            body = six.BytesIO(b'1234567890\n1234567890\n12345')
+            stream = response.StreamingBody(body, content_length=27)
+            self._assert_lines(
+                stream.iter_lines(chunk_size),
+                [b'1234567890', b'1234567890', b'12345'],
+            )
+
+    def _assert_lines(self, line_iterator, expected_lines):
+        for expected_line in expected_lines:
+            self.assertEqual(
+                next(line_iterator),
+                expected_line,
+            )
+        # We should have exhausted the iterator.
         with self.assertRaises(StopIteration):
-            next(lines)
+            next(line_iterator)
 
 
 class TestGetResponse(BaseResponseTest):
