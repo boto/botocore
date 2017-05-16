@@ -122,7 +122,7 @@ class StreamingBody(object):
         while True:
             current_chunk = self.read(chunk_size)
             if current_chunk == b"":
-                raise StopIteration()
+                break
             yield current_chunk
 
     def _verify_content_length(self):
