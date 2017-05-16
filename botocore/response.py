@@ -102,9 +102,7 @@ class StreamingBody(object):
 
             lines = chunk.splitlines()
 
-            chunk_ends_with_newline = chunk[-1] == b"\n"
-
-            if lines and lines[-1] and chunk and not chunk_ends_with_newline:
+            if lines and lines[-1] and chunk and lines[-1][-1] == chunk[-1]:
                 # We might be in the 'middle' of a line. Hence we keep the
                 # last line as pending.
                 pending = lines.pop()
