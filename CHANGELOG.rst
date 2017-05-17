@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.5.51
+======
+
+* api-change:``polly``: Update polly client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``events``: Update events client to latest version
+* api-change:``logs``: Update logs client to latest version
+
+
 1.5.50
 ======
 
