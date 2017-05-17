@@ -81,6 +81,9 @@ class StreamingBody(object):
         return chunk
 
     def _verify_content_length(self):
+        # See: https://github.com/kennethreitz/requests/issues/1855
+        # Basically, our http library doesn't do this for us, so we have
+        # to do this ourself.
         if self._content_length is not None and \
                 self._amount_read != int(self._content_length):
             raise IncompleteReadError(
@@ -90,17 +93,6 @@ class StreamingBody(object):
     def close(self):
         """Close the underlying http response stream."""
         self._raw_stream.close()
-
-
-def _validate_content_length(expected_content_length, body_length):
-    # See: https://github.com/kennethreitz/requests/issues/1855
-    # Basically, our http library doesn't do this for us, so we have
-    # to do this ourself.
-    if expected_content_length is not None:
-        if int(expected_content_length) != body_length:
-            raise IncompleteReadError(
-                actual_bytes=body_length,
-                expected_bytes=int(expected_content_length))
 
 
 def get_response(operation_model, http_response):

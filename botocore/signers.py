@@ -89,7 +89,8 @@ class RequestSigner(object):
         # Don't call this method directly.
         return self.sign(operation_name, request)
 
-    def sign(self, operation_name, request):
+    def sign(self, operation_name, request, region_name=None,
+             signing_type='standard', expires_in=None, signing_name=None):
         """Sign a request before it goes out over the wire.
 
         :type operation_name: string
@@ -97,31 +98,96 @@ class RequestSigner(object):
                                ``ListBuckets``.
         :type request: AWSRequest
         :param request: The request object to be sent over the wire.
-        """
-        signature_version = self._signature_version
 
-        # Allow overriding signature version. A response of a blank
-        # string means no signing is performed. A response of ``None``
-        # means that the default signing method is used.
-        handler, response = self._event_emitter.emit_until_response(
-            'choose-signer.{0}.{1}'.format(self._service_name, operation_name),
-            signing_name=self._signing_name, region_name=self._region_name,
-            signature_version=signature_version)
-        if response is not None:
-            signature_version = response
+        :type region_name: str
+        :param region_name: The region to sign the request for.
+
+        :type signing_type: str
+        :param signing_type: The type of signing to perform. This can be one of
+            three possible values:
+
+            * 'standard'     - This should be used for most requests.
+            * 'presign-url'  - This should be used when pre-signing a request.
+            * 'presign-post' - This should be used when pre-signing an S3 post.
+
+        :type expires_in: int
+        :param expires_in: The number of seconds the presigned url is valid
+            for. This parameter is only valid for signing type 'presign-url'.
+
+        :type signing_name: str
+        :param signing_name: The name to use for the service when signing.
+        """
+        if region_name is None:
+            region_name = self._region_name
+
+        if signing_name is None:
+            signing_name = self._signing_name
+
+        signature_version = self._choose_signer(
+            operation_name, signing_type, request.context)
 
         # Allow mutating request before signing
         self._event_emitter.emit(
             'before-sign.{0}.{1}'.format(self._service_name, operation_name),
-            request=request, signing_name=self._signing_name,
+            request=request, signing_name=signing_name,
             region_name=self._region_name,
             signature_version=signature_version, request_signer=self)
 
         if signature_version != botocore.UNSIGNED:
-            signer = self.get_auth_instance(self._signing_name,
-                                            self._region_name,
-                                            signature_version)
-            signer.add_auth(request=request)
+            kwargs = {
+                'signing_name': signing_name,
+                'region_name': region_name,
+                'signature_version': signature_version
+            }
+            if expires_in is not None:
+                kwargs['expires'] = expires_in
+
+            try:
+                auth = self.get_auth_instance(**kwargs)
+            except UnknownSignatureVersionError as e:
+                if signing_type != 'standard':
+                    raise UnsupportedSignatureVersionError(
+                        signature_version=signature_version)
+                else:
+                    raise e
+
+            auth.add_auth(request)
+
+    def _choose_signer(self, operation_name, signing_type, context):
+        """
+        Allow setting the signature version via the choose-signer event.
+        A value of `botocore.UNSIGNED` means no signing will be performed.
+
+        :param operation_name: The operation to sign.
+        :param signing_type: The type of signing that the signer is to be used
+            for.
+        :return: The signature version to sign with.
+        """
+        signing_type_suffix_map = {
+            'presign-post': '-presign-post',
+            'presign-url': '-query'
+        }
+        suffix = signing_type_suffix_map.get(signing_type, '')
+
+        signature_version = self._signature_version
+        if signature_version is not botocore.UNSIGNED and not \
+                signature_version.endswith(suffix):
+            signature_version += suffix
+
+        handler, response = self._event_emitter.emit_until_response(
+            'choose-signer.{0}.{1}'.format(self._service_name, operation_name),
+            signing_name=self._signing_name, region_name=self._region_name,
+            signature_version=signature_version, context=context)
+
+        if response is not None:
+            signature_version = response
+            # The suffix needs to be checked again in case we get an improper
+            # signature version from choose-signer.
+            if signature_version is not botocore.UNSIGNED and not \
+                    signature_version.endswith(suffix):
+                signature_version += suffix
+
+        return signature_version
 
     def get_auth_instance(self, signing_name, region_name,
                           signature_version=None, **kwargs):
@@ -169,13 +235,17 @@ class RequestSigner(object):
     # Alias get_auth for backwards compatibility.
     get_auth = get_auth_instance
 
-    def generate_presigned_url(self, request_dict, expires_in=3600,
-                               region_name=None):
+    def generate_presigned_url(self, request_dict, operation_name,
+                               expires_in=3600, region_name=None,
+                               signing_name=None):
         """Generates a presigned url
 
         :type request_dict: dict
         :param request_dict: The prepared request dictionary returned by
             ``botocore.awsrequest.prepare_request_dict()``
+
+        :type operation_name: str
+        :param operation_name: The operation being signed.
 
         :type expires_in: int
         :param expires_in: The number of seconds the presigned url is valid
@@ -184,35 +254,16 @@ class RequestSigner(object):
         :type region_name: string
         :param region_name: The region name to sign the presigned url.
 
+        :type signing_name: str
+        :param signing_name: The name to use for the service when signing.
+
         :returns: The presigned url
         """
-        if region_name is None:
-            region_name = self._region_name
-        query_prefix = '-query'
-        signature_version = self._signature_version
-        if not signature_version.endswith(query_prefix):
-            signature_version += query_prefix
-
-        kwargs = {'signing_name': self._signing_name,
-                  'region_name': region_name,
-                  'signature_version': signature_version,
-                  'expires': expires_in}
-
-        signature_type = signature_version.split('-', 1)[0]
-        try:
-            auth = self.get_auth_instance(**kwargs)
-        except UnknownSignatureVersionError:
-            raise UnsupportedSignatureVersionError(
-                signature_version=signature_type)
-
         request = create_request_object(request_dict)
+        self.sign(operation_name, request, region_name,
+                  'presign-url', expires_in, signing_name)
 
-        # Fix s3 host for s3 sigv2 bucket names
-        fix_s3_host(request, signature_type, region_name)
-
-        auth.add_auth(request)
         request.prepare()
-
         return request.url
 
 
@@ -270,8 +321,8 @@ class CloudFrontSigner(object):
         :rtype: str
         :return: The signed URL.
         """
-        if (date_less_than is not None and policy is not None
-                or date_less_than is None and policy is None):
+        if (date_less_than is not None and policy is not None or
+                date_less_than is None and policy is None):
             e = 'Need to provide either date_less_than or policy, but not both'
             raise ValueError(e)
         if date_less_than is not None:
@@ -342,6 +393,61 @@ class CloudFrontSigner(object):
             data).replace(b'+', b'-').replace(b'=', b'_').replace(b'/', b'~')
 
 
+def add_generate_db_auth_token(class_attributes, **kwargs):
+    class_attributes['generate_db_auth_token'] = generate_db_auth_token
+
+
+def generate_db_auth_token(self, DBHostname, Port, DBUsername, Region=None):
+    """Generates an auth token used to connect to a db with IAM credentials.
+
+    :type DBHostname: str
+    :param DBHostname: The hostname of the database to connect to.
+
+    :type Port: int
+    :param Port: The port number the database is listening on.
+
+    :type DBUsername: str
+    :param DBUsername: The username to log in as.
+
+    :type Region: str
+    :param Region: The region the database is in. If None, the client
+        region will be used.
+
+    :return: A presigned url which can be used as an auth token.
+    """
+    region = Region
+    if region is None:
+        region = self.meta.region_name
+
+    params = {
+        'Action': 'connect',
+        'DBUser': DBUsername,
+    }
+
+    request_dict = {
+        'url_path': '/',
+        'query_string': '',
+        'headers': {},
+        'body': params,
+        'method': 'GET'
+    }
+
+    # RDS requires that the scheme not be set when sent over. This can cause
+    # issues when signing because the Python url parsing libraries follow
+    # RFC 1808 closely, which states that a netloc must be introduced by `//`.
+    # Otherwise the url is presumed to be relative, and thus the whole
+    # netloc would be treated as a path component. To work around this we
+    # introduce https here and remove it once we're done processing it.
+    scheme = 'https://'
+    endpoint_url = '%s%s:%s' % (scheme, DBHostname, Port)
+    prepare_request_dict(request_dict, endpoint_url)
+    presigned_url = self._request_signer.generate_presigned_url(
+        operation_name='connect', request_dict=request_dict,
+        region_name=region, expires_in=900, signing_name='rds-db'
+    )
+    return presigned_url[len(scheme):]
+
+
 class S3PostPresigner(object):
     def __init__(self, request_signer):
         self._request_signer = request_signer
@@ -394,9 +500,6 @@ class S3PostPresigner(object):
         if conditions is None:
             conditions = []
 
-        if region_name is None:
-            region_name = self._request_signer.region_name
-
         # Create the policy for the post.
         policy = {}
 
@@ -410,33 +513,13 @@ class S3PostPresigner(object):
         for condition in conditions:
             policy['conditions'].append(condition)
 
-        # Obtain the appropriate signer.
-        query_prefix = '-presign-post'
-        signature_version = self._request_signer.signature_version
-        if not signature_version.endswith(query_prefix):
-            signature_version += query_prefix
-
-        kwargs = {'signing_name': self._request_signer.signing_name,
-                  'region_name': region_name,
-                  'signature_version': signature_version}
-
-        signature_type = signature_version.split('-', 1)[0]
-
-        try:
-            auth = self._request_signer.get_auth_instance(**kwargs)
-        except UnknownSignatureVersionError:
-            raise UnsupportedSignatureVersionError(
-                signature_version=signature_type)
-
         # Store the policy and the fields in the request for signing
         request = create_request_object(request_dict)
         request.context['s3-presign-post-fields'] = fields
         request.context['s3-presign-post-policy'] = policy
 
-        auth.add_auth(request)
-
-        # Fix s3 host for s3 sigv2 bucket names
-        fix_s3_host(request, signature_type, region_name)
+        self._request_signer.sign(
+            'PutObject', request, region_name, 'presign-post')
         # Return the url and the fields for th form to post.
         return {'url': request.url, 'fields': fields}
 
@@ -496,7 +579,8 @@ def generate_presigned_url(self, ClientMethod, Params=None, ExpiresIn=3600,
 
     # Generate the presigned url.
     return request_signer.generate_presigned_url(
-        request_dict=request_dict, expires_in=expires_in)
+        request_dict=request_dict, expires_in=expires_in,
+        operation_name=operation_name)
 
 
 def add_generate_presigned_post(class_attributes, **kwargs):
@@ -514,9 +598,9 @@ def generate_presigned_post(self, Bucket, Key, Fields=None, Conditions=None,
 
     :type Key: string
     :param Key: Key name, optionally add ${filename} to the end to
-        attach the submitted filename. Note that key related condtions and
+        attach the submitted filename. Note that key related conditions and
         fields are filled out for you and should not be included in the
-        ``fields`` or ``condtions`` parmater.
+        ``Fields`` or ``Conditions`` parameter.
 
     :type Fields: dict
     :param Fields: A dictionary of prefilled form fields to build on top

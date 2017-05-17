@@ -21,8 +21,6 @@ from botocore.model import ServiceModel
 from botocore import serialize
 from botocore.compat import six
 from botocore.exceptions import ParamValidationError
-from botocore.serialize import Serializer
-from botocore.validate import ParamValidationDecorator
 
 
 class BaseModelWithBlob(unittest.TestCase):
@@ -76,6 +74,8 @@ class TestBinaryTypes(BaseModelWithBlob):
     def test_blob_accepts_bytes_type(self):
         body = b'bytes body'
         request = self.serialize_to_request(input_params={'Blob': body})
+        self.assert_serialized_blob_equals(
+            request, blob_bytes=body)
 
     def test_blob_accepts_str_type(self):
         body = u'ascii text'
@@ -91,6 +91,7 @@ class TestBinaryTypes(BaseModelWithBlob):
 
 
 class TestBinaryTypesJSON(BaseModelWithBlob):
+
     def setUp(self):
         super(TestBinaryTypesJSON, self).setUp()
         self.model['metadata'] = {
@@ -110,6 +111,7 @@ class TestBinaryTypesJSON(BaseModelWithBlob):
 
 
 class TestBinaryTypesWithRestXML(BaseModelWithBlob):
+
     def setUp(self):
         super(TestBinaryTypesWithRestXML, self).setUp()
         self.model['metadata'] = {
@@ -213,6 +215,7 @@ class TestTimestampHeadersWithRestXML(unittest.TestCase):
 
 
 class TestTimestamps(unittest.TestCase):
+
     def setUp(self):
         self.model = {
             'metadata': {'protocol': 'query', 'apiVersion': '2014-01-01'},
@@ -259,14 +262,16 @@ class TestTimestamps(unittest.TestCase):
         self.assertEqual(request['body']['Timestamp'], '2014-01-01T12:12:12Z')
 
     def test_accepts_iso_8601_format(self):
-        request = self.serialize_to_request({'Timestamp': '2014-01-01T12:12:12Z'})
+        request = self.serialize_to_request(
+            {'Timestamp': '2014-01-01T12:12:12Z'})
         self.assertEqual(request['body']['Timestamp'], '2014-01-01T12:12:12Z')
 
     def test_accepts_timestamp_without_tz_info(self):
         # If a timezone/utc is not specified, assume they meant
         # UTC.  This is also the previous behavior from older versions
         # of botocore so we want to make sure we preserve this behavior.
-        request = self.serialize_to_request({'Timestamp': '2014-01-01T12:12:12'})
+        request = self.serialize_to_request(
+            {'Timestamp': '2014-01-01T12:12:12'})
         self.assertEqual(request['body']['Timestamp'], '2014-01-01T12:12:12Z')
 
     def test_microsecond_timestamp_without_tz_info(self):
@@ -277,6 +282,7 @@ class TestTimestamps(unittest.TestCase):
 
 
 class TestJSONTimestampSerialization(unittest.TestCase):
+
     def setUp(self):
         self.model = {
             'metadata': {'protocol': 'json', 'apiVersion': '2014-01-01',
@@ -333,6 +339,7 @@ class TestJSONTimestampSerialization(unittest.TestCase):
 
 
 class TestInstanceCreation(unittest.TestCase):
+
     def setUp(self):
         self.model = {
             'metadata': {'protocol': 'query', 'apiVersion': '2014-01-01'},
@@ -385,12 +392,14 @@ class TestInstanceCreation(unittest.TestCase):
         try:
             self.assert_serialize_valid_parameter(request_serializer)
         except ParamValidationError as e:
-            self.fail("Shouldn't fail serializing valid parameter without validation")
+            self.fail(
+                "Shouldn't fail serializing valid parameter without validation".format(e))
 
         try:
             self.assert_serialize_invalid_parameter(request_serializer)
         except ParamValidationError as e:
-            self.fail("Shouldn't fail serializing invalid parameter without validation")
+            self.fail(
+                "Shouldn't fail serializing invalid parameter without validation".format(e))
 
     def test_instantiate_with_validation(self):
         request_serializer = serialize.create_serializer(
@@ -398,7 +407,101 @@ class TestInstanceCreation(unittest.TestCase):
         try:
             self.assert_serialize_valid_parameter(request_serializer)
         except ParamValidationError as e:
-            self.fail("Shouldn't fail serializing valid parameter with validation")
+            self.fail(
+                "Shouldn't fail serializing valid parameter with validation".format(e))
 
         with self.assertRaises(ParamValidationError):
             self.assert_serialize_invalid_parameter(request_serializer)
+
+
+class TestHeaderSerialization(BaseModelWithBlob):
+
+    def setUp(self):
+        self.model = {
+            'metadata': {'protocol': 'rest-xml', 'apiVersion': '2014-01-01'},
+            'documentation': '',
+            'operations': {
+                'TestOperation': {
+                    'name': 'TestOperation',
+                    'http': {
+                        'method': 'POST',
+                        'requestUri': '/',
+                    },
+                    'input': {'shape': 'InputShape'},
+                }
+            },
+            'shapes': {
+                'InputShape': {
+                    'type': 'structure',
+                    'members': {
+                        'ContentLength': {
+                            'shape': 'Integer',
+                            'location': 'header',
+                            'locationName': 'Content-Length'
+                        },
+                    }
+                },
+                'Integer': {
+                    'type': 'integer'
+                },
+            }
+        }
+        self.service_model = ServiceModel(self.model)
+
+    def test_always_serialized_as_str(self):
+        request = self.serialize_to_request({'ContentLength': 100})
+        self.assertEqual(request['headers']['Content-Length'], '100')
+
+
+class TestRestXMLUnicodeSerialization(unittest.TestCase):
+
+    def setUp(self):
+        self.model = {
+            'metadata': {'protocol': 'rest-xml', 'apiVersion': '2014-01-01'},
+            'documentation': '',
+            'operations': {
+                'TestOperation': {
+                    'name': 'TestOperation',
+                    'http': {
+                        'method': 'POST',
+                        'requestUri': '/',
+                    },
+                    'input': {'shape': 'InputShape'},
+                }
+            },
+            'shapes': {
+                'InputShape': {
+                    'type': 'structure',
+                    'members': {
+                        'Foo': {
+                            'shape': 'FooShape',
+                            'locationName': 'Foo'
+                        },
+                    },
+                    'payload': 'Foo'
+                },
+                'FooShape': {
+                    'type': 'list',
+                    'member': {'shape': 'StringShape'}
+                },
+                'StringShape': {
+                    'type': 'string',
+                }
+            }
+        }
+        self.service_model = ServiceModel(self.model)
+
+    def serialize_to_request(self, input_params):
+        request_serializer = serialize.create_serializer(
+            self.service_model.metadata['protocol'])
+        return request_serializer.serialize_to_request(
+            input_params, self.service_model.operation_model('TestOperation'))
+
+    def test_restxml_serializes_unicode(self):
+        params = {
+            'Foo': [u'\u65e5\u672c\u8a9e\u3067\u304a\uff4b']
+        }
+        try:
+            self.serialize_to_request(params)
+        except UnicodeEncodeError:
+            self.fail("RestXML serializer failed to serialize unicode text.")

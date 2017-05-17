@@ -11,21 +11,24 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import re
+import time
 import logging
 import datetime
 import hashlib
 import binascii
 import functools
+import weakref
 
-from six import string_types, text_type
 import dateutil.parser
 from dateutil.tz import tzlocal, tzutc
 
+import botocore
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
-from botocore.exceptions import InvalidDNSNameError
+from botocore.exceptions import InvalidDNSNameError, ClientError
+from botocore.exceptions import MetadataRetrievalError
 from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
 from botocore.vendored import requests
-from botocore.compat import OrderedDict
+from botocore.compat import OrderedDict, six
 
 
 logger = logging.getLogger(__name__)
@@ -41,11 +44,28 @@ RESTRICTED_REGIONS = [
     'us-gov-west-1',
     'fips-us-gov-west-1',
 ]
+RETRYABLE_HTTP_ERRORS = (requests.Timeout, requests.ConnectionError)
+S3_ACCELERATE_WHITELIST = ['dualstack']
 
 
 class _RetriesExceededError(Exception):
     """Internal exception used when the number of retries are exceeded."""
     pass
+
+
+def is_json_value_header(shape):
+    """Determines if the provided shape is the special header type jsonvalue.
+
+    :type shape: botocore.shape
+    :param shape: Shape to be inspected for the jsonvalue trait.
+
+    :return: True if this type is a jsonvalue, False otherwise
+    :rtype: Bool
+    """
+    return (hasattr(shape, 'serialization') and
+            shape.serialization.get('jsonvalue', False) and
+            shape.serialization.get('location') == 'header' and
+            shape.type_name == 'string')
 
 
 def get_service_module_name(service_model):
@@ -70,44 +90,30 @@ def normalize_url_path(path):
 
 
 def remove_dot_segments(url):
-    # RFC 2986, section 5.2.4 "Remove Dot Segments"
-    output = []
-    while url:
-        if url.startswith('../'):
-            url = url[3:]
-        elif url.startswith('./'):
-            url = url[2:]
-        elif url.startswith('/./'):
-            url = '/' + url[3:]
-        elif url.startswith('/../'):
-            url = '/' + url[4:]
-            if output:
-                output.pop()
-        elif url.startswith('/..'):
-            url = '/' + url[3:]
-            if output:
-                output.pop()
-        elif url.startswith('/.'):
-            url = '/' + url[2:]
-        elif url == '.' or url == '..':
-            url = ''
-        elif url.startswith('//'):
-            # As far as I can tell, this is not in the RFC,
-            # but AWS auth services require consecutive
-            # slashes are removed.
-            url = url[1:]
-        else:
-            if url[0] == '/':
-                next_slash = url.find('/', 1)
+    # RFC 3986, section 5.2.4 "Remove Dot Segments"
+    # Also, AWS services require consecutive slashes to be removed,
+    # so that's done here as well
+    if not url:
+        return ''
+    input_url = url.split('/')
+    output_list = []
+    for x in input_url:
+        if x and x != '.':
+            if x == '..':
+                if output_list:
+                    output_list.pop()
             else:
-                next_slash = url.find('/', 0)
-            if next_slash == -1:
-                output.append(url)
-                url = ''
-            else:
-                output.append(url[:next_slash])
-                url = url[next_slash:]
-    return ''.join(output)
+                output_list.append(x)
+
+    if url[0] == '/':
+        first = '/'
+    else:
+        first = ''
+    if url[-1] == '/' and output_list:
+        last = '/'
+    else:
+        last = ''
+    return first + '/'.join(output_list) + last
 
 
 def validate_jmespath_for_set(expression):
@@ -165,7 +171,7 @@ class InstanceMetadataFetcher(object):
         for i in range(num_attempts):
             try:
                 response = requests.get(url, timeout=timeout)
-            except (requests.Timeout, requests.ConnectionError) as e:
+            except RETRYABLE_HTTP_ERRORS as e:
                 logger.debug("Caught exception while trying to retrieve "
                              "credentials: %s", e, exc_info=True)
             else:
@@ -312,10 +318,18 @@ def percent_encode(input_str, safe=SAFE_CHARS):
     producing a percent encoded string, this function deals only with
     taking a string (not a dict/sequence) and percent encoding it.
 
+    If given the binary type, will simply URL encode it. If given the
+    text type, will produce the binary type by UTF-8 encoding the
+    text. If given something else, will convert it to the the text type
+    first.
     """
-    if not isinstance(input_str, string_types):
-        input_str = text_type(input_str)
-    return quote(text_type(input_str).encode('utf-8'), safe=safe)
+    # If its not a binary or text string, make it a text string.
+    if not isinstance(input_str, (six.binary_type, six.text_type)):
+        input_str = six.text_type(input_str)
+    # If it's not bytes, make it bytes by UTF-8 encoding it.
+    if not isinstance(input_str, six.binary_type):
+        input_str = input_str.encode('utf-8')
+    return quote(input_str, safe=safe)
 
 
 def parse_timestamp(value):
@@ -339,7 +353,10 @@ def parse_timestamp(value):
         except (TypeError, ValueError):
             pass
     try:
-        return dateutil.parser.parse(value)
+        # In certain cases, a timestamp marked with GMT can be parsed into a
+        # different time zone, so here we provide a context which will
+        # enforce that GMT == UTC.
+        return dateutil.parser.parse(value, tzinfos={'GMT': tzutc()})
     except (TypeError, ValueError) as e:
         raise ValueError('Invalid timestamp "%s": %s' % (value, e))
 
@@ -511,12 +528,13 @@ class ArgumentGenerator(object):
     """Generate sample input based on a shape model.
 
     This class contains a ``generate_skeleton`` method that will take
-    an input shape (created from ``botocore.model``) and generate
-    a sample dictionary corresponding to the input shape.
+    an input/output shape (created from ``botocore.model``) and generate
+    a sample dictionary corresponding to the input/output shape.
 
-    The specific values used are place holder values. For strings an
-    empty string is used, for numbers 0 or 0.0 is used.  The intended
-    usage of this class is to generate the *shape* of the input structure.
+    The specific values used are place holder values. For strings either an
+    empty string or the member name can be used, for numbers 0 or 0.0 is used.
+    The intended usage of this class is to generate the *shape* of the input
+    structure.
 
     This can be useful for operations that have complex input shapes.
     This allows a user to just fill in the necessary data instead of
@@ -532,8 +550,8 @@ class ArgumentGenerator(object):
         print("Sample input for dynamodb.CreateTable: %s" % sample_input)
 
     """
-    def __init__(self):
-        pass
+    def __init__(self, use_member_names=False):
+        self._use_member_names = use_member_names
 
     def generate_skeleton(self, shape):
         """Generate a sample input.
@@ -548,7 +566,7 @@ class ArgumentGenerator(object):
         stack = []
         return self._generate_skeleton(shape, stack)
 
-    def _generate_skeleton(self, shape, stack):
+    def _generate_skeleton(self, shape, stack, name=''):
         stack.append(shape.name)
         try:
             if shape.type_name == 'structure':
@@ -558,6 +576,8 @@ class ArgumentGenerator(object):
             elif shape.type_name == 'map':
                 return self._generate_type_map(shape, stack)
             elif shape.type_name == 'string':
+                if self._use_member_names:
+                    return name
                 return ''
             elif shape.type_name in ['integer', 'long']:
                 return 0
@@ -565,6 +585,8 @@ class ArgumentGenerator(object):
                 return 0.0
             elif shape.type_name == 'boolean':
                 return True
+            elif shape.type_name == 'timestamp':
+                return datetime.datetime(1970, 1, 1, 0, 0, 0)
         finally:
             stack.pop()
 
@@ -573,15 +595,18 @@ class ArgumentGenerator(object):
             return {}
         skeleton = OrderedDict()
         for member_name, member_shape in shape.members.items():
-            skeleton[member_name] = self._generate_skeleton(member_shape,
-                                                            stack)
+            skeleton[member_name] = self._generate_skeleton(
+                member_shape, stack, name=member_name)
         return skeleton
 
     def _generate_type_list(self, shape, stack):
         # For list elements we've arbitrarily decided to
         # return two elements for the skeleton list.
+        name = ''
+        if self._use_member_names:
+            name = shape.member.name
         return [
-            self._generate_skeleton(shape.member, stack),
+            self._generate_skeleton(shape.member, stack, name),
         ]
 
     def _generate_type_map(self, shape, stack):
@@ -616,6 +641,7 @@ def is_valid_endpoint_url(endpoint_url):
         re.IGNORECASE)
     return allowed.match(hostname)
 
+
 def check_dns_name(bucket_name):
     """
     Check to see if the ``bucket_name`` complies with the
@@ -642,7 +668,8 @@ def check_dns_name(bucket_name):
     return True
 
 
-def fix_s3_host(request, signature_version, region_name, **kwargs):
+def fix_s3_host(request, signature_version, region_name,
+                default_endpoint_url='s3.amazonaws.com', **kwargs):
     """
     This handler looks at S3 requests just before they are signed.
     If there is a bucket name on the path (true for everything except
@@ -654,13 +681,14 @@ def fix_s3_host(request, signature_version, region_name, **kwargs):
     """
     # By default we do not use virtual hosted style addressing when
     # signed with signature version 4.
-    if signature_version in ['s3v4', 'v4']:
+    if signature_version is not botocore.UNSIGNED and \
+            's3v4' in signature_version:
         return
     elif not _allowed_region(region_name):
         return
     try:
         switch_to_virtual_host_style(
-            request, signature_version, 's3.amazonaws.com')
+            request, signature_version, default_endpoint_url)
     except InvalidDNSNameError as e:
         bucket_name = e.kwargs['bucket_name']
         logger.debug('Not changing URI, bucket is not DNS compatible: %s',
@@ -768,3 +796,292 @@ def instance_cache(func):
         self._instance_cache[cache_key] = result
         return result
     return _cache_guard
+
+
+def switch_host_s3_accelerate(request, operation_name, **kwargs):
+    """Switches the current s3 endpoint with an S3 Accelerate endpoint"""
+
+    # Note that when registered the switching of the s3 host happens
+    # before it gets changed to virtual. So we are not concerned with ensuring
+    # that the bucket name is translated to the virtual style here and we
+    # can hard code the Accelerate endpoint.
+    parts = urlsplit(request.url).netloc.split('.')
+    parts = [p for p in parts if p in S3_ACCELERATE_WHITELIST]
+    endpoint = 'https://s3-accelerate.'
+    if len(parts) > 0:
+        endpoint += '.'.join(parts) + '.'
+    endpoint += 'amazonaws.com'
+
+    if operation_name in ['ListBuckets', 'CreateBucket', 'DeleteBucket']:
+        return
+    _switch_hosts(request, endpoint,  use_new_scheme=False)
+
+
+def switch_host_with_param(request, param_name):
+    """Switches the host using a parameter value from a JSON request body"""
+    request_json = json.loads(request.data.decode('utf-8'))
+    if request_json.get(param_name):
+        new_endpoint = request_json[param_name]
+        _switch_hosts(request, new_endpoint)
+
+
+def _switch_hosts(request, new_endpoint, use_new_scheme=True):
+    final_endpoint = _get_new_endpoint(
+        request.url, new_endpoint, use_new_scheme)
+    request.url = final_endpoint
+
+
+def _get_new_endpoint(original_endpoint, new_endpoint, use_new_scheme=True):
+    new_endpoint_components = urlsplit(new_endpoint)
+    original_endpoint_components = urlsplit(original_endpoint)
+    scheme = original_endpoint_components.scheme
+    if use_new_scheme:
+        scheme = new_endpoint_components.scheme
+    final_endpoint_components = (
+        scheme,
+        new_endpoint_components.netloc,
+        original_endpoint_components.path,
+        original_endpoint_components.query,
+        ''
+    )
+    final_endpoint = urlunsplit(final_endpoint_components)
+    logger.debug('Updating URI from %s to %s' % (
+        original_endpoint, final_endpoint))
+    return final_endpoint
+
+
+def deep_merge(base, extra):
+    """Deeply two dictionaries, overriding existing keys in the base.
+
+    :param base: The base dictionary which will be merged into.
+    :param extra: The dictionary to merge into the base. Keys from this
+        dictionary will take precedence.
+    """
+    for key in extra:
+        # If the key represents a dict on both given dicts, merge the sub-dicts
+        if key in base and isinstance(base[key], dict)\
+                and isinstance(extra[key], dict):
+            deep_merge(base[key], extra[key])
+            continue
+
+        # Otherwise, set the key on the base to be the value of the extra.
+        base[key] = extra[key]
+
+
+class S3RegionRedirector(object):
+    def __init__(self, endpoint_bridge, client, cache=None):
+        self._endpoint_resolver = endpoint_bridge
+        self._cache = cache
+        if self._cache is None:
+            self._cache = {}
+
+        # This needs to be a weak ref in order to prevent memory leaks on
+        # python 2.6
+        self._client = weakref.proxy(client)
+
+    def register(self, event_emitter=None):
+        emitter = event_emitter or self._client.meta.events
+        emitter.register('needs-retry.s3', self.redirect_from_error)
+        emitter.register('before-call.s3', self.set_request_url)
+        emitter.register('before-parameter-build.s3',
+                         self.redirect_from_cache)
+
+    def redirect_from_error(self, request_dict, response, operation, **kwargs):
+        """
+        An S3 request sent to the wrong region will return an error that
+        contains the endpoint the request should be sent to. This handler
+        will add the redirect information to the signing context and then
+        redirect the request.
+        """
+        if response is None:
+            # This could be none if there was a ConnectionError or other
+            # transport error.
+            return
+
+        error = response[1].get('Error', {})
+        error_code = error.get('Code')
+
+        if error_code == '301':
+            # A raw 301 error might be returned for several reasons, but we
+            # only want to try to redirect it if it's a HeadObject or
+            # HeadBucket  because all other operations will return
+            # PermanentRedirect if region is incorrect.
+            if operation.name not in ['HeadObject', 'HeadBucket']:
+                return
+        elif error_code != 'PermanentRedirect':
+            return
+
+        bucket = request_dict['context']['signing']['bucket']
+        client_region = request_dict['context'].get('client_region')
+        new_region = self.get_bucket_region(bucket, response)
+
+        if new_region is None:
+            logger.debug(
+                "S3 client configured for region %s but the bucket %s is not "
+                "in that region and the proper region could not be "
+                "automatically determined." % (client_region, bucket))
+            return
+
+        logger.debug(
+            "S3 client configured for region %s but the bucket %s is in region"
+            " %s; Please configure the proper region to avoid multiple "
+            "unnecessary redirects and signing attempts." % (
+                client_region, bucket, new_region))
+
+        endpoint = self._endpoint_resolver.resolve('s3', new_region)
+        endpoint = endpoint['endpoint_url']
+
+        signing_context = {
+            'region': new_region,
+            'bucket': bucket,
+            'endpoint': endpoint
+        }
+        request_dict['context']['signing'] = signing_context
+
+        self._cache[bucket] = signing_context
+        self.set_request_url(request_dict, request_dict['context'])
+
+        # Return 0 so it doesn't wait to retry
+        return 0
+
+    def get_bucket_region(self, bucket, response):
+        """
+        There are multiple potential sources for the new region to redirect to,
+        but they aren't all universally available for use. This will try to
+        find region from response elements, but will fall back to calling
+        HEAD on the bucket if all else fails.
+
+        :param bucket: The bucket to find the region for. This is necessary if
+            the region is not available in the error response.
+        :param response: A response representing a service request that failed
+            due to incorrect region configuration.
+        """
+        # First try to source the region from the headers.
+        service_response = response[1]
+        response_headers = service_response['ResponseMetadata']['HTTPHeaders']
+        if 'x-amz-bucket-region' in response_headers:
+            return response_headers['x-amz-bucket-region']
+
+        # Next, check the error body
+        region = service_response.get('Error', {}).get('Region', None)
+        if region is not None:
+            return region
+
+        # Finally, HEAD the bucket. No other choice sadly.
+        try:
+            response = self._client.head_bucket(Bucket=bucket)
+            headers = response['ResponseMetadata']['HTTPHeaders']
+        except ClientError as e:
+            headers = e.response['ResponseMetadata']['HTTPHeaders']
+
+        region = headers.get('x-amz-bucket-region', None)
+        return region
+
+    def set_request_url(self, params, context, **kwargs):
+        endpoint = context.get('signing', {}).get('endpoint', None)
+        if endpoint is not None:
+            params['url'] = _get_new_endpoint(params['url'], endpoint, False)
+
+    def redirect_from_cache(self, params, context, **kwargs):
+        """
+        This handler retrieves a given bucket's signing context from the cache
+        and adds it into the request context.
+        """
+        bucket = params.get('Bucket')
+        signing_context = self._cache.get(bucket)
+        if signing_context is not None:
+            context['signing'] = signing_context
+        else:
+            context['signing'] = {'bucket': bucket}
+
+
+class ContainerMetadataFetcher(object):
+
+    TIMEOUT_SECONDS = 2
+    RETRY_ATTEMPTS = 3
+    SLEEP_TIME = 1
+    IP_ADDRESS = '169.254.170.2'
+    _ALLOWED_HOSTS = [IP_ADDRESS, 'localhost', '127.0.0.1']
+
+    def __init__(self, session=None, sleep=time.sleep):
+        if session is None:
+            session = requests.Session()
+        self._session = session
+        self._sleep = sleep
+
+    def retrieve_full_uri(self, full_url, headers=None):
+        """Retrieve JSON metadata from container metadata.
+
+        :type full_url: str
+        :param full_url: The full URL of the metadata service.
+            This should include the scheme as well, e.g
+            "http://localhost:123/foo"
+
+        """
+        self._validate_allowed_url(full_url)
+        return self._retrieve_credentials(full_url, headers)
+
+    def _validate_allowed_url(self, full_url):
+        parsed = botocore.compat.urlparse(full_url)
+        is_whitelisted_host = self._check_if_whitelisted_host(
+            parsed.hostname)
+        if not is_whitelisted_host:
+            raise ValueError(
+                "Unsupported host '%s'.  Can only "
+                "retrieve metadata from these hosts: %s" %
+                (parsed.hostname, ', '.join(self._ALLOWED_HOSTS)))
+
+    def _check_if_whitelisted_host(self, host):
+        if host in self._ALLOWED_HOSTS:
+            return True
+        return False
+
+    def retrieve_uri(self, relative_uri):
+        """Retrieve JSON metadata from ECS metadata.
+
+        :type relative_uri: str
+        :param relative_uri: A relative URI, e.g "/foo/bar?id=123"
+
+        :return: The parsed JSON response.
+
+        """
+        full_url = self.full_url(relative_uri)
+        return self._retrieve_credentials(full_url)
+
+    def _retrieve_credentials(self, full_url, extra_headers=None):
+        headers = {'Accept': 'application/json'}
+        if extra_headers is not None:
+            headers.update(extra_headers)
+        attempts = 0
+        while True:
+            try:
+                return self._get_response(full_url, headers, self.TIMEOUT_SECONDS)
+            except MetadataRetrievalError as e:
+                logger.debug("Received error when attempting to retrieve "
+                             "container metadata: %s", e, exc_info=True)
+                self._sleep(self.SLEEP_TIME)
+                attempts += 1
+                if attempts >= self.RETRY_ATTEMPTS:
+                    raise
+
+    def _get_response(self, full_url, headers, timeout):
+        try:
+            response = self._session.get(full_url, headers=headers,
+                                         timeout=timeout)
+            if response.status_code != 200:
+                raise MetadataRetrievalError(
+                    error_msg="Received non 200 response (%s) from ECS metadata: %s"
+                    % (response.status_code, response.text))
+            try:
+                return json.loads(response.text)
+            except ValueError:
+                raise MetadataRetrievalError(
+                    error_msg=("Unable to parse JSON returned from "
+                               "ECS metadata: %s" % response.text))
+        except RETRYABLE_HTTP_ERRORS as e:
+            error_msg = ("Received error when attempting to retrieve "
+                         "ECS metadata: %s" % e)
+            raise MetadataRetrievalError(error_msg=error_msg)
+
+    def full_url(self, relative_uri):
+        return 'http://%s%s' % (self.IP_ADDRESS, relative_uri)

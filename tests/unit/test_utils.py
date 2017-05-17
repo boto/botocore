@@ -19,11 +19,14 @@ import six
 import mock
 
 from botocore import xform_name
-from botocore.compat import OrderedDict
+from botocore.compat import OrderedDict, json
 from botocore.awsrequest import AWSRequest
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
-from botocore.exceptions import InvalidDNSNameError
+from botocore.exceptions import ClientError
+from botocore.exceptions import InvalidDNSNameError, MetadataRetrievalError
 from botocore.model import ServiceModel
+from botocore.vendored import requests
+from botocore.utils import is_json_value_header
 from botocore.utils import remove_dot_segments
 from botocore.utils import normalize_url_path
 from botocore.utils import validate_jmespath_for_set
@@ -44,8 +47,56 @@ from botocore.utils import instance_cache
 from botocore.utils import merge_dicts
 from botocore.utils import get_service_module_name
 from botocore.utils import percent_encode_sequence
+from botocore.utils import percent_encode
+from botocore.utils import switch_host_s3_accelerate
+from botocore.utils import deep_merge
+from botocore.utils import S3RegionRedirector
+from botocore.utils import ContainerMetadataFetcher
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
+from botocore.config import Config
+
+
+class TestIsJSONValueHeader(unittest.TestCase):
+    def test_no_serialization_section(self):
+        shape = mock.Mock()
+        shape.type_name = 'string'
+        self.assertFalse(is_json_value_header(shape))
+
+    def test_non_jsonvalue_shape(self):
+        shape = mock.Mock()
+        shape.serialization = {
+            'location': 'header'
+        }
+        shape.type_name = 'string'
+        self.assertFalse(is_json_value_header(shape))
+
+    def test_non_header_jsonvalue_shape(self):
+        shape = mock.Mock()
+        shape.serialization = {
+            'jsonvalue': True
+        }
+        shape.type_name = 'string'
+        self.assertFalse(is_json_value_header(shape))
+
+    def test_non_string_jsonvalue_shape(self):
+        shape = mock.Mock()
+        shape.serialization = {
+            'location': 'header',
+            'jsonvalue': True
+        }
+        shape.type_name = 'integer'
+        self.assertFalse(is_json_value_header(shape))
+
+    def test_json_value_header(self):
+        shape = mock.Mock()
+        shape.serialization = {
+            'jsonvalue': True,
+            'location': 'header'
+        }
+        shape.type_name = 'string'
+        self.assertTrue(is_json_value_header(shape))
+
 
 
 class TestURINormalization(unittest.TestCase):
@@ -62,6 +113,11 @@ class TestURINormalization(unittest.TestCase):
         self.assertEqual(remove_dot_segments('..'), '')
         self.assertEqual(remove_dot_segments('.'), '')
         self.assertEqual(remove_dot_segments('/.'), '/')
+        self.assertEqual(remove_dot_segments('/.foo'), '/.foo')
+        self.assertEqual(remove_dot_segments('/..foo'), '/..foo')
+        self.assertEqual(remove_dot_segments(''), '')
+        self.assertEqual(remove_dot_segments('/a/b/c/./../../g'), '/a/g')
+        self.assertEqual(remove_dot_segments('mid/content=5/../6'), 'mid/6')
         # I don't think this is RFC compliant...
         self.assertEqual(remove_dot_segments('//foo//'), '/foo/')
 
@@ -84,7 +140,8 @@ class TestTransformName(unittest.TestCase):
 
     def test_consecutive_upper_case_middle_string(self):
         self.assertEqual(xform_name('MainHTTPHeaders'), 'main_http_headers')
-        self.assertEqual(xform_name('MainHTTPHeaders', '-'), 'main-http-headers')
+        self.assertEqual(xform_name('MainHTTPHeaders', '-'),
+                         'main-http-headers')
 
     def test_s3_prefix(self):
         self.assertEqual(xform_name('S3BucketName'), 's3_bucket_name')
@@ -96,15 +153,27 @@ class TestTransformName(unittest.TestCase):
 
     def test_special_cases(self):
         # Some patterns don't actually match the rules we expect.
-        self.assertEqual(xform_name('SwapEnvironmentCNAMEs'), 'swap_environment_cnames')
-        self.assertEqual(xform_name('SwapEnvironmentCNAMEs', '-'), 'swap-environment-cnames')
-        self.assertEqual(xform_name('CreateCachediSCSIVolume', '-'), 'create-cached-iscsi-volume')
-        self.assertEqual(xform_name('DescribeCachediSCSIVolumes', '-'), 'describe-cached-iscsi-volumes')
-        self.assertEqual(xform_name('DescribeStorediSCSIVolumes', '-'), 'describe-stored-iscsi-volumes')
-        self.assertEqual(xform_name('CreateStorediSCSIVolume', '-'), 'create-stored-iscsi-volume')
+        self.assertEqual(xform_name('SwapEnvironmentCNAMEs'),
+                         'swap_environment_cnames')
+        self.assertEqual(xform_name('SwapEnvironmentCNAMEs', '-'),
+                         'swap-environment-cnames')
+        self.assertEqual(xform_name('CreateCachediSCSIVolume', '-'),
+                         'create-cached-iscsi-volume')
+        self.assertEqual(xform_name('DescribeCachediSCSIVolumes', '-'),
+                         'describe-cached-iscsi-volumes')
+        self.assertEqual(xform_name('DescribeStorediSCSIVolumes', '-'),
+                         'describe-stored-iscsi-volumes')
+        self.assertEqual(xform_name('CreateStorediSCSIVolume', '-'),
+                         'create-stored-iscsi-volume')
 
     def test_special_case_ends_with_s(self):
         self.assertEqual(xform_name('GatewayARNs', '-'), 'gateway-arns')
+
+    def test_partial_rename(self):
+        transformed = xform_name('IPV6', '-')
+        self.assertEqual(transformed, 'ipv6')
+        transformed = xform_name('IPV6', '_')
+        self.assertEqual(transformed, 'ipv6')
 
 
 class TestValidateJMESPathForSet(unittest.TestCase):
@@ -230,6 +299,18 @@ class TestParseTimestamps(unittest.TestCase):
             parse_timestamp('Wed, 02 Oct 2002 13:00:00 GMT'),
             datetime.datetime(2002, 10, 2, 13, 0, tzinfo=tzutc()))
 
+    def test_parse_gmt_in_uk_time(self):
+        # In the UK the time switches from GMT to BST and back as part of
+        # their daylight savings time. time.tzname will therefore report
+        # both time zones. dateutil sees that the time zone is a local time
+        # zone and so parses it as local time, but it ends up being BST
+        # instead of GMT. To remedy this issue we can provide a time zone
+        # context which will enforce GMT == UTC.
+        with mock.patch('time.tzname', ('GMT', 'BST')):
+            self.assertEqual(
+                parse_timestamp('Wed, 02 Oct 2002 13:00:00 GMT'),
+                datetime.datetime(2002, 10, 2, 13, 0, tzinfo=tzutc()))
+
     def test_parse_invalid_timestamp(self):
         with self.assertRaises(ValueError):
             parse_timestamp('invalid date')
@@ -340,14 +421,60 @@ class TestArgumentGenerator(unittest.TestCase):
                 'B': {'type': 'integer'},
                 'C': {'type': 'float'},
                 'D': {'type': 'boolean'},
+                'E': {'type': 'timestamp'}
             },
             generated_skeleton={
                 'A': '',
                 'B': 0,
                 'C': 0.0,
                 'D': True,
+                'E': datetime.datetime(1970, 1, 1, 0, 0, 0)
             }
         )
+
+    def test_will_use_member_names_for_string_values(self):
+        self.arg_generator = ArgumentGenerator(use_member_names=True)
+        self.assert_skeleton_from_model_is(
+            model={
+                'A': {'type': 'string'},
+                'B': {'type': 'integer'},
+                'C': {'type': 'float'},
+                'D': {'type': 'boolean'},
+            },
+            generated_skeleton={
+                'A': 'A',
+                'B': 0,
+                'C': 0.0,
+                'D': True,
+            }
+        )
+
+    def test_will_use_member_names_for_string_values_of_list(self):
+        self.arg_generator = ArgumentGenerator(use_member_names=True)
+        # We're not using assert_skeleton_from_model_is
+        # because we can't really control the name of strings shapes
+        # being used in the DenormalizedStructureBuilder. We can only
+        # control the name of structures and list shapes.
+        shape_map = ShapeResolver({
+            'InputShape': {
+                'type': 'structure',
+                'members': {
+                    'StringList': {'shape': 'StringList'},
+                }
+            },
+            'StringList': {
+                'type': 'list',
+                'member': {'shape': 'StringType'},
+            },
+            'StringType': {
+                'type': 'string',
+            }
+        })
+        shape = shape_map.get_shape_by_name('InputShape')
+        actual = self.arg_generator.generate_skeleton(shape)
+
+        expected = {'StringList': ['StringType']}
+        self.assertEqual(actual, expected)
 
     def test_generate_nested_structure(self):
         self.assert_skeleton_from_model_is(
@@ -575,6 +702,36 @@ class TestFixS3Host(unittest.TestCase):
         # The request url should not have been modified because this is
         # a request for GetBucketLocation.
         self.assertEqual(request.url, original_url)
+
+    def test_can_provide_default_endpoint_url(self):
+        request = AWSRequest(
+            method='PUT', headers={},
+            url='https://s3-us-west-2.amazonaws.com/bucket/key.txt'
+        )
+        region_name = 'us-west-2'
+        signature_version = 's3'
+        fix_s3_host(
+            request=request, signature_version=signature_version,
+            region_name=region_name,
+            default_endpoint_url='foo.s3.amazonaws.com')
+        self.assertEqual(request.url,
+                         'https://bucket.foo.s3.amazonaws.com/key.txt')
+
+    def test_no_endpoint_url_uses_request_url(self):
+        request = AWSRequest(
+            method='PUT', headers={},
+            url='https://s3-us-west-2.amazonaws.com/bucket/key.txt'
+        )
+        region_name = 'us-west-2'
+        signature_version = 's3'
+        fix_s3_host(
+            request=request, signature_version=signature_version,
+            region_name=region_name,
+            # A value of None means use the url in the current request.
+            default_endpoint_url=None,
+        )
+        self.assertEqual(request.url,
+                         'https://bucket.s3-us-west-2.amazonaws.com/key.txt')
 
 
 class TestSwitchToVirtualHostStyle(unittest.TestCase):
@@ -875,7 +1032,8 @@ class TestPercentEncodeSequence(unittest.TestCase):
 
     def test_percent_encode_special_chars(self):
         self.assertEqual(
-            percent_encode_sequence({'k1': 'with spaces++/'}), 'k1=with%20spaces%2B%2B%2F')
+            percent_encode_sequence({'k1': 'with spaces++/'}),
+            'k1=with%20spaces%2B%2B%2F')
 
     def test_percent_encode_string_string_tuples(self):
         self.assertEqual(percent_encode_sequence([('k1', 'v1'), ('k2', 'v2')]),
@@ -896,8 +1054,586 @@ class TestPercentEncodeSequence(unittest.TestCase):
     def test_percent_encode_list_values_of_string(self):
         self.assertEqual(
             percent_encode_sequence(
-                OrderedDict([('k1', ['a', 'list']), ('k2', ['another', 'list'])])),
+                OrderedDict([('k1', ['a', 'list']),
+                             ('k2', ['another', 'list'])])),
             'k1=a&k1=list&k2=another&k2=list')
+
+class TestPercentEncode(unittest.TestCase):
+    def test_percent_encode_obj(self):
+        self.assertEqual(percent_encode(1), '1')
+
+    def test_percent_encode_text(self):
+        self.assertEqual(percent_encode(u''), '')
+        self.assertEqual(percent_encode(u'a'), 'a')
+        self.assertEqual(percent_encode(u'\u0000'), '%00')
+        # Codepoint > 0x7f
+        self.assertEqual(percent_encode(u'\u2603'), '%E2%98%83')
+        # Codepoint > 0xffff
+        self.assertEqual(percent_encode(u'\U0001f32e'), '%F0%9F%8C%AE')
+
+    def test_percent_encode_bytes(self):
+        self.assertEqual(percent_encode(b''), '')
+        self.assertEqual(percent_encode(b'a'), u'a')
+        self.assertEqual(percent_encode(b'\x00'), u'%00')
+        # UTF-8 Snowman
+        self.assertEqual(percent_encode(b'\xe2\x98\x83'), '%E2%98%83')
+        # Arbitrary bytes (not valid UTF-8).
+        self.assertEqual(percent_encode(b'\x80\x00'), '%80%00')
+
+class TestSwitchHostS3Accelerate(unittest.TestCase):
+    def setUp(self):
+        self.original_url = 'https://s3.amazonaws.com/foo/key.txt'
+        self.request = AWSRequest(
+            method='PUT', headers={},
+            url=self.original_url
+        )
+        self.client_config = Config()
+        self.request.context['client_config'] = self.client_config
+
+    def test_switch_host(self):
+        switch_host_s3_accelerate(self.request, 'PutObject')
+        self.assertEqual(
+            self.request.url,
+            'https://s3-accelerate.amazonaws.com/foo/key.txt')
+
+    def test_do_not_switch_black_listed_operations(self):
+        # It should not get switched for ListBuckets, DeleteBucket, and
+        # CreateBucket
+        blacklist_ops = [
+            'ListBuckets',
+            'DeleteBucket',
+            'CreateBucket'
+        ]
+        for op_name in blacklist_ops:
+            switch_host_s3_accelerate(self.request, op_name)
+            self.assertEqual(self.request.url, self.original_url)
+
+    def test_uses_original_endpoint_scheme(self):
+        self.request.url = 'http://s3.amazonaws.com/foo/key.txt'
+        switch_host_s3_accelerate(self.request, 'PutObject')
+        self.assertEqual(
+            self.request.url,
+            'http://s3-accelerate.amazonaws.com/foo/key.txt')
+
+    def test_uses_dualstack(self):
+        self.client_config.s3 = {'use_dualstack_endpoint': True}
+        self.original_url = 'https://s3.dualstack.amazonaws.com/foo/key.txt'
+        self.request = AWSRequest(
+            method='PUT', headers={},
+            url=self.original_url
+        )
+        self.request.context['client_config'] = self.client_config
+        switch_host_s3_accelerate(self.request, 'PutObject')
+        self.assertEqual(
+            self.request.url,
+            'https://s3-accelerate.dualstack.amazonaws.com/foo/key.txt')
+
+
+class TestDeepMerge(unittest.TestCase):
+    def test_simple_merge(self):
+        a = {'key': 'value'}
+        b = {'otherkey': 'othervalue'}
+        deep_merge(a, b)
+
+        expected = {'key': 'value', 'otherkey': 'othervalue'}
+        self.assertEqual(a, expected)
+
+    def test_merge_list(self):
+        # Lists are treated as opaque data and so no effort should be made to
+        # combine them.
+        a = {'key': ['original']}
+        b = {'key': ['new']}
+        deep_merge(a, b)
+        self.assertEqual(a, {'key': ['new']})
+
+    def test_merge_number(self):
+        # The value from b is always taken
+        a = {'key': 10}
+        b = {'key': 45}
+        deep_merge(a, b)
+        self.assertEqual(a, {'key': 45})
+
+        a = {'key': 45}
+        b = {'key': 10}
+        deep_merge(a, b)
+        self.assertEqual(a, {'key': 10})
+
+    def test_merge_boolean(self):
+        # The value from b is always taken
+        a = {'key': False}
+        b = {'key': True}
+        deep_merge(a, b)
+        self.assertEqual(a, {'key': True})
+
+        a = {'key': True}
+        b = {'key': False}
+        deep_merge(a, b)
+        self.assertEqual(a, {'key': False})
+
+    def test_merge_string(self):
+        a = {'key': 'value'}
+        b = {'key': 'othervalue'}
+        deep_merge(a, b)
+        self.assertEqual(a, {'key': 'othervalue'})
+
+    def test_merge_overrides_value(self):
+        # The value from b is always taken, even when it's a different type
+        a = {'key': 'original'}
+        b = {'key': {'newkey': 'newvalue'}}
+        deep_merge(a, b)
+        self.assertEqual(a, {'key': {'newkey': 'newvalue'}})
+
+        a = {'key': {'anotherkey': 'value'}}
+        b = {'key': 'newvalue'}
+        deep_merge(a, b)
+        self.assertEqual(a, {'key': 'newvalue'})
+
+    def test_deep_merge(self):
+        a = {
+            'first': {
+                'second': {
+                    'key': 'value',
+                    'otherkey': 'othervalue'
+                },
+                'key': 'value'
+            }
+        }
+        b = {
+            'first': {
+                'second': {
+                    'otherkey': 'newvalue',
+                    'yetanotherkey': 'yetanothervalue'
+                }
+            }
+        }
+        deep_merge(a, b)
+
+        expected = {
+            'first': {
+                'second': {
+                    'key': 'value',
+                    'otherkey': 'newvalue',
+                    'yetanotherkey': 'yetanothervalue'
+                },
+                'key': 'value'
+            }
+        }
+        self.assertEqual(a, expected)
+
+
+class TestS3RegionRedirector(unittest.TestCase):
+    def setUp(self):
+        self.endpoint_bridge = mock.Mock()
+        self.endpoint_bridge.resolve.return_value = {
+            'endpoint_url': 'https://eu-central-1.amazonaws.com'
+        }
+        self.client = mock.Mock()
+        self.cache = {}
+        self.redirector = S3RegionRedirector(self.endpoint_bridge, self.client)
+        self.set_client_response_headers({})
+        self.operation = mock.Mock()
+        self.operation.name = 'foo'
+
+    def set_client_response_headers(self, headers):
+        error_response = ClientError({
+            'Error': {
+                'Code': '',
+                'Message': ''
+            },
+            'ResponseMetadata': {
+                'HTTPHeaders': headers
+            }
+        }, 'HeadBucket')
+        success_response = {
+            'ResponseMetadata': {
+                'HTTPHeaders': headers
+            }
+        }
+        self.client.head_bucket.side_effect = [
+            error_response, success_response]
+
+    def test_set_request_url(self):
+        params = {'url': 'https://us-west-2.amazonaws.com/foo'}
+        context = {'signing': {
+            'endpoint': 'https://eu-central-1.amazonaws.com'
+        }}
+        self.redirector.set_request_url(params, context)
+        self.assertEqual(
+            params['url'], 'https://eu-central-1.amazonaws.com/foo')
+
+    def test_only_changes_request_url_if_endpoint_present(self):
+        params = {'url': 'https://us-west-2.amazonaws.com/foo'}
+        context = {}
+        self.redirector.set_request_url(params, context)
+        self.assertEqual(
+            params['url'], 'https://us-west-2.amazonaws.com/foo')
+
+    def test_set_request_url_keeps_old_scheme(self):
+        params = {'url': 'http://us-west-2.amazonaws.com/foo'}
+        context = {'signing': {
+            'endpoint': 'https://eu-central-1.amazonaws.com'
+        }}
+        self.redirector.set_request_url(params, context)
+        self.assertEqual(
+            params['url'], 'http://eu-central-1.amazonaws.com/foo')
+
+    def test_sets_signing_context_from_cache(self):
+        signing_context = {'endpoint': 'bar'}
+        self.cache['foo'] = signing_context
+        self.redirector = S3RegionRedirector(
+            self.endpoint_bridge, self.client, cache=self.cache)
+        params = {'Bucket': 'foo'}
+        context = {}
+        self.redirector.redirect_from_cache(params, context)
+        self.assertEqual(context.get('signing'), signing_context)
+
+    def test_only_changes_context_if_bucket_in_cache(self):
+        signing_context = {'endpoint': 'bar'}
+        self.cache['bar'] = signing_context
+        self.redirector = S3RegionRedirector(
+            self.endpoint_bridge, self.client, cache=self.cache)
+        params = {'Bucket': 'foo'}
+        context = {}
+        self.redirector.redirect_from_cache(params, context)
+        self.assertNotEqual(context.get('signing'), signing_context)
+
+    def test_redirect_from_error(self):
+        request_dict = {
+            'context': {'signing': {'bucket': 'foo'}},
+            'url': 'https://us-west-2.amazonaws.com/foo'
+        }
+        response = (None, {
+            'Error': {
+                'Code': 'PermanentRedirect',
+                'Endpoint': 'foo.eu-central-1.amazonaws.com',
+                'Bucket': 'foo'
+            },
+            'ResponseMetadata': {
+                'HTTPHeaders': {'x-amz-bucket-region': 'eu-central-1'}
+            }
+        })
+
+        redirect_response = self.redirector.redirect_from_error(
+            request_dict, response, self.operation)
+
+        # The response needs to be 0 so that there is no retry delay
+        self.assertEqual(redirect_response, 0)
+
+        self.assertEqual(
+            request_dict['url'], 'https://eu-central-1.amazonaws.com/foo')
+
+        expected_signing_context = {
+            'endpoint': 'https://eu-central-1.amazonaws.com',
+            'bucket': 'foo',
+            'region': 'eu-central-1'
+        }
+        signing_context = request_dict['context'].get('signing')
+        self.assertEqual(signing_context, expected_signing_context)
+
+    def test_does_not_redirect_unless_permanentredirect_recieved(self):
+        request_dict = {}
+        response = (None, {})
+        redirect_response = self.redirector.redirect_from_error(
+            request_dict, response, self.operation)
+        self.assertIsNone(redirect_response)
+        self.assertEqual(request_dict, {})
+
+    def test_does_not_redirect_if_region_cannot_be_found(self):
+        request_dict = {'url': 'https://us-west-2.amazonaws.com/foo',
+                        'context': {'signing': {'bucket': 'foo'}}}
+        response = (None, {
+            'Error': {
+                'Code': 'PermanentRedirect',
+                'Endpoint': 'foo.eu-central-1.amazonaws.com',
+                'Bucket': 'foo'
+            },
+            'ResponseMetadata': {
+                'HTTPHeaders': {}
+            }
+        })
+
+        redirect_response = self.redirector.redirect_from_error(
+            request_dict, response, self.operation)
+
+        self.assertIsNone(redirect_response)
+
+    def test_redirects_301(self):
+        request_dict = {'url': 'https://us-west-2.amazonaws.com/foo',
+                        'context': {'signing': {'bucket': 'foo'}}}
+        response = (None, {
+            'Error': {
+                'Code': '301',
+                'Message': 'Moved Permanently'
+            },
+            'ResponseMetadata': {
+                'HTTPHeaders': {'x-amz-bucket-region': 'eu-central-1'}
+            }
+        })
+
+        self.operation.name = 'HeadObject'
+        redirect_response = self.redirector.redirect_from_error(
+            request_dict, response, self.operation)
+        self.assertEqual(redirect_response, 0)
+
+        self.operation.name = 'ListObjects'
+        redirect_response = self.redirector.redirect_from_error(
+            request_dict, response, self.operation)
+        self.assertIsNone(redirect_response)
+
+    def test_does_not_redirect_if_None_response(self):
+        request_dict = {'url': 'https://us-west-2.amazonaws.com/foo',
+                        'context': {'signing': {'bucket': 'foo'}}}
+        response = None
+        redirect_response = self.redirector.redirect_from_error(
+            request_dict, response, self.operation)
+        self.assertIsNone(redirect_response)
+
+    def test_get_region_from_response(self):
+        response = (None, {
+            'Error': {
+                'Code': 'PermanentRedirect',
+                'Endpoint': 'foo.eu-central-1.amazonaws.com',
+                'Bucket': 'foo'
+            },
+            'ResponseMetadata': {
+                'HTTPHeaders': {'x-amz-bucket-region': 'eu-central-1'}
+            }
+        })
+        region = self.redirector.get_bucket_region('foo', response)
+        self.assertEqual(region, 'eu-central-1')
+
+    def test_get_region_from_response_error_body(self):
+        response = (None, {
+            'Error': {
+                'Code': 'PermanentRedirect',
+                'Endpoint': 'foo.eu-central-1.amazonaws.com',
+                'Bucket': 'foo',
+                'Region': 'eu-central-1'
+            },
+            'ResponseMetadata': {
+                'HTTPHeaders': {}
+            }
+        })
+        region = self.redirector.get_bucket_region('foo', response)
+        self.assertEqual(region, 'eu-central-1')
+
+    def test_get_region_from_head_bucket_error(self):
+        self.set_client_response_headers(
+            {'x-amz-bucket-region': 'eu-central-1'})
+        response = (None, {
+            'Error': {
+                'Code': 'PermanentRedirect',
+                'Endpoint': 'foo.eu-central-1.amazonaws.com',
+                'Bucket': 'foo',
+            },
+            'ResponseMetadata': {
+                'HTTPHeaders': {}
+            }
+        })
+        region = self.redirector.get_bucket_region('foo', response)
+        self.assertEqual(region, 'eu-central-1')
+
+    def test_get_region_from_head_bucket_success(self):
+        success_response = {
+            'ResponseMetadata': {
+                'HTTPHeaders': {'x-amz-bucket-region': 'eu-central-1'}
+            }
+        }
+        self.client.head_bucket.side_effect = None
+        self.client.head_bucket.return_value = success_response
+        response = (None, {
+            'Error': {
+                'Code': 'PermanentRedirect',
+                'Endpoint': 'foo.eu-central-1.amazonaws.com',
+                'Bucket': 'foo',
+            },
+            'ResponseMetadata': {
+                'HTTPHeaders': {}
+            }
+        })
+        region = self.redirector.get_bucket_region('foo', response)
+        self.assertEqual(region, 'eu-central-1')
+
+
+class TestContainerMetadataFetcher(unittest.TestCase):
+    def setUp(self):
+        self.responses = []
+        self.http = mock.Mock()
+        self.sleep = mock.Mock()
+
+    def create_fetcher(self):
+        return ContainerMetadataFetcher(self.http, sleep=self.sleep)
+
+    def fake_response(self, status_code, body):
+        response = mock.Mock()
+        response.status_code = status_code
+        response.text = body
+        return response
+
+    def set_http_responses_to(self, *responses):
+        http_responses = []
+        for response in responses:
+            if isinstance(response, Exception):
+                # Simulating an error condition.
+                http_response = response
+            elif hasattr(response, 'status_code'):
+                # It's a precreated fake_response.
+                http_response = response
+            else:
+                http_response = self.fake_response(
+                    status_code=200, body=json.dumps(response))
+            http_responses.append(http_response)
+        self.http.get.side_effect = http_responses
+
+    def assert_can_retrieve_metadata_from(self, full_uri):
+        response_body = {'foo': 'bar'}
+        self.set_http_responses_to(response_body)
+        fetcher = self.create_fetcher()
+        response = fetcher.retrieve_full_uri(full_uri)
+        self.assertEqual(response, response_body)
+        self.http.get.assert_called_with(
+            full_uri, headers={'Accept': 'application/json'},
+            timeout=fetcher.TIMEOUT_SECONDS,
+        )
+
+    def assert_host_is_not_allowed(self, full_uri):
+        response_body = {'foo': 'bar'}
+        self.set_http_responses_to(response_body)
+        fetcher = self.create_fetcher()
+        with self.assertRaisesRegexp(ValueError, 'Unsupported host'):
+            fetcher.retrieve_full_uri(full_uri)
+        self.assertFalse(self.http.get.called)
+
+    def test_can_specify_extra_headers_are_merged(self):
+        headers = {
+            # The 'Accept' header will override the
+            # default Accept header of application/json.
+            'Accept': 'application/not-json',
+            'X-Other-Header': 'foo',
+        }
+        self.set_http_responses_to({'foo': 'bar'})
+        fetcher = self.create_fetcher()
+        response = fetcher.retrieve_full_uri(
+            'http://localhost', headers)
+        self.http.get.assert_called_with(
+            'http://localhost', headers=headers,
+            timeout=fetcher.TIMEOUT_SECONDS,
+        )
+
+    def test_can_retrieve_uri(self):
+        json_body =  {
+            "AccessKeyId" : "a",
+            "SecretAccessKey" : "b",
+            "Token" : "c",
+            "Expiration" : "d"
+        }
+        self.set_http_responses_to(json_body)
+
+        fetcher = self.create_fetcher()
+        response = fetcher.retrieve_uri('/foo?id=1')
+
+        self.assertEqual(response, json_body)
+        # Ensure we made calls to the right endpoint.
+        self.http.get.assert_called_with(
+            'http://169.254.170.2/foo?id=1',
+            headers={'Accept': 'application/json'},
+            timeout=fetcher.TIMEOUT_SECONDS,
+        )
+
+    def test_can_retry_requests(self):
+        success_response = {
+            "AccessKeyId" : "a",
+            "SecretAccessKey" : "b",
+            "Token" : "c",
+            "Expiration" : "d"
+        }
+        self.set_http_responses_to(
+            # First response is a connection error, should
+            # be retried.
+            requests.ConnectionError(),
+            # Second response is the successful JSON response
+            # with credentials.
+            success_response,
+        )
+        fetcher = self.create_fetcher()
+        response = fetcher.retrieve_uri('/foo?id=1')
+        self.assertEqual(response, success_response)
+
+    def test_propagates_credential_error_on_http_errors(self):
+        self.set_http_responses_to(
+            # In this scenario, we never get a successful response.
+            requests.ConnectionError(),
+            requests.ConnectionError(),
+            requests.ConnectionError(),
+            requests.ConnectionError(),
+            requests.ConnectionError(),
+        )
+        # As a result, we expect an appropriate error to be raised.
+        fetcher = self.create_fetcher()
+        with self.assertRaises(MetadataRetrievalError):
+            fetcher.retrieve_uri('/foo?id=1')
+        self.assertEqual(self.http.get.call_count, fetcher.RETRY_ATTEMPTS)
+
+    def test_error_raised_on_non_200_response(self):
+        self.set_http_responses_to(
+            self.fake_response(status_code=404, body='Error not found'),
+            self.fake_response(status_code=404, body='Error not found'),
+            self.fake_response(status_code=404, body='Error not found'),
+        )
+        fetcher = self.create_fetcher()
+        with self.assertRaises(MetadataRetrievalError):
+            fetcher.retrieve_uri('/foo?id=1')
+        # Should have tried up to RETRY_ATTEMPTS.
+        self.assertEqual(self.http.get.call_count, fetcher.RETRY_ATTEMPTS)
+
+    def test_error_raised_on_no_json_response(self):
+        # If the service returns a sucess response but with a body that
+        # does not contain JSON, we should still retry up to RETRY_ATTEMPTS,
+        # but after exhausting retries we propagate the exception.
+        self.set_http_responses_to(
+            self.fake_response(status_code=200, body='Not JSON'),
+            self.fake_response(status_code=200, body='Not JSON'),
+            self.fake_response(status_code=200, body='Not JSON'),
+        )
+        fetcher = self.create_fetcher()
+        with self.assertRaises(MetadataRetrievalError):
+            fetcher.retrieve_uri('/foo?id=1')
+        # Should have tried up to RETRY_ATTEMPTS.
+        self.assertEqual(self.http.get.call_count, fetcher.RETRY_ATTEMPTS)
+
+    def test_can_retrieve_full_uri_with_fixed_ip(self):
+        self.assert_can_retrieve_metadata_from(
+            'http://%s/foo?id=1' % ContainerMetadataFetcher.IP_ADDRESS)
+
+    def test_localhost_http_is_allowed(self):
+        self.assert_can_retrieve_metadata_from('http://localhost/foo')
+
+    def test_localhost_with_port_http_is_allowed(self):
+        self.assert_can_retrieve_metadata_from('http://localhost:8000/foo')
+
+    def test_localhost_https_is_allowed(self):
+        self.assert_can_retrieve_metadata_from('https://localhost/foo')
+
+    def test_can_use_127_ip_addr(self):
+        self.assert_can_retrieve_metadata_from('https://127.0.0.1/foo')
+
+    def test_can_use_127_ip_addr_with_port(self):
+        self.assert_can_retrieve_metadata_from('https://127.0.0.1:8080/foo')
+
+    def test_link_local_http_is_not_allowed(self):
+        self.assert_host_is_not_allowed('http://169.254.0.1/foo')
+
+    def test_link_local_https_is_not_allowed(self):
+        self.assert_host_is_not_allowed('https://169.254.0.1/foo')
+
+    def test_non_link_local_nonallowed_url(self):
+        self.assert_host_is_not_allowed('http://169.1.2.3/foo')
+
+    def test_error_raised_on_nonallowed_url(self):
+        self.assert_host_is_not_allowed('http://somewhere.com/foo')
+
+    def test_external_host_not_allowed_if_https(self):
+        self.assert_host_is_not_allowed('https://somewhere.com/foo')
 
 
 if __name__ == '__main__':

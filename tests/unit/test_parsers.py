@@ -12,11 +12,37 @@
 # language governing permissions and limitations under the License.
 from tests import unittest
 import datetime
+import collections
 
 from dateutil.tz import tzutc
+from nose.tools import assert_equal
 
 from botocore import parsers
 from botocore import model
+from botocore.compat import json
+
+
+# HTTP responses will typically return a custom HTTP
+# dict.  We want to ensure we're able to work with any
+# kind of mutable mapping implementation.
+class CustomHeaderDict(collections.MutableMapping):
+    def __init__(self, original_dict):
+        self._d = original_dict
+
+    def __getitem__(self, item):
+        return self._d[item]
+
+    def __setitem__(self, item, value):
+        self._d[item] = value
+
+    def __delitem__(self, item):
+        del self._d[item]
+
+    def __iter__(self):
+        return iter(self._d)
+
+    def __len__(self):
+        return len(self._d)
 
 
 # These tests contain botocore specific tests that either
@@ -62,7 +88,52 @@ class TestResponseMetadataParsed(unittest.TestCase):
         self.assertEqual(
             parsed, {'Str': 'myname',
                      'ResponseMetadata': {'RequestId': 'request-id',
-                                          'HTTPStatusCode': 200}})
+                                          'HTTPStatusCode': 200,
+                                          'HTTPHeaders': {}}})
+
+    def test_metadata_always_exists_for_query(self):
+        # ResponseMetadata is used for more than just the request id. It
+        # should always get populated, even if the request doesn't seem to
+        # have an id.
+        parser = parsers.QueryParser()
+        response = (
+            '<OperationNameResponse>'
+            '  <OperationNameResult><Str>myname</Str></OperationNameResult>'
+            '</OperationNameResponse>').encode('utf-8')
+        output_shape = model.StructureShape(
+            'OutputShape',
+            {
+                'type': 'structure',
+                'resultWrapper': 'OperationNameResult',
+                'members': {
+                    'Str': {
+                        'shape': 'StringType',
+                    },
+                    'Num': {
+                        'shape': 'IntegerType',
+                    }
+                }
+            },
+            model.ShapeResolver({
+                'StringType': {
+                    'type': 'string',
+                },
+                'IntegerType': {
+                    'type': 'integer',
+                }
+            })
+        )
+        parsed = parser.parse(
+            {'body': response, 'headers': {}, 'status_code': 200},
+            output_shape)
+        expected = {
+            'Str': 'myname',
+            'ResponseMetadata': {
+                'HTTPStatusCode': 200,
+                'HTTPHeaders': {}
+            }
+        }
+        self.assertEqual(parsed, expected)
 
     def test_response_metadata_parsed_for_ec2(self):
         parser = parsers.EC2QueryParser()
@@ -91,9 +162,44 @@ class TestResponseMetadataParsed(unittest.TestCase):
         self.assertEqual(
             parsed, {'Str': 'myname',
                      'ResponseMetadata': {'RequestId': 'request-id',
-                                          'HTTPStatusCode': 200}})
+                                          'HTTPStatusCode': 200,
+                                          'HTTPHeaders': {}}})
 
-    def test_response_metadata_on_normal_request(self):
+    def test_metadata_always_exists_for_ec2(self):
+        # ResponseMetadata is used for more than just the request id. It
+        # should always get populated, even if the request doesn't seem to
+        # have an id.
+        parser = parsers.EC2QueryParser()
+        response = (
+            '<OperationNameResponse>'
+            '  <Str>myname</Str>'
+            '</OperationNameResponse>').encode('utf-8')
+        output_shape = model.StructureShape(
+            'OutputShape',
+            {
+                'type': 'structure',
+                'members': {
+                    'Str': {
+                        'shape': 'StringType',
+                    }
+                }
+            },
+            model.ShapeResolver({'StringType': {'type': 'string'}})
+        )
+        parsed = parser.parse(
+            {'headers': {}, 'body': response, 'status_code': 200},
+            output_shape)
+        expected = {
+            'Str': 'myname',
+            'ResponseMetadata': {
+                'HTTPStatusCode': 200,
+                'HTTPHeaders': {}
+            }
+        }
+        self.assertEqual(
+            parsed, expected)
+
+    def test_response_metadata_on_json_request(self):
         parser = parsers.JSONParser()
         response = b'{"Str": "mystring"}'
         headers = {'x-amzn-requestid': 'request-id'}
@@ -116,9 +222,41 @@ class TestResponseMetadataParsed(unittest.TestCase):
         self.assertEqual(
             parsed, {'Str': 'mystring',
                      'ResponseMetadata': {'RequestId': 'request-id',
-                                          'HTTPStatusCode': 200}})
+                                          'HTTPStatusCode': 200,
+                                          'HTTPHeaders': headers}})
 
-    def test_response_metadata_on_rest_response(self):
+    def test_metadata_always_exists_for_json(self):
+        # ResponseMetadata is used for more than just the request id. It
+        # should always get populated, even if the request doesn't seem to
+        # have an id.
+        parser = parsers.JSONParser()
+        response = b'{"Str": "mystring"}'
+        headers = {}
+        output_shape = model.StructureShape(
+            'OutputShape',
+            {
+                'type': 'structure',
+                'members': {
+                    'Str': {
+                        'shape': 'StringType',
+                    }
+                }
+            },
+            model.ShapeResolver({'StringType': {'type': 'string'}})
+        )
+        parsed = parser.parse(
+            {'body': response, 'headers': headers, 'status_code': 200},
+            output_shape)
+        expected = {
+            'Str': 'mystring',
+            'ResponseMetadata': {
+                'HTTPStatusCode': 200,
+                'HTTPHeaders': headers
+            }
+        }
+        self.assertEqual(parsed, expected)
+
+    def test_response_metadata_on_rest_json_response(self):
         parser = parsers.RestJSONParser()
         response = b'{"Str": "mystring"}'
         headers = {'x-amzn-requestid': 'request-id'}
@@ -141,7 +279,39 @@ class TestResponseMetadataParsed(unittest.TestCase):
         self.assertEqual(
             parsed, {'Str': 'mystring',
                      'ResponseMetadata': {'RequestId': 'request-id',
-                                          'HTTPStatusCode': 200}})
+                                          'HTTPStatusCode': 200,
+                                          'HTTPHeaders': headers}})
+
+    def test_metadata_always_exists_on_rest_json_response(self):
+        # ResponseMetadata is used for more than just the request id. It
+        # should always get populated, even if the request doesn't seem to
+        # have an id.
+        parser = parsers.RestJSONParser()
+        response = b'{"Str": "mystring"}'
+        headers = {}
+        output_shape = model.StructureShape(
+            'OutputShape',
+            {
+                'type': 'structure',
+                'members': {
+                    'Str': {
+                        'shape': 'StringType',
+                    }
+                }
+            },
+            model.ShapeResolver({'StringType': {'type': 'string'}})
+        )
+        parsed = parser.parse(
+            {'body': response, 'headers': headers, 'status_code': 200},
+            output_shape)
+        expected = {
+            'Str': 'mystring',
+            'ResponseMetadata': {
+                'HTTPStatusCode': 200,
+                'HTTPHeaders': headers
+            }
+        }
+        self.assertEqual(parsed, expected)
 
     def test_response_metadata_from_s3_response(self):
         # Even though s3 is a rest-xml service, it's response metadata
@@ -159,7 +329,77 @@ class TestResponseMetadataParsed(unittest.TestCase):
             parsed,
             {'ResponseMetadata': {'RequestId': 'request-id',
                                   'HostId': 'second-id',
-                                  'HTTPStatusCode': 200}})
+                                  'HTTPStatusCode': 200,
+                                  'HTTPHeaders': headers}})
+
+    def test_metadata_always_exists_on_rest_xml_response(self):
+        # ResponseMetadata is used for more than just the request id. It
+        # should always get populated, even if the request doesn't seem to
+        # have an id.
+        headers = {}
+        parser = parsers.RestXMLParser()
+        parsed = parser.parse(
+            {'body': '', 'headers': headers, 'status_code': 200}, None)
+        expected = {
+            'ResponseMetadata': {
+                'HTTPStatusCode': 200,
+                'HTTPHeaders': headers
+            }
+        }
+        self.assertEqual(parsed, expected)
+
+
+class TestHeaderResponseInclusion(unittest.TestCase):
+    def create_parser(self):
+        return parsers.JSONParser()
+
+    def create_arbitary_output_shape(self):
+        output_shape = model.StructureShape(
+            'OutputShape',
+            {
+                'type': 'structure',
+                'members': {
+                    'Str': {
+                        'shape': 'StringType',
+                    }
+                }
+            },
+            model.ShapeResolver({'StringType': {'type': 'string'}})
+        )
+        return output_shape
+
+    def test_can_add_errors_into_response(self):
+        parser = self.create_parser()
+        headers = {
+            'x-amzn-requestid': 'request-id',
+            'Header1': 'foo',
+            'Header2': 'bar',
+        }
+        output_shape = self.create_arbitary_output_shape()
+        parsed = parser.parse(
+            {'body': b'{}', 'headers': headers,
+             'status_code': 200}, output_shape)
+        # Response headers should be mapped as HTTPHeaders.
+        self.assertEqual(
+            parsed['ResponseMetadata']['HTTPHeaders'], headers)
+
+    def test_can_always_json_serialize_headers(self):
+        parser = self.create_parser()
+        original_headers = {
+            'x-amzn-requestid': 'request-id',
+            'Header1': 'foo',
+        }
+        headers = CustomHeaderDict(original_headers)
+        output_shape = self.create_arbitary_output_shape()
+        parsed = parser.parse(
+            {'body': b'{}', 'headers': headers,
+             'status_code': 200}, output_shape)
+        metadata = parsed['ResponseMetadata']
+        # We've had the contract that you can json serialize a
+        # response.  So we want to ensure that despite using a CustomHeaderDict
+        # we can always JSON dumps the response metadata.
+        self.assertEqual(
+            json.loads(json.dumps(metadata))['HTTPHeaders']['Header1'], 'foo')
 
 
 class TestResponseParsingDatetimes(unittest.TestCase):
@@ -248,7 +488,8 @@ class TestHandlesNoOutputShape(unittest.TestCase):
         self.assertEqual(
             parsed,
             {'ResponseMetadata': {'RequestId': 'request-id',
-                                  'HTTPStatusCode': 200}})
+                                  'HTTPStatusCode': 200,
+                                  'HTTPHeaders': headers}})
 
     def test_empty_rest_xml_response(self):
         # This is the format used by cloudfront, route53.
@@ -261,7 +502,8 @@ class TestHandlesNoOutputShape(unittest.TestCase):
         self.assertEqual(
             parsed,
             {'ResponseMetadata': {'RequestId': 'request-id',
-                                  'HTTPStatusCode': 200}})
+                                  'HTTPStatusCode': 200,
+                                  'HTTPHeaders': headers}})
 
     def test_empty_query_response(self):
         body = (
@@ -279,7 +521,8 @@ class TestHandlesNoOutputShape(unittest.TestCase):
         self.assertEqual(
             parsed,
             {'ResponseMetadata': {'RequestId': 'request-id',
-                                  'HTTPStatusCode': 200}})
+                                  'HTTPStatusCode': 200,
+                                  'HTTPHeaders': {}}})
 
     def test_empty_json_response(self):
         headers = {'x-amzn-requestid': 'request-id'}
@@ -292,7 +535,8 @@ class TestHandlesNoOutputShape(unittest.TestCase):
         self.assertEqual(
             parsed,
             {'ResponseMetadata': {'RequestId': 'request-id',
-                                  'HTTPStatusCode': 200}})
+                                  'HTTPStatusCode': 200,
+                                  'HTTPHeaders': headers}})
 
 
 class TestHandlesInvalidXMLResponses(unittest.TestCase):
@@ -438,7 +682,8 @@ class TestParseErrorResponses(unittest.TestCase):
         })
         self.assertEqual(parsed['ResponseMetadata'], {
             'RequestId': 'abc-123',
-            'HTTPStatusCode': 500
+            'HTTPStatusCode': 500,
+            'HTTPHeaders': {}
         })
 
     def test_can_parser_ec2_errors(self):
@@ -510,11 +755,52 @@ class TestParseErrorResponses(unittest.TestCase):
 
         self.assertIn('Error', parsed)
         self.assertEqual(parsed['Error'], {
-            'Code': '',
-            'Message': ''
+            'Code': '504',
+            'Message': 'Gateway Timeout'
         })
         self.assertEqual(parsed['ResponseMetadata'], {
             'HTTPStatusCode': 504,
+            'HTTPHeaders': headers
+        })
+
+    def test_error_response_with_string_body_rest_json(self):
+        parser = parsers.RestJSONParser()
+        response = b'HTTP content length exceeded 1049600 bytes.'
+        headers = {'content-length': '0', 'connection': 'keep-alive'}
+        output_shape = None
+        parsed = parser.parse({'body': response, 'headers': headers,
+                               'status_code': 413}, output_shape)
+
+        self.assertIn('Error', parsed)
+        self.assertEqual(parsed['Error'], {
+            'Code': '413',
+            'Message': response.decode('utf-8')
+        })
+        self.assertEqual(parsed['ResponseMetadata'], {
+            'HTTPStatusCode': 413,
+            'HTTPHeaders': headers
+        })
+
+    def test_error_response_with_xml_body_rest_json(self):
+        parser = parsers.RestJSONParser()
+        response = (
+            '<AccessDeniedException>'
+            '   <Message>Unable to determine service/operation name to be authorized</Message>'
+            '</AccessDeniedException>'
+        ).encode('utf-8')
+        headers = {'content-length': '0', 'connection': 'keep-alive'}
+        output_shape = None
+        parsed = parser.parse({'body': response, 'headers': headers,
+                               'status_code': 403}, output_shape)
+
+        self.assertIn('Error', parsed)
+        self.assertEqual(parsed['Error'], {
+            'Code': '403',
+            'Message': response.decode('utf-8')
+        })
+        self.assertEqual(parsed['ResponseMetadata'], {
+            'HTTPStatusCode': 403,
+            'HTTPHeaders': headers
         })
 
     def test_s3_error_response(self):
@@ -546,6 +832,7 @@ class TestParseErrorResponses(unittest.TestCase):
             'RequestId': 'request-id',
             'HostId': 'second-id',
             'HTTPStatusCode': 400,
+            'HTTPHeaders': headers
         })
 
     def test_s3_error_response_with_no_body(self):
@@ -570,6 +857,7 @@ class TestParseErrorResponses(unittest.TestCase):
             'RequestId': 'request-id',
             'HostId': 'second-id',
             'HTTPStatusCode': 404,
+            'HTTPHeaders': headers
         })
 
     def test_can_parse_glacier_error_response(self):
@@ -635,3 +923,26 @@ class TestParseErrorResponses(unittest.TestCase):
         # Even though there's no <Message /> we should
         # still populate an empty string.
         self.assertEqual(error['Message'], '')
+
+
+def test_can_handle_generic_error_message():
+    # There are times when you can get a service to respond with a generic
+    # html error page.  We should be able to handle this case.
+    for parser_cls in parsers.PROTOCOL_PARSERS.values():
+        generic_html_body =  (
+            '<html><body><b>Http/1.1 Service Unavailable</b></body></html>'
+        ).encode('utf-8')
+        empty_body = b''
+        yield _assert_parses_generic_error, parser_cls(), generic_html_body
+        yield _assert_parses_generic_error, parser_cls(), empty_body
+
+
+def _assert_parses_generic_error(parser, body):
+    # There are times when you can get a service to respond with a generic
+    # html error page.  We should be able to handle this case.
+    parsed = parser.parse({
+        'body': body, 'headers': {}, 'status_code': 503}, None)
+    assert_equal(
+        parsed['Error'],
+        {'Code': '503', 'Message': 'Service Unavailable'})
+    assert_equal(parsed['ResponseMetadata']['HTTPStatusCode'], 503)

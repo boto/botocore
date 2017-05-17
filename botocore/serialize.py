@@ -47,6 +47,7 @@ from botocore.compat import six
 from botocore.compat import json, formatdate
 from botocore.utils import parse_to_aware_datetime
 from botocore.utils import percent_encode
+from botocore.utils import is_json_value_header
 from botocore import validate
 
 
@@ -265,6 +266,7 @@ class EC2Serializer(QuerySerializer):
     to worry about wiring this class up correctly.
 
     """
+
     def _get_serialized_name(self, shape, default_name):
         # Returns the serialized name for the shape if it exists.
         # Otherwise it will return the passed in default_name.
@@ -478,12 +480,15 @@ class BaseRestSerializer(Serializer):
         elif location == 'querystring':
             if isinstance(param_value, dict):
                 partitioned['query_string_kwargs'].update(param_value)
+            elif isinstance(param_value, bool):
+                partitioned['query_string_kwargs'][
+                    key_name] = str(param_value).lower()
             else:
                 partitioned['query_string_kwargs'][key_name] = param_value
         elif location == 'header':
             shape = shape_members[param_name]
             value = self._convert_header_value(shape, param_value)
-            partitioned['headers'][key_name] = value
+            partitioned['headers'][key_name] = str(value)
         elif location == 'headers':
             # 'headers' is a bit of an oddball.  The ``key_name``
             # is actually really a prefix for the header names:
@@ -511,6 +516,10 @@ class BaseRestSerializer(Serializer):
             datetime_obj = parse_to_aware_datetime(value)
             timestamp = calendar.timegm(datetime_obj.utctimetuple())
             return self._timestamp_rfc822(timestamp)
+        elif is_json_value_header(shape):
+            # Serialize with no spaces after separators to save space in
+            # the header.
+            return self._get_base64(json.dumps(value, separators=(',', ':')))
         else:
             return value
 
@@ -615,7 +624,7 @@ class RestXMLSerializer(BaseRestSerializer):
 
     def _default_serialize(self, xmlnode, params, shape, name):
         node = ElementTree.SubElement(xmlnode, name)
-        node.text = str(params)
+        node.text = six.text_type(params)
 
 
 SERIALIZERS = {

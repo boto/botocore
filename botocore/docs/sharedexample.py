@@ -13,7 +13,7 @@
 import re
 import numbers
 from botocore.utils import parse_timestamp
-from datetime import datetime
+from botocore.compat import six
 
 
 class SharedExampleDocumenter(object):
@@ -41,7 +41,7 @@ class SharedExampleDocumenter(object):
         input_section.style.start_codeblock()
         if prefix is not None:
             input_section.write(prefix)
-        params = example['input']
+        params = example.get('input', {})
         comments = example.get('comments')
         if comments:
             comments = comments.get('input')
@@ -165,7 +165,7 @@ class SharedExampleDocumenter(object):
     def _document_str(self, section, value, path):
         # We do the string conversion because this might accept a type that
         # we don't specifically address.
-        section.write("'%s'," % str(value))
+        section.write(u"'%s'," % six.text_type(value))
 
     def _document_number(self, section, value, path):
         section.write("%s," % str(value))

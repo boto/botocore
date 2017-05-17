@@ -13,7 +13,7 @@
 
 from tests import unittest
 
-from mock import Mock, patch
+from mock import Mock, patch, sentinel
 from nose.tools import assert_equals
 from botocore.vendored.requests import ConnectionError
 
@@ -21,7 +21,7 @@ from botocore.compat import six
 from botocore.awsrequest import AWSRequest
 from botocore.endpoint import Endpoint, DEFAULT_TIMEOUT
 from botocore.endpoint import EndpointCreator
-from botocore.endpoint import PreserveAuthSession
+from botocore.endpoint import BotocoreHTTPSession
 from botocore.exceptions import EndpointConnectionError
 from botocore.exceptions import ConnectionClosedError
 from botocore.exceptions import BaseEndpointResolverError
@@ -34,7 +34,8 @@ def request_dict():
         'url_path': '/',
         'query_string': '',
         'method': 'POST',
-        'url': 'https://example.com'
+        'url': 'https://example.com',
+        'context': {}
     }
 
 
@@ -125,32 +126,26 @@ class TestEndpointFeatures(TestEndpointBase):
                                      'Connection was closed'):
             self.endpoint.make_request(self.op, request_dict())
 
+    def test_make_request_with_context(self):
+        r = request_dict()
+        r['context'] = {'signing': {'region': 'us-west-2'}}
+        with patch('botocore.endpoint.Endpoint.prepare_request') as prepare:
+            self.endpoint.make_request(self.op, r)
+        request = prepare.call_args[0][0]
+        self.assertEqual(request.context['signing']['region'], 'us-west-2')
+
+    def test_can_specify_max_pool_connections(self):
+        endpoint = Endpoint('https://ec2.us-west-2.amazonaws.com', 'ec2',
+                            self.event_emitter, max_pool_connections=50)
+        # We can look in endpoint.http_session.adapters[0]._pool_maxsize,
+        # but that feels like testing too much implementation detail.
+        self.assertEqual(endpoint.max_pool_connections, 50)
+
 
 class TestRetryInterface(TestEndpointBase):
     def setUp(self):
         super(TestRetryInterface, self).setUp()
         self.retried_on_exception = None
-
-    def max_attempts_retry_handler(self, attempts, **kwargs):
-        # Simulate a max requests of 3.
-        self.total_calls += 1
-        if attempts == 3:
-            return None
-        else:
-            # Returning anything non-None will trigger a retry,
-            # but 0 here is so that time.sleep(0) happens.
-            return 0
-
-    def connection_error_handler(self, attempts, caught_exception, **kwargs):
-        self.total_calls += 1
-        if attempts == 3:
-            return None
-        elif isinstance(caught_exception, ConnectionError):
-            # Returning anything non-None will trigger a retry,
-            # but 0 here is so that time.sleep(0) happens.
-            return 0
-        else:
-            return None
 
     def test_retry_events_are_emitted(self):
         op = Mock()
@@ -208,6 +203,33 @@ class TestRetryInterface(TestEndpointBase):
                          'request-created.ec2.DescribeInstances')
         self.assertEqual(call_args[3][0][0],
                          'needs-retry.ec2.DescribeInstances')
+
+    def test_retry_attempts_added_to_response_metadata(self):
+        op = Mock(name='DescribeInstances')
+        op.metadata = {'protocol': 'query'}
+        self.event_emitter.emit.side_effect = [
+            [(None, None)],    # Request created.
+            [(None, 0)],       # Check if retry needed. Retry needed.
+            [(None, None)],    # Request created.
+            [(None, None)]     # Check if retry needed. Retry not needed.
+        ]
+        parser = Mock()
+        parser.parse.return_value = {'ResponseMetadata': {}}
+        self.factory.return_value.create_parser.return_value = parser
+        response = self.endpoint.make_request(op, request_dict())
+        self.assertEqual(response[1]['ResponseMetadata']['RetryAttempts'], 1)
+
+    def test_retry_attempts_is_zero_when_not_retried(self):
+        op = Mock(name='DescribeInstances', metadata={'protocol': 'query'})
+        self.event_emitter.emit.side_effect = [
+            [(None, None)],    # Request created.
+            [(None, None)],    # Check if retry needed. Retry needed.
+        ]
+        parser = Mock()
+        parser.parse.return_value = {'ResponseMetadata': {}}
+        self.factory.return_value.create_parser.return_value = parser
+        response = self.endpoint.make_request(op, request_dict())
+        self.assertEqual(response[1]['ResponseMetadata']['RetryAttempts'], 0)
 
 
 class TestS3ResetStreamOnRetry(TestEndpointBase):
@@ -308,6 +330,14 @@ class TestEndpointCreator(unittest.TestCase):
         # /path/cacerts.pem wins over the value from the env var.
         self.assertEqual(endpoint.verify, '/path/cacerts.pem')
 
+    def test_can_specify_max_pool_conns(self):
+        endpoint = self.creator.create_endpoint(
+            self.service_model, region_name='us-west-2',
+            endpoint_url='https://example.com',
+            max_pool_connections=100
+        )
+        self.assertEqual(endpoint.max_pool_connections, 100)
+
 
 class TestAWSSession(unittest.TestCase):
     def test_auth_header_preserved_from_s3_redirects(self):
@@ -331,7 +361,7 @@ class TestAWSSession(unittest.TestCase):
         success_response.raw._original_response = None
         success_response.is_redirect = False
         success_response.status_code = 200
-        session = PreserveAuthSession()
+        session = BotocoreHTTPSession()
         session.send = Mock(return_value=success_response)
 
         list(session.resolve_redirects(
@@ -343,3 +373,11 @@ class TestAWSSession(unittest.TestCase):
         self.assertEqual(
             redirected_request.headers['Authorization'],
             'original auth header')
+
+    def test_max_pool_conns_injects_custom_adapter(self):
+        http_adapter_cls = Mock(return_value=sentinel.HTTP_ADAPTER)
+        session = BotocoreHTTPSession(max_pool_connections=20,
+                                      http_adapter_cls=http_adapter_cls)
+        http_adapter_cls.assert_called_with(pool_maxsize=20)
+        self.assertEqual(session.adapters['https://'], sentinel.HTTP_ADAPTER)
+        self.assertEqual(session.adapters['http://'], sentinel.HTTP_ADAPTER)

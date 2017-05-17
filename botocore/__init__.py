@@ -16,7 +16,7 @@ import os
 import re
 import logging
 
-__version__ = '1.4.1'
+__version__ = '1.5.50'
 
 
 class NullHandler(logging.Handler):
@@ -45,6 +45,16 @@ _xform_cache = {
     ('DescribeStorediSCSIVolumes', '-'): 'describe-stored-iscsi-volumes',
     ('CreateStorediSCSIVolume', '_'): 'create_stored_iscsi_volume',
     ('CreateStorediSCSIVolume', '-'): 'create-stored-iscsi-volume',
+    ('ListHITsForQualificationType', '_'): 'list_hits_for_qualification_type',
+    ('ListHITsForQualificationType', '-'): 'list-hits-for-qualification-type',
+}
+# The items in this dict represent partial renames to apply globally to all
+# services which might have a matching argument or operation. This way a
+# common mis-translation can be fixed without having to call out each
+# individual case.
+_partial_renames = {
+    'ipv-6': 'ipv6',
+    'ipv_6': 'ipv6',
 }
 ScalarTypes = ('string', 'integer', 'boolean', 'timestamp', 'float', 'double')
 
@@ -54,7 +64,8 @@ BOTOCORE_ROOT = os.path.dirname(os.path.abspath(__file__))
 UNSIGNED = object()
 
 
-def xform_name(name, sep='_', _xform_cache=_xform_cache):
+def xform_name(name, sep='_', _xform_cache=_xform_cache,
+               partial_renames=_partial_renames):
     """Convert camel case to a "pythonic" name.
 
     If the name contains the ``sep`` character, then it is
@@ -75,5 +86,10 @@ def xform_name(name, sep='_', _xform_cache=_xform_cache):
         s1 = _first_cap_regex.sub(r'\1' + sep + r'\2', name)
         s2 = _number_cap_regex.sub(r'\1' + sep + r'\2', s1)
         transformed = _end_cap_regex.sub(r'\1' + sep + r'\2', s2).lower()
+
+        # Do partial renames
+        for old, new in partial_renames.items():
+            if old in transformed:
+                transformed = transformed.replace(old, new)
         _xform_cache[key] = transformed
     return _xform_cache[key]

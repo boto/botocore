@@ -1,0 +1,37 @@
+[
+  {
+    "category": "``dms``", 
+    "description": "Update dms client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``rds``", 
+    "description": "Update rds client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``logs``", 
+    "description": "Update logs client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``marketplacecommerceanalytics``", 
+    "description": "Update marketplacecommerceanalytics client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``elasticbeanstalk``", 
+    "description": "Update elasticbeanstalk client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``sts``", 
+    "description": "Update sts client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``batch``", 
+    "description": "Update batch client to latest version", 
+    "type": "feature"
+  }
+]

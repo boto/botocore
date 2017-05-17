@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``elasticbeanstalk``", 
+    "description": "Update elasticbeanstalk client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``acm``", 
+    "description": "Update acm client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``gamelift``", 
+    "description": "Update gamelift client to latest version", 
+    "type": "feature"
+  }
+]

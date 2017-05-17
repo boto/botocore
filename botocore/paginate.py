@@ -13,14 +13,164 @@
 
 from itertools import tee
 
-from six import string_types
+from botocore.compat import six
 
 import jmespath
 import json
 import base64
+import logging
 from botocore.exceptions import PaginationError
 from botocore.compat import zip
 from botocore.utils import set_value_from_jmespath, merge_dicts
+
+
+log = logging.getLogger(__name__)
+
+
+class TokenEncoder(object):
+    """Encodes dictionaries into opaque strings.
+
+    This for the most part json dumps + base64 encoding, but also supports
+    having bytes in the dictionary in addition to the types that json can
+    handle by default.
+
+    This is intended for use in encoding pagination tokens, which in some
+    cases can be complex structures and / or contain bytes.
+    """
+
+    def encode(self, token):
+        """Encodes a dictionary to an opaque string.
+
+        :type token: dict
+        :param token: A dictionary containing pagination information,
+            particularly the service pagination token(s) but also other boto
+            metadata.
+
+        :rtype: str
+        :returns: An opaque string
+        """
+        try:
+            # Try just using json dumps first to avoid having to traverse
+            # and encode the dict. In 99.9999% of cases this will work.
+            json_string = json.dumps(token)
+        except (TypeError, UnicodeDecodeError):
+            # If normal dumping failed, go through and base64 encode all bytes.
+            encoded_token, encoded_keys = self._encode(token, [])
+
+            # Save the list of all the encoded key paths. We can safely
+            # assume that no service will ever use this key.
+            encoded_token['boto_encoded_keys'] = encoded_keys
+
+            # Now that the bytes are all encoded, dump the json.
+            json_string = json.dumps(encoded_token)
+
+        # base64 encode the json string to produce an opaque token string.
+        return base64.b64encode(json_string.encode('utf-8')).decode('utf-8')
+
+    def _encode(self, data, path):
+        """Encode bytes in given data, keeping track of the path traversed."""
+        if isinstance(data, dict):
+            return self._encode_dict(data, path)
+        elif isinstance(data, list):
+            return self._encode_list(data, path)
+        elif isinstance(data, six.binary_type):
+            return self._encode_bytes(data, path)
+        else:
+            return data, []
+
+    def _encode_list(self, data, path):
+        """Encode any bytes in a list, noting the index of what is encoded."""
+        new_data = []
+        encoded = []
+        for i, value in enumerate(data):
+            new_path = path + [i]
+            new_value, new_encoded = self._encode(value, new_path)
+            new_data.append(new_value)
+            encoded.extend(new_encoded)
+        return new_data, encoded
+
+    def _encode_dict(self, data, path):
+        """Encode any bytes in a dict, noting the index of what is encoded."""
+        new_data = {}
+        encoded = []
+        for key, value in data.items():
+            new_path = path + [key]
+            new_value, new_encoded = self._encode(value, new_path)
+            new_data[key] = new_value
+            encoded.extend(new_encoded)
+        return new_data, encoded
+
+    def _encode_bytes(self, data, path):
+        """Base64 encode a byte string."""
+        return base64.b64encode(data).decode('utf-8'), [path]
+
+
+class TokenDecoder(object):
+    """Decodes token strings back into dictionaries.
+
+    This performs the inverse operation to the TokenEncoder, accepting
+    opaque strings and decoding them into a useable form.
+    """
+
+    def decode(self, token):
+        """Decodes an opaque string to a dictionary.
+
+        :type token: str
+        :param token: A token string given by the botocore pagination
+            interface.
+
+        :rtype: dict
+        :returns: A dictionary containing pagination information,
+            particularly the service pagination token(s) but also other boto
+            metadata.
+        """
+        json_string = base64.b64decode(token.encode('utf-8')).decode('utf-8')
+        decoded_token = json.loads(json_string)
+
+        # Remove the encoding metadata as it is read since it will no longer
+        # be needed.
+        encoded_keys = decoded_token.pop('boto_encoded_keys', None)
+        if encoded_keys is None:
+            return decoded_token
+        else:
+            return self._decode(decoded_token, encoded_keys)
+
+    def _decode(self, token, encoded_keys):
+        """Find each encoded value and decode it."""
+        for key in encoded_keys:
+            encoded = self._path_get(token, key)
+            decoded = base64.b64decode(encoded.encode('utf-8'))
+            self._path_set(token, key, decoded)
+        return token
+
+    def _path_get(self, data, path):
+        """Return the nested data at the given path.
+
+        For instance:
+            data = {'foo': ['bar', 'baz']}
+            path = ['foo', 0]
+            ==> 'bar'
+        """
+        # jmespath isn't used here because it would be difficult to actually
+        # create the jmespath query when taking all of the unknowns of key
+        # structure into account. Gross though this is, it is simple and not
+        # very error prone.
+        d = data
+        for step in path:
+            d = d[step]
+        return d
+
+    def _path_set(self, data, path, value):
+        """Set the value of a key in the given data.
+
+        Example:
+            data = {'foo': ['bar', 'baz']}
+            path = ['foo', 1]
+            value = 'bin'
+            ==> data = {'foo': ['bar', 'bin']}
+        """
+        container = self._path_get(data, path[:-1])
+        container[path[-1]] = value
 
 
 class PaginatorModel(object):
@@ -41,7 +191,6 @@ class PageIterator(object):
                  result_keys, non_aggregate_keys, limit_key, max_items,
                  starting_token, page_size, op_kwargs):
         self._method = method
-        self._op_kwargs = op_kwargs
         self._input_token = input_token
         self._output_token = output_token
         self._more_results = more_results
@@ -54,6 +203,8 @@ class PageIterator(object):
         self._resume_token = None
         self._non_aggregate_key_exprs = non_aggregate_keys
         self._non_aggregate_part = {}
+        self._token_encoder = TokenEncoder()
+        self._token_decoder = TokenDecoder()
 
     @property
     def result_keys(self):
@@ -76,8 +227,7 @@ class PageIterator(object):
         dict_keys = sorted(value.keys())
 
         if token_keys == dict_keys:
-            self._resume_token = base64.b64encode(
-                json.dumps(value).encode('utf-8')).decode('utf-8')
+            self._resume_token = self._token_encoder.encode(value)
         else:
             raise ValueError("Bad starting token: %s" % value)
 
@@ -128,13 +278,13 @@ class PageIterator(object):
                 if all(t is None for t in next_token.values()):
                     break
                 if self._max_items is not None and \
-                                total_items == self._max_items:
+                        total_items == self._max_items:
                     # We're on a page boundary so we can set the current
                     # next token to be the resume token.
                     self.resume_token = next_token
                     break
                 if previous_next_token is not None and \
-                                previous_next_token == next_token:
+                        previous_next_token == next_token:
                     message = ("The same next token was received "
                                "twice: %s" % next_token)
                     raise PaginationError(message=message)
@@ -197,9 +347,10 @@ class PageIterator(object):
 
     def _inject_token_into_kwargs(self, op_kwargs, next_token):
         for name, token in next_token.items():
-            if token is None or token == 'None':
-                continue
-            op_kwargs[name] = token
+            if (token is not None) and (token != 'None'):
+                op_kwargs[name] = token
+            elif name in op_kwargs:
+                del op_kwargs[name]
 
     def _handle_first_request(self, parsed, primary_result_key,
                               starting_truncation):
@@ -207,7 +358,7 @@ class PageIterator(object):
         # and only return the truncated amount.
         starting_truncation = self._parse_starting_token()[1]
         all_data = primary_result_key.search(parsed)
-        if isinstance(all_data, (list, string_types)):
+        if isinstance(all_data, (list, six.string_types)):
             data = all_data[starting_truncation:]
         else:
             data = None
@@ -225,7 +376,7 @@ class PageIterator(object):
             sample = token.search(parsed)
             if isinstance(sample, list):
                 empty_value = []
-            elif isinstance(sample, string_types):
+            elif isinstance(sample, six.string_types):
                 empty_value = ''
             elif isinstance(sample, (int, float)):
                 empty_value = 0
@@ -317,7 +468,7 @@ class PageIterator(object):
                 # Now both result_value and existing_value contain something
                 if isinstance(result_value, list):
                     existing_value.extend(result_value)
-                elif isinstance(result_value, (int, float, string_types)):
+                elif isinstance(result_value, (int, float, six.string_types)):
                     # Modify the existing result with the sum or concatenation
                     set_value_from_jmespath(
                         complete_result, result_expression.expression,
@@ -334,15 +485,56 @@ class PageIterator(object):
         # The starting token is a dict passed as a base64 encoded string.
         next_token = self._starting_token
         try:
-            next_token = json.loads(
-                base64.b64decode(next_token).decode('utf-8'))
+            next_token = self._token_decoder.decode(next_token)
             index = 0
             if 'boto_truncate_amount' in next_token:
                 index = next_token.get('boto_truncate_amount')
                 del next_token['boto_truncate_amount']
         except (ValueError, TypeError):
-            raise ValueError("Bad starting token: %s" % self._starting_token)
+            next_token, index = self._parse_starting_token_deprecated()
         return next_token, index
+
+    def _parse_starting_token_deprecated(self):
+        """
+        This handles parsing of old style starting tokens, and attempts to
+        coerce them into the new style.
+        """
+        log.debug("Attempting to fall back to old starting token parser. For "
+                  "token: %s" % self._starting_token)
+        if self._starting_token is None:
+            return None
+
+        parts = self._starting_token.split('___')
+        next_token = []
+        index = 0
+        if len(parts) == len(self._input_token) + 1:
+            try:
+                index = int(parts.pop())
+            except ValueError:
+                raise ValueError("Bad starting token: %s" %
+                                 self._starting_token)
+        for part in parts:
+            if part == 'None':
+                next_token.append(None)
+            else:
+                next_token.append(part)
+        return self._convert_deprecated_starting_token(next_token), index
+
+    def _convert_deprecated_starting_token(self, deprecated_token):
+        """
+        This attempts to convert a deprecated starting token into the new
+        style.
+        """
+        len_deprecated_token = len(deprecated_token)
+        len_input_token = len(self._input_token)
+        if len_deprecated_token > len_input_token:
+            raise ValueError("Bad starting token: %s" % self._starting_token)
+        elif len_deprecated_token < len_input_token:
+            log.debug("Old format starting token does not contain all input "
+                      "tokens. Setting the rest, in order, as None.")
+            for i in range(len_input_token - len_deprecated_token):
+                deprecated_token.append(None)
+        return dict(zip(self._input_token, deprecated_token))
 
 
 class Paginator(object):
@@ -426,6 +618,10 @@ class Paginator(object):
             max_items = int(max_items)
         page_size = pagination_config.get('PageSize', None)
         if page_size is not None:
+            if self._pagination_cfg.get('limit_key', None) is None:
+                raise PaginationError(
+                    message="PageSize parameter is not supported for the "
+                            "pagination interface for this operation.")
             page_size = int(page_size)
         return {
             'MaxItems': max_items,

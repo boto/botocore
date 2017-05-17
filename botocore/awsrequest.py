@@ -19,7 +19,8 @@ import socket
 import inspect
 
 from botocore.compat import six
-from botocore.compat import HTTPHeaders, HTTPResponse, urlunsplit, urlsplit
+from botocore.compat import HTTPHeaders, HTTPResponse, urlunsplit, urlsplit,\
+    urlparse
 from botocore.exceptions import UnseekableStreamError
 from botocore.utils import percent_encode_sequence
 from botocore.vendored.requests import models
@@ -118,7 +119,7 @@ class AWSHTTPConnection(HTTPConnection):
             if line in (b'\r\n', b'\n', b''):
                 break
 
-    def _send_request(self, method, url, body, headers):
+    def _send_request(self, method, url, body, headers, *args, **kwargs):
         self._response_received = False
         if headers.get('Expect', b'') == b'100-continue':
             self._expect_header_set = True
@@ -126,7 +127,7 @@ class AWSHTTPConnection(HTTPConnection):
             self._expect_header_set = False
             self.response_class = self._original_response_cls
         rval = HTTPConnection._send_request(
-            self, method, url, body, headers)
+            self, method, url, body, headers, *args, **kwargs)
         self._expect_header_set = False
         return rval
 
@@ -143,7 +144,7 @@ class AWSHTTPConnection(HTTPConnection):
         msg = b"\r\n".join(bytes_buffer)
         return msg
 
-    def _send_output(self, message_body=None):
+    def _send_output(self, message_body=None, *args, **kwargs):
         self._buffer.extend((b"", b""))
         msg = self._convert_to_bytes(self._buffer)
         del self._buffer[:]
@@ -260,7 +261,8 @@ for name, function in AWSHTTPConnection.__dict__.items():
         setattr(AWSHTTPSConnection, name, function)
 
 
-def prepare_request_dict(request_dict, endpoint_url, user_agent=None):
+def prepare_request_dict(request_dict, endpoint_url, context=None,
+                         user_agent=None):
     """
     This method prepares a request dict to be created into an
     AWSRequestObject. This prepares the request dict by adding the
@@ -289,6 +291,9 @@ def prepare_request_dict(request_dict, endpoint_url, user_agent=None):
         else:
             url += '&%s' % encoded_query_string
     r['url'] = url
+    r['context'] = context
+    if context is None:
+        r['context'] = {}
 
 
 def create_request_object(request_dict):
@@ -305,9 +310,10 @@ def create_request_object(request_dict):
 
     """
     r = request_dict
-    return AWSRequest(method=r['method'], url=r['url'],
-                      data=r['body'],
-                      headers=r['headers'])
+    request_object = AWSRequest(
+        method=r['method'], url=r['url'], data=r['body'], headers=r['headers'])
+    request_object.context.update(r['context'])
+    return request_object
 
 
 def _urljoin(endpoint_url, url_path):
@@ -443,6 +449,7 @@ class AWSPreparedRequest(models.PreparedRequest):
                 # AWS Services so remove it if it is added.
                 if 'Transfer-Encoding' in self.headers:
                     self.headers.pop('Transfer-Encoding')
+
 
 HTTPSConnectionPool.ConnectionCls = AWSHTTPSConnection
 HTTPConnectionPool.ConnectionCls = AWSHTTPConnection

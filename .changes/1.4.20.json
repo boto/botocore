@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``dynamodb``", 
+    "description": "Update dynamodb client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "Waiters", 
+    "description": "Fix ``JMESPathTypeError`` exception being raised (`#906 <https://github.com/boto/botocore/issues/906>`__, `#907 <https://github.com/boto/botocore/issues/907>`__)", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``workspaces``", 
+    "description": "Update workspaces client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "s3", 
+    "description": "Add paginator for ListObjectsV2", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``discovery``", 
+    "description": "Update discovery client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "iam", 
+    "description": "Add missing paginators. Fixes `#919 <https://github.com/boto/botocore/issues/919>`__.", 
+    "type": "feature"
+  }
+]

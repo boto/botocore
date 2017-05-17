@@ -98,7 +98,8 @@ import logging
 
 from botocore.compat import six, XMLParseError
 
-from botocore.utils import parse_timestamp, merge_dicts
+from botocore.utils import parse_timestamp, merge_dicts, \
+    is_json_value_header
 
 LOG = logging.getLogger(__name__)
 
@@ -203,15 +204,49 @@ class ResponseParser(object):
         LOG.debug('Response headers: %s', response['headers'])
         LOG.debug('Response body:\n%s', response['body'])
         if response['status_code'] >= 301:
-            parsed = self._do_error_parse(response, shape)
+            if self._is_generic_error_response(response):
+                parsed = self._do_generic_error_parse(response)
+            else:
+                parsed = self._do_error_parse(response, shape)
         else:
             parsed = self._do_parse(response, shape)
-        # Inject HTTPStatusCode key in the response metadata if the
-        # response metadata exists.
-        if isinstance(parsed, dict) and 'ResponseMetadata' in parsed:
-            parsed['ResponseMetadata']['HTTPStatusCode'] = (
-                response['status_code'])
+
+        # Add ResponseMetadata if it doesn't exist and inject the HTTP
+        # status code and headers from the response.
+        if isinstance(parsed, dict):
+            response_metadata = parsed.get('ResponseMetadata', {})
+            response_metadata['HTTPStatusCode'] = response['status_code']
+            response_metadata['HTTPHeaders'] = dict(response['headers'])
+            parsed['ResponseMetadata'] = response_metadata
         return parsed
+
+    def _is_generic_error_response(self, response):
+        # There are times when a service will respond with a generic
+        # error response such as:
+        # '<html><body><b>Http/1.1 Service Unavailable</b></body></html>'
+        #
+        # This can also happen if you're going through a proxy.
+        # In this case the protocol specific _do_error_parse will either
+        # fail to parse the response (in the best case) or silently succeed
+        # and treat the HTML above as an XML response and return
+        # non sensical parsed data.
+        # To prevent this case from happening we first need to check
+        # whether or not this response looks like the generic response.
+        if response['status_code'] >= 500:
+            body = response['body'].strip()
+            return body.startswith(b'<html>') or not body
+
+    def _do_generic_error_parse(self, response):
+        # There's not really much we can do when we get a generic
+        # html response.
+        LOG.debug("Received a non protocol specific error response from the "
+                  "service, unable to populate error code and message.")
+        return {
+            'Error': {'Code': str(response['status_code']),
+                      'Message': six.moves.http_client.responses.get(
+                          response['status_code'], '')},
+            'ResponseMetadata': {},
+        }
 
     def _do_parse(self, response, shape):
         raise NotImplementedError("%s._do_parse" % self.__class__.__name__)
@@ -519,7 +554,10 @@ class BaseJSONParser(ResponseParser):
         # so we need to check for both.
         error['Error']['Message'] = body.get('message',
                                              body.get('Message', ''))
-        code = body.get('__type')
+        # if the message did not contain an error code
+        # include the response status code
+        response_code = response.get('status_code')
+        code = body.get('__type', response_code and str(response_code))
         if code is not None:
             # code has a couple forms as well:
             # * "com.aws.dynamodb.vAPI#ProvisionedThroughputExceededException"
@@ -539,8 +577,13 @@ class BaseJSONParser(ResponseParser):
         if not body_contents:
             return {}
         body = body_contents.decode(self.DEFAULT_ENCODING)
-        original_parsed = json.loads(body)
-        return original_parsed
+        try:
+            original_parsed = json.loads(body)
+            return original_parsed
+        except ValueError:
+            # if the body cannot be parsed, include
+            # the literal string as the message
+            return { 'message': body }
 
 
 class JSONParser(BaseJSONParser):
@@ -645,6 +688,13 @@ class BaseRestParser(ResponseParser):
         # of parsing.
         raise NotImplementedError("_initial_body_parse")
 
+    def _handle_string(self, shape, value):
+        parsed = value
+        if is_json_value_header(shape):
+            decoded = base64.b64decode(value).decode(self.DEFAULT_ENCODING)
+            parsed = json.loads(decoded)
+        return parsed
+
 
 class RestJSONParser(BaseRestParser, BaseJSONParser):
 
@@ -739,6 +789,11 @@ class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
         default = {'Error': {'Message': '', 'Code': ''}}
         merge_dicts(default, parsed)
         return default
+
+    @_text_content
+    def _handle_string(self, shape, text):
+        text = super(RestXMLParser, self)._handle_string(shape, text)
+        return text
 
 
 PROTOCOL_PARSERS = {

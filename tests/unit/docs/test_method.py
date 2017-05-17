@@ -116,9 +116,15 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
             method_description='This describes the foo method.',
             example_prefix='response = client.foo'
         )
+        cross_ref_link = (
+            'See also: `AWS API Documentation '
+            '<https://docs.aws.amazon.com/goto/WebAPI'
+            '/myservice-2014-01-01/SampleOperation>'
+        )
         self.assert_contains_lines_in_order([
             '.. py:method:: foo(**kwargs)',
             '  This describes the foo method.',
+            cross_ref_link,
             '  **Request Syntax**',
             '  ::',
             '    response = client.foo(',
@@ -314,3 +320,21 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
             example_prefix='response = client.foo'
         )
         self.assert_contains_line('**Body** (:class:`.StreamingBody`)')
+
+    def test_streaming_body_in_input(self):
+        del self.json_model['operations']['SampleOperation']['output']
+        self.add_shape_to_params('Body', 'Blob')
+        self.json_model['shapes']['Blob'] = {'type': 'blob'}
+        self.json_model['shapes']['SampleOperationInputOutput']['payload'] = \
+            'Body'
+        document_model_driven_method(
+            self.doc_structure, 'foo', self.operation_model,
+            event_emitter=self.event_emitter,
+            method_description='This describes the foo method.',
+            example_prefix='response = client.foo'
+        )
+        # The line in the example
+        self.assert_contains_line('Body=b\'bytes\'|file')
+        # The line in the parameter description
+        self.assert_contains_line(
+            ':type Body: bytes or seekable file-like object')

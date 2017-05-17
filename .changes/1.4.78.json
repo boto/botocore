@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``s3``", 
+    "description": "Update s3 client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``glacier``", 
+    "description": "Update glacier client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``cloudformation``", 
+    "description": "Update cloudformation client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``route53``", 
+    "description": "Update route53 client to latest version", 
+    "type": "feature"
+  }
+]

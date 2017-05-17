@@ -38,7 +38,9 @@ class TestServiceModel(unittest.TestCase):
                          'endpointPrefix': 'endpoint-prefix'},
             'documentation': 'Documentation value',
             'operations': {},
-            'shapes': {}
+            'shapes': {
+                'StringShape': {'type': 'string'}
+            }
         }
         self.service_model = model.ServiceModel(self.model)
 
@@ -66,6 +68,9 @@ class TestServiceModel(unittest.TestCase):
         self.assertEqual(self.service_model.documentation,
                          'Documentation value')
 
+    def test_shape_names(self):
+        self.assertEqual(self.service_model.shape_names, ['StringShape'])
+
 
 class TestOperationModelFromService(unittest.TestCase):
     def setUp(self):
@@ -87,6 +92,22 @@ class TestOperationModelFromService(unittest.TestCase):
                     },
                     'errors': [{'shape': 'NoSuchResourceException'}],
                     'documentation': 'Docs for OperationName',
+                    'authtype': 'v4'
+                },
+                'OperationTwo': {
+                    'http': {
+                        'method': 'POST',
+                        'requestUri': '/',
+                    },
+                    'name': 'OperationTwo',
+                    'input': {
+                        'shape': 'OperationNameRequest'
+                    },
+                    'output': {
+                        'shape': 'OperationNameResponse',
+                    },
+                    'errors': [{'shape': 'NoSuchResourceException'}],
+                    'documentation': 'Docs for OperationTwo',
                 }
             },
             'shapes': {
@@ -122,6 +143,11 @@ class TestOperationModelFromService(unittest.TestCase):
             self.model['operations']['OperationName'], service_model, 'Foo')
         self.assertEqual(operation.name, 'Foo')
         self.assertEqual(operation.wire_name, 'OperationName')
+
+    def test_operation_name_in_repr(self):
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertIn('OperationName', repr(operation))
 
     def test_name_and_wire_name_defaults_to_same_value(self):
         service_model = model.ServiceModel(self.model)
@@ -183,20 +209,54 @@ class TestOperationModelFromService(unittest.TestCase):
         output_shape = operation.output_shape
         self.assertIsNone(output_shape)
 
-    def test_streaming_output_for_operation(self):
+    def test_error_shapes(self):
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        # OperationName only has a NoSuchResourceException
+        self.assertEqual(len(operation.error_shapes), 1)
+        self.assertEqual(
+            operation.error_shapes[0].name, 'NoSuchResourceException')
+
+    def test_has_auth_type(self):
+        operation = self.service_model.operation_model('OperationName')
+        self.assertEqual(operation.auth_type, 'v4')
+
+    def test_auth_type_not_set(self):
+        operation = self.service_model.operation_model('OperationTwo')
+        self.assertIsNone(operation.auth_type)
+
+
+class TestOperationModelStreamingTypes(unittest.TestCase):
+    def setUp(self):
+        super(TestOperationModelStreamingTypes, self).setUp()
         self.model = {
             'metadata': {'protocol': 'query', 'endpointPrefix': 'foo'},
             'documentation': '',
             'operations': {
                 'OperationName': {
                     'name': 'OperationName',
+                    'input': {
+                        'shape': 'OperationRequest',
+                    },
                     'output': {
-                        'shape': 'OperationNameResponse',
+                        'shape': 'OperationResponse',
                     },
                 }
             },
             'shapes': {
-                'OperationNameResponse': {
+                'OperationRequest': {
+                    'type': 'structure',
+                    'members': {
+                        'String': {
+                            'shape': 'stringType',
+                        },
+                        "Body": {
+                            'shape': 'blobType',
+                        }
+                    },
+                    'payload': 'Body'
+                },
+                'OperationResponse': {
                     'type': 'structure',
                     'members': {
                         'String': {
@@ -216,39 +276,35 @@ class TestOperationModelFromService(unittest.TestCase):
                 }
             }
         }
+
+    def remove_payload(self, type):
+        self.model['shapes']['Operation' + type].pop('payload')
+
+    def test_streaming_input_for_operation(self):
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertTrue(operation.has_streaming_input)
+        self.assertEqual(operation.get_streaming_input().name, 'blobType')
+
+    def test_not_streaming_input_for_operation(self):
+        self.remove_payload('Request')
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertFalse(operation.has_streaming_input)
+        self.assertEqual(operation.get_streaming_input(), None)
+
+    def test_streaming_output_for_operation(self):
         service_model = model.ServiceModel(self.model)
         operation = service_model.operation_model('OperationName')
         self.assertTrue(operation.has_streaming_output)
+        self.assertEqual(operation.get_streaming_output().name, 'blobType')
 
-    def test_payload_thats_not_streaming(self):
-        self.model = {
-            'metadata': {'protocol': 'query', 'endpointPrefix': 'foo'},
-            'operations': {
-                'OperationName': {
-                    'name': 'OperationName',
-                    'output': {
-                        'shape': 'OperationNameResponse',
-                    },
-                }
-            },
-            'shapes': {
-                'OperationNameResponse': {
-                    'type': 'structure',
-                    'members': {
-                        'String': {
-                            'shape': 'stringType',
-                        },
-                    },
-                    'payload': 'String'
-                },
-                'stringType': {
-                    'type': 'string',
-                },
-            }
-        }
+    def test_not_streaming_output_for_operation(self):
+        self.remove_payload('Response')
         service_model = model.ServiceModel(self.model)
         operation = service_model.operation_model('OperationName')
         self.assertFalse(operation.has_streaming_output)
+        self.assertEqual(operation.get_streaming_output(), None)
 
 
 class TestDeepMerge(unittest.TestCase):

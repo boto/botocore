@@ -41,7 +41,12 @@ class TestBucketWithVersions(unittest.TestCase):
         # 1. Create a bucket
         # 2. Enable versioning
         # 3. Put an Object
-        self.client.create_bucket(Bucket=self.bucket_name)
+        self.client.create_bucket(
+            Bucket=self.bucket_name,
+            CreateBucketConfiguration={
+                'LocationConstraint': 'us-west-2'
+            }
+        )
         self.addCleanup(self.client.delete_bucket, Bucket=self.bucket_name)
 
         self.client.put_bucket_versioning(
@@ -143,14 +148,44 @@ class TestCreateClients(unittest.TestCase):
                 'cloudformation', region_name='invalid region name')
 
 
-class TestClientErrorMessages(unittest.TestCase):
+class TestClientErrors(unittest.TestCase):
+    def setUp(self):
+        self.session = botocore.session.get_session()
+
     def test_region_mentioned_in_invalid_region(self):
-        session = botocore.session.get_session()
-        client = session.create_client(
+        client = self.session.create_client(
             'cloudformation', region_name='us-east-999')
         with self.assertRaisesRegexp(EndpointConnectionError,
                                      'Could not connect to the endpoint URL'):
             client.list_stacks()
+
+    def test_client_modeled_exception(self):
+        client = self.session.create_client(
+            'dynamodb', region_name='us-west-2')
+        with self.assertRaises(client.exceptions.ResourceNotFoundException):
+            client.describe_table(TableName="NonexistentTable")
+
+    def test_client_modeleded_exception_with_differing_code(self):
+        client = self.session.create_client('iam', region_name='us-west-2')
+        # The NoSuchEntityException should be raised on NoSuchEntity error
+        # code.
+        with self.assertRaises(client.exceptions.NoSuchEntityException):
+            client.get_role(RoleName="NonexistentIAMRole")
+
+    def test_raises_general_client_error_for_non_modeled_exception(self):
+        client = self.session.create_client('ec2', region_name='us-west-2')
+        try:
+            client.describe_regions(DryRun=True)
+        except client.exceptions.ClientError as e:
+            self.assertIs(e.__class__, ClientError)
+
+    def test_can_catch_client_exceptions_across_two_different_clients(self):
+        client = self.session.create_client(
+            'dynamodb', region_name='us-west-2')
+        client2 = self.session.create_client(
+            'dynamodb', region_name='us-west-2')
+        with self.assertRaises(client2.exceptions.ResourceNotFoundException):
+            client.describe_table(TableName="NonexistentTable")
 
 
 class TestClientMeta(unittest.TestCase):

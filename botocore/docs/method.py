@@ -18,6 +18,9 @@ from botocore.docs.example import ResponseExampleDocumenter
 from botocore.docs.example import RequestExampleDocumenter
 
 
+AWS_DOC_BASE = 'https://docs.aws.amazon.com/goto/WebAPI'
+
+
 def get_instance_public_methods(instance):
     """Retrieves an objects public methods
 
@@ -171,16 +174,33 @@ def document_model_driven_method(section, method_name, operation_model,
     # Add the description for the method.
     method_intro_section = section.add_new_section('method-intro')
     method_intro_section.include_doc_string(method_description)
+    service_uid = operation_model.service_model.metadata.get('uid')
+    if service_uid is not None:
+        method_intro_section.style.new_paragraph()
+        method_intro_section.write("See also: ")
+        link = '%s/%s/%s' % (AWS_DOC_BASE, service_uid,
+                             operation_model.name)
+        method_intro_section.style.external_link(title="AWS API Documentation",
+                                                 link=link)
+        method_intro_section.writeln('')
 
     # Add the example section.
     example_section = section.add_new_section('example')
     example_section.style.new_paragraph()
     example_section.style.bold('Request Syntax')
+
+    context = {
+        'special_shape_types': {
+            'streaming_input_shape': operation_model.get_streaming_input(),
+            'streaming_output_shape': operation_model.get_streaming_output(),
+        },
+    }
+
     if operation_model.input_shape:
         RequestExampleDocumenter(
             service_name=operation_model.service_model.service_name,
             operation_name=operation_model.name,
-            event_emitter=event_emitter).document_example(
+            event_emitter=event_emitter, context=context).document_example(
                 example_section, operation_model.input_shape,
                 prefix=example_prefix, include=include_input,
                 exclude=exclude_input)
@@ -195,7 +215,7 @@ def document_model_driven_method(section, method_name, operation_model,
         RequestParamsDocumenter(
             service_name=operation_model.service_model.service_name,
             operation_name=operation_model.name,
-            event_emitter=event_emitter).document_params(
+            event_emitter=event_emitter, context=context).document_params(
                 request_params_section, operation_model.input_shape,
                 include=include_input, exclude=exclude_input)
 
@@ -208,8 +228,6 @@ def document_model_driven_method(section, method_name, operation_model,
         return_section.write(':returns: ')
         return_section.style.indent()
         return_section.style.new_line()
-
-        context = {'streaming_shape': operation_model.get_streaming_output()}
 
         # Add an example return value
         return_example_section = return_section.add_new_section('example')

@@ -41,6 +41,7 @@ class BaseSessionTest(unittest.TestCase):
             'config_file': (None, 'FOO_CONFIG_FILE', None, None),
             'credentials_file': (None, None, '/tmp/nowhere', None),
             'ca_bundle': ('foo_ca_bundle', 'FOO_AWS_CA_BUNDLE', None, None),
+            'api_versions': ('foo_api_versions', None, {}, None)
         }
         self.environ = {}
         self.environ_patch = mock.patch('os.environ', self.environ)
@@ -354,6 +355,20 @@ class TestSessionUserAgent(BaseSessionTest):
         self.assertTrue(
             self.session.user_agent().endswith('custom-thing/other'))
 
+    def test_execution_env_not_set(self):
+        self.assertFalse(self.session.user_agent().endswith('FooEnv'))
+
+    def test_execution_env_set(self):
+        self.environ['AWS_EXECUTION_ENV'] = 'FooEnv'
+        self.assertTrue(self.session.user_agent().endswith(' exec-env/FooEnv'))
+
+    def test_agent_extra_and_exec_env(self):
+        self.session.user_agent_extra = 'custom-thing/other'
+        self.environ['AWS_EXECUTION_ENV'] = 'FooEnv'
+        user_agent = self.session.user_agent()
+        self.assertTrue(user_agent.endswith('custom-thing/other'))
+        self.assertIn('exec-env/FooEnv', user_agent)
+
 
 class TestConfigLoaderObject(BaseSessionTest):
     def test_config_loader_delegation(self):
@@ -430,6 +445,20 @@ class TestCreateClient(BaseSessionTest):
                          "Credential provider was called even though "
                          "explicit credentials were provided to the "
                          "create_client call.")
+
+    def test_cred_provider_called_when_partial_creds_provided(self):
+        with self.assertRaises(botocore.exceptions.PartialCredentialsError):
+            self.session.create_client(
+                'sts', 'us-west-2',
+                aws_access_key_id='foo',
+                aws_secret_access_key=None
+            )
+        with self.assertRaises(botocore.exceptions.PartialCredentialsError):
+            self.session.create_client(
+                'sts', 'us-west-2',
+                aws_access_key_id=None,
+                aws_secret_access_key='foo',
+            )
 
     @mock.patch('botocore.client.ClientCreator')
     def test_config_passed_to_client_creator(self, client_creator):
@@ -553,6 +582,75 @@ class TestCreateClient(BaseSessionTest):
             # The verify parameter should override all the other
             # configurations
             self.assertEqual(call_kwargs['verify'], 'verify-certs.pem')
+
+    @mock.patch('botocore.client.ClientCreator')
+    def test_create_client_use_no_api_version_by_default(self, client_creator):
+        self.session.create_client('myservice', 'us-west-2')
+        call_kwargs = client_creator.return_value.create_client.call_args[1]
+        self.assertEqual(call_kwargs['api_version'], None)
+
+    @mock.patch('botocore.client.ClientCreator')
+    def test_create_client_uses_api_version_from_config(self, client_creator):
+        config_api_version = '2012-01-01'
+        with temporary_file('w') as f:
+            del self.environ['FOO_PROFILE']
+            self.environ['FOO_CONFIG_FILE'] = f.name
+            self.session = create_session(session_vars=self.env_vars)
+            f.write('[default]\n')
+            f.write('foo_api_versions =\n'
+                    '    myservice = %s\n' % config_api_version)
+            f.flush()
+
+            self.session.create_client('myservice', 'us-west-2')
+            call_kwargs = client_creator.return_value.\
+                create_client.call_args[1]
+            self.assertEqual(call_kwargs['api_version'], config_api_version)
+
+    @mock.patch('botocore.client.ClientCreator')
+    def test_can_specify_multiple_versions_from_config(self, client_creator):
+        config_api_version = '2012-01-01'
+        second_config_api_version = '2013-01-01'
+        with temporary_file('w') as f:
+            del self.environ['FOO_PROFILE']
+            self.environ['FOO_CONFIG_FILE'] = f.name
+            self.session = create_session(session_vars=self.env_vars)
+            f.write('[default]\n')
+            f.write('foo_api_versions =\n'
+                    '    myservice = %s\n'
+                    '    myservice2 = %s\n' % (
+                        config_api_version, second_config_api_version)
+            )
+            f.flush()
+
+            self.session.create_client('myservice', 'us-west-2')
+            call_kwargs = client_creator.return_value.\
+                create_client.call_args[1]
+            self.assertEqual(call_kwargs['api_version'], config_api_version)
+
+            self.session.create_client('myservice2', 'us-west-2')
+            call_kwargs = client_creator.return_value.\
+                create_client.call_args[1]
+            self.assertEqual(
+                call_kwargs['api_version'], second_config_api_version)
+
+    @mock.patch('botocore.client.ClientCreator')
+    def test_param_api_version_overrides_config_value(self, client_creator):
+        config_api_version = '2012-01-01'
+        override_api_version = '2014-01-01'
+        with temporary_file('w') as f:
+            del self.environ['FOO_PROFILE']
+            self.environ['FOO_CONFIG_FILE'] = f.name
+            self.session = create_session(session_vars=self.env_vars)
+            f.write('[default]\n')
+            f.write('foo_api_versions =\n'
+                    '    myservice = %s\n' % config_api_version)
+            f.flush()
+
+            self.session.create_client(
+                'myservice', 'us-west-2', api_version=override_api_version)
+            call_kwargs = client_creator.return_value.\
+                create_client.call_args[1]
+            self.assertEqual(call_kwargs['api_version'], override_api_version)
 
 
 class TestComponentLocator(unittest.TestCase):

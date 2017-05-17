@@ -17,6 +17,7 @@ import logging
 import time
 import threading
 
+from botocore.vendored.requests.adapters import HTTPAdapter
 from botocore.vendored.requests.sessions import Session
 from botocore.vendored.requests.utils import get_environ_proxies
 from botocore.vendored.requests.exceptions import ConnectionError
@@ -35,6 +36,7 @@ from botocore import parsers
 
 logger = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 60
+MAX_POOL_CONNECTIONS = 10
 filter_ssl_warnings()
 
 try:
@@ -74,8 +76,27 @@ def convert_to_response_dict(http_response, operation_model):
     return response_dict
 
 
-class PreserveAuthSession(Session):
+class BotocoreHTTPSession(Session):
+    """Internal session class used to workaround requests behavior.
+
+    This class is intended to be used only by the Endpoint class.
+
+    """
+    def __init__(self, max_pool_connections=MAX_POOL_CONNECTIONS,
+                 http_adapter_cls=HTTPAdapter):
+        super(BotocoreHTTPSession, self).__init__()
+        # In order to support a user provided "max_pool_connections", we need
+        # to recreate the HTTPAdapter and pass in our max_pool_connections
+        # value.
+        adapter = http_adapter_cls(pool_maxsize=max_pool_connections)
+        # requests uses an HTTPAdapter for mounting both http:// and https://
+        self.mount('https://', adapter)
+        self.mount('http://', adapter)
+
     def rebuild_auth(self, prepared_request, response):
+        # Keep the existing auth information from the original prepared request.
+        # Normally this method would be where auth is regenerated as needed.
+        # By making this a noop, we're keeping the existing auth info.
         pass
 
 
@@ -92,7 +113,8 @@ class Endpoint(object):
 
     def __init__(self, host, endpoint_prefix,
                  event_emitter, proxies=None, verify=True,
-                 timeout=DEFAULT_TIMEOUT, response_parser_factory=None):
+                 timeout=DEFAULT_TIMEOUT, response_parser_factory=None,
+                 max_pool_connections=MAX_POOL_CONNECTIONS):
         self._endpoint_prefix = endpoint_prefix
         self._event_emitter = event_emitter
         self.host = host
@@ -100,8 +122,10 @@ class Endpoint(object):
         if proxies is None:
             proxies = {}
         self.proxies = proxies
-        self.http_session = PreserveAuthSession()
+        self.http_session = BotocoreHTTPSession(
+            max_pool_connections=max_pool_connections)
         self.timeout = timeout
+        self.max_pool_connections = max_pool_connections
         logger.debug('Setting %s timeout as %s', endpoint_prefix, self.timeout)
         self._lock = threading.Lock()
         if response_parser_factory is None:
@@ -142,7 +166,7 @@ class Endpoint(object):
         request = self.create_request(request_dict, operation_model)
         success_response, exception = self._get_response(
             request, operation_model, attempts)
-        while self._needs_retry(attempts, operation_model,
+        while self._needs_retry(attempts, operation_model, request_dict,
                                 success_response, exception):
             attempts += 1
             # If there is a stream associated with the request, we need
@@ -152,9 +176,15 @@ class Endpoint(object):
             request.reset_stream()
             # Create a new request when retried (including a new signature).
             request = self.create_request(
-                request_dict, operation_model=operation_model)
+                request_dict, operation_model)
             success_response, exception = self._get_response(
                 request, operation_model, attempts)
+        if success_response is not None and \
+                'ResponseMetadata' in success_response[1]:
+            # We want to share num retries, not num attempts.
+            total_retries = attempts - 1
+            success_response[1]['ResponseMetadata']['RetryAttempts'] = \
+                    total_retries
         if exception is not None:
             raise exception
         else:
@@ -199,9 +229,9 @@ class Endpoint(object):
                                                  operation_model)
         parser = self._response_parser_factory.create_parser(
             operation_model.metadata['protocol'])
-        return ((http_response,
-                 parser.parse(response_dict, operation_model.output_shape)),
-                None)
+        parsed_response = parser.parse(
+            response_dict, operation_model.output_shape)
+        return (http_response, parsed_response), None
 
     def _looks_like_dns_error(self, e):
         return 'gaierror' in str(e) and e.request is not None
@@ -209,14 +239,14 @@ class Endpoint(object):
     def _looks_like_bad_status_line(self, e):
         return 'BadStatusLine' in str(e) and e.request is not None
 
-    def _needs_retry(self, attempts, operation_model, response=None,
-                     caught_exception=None):
+    def _needs_retry(self, attempts, operation_model, request_dict,
+                     response=None, caught_exception=None):
         event_name = 'needs-retry.%s.%s' % (self._endpoint_prefix,
                                             operation_model.name)
         responses = self._event_emitter.emit(
             event_name, response=response, endpoint=self,
             operation=operation_model, attempts=attempts,
-            caught_exception=caught_exception)
+            caught_exception=caught_exception, request_dict=request_dict)
         handler_response = first_non_none_response(responses)
         if handler_response is None:
             return False
@@ -235,8 +265,10 @@ class EndpointCreator(object):
 
     def create_endpoint(self, service_model, region_name, endpoint_url,
                         verify=None, response_parser_factory=None,
-                        timeout=DEFAULT_TIMEOUT):
+                        timeout=DEFAULT_TIMEOUT,
+                        max_pool_connections=MAX_POOL_CONNECTIONS):
         if not is_valid_endpoint_url(endpoint_url):
+
             raise ValueError("Invalid endpoint: %s" % endpoint_url)
         return Endpoint(
             endpoint_url,
@@ -245,6 +277,7 @@ class EndpointCreator(object):
             proxies=self._get_proxies(endpoint_url),
             verify=self._get_verify_value(verify),
             timeout=timeout,
+            max_pool_connections=max_pool_connections,
             response_parser_factory=response_parser_factory)
 
     def _get_proxies(self, url):

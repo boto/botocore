@@ -30,6 +30,10 @@ from botocore.vendored.requests.exceptions import ConnectionError
 SMOKE_TESTS = {
  'acm': {'ListCertificates': {}},
  'apigateway': {'GetRestApis': {}},
+ 'application-autoscaling': {
+     'DescribeScalableTargets': {
+         'ServiceNamespace': 'ecs'
+     }},
  'autoscaling': {'DescribeAccountLimits': {},
                  'DescribeAdjustmentTypes': {}},
  'cloudformation': {'DescribeStacks': {},
@@ -44,8 +48,6 @@ SMOKE_TESTS = {
  'codecommit': {'ListRepositories': {}},
  'codedeploy': {'ListApplications': {}},
  'codepipeline': {'ListActionTypes': {}},
- 'codedeploy': {'ListApplications': {}},
- 'codecommit': {'ListRepositories': {}},
  'cognito-identity': {'ListIdentityPools': {'MaxResults': 1}},
  'cognito-sync': {'ListIdentityPoolUsage': {}},
  'config': {'DescribeDeliveryChannels': {}},
@@ -111,6 +113,10 @@ SMOKE_TESTS = {
 # we've sent invalid params.
 ERROR_TESTS = {
     'apigateway': {'GetRestApi': {'restApiId': 'fake-id'}},
+    'application-autoscaling': {
+        'DescribeScalableTargets': {
+            'ServiceNamespace': 'fake-service-namespace'
+        }},
     'autoscaling': {'CreateLaunchConfiguration': {
         'LaunchConfigurationName': 'foo',
         'ImageId': 'ami-12345678',

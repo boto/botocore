@@ -26,7 +26,8 @@ import botocore.configloader
 import botocore.credentials
 import botocore.client
 from botocore.exceptions import ConfigNotFound, ProfileNotFound
-from botocore.exceptions import UnknownServiceError
+from botocore.exceptions import UnknownServiceError, PartialCredentialsError
+from botocore.errorfactory import ClientExceptionsFactory
 from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.loaders import create_loader
@@ -80,6 +81,7 @@ class Session(object):
         'data_path': ('data_path', 'AWS_DATA_PATH', None, None),
         'config_file': (None, 'AWS_CONFIG_FILE', '~/.aws/config', None),
         'ca_bundle': ('ca_bundle', 'AWS_CA_BUNDLE', None, None),
+        'api_versions': ('api_versions', None, {}, None),
 
         # This is the shared credentials file amongst sdks.
         'credentials_file': (None, 'AWS_SHARED_CREDENTIALS_FILE',
@@ -89,12 +91,15 @@ class Session(object):
 
         # This is the number of seconds until we time out a request to
         # the instance metadata service.
-        'metadata_service_timeout': ('metadata_service_timeout',
-                                     'AWS_METADATA_SERVICE_TIMEOUT', 1, int),
+        'metadata_service_timeout': (
+            'metadata_service_timeout',
+            'AWS_METADATA_SERVICE_TIMEOUT', 1, int),
         # This is the number of request attempts we make until we give
         # up trying to retrieve data from the instance metadata service.
-        'metadata_service_num_attempts': ('metadata_service_num_attempts',
-                                          'AWS_METADATA_SERVICE_NUM_ATTEMPTS', 1, int),
+        'metadata_service_num_attempts': (
+            'metadata_service_num_attempts',
+            'AWS_METADATA_SERVICE_NUM_ATTEMPTS', 1, int),
+        'parameter_validation': ('parameter_validation', None, True, None),
     }
 
     #: The default format string to use when configuring the botocore logger.
@@ -160,6 +165,7 @@ class Session(object):
         self._register_endpoint_resolver()
         self._register_event_emitter()
         self._register_response_parser_factory()
+        self._register_exceptions_factory()
 
     def _register_event_emitter(self):
         self._components.register_component('event_emitter', self._events)
@@ -185,6 +191,10 @@ class Session(object):
     def _register_response_parser_factory(self):
         self._components.register_component('response_parser_factory',
                                             ResponseParserFactory())
+
+    def _register_exceptions_factory(self):
+        self._components.register_component(
+            'exceptions_factory', ClientExceptionsFactory())
 
     def _register_builtin_handlers(self, events):
         for spec in handlers.BUILTIN_HANDLERS:
@@ -372,7 +382,8 @@ class Session(object):
                 # can validate the user is not referring to a nonexistent
                 # profile.
                 cred_file = self.get_config_variable('credentials_file')
-                cred_profiles = botocore.configloader.raw_config_parse(cred_file)
+                cred_profiles = botocore.configloader.raw_config_parse(
+                    cred_file)
                 for profile in cred_profiles:
                     cred_vars = cred_profiles[profile]
                     if profile not in self._config['profiles']:
@@ -443,7 +454,7 @@ class Session(object):
         Return a string suitable for use as a User-Agent header.
         The string will be of the form:
 
-        <agent_name>/<agent_version> Python/<py_ver> <plat_name>/<plat_ver>
+        <agent_name>/<agent_version> Python/<py_ver> <plat_name>/<plat_ver> <exec_env>
 
         Where:
 
@@ -455,6 +466,7 @@ class Session(object):
          - py_ver is the version of the Python interpreter beng used.
          - plat_name is the name of the platform (e.g. Darwin)
          - plat_ver is the version of the platform
+         - exec_env is exec-env/$AWS_EXECUTION_ENV
 
         If ``user_agent_extra`` is not empty, then this value will be
         appended to the end of the user agent string.
@@ -465,8 +477,11 @@ class Session(object):
                                           platform.python_version(),
                                           platform.system(),
                                           platform.release())
+        if os.environ.get('AWS_EXECUTION_ENV') is not None:
+            base += ' exec-env/%s' % os.environ.get('AWS_EXECUTION_ENV')
         if self.user_agent_extra:
             base += ' %s' % self.user_agent_extra
+
         return base
 
     def get_data(self, data_path):
@@ -787,27 +802,46 @@ class Session(object):
         if verify is None:
             verify = self.get_config_variable('ca_bundle')
 
+        if api_version is None:
+            api_version = self.get_config_variable('api_versions').get(
+                service_name, None)
+
         loader = self.get_component('data_loader')
         event_emitter = self.get_component('event_emitter')
         response_parser_factory = self.get_component(
             'response_parser_factory')
-        if aws_secret_access_key is not None:
+        if aws_access_key_id is not None and aws_secret_access_key is not None:
             credentials = botocore.credentials.Credentials(
                 access_key=aws_access_key_id,
                 secret_key=aws_secret_access_key,
                 token=aws_session_token)
+        elif self._missing_cred_vars(aws_access_key_id,
+                                     aws_secret_access_key):
+            raise PartialCredentialsError(
+                provider='explicit',
+                cred_var=self._missing_cred_vars(aws_access_key_id,
+                                                 aws_secret_access_key))
         else:
             credentials = self.get_credentials()
         endpoint_resolver = self.get_component('endpoint_resolver')
+        exceptions_factory = self.get_component('exceptions_factory')
         client_creator = botocore.client.ClientCreator(
             loader, endpoint_resolver, self.user_agent(), event_emitter,
-            retryhandler, translate, response_parser_factory)
+            retryhandler, translate, response_parser_factory,
+            exceptions_factory)
         client = client_creator.create_client(
             service_name=service_name, region_name=region_name,
             is_secure=use_ssl, endpoint_url=endpoint_url, verify=verify,
             credentials=credentials, scoped_config=self.get_scoped_config(),
             client_config=config, api_version=api_version)
         return client
+
+    def _missing_cred_vars(self, access_key, secret_key):
+        if access_key is not None and secret_key is None:
+            return 'aws_secret_access_key'
+        if secret_key is not None and access_key is None:
+            return 'aws_access_key_id'
+        return None
 
     def get_available_partitions(self):
         """Lists the available partitions found on disk

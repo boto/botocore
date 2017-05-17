@@ -14,16 +14,57 @@
 from tests import unittest
 from botocore.paginate import Paginator
 from botocore.paginate import PaginatorModel
+from botocore.paginate import TokenDecoder
+from botocore.paginate import TokenEncoder
 from botocore.exceptions import PaginationError
 from botocore.compat import six
 
 import mock
-import base64
-import json
 
 
 def encode_token(token):
-    return base64.b64encode(json.dumps(token).encode('utf-8')).decode('utf-8')
+    return TokenEncoder().encode(token)
+
+
+class TestTokenDecoder(unittest.TestCase):
+    def setUp(self):
+        self.decoder = TokenDecoder()
+
+    def test_decode(self):
+        token = 'eyJmb28iOiAiYmFyIn0='
+        expected = {'foo': 'bar'}
+        self.assertEqual(self.decoder.decode(token), expected)
+
+    def test_decode_with_bytes(self):
+        token = (
+            'eyJib3RvX2VuY29kZWRfa2V5cyI6IFtbImZvbyJdXSwgImZvbyI6ICJZbUZ5In0='
+        )
+        expected = {'foo': b'bar'}
+        self.assertEqual(self.decoder.decode(token), expected)
+
+    def test_decode_with_nested_bytes(self):
+        token = (
+            'eyJmb28iOiB7ImJhciI6ICJZbUY2In0sICJib3RvX2VuY29kZWRfa2V5cyI6'
+            'IFtbImZvbyIsICJiYXIiXV19'
+        )
+        expected = {'foo': {'bar': b'baz'}}
+        self.assertEqual(self.decoder.decode(token), expected)
+
+    def test_decode_with_listed_bytes(self):
+        token = (
+            'eyJib3RvX2VuY29kZWRfa2V5cyI6IFtbImZvbyIsICJiYXIiLCAxXV0sICJmb28i'
+            'OiB7ImJhciI6IFsiYmF6IiwgIlltbHUiXX19'
+        )
+        expected = {'foo': {'bar': ['baz', b'bin']}}
+        self.assertEqual(self.decoder.decode(token), expected)
+
+    def test_decode_with_multiple_bytes_values(self):
+        token = (
+            'eyJib3RvX2VuY29kZWRfa2V5cyI6IFtbImZvbyIsICJiaW4iXSwgWyJmb28iLCAi'
+            'YmFyIl1dLCAiZm9vIjogeyJiaW4iOiAiWW1GdCIsICJiYXIiOiAiWW1GNiJ9fQ=='
+        )
+        expected = {'foo': {'bar': b'baz', 'bin': b'bam'}}
+        self.assertEqual(self.decoder.decode(token), expected)
 
 
 class TestPaginatorModel(unittest.TestCase):
@@ -286,6 +327,14 @@ class TestPaginatorPageSize(unittest.TestCase):
         pages._inject_starting_params(extracted_kwargs)
         self.assertEqual(extracted_kwargs, ref_kwargs)
 
+    def test_page_size_incorrectly_provided(self):
+        kwargs = {'arg1': 'foo', 'arg2': 'bar',
+                  'PaginationConfig': {'PageSize': 5}}
+        del self.paginate_config['limit_key']
+
+        with self.assertRaises(PaginationError):
+            self.paginator.paginate(**kwargs)
+
 
 class TestPaginatorWithPathExpressions(unittest.TestCase):
     def setUp(self):
@@ -327,6 +376,176 @@ class TestPaginatorWithPathExpressions(unittest.TestCase):
              mock.call(next_marker='Last')])
 
 
+class TestBinaryTokens(unittest.TestCase):
+    def setUp(self):
+        self.method = mock.Mock()
+        self.paginate_config = {
+            "output_token": "Marker",
+            "input_token": "Marker",
+            "result_key": "Users"
+        }
+        self.paginator = Paginator(self.method, self.paginate_config)
+
+    def test_build_full_result_with_bytes(self):
+        responses = [
+            {"Users": ["User1", "User2"], "Marker": b'\xff'},
+            {"Users": ["User3", "User4"], "Marker": b'\xfe'},
+            {"Users": ["User5"]}
+        ]
+        self.method.side_effect = responses
+        pages = self.paginator.paginate(PaginationConfig={'MaxItems': 3})
+        complete = pages.build_full_result()
+        expected_token = encode_token({
+            "Marker": b'\xff', "boto_truncate_amount": 1,
+        })
+        expected_response = {
+            "Users": ["User1", "User2", "User3"],
+            "NextToken": expected_token
+        }
+        self.assertEqual(complete, expected_response)
+
+    def test_build_full_result_with_nested_bytes(self):
+        responses = [
+            {"Users": ["User1", "User2"], "Marker": {'key': b'\xff'}},
+            {"Users": ["User3", "User4"], "Marker": {'key': b'\xfe'}},
+            {"Users": ["User5"]}
+        ]
+        self.method.side_effect = responses
+        pages = self.paginator.paginate(PaginationConfig={'MaxItems': 3})
+        complete = pages.build_full_result()
+        expected_token = encode_token({
+            "Marker": {'key': b'\xff'}, "boto_truncate_amount": 1,
+        })
+        expected_response = {
+            "Users": ["User1", "User2", "User3"],
+            "NextToken": expected_token
+        }
+        self.assertEqual(complete, expected_response)
+
+    def test_build_full_result_with_listed_bytes(self):
+        responses = [
+            {"Users": ["User1", "User2"], "Marker": {'key': ['foo', b'\xff']}},
+            {"Users": ["User3", "User4"], "Marker": {'key': ['foo', b'\xfe']}},
+            {"Users": ["User5"]}
+        ]
+        self.method.side_effect = responses
+        pages = self.paginator.paginate(PaginationConfig={'MaxItems': 3})
+        complete = pages.build_full_result()
+        expected_token = encode_token({
+            "Marker": {'key': ['foo', b'\xff']}, "boto_truncate_amount": 1,
+        })
+        expected_response = {
+            "Users": ["User1", "User2", "User3"],
+            "NextToken": expected_token
+        }
+        self.assertEqual(complete, expected_response)
+
+    def test_build_full_result_with_multiple_bytes_values(self):
+        responses = [
+            {
+                "Users": ["User1", "User2"],
+                "Marker": {'key': b'\xff', 'key2': b'\xef'}
+            },
+            {
+                "Users": ["User3", "User4"],
+                "Marker": {'key': b'\xfe', 'key2': b'\xee'}
+            },
+            {
+                "Users": ["User5"]
+            }
+        ]
+        self.method.side_effect = responses
+        pages = self.paginator.paginate(PaginationConfig={'MaxItems': 3})
+        complete = pages.build_full_result()
+        expected_token = encode_token({
+            "Marker": {'key': b'\xff', 'key2': b'\xef'},
+            "boto_truncate_amount": 1,
+        })
+        expected_response = {
+            "Users": ["User1", "User2", "User3"],
+            "NextToken": expected_token
+        }
+        self.assertEqual(complete, expected_response)
+
+    def test_resume_with_bytes(self):
+        responses = [
+            {"Users": ["User3", "User4"], "Marker": b'\xfe'},
+            {"Users": ["User5"]}
+        ]
+        self.method.side_effect = responses
+        starting_token = encode_token({
+            "Marker": b'\xff', "boto_truncate_amount": 1,
+        })
+        pages = self.paginator.paginate(
+            PaginationConfig={'StartingToken': starting_token})
+        complete = pages.build_full_result()
+        expected_response = {
+            "Users": ["User4", "User5"]
+        }
+        self.assertEqual(complete, expected_response)
+        self.method.assert_any_call(Marker=b'\xff')
+
+    def test_resume_with_nested_bytes(self):
+        responses = [
+            {"Users": ["User3", "User4"], "Marker": {'key': b'\xfe'}},
+            {"Users": ["User5"]}
+        ]
+        self.method.side_effect = responses
+        starting_token = encode_token({
+            "Marker": {'key': b'\xff'}, "boto_truncate_amount": 1,
+        })
+        pages = self.paginator.paginate(
+            PaginationConfig={'StartingToken': starting_token})
+        complete = pages.build_full_result()
+        expected_response = {
+            "Users": ["User4", "User5"]
+        }
+        self.assertEqual(complete, expected_response)
+        self.method.assert_any_call(Marker={'key': b'\xff'})
+
+    def test_resume_with_listed_bytes(self):
+        responses = [
+            {"Users": ["User3", "User4"], "Marker": {'key': ['bar', b'\xfe']}},
+            {"Users": ["User5"]}
+        ]
+        self.method.side_effect = responses
+        starting_token = encode_token({
+            "Marker": {'key': ['foo', b'\xff']}, "boto_truncate_amount": 1,
+        })
+        pages = self.paginator.paginate(
+            PaginationConfig={'StartingToken': starting_token})
+        complete = pages.build_full_result()
+        expected_response = {
+            "Users": ["User4", "User5"]
+        }
+        self.assertEqual(complete, expected_response)
+        self.method.assert_any_call(Marker={'key': ['foo', b'\xff']})
+
+    def test_resume_with_multiple_bytes_values(self):
+        responses = [
+            {
+                "Users": ["User3", "User4"],
+                "Marker": {'key': b'\xfe', 'key2': b'\xee'}
+            },
+            {
+                "Users": ["User5"]
+            }
+        ]
+        self.method.side_effect = responses
+        starting_token = encode_token({
+            "Marker": {'key': b'\xff', 'key2': b'\xef'},
+            "boto_truncate_amount": 1,
+        })
+        pages = self.paginator.paginate(
+            PaginationConfig={'StartingToken': starting_token})
+        complete = pages.build_full_result()
+        expected_response = {
+            "Users": ["User4", "User5"]
+        }
+        self.assertEqual(complete, expected_response)
+        self.method.assert_any_call(Marker={'key': b'\xfe', 'key2': b'\xee'})
+
+
 class TestMultipleTokens(unittest.TestCase):
     def setUp(self):
         self.method = mock.Mock()
@@ -357,6 +576,54 @@ class TestMultipleTokens(unittest.TestCase):
              mock.call(key_marker='key1', upload_id_marker='up1'),
              mock.call(key_marker='key2', upload_id_marker='up2'),
              mock.call(key_marker='key3', upload_id_marker='up3'),
+             ])
+
+
+class TestOptionalTokens(unittest.TestCase):
+    """
+    Tests a paginator with an optional output token.
+
+    The Route53 ListResourceRecordSets paginator includes three output tokens,
+    one of which only appears in certain records. If this gets left in the
+    request params from a previous page, the API will skip over a record.
+
+    """
+    def setUp(self):
+        self.method = mock.Mock()
+        # This is based on Route53 pagination.
+        self.paginate_config = {
+            "output_token": ["NextRecordName",
+                             "NextRecordType",
+                             "NextRecordIdentifier"],
+            "input_token": ["StartRecordName",
+                            "StartRecordType",
+                            "StartRecordIdentifier"],
+            "result_key": 'Foo',
+        }
+        self.paginator = Paginator(self.method, self.paginate_config)
+
+    def test_clean_token(self):
+        responses = [
+            {"Foo": [1],
+             "IsTruncated": True,
+             "NextRecordName": "aaa.example.com",
+             "NextRecordType": "A",
+             "NextRecordIdentifier": "id"},
+            {"Foo": [2],
+             "IsTruncated": True,
+             "NextRecordName": "bbb.example.com",
+             "NextRecordType": "A"},
+            {"Foo": [3],
+             "IsTruncated": False},
+        ]
+        self.method.side_effect = responses
+        list(self.paginator.paginate())
+        self.assertEqual(
+            self.method.call_args_list,
+            [mock.call(),
+             mock.call(StartRecordName='aaa.example.com', StartRecordType='A',
+                       StartRecordIdentifier='id'),
+             mock.call(StartRecordName='bbb.example.com', StartRecordType='A')
              ])
 
 
@@ -505,7 +772,7 @@ class TestKeyIterators(unittest.TestCase):
         ]
         self.method.side_effect = responses
         with self.assertRaisesRegexp(ValueError, 'Bad starting token'):
-            pagination_config = {'StartingToken': 'doesnotdecode'}
+            pagination_config = {'StartingToken': 'does___not___work'}
             self.paginator.paginate(
                 PaginationConfig=pagination_config).build_full_result()
 
@@ -894,6 +1161,133 @@ class TestSearchOverResults(unittest.TestCase):
     def test_no_yield_when_no_match_on_page(self):
         result = list(self.paginator.paginate().search('Foo[].b'))
         self.assertEqual([2, 4], result)
+
+
+class TestDeprecatedStartingToken(unittest.TestCase):
+    def setUp(self):
+        self.method = mock.Mock()
+
+    def create_paginator(self, multiple_tokens=False):
+        if multiple_tokens:
+            paginator_config = {
+                "output_token": ["Marker1", "Marker2"],
+                "input_token": ["InMarker1", "InMarker2"],
+                "result_key": ["Users", "Groups"],
+            }
+        else:
+            paginator_config = {
+                'output_token': 'Marker',
+                'input_token': 'Marker',
+                'result_key': 'Users',
+            }
+        return Paginator(self.method, paginator_config)
+
+    def assert_pagination_result(self, expected, pagination_config,
+                                 multiple_tokens=False):
+        paginator = self.create_paginator(multiple_tokens)
+        try:
+            actual = paginator.paginate(
+                PaginationConfig=pagination_config).build_full_result()
+            self.assertEqual(actual, expected)
+        except ValueError:
+            self.fail("Deprecated paginator failed.")
+
+    def test_deprecated_starting_token(self):
+        responses = [
+            {"Users": ["User1"], "Marker": "m2"},
+            {"Users": ["User2"], "Marker": "m3"},
+            {"Users": ["User3"]},
+        ]
+        self.method.side_effect = responses
+        pagination_config = {'StartingToken': 'm1___0'}
+        expected = {'Users': ['User1', 'User2', 'User3']}
+        self.assert_pagination_result(expected, pagination_config)
+
+    def test_deprecated_multiple_starting_token(self):
+        responses = [
+            {
+                "Users": ["User1", "User2"],
+                "Groups": ["Group1"],
+                "Marker1": "m1",
+                "Marker2": "m2"
+            },
+            {
+                "Users": ["User3", "User4"],
+                "Groups": ["Group2"],
+                "Marker1": "m3",
+                "Marker2": "m4"
+            },
+            {
+                "Users": ["User5"],
+                "Groups": ["Group3"]
+            }
+        ]
+        self.method.side_effect = responses
+        pagination_config = {'StartingToken': 'm0___m0___1'}
+        expected = {
+            'Groups': ['Group2', 'Group3'],
+            'Users': ['User2', 'User3', 'User4', 'User5']
+        }
+        self.assert_pagination_result(
+            expected, pagination_config, multiple_tokens=True)
+
+    def test_deprecated_starting_token_returns_new_style_next_token(self):
+        responses = [
+            {"Users": ["User1"], "Marker": "m2"},
+            {"Users": ["User2"], "Marker": "m3"},
+            {"Users": ["User3"], "Marker": "m4"},
+        ]
+        self.method.side_effect = responses
+        pagination_config = {'StartingToken': 'm1___0', 'MaxItems': 3}
+        expected = {
+            'Users': ['User1', 'User2', 'User3'],
+            'NextToken': encode_token({'Marker': 'm4'})
+        }
+        self.assert_pagination_result(expected, pagination_config)
+
+    def test_deprecated_starting_token_without_all_input_set_to_none(self):
+        responses = [
+            {
+                "Users": ["User1", "User2"],
+                "Groups": ["Group1"],
+                "Marker1": "m1",
+                "Marker2": "m2"
+            },
+            {
+                "Users": ["User3", "User4"],
+                "Groups": ["Group2"],
+                "Marker1": "m3",
+                "Marker2": "m4"
+            },
+            {
+                "Users": ["User5"],
+                "Groups": ["Group3"]
+            }
+        ]
+        self.method.side_effect = responses
+        pagination_config = {'StartingToken': 'm0'}
+        expected = {
+            'Groups': ['Group2', 'Group3'],
+            'Users': ['User1', 'User2', 'User3', 'User4', 'User5']
+        }
+        self.assert_pagination_result(
+            expected, pagination_config, multiple_tokens=True)
+
+    def test_deprecated_starting_token_rejects_too_many_input_tokens(self):
+        responses = [
+            {"Users": ["User1"], "Marker": "m2"},
+            {"Users": ["User2"], "Marker": "m3"},
+            {"Users": ["User3"]},
+        ]
+        self.method.side_effect = responses
+        pagination_config = {'StartingToken': 'm1___m4___0'}
+        expected = {'Users': ['User1', 'User2', 'User3']}
+
+        paginator = self.create_paginator()
+        with self.assertRaises(ValueError):
+            actual = paginator.paginate(
+                PaginationConfig=pagination_config).build_full_result()
+            self.assertEqual(actual, expected)
 
 
 if __name__ == '__main__':

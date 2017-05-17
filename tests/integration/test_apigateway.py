@@ -10,9 +10,12 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import time
+
 from tests import unittest
 
 import botocore.session
+from botocore import exceptions
 
 
 class TestApigateway(unittest.TestCase):
@@ -20,12 +23,35 @@ class TestApigateway(unittest.TestCase):
         self.session = botocore.session.get_session()
         self.client = self.session.create_client('apigateway', 'us-east-1')
 
-        # Create a resoruce to use with this client.
+        # Create a resource to use with this client.
         self.api_name = 'mytestapi'
-        self.api_id = self.client.create_rest_api(name=self.api_name)['id']
+        self.api_id = self.create_rest_api_or_skip()
+
+    def create_rest_api_or_skip(self):
+        try:
+            api_id = self.client.create_rest_api(name=self.api_name)['id']
+        except exceptions.ClientError as e:
+            if e.response['Error']['Code'] == 'TooManyRequestsException':
+                raise unittest.SkipTest(
+                    "Hit API gateway throttle limit, skipping test.")
+            raise
+        return api_id
+
+    def delete_api(self):
+        retries = 0
+        while retries < 10:
+            try:
+                self.client.delete_rest_api(restApiId=self.api_id)
+                break
+            except exceptions.ClientError as e:
+                if e.response['Error']['Code'] == 'TooManyRequestsException':
+                    retries += 1
+                    time.sleep(5)
+                else:
+                    raise
 
     def tearDown(self):
-        self.client.delete_rest_api(restApiId=self.api_id)
+        self.delete_api()
 
     def test_put_integration(self):
         # The only resource on a brand new api is the path. So use that ID.

@@ -3,11 +3,11 @@
   "metadata":{
     "apiVersion":"2015-01-01",
     "endpointPrefix":"es",
+    "protocol":"rest-json",
     "serviceFullName":"Amazon Elasticsearch Service",
     "signatureVersion":"v4",
-    "protocol":"rest-json"
+    "uid":"es-2015-01-01"
   },
-  "documentation":"<fullname>Amazon Elasticsearch Configuration Service</fullname> <p>Use the Amazon Elasticsearch configuration API to create, configure, and manage Elasticsearch domains.</p> <p>The endpoint for configuration service requests is region-specific: es.<i>region</i>.amazonaws.com. For example, es.us-east-1.amazonaws.com. For a current list of supported regions and endpoints, see <a href=\"http://docs.aws.amazon.com/general/latest/gr/rande.html#cloudsearch_region\" target=\"_blank\">Regions and Endpoints</a>.</p>",
   "operations":{
     "AddTags":{
       "name":"AddTags",
@@ -15,34 +15,12 @@
         "method":"POST",
         "requestUri":"/2015-01-01/tags"
       },
-      "input":{
-        "shape":"AddTagsRequest",
-        "documentation":"<p>Container for the parameters to the <code><a>AddTags</a></code> operation. Specify the tags that you want to attach to the Elasticsearch domain.</p>"
-      },
+      "input":{"shape":"AddTagsRequest"},
       "errors":[
-        {
-          "shape":"BaseException",
-          "exception":true,
-          "documentation":"<p>An error occurred while processing the request.</p>"
-        },
-        {
-          "shape":"LimitExceededException",
-          "error":{"httpStatusCode":409},
-          "exception":true,
-          "documentation":"<p>An exception for trying to create more than allowed resources or sub-resources. Gives http status code of 409.</p>"
-        },
-        {
-          "shape":"ValidationException",
-          "error":{"httpStatusCode":400},
-          "exception":true,
-          "documentation":"<p>An exception for missing / invalid input fields. Gives http status code of 400.</p>"
-        },
-        {
-          "shape":"InternalException",
-          "error":{"httpStatusCode":500},
-          "exception":true,
-          "documentation":"<p>The request processing has failed because of an unknown error, exception or failure (the failure is internal to the service) . Gives http status code of 500.</p>"
-        }
+        {"shape":"BaseException"},
+        {"shape":"LimitExceededException"},
+        {"shape":"ValidationException"},
+        {"shape":"InternalException"}
       ],
       "documentation":"<p>Attaches tags to an existing Elasticsearch domain. Tags are a set of case-sensitive key value pairs. An Elasticsearch domain may have up to 10 tags. See <a href=\"http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-managedomains.html#es-managedomains-awsresorcetagging\" target=\"_blank\"> Tagging Amazon Elasticsearch Service Domains for more information.</a></p>"
     },
@@ -53,52 +31,15 @@
         "requestUri":"/2015-01-01/es/domain"
       },
       "input":{"shape":"CreateElasticsearchDomainRequest"},
-      "output":{
-        "shape":"CreateElasticsearchDomainResponse",
-        "documentation":"<p>The result of a <code>CreateElasticsearchDomain</code> operation. Contains the status of the newly created Elasticsearch domain.</p>"
-      },
+      "output":{"shape":"CreateElasticsearchDomainResponse"},
       "errors":[
-        {
-          "shape":"BaseException",
-          "exception":true,
-          "documentation":"<p>An error occurred while processing the request.</p>"
-        },
-        {
-          "shape":"DisabledOperationException",
-          "error":{"httpStatusCode":409},
-          "exception":true,
-          "documentation":"<p>An error occured because the client wanted to access a not supported operation. Gives http status code of 409.</p>"
-        },
-        {
-          "shape":"InternalException",
-          "error":{"httpStatusCode":500},
-          "exception":true,
-          "documentation":"<p>The request processing has failed because of an unknown error, exception or failure (the failure is internal to the service) . Gives http status code of 500.</p>"
-        },
-        {
-          "shape":"InvalidTypeException",
-          "error":{"httpStatusCode":409},
-          "exception":true,
-          "documentation":"<p>An exception for trying to create or access sub-resource that is either invalid or not supported. Gives http status code of 409.</p>"
-        },
-        {
-          "shape":"LimitExceededException",
-          "error":{"httpStatusCode":409},
-          "exception":true,
-          "documentation":"<p>An exception for trying to create more than allowed resources or sub-resources. Gives http status code of 409.</p>"
-        },
-        {
-          "shape":"ResourceAlreadyExistsException",
-          "error":{"httpStatusCode":409},
-          "exception":true,
-          "documentation":"<p>An exception for creating a resource that already exists. Gives http status code of 400.</p>"
-        },
-        {
-          "shape":"ValidationException",
-          "error":{"httpStatusCode":400},
-          "exception":true,
-          "documentation":"<p>An exception for missing / invalid input fields. Gives http status code of 400.</p>"
-        }
+        {"shape":"BaseException"},
+        {"shape":"DisabledOperationException"},
+        {"shape":"InternalException"},
+        {"shape":"InvalidTypeException"},
+        {"shape":"LimitExceededException"},
+        {"shape":"ResourceAlreadyExistsException"},
+        {"shape":"ValidationException"}
       ],
       "documentation":"<p>Creates a new Elasticsearch domain. For more information, see <a href=\"http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-createupdatedomains.html#es-createdomains\" target=\"_blank\">Creating Elasticsearch Domains</a> in the <i>Amazon Elasticsearch Service Developer Guide</i>.</p>"
     },
@@ -108,38 +49,13 @@
         "method":"DELETE",
         "requestUri":"/2015-01-01/es/domain/{DomainName}"
       },
-      "input":{
-        "shape":"DeleteElasticsearchDomainRequest",
-        "documentation":"<p>Container for the parameters to the <code><a>DeleteElasticsearchDomain</a></code> operation. Specifies the name of the Elasticsearch domain that you want to delete.</p>"
-      },
-      "output":{
-        "shape":"DeleteElasticsearchDomainResponse",
-        "documentation":"<p>The result of a <code>DeleteElasticsearchDomain</code> request. Contains the status of the pending deletion, or no status if the domain and all of its resources have been deleted.</p>"
-      },
+      "input":{"shape":"DeleteElasticsearchDomainRequest"},
+      "output":{"shape":"DeleteElasticsearchDomainResponse"},
       "errors":[
-        {
-          "shape":"BaseException",
-          "exception":true,
-          "documentation":"<p>An error occurred while processing the request.</p>"
-        },
-        {
-          "shape":"InternalException",
-          "error":{"httpStatusCode":500},
-          "exception":true,
-          "documentation":"<p>The request processing has failed because of an unknown error, exception or failure (the failure is internal to the service) . Gives http status code of 500.</p>"
-        },
-        {
-          "shape":"ResourceNotFoundException",
-          "error":{"httpStatusCode":409},
-          "exception":true,
-          "documentation":"<p>An exception for accessing or deleting a resource that does not exist. Gives http status code of 400.</p>"
-        },
-        {
-          "shape":"ValidationException",
-          "error":{"httpStatusCode":400},
-          "exception":true,
-          "documentation":"<p>An exception for missing / invalid input fields. Gives http status code of 400.</p>"
-        }
+        {"shape":"BaseException"},
+        {"shape":"InternalException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ValidationException"}
       ],
       "documentation":"<p>Permanently deletes the specified Elasticsearch domain and all of its data. Once a domain is deleted, it cannot be recovered.</p>"
     },
@@ -149,38 +65,13 @@
         "method":"GET",
         "requestUri":"/2015-01-01/es/domain/{DomainName}"
       },
-      "input":{
-        "shape":"DescribeElasticsearchDomainRequest",
-        "documentation":"<p>Container for the parameters to the <code><a>DescribeElasticsearchDomain</a></code> operation.</p>"
-      },
-      "output":{
-        "shape":"DescribeElasticsearchDomainResponse",
-        "documentation":"<p>The result of a <code>DescribeElasticsearchDomain</code> request. Contains the status of the domain specified in the request.</p>"
-      },
+      "input":{"shape":"DescribeElasticsearchDomainRequest"},
+      "output":{"shape":"DescribeElasticsearchDomainResponse"},
       "errors":[
-        {
-          "shape":"BaseException",
-          "exception":true,
-          "documentation":"<p>An error occurred while processing the request.</p>"
-        },
-        {
-          "shape":"InternalException",
-          "error":{"httpStatusCode":500},
-          "exception":true,
-          "documentation":"<p>The request processing has failed because of an unknown error, exception or failure (the failure is internal to the service) . Gives http status code of 500.</p>"
-        },
-        {
-          "shape":"ResourceNotFoundException",
-          "error":{"httpStatusCode":409},
-          "exception":true,
-          "documentation":"<p>An exception for accessing or deleting a resource that does not exist. Gives http status code of 400.</p>"
-        },
-        {
-          "shape":"ValidationException",
-          "error":{"httpStatusCode":400},
-          "exception":true,
-          "documentation":"<p>An exception for missing / invalid input fields. Gives http status code of 400.</p>"
-        }
+        {"shape":"BaseException"},
+        {"shape":"InternalException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ValidationException"}
       ],
       "documentation":"<p>Returns domain configuration information about the specified Elasticsearch domain, including the domain ID, domain endpoint, and domain ARN.</p>"
     },
@@ -190,38 +81,13 @@
         "method":"GET",
         "requestUri":"/2015-01-01/es/domain/{DomainName}/config"
       },
-      "input":{
-        "shape":"DescribeElasticsearchDomainConfigRequest",
-        "documentation":"<p> Container for the parameters to the <code>DescribeElasticsearchDomainConfig</code> operation. Specifies the domain name for which you want configuration information.</p>"
-      },
-      "output":{
-        "shape":"DescribeElasticsearchDomainConfigResponse",
-        "documentation":"<p>The result of a <code>DescribeElasticsearchDomainConfig</code> request. Contains the configuration information of the requested domain.</p>"
-      },
+      "input":{"shape":"DescribeElasticsearchDomainConfigRequest"},
+      "output":{"shape":"DescribeElasticsearchDomainConfigResponse"},
       "errors":[
-        {
-          "shape":"BaseException",
-          "exception":true,
-          "documentation":"<p>An error occurred while processing the request.</p>"
-        },
-        {
-          "shape":"InternalException",
-          "error":{"httpStatusCode":500},
-          "exception":true,
-          "documentation":"<p>The request processing has failed because of an unknown error, exception or failure (the failure is internal to the service) . Gives http status code of 500.</p>"
-        },
-        {
-          "shape":"ResourceNotFoundException",
-          "error":{"httpStatusCode":409},
-          "exception":true,
-          "documentation":"<p>An exception for accessing or deleting a resource that does not exist. Gives http status code of 400.</p>"
-        },
-        {
-          "shape":"ValidationException",
-          "error":{"httpStatusCode":400},
-          "exception":true,
-          "documentation":"<p>An exception for missing / invalid input fields. Gives http status code of 400.</p>"
-        }
+        {"shape":"BaseException"},
+        {"shape":"InternalException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ValidationException"}
       ],
       "documentation":"<p>Provides cluster configuration information about the specified Elasticsearch domain, such as the state, creation date, update version, and update date for cluster options.</p>"
     },
@@ -231,34 +97,32 @@
         "method":"POST",
         "requestUri":"/2015-01-01/es/domain-info"
       },
-      "input":{
-        "shape":"DescribeElasticsearchDomainsRequest",
-        "documentation":"<p>Container for the parameters to the <code><a>DescribeElasticsearchDomains</a></code> operation. By default, the API returns the status of all Elasticsearch domains.</p>"
-      },
-      "output":{
-        "shape":"DescribeElasticsearchDomainsResponse",
-        "documentation":"<p>The result of a <code>DescribeElasticsearchDomains</code> request. Contains the status of the specified domains or all domains owned by the account.</p>"
-      },
+      "input":{"shape":"DescribeElasticsearchDomainsRequest"},
+      "output":{"shape":"DescribeElasticsearchDomainsResponse"},
       "errors":[
-        {
-          "shape":"BaseException",
-          "exception":true,
-          "documentation":"<p>An error occurred while processing the request.</p>"
-        },
-        {
-          "shape":"InternalException",
-          "error":{"httpStatusCode":500},
-          "exception":true,
-          "documentation":"<p>The request processing has failed because of an unknown error, exception or failure (the failure is internal to the service) . Gives http status code of 500.</p>"
-        },
-        {
-          "shape":"ValidationException",
-          "error":{"httpStatusCode":400},
-          "exception":true,
-          "documentation":"<p>An exception for missing / invalid input fields. Gives http status code of 400.</p>"
-        }
+        {"shape":"BaseException"},
+        {"shape":"InternalException"},
+        {"shape":"ValidationException"}
       ],
       "documentation":"<p>Returns domain configuration information about the specified Elasticsearch domains, including the domain ID, domain endpoint, and domain ARN.</p>"
+    },
+    "DescribeElasticsearchInstanceTypeLimits":{
+      "name":"DescribeElasticsearchInstanceTypeLimits",
+      "http":{
+        "method":"GET",
+        "requestUri":"/2015-01-01/es/instanceTypeLimits/{ElasticsearchVersion}/{InstanceType}"
+      },
+      "input":{"shape":"DescribeElasticsearchInstanceTypeLimitsRequest"},
+      "output":{"shape":"DescribeElasticsearchInstanceTypeLimitsResponse"},
+      "errors":[
+        {"shape":"BaseException"},
+        {"shape":"InternalException"},
+        {"shape":"InvalidTypeException"},
+        {"shape":"LimitExceededException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ValidationException"}
+      ],
+      "documentation":"<p> Describe Elasticsearch Limits for a given InstanceType and ElasticsearchVersion. When modifying existing Domain, specify the <code> <a>DomainName</a> </code> to know what Limits are supported for modifying. </p>"
     },
     "ListDomainNames":{
       "name":"ListDomainNames",
@@ -266,24 +130,44 @@
         "method":"GET",
         "requestUri":"/2015-01-01/domain"
       },
-      "output":{
-        "shape":"ListDomainNamesResponse",
-        "documentation":"<p>The result of a <code>ListDomainNames</code> operation. Contains the names of all Elasticsearch domains owned by this account.</p>"
-      },
+      "output":{"shape":"ListDomainNamesResponse"},
       "errors":[
-        {
-          "shape":"BaseException",
-          "exception":true,
-          "documentation":"<p>An error occurred while processing the request.</p>"
-        },
-        {
-          "shape":"ValidationException",
-          "error":{"httpStatusCode":400},
-          "exception":true,
-          "documentation":"<p>An exception for missing / invalid input fields. Gives http status code of 400.</p>"
-        }
+        {"shape":"BaseException"},
+        {"shape":"ValidationException"}
       ],
       "documentation":"<p>Returns the name of all Elasticsearch domains owned by the current user's account. </p>"
+    },
+    "ListElasticsearchInstanceTypes":{
+      "name":"ListElasticsearchInstanceTypes",
+      "http":{
+        "method":"GET",
+        "requestUri":"/2015-01-01/es/instanceTypes/{ElasticsearchVersion}"
+      },
+      "input":{"shape":"ListElasticsearchInstanceTypesRequest"},
+      "output":{"shape":"ListElasticsearchInstanceTypesResponse"},
+      "errors":[
+        {"shape":"BaseException"},
+        {"shape":"InternalException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ValidationException"}
+      ],
+      "documentation":"<p>List all Elasticsearch instance types that are supported for given ElasticsearchVersion</p>"
+    },
+    "ListElasticsearchVersions":{
+      "name":"ListElasticsearchVersions",
+      "http":{
+        "method":"GET",
+        "requestUri":"/2015-01-01/es/versions"
+      },
+      "input":{"shape":"ListElasticsearchVersionsRequest"},
+      "output":{"shape":"ListElasticsearchVersionsResponse"},
+      "errors":[
+        {"shape":"BaseException"},
+        {"shape":"InternalException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ValidationException"}
+      ],
+      "documentation":"<p>List all supported Elasticsearch versions</p>"
     },
     "ListTags":{
       "name":"ListTags",
@@ -291,38 +175,13 @@
         "method":"GET",
         "requestUri":"/2015-01-01/tags/"
       },
-      "input":{
-        "shape":"ListTagsRequest",
-        "documentation":"<p>Container for the parameters to the <code><a>ListTags</a></code> operation. Specify the <code>ARN</code> for the Elasticsearch domain to which the tags are attached that you want to view are attached.</p>"
-      },
-      "output":{
-        "shape":"ListTagsResponse",
-        "documentation":"<p>The result of a <code>ListTags</code> operation. Contains tags for all requested Elasticsearch domains.</p>"
-      },
+      "input":{"shape":"ListTagsRequest"},
+      "output":{"shape":"ListTagsResponse"},
       "errors":[
-        {
-          "shape":"BaseException",
-          "exception":true,
-          "documentation":"<p>An error occurred while processing the request.</p>"
-        },
-        {
-          "shape":"ResourceNotFoundException",
-          "error":{"httpStatusCode":409},
-          "exception":true,
-          "documentation":"<p>An exception for accessing or deleting a resource that does not exist. Gives http status code of 400.</p>"
-        },
-        {
-          "shape":"ValidationException",
-          "error":{"httpStatusCode":400},
-          "exception":true,
-          "documentation":"<p>An exception for missing / invalid input fields. Gives http status code of 400.</p>"
-        },
-        {
-          "shape":"InternalException",
-          "error":{"httpStatusCode":500},
-          "exception":true,
-          "documentation":"<p>The request processing has failed because of an unknown error, exception or failure (the failure is internal to the service) . Gives http status code of 500.</p>"
-        }
+        {"shape":"BaseException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ValidationException"},
+        {"shape":"InternalException"}
       ],
       "documentation":"<p>Returns all tags for the given Elasticsearch domain.</p>"
     },
@@ -332,28 +191,11 @@
         "method":"POST",
         "requestUri":"/2015-01-01/tags-removal"
       },
-      "input":{
-        "shape":"RemoveTagsRequest",
-        "documentation":"<p>Container for the parameters to the <code><a>RemoveTags</a></code> operation. Specify the <code>ARN</code> for the Elasticsearch domain from which you want to remove the specified <code>TagKey</code>.</p>"
-      },
+      "input":{"shape":"RemoveTagsRequest"},
       "errors":[
-        {
-          "shape":"BaseException",
-          "exception":true,
-          "documentation":"<p>An error occurred while processing the request.</p>"
-        },
-        {
-          "shape":"ValidationException",
-          "error":{"httpStatusCode":400},
-          "exception":true,
-          "documentation":"<p>An exception for missing / invalid input fields. Gives http status code of 400.</p>"
-        },
-        {
-          "shape":"InternalException",
-          "error":{"httpStatusCode":500},
-          "exception":true,
-          "documentation":"<p>The request processing has failed because of an unknown error, exception or failure (the failure is internal to the service) . Gives http status code of 500.</p>"
-        }
+        {"shape":"BaseException"},
+        {"shape":"ValidationException"},
+        {"shape":"InternalException"}
       ],
       "documentation":"<p>Removes the specified set of tags from the specified Elasticsearch domain.</p>"
     },
@@ -363,50 +205,15 @@
         "method":"POST",
         "requestUri":"/2015-01-01/es/domain/{DomainName}/config"
       },
-      "input":{
-        "shape":"UpdateElasticsearchDomainConfigRequest",
-        "documentation":"<p>Container for the parameters to the <code><a>UpdateElasticsearchDomain</a></code> operation. Specifies the type and number of instances in the domain cluster.</p>"
-      },
-      "output":{
-        "shape":"UpdateElasticsearchDomainConfigResponse",
-        "documentation":"<p>The result of an <code>UpdateElasticsearchDomain</code> request. Contains the status of the Elasticsearch domain being updated.</p>"
-      },
+      "input":{"shape":"UpdateElasticsearchDomainConfigRequest"},
+      "output":{"shape":"UpdateElasticsearchDomainConfigResponse"},
       "errors":[
-        {
-          "shape":"BaseException",
-          "exception":true,
-          "documentation":"<p>An error occurred while processing the request.</p>"
-        },
-        {
-          "shape":"InternalException",
-          "error":{"httpStatusCode":500},
-          "exception":true,
-          "documentation":"<p>The request processing has failed because of an unknown error, exception or failure (the failure is internal to the service) . Gives http status code of 500.</p>"
-        },
-        {
-          "shape":"InvalidTypeException",
-          "error":{"httpStatusCode":409},
-          "exception":true,
-          "documentation":"<p>An exception for trying to create or access sub-resource that is either invalid or not supported. Gives http status code of 409.</p>"
-        },
-        {
-          "shape":"LimitExceededException",
-          "error":{"httpStatusCode":409},
-          "exception":true,
-          "documentation":"<p>An exception for trying to create more than allowed resources or sub-resources. Gives http status code of 409.</p>"
-        },
-        {
-          "shape":"ResourceNotFoundException",
-          "error":{"httpStatusCode":409},
-          "exception":true,
-          "documentation":"<p>An exception for accessing or deleting a resource that does not exist. Gives http status code of 400.</p>"
-        },
-        {
-          "shape":"ValidationException",
-          "error":{"httpStatusCode":400},
-          "exception":true,
-          "documentation":"<p>An exception for missing / invalid input fields. Gives http status code of 400.</p>"
-        }
+        {"shape":"BaseException"},
+        {"shape":"InternalException"},
+        {"shape":"InvalidTypeException"},
+        {"shape":"LimitExceededException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"ValidationException"}
       ],
       "documentation":"<p>Modifies the cluster configuration of the specified Elasticsearch domain, setting as setting the instance type and the number of instances. </p>"
     }
@@ -452,6 +259,24 @@
       },
       "documentation":"<p>Container for the parameters to the <code><a>AddTags</a></code> operation. Specify the tags that you want to attach to the Elasticsearch domain.</p>"
     },
+    "AdditionalLimit":{
+      "type":"structure",
+      "members":{
+        "LimitName":{
+          "shape":"LimitName",
+          "documentation":"<p> Name of Additional Limit is specific to a given InstanceType and for each of it's <code> <a>InstanceRole</a> </code> etc. <br/> Attributes and their details: <br/> <ul> <li>MaximumNumberOfDataNodesSupported</li> This attribute will be present in Master node only to specify how much data nodes upto which given <code> <a>ESPartitionInstanceType</a> </code> can support as master node. <li>MaximumNumberOfDataNodesWithoutMasterNode</li> This attribute will be present in Data node only to specify how much data nodes of given <code> <a>ESPartitionInstanceType</a> </code> upto which you don't need any master nodes to govern them. </ul> </p>"
+        },
+        "LimitValues":{
+          "shape":"LimitValueList",
+          "documentation":"<p> Value for given <code> <a>AdditionalLimit$LimitName</a> </code> . </p>"
+        }
+      },
+      "documentation":"<p> List of limits that are specific to a given InstanceType and for each of it's <code> <a>InstanceRole</a> </code> . </p>"
+    },
+    "AdditionalLimitList":{
+      "type":"list",
+      "member":{"shape":"AdditionalLimit"}
+    },
     "AdvancedOptions":{
       "type":"map",
       "key":{"shape":"String"},
@@ -484,8 +309,8 @@
           "documentation":"<p>A description of the error.</p>"
         }
       },
-      "exception":true,
-      "documentation":"<p>An error occurred while processing the request.</p>"
+      "documentation":"<p>An error occurred while processing the request.</p>",
+      "exception":true
     },
     "Boolean":{"type":"boolean"},
     "CreateElasticsearchDomainRequest":{
@@ -495,6 +320,10 @@
         "DomainName":{
           "shape":"DomainName",
           "documentation":"<p>The name of the Elasticsearch domain that you are creating. Domain names are unique across the domains owned by an account within an AWS region. Domain names must start with a letter or number and can contain the following characters: a-z (lowercase), 0-9, and - (hyphen).</p>"
+        },
+        "ElasticsearchVersion":{
+          "shape":"ElasticsearchVersionString",
+          "documentation":"<p>String of format X.Y to specify version for the Elasticsearch domain eg. \"1.5\" or \"2.3\". For more information, see <a href=\"http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-createupdatedomains.html#es-createdomains\" target=\"_blank\">Creating Elasticsearch Domains</a> in the <i>Amazon Elasticsearch Service Developer Guide</i>.</p>"
         },
         "ElasticsearchClusterConfig":{
           "shape":"ElasticsearchClusterConfig",
@@ -534,9 +363,9 @@
       "members":{
         "DomainName":{
           "shape":"DomainName",
+          "documentation":"<p>The name of the Elasticsearch domain that you want to permanently delete.</p>",
           "location":"uri",
-          "locationName":"DomainName",
-          "documentation":"<p>The name of the Elasticsearch domain that you want to permanently delete.</p>"
+          "locationName":"DomainName"
         }
       },
       "documentation":"<p>Container for the parameters to the <code><a>DeleteElasticsearchDomain</a></code> operation. Specifies the name of the Elasticsearch domain that you want to delete.</p>"
@@ -557,9 +386,9 @@
       "members":{
         "DomainName":{
           "shape":"DomainName",
+          "documentation":"<p>The Elasticsearch domain that you want to get information about.</p>",
           "location":"uri",
-          "locationName":"DomainName",
-          "documentation":"<p>The Elasticsearch domain that you want to get information about.</p>"
+          "locationName":"DomainName"
         }
       },
       "documentation":"<p> Container for the parameters to the <code>DescribeElasticsearchDomainConfig</code> operation. Specifies the domain name for which you want configuration information.</p>"
@@ -581,9 +410,9 @@
       "members":{
         "DomainName":{
           "shape":"DomainName",
+          "documentation":"<p>The name of the Elasticsearch domain for which you want information.</p>",
           "location":"uri",
-          "locationName":"DomainName",
-          "documentation":"<p>The name of the Elasticsearch domain for which you want information.</p>"
+          "locationName":"DomainName"
         }
       },
       "documentation":"<p>Container for the parameters to the <code><a>DescribeElasticsearchDomain</a></code> operation.</p>"
@@ -621,19 +450,54 @@
       },
       "documentation":"<p>The result of a <code>DescribeElasticsearchDomains</code> request. Contains the status of the specified domains or all domains owned by the account.</p>"
     },
+    "DescribeElasticsearchInstanceTypeLimitsRequest":{
+      "type":"structure",
+      "required":[
+        "InstanceType",
+        "ElasticsearchVersion"
+      ],
+      "members":{
+        "DomainName":{
+          "shape":"DomainName",
+          "documentation":"<p> DomainName represents the name of the Domain that we are trying to modify. This should be present only if we are querying for Elasticsearch <code> <a>Limits</a> </code> for existing domain. </p>",
+          "location":"querystring",
+          "locationName":"domainName"
+        },
+        "InstanceType":{
+          "shape":"ESPartitionInstanceType",
+          "documentation":"<p> The instance type for an Elasticsearch cluster for which Elasticsearch <code> <a>Limits</a> </code> are needed. </p>",
+          "location":"uri",
+          "locationName":"InstanceType"
+        },
+        "ElasticsearchVersion":{
+          "shape":"ElasticsearchVersionString",
+          "documentation":"<p> Version of Elasticsearch for which <code> <a>Limits</a> </code> are needed. </p>",
+          "location":"uri",
+          "locationName":"ElasticsearchVersion"
+        }
+      },
+      "documentation":"<p> Container for the parameters to <code> <a>DescribeElasticsearchInstanceTypeLimits</a> </code> operation. </p>"
+    },
+    "DescribeElasticsearchInstanceTypeLimitsResponse":{
+      "type":"structure",
+      "members":{
+        "LimitsByRole":{"shape":"LimitsByRole"}
+      },
+      "documentation":"<p> Container for the parameters received from <code> <a>DescribeElasticsearchInstanceTypeLimits</a> </code> operation. </p>"
+    },
     "DisabledOperationException":{
       "type":"structure",
       "members":{
       },
+      "documentation":"<p>An error occured because the client wanted to access a not supported operation. Gives http status code of 409.</p>",
       "error":{"httpStatusCode":409},
-      "exception":true,
-      "documentation":"<p>An error occured because the client wanted to access a not supported operation. Gives http status code of 409.</p>"
+      "exception":true
     },
     "DomainId":{
       "type":"string",
-      "min":1,
+      "documentation":"<p>Unique identifier for an Elasticsearch domain.</p>",
       "max":64,
-      "documentation":"<p>Unique identifier for an Elasticsearch domain.</p>"
+      "min":1
     },
     "DomainInfo":{
       "type":"structure",
@@ -651,10 +515,10 @@
     },
     "DomainName":{
       "type":"string",
-      "min":3,
+      "documentation":"<p>The name of an Elasticsearch domain. Domain names are unique across the domains owned by an account within an AWS region. Domain names start with a letter or number and can contain the following characters: a-z (lowercase), 0-9, and - (hyphen).</p>",
       "max":28,
-      "pattern":"[a-z][a-z0-9\\-]+",
-      "documentation":"<p>The name of an Elasticsearch domain. Domain names are unique across the domains owned by an account within an AWS region. Domain names start with a letter or number and can contain the following characters: a-z (lowercase), 0-9, and - (hyphen).</p>"
+      "min":3,
+      "pattern":"[a-z][a-z0-9\\-]+"
     },
     "DomainNameList":{
       "type":"list",
@@ -708,6 +572,11 @@
         "m3.large.elasticsearch",
         "m3.xlarge.elasticsearch",
         "m3.2xlarge.elasticsearch",
+        "m4.large.elasticsearch",
+        "m4.xlarge.elasticsearch",
+        "m4.2xlarge.elasticsearch",
+        "m4.4xlarge.elasticsearch",
+        "m4.10xlarge.elasticsearch",
         "t2.micro.elasticsearch",
         "t2.small.elasticsearch",
         "t2.medium.elasticsearch",
@@ -717,7 +586,22 @@
         "r3.4xlarge.elasticsearch",
         "r3.8xlarge.elasticsearch",
         "i2.xlarge.elasticsearch",
-        "i2.2xlarge.elasticsearch"
+        "i2.2xlarge.elasticsearch",
+        "d2.xlarge.elasticsearch",
+        "d2.2xlarge.elasticsearch",
+        "d2.4xlarge.elasticsearch",
+        "d2.8xlarge.elasticsearch",
+        "c4.large.elasticsearch",
+        "c4.xlarge.elasticsearch",
+        "c4.2xlarge.elasticsearch",
+        "c4.4xlarge.elasticsearch",
+        "c4.8xlarge.elasticsearch",
+        "r4.large.elasticsearch",
+        "r4.xlarge.elasticsearch",
+        "r4.2xlarge.elasticsearch",
+        "r4.4xlarge.elasticsearch",
+        "r4.8xlarge.elasticsearch",
+        "r4.16xlarge.elasticsearch"
       ]
     },
     "ElasticsearchClusterConfig":{
@@ -771,6 +655,10 @@
     "ElasticsearchDomainConfig":{
       "type":"structure",
       "members":{
+        "ElasticsearchVersion":{
+          "shape":"ElasticsearchVersionStatus",
+          "documentation":"<p>String of format X.Y to specify version for the Elasticsearch domain.</p>"
+        },
         "ElasticsearchClusterConfig":{
           "shape":"ElasticsearchClusterConfigStatus",
           "documentation":"<p>Specifies the <code>ElasticsearchClusterConfig</code> for the Elasticsearch domain.</p>"
@@ -831,6 +719,7 @@
           "shape":"Boolean",
           "documentation":"<p>The status of the Elasticsearch domain configuration. <code>True</code> if Amazon Elasticsearch Service is processing configuration changes. <code>False</code> if the configuration is active.</p>"
         },
+        "ElasticsearchVersion":{"shape":"ElasticsearchVersionString"},
         "ElasticsearchClusterConfig":{
           "shape":"ElasticsearchClusterConfig",
           "documentation":"<p>The type and number of instances in the domain cluster.</p>"
@@ -859,31 +748,103 @@
       "member":{"shape":"ElasticsearchDomainStatus"},
       "documentation":"<p>A list that contains the status of each requested Elasticsearch domain.</p>"
     },
+    "ElasticsearchInstanceTypeList":{
+      "type":"list",
+      "member":{"shape":"ESPartitionInstanceType"},
+      "documentation":"<p> List of instance types supported by Amazon Elasticsearch service. </p>"
+    },
+    "ElasticsearchVersionList":{
+      "type":"list",
+      "member":{"shape":"ElasticsearchVersionString"},
+      "documentation":"<p>List of supported elastic search versions. </p>"
+    },
+    "ElasticsearchVersionStatus":{
+      "type":"structure",
+      "required":[
+        "Options",
+        "Status"
+      ],
+      "members":{
+        "Options":{
+          "shape":"ElasticsearchVersionString",
+          "documentation":"<p> Specifies the Elasticsearch version for the specified Elasticsearch domain.</p>"
+        },
+        "Status":{
+          "shape":"OptionStatus",
+          "documentation":"<p> Specifies the status of the Elasticsearch version options for the specified Elasticsearch domain.</p>"
+        }
+      },
+      "documentation":"<p> Status of the Elasticsearch version options for the specified Elasticsearch domain.</p>"
+    },
+    "ElasticsearchVersionString":{"type":"string"},
     "ErrorMessage":{"type":"string"},
+    "InstanceCountLimits":{
+      "type":"structure",
+      "members":{
+        "MinimumInstanceCount":{"shape":"MinimumInstanceCount"},
+        "MaximumInstanceCount":{"shape":"MaximumInstanceCount"}
+      },
+      "documentation":"<p> InstanceCountLimits represents the limits on number of instances that be created in Amazon Elasticsearch for given InstanceType. </p>"
+    },
+    "InstanceLimits":{
+      "type":"structure",
+      "members":{
+        "InstanceCountLimits":{"shape":"InstanceCountLimits"}
+      },
+      "documentation":"<p>InstanceLimits represents the list of instance related attributes that are available for given InstanceType. </p>"
+    },
+    "InstanceRole":{"type":"string"},
     "IntegerClass":{"type":"integer"},
     "InternalException":{
       "type":"structure",
       "members":{
       },
+      "documentation":"<p>The request processing has failed because of an unknown error, exception or failure (the failure is internal to the service) . Gives http status code of 500.</p>",
       "error":{"httpStatusCode":500},
-      "exception":true,
-      "documentation":"<p>The request processing has failed because of an unknown error, exception or failure (the failure is internal to the service) . Gives http status code of 500.</p>"
+      "exception":true
     },
     "InvalidTypeException":{
       "type":"structure",
       "members":{
       },
+      "documentation":"<p>An exception for trying to create or access sub-resource that is either invalid or not supported. Gives http status code of 409.</p>",
       "error":{"httpStatusCode":409},
-      "exception":true,
-      "documentation":"<p>An exception for trying to create or access sub-resource that is either invalid or not supported. Gives http status code of 409.</p>"
+      "exception":true
     },
     "LimitExceededException":{
       "type":"structure",
       "members":{
       },
+      "documentation":"<p>An exception for trying to create more than allowed resources or sub-resources. Gives http status code of 409.</p>",
       "error":{"httpStatusCode":409},
-      "exception":true,
-      "documentation":"<p>An exception for trying to create more than allowed resources or sub-resources. Gives http status code of 409.</p>"
+      "exception":true
+    },
+    "LimitName":{"type":"string"},
+    "LimitValue":{"type":"string"},
+    "LimitValueList":{
+      "type":"list",
+      "member":{"shape":"LimitValue"}
+    },
+    "Limits":{
+      "type":"structure",
+      "members":{
+        "StorageTypes":{
+          "shape":"StorageTypeList",
+          "documentation":"<p>StorageType represents the list of storage related types and attributes that are available for given InstanceType. </p>"
+        },
+        "InstanceLimits":{"shape":"InstanceLimits"},
+        "AdditionalLimits":{
+          "shape":"AdditionalLimitList",
+          "documentation":"<p> List of additional limits that are specific to a given InstanceType and for each of it's <code> <a>InstanceRole</a> </code> . </p>"
+        }
+      },
+      "documentation":"<p> Limits for given InstanceType and for each of it's role. <br/> Limits contains following <code> <a>StorageTypes,</a> </code> <code> <a>InstanceLimits</a> </code> and <code> <a>AdditionalLimits</a> </code> </p>"
+    },
+    "LimitsByRole":{
+      "type":"map",
+      "key":{"shape":"InstanceRole"},
+      "value":{"shape":"Limits"},
+      "documentation":"<p> Map of Role of the Instance and Limits that are applicable. Role performed by given Instance in Elasticsearch can be one of the following: <ul> <li>Data: If the given InstanceType is used as Data node</li> <li>Master: If the given InstanceType is used as Master node</li> </ul> </p>"
     },
     "ListDomainNamesResponse":{
       "type":"structure",
@@ -895,15 +856,85 @@
       },
       "documentation":"<p>The result of a <code>ListDomainNames</code> operation. Contains the names of all Elasticsearch domains owned by this account.</p>"
     },
+    "ListElasticsearchInstanceTypesRequest":{
+      "type":"structure",
+      "required":["ElasticsearchVersion"],
+      "members":{
+        "ElasticsearchVersion":{
+          "shape":"ElasticsearchVersionString",
+          "documentation":"<p>Version of Elasticsearch for which list of supported elasticsearch instance types are needed. </p>",
+          "location":"uri",
+          "locationName":"ElasticsearchVersion"
+        },
+        "DomainName":{
+          "shape":"DomainName",
+          "documentation":"<p>DomainName represents the name of the Domain that we are trying to modify. This should be present only if we are querying for list of available Elasticsearch instance types when modifying existing domain. </p>",
+          "location":"querystring",
+          "locationName":"domainName"
+        },
+        "MaxResults":{
+          "shape":"MaxResults",
+          "documentation":"<p> Set this value to limit the number of results returned. Value provided must be greater than 30 else it wont be honored. </p>",
+          "location":"querystring",
+          "locationName":"maxResults"
+        },
+        "NextToken":{
+          "shape":"NextToken",
+          "documentation":"<p>NextToken should be sent in case if earlier API call produced result containing NextToken. It is used for pagination. </p>",
+          "location":"querystring",
+          "locationName":"nextToken"
+        }
+      },
+      "documentation":"<p> Container for the parameters to the <code> <a>ListElasticsearchInstanceTypes</a> </code> operation. </p>"
+    },
+    "ListElasticsearchInstanceTypesResponse":{
+      "type":"structure",
+      "members":{
+        "ElasticsearchInstanceTypes":{
+          "shape":"ElasticsearchInstanceTypeList",
+          "documentation":"<p> List of instance types supported by Amazon Elasticsearch service for given <code> <a>ElasticsearchVersion</a> </code> </p>"
+        },
+        "NextToken":{
+          "shape":"NextToken",
+          "documentation":"<p>In case if there are more results available NextToken would be present, make further request to the same API with received NextToken to paginate remaining results. </p>"
+        }
+      },
+      "documentation":"<p> Container for the parameters returned by <code> <a>ListElasticsearchInstanceTypes</a> </code> operation. </p>"
+    },
+    "ListElasticsearchVersionsRequest":{
+      "type":"structure",
+      "members":{
+        "MaxResults":{
+          "shape":"MaxResults",
+          "documentation":"<p> Set this value to limit the number of results returned. Value provided must be greater than 10 else it wont be honored. </p>",
+          "location":"querystring",
+          "locationName":"maxResults"
+        },
+        "NextToken":{
+          "shape":"NextToken",
+          "location":"querystring",
+          "locationName":"nextToken"
+        }
+      },
+      "documentation":"<p> Container for the parameters to the <code> <a>ListElasticsearchVersions</a> </code> operation. <p> Use <code> <a>MaxResults</a> </code> to control the maximum number of results to retrieve in a single call. </p> <p> Use <code> <a>NextToken</a> </code> in response to retrieve more results. If the received response does not contain a NextToken, then there are no more results to retrieve. </p> </p>"
+    },
+    "ListElasticsearchVersionsResponse":{
+      "type":"structure",
+      "members":{
+        "ElasticsearchVersions":{"shape":"ElasticsearchVersionList"},
+        "NextToken":{"shape":"NextToken"}
+      },
+      "documentation":"<p> Container for the parameters for response received from <code> <a>ListElasticsearchVersions</a> </code> operation. </p>"
+    },
     "ListTagsRequest":{
       "type":"structure",
       "required":["ARN"],
       "members":{
         "ARN":{
           "shape":"ARN",
+          "documentation":"<p> Specify the <code>ARN</code> for the Elasticsearch domain to which the tags are attached that you want to view.</p>",
           "location":"querystring",
-          "locationName":"arn",
-          "documentation":"<p> Specify the <code>ARN</code> for the Elasticsearch domain to which the tags are attached that you want to view.</p>"
+          "locationName":"arn"
         }
       },
       "documentation":"<p>Container for the parameters to the <code><a>ListTags</a></code> operation. Specify the <code>ARN</code> for the Elasticsearch domain to which the tags are attached that you want to view are attached.</p>"
@@ -918,14 +949,31 @@
       },
       "documentation":"<p>The result of a <code>ListTags</code> operation. Contains tags for all requested Elasticsearch domains.</p>"
     },
+    "MaxResults":{
+      "type":"integer",
+      "documentation":"<p> Set this value to limit the number of results returned. </p>",
+      "max":100
+    },
+    "MaximumInstanceCount":{
+      "type":"integer",
+      "documentation":"<p> Maximum number of Instances that can be instantiated for given InstanceType. </p>"
+    },
+    "MinimumInstanceCount":{
+      "type":"integer",
+      "documentation":"<p> Minimum number of Instances that can be instantiated for given InstanceType. </p>"
+    },
+    "NextToken":{
+      "type":"string",
+      "documentation":"<p> Paginated APIs accepts NextToken input to returns next page results and provides a NextToken output in the response which can be used by the client to retrieve more results. </p>"
+    },
     "OptionState":{
       "type":"string",
+      "documentation":"<p>The state of a requested change. One of the following:</p> <ul> <li>Processing: The request change is still in-process.</li> <li>Active: The request change is processed and deployed to the Elasticsearch domain.</li> </ul>",
       "enum":[
         "RequiresIndexDocuments",
         "Processing",
         "Active"
-      ],
-      "documentation":"<p>The state of a requested change. One of the following:</p> <ul> <li>Processing: The request change is still in-process.</li> <li>Active: The request change is processed and deployed to the Elasticsearch domain.</li> </ul>"
+      ]
     },
     "OptionStatus":{
       "type":"structure",
@@ -984,17 +1032,17 @@
       "type":"structure",
       "members":{
       },
+      "documentation":"<p>An exception for creating a resource that already exists. Gives http status code of 400.</p>",
       "error":{"httpStatusCode":409},
-      "exception":true,
-      "documentation":"<p>An exception for creating a resource that already exists. Gives http status code of 400.</p>"
+      "exception":true
     },
     "ResourceNotFoundException":{
       "type":"structure",
       "members":{
       },
+      "documentation":"<p>An exception for accessing or deleting a resource that does not exist. Gives http status code of 400.</p>",
       "error":{"httpStatusCode":409},
-      "exception":true,
-      "documentation":"<p>An exception for accessing or deleting a resource that does not exist. Gives http status code of 400.</p>"
+      "exception":true
     },
     "ServiceUrl":{
       "type":"string",
@@ -1028,6 +1076,48 @@
       },
       "documentation":"<p>Status of a daily automated snapshot.</p>"
     },
+    "StorageSubTypeName":{
+      "type":"string",
+      "documentation":"<p> SubType of the given storage type. List of available sub-storage options: For \"instance\" storageType we wont have any storageSubType, in case of \"ebs\" storageType we will have following valid storageSubTypes <ol> <li>standard</li> <li>gp2</li> <li>io1</li> </ol> Refer <code><a>VolumeType</a></code> for more information regarding above EBS storage options. </p>"
+    },
+    "StorageType":{
+      "type":"structure",
+      "members":{
+        "StorageTypeName":{"shape":"StorageTypeName"},
+        "StorageSubTypeName":{"shape":"StorageSubTypeName"},
+        "StorageTypeLimits":{
+          "shape":"StorageTypeLimitList",
+          "documentation":"<p>List of limits that are applicable for given storage type. </p>"
+        }
+      },
+      "documentation":"<p>StorageTypes represents the list of storage related types and their attributes that are available for given InstanceType. </p>"
+    },
+    "StorageTypeLimit":{
+      "type":"structure",
+      "members":{
+        "LimitName":{
+          "shape":"LimitName",
+          "documentation":"<p> Name of storage limits that are applicable for given storage type. If <code> <a>StorageType</a> </code> is ebs, following storage options are applicable <ol> <li>MinimumVolumeSize</li> Minimum amount of volume size that is applicable for given storage type.It can be empty if it is not applicable. <li>MaximumVolumeSize</li> Maximum amount of volume size that is applicable for given storage type.It can be empty if it is not applicable. <li>MaximumIops</li> Maximum amount of Iops that is applicable for given storage type.It can be empty if it is not applicable. <li>MinimumIops</li> Minimum amount of Iops that is applicable for given storage type.It can be empty if it is not applicable. </ol> </p>"
+        },
+        "LimitValues":{
+          "shape":"LimitValueList",
+          "documentation":"<p> Values for the <code> <a>StorageTypeLimit$LimitName</a> </code> . </p>"
+        }
+      },
+      "documentation":"<p>Limits that are applicable for given storage type. </p>"
+    },
+    "StorageTypeLimitList":{
+      "type":"list",
+      "member":{"shape":"StorageTypeLimit"}
+    },
+    "StorageTypeList":{
+      "type":"list",
+      "member":{"shape":"StorageType"}
+    },
+    "StorageTypeName":{
+      "type":"string",
+      "documentation":"<p> Type of the storage. List of available storage options: <ol> <li>instance</li> Inbuilt storage available for the given Instance <li>ebs</li> Elastic block storage that would be attached to the given Instance </ol> </p>"
+    },
     "String":{"type":"string"},
     "StringList":{
       "type":"list",
@@ -1053,9 +1143,9 @@
     },
     "TagKey":{
       "type":"string",
-      "min":1,
+      "documentation":"<p>A string of length from 1 to 128 characters that specifies the key for a Tag. Tag keys must be unique for the Elasticsearch domain to which they are attached.</p>",
       "max":128,
-      "documentation":"<p>A string of length from 1 to 128 characters that specifies the key for a Tag. Tag keys must be unique for the Elasticsearch domain to which they are attached.</p>"
+      "min":1
     },
     "TagList":{
       "type":"list",
@@ -1064,9 +1154,9 @@
     },
     "TagValue":{
       "type":"string",
-      "min":0,
+      "documentation":"<p>A string of length from 0 to 256 characters that specifies the value for a Tag. Tag values can be null and do not have to be unique in a tag set.</p>",
       "max":256,
-      "documentation":"<p>A string of length from 0 to 256 characters that specifies the value for a Tag. Tag values can be null and do not have to be unique in a tag set.</p>"
+      "min":0
     },
     "UIntValue":{
       "type":"integer",
@@ -1078,9 +1168,9 @@
       "members":{
         "DomainName":{
           "shape":"DomainName",
+          "documentation":"<p>The name of the Elasticsearch domain that you are updating. </p>",
           "location":"uri",
-          "locationName":"DomainName",
-          "documentation":"<p>The name of the Elasticsearch domain that you are updating. </p>"
+          "locationName":"DomainName"
         },
         "ElasticsearchClusterConfig":{
           "shape":"ElasticsearchClusterConfig",
@@ -1121,20 +1211,19 @@
       "type":"structure",
       "members":{
       },
+      "documentation":"<p>An exception for missing / invalid input fields. Gives http status code of 400.</p>",
       "error":{"httpStatusCode":400},
-      "exception":true,
-      "documentation":"<p>An exception for missing / invalid input fields. Gives http status code of 400.</p>"
+      "exception":true
     },
     "VolumeType":{
       "type":"string",
+      "documentation":"<p> The type of EBS volume, standard, gp2, or io1. See <a href=\"http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-createupdatedomains.html#es-createdomain-configure-ebs\" target=\"_blank\">Configuring EBS-based Storage</a>for more information.</p>",
       "enum":[
         "standard",
         "gp2",
         "io1"
-      ],
-      "documentation":"<p> The type of EBS volume, standard, gp2, or io1. See <a href=\"http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-createupdatedomains.html#es-createdomain-configure-ebs\" target=\"_blank\">Configuring EBS-based Storage</a>for more information.</p>"
+      ]
     }
   },
-  "examples":{
-  }
+  "documentation":"<fullname>Amazon Elasticsearch Configuration Service</fullname> <p>Use the Amazon Elasticsearch configuration API to create, configure, and manage Elasticsearch domains.</p> <p>The endpoint for configuration service requests is region-specific: es.<i>region</i>.amazonaws.com. For example, es.us-east-1.amazonaws.com. For a current list of supported regions and endpoints, see <a href=\"http://docs.aws.amazon.com/general/latest/gr/rande.html#elasticsearch-service-regions\" target=\"_blank\">Regions and Endpoints</a>.</p>"
 }

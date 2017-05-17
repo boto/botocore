@@ -15,9 +15,11 @@ Validation Errors
 
 from botocore.compat import six
 import decimal
+import json
 from datetime import datetime
 
 from botocore.utils import parse_to_aware_datetime
+from botocore.utils import is_json_value_header
 from botocore.exceptions import ParamValidationError
 
 
@@ -78,7 +80,6 @@ def range_check(name, value, shape, error_type, errors):
                       valid_range=[min_allowed, max_allowed])
 
 
-
 class ValidationErrors(object):
     def __init__(self):
         self._errors = []
@@ -102,12 +103,13 @@ class ValidationErrors(object):
                 name, additional['required_name'])
         elif error_type == 'unknown field':
             return 'Unknown parameter in %s: "%s", must be one of: %s' % (
-                name, additional['unknown_param'], ', '.join(additional['valid_names']))
+                name, additional['unknown_param'],
+                ', '.join(additional['valid_names']))
         elif error_type == 'invalid type':
-            return 'Invalid type for parameter %s, value: %s, type: %s, valid types: %s' % (
-                name, additional['param'],
-                str(type(additional['param'])),
-                ', '.join(additional['valid_types']))
+            return 'Invalid type for parameter %s, value: %s, type: %s, ' \
+                   'valid types: %s' % (name, additional['param'],
+                                        str(type(additional['param'])),
+                                        ', '.join(additional['valid_types']))
         elif error_type == 'invalid range':
             min_allowed = additional['valid_range'][0]
             max_allowed = additional['valid_range'][1]
@@ -120,6 +122,9 @@ class ValidationErrors(object):
             return ('Invalid length for parameter %s, value: %s, valid range: '
                     '%s-%s' % (name, additional['param'],
                                min_allowed, max_allowed))
+        elif error_type == 'unable to encode to json':
+            return 'Invalid parameter %s must be json serializable: %s' \
+                % (name, additional['type_error'])
 
     def _get_name(self, name):
         if not name:
@@ -154,8 +159,25 @@ class ParamValidator(object):
         self._validate(params, shape, errors, name='')
         return errors
 
+    def _check_special_validation_cases(self, shape):
+        if is_json_value_header(shape):
+            return self._validate_jsonvalue_string
+
     def _validate(self, params, shape, errors, name):
-        getattr(self, '_validate_%s' % shape.type_name)(params, shape, errors, name)
+        special_validator = self._check_special_validation_cases(shape)
+        if special_validator:
+            special_validator(params, shape, errors, name)
+        else:
+            getattr(self, '_validate_%s' % shape.type_name)(
+                params, shape, errors, name)
+
+    def _validate_jsonvalue_string(self, params, shape, errors, name):
+        # Check to see if a value marked as a jsonvalue can be dumped to
+        # a json string.
+        try:
+            json.dumps(params)
+        except (ValueError, TypeError) as e:
+            errors.report(name, 'unable to encode to json', type_error=e)
 
     @type_check(valid_types=(dict,))
     def _validate_structure(self, params, shape, errors, name):
@@ -218,8 +240,8 @@ class ParamValidator(object):
             return
         else:
             errors.report(name, 'invalid type', param=param,
-                         valid_types=[str(bytes), str(bytearray),
-                                      'file-like object'])
+                          valid_types=[str(bytes), str(bytearray),
+                                       'file-like object'])
 
     @type_check(valid_types=(bool,))
     def _validate_boolean(self, param, shape, errors, name):
@@ -243,7 +265,7 @@ class ParamValidator(object):
         if not is_valid_type:
             valid_type_names = [six.text_type(datetime), 'timestamp-string']
             errors.report(name, 'invalid type', param=param,
-                            valid_types=valid_type_names)
+                          valid_types=valid_type_names)
 
     def _type_check_datetime(self, value):
         try:

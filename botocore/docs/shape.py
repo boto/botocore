@@ -16,6 +16,9 @@
 # ``traverse_and_document_shape`` method called directly. It should be
 # inherited from a Documenter class with the appropriate methods
 # and attributes.
+from botocore.utils import is_json_value_header
+
+
 class ShapeDocumenter(object):
     EVENT_NAME = ''
 
@@ -24,7 +27,11 @@ class ShapeDocumenter(object):
         self._service_name = service_name
         self._operation_name = operation_name
         self._event_emitter = event_emitter
-        self._context = {} if context is None else context
+        self._context = context
+        if context is None:
+            self._context = {
+                'special_shape_types': {}
+            }
 
     def traverse_and_document_shape(self, section, shape, history,
                                     include=None, exclude=None, name=None,
@@ -78,3 +85,29 @@ class ShapeDocumenter(object):
                                                         self._operation_name),
                     section=section)
             history.pop()
+
+    def _get_special_py_default(self, shape):
+        special_defaults = {
+            'jsonvalue_header': '{...}|[...]|123|123.4|\'string\'|True|None',
+            'streaming_input_shape': 'b\'bytes\'|file',
+            'streaming_output_shape': 'StreamingBody()'
+        }
+        return self._get_value_for_special_type(shape, special_defaults)
+
+    def _get_special_py_type_name(self, shape):
+        special_type_names = {
+            'jsonvalue_header': 'JSON serializable',
+            'streaming_input_shape': 'bytes or seekable file-like object',
+            'streaming_output_shape': ':class:`.StreamingBody`'
+        }
+        return self._get_value_for_special_type(shape, special_type_names)
+
+    def _get_value_for_special_type(self, shape, special_type_map):
+        if is_json_value_header(shape):
+            return special_type_map['jsonvalue_header']
+        for special_type, marked_shape in self._context[
+                'special_shape_types'].items():
+            if special_type in special_type_map:
+                if shape == marked_shape:
+                    return special_type_map[special_type]
+        return None

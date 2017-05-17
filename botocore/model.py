@@ -48,8 +48,10 @@ class Shape(object):
     # the attributes that should be moved.
     SERIALIZED_ATTRS = ['locationName', 'queryName', 'flattened', 'location',
                         'payload', 'streaming', 'timestampFormat',
-                        'xmlNamespace', 'resultWrapper', 'xmlAttribute']
-    METADATA_ATTRS = ['required', 'min', 'max', 'sensitive', 'enum']
+                        'xmlNamespace', 'resultWrapper', 'xmlAttribute',
+                        'jsonvalue']
+    METADATA_ATTRS = ['required', 'min', 'max', 'sensitive', 'enum',
+                      'idempotencyToken', 'error', 'exception']
     MAP_TYPE = OrderedDict
 
     def __init__(self, shape_name, shape_model, shape_resolver=None):
@@ -102,6 +104,7 @@ class Shape(object):
             * xmlNamespace
             * resultWrapper
             * xmlAttribute
+            * jsonvalue
 
         :rtype: dict
         :return: Serialization information about the shape.
@@ -128,6 +131,7 @@ class Shape(object):
             * enum
             * sensitive
             * required
+            * idempotencyToken
 
         :rtype: dict
         :return: Metadata about the shape.
@@ -240,6 +244,10 @@ class ServiceModel(object):
 
     def resolve_shape_ref(self, shape_ref):
         return self._shape_resolver.resolve_shape_ref(shape_ref)
+
+    @CachedProperty
+    def shape_names(self):
+        return list(self._service_description.get('shapes', {}))
 
     @instance_cache
     def operation_model(self, operation_name):
@@ -408,12 +416,40 @@ class OperationModel(object):
             self._operation_model['output'])
 
     @CachedProperty
+    def idempotent_members(self):
+        input_shape = self.input_shape
+        if not input_shape:
+            return []
+
+        return [name for (name, shape) in input_shape.members.items()
+                if 'idempotencyToken' in shape.metadata and
+                shape.metadata['idempotencyToken']]
+
+    @CachedProperty
+    def auth_type(self):
+        return self._operation_model.get('authtype')
+
+    @CachedProperty
+    def error_shapes(self):
+        shapes = self._operation_model.get("errors", [])
+        return list(self._service_model.resolve_shape_ref(s) for s in shapes)
+
+    @CachedProperty
+    def has_streaming_input(self):
+        return self.get_streaming_input() is not None
+
+    @CachedProperty
     def has_streaming_output(self):
         return self.get_streaming_output() is not None
 
+    def get_streaming_input(self):
+        return self._get_streaming_body(self.input_shape)
+
     def get_streaming_output(self):
+        return self._get_streaming_body(self.output_shape)
+
+    def _get_streaming_body(self, shape):
         """Returns the streaming member's shape if any; or None otherwise."""
-        shape = self.output_shape
         if shape is None:
             return None
         payload = shape.serialization.get('payload')
@@ -422,6 +458,9 @@ class OperationModel(object):
             if payload_shape.type_name == 'blob':
                 return payload_shape
         return None
+
+    def __repr__(self):
+        return '%s(name=%s)' % (self.__class__.__name__, self.name)
 
 
 class ShapeResolver(object):

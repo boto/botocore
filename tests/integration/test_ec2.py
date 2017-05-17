@@ -28,7 +28,8 @@ class TestEC2(unittest.TestCase):
     def test_can_make_request(self):
         # Basic smoke test to ensure we can talk to ec2.
         result = self.client.describe_availability_zones()
-        zones = list(sorted(a['ZoneName'] for a in result['AvailabilityZones']))
+        zones = list(
+            sorted(a['ZoneName'] for a in result['AvailabilityZones']))
         self.assertEqual(zones, ['us-west-2a', 'us-west-2b', 'us-west-2c'])
 
     def test_get_console_output_handles_error(self):
@@ -65,6 +66,19 @@ class TestEC2Pagination(unittest.TestCase):
             # There should only be one reserved instance offering on each
             # page.
             self.assertEqual(len(reserved_inst_offer), 1)
+
+    def test_can_fall_back_to_old_starting_token(self):
+        # Using an operation that we know will paginate.
+        paginator = self.client.get_paginator(
+            'describe_reserved_instances_offerings')
+        pages = paginator.paginate(PaginationConfig={'NextToken': 'None___1'})
+
+        try:
+            results = list(itertools.islice(pages, 0, 3))
+            self.assertEqual(len(results), 3)
+            self.assertTrue(results[0]['NextToken'] != results[1]['NextToken'])
+        except ValueError:
+            self.fail("Old style paginator failed.")
 
 
 @attr('slow')

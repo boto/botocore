@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``organizations``", 
+    "description": "Update organizations client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``workdocs``", 
+    "description": "Update workdocs client to latest version", 
+    "type": "api-change"
+  }
+]

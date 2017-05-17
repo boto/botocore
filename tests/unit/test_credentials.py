@@ -15,10 +15,11 @@ from datetime import datetime, timedelta
 import mock
 import os
 
-from dateutil.tz import tzlocal
+from dateutil.tz import tzlocal, tzutc
 
 from botocore import credentials
-from botocore.credentials import EnvProvider
+from botocore.utils import ContainerMetadataFetcher
+from botocore.credentials import EnvProvider, create_assume_role_refresher
 import botocore.exceptions
 import botocore.session
 from tests import unittest, BaseEnvVar, IntegerRefresher
@@ -210,6 +211,29 @@ class TestEnvVar(BaseEnvVar):
         self.assertEqual(creds.secret_key, 'bar')
         self.assertEqual(creds.token, 'baz')
 
+    def test_can_override_expiry_env_var_mapping(self):
+        expiry_time = datetime.now(tzlocal()) - timedelta(hours=1)
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'foo',
+            'AWS_SECRET_ACCESS_KEY': 'bar',
+            'AWS_SESSION_TOKEN': 'baz',
+            'FOO_EXPIRY': expiry_time.isoformat(),
+        }
+        provider = credentials.EnvProvider(
+            environ, {'expiry_time': 'FOO_EXPIRY'}
+        )
+        creds = provider.load()
+
+        # Since the credentials are expired, we'll trigger a refresh whenever
+        # we try to access them. Since the environment credentials are still
+        # expired, this will raise an error.
+        error_message = (
+            "Credentials were refreshed, but the refreshed credentials are "
+            "still expired."
+        )
+        with self.assertRaisesRegexp(RuntimeError, error_message):
+            creds.get_frozen_credentials()
+
     def test_partial_creds_is_an_error(self):
         # If the user provides an access key, they must also
         # provide a secret key.  Not doing so will generate an
@@ -221,6 +245,146 @@ class TestEnvVar(BaseEnvVar):
         provider = credentials.EnvProvider(environ)
         with self.assertRaises(botocore.exceptions.PartialCredentialsError):
             provider.load()
+
+    def test_missing_access_key_id_raises_error(self):
+        expiry_time = datetime.now(tzlocal()) - timedelta(hours=1)
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'foo',
+            'AWS_SECRET_ACCESS_KEY': 'bar',
+            'AWS_CREDENTIAL_EXPIRATION': expiry_time.isoformat(),
+        }
+        provider = credentials.EnvProvider(environ)
+        creds = provider.load()
+
+        del environ['AWS_ACCESS_KEY_ID']
+
+        # Since the credentials are expired, we'll trigger a refresh
+        # whenever we try to access them. At that refresh time, the relevant
+        # environment variables are incomplete, so an error will be raised.
+        with self.assertRaises(botocore.exceptions.PartialCredentialsError):
+            creds.get_frozen_credentials()
+
+    def test_credentials_refresh(self):
+        # First initialize the credentials with an expired credential set.
+        expiry_time = datetime.now(tzlocal()) - timedelta(hours=1)
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'foo',
+            'AWS_SECRET_ACCESS_KEY': 'bar',
+            'AWS_SESSION_TOKEN': 'baz',
+            'AWS_CREDENTIAL_EXPIRATION': expiry_time.isoformat(),
+        }
+        provider = credentials.EnvProvider(environ)
+        creds = provider.load()
+        self.assertIsInstance(creds, credentials.RefreshableCredentials)
+
+        # Since the credentials are expired, we'll trigger a refresh whenever
+        # we try to access them. But at this point the environment hasn't been
+        # updated, so when it refreshes it will trigger an exception because
+        # the new creds are still expired.
+        error_message = (
+            "Credentials were refreshed, but the refreshed credentials are "
+            "still expired."
+        )
+        with self.assertRaisesRegexp(RuntimeError, error_message):
+            creds.get_frozen_credentials()
+
+        # Now we update the environment with non-expired credentials,
+        # so when we access the creds it will refresh and grab the new ones.
+        expiry_time = datetime.now(tzlocal()) + timedelta(hours=1)
+        environ.update({
+            'AWS_ACCESS_KEY_ID': 'bin',
+            'AWS_SECRET_ACCESS_KEY': 'bam',
+            'AWS_SESSION_TOKEN': 'biz',
+            'AWS_CREDENTIAL_EXPIRATION': expiry_time.isoformat(),
+        })
+
+        frozen = creds.get_frozen_credentials()
+        self.assertEqual(frozen.access_key, 'bin')
+        self.assertEqual(frozen.secret_key, 'bam')
+        self.assertEqual(frozen.token, 'biz')
+
+    def test_credentials_only_refresh_when_needed(self):
+        expiry_time = datetime.now(tzlocal()) + timedelta(hours=2)
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'foo',
+            'AWS_SECRET_ACCESS_KEY': 'bar',
+            'AWS_SESSION_TOKEN': 'baz',
+            'AWS_CREDENTIAL_EXPIRATION': expiry_time.isoformat(),
+        }
+        provider = credentials.EnvProvider(environ)
+
+        # Perform the initial credential load
+        creds = provider.load()
+
+        # Now that the initial load has been performed, we go ahead and
+        # change the environment. If the credentials were expired,
+        # they would immediately refresh upon access and we'd get the new
+        # ones. Since they've got plenty of time, they shouldn't refresh.
+        expiry_time = datetime.now(tzlocal()) + timedelta(hours=3)
+        environ.update({
+            'AWS_ACCESS_KEY_ID': 'bin',
+            'AWS_SECRET_ACCESS_KEY': 'bam',
+            'AWS_SESSION_TOKEN': 'biz',
+            'AWS_CREDENTIAL_EXPIRATION': expiry_time.isoformat(),
+        })
+
+        frozen = creds.get_frozen_credentials()
+        self.assertEqual(frozen.access_key, 'foo')
+        self.assertEqual(frozen.secret_key, 'bar')
+        self.assertEqual(frozen.token, 'baz')
+
+    def test_credentials_not_refreshable_if_no_expiry_present(self):
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'foo',
+            'AWS_SECRET_ACCESS_KEY': 'bar',
+            'AWS_SESSION_TOKEN': 'baz',
+        }
+        provider = credentials.EnvProvider(environ)
+        creds = provider.load()
+        self.assertNotIsInstance(creds, credentials.RefreshableCredentials)
+        self.assertIsInstance(creds, credentials.Credentials)
+
+    def test_credentials_do_not_become_refreshable(self):
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'foo',
+            'AWS_SECRET_ACCESS_KEY': 'bar',
+            'AWS_SESSION_TOKEN': 'baz',
+        }
+        provider = credentials.EnvProvider(environ)
+        creds = provider.load()
+        frozen = creds.get_frozen_credentials()
+        self.assertEqual(frozen.access_key, 'foo')
+        self.assertEqual(frozen.secret_key, 'bar')
+        self.assertEqual(frozen.token, 'baz')
+
+        expiry_time = datetime.now(tzlocal()) - timedelta(hours=1)
+        environ.update({
+            'AWS_ACCESS_KEY_ID': 'bin',
+            'AWS_SECRET_ACCESS_KEY': 'bam',
+            'AWS_SESSION_TOKEN': 'biz',
+            'AWS_CREDENTIAL_EXPIRATION': expiry_time.isoformat(),
+        })
+
+        frozen = creds.get_frozen_credentials()
+        self.assertEqual(frozen.access_key, 'foo')
+        self.assertEqual(frozen.secret_key, 'bar')
+        self.assertEqual(frozen.token, 'baz')
+        self.assertNotIsInstance(creds, credentials.RefreshableCredentials)
+
+    def test_credentials_throw_error_if_expiry_goes_away(self):
+        expiry_time = datetime.now(tzlocal()) - timedelta(hours=1)
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'foo',
+            'AWS_SECRET_ACCESS_KEY': 'bar',
+            'AWS_CREDENTIAL_EXPIRATION': expiry_time.isoformat(),
+        }
+        provider = credentials.EnvProvider(environ)
+        creds = provider.load()
+
+        del environ['AWS_CREDENTIAL_EXPIRATION']
+
+        with self.assertRaises(credentials.PartialCredentialsError):
+            creds.get_frozen_credentials()
 
 
 class TestSharedCredentialsProvider(BaseEnvVar):
@@ -746,6 +910,23 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         self.assertEqual(creds.secret_key, 'bar')
         self.assertEqual(creds.token, 'baz')
 
+    def test_assume_role_refresher_serializes_datetime(self):
+        client = mock.Mock()
+        time_zone = tzutc()
+        expiration = datetime(
+            year=2016, month=11, day=6, hour=1, minute=30, tzinfo=time_zone)
+        client.assume_role.return_value = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': expiration,
+            }
+        }
+        refresh = create_assume_role_refresher(client, {})
+        expiry_time = refresh()['expiry_time']
+        self.assertEqual(expiry_time, '2016-11-06T01:30:00UTC')
+
     def test_assume_role_retrieves_from_cache(self):
         date_in_future = datetime.utcnow() + timedelta(seconds=1000)
         utc_timestamp = date_in_future.isoformat() + 'Z'
@@ -821,15 +1002,14 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
             response)
 
     def test_assume_role_in_cache_but_expired(self):
-        expired_creds = datetime.utcnow()
-        valid_creds = expired_creds + timedelta(seconds=60)
-        utc_timestamp = expired_creds.isoformat() + 'Z'
+        expired_creds = datetime.now(tzlocal())
+        valid_creds = expired_creds + timedelta(hours=1)
         response = {
             'Credentials': {
                 'AccessKeyId': 'foo',
                 'SecretAccessKey': 'bar',
                 'SessionToken': 'baz',
-                'Expiration': valid_creds.isoformat() + 'Z',
+                'Expiration': valid_creds,
             },
         }
         client_creator = self.create_client_creator(with_response=response)
@@ -839,7 +1019,7 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
                     'AccessKeyId': 'foo-cached',
                     'SecretAccessKey': 'bar-cached',
                     'SessionToken': 'baz-cached',
-                    'Expiration': utc_timestamp,
+                    'Expiration': expired_creds,
                 }
             }
         }
@@ -1124,3 +1304,162 @@ class TestRefreshLogic(unittest.TestCase):
             # Because credentials are actually expired, any
             # failure to refresh should be propagated.
             creds.get_frozen_credentials()
+
+
+class TestContainerProvider(BaseEnvVar):
+    def test_noop_if_env_var_is_not_set(self):
+        # The 'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI' env var
+        # is not present as an env var.
+        environ = {}
+        provider = credentials.ContainerProvider(environ)
+        creds = provider.load()
+        self.assertIsNone(creds)
+
+    def full_url(self, url):
+        return 'http://%s%s' % (ContainerMetadataFetcher.IP_ADDRESS, url)
+
+    def create_fetcher(self):
+        fetcher = mock.Mock(spec=ContainerMetadataFetcher)
+        fetcher.full_url = self.full_url
+        return fetcher
+
+    def test_retrieve_from_provider_if_env_var_present(self):
+        environ = {
+            'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI': '/latest/credentials?id=foo'
+        }
+        fetcher = self.create_fetcher()
+        timeobj = datetime.now(tzlocal())
+        timestamp = (timeobj + timedelta(hours=24)).isoformat()
+        fetcher.retrieve_full_uri.return_value = {
+            "AccessKeyId" : "access_key",
+            "SecretAccessKey" : "secret_key",
+            "Token" : "token",
+            "Expiration" : timestamp,
+        }
+        provider = credentials.ContainerProvider(environ, fetcher)
+        creds = provider.load()
+
+        fetcher.retrieve_full_uri.assert_called_with(
+            self.full_url('/latest/credentials?id=foo'), headers=None)
+        self.assertEqual(creds.access_key, 'access_key')
+        self.assertEqual(creds.secret_key, 'secret_key')
+        self.assertEqual(creds.token, 'token')
+        self.assertEqual(creds.method, 'container-role')
+
+    def test_creds_refresh_when_needed(self):
+        environ = {
+            'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI': '/latest/credentials?id=foo'
+        }
+        fetcher = mock.Mock(spec=credentials.ContainerMetadataFetcher)
+        timeobj = datetime.now(tzlocal())
+        expired_timestamp = (timeobj - timedelta(hours=23)).isoformat()
+        future_timestamp = (timeobj + timedelta(hours=1)).isoformat()
+        fetcher.retrieve_full_uri.side_effect = [
+            {
+                "AccessKeyId" : "access_key_old",
+                "SecretAccessKey" : "secret_key_old",
+                "Token" : "token_old",
+                "Expiration" : expired_timestamp,
+            },
+            {
+                "AccessKeyId" : "access_key_new",
+                "SecretAccessKey" : "secret_key_new",
+                "Token" : "token_new",
+                "Expiration" : future_timestamp,
+            }
+        ]
+        provider = credentials.ContainerProvider(environ, fetcher)
+        creds = provider.load()
+        frozen_creds = creds.get_frozen_credentials()
+        self.assertEqual(frozen_creds.access_key, 'access_key_new')
+        self.assertEqual(frozen_creds.secret_key, 'secret_key_new')
+        self.assertEqual(frozen_creds.token, 'token_new')
+
+    def test_http_error_propagated(self):
+        environ = {
+            'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI': '/latest/credentials?id=foo'
+        }
+        fetcher = mock.Mock(spec=credentials.ContainerMetadataFetcher)
+        timeobj = datetime.now(tzlocal())
+        expired_timestamp = (timeobj - timedelta(hours=23)).isoformat()
+        future_timestamp = (timeobj + timedelta(hours=1)).isoformat()
+        exception = botocore.exceptions.CredentialRetrievalError
+        fetcher.retrieve_full_uri.side_effect = exception(provider='ecs-role',
+                                                     error_msg='fake http error')
+        with self.assertRaises(exception):
+            provider = credentials.ContainerProvider(environ, fetcher)
+            creds = provider.load()
+
+    def test_http_error_propagated_on_refresh(self):
+        # We should ensure errors are still propagated even in the
+        # case of a failed refresh.
+        environ = {
+            'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI': '/latest/credentials?id=foo'
+        }
+        fetcher = mock.Mock(spec=credentials.ContainerMetadataFetcher)
+        timeobj = datetime.now(tzlocal())
+        expired_timestamp = (timeobj - timedelta(hours=23)).isoformat()
+        http_exception = botocore.exceptions.MetadataRetrievalError
+        raised_exception = botocore.exceptions.CredentialRetrievalError
+        fetcher.retrieve_full_uri.side_effect = [
+            {
+                "AccessKeyId" : "access_key_old",
+                "SecretAccessKey" : "secret_key_old",
+                "Token" : "token_old",
+                "Expiration" : expired_timestamp,
+            },
+            http_exception(error_msg='HTTP connection timeout')
+        ]
+        provider = credentials.ContainerProvider(environ, fetcher)
+        # First time works with no issues.
+        creds = provider.load()
+        # Second time with a refresh should propagate an error.
+        with self.assertRaises(raised_exception):
+            frozen_creds = creds.get_frozen_credentials()
+
+    def test_can_use_full_url(self):
+        environ = {
+            'AWS_CONTAINER_CREDENTIALS_FULL_URI': 'http://localhost/foo'
+        }
+        fetcher = self.create_fetcher()
+        timeobj = datetime.now(tzlocal())
+        timestamp = (timeobj + timedelta(hours=24)).isoformat()
+        fetcher.retrieve_full_uri.return_value = {
+            "AccessKeyId" : "access_key",
+            "SecretAccessKey" : "secret_key",
+            "Token" : "token",
+            "Expiration" : timestamp,
+        }
+        provider = credentials.ContainerProvider(environ, fetcher)
+        creds = provider.load()
+
+        fetcher.retrieve_full_uri.assert_called_with('http://localhost/foo',
+                                                     headers=None)
+        self.assertEqual(creds.access_key, 'access_key')
+        self.assertEqual(creds.secret_key, 'secret_key')
+        self.assertEqual(creds.token, 'token')
+        self.assertEqual(creds.method, 'container-role')
+
+    def test_can_pass_basic_auth_token(self):
+        environ = {
+            'AWS_CONTAINER_CREDENTIALS_FULL_URI': 'http://localhost/foo',
+            'AWS_CONTAINER_AUTHORIZATION_TOKEN': 'Basic auth-token',
+        }
+        fetcher = self.create_fetcher()
+        timeobj = datetime.now(tzlocal())
+        timestamp = (timeobj + timedelta(hours=24)).isoformat()
+        fetcher.retrieve_full_uri.return_value = {
+            "AccessKeyId" : "access_key",
+            "SecretAccessKey" : "secret_key",
+            "Token" : "token",
+            "Expiration" : timestamp,
+        }
+        provider = credentials.ContainerProvider(environ, fetcher)
+        creds = provider.load()
+
+        fetcher.retrieve_full_uri.assert_called_with(
+            'http://localhost/foo', headers={'Authorization': 'Basic auth-token'})
+        self.assertEqual(creds.access_key, 'access_key')
+        self.assertEqual(creds.secret_key, 'secret_key')
+        self.assertEqual(creds.token, 'token')
+        self.assertEqual(creds.method, 'container-role')

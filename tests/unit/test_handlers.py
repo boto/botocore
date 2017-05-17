@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from tests import BaseSessionTest
+from tests import unittest, BaseSessionTest
 
 import base64
 import mock
@@ -21,9 +21,16 @@ import os
 import botocore
 import botocore.session
 from botocore.exceptions import ParamValidationError, MD5UnavailableError
+from botocore.exceptions import AliasConflictParameterError
 from botocore.awsrequest import AWSRequest
 from botocore.compat import quote, six
+from botocore.config import Config
+from botocore.docs.bcdoc.restdoc import DocumentStructure
+from botocore.docs.params import RequestParamsDocumenter
+from botocore.docs.example import RequestExampleDocumenter
+from botocore.hooks import HierarchicalEmitter
 from botocore.model import OperationModel, ServiceModel
+from botocore.model import DenormalizedStructureBuilder
 from botocore.signers import RequestSigner
 from botocore.credentials import Credentials
 from botocore import handlers
@@ -40,6 +47,12 @@ class TestHandlers(BaseSessionTest):
         parsed = {'Output': 1}
         handlers.decode_console_output(parsed)
         self.assertEqual(parsed['Output'], 1)
+
+    def test_get_console_output_bad_unicode_errors(self):
+        original = base64.b64encode(b'before\xffafter').decode('utf-8')
+        parsed = {'Output': original}
+        handlers.decode_console_output(parsed)
+        self.assertEqual(parsed['Output'], u'before\ufffdafter')
 
     def test_noop_if_output_key_does_not_exist(self):
         original = {'foo': 'bar'}
@@ -117,41 +130,125 @@ class TestHandlers(BaseSessionTest):
         self.assertEqual(params['CopySource'],
                          '/foo/bar?versionId=123')
 
-    def test_presigned_url_already_present(self):
+    def test_presigned_url_already_present_ec2(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopySnapshot'
         params = {'body': {'PresignedUrl': 'https://foo'}}
-        handlers.copy_snapshot_encrypted(params, None)
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'ec2', 'us-east-1', 'ec2', 'v4', credentials, event_emitter)
+        handlers.inject_presigned_url_ec2(
+            params, request_signer, operation_model)
         self.assertEqual(params['body']['PresignedUrl'], 'https://foo')
 
-    def test_copy_snapshot_encrypted(self):
+    def test_presigned_url_with_source_region_ec2(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopySnapshot'
+        params = {
+            'body': {
+                'PresignedUrl': 'https://foo',
+                'SourceRegion': 'us-east-1'
+            }
+        }
         credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
         request_signer = RequestSigner(
-            'ec2', 'us-east-1', 'ec2', 'v4', credentials, mock.Mock())
+            'ec2', 'us-east-1', 'ec2', 'v4', credentials, event_emitter)
+        handlers.inject_presigned_url_ec2(
+            params, request_signer, operation_model)
+        self.assertEqual(params['body']['PresignedUrl'], 'https://foo')
+        self.assertEqual(params['body']['SourceRegion'], 'us-east-1')
+
+    def test_presigned_url_already_present_rds(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopyDBSnapshot'
+        params = {'body': {'PreSignedUrl': 'https://foo'}}
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+        handlers.inject_presigned_url_rds(
+            params, request_signer, operation_model)
+        self.assertEqual(params['body']['PreSignedUrl'], 'https://foo')
+
+    def test_presigned_url_with_source_region_rds(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopyDBSnapshot'
+        params = {
+            'body': {
+                'PreSignedUrl': 'https://foo',
+                'SourceRegion': 'us-east-1'
+            }
+        }
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+        handlers.inject_presigned_url_rds(
+            params, request_signer, operation_model)
+        self.assertEqual(params['body']['PreSignedUrl'], 'https://foo')
+        self.assertNotIn('SourceRegion', params['body'])
+
+    def test_inject_presigned_url_ec2(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopySnapshot'
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'ec2', 'us-east-1', 'ec2', 'v4', credentials, event_emitter)
         request_dict = {}
         params = {'SourceRegion': 'us-west-2'}
         request_dict['body'] = params
         request_dict['url'] = 'https://ec2.us-east-1.amazonaws.com'
         request_dict['method'] = 'POST'
         request_dict['headers'] = {}
+        request_dict['context'] = {}
 
-        handlers.copy_snapshot_encrypted(request_dict, request_signer)
+        handlers.inject_presigned_url_ec2(
+            request_dict, request_signer, operation_model)
 
         self.assertIn('https://ec2.us-west-2.amazonaws.com?',
                       params['PresignedUrl'])
         self.assertIn('X-Amz-Signature',
                       params['PresignedUrl'])
+        self.assertIn('DestinationRegion', params['PresignedUrl'])
         # We should also populate the DestinationRegion with the
         # region_name of the endpoint object.
         self.assertEqual(params['DestinationRegion'], 'us-east-1')
+
+    def test_use_event_operation_name(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'FakeOperation'
+        request_signer = mock.Mock()
+        request_signer._region_name = 'us-east-1'
+        request_dict = {}
+        params = {'SourceRegion': 'us-west-2'}
+        request_dict['body'] = params
+        request_dict['url'] = 'https://myservice.us-east-1.amazonaws.com'
+        request_dict['method'] = 'POST'
+        request_dict['headers'] = {}
+        request_dict['context'] = {}
+
+        handlers.inject_presigned_url_ec2(
+            request_dict, request_signer, operation_model)
+
+        call_args = request_signer.generate_presigned_url.call_args
+        operation_name = call_args[1].get('operation_name')
+        self.assertEqual(operation_name, 'FakeOperation')
 
     def test_destination_region_always_changed(self):
         # If the user provides a destination region, we will still
         # override the DesinationRegion with the region_name from
         # the endpoint object.
         actual_region = 'us-west-1'
+        operation_model = mock.Mock()
+        operation_model.name = 'CopySnapshot'
 
         credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
         request_signer = RequestSigner(
-            'ec2', actual_region, 'ec2', 'v4', credentials, mock.Mock())
+            'ec2', actual_region, 'ec2', 'v4', credentials, event_emitter)
         request_dict = {}
         params = {
             'SourceRegion': 'us-west-2',
@@ -160,10 +257,12 @@ class TestHandlers(BaseSessionTest):
         request_dict['url'] = 'https://ec2.us-west-1.amazonaws.com'
         request_dict['method'] = 'POST'
         request_dict['headers'] = {}
+        request_dict['context'] = {}
 
         # The user provides us-east-1, but we will override this to
         # endpoint.region_name, of 'us-west-1' in this case.
-        handlers.copy_snapshot_encrypted(request_dict, request_signer)
+        handlers.inject_presigned_url_ec2(
+            request_dict, request_signer, operation_model)
 
         self.assertIn('https://ec2.us-west-2.amazonaws.com?',
                       params['PresignedUrl'])
@@ -171,6 +270,142 @@ class TestHandlers(BaseSessionTest):
         # Always use the DestinationRegion from the endpoint, regardless of
         # whatever value the user provides.
         self.assertEqual(params['DestinationRegion'], actual_region)
+
+    def test_inject_presigned_url_rds(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopyDBSnapshot'
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+        request_dict = {}
+        params = {'SourceRegion': 'us-west-2'}
+        request_dict['body'] = params
+        request_dict['url'] = 'https://rds.us-east-1.amazonaws.com'
+        request_dict['method'] = 'POST'
+        request_dict['headers'] = {}
+        request_dict['context'] = {}
+
+        handlers.inject_presigned_url_rds(
+            request_dict, request_signer, operation_model)
+
+        self.assertIn('https://rds.us-west-2.amazonaws.com?',
+                      params['PreSignedUrl'])
+        self.assertIn('X-Amz-Signature',
+                      params['PreSignedUrl'])
+        self.assertIn('DestinationRegion', params['PreSignedUrl'])
+        # We should not populate the destination region for rds
+        self.assertNotIn('DestinationRegion', params)
+
+    def test_source_region_removed(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopyDBSnapshot'
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+        request_dict = {}
+        params = {'SourceRegion': 'us-west-2'}
+        request_dict['body'] = params
+        request_dict['url'] = 'https://rds.us-east-1.amazonaws.com'
+        request_dict['method'] = 'POST'
+        request_dict['headers'] = {}
+        request_dict['context'] = {}
+
+        handlers.inject_presigned_url_rds(
+            params=request_dict,
+            request_signer=request_signer,
+            model=operation_model
+        )
+
+        self.assertNotIn('SourceRegion', params)
+
+    def test_source_region_removed_when_presigned_url_provided_for_rds(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopyDBSnapshot'
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+        request_dict = {}
+        params = {'SourceRegion': 'us-west-2', 'PreSignedUrl': 'https://foo'}
+        request_dict['body'] = params
+        request_dict['url'] = 'https://rds.us-east-1.amazonaws.com'
+        request_dict['method'] = 'POST'
+        request_dict['headers'] = {}
+        request_dict['context'] = {}
+
+        handlers.inject_presigned_url_rds(
+            params=request_dict,
+            request_signer=request_signer,
+            model=operation_model
+        )
+
+        self.assertNotIn('SourceRegion', params)
+
+    def test_dest_region_removed(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopyDBSnapshot'
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+        request_dict = {}
+        params = {'SourceRegion': 'us-west-2'}
+        request_dict['body'] = params
+        request_dict['url'] = 'https://rds.us-east-1.amazonaws.com'
+        request_dict['method'] = 'POST'
+        request_dict['headers'] = {}
+        request_dict['context'] = {}
+
+        handlers.inject_presigned_url_rds(
+            params=request_dict,
+            request_signer=request_signer,
+            model=operation_model
+        )
+
+        self.assertNotIn('DestinationRegion', params)
+
+    def test_presigned_url_already_present_for_rds(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopyDBSnapshot'
+        params = {'body': {'PresignedUrl': 'https://foo'}}
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+        handlers.inject_presigned_url_rds(
+            params=params,
+            request_signer=request_signer,
+            model=operation_model
+        )
+        self.assertEqual(params['body']['PresignedUrl'], 'https://foo')
+
+    def test_presigned_url_casing_changed_for_rds(self):
+        operation_model = mock.Mock()
+        operation_model.name = 'CopyDBSnapshot'
+        credentials = Credentials('key', 'secret')
+        event_emitter = HierarchicalEmitter()
+        request_signer = RequestSigner(
+            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+        request_dict = {}
+        params = {'SourceRegion': 'us-west-2'}
+        request_dict['body'] = params
+        request_dict['url'] = 'https://rds.us-east-1.amazonaws.com'
+        request_dict['method'] = 'POST'
+        request_dict['headers'] = {}
+        request_dict['context'] = {}
+
+        handlers.inject_presigned_url_rds(
+            params=request_dict,
+            request_signer=request_signer,
+            model=operation_model
+        )
+
+        self.assertNotIn('PresignedUrl', params)
+        self.assertIn('https://rds.us-west-2.amazonaws.com?',
+                      params['PreSignedUrl'])
+        self.assertIn('X-Amz-Signature', params['PreSignedUrl'])
 
     def test_500_status_code_set_for_200_response(self):
         http_response = mock.Mock()
@@ -275,10 +510,9 @@ class TestHandlers(BaseSessionTest):
     def test_run_instances_userdata(self):
         user_data = 'This is a test'
         b64_user_data = base64.b64encode(six.b(user_data)).decode('utf-8')
-        event = 'before-parameter-build.ec2.RunInstances'
         params = dict(ImageId='img-12345678',
                       MinCount=1, MaxCount=5, UserData=user_data)
-        self.session.emit(event, params=params)
+        handlers.base64_encode_user_data(params=params)
         result = {'ImageId': 'img-12345678',
                   'MinCount': 1,
                   'MaxCount': 5,
@@ -291,10 +525,9 @@ class TestHandlers(BaseSessionTest):
         # user data.
         user_data = b'\xc7\xa9This is a test'
         b64_user_data = base64.b64encode(user_data).decode('utf-8')
-        event = 'before-parameter-build.ec2.RunInstances'
         params = dict(ImageId='img-12345678',
                       MinCount=1, MaxCount=5, UserData=user_data)
-        self.session.emit(event, params=params)
+        handlers.base64_encode_user_data(params=params)
         result = {'ImageId': 'img-12345678',
                   'MinCount': 1,
                   'MaxCount': 5,
@@ -408,6 +641,13 @@ class TestHandlers(BaseSessionTest):
         handlers.add_accept_header(None, request_dict)
         self.assertEqual(request_dict['headers']['Accept'], 'application/json')
 
+    def test_accept_header_not_added_if_present(self):
+        request_dict = {
+            'headers': {'Accept': 'application/yaml'}
+        }
+        handlers.add_accept_header(None, request_dict)
+        self.assertEqual(request_dict['headers']['Accept'], 'application/yaml')
+
     def test_glacier_checksums_added(self):
         request_dict = {
             'headers': {},
@@ -513,12 +753,33 @@ class TestHandlers(BaseSessionTest):
     def test_validation_is_noop_if_no_bucket_param_exists(self):
         self.assertIsNone(handlers.validate_bucket_name(params={}))
 
+    def test_validate_non_ascii_metadata_values(self):
+        with self.assertRaises(ParamValidationError):
+            handlers.validate_ascii_metadata({'Metadata': {'foo': u'\u2713'}})
+
+    def test_validate_non_ascii_metadata_keys(self):
+        with self.assertRaises(ParamValidationError):
+            handlers.validate_ascii_metadata(
+                {'Metadata': {u'\u2713': 'bar'}})
+
+    def test_validate_non_triggered_when_no_md_specified(self):
+        original = {'NotMetadata': ''}
+        copied = original.copy()
+        handlers.validate_ascii_metadata(copied)
+        self.assertEqual(original, copied)
+
+    def test_validation_passes_when_all_ascii_chars(self):
+        original = {'Metadata': {'foo': 'bar'}}
+        copied = original.copy()
+        handlers.validate_ascii_metadata(original)
+        self.assertEqual(original, copied)
+
     def test_set_encoding_type(self):
         params = {}
         context = {}
         handlers.set_list_objects_encoding_type_url(params, context=context)
         self.assertEqual(params['EncodingType'], 'url')
-        self.assertTrue(context['EncodingTypeAutoSet'])
+        self.assertTrue(context['encoding_type_auto_set'])
 
         params['EncodingType'] = 'new_value'
         handlers.set_list_objects_encoding_type_url(params, context={})
@@ -529,7 +790,7 @@ class TestHandlers(BaseSessionTest):
             'Contents': [{'Key': "%C3%A7%C3%B6s%25asd%08"}],
             'EncodingType': 'url',
         }
-        context = {'EncodingTypeAutoSet': True}
+        context = {'encoding_type_auto_set': True}
         handlers.decode_list_object(parsed, context=context)
         self.assertEqual(parsed['Contents'][0]['Key'], u'\xe7\xf6s%asd\x08')
 
@@ -546,7 +807,7 @@ class TestHandlers(BaseSessionTest):
             'Marker': "%C3%A7%C3%B6s%25%20asd%08+c",
             'EncodingType': 'url',
         }
-        context = {'EncodingTypeAutoSet': True}
+        context = {'encoding_type_auto_set': True}
         handlers.decode_list_object(parsed, context=context)
         self.assertEqual(parsed['Marker'], u'\xe7\xf6s% asd\x08 c')
 
@@ -555,7 +816,7 @@ class TestHandlers(BaseSessionTest):
             'NextMarker': "%C3%A7%C3%B6s%25%20asd%08+c",
             'EncodingType': 'url',
         }
-        context = {'EncodingTypeAutoSet': True}
+        context = {'encoding_type_auto_set': True}
         handlers.decode_list_object(parsed, context=context)
         self.assertEqual(parsed['NextMarker'], u'\xe7\xf6s% asd\x08 c')
 
@@ -564,7 +825,7 @@ class TestHandlers(BaseSessionTest):
             'CommonPrefixes': [{'Prefix': "%C3%A7%C3%B6s%25%20asd%08+c"}],
             'EncodingType': 'url',
         }
-        context = {'EncodingTypeAutoSet': True}
+        context = {'encoding_type_auto_set': True}
         handlers.decode_list_object(parsed, context=context)
         self.assertEqual(parsed['CommonPrefixes'][0]['Prefix'],
                          u'\xe7\xf6s% asd\x08 c')
@@ -574,9 +835,60 @@ class TestHandlers(BaseSessionTest):
             'Delimiter': "%C3%A7%C3%B6s%25%20asd%08+c",
             'EncodingType': 'url',
         }
-        context = {'EncodingTypeAutoSet': True}
+        context = {'encoding_type_auto_set': True}
         handlers.decode_list_object(parsed, context=context)
         self.assertEqual(parsed['Delimiter'], u'\xe7\xf6s% asd\x08 c')
+
+    def test_get_bucket_location_optional(self):
+        # This handler should no-op if another hook (i.e. stubber) has already
+        # filled in response
+        response = {"LocationConstraint": "eu-west-1"}
+        handlers.parse_get_bucket_location(response, None),
+        self.assertEqual(response["LocationConstraint"], "eu-west-1")
+
+    def test_set_operation_specific_signer_no_auth_type(self):
+        signing_name = 'myservice'
+        context = {'auth_type': None}
+        response = handlers.set_operation_specific_signer(
+            context=context, signing_name=signing_name)
+        self.assertIsNone(response)
+
+    def test_set_operation_specific_signer_unsigned(self):
+        signing_name = 'myservice'
+        context = {'auth_type': 'none'}
+        response = handlers.set_operation_specific_signer(
+            context=context, signing_name=signing_name)
+        self.assertEqual(response, botocore.UNSIGNED)
+
+    def test_set_operation_specific_signer_v4(self):
+        signing_name = 'myservice'
+        context = {'auth_type': 'v4'}
+        response = handlers.set_operation_specific_signer(
+            context=context, signing_name=signing_name)
+        self.assertEqual(response, 'v4')
+
+    def test_set_operation_specific_signer_s3v4(self):
+        signing_name = 's3'
+        context = {'auth_type': 'v4'}
+        response = handlers.set_operation_specific_signer(
+            context=context, signing_name=signing_name)
+        self.assertEqual(response, 's3v4')
+
+    def test_set_operation_specific_signer_v4_unsinged_payload(self):
+        signing_name = 'myservice'
+        context = {'auth_type': 'v4-unsigned-body'}
+        response = handlers.set_operation_specific_signer(
+            context=context, signing_name=signing_name)
+        self.assertEqual(response, 'v4')
+        self.assertEqual(context.get('payload_signing_enabled'), False)
+
+    def test_set_operation_specific_signer_s3v4_unsigned_payload(self):
+        signing_name = 's3'
+        context = {'auth_type': 'v4-unsigned-body'}
+        response = handlers.set_operation_specific_signer(
+            context=context, signing_name=signing_name)
+        self.assertEqual(response, 's3v4')
+        self.assertEqual(context.get('payload_signing_enabled'), False)
 
 
 class TestConvertStringBodyToFileLikeObject(BaseSessionTest):
@@ -688,7 +1000,7 @@ class TestSSEMD5(BaseMD5Test):
             event = 'before-parameter-build.s3.%s' % op
             params = {'SSECustomerKey': b'bar',
                       'SSECustomerAlgorithm': 'AES256'}
-            self.session.emit(event, params=params, model=mock.Mock())
+            self.session.emit(event, params=params, model=mock.MagicMock())
             self.assertEqual(params['SSECustomerKey'], 'YmFy')
             self.assertEqual(params['SSECustomerKeyMD5'], 'Zm9v')
 
@@ -696,7 +1008,7 @@ class TestSSEMD5(BaseMD5Test):
         event = 'before-parameter-build.s3.PutObject'
         params = {'SSECustomerKey': 'bar',
                   'SSECustomerAlgorithm': 'AES256'}
-        self.session.emit(event, params=params, model=mock.Mock())
+        self.session.emit(event, params=params, model=mock.MagicMock())
         self.assertEqual(params['SSECustomerKey'], 'YmFy')
         self.assertEqual(params['SSECustomerKeyMD5'], 'Zm9v')
 
@@ -705,7 +1017,7 @@ class TestSSEMD5(BaseMD5Test):
             event = 'before-parameter-build.s3.%s' % op
             params = {'CopySourceSSECustomerKey': b'bar',
                       'CopySourceSSECustomerAlgorithm': 'AES256'}
-            self.session.emit(event, params=params, model=mock.Mock())
+            self.session.emit(event, params=params, model=mock.MagicMock())
             self.assertEqual(params['CopySourceSSECustomerKey'], 'YmFy')
             self.assertEqual(params['CopySourceSSECustomerKeyMD5'], 'Zm9v')
 
@@ -713,13 +1025,20 @@ class TestSSEMD5(BaseMD5Test):
         event = 'before-parameter-build.s3.CopyObject'
         params = {'CopySourceSSECustomerKey': 'bar',
                   'CopySourceSSECustomerAlgorithm': 'AES256'}
-        self.session.emit(event, params=params, model=mock.Mock())
+        self.session.emit(event, params=params, model=mock.MagicMock())
         self.assertEqual(params['CopySourceSSECustomerKey'], 'YmFy')
         self.assertEqual(params['CopySourceSSECustomerKeyMD5'], 'Zm9v')
 
 
 class TestAddMD5(BaseMD5Test):
-    def test_does_not_add_md5_when_v4(self):
+    def get_context(self, s3_config=None):
+        if s3_config is None:
+            s3_config = {}
+        return {
+            'client_config': Config(s3=s3_config)
+        }
+
+    def test_adds_md5_when_v4(self):
         credentials = Credentials('key', 'secret')
         request_signer = RequestSigner(
             's3', 'us-east-1', 's3', 'v4', credentials, mock.Mock())
@@ -727,11 +1046,12 @@ class TestAddMD5(BaseMD5Test):
                         'url': 'https://s3.us-east-1.amazonaws.com',
                         'method': 'PUT',
                         'headers': {}}
-        handlers.conditionally_calculate_md5(request_dict,
-                                             request_signer=request_signer)
-        self.assertTrue('Content-MD5' not in request_dict['headers'])
+        context = self.get_context()
+        handlers.conditionally_calculate_md5(
+            request_dict, request_signer=request_signer, context=context)
+        self.assertTrue('Content-MD5' in request_dict['headers'])
 
-    def test_does_not_add_md5_when_s3v4(self):
+    def test_adds_md5_when_s3v4(self):
         credentials = Credentials('key', 'secret')
         request_signer = RequestSigner(
             's3', 'us-east-1', 's3', 's3v4', credentials, mock.Mock())
@@ -739,9 +1059,10 @@ class TestAddMD5(BaseMD5Test):
                         'url': 'https://s3.us-east-1.amazonaws.com',
                         'method': 'PUT',
                         'headers': {}}
-        handlers.conditionally_calculate_md5(request_dict,
-                                             request_signer=request_signer)
-        self.assertTrue('Content-MD5' not in request_dict['headers'])
+        context = self.get_context({'payload_signing_enabled': False})
+        handlers.conditionally_calculate_md5(
+            request_dict, request_signer=request_signer, context=context)
+        self.assertTrue('Content-MD5' in request_dict['headers'])
 
     def test_conditional_does_not_add_when_md5_unavailable(self):
         credentials = Credentials('key', 'secret')
@@ -752,10 +1073,11 @@ class TestAddMD5(BaseMD5Test):
                         'method': 'PUT',
                         'headers': {}}
 
+        context = self.get_context()
         self.set_md5_available(False)
         with mock.patch('botocore.handlers.MD5_AVAILABLE', False):
             handlers.conditionally_calculate_md5(
-                request_dict, request_signer=request_signer)
+                request_dict, request_signer=request_signer, context=context)
             self.assertFalse('Content-MD5' in request_dict['headers'])
 
     def test_add_md5_raises_error_when_md5_unavailable(self):
@@ -772,7 +1094,7 @@ class TestAddMD5(BaseMD5Test):
             handlers.calculate_md5(
                 request_dict, request_signer=request_signer)
 
-    def test_adds_md5_when_not_v4(self):
+    def test_adds_md5_when_s3v2(self):
         credentials = Credentials('key', 'secret')
         request_signer = RequestSigner(
             's3', 'us-east-1', 's3', 's3', credentials, mock.Mock())
@@ -780,8 +1102,9 @@ class TestAddMD5(BaseMD5Test):
                         'url': 'https://s3.us-east-1.amazonaws.com',
                         'method': 'PUT',
                         'headers': {}}
-        handlers.conditionally_calculate_md5(request_dict,
-                                             request_signer=request_signer)
+        context = self.get_context()
+        handlers.conditionally_calculate_md5(
+            request_dict, request_signer=request_signer, context=context)
         self.assertTrue('Content-MD5' in request_dict['headers'])
 
     def test_add_md5_with_file_like_body(self):
@@ -804,3 +1127,107 @@ class TestAddMD5(BaseMD5Test):
         self.assertEqual(
             request_dict['headers']['Content-MD5'],
             'OFj2IjCsPJFfMAxmQxLGPw==')
+
+    def test_add_md5_with_bytearray_object(self):
+        request_dict = {
+            'body': bytearray(b'foobar'),
+            'headers': {}
+        }
+        self.md5_digest.return_value = b'8X\xf6"0\xac<\x91_0\x0cfC\x12\xc6?'
+        handlers.calculate_md5(request_dict)
+        self.assertEqual(
+            request_dict['headers']['Content-MD5'],
+            'OFj2IjCsPJFfMAxmQxLGPw==')
+
+
+class TestParameterAlias(unittest.TestCase):
+    def setUp(self):
+        self.original_name = 'original'
+        self.alias_name = 'alias'
+        self.parameter_alias = handlers.ParameterAlias(
+            self.original_name, self.alias_name)
+
+        self.operation_model = mock.Mock()
+        request_shape = DenormalizedStructureBuilder().with_members(
+            {self.original_name: {'type': 'string'}}).build_model()
+        self.operation_model.input_shape = request_shape
+        self.sample_section = DocumentStructure('')
+        self.event_emitter = HierarchicalEmitter()
+
+    def test_alias_parameter_in_call(self):
+        value = 'value'
+        params = {self.alias_name: value}
+        self.parameter_alias.alias_parameter_in_call(
+            params, self.operation_model)
+        self.assertEqual(params, {self.original_name: value})
+
+    def test_alias_parameter_and_original_in_call(self):
+        params = {
+            self.original_name: 'orginal_value',
+            self.alias_name: 'alias_value'
+        }
+        with self.assertRaises(AliasConflictParameterError):
+            self.parameter_alias.alias_parameter_in_call(
+                params, self.operation_model)
+
+    def test_alias_parameter_in_call_does_not_touch_original(self):
+        value = 'value'
+        params = {self.original_name: value}
+        self.parameter_alias.alias_parameter_in_call(
+            params, self.operation_model)
+        self.assertEqual(params, {self.original_name: value})
+
+    def test_does_not_alias_parameter_for_no_input_shape(self):
+        value = 'value'
+        params = {self.alias_name: value}
+        self.operation_model.input_shape = None
+        self.parameter_alias.alias_parameter_in_call(
+            params, self.operation_model)
+        self.assertEqual(params, {self.alias_name: value})
+
+    def test_does_not_alias_parameter_for_not_modeled_member(self):
+        value = 'value'
+        params = {self.alias_name: value}
+
+        request_shape = DenormalizedStructureBuilder().with_members(
+            {'foo': {'type': 'string'}}).build_model()
+        self.operation_model.input_shape = request_shape
+        self.parameter_alias.alias_parameter_in_call(
+            params, self.operation_model)
+        self.assertEqual(params, {self.alias_name: value})
+
+    def test_alias_parameter_in_documentation_request_params(self):
+        RequestParamsDocumenter(
+            'myservice', 'myoperation', self.event_emitter).document_params(
+                self.sample_section, self.operation_model.input_shape)
+        self.parameter_alias.alias_parameter_in_documentation(
+            'docs.request-params.myservice.myoperation.complete-section',
+            self.sample_section
+        )
+        contents = self.sample_section.flush_structure().decode('utf-8')
+        self.assertIn(':type ' + self.alias_name + ':',  contents)
+        self.assertIn(':param ' + self.alias_name + ':',  contents)
+        self.assertNotIn(':type ' + self.original_name + ':',  contents)
+        self.assertNotIn(':param ' + self.original_name + ':',  contents)
+
+    def test_alias_parameter_in_documentation_request_example(self):
+        RequestExampleDocumenter(
+            'myservice', 'myoperation', self.event_emitter).document_example(
+                self.sample_section, self.operation_model.input_shape)
+        self.parameter_alias.alias_parameter_in_documentation(
+            'docs.request-example.myservice.myoperation.complete-section',
+            self.sample_section
+        )
+        contents = self.sample_section.flush_structure().decode('utf-8')
+        self.assertIn(self.alias_name + '=',  contents)
+        self.assertNotIn(self.original_name + '=', contents)
+
+
+class TestCommandAlias(unittest.TestCase):
+    def test_command_alias(self):
+        alias = handlers.ClientMethodAlias('foo')
+        client = mock.Mock()
+        client.foo.return_value = 'bar'
+
+        response = alias(client=client)()
+        self.assertEqual(response, 'bar')
