@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.5.52
+======
+
+* api-change:``athena``: Update athena client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+
+
 1.5.51
 ======
 
