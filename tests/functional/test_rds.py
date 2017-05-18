@@ -15,6 +15,8 @@ from contextlib import contextmanager
 
 import botocore.session
 from tests import BaseSessionTest
+from botocore.stub import Stubber
+from tests import unittest
 
 
 class TestRDSPresignUrlInjection(BaseSessionTest):
@@ -67,3 +69,25 @@ class TestRDSPresignUrlInjection(BaseSessionTest):
             self.client.create_db_instance_read_replica(**params)
             sent_request = send.call_args[0][0]
             self.assert_presigned_url_injected_in_request(sent_request.body)
+
+
+class TestRDS(unittest.TestCase):
+    def setUp(self):
+        self.session = botocore.session.get_session()
+        self.client = self.session.create_client('rds', 'us-west-2')
+        self.stubber = Stubber(self.client)
+        self.stubber.activate()
+
+    def test_generate_db_auth_token(self):
+        hostname = 'host.us-east-1.rds.amazonaws.com'
+        port = 3306
+        username = 'mySQLUser'
+        auth_token = self.client.generate_db_auth_token(
+            DBHostname=hostname, Port=port, DBUsername=username)
+
+        endpoint_url = 'host.us-east-1.rds.amazonaws.com:3306'
+        self.assertIn(endpoint_url, auth_token)
+        self.assertIn('Action=connect', auth_token)
+
+        # Asserts that there is no scheme in the url
+        self.assertTrue(auth_token.startswith(hostname))

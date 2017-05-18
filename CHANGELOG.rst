@@ -2,6 +2,91 @@
 CHANGELOG
 =========
 
+1.5.51
+======
+
+* api-change:``polly``: Update polly client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``events``: Update events client to latest version
+* api-change:``logs``: Update logs client to latest version
+
+
+1.5.50
+======
+
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+* api-change:``inspector``: Update inspector client to latest version
+* api-change:``kms``: Update kms client to latest version
+
+
+1.5.49
+======
+
+* api-change:``ssm``: Update ssm client to latest version
+
+
+1.5.48
+======
+
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``elb``: Update elb client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+
+
+1.5.47
+======
+
+* api-change:``codestar``: Update codestar client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+* enhancement:Credentials: Add support for environment variable credential expiration.
+
+
+1.5.46
+======
+
+* api-change:``marketplace-entitlement``: Update marketplace-entitlement client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+
+
+1.5.45
+======
+
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``snowball``: Update snowball client to latest version
+* api-change:``sqs``: Update sqs client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+* bugfix:Paginator: Fixes bug where pagination would fail if the pagination token contained bytes.
+* api-change:``rds``: Update rds client to latest version
+
+
+1.5.44
+======
+
+* enhancement:rds: Add rds database presigner.
+* api-change:``rds``: Update rds client to latest version
+
+
+1.5.43
+======
+
+* api-change:``appstream``: Update appstream client to latest version
+* bugfix:Auth: Fix bug in Signature Version 4 signer when a header value has consecutive spaces
+* api-change:``kinesis``: Update kinesis client to latest version
+
+
+1.5.42
+======
+
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``directconnect``: Update directconnect client to latest version
+* api-change:``devicefarm``: Update devicefarm client to latest version
+* api-change:``kms``: Update kms client to latest version
+* api-change:``route53domains``: Update route53domains client to latest version
+
+
 1.5.41
 ======
 

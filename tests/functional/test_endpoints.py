@@ -35,6 +35,7 @@ SERVICE_RENAMES = {
     'mturk': 'mturk-requester',
     'resourcegroupstaggingapi': 'tagging',
     'lex-models': 'models.lex',
+    'marketplace-entitlement': 'entitlement.marketplace',
 }
 
 BLACKLIST = [

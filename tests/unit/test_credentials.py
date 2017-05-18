@@ -211,6 +211,29 @@ class TestEnvVar(BaseEnvVar):
         self.assertEqual(creds.secret_key, 'bar')
         self.assertEqual(creds.token, 'baz')
 
+    def test_can_override_expiry_env_var_mapping(self):
+        expiry_time = datetime.now(tzlocal()) - timedelta(hours=1)
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'foo',
+            'AWS_SECRET_ACCESS_KEY': 'bar',
+            'AWS_SESSION_TOKEN': 'baz',
+            'FOO_EXPIRY': expiry_time.isoformat(),
+        }
+        provider = credentials.EnvProvider(
+            environ, {'expiry_time': 'FOO_EXPIRY'}
+        )
+        creds = provider.load()
+
+        # Since the credentials are expired, we'll trigger a refresh whenever
+        # we try to access them. Since the environment credentials are still
+        # expired, this will raise an error.
+        error_message = (
+            "Credentials were refreshed, but the refreshed credentials are "
+            "still expired."
+        )
+        with self.assertRaisesRegexp(RuntimeError, error_message):
+            creds.get_frozen_credentials()
+
     def test_partial_creds_is_an_error(self):
         # If the user provides an access key, they must also
         # provide a secret key.  Not doing so will generate an
@@ -222,6 +245,146 @@ class TestEnvVar(BaseEnvVar):
         provider = credentials.EnvProvider(environ)
         with self.assertRaises(botocore.exceptions.PartialCredentialsError):
             provider.load()
+
+    def test_missing_access_key_id_raises_error(self):
+        expiry_time = datetime.now(tzlocal()) - timedelta(hours=1)
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'foo',
+            'AWS_SECRET_ACCESS_KEY': 'bar',
+            'AWS_CREDENTIAL_EXPIRATION': expiry_time.isoformat(),
+        }
+        provider = credentials.EnvProvider(environ)
+        creds = provider.load()
+
+        del environ['AWS_ACCESS_KEY_ID']
+
+        # Since the credentials are expired, we'll trigger a refresh
+        # whenever we try to access them. At that refresh time, the relevant
+        # environment variables are incomplete, so an error will be raised.
+        with self.assertRaises(botocore.exceptions.PartialCredentialsError):
+            creds.get_frozen_credentials()
+
+    def test_credentials_refresh(self):
+        # First initialize the credentials with an expired credential set.
+        expiry_time = datetime.now(tzlocal()) - timedelta(hours=1)
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'foo',
+            'AWS_SECRET_ACCESS_KEY': 'bar',
+            'AWS_SESSION_TOKEN': 'baz',
+            'AWS_CREDENTIAL_EXPIRATION': expiry_time.isoformat(),
+        }
+        provider = credentials.EnvProvider(environ)
+        creds = provider.load()
+        self.assertIsInstance(creds, credentials.RefreshableCredentials)
+
+        # Since the credentials are expired, we'll trigger a refresh whenever
+        # we try to access them. But at this point the environment hasn't been
+        # updated, so when it refreshes it will trigger an exception because
+        # the new creds are still expired.
+        error_message = (
+            "Credentials were refreshed, but the refreshed credentials are "
+            "still expired."
+        )
+        with self.assertRaisesRegexp(RuntimeError, error_message):
+            creds.get_frozen_credentials()
+
+        # Now we update the environment with non-expired credentials,
+        # so when we access the creds it will refresh and grab the new ones.
+        expiry_time = datetime.now(tzlocal()) + timedelta(hours=1)
+        environ.update({
+            'AWS_ACCESS_KEY_ID': 'bin',
+            'AWS_SECRET_ACCESS_KEY': 'bam',
+            'AWS_SESSION_TOKEN': 'biz',
+            'AWS_CREDENTIAL_EXPIRATION': expiry_time.isoformat(),
+        })
+
+        frozen = creds.get_frozen_credentials()
+        self.assertEqual(frozen.access_key, 'bin')
+        self.assertEqual(frozen.secret_key, 'bam')
+        self.assertEqual(frozen.token, 'biz')
+
+    def test_credentials_only_refresh_when_needed(self):
+        expiry_time = datetime.now(tzlocal()) + timedelta(hours=2)
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'foo',
+            'AWS_SECRET_ACCESS_KEY': 'bar',
+            'AWS_SESSION_TOKEN': 'baz',
+            'AWS_CREDENTIAL_EXPIRATION': expiry_time.isoformat(),
+        }
+        provider = credentials.EnvProvider(environ)
+
+        # Perform the initial credential load
+        creds = provider.load()
+
+        # Now that the initial load has been performed, we go ahead and
+        # change the environment. If the credentials were expired,
+        # they would immediately refresh upon access and we'd get the new
+        # ones. Since they've got plenty of time, they shouldn't refresh.
+        expiry_time = datetime.now(tzlocal()) + timedelta(hours=3)
+        environ.update({
+            'AWS_ACCESS_KEY_ID': 'bin',
+            'AWS_SECRET_ACCESS_KEY': 'bam',
+            'AWS_SESSION_TOKEN': 'biz',
+            'AWS_CREDENTIAL_EXPIRATION': expiry_time.isoformat(),
+        })
+
+        frozen = creds.get_frozen_credentials()
+        self.assertEqual(frozen.access_key, 'foo')
+        self.assertEqual(frozen.secret_key, 'bar')
+        self.assertEqual(frozen.token, 'baz')
+
+    def test_credentials_not_refreshable_if_no_expiry_present(self):
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'foo',
+            'AWS_SECRET_ACCESS_KEY': 'bar',
+            'AWS_SESSION_TOKEN': 'baz',
+        }
+        provider = credentials.EnvProvider(environ)
+        creds = provider.load()
+        self.assertNotIsInstance(creds, credentials.RefreshableCredentials)
+        self.assertIsInstance(creds, credentials.Credentials)
+
+    def test_credentials_do_not_become_refreshable(self):
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'foo',
+            'AWS_SECRET_ACCESS_KEY': 'bar',
+            'AWS_SESSION_TOKEN': 'baz',
+        }
+        provider = credentials.EnvProvider(environ)
+        creds = provider.load()
+        frozen = creds.get_frozen_credentials()
+        self.assertEqual(frozen.access_key, 'foo')
+        self.assertEqual(frozen.secret_key, 'bar')
+        self.assertEqual(frozen.token, 'baz')
+
+        expiry_time = datetime.now(tzlocal()) - timedelta(hours=1)
+        environ.update({
+            'AWS_ACCESS_KEY_ID': 'bin',
+            'AWS_SECRET_ACCESS_KEY': 'bam',
+            'AWS_SESSION_TOKEN': 'biz',
+            'AWS_CREDENTIAL_EXPIRATION': expiry_time.isoformat(),
+        })
+
+        frozen = creds.get_frozen_credentials()
+        self.assertEqual(frozen.access_key, 'foo')
+        self.assertEqual(frozen.secret_key, 'bar')
+        self.assertEqual(frozen.token, 'baz')
+        self.assertNotIsInstance(creds, credentials.RefreshableCredentials)
+
+    def test_credentials_throw_error_if_expiry_goes_away(self):
+        expiry_time = datetime.now(tzlocal()) - timedelta(hours=1)
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'foo',
+            'AWS_SECRET_ACCESS_KEY': 'bar',
+            'AWS_CREDENTIAL_EXPIRATION': expiry_time.isoformat(),
+        }
+        provider = credentials.EnvProvider(environ)
+        creds = provider.load()
+
+        del environ['AWS_CREDENTIAL_EXPIRATION']
+
+        with self.assertRaises(credentials.PartialCredentialsError):
+            creds.get_frozen_credentials()
 
 
 class TestSharedCredentialsProvider(BaseEnvVar):

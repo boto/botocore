@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``appstream``", 
+    "description": "Update appstream client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "Auth", 
+    "description": "Fix bug in Signature Version 4 signer when a header value has consecutive spaces", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``kinesis``", 
+    "description": "Update kinesis client to latest version", 
+    "type": "api-change"
+  }
+]
