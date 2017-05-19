@@ -16,6 +16,14 @@
         }
       }
     },
+    "throttled_exception": {
+      "applies_when": {
+        "response": {
+          "service_error_code": "ThrottledException",
+          "http_status_code": 400
+        }
+      }
+    },
     "too_many_requests": {
       "applies_when": {
         "response": {
@@ -80,6 +88,7 @@
           "gateway_timeout": {"$ref": "gateway_timeout"},
           "limit_exceeded": {"$ref": "limit_exceeded"},
           "throttling_exception": {"$ref": "throttling_exception"},
+          "throttled_exception": {"$ref": "throttled_exception"},
           "throttling": {"$ref": "throttling"},
           "too_many_requests": {"$ref": "too_many_requests"}
       }
