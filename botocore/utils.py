@@ -19,9 +19,17 @@ import binascii
 import functools
 import weakref
 
-from datetime import timezone
-import iso8601
-from email.utils import parsedate_to_datetime
+try:
+    from datetime import timezone
+    from email.utils import parsedate_to_datetime
+    import iso8601
+
+    _HAVE_DT_SPEEDUPS = True
+except ImportError:
+    import dateutil.parser
+
+    _HAVE_DT_SPEEDUPS = False
+
 from dateutil.tz import tzlocal, tzutc
 
 import botocore
@@ -358,27 +366,34 @@ def parse_timestamp(value):
     try:
         utc_tz = tzutc()
 
-        if value[10] == 'T' and value[-1] == 'Z':
-            dt = iso8601.parse_date(value, utc_tz)
-            if dt.tzinfo == iso8601.UTC:
-                dt = dt.replace(tzinfo=utc_tz)
-            else:
-                raise ValueError  # unsupported format, investigate
-            return dt
-        else:
-            dt = parsedate_to_datetime(value)
-            if dt.tzinfo is None:
-                if value.endswith(' -0000'):
-                    # if UTC offset is specified as -0000, it returns a naive datetime :(
+        if _HAVE_DT_SPEEDUPS:
+            if value[10] == 'T' and value[-1] == 'Z':
+                dt = iso8601.parse_date(value, utc_tz)
+                if dt.tzinfo == iso8601.UTC:
                     dt = dt.replace(tzinfo=utc_tz)
                 else:
                     raise ValueError  # unsupported format, investigate
-            elif dt.tzinfo == timezone.utc:
-                dt = dt.replace(tzinfo=utc_tz)
+                return dt
             else:
-                raise ValueError
+                dt = parsedate_to_datetime(value)
+                if dt.tzinfo is None:
+                    if value.endswith(' -0000'):
+                        # if UTC offset is specified as -0000, it returns a naive datetime :(
+                        dt = dt.replace(tzinfo=utc_tz)
+                    else:
+                        raise ValueError  # unsupported format, investigate
+                elif dt.tzinfo == timezone.utc:
+                    dt = dt.replace(tzinfo=utc_tz)
+                else:
+                    raise ValueError
 
-            return dt
+                return dt
+        else:
+            # In certain cases, a timestamp marked with GMT can be parsed into a
+            # different time zone, so here we provide a context which will
+            # enforce that GMT == UTC.
+            return dateutil.parser.parse(value, tzinfos={'GMT': utc_tz})
+
     except (TypeError, ValueError) as e:
         raise ValueError('Invalid timestamp "%s": %s' % (value, e))
 
