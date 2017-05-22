@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.5.53
+======
+
+* api-change:``resourcegroupstaggingapi``: Update resourcegroupstaggingapi client to latest version
+
+
 1.5.52
 ======
 
