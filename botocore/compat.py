@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 if six.PY3:
-    from six.moves import http_client
+    from botocore.vendored.six.moves import http_client
 
     class HTTPHeaders(http_client.HTTPMessage):
         pass

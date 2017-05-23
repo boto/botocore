@@ -14,7 +14,7 @@
 from tests import unittest
 from dateutil.tz import tzutc, tzoffset
 import datetime
-import six
+from botocore.compat import six
 
 import mock
 
