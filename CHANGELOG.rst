@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.5.54
+======
+
+* api-change:``dms``: Update dms client to latest version
+
+
 1.5.53
 ======
 
