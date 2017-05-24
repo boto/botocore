@@ -23,6 +23,7 @@ try:
     from datetime import timezone
     from email.utils import parsedate_to_datetime
     import iso8601
+    from iso8601.iso8601 import FixedOffset, Utc
 
     _HAVE_DT_SPEEDUPS = True
 except ImportError:
@@ -30,7 +31,7 @@ except ImportError:
 
     _HAVE_DT_SPEEDUPS = False
 
-from dateutil.tz import tzlocal, tzutc
+from dateutil.tz import tzlocal, tzutc, tzoffset
 
 import botocore
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
@@ -369,8 +370,10 @@ def parse_timestamp(value):
         if _HAVE_DT_SPEEDUPS:
             if " " not in value:  # rfc822 has at least one space and iso8601 has no spaces
                 dt = iso8601.parse_date(value, utc_tz)
-                if isinstance(dt.tzinfo, iso8601.UTC.__class__):
+                if isinstance(dt.tzinfo, Utc):
                     dt = dt.replace(tzinfo=utc_tz)
+                elif isinstance(dt.tzinfo, FixedOffset):
+                    dt = dt.replace(tzinfo=tzoffset(None, dt.utcoffset().total_seconds()))
                 elif not isinstance(dt.tzinfo, tzutc):
                     raise ValueError  # unsupported format, investigate
                 return dt
