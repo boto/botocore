@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.5.55
+======
+
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``iam``: Update iam client to latest version
+* api-change:``sts``: Update sts client to latest version
+
+
 1.5.54
 ======
 
