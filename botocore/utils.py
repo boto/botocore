@@ -23,13 +23,15 @@ try:
     from datetime import timezone
     from email.utils import parsedate_to_datetime
     import iso8601
-    from iso8601.iso8601 import FixedOffset, Utc
+    from iso8601.iso8601 import FixedOffset, Utc, ParseError
 
     _HAVE_DT_SPEEDUPS = True
+    _TIMESTAMP_EXCEPTIONS = (TypeError, ValueError, ParseError)
 except ImportError:
     import dateutil.parser
 
     _HAVE_DT_SPEEDUPS = False
+    _TIMESTAMP_EXCEPTIONS = (TypeError, ValueError)
 
 from dateutil.tz import tzlocal, tzutc, tzoffset
 
@@ -368,7 +370,7 @@ def parse_timestamp(value):
         utc_tz = tzutc()
 
         if _HAVE_DT_SPEEDUPS:
-            if " " not in value:  # rfc822 has at least one space and iso8601 has no spaces
+            if value.count(' ') < 3:  # rfc822 has at least 3 spaces and iso8601 has no more than 1 (malformed)
                 dt = iso8601.parse_date(value, utc_tz)
                 if isinstance(dt.tzinfo, Utc):
                     dt = dt.replace(tzinfo=utc_tz)
@@ -397,7 +399,7 @@ def parse_timestamp(value):
             # enforce that GMT == UTC.
             return dateutil.parser.parse(value, tzinfos={'GMT': utc_tz})
 
-    except (TypeError, ValueError) as e:
+    except _TIMESTAMP_EXCEPTIONS as e:
         raise ValueError('Invalid timestamp "%s": %s' % (value, e))
 
 
