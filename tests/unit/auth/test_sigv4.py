@@ -27,8 +27,6 @@ import logging
 import io
 import datetime
 from botocore.compat import six
-from six import BytesIO
-from six.moves import BaseHTTPServer
 
 import nose.tools as t
 from nose import with_setup
@@ -78,11 +76,11 @@ if not six.PY3:
 log = logging.getLogger(__name__)
 
 
-class RawHTTPRequest(BaseHTTPServer.BaseHTTPRequestHandler):
+class RawHTTPRequest(six.moves.BaseHTTPServer.BaseHTTPRequestHandler):
     def __init__(self, raw_request):
         if isinstance(raw_request, six.text_type):
             raw_request = raw_request.encode('utf-8')
-        self.rfile = BytesIO(raw_request)
+        self.rfile = six.BytesIO(raw_request)
         self.raw_requestline = self.rfile.readline()
         self.error_code = None
         self.error_message = None
