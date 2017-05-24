@@ -299,6 +299,15 @@ class TestParseTimestamps(unittest.TestCase):
             parse_timestamp('Wed, 02 Oct 2002 13:00:00 GMT'),
             datetime.datetime(2002, 10, 2, 13, 0, tzinfo=tzutc()))
 
+    def test_parse_rfc822_zeros(self):
+        self.assertEqual(
+            parse_timestamp('Wed, 02 Oct 2002 13:00:00 -0000'),
+            datetime.datetime(2002, 10, 2, 13, 0, tzinfo=tzutc()))
+
+    def test_parse_rfc822_unknown(self):
+        with self.assertRaises(ValueError):
+            parse_timestamp('Wed, 02 Oct 2002 13:00:00 -000')
+
     def test_parse_gmt_in_uk_time(self):
         # In the UK the time switches from GMT to BST and back as part of
         # their daylight savings time. time.tzname will therefore report
