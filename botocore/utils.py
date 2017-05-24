@@ -371,7 +371,7 @@ def parse_timestamp(value):
                 dt = iso8601.parse_date(value, utc_tz)
                 if dt.tzinfo == iso8601.UTC:
                     dt = dt.replace(tzinfo=utc_tz)
-                else:
+                elif dt.tzinfo != utc_tz:
                     raise ValueError  # unsupported format, investigate
                 return dt
             else:
