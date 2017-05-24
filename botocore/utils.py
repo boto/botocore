@@ -369,7 +369,7 @@ def parse_timestamp(value):
         if _HAVE_DT_SPEEDUPS:
             if " " not in value:  # rfc822 has at least one space and iso8601 has no spaces
                 dt = iso8601.parse_date(value, utc_tz)
-                if dt.tzinfo == iso8601.UTC:
+                if isinstance(dt.tzinfo, iso8601.UTC.__class__):
                     dt = dt.replace(tzinfo=utc_tz)
                 elif not isinstance(dt.tzinfo, tzutc):
                     raise ValueError  # unsupported format, investigate
