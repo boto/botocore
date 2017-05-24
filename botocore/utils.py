@@ -375,7 +375,7 @@ def parse_timestamp(value):
                 if isinstance(dt.tzinfo, Utc):
                     dt = dt.replace(tzinfo=utc_tz)
                 elif isinstance(dt.tzinfo, FixedOffset):
-                    dt = dt.replace(tzinfo=tzoffset(None, dt.utcoffset().total_seconds()))
+                    dt = dt.replace(tzinfo=tzoffset(dt.tzname(), dt.utcoffset().total_seconds()))
                 elif not isinstance(dt.tzinfo, tzutc):
                     raise ValueError  # unsupported format, investigate
                 return dt
@@ -390,7 +390,7 @@ def parse_timestamp(value):
                 elif dt.tzinfo == timezone.utc:
                     dt = dt.replace(tzinfo=utc_tz)
                 else:
-                    raise ValueError
+                    dt = dt.replace(tzinfo=tzoffset(dt.tzname(), dt.utcoffset().total_seconds()))
 
                 return dt
         else:
