@@ -2,6 +2,34 @@
 CHANGELOG
 =========
 
+1.5.54
+======
+
+* api-change:``dms``: Update dms client to latest version
+
+
+1.5.53
+======
+
+* api-change:``resourcegroupstaggingapi``: Update resourcegroupstaggingapi client to latest version
+
+
+1.5.52
+======
+
+* api-change:``athena``: Update athena client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+
+
+1.5.51
+======
+
+* api-change:``polly``: Update polly client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``events``: Update events client to latest version
+* api-change:``logs``: Update logs client to latest version
+
+
 1.5.50
 ======
 
