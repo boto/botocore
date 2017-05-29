@@ -19,7 +19,6 @@ import botocore.session
 from botocore.client import ClientError
 from botocore.compat import six
 from botocore.exceptions import EndpointConnectionError
-from six import StringIO
 
 
 class TestBucketWithVersions(unittest.TestCase):
@@ -93,7 +92,7 @@ class TestResponseLog(unittest.TestCase):
         # lose this feature.
         session = botocore.session.get_session()
         client = session.create_client('s3', region_name='us-west-2')
-        debug_log = StringIO()
+        debug_log = six.StringIO()
         session.set_stream_logger('', logging.DEBUG, debug_log)
         client.list_buckets()
         debug_log_contents = debug_log.getvalue()

@@ -1,0 +1,7 @@
+[
+  {
+    "category": "``dms``", 
+    "description": "Update dms client to latest version", 
+    "type": "api-change"
+  }
+]

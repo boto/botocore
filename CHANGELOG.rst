@@ -2,6 +2,40 @@
 CHANGELOG
 =========
 
+1.5.56
+======
+
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
+1.5.55
+======
+
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``iam``: Update iam client to latest version
+* api-change:``sts``: Update sts client to latest version
+
+
+1.5.54
+======
+
+* api-change:``dms``: Update dms client to latest version
+
+
+1.5.53
+======
+
+* api-change:``resourcegroupstaggingapi``: Update resourcegroupstaggingapi client to latest version
+
+
+1.5.52
+======
+
+* api-change:``athena``: Update athena client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+
+
 1.5.51
 ======
 
