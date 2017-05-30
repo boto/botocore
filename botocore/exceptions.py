@@ -24,9 +24,11 @@ class BotoCoreError(Exception):
     fmt = 'An unspecified error occurred'
 
     def __init__(self, **kwargs):
-        msg = self.fmt.format(**kwargs)
-        Exception.__init__(self, msg)
+        self.message = self.fmt.format(**kwargs)
         self.kwargs = kwargs
+
+    def __str__(self):
+        return self.message
 
 
 class DataNotFoundError(BotoCoreError):
@@ -350,13 +352,12 @@ class ClientError(Exception):
 
     def __init__(self, error_response, operation_name):
         retry_info = self._get_retry_info(error_response)
-        msg = self.MSG_TEMPLATE.format(
+        self.message = self.MSG_TEMPLATE.format(
             error_code=error_response['Error'].get('Code', 'Unknown'),
             error_message=error_response['Error'].get('Message', 'Unknown'),
             operation_name=operation_name,
             retry_info=retry_info,
         )
-        super(ClientError, self).__init__(msg)
         self.response = error_response
         self.operation_name = operation_name
 
@@ -369,6 +370,9 @@ class ClientError(Exception):
                     retry_info = (' (reached max retries: %s)' %
                                   metadata['RetryAttempts'])
         return retry_info
+
+    def __str__(self):
+        return self.message
 
 
 class UnsupportedTLSVersionWarning(Warning):
