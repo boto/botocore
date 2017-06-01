@@ -676,7 +676,7 @@
       },
       "input":{"shape":"PutBucketNotificationRequest"},
       "documentationUrl":"http://docs.amazonwebservices.com/AmazonS3/latest/API/RESTBucketPUTnotification.html",
-      "documentation":"Deprecated, see the PutBucketNotificationConfiguraiton operation.",
+      "documentation":"Deprecated, see the PutBucketNotificationConfiguration operation.",
       "deprecated":true
     },
     "PutBucketNotificationConfiguration":{
