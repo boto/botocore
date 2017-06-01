@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.5.59
+======
+
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+
+
 1.5.58
 ======
 
