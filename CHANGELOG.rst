@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.5.60
+======
+
+* api-change:``workdocs``: Update workdocs client to latest version
+* api-change:``kinesisanalytics``: Update kinesisanalytics client to latest version
+
+
 1.5.59
 ======
 
