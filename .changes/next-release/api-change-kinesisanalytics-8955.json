@@ -1,5 +1,0 @@
-{
-  "category": "``kinesisanalytics``", 
-  "type": "api-change", 
-  "description": "Update kinesisanalytics client to latest version"
-}
