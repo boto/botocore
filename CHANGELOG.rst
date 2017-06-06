@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.5.62
+======
+
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``acm``: Update acm client to latest version
+
+
 1.5.61
 ======
 
