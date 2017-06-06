@@ -20,6 +20,7 @@ from botocore.docs.utils import get_official_service_name
 from botocore.docs.utils import AutoPopulatedParam
 from botocore.docs.utils import HideParamFromOperations
 from botocore.docs.utils import AppendParamDocumentation
+from botocore.docs.utils import DocumentModifiedShape
 
 
 class TestPythonTypeName(unittest.TestCase):
@@ -219,3 +220,50 @@ class TestAppendParamDocumentation(BaseDocsTest):
             'docs.request-params', self.doc_structure)
         self.assert_contains_line('foo\n')
         self.assert_contains_line('hello!')
+
+
+class TestDocumentModifiedShape(BaseDocsTest):
+    def setUp(self):
+        super(TestDocumentModifiedShape, self).setUp()
+        self.name = 'shape'
+        self.old_type = 'old_type'
+        self.type = 'new_type'
+        self.description = 'new_description'
+        self.example = 'new_example'
+
+    def test_modifies_type(self):
+        context = {'shape': self.name}
+        section = self.doc_structure.add_new_section(self.name, context)
+        type_section = section.add_new_section('param-type')
+        type_section.writeln(self.old_type)
+        modifier = DocumentModifiedShape(self.name, self.type)
+        modifier.replace_documentation_for_matching_shape(
+            'docs.request-params', self.doc_structure)
+        self.assert_not_contains_line(self.old_type)
+        self.assert_contains_line(self.type)
+
+    def test_modifies_documentation_string(self):
+        context = {'shape': self.name}
+        section = self.doc_structure.add_new_section(self.name, context)
+        section.add_new_section('param-type')
+        doc_section = section.add_new_section('param-documentation')
+        old_documentation = 'gets_deleted'
+        doc_section.write(old_documentation)
+        modifier = DocumentModifiedShape(self.name, self.type, self.description)
+        modifier.replace_documentation_for_matching_shape(
+            'docs.request-params', self.doc_structure)
+        self.assert_contains_line(self.type)
+        self.assert_not_contains_line(old_documentation)
+        self.assert_contains_line(self.description)
+
+    def test_modifies_example(self):
+        context = {'shape': self.name}
+        section = self.doc_structure.add_new_section(self.name, context)
+        old_example = 'gets_deleted'
+        section.write(old_example)
+        modifier = DocumentModifiedShape(self.name, self.type,
+                                         new_example_value=self.example)
+        modifier.replace_documentation_for_matching_shape(
+            'docs.request-example', self.doc_structure)
+        self.assert_not_contains_line(old_example)
+        self.assert_contains_line(self.example)

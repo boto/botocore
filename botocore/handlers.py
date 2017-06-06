@@ -29,6 +29,7 @@ from botocore.compat import unquote, json, six, unquote_str, \
 from botocore.docs.utils import AutoPopulatedParam
 from botocore.docs.utils import HideParamFromOperations
 from botocore.docs.utils import AppendParamDocumentation
+from botocore.docs.utils import DocumentModifiedShape
 from botocore.signers import add_generate_presigned_url
 from botocore.signers import add_generate_presigned_post
 from botocore.signers import add_generate_db_auth_token
@@ -965,6 +966,13 @@ BUILTIN_HANDLERS = [
      AutoPopulatedParam('PresignedUrl').document_auto_populated_param),
     ('docs.*.ec2.CopySnapshot.complete-section',
      AutoPopulatedParam('DestinationRegion').document_auto_populated_param),
+    # IAM PolicyDocument documentation customizations
+    ('docs.*.iam.*.complete-section',
+     DocumentModifiedShape(
+         shape_name='policyDocumentType',
+         new_type='dict',
+         new_example_value='{}')
+        .replace_documentation_for_matching_shape),
     # S3 SSE documentation modifications
     ('docs.*.s3.*.complete-section',
      AutoPopulatedParam('SSECustomerKeyMD5').document_auto_populated_param),
