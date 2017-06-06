@@ -2,6 +2,41 @@
 CHANGELOG
 =========
 
+1.5.61
+======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+
+
+1.5.60
+======
+
+* api-change:``workdocs``: Update workdocs client to latest version
+* api-change:``kinesisanalytics``: Update kinesisanalytics client to latest version
+
+
+1.5.59
+======
+
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+
+
+1.5.58
+======
+
+* api-change:``rds``: Update rds client to latest version
+
+
+1.5.57
+======
+
+* api-change:``clouddirectory``: Update clouddirectory client to latest version
+
+
 1.5.56
 ======
 

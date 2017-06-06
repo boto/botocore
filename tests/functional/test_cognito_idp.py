@@ -21,7 +21,8 @@ def test_unsigned_operations():
     operation_params = {
         'change_password': {
             'PreviousPassword': 'myoldbadpassword',
-            'ProposedPassword': 'mynewgoodpassword'
+            'ProposedPassword': 'mynewgoodpassword',
+            'AccessToken': 'foobar'
         },
         'confirm_forgot_password': {
             'ClientId': 'foo',
@@ -34,17 +35,23 @@ def test_unsigned_operations():
             'Username': 'myusername',
             'ConfirmationCode': 'ireallydowanttosignup'
         },
-        'delete_user': {},
+        'delete_user': {
+            'AccessToken': 'foobar'
+        },
         'delete_user_attributes': {
-            'UserAttributeNames': ['myattribute']
+            'UserAttributeNames': ['myattribute'],
+            'AccessToken': 'foobar'
         },
         'forgot_password': {
             'ClientId': 'foo',
             'Username': 'myusername'
         },
-        'get_user': {},
+        'get_user': {
+            'AccessToken': 'foobar'
+        },
         'get_user_attribute_verification_code': {
-            'AttributeName': 'myattribute'
+            'AttributeName': 'myattribute',
+            'AccessToken': 'foobar'
         },
         'resend_confirmation_code': {
             'ClientId': 'foo',
@@ -66,11 +73,13 @@ def test_unsigned_operations():
             'UserAttributes': [{
                 'Name': 'someattributename',
                 'Value': 'newvalue'
-            }]
+            }],
+            'AccessToken': 'foobar'
         },
         'verify_user_attribute': {
             'AttributeName': 'someattributename',
-            'Code': 'someverificationcode'
+            'Code': 'someverificationcode',
+            'AccessToken': 'foobar'
         },
     }
 
