@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.5.63
+======
+
+* api-change:``greengrass``: Update greengrass client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+
+
 1.5.62
 ======
 
