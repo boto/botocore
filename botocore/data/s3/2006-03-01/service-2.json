@@ -1021,7 +1021,7 @@
         },
         "CreationDate":{
           "shape":"CreationDate",
-          "documentation":"Date the bucket was created."
+          "documentation":"Date the bucket was created. This will be <code>null</code> if the bucket is owned by another account or you do not have permissions to ListBuckets"
         }
       }
     },
