@@ -37,7 +37,7 @@ from botocore.exceptions import ClientError
 
 
 def random_bucketname():
-    return 'botocoretest-' + random_chars(10)
+    return random_chars(10) + '-botocoretest'
 
 
 LOG = logging.getLogger('botocore.tests.integration')
