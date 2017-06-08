@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.5.64
+======
+
+* api-change:``rekognition``: Update rekognition client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+
+
 1.5.63
 ======
 
