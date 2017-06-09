@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.5.65
+======
+
+* api-change:``opsworks``: Update opsworks client to latest version
+
+
 1.5.64
 ======
 
