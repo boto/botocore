@@ -671,7 +671,7 @@ def check_openssl_supports_tls_version_1_2(**kwargs):
     import ssl
     try:
         openssl_version_tuple = ssl.OPENSSL_VERSION_INFO
-        if openssl_version_tuple[0] < 1 or openssl_version_tuple[2] < 1:
+        if openssl_version_tuple < (1, 0, 1):
             warnings.warn(
                 'Currently installed openssl version: %s does not '
                 'support TLS 1.2, which is required for use of iot-data. '
