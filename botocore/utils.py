@@ -1087,34 +1087,6 @@ class ContainerMetadataFetcher(object):
         return 'http://%s%s' % (self.IP_ADDRESS, relative_uri)
 
 
-def get_configured_signature_version(service_name, client_config,
-                                     scoped_config):
-    """
-    Gets the manually configured signature version.
-
-    :returns: the customer configured signature version, or None if no
-        signature version was configured.
-    """
-    # Client config overrides everything.
-    if client_config and client_config.signature_version is not None:
-        return client_config.signature_version
-
-    # Scoped config overrides picking from the endpoint metadata.
-    if scoped_config is not None:
-        # A given service may have service specific configuration in the
-        # config file, so we need to check there as well.
-        service_config = scoped_config.get(service_name)
-        if service_config is not None and isinstance(service_config, dict):
-            version = service_config.get('signature_version')
-            if version:
-                logger.debug(
-                    "Switching signature version for service %s "
-                    "to version %s based on config file override.",
-                    service_name, version)
-                return version
-    return None
-
-
 def default_s3_presign_to_sigv2(signature_version, signing_name,
                                 **kwargs):
     """

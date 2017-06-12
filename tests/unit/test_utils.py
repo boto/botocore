@@ -54,7 +54,6 @@ from botocore.utils import deep_merge
 from botocore.utils import S3RegionRedirector
 from botocore.utils import ContainerMetadataFetcher
 from botocore.utils import default_s3_presign_to_sigv2
-from botocore.utils import get_configured_signature_version
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
 from botocore.config import Config
@@ -1677,49 +1676,6 @@ class TestSwitchToS3SigV2Presigner(unittest.TestCase):
 
         signer = default_s3_presign_to_sigv2('v2', 's3')
         self.assertIsNone(signer)
-
-
-class TestGetConfiguredSignatureVersion(unittest.TestCase):
-    def setUp(self):
-        self.client_config = mock.Mock()
-        self.client_config.signature_version = None
-        self.scoped_config = {}
-
-    def test_get_client_config_signature_version(self):
-        self.client_config.signature_version = 'v3'
-        version = get_configured_signature_version(
-            'myservice', self.client_config, self.scoped_config)
-        self.assertEqual(version, 'v3')
-
-    def test_get_scoped_config_signature_version(self):
-        self.scoped_config['myservice'] = {'signature_version': 'v3'}
-        version = get_configured_signature_version(
-            'myservice', self.client_config, self.scoped_config)
-        self.assertEqual(version, 'v3')
-
-    def test_skips_non_dict_scoped_config(self):
-        self.scoped_config['myservcie'] = 'myservice'
-        version = get_configured_signature_version(
-            'myservice', self.client_config, self.scoped_config)
-        self.assertIsNone(version)
-
-    def test_empty_scoped_config(self):
-        self.scoped_config['myservcie'] = {}
-        version = get_configured_signature_version(
-            'myservice', self.client_config, self.scoped_config)
-        self.assertIsNone(version)
-
-    def test_client_config_has_priority_over_scoped_config(self):
-        self.client_config.signature_version = 'v3'
-        self.scoped_config['myservcie'] = {'signature_version': 'v4'}
-        version = get_configured_signature_version(
-            'myservice', self.client_config, self.scoped_config)
-        self.assertEqual(version, 'v3')
-
-    def test_no_configured_version(self):
-        version = get_configured_signature_version(
-            'myservice', self.client_config, self.scoped_config)
-        self.assertIsNone(version)
 
 if __name__ == '__main__':
     unittest.main()

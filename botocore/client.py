@@ -31,7 +31,6 @@ from botocore.utils import S3RegionRedirector
 from botocore.utils import fix_s3_host
 from botocore.utils import switch_to_virtual_host_style
 from botocore.utils import S3_ACCELERATE_WHITELIST
-from botocore.utils import get_configured_signature_version
 from botocore.utils import default_s3_presign_to_sigv2
 from botocore.args import ClientArgsCreator
 from botocore.compat import urlsplit
@@ -225,7 +224,7 @@ class ClientCreator(object):
         # This will return the manually configured signature version, or None
         # if none was manually set. If a customer manually sets the signature
         # version, we always want to use what they set.
-        provided_signature_version = get_configured_signature_version(
+        provided_signature_version = _get_configured_signature_version(
             's3', client_config, scoped_config)
         if provided_signature_version is not None:
             return
@@ -472,7 +471,7 @@ class ClientEndpointBridge(object):
         return region_name, signing_region
 
     def _resolve_signature_version(self, service_name, resolved):
-        configured_version = get_configured_signature_version(
+        configured_version = _get_configured_signature_version(
             service_name, self.client_config, self.scoped_config)
         if configured_version is not None:
             return configured_version
@@ -788,3 +787,31 @@ class ClientMeta(object):
     @property
     def partition(self):
         return self._partition
+
+
+def _get_configured_signature_version(service_name, client_config,
+                                      scoped_config):
+    """
+    Gets the manually configured signature version.
+
+    :returns: the customer configured signature version, or None if no
+        signature version was configured.
+    """
+    # Client config overrides everything.
+    if client_config and client_config.signature_version is not None:
+        return client_config.signature_version
+
+    # Scoped config overrides picking from the endpoint metadata.
+    if scoped_config is not None:
+        # A given service may have service specific configuration in the
+        # config file, so we need to check there as well.
+        service_config = scoped_config.get(service_name)
+        if service_config is not None and isinstance(service_config, dict):
+            version = service_config.get('signature_version')
+            if version:
+                logger.debug(
+                    "Switching signature version for service %s "
+                    "to version %s based on config file override.",
+                    service_name, version)
+                return version
+    return None
