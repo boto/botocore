@@ -31,9 +31,9 @@ from botocore.utils import S3RegionRedirector
 from botocore.utils import fix_s3_host
 from botocore.utils import switch_to_virtual_host_style
 from botocore.utils import S3_ACCELERATE_WHITELIST
-from botocore.utils import default_s3_presign_to_sigv2
 from botocore.args import ClientArgsCreator
 from botocore.compat import urlsplit
+from botocore import UNSIGNED
 # Keep this imported.  There's pre-existing code that uses
 # "from botocore.client import Config".
 from botocore.config import Config
@@ -239,7 +239,8 @@ class ClientCreator(object):
 
         # If it is a region we know about, we want to default to sigv2, so here
         # we check to see if it is available.
-        endpoint = self._endpoint_resolver.construct_endpoint('s3')
+        endpoint = self._endpoint_resolver.construct_endpoint(
+            's3', client_meta.region_name)
         signature_versions = endpoint['signatureVersions']
         if 's3' not in signature_versions:
             return
@@ -248,7 +249,29 @@ class ClientCreator(object):
         # the customer hasn't set a signature version so we default the
         # signature version to sigv2.
         client_meta.events.register(
-            'choose-signer.s3', default_s3_presign_to_sigv2)
+            'choose-signer.s3', self._default_s3_presign_to_sigv2)
+
+    def _default_s3_presign_to_sigv2(self, signature_version, signing_name,
+                                     **kwargs):
+        """
+        Returns the 's3' (sigv2) signer if presigning an s3 request. This is
+        intended to be used to set the default signature version for the signer
+        to sigv2.
+
+        :type signature_version: str
+        :param signature_version: The current client signature version.
+
+        :type signing_name: str
+        :param signing_name: The signing name of the service.
+
+        :return: 's3' if the request is an s3 presign request, None otherwise
+        """
+        if signing_name != 's3' or signature_version is UNSIGNED:
+            return
+
+        for suffix in ['-query', '-presign-post']:
+            if signature_version.endswith(suffix):
+                return 's3' + suffix
 
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,

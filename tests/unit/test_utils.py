@@ -53,7 +53,6 @@ from botocore.utils import switch_host_s3_accelerate
 from botocore.utils import deep_merge
 from botocore.utils import S3RegionRedirector
 from botocore.utils import ContainerMetadataFetcher
-from botocore.utils import default_s3_presign_to_sigv2
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
 from botocore.config import Config
@@ -1636,46 +1635,6 @@ class TestContainerMetadataFetcher(unittest.TestCase):
 
     def test_external_host_not_allowed_if_https(self):
         self.assert_host_is_not_allowed('https://somewhere.com/foo')
-
-
-class TestSwitchToS3SigV2Presigner(unittest.TestCase):
-    def test_switch_query(self):
-        signer = default_s3_presign_to_sigv2('s3v4-query', 's3')
-        self.assertEqual(signer, 's3-query')
-
-        signer = default_s3_presign_to_sigv2('s3-query', 's3')
-        self.assertEqual(signer, 's3-query')
-
-    def test_switch_presign_post(self):
-        signer = default_s3_presign_to_sigv2('s3v4-presign-post', 's3')
-        self.assertEqual(signer, 's3-presign-post')
-
-        signer = default_s3_presign_to_sigv2('s3-presign-post', 's3')
-        self.assertEqual(signer, 's3-presign-post')
-
-    def test_does_not_switch_if_not_s3(self):
-        signer = default_s3_presign_to_sigv2('s3v4-query', 'sqs')
-        self.assertIsNone(signer)
-
-        signer = default_s3_presign_to_sigv2('s3-presign-post', 'rds')
-        self.assertIsNone(signer)
-
-    def test_does_not_switch_if_unsigned(self):
-        signer = default_s3_presign_to_sigv2(botocore.UNSIGNED, 's3')
-        self.assertIsNone(signer)
-
-    def test_does_not_switch_if_not_presign(self):
-        signer = default_s3_presign_to_sigv2('s3', 's3')
-        self.assertIsNone(signer)
-
-        signer = default_s3_presign_to_sigv2('s3v4', 's3')
-        self.assertIsNone(signer)
-
-        signer = default_s3_presign_to_sigv2('v4', 's3')
-        self.assertIsNone(signer)
-
-        signer = default_s3_presign_to_sigv2('v2', 's3')
-        self.assertIsNone(signer)
 
 if __name__ == '__main__':
     unittest.main()

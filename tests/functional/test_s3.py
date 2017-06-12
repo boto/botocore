@@ -333,6 +333,16 @@ class TestGeneratePresigned(BaseS3OperationTest):
         url = client.generate_presigned_url(ClientMethod='list_buckets')
         self.assertNotIn('Algorithm=AWS4-HMAC-SHA256', url)
 
+    def test_uses_sigv4_for_unknown_region(self):
+        client = self.session.create_client('s3', 'us-west-88')
+        url = client.generate_presigned_url(ClientMethod='list_buckets')
+        self.assertIn('Algorithm=AWS4-HMAC-SHA256', url)
+
+    def test_default_presign_sigv4_in_sigv4_only_region(self):
+        client = self.session.create_client('s3', 'us-east-2')
+        url = client.generate_presigned_url(ClientMethod='list_buckets')
+        self.assertIn('Algorithm=AWS4-HMAC-SHA256', url)
+
 
 def test_correct_url_used_for_s3():
     # Test that given various sets of config options and bucket names,
@@ -420,7 +430,7 @@ def test_correct_url_used_for_s3():
         region='us-gov-west-1', bucket='bucket', key='key',
         s3_config=virtual_hosting,
         expected_url='https://bucket.s3-us-gov-west-1.amazonaws.com/key')
-    
+
     # Test restricted regions not do virtual host by default
     yield t.case(
         region='us-gov-west-1', bucket='bucket', key='key',
