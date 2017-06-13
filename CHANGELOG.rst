@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.5.67
+======
+
+* api-change:``config``: Update config client to latest version
+
+
+1.5.66
+======
+
+* api-change:``rds``: Update rds client to latest version
+
+
 1.5.65
 ======
 
