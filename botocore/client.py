@@ -134,7 +134,7 @@ class ClientCreator(object):
             client.meta.events.register_first(
                 'request-created.s3', switch_host_s3_accelerate)
 
-        self._set_s3_presign_signature_verion(
+        self._set_s3_presign_signature_version(
             client.meta, client_config, scoped_config)
 
     def _set_s3_addressing_style(self, endpoint_url, s3_config, event_emitter):
@@ -219,8 +219,8 @@ class ClientCreator(object):
         # Remaining parts must all be in the whitelist.
         return all(p in S3_ACCELERATE_WHITELIST for p in feature_parts)
 
-    def _set_s3_presign_signature_verion(self, client_meta,
-                                         client_config, scoped_config):
+    def _set_s3_presign_signature_version(self, client_meta,
+                                          client_config, scoped_config):
         # This will return the manually configured signature version, or None
         # if none was manually set. If a customer manually sets the signature
         # version, we always want to use what they set.
@@ -251,8 +251,7 @@ class ClientCreator(object):
         client_meta.events.register(
             'choose-signer.s3', self._default_s3_presign_to_sigv2)
 
-    def _default_s3_presign_to_sigv2(self, signature_version, signing_name,
-                                     **kwargs):
+    def _default_s3_presign_to_sigv2(self, signature_version, **kwargs):
         """
         Returns the 's3' (sigv2) signer if presigning an s3 request. This is
         intended to be used to set the default signature version for the signer
@@ -266,9 +265,6 @@ class ClientCreator(object):
 
         :return: 's3' if the request is an s3 presign request, None otherwise
         """
-        if signing_name != 's3' or signature_version is UNSIGNED:
-            return
-
         for suffix in ['-query', '-presign-post']:
             if signature_version.endswith(suffix):
                 return 's3' + suffix
