@@ -343,6 +343,13 @@ class TestGeneratePresigned(BaseS3OperationTest):
         url = client.generate_presigned_url(ClientMethod='list_buckets')
         self.assertIn('Algorithm=AWS4-HMAC-SHA256', url)
 
+    def test_presign_unsigned(self):
+        config = Config(signature_version=botocore.UNSIGNED)
+        client = self.session.create_client('s3', 'us-east-2', config=config)
+        url = client.generate_presigned_url(ClientMethod='list_buckets')
+        self.assertEqual(
+            'https://s3.us-east-2.amazonaws.com/', url)
+
 
 def test_correct_url_used_for_s3():
     # Test that given various sets of config options and bucket names,
