@@ -85,11 +85,11 @@ class StreamingBody(object):
         """
         # Reading 1024 bytes at a time seems a sane choice [citation needed].
         # If the user needs to specify something different they can always call
-        # streaming_body.iter_lines(<other-chunk-size>)
+        # streaming_body._iter_lines(<other-chunk-size>)
         default_chunk_size = 1024
-        return self.iter_lines(default_chunk_size)
+        return self._iter_lines(default_chunk_size)
 
-    def iter_lines(self, chunk_size):
+    def _iter_lines(self, chunk_size):
         """Return an iterator to yield lines from the raw stream.
 
         This is achieved by reading chunk of bytes (of size chunk_size) at a

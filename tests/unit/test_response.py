@@ -89,7 +89,7 @@ class TestStreamWrapper(unittest.TestCase):
             body = six.BytesIO(b'1234567890\n1234567890\n12345')
             stream = response.StreamingBody(body, content_length=27)
             self._assert_lines(
-                stream.iter_lines(chunk_size),
+                stream._iter_lines(chunk_size),
                 [b'1234567890', b'1234567890', b'12345'],
             )
 
