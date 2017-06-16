@@ -18,7 +18,6 @@ from botocore.compat import six
 
 import mock
 
-import botocore
 from botocore import xform_name
 from botocore.compat import OrderedDict, json
 from botocore.awsrequest import AWSRequest
