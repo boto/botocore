@@ -33,7 +33,6 @@ from botocore.compat import encodebytes
 from botocore.compat import six
 from botocore.compat import json
 from botocore.compat import MD5_AVAILABLE
-from botocore.compat import ensure_unicode
 
 logger = logging.getLogger(__name__)
 
@@ -231,7 +230,7 @@ class SigV4Auth(BaseSigner):
         for key in sorted_header_names:
             value = ','.join(self._header_value(v) for v in
                              sorted(headers_to_sign.get_all(key)))
-            headers.append('%s:%s' % (key, ensure_unicode(value)))
+            headers.append('%s:%s' % (key, value))
         return '\n'.join(headers)
 
     def _header_value(self, value):

@@ -52,16 +52,9 @@ class ClientArgsCreator(object):
         s3_config = final_args['s3_config']
         partition = endpoint_config['metadata'].get('partition', None)
 
-        signing_region = endpoint_config['signing_region']
-        endpoint_region_name = endpoint_config['region_name']
-        if signing_region is None and endpoint_region_name is None:
-            signing_region, endpoint_region_name = \
-                self._get_default_s3_region(service_name, endpoint_bridge)
-            config_kwargs['region_name'] = endpoint_region_name
-
         event_emitter = copy.copy(self._event_emitter)
         signer = RequestSigner(
-            service_name, signing_region,
+            service_name, endpoint_config['signing_region'],
             endpoint_config['signing_name'],
             endpoint_config['signature_version'],
             credentials, event_emitter)
@@ -71,7 +64,7 @@ class ClientArgsCreator(object):
         endpoint_creator = EndpointCreator(event_emitter)
 
         endpoint = endpoint_creator.create_endpoint(
-            service_model, region_name=endpoint_region_name,
+            service_model, region_name=endpoint_config['region_name'],
             endpoint_url=endpoint_config['endpoint_url'], verify=verify,
             response_parser_factory=self._response_parser_factory,
             max_pool_connections=new_config.max_pool_connections,
@@ -194,12 +187,3 @@ class ClientArgsCreator(object):
             else:
                 config_copy[key] = False
         return config_copy
-
-    def _get_default_s3_region(self, service_name, endpoint_bridge):
-        # If a user is providing a custom URL, the endpoint resolver will
-        # refuse to infer a signing region. If we want to default to s3v4,
-        # we have to account for this.
-        if service_name == 's3':
-            endpoint = endpoint_bridge.resolve('s3')
-            return endpoint['signing_region'], endpoint['region_name']
-        return None, None
