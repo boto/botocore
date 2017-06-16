@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.5.70
+======
+
+* api-change:``xray``: Update xray client to latest version
+
+
 1.5.69
 ======
 
