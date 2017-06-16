@@ -36,4 +36,4 @@ class TestIdempotencyInjection(unittest.TestCase):
         # RequiredKey is provided, should not be replaced
         params = {'RequiredKey': 'already populated'}
         generate_idempotent_uuid(params, self.mock_model)
-        self.assertEquals(params['RequiredKey'], 'already populated')
+        self.assertEqual(params['RequiredKey'], 'already populated')
