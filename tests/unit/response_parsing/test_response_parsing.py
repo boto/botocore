@@ -17,17 +17,11 @@ import json
 import pprint
 import logging
 import difflib
-from tests import unittest, create_session
-
-from mock import Mock
-from botocore.vendored.requests.structures import CaseInsensitiveDict
+from tests import create_session
 
 import botocore.session
 from botocore import xform_name
-#from botocore.response import XmlResponse, JSONResponse, get_response
-from botocore import response
 from botocore import parsers
-from botocore.exceptions import IncompleteReadError
 
 log = logging.getLogger(__name__)
 

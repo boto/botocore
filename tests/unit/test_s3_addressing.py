@@ -20,7 +20,6 @@ from mock import patch, Mock
 
 from botocore.compat import OrderedDict
 from botocore.handlers import set_list_objects_encoding_type_url
-from botocore.exceptions import UnknownEndpointError
 
 
 class TestS3Addressing(BaseSessionTest):
