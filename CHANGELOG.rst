@@ -2,6 +2,28 @@
 CHANGELOG
 =========
 
+1.5.70
+======
+
+* api-change:``xray``: Update xray client to latest version
+
+
+1.5.69
+======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.5.68
+======
+
+* api-change:``clouddirectory``: Update clouddirectory client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+
+
 1.5.67
 ======
 

@@ -3,10 +3,8 @@ import json
 from botocore import xform_name
 from botocore.exceptions import ClientError
 
-import jmespath
 from behave import when, then
 from nose.tools import assert_equal
-from nose.tools import assert_is_instance
 
 
 def _params_from_table(table):
