@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.5.71
+======
+
+* enhancement:s3: All S3 requests will now use SigV4 by default so that we can take advantage of stronger security algorithms and improved access key isolation.
+* api-change:``organizations``: Update organizations client to latest version
+
+
 1.5.70
 ======
 
