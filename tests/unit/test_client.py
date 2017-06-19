@@ -24,8 +24,6 @@ from botocore.client import ClientEndpointBridge
 from botocore.credentials import Credentials
 from botocore.exceptions import ParamValidationError
 from botocore.exceptions import InvalidS3AddressingStyleError
-from botocore.exceptions import NoRegionError
-from botocore.exceptions import UnknownEndpointError
 from botocore.exceptions import UnknownSignatureVersionError
 from botocore.errorfactory import ClientExceptionsFactory
 from botocore.stub import Stubber
