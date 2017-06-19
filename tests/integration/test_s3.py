@@ -544,11 +544,11 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
     def setUp(self):
         super(TestS3PresignUsStandard, self).setUp()
         self.region = 'us-east-1'
-        self.bucket_name = self.create_bucket(self.region)
         self.client_config = Config(
             region_name=self.region, signature_version='s3')
         self.client = self.session.create_client(
             's3', config=self.client_config)
+        self.bucket_name = self.create_bucket(self.region)
         self.setup_bucket()
 
     def test_presign_sigv2(self):

@@ -1,0 +1,12 @@
+[
+  {
+    "category": "s3", 
+    "description": "All S3 requests will now use SigV4 by default so that we can take advantage of stronger security algorithms and improved access key isolation.", 
+    "type": "enhancement"
+  }, 
+  {
+    "category": "``organizations``", 
+    "description": "Update organizations client to latest version", 
+    "type": "api-change"
+  }
+]

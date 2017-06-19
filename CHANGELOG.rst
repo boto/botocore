@@ -2,6 +2,126 @@
 CHANGELOG
 =========
 
+1.5.71
+======
+
+* enhancement:s3: All S3 requests will now use SigV4 by default so that we can take advantage of stronger security algorithms and improved access key isolation.
+* api-change:``organizations``: Update organizations client to latest version
+
+
+1.5.70
+======
+
+* api-change:``xray``: Update xray client to latest version
+
+
+1.5.69
+======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.5.68
+======
+
+* api-change:``clouddirectory``: Update clouddirectory client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+
+
+1.5.67
+======
+
+* api-change:``config``: Update config client to latest version
+
+
+1.5.66
+======
+
+* api-change:``rds``: Update rds client to latest version
+
+
+1.5.65
+======
+
+* api-change:``opsworks``: Update opsworks client to latest version
+
+
+1.5.64
+======
+
+* api-change:``rekognition``: Update rekognition client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+
+
+1.5.63
+======
+
+* api-change:``greengrass``: Update greengrass client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+
+
+1.5.62
+======
+
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``acm``: Update acm client to latest version
+
+
+1.5.61
+======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+
+
+1.5.60
+======
+
+* api-change:``workdocs``: Update workdocs client to latest version
+* api-change:``kinesisanalytics``: Update kinesisanalytics client to latest version
+
+
+1.5.59
+======
+
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+
+
+1.5.58
+======
+
+* api-change:``rds``: Update rds client to latest version
+
+
+1.5.57
+======
+
+* api-change:``clouddirectory``: Update clouddirectory client to latest version
+
+
+1.5.56
+======
+
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
+1.5.55
+======
+
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``iam``: Update iam client to latest version
+* api-change:``sts``: Update sts client to latest version
+
+
 1.5.54
 ======
 
