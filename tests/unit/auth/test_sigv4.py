@@ -28,8 +28,6 @@ import io
 import datetime
 from botocore.compat import six
 
-import nose.tools as t
-from nose import with_setup
 import mock
 
 import botocore.auth
