@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.5.72
+======
+
+* api-change:``workdocs``: Update workdocs client to latest version
+
+
 1.5.71
 ======
 
