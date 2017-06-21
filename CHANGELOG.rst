@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.5.73
+======
+
+* api-change:``dax``: Update dax client to latest version
+* api-change:``waf``: Update waf client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``waf-regional``: Update waf-regional client to latest version
+
+
 1.5.72
 ======
 
