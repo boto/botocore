@@ -1635,6 +1635,5 @@ class TestContainerMetadataFetcher(unittest.TestCase):
     def test_external_host_not_allowed_if_https(self):
         self.assert_host_is_not_allowed('https://somewhere.com/foo')
 
-
 if __name__ == '__main__':
     unittest.main()

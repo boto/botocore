@@ -17,7 +17,6 @@ import datetime
 import time
 import base64
 import json
-import tempfile
 
 import mock
 

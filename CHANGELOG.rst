@@ -2,6 +2,51 @@
 CHANGELOG
 =========
 
+1.5.73
+======
+
+* api-change:``dax``: Update dax client to latest version
+* api-change:``waf``: Update waf client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``waf-regional``: Update waf-regional client to latest version
+
+
+1.5.72
+======
+
+* api-change:``workdocs``: Update workdocs client to latest version
+
+
+1.5.71
+======
+
+* enhancement:s3: All S3 requests will now use SigV4 by default so that we can take advantage of stronger security algorithms and improved access key isolation.
+* api-change:``organizations``: Update organizations client to latest version
+
+
+1.5.70
+======
+
+* api-change:``xray``: Update xray client to latest version
+
+
+1.5.69
+======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.5.68
+======
+
+* api-change:``clouddirectory``: Update clouddirectory client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+
+
 1.5.67
 ======
 

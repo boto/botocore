@@ -14,7 +14,6 @@
 from tests import unittest
 
 from mock import Mock, patch, sentinel
-from nose.tools import assert_equals
 from botocore.vendored.requests import ConnectionError
 
 from botocore.compat import six
@@ -24,7 +23,6 @@ from botocore.endpoint import EndpointCreator
 from botocore.endpoint import BotocoreHTTPSession
 from botocore.exceptions import EndpointConnectionError
 from botocore.exceptions import ConnectionClosedError
-from botocore.exceptions import BaseEndpointResolverError
 
 
 def request_dict():
