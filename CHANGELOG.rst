@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.5.74
+======
+
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``codepipeline``: Update codepipeline client to latest version
+* api-change:``dms``: Update dms client to latest version
+
+
 1.5.73
 ======
 
