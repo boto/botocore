@@ -139,6 +139,12 @@ class TestEndpointFeatures(TestEndpointBase):
         # but that feels like testing too much implementation detail.
         self.assertEqual(endpoint.max_pool_connections, 50)
 
+    def test_can_specify_proxies(self):
+        proxies = {'http': 'http://foo.bar:1234'}
+        endpoint = Endpoint('https://ec2.us-west-2.amazonaws.com', 'ec2',
+                            self.event_emitter, proxies=proxies)
+        self.assertEqual(endpoint.proxies, proxies)
+
 
 class TestRetryInterface(TestEndpointBase):
     def setUp(self):
