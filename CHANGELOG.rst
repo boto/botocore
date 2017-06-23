@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.5.75
+======
+
+* api-change:``lambda``: Update lambda client to latest version
+
+
 1.5.74
 ======
 
