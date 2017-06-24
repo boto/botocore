@@ -12,6 +12,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import contextlib
 import os
 import logging
 import time
@@ -224,14 +225,15 @@ class Endpoint(object):
             logger.debug("Exception received when sending HTTP request.",
                          exc_info=True)
             return (None, e)
-        # This returns the http_response and the parsed_data.
-        response_dict = convert_to_response_dict(http_response,
-                                                 operation_model)
-        parser = self._response_parser_factory.create_parser(
-            operation_model.metadata['protocol'])
-        parsed_response = parser.parse(
-            response_dict, operation_model.output_shape)
-        return (http_response, parsed_response), None
+        with contextlib.closing(http_response):
+            # This returns the http_response and the parsed_data.
+            response_dict = convert_to_response_dict(http_response,
+                                                     operation_model)
+            parser = self._response_parser_factory.create_parser(
+                operation_model.metadata['protocol'])
+            parsed_response = parser.parse(
+                response_dict, operation_model.output_shape)
+            return (http_response, parsed_response), None
 
     def _looks_like_dns_error(self, e):
         return 'gaierror' in str(e) and e.request is not None
