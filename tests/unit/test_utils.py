@@ -15,9 +15,11 @@ from tests import unittest
 from dateutil.tz import tzutc, tzoffset
 import datetime
 from botocore.compat import six
+import copy
 
 import mock
 
+import botocore
 from botocore import xform_name
 from botocore.compat import OrderedDict, json
 from botocore.awsrequest import AWSRequest
@@ -1634,6 +1636,14 @@ class TestContainerMetadataFetcher(unittest.TestCase):
 
     def test_external_host_not_allowed_if_https(self):
         self.assert_host_is_not_allowed('https://somewhere.com/foo')
+
+
+class TestUnsigned(unittest.TestCase):
+    def test_copy_returns_same_object(self):
+        self.assertIs(botocore.UNSIGNED, copy.copy(botocore.UNSIGNED))
+
+    def test_deepcopy_returns_same_object(self):
+        self.assertIs(botocore.UNSIGNED, copy.deepcopy(botocore.UNSIGNED))
 
 if __name__ == '__main__':
     unittest.main()
