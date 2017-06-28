@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.5.76
+======
+
+* bugfix:Config: Fixes a bug resulting from copy/deepcopy not returning the same object for botocore.UNSIGNED. Fixes boto/boto3`#1144 <https://github.com/boto/botocore/issues/1144>`__
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+
+
 1.5.75
 ======
 
