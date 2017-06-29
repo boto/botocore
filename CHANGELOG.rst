@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.5.77
+======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``events``: Update events client to latest version
+
+
 1.5.76
 ======
 
