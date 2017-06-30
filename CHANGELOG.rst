@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.5.78
+======
+
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+
+
 1.5.77
 ======
 
