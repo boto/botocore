@@ -2,6 +2,28 @@
 CHANGELOG
 =========
 
+1.5.78
+======
+
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+
+
+1.5.77
+======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``events``: Update events client to latest version
+
+
+1.5.76
+======
+
+* bugfix:Config: Fixes a bug resulting from copy/deepcopy not returning the same object for botocore.UNSIGNED. Fixes boto/boto3`#1144 <https://github.com/boto/botocore/issues/1144>`__
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+
+
 1.5.75
 ======
 
