@@ -23,7 +23,7 @@ class TestEndpointResolver(unittest.TestCase):
                 {
                     'partition': 'aws',
                     'dnsSuffix': 'amazonaws.com',
-                    'regionRegex': '^(us|eu)\-\w+$',
+                    'regionRegex': r'^(us|eu)\-\w+$',
                     'defaults': {
                         'hostname': '{service}.{region}.{dnsSuffix}'
                     },
@@ -86,7 +86,7 @@ class TestEndpointResolver(unittest.TestCase):
                 {
                     'partition': 'foo',
                     'dnsSuffix': 'foo.com',
-                    'regionRegex': '^(foo)\-\w+$',
+                    'regionRegex': r'^(foo)\-\w+$',
                     'defaults': {
                         'hostname': '{service}.{region}.{dnsSuffix}',
                         'protocols': ['http'],
