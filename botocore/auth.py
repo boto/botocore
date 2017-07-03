@@ -110,7 +110,7 @@ class SigV2Auth(BaseSigner):
             params = request.data
         else:
             # GET
-            params = request.param
+            params = request.params
         params['AWSAccessKeyId'] = self.credentials.access_key
         params['SignatureVersion'] = '2'
         params['SignatureMethod'] = 'HmacSHA256'

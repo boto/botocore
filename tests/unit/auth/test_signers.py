@@ -225,6 +225,20 @@ class TestSigV2(unittest.TestCase):
             result, ('Foo=%E2%9C%93',
                      u'VCtWuwaOL0yMffAT8W4y0AFW3W4KUykBqah9S40rB+Q='))
 
+    def test_get(self):
+        request = Request()
+        request.url = '/'
+        request.method = 'GET'
+        request.params = {'Foo': u'\u2713'}
+        self.signer.add_auth(request)
+        self.assertEqual(request.params['AWSAccessKeyId'], 'foo')
+        self.assertEqual(request.params['Foo'], u'\u2713')
+        self.assertEqual(request.params['Timestamp'], '2014-06-20T08:40:23Z')
+        self.assertEqual(request.params['Signature'],
+                         u'Un97klqZCONP65bA1+Iv4H3AcB2I40I4DBvw5ZERFPw=')
+        self.assertEqual(request.params['SignatureMethod'], 'HmacSHA256')
+        self.assertEqual(request.params['SignatureVersion'], '2')
+
 
 class TestSigV3(unittest.TestCase):
 
