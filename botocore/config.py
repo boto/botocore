@@ -54,6 +54,12 @@ class Config(object):
         keep in a connection pool.  If this value is not set, the default
         value of 10 is used.
 
+    :type proxies: dict
+    :param proxies: A dictionary of proxy servers to use by protocol or
+        endpoint, e.g.:
+        {'http': 'foo.bar:3128', 'http://hostname': 'foo.bar:4012'}.
+        The proxies are used on each request.
+
     :type s3: dict
     :param s3: A dictionary of s3 specific configurations.
         Valid keys are:
@@ -92,6 +98,7 @@ class Config(object):
         ('read_timeout', DEFAULT_TIMEOUT),
         ('parameter_validation', True),
         ('max_pool_connections', MAX_POOL_CONNECTIONS),
+        ('proxies', None),
         ('s3', None)
     ])
 

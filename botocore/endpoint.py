@@ -266,15 +266,18 @@ class EndpointCreator(object):
     def create_endpoint(self, service_model, region_name, endpoint_url,
                         verify=None, response_parser_factory=None,
                         timeout=DEFAULT_TIMEOUT,
-                        max_pool_connections=MAX_POOL_CONNECTIONS):
+                        max_pool_connections=MAX_POOL_CONNECTIONS,
+                        proxies=None):
         if not is_valid_endpoint_url(endpoint_url):
 
             raise ValueError("Invalid endpoint: %s" % endpoint_url)
+        if proxies is None:
+            proxies = self._get_proxies(endpoint_url)
         return Endpoint(
             endpoint_url,
             endpoint_prefix=service_model.endpoint_prefix,
             event_emitter=self._event_emitter,
-            proxies=self._get_proxies(endpoint_url),
+            proxies=proxies,
             verify=self._get_verify_value(verify),
             timeout=timeout,
             max_pool_connections=max_pool_connections,
