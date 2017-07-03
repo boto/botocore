@@ -2,6 +2,59 @@
 CHANGELOG
 =========
 
+1.5.78
+======
+
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+
+
+1.5.77
+======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``events``: Update events client to latest version
+
+
+1.5.76
+======
+
+* bugfix:Config: Fixes a bug resulting from copy/deepcopy not returning the same object for botocore.UNSIGNED. Fixes boto/boto3`#1144 <https://github.com/boto/botocore/issues/1144>`__
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+
+
+1.5.75
+======
+
+* api-change:``lambda``: Update lambda client to latest version
+
+
+1.5.74
+======
+
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``codepipeline``: Update codepipeline client to latest version
+* api-change:``dms``: Update dms client to latest version
+
+
+1.5.73
+======
+
+* api-change:``dax``: Update dax client to latest version
+* api-change:``waf``: Update waf client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``waf-regional``: Update waf-regional client to latest version
+
+
+1.5.72
+======
+
+* api-change:``workdocs``: Update workdocs client to latest version
+
+
 1.5.71
 ======
 

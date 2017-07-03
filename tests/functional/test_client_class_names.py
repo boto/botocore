@@ -10,7 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from nose.tools import assert_equals
+from nose.tools import assert_equal
 
 import botocore.session
 
@@ -78,4 +78,4 @@ def test_client_has_correct_class_name():
 
 
 def _assert_class_name_matches_ref_class_name(client, ref_class_name):
-    assert_equals(client.__class__.__name__, ref_class_name)
+    assert_equal(client.__class__.__name__, ref_class_name)

@@ -128,7 +128,35 @@ class TestCreateClientArgs(unittest.TestCase):
             m.return_value.create_endpoint.assert_called_with(
                 mock.ANY, endpoint_url='https://ec2/', region_name='us-west-2',
                 response_parser_factory=None, timeout=(60, 60), verify=True,
-                max_pool_connections=20
+                max_pool_connections=20, proxies=None
+            )
+
+    def test_proxies_from_client_config_forwarded_to_endpoint_creator(self):
+        args_create = args.ClientArgsCreator(
+            mock.Mock(), None, None, None, None)
+        proxies = {'http': 'http://foo.bar:1234',
+                   'https': 'https://foo.bar:4321'}
+        config = botocore.config.Config(proxies=proxies)
+        service_model = mock.Mock()
+        service_model.metadata = {
+            'serviceFullName': 'MyService',
+            'protocol': 'query'
+        }
+        service_model.operation_names = []
+        bridge = mock.Mock()
+        bridge.resolve.return_value = {
+            'region_name': 'us-west-2', 'signature_version': 'v4',
+            'endpoint_url': 'https://ec2/',
+            'signing_name': 'ec2', 'signing_region': 'us-west-2',
+            'metadata': {}}
+        with mock.patch('botocore.args.EndpointCreator') as m:
+            args_create.get_client_args(
+                service_model, 'us-west-2', True, 'https://ec2/', True,
+                None, {}, config, bridge)
+            m.return_value.create_endpoint.assert_called_with(
+                mock.ANY, endpoint_url='https://ec2/', region_name='us-west-2',
+                response_parser_factory=None, timeout=(60, 60), verify=True,
+                proxies=proxies, max_pool_connections=10
             )
 
     def test_s3_with_endpoint_url_still_resolves_region(self):
