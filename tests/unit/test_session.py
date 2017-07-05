@@ -328,7 +328,7 @@ class TestSessionPartitionFiles(BaseSessionTest):
         mock_resolver = mock.Mock()
         mock_resolver.get_available_partitions.return_value = ['foo']
         self.session.register_component('endpoint_resolver', mock_resolver)
-        self.assertEquals(['foo'], self.session.get_available_partitions())
+        self.assertEqual(['foo'], self.session.get_available_partitions())
 
     def test_proxies_list_endpoints_to_resolver(self):
         resolver = mock.Mock()

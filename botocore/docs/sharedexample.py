@@ -178,7 +178,7 @@ class SharedExampleDocumenter(object):
         section.write("datetime(%s)," % datetime_str)
 
     def _get_comment(self, path, comments):
-        key = re.sub('^\.', '', ''.join(path))
+        key = re.sub(r'^\.', '', ''.join(path))
         if comments and key in comments:
             return '# ' + comments[key]
         else:

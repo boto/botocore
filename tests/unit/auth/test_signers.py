@@ -225,6 +225,20 @@ class TestSigV2(unittest.TestCase):
             result, ('Foo=%E2%9C%93',
                      u'VCtWuwaOL0yMffAT8W4y0AFW3W4KUykBqah9S40rB+Q='))
 
+    def test_get(self):
+        request = Request()
+        request.url = '/'
+        request.method = 'GET'
+        request.params = {'Foo': u'\u2713'}
+        self.signer.add_auth(request)
+        self.assertEqual(request.params['AWSAccessKeyId'], 'foo')
+        self.assertEqual(request.params['Foo'], u'\u2713')
+        self.assertEqual(request.params['Timestamp'], '2014-06-20T08:40:23Z')
+        self.assertEqual(request.params['Signature'],
+                         u'Un97klqZCONP65bA1+Iv4H3AcB2I40I4DBvw5ZERFPw=')
+        self.assertEqual(request.params['SignatureMethod'], 'HmacSHA256')
+        self.assertEqual(request.params['SignatureVersion'], '2')
+
 
 class TestSigV3(unittest.TestCase):
 
@@ -638,8 +652,8 @@ class TestS3SigV2Presign(BasePresignTest):
         self.assertEqual(query_string['AWSAccessKeyId'], self.access_key)
         self.assertEqual(query_string['Expires'],
                          str(int(self.current_epoch_time) + self.expires))
-        self.assertEquals(query_string['Signature'],
-                          'ZRSgywstwIruKLTLt/Bcrf9H1K4=')
+        self.assertEqual(query_string['Signature'],
+                         'ZRSgywstwIruKLTLt/Bcrf9H1K4=')
 
     def test_presign_with_x_amz_headers(self):
         self.request.headers['x-amz-security-token'] = 'foo'
@@ -648,8 +662,8 @@ class TestS3SigV2Presign(BasePresignTest):
         query_string = self.get_parsed_query_string(self.request)
         self.assertEqual(query_string['x-amz-security-token'], 'foo')
         self.assertEqual(query_string['x-amz-acl'], 'read-only')
-        self.assertEquals(query_string['Signature'],
-                          '5oyMAGiUk1E5Ry2BnFr6cIS3Gus=')
+        self.assertEqual(query_string['Signature'],
+                         '5oyMAGiUk1E5Ry2BnFr6cIS3Gus=')
 
     def test_presign_with_content_headers(self):
         self.request.headers['content-type'] = 'txt'
@@ -658,16 +672,16 @@ class TestS3SigV2Presign(BasePresignTest):
         query_string = self.get_parsed_query_string(self.request)
         self.assertEqual(query_string['content-type'], 'txt')
         self.assertEqual(query_string['content-md5'], 'foo')
-        self.assertEquals(query_string['Signature'],
-                          '/YQRFdQGywXP74WrOx2ET/RUqz8=')
+        self.assertEqual(query_string['Signature'],
+                         '/YQRFdQGywXP74WrOx2ET/RUqz8=')
 
     def test_presign_with_unused_headers(self):
         self.request.headers['user-agent'] = 'botocore'
         self.auth.add_auth(self.request)
         query_string = self.get_parsed_query_string(self.request)
         self.assertNotIn('user-agent', query_string)
-        self.assertEquals(query_string['Signature'],
-                          'ZRSgywstwIruKLTLt/Bcrf9H1K4=')
+        self.assertEqual(query_string['Signature'],
+                         'ZRSgywstwIruKLTLt/Bcrf9H1K4=')
 
 
 class TestSigV4Presign(BasePresignTest):
