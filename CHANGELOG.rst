@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.5.79
+======
+
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``route53``: Update route53 client to latest version
+
+
 1.5.78
 ======
 

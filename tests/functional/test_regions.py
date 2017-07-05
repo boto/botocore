@@ -13,7 +13,7 @@
 from tests import create_session
 
 import mock
-from nose.tools import assert_equals, assert_raises
+from nose.tools import assert_equal, assert_raises
 
 from botocore.client import ClientEndpointBridge
 from botocore.exceptions import NoRegionError
@@ -465,7 +465,7 @@ def _test_single_service_region(service_name, region_name,
     bridge = ClientEndpointBridge(resolver, None, None)
     result = bridge.resolve(service_name, region_name)
     expected = 'https://%s' % expected_endpoint
-    assert_equals(result['endpoint_url'], expected)
+    assert_equal(result['endpoint_url'], expected)
 
 
 # Ensure that all S3 regions use s3v4 instead of v4
@@ -491,7 +491,7 @@ def _test_single_service_partition_endpoint(service_name, expected_endpoint,
                                             resolver):
     bridge = ClientEndpointBridge(resolver)
     result = bridge.resolve(service_name)
-    assert_equals(result['endpoint_url'], expected_endpoint)
+    assert_equal(result['endpoint_url'], expected_endpoint)
 
 
 def test_non_partition_endpoint_requires_region():

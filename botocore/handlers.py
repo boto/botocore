@@ -54,7 +54,7 @@ REGISTER_LAST = object()
 # to be as long as 255 characters, and bucket names can contain any
 # combination of uppercase letters, lowercase letters, numbers, periods
 # (.), hyphens (-), and underscores (_).
-VALID_BUCKET = re.compile('^[a-zA-Z0-9.\-_]{1,255}$')
+VALID_BUCKET = re.compile(r'^[a-zA-Z0-9.\-_]{1,255}$')
 VERSION_ID_SUFFIX = re.compile(r'\?versionId=[^\s]+$')
 
 
@@ -671,7 +671,7 @@ def check_openssl_supports_tls_version_1_2(**kwargs):
     import ssl
     try:
         openssl_version_tuple = ssl.OPENSSL_VERSION_INFO
-        if openssl_version_tuple[0] < 1 or openssl_version_tuple[2] < 1:
+        if openssl_version_tuple < (1, 0, 1):
             warnings.warn(
                 'Currently installed openssl version: %s does not '
                 'support TLS 1.2, which is required for use of iot-data. '

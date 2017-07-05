@@ -39,7 +39,7 @@ METADATA_SECURITY_CREDENTIALS_URL = (
 # These are chars that do not need to be urlencoded.
 # Based on rfc2986, section 2.3
 SAFE_CHARS = '-._~'
-LABEL_RE = re.compile('[a-z0-9][a-z0-9\-]*[a-z0-9]')
+LABEL_RE = re.compile(r'[a-z0-9][a-z0-9\-]*[a-z0-9]')
 RESTRICTED_REGIONS = [
     'us-gov-west-1',
     'fips-us-gov-west-1',
@@ -79,7 +79,7 @@ def get_service_module_name(service_model):
             'serviceFullName', service_model.service_name))
     name = name.replace('Amazon', '')
     name = name.replace('AWS', '')
-    name = re.sub('\W+', '', name)
+    name = re.sub(r'\W+', '', name)
     return name
 
 
@@ -637,7 +637,7 @@ def is_valid_endpoint_url(endpoint_url):
     if hostname[-1] == ".":
         hostname = hostname[:-1]
     allowed = re.compile(
-        "^((?!-)[A-Z\d-]{1,63}(?<!-)\.)*((?!-)[A-Z\d-]{1,63}(?<!-))$",
+        r"^((?!-)[A-Z\d-]{1,63}(?<!-)\.)*((?!-)[A-Z\d-]{1,63}(?<!-))$",
         re.IGNORECASE)
     return allowed.match(hostname)
 
