@@ -707,7 +707,7 @@
         },
         "Expected":{
           "shape":"ExpectedAttributeMap",
-          "documentation":"<p>This is a legacy parameter. Use <code>ConditionExpresssion</code> instead. For more information, see <a href=\"http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/LegacyConditionalParameters.Expected.html\">Expected</a> in the <i>Amazon DynamoDB Developer Guide</i>.</p>"
+          "documentation":"<p>This is a legacy parameter. Use <code>ConditionExpression</code> instead. For more information, see <a href=\"http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/LegacyConditionalParameters.Expected.html\">Expected</a> in the <i>Amazon DynamoDB Developer Guide</i>.</p>"
         },
         "ConditionalOperator":{
           "shape":"ConditionalOperator",
