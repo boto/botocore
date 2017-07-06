@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``kinesis``", 
+    "description": "Update kinesis client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kms``", 
+    "description": "Update kms client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ds``", 
+    "description": "Update ds client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ssm``", 
+    "description": "Update ssm client to latest version", 
+    "type": "api-change"
+  }
+]
