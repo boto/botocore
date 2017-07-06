@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.5.80
+======
+
+* api-change:``kinesis``: Update kinesis client to latest version
+* api-change:``kms``: Update kms client to latest version
+* api-change:``ds``: Update ds client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+
+
 1.5.79
 ======
 
