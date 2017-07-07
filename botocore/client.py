@@ -61,7 +61,8 @@ class ClientCreator(object):
                       credentials=None, scoped_config=None,
                       api_version=None,
                       client_config=None):
-        service_model = self._load_service_model(service_name, api_version)
+        service_model = self._load_service_model(service_name, api_version,
+            client_config)
         cls = self._create_client_class(service_name, service_model)
         endpoint_bridge = ClientEndpointBridge(
             self._endpoint_resolver, scoped_config, client_config,
@@ -91,14 +92,15 @@ class ClientCreator(object):
         cls = type(str(class_name), tuple(bases), class_attributes)
         return cls
 
-    def _load_service_model(self, service_name, api_version=None):
+    def _load_service_model(self, service_name, api_version=None,
+                            client_config=None):
         json_model = self._loader.load_service_model(service_name, 'service-2',
                                                      api_version=api_version)
         service_model = ServiceModel(json_model, service_name=service_name)
-        self._register_retries(service_model)
+        self._register_retries(service_model, client_config)
         return service_model
 
-    def _register_retries(self, service_model):
+    def _register_retries(self, service_model, client_config=None):
         endpoint_prefix = service_model.endpoint_prefix
 
         # First, we load the entire retry config for all services,
@@ -110,6 +112,11 @@ class ClientCreator(object):
         retry_config = self._retry_config_translator.build_retry_config(
             endpoint_prefix, original_config.get('retry', {}),
             original_config.get('definitions', {}))
+
+        # Use the client_config max_attempts if its given
+        if client_config and client_config.max_attempts:
+            (retry_config['__default__']
+                ['max_attempts']) = client_config.max_attempts
 
         logger.debug("Registering retry handlers for service: %s",
                      service_model.service_name)
