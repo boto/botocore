@@ -11,7 +11,9 @@
         "StreamDescription.StreamName",
         "StreamDescription.StreamStatus",
         "StreamDescription.RetentionPeriodHours",
-        "StreamDescription.EnhancedMonitoring"
+        "StreamDescription.EnhancedMonitoring",
+        "StreamDescription.EncryptionType",
+        "StreamDescription.KeyId"
       ]
     },
     "ListStreams": {
