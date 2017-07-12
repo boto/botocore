@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import copy
 import logging
 import functools
 
@@ -113,15 +114,17 @@ class ClientCreator(object):
             endpoint_prefix, original_config.get('retry', {}),
             original_config.get('definitions', {}))
 
+        retry_config_copy = copy.deepcopy(retry_config)
+
         # Use the client_config max_attempts if its given
         if client_config and client_config.max_attempts:
-            (retry_config['__default__']
+            (retry_config_copy['__default__']
                 ['max_attempts']) = client_config.max_attempts
 
         logger.debug("Registering retry handlers for service: %s",
                      service_model.service_name)
         handler = self._retry_handler_factory.create_retry_handler(
-            retry_config, endpoint_prefix)
+            retry_config_copy, endpoint_prefix)
         unique_id = 'retry-config-%s' % endpoint_prefix
         self._event_emitter.register('needs-retry.%s' % endpoint_prefix,
                                      handler, unique_id=unique_id)
