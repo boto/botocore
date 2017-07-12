@@ -1,13 +1,13 @@
 {
   "version":"2.0",
   "metadata":{
-    "uid":"elasticloadbalancingv2-2015-12-01",
     "apiVersion":"2015-12-01",
     "endpointPrefix":"elasticloadbalancing",
     "protocol":"query",
     "serviceAbbreviation":"Elastic Load Balancing v2",
     "serviceFullName":"Elastic Load Balancing",
     "signatureVersion":"v4",
+    "uid":"elasticloadbalancingv2-2015-12-01",
     "xmlNamespace":"http://elasticloadbalancing.amazonaws.com/doc/2015-12-01/"
   },
   "operations":{
@@ -79,7 +79,7 @@
         {"shape":"TooManyTagsException"},
         {"shape":"DuplicateTagKeysException"}
       ],
-      "documentation":"<p>Creates an Application Load Balancer.</p> <p>To create listeners for your load balancer, use <a>CreateListener</a>. You can add security groups, subnets, and tags when you create your load balancer, or you can add them later using <a>SetSecurityGroups</a>, <a>SetSubnets</a>, and <a>AddTags</a>.</p> <p>To describe your current load balancers, see <a>DescribeLoadBalancers</a>. When you are finished with a load balancer, you can delete it using <a>DeleteLoadBalancer</a>.</p> <p>You can create up to 20 load balancers per region per account. You can request an increase for the number of load balancers for your account. For more information, see <a href=\"http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-limits.html\">Limits for Your Application Load Balancer</a> in the <i>Application Load Balancers Guide</i>.</p> <p>For more information, see <a href=\"http://docs.aws.amazon.com/elasticloadbalancing/latest/application/application-load-balancers.html\">Application Load Balancers</a> in the <i>Application Load Balancers Guide</i>.</p>"
+      "documentation":"<p>Creates an Application Load Balancer.</p> <p>When you create a load balancer, you can specify security groups, subnets, IP address type, and tags. Otherwise, you could do so later using <a>SetSecurityGroups</a>, <a>SetSubnets</a>, <a>SetIpAddressType</a>, and <a>AddTags</a>.</p> <p>To create listeners for your load balancer, use <a>CreateListener</a>. To describe your current load balancers, see <a>DescribeLoadBalancers</a>. When you are finished with a load balancer, you can delete it using <a>DeleteLoadBalancer</a>.</p> <p>You can create up to 20 load balancers per region per account. You can request an increase for the number of load balancers for your account. For more information, see <a href=\"http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-limits.html\">Limits for Your Application Load Balancer</a> in the <i>Application Load Balancers Guide</i>.</p> <p>For more information, see <a href=\"http://docs.aws.amazon.com/elasticloadbalancing/latest/application/application-load-balancers.html\">Application Load Balancers</a> in the <i>Application Load Balancers Guide</i>.</p>"
     },
     "CreateRule":{
       "name":"CreateRule",
@@ -204,6 +204,19 @@
       ],
       "documentation":"<p>Deregisters the specified targets from the specified target group. After the targets are deregistered, they no longer receive traffic from the load balancer.</p>"
     },
+    "DescribeAccountLimits":{
+      "name":"DescribeAccountLimits",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"DescribeAccountLimitsInput"},
+      "output":{
+        "shape":"DescribeAccountLimitsOutput",
+        "resultWrapper":"DescribeAccountLimitsResult"
+      },
+      "documentation":"<p>Describes the current Elastic Load Balancing resource limits for your AWS account.</p> <p>For more information, see <a href=\"http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-limits.html\">Limits for Your Application Load Balancer</a> in the <i>Application Load Balancer Guide</i>.</p>"
+    },
     "DescribeListeners":{
       "name":"DescribeListeners",
       "http":{
@@ -284,7 +297,7 @@
       "errors":[
         {"shape":"SSLPolicyNotFoundException"}
       ],
-      "documentation":"<p>Describes the specified policies or all policies used for SSL negotiation.</p> <p>Note that the only supported policy at this time is ELBSecurityPolicy-2015-05.</p>"
+      "documentation":"<p>Describes the specified policies or all policies used for SSL negotiation.</p> <p>For more information, see <a href=\"http://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html#describe-ssl-policies\">Security Policies</a> in the <i>Application Load Balancers Guide</i>.</p>"
     },
     "DescribeTags":{
       "name":"DescribeTags",
@@ -303,7 +316,7 @@
         {"shape":"ListenerNotFoundException"},
         {"shape":"RuleNotFoundException"}
       ],
-      "documentation":"<p>Describes the tags for the specified resources.</p>"
+      "documentation":"<p>Describes the tags for the specified resources. You can describe the tags for one or more Application Load Balancers and target groups.</p>"
     },
     "DescribeTargetGroupAttributes":{
       "name":"DescribeTargetGroupAttributes",
@@ -381,7 +394,7 @@
         {"shape":"UnsupportedProtocolException"},
         {"shape":"TooManyRegistrationsForTargetIdException"}
       ],
-      "documentation":"<p>Modifies the specified properties of the specified listener.</p> <p>Any properties that you do not specify retain their current values. However, changing the protocol from HTTPS to HTTP removes the security policy and SSL certificate properties. If you change the protocol from HTTP to HTTPS, you must add the security policy.</p>"
+      "documentation":"<p>Modifies the specified properties of the specified listener.</p> <p>Any properties that you do not specify retain their current values. However, changing the protocol from HTTPS to HTTP removes the security policy and SSL certificate properties. If you change the protocol from HTTP to HTTPS, you must add the security policy and server certificate.</p>"
     },
     "ModifyLoadBalancerAttributes":{
       "name":"ModifyLoadBalancerAttributes",
@@ -415,7 +428,9 @@
         {"shape":"TargetGroupAssociationLimitException"},
         {"shape":"RuleNotFoundException"},
         {"shape":"OperationNotPermittedException"},
-        {"shape":"TooManyRegistrationsForTargetIdException"}
+        {"shape":"TooManyRegistrationsForTargetIdException"},
+        {"shape":"TooManyTargetsException"},
+        {"shape":"TargetGroupNotFoundException"}
       ],
       "documentation":"<p>Modifies the specified rule.</p> <p>Any existing properties that you do not modify retain their current values.</p> <p>To modify the default action, use <a>ModifyListener</a>.</p>"
     },
@@ -468,7 +483,7 @@
         {"shape":"InvalidTargetException"},
         {"shape":"TooManyRegistrationsForTargetIdException"}
       ],
-      "documentation":"<p>Registers the specified targets with the specified target group.</p> <p>By default, the load balancer routes requests to registered targets using the protocol and port number for the target group. Alternatively, you can override the port for a target when you register it.</p> <p>The target must be in the virtual private cloud (VPC) that you specified for the target group. If the target is an EC2 instance, it can't be in the <code>stopped</code> or <code>running</code> state when you register it.</p> <p>To remove a target from a target group, use <a>DeregisterTargets</a>.</p>"
+      "documentation":"<p>Registers the specified targets with the specified target group.</p> <p>By default, the load balancer routes requests to registered targets using the protocol and port number for the target group. Alternatively, you can override the port for a target when you register it.</p> <p>The target must be in the virtual private cloud (VPC) that you specified for the target group. If the target is an EC2 instance, it must be in the <code>running</code> state when you register it.</p> <p>To remove a target from a target group, use <a>DeregisterTargets</a>.</p>"
     },
     "RemoveTags":{
       "name":"RemoveTags",
@@ -489,6 +504,24 @@
         {"shape":"TooManyTagsException"}
       ],
       "documentation":"<p>Removes the specified tags from the specified resource.</p> <p>To list the current tags for your resources, use <a>DescribeTags</a>.</p>"
+    },
+    "SetIpAddressType":{
+      "name":"SetIpAddressType",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"SetIpAddressTypeInput"},
+      "output":{
+        "shape":"SetIpAddressTypeOutput",
+        "resultWrapper":"SetIpAddressTypeResult"
+      },
+      "errors":[
+        {"shape":"LoadBalancerNotFoundException"},
+        {"shape":"InvalidConfigurationRequestException"},
+        {"shape":"InvalidSubnetException"}
+      ],
+      "documentation":"<p>Sets the type of IP addresses used by the subnets of the specified Application Load Balancer.</p>"
     },
     "SetRulePriorities":{
       "name":"SetRulePriorities",
@@ -588,14 +621,12 @@
           "shape":"TagList",
           "documentation":"<p>The tags. Each resource can have a maximum of 10 tags.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for AddTags.</p>"
+      }
     },
     "AddTagsOutput":{
       "type":"structure",
       "members":{
-      },
-      "documentation":"<p>Contains the output of AddTags.</p>"
+      }
     },
     "AvailabilityZone":{
       "type":"structure",
@@ -700,8 +731,7 @@
           "shape":"Actions",
           "documentation":"<p>The default action for the listener.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for CreateListener.</p>"
+      }
     },
     "CreateListenerOutput":{
       "type":"structure",
@@ -710,8 +740,7 @@
           "shape":"Listeners",
           "documentation":"<p>Information about the listener.</p>"
         }
-      },
-      "documentation":"<p>Contains the output of CreateListener.</p>"
+      }
     },
     "CreateLoadBalancerInput":{
       "type":"structure",
@@ -722,7 +751,7 @@
       "members":{
         "Name":{
           "shape":"LoadBalancerName",
-          "documentation":"<p>The name of the load balancer.</p> <p>This name must be unique within your AWS account, can have a maximum of 32 characters, must contain only alphanumeric characters or hyphens, and must not begin or end with a hyphen.</p>"
+          "documentation":"<p>The name of the load balancer.</p> <p>This name must be unique per region per account, can have a maximum of 32 characters, must contain only alphanumeric characters or hyphens, and must not begin or end with a hyphen.</p>"
         },
         "Subnets":{
           "shape":"Subnets",
@@ -739,9 +768,12 @@
         "Tags":{
           "shape":"TagList",
           "documentation":"<p>One or more tags to assign to the load balancer.</p>"
+        },
+        "IpAddressType":{
+          "shape":"IpAddressType",
+          "documentation":"<p>The type of IP addresses used by the subnets for your load balancer. The possible values are <code>ipv4</code> (for IPv4 addresses) and <code>dualstack</code> (for IPv4 and IPv6 addresses). Internal load balancers must use <code>ipv4</code>.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for CreateLoadBalancer.</p>"
+      }
     },
     "CreateLoadBalancerOutput":{
       "type":"structure",
@@ -750,8 +782,7 @@
           "shape":"LoadBalancers",
           "documentation":"<p>Information about the load balancer.</p>"
         }
-      },
-      "documentation":"<p>Contains the output of CreateLoadBalancer.</p>"
+      }
     },
     "CreateRuleInput":{
       "type":"structure",
@@ -768,7 +799,7 @@
         },
         "Conditions":{
           "shape":"RuleConditionList",
-          "documentation":"<p>A condition. Each condition has the field <code>path-pattern</code> and specifies one path pattern. A path pattern is case sensitive, can be up to 255 characters in length, and can contain any of the following characters:</p> <ul> <li> <p>A-Z, a-z, 0-9</p> </li> <li> <p>_ - . $ / ~ \" ' @ : +</p> </li> <li> <p>&amp; (using &amp;amp;)</p> </li> <li> <p>* (matches 0 or more characters)</p> </li> <li> <p>? (matches exactly 1 character)</p> </li> </ul>"
+          "documentation":"<p>A condition. Each condition specifies a field name and a single value.</p> <p>If the field name is <code>host-header</code>, you can specify a single host name (for example, my.example.com). A host name is case insensitive, can be up to 128 characters in length, and can contain any of the following characters. Note that you can include up to three wildcard characters.</p> <ul> <li> <p>A-Z, a-z, 0-9</p> </li> <li> <p>- .</p> </li> <li> <p>* (matches 0 or more characters)</p> </li> <li> <p>? (matches exactly 1 character)</p> </li> </ul> <p>If the field name is <code>path-pattern</code>, you can specify a single path pattern. A path pattern is case sensitive, can be up to 128 characters in length, and can contain any of the following characters. Note that you can include up to three wildcard characters.</p> <ul> <li> <p>A-Z, a-z, 0-9</p> </li> <li> <p>_ - . $ / ~ \" ' @ : +</p> </li> <li> <p>&amp; (using &amp;amp;)</p> </li> <li> <p>* (matches 0 or more characters)</p> </li> <li> <p>? (matches exactly 1 character)</p> </li> </ul>"
         },
         "Priority":{
           "shape":"RulePriority",
@@ -778,8 +809,7 @@
           "shape":"Actions",
           "documentation":"<p>An action. Each action has the type <code>forward</code> and specifies a target group.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for CreateRule.</p>"
+      }
     },
     "CreateRuleOutput":{
       "type":"structure",
@@ -788,8 +818,7 @@
           "shape":"Rules",
           "documentation":"<p>Information about the rule.</p>"
         }
-      },
-      "documentation":"<p>Contains the output of CreateRule.</p>"
+      }
     },
     "CreateTargetGroupInput":{
       "type":"structure",
@@ -802,7 +831,7 @@
       "members":{
         "Name":{
           "shape":"TargetGroupName",
-          "documentation":"<p>The name of the target group.</p>"
+          "documentation":"<p>The name of the target group.</p> <p>This name must be unique per region per account, can have a maximum of 32 characters, must contain only alphanumeric characters or hyphens, and must not begin or end with a hyphen.</p>"
         },
         "Protocol":{
           "shape":"ProtocolEnum",
@@ -848,8 +877,7 @@
           "shape":"Matcher",
           "documentation":"<p>The HTTP codes to use when checking for a successful response from a target. The default is 200.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for CreateTargetGroup.</p>"
+      }
     },
     "CreateTargetGroupOutput":{
       "type":"structure",
@@ -858,8 +886,7 @@
           "shape":"TargetGroups",
           "documentation":"<p>Information about the target group.</p>"
         }
-      },
-      "documentation":"<p>Contains the output of CreateTargetGroup.</p>"
+      }
     },
     "CreatedTime":{"type":"timestamp"},
     "DNSName":{"type":"string"},
@@ -871,14 +898,12 @@
           "shape":"ListenerArn",
           "documentation":"<p>The Amazon Resource Name (ARN) of the listener.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for DeleteListener.</p>"
+      }
     },
     "DeleteListenerOutput":{
       "type":"structure",
       "members":{
-      },
-      "documentation":"<p>Contains the output of DeleteListener.</p>"
+      }
     },
     "DeleteLoadBalancerInput":{
       "type":"structure",
@@ -888,14 +913,12 @@
           "shape":"LoadBalancerArn",
           "documentation":"<p>The Amazon Resource Name (ARN) of the load balancer.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for DeleteLoadBalancer.</p>"
+      }
     },
     "DeleteLoadBalancerOutput":{
       "type":"structure",
       "members":{
-      },
-      "documentation":"<p>Contains the output of DeleteLoadBalancer.</p>"
+      }
     },
     "DeleteRuleInput":{
       "type":"structure",
@@ -905,14 +928,12 @@
           "shape":"RuleArn",
           "documentation":"<p>The Amazon Resource Name (ARN) of the rule.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for DeleteRule.</p>"
+      }
     },
     "DeleteRuleOutput":{
       "type":"structure",
       "members":{
-      },
-      "documentation":"<p>Contains the output of DeleteRule.</p>"
+      }
     },
     "DeleteTargetGroupInput":{
       "type":"structure",
@@ -922,14 +943,12 @@
           "shape":"TargetGroupArn",
           "documentation":"<p>The Amazon Resource Name (ARN) of the target group.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for DeleteTargetGroup.</p>"
+      }
     },
     "DeleteTargetGroupOutput":{
       "type":"structure",
       "members":{
-      },
-      "documentation":"<p>Contains the output of DeleteTargetGroup.</p>"
+      }
     },
     "DeregisterTargetsInput":{
       "type":"structure",
@@ -946,14 +965,38 @@
           "shape":"TargetDescriptions",
           "documentation":"<p>The targets. If you specified a port override when you registered a target, you must specify both the target ID and the port when you deregister it.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for DeregisterTargets.</p>"
+      }
     },
     "DeregisterTargetsOutput":{
       "type":"structure",
       "members":{
-      },
-      "documentation":"<p>Contains the output of DeregisterTargets.</p>"
+      }
+    },
+    "DescribeAccountLimitsInput":{
+      "type":"structure",
+      "members":{
+        "Marker":{
+          "shape":"Marker",
+          "documentation":"<p>The marker for the next set of results. (You received this marker from a previous call.)</p>"
+        },
+        "PageSize":{
+          "shape":"PageSize",
+          "documentation":"<p>The maximum number of results to return with this call.</p>"
+        }
+      }
+    },
+    "DescribeAccountLimitsOutput":{
+      "type":"structure",
+      "members":{
+        "Limits":{
+          "shape":"Limits",
+          "documentation":"<p>Information about the limits.</p>"
+        },
+        "NextMarker":{
+          "shape":"Marker",
+          "documentation":"<p>The marker to use when requesting the next set of results. If there are no additional results, the string is empty.</p>"
+        }
+      }
     },
     "DescribeListenersInput":{
       "type":"structure",
@@ -974,8 +1017,7 @@
           "shape":"PageSize",
           "documentation":"<p>The maximum number of results to return with this call.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for DescribeListeners.</p>"
+      }
     },
     "DescribeListenersOutput":{
       "type":"structure",
@@ -988,8 +1030,7 @@
           "shape":"Marker",
           "documentation":"<p>The marker to use when requesting the next set of results. If there are no additional results, the string is empty.</p>"
         }
-      },
-      "documentation":"<p>Contains the output of DescribeListeners.</p>"
+      }
     },
     "DescribeLoadBalancerAttributesInput":{
       "type":"structure",
@@ -999,8 +1040,7 @@
           "shape":"LoadBalancerArn",
           "documentation":"<p>The Amazon Resource Name (ARN) of the load balancer.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for DescribeLoadBalancerAttributes.</p>"
+      }
     },
     "DescribeLoadBalancerAttributesOutput":{
       "type":"structure",
@@ -1009,15 +1049,14 @@
           "shape":"LoadBalancerAttributes",
           "documentation":"<p>Information about the load balancer attributes.</p>"
         }
-      },
-      "documentation":"<p>Contains the output of DescribeLoadBalancerAttributes.</p>"
+      }
     },
     "DescribeLoadBalancersInput":{
       "type":"structure",
       "members":{
         "LoadBalancerArns":{
           "shape":"LoadBalancerArns",
-          "documentation":"<p>The Amazon Resource Names (ARN) of the load balancers.</p>"
+          "documentation":"<p>The Amazon Resource Names (ARN) of the load balancers. You can specify up to 20 load balancers in a single call.</p>"
         },
         "Names":{
           "shape":"LoadBalancerNames",
@@ -1031,8 +1070,7 @@
           "shape":"PageSize",
           "documentation":"<p>The maximum number of results to return with this call.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for DescribeLoadBalancers.</p>"
+      }
     },
     "DescribeLoadBalancersOutput":{
       "type":"structure",
@@ -1045,8 +1083,7 @@
           "shape":"Marker",
           "documentation":"<p>The marker to use when requesting the next set of results. If there are no additional results, the string is empty.</p>"
         }
-      },
-      "documentation":"<p>Contains the output of DescribeLoadBalancers.</p>"
+      }
     },
     "DescribeRulesInput":{
       "type":"structure",
@@ -1058,9 +1095,16 @@
         "RuleArns":{
           "shape":"RuleArns",
           "documentation":"<p>The Amazon Resource Names (ARN) of the rules.</p>"
+        },
+        "Marker":{
+          "shape":"Marker",
+          "documentation":"<p>The marker for the next set of results. (You received this marker from a previous call.)</p>"
+        },
+        "PageSize":{
+          "shape":"PageSize",
+          "documentation":"<p>The maximum number of results to return with this call.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for DescribeRules.</p>"
+      }
     },
     "DescribeRulesOutput":{
       "type":"structure",
@@ -1068,9 +1112,12 @@
         "Rules":{
           "shape":"Rules",
           "documentation":"<p>Information about the rules.</p>"
+        },
+        "NextMarker":{
+          "shape":"Marker",
+          "documentation":"<p>The marker to use when requesting the next set of results. If there are no additional results, the string is empty.</p>"
         }
-      },
-      "documentation":"<p>Contains the output of DescribeRules.</p>"
+      }
     },
     "DescribeSSLPoliciesInput":{
       "type":"structure",
@@ -1087,8 +1134,7 @@
           "shape":"PageSize",
           "documentation":"<p>The maximum number of results to return with this call.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for DescribeSSLPolicies.</p>"
+      }
     },
     "DescribeSSLPoliciesOutput":{
       "type":"structure",
@@ -1101,8 +1147,7 @@
           "shape":"Marker",
           "documentation":"<p>The marker to use when requesting the next set of results. If there are no additional results, the string is empty.</p>"
         }
-      },
-      "documentation":"<p>Contains the output of DescribeSSLPolicies.</p>"
+      }
     },
     "DescribeTagsInput":{
       "type":"structure",
@@ -1112,8 +1157,7 @@
           "shape":"ResourceArns",
           "documentation":"<p>The Amazon Resource Names (ARN) of the resources.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for DescribeTags.</p>"
+      }
     },
     "DescribeTagsOutput":{
       "type":"structure",
@@ -1122,8 +1166,7 @@
           "shape":"TagDescriptions",
           "documentation":"<p>Information about the tags.</p>"
         }
-      },
-      "documentation":"<p>Contains the output of DescribeTags.</p>"
+      }
     },
     "DescribeTargetGroupAttributesInput":{
       "type":"structure",
@@ -1133,8 +1176,7 @@
           "shape":"TargetGroupArn",
           "documentation":"<p>The Amazon Resource Name (ARN) of the target group.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for DescribeTargetGroupAttributes.</p>"
+      }
     },
     "DescribeTargetGroupAttributesOutput":{
       "type":"structure",
@@ -1143,8 +1185,7 @@
           "shape":"TargetGroupAttributes",
           "documentation":"<p>Information about the target group attributes</p>"
         }
-      },
-      "documentation":"<p>Contains the output of DescribeTargetGroupAttributes.</p>"
+      }
     },
     "DescribeTargetGroupsInput":{
       "type":"structure",
@@ -1169,8 +1210,7 @@
           "shape":"PageSize",
           "documentation":"<p>The maximum number of results to return with this call.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for DescribeTargetGroups.</p>"
+      }
     },
     "DescribeTargetGroupsOutput":{
       "type":"structure",
@@ -1183,8 +1223,7 @@
           "shape":"Marker",
           "documentation":"<p>The marker to use when requesting the next set of results. If there are no additional results, the string is empty.</p>"
         }
-      },
-      "documentation":"<p>Contains the output of DescribeTargetGroups.</p>"
+      }
     },
     "DescribeTargetHealthInput":{
       "type":"structure",
@@ -1198,8 +1237,7 @@
           "shape":"TargetDescriptions",
           "documentation":"<p>The targets.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for DescribeTargetHealth.</p>"
+      }
     },
     "DescribeTargetHealthOutput":{
       "type":"structure",
@@ -1208,8 +1246,7 @@
           "shape":"TargetHealthDescriptions",
           "documentation":"<p>Information about the health of the targets.</p>"
         }
-      },
-      "documentation":"<p>Contains the output of DescribeTargetHealth.</p>"
+      }
     },
     "Description":{"type":"string"},
     "DuplicateListenerException":{
@@ -1228,7 +1265,7 @@
       "type":"structure",
       "members":{
       },
-      "documentation":"<p>A load balancer with the specified name already exists for this account.</p>",
+      "documentation":"<p>A load balancer with the specified name already exists.</p>",
       "error":{
         "code":"DuplicateLoadBalancerName",
         "httpStatusCode":400,
@@ -1360,7 +1397,32 @@
       },
       "exception":true
     },
+    "IpAddressType":{
+      "type":"string",
+      "enum":[
+        "ipv4",
+        "dualstack"
+      ]
+    },
     "IsDefault":{"type":"boolean"},
+    "Limit":{
+      "type":"structure",
+      "members":{
+        "Name":{
+          "shape":"Name",
+          "documentation":"<p>The name of the limit. The possible values are:</p> <ul> <li> <p>application-load-balancers</p> </li> <li> <p>listeners-per-application-load-balancer</p> </li> <li> <p>rules-per-application-load-balancer</p> </li> <li> <p>target-groups</p> </li> <li> <p>targets-per-application-load-balancer</p> </li> </ul>"
+        },
+        "Max":{
+          "shape":"Max",
+          "documentation":"<p>The maximum value of the limit.</p>"
+        }
+      },
+      "documentation":"<p>Information about an Elastic Load Balancing resource limit for your AWS account.</p>"
+    },
+    "Limits":{
+      "type":"list",
+      "member":{"shape":"Limit"}
+    },
     "ListOfString":{
       "type":"list",
       "member":{"shape":"StringValue"}
@@ -1466,6 +1528,10 @@
         "SecurityGroups":{
           "shape":"SecurityGroups",
           "documentation":"<p>The IDs of the security groups for the load balancer.</p>"
+        },
+        "IpAddressType":{
+          "shape":"IpAddressType",
+          "documentation":"<p>The type of IP addresses used by the subnets for your load balancer. The possible values are <code>ipv4</code> (for IPv4 addresses) and <code>dualstack</code> (for IPv4 and IPv6 addresses).</p>"
         }
       },
       "documentation":"<p>Information about a load balancer.</p>"
@@ -1564,11 +1630,12 @@
       "members":{
         "HttpCode":{
           "shape":"HttpCode",
-          "documentation":"<p>The HTTP codes. The default value is 200. You can specify multiple values (for example, \"200,202\") or a range of values (for example, \"200-299\").</p>"
+          "documentation":"<p>The HTTP codes. You can specify values between 200 and 499. The default value is 200. You can specify multiple values (for example, \"200,202\") or a range of values (for example, \"200-299\").</p>"
         }
       },
       "documentation":"<p>Information to use when checking for a successful response from a target.</p>"
     },
+    "Max":{"type":"string"},
     "ModifyListenerInput":{
       "type":"structure",
       "required":["ListenerArn"],
@@ -1587,7 +1654,7 @@
         },
         "SslPolicy":{
           "shape":"SslPolicyName",
-          "documentation":"<p>The security policy that defines which ciphers and protocols are supported.</p>"
+          "documentation":"<p>The security policy that defines which protocols and ciphers are supported. For more information, see <a href=\"http://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html#describe-ssl-policies\">Security Policies</a> in the <i>Application Load Balancers Guide</i>.</p>"
         },
         "Certificates":{
           "shape":"CertificateList",
@@ -1597,8 +1664,7 @@
           "shape":"Actions",
           "documentation":"<p>The default actions.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for ModifyListener.</p>"
+      }
     },
     "ModifyListenerOutput":{
       "type":"structure",
@@ -1607,8 +1673,7 @@
           "shape":"Listeners",
           "documentation":"<p>Information about the modified listeners.</p>"
         }
-      },
-      "documentation":"<p>Contains the output of ModifyListener.</p>"
+      }
     },
     "ModifyLoadBalancerAttributesInput":{
       "type":"structure",
@@ -1625,8 +1690,7 @@
           "shape":"LoadBalancerAttributes",
           "documentation":"<p>The load balancer attributes.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for ModifyLoadBalancerAttributes.</p>"
+      }
     },
     "ModifyLoadBalancerAttributesOutput":{
       "type":"structure",
@@ -1635,8 +1699,7 @@
           "shape":"LoadBalancerAttributes",
           "documentation":"<p>Information about the load balancer attributes.</p>"
         }
-      },
-      "documentation":"<p>Contains the output of ModifyLoadBalancerAttributes.</p>"
+      }
     },
     "ModifyRuleInput":{
       "type":"structure",
@@ -1654,8 +1717,7 @@
           "shape":"Actions",
           "documentation":"<p>The actions.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for ModifyRules.</p>"
+      }
     },
     "ModifyRuleOutput":{
       "type":"structure",
@@ -1664,8 +1726,7 @@
           "shape":"Rules",
           "documentation":"<p>Information about the rule.</p>"
         }
-      },
-      "documentation":"<p>Contains the output of ModifyRules.</p>"
+      }
     },
     "ModifyTargetGroupAttributesInput":{
       "type":"structure",
@@ -1682,8 +1743,7 @@
           "shape":"TargetGroupAttributes",
           "documentation":"<p>The attributes.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for ModifyTargetGroupAttributes.</p>"
+      }
     },
     "ModifyTargetGroupAttributesOutput":{
       "type":"structure",
@@ -1692,8 +1752,7 @@
           "shape":"TargetGroupAttributes",
           "documentation":"<p>Information about the attributes.</p>"
         }
-      },
-      "documentation":"<p>Contains the output of ModifyTargetGroupAttributes.</p>"
+      }
     },
     "ModifyTargetGroupInput":{
       "type":"structure",
@@ -1735,8 +1794,7 @@
           "shape":"Matcher",
           "documentation":"<p>The HTTP codes to use when checking for a successful response from a target.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for ModifyTargetGroup.</p>"
+      }
     },
     "ModifyTargetGroupOutput":{
       "type":"structure",
@@ -1745,9 +1803,9 @@
           "shape":"TargetGroups",
           "documentation":"<p>Information about the target group.</p>"
         }
-      },
-      "documentation":"<p>Contains the output of ModifyTargetGroup.</p>"
+      }
     },
+    "Name":{"type":"string"},
     "OperationNotPermittedException":{
       "type":"structure",
       "members":{
@@ -1809,14 +1867,12 @@
           "shape":"TargetDescriptions",
           "documentation":"<p>The targets. The default port for a target is the port for the target group. You can specify a port override. If a target is already registered, you can register it again using a different port.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for RegisterTargets.</p>"
+      }
     },
     "RegisterTargetsOutput":{
       "type":"structure",
       "members":{
-      },
-      "documentation":"<p>Contains the output of RegisterTargets.</p>"
+      }
     },
     "RemoveTagsInput":{
       "type":"structure",
@@ -1833,14 +1889,12 @@
           "shape":"TagKeys",
           "documentation":"<p>The tag keys for the tags to remove.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for RemoveTags.</p>"
+      }
     },
     "RemoveTagsOutput":{
       "type":"structure",
       "members":{
-      },
-      "documentation":"<p>Contains the output of RemoveTags.</p>"
+      }
     },
     "ResourceArn":{"type":"string"},
     "ResourceArns":{
@@ -1895,11 +1949,11 @@
       "members":{
         "Field":{
           "shape":"ConditionFieldName",
-          "documentation":"<p>The only possible value is <code>path-pattern</code>.</p>"
+          "documentation":"<p>The name of the field. The possible values are <code>host-header</code> and <code>path-pattern</code>.</p>"
         },
         "Values":{
           "shape":"ListOfString",
-          "documentation":"<p>The path pattern. You can specify a single path pattern.</p> <p>A path pattern is case sensitive, can be up to 255 characters in length, and can contain any of the following characters:</p> <ul> <li> <p>A-Z, a-z, 0-9</p> </li> <li> <p>_ - . $ / ~ \" ' @ : +</p> </li> <li> <p>&amp; (using &amp;amp;)</p> </li> <li> <p>* (matches 0 or more characters)</p> </li> <li> <p>? (matches exactly 1 character)</p> </li> </ul>"
+          "documentation":"<p>The condition value.</p> <p>If the field name is <code>host-header</code>, you can specify a single host name (for example, my.example.com). A host name is case insensitive, can be up to 128 characters in length, and can contain any of the following characters. Note that you can include up to three wildcard characters.</p> <ul> <li> <p>A-Z, a-z, 0-9</p> </li> <li> <p>- .</p> </li> <li> <p>* (matches 0 or more characters)</p> </li> <li> <p>? (matches exactly 1 character)</p> </li> </ul> <p>If the field name is <code>path-pattern</code>, you can specify a single path pattern (for example, /img/*). A path pattern is case sensitive, can be up to 128 characters in length, and can contain any of the following characters. Note that you can include up to three wildcard characters.</p> <ul> <li> <p>A-Z, a-z, 0-9</p> </li> <li> <p>_ - . $ / ~ \" ' @ : +</p> </li> <li> <p>&amp; (using &amp;amp;)</p> </li> <li> <p>* (matches 0 or more characters)</p> </li> <li> <p>? (matches exactly 1 character)</p> </li> </ul>"
         }
       },
       "documentation":"<p>Information about a condition for a rule.</p>"
@@ -1964,6 +2018,32 @@
       "type":"list",
       "member":{"shape":"SecurityGroupId"}
     },
+    "SetIpAddressTypeInput":{
+      "type":"structure",
+      "required":[
+        "LoadBalancerArn",
+        "IpAddressType"
+      ],
+      "members":{
+        "LoadBalancerArn":{
+          "shape":"LoadBalancerArn",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the load balancer.</p>"
+        },
+        "IpAddressType":{
+          "shape":"IpAddressType",
+          "documentation":"<p>The IP address type. The possible values are <code>ipv4</code> (for IPv4 addresses) and <code>dualstack</code> (for IPv4 and IPv6 addresses). Internal load balancers must use <code>ipv4</code>.</p>"
+        }
+      }
+    },
+    "SetIpAddressTypeOutput":{
+      "type":"structure",
+      "members":{
+        "IpAddressType":{
+          "shape":"IpAddressType",
+          "documentation":"<p>The IP address type.</p>"
+        }
+      }
+    },
     "SetRulePrioritiesInput":{
       "type":"structure",
       "required":["RulePriorities"],
@@ -1972,8 +2052,7 @@
           "shape":"RulePriorityList",
           "documentation":"<p>The rule priorities.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for SetRulePriorities.</p>"
+      }
     },
     "SetRulePrioritiesOutput":{
       "type":"structure",
@@ -1982,8 +2061,7 @@
           "shape":"Rules",
           "documentation":"<p>Information about the rules.</p>"
         }
-      },
-      "documentation":"<p>Contains the output of SetRulePriorities.</p>"
+      }
     },
     "SetSecurityGroupsInput":{
       "type":"structure",
@@ -2000,8 +2078,7 @@
           "shape":"SecurityGroups",
           "documentation":"<p>The IDs of the security groups.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for SetSecurityGroups.</p>"
+      }
     },
     "SetSecurityGroupsOutput":{
       "type":"structure",
@@ -2010,8 +2087,7 @@
           "shape":"SecurityGroups",
           "documentation":"<p>The IDs of the security groups associated with the load balancer.</p>"
         }
-      },
-      "documentation":"<p>Contains the output of SetSecurityGroups.</p>"
+      }
     },
     "SetSubnetsInput":{
       "type":"structure",
@@ -2028,8 +2104,7 @@
           "shape":"Subnets",
           "documentation":"<p>The IDs of the subnets. You must specify at least two subnets. You can add only one subnet per Availability Zone.</p>"
         }
-      },
-      "documentation":"<p>Contains the parameters for SetSubnets.</p>"
+      }
     },
     "SetSubnetsOutput":{
       "type":"structure",
@@ -2038,8 +2113,7 @@
           "shape":"AvailabilityZones",
           "documentation":"<p>Information about the subnet and Availability Zone.</p>"
         }
-      },
-      "documentation":"<p>Contains the output of SetSubnets.</p>"
+      }
     },
     "SslPolicies":{
       "type":"list",

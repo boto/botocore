@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``devicefarm``", 
+    "description": "Update devicefarm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``events``", 
+    "description": "Update events client to latest version", 
+    "type": "api-change"
+  }
+]

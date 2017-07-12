@@ -14,8 +14,9 @@
 import os
 import shlex
 import copy
+import sys
 
-from six.moves import configparser
+from botocore.compat import six
 
 import botocore.exceptions
 
@@ -142,12 +143,13 @@ def raw_config_parse(config_filename, parse_subsections=True):
         path = os.path.expandvars(path)
         path = os.path.expanduser(path)
         if not os.path.isfile(path):
-            raise botocore.exceptions.ConfigNotFound(path=path)
-        cp = configparser.RawConfigParser()
+            raise botocore.exceptions.ConfigNotFound(path=_unicode_path(path))
+        cp = six.moves.configparser.RawConfigParser()
         try:
-            cp.read(path)
-        except configparser.Error:
-            raise botocore.exceptions.ConfigParseError(path=path)
+            cp.read([path])
+        except six.moves.configparser.Error:
+            raise botocore.exceptions.ConfigParseError(
+                path=_unicode_path(path))
         else:
             for section in cp.sections():
                 config[section] = {}
@@ -161,9 +163,15 @@ def raw_config_parse(config_filename, parse_subsections=True):
                             config_value = _parse_nested(config_value)
                         except ValueError:
                             raise botocore.exceptions.ConfigParseError(
-                                path=path)
+                                path=_unicode_path(path))
                     config[section][option] = config_value
     return config
+
+
+def _unicode_path(path):
+    if isinstance(path, six.text_type):
+        return path
+    return path.decode(sys.getfilesystemencoding(), 'replace')
 
 
 def _parse_nested(config_value):

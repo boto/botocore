@@ -387,3 +387,9 @@ class ReSTStyle(BaseStyle):
         docstring_lines = docstring.splitlines()
         for docstring_line in docstring_lines:
             self.doc.writeln(docstring_line)
+
+    def external_link(self, title, link):
+        if self.doc.target == 'html':
+            self.doc.write('`%s <%s>`_' % (title, link))
+        else:
+            self.doc.write(title)

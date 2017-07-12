@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``codedeploy``", 
+    "description": "Update codedeploy client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "Paginator", 
+    "description": "Fix a paginator bug involving optional tokens (`#1057 <https://github.com/boto/botocore/issues/1057>`__)", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``ecs``", 
+    "description": "Update ecs client to latest version", 
+    "type": "feature"
+  }
+]

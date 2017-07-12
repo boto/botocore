@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``gamelift``", 
+    "description": "Update gamelift client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codedeploy``", 
+    "description": "Update codedeploy client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``inspector``", 
+    "description": "Update inspector client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kms``", 
+    "description": "Update kms client to latest version", 
+    "type": "api-change"
+  }
+]

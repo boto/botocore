@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``gamelift``", 
+    "description": "Update gamelift client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``batch``", 
+    "description": "Update batch client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``apigateway``", 
+    "description": "Update apigateway client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``opsworks``", 
+    "description": "Update opsworks client to latest version", 
+    "type": "api-change"
+  }
+]

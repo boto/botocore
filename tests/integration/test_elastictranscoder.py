@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 
 from tests import unittest, random_chars
-import functools
 
 import botocore.session
 

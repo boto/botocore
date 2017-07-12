@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``storagegateway``", 
+    "description": "Update storagegateway client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``firehose``", 
+    "description": "Update firehose client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``route53``", 
+    "description": "Update route53 client to latest version", 
+    "type": "feature"
+  }
+]

@@ -19,7 +19,6 @@ import binascii
 import functools
 import weakref
 
-from six import string_types, text_type
 import dateutil.parser
 from dateutil.tz import tzlocal, tzutc
 
@@ -29,7 +28,7 @@ from botocore.exceptions import InvalidDNSNameError, ClientError
 from botocore.exceptions import MetadataRetrievalError
 from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
 from botocore.vendored import requests
-from botocore.compat import OrderedDict
+from botocore.compat import OrderedDict, six
 
 
 logger = logging.getLogger(__name__)
@@ -40,7 +39,7 @@ METADATA_SECURITY_CREDENTIALS_URL = (
 # These are chars that do not need to be urlencoded.
 # Based on rfc2986, section 2.3
 SAFE_CHARS = '-._~'
-LABEL_RE = re.compile('[a-z0-9][a-z0-9\-]*[a-z0-9]')
+LABEL_RE = re.compile(r'[a-z0-9][a-z0-9\-]*[a-z0-9]')
 RESTRICTED_REGIONS = [
     'us-gov-west-1',
     'fips-us-gov-west-1',
@@ -54,6 +53,21 @@ class _RetriesExceededError(Exception):
     pass
 
 
+def is_json_value_header(shape):
+    """Determines if the provided shape is the special header type jsonvalue.
+
+    :type shape: botocore.shape
+    :param shape: Shape to be inspected for the jsonvalue trait.
+
+    :return: True if this type is a jsonvalue, False otherwise
+    :rtype: Bool
+    """
+    return (hasattr(shape, 'serialization') and
+            shape.serialization.get('jsonvalue', False) and
+            shape.serialization.get('location') == 'header' and
+            shape.type_name == 'string')
+
+
 def get_service_module_name(service_model):
     """Returns the module name for a service
 
@@ -65,7 +79,7 @@ def get_service_module_name(service_model):
             'serviceFullName', service_model.service_name))
     name = name.replace('Amazon', '')
     name = name.replace('AWS', '')
-    name = re.sub('\W+', '', name)
+    name = re.sub(r'\W+', '', name)
     return name
 
 
@@ -304,10 +318,18 @@ def percent_encode(input_str, safe=SAFE_CHARS):
     producing a percent encoded string, this function deals only with
     taking a string (not a dict/sequence) and percent encoding it.
 
+    If given the binary type, will simply URL encode it. If given the
+    text type, will produce the binary type by UTF-8 encoding the
+    text. If given something else, will convert it to the the text type
+    first.
     """
-    if not isinstance(input_str, string_types):
-        input_str = text_type(input_str)
-    return quote(text_type(input_str).encode('utf-8'), safe=safe)
+    # If its not a binary or text string, make it a text string.
+    if not isinstance(input_str, (six.binary_type, six.text_type)):
+        input_str = six.text_type(input_str)
+    # If it's not bytes, make it bytes by UTF-8 encoding it.
+    if not isinstance(input_str, six.binary_type):
+        input_str = input_str.encode('utf-8')
+    return quote(input_str, safe=safe)
 
 
 def parse_timestamp(value):
@@ -615,7 +637,7 @@ def is_valid_endpoint_url(endpoint_url):
     if hostname[-1] == ".":
         hostname = hostname[:-1]
     allowed = re.compile(
-        "^((?!-)[A-Z\d-]{1,63}(?<!-)\.)*((?!-)[A-Z\d-]{1,63}(?<!-))$",
+        r"^((?!-)[A-Z\d-]{1,63}(?<!-)\.)*((?!-)[A-Z\d-]{1,63}(?<!-))$",
         re.IGNORECASE)
     return allowed.match(hostname)
 
@@ -979,12 +1001,40 @@ class ContainerMetadataFetcher(object):
     RETRY_ATTEMPTS = 3
     SLEEP_TIME = 1
     IP_ADDRESS = '169.254.170.2'
+    _ALLOWED_HOSTS = [IP_ADDRESS, 'localhost', '127.0.0.1']
 
     def __init__(self, session=None, sleep=time.sleep):
         if session is None:
             session = requests.Session()
         self._session = session
         self._sleep = sleep
+
+    def retrieve_full_uri(self, full_url, headers=None):
+        """Retrieve JSON metadata from container metadata.
+
+        :type full_url: str
+        :param full_url: The full URL of the metadata service.
+            This should include the scheme as well, e.g
+            "http://localhost:123/foo"
+
+        """
+        self._validate_allowed_url(full_url)
+        return self._retrieve_credentials(full_url, headers)
+
+    def _validate_allowed_url(self, full_url):
+        parsed = botocore.compat.urlparse(full_url)
+        is_whitelisted_host = self._check_if_whitelisted_host(
+            parsed.hostname)
+        if not is_whitelisted_host:
+            raise ValueError(
+                "Unsupported host '%s'.  Can only "
+                "retrieve metadata from these hosts: %s" %
+                (parsed.hostname, ', '.join(self._ALLOWED_HOSTS)))
+
+    def _check_if_whitelisted_host(self, host):
+        if host in self._ALLOWED_HOSTS:
+            return True
+        return False
 
     def retrieve_uri(self, relative_uri):
         """Retrieve JSON metadata from ECS metadata.
@@ -995,15 +1045,20 @@ class ContainerMetadataFetcher(object):
         :return: The parsed JSON response.
 
         """
-        full_url = self._full_url(relative_uri)
+        full_url = self.full_url(relative_uri)
+        return self._retrieve_credentials(full_url)
+
+    def _retrieve_credentials(self, full_url, extra_headers=None):
         headers = {'Accept': 'application/json'}
+        if extra_headers is not None:
+            headers.update(extra_headers)
         attempts = 0
         while True:
             try:
                 return self._get_response(full_url, headers, self.TIMEOUT_SECONDS)
             except MetadataRetrievalError as e:
                 logger.debug("Received error when attempting to retrieve "
-                             "ECS metadata: %s", e, exc_info=True)
+                             "container metadata: %s", e, exc_info=True)
                 self._sleep(self.SLEEP_TIME)
                 attempts += 1
                 if attempts >= self.RETRY_ATTEMPTS:
@@ -1028,5 +1083,5 @@ class ContainerMetadataFetcher(object):
                          "ECS metadata: %s" % e)
             raise MetadataRetrievalError(error_msg=error_msg)
 
-    def _full_url(self, relative_uri):
+    def full_url(self, relative_uri):
         return 'http://%s%s' % (self.IP_ADDRESS, relative_uri)

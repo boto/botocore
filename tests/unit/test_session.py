@@ -328,7 +328,7 @@ class TestSessionPartitionFiles(BaseSessionTest):
         mock_resolver = mock.Mock()
         mock_resolver.get_available_partitions.return_value = ['foo']
         self.session.register_component('endpoint_resolver', mock_resolver)
-        self.assertEquals(['foo'], self.session.get_available_partitions())
+        self.assertEqual(['foo'], self.session.get_available_partitions())
 
     def test_proxies_list_endpoints_to_resolver(self):
         resolver = mock.Mock()
@@ -354,6 +354,20 @@ class TestSessionUserAgent(BaseSessionTest):
         self.session.user_agent_extra = 'custom-thing/other'
         self.assertTrue(
             self.session.user_agent().endswith('custom-thing/other'))
+
+    def test_execution_env_not_set(self):
+        self.assertFalse(self.session.user_agent().endswith('FooEnv'))
+
+    def test_execution_env_set(self):
+        self.environ['AWS_EXECUTION_ENV'] = 'FooEnv'
+        self.assertTrue(self.session.user_agent().endswith(' exec-env/FooEnv'))
+
+    def test_agent_extra_and_exec_env(self):
+        self.session.user_agent_extra = 'custom-thing/other'
+        self.environ['AWS_EXECUTION_ENV'] = 'FooEnv'
+        user_agent = self.session.user_agent()
+        self.assertTrue(user_agent.endswith('custom-thing/other'))
+        self.assertIn('exec-env/FooEnv', user_agent)
 
 
 class TestConfigLoaderObject(BaseSessionTest):

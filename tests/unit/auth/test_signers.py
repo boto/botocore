@@ -17,7 +17,6 @@ import datetime
 import time
 import base64
 import json
-import tempfile
 
 import mock
 
@@ -226,6 +225,20 @@ class TestSigV2(unittest.TestCase):
             result, ('Foo=%E2%9C%93',
                      u'VCtWuwaOL0yMffAT8W4y0AFW3W4KUykBqah9S40rB+Q='))
 
+    def test_get(self):
+        request = Request()
+        request.url = '/'
+        request.method = 'GET'
+        request.params = {'Foo': u'\u2713'}
+        self.signer.add_auth(request)
+        self.assertEqual(request.params['AWSAccessKeyId'], 'foo')
+        self.assertEqual(request.params['Foo'], u'\u2713')
+        self.assertEqual(request.params['Timestamp'], '2014-06-20T08:40:23Z')
+        self.assertEqual(request.params['Signature'],
+                         u'Un97klqZCONP65bA1+Iv4H3AcB2I40I4DBvw5ZERFPw=')
+        self.assertEqual(request.params['SignatureMethod'], 'HmacSHA256')
+        self.assertEqual(request.params['SignatureVersion'], '2')
+
 
 class TestSigV3(unittest.TestCase):
 
@@ -341,6 +354,10 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
     def test_blacklist_expect_headers(self):
         self._test_blacklist_header('expect', '100-continue')
 
+    def test_blacklist_trace_id(self):
+        self._test_blacklist_header('x-amzn-trace-id',
+                                    'Root=foo;Parent=bar;Sampleid=1')
+
     def test_blacklist_headers(self):
         self._test_blacklist_header('user-agent', 'botocore/1.4.11')
 
@@ -387,7 +404,7 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
     def test_uses_sha256_if_not_streaming_upload(self):
         self.request.context['has_streaming_input'] = False
         self.request.headers.add_header('Content-MD5', 'foo')
-        self.request.url = 'http://s3.amazonaws.com/bucket'
+        self.request.url = 'https://s3.amazonaws.com/bucket'
         self.auth.add_auth(self.request)
         sha_header = self.request.headers['X-Amz-Content-SHA256']
         self.assertNotEqual(sha_header, 'UNSIGNED-PAYLOAD')
@@ -398,6 +415,28 @@ class TestS3SigV4Auth(BaseTestWithFixedDate):
         self.auth.add_auth(self.request)
         sha_header = self.request.headers['X-Amz-Content-SHA256']
         self.assertEqual(sha_header, 'UNSIGNED-PAYLOAD')
+
+    def test_does_not_use_sha256_if_context_config_set(self):
+        self.request.context['payload_signing_enabled'] = False
+        self.request.headers.add_header('Content-MD5', 'foo')
+        self.auth.add_auth(self.request)
+        sha_header = self.request.headers['X-Amz-Content-SHA256']
+        self.assertEqual(sha_header, 'UNSIGNED-PAYLOAD')
+
+    def test_sha256_if_context_set_on_http(self):
+        self.request.context['payload_signing_enabled'] = False
+        self.request.headers.add_header('Content-MD5', 'foo')
+        self.request.url = 'http://s3.amazonaws.com/bucket'
+        self.auth.add_auth(self.request)
+        sha_header = self.request.headers['X-Amz-Content-SHA256']
+        self.assertNotEqual(sha_header, 'UNSIGNED-PAYLOAD')
+
+    def test_sha256_if_context_set_without_md5(self):
+        self.request.context['payload_signing_enabled'] = False
+        self.request.url = 'https://s3.amazonaws.com/bucket'
+        self.auth.add_auth(self.request)
+        sha_header = self.request.headers['X-Amz-Content-SHA256']
+        self.assertNotEqual(sha_header, 'UNSIGNED-PAYLOAD')
 
 
 class TestSigV4(unittest.TestCase):
@@ -469,6 +508,7 @@ class TestSigV4(unittest.TestCase):
     def test_payload_is_binary_file(self):
         request = AWSRequest()
         request.data = six.BytesIO(u'\u2713'.encode('utf-8'))
+        request.url = 'https://amazonaws.com'
         auth = self.create_signer()
         payload = auth.payload(request)
         self.assertEqual(
@@ -478,11 +518,46 @@ class TestSigV4(unittest.TestCase):
     def test_payload_is_bytes_type(self):
         request = AWSRequest()
         request.data = u'\u2713'.encode('utf-8')
+        request.url = 'https://amazonaws.com'
         auth = self.create_signer()
         payload = auth.payload(request)
         self.assertEqual(
             payload,
             '1dabba21cdad44541f6b15796f8d22978fc7ea10c46aeceeeeb66c23b3ac7604')
+
+    def test_payload_not_signed_if_disabled_in_context(self):
+        request = AWSRequest()
+        request.data = u'\u2713'.encode('utf-8')
+        request.url = 'https://amazonaws.com'
+        request.context['payload_signing_enabled'] = False
+        auth = self.create_signer()
+        payload = auth.payload(request)
+        self.assertEqual(payload, 'UNSIGNED-PAYLOAD')
+
+    def test_content_sha256_set_if_payload_signing_disabled(self):
+        request = AWSRequest()
+        request.data = six.BytesIO(u'\u2713'.encode('utf-8'))
+        request.url = 'https://amazonaws.com'
+        request.context['payload_signing_enabled'] = False
+        request.method = 'PUT'
+        auth = self.create_signer()
+        auth.add_auth(request)
+        sha_header = request.headers['X-Amz-Content-SHA256']
+        self.assertEqual(sha_header, 'UNSIGNED-PAYLOAD')
+
+    def test_collapse_multiple_spaces(self):
+        auth = self.create_signer()
+        original = HTTPHeaders()
+        original['foo'] = 'double  space'
+        headers = auth.canonical_headers(original)
+        self.assertEqual(headers, 'foo:double space')
+
+    def test_trims_leading_trailing_spaces(self):
+        auth = self.create_signer()
+        original = HTTPHeaders()
+        original['foo'] = '  leading  and  trailing  '
+        headers = auth.canonical_headers(original)
+        self.assertEqual(headers, 'foo:leading and trailing')
 
 
 class TestSigV4Resign(BaseTestWithFixedDate):
@@ -577,8 +652,8 @@ class TestS3SigV2Presign(BasePresignTest):
         self.assertEqual(query_string['AWSAccessKeyId'], self.access_key)
         self.assertEqual(query_string['Expires'],
                          str(int(self.current_epoch_time) + self.expires))
-        self.assertEquals(query_string['Signature'],
-                          'ZRSgywstwIruKLTLt/Bcrf9H1K4=')
+        self.assertEqual(query_string['Signature'],
+                         'ZRSgywstwIruKLTLt/Bcrf9H1K4=')
 
     def test_presign_with_x_amz_headers(self):
         self.request.headers['x-amz-security-token'] = 'foo'
@@ -587,8 +662,8 @@ class TestS3SigV2Presign(BasePresignTest):
         query_string = self.get_parsed_query_string(self.request)
         self.assertEqual(query_string['x-amz-security-token'], 'foo')
         self.assertEqual(query_string['x-amz-acl'], 'read-only')
-        self.assertEquals(query_string['Signature'],
-                          '5oyMAGiUk1E5Ry2BnFr6cIS3Gus=')
+        self.assertEqual(query_string['Signature'],
+                         '5oyMAGiUk1E5Ry2BnFr6cIS3Gus=')
 
     def test_presign_with_content_headers(self):
         self.request.headers['content-type'] = 'txt'
@@ -597,16 +672,16 @@ class TestS3SigV2Presign(BasePresignTest):
         query_string = self.get_parsed_query_string(self.request)
         self.assertEqual(query_string['content-type'], 'txt')
         self.assertEqual(query_string['content-md5'], 'foo')
-        self.assertEquals(query_string['Signature'],
-                          '/YQRFdQGywXP74WrOx2ET/RUqz8=')
+        self.assertEqual(query_string['Signature'],
+                         '/YQRFdQGywXP74WrOx2ET/RUqz8=')
 
     def test_presign_with_unused_headers(self):
         self.request.headers['user-agent'] = 'botocore'
         self.auth.add_auth(self.request)
         query_string = self.get_parsed_query_string(self.request)
         self.assertNotIn('user-agent', query_string)
-        self.assertEquals(query_string['Signature'],
-                          'ZRSgywstwIruKLTLt/Bcrf9H1K4=')
+        self.assertEqual(query_string['Signature'],
+                         'ZRSgywstwIruKLTLt/Bcrf9H1K4=')
 
 
 class TestSigV4Presign(BasePresignTest):

@@ -98,7 +98,8 @@ import logging
 
 from botocore.compat import six, XMLParseError
 
-from botocore.utils import parse_timestamp, merge_dicts
+from botocore.utils import parse_timestamp, merge_dicts, \
+    is_json_value_header
 
 LOG = logging.getLogger(__name__)
 
@@ -687,6 +688,13 @@ class BaseRestParser(ResponseParser):
         # of parsing.
         raise NotImplementedError("_initial_body_parse")
 
+    def _handle_string(self, shape, value):
+        parsed = value
+        if is_json_value_header(shape):
+            decoded = base64.b64decode(value).decode(self.DEFAULT_ENCODING)
+            parsed = json.loads(decoded)
+        return parsed
+
 
 class RestJSONParser(BaseRestParser, BaseJSONParser):
 
@@ -781,6 +789,11 @@ class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
         default = {'Error': {'Message': '', 'Code': ''}}
         merge_dicts(default, parsed)
         return default
+
+    @_text_content
+    def _handle_string(self, shape, text):
+        text = super(RestXMLParser, self)._handle_string(shape, text)
+        return text
 
 
 PROTOCOL_PARSERS = {

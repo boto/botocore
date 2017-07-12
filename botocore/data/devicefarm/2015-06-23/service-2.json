@@ -27,6 +27,22 @@
       ],
       "documentation":"<p>Creates a device pool.</p>"
     },
+    "CreateNetworkProfile":{
+      "name":"CreateNetworkProfile",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"CreateNetworkProfileRequest"},
+      "output":{"shape":"CreateNetworkProfileResult"},
+      "errors":[
+        {"shape":"ArgumentException"},
+        {"shape":"NotFoundException"},
+        {"shape":"LimitExceededException"},
+        {"shape":"ServiceAccountException"}
+      ],
+      "documentation":"<p>Creates a network profile.</p>"
+    },
     "CreateProject":{
       "name":"CreateProject",
       "http":{
@@ -90,6 +106,22 @@
         {"shape":"ServiceAccountException"}
       ],
       "documentation":"<p>Deletes a device pool given the pool ARN. Does not allow deletion of curated pools owned by the system.</p>"
+    },
+    "DeleteNetworkProfile":{
+      "name":"DeleteNetworkProfile",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"DeleteNetworkProfileRequest"},
+      "output":{"shape":"DeleteNetworkProfileResult"},
+      "errors":[
+        {"shape":"ArgumentException"},
+        {"shape":"NotFoundException"},
+        {"shape":"LimitExceededException"},
+        {"shape":"ServiceAccountException"}
+      ],
+      "documentation":"<p>Deletes a network profile.</p>"
     },
     "DeleteProject":{
       "name":"DeleteProject",
@@ -234,6 +266,22 @@
         {"shape":"ServiceAccountException"}
       ],
       "documentation":"<p>Gets information about a job.</p>"
+    },
+    "GetNetworkProfile":{
+      "name":"GetNetworkProfile",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"GetNetworkProfileRequest"},
+      "output":{"shape":"GetNetworkProfileResult"},
+      "errors":[
+        {"shape":"ArgumentException"},
+        {"shape":"NotFoundException"},
+        {"shape":"LimitExceededException"},
+        {"shape":"ServiceAccountException"}
+      ],
+      "documentation":"<p>Returns information about a network profile.</p>"
     },
     "GetOfferingStatus":{
       "name":"GetOfferingStatus",
@@ -427,6 +475,39 @@
         {"shape":"ServiceAccountException"}
       ],
       "documentation":"<p>Gets information about jobs.</p>"
+    },
+    "ListNetworkProfiles":{
+      "name":"ListNetworkProfiles",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"ListNetworkProfilesRequest"},
+      "output":{"shape":"ListNetworkProfilesResult"},
+      "errors":[
+        {"shape":"ArgumentException"},
+        {"shape":"NotFoundException"},
+        {"shape":"LimitExceededException"},
+        {"shape":"ServiceAccountException"}
+      ],
+      "documentation":"<p>Returns the list of available network profiles.</p>"
+    },
+    "ListOfferingPromotions":{
+      "name":"ListOfferingPromotions",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"ListOfferingPromotionsRequest"},
+      "output":{"shape":"ListOfferingPromotionsResult"},
+      "errors":[
+        {"shape":"ArgumentException"},
+        {"shape":"NotFoundException"},
+        {"shape":"NotEligibleException"},
+        {"shape":"LimitExceededException"},
+        {"shape":"ServiceAccountException"}
+      ],
+      "documentation":"<p>Returns a list of offering promotions. Each offering promotion record contains the ID and description of the promotion. The API returns a <code>NotEligible</code> error if the caller is not permitted to invoke the operation. Contact <a href=\"mailto:aws-devicefarm-support@amazon.com\">aws-devicefarm-support@amazon.com</a> if you believe that you should be able to invoke this operation.</p>"
     },
     "ListOfferingTransactions":{
       "name":"ListOfferingTransactions",
@@ -689,6 +770,22 @@
       ],
       "documentation":"<p>Modifies the name, description, and rules in a device pool given the attributes and the pool ARN. Rule updates are all-or-nothing, meaning they can only be updated as a whole (or not at all).</p>"
     },
+    "UpdateNetworkProfile":{
+      "name":"UpdateNetworkProfile",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"UpdateNetworkProfileRequest"},
+      "output":{"shape":"UpdateNetworkProfileResult"},
+      "errors":[
+        {"shape":"ArgumentException"},
+        {"shape":"NotFoundException"},
+        {"shape":"LimitExceededException"},
+        {"shape":"ServiceAccountException"}
+      ],
+      "documentation":"<p>Updates the network profile with specific settings.</p>"
+    },
     "UpdateProject":{
       "name":"UpdateProject",
       "http":{
@@ -726,10 +823,27 @@
         "unmeteredRemoteAccessDevices":{
           "shape":"PurchasedDevicesMap",
           "documentation":"<p>Returns the unmetered remote access devices you have purchased or want to purchase.</p>"
+        },
+        "maxJobTimeoutMinutes":{
+          "shape":"JobTimeoutMinutes",
+          "documentation":"<p>The maximum number of minutes a test run will execute before it times out.</p>"
+        },
+        "trialMinutes":{
+          "shape":"TrialMinutes",
+          "documentation":"<p>Information about an AWS account's usage of free trial device minutes.</p>"
+        },
+        "maxSlots":{
+          "shape":"MaxSlotMap",
+          "documentation":"<p>The maximum number of device slots that the AWS account can purchase. Each maximum is expressed as an <code>offering-id:number</code> pair, where the <code>offering-id</code> represents one of the IDs returned by the <code>ListOfferings</code> command.</p>"
+        },
+        "defaultJobTimeoutMinutes":{
+          "shape":"JobTimeoutMinutes",
+          "documentation":"<p>The default number of minutes (at the account level) a test run will execute before it times out. Default value is 60 minutes.</p>"
         }
       },
       "documentation":"<p>A container for account-level settings within AWS Device Farm.</p>"
     },
+    "AccountsCleanup":{"type":"boolean"},
     "AmazonResourceName":{
       "type":"string",
       "min":32
@@ -738,6 +852,7 @@
       "type":"list",
       "member":{"shape":"AmazonResourceName"}
     },
+    "AppPackagesCleanup":{"type":"boolean"},
     "ArgumentException":{
       "type":"structure",
       "members":{
@@ -919,6 +1034,72 @@
       },
       "documentation":"<p>Represents the result of a create device pool request.</p>"
     },
+    "CreateNetworkProfileRequest":{
+      "type":"structure",
+      "required":[
+        "projectArn",
+        "name"
+      ],
+      "members":{
+        "projectArn":{
+          "shape":"AmazonResourceName",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the project for which you want to create a network profile.</p>"
+        },
+        "name":{
+          "shape":"Name",
+          "documentation":"<p>The name you wish to specify for the new network profile.</p>"
+        },
+        "description":{
+          "shape":"Message",
+          "documentation":"<p>The description of the network profile.</p>"
+        },
+        "type":{
+          "shape":"NetworkProfileType",
+          "documentation":"<p>The type of network profile you wish to create. Valid values are listed below.</p>"
+        },
+        "uplinkBandwidthBits":{
+          "shape":"Long",
+          "documentation":"<p>The data throughput rate in bits per second, as an integer from 0 to 104857600.</p>"
+        },
+        "downlinkBandwidthBits":{
+          "shape":"Long",
+          "documentation":"<p>The data throughput rate in bits per second, as an integer from 0 to 104857600.</p>"
+        },
+        "uplinkDelayMs":{
+          "shape":"Long",
+          "documentation":"<p>Delay time for all packets to destination in milliseconds as an integer from 0 to 2000.</p>"
+        },
+        "downlinkDelayMs":{
+          "shape":"Long",
+          "documentation":"<p>Delay time for all packets to destination in milliseconds as an integer from 0 to 2000.</p>"
+        },
+        "uplinkJitterMs":{
+          "shape":"Long",
+          "documentation":"<p>Time variation in the delay of received packets in milliseconds as an integer from 0 to 2000.</p>"
+        },
+        "downlinkJitterMs":{
+          "shape":"Long",
+          "documentation":"<p>Time variation in the delay of received packets in milliseconds as an integer from 0 to 2000.</p>"
+        },
+        "uplinkLossPercent":{
+          "shape":"PercentInteger",
+          "documentation":"<p>Proportion of transmitted packets that fail to arrive from 0 to 100 percent.</p>"
+        },
+        "downlinkLossPercent":{
+          "shape":"PercentInteger",
+          "documentation":"<p>Proportion of received packets that fail to arrive from 0 to 100 percent.</p>"
+        }
+      }
+    },
+    "CreateNetworkProfileResult":{
+      "type":"structure",
+      "members":{
+        "networkProfile":{
+          "shape":"NetworkProfile",
+          "documentation":"<p>The network profile that is returned by the create network profile request.</p>"
+        }
+      }
+    },
     "CreateProjectRequest":{
       "type":"structure",
       "required":["name"],
@@ -926,6 +1107,10 @@
         "name":{
           "shape":"Name",
           "documentation":"<p>The project's name.</p>"
+        },
+        "defaultJobTimeoutMinutes":{
+          "shape":"JobTimeoutMinutes",
+          "documentation":"<p>Sets the execution timeout value (in minutes) for a project. All test runs in this project will use the specified execution timeout value unless overridden when scheduling a run.</p>"
         }
       },
       "documentation":"<p>Represents a request to the create project operation.</p>"
@@ -1045,6 +1230,21 @@
       },
       "documentation":"<p>Represents the result of a delete device pool request.</p>"
     },
+    "DeleteNetworkProfileRequest":{
+      "type":"structure",
+      "required":["arn"],
+      "members":{
+        "arn":{
+          "shape":"AmazonResourceName",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the network profile you want to delete.</p>"
+        }
+      }
+    },
+    "DeleteNetworkProfileResult":{
+      "type":"structure",
+      "members":{
+      }
+    },
     "DeleteProjectRequest":{
       "type":"structure",
       "required":["arn"],
@@ -1148,7 +1348,10 @@
           "shape":"CPU",
           "documentation":"<p>Information about the device's CPU.</p>"
         },
-        "resolution":{"shape":"Resolution"},
+        "resolution":{
+          "shape":"Resolution",
+          "documentation":"<p>The resolution of the device.</p>"
+        },
         "heapSize":{
           "shape":"Long",
           "documentation":"<p>The device's heap size, expressed in bytes.</p>"
@@ -1191,7 +1394,8 @@
         "PLATFORM",
         "FORM_FACTOR",
         "MANUFACTURER",
-        "REMOTE_ACCESS_ENABLED"
+        "REMOTE_ACCESS_ENABLED",
+        "APPIUM_VERSION"
       ]
     },
     "DeviceFormFactor":{
@@ -1255,7 +1459,10 @@
     "DevicePoolCompatibilityResult":{
       "type":"structure",
       "members":{
-        "device":{"shape":"Device"},
+        "device":{
+          "shape":"Device",
+          "documentation":"<p>The device (phone or tablet) that you wish to return information about.</p>"
+        },
         "compatible":{
           "shape":"Boolean",
           "documentation":"<p>Whether the result was compatible with the device pool.</p>"
@@ -1287,6 +1494,24 @@
       "member":{"shape":"Device"}
     },
     "Double":{"type":"double"},
+    "ExecutionConfiguration":{
+      "type":"structure",
+      "members":{
+        "jobTimeoutMinutes":{
+          "shape":"JobTimeoutMinutes",
+          "documentation":"<p>The number of minutes a test run will execute before it times out.</p>"
+        },
+        "accountsCleanup":{
+          "shape":"AccountsCleanup",
+          "documentation":"<p>True if account cleanup is enabled at the beginning of the test; otherwise, false.</p>"
+        },
+        "appPackagesCleanup":{
+          "shape":"AppPackagesCleanup",
+          "documentation":"<p>True if app package cleanup is enabled at the beginning of the test; otherwise, false.</p>"
+        }
+      },
+      "documentation":"<p>Represents configuration information about a test run, such as the execution timeout (in minutes).</p>"
+    },
     "ExecutionResult":{
       "type":"string",
       "enum":[
@@ -1327,7 +1552,10 @@
     "GetAccountSettingsResult":{
       "type":"structure",
       "members":{
-        "accountSettings":{"shape":"AccountSettings"}
+        "accountSettings":{
+          "shape":"AccountSettings",
+          "documentation":"<p>The account settings.</p>"
+        }
       },
       "documentation":"<p>Represents the account settings return values from the <code>GetAccountSettings</code> request.</p>"
     },
@@ -1346,6 +1574,10 @@
         "testType":{
           "shape":"TestType",
           "documentation":"<p>The test type for the specified device pool.</p> <p>Allowed values include the following:</p> <ul> <li> <p>BUILTIN_FUZZ: The built-in fuzz type.</p> </li> <li> <p>BUILTIN_EXPLORER: For Android, an app explorer that will traverse an Android app, interacting with it and capturing screenshots at the same time.</p> </li> <li> <p>APPIUM_JAVA_JUNIT: The Appium Java JUnit type.</p> </li> <li> <p>APPIUM_JAVA_TESTNG: The Appium Java TestNG type.</p> </li> <li> <p>APPIUM_PYTHON: The Appium Python type.</p> </li> <li> <p>APPIUM_WEB_JAVA_JUNIT: The Appium Java JUnit type for Web apps.</p> </li> <li> <p>APPIUM_WEB_JAVA_TESTNG: The Appium Java TestNG type for Web apps.</p> </li> <li> <p>APPIUM_WEB_PYTHON: The Appium Python type for Web apps.</p> </li> <li> <p>CALABASH: The Calabash type.</p> </li> <li> <p>INSTRUMENTATION: The Instrumentation type.</p> </li> <li> <p>UIAUTOMATION: The uiautomation type.</p> </li> <li> <p>UIAUTOMATOR: The uiautomator type.</p> </li> <li> <p>XCTEST: The XCode test type.</p> </li> <li> <p>XCTEST_UI: The XCode UI test type.</p> </li> </ul>"
+        },
+        "test":{
+          "shape":"ScheduleRunTest",
+          "documentation":"<p>Information about the uploaded test to be run against the device pool.</p>"
         }
       },
       "documentation":"<p>Represents a request to the get device pool compatibility operation.</p>"
@@ -1378,7 +1610,10 @@
     "GetDevicePoolResult":{
       "type":"structure",
       "members":{
-        "devicePool":{"shape":"DevicePool"}
+        "devicePool":{
+          "shape":"DevicePool",
+          "documentation":"<p>An object containing information about the requested device pool.</p>"
+        }
       },
       "documentation":"<p>Represents the result of a get device pool request.</p>"
     },
@@ -1396,7 +1631,10 @@
     "GetDeviceResult":{
       "type":"structure",
       "members":{
-        "device":{"shape":"Device"}
+        "device":{
+          "shape":"Device",
+          "documentation":"<p>An object containing information about the requested device.</p>"
+        }
       },
       "documentation":"<p>Represents the result of a get device request.</p>"
     },
@@ -1414,9 +1652,31 @@
     "GetJobResult":{
       "type":"structure",
       "members":{
-        "job":{"shape":"Job"}
+        "job":{
+          "shape":"Job",
+          "documentation":"<p>An object containing information about the requested job.</p>"
+        }
       },
       "documentation":"<p>Represents the result of a get job request.</p>"
+    },
+    "GetNetworkProfileRequest":{
+      "type":"structure",
+      "required":["arn"],
+      "members":{
+        "arn":{
+          "shape":"AmazonResourceName",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the network profile you want to return information about.</p>"
+        }
+      }
+    },
+    "GetNetworkProfileResult":{
+      "type":"structure",
+      "members":{
+        "networkProfile":{
+          "shape":"NetworkProfile",
+          "documentation":"<p>The network profile.</p>"
+        }
+      }
     },
     "GetOfferingStatusRequest":{
       "type":"structure",
@@ -1460,7 +1720,10 @@
     "GetProjectResult":{
       "type":"structure",
       "members":{
-        "project":{"shape":"Project"}
+        "project":{
+          "shape":"Project",
+          "documentation":"<p>The project you wish to get information about.</p>"
+        }
       },
       "documentation":"<p>Represents the result of a get project request.</p>"
     },
@@ -1499,7 +1762,10 @@
     "GetRunResult":{
       "type":"structure",
       "members":{
-        "run":{"shape":"Run"}
+        "run":{
+          "shape":"Run",
+          "documentation":"<p>The run you wish to get results from.</p>"
+        }
       },
       "documentation":"<p>Represents the result of a get run request.</p>"
     },
@@ -1517,7 +1783,10 @@
     "GetSuiteResult":{
       "type":"structure",
       "members":{
-        "suite":{"shape":"Suite"}
+        "suite":{
+          "shape":"Suite",
+          "documentation":"<p>A collection of one or more tests.</p>"
+        }
       },
       "documentation":"<p>Represents the result of a get suite request.</p>"
     },
@@ -1535,7 +1804,10 @@
     "GetTestResult":{
       "type":"structure",
       "members":{
-        "test":{"shape":"Test"}
+        "test":{
+          "shape":"Test",
+          "documentation":"<p>A test condition that is evaluated.</p>"
+        }
       },
       "documentation":"<p>Represents the result of a get test request.</p>"
     },
@@ -1553,7 +1825,10 @@
     "GetUploadResult":{
       "type":"structure",
       "members":{
-        "upload":{"shape":"Upload"}
+        "upload":{
+          "shape":"Upload",
+          "documentation":"<p>An app or a set of one or more tests to upload or that have been uploaded.</p>"
+        }
       },
       "documentation":"<p>Represents the result of a get upload request.</p>"
     },
@@ -1577,7 +1852,7 @@
         },
         "type":{
           "shape":"DeviceAttribute",
-          "documentation":"<p>The type of incompatibility.</p> <p>Allowed values include:</p> <ul> <li> <p>ARN: The ARN.</p> </li> <li> <p>FORM_FACTOR: The form factor (for example, phone or tablet).</p> </li> <li> <p>MANUFACTURER: The manufacturer.</p> </li> <li> <p>PLATFORM: The platform (for example, Android or iOS).</p> </li> </ul>"
+          "documentation":"<p>The type of incompatibility.</p> <p>Allowed values include:</p> <ul> <li> <p>ARN: The ARN.</p> </li> <li> <p>FORM_FACTOR: The form factor (for example, phone or tablet).</p> </li> <li> <p>MANUFACTURER: The manufacturer.</p> </li> <li> <p>PLATFORM: The platform (for example, Android or iOS).</p> </li> <li> <p>REMOTE_ACCESS_ENABLED: Whether the device is enabled for remote access.</p> </li> <li> <p>APPIUM_VERSION: The Appium version for the test.</p> </li> </ul>"
         }
       },
       "documentation":"<p>Represents information about incompatibility.</p>"
@@ -1607,7 +1882,10 @@
     "InstallToRemoteAccessSessionResult":{
       "type":"structure",
       "members":{
-        "appUpload":{"shape":"Upload"}
+        "appUpload":{
+          "shape":"Upload",
+          "documentation":"<p>An app to upload or that has been uploaded.</p>"
+        }
       },
       "documentation":"<p>Represents the response from the server after AWS Device Farm makes a request to install to a remote access session.</p>"
     },
@@ -1655,7 +1933,10 @@
           "shape":"Message",
           "documentation":"<p>A message about the job's result.</p>"
         },
-        "device":{"shape":"Device"},
+        "device":{
+          "shape":"Device",
+          "documentation":"<p>The device (phone or tablet).</p>"
+        },
         "deviceMinutes":{
           "shape":"DeviceMinutes",
           "documentation":"<p>Represents the total (metered or unmetered) minutes used by the job.</p>"
@@ -1663,6 +1944,7 @@
       },
       "documentation":"<p>Represents a device.</p>"
     },
+    "JobTimeoutMinutes":{"type":"integer"},
     "Jobs":{
       "type":"list",
       "member":{"shape":"Job"}
@@ -1803,6 +2085,59 @@
         }
       },
       "documentation":"<p>Represents the result of a list jobs request.</p>"
+    },
+    "ListNetworkProfilesRequest":{
+      "type":"structure",
+      "required":["arn"],
+      "members":{
+        "arn":{
+          "shape":"AmazonResourceName",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the project for which you want to list network profiles.</p>"
+        },
+        "type":{
+          "shape":"NetworkProfileType",
+          "documentation":"<p>The type of network profile you wish to return information about. Valid values are listed below.</p>"
+        },
+        "nextToken":{
+          "shape":"PaginationToken",
+          "documentation":"<p>An identifier that was returned from the previous call to this operation, which can be used to return the next set of items in the list.</p>"
+        }
+      }
+    },
+    "ListNetworkProfilesResult":{
+      "type":"structure",
+      "members":{
+        "networkProfiles":{
+          "shape":"NetworkProfiles",
+          "documentation":"<p>A list of the available network profiles.</p>"
+        },
+        "nextToken":{
+          "shape":"PaginationToken",
+          "documentation":"<p>An identifier that was returned from the previous call to this operation, which can be used to return the next set of items in the list.</p>"
+        }
+      }
+    },
+    "ListOfferingPromotionsRequest":{
+      "type":"structure",
+      "members":{
+        "nextToken":{
+          "shape":"PaginationToken",
+          "documentation":"<p>An identifier that was returned from the previous call to this operation, which can be used to return the next set of items in the list.</p>"
+        }
+      }
+    },
+    "ListOfferingPromotionsResult":{
+      "type":"structure",
+      "members":{
+        "offeringPromotions":{
+          "shape":"OfferingPromotions",
+          "documentation":"<p>Information about the offering promotions.</p>"
+        },
+        "nextToken":{
+          "shape":"PaginationToken",
+          "documentation":"<p>An identifier to be used in the next call to this operation, to return the next set of items in the list.</p>"
+        }
+      }
     },
     "ListOfferingTransactionsRequest":{
       "type":"structure",
@@ -2102,6 +2437,11 @@
       "documentation":"<p>Represents a latitude and longitude pair, expressed in geographic coordinate system degrees (for example 47.6204, -122.3491).</p> <p>Elevation is currently not supported.</p>"
     },
     "Long":{"type":"long"},
+    "MaxSlotMap":{
+      "type":"map",
+      "key":{"shape":"String"},
+      "value":{"shape":"Integer"}
+    },
     "Message":{
       "type":"string",
       "max":16384,
@@ -2130,6 +2470,71 @@
       "type":"string",
       "max":256,
       "min":0
+    },
+    "NetworkProfile":{
+      "type":"structure",
+      "members":{
+        "arn":{
+          "shape":"AmazonResourceName",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the network profile.</p>"
+        },
+        "name":{
+          "shape":"Name",
+          "documentation":"<p>The name of the network profile.</p>"
+        },
+        "description":{
+          "shape":"Message",
+          "documentation":"<p>The description of the network profile.</p>"
+        },
+        "type":{
+          "shape":"NetworkProfileType",
+          "documentation":"<p>The type of network profile. Valid values are listed below.</p>"
+        },
+        "uplinkBandwidthBits":{
+          "shape":"Long",
+          "documentation":"<p>The data throughput rate in bits per second, as an integer from 0 to 104857600.</p>"
+        },
+        "downlinkBandwidthBits":{
+          "shape":"Long",
+          "documentation":"<p>The data throughput rate in bits per second, as an integer from 0 to 104857600.</p>"
+        },
+        "uplinkDelayMs":{
+          "shape":"Long",
+          "documentation":"<p>Delay time for all packets to destination in milliseconds as an integer from 0 to 2000.</p>"
+        },
+        "downlinkDelayMs":{
+          "shape":"Long",
+          "documentation":"<p>Delay time for all packets to destination in milliseconds as an integer from 0 to 2000.</p>"
+        },
+        "uplinkJitterMs":{
+          "shape":"Long",
+          "documentation":"<p>Time variation in the delay of received packets in milliseconds as an integer from 0 to 2000.</p>"
+        },
+        "downlinkJitterMs":{
+          "shape":"Long",
+          "documentation":"<p>Time variation in the delay of received packets in milliseconds as an integer from 0 to 2000.</p>"
+        },
+        "uplinkLossPercent":{
+          "shape":"PercentInteger",
+          "documentation":"<p>Proportion of transmitted packets that fail to arrive from 0 to 100 percent.</p>"
+        },
+        "downlinkLossPercent":{
+          "shape":"PercentInteger",
+          "documentation":"<p>Proportion of received packets that fail to arrive from 0 to 100 percent.</p>"
+        }
+      },
+      "documentation":"<p>An array of settings that describes characteristics of a network profile.</p>"
+    },
+    "NetworkProfileType":{
+      "type":"string",
+      "enum":[
+        "CURATED",
+        "PRIVATE"
+      ]
+    },
+    "NetworkProfiles":{
+      "type":"list",
+      "member":{"shape":"NetworkProfile"}
     },
     "NotEligibleException":{
       "type":"structure",
@@ -2183,6 +2588,28 @@
       "type":"string",
       "min":32
     },
+    "OfferingPromotion":{
+      "type":"structure",
+      "members":{
+        "id":{
+          "shape":"OfferingPromotionIdentifier",
+          "documentation":"<p>The ID of the offering promotion.</p>"
+        },
+        "description":{
+          "shape":"Message",
+          "documentation":"<p>A string describing the offering promotion.</p>"
+        }
+      },
+      "documentation":"<p>Represents information about an offering promotion.</p>"
+    },
+    "OfferingPromotionIdentifier":{
+      "type":"string",
+      "min":4
+    },
+    "OfferingPromotions":{
+      "type":"list",
+      "member":{"shape":"OfferingPromotion"}
+    },
     "OfferingStatus":{
       "type":"structure",
       "members":{
@@ -2221,6 +2648,10 @@
           "shape":"TransactionIdentifier",
           "documentation":"<p>The transaction ID of the offering transaction.</p>"
         },
+        "offeringPromotionId":{
+          "shape":"OfferingPromotionIdentifier",
+          "documentation":"<p>The ID that corresponds to a device offering promotion.</p>"
+        },
         "createdOn":{
           "shape":"DateTime",
           "documentation":"<p>The date on which an offering transaction was created.</p>"
@@ -2256,6 +2687,11 @@
       "type":"string",
       "max":1024,
       "min":4
+    },
+    "PercentInteger":{
+      "type":"integer",
+      "max":100,
+      "min":0
     },
     "Problem":{
       "type":"structure",
@@ -2320,6 +2756,10 @@
           "shape":"Name",
           "documentation":"<p>The project's name.</p>"
         },
+        "defaultJobTimeoutMinutes":{
+          "shape":"JobTimeoutMinutes",
+          "documentation":"<p>The default number of minutes (at the project level) a test run will execute before it times out. Default value is 60 minutes.</p>"
+        },
         "created":{
           "shape":"DateTime",
           "documentation":"<p>When the project was created.</p>"
@@ -2341,6 +2781,10 @@
         "quantity":{
           "shape":"Integer",
           "documentation":"<p>The number of device slots you wish to purchase in an offering request.</p>"
+        },
+        "offeringPromotionId":{
+          "shape":"OfferingPromotionIdentifier",
+          "documentation":"<p>The ID of the offering promotion to be applied to the purchase.</p>"
         }
       },
       "documentation":"<p>Represents a request for a purchase offering.</p>"
@@ -2439,12 +2883,18 @@
           "shape":"DateTime",
           "documentation":"<p>The date and time the remote access session was stopped.</p>"
         },
-        "device":{"shape":"Device"},
+        "device":{
+          "shape":"Device",
+          "documentation":"<p>The device (phone or tablet) used in the remote access session.</p>"
+        },
         "billingMethod":{
           "shape":"BillingMethod",
           "documentation":"<p>The billing method of the remote access session. Possible values include <code>METERED</code> or <code>UNMETERED</code>. For more information about metered devices, see <a href=\"http://docs.aws.amazon.com/devicefarm/latest/developerguide/welcome.html#welcome-terminology\">AWS Device Farm terminology</a>.\"</p>"
         },
-        "deviceMinutes":{"shape":"DeviceMinutes"},
+        "deviceMinutes":{
+          "shape":"DeviceMinutes",
+          "documentation":"<p>The number of minutes a device is used in a remote access sesssion (including setup and teardown minutes).</p>"
+        },
         "endpoint":{
           "shape":"String",
           "documentation":"<p>The endpoint for the remote access sesssion.</p>"
@@ -2499,11 +2949,11 @@
       "members":{
         "attribute":{
           "shape":"DeviceAttribute",
-          "documentation":"<p>The rule's stringified attribute. For example, specify the value as <code>\"\\\"abc\\\"\"</code>.</p> <p>Allowed values include:</p> <ul> <li> <p>ARN: The ARN.</p> </li> <li> <p>FORM_FACTOR: The form factor (for example, phone or tablet).</p> </li> <li> <p>MANUFACTURER: The manufacturer.</p> </li> <li> <p>PLATFORM: The platform (for example, Android or iOS).</p> </li> </ul>"
+          "documentation":"<p>The rule's stringified attribute. For example, specify the value as <code>\"\\\"abc\\\"\"</code>.</p> <p>Allowed values include:</p> <ul> <li> <p>ARN: The ARN.</p> </li> <li> <p>FORM_FACTOR: The form factor (for example, phone or tablet).</p> </li> <li> <p>MANUFACTURER: The manufacturer.</p> </li> <li> <p>PLATFORM: The platform (for example, Android or iOS).</p> </li> <li> <p>REMOTE_ACCESS_ENABLED: Whether the device is enabled for remote access.</p> </li> <li> <p>APPIUM_VERSION: The Appium version for the test.</p> </li> </ul>"
         },
         "operator":{
           "shape":"RuleOperator",
-          "documentation":"<p>The rule's operator.</p> <ul> <li> <p>EQUALS: The equals operator.</p> </li> <li> <p>GREATER_THAN: The greater-than operator.</p> </li> <li> <p>IN: The in operator.</p> </li> <li> <p>LESS_THAN: The less-than operator.</p> </li> <li> <p>NOT_IN: The not-in operator.</p> </li> </ul>"
+          "documentation":"<p>The rule's operator.</p> <ul> <li> <p>EQUALS: The equals operator.</p> </li> <li> <p>GREATER_THAN: The greater-than operator.</p> </li> <li> <p>IN: The in operator.</p> </li> <li> <p>LESS_THAN: The less-than operator.</p> </li> <li> <p>NOT_IN: The not-in operator.</p> </li> <li> <p>CONTAINS: The contains operator.</p> </li> </ul>"
         },
         "value":{
           "shape":"String",
@@ -2519,7 +2969,8 @@
         "LESS_THAN",
         "GREATER_THAN",
         "IN",
-        "NOT_IN"
+        "NOT_IN",
+        "CONTAINS"
       ]
     },
     "Rules":{
@@ -2588,6 +3039,10 @@
         "deviceMinutes":{
           "shape":"DeviceMinutes",
           "documentation":"<p>Represents the total (metered or unmetered) minutes used by the test run.</p>"
+        },
+        "networkProfile":{
+          "shape":"NetworkProfile",
+          "documentation":"<p>The network profile being used for a test run.</p>"
         }
       },
       "documentation":"<p>Represents an app on a set of devices with a specific test and configuration.</p>"
@@ -2705,6 +3160,10 @@
         "configuration":{
           "shape":"ScheduleRunConfiguration",
           "documentation":"<p>Information about the settings for the run to be scheduled.</p>"
+        },
+        "executionConfiguration":{
+          "shape":"ExecutionConfiguration",
+          "documentation":"<p>Specifies configuration information about a test run, such as the execution timeout (in minutes).</p>"
         }
       },
       "documentation":"<p>Represents a request to the schedule run operation.</p>"
@@ -2737,7 +3196,7 @@
         },
         "parameters":{
           "shape":"TestParameters",
-          "documentation":"<p>The test's parameters, such as test framework parameters and fixture settings.</p>"
+          "documentation":"<p>The test's parameters, such as the following test framework parameters and fixture settings:</p> <p>For Calabash tests:</p> <ul> <li> <p>profile: A cucumber profile, for example, \"my_profile_name\".</p> </li> <li> <p>tags: You can limit execution to features or scenarios that have (or don't have) certain tags, for example, \"@smoke\" or \"@smoke,~@wip\".</p> </li> </ul> <p>For Appium tests (all types):</p> <ul> <li> <p>appium_version: The Appium version. Currently supported values are \"1.4.16\", \"1.6.3\", \"latest\", and \"default\".</p> <ul> <li> <p>“latest” will run the latest Appium version supported by Device Farm (1.6.3).</p> </li> <li> <p>For “default”, Device Farm will choose a compatible version of Appium for the device. The current behavior is to run 1.4.16 on Android devices and iOS 9 and earlier, 1.6.3 for iOS 10 and later.</p> </li> <li> <p>This behavior is subject to change.</p> </li> </ul> </li> </ul> <p>For Fuzz tests (Android only):</p> <ul> <li> <p>event_count: The number of events, between 1 and 10000, that the UI fuzz test should perform.</p> </li> <li> <p>throttle: The time, in ms, between 0 and 1000, that the UI fuzz test should wait between events.</p> </li> <li> <p>seed: A seed to use for randomizing the UI fuzz test. Using the same seed value between tests ensures identical event sequences.</p> </li> </ul> <p>For Explorer tests:</p> <ul> <li> <p>username: A username to use if the Explorer encounters a login form. If not supplied, no username will be inserted.</p> </li> <li> <p>password: A password to use if the Explorer encounters a login form. If not supplied, no password will be inserted.</p> </li> </ul> <p>For Instrumentation:</p> <ul> <li> <p>filter: A test filter string. Examples:</p> <ul> <li> <p>Running a single test case: \"com.android.abc.Test1\"</p> </li> <li> <p>Running a single test: \"com.android.abc.Test1#smoke\"</p> </li> <li> <p>Running multiple tests: \"com.android.abc.Test1,com.android.abc.Test2\"</p> </li> </ul> </li> </ul> <p>For XCTest and XCTestUI:</p> <ul> <li> <p>filter: A test filter string. Examples:</p> <ul> <li> <p>Running a single test class: \"LoginTests\"</p> </li> <li> <p>Running a multiple test classes: \"LoginTests,SmokeTests\"</p> </li> <li> <p>Running a single test: \"LoginTests/testValid\"</p> </li> <li> <p>Running multiple tests: \"LoginTests/testValid,LoginTests/testInvalid\"</p> </li> </ul> </li> </ul> <p>For UIAutomator:</p> <ul> <li> <p>filter: A test filter string. Examples:</p> <ul> <li> <p>Running a single test case: \"com.android.abc.Test1\"</p> </li> <li> <p>Running a single test: \"com.android.abc.Test1#smoke\"</p> </li> <li> <p>Running multiple tests: \"com.android.abc.Test1,com.android.abc.Test2\"</p> </li> </ul> </li> </ul>"
         }
       },
       "documentation":"<p>Represents additional test settings.</p>"
@@ -2788,7 +3247,10 @@
     "StopRunResult":{
       "type":"structure",
       "members":{
-        "run":{"shape":"Run"}
+        "run":{
+          "shape":"Run",
+          "documentation":"<p>The run that was stopped.</p>"
+        }
       },
       "documentation":"<p>Represents the results of your stop run attempt.</p>"
     },
@@ -2929,6 +3391,20 @@
       "type":"string",
       "min":32
     },
+    "TrialMinutes":{
+      "type":"structure",
+      "members":{
+        "total":{
+          "shape":"Double",
+          "documentation":"<p>The total number of free trial minutes that the account started with.</p>"
+        },
+        "remaining":{
+          "shape":"Double",
+          "documentation":"<p>The number of free trial minutes remaining in the account.</p>"
+        }
+      },
+      "documentation":"<p>Represents information about free trial device minutes for an AWS account.</p>"
+    },
     "URL":{
       "type":"string",
       "max":2048,
@@ -2983,9 +3459,75 @@
     "UpdateDevicePoolResult":{
       "type":"structure",
       "members":{
-        "devicePool":{"shape":"DevicePool"}
+        "devicePool":{
+          "shape":"DevicePool",
+          "documentation":"<p>The device pool you just updated.</p>"
+        }
       },
       "documentation":"<p>Represents the result of an update device pool request.</p>"
+    },
+    "UpdateNetworkProfileRequest":{
+      "type":"structure",
+      "required":["arn"],
+      "members":{
+        "arn":{
+          "shape":"AmazonResourceName",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the project that you wish to update network profile settings.</p>"
+        },
+        "name":{
+          "shape":"Name",
+          "documentation":"<p>The name of the network profile about which you are returning information.</p>"
+        },
+        "description":{
+          "shape":"Message",
+          "documentation":"<p>The descriptoin of the network profile about which you are returning information.</p>"
+        },
+        "type":{
+          "shape":"NetworkProfileType",
+          "documentation":"<p>The type of network profile you wish to return information about. Valid values are listed below.</p>"
+        },
+        "uplinkBandwidthBits":{
+          "shape":"Long",
+          "documentation":"<p>The data throughput rate in bits per second, as an integer from 0 to 104857600.</p>"
+        },
+        "downlinkBandwidthBits":{
+          "shape":"Long",
+          "documentation":"<p>The data throughput rate in bits per second, as an integer from 0 to 104857600.</p>"
+        },
+        "uplinkDelayMs":{
+          "shape":"Long",
+          "documentation":"<p>Delay time for all packets to destination in milliseconds as an integer from 0 to 2000.</p>"
+        },
+        "downlinkDelayMs":{
+          "shape":"Long",
+          "documentation":"<p>Delay time for all packets to destination in milliseconds as an integer from 0 to 2000.</p>"
+        },
+        "uplinkJitterMs":{
+          "shape":"Long",
+          "documentation":"<p>Time variation in the delay of received packets in milliseconds as an integer from 0 to 2000.</p>"
+        },
+        "downlinkJitterMs":{
+          "shape":"Long",
+          "documentation":"<p>Time variation in the delay of received packets in milliseconds as an integer from 0 to 2000.</p>"
+        },
+        "uplinkLossPercent":{
+          "shape":"PercentInteger",
+          "documentation":"<p>Proportion of transmitted packets that fail to arrive from 0 to 100 percent.</p>"
+        },
+        "downlinkLossPercent":{
+          "shape":"PercentInteger",
+          "documentation":"<p>Proportion of received packets that fail to arrive from 0 to 100 percent.</p>"
+        }
+      }
+    },
+    "UpdateNetworkProfileResult":{
+      "type":"structure",
+      "members":{
+        "networkProfile":{
+          "shape":"NetworkProfile",
+          "documentation":"<p>A list of the available network profiles.</p>"
+        }
+      }
     },
     "UpdateProjectRequest":{
       "type":"structure",
@@ -2998,6 +3540,10 @@
         "name":{
           "shape":"Name",
           "documentation":"<p>A string representing the new name of the project that you are updating.</p>"
+        },
+        "defaultJobTimeoutMinutes":{
+          "shape":"JobTimeoutMinutes",
+          "documentation":"<p>The number of minutes a test run in the project will execute before it times out.</p>"
         }
       },
       "documentation":"<p>Represents a request to the update project operation.</p>"
@@ -3005,7 +3551,10 @@
     "UpdateProjectResult":{
       "type":"structure",
       "members":{
-        "project":{"shape":"Project"}
+        "project":{
+          "shape":"Project",
+          "documentation":"<p>The project you wish to update.</p>"
+        }
       },
       "documentation":"<p>Represents the result of an update project request.</p>"
     },

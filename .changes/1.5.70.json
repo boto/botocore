@@ -1,0 +1,7 @@
+[
+  {
+    "category": "``xray``", 
+    "description": "Update xray client to latest version", 
+    "type": "api-change"
+  }
+]

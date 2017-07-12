@@ -41,7 +41,8 @@ class ServiceDocumenter(object):
         :returns: The reStructured text of the documented service.
         """
         doc_structure = DocumentStructure(
-            self._service_name, section_names=self.sections)
+            self._service_name, section_names=self.sections,
+            target='html')
         self.title(doc_structure.get_section('title'))
         self.table_of_contents(doc_structure.get_section('table-of-contents'))
         self.client_api(doc_structure.get_section('client-api'))

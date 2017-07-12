@@ -33,6 +33,7 @@ from botocore.compat import encodebytes
 from botocore.compat import six
 from botocore.compat import json
 from botocore.compat import MD5_AVAILABLE
+from botocore.compat import ensure_unicode
 
 logger = logging.getLogger(__name__)
 
@@ -47,8 +48,10 @@ ISO8601 = '%Y-%m-%dT%H:%M:%SZ'
 SIGV4_TIMESTAMP = '%Y%m%dT%H%M%SZ'
 SIGNED_HEADERS_BLACKLIST = [
     'expect',
-    'user-agent'
+    'user-agent',
+    'x-amzn-trace-id',
 ]
+UNSIGNED_PAYLOAD = 'UNSIGNED-PAYLOAD'
 
 
 class BaseSigner(object):
@@ -107,7 +110,7 @@ class SigV2Auth(BaseSigner):
             params = request.data
         else:
             # GET
-            params = request.param
+            params = request.params
         params['AWSAccessKeyId'] = self.credentials.access_key
         params['SignatureVersion'] = '2'
         params['SignatureMethod'] = 'HmacSHA256'
@@ -226,10 +229,18 @@ class SigV4Auth(BaseSigner):
         headers = []
         sorted_header_names = sorted(set(headers_to_sign))
         for key in sorted_header_names:
-            value = ','.join(v.strip() for v in
+            value = ','.join(self._header_value(v) for v in
                              sorted(headers_to_sign.get_all(key)))
-            headers.append('%s:%s' % (key, value))
+            headers.append('%s:%s' % (key, ensure_unicode(value)))
         return '\n'.join(headers)
+
+    def _header_value(self, value):
+        # From the sigv4 docs:
+        # Lowercase(HeaderName) + ':' + Trimall(HeaderValue)
+        #
+        # The Trimall function removes excess white space before and after
+        # values, and converts sequential spaces to a single space.
+        return ' '.join(value.split())
 
     def signed_headers(self, headers_to_sign):
         l = ['%s' % n.lower().strip() for n in set(headers_to_sign)]
@@ -237,6 +248,10 @@ class SigV4Auth(BaseSigner):
         return ';'.join(l)
 
     def payload(self, request):
+        if not self._should_sha256_sign_payload(request):
+            # When payload signing is disabled, we use this static string in
+            # place of the payload checksum.
+            return UNSIGNED_PAYLOAD
         if request.body and hasattr(request.body, 'seek'):
             position = request.body.tell()
             read_chunksize = functools.partial(request.body.read,
@@ -253,6 +268,16 @@ class SigV4Auth(BaseSigner):
             return sha256(request.body).hexdigest()
         else:
             return EMPTY_SHA256_HASH
+
+    def _should_sha256_sign_payload(self, request):
+        # Payloads will always be signed over insecure connections.
+        if not request.url.startswith('https'):
+            return True
+
+        # Certain operations may have payload signing disabled by default.
+        # Since we don't have access to the operation model, we pass in this
+        # bit of metadata through the request context.
+        return request.context.get('payload_signing_enabled', True)
 
     def canonical_request(self, request):
         cr = [request.method.upper()]
@@ -345,6 +370,11 @@ class SigV4Auth(BaseSigner):
                 del request.headers['X-Amz-Security-Token']
             request.headers['X-Amz-Security-Token'] = self.credentials.token
 
+        if not request.context.get('payload_signing_enabled', True):
+            if 'X-Amz-Content-SHA256' in request.headers:
+                del request.headers['X-Amz-Content-SHA256']
+            request.headers['X-Amz-Content-SHA256'] = UNSIGNED_PAYLOAD
+
     def _set_necessary_date_headers(self, request):
         # The spec allows for either the Date _or_ the X-Amz-Date value to be
         # used so we check both.  If there's a Date header, we use the date
@@ -382,10 +412,7 @@ class S3SigV4Auth(SigV4Auth):
         if 'X-Amz-Content-SHA256' in request.headers:
             del request.headers['X-Amz-Content-SHA256']
 
-        if self._should_sha256_sign_payload(request):
-            request.headers['X-Amz-Content-SHA256'] = self.payload(request)
-        else:
-            request.headers['X-Amz-Content-SHA256'] = 'UNSIGNED-PAYLOAD'
+        request.headers['X-Amz-Content-SHA256'] = self.payload(request)
 
     def _should_sha256_sign_payload(self, request):
         # S3 allows optional body signing, so to minimize the performance
@@ -399,15 +426,27 @@ class S3SigV4Auth(SigV4Auth):
         if s3_config is None:
             s3_config = {}
 
+        # The explicit configuration takes precedence over any implicit
+        # configuration.
         sign_payload = s3_config.get('payload_signing_enabled', None)
         if sign_payload is not None:
             return sign_payload
 
-        if 'Content-MD5' in request.headers and 'https' in request.url and \
-                request.context.get('has_streaming_input', False):
+        # We require that both content-md5 be present and https be enabled
+        # to implicitly disable body signing. The combination of TLS and
+        # content-md5 is sufficiently secure and durable for us to be
+        # confident in the request without body signing.
+        if not request.url.startswith('https') or \
+                'Content-MD5' not in request.headers:
+            return True
+
+        # If the input is streaming we disable body signing by default.
+        if request.context.get('has_streaming_input', False):
             return False
 
-        return True
+        # If the S3-specific checks had no results, delegate to the generic
+        # checks.
+        return super(S3SigV4Auth, self)._should_sha256_sign_payload(request)
 
     def _normalize_url_path(self, path):
         # For S3, we do not normalize the path.
@@ -513,7 +552,7 @@ class S3SigV4QueryAuth(SigV4QueryAuth):
         # "You don't include a payload hash in the Canonical Request, because
         # when you create a presigned URL, you don't know anything about the
         # payload. Instead, you use a constant string "UNSIGNED-PAYLOAD".
-        return "UNSIGNED-PAYLOAD"
+        return UNSIGNED_PAYLOAD
 
 
 class S3SigV4PostAuth(SigV4Auth):

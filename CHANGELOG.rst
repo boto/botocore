@@ -2,6 +2,696 @@
 CHANGELOG
 =========
 
+1.5.80
+======
+
+* api-change:``kinesis``: Update kinesis client to latest version
+* api-change:``kms``: Update kms client to latest version
+* api-change:``ds``: Update ds client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+
+
+1.5.79
+======
+
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``route53``: Update route53 client to latest version
+
+
+1.5.78
+======
+
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+
+
+1.5.77
+======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``events``: Update events client to latest version
+
+
+1.5.76
+======
+
+* bugfix:Config: Fixes a bug resulting from copy/deepcopy not returning the same object for botocore.UNSIGNED. Fixes boto/boto3`#1144 <https://github.com/boto/botocore/issues/1144>`__
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+
+
+1.5.75
+======
+
+* api-change:``lambda``: Update lambda client to latest version
+
+
+1.5.74
+======
+
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``codepipeline``: Update codepipeline client to latest version
+* api-change:``dms``: Update dms client to latest version
+
+
+1.5.73
+======
+
+* api-change:``dax``: Update dax client to latest version
+* api-change:``waf``: Update waf client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``waf-regional``: Update waf-regional client to latest version
+
+
+1.5.72
+======
+
+* api-change:``workdocs``: Update workdocs client to latest version
+
+
+1.5.71
+======
+
+* enhancement:s3: All S3 requests will now use SigV4 by default so that we can take advantage of stronger security algorithms and improved access key isolation.
+* api-change:``organizations``: Update organizations client to latest version
+
+
+1.5.70
+======
+
+* api-change:``xray``: Update xray client to latest version
+
+
+1.5.69
+======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.5.68
+======
+
+* api-change:``clouddirectory``: Update clouddirectory client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+
+
+1.5.67
+======
+
+* api-change:``config``: Update config client to latest version
+
+
+1.5.66
+======
+
+* api-change:``rds``: Update rds client to latest version
+
+
+1.5.65
+======
+
+* api-change:``opsworks``: Update opsworks client to latest version
+
+
+1.5.64
+======
+
+* api-change:``rekognition``: Update rekognition client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+
+
+1.5.63
+======
+
+* api-change:``greengrass``: Update greengrass client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+
+
+1.5.62
+======
+
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``acm``: Update acm client to latest version
+
+
+1.5.61
+======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+
+
+1.5.60
+======
+
+* api-change:``workdocs``: Update workdocs client to latest version
+* api-change:``kinesisanalytics``: Update kinesisanalytics client to latest version
+
+
+1.5.59
+======
+
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+
+
+1.5.58
+======
+
+* api-change:``rds``: Update rds client to latest version
+
+
+1.5.57
+======
+
+* api-change:``clouddirectory``: Update clouddirectory client to latest version
+
+
+1.5.56
+======
+
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
+1.5.55
+======
+
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``iam``: Update iam client to latest version
+* api-change:``sts``: Update sts client to latest version
+
+
+1.5.54
+======
+
+* api-change:``dms``: Update dms client to latest version
+
+
+1.5.53
+======
+
+* api-change:``resourcegroupstaggingapi``: Update resourcegroupstaggingapi client to latest version
+
+
+1.5.52
+======
+
+* api-change:``athena``: Update athena client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+
+
+1.5.51
+======
+
+* api-change:``polly``: Update polly client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``events``: Update events client to latest version
+* api-change:``logs``: Update logs client to latest version
+
+
+1.5.50
+======
+
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+* api-change:``inspector``: Update inspector client to latest version
+* api-change:``kms``: Update kms client to latest version
+
+
+1.5.49
+======
+
+* api-change:``ssm``: Update ssm client to latest version
+
+
+1.5.48
+======
+
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``elb``: Update elb client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+
+
+1.5.47
+======
+
+* api-change:``codestar``: Update codestar client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+* enhancement:Credentials: Add support for environment variable credential expiration.
+
+
+1.5.46
+======
+
+* api-change:``marketplace-entitlement``: Update marketplace-entitlement client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+
+
+1.5.45
+======
+
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``snowball``: Update snowball client to latest version
+* api-change:``sqs``: Update sqs client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+* bugfix:Paginator: Fixes bug where pagination would fail if the pagination token contained bytes.
+* api-change:``rds``: Update rds client to latest version
+
+
+1.5.44
+======
+
+* enhancement:rds: Add rds database presigner.
+* api-change:``rds``: Update rds client to latest version
+
+
+1.5.43
+======
+
+* api-change:``appstream``: Update appstream client to latest version
+* bugfix:Auth: Fix bug in Signature Version 4 signer when a header value has consecutive spaces
+* api-change:``kinesis``: Update kinesis client to latest version
+
+
+1.5.42
+======
+
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``directconnect``: Update directconnect client to latest version
+* api-change:``devicefarm``: Update devicefarm client to latest version
+* api-change:``kms``: Update kms client to latest version
+* api-change:``route53domains``: Update route53domains client to latest version
+
+
+1.5.41
+======
+
+* api-change:``codestar``: Update codestar client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``iam``: Update iam client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+* api-change:``polly``: Update polly client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.5.40
+======
+
+* bugfix:mturk: Fix naming on list_hits_for_qualification_type for mturk. The old method name will still be supported.
+* api-change:``lambda``: Update lambda client to latest version
+
+
+1.5.39
+======
+
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``batch``: Update batch client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``opsworks``: Update opsworks client to latest version
+
+
+1.5.38
+======
+
+* api-change:``redshift``: Update redshift client to latest version
+
+
+1.5.37
+======
+
+* api-change:``elbv2``: Update elbv2 client to latest version
+
+
+1.5.36
+======
+
+* api-change:``elasticache``: Update elasticache client to latest version
+
+
+1.5.35
+======
+
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+
+
+1.5.34
+======
+
+* api-change:``lex-runtime``: Update lex-runtime client to latest version
+
+
+1.5.33
+======
+
+* api-change:``clouddirectory``: Update clouddirectory client to latest version
+
+
+1.5.32
+======
+
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``resourcegroupstaggingapi``: Update resourcegroupstaggingapi client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``config``: Update config client to latest version
+
+
+1.5.31
+======
+
+* api-change:``batch``: Update batch client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.5.30
+======
+
+* api-change:``ssm``: Update ssm client to latest version
+* bugfix:config: Fix a bug in loading config files from paths that contain non-ascii characters. Fixes aws/aws-cli`#2395 <https://github.com/boto/botocore/issues/2395>`__
+
+
+1.5.29
+======
+
+* api-change:``cloudtrail``: Update cloudtrail client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+
+
+1.5.28
+======
+
+* api-change:``discovery``: Update discovery client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+
+
+1.5.27
+======
+
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``directconnect``: Update directconnect client to latest version
+* enhancement:Credentials: Add support for localhost when using container credential provider (`#1160 <https://github.com/boto/botocore/issues/1160>`__)
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
+1.5.26
+======
+
+* api-change:``budgets``: Update budgets client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+* api-change:``events``: Update events client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
+1.5.25
+======
+
+* api-change:``devicefarm``: Update devicefarm client to latest version
+* api-change:``events``: Update events client to latest version
+
+
+1.5.24
+======
+
+* api-change:``codedeploy``: Update codedeploy client to latest version
+* api-change:``emr``: Update emr client to latest version
+
+
+1.5.23
+======
+
+* api-change:``clouddirectory``: Update clouddirectory client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+
+
+1.5.22
+======
+
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``workdocs``: Update workdocs client to latest version
+
+
+1.5.21
+======
+
+* api-change:``rds``: Update rds client to latest version
+
+
+1.5.20
+======
+
+* api-change:``budgets``: Update budgets client to latest version
+* api-change:``cloudtrail``: Update cloudtrail client to latest version
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+
+
+1.5.19
+======
+
+* api-change:``waf``: Update waf client to latest version
+* api-change:``mturk``: Update mturk client to latest version
+* api-change:``iam``: Update iam client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``waf-regional``: Update waf-regional client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``dynamodbstreams``: Update dynamodbstreams client to latest version
+
+
+1.5.18
+======
+
+* api-change:``es``: Update es client to latest version
+
+
+1.5.17
+======
+
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.5.16
+======
+
+* api-change:``clouddirectory``: Update clouddirectory client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* api-change:``route53``: Update route53 client to latest version
+
+
+1.5.15
+======
+
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.5.14
+======
+
+* api-change:``directconnect``: Update directconnect client to latest version
+
+
+1.5.13
+======
+
+* api-change:``config``: Update config client to latest version
+* api-change:``cognito-identity``: Update cognito-identity client to latest version
+
+
+1.5.12
+======
+
+* feature:``kms``: Update kms client to latest version
+
+
+1.5.11
+======
+
+* feature:``ec2``: Update ec2 client to latest version
+
+
+1.5.10
+======
+
+* feature:``storagegateway``: Update storagegateway client to latest version
+* feature:Waiter: Adds several new waiters.
+* feature:``clouddirectory``: Update clouddirectory client to latest version
+* feature:``lex-runtime``: Update lex-runtime client to latest version
+
+
+1.5.9
+=====
+
+* feature:``rekognition``: Update rekognition client to latest version
+* feature:``ec2``: Update ec2 client to latest version
+
+
+1.5.8
+=====
+
+* feature:``lex-runtime``: Update lex-runtime client to latest version
+* feature:Paginator: Added paginators for multiple services
+
+
+1.5.7
+=====
+
+* feature:``ec2``: Update ec2 client to latest version
+* feature:``clouddirectory``: Update clouddirectory client to latest version
+* feature:``codedeploy``: Update codedeploy client to latest version
+* feature:``rds``: Update rds client to latest version
+
+
+1.5.6
+=====
+
+* feature:``elbv2``: Update elbv2 client to latest version
+* feature:``rds``: Update rds client to latest version
+
+
+1.5.5
+=====
+
+* feature:``codebuild``: Update codebuild client to latest version
+* feature:``ecs``: Update ecs client to latest version
+* feature:``codecommit``: Update codecommit client to latest version
+
+
+1.5.4
+=====
+
+* feature:``health``: Update health client to latest version
+* feature:``acm``: Update acm client to latest version
+
+
+1.5.3
+=====
+
+* feature:``ec2``: Update ec2 client to latest version
+
+
+1.5.2
+=====
+
+* feature:``rds``: Update rds client to latest version
+
+
+1.5.1
+=====
+
+* feature:``glacier``: Update glacier client to latest version
+* feature:``dynamodb``: Update dynamodb client to latest version
+* feature:``route53``: Update route53 client to latest version
+* feature:``polly``: Update polly client to latest version
+* feature:``rekognition``: Update rekognition client to latest version
+
+
+1.5.0
+=====
+
+* feature:Exceptions: Add modeled exceptions on client via ``Client.exceptions`` property
+* feature:``dynamodb``: Update dynamodb client to latest version
+* feature:``config``: Update config client to latest version
+* feature:``cur``: Update cur client to latest version
+* feature:``elasticache``: Update elasticache client to latest version
+
+
+1.4.93
+======
+
+* feature:``rds``: Update rds client to latest version
+* feature:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+* feature:``config``: Update config client to latest version
+* feature:``iam``: Update iam client to latest version
+* feature:``lambda``: Update lambda client to latest version
+* feature:``dynamodbstreams``: Update dynamodbstreams client to latest version
+* feature:``efs``: Update efs client to latest version
+* feature:``rekognition``: Update rekognition client to latest version
+
+
+1.4.92
+======
+
+* feature:``codedeploy``: Update codedeploy client to latest version
+* bugfix:Paginator: Fix a paginator bug involving optional tokens (`#1057 <https://github.com/boto/botocore/issues/1057>`__)
+* feature:``ecs``: Update ecs client to latest version
+
+
+1.4.91
+======
+
+* feature:``iam``: Update iam client to latest version
+* feature:``apigateway``: Update apigateway client to latest version
+* feature:``ds``: Update ds client to latest version
+* feature:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* feature:``kms``: Update kms client to latest version
+
+
+1.4.90
+======
+
+* feature:``rds``: Update rds client to latest version
+* feature:``ecr``: Update ecr client to latest version
+
+
+1.4.89
+======
+
+* feature:``storagegateway``: Update storagegateway client to latest version
+* feature:``firehose``: Update firehose client to latest version
+* feature:``route53``: Update route53 client to latest version
+
+
+1.4.88
+======
+
+* feature:``discovery``: Update discovery client to latest version
+* feature:``cognito-identity``: Update cognito-identity client to latest version
+* feature:``inspector``: Update inspector client to latest version
+* feature:``sqs``: Update sqs client to latest version
+* feature:``cloudformation``: Update cloudformation client to latest version
+
+
+1.4.87
+======
+
+* feature:``ssm``: Update ssm client to latest version
+* feature:user-agent: Default user agent now includes the environment variable $AWS_EXECUTION_ENVIRONMENT
+* bugfix:Python 3.6: Adds compatibility with the new Python 3.6 HTTPConnection.
+* bugfix:sigv4: Do not sign x-amzn-trace-id as it can be mutated along the way.
+* feature:``cognito-idp``: Update cognito-idp client to latest version
+
+
+1.4.86
+======
+
+* feature:``dms``: Update dms client to latest version
+* feature:``rds``: Update rds client to latest version
+* feature:``logs``: Update logs client to latest version
+* feature:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+* feature:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* feature:``sts``: Update sts client to latest version
+* feature:``batch``: Update batch client to latest version
+
+
 1.4.85
 ======
 

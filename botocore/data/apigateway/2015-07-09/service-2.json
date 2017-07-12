@@ -156,6 +156,24 @@
       ],
       "documentation":"<p>Adds a new <a>Model</a> resource to an existing <a>RestApi</a> resource.</p>"
     },
+    "CreateRequestValidator":{
+      "name":"CreateRequestValidator",
+      "http":{
+        "method":"POST",
+        "requestUri":"/restapis/{restapi_id}/requestvalidators",
+        "responseCode":201
+      },
+      "input":{"shape":"CreateRequestValidatorRequest"},
+      "output":{"shape":"RequestValidator"},
+      "errors":[
+        {"shape":"BadRequestException"},
+        {"shape":"UnauthorizedException"},
+        {"shape":"NotFoundException"},
+        {"shape":"LimitExceededException"},
+        {"shape":"TooManyRequestsException"}
+      ],
+      "documentation":"<p>Creates a <a>ReqeustValidator</a> of a given <a>RestApi</a>.</p>"
+    },
     "CreateResource":{
       "name":"CreateResource",
       "http":{
@@ -456,6 +474,23 @@
         {"shape":"ConflictException"}
       ],
       "documentation":"<p>Deletes a model.</p>"
+    },
+    "DeleteRequestValidator":{
+      "name":"DeleteRequestValidator",
+      "http":{
+        "method":"DELETE",
+        "requestUri":"/restapis/{restapi_id}/requestvalidators/{requestvalidator_id}",
+        "responseCode":202
+      },
+      "input":{"shape":"DeleteRequestValidatorRequest"},
+      "errors":[
+        {"shape":"UnauthorizedException"},
+        {"shape":"NotFoundException"},
+        {"shape":"TooManyRequestsException"},
+        {"shape":"BadRequestException"},
+        {"shape":"ConflictException"}
+      ],
+      "documentation":"<p>Deletes a <a>RequestValidator</a> of a given <a>RestApi</a>.</p>"
     },
     "DeleteResource":{
       "name":"DeleteResource",
@@ -968,6 +1003,37 @@
       ],
       "documentation":"<p>Describes existing <a>Models</a> defined for a <a>RestApi</a> resource.</p>"
     },
+    "GetRequestValidator":{
+      "name":"GetRequestValidator",
+      "http":{
+        "method":"GET",
+        "requestUri":"/restapis/{restapi_id}/requestvalidators/{requestvalidator_id}"
+      },
+      "input":{"shape":"GetRequestValidatorRequest"},
+      "output":{"shape":"RequestValidator"},
+      "errors":[
+        {"shape":"UnauthorizedException"},
+        {"shape":"NotFoundException"},
+        {"shape":"TooManyRequestsException"}
+      ],
+      "documentation":"<p>Gets a <a>RequestValidator</a> of a given <a>RestApi</a>.</p>"
+    },
+    "GetRequestValidators":{
+      "name":"GetRequestValidators",
+      "http":{
+        "method":"GET",
+        "requestUri":"/restapis/{restapi_id}/requestvalidators"
+      },
+      "input":{"shape":"GetRequestValidatorsRequest"},
+      "output":{"shape":"RequestValidators"},
+      "errors":[
+        {"shape":"BadRequestException"},
+        {"shape":"UnauthorizedException"},
+        {"shape":"NotFoundException"},
+        {"shape":"TooManyRequestsException"}
+      ],
+      "documentation":"<p>Gets the <a>RequestValidators</a> collection of a given <a>RestApi</a>.</p>"
+    },
     "GetResource":{
       "name":"GetResource",
       "http":{
@@ -1045,6 +1111,33 @@
         {"shape":"TooManyRequestsException"}
       ],
       "documentation":"<p>Generates a client SDK for a <a>RestApi</a> and <a>Stage</a>.</p>"
+    },
+    "GetSdkType":{
+      "name":"GetSdkType",
+      "http":{
+        "method":"GET",
+        "requestUri":"/sdktypes/{sdktype_id}"
+      },
+      "input":{"shape":"GetSdkTypeRequest"},
+      "output":{"shape":"SdkType"},
+      "errors":[
+        {"shape":"UnauthorizedException"},
+        {"shape":"NotFoundException"},
+        {"shape":"TooManyRequestsException"}
+      ]
+    },
+    "GetSdkTypes":{
+      "name":"GetSdkTypes",
+      "http":{
+        "method":"GET",
+        "requestUri":"/sdktypes"
+      },
+      "input":{"shape":"GetSdkTypesRequest"},
+      "output":{"shape":"SdkTypes"},
+      "errors":[
+        {"shape":"UnauthorizedException"},
+        {"shape":"TooManyRequestsException"}
+      ]
     },
     "GetStage":{
       "name":"GetStage",
@@ -1572,6 +1665,22 @@
       ],
       "documentation":"<p>Changes information about a model.</p>"
     },
+    "UpdateRequestValidator":{
+      "name":"UpdateRequestValidator",
+      "http":{
+        "method":"PATCH",
+        "requestUri":"/restapis/{restapi_id}/requestvalidators/{requestvalidator_id}"
+      },
+      "input":{"shape":"UpdateRequestValidatorRequest"},
+      "output":{"shape":"RequestValidator"},
+      "errors":[
+        {"shape":"UnauthorizedException"},
+        {"shape":"NotFoundException"},
+        {"shape":"BadRequestException"},
+        {"shape":"TooManyRequestsException"}
+      ],
+      "documentation":"<p>Updates a <a>RequestValidator</a> of a given <a>RestApi</a>.</p>"
+    },
     "UpdateResource":{
       "name":"UpdateResource",
       "http":{
@@ -1709,11 +1818,11 @@
         },
         "createdDate":{
           "shape":"Timestamp",
-          "documentation":"<p>The date when the API Key was created, in <a href=\"http://www.iso.org/iso/home/standards/iso8601.htm\" target=\"_blank\">ISO 8601 format</a>.</p>"
+          "documentation":"<p>The timestamp when the API Key was created.</p>"
         },
         "lastUpdatedDate":{
           "shape":"Timestamp",
-          "documentation":"<p>When the API Key was last updated, in ISO 8601 format.</p>"
+          "documentation":"<p>The timestamp when the API Key was last updated.</p>"
         },
         "stageKeys":{
           "shape":"ListOfString",
@@ -1918,11 +2027,11 @@
         },
         "createdDate":{
           "shape":"Timestamp",
-          "documentation":"<p>The date when the client certificate was created, in <a href=\"http://www.iso.org/iso/home/standards/iso8601.htm\" target=\"_blank\">ISO 8601 format</a>.</p>"
+          "documentation":"<p>The timestamp when the client certificate was created.</p>"
         },
         "expirationDate":{
           "shape":"Timestamp",
-          "documentation":"<p>The date when the client certificate will expire, in <a href=\"http://www.iso.org/iso/home/standards/iso8601.htm\" target=\"_blank\">ISO 8601 format</a>.</p>"
+          "documentation":"<p>The timestamp when the client certificate will expire.</p>"
         }
       },
       "documentation":"<p>Represents a client certificate used to configure client-side SSL authentication while sending requests to the integration endpoint.</p> <div class=\"remarks\">Client certificates are used authenticate an API by the back-end server. To authenticate an API client (or user), use a custom <a>Authorizer</a>.</div> <div class=\"seeAlso\"> <a href=\"http://docs.aws.amazon.com/apigateway/latest/developerguide/getting-started-client-side-ssl-authentication.html\">Use Client-Side Certificate</a> </div>"
@@ -2162,33 +2271,31 @@
     },
     "CreateDomainNameRequest":{
       "type":"structure",
-      "required":[
-        "domainName",
-        "certificateName",
-        "certificateBody",
-        "certificatePrivateKey",
-        "certificateChain"
-      ],
+      "required":["domainName"],
       "members":{
         "domainName":{
           "shape":"String",
-          "documentation":"<p>The name of the <a>DomainName</a> resource.</p>"
+          "documentation":"<p>(Required) The name of the <a>DomainName</a> resource.</p>"
         },
         "certificateName":{
           "shape":"String",
-          "documentation":"<p>The name of the certificate.</p>"
+          "documentation":"<p>The user-friendly name of the certificate.</p>"
         },
         "certificateBody":{
           "shape":"String",
-          "documentation":"<p>The body of the server certificate provided by your certificate authority.</p>"
+          "documentation":"<p>[Deprecated] The body of the server certificate provided by your certificate authority.</p>"
         },
         "certificatePrivateKey":{
           "shape":"String",
-          "documentation":"<p>Your certificate's private key.</p>"
+          "documentation":"<p>[Deprecated] Your certificate's private key.</p>"
         },
         "certificateChain":{
           "shape":"String",
-          "documentation":"<p>The intermediate certificates and optionally the root certificate, one after the other without any blank lines. If you include the root certificate, your certificate chain must start with intermediate certificates and end with the root certificate. Use the intermediate certificates that were provided by your certificate authority. Do not include any intermediaries that are not in the chain of trust path.</p>"
+          "documentation":"<p>[Deprecated] The intermediate certificates and optionally the root certificate, one after the other without any blank lines. If you include the root certificate, your certificate chain must start with intermediate certificates and end with the root certificate. Use the intermediate certificates that were provided by your certificate authority. Do not include any intermediaries that are not in the chain of trust path.</p>"
+        },
+        "certificateArn":{
+          "shape":"String",
+          "documentation":"<p>The reference to an AWS-managed certificate. AWS Certificate Manager is the only supported source.</p>"
         }
       },
       "documentation":"<p>A request to create a new domain name.</p>"
@@ -2225,6 +2332,31 @@
         }
       },
       "documentation":"<p>Request to add a new <a>Model</a> to an existing <a>RestApi</a> resource.</p>"
+    },
+    "CreateRequestValidatorRequest":{
+      "type":"structure",
+      "required":["restApiId"],
+      "members":{
+        "restApiId":{
+          "shape":"String",
+          "documentation":"<p>[Required] The identifier of the <a>RestApi</a> for which the <a>RequestValidator</a> is created.</p>",
+          "location":"uri",
+          "locationName":"restapi_id"
+        },
+        "name":{
+          "shape":"String",
+          "documentation":"<p>The name of the to-be-created <a>RequestValidator</a>.</p>"
+        },
+        "validateRequestBody":{
+          "shape":"Boolean",
+          "documentation":"<p>A Boolean flag to indicate whether to validate request body according to the configured model schema for the method (<code>true</code>) or not (<code>false</code>).</p>"
+        },
+        "validateRequestParameters":{
+          "shape":"Boolean",
+          "documentation":"<p>A Boolean flag to indicate whether to validate request parameters, <code>true</code>, or not <code>false</code>.</p>"
+        }
+      },
+      "documentation":"<p>Creates a <a>RequestValidator</a> of a given <a>RestApi</a>.</p>"
     },
     "CreateResourceRequest":{
       "type":"structure",
@@ -2678,6 +2810,28 @@
       },
       "documentation":"<p>Request to delete an existing model in an existing <a>RestApi</a> resource.</p>"
     },
+    "DeleteRequestValidatorRequest":{
+      "type":"structure",
+      "required":[
+        "restApiId",
+        "requestValidatorId"
+      ],
+      "members":{
+        "restApiId":{
+          "shape":"String",
+          "documentation":"<p>[Required] The identifier of the <a>RestApi</a> from which the given <a>RequestValidator</a> is deleted.</p>",
+          "location":"uri",
+          "locationName":"restapi_id"
+        },
+        "requestValidatorId":{
+          "shape":"String",
+          "documentation":"<p>[Required] The identifier of the <a>RequestValidator</a> to be deleted.</p>",
+          "location":"uri",
+          "locationName":"requestvalidator_id"
+        }
+      },
+      "documentation":"<p>Deletes a specified <a>RequestValidator</a> of a given <a>RestApi</a>.</p>"
+    },
     "DeleteResourceRequest":{
       "type":"structure",
       "required":[
@@ -2842,7 +2996,7 @@
       "members":{
         "type":{
           "shape":"DocumentationPartType",
-          "documentation":"<p>The type of API entity to which the documentation content applies. It is a valid and required field for API entity types of <code>API</code>, <code>AUTHORIZER</code>, <code>MODEL</code>, <code>RESOURCE</code>, <code>METHOD</code>, <code>PATH_PARAMETER</code>, <code>QUERY_PARAMETER</code>, <code>REQUEST_HEADER</code>, <code>REQUEST_BODY</code>, <code>RESPONSE</code>, <code>RESPONSE_HEADER</code>, and <code>RESPONSE_BODY</code>. Content inheritance does not apply to any entity of the <code>API</code>, <code>AUTHROZER</code>, <code>MODEL</code>, or <code>RESOURCE</code> type.</p>"
+          "documentation":"<p>The type of API entity to which the documentation content applies. It is a valid and required field for API entity types of <code>API</code>, <code>AUTHORIZER</code>, <code>MODEL</code>, <code>RESOURCE</code>, <code>METHOD</code>, <code>PATH_PARAMETER</code>, <code>QUERY_PARAMETER</code>, <code>REQUEST_HEADER</code>, <code>REQUEST_BODY</code>, <code>RESPONSE</code>, <code>RESPONSE_HEADER</code>, and <code>RESPONSE_BODY</code>. Content inheritance does not apply to any entity of the <code>API</code>, <code>AUTHROZER</code>, <code>METHOD</code>, <code>MODEL</code>, <code>REQUEST_BODY</code>, or <code>RESOURCE</code> type.</p>"
         },
         "path":{
           "shape":"String",
@@ -2937,9 +3091,13 @@
           "shape":"String",
           "documentation":"<p>The name of the certificate.</p>"
         },
+        "certificateArn":{
+          "shape":"String",
+          "documentation":"<p>The reference to an AWS-managed certificate. AWS Certificate Manager is the only supported source.</p>"
+        },
         "certificateUploadDate":{
           "shape":"Timestamp",
-          "documentation":"<p>The date when the certificate was uploaded, in <a href=\"http://www.iso.org/iso/home/standards/iso8601.htm\" target=\"_blank\">ISO 8601 format</a>.</p>"
+          "documentation":"<p>The timestamp when the certificate was uploaded.</p>"
         },
         "distributionDomainName":{
           "shape":"String",
@@ -3068,7 +3226,7 @@
       "members":{
         "position":{
           "shape":"String",
-          "documentation":"<p>The position of the current <a>ApiKeys</a> resource to get information about.</p>",
+          "documentation":"<p>The current pagination position in the paged result set.</p>",
           "location":"querystring",
           "locationName":"position"
         },
@@ -3133,13 +3291,13 @@
         },
         "position":{
           "shape":"String",
-          "documentation":"<p>If not all <a>Authorizer</a> resources in the response were present, the position will specify where to start the next page of results.</p>",
+          "documentation":"<p>The current pagination position in the paged result set.</p>",
           "location":"querystring",
           "locationName":"position"
         },
         "limit":{
           "shape":"NullableInteger",
-          "documentation":"<p>Limit the number of <a>Authorizer</a> resources in the response.</p>",
+          "documentation":"<p>The maximum number of returned results per page.</p>",
           "location":"querystring",
           "locationName":"limit"
         }
@@ -3180,13 +3338,13 @@
         },
         "position":{
           "shape":"String",
-          "documentation":"<p>The position of the current <a>BasePathMapping</a> resource in the collection to get information about.</p>",
+          "documentation":"<p>The current pagination position in the paged result set.</p>",
           "location":"querystring",
           "locationName":"position"
         },
         "limit":{
           "shape":"NullableInteger",
-          "documentation":"<p>The maximum number of <a>BasePathMapping</a> resources in the collection to get information about. The default limit is 25. It should be an integer between 1 - 500.</p>",
+          "documentation":"<p>The maximum number of returned results per page. The value is 25 by default and could be between 1 - 500.</p>",
           "location":"querystring",
           "locationName":"limit"
         }
@@ -3211,13 +3369,13 @@
       "members":{
         "position":{
           "shape":"String",
-          "documentation":"<p>The position of the current <a>ClientCertificate</a> resource in the collection to get information about.</p>",
+          "documentation":"<p>The current pagination position in the paged result set.</p>",
           "location":"querystring",
           "locationName":"position"
         },
         "limit":{
           "shape":"NullableInteger",
-          "documentation":"<p>The maximum number of <a>ClientCertificate</a> resources in the collection to get information about. The default limit is 25. It should be an integer between 1 - 500.</p>",
+          "documentation":"<p>The maximum number of returned results per page. The value is 25 by default and could be between 1 - 500.</p>",
           "location":"querystring",
           "locationName":"limit"
         }
@@ -3242,6 +3400,12 @@
           "documentation":"<p>The identifier of the <a>Deployment</a> resource to get information about.</p>",
           "location":"uri",
           "locationName":"deployment_id"
+        },
+        "embed":{
+          "shape":"ListOfString",
+          "documentation":"<p>A query parameter to retrieve the specified embedded resources of the returned <a>Deployment</a> resource in the response. In a REST API call, this <code>embed</code> parameter value is a list of comma-separated strings, as in <code>GET /restapis/{restapi_id}/deployments/{deployment_id}?embed=var1,var2</code>. The SDK and other platform-dependent libraries might use a different format for the list. Currently, this request supports only retrieval of the embedded API summary this way. Hence, the parameter value must be a single-valued list containing only the <code>\"apisummary\"</code> string. For example, <code>GET /restapis/{restapi_id}/deployments/{deployment_id}?embed=apisummary</code>.</p>",
+          "location":"querystring",
+          "locationName":"embed"
         }
       },
       "documentation":"<p>Requests Amazon API Gateway to get information about a <a>Deployment</a> resource.</p>"
@@ -3258,13 +3422,13 @@
         },
         "position":{
           "shape":"String",
-          "documentation":"<p>The position of the current <a>Deployment</a> resource in the collection to get information about.</p>",
+          "documentation":"<p>The current pagination position in the paged result set.</p>",
           "location":"querystring",
           "locationName":"position"
         },
         "limit":{
           "shape":"NullableInteger",
-          "documentation":"<p>The maximum number of <a>Deployment</a> resources in the collection to get information about. The default limit is 25. It should be an integer between 1 - 500.</p>",
+          "documentation":"<p>The maximum number of returned results per page. The value is 25 by default and could be between 1 - 500.</p>",
           "location":"querystring",
           "locationName":"limit"
         }
@@ -3323,13 +3487,13 @@
         },
         "position":{
           "shape":"String",
-          "documentation":"<p>The position of the to-be-retrieved documentation part in the <a>DocumentationParts</a> collection.</p>",
+          "documentation":"<p>The current pagination position in the paged result set.</p>",
           "location":"querystring",
           "locationName":"position"
         },
         "limit":{
           "shape":"NullableInteger",
-          "documentation":"<p>The size of the paged results.</p>",
+          "documentation":"<p>The maximum number of returned results per page.</p>",
           "location":"querystring",
           "locationName":"limit"
         }
@@ -3370,13 +3534,13 @@
         },
         "position":{
           "shape":"String",
-          "documentation":"<p>The position of the returned <code>DocumentationVersion</code> in the <a>DocumentationVersions</a> collection.</p>",
+          "documentation":"<p>The current pagination position in the paged result set.</p>",
           "location":"querystring",
           "locationName":"position"
         },
         "limit":{
           "shape":"NullableInteger",
-          "documentation":"<p>The page size of the returned documentation versions.</p>",
+          "documentation":"<p>The maximum number of returned results per page.</p>",
           "location":"querystring",
           "locationName":"limit"
         }
@@ -3401,13 +3565,13 @@
       "members":{
         "position":{
           "shape":"String",
-          "documentation":"<p>The position of the current domain names to get information about.</p>",
+          "documentation":"<p>The current pagination position in the paged result set.</p>",
           "location":"querystring",
           "locationName":"position"
         },
         "limit":{
           "shape":"NullableInteger",
-          "documentation":"<p>The maximum number of <a>DomainName</a> resources in the collection to get information about. The default limit is 25. It should be an integer between 1 - 500.</p>",
+          "documentation":"<p>The maximum number of returned results per page. The value is 25 by default and could be between 1 - 500.</p>",
           "location":"querystring",
           "locationName":"limit"
         }
@@ -3646,18 +3810,65 @@
         },
         "position":{
           "shape":"String",
-          "documentation":"<p>The position of the next set of results in the <a>Models</a> resource to get information about.</p>",
+          "documentation":"<p>The current pagination position in the paged result set.</p>",
           "location":"querystring",
           "locationName":"position"
         },
         "limit":{
           "shape":"NullableInteger",
-          "documentation":"<p>The maximum number of models in the collection to get information about. The default limit is 25. It should be an integer between 1 - 500.</p>",
+          "documentation":"<p>The maximum number of returned results per page. The value is 25 by default and could be between 1 - 500.</p>",
           "location":"querystring",
           "locationName":"limit"
         }
       },
       "documentation":"<p>Request to list existing <a>Models</a> defined for a <a>RestApi</a> resource.</p>"
+    },
+    "GetRequestValidatorRequest":{
+      "type":"structure",
+      "required":[
+        "restApiId",
+        "requestValidatorId"
+      ],
+      "members":{
+        "restApiId":{
+          "shape":"String",
+          "documentation":"<p>[Required] The identifier of the <a>RestApi</a> to which the specified <a>RequestValidator</a> belongs.</p>",
+          "location":"uri",
+          "locationName":"restapi_id"
+        },
+        "requestValidatorId":{
+          "shape":"String",
+          "documentation":"<p>[Required] The identifier of the <a>RequestValidator</a> to be retrieved.</p>",
+          "location":"uri",
+          "locationName":"requestvalidator_id"
+        }
+      },
+      "documentation":"<p>Gets a <a>RequestValidator</a> of a given <a>RestApi</a>.</p>"
+    },
+    "GetRequestValidatorsRequest":{
+      "type":"structure",
+      "required":["restApiId"],
+      "members":{
+        "restApiId":{
+          "shape":"String",
+          "documentation":"<p>[Required] The identifier of a <a>RestApi</a> to which the <a>RequestValidators</a> collection belongs.</p>",
+          "location":"uri",
+          "locationName":"restapi_id"
+        },
+        "position":{
+          "shape":"String",
+          "documentation":"<p>The current pagination position in the paged result set.</p>",
+          "location":"querystring",
+          "locationName":"position"
+        },
+        "limit":{
+          "shape":"NullableInteger",
+          "documentation":"<p>The maximum number of returned results per page.</p>",
+          "location":"querystring",
+          "locationName":"limit"
+        }
+      },
+      "documentation":"<p>Gets the <a>RequestValidators</a> collection of a given <a>RestApi</a>.</p>"
     },
     "GetResourceRequest":{
       "type":"structure",
@@ -3677,6 +3888,12 @@
           "documentation":"<p>The identifier for the <a>Resource</a> resource.</p>",
           "location":"uri",
           "locationName":"resource_id"
+        },
+        "embed":{
+          "shape":"ListOfString",
+          "documentation":"<p>A query parameter to retrieve the specified resources embedded in the returned <a>Resource</a> representation in the response. This <code>embed</code> parameter value is a list of comma-separated strings. Currently, the request supports only retrieval of the embedded <a>Method</a> resources this way. The query parameter value must be a single-valued list and contain the <code>\"methods\"</code> string. For example, <code>GET /restapis/{restapi_id}/resources/{resource_id}?embed=methods</code>.</p>",
+          "location":"querystring",
+          "locationName":"embed"
         }
       },
       "documentation":"<p>Request to list information about a resource.</p>"
@@ -3693,15 +3910,21 @@
         },
         "position":{
           "shape":"String",
-          "documentation":"<p>The position of the next set of results in the current <a>Resources</a> resource to get information about.</p>",
+          "documentation":"<p>The current pagination position in the paged result set.</p>",
           "location":"querystring",
           "locationName":"position"
         },
         "limit":{
           "shape":"NullableInteger",
-          "documentation":"<p>The maximum number of <a>Resource</a> resources in the collection to get information about. The default limit is 25. It should be an integer between 1 - 500.</p>",
+          "documentation":"<p>The maximum number of returned results per page. The value is 25 by default and could be between 1 - 500.</p>",
           "location":"querystring",
           "locationName":"limit"
+        },
+        "embed":{
+          "shape":"ListOfString",
+          "documentation":"<p>A query parameter used to retrieve the specified resources embedded in the returned <a>Resources</a> resource in the response. This <code>embed</code> parameter value is a list of comma-separated strings. Currently, the request supports only retrieval of the embedded <a>Method</a> resources this way. The query parameter value must be a single-valued list and contain the <code>\"methods\"</code> string. For example, <code>GET /restapis/{restapi_id}/resources?embed=methods</code>.</p>",
+          "location":"querystring",
+          "locationName":"embed"
         }
       },
       "documentation":"<p>Request to list information about a collection of resources.</p>"
@@ -3724,13 +3947,13 @@
       "members":{
         "position":{
           "shape":"String",
-          "documentation":"<p>The position of the current <a>RestApis</a> resource in the collection to get information about.</p>",
+          "documentation":"<p>The current pagination position in the paged result set.</p>",
           "location":"querystring",
           "locationName":"position"
         },
         "limit":{
           "shape":"NullableInteger",
-          "documentation":"<p>The maximum number of <a>RestApi</a> resources in the collection to get information about. The default limit is 25. It should be an integer between 1 - 500.</p>",
+          "documentation":"<p>The maximum number of returned results per page. The value is 25 by default and could be between 1 - 500.</p>",
           "location":"querystring",
           "locationName":"limit"
         }
@@ -3770,6 +3993,37 @@
         }
       },
       "documentation":"<p>Request a new generated client SDK for a <a>RestApi</a> and <a>Stage</a>.</p>"
+    },
+    "GetSdkTypeRequest":{
+      "type":"structure",
+      "required":["id"],
+      "members":{
+        "id":{
+          "shape":"String",
+          "documentation":"<p>The identifier of the queried <a>SdkType</a> instance.</p>",
+          "location":"uri",
+          "locationName":"sdktype_id"
+        }
+      },
+      "documentation":"<p>Get an <a>SdkType</a> instance.</p>"
+    },
+    "GetSdkTypesRequest":{
+      "type":"structure",
+      "members":{
+        "position":{
+          "shape":"String",
+          "documentation":"<p>The current pagination position in the paged result set.</p>",
+          "location":"querystring",
+          "locationName":"position"
+        },
+        "limit":{
+          "shape":"NullableInteger",
+          "documentation":"<p>The maximum number of returned results per page.</p>",
+          "location":"querystring",
+          "locationName":"limit"
+        }
+      },
+      "documentation":"<p>Get the <a>SdkTypes</a> collection.</p>"
     },
     "GetStageRequest":{
       "type":"structure",
@@ -3846,13 +4100,13 @@
         },
         "position":{
           "shape":"String",
-          "documentation":"<p>A query parameter specifying the zero-based index specifying the position of a usage plan key.</p>",
+          "documentation":"<p>The current pagination position in the paged result set.</p>",
           "location":"querystring",
           "locationName":"position"
         },
         "limit":{
           "shape":"NullableInteger",
-          "documentation":"<p>A query parameter specifying the maximum number usage plan keys returned by the GET request.</p>",
+          "documentation":"<p>The maximum number of returned results per page.</p>",
           "location":"querystring",
           "locationName":"limit"
         },
@@ -3883,7 +4137,7 @@
       "members":{
         "position":{
           "shape":"String",
-          "documentation":"<p>The zero-based array index specifying the position of the to-be-retrieved <a>UsagePlan</a> resource.</p>",
+          "documentation":"<p>The current pagination position in the paged result set.</p>",
           "location":"querystring",
           "locationName":"position"
         },
@@ -3895,7 +4149,7 @@
         },
         "limit":{
           "shape":"NullableInteger",
-          "documentation":"<p>The number of <a>UsagePlan</a> resources to be returned as the result.</p>",
+          "documentation":"<p>The maximum number of returned results per page.</p>",
           "location":"querystring",
           "locationName":"limit"
         }
@@ -3936,13 +4190,13 @@
         },
         "position":{
           "shape":"String",
-          "documentation":"<p>Position</p>",
+          "documentation":"<p>The current pagination position in the paged result set.</p>",
           "location":"querystring",
           "locationName":"position"
         },
         "limit":{
           "shape":"NullableInteger",
-          "documentation":"<p>The maximum number of results to be returned.</p>",
+          "documentation":"<p>The maximum number of returned results per page.</p>",
           "location":"querystring",
           "locationName":"limit"
         }
@@ -4046,7 +4300,7 @@
         },
         "uri":{
           "shape":"String",
-          "documentation":"<p>Specifies the integration's Uniform Resource Identifier (URI). For HTTP integrations, the URI must be a fully formed, encoded HTTP(S) URL according to the <a href=\"https://www.ietf.org/rfc/rfc3986.txt\" target=\"_blank\">RFC-3986 specification</a>. For AWS integrations, the URI should be of the form <code>arn:aws:apigateway:{region}:{subdomain.service|service}:{path|action}/{service_api}</code>. <code>Region</code>, <code>subdomain</code> and <code>service</code> are used to determine the right endpoint. For AWS services that use the <code>Action=</code> query string parameter, <code>service_api</code> should be a valid action for the desired service. For RESTful AWS service APIs, <code>path</code> is used to indicate that the remaining substring in the URI should be treated as the path to the resource, including the initial <code>/</code>.</p>"
+          "documentation":"<p>Specifies the integration's Uniform Resource Identifier (URI). For HTTP integrations, the URI must be a fully formed, encoded HTTP(S) URL according to the <a href=\"https://en.wikipedia.org/wiki/Uniform_Resource_Identifier\" target=\"_blank\">RFC-3986 specification</a>. For AWS integrations, the URI should be of the form <code>arn:aws:apigateway:{region}:{subdomain.service|service}:{path|action}/{service_api}</code>. <code>Region</code>, <code>subdomain</code> and <code>service</code> are used to determine the right endpoint. For AWS services that use the <code>Action=</code> query string parameter, <code>service_api</code> should be a valid action for the desired service. For RESTful AWS service APIs, <code>path</code> is used to indicate that the remaining substring in the URI should be treated as the path to the resource, including the initial <code>/</code>.</p>"
         },
         "credentials":{
           "shape":"String",
@@ -4081,7 +4335,7 @@
           "documentation":"<p>Specifies the integration's responses.</p> <div class=\"remarks\"> <p/> <h4>Example: Get integration responses of a method</h4> <h5>Request</h5> <p/> <pre><code>GET /restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration/responses/200 HTTP/1.1 Content-Type: application/json Host: apigateway.us-east-1.amazonaws.com X-Amz-Date: 20160607T191449Z Authorization: AWS4-HMAC-SHA256 Credential={access_key_ID}/20160607/us-east-1/apigateway/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature={sig4_hash} </code></pre> <h5>Response</h5> <p>The successful response returns <code>200 OK</code> status and a payload as follows:</p> <pre><code>{ \"_links\": { \"curies\": { \"href\": \"http://docs.aws.amazon.com/apigateway/latest/developerguide/restapi-integration-response-{rel}.html\", \"name\": \"integrationresponse\", \"templated\": true }, \"self\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration/responses/200\", \"title\": \"200\" }, \"integrationresponse:delete\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration/responses/200\" }, \"integrationresponse:update\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration/responses/200\" } }, \"responseParameters\": { \"method.response.header.Content-Type\": \"'application/xml'\" }, \"responseTemplates\": { \"application/json\": \"$util.urlDecode(\\\"%3CkinesisStreams%3E#foreach($stream in $input.path('$.StreamNames'))%3Cstream%3E%3Cname%3E$stream%3C/name%3E%3C/stream%3E#end%3C/kinesisStreams%3E\\\")\\n\" }, \"statusCode\": \"200\" }</code></pre> <p/> </div> <div class=\"seeAlso\"> <a href=\"http://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-create-api.html\">Creating an API</a> </div>"
         }
       },
-      "documentation":"<p>Represents an HTTP, HTTP_PROXY, AWS, AWS_PROXY, or Mock integration.</p> <div class=\"remarks\">In the API Gateway console, the built-in Lambda integration is an AWS integration.</div> <div class=\"seeAlso\"> <a href=\"http://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-create-api.html\">Creating an API</a>, <a href=\"http://docs.aws.amazon.com/apigateway/latest/developerguide/.html\"/> </div>"
+      "documentation":"<p>Represents an HTTP, HTTP_PROXY, AWS, AWS_PROXY, or Mock integration.</p> <div class=\"remarks\">In the API Gateway console, the built-in Lambda integration is an AWS integration.</div> <div class=\"seeAlso\"> <a href=\"http://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-create-api.html\">Creating an API</a> </div>"
     },
     "IntegrationResponse":{
       "type":"structure",
@@ -4186,6 +4440,10 @@
       "member":{"shape":"PatchOperation"},
       "documentation":"A list of operations describing the updates to apply to the specified resource. The patches are applied in the order specified in the list."
     },
+    "ListOfRequestValidator":{
+      "type":"list",
+      "member":{"shape":"RequestValidator"}
+    },
     "ListOfResource":{
       "type":"list",
       "member":{"shape":"Resource"}
@@ -4193,6 +4451,14 @@
     "ListOfRestApi":{
       "type":"list",
       "member":{"shape":"RestApi"}
+    },
+    "ListOfSdkConfigurationProperty":{
+      "type":"list",
+      "member":{"shape":"SdkConfigurationProperty"}
+    },
+    "ListOfSdkType":{
+      "type":"list",
+      "member":{"shape":"SdkType"}
     },
     "ListOfStage":{
       "type":"list",
@@ -4278,7 +4544,7 @@
         },
         "authorizationType":{
           "shape":"String",
-          "documentation":"<p>The method's authorization type.</p>"
+          "documentation":"<p>The method's authorization type. Valid values are <code>NONE</code> for open access, <code>AWS_IAM</code> for using AWS IAM permissions, <code>CUSTOM</code> for using a custom authorizer, or <code>COGNITO_USER_POOLS</code> for using a Cognito user pool.</p>"
         },
         "authorizerId":{
           "shape":"String",
@@ -4287,6 +4553,14 @@
         "apiKeyRequired":{
           "shape":"NullableBoolean",
           "documentation":"<p>A boolean flag specifying whether a valid <a>ApiKey</a> is required to invoke this method.</p>"
+        },
+        "requestValidatorId":{
+          "shape":"String",
+          "documentation":"<p>The identifier of a <a>RequestValidator</a> for request validation.</p>"
+        },
+        "operationName":{
+          "shape":"String",
+          "documentation":"<p>A human-friendly operation identifier for the method. For example, you can assign the <code>operationName</code> of <code>ListPets</code> for the <code>GET /pets</code> method in <a href=\"http://petstore-demo-endpoint.execute-api.com/petstore/pets\">PetStore</a> example.</p>"
         },
         "requestParameters":{
           "shape":"MapOfStringToBoolean",
@@ -4376,7 +4650,7 @@
       "members":{
         "authorizationType":{
           "shape":"String",
-          "documentation":"<p>Specifies the type of authorization used for the method.</p>"
+          "documentation":"<p>The method's authorization type. Valid values are <code>NONE</code> for open access, <code>AWS_IAM</code> for using AWS IAM permissions, <code>CUSTOM</code> for using a custom authorizer, or <code>COGNITO_USER_POOLS</code> for using a Cognito user pool.</p>"
         },
         "apiKeyRequired":{
           "shape":"Boolean",
@@ -4457,7 +4731,7 @@
         },
         "value":{
           "shape":"String",
-          "documentation":"<p>The new target value of the update operation. </p>"
+          "documentation":"<p>The new target value of the update operation. When using AWS CLI to update a property of a JSON value, enclose the JSON object with a pair of single quotes in a Linux shell, e.g., '{\"a\": ...}'. In a Windows shell, see <a href=\"http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json\">Using JSON for Parameters</a>.</p>"
         },
         "from":{
           "shape":"String",
@@ -4624,7 +4898,7 @@
         },
         "authorizationType":{
           "shape":"String",
-          "documentation":"<p>Specifies the type of authorization used for the method.</p>"
+          "documentation":"<p>The method's authorization type. Valid values are <code>NONE</code> for open access, <code>AWS_IAM</code> for using AWS IAM permissions, <code>CUSTOM</code> for using a custom authorizer, or <code>COGNITO_USER_POOLS</code> for using a Cognito user pool.</p>"
         },
         "authorizerId":{
           "shape":"String",
@@ -4634,6 +4908,10 @@
           "shape":"Boolean",
           "documentation":"<p>Specifies whether the method required a valid <a>ApiKey</a>.</p>"
         },
+        "operationName":{
+          "shape":"String",
+          "documentation":"<p>A human-friendly operation identifier for the method. For example, you can assign the <code>operationName</code> of <code>ListPets</code> for the <code>GET /pets</code> method in <a href=\"http://petstore-demo-endpoint.execute-api.com/petstore/pets\">PetStore</a> example.</p>"
+        },
         "requestParameters":{
           "shape":"MapOfStringToBoolean",
           "documentation":"<p>A key-value map defining required or optional method request parameters that can be accepted by Amazon API Gateway. A key defines a method request parameter name matching the pattern of <code>method.request.{location}.{name}</code>, where <code>location</code> is <code>querystring</code>, <code>path</code>, or <code>header</code> and <code>name</code> is a valid and unique parameter name. The value associated with the key is a Boolean flag indicating whether the parameter is required (<code>true</code>) or optional (<code>false</code>). The method request parameter names defined here are available in <a>Integration</a> to be mapped to integration request parameters or body-mapping templates.</p>"
@@ -4641,6 +4919,10 @@
         "requestModels":{
           "shape":"MapOfStringToString",
           "documentation":"<p>Specifies the <a>Model</a> resources used for the request's content type. Request models are represented as a key/value map, with a content type as the key and a <a>Model</a> name as the value.</p>"
+        },
+        "requestValidatorId":{
+          "shape":"String",
+          "documentation":"<p>The identifier of a <a>RequestValidator</a> for validating the method request.</p>"
         }
       },
       "documentation":"<p>Request to add a method to an existing <a>Resource</a> resource.</p>"
@@ -4760,6 +5042,40 @@
       },
       "documentation":"<p>Quotas configured for a usage plan.</p>"
     },
+    "RequestValidator":{
+      "type":"structure",
+      "members":{
+        "id":{
+          "shape":"String",
+          "documentation":"<p>The identifier of this <a>RequestValidator</a>.</p>"
+        },
+        "name":{
+          "shape":"String",
+          "documentation":"<p>The name of this <a>RequestValidator</a></p>"
+        },
+        "validateRequestBody":{
+          "shape":"Boolean",
+          "documentation":"<p>A Boolean flag to indicate whether to validate a request body according to the configured <a>Model</a> schema.</p>"
+        },
+        "validateRequestParameters":{
+          "shape":"Boolean",
+          "documentation":"<p>A Boolean flag to indicate whether to validate request parameters (<code>true</code>) or not (<code>false</code>).</p>"
+        }
+      },
+      "documentation":"<p>A set of validation rules for incoming <a>Method</a> requests.</p> <div class=\"remarks\"> <p>In Swagger, a <a>RequestValidator</a> of an API is defined by the <a href=\"http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-swagger-extensions.html#api-gateway-swagger-extensions-request-validators.requestValidator.html\">x-amazon-apigateway-request-validators.requestValidator</a> object. It the referenced using the <a href=\"http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-swagger-extensions.html#api-gateway-swagger-extensions-request-validator\">x-amazon-apigateway-request-validator</a> property.</p> </div> <div class=\"seeAlso\"><a href=\"http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-method-request-validation.html\">Enable Basic Request Validation in API Gateway</a></div>"
+    },
+    "RequestValidators":{
+      "type":"structure",
+      "members":{
+        "position":{"shape":"String"},
+        "items":{
+          "shape":"ListOfRequestValidator",
+          "documentation":"<p>The current page of <a>RequestValidator</a> resources in the <a>RequestValidators</a> collection.</p>",
+          "locationName":"item"
+        }
+      },
+      "documentation":"<p>A collection of <a>RequestValidator</a> resources of a given <a>RestApi</a>.</p> <div class=\"remarks\"> <p>In Swagger, the <a>RequestValidators</a> of an API is defined by the <a href=\"http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-swagger-extensions.html#api-gateway-swagger-extensions-request-validators.html\">x-amazon-apigateway-request-validators</a> extension.</p> </div> <div class=\"seeAlso\"><a href=\"http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-method-request-validation.html\">Enable Basic Request Validation in API Gateway</a></div>"
+    },
     "Resource":{
       "type":"structure",
       "members":{
@@ -4781,7 +5097,7 @@
         },
         "resourceMethods":{
           "shape":"MapOfMethod",
-          "documentation":"<p>Gets an API resource's method of a given HTTP verb.</p> <div class=\"remarks\"> <p>The resource methods are a map of methods indexed by methods' HTTP verbs enabled on the resource. This method map is included in the <code>200 OK</code> response of the <code>GET /restapis/{restapi_id}/resources/{resource_id}</code> or <code>GET /restapis/{restapi_id}/resources/{resource_id}?embed=methods</code> request.</p> <h4>Example: Get the GET method of an API resource</h4> <h5>Request</h5> <pre><code>GET /restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET HTTP/1.1 Content-Type: application/json Host: apigateway.us-east-1.amazonaws.com X-Amz-Date: 20160608T031827Z Authorization: AWS4-HMAC-SHA256 Credential={access_key_ID}/20160608/us-east-1/apigateway/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature={sig4_hash}</code></pre> <h5>Response</h5> <pre><code>{ \"_links\": { \"curies\": [ { \"href\": \"http://docs.aws.amazon.com/apigateway/latest/developerguide/restapi-integration-{rel}.html\", \"name\": \"integration\", \"templated\": true }, { \"href\": \"http://docs.aws.amazon.com/apigateway/latest/developerguide/restapi-integration-response-{rel}.html\", \"name\": \"integrationresponse\", \"templated\": true }, { \"href\": \"http://docs.aws.amazon.com/apigateway/latest/developerguide/restapi-method-{rel}.html\", \"name\": \"method\", \"templated\": true }, { \"href\": \"http://docs.aws.amazon.com/apigateway/latest/developerguide/restapi-method-response-{rel}.html\", \"name\": \"methodresponse\", \"templated\": true } ], \"self\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET\", \"name\": \"GET\", \"title\": \"GET\" }, \"integration:put\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration\" }, \"method:delete\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET\" }, \"method:integration\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration\" }, \"method:responses\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/responses/200\", \"name\": \"200\", \"title\": \"200\" }, \"method:update\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET\" }, \"methodresponse:put\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/responses/{status_code}\", \"templated\": true } }, \"apiKeyRequired\": false, \"authorizationType\": \"NONE\", \"httpMethod\": \"GET\", \"_embedded\": { \"method:integration\": { \"_links\": { \"self\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration\" }, \"integration:delete\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration\" }, \"integration:responses\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration/responses/200\", \"name\": \"200\", \"title\": \"200\" }, \"integration:update\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration\" }, \"integrationresponse:put\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration/responses/{status_code}\", \"templated\": true } }, \"cacheKeyParameters\": [], \"cacheNamespace\": \"3kzxbg5sa2\", \"credentials\": \"arn:aws:iam::123456789012:role/apigAwsProxyRole\", \"httpMethod\": \"POST\", \"passthroughBehavior\": \"WHEN_NO_MATCH\", \"requestParameters\": { \"integration.request.header.Content-Type\": \"'application/x-amz-json-1.1'\" }, \"requestTemplates\": { \"application/json\": \"{\\n}\" }, \"type\": \"AWS\", \"uri\": \"arn:aws:apigateway:us-east-1:kinesis:action/ListStreams\", \"_embedded\": { \"integration:responses\": { \"_links\": { \"self\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration/responses/200\", \"name\": \"200\", \"title\": \"200\" }, \"integrationresponse:delete\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration/responses/200\" }, \"integrationresponse:update\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration/responses/200\" } }, \"responseParameters\": { \"method.response.header.Content-Type\": \"'application/xml'\" }, \"responseTemplates\": { \"application/json\": \"$util.urlDecode(\\\"%3CkinesisStreams%3E#foreach($stream in $input.path('$.StreamNames'))%3Cstream%3E%3Cname%3E$stream%3C/name%3E%3C/stream%3E#end%3C/kinesisStreams%3E\\\")\\n\" }, \"statusCode\": \"200\" } } }, \"method:responses\": { \"_links\": { \"self\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/responses/200\", \"name\": \"200\", \"title\": \"200\" }, \"methodresponse:delete\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/responses/200\" }, \"methodresponse:update\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/responses/200\" } }, \"responseModels\": { \"application/json\": \"Empty\" }, \"responseParameters\": { \"method.response.header.Content-Type\": false }, \"statusCode\": \"200\" } } }</code></pre> <p>If the <code>OPTIONS</code> is enabled on the resource, you can follow the example here to get that method. Just replace the <code>GET</code> of the last path segment in the request URL with <code>OPTIONS</code>.</p> </div> <div class=\"seeAlso\"> </div>"
+          "documentation":"<p>Gets an API resource's method of a given HTTP verb.</p> <div class=\"remarks\"> <p>The resource methods are a map of methods indexed by methods' HTTP verbs enabled on the resource. This method map is included in the <code>200 OK</code> response of the <code>GET /restapis/{restapi_id}/resources/{resource_id}</code> or <code>GET /restapis/{restapi_id}/resources/{resource_id}?embed=methods</code> request.</p> <h4>Example: Get the GET method of an API resource</h4> <h5>Request</h5> <pre><code>GET /restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET HTTP/1.1 Content-Type: application/json Host: apigateway.us-east-1.amazonaws.com X-Amz-Date: 20170223T031827Z Authorization: AWS4-HMAC-SHA256 Credential={access_key_ID}/20170223/us-east-1/apigateway/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature={sig4_hash}</code></pre> <h5>Response</h5> <pre><code>{ \"_links\": { \"curies\": [ { \"href\": \"http://docs.aws.amazon.com/apigateway/latest/developerguide/restapi-integration-{rel}.html\", \"name\": \"integration\", \"templated\": true }, { \"href\": \"http://docs.aws.amazon.com/apigateway/latest/developerguide/restapi-integration-response-{rel}.html\", \"name\": \"integrationresponse\", \"templated\": true }, { \"href\": \"http://docs.aws.amazon.com/apigateway/latest/developerguide/restapi-method-{rel}.html\", \"name\": \"method\", \"templated\": true }, { \"href\": \"http://docs.aws.amazon.com/apigateway/latest/developerguide/restapi-method-response-{rel}.html\", \"name\": \"methodresponse\", \"templated\": true } ], \"self\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET\", \"name\": \"GET\", \"title\": \"GET\" }, \"integration:put\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration\" }, \"method:delete\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET\" }, \"method:integration\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration\" }, \"method:responses\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/responses/200\", \"name\": \"200\", \"title\": \"200\" }, \"method:update\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET\" }, \"methodresponse:put\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/responses/{status_code}\", \"templated\": true } }, \"apiKeyRequired\": false, \"authorizationType\": \"NONE\", \"httpMethod\": \"GET\", \"_embedded\": { \"method:integration\": { \"_links\": { \"self\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration\" }, \"integration:delete\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration\" }, \"integration:responses\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration/responses/200\", \"name\": \"200\", \"title\": \"200\" }, \"integration:update\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration\" }, \"integrationresponse:put\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration/responses/{status_code}\", \"templated\": true } }, \"cacheKeyParameters\": [], \"cacheNamespace\": \"3kzxbg5sa2\", \"credentials\": \"arn:aws:iam::123456789012:role/apigAwsProxyRole\", \"httpMethod\": \"POST\", \"passthroughBehavior\": \"WHEN_NO_MATCH\", \"requestParameters\": { \"integration.request.header.Content-Type\": \"'application/x-amz-json-1.1'\" }, \"requestTemplates\": { \"application/json\": \"{\\n}\" }, \"type\": \"AWS\", \"uri\": \"arn:aws:apigateway:us-east-1:kinesis:action/ListStreams\", \"_embedded\": { \"integration:responses\": { \"_links\": { \"self\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration/responses/200\", \"name\": \"200\", \"title\": \"200\" }, \"integrationresponse:delete\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration/responses/200\" }, \"integrationresponse:update\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/integration/responses/200\" } }, \"responseParameters\": { \"method.response.header.Content-Type\": \"'application/xml'\" }, \"responseTemplates\": { \"application/json\": \"$util.urlDecode(\\\"%3CkinesisStreams%3E#foreach($stream in $input.path('$.StreamNames'))%3Cstream%3E%3Cname%3E$stream%3C/name%3E%3C/stream%3E#end%3C/kinesisStreams%3E\\\")\\n\" }, \"statusCode\": \"200\" } } }, \"method:responses\": { \"_links\": { \"self\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/responses/200\", \"name\": \"200\", \"title\": \"200\" }, \"methodresponse:delete\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/responses/200\" }, \"methodresponse:update\": { \"href\": \"/restapis/fugvjdxtri/resources/3kzxbg5sa2/methods/GET/responses/200\" } }, \"responseModels\": { \"application/json\": \"Empty\" }, \"responseParameters\": { \"method.response.header.Content-Type\": false }, \"statusCode\": \"200\" } } }</code></pre> <p>If the <code>OPTIONS</code> is enabled on the resource, you can follow the example here to get that method. Just replace the <code>GET</code> of the last path segment in the request URL with <code>OPTIONS</code>.</p> </div> <div class=\"seeAlso\"> </div>"
         }
       },
       "documentation":"<p>Represents an API resource.</p> <div class=\"seeAlso\"> <a href=\"http://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-create-api.html\">Create an API</a> </div>"
@@ -4815,7 +5131,7 @@
         },
         "createdDate":{
           "shape":"Timestamp",
-          "documentation":"<p>The date when the API was created, in <a href=\"http://www.iso.org/iso/home/standards/iso8601.htm\" target=\"_blank\">ISO 8601 format</a>.</p>"
+          "documentation":"<p>The timestamp when the API was created.</p>"
         },
         "version":{
           "shape":"String",
@@ -4844,6 +5160,32 @@
       },
       "documentation":"<p>Contains references to your APIs and links that guide you in how to interact with your collection. A collection offers a paginated view of your APIs.</p> <div class=\"seeAlso\"> <a href=\"http://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-create-api.html\">Create an API</a> </div>"
     },
+    "SdkConfigurationProperty":{
+      "type":"structure",
+      "members":{
+        "name":{
+          "shape":"String",
+          "documentation":"<p>The name of a an <a>SdkType</a> configuration property.</p>"
+        },
+        "friendlyName":{
+          "shape":"String",
+          "documentation":"<p>The user-friendly name of an <a>SdkType</a> configuration property.</p>"
+        },
+        "description":{
+          "shape":"String",
+          "documentation":"<p>The description of an <a>SdkType</a> configuration property.</p>"
+        },
+        "required":{
+          "shape":"Boolean",
+          "documentation":"<p>A boolean flag of an <a>SdkType</a> configuration property to indicate if the associated SDK configuration property is required (<code>true</code>) or not (<code>false</code>).</p>"
+        },
+        "defaultValue":{
+          "shape":"String",
+          "documentation":"<p>The default value of an <a>SdkType</a> configuration property.</p>"
+        }
+      },
+      "documentation":"<p>A configuration property of an SDK type.</p>"
+    },
     "SdkResponse":{
       "type":"structure",
       "members":{
@@ -4866,6 +5208,40 @@
       },
       "documentation":"<p>The binary blob response to <a>GetSdk</a>, which contains the generated SDK.</p>",
       "payload":"body"
+    },
+    "SdkType":{
+      "type":"structure",
+      "members":{
+        "id":{
+          "shape":"String",
+          "documentation":"<p>The identifier of an <a>SdkType</a> instance.</p>"
+        },
+        "friendlyName":{
+          "shape":"String",
+          "documentation":"<p>The user-friendly name of an <a>SdkType</a> instance.</p>"
+        },
+        "description":{
+          "shape":"String",
+          "documentation":"<p>The description of an <a>SdkType</a>.</p>"
+        },
+        "configurationProperties":{
+          "shape":"ListOfSdkConfigurationProperty",
+          "documentation":"<p>A list of configuration properties of an <a>SdkType</a>.</p>"
+        }
+      },
+      "documentation":"<p>A type of SDK that API Gateway can generate.</p>"
+    },
+    "SdkTypes":{
+      "type":"structure",
+      "members":{
+        "position":{"shape":"String"},
+        "items":{
+          "shape":"ListOfSdkType",
+          "documentation":"<p>The set of <a>SdkType</a> items that comprise this view of the <a>SdkTypes</a> collection.</p>",
+          "locationName":"item"
+        }
+      },
+      "documentation":"<p>The collection of <a>SdkType</a> instances.</p>"
     },
     "ServiceUnavailableException":{
       "type":"structure",
@@ -4926,11 +5302,11 @@
         },
         "createdDate":{
           "shape":"Timestamp",
-          "documentation":"<p>The date and time that the stage was created, in <a href=\"http://www.iso.org/iso/home/standards/iso8601.htm\" target=\"_blank\">ISO 8601 format</a>.</p>"
+          "documentation":"<p>The timestamp when the stage was created.</p>"
         },
         "lastUpdatedDate":{
           "shape":"Timestamp",
-          "documentation":"<p>The date and time that information about the stage was last updated, in <a href=\"http://www.iso.org/iso/home/standards/iso8601.htm\" target=\"_blank\">ISO 8601 format</a>.</p>"
+          "documentation":"<p>The timestamp when the stage last updated.</p>"
         }
       },
       "documentation":"<p>Represents a unique identifier for a version of a deployed <a>RestApi</a> that is callable by users.</p> <div class=\"seeAlso\"> <a href=\"http://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-deploy-api.html\">Deploy an API</a> </div>"
@@ -5529,6 +5905,32 @@
         }
       },
       "documentation":"<p>Request to update an existing model in an existing <a>RestApi</a> resource.</p>"
+    },
+    "UpdateRequestValidatorRequest":{
+      "type":"structure",
+      "required":[
+        "restApiId",
+        "requestValidatorId"
+      ],
+      "members":{
+        "restApiId":{
+          "shape":"String",
+          "documentation":"<p>[Required] The identifier of the <a>RestApi</a> for which the given <a>RequestValidator</a> is updated.</p>",
+          "location":"uri",
+          "locationName":"restapi_id"
+        },
+        "requestValidatorId":{
+          "shape":"String",
+          "documentation":"<p>[Required] The identifier of <a>RequestValidator</a> to be updated.</p>",
+          "location":"uri",
+          "locationName":"requestvalidator_id"
+        },
+        "patchOperations":{
+          "shape":"ListOfPatchOperation",
+          "documentation":"<p>A list of update operations to be applied to the specified resource and in the order specified in this list.</p>"
+        }
+      },
+      "documentation":"<p>Updates a <a>RequestValidator</a> of a given <a>RestApi</a>.</p>"
     },
     "UpdateResourceRequest":{
       "type":"structure",

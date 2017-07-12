@@ -281,3 +281,21 @@ class TestSharedExampleDocumenter(BaseDocsTest):
             "    foo='bar',",
             ")"
         ])
+
+    def test_unicode_exammple(self):
+        self.add_shape_to_params('foo', 'String')
+        self.documenter.document_shared_example(
+            example={
+                'input': {
+                    'foo': u'\u2713'
+                }
+            },
+            prefix='foo.bar',
+            section=self.doc_structure,
+            operation_model=self.operation_model
+        )
+        self.assert_contains_lines_in_order([
+            u"foo.bar(",
+            u"    foo='\u2713'",
+            u")"
+        ])

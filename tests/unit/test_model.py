@@ -38,7 +38,9 @@ class TestServiceModel(unittest.TestCase):
                          'endpointPrefix': 'endpoint-prefix'},
             'documentation': 'Documentation value',
             'operations': {},
-            'shapes': {}
+            'shapes': {
+                'StringShape': {'type': 'string'}
+            }
         }
         self.service_model = model.ServiceModel(self.model)
 
@@ -66,6 +68,9 @@ class TestServiceModel(unittest.TestCase):
         self.assertEqual(self.service_model.documentation,
                          'Documentation value')
 
+    def test_shape_names(self):
+        self.assertEqual(self.service_model.shape_names, ['StringShape'])
+
 
 class TestOperationModelFromService(unittest.TestCase):
     def setUp(self):
@@ -87,6 +92,22 @@ class TestOperationModelFromService(unittest.TestCase):
                     },
                     'errors': [{'shape': 'NoSuchResourceException'}],
                     'documentation': 'Docs for OperationName',
+                    'authtype': 'v4'
+                },
+                'OperationTwo': {
+                    'http': {
+                        'method': 'POST',
+                        'requestUri': '/',
+                    },
+                    'name': 'OperationTwo',
+                    'input': {
+                        'shape': 'OperationNameRequest'
+                    },
+                    'output': {
+                        'shape': 'OperationNameResponse',
+                    },
+                    'errors': [{'shape': 'NoSuchResourceException'}],
+                    'documentation': 'Docs for OperationTwo',
                 }
             },
             'shapes': {
@@ -187,6 +208,22 @@ class TestOperationModelFromService(unittest.TestCase):
         operation = service_model.operation_model('OperationName')
         output_shape = operation.output_shape
         self.assertIsNone(output_shape)
+
+    def test_error_shapes(self):
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        # OperationName only has a NoSuchResourceException
+        self.assertEqual(len(operation.error_shapes), 1)
+        self.assertEqual(
+            operation.error_shapes[0].name, 'NoSuchResourceException')
+
+    def test_has_auth_type(self):
+        operation = self.service_model.operation_model('OperationName')
+        self.assertEqual(operation.auth_type, 'v4')
+
+    def test_auth_type_not_set(self):
+        operation = self.service_model.operation_model('OperationTwo')
+        self.assertIsNone(operation.auth_type)
 
 
 class TestOperationModelStreamingTypes(unittest.TestCase):

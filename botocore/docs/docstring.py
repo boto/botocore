@@ -72,7 +72,7 @@ class LazyLoadedDocstring(str):
         return self._docstring
 
     def _create_docstring(self):
-        docstring_structure = DocumentStructure('docstring')
+        docstring_structure = DocumentStructure('docstring', target='html')
         # Call the document method function with the args and kwargs
         # passed to the class.
         self._write_docstring(

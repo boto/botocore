@@ -47,7 +47,7 @@ class BaseDocsTest(unittest.TestCase):
         self.events = HierarchicalEmitter()
         self.setup_client()
         self.doc_name = 'MyDoc'
-        self.doc_structure = DocumentStructure(self.doc_name)
+        self.doc_structure = DocumentStructure(self.doc_name, target='html')
 
     def tearDown(self):
         shutil.rmtree(self.root_dir)
@@ -79,7 +79,8 @@ class BaseDocsTest(unittest.TestCase):
             loader=self.loader, endpoint_resolver=endpoint_resolver,
             user_agent='user-agent', event_emitter=self.events,
             retry_handler_factory=mock.Mock(),
-            retry_config_translator=mock.Mock())
+            retry_config_translator=mock.Mock(),
+            exceptions_factory=mock.Mock())
 
         self.client = self.creator.create_client('myservice', 'us-east-1')
 
@@ -90,6 +91,7 @@ class BaseDocsTest(unittest.TestCase):
                 'endpointPrefix': 'myservice',
                 'signatureVersion': 'v4',
                 'serviceFullName': 'AWS MyService',
+                'uid': 'myservice-2014-01-01',
                 'protocol': 'query'
             },
             'operations': {

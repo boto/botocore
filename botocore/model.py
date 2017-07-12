@@ -48,9 +48,10 @@ class Shape(object):
     # the attributes that should be moved.
     SERIALIZED_ATTRS = ['locationName', 'queryName', 'flattened', 'location',
                         'payload', 'streaming', 'timestampFormat',
-                        'xmlNamespace', 'resultWrapper', 'xmlAttribute']
+                        'xmlNamespace', 'resultWrapper', 'xmlAttribute',
+                        'jsonvalue']
     METADATA_ATTRS = ['required', 'min', 'max', 'sensitive', 'enum',
-                      'idempotencyToken']
+                      'idempotencyToken', 'error', 'exception']
     MAP_TYPE = OrderedDict
 
     def __init__(self, shape_name, shape_model, shape_resolver=None):
@@ -103,6 +104,7 @@ class Shape(object):
             * xmlNamespace
             * resultWrapper
             * xmlAttribute
+            * jsonvalue
 
         :rtype: dict
         :return: Serialization information about the shape.
@@ -242,6 +244,10 @@ class ServiceModel(object):
 
     def resolve_shape_ref(self, shape_ref):
         return self._shape_resolver.resolve_shape_ref(shape_ref)
+
+    @CachedProperty
+    def shape_names(self):
+        return list(self._service_description.get('shapes', {}))
 
     @instance_cache
     def operation_model(self, operation_name):
@@ -418,6 +424,15 @@ class OperationModel(object):
         return [name for (name, shape) in input_shape.members.items()
                 if 'idempotencyToken' in shape.metadata and
                 shape.metadata['idempotencyToken']]
+
+    @CachedProperty
+    def auth_type(self):
+        return self._operation_model.get('authtype')
+
+    @CachedProperty
+    def error_shapes(self):
+        shapes = self._operation_model.get("errors", [])
+        return list(self._service_model.resolve_shape_ref(s) for s in shapes)
 
     @CachedProperty
     def has_streaming_input(self):

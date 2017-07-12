@@ -14,7 +14,6 @@
 from tests import unittest
 
 from mock import Mock, patch, sentinel
-from nose.tools import assert_equals
 from botocore.vendored.requests import ConnectionError
 
 from botocore.compat import six
@@ -24,7 +23,6 @@ from botocore.endpoint import EndpointCreator
 from botocore.endpoint import BotocoreHTTPSession
 from botocore.exceptions import EndpointConnectionError
 from botocore.exceptions import ConnectionClosedError
-from botocore.exceptions import BaseEndpointResolverError
 
 
 def request_dict():
@@ -140,6 +138,12 @@ class TestEndpointFeatures(TestEndpointBase):
         # We can look in endpoint.http_session.adapters[0]._pool_maxsize,
         # but that feels like testing too much implementation detail.
         self.assertEqual(endpoint.max_pool_connections, 50)
+
+    def test_can_specify_proxies(self):
+        proxies = {'http': 'http://foo.bar:1234'}
+        endpoint = Endpoint('https://ec2.us-west-2.amazonaws.com', 'ec2',
+                            self.event_emitter, proxies=proxies)
+        self.assertEqual(endpoint.proxies, proxies)
 
 
 class TestRetryInterface(TestEndpointBase):

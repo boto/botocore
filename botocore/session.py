@@ -27,6 +27,7 @@ import botocore.credentials
 import botocore.client
 from botocore.exceptions import ConfigNotFound, ProfileNotFound
 from botocore.exceptions import UnknownServiceError, PartialCredentialsError
+from botocore.errorfactory import ClientExceptionsFactory
 from botocore import handlers
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
 from botocore.loaders import create_loader
@@ -164,6 +165,7 @@ class Session(object):
         self._register_endpoint_resolver()
         self._register_event_emitter()
         self._register_response_parser_factory()
+        self._register_exceptions_factory()
 
     def _register_event_emitter(self):
         self._components.register_component('event_emitter', self._events)
@@ -189,6 +191,10 @@ class Session(object):
     def _register_response_parser_factory(self):
         self._components.register_component('response_parser_factory',
                                             ResponseParserFactory())
+
+    def _register_exceptions_factory(self):
+        self._components.register_component(
+            'exceptions_factory', ClientExceptionsFactory())
 
     def _register_builtin_handlers(self, events):
         for spec in handlers.BUILTIN_HANDLERS:
@@ -448,7 +454,7 @@ class Session(object):
         Return a string suitable for use as a User-Agent header.
         The string will be of the form:
 
-        <agent_name>/<agent_version> Python/<py_ver> <plat_name>/<plat_ver>
+        <agent_name>/<agent_version> Python/<py_ver> <plat_name>/<plat_ver> <exec_env>
 
         Where:
 
@@ -460,6 +466,7 @@ class Session(object):
          - py_ver is the version of the Python interpreter beng used.
          - plat_name is the name of the platform (e.g. Darwin)
          - plat_ver is the version of the platform
+         - exec_env is exec-env/$AWS_EXECUTION_ENV
 
         If ``user_agent_extra`` is not empty, then this value will be
         appended to the end of the user agent string.
@@ -470,8 +477,11 @@ class Session(object):
                                           platform.python_version(),
                                           platform.system(),
                                           platform.release())
+        if os.environ.get('AWS_EXECUTION_ENV') is not None:
+            base += ' exec-env/%s' % os.environ.get('AWS_EXECUTION_ENV')
         if self.user_agent_extra:
             base += ' %s' % self.user_agent_extra
+
         return base
 
     def get_data(self, data_path):
@@ -814,9 +824,11 @@ class Session(object):
         else:
             credentials = self.get_credentials()
         endpoint_resolver = self.get_component('endpoint_resolver')
+        exceptions_factory = self.get_component('exceptions_factory')
         client_creator = botocore.client.ClientCreator(
             loader, endpoint_resolver, self.user_agent(), event_emitter,
-            retryhandler, translate, response_parser_factory)
+            retryhandler, translate, response_parser_factory,
+            exceptions_factory)
         client = client_creator.create_client(
             service_name=service_name, region_name=region_name,
             is_secure=use_ssl, endpoint_url=endpoint_url, verify=verify,

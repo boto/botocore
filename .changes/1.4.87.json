@@ -1,0 +1,27 @@
+[
+  {
+    "category": "``ssm``", 
+    "description": "Update ssm client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "user-agent", 
+    "description": "Default user agent now includes the environment variable $AWS_EXECUTION_ENVIRONMENT", 
+    "type": "feature"
+  }, 
+  {
+    "category": "Python 3.6", 
+    "description": "Adds compatibility with the new Python 3.6 HTTPConnection.", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "sigv4", 
+    "description": "Do not sign x-amzn-trace-id as it can be mutated along the way.", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``cognito-idp``", 
+    "description": "Update cognito-idp client to latest version", 
+    "type": "feature"
+  }
+]
