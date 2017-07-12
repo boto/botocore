@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.5.81
+======
+
+* enhancement:SSM: Added a paginator for describe_parameters.
+* enchancement:Organizations: Added paginators for Organizations.
+* enhancement:IoT: Add paginators for IoT.
+* api-change:``swf``: Update swf client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* enhancement:Athena: Added paginators for Athena.
+
+
 1.5.80
 ======
 
