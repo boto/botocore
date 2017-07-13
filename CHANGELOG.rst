@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.5.82
+======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+
+
 1.5.81
 ======
 
