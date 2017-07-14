@@ -64,7 +64,7 @@ class TestStreamWrapper(unittest.TestCase):
     def test_streaming_body_with_zero_read(self):
         body = six.BytesIO(b'1234567890')
         stream = response.StreamingBody(body, content_length=10)
-        self.assertEqual(stream.read(0), '')
+        self.assertEqual(stream.read(0), b'')
 
     def test_streaming_body_closes(self):
         body = six.BytesIO(b'1234567890')
