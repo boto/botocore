@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.5.83
+======
+
+* api-change:``discovery``: Update discovery client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+
+
 1.5.82
 ======
 
