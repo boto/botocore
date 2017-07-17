@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.5.84
+======
+
+* api-change:``lambda``: Update lambda client to latest version
+* bugfix:Paginator: Fixed a bug causing running `build_full_results` multiple times to incorrectly generate the `NextToken` value.
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+
+
 1.5.83
 ======
 
