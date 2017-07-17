@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``lambda``", 
+    "description": "Update lambda client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "Paginator", 
+    "description": "Fixed a bug causing running `build_full_results` multiple times to incorrectly generate the `NextToken` value.", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``cognito-idp``", 
+    "description": "Update cognito-idp client to latest version", 
+    "type": "api-change"
+  }
+]

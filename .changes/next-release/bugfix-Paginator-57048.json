@@ -1,5 +1,0 @@
-{
-  "category": "Paginator",
-  "description": "Fixed a bug causing running `build_full_results` multiple times to incorrectly generate the `NextToken` value.",
-  "type": "bugfix"
-}
