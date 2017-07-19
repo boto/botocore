@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.5.85
+======
+
+* api-change:``budgets``: Update budgets client to latest version
+
+
 1.5.84
 ======
 
