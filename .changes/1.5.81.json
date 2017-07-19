@@ -1,0 +1,32 @@
+[
+  {
+    "category": "SSM", 
+    "description": "Added a paginator for describe_parameters.", 
+    "type": "enhancement"
+  }, 
+  {
+    "category": "Organizations", 
+    "description": "Added paginators for Organizations.", 
+    "type": "enchancement"
+  }, 
+  {
+    "category": "IoT", 
+    "description": "Add paginators for IoT.", 
+    "type": "enhancement"
+  }, 
+  {
+    "category": "``swf``", 
+    "description": "Update swf client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``autoscaling``", 
+    "description": "Update autoscaling client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "Athena", 
+    "description": "Added paginators for Athena.", 
+    "type": "enhancement"
+  }
+]

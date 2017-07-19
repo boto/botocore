@@ -296,6 +296,49 @@ class TestPagination(unittest.TestCase):
         complete = pages.build_full_result()
         self.assertEqual(complete, {'Users': ['User1', 'User2', 'User3']})
 
+    def test_build_multiple_results(self):
+        self.paginate_config = {
+            "output_token": "Marker",
+            "input_token": "Marker",
+            "result_key": "Users",
+            "limit_key": "MaxKeys",
+        }
+        self.paginator = Paginator(self.method, self.paginate_config)
+
+        max_items = 3
+        page_size = 2
+
+        responses = [
+            {"Users": ["User1", "User2"], "Marker": "m1"},
+            {"Users": ["User3", "User4"], "Marker": "m2"},
+            {"Users": ["User3", "User4"], "Marker": "m2"},
+            {"Users": ["User5", "User6", "User7"], "Marker": "m3"},
+        ]
+        self.method.side_effect = responses
+
+        pages = self.paginator.paginate(
+            PaginationConfig={
+                'PageSize': page_size,
+                'MaxItems': max_items
+            }
+        )
+        result = pages.build_full_result()
+
+        pages = self.paginator.paginate(
+            PaginationConfig={
+                'MaxItems': max_items,
+                'PageSize': page_size,
+                'StartingToken': result['NextToken']
+            }
+        )
+        result = pages.build_full_result()
+
+        expected_token = encode_token({
+            'Marker': 'm2',
+            'boto_truncate_amount': 2,
+        })
+        self.assertEqual(expected_token, result['NextToken'])
+
 
 class TestPaginatorPageSize(unittest.TestCase):
     def setUp(self):

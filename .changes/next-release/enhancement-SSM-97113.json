@@ -1,5 +1,0 @@
-{
-  "type": "enhancement",
-  "category": "SSM",
-  "description": "Added a paginator for describe_parameters."
-}

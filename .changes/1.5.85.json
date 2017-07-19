@@ -1,0 +1,7 @@
+[
+  {
+    "category": "``budgets``", 
+    "description": "Update budgets client to latest version", 
+    "type": "api-change"
+  }
+]
