@@ -220,8 +220,7 @@ class ReSTStyle(BaseStyle):
                 if ':' in last_write:
                     last_write = last_write.replace(':', r'\:')
                 self.doc.push_write(last_write)
-                self.doc.hrefs[last_write] = self.a_href
-                self.doc.write('`_')
+                self.doc.push_write(' <%s>`_' % self.a_href)
             elif last_write == '`':
                 # Look at start_a().  It will do a self.doc.write('`')
                 # which is the start of the link title.  If that is the
