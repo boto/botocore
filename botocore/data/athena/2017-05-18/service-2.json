@@ -706,7 +706,7 @@
       "members":{
         "OutputLocation":{
           "shape":"String",
-          "documentation":"<p>The location in S3 where query results are stored.</p>"
+          "documentation":"<p>The location in S3 where query results are stored. For example <code>s3://bucketname/key1/key2/</code>.</p>"
         },
         "EncryptionConfiguration":{
           "shape":"EncryptionConfiguration",
