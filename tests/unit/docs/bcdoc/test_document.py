@@ -41,13 +41,19 @@ class TestReSTDocument(unittest.TestCase):
         doc = ReSTDocument()
         doc.include_doc_string('<p>this is a <code>test</code></p>')
         self.assertEqual(doc.getvalue(), six.b('\n\nthis is a ``test`` \n\n'))
-        
+
     def test_remove_doc_string(self):
         doc = ReSTDocument()
         doc.writeln('foo')
         doc.include_doc_string('<p>this is a <code>test</code></p>')
         doc.remove_last_doc_string()
         self.assertEqual(doc.getvalue(), six.b('foo\n'))
+
+    def test_add_links(self):
+        doc = ReSTDocument()
+        doc.hrefs['foo'] = 'https://example.com/'
+        self.assertEqual(
+            doc.getvalue(), six.b('\n\n.. _foo: https://example.com/\n'))
 
 
 class TestDocumentStructure(unittest.TestCase):

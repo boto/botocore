@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.5.86
+======
+
+* api-change:``emr``: Update emr client to latest version
+
+
 1.5.85
 ======
 
