@@ -55,6 +55,15 @@ def create_credential_resolver(session):
     config_file = session.get_config_variable('config_file')
     metadata_timeout = session.get_config_variable('metadata_service_timeout')
     num_attempts = session.get_config_variable('metadata_service_num_attempts')
+    credential_cache = session.get_config_variable('credential_cache')
+    credential_cache_directory = session.get_config_variable(
+        'credential_cache_directory')
+    if credential_cache == 'file':
+        cache = JSONFileCache(credential_cache_directory)
+    elif credential_cache == 'memory':
+        cache = {}
+    else:
+        cache = {}
 
     env_provider = EnvProvider()
     providers = [
@@ -62,7 +71,7 @@ def create_credential_resolver(session):
         AssumeRoleProvider(
             load_config=lambda: session.full_config,
             client_creator=session.create_client,
-            cache=JSONFileCache(),
+            cache=cache,
             profile_name=profile_name,
         ),
         SharedCredentialProvider(
@@ -161,7 +170,7 @@ class JSONFileCache(object):
     values can be retrieved at a later time.
     """
 
-    CACHE_DIR = os.path.expanduser(os.path.join('~', '.aws', 'cli', 'cache'))
+    CACHE_DIR = os.path.expanduser(os.path.join('~', '.aws', 'cache'))
 
     def __init__(self, working_dir=CACHE_DIR):
         self._working_dir = working_dir

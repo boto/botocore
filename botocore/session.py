@@ -20,6 +20,7 @@ import copy
 import logging
 import os
 import platform
+import string
 
 from botocore import __version__
 import botocore.configloader
@@ -99,6 +100,14 @@ class Session(object):
         'metadata_service_num_attempts': (
             'metadata_service_num_attempts',
             'AWS_METADATA_SERVICE_NUM_ATTEMPTS', 1, int),
+        'credential_cache': (
+            'credential_cache',
+            'AWS_CREDENTIAL_CACHE', 'memory', string.lower),
+        'credential_cache_directory': (
+            'credential_cache_directory',
+            'AWS_CREDENTIAL_CACHE_DIRECTORY',
+            os.path.join('~', '.aws', 'cache'),
+            os.path.expanduser),
         'parameter_validation': ('parameter_validation', None, True, None),
     }
 

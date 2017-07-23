@@ -629,6 +629,8 @@ class TestCreateCredentialResolver(BaseEnvVar):
             'config_file': 'c',
             'metadata_service_timeout': 'd',
             'metadata_service_num_attempts': 'e',
+            'credential_cache': 'f',
+            'credential_cache_directory': 'g',
         }
         self.fake_env_vars = {}
         self.session.get_config_variable = self.fake_get_config_variable
@@ -663,6 +665,35 @@ class TestCreateCredentialResolver(BaseEnvVar):
         resolver = credentials.create_credential_resolver(self.session)
         self.assertTrue(
             any(isinstance(p, EnvProvider) for p in resolver.providers))
+
+    def test_memory_cache_selection(self):
+        self.session_instance_vars['credential_cache'] = 'memory'
+        resolver = credentials.create_credential_resolver(self.session)
+        assume_role_provider = next(x for x in resolver.providers if
+                    isinstance(x, credentials.AssumeRoleProvider))
+        self.assertIsInstance(assume_role_provider.cache, dict)
+
+    def test_file_cache_selection(self):
+        self.session_instance_vars['credential_cache'] = 'file'
+        resolver = credentials.create_credential_resolver(self.session)
+        assume_role_provider = next(
+            x for x in resolver.providers
+            if isinstance(x, credentials.AssumeRoleProvider))
+        self.assertIsInstance(
+            assume_role_provider.cache, credentials.JSONFileCache)
+
+    def test_credential_cache_directory(self):
+        self.session_instance_vars['credential_cache'] = 'file'
+        credential_cache_directory = '~/.aws/test'
+        self.session_instance_vars['credential_cache_directory'] = (
+            credential_cache_directory)
+        resolver = credentials.create_credential_resolver(self.session)
+        assume_role_provider = next(
+            x for x in resolver.providers
+            if isinstance(x, credentials.AssumeRoleProvider))
+        self.assertEqual(
+            assume_role_provider.cache._working_dir,
+            os.path.expanduser(credential_cache_directory))
 
 
 class TestAssumeRoleCredentialProvider(unittest.TestCase):
