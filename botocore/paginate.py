@@ -257,6 +257,11 @@ class PageIterator(object):
                         parsed, primary_result_key, starting_truncation)
                 first_request = False
                 self._record_non_aggregate_key_values(parsed)
+            else:
+                # If this isn't the first request, we have already sliced into
+                # the first request and had to make additional requests after.
+                # We no longer need to add this to truncation.
+                starting_truncation = 0
             current_response = primary_result_key.search(parsed)
             if current_response is None:
                 current_response = []

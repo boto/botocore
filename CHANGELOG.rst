@@ -2,6 +2,47 @@
 CHANGELOG
 =========
 
+1.5.85
+======
+
+* api-change:``budgets``: Update budgets client to latest version
+
+
+1.5.84
+======
+
+* api-change:``lambda``: Update lambda client to latest version
+* bugfix:Paginator: Fixed a bug causing running `build_full_results` multiple times to incorrectly generate the `NextToken` value.
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+
+
+1.5.83
+======
+
+* api-change:``discovery``: Update discovery client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``marketplacecommerceanalytics``: Update marketplacecommerceanalytics client to latest version
+
+
+1.5.82
+======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+
+
+1.5.81
+======
+
+* enhancement:SSM: Added a paginator for describe_parameters.
+* enchancement:Organizations: Added paginators for Organizations.
+* enhancement:IoT: Add paginators for IoT.
+* api-change:``swf``: Update swf client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* enhancement:Athena: Added paginators for Athena.
+
+
 1.5.80
 ======
 
