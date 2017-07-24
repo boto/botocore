@@ -13,7 +13,8 @@
         "StreamDescription.RetentionPeriodHours",
         "StreamDescription.EnhancedMonitoring",
         "StreamDescription.EncryptionType",
-        "StreamDescription.KeyId"
+        "StreamDescription.KeyId",
+        "StreamDescription.StreamCreationTimestamp"
       ]
     },
     "ListStreams": {
