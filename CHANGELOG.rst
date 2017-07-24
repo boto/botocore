@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.5.87
+======
+
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.5.86
 ======
 
