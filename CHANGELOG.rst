@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.5.88
+======
+
+* api-change:``clouddirectory``: Update clouddirectory client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+
+
 1.5.87
 ======
 
