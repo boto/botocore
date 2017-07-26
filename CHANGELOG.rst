@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.5.89
+======
+
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+
+
 1.5.88
 ======
 
