@@ -299,3 +299,22 @@ class TestSharedExampleDocumenter(BaseDocsTest):
             u"    foo='\u2713'",
             u")"
         ])
+
+    def test_escape_character_example(self):
+        self.add_shape_to_params('foo', 'String')
+        self.documenter.document_shared_example(
+            example={
+                'output': {
+                    'foo': 'good\n\rintentions!\n\r'
+                }
+            },
+            prefix='foo.bar',
+            section=self.doc_structure,
+            operation_model=self.operation_model
+        )
+        self.assert_contains_lines_in_order([
+            "Expected Output:",
+            "  {",
+            "      'foo': 'good\\n\\rintentions!\\n\\r',",
+            "  }",
+        ])
