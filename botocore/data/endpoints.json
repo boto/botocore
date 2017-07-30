@@ -495,6 +495,7 @@
           "eu-central-1" : { },
           "eu-west-1" : { },
           "eu-west-2" : { },
+          "sa-east-1" : { },
           "us-east-1" : { },
           "us-east-2" : { },
           "us-west-2" : { }
@@ -618,6 +619,7 @@
       "elasticfilesystem" : {
         "endpoints" : {
           "ap-southeast-2" : { },
+          "eu-central-1" : { },
           "eu-west-1" : { },
           "us-east-1" : { },
           "us-east-2" : { },
@@ -1250,7 +1252,6 @@
           "ap-northeast-2" : { },
           "ap-south-1" : { },
           "ap-southeast-2" : { },
-          "ca-central-1" : { },
           "eu-central-1" : { },
           "eu-west-1" : { },
           "us-east-1" : { },
@@ -1507,6 +1508,7 @@
           "ap-northeast-1" : { },
           "eu-west-1" : { },
           "us-east-1" : { },
+          "us-west-1" : { },
           "us-west-2" : { }
         }
       },
@@ -1676,6 +1678,16 @@
         "isRegionalized" : false,
         "partitionEndpoint" : "aws-cn-global"
       },
+      "iot" : {
+        "defaults" : {
+          "credentialScope" : {
+            "service" : "execute-api"
+          }
+        },
+        "endpoints" : {
+          "cn-north-1" : { }
+        }
+      },
       "kinesis" : {
         "endpoints" : {
           "cn-north-1" : { }
@@ -1783,6 +1795,11 @@
       }
     },
     "services" : {
+      "acm" : {
+        "endpoints" : {
+          "us-gov-west-1" : { }
+        }
+      },
       "autoscaling" : {
         "endpoints" : {
           "us-gov-west-1" : {
