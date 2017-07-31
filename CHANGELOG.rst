@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.5.91
+======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``inspector``: Update inspector client to latest version
+
+
 1.5.90
 ======
 
