@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.5.92
+======
+
+* api-change:``ses``: Update ses client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+* api-change:``config``: Update config client to latest version
+
+
 1.5.91
 ======
 
