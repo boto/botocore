@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``ses``", 
+    "description": "Update ses client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``pinpoint``", 
+    "description": "Update pinpoint client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codedeploy``", 
+    "description": "Update codedeploy client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``config``", 
+    "description": "Update config client to latest version", 
+    "type": "api-change"
+  }
+]
