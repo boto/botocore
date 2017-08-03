@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import re
 from collections import namedtuple
 
 
@@ -177,3 +178,20 @@ class AppendParamDocumentation(object):
             description_section = section.get_section(
                 'param-documentation')
             description_section.writeln(self._doc_string)
+
+
+_CONTROLS = {
+    '\n': '\\n',
+    '\r': '\\r',
+    '\t': '\\t',
+    '\b': '\\b',
+    '\f': '\\f',
+}
+# Combines all CONTROLS keys into a big or regular expression
+_ESCAPE_CONTROLS_RE = re.compile('|'.join(map(re.escape, _CONTROLS)))
+# Based on the match get the appropriate replacement from CONTROLS
+_CONTROLS_MATCH_HANDLER = lambda match: _CONTROLS[match.group(0)]
+
+
+def escape_controls(value):
+    return _ESCAPE_CONTROLS_RE.sub(_CONTROLS_MATCH_HANDLER, value)

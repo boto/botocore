@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "Paginator",
+  "description": "Ensure that the page size type matches the type expected by the service. Fixes `#1063 <https://github.com/boto/botocore/issues/1063>`__."
+}
