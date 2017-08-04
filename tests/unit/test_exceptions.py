@@ -62,3 +62,19 @@ def test_retry_info_not_added_if_retry_attempts_not_present():
         raise AssertionError("Retry information should not be in exception "
                              "message when retry attempts not in response "
                              "metadata: %s" % error_msg)
+
+
+def test_can_handle_when_response_missing_error_key():
+    response = {
+        'ResponseMetadata': {
+            'HTTPHeaders': {},
+            'HTTPStatusCode': 503,
+            'MaxAttemptsReached': True,
+            'RetryAttempts': 4
+        }
+    }
+    e = exceptions.ClientError(response, 'SomeOperation')
+    if 'An error occurred (Unknown)' not in str(e):
+        raise AssertionError(
+            "Error code should default to 'Unknown' "
+            "when missing error response, instead got: %s" % str(e))
