@@ -1,0 +1,5 @@
+{
+  "category": "Exceptions", 
+  "type": "bugfix", 
+  "description": "Default to 'Unknown' when error response is missing 'Error' key"
+}
