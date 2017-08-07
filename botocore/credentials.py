@@ -444,8 +444,16 @@ class RefreshableCredentials(Credentials):
 
 class CredentialProvider(object):
 
-    # Implementations must provide a method.
+    # A short name to identify the provider within botocore.
     METHOD = None
+
+    # A name to identify the provider for use in cross-sdk features like
+    # assume role's `credential_source` configuration option. These names
+    # are to be treated in a case-insensitive way. NOTE: any providers not
+    # implemented in botocore MUST prefix their canonical names with
+    # 'custom' or we DO NOT gaurantee that it will work with any features
+    # that this provides.
+    CANONICAL_NAME = None
 
     def __init__(self, session=None):
         self.session = session
@@ -482,6 +490,7 @@ class CredentialProvider(object):
 
 class InstanceMetadataProvider(CredentialProvider):
     METHOD = 'iam-role'
+    CANONICAL_NAME = 'Ec2InstanceMetadata'
 
     def __init__(self, iam_role_fetcher):
         self._role_fetcher = iam_role_fetcher
@@ -509,6 +518,7 @@ class InstanceMetadataProvider(CredentialProvider):
 
 class EnvProvider(CredentialProvider):
     METHOD = 'env'
+    CANONICAL_NAME = 'Environment'
     ACCESS_KEY = 'AWS_ACCESS_KEY_ID'
     SECRET_KEY = 'AWS_SECRET_ACCESS_KEY'
     # The token can come from either of these env var.
@@ -619,6 +629,7 @@ class EnvProvider(CredentialProvider):
 
 class OriginalEC2Provider(CredentialProvider):
     METHOD = 'ec2-credentials-file'
+    CANONICAL_NAME = 'Ec2Config'
 
     CRED_FILE_ENV = 'AWS_CREDENTIAL_FILE'
     ACCESS_KEY = 'AWSAccessKeyId'
@@ -651,6 +662,7 @@ class OriginalEC2Provider(CredentialProvider):
 
 class SharedCredentialProvider(CredentialProvider):
     METHOD = 'shared-credentials-file'
+    CANONICAL_NAME = 'SharedCredentials'
 
     ACCESS_KEY = 'aws_access_key_id'
     SECRET_KEY = 'aws_secret_access_key'
@@ -693,6 +705,7 @@ class SharedCredentialProvider(CredentialProvider):
 class ConfigProvider(CredentialProvider):
     """INI based config provider with profile sections."""
     METHOD = 'config-file'
+    CANONICAL_NAME = 'SharedConfig'
 
     ACCESS_KEY = 'aws_access_key_id'
     SECRET_KEY = 'aws_secret_access_key'
@@ -746,6 +759,7 @@ class ConfigProvider(CredentialProvider):
 
 class BotoProvider(CredentialProvider):
     METHOD = 'boto-config'
+    CANONICAL_NAME = 'Boto2Config'
 
     BOTO_CONFIG_ENV = 'BOTO_CONFIG'
     DEFAULT_CONFIG_FILENAMES = ['/etc/boto.cfg', '~/.boto']
@@ -788,6 +802,12 @@ class BotoProvider(CredentialProvider):
 class AssumeRoleProvider(CredentialProvider):
 
     METHOD = 'assume-role'
+    # The AssumeRole provider is logically part of the SharedConfig and
+    # SharedCredentials providers. Since the purpose of the canonical name
+    # is to provide cross-sdk compatibility, calling code will need to be
+    # aware that either of those providers should be tied to the AssumeRole
+    # provider as much as possible.
+    CANONICAL_NAME = None
     ROLE_CONFIG_VAR = 'role_arn'
     # Credentials are considered expired (and will be refreshed) once the total
     # remaining time left until the credentials expires is less than the
@@ -996,6 +1016,7 @@ class AssumeRoleProvider(CredentialProvider):
 class ContainerProvider(CredentialProvider):
 
     METHOD = 'container-role'
+    CANONICAL_NAME = 'EcsContainer'
     ENV_VAR = 'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI'
     ENV_VAR_FULL = 'AWS_CONTAINER_CREDENTIALS_FULL_URI'
     ENV_VAR_AUTH_TOKEN = 'AWS_CONTAINER_AUTHORIZATION_TOKEN'
@@ -1140,6 +1161,61 @@ class CredentialResolver(object):
             return [p.METHOD for p in self.providers].index(name)
         except ValueError:
             raise UnknownCredentialError(name=name)
+
+    def get_provider_by_canonical_name(self, canonical_name):
+        """Return a credential provider by its canonical name.
+
+        :type canonical_name: str
+        :param canonical_name: The canonical name of the provider.
+
+        :raises UnknownCredentialError: Raised if no
+            credential provider by the provided name
+            is found.
+        """
+        provider = self._get_provider_by_canonical_name(canonical_name)
+
+        # The AssumeRole provider should really be part of the SharedConfig
+        # provider rather than being its own thing, but it is not. It is
+        # effectively part of both the SharedConfig provider and the
+        # SharedCredentials provider now due to the way it behaves.
+        # Therefore if we want either of those providers we should return
+        # the AssumeRole provider with it.
+        if canonical_name.lower() in ['sharedconfig', 'sharedcredentials']:
+            try:
+                assume_role_provider = self.get_provider('assume-role')
+
+                # The SharedConfig or SharedCredentials provider may not be
+                # present if it was removed for some reason, but the
+                # AssumeRole provider could still be present. In that case,
+                # return the assume role provider by itself.
+                if provider is None:
+                    return assume_role_provider
+
+                # If both are present, return them both as a
+                # CredentialResolver so that calling code can treat them as
+                # a single entity.
+                return CredentialResolver([assume_role_provider, provider])
+            except UnknownCredentialError:
+                # If the AssumeRole provider isn't present, treat the
+                # request like a request for any other provider.
+                pass
+
+        if provider is None:
+            raise UnknownCredentialError(name=canonical_name)
+
+        return provider
+
+    def _get_provider_by_canonical_name(self, canonical_name):
+        """Return a credential provider by tis canonical name.
+
+        This function is strict, it does not attempt to address the
+        compatibility issues that the public function does.
+        """
+        for provider in self.providers:
+            name = provider.CANONICAL_NAME
+            # Canonical names are case-insensitive
+            if name and name.lower() == canonical_name.lower():
+                return provider
 
     def load_credentials(self):
         """

@@ -669,8 +669,10 @@ class CredentialResolverTest(BaseEnvVar):
         super(CredentialResolverTest, self).setUp()
         self.provider1 = mock.Mock()
         self.provider1.METHOD = 'provider1'
+        self.provider1.CANONICAL_NAME = 'CustomProvider1'
         self.provider2 = mock.Mock()
         self.provider2.METHOD = 'provider2'
+        self.provider2.CANONICAL_NAME = 'CustomProvider2'
         self.fake_creds = credentials.Credentials('a', 'b', 'c')
 
     def test_load_credentials_single_provider(self):
@@ -699,6 +701,100 @@ class CredentialResolverTest(BaseEnvVar):
         resolver = credentials.CredentialResolver(providers=[self.provider1])
         with self.assertRaises(botocore.exceptions.UnknownCredentialError):
             resolver.get_provider('unknown-foo')
+
+    def test_get_provider_by_canonical_name(self):
+        resolver = credentials.CredentialResolver(providers=[
+            self.provider1, self.provider2
+        ])
+        result = resolver.get_provider_by_canonical_name('CustomProvider1')
+        self.assertIs(result, self.provider1)
+
+    def test_get_provider_by_canonical_name_case_insensitive(self):
+        resolver = credentials.CredentialResolver(providers=[
+            self.provider1, self.provider2
+        ])
+        result = resolver.get_provider_by_canonical_name('cUsToMpRoViDeR1')
+        self.assertIs(result, self.provider1)
+
+    def test_get_unknown_canonical_name_raises_error(self):
+        resolver = credentials.CredentialResolver(providers=[self.provider1])
+        with self.assertRaises(botocore.exceptions.UnknownCredentialError):
+            resolver.get_provider_by_canonical_name('CustomUnknown')
+
+    def _assert_shared_file_tied_to_assume_role(self, method, canonical_name):
+        assume_role_provider = mock.Mock()
+        assume_role_provider.METHOD = 'assume-role'
+        assume_role_provider.CANONICAL_NAME = None
+
+        shared_file_provider = mock.Mock()
+        shared_file_provider.METHOD = method
+        shared_file_provider.CANONICAL_NAME = canonical_name
+
+        resolver = credentials.CredentialResolver(providers=[
+            assume_role_provider, shared_file_provider
+        ])
+
+        result = resolver.get_provider_by_canonical_name(canonical_name)
+
+        # If the assume role provider returns credentials, those should be
+        # what is returned.
+        assume_role_provider.load.return_value = self.fake_creds
+        shared_file_provider.load.return_value = credentials.Credentials(
+            'd', 'e', 'f'
+        )
+
+        creds = result.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'a')
+        self.assertEqual(creds.secret_key, 'b')
+        self.assertEqual(creds.token, 'c')
+
+        # If the assume role provider returns nothing, then whatever is in
+        # the config provider should be returned.
+        assume_role_provider.load.return_value = None
+
+        creds = result.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'd')
+        self.assertEqual(creds.secret_key, 'e')
+        self.assertEqual(creds.token, 'f')
+
+    def test_get_canonical_shared_file_returns_assume_role(self):
+        self._assert_shared_file_tied_to_assume_role(
+            'config-file', 'SharedConfig')
+        self._assert_shared_file_tied_to_assume_role(
+            'credentials-file', 'SharedCredentials')
+
+    def test_get_canonical_assume_role_without_shared_files(self):
+        assume_role_provider = mock.Mock()
+        assume_role_provider.METHOD = 'assume-role'
+        assume_role_provider.CANONICAL_NAME = None
+        assume_role_provider.load.return_value = self.fake_creds
+
+        resolver = credentials.CredentialResolver(providers=[
+            assume_role_provider
+        ])
+
+        result = resolver.get_provider_by_canonical_name('SharedConfig')
+        creds = result.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'a')
+        self.assertEqual(creds.secret_key, 'b')
+        self.assertEqual(creds.token, 'c')
+
+        result = resolver.get_provider_by_canonical_name('SharedCredentials')
+        creds = result.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'a')
+        self.assertEqual(creds.secret_key, 'b')
+        self.assertEqual(creds.token, 'c')
+
+    def test_get_canonical_shared_files_without_assume_role(self):
+        resolver = credentials.CredentialResolver(providers=[self.provider1])
+        with self.assertRaises(botocore.exceptions.UnknownCredentialError):
+            resolver.get_provider_by_canonical_name('SharedConfig')
+        with self.assertRaises(botocore.exceptions.UnknownCredentialError):
+            resolver.get_provider_by_canonical_name('SharedCredentials')
 
     def test_first_credential_non_none_wins(self):
         self.provider1.load.return_value = None
