@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.5.93
+======
+
+* bugfix:Paginator: Ensure that the page size type matches the type expected by the service. Fixes `#1063 <https://github.com/boto/botocore/issues/1063>`__.
+* bugfix:Exceptions: Default to 'Unknown' when error response is missing 'Error' key
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+
+
 1.5.92
 ======
 
