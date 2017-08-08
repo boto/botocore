@@ -681,9 +681,11 @@ class BaseClient(object):
             documented_paginator_cls = type(
                 paginator_class_name, (Paginator,), {'paginate': paginate})
 
+            operation_model = self._service_model.operation_model(actual_operation_name)
             paginator = documented_paginator_cls(
                 getattr(self, operation_name),
-                paginator_config)
+                paginator_config,
+                operation_model)
             return paginator
 
     def can_paginate(self, operation_name):

@@ -350,9 +350,10 @@ class ClientError(Exception):
 
     def __init__(self, error_response, operation_name):
         retry_info = self._get_retry_info(error_response)
+        error = error_response.get('Error', {})
         msg = self.MSG_TEMPLATE.format(
-            error_code=error_response['Error'].get('Code', 'Unknown'),
-            error_message=error_response['Error'].get('Message', 'Unknown'),
+            error_code=error.get('Code', 'Unknown'),
+            error_message=error.get('Message', 'Unknown'),
             operation_name=operation_name,
             retry_info=retry_info,
         )
