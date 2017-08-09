@@ -75,3 +75,10 @@ class TestBuildRetryConfig(unittest.TestCase):
         # And we should resolve references.
         self.assertEqual(operation_config['policies']['other'],
                          {"from": {"definition": "file"}})
+
+    def test_client_override_max_attempts(self):
+        retry = translate.build_retry_config(
+            'sts', self.retry['retry'], self.retry['definitions'],
+            client_retry_config={'max_attempts': 9}
+        )
+        self.assertEqual(retry['__default__']['max_attempts'], 10)

@@ -203,3 +203,24 @@ class TestCreateClientArgs(unittest.TestCase):
             service_model, 'us-west-2', True, 'http://other.com/', True, None,
             {}, config, bridge)
         self.assertEqual(client_args['client_config'].region_name, None)
+
+    def test_provide_retry_config(self):
+        self.args_create = args.ClientArgsCreator(
+            mock.Mock(), None, None, None, None)
+        service_model = mock.Mock()
+        service_model.endpoint_prefix = 'ec2'
+        service_model.metadata = {'protocol': 'query'}
+        config = botocore.config.Config(
+            retries={'max_attempts': 10}
+        )
+        bridge = mock.Mock()
+        bridge.resolve.side_effect = [{
+            'region_name': None, 'signature_version': 'v4',
+            'endpoint_url': 'http://other.com/', 'signing_name': 'ec2',
+            'signing_region': None, 'metadata': {}
+        }]
+        client_args = self.args_create.get_client_args(
+            service_model, 'us-west-2', True, 'https://ec2/', True, None,
+            {}, config, bridge)
+        self.assertEqual(
+            client_args['client_config'].retries, {'max_attempts': 10})

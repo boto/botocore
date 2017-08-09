@@ -14,7 +14,8 @@
 from botocore.utils import merge_dicts
 
 
-def build_retry_config(endpoint_prefix, retry_model, definitions):
+def build_retry_config(endpoint_prefix, retry_model, definitions,
+                       client_retry_config=None):
     service_config = retry_model.get(endpoint_prefix, {})
     resolve_references(service_config, definitions)
     # We want to merge the global defaults with the service specific
@@ -24,7 +25,22 @@ def build_retry_config(endpoint_prefix, retry_model, definitions):
     resolve_references(final_retry_config, definitions)
     # The merge the service specific config on top.
     merge_dicts(final_retry_config, service_config)
+    if client_retry_config is not None:
+        _merge_client_retry_config(final_retry_config, client_retry_config)
     return final_retry_config
+
+
+def _merge_client_retry_config(retry_config, client_retry_config):
+    max_retry_attempts_override = client_retry_config.get('max_attempts')
+    if max_retry_attempts_override is not None:
+        # In the retry config, the max_attempts refers to the maximum number
+        # of requests in general will be made. However, for the client's
+        # retry config it refers to how many retry attempts will be made at
+        # most. So to translate this number from the client config, one is
+        # added to convert it to the maximum number request that will be made
+        # by including the initial request.
+        retry_config['__default__'][
+            'max_attempts'] = max_retry_attempts_override + 1
 
 
 def resolve_references(config, definitions):
