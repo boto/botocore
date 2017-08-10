@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.5.95
+======
+
+* api-change:``clouddirectory``: Update clouddirectory client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+
+
 1.5.94
 ======
 
