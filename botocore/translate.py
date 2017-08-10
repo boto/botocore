@@ -11,6 +11,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import copy
+
 from botocore.utils import merge_dicts
 
 
@@ -21,7 +23,13 @@ def build_retry_config(endpoint_prefix, retry_model, definitions,
     # We want to merge the global defaults with the service specific
     # defaults, with the service specific defaults taking precedence.
     # So we use the global defaults as the base.
-    final_retry_config = {'__default__': retry_model.get('__default__', {})}
+    #
+    # A deepcopy is done on the retry defaults because it ensures the
+    # retry model has no chance of getting mutated when the service specific
+    # configuration or client retry config is merged in.
+    final_retry_config = {
+        '__default__': copy.deepcopy(retry_model.get('__default__', {}))
+    }
     resolve_references(final_retry_config, definitions)
     # The merge the service specific config on top.
     merge_dicts(final_retry_config, service_config)

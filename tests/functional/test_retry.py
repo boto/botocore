@@ -20,6 +20,11 @@ class TestRetry(BaseSessionTest):
     def setUp(self):
         super(TestRetry, self).setUp()
         self.region = 'us-west-2'
+        self.sleep_patch = mock.patch('time.sleep')
+        self.sleep_patch.start()
+
+    def tearDown(self):
+        self.sleep_patch.stop()
 
     def add_n_retryable_responses(self, mock_send, num_responses):
         responses = []
@@ -31,24 +36,62 @@ class TestRetry(BaseSessionTest):
             responses.append(http_response)
         mock_send.side_effect = responses
 
+    def assert_will_retry_n_times(self, method, num_retries):
+        num_responses = num_retries + 1
+        with mock.patch('botocore.endpoint.Session.send') as mock_send:
+            self.add_n_retryable_responses(mock_send, num_responses)
+            with self.assertRaisesRegexp(
+                    ClientError, 'reached max retries: %s' % num_retries):
+                method()
+            self.assertEqual(mock_send.call_count, num_responses)
+
     def test_can_override_max_attempts(self):
         client = self.session.create_client(
             'dynamodb', self.region, config=Config(
                 retries={'max_attempts': 1}))
-        with mock.patch('botocore.endpoint.Session.send') as mock_send:
-            self.add_n_retryable_responses(mock_send, 2)
-            with self.assertRaisesRegexp(
-                    ClientError, 'reached max retries: 1'):
-                client.list_tables()
-            self.assertEqual(mock_send.call_count, 2)
+        self.assert_will_retry_n_times(client.list_tables, 1)
 
     def test_do_not_attempt_retries(self):
         client = self.session.create_client(
             'dynamodb', self.region, config=Config(
                 retries={'max_attempts': 0}))
-        with mock.patch('botocore.endpoint.Session.send') as mock_send:
-            self.add_n_retryable_responses(mock_send, 1)
-            with self.assertRaisesRegexp(
-                    ClientError, 'reached max retries: 0'):
-                client.list_tables()
-            self.assertEqual(mock_send.call_count, 1)
+        self.assert_will_retry_n_times(client.list_tables, 0)
+
+    def test_setting_max_attempts_does_not_set_for_other_clients(self):
+        # Make one client with max attempts configured.
+        self.session.create_client(
+            'codecommit', self.region, config=Config(
+                retries={'max_attempts': 1}))
+
+        # Make another client that has no custom retry configured.
+        client = self.session.create_client('codecommit', self.region)
+        # It should use the default max retries, which should be four retries
+        # for this service.
+        self.assert_will_retry_n_times(client.list_repositories, 4)
+
+    def test_service_specific_defaults_do_not_clobber(self):
+        # Make a dynamodb client. It's a special case client that is
+        # configured to a make a maximum of 10 requests (9 retries).
+        client = self.session.create_client('dynamodb', self.region)
+        self.assert_will_retry_n_times(client.list_tables, 9)
+
+        # A codecommit client is not a special case for retries. It will at
+        # most make 5 requests (4 retries) for its default.
+        client = self.session.create_client('codecommit', self.region)
+        self.assert_will_retry_n_times(client.list_repositories, 4)
+
+    def test_set_max_attempts_on_session(self):
+        self.session.set_default_client_config(
+            Config(retries={'max_attempts': 1}))
+        # Max attempts should be inherited from the session.
+        client = self.session.create_client('codecommit', self.region)
+        self.assert_will_retry_n_times(client.list_repositories, 1)
+
+    def test_can_clobber_max_attempts_on_session(self):
+        self.session.set_default_client_config(
+            Config(retries={'max_attempts': 1}))
+        # Max attempts should override the session's configured max attempts.
+        client = self.session.create_client(
+            'codecommit', self.region, config=Config(
+                retries={'max_attempts': 0}))
+        self.assert_will_retry_n_times(client.list_repositories, 0)
