@@ -15,7 +15,8 @@ from botocore.compat import OrderedDict
 
 from botocore.endpoint import DEFAULT_TIMEOUT, MAX_POOL_CONNECTIONS
 from botocore.exceptions import InvalidS3AddressingStyleError
-from botocore.exceptions import InvalidRetryConfiguration
+from botocore.exceptions import InvalidRetryConfigurationError
+from botocore.exceptions import InvalidMaxRetryAttemptsError
 
 
 class Config(object):
@@ -177,7 +178,12 @@ class Config(object):
         if retries is not None:
             for key in retries:
                 if key not in ['max_attempts']:
-                    raise InvalidRetryConfiguration(retry_config_option=key)
+                    raise InvalidRetryConfigurationError(
+                        retry_config_option=key)
+                if key == 'max_attempts' and retries[key] < 0:
+                    raise InvalidMaxRetryAttemptsError(
+                        provided_max_attempts=retries[key]
+                    )
 
     def merge(self, other_config):
         """Merges the config object with another config object

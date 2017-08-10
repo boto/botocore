@@ -25,7 +25,8 @@ from botocore.credentials import Credentials
 from botocore.exceptions import ParamValidationError
 from botocore.exceptions import InvalidS3AddressingStyleError
 from botocore.exceptions import UnknownSignatureVersionError
-from botocore.exceptions import InvalidRetryConfiguration
+from botocore.exceptions import InvalidRetryConfigurationError
+from botocore.exceptions import InvalidMaxRetryAttemptsError
 from botocore.errorfactory import ClientExceptionsFactory
 from botocore.stub import Stubber
 from botocore import exceptions
@@ -1629,9 +1630,13 @@ class TestConfig(unittest.TestCase):
 
     def test_validates_retry_config(self):
         with self.assertRaisesRegexp(
-                InvalidRetryConfiguration,
+                InvalidRetryConfigurationError,
                 'Cannot provide retry configuration for "not-allowed"'):
             botocore.config.Config(retries={'not-allowed': True})
+
+    def test_validates_max_retry_attempts(self):
+        with self.assertRaises(InvalidMaxRetryAttemptsError):
+            botocore.config.Config(retries={'max_attempts': -1})
 
 
 class TestClientEndpointBridge(unittest.TestCase):
