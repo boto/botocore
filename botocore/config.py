@@ -60,6 +60,10 @@ class Config(object):
         {'http': 'foo.bar:3128', 'http://hostname': 'foo.bar:4012'}.
         The proxies are used on each request.
 
+    :type max_attempts: int
+    :param max_attempts: The maximum number of retries a request will make.
+        If this value is not set, the default value of 5 is used.
+
     :type s3: dict
     :param s3: A dictionary of s3 specific configurations.
         Valid keys are:
@@ -99,6 +103,7 @@ class Config(object):
         ('parameter_validation', True),
         ('max_pool_connections', MAX_POOL_CONNECTIONS),
         ('proxies', None),
+        ('max_attempts', None),
         ('s3', None)
     ])
 
