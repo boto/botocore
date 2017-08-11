@@ -47,6 +47,11 @@ def _merge_client_retry_config(retry_config, client_retry_config):
         # most. So to translate this number from the client config, one is
         # added to convert it to the maximum number request that will be made
         # by including the initial request.
+        #
+        # It is also important to note that if we ever support per operation
+        # configuration in the retry model via the client, we will need to
+        # revisit this logic to make sure max_attempts gets applied
+        # per operation.
         retry_config['__default__'][
             'max_attempts'] = max_retry_attempts_override + 1
 

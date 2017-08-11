@@ -69,7 +69,13 @@ class TestRetry(BaseSessionTest):
         # for this service.
         self.assert_will_retry_n_times(client.list_repositories, 4)
 
-    def test_service_specific_defaults_do_not_clobber(self):
+    def test_service_specific_defaults_do_not_mutate_general_defaults(self):
+        # This tests for a bug where if you created a client for a service
+        # with specific retry configurations and then created a client for
+        # a service whose retry configurations fallback to the general
+        # defaults, the second client would actually use the defaults of
+        # the first client.
+
         # Make a dynamodb client. It's a special case client that is
         # configured to a make a maximum of 10 requests (9 retries).
         client = self.session.create_client('dynamodb', self.region)
