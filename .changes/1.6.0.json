@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "retries", 
+    "description": "Add ability to configure the maximum amount of retry attempts a client call can make. (`#1260 <https://github.com/boto/botocore/pull/1260>`__)", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``cognito-idp``", 
+    "description": "Update cognito-idp client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codedeploy``", 
+    "description": "Update codedeploy client to latest version", 
+    "type": "api-change"
+  }
+]
