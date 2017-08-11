@@ -1,0 +1,5 @@
+{
+  "category": "retries", 
+  "type": "feature", 
+  "description": "Add ability to configure the maximum amount of retry attempts a client call can make. (`#1260 <https://github.com/boto/botocore/pull/1260>`__)"
+}

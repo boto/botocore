@@ -131,6 +131,7 @@ class ClientArgsCreator(object):
                 read_timeout=client_config.read_timeout,
                 max_pool_connections=client_config.max_pool_connections,
                 proxies=client_config.proxies,
+                retries=client_config.retries
             )
         s3_config = self.compute_s3_config(scoped_config,
                                            client_config)

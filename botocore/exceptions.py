@@ -400,6 +400,21 @@ class InvalidS3AddressingStyleError(BotoCoreError):
     )
 
 
+class InvalidRetryConfigurationError(BotoCoreError):
+    """Error when invalid retry configuration is specified"""
+    fmt = (
+        'Cannot provide retry configuration for "{retry_config_option}". '
+        'Valid retry configuration options are: \'max_attempts\''
+    )
+
+
+class InvalidMaxRetryAttemptsError(InvalidRetryConfigurationError):
+    """Error when invalid retry configuration is specified"""
+    fmt = (
+        'Value provided to "max_attempts": {provided_max_attempts} must '
+        'be an integer greater than or equal to zero.'
+    )
+
 class StubResponseError(BotoCoreError):
     fmt = 'Error getting response stub for operation {operation_name}: {reason}'
 
