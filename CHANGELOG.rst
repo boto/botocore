@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.6.0
+=====
+
+* api-change:``ec2``: Update ec2 client to latest version
+* feature:retries: Add ability to configure the maximum amount of retry attempts a client call can make. (`#1260 <https://github.com/boto/botocore/pull/1260>`__)
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+
+
 1.5.95
 ======
 
