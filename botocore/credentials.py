@@ -20,6 +20,7 @@ import threading
 from collections import namedtuple
 from copy import deepcopy
 from hashlib import sha256
+import json
 
 from dateutil.parser import parse
 from dateutil.tz import tzlocal, tzutc
@@ -440,6 +441,246 @@ class RefreshableCredentials(Credentials):
         """
         self._refresh()
         return self._frozen_credentials
+
+
+class AssumeRoleCredentials(Credentials):
+    """A composable, refreshable set of credentials using assume role."""
+
+    EXPIRY_WINDOW_SECONDS = 60 * 15
+
+    def __init__(self, client_creator, source_credentials, role_arn,
+                 role_session_name=None, duration=None, external_id=None,
+                 policy=None, mfa_serial=None, mfa_prompter=None,
+                 mfa_refresh_enabled=True, cache=None,
+                 method=None):
+        """
+        :type client_creator: callable
+        :param client_creator: A callable that creates a client taking
+            arguments like ``Session.create_client``.
+
+        :type source_credentials: Credentials
+        :param source_credentials: The credentials to use to create the
+            client for the call to AssumeRole.
+
+        :type role_arn: str
+        :param role_arn: The ARN of the role to be assumed.
+
+        :type role_session_name: str
+        :param role_session_name: An identifier for the assumed role session.
+            If not provided, a default session name is generated.
+
+        :type duration: int
+        :param duration: The duration, in seconds, for which the temporary
+            credentials will be valid. The default value is 3600 seconds,
+            or 1 hour.
+
+        :type external_id: str
+        :param external_id: A unique identifier that is used by third parties
+            when assuming roles in their customers' accounts.
+
+        :type policy: JSON str
+        :param policy: An IAM policy. The temporary security credentials
+            that are returned by the assume role call have the permissions
+            that are allowed by both (the intersection of) the access policy
+            of the role that is being assumed, *and* the policy that you pass.
+
+        :type mfa_serial: str
+        :param mfa_serial: The identification number of the MFA device that
+            is associated with the user who is making the assume role call.
+
+        :type mfa_prompter: callable
+        :param mfa_prompter: A callable that returns input provided by the
+            user (i.e raw_input, getpass.getpass, etc.).
+
+        :type mfa_refresh_enabled: bool
+        :param mfa_refresh_enabled: Whether or not to allow refreshing
+            credentials that require MFA. This is enabled by default.
+
+        :type cache: dict
+        :param cache: An object that supports ``__getitem__``,
+            ``__setitem__``, and ``__contains__``.  An example of this is
+            the ``JSONFileCache`` class in aws-cli.
+
+        :type method: str
+        :param method: A string which identifies where the credentials
+            were found.
+        """
+        self._client_creator = client_creator
+        self._source_credentials = source_credentials
+        self._role_arn = role_arn
+
+        self._role_session_name = role_session_name
+        self._using_default_session_name = False
+        if not self._role_session_name:
+            self._role_session_name = 'botocore-session-%s' % (
+                int(time.time()))
+            self._using_default_session_name = True
+
+        self._duration = duration
+        self._external_id = external_id
+        self._policy = policy
+        self._mfa_serial = mfa_serial
+        self._mfa_refresh_enabled = mfa_refresh_enabled
+
+        self._mfa_prompter = mfa_prompter
+        if self._mfa_prompter is None:
+            self._mfa_prompter = getpass.getpass
+
+        self._cache = cache
+        if self._cache is None:
+            self._cache = {}
+
+        self._method = method
+        if self._method is None:
+            self._method = 'assume-role'
+
+        self._refreshable_credentials = None
+        self._cache_key = self._create_cache_key()
+
+    @property
+    def access_key(self):
+        return self._get_refreshable_credentials().access_key
+
+    @property
+    def secret_key(self):
+        return self._get_refreshable_credentials().secret_key
+
+    @property
+    def token(self):
+        return self._get_refreshable_credentials().token
+
+    def get_frozen_credentials(self):
+        return self._get_refreshable_credentials().get_frozen_credentials()
+
+    def _create_cache_key(self):
+        """Create a predictable cache key for the current configuration.
+
+        The cache key is intended to be compatible with file names.
+        """
+        # On windows, ':' is not allowed in file names, so we'll
+        # replace them with '_' instead.
+        role_arn = self._role_arn.replace(':', '_')
+        cache_key = '%s' % role_arn
+
+        if not self._using_default_session_name:
+            cache_key += '--%s' % self._role_session_name
+
+        if self._policy:
+            # To have a predictable hash, the keys of the policy must be
+            # sorted.
+            policy = json.dumps(json.loads(self._policy), sort_keys=True)
+            cache_key += '--%s' % sha256(policy.encode()).hexdigest()
+
+        return cache_key
+
+    def _get_refreshable_credentials(self):
+        """Get the underlying RefreshableCredentials object.
+
+        The logic for performing a refresh lives in this class, but the
+        logic of maintaining current credentials lives in
+        RefreshableCredentials. This will create a RefreshableCredentials
+        object, passing in the method to refresh, if it hasn't already been
+        created.
+
+        :return: A set of credentials that will refresh using assume role when
+            needed.
+        """
+        if self._refreshable_credentials is not None:
+            # The underlying credentials object only needs to be created once.
+            return self._refreshable_credentials
+
+        credentials = self._create_creds_from_response(self._get_credentials())
+        self._refreshable_credentials = credentials
+        return self._refreshable_credentials
+
+    def _get_credentials(self):
+        """Get up-to-date credentials.
+
+        This will check the cache for up-to-date credentials, calling assume
+        role if none are available.
+        """
+        response = self._load_from_cache()
+        if response is None or self._is_expired(response):
+            response = self._assume_role()
+        return response
+
+    def _assume_role(self):
+        """Get credentials by calling assume role."""
+        kwargs = self._assume_role_kwargs()
+        client = self._create_client()
+        response = client.assume_role(**kwargs)
+        self._write_to_cache(response)
+        return response
+
+    def _assume_role_kwargs(self):
+        """Get the arguments for assume role based on current configuration."""
+        assume_role_kwargs = {
+            'RoleArn': self._role_arn,
+            'RoleSessionName': self._role_session_name
+        }
+        if self._duration is not None:
+            assume_role_kwargs['DurationSeconds'] = self._duration
+        if self._external_id is not None:
+            assume_role_kwargs['ExternalId'] = self._external_id
+        if self._policy is not None:
+            assume_role_kwargs['Policy'] = self._policy
+        if self._mfa_serial is not None:
+            prompt = 'Enter MFA code for %s: ' % self._mfa_serial
+            token_code = self._mfa_prompter(prompt)
+            assume_role_kwargs['SerialNumber'] = self._mfa_serial
+            assume_role_kwargs['TokenCode'] = token_code
+        return assume_role_kwargs
+
+    def _create_client(self):
+        """Create an STS client using the source credentials."""
+        frozen_credentials = self._source_credentials.get_frozen_credentials()
+        return self._client_creator(
+            'sts',
+            aws_access_key_id=frozen_credentials.access_key,
+            aws_secret_access_key=frozen_credentials.secret_key,
+            aws_session_token=frozen_credentials.token,
+        )
+
+    def _refresh_credentials(self):
+        """Get refreshed credentials."""
+        if self._mfa_serial is not None and not self._mfa_refresh_enabled:
+            # This will not be supported by the built in providers for now.
+            raise RefreshWithMFAUnsupportedError()
+
+        credentials = self._get_credentials()['Credentials']
+        return {
+            'access_key': credentials['AccessKeyId'],
+            'secret_key': credentials['SecretAccessKey'],
+            'token': credentials['SessionToken'],
+            'expiry_time': credentials['Expiration'],
+        }
+
+    def _load_from_cache(self):
+        response = deepcopy(self._cache.get(self._cache_key))
+        return response
+
+    def _write_to_cache(self, response):
+        self._cache[self._cache_key] = deepcopy(response)
+
+    def _is_expired(self, credentials):
+        """Check if credentials are expired."""
+        end_time = _parse_if_needed(credentials['Credentials']['Expiration'])
+        now = datetime.datetime.now(tzlocal())
+        seconds = total_seconds(end_time - now)
+        return seconds < self.EXPIRY_WINDOW_SECONDS
+
+    def _create_creds_from_response(self, response):
+        """Create a RefreshableCredentials object from a credentials dict."""
+        expiration = _parse_if_needed(response['Credentials']['Expiration'])
+        return RefreshableCredentials(
+            access_key=response['Credentials']['AccessKeyId'],
+            secret_key=response['Credentials']['SecretAccessKey'],
+            token=response['Credentials']['SessionToken'],
+            method=self._method,
+            expiry_time=expiration,
+            refresh_using=self._refresh_credentials,
+            time_fetcher=_utcnow
+        )
 
 
 class CredentialProvider(object):
