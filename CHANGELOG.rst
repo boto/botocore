@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.6.1
+=====
+
+* api-change:``cloudhsmv2``: Update cloudhsmv2 client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``mgh``: Update mgh client to latest version
+* api-change:``efs``: Update efs client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``batch``: Update batch client to latest version
+
+
 1.6.0
 =====
 
