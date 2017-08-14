@@ -427,6 +427,14 @@ class InvalidConfigError(BotoCoreError):
     fmt = '{error_msg}'
 
 
+class InfiniteLoopConfigError(InvalidConfigError):
+    fmt = (
+        'Infinite loop in credential configuration detected. Attempting to '
+        'load from profile {source_profile} which has already been visited. '
+        'Visited profiles: {visited_profiles}'
+    )
+
+
 class RefreshWithMFAUnsupportedError(BotoCoreError):
     fmt = 'Cannot refresh credentials: MFA token required.'
 
