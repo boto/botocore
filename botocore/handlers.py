@@ -253,6 +253,14 @@ def _needs_s3_sse_customization(params, sse_member_prefix):
             sse_member_prefix + 'KeyMD5' not in params)
 
 
+# NOTE: Retries get registered in two separate places in the botocore
+# code: once when creating the client and once when you load the service
+# model from the session. While at first this handler seems unneeded, it
+# would be a breaking change for the AWS CLI to have it removed. This is
+# because it relies on the service model from the session to create commands
+# and this handler respects operation granular retry logic while the client
+# one does not. If this is ever to be removed the handler, the client
+# will have to respect per-operation level retry configuration.
 def register_retries_for_service(service_data, session,
                                  service_name, **kwargs):
     loader = session.get_component('data_loader')

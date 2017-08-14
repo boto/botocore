@@ -2,6 +2,36 @@
 CHANGELOG
 =========
 
+1.6.0
+=====
+
+* api-change:``ec2``: Update ec2 client to latest version
+* feature:retries: Add ability to configure the maximum amount of retry attempts a client call can make. (`#1260 <https://github.com/boto/botocore/pull/1260>`__)
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+
+
+1.5.95
+======
+
+* api-change:``clouddirectory``: Update clouddirectory client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+
+
+1.5.94
+======
+
+* api-change:``rds``: Update rds client to latest version
+
+
+1.5.93
+======
+
+* bugfix:Paginator: Ensure that the page size type matches the type expected by the service. Fixes `#1063 <https://github.com/boto/botocore/issues/1063>`__.
+* bugfix:Exceptions: Default to 'Unknown' when error response is missing 'Error' key
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+
+
 1.5.92
 ======
 
