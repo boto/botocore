@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.6.2
+=====
+
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.6.1
 =====
 
