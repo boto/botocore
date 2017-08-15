@@ -16,12 +16,15 @@ import jmespath
 from jmespath.exceptions import JMESPathError
 
 import botocore.session
+from botocore.compat import six
+from botocore.utils import ArgumentGenerator
 
 
 KNOWN_PAGE_KEYS = set(
     ['input_token', 'py_input_token', 'output_token', 'result_key',
      'limit_key', 'more_results', 'non_aggregate_keys'])
 MEMBER_NAME_CHARS = set(string.ascii_letters + string.digits)
+VALID_AGGREGATE_TYPES = (list, int, float, six.string_types)
 
 
 def test_lint_pagination_configs():
@@ -50,6 +53,7 @@ def _lint_single_paginator(operation_name, page_config,
     _validate_operation_has_output(operation_name, service_model)
     _validate_input_keys_match(operation_name, page_config, service_model)
     _validate_output_keys_match(operation_name, page_config, service_model)
+    _validate_result_key_types(operation_name, page_config, service_model)
 
 
 def _validate_known_pagination_keys(page_config):
@@ -119,6 +123,22 @@ def _validate_output_keys_match(operation_name, page_config, service_model):
                                          key_name, output_key))
 
 
+def _validate_result_key_types(operation_name, page_config, service_model):
+    # This ensures that all result_keys point to types that we support
+    # aggregate pagination for. See VALID_AGGREGATE_TYPES for valid types.
+    service_name = service_model.service_name
+    operation_model = service_model.operation_model(operation_name)
+    output_shape = operation_model.output_shape
+    output_members = output_shape.members
+    for result_key in _get_list_value(page_config, 'result_key'):
+        _validate_jmespath_compiles(result_key)
+        result = _search_jmespath_expression(result_key, operation_model)
+        if not isinstance(result, VALID_AGGREGATE_TYPES):
+            details = (service_name, operation_name, result_key, type(result))
+            raise AssertionError("(%s) %s result_key '%s' points to a type "
+                                 "that cannot be aggregated: %s" % details)
+
+
 def _looks_like_jmespath(expression):
     if all(ch in MEMBER_NAME_CHARS for ch in expression):
         return False
@@ -127,7 +147,7 @@ def _looks_like_jmespath(expression):
 
 def _validate_jmespath_compiles(expression):
     try:
-        jmespath.compile(expression)
+        return jmespath.compile(expression)
     except JMESPathError as e:
         raise AssertionError("Invalid JMESPath expression used "
                              "in pagination config: %s\nerror: %s"
@@ -153,3 +173,10 @@ def _get_list_value(page_config, key):
     if not isinstance(value, list):
         value = [value]
     return value
+
+
+def _search_jmespath_expression(expression, op_model):
+    arg_gen = ArgumentGenerator(use_member_names=True)
+    sample_output = arg_gen.generate_skeleton(op_model.output_shape)
+    search_result = jmespath.search(expression, sample_output)
+    return search_result
