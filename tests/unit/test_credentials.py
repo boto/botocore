@@ -681,6 +681,15 @@ class CredentialResolverTest(BaseEnvVar):
         self.assertEqual(creds.secret_key, 'b')
         self.assertEqual(creds.token, 'c')
 
+    def test_load_single_provider(self):
+        # This is testing ``load`` which is an alias of ``load_credentials``
+        self.provider1.load.return_value = self.fake_creds
+        resolver = credentials.CredentialResolver(providers=[self.provider1])
+        creds = resolver.load()
+        self.assertEqual(creds.access_key, 'a')
+        self.assertEqual(creds.secret_key, 'b')
+        self.assertEqual(creds.token, 'c')
+
     def test_get_provider_by_name(self):
         resolver = credentials.CredentialResolver(providers=[self.provider1])
         result = resolver.get_provider('provider1')
@@ -703,12 +712,34 @@ class CredentialResolverTest(BaseEnvVar):
         self.provider1.load.assert_called_with()
         self.provider2.load.assert_called_with()
 
+    def test_load_first_credential_non_none_wins(self):
+        # This is testing ``load`` which is an alias of ``load_credentials``
+        self.provider1.load.return_value = None
+        self.provider2.load.return_value = self.fake_creds
+        resolver = credentials.CredentialResolver(providers=[self.provider1,
+                                                             self.provider2])
+        creds = resolver.load()
+        self.assertEqual(creds.access_key, 'a')
+        self.assertEqual(creds.secret_key, 'b')
+        self.assertEqual(creds.token, 'c')
+        self.provider1.load.assert_called_with()
+        self.provider2.load.assert_called_with()
+
     def test_no_creds_loaded(self):
         self.provider1.load.return_value = None
         self.provider2.load.return_value = None
         resolver = credentials.CredentialResolver(providers=[self.provider1,
                                                              self.provider2])
         creds = resolver.load_credentials()
+        self.assertIsNone(creds)
+
+    def test_load_no_creds_loaded(self):
+        # This is testing ``load`` which is an alias of ``load_credentials``
+        self.provider1.load.return_value = None
+        self.provider2.load.return_value = None
+        resolver = credentials.CredentialResolver(providers=[self.provider1,
+                                                             self.provider2])
+        creds = resolver.load()
         self.assertIsNone(creds)
 
     def test_inject_additional_providers_after_existing(self):

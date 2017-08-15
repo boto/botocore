@@ -1160,3 +1160,12 @@ class CredentialResolver(object):
         # +1
         # -js
         return None
+
+    def load(self):
+        """
+        Goes through the credentials chain, returning the first ``Credentials``
+        that could be loaded.
+
+        This is an alias of ``load_credentials``.
+        """
+        return self.load_credentials()
