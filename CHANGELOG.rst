@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.6.3
+=====
+
+* api-change:``gamelift``: Update gamelift client to latest version
+
+
 1.6.2
 =====
 
