@@ -66,14 +66,18 @@ def create_credential_resolver(session):
             timeout=metadata_timeout,
             num_attempts=num_attempts)
     )
+    assume_role_provider = AssumeRoleProvider(
+        load_config=lambda: session.full_config,
+        client_creator=session.create_client,
+        cache={},
+        profile_name=profile_name,
+        credential_resolver=CredentialResolver([
+            env_provider, container_provider, instance_metadata_provider
+        ])
+    )
     providers = [
         env_provider,
-        AssumeRoleProvider(
-            load_config=lambda: session.full_config,
-            client_creator=session.create_client,
-            cache={},
-            profile_name=profile_name,
-        ),
+        assume_role_provider,
         SharedCredentialProvider(
             creds_filename=credential_file,
             profile_name=profile_name
