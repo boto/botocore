@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.6.4
+=====
+
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``firehose``: Update firehose client to latest version
+
+
 1.6.3
 =====
 
