@@ -170,7 +170,7 @@ class TestStyle(unittest.TestCase):
         style.start_a(attrs=[('href', 'http://example.org')])
         style.end_a()
         self.assertEqual(style.doc.getvalue(),
-                         six.b('`<http://example.org>`_ '))
+                         six.b('`<http://example.org>`__ '))
 
     def test_sphinx_reference_label_html(self):
         style = ReSTStyle(ReSTDocument())
