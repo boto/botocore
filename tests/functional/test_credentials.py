@@ -26,8 +26,11 @@ from tests import unittest, IntegerRefresher, BaseEnvVar, random_chars
 from botocore.credentials import EnvProvider, ContainerProvider
 from botocore.credentials import InstanceMetadataProvider
 from botocore.credentials import Credentials, ReadOnlyCredentials
+from botocore.credentials import AssumeRoleProvider
+from botocore.credentials import CanonicalNameCredentialSourcer
 from botocore.session import Session
-from botocore.exceptions import InvalidConfigError
+from botocore.exceptions import InvalidConfigError, InfiniteLoopConfigError
+from botocore.stub import Stubber
 
 
 class TestCredentialRefreshRaces(unittest.TestCase):
@@ -108,43 +111,73 @@ class TestCredentialRefreshRaces(unittest.TestCase):
 class TestAssumeRole(BaseEnvVar):
     def setUp(self):
         super(TestAssumeRole, self).setUp()
-        self.make_request_patch = mock.patch(
-            'botocore.endpoint.Endpoint.make_request')
-        self.make_request = self.make_request_patch.start()
-        self.http_response = requests.models.Response()
-        self.http_response.status_code = 200
         self.tempdir = tempfile.mkdtemp()
         self.config_file = os.path.join(self.tempdir, 'config')
         self.environ['AWS_CONFIG_FILE'] = self.config_file
         self.environ['AWS_ACCESS_KEY_ID'] = 'access_key'
         self.environ['AWS_SECRET_ACCESS_KEY'] = 'secret_key'
 
-        self._provider_patches = []
+        self.metadata_provider = self.mock_provider(InstanceMetadataProvider)
+        self.env_provider = self.mock_provider(EnvProvider)
+        self.container_provider = self.mock_provider(ContainerProvider)
 
-        self.metadata_provider = self.patch_provider(InstanceMetadataProvider)
-        self.env_provider = self.patch_provider(EnvProvider)
-        self.container_provider = self.patch_provider(ContainerProvider)
-
-    def patch_provider(self, provider_cls, path=None):
-        if path is None:
-            path = 'botocore.credentials.%s' % provider_cls.__name__
+    def mock_provider(self, provider_cls):
         mock_instance = mock.Mock(spec=provider_cls)
         mock_instance.load.return_value = None
+        mock_instance.METHOD = provider_cls.METHOD
         mock_instance.CANONICAL_NAME = provider_cls.CANONICAL_NAME
-        mock_cls = mock.Mock(return_value=mock_instance)
-        provider_patch = mock.patch(path, mock_cls)
-        provider_patch.start()
-        self._provider_patches.append(provider_patch)
         return mock_instance
 
     def tearDown(self):
-        self.make_request_patch.stop()
-        for provider_patch in self._provider_patches:
-            provider_patch.stop()
         shutil.rmtree(self.tempdir)
 
-    def create_assume_role_response(self, credentials, expiration=None):
+    def create_session(self, profile=None):
+        session = Session(profile=profile)
 
+        # We have to set bogus credentials here or otherwise we'll trigger
+        # an early credential chain resolution.
+        sts = session.create_client(
+            'sts',
+            aws_access_key_id='spam',
+            aws_secret_access_key='eggs',
+        )
+        stubber = Stubber(sts)
+        stubber.activate()
+        assume_role_provider = AssumeRoleProvider(
+            load_config=lambda: session.full_config,
+            client_creator=lambda *args, **kwargs: sts,
+            cache={},
+            profile_name=profile,
+            credential_sourcer=CanonicalNameCredentialSourcer([
+                self.env_provider, self.container_provider,
+                self.metadata_provider
+            ])
+        )
+
+        component_name = 'credential_provider'
+        resolver = session.get_component(component_name)
+        available_methods = [p.METHOD for p in resolver.providers]
+        replacements = {
+            'env': self.env_provider,
+            'iam-role': self.metadata_provider,
+            'container-role': self.container_provider,
+            'assume-role': assume_role_provider
+        }
+        for name, provider in replacements.items():
+            try:
+                index = available_methods.index(name)
+            except ValueError:
+                # The provider isn't in the session
+                continue
+
+            resolver.providers[index] = provider
+
+        session.register_component(
+            'credential_provider', resolver
+        )
+        return session, stubber
+
+    def create_assume_role_response(self, credentials, expiration=None):
         if expiration is None:
             expiration = self.some_future_time()
 
@@ -161,7 +194,7 @@ class TestAssumeRole(BaseEnvVar):
             }
         }
 
-        return self.http_response, response
+        return response
 
     def create_random_credentials(self):
         return Credentials(
@@ -200,12 +233,12 @@ class TestAssumeRole(BaseEnvVar):
 
         expected_creds = self.create_random_credentials()
         response = self.create_assume_role_response(expected_creds)
-        self.make_request.return_value = response
+        session, stubber = self.create_session(profile='A')
+        stubber.add_response('assume_role', response)
 
-        session = Session(profile='A')
         actual_creds = session.get_credentials()
         self.assert_creds_equal(actual_creds, expected_creds)
-        self.assertEqual(self.make_request.call_count, 1)
+        stubber.assert_no_pending_responses()
 
     def test_environment_credential_source(self):
         config = (
@@ -220,13 +253,13 @@ class TestAssumeRole(BaseEnvVar):
 
         expected_creds = self.create_random_credentials()
         response = self.create_assume_role_response(expected_creds)
-        self.make_request.return_value = response
+        session, stubber = self.create_session(profile='A')
+        stubber.add_response('assume_role', response)
 
-        session = Session(profile='A')
         actual_creds = session.get_credentials()
         self.assert_creds_equal(actual_creds, expected_creds)
 
-        self.assertEqual(self.make_request.call_count, 1)
+        stubber.assert_no_pending_responses()
         self.assertEqual(self.env_provider.load.call_count, 1)
 
     def test_instance_metadata_credential_source(self):
@@ -242,13 +275,13 @@ class TestAssumeRole(BaseEnvVar):
 
         expected_creds = self.create_random_credentials()
         response = self.create_assume_role_response(expected_creds)
-        self.make_request.return_value = response
+        session, stubber = self.create_session(profile='A')
+        stubber.add_response('assume_role', response)
 
-        session = Session(profile='A')
         actual_creds = session.get_credentials()
         self.assert_creds_equal(actual_creds, expected_creds)
 
-        self.assertEqual(self.make_request.call_count, 1)
+        stubber.assert_no_pending_responses()
         self.assertEqual(self.metadata_provider.load.call_count, 1)
 
     def test_container_credential_source(self):
@@ -264,13 +297,13 @@ class TestAssumeRole(BaseEnvVar):
 
         expected_creds = self.create_random_credentials()
         response = self.create_assume_role_response(expected_creds)
-        self.make_request.return_value = response
+        session, stubber = self.create_session(profile='A')
+        stubber.add_response('assume_role', response)
 
-        session = Session(profile='A')
         actual_creds = session.get_credentials()
         self.assert_creds_equal(actual_creds, expected_creds)
 
-        self.assertEqual(self.make_request.call_count, 1)
+        stubber.assert_no_pending_responses()
         self.assertEqual(self.container_provider.load.call_count, 1)
 
     def test_invalid_credential_source(self):
@@ -282,7 +315,8 @@ class TestAssumeRole(BaseEnvVar):
         self.write_config(config)
 
         with self.assertRaises(InvalidConfigError):
-            Session(profile='A').get_credentials()
+            session, _ = self.create_session(profile='A')
+            session.get_credentials()
 
     def test_recursive_assume_role(self):
         config = (
@@ -303,14 +337,13 @@ class TestAssumeRole(BaseEnvVar):
         profile_a_creds = self.create_random_credentials()
         profile_a_response = self.create_assume_role_response(profile_a_creds)
 
-        self.make_request.side_effect = [
-            profile_b_response, profile_a_response]
+        session, stubber = self.create_session(profile='A')
+        stubber.add_response('assume_role', profile_b_response)
+        stubber.add_response('assume_role', profile_a_response)
 
-        session = Session(profile='A')
         actual_creds = session.get_credentials()
         self.assert_creds_equal(actual_creds, profile_a_creds)
-
-        self.assertEqual(self.make_request.call_count, 2)
+        stubber.assert_no_pending_responses()
 
     def test_recursive_assume_role_stops_at_static_creds(self):
         config = (
@@ -330,11 +363,40 @@ class TestAssumeRole(BaseEnvVar):
 
         profile_a_creds = self.create_random_credentials()
         profile_a_response = self.create_assume_role_response(profile_a_creds)
+        session, stubber = self.create_session(profile='A')
+        stubber.add_response('assume_role', profile_a_response)
 
-        self.make_request.side_effect = [profile_a_response]
-
-        session = Session(profile='A')
         actual_creds = session.get_credentials()
         self.assert_creds_equal(actual_creds, profile_a_creds)
+        stubber.assert_no_pending_responses()
 
-        self.assertEqual(self.make_request.call_count, 1)
+    def test_infinitely_recursive_assume_role(self):
+        config = (
+            '[profile A]\n'
+            'role_arn = arn:aws:iam::123456789:role/RoleA\n'
+            'source_profile = A\n'
+        )
+        self.write_config(config)
+
+        with self.assertRaises(InfiniteLoopConfigError):
+            session, _ = self.create_session(profile='A')
+            session.get_credentials()
+
+    def test_self_referential_profile(self):
+        config = (
+            '[profile A]\n'
+            'role_arn = arn:aws:iam::123456789:role/RoleA\n'
+            'source_profile = A\n'
+            'aws_access_key_id = abc123\n'
+            'aws_secret_access_key = def456\n'
+        )
+        self.write_config(config)
+
+        expected_creds = self.create_random_credentials()
+        response = self.create_assume_role_response(expected_creds)
+        session, stubber = self.create_session(profile='A')
+        stubber.add_response('assume_role', response)
+
+        actual_creds = session.get_credentials()
+        self.assert_creds_equal(actual_creds, expected_creds)
+        stubber.assert_no_pending_responses()
