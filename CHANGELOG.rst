@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.6.5
+=====
+
+* bugfix:Paginator: Fix Athena GetQueryResults paginator
+* api-change:``ssm``: Update ssm client to latest version
+
+
 1.6.4
 =====
 

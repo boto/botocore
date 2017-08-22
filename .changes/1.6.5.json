@@ -1,0 +1,12 @@
+[
+  {
+    "category": "Paginator", 
+    "description": "Fix Athena GetQueryResults paginator", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``ssm``", 
+    "description": "Update ssm client to latest version", 
+    "type": "api-change"
+  }
+]
