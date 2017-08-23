@@ -220,18 +220,18 @@ class ReSTStyle(BaseStyle):
                 if ':' in last_write:
                     last_write = last_write.replace(':', r'\:')
                 self.doc.push_write(last_write)
-                self.doc.push_write(' <%s>`_' % self.a_href)
+                self.doc.push_write(' <%s>`__' % self.a_href)
             elif last_write == '`':
                 # Look at start_a().  It will do a self.doc.write('`')
                 # which is the start of the link title.  If that is the
                 # case then there was no link text.  We should just
                 # use an inline link.  The syntax of this is
                 # `<http://url>`_
-                self.doc.push_write('`<%s>`_' % self.a_href)
+                self.doc.push_write('`<%s>`__' % self.a_href)
             else:
                 self.doc.push_write(self.a_href)
                 self.doc.hrefs[self.a_href] = self.a_href
-                self.doc.write('`_')
+                self.doc.write('`__')
             self.a_href = None
         self.doc.write(' ')
 
