@@ -1,0 +1,5 @@
+{
+  "category": "Waiter",
+  "type": "feature",
+  "description": "Expose configurable waiter interface"
+}
