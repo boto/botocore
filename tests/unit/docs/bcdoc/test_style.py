@@ -153,7 +153,7 @@ class TestStyle(unittest.TestCase):
         style.end_a()
         self.assertEqual(
             style.doc.getvalue(),
-            six.b('`example <http://example.org>`_ ')
+            six.b('`example <http://example.org>`__ ')
         )
 
     def test_escape_href_link(self):
@@ -163,14 +163,14 @@ class TestStyle(unittest.TestCase):
         style.end_a()
         self.assertEqual(
             style.doc.getvalue(),
-            six.b('`foo\\: the next bar <http://example.org>`_ '))
+            six.b('`foo\\: the next bar <http://example.org>`__ '))
 
     def test_handle_no_text_hrefs(self):
         style = ReSTStyle(ReSTDocument())
         style.start_a(attrs=[('href', 'http://example.org')])
         style.end_a()
         self.assertEqual(style.doc.getvalue(),
-                         six.b('`<http://example.org>`_ '))
+                         six.b('`<http://example.org>`__ '))
 
     def test_sphinx_reference_label_html(self):
         style = ReSTStyle(ReSTDocument())
