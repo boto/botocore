@@ -6633,7 +6633,7 @@
       "type":"integer",
       "box":true,
       "max":24,
-      "min":1
+      "min":0
     },
     "passwordType":{
       "type":"string",
