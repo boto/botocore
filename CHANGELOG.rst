@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.6.8
+=====
+
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
 1.6.7
 =====
 
