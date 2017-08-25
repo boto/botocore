@@ -2,6 +2,56 @@
 CHANGELOG
 =========
 
+1.6.7
+=====
+
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
+1.6.6
+=====
+
+* api-change:``appstream``: Update appstream client to latest version
+
+
+1.6.5
+=====
+
+* bugfix:Paginator: Fix Athena GetQueryResults paginator
+* api-change:``ssm``: Update ssm client to latest version
+
+
+1.6.4
+=====
+
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``firehose``: Update firehose client to latest version
+
+
+1.6.3
+=====
+
+* api-change:``gamelift``: Update gamelift client to latest version
+
+
+1.6.2
+=====
+
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.6.1
+=====
+
+* api-change:``cloudhsmv2``: Update cloudhsmv2 client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``mgh``: Update mgh client to latest version
+* api-change:``efs``: Update efs client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``batch``: Update batch client to latest version
+
+
 1.6.0
 =====
 
