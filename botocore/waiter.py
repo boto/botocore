@@ -287,9 +287,11 @@ class Waiter(object):
     def wait(self, **kwargs):
         acceptors = list(self.config.acceptors)
         current_state = 'waiting'
-        sleep_amount = self.config.delay
+        # pop the invocation specific config
+        config = kwargs.pop('WaiterConfig', {})
+        sleep_amount = config.get('Delay', self.config.delay)
+        max_attempts = config.get('MaxAttempts', self.config.max_attempts)
         num_attempts = 0
-        max_attempts = self.config.max_attempts
 
         while True:
             response = self._operation_method(**kwargs)
