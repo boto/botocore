@@ -9,19 +9,19 @@
         {
           "expected": "SUCCEEDED",
           "matcher": "path",
-          "argument": "QueryExecution.Status",
+          "argument": "QueryExecution.Status.State",
           "state": "success"
         },
         {
           "expected": "CANCELLED",
           "matcher": "path",
-          "argument": "QueryExecution.Status",
+          "argument": "QueryExecution.Status.State",
           "state": "failure"
         },
         {
           "expected": "FAILED",
           "matcher": "path",
-          "argument": "QueryExecution.Status",
+          "argument": "QueryExecution.Status.State",
           "state": "failure"
         }
       ]
