@@ -40,7 +40,7 @@ SMOKE_TESTS = {
                     'ListStacks': {}},
  'cloudfront': {'ListDistributions': {},
                 'ListStreamingDistributions': {}},
- 'cloudhsm': {'ListAvailableZones': {}},
+ 'cloudhsmv2': {'DescribeBackups': {}},
  'cloudsearch': {'DescribeDomains': {},
                  'ListDomainNames': {}},
  'cloudtrail': {'DescribeTrails': {}},
@@ -127,7 +127,7 @@ ERROR_TESTS = {
         'TemplateURL': 'http://s3.amazonaws.com/foo/bar',
         }},
     'cloudfront': {'GetDistribution': {'Id': 'fake-id'}},
-    'cloudhsm': {'DescribeHapg': {'HapgArn': 'bogus-arn'}},
+    'cloudhsmv2': {'ListTags': {'ResourceId': 'fake-id'}},
     'cloudsearch': {'DescribeIndexFields': {'DomainName': 'fakedomain'}},
     'cloudtrail': {'DeleteTrail': {'Name': 'fake-trail'}},
     'cloudwatch': {'SetAlarmState': {

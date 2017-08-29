@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.7.0
+=====
+
+* api-change:``ec2``: Update ec2 client to latest version
+* feature:Waiter: Expose configurable waiter interface
+* api-change:``config``: Update config client to latest version
+
+
 1.6.8
 =====
 
