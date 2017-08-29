@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "waiters": {
+    "QuerySucceeded": {
+      "delay": 5,
+      "operation": "GetQueryExecution",
+      "maxAttempts": 30,
+      "acceptors": [
+        {
+          "expected": "SUCCEEDED",
+          "matcher": "path",
+          "argument": "QueryExecution.Status",
+          "state": "success"
+        },
+        {
+          "expected": "CANCELLED",
+          "matcher": "path",
+          "argument": "QueryExecution.Status",
+          "state": "failure"
+        },
+        {
+          "expected": "FAILED",
+          "matcher": "path",
+          "argument": "QueryExecution.Status",
+          "state": "failure"
+        }
+      ]
+    }
+  }
+}
