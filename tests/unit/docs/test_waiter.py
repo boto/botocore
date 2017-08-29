@@ -47,5 +47,14 @@ class TestWaiterDocumenter(BaseDocsTest):
             '      )',
             '    :type Biz: string',
             '    :param Biz:',
+            '    :type WaiterConfig: dict',
+            '    :param WaiterConfig:',
+            ('A dictionary that provides parameters to control waiting '
+             'behavior.'),
+            '     - **Delay** *(integer) --*',
+            ('        The amount of time in seconds to wait between attempts. '
+             'Default: 15'),
+            '      - **MaxAttempts** *(integer) --*',
+            '        The maximum number of attempts to be made. Default: 40',
             '    :returns: None'
         ])
