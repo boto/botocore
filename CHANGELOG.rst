@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.7.1
+=====
+
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+
+
 1.7.0
 =====
 
