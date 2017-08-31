@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.7.2
+=====
+
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+
+
 1.7.1
 =====
 
