@@ -1,0 +1,7 @@
+[
+  {
+    "category": "``codestar``", 
+    "description": "Update codestar client to latest version", 
+    "type": "api-change"
+  }
+]
