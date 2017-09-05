@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.7.4
+=====
+
+* api-change:``codestar``: Update codestar client to latest version
+
+
 1.7.3
 =====
 
