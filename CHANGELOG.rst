@@ -2,6 +2,26 @@
 CHANGELOG
 =========
 
+1.7.5
+=====
+
+* api-change:``budgets``: Update budgets client to latest version
+
+
+1.7.4
+=====
+
+* api-change:``codestar``: Update codestar client to latest version
+
+
+1.7.3
+=====
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``mobile``: Update mobile client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+
+
 1.7.2
 =====
 
