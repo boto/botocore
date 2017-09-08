@@ -717,36 +717,41 @@ class BaseClient(object):
         actual_operation_name = self._PY_TO_OP_NAME[operation_name]
         return actual_operation_name in self._cache['page_config']
 
-    def _get_waiter_config(self):
-        if 'waiter_config' not in self._cache:
-            try:
-                waiter_config = self._loader.load_service_model(
-                    self._service_model.service_name,
-                    'waiters-2',
-                    self._service_model.api_version)
-                self._cache['waiter_config'] = waiter_config
-            except DataNotFoundError:
-                self._cache['waiter_config'] = {}
-        return self._cache['waiter_config']
+    @CachedProperty
+    def _waiter_config(self):
+        try:
+            return self._loader.load_service_model(
+                self._service_model.service_name,
+                'waiters-2',
+                self._service_model.api_version)
+        except DataNotFoundError:
+            return {}
 
-    def get_waiter(self, waiter_name):
-        config = self._get_waiter_config()
-        if not config:
-            raise ValueError("Waiter does not exist: %s" % waiter_name)
-        model = waiter.WaiterModel(config)
+    def get_waiter(self, waiter_name, **config):
+        """Return waiter by name.
+
+        :param waiter_name: The waiter name.
+        :param config: Optional waiter configuration overrides,
+            e.g, delay, max_attempts
+        """
         mapping = {}
-        for name in model.waiter_names:
-            mapping[xform_name(name)] = name
+        if self._waiter_config:
+            model = waiter.WaiterModel(self._waiter_config)
+            mapping = dict((xform_name(name), name)
+                for name in model.waiter_names)
         if waiter_name not in mapping:
             raise ValueError("Waiter does not exist: %s" % waiter_name)
-
-        return waiter.create_waiter_with_client(
+        result = waiter.create_waiter_with_client(
             mapping[waiter_name], model, self)
+        for name in config:
+            getattr(result.config, name)  # raise AttributeError if invalid
+            setattr(result.config, name, config[name])
+        return result
 
     @CachedProperty
     def waiter_names(self):
         """Returns a list of all available waiters."""
-        config = self._get_waiter_config()
+        config = self._waiter_config
         if not config:
             return []
         model = waiter.WaiterModel(config)

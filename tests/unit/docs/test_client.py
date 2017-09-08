@@ -37,7 +37,7 @@ class TestClientDocumenter(BaseDocsTest):
             '  *   :py:meth:`~MyService.Client.sample_operation`',
             '  .. py:method:: can_paginate(operation_name)',
             '  .. py:method:: get_paginator(operation_name)',
-            '  .. py:method:: get_waiter(waiter_name)',
+            '  .. py:method:: get_waiter(waiter_name, **config)',
             '  .. py:method:: sample_operation(**kwargs)',
             '    **Request Syntax**',
             '    ::',
