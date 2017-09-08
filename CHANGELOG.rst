@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.7.7
+=====
+
+* api-change:``logs``: Update logs client to latest version
+
+
 1.7.6
 =====
 
