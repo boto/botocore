@@ -733,9 +733,16 @@ class ConfigProvider(CredentialProvider):
                         logger.error("The keyring module could not be imported."
                             " For keyring support, install the keyring module.")
                         raise
-                    access_key = project_config[self.ACCESS_KEY]
+                    try:
+                        access_key = profile_config[self.ACCESS_KEY]
+                    except KeyError:
+                        raise PartialCredentialsError(provider=self.METHOD,
+                                                      cred_var=self.ACCESS_KEY)
                     secret_key = keyring.get_password(self._profile_name,
                                                       access_key)
+                    if secret_key is None:
+                        raise PartialCredentialsError(provider=self.METHOD,
+                                                      cred_var=self.SECRET_KEY)
                 else:
                     access_key, secret_key = self._extract_creds_from_mapping(
                         profile_config, self.ACCESS_KEY, self.SECRET_KEY)

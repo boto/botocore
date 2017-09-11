@@ -14,6 +14,7 @@
 from datetime import datetime, timedelta
 import mock
 import os
+import sys
 
 from dateutil.tz import tzlocal, tzutc
 
@@ -22,7 +23,7 @@ from botocore.utils import ContainerMetadataFetcher
 from botocore.credentials import EnvProvider, create_assume_role_refresher
 import botocore.exceptions
 import botocore.session
-from tests import unittest, BaseEnvVar, IntegerRefresher
+from tests import unittest, temporary_set_keyring_backend, BaseEnvVar, DummyKeyringBackend, IntegerRefresher
 
 
 # Passed to session to keep it from finding default config file
@@ -534,6 +535,56 @@ class TestConfigFileProvider(BaseEnvVar):
         provider = credentials.ConfigProvider('cli.cfg', 'default', parser)
         with self.assertRaises(botocore.exceptions.PartialCredentialsError):
             provider.load()
+
+    # Pretend that the keyring package is not installed
+    @mock.patch.dict(sys.modules, {"keyring": None})
+    def test_keyring_import_error(self):
+        profile_config = {
+            'aws_access_key_id': 'a',
+            'keyring': 'true'
+        }
+        parsed = {'profiles': {'default': profile_config}}
+        parser = mock.Mock()
+        parser.return_value = parsed
+        provider = credentials.ConfigProvider('cli.cfg', 'default', parser)
+        with self.assertRaises(ImportError):
+            provider.load()
+
+    def test_secret_key_from_keyring(self):
+        keyring_backend = DummyKeyringBackend()
+        keyring_backend.set_password('default', 'a', 'b')
+
+        profile_config = {
+            'aws_access_key_id': 'a',
+            'keyring': 'true'
+        }
+        parsed = {'profiles': {'default': profile_config}}
+        parser = mock.Mock()
+        parser.return_value = parsed
+        provider = credentials.ConfigProvider('cli.cfg', 'default', parser)
+
+        with temporary_set_keyring_backend(keyring_backend):
+            creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'a')
+        self.assertEqual(creds.secret_key, 'b')
+        self.assertEqual(creds.method, 'config-file')
+
+    def test_secret_key_not_in_keyring(self):
+        keyring_backend = DummyKeyringBackend()
+
+        profile_config = {
+            'aws_access_key_id': 'a',
+            'keyring': 'true'
+        }
+        parsed = {'profiles': {'default': profile_config}}
+        parser = mock.Mock()
+        parser.return_value = parsed
+        provider = credentials.ConfigProvider('cli.cfg', 'default', parser)
+
+        with temporary_set_keyring_backend(keyring_backend):
+            with self.assertRaises(botocore.exceptions.PartialCredentialsError):
+                provider.load()
 
 
 class TestBotoProvider(BaseEnvVar):

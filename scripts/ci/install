@@ -25,6 +25,7 @@ if python_version == '2.6':
 
 run('pip install -r requirements.txt')
 run('pip install coverage')
+run('pip install keyring')
 if os.path.isdir('dist') and os.listdir('dist'):
     shutil.rmtree('dist')
 run('python setup.py bdist_wheel')

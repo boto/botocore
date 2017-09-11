@@ -24,6 +24,7 @@ import platform
 import select
 import datetime
 from subprocess import Popen, PIPE
+import keyring
 
 from dateutil.tz import tzlocal
 # The unittest module got a significant overhaul
@@ -74,6 +75,14 @@ def create_session(**kwargs):
     session.register_component('data_loader', _LOADER)
     session.set_config_variable('credentials_file', 'noexist/foo/botocore')
     return session
+
+
+@contextlib.contextmanager
+def temporary_set_keyring_backend(keyring_backend):
+    orig_keyring_backend = keyring.get_keyring()
+    keyring.set_keyring(keyring_backend)
+    yield
+    keyring.set_keyring(orig_keyring_backend)
 
 
 @contextlib.contextmanager
@@ -247,6 +256,24 @@ class ClientDriver(object):
         if result != b'OK':
             raise RuntimeError(
                 "Error from command '%s': %s" % (cmd, result))
+
+
+class DummyKeyringBackend(keyring.backend.KeyringBackend):
+    priority = 1
+
+    def __init__(self):
+        self._credentials = {}
+
+    def set_password(self, servicename, username, password):
+        if servicename not in self._credentials:
+            self._credentials[servicename] = {}
+        self._credentials[servicename][username] = password
+
+    def get_password(self, servicename, username):
+        if servicename in self._credentials:
+            if username in self._credentials[servicename]:
+                return self._credentials[servicename][username]
+        return None
 
 
 # This is added to this file because it's used in both
