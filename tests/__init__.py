@@ -24,7 +24,16 @@ import platform
 import select
 import datetime
 from subprocess import Popen, PIPE
-import keyring
+
+try:
+    import keyring
+    from keyring.backend import KeyringBackend
+    HAS_KEYRING = True
+except ImportError:
+    class KeyringBackend(object):
+        pass
+
+    HAS_KEYRING = False
 
 from dateutil.tz import tzlocal
 # The unittest module got a significant overhaul
@@ -79,6 +88,8 @@ def create_session(**kwargs):
 
 @contextlib.contextmanager
 def temporary_set_keyring_backend(keyring_backend):
+    if not HAS_KEYRING:
+        return
     orig_keyring_backend = keyring.get_keyring()
     keyring.set_keyring(keyring_backend)
     yield
@@ -258,7 +269,7 @@ class ClientDriver(object):
                 "Error from command '%s': %s" % (cmd, result))
 
 
-class DummyKeyringBackend(keyring.backend.KeyringBackend):
+class DummyKeyringBackend(KeyringBackend):
     priority = 1
 
     def __init__(self):

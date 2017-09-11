@@ -537,6 +537,7 @@ class TestConfigFileProvider(BaseEnvVar):
             provider.load()
 
     # Pretend that the keyring package is not installed
+    @unittest.skipIf(sys.version_info < (2, 7), "Keyring package does not support python2.6")
     @mock.patch.dict(sys.modules, {"keyring": None})
     def test_keyring_import_error(self):
         profile_config = {
@@ -550,6 +551,7 @@ class TestConfigFileProvider(BaseEnvVar):
         with self.assertRaises(ImportError):
             provider.load()
 
+    @unittest.skipIf(sys.version_info < (2, 7), "Keyring package does not support python2.6")
     def test_secret_key_from_keyring(self):
         keyring_backend = DummyKeyringBackend()
         keyring_backend.set_password('default', 'a', 'b')
@@ -570,6 +572,7 @@ class TestConfigFileProvider(BaseEnvVar):
         self.assertEqual(creds.secret_key, 'b')
         self.assertEqual(creds.method, 'config-file')
 
+    @unittest.skipIf(sys.version_info < (2, 7), "Keyring package does not support python2.6")
     def test_secret_key_not_in_keyring(self):
         keyring_backend = DummyKeyringBackend()
 
