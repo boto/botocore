@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.7.8
+=====
+
+* api-change:``devicefarm``: Update devicefarm client to latest version
+
+
 1.7.7
 =====
 
