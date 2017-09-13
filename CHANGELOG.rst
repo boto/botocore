@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.7.10
+======
+
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``batch``: Update batch client to latest version
+* api-change:``events``: Update events client to latest version
+
+
 1.7.9
 =====
 
