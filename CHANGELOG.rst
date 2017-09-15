@@ -2,6 +2,20 @@
 CHANGELOG
 =========
 
+1.7.12
+======
+
+* api-change:``apigateway``: Update apigateway client to latest version
+
+
+1.7.11
+======
+
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+
+
 1.7.10
 ======
 
