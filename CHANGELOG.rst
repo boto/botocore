@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.7.13
+======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``iam``: Update iam client to latest version
+* api-change:``ses``: Update ses client to latest version
+
+
 1.7.12
 ======
 
