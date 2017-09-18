@@ -39,6 +39,9 @@ from botocore import waiter
 from botocore import retryhandler, translate
 
 
+logger = logging.getLogger(__name__)
+
+
 class Session(object):
     """
     The Session object collects together useful functionality
@@ -259,12 +262,29 @@ class Session(object):
         value = None
         var_config = self.session_var_map[logical_name]
         if self._found_in_instance_vars(methods, logical_name):
-            return self._session_instance_vars[logical_name]
+            value = self._session_instance_vars[logical_name]
+            logger.debug(
+                "Loading variable %s from instance vars with value %r.",
+                logical_name,
+                value,
+            )
+            return value
         elif self._found_in_env(methods, var_config):
             value = self._retrieve_from_env(var_config[1], os.environ)
+            logger.debug(
+                "Loading variable %s from environment with value %r.",
+                logical_name,
+                value,
+            )
         elif self._found_in_config_file(methods, var_config):
             value = self.get_scoped_config()[var_config[0]]
+            logger.debug(
+                "Loading variable %s from config file with value %r.",
+                logical_name,
+                value,
+            )
         if value is None:
+            logger.debug("Loading variable %s from defaults.", logical_name)
             value = var_config[2]
         if var_config[3] is not None:
             value = var_config[3](value)
@@ -320,6 +340,11 @@ class Session(object):
         :param value: The value to associate with the config variable.
 
         """
+        logger.debug(
+            "Setting config variable for %s to %r",
+            logical_name,
+            value,
+        )
         self._session_instance_vars[logical_name] = value
 
     def get_scoped_config(self):
