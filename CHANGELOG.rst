@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.7.15
+======
+
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``greengrass``: Update greengrass client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``codepipeline``: Update codepipeline client to latest version
+* api-change:``lex-runtime``: Update lex-runtime client to latest version
+
+
 1.7.14
 ======
 
