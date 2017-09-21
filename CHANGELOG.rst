@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.7.16
+======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``logs``: Update logs client to latest version
+* api-change:``budgets``: Update budgets client to latest version
+
+
 1.7.15
 ======
 
