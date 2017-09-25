@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.7.17
+======
+
+* api-change:``config``: Update config client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
 1.7.16
 ======
 
