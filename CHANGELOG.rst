@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.7.19
+======
+
+* api-change:``pinpoint``: Update pinpoint client to latest version
+
+
 1.7.18
 ======
 
