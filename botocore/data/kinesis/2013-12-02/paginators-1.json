@@ -5,7 +5,7 @@
       "limit_key": "Limit",
       "more_results": "StreamDescription.HasMoreShards",
       "output_token": "StreamDescription.Shards[-1].ShardId",
-      "result_key": "StreamDescription.Shards",
+      "result_key": "StreamDescription",
       "non_aggregate_keys": [
         "StreamDescription.StreamARN",
         "StreamDescription.StreamName",
