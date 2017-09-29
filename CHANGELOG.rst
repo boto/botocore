@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.7.20
+======
+
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``mturk``: Update mturk client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+
+
 1.7.19
 ======
 
