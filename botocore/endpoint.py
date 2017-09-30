@@ -138,6 +138,11 @@ class Endpoint(object):
     def make_request(self, operation_model, request_dict):
         logger.debug("Making request for %s (verify_ssl=%s) with params: %s",
                      operation_model, self.verify, request_dict)
+        if self._endpoint_prefix == 'sdb':
+            logger.debug("Forcing charset to UTF-8 for SimpleDB request")
+            # https://github.com/boto/boto3/issues/354
+            request_dict['headers']['Content-Type'] = (
+                'application/x-www-form-urlencoded; charset=utf-8')
         return self._send_request(request_dict, operation_model)
 
     def create_request(self, params, operation_model=None):

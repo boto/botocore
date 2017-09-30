@@ -145,6 +145,16 @@ class TestEndpointFeatures(TestEndpointBase):
                             self.event_emitter, proxies=proxies)
         self.assertEqual(endpoint.proxies, proxies)
 
+    def test_sdb_charset(self):
+        # https://github.com/boto/boto3/issues/354
+        content_type = 'application/x-www-form-urlencoded; charset=utf-8'
+        endpoint = Endpoint('https://sdb.us-west-1.amazonaws.com',
+                            endpoint_prefix='sdb',
+                            event_emitter=self.event_emitter)
+        r_dict = request_dict()
+        endpoint.make_request(self.op, r_dict)
+        self.assertEqual(r_dict['headers']['Content-Type'], content_type)
+
 
 class TestRetryInterface(TestEndpointBase):
     def setUp(self):
