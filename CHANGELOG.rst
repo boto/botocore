@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.7.21
+======
+
+* api-change:``cloudhsm``: Update cloudhsm client to latest version
+
+
 1.7.20
 ======
 
