@@ -1,0 +1,7 @@
+[
+  {
+    "category": "``cloudhsm``", 
+    "description": "Update cloudhsm client to latest version", 
+    "type": "api-change"
+  }
+]
