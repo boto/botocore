@@ -2,6 +2,44 @@
 CHANGELOG
 =========
 
+1.7.20
+======
+
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``mturk``: Update mturk client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+
+
+1.7.19
+======
+
+* api-change:``pinpoint``: Update pinpoint client to latest version
+
+
+1.7.18
+======
+
+* api-change:``cloudformation``: Update cloudformation client to latest version
+
+
+1.7.17
+======
+
+* api-change:``config``: Update config client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
+1.7.16
+======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``logs``: Update logs client to latest version
+* api-change:``budgets``: Update budgets client to latest version
+
+
 1.7.15
 ======
 
