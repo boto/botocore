@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.7.23
+======
+
+* api-change:``route53domains``: Update route53domains client to latest version
+* api-change:``kinesisanalytics``: Update kinesisanalytics client to latest version
+
+
 1.7.22
 ======
 
