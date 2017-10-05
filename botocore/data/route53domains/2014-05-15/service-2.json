@@ -10,7 +10,6 @@
     "targetPrefix":"Route53Domains_v20140515",
     "uid":"route53domains-2014-05-15"
   },
-  "documentation":"<fullname>Amazon Route 53 Domains</fullname><p>Amazon Route 53 permits Interned Domain Name registration, trasnfer and management</p>",
   "operations":{
     "CheckDomainAvailability":{
       "name":"CheckDomainAvailability",
