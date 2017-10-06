@@ -340,27 +340,6 @@
         "ApproximateFirstReceiveTimestamp"
       ]
     },
-    "QueueAttributeMap":{
-      "type":"map",
-      "key":{
-        "shape":"QueueAttributeName",
-        "locationName":"Name"
-      },
-      "value":{
-        "shape":"String",
-        "locationName":"Value"
-      },
-      "flattened":true,
-      "locationName":"Attribute"
-    },
-    "QueueAttributeNameList":{
-      "type":"list",
-      "member":{
-        "shape":"QueueAttributeName",
-        "locationName":"AttributeName"
-      },
-      "flattened":true
-    },
     "BatchEntryIdsNotDistinct":{
       "type":"structure",
       "members":{
