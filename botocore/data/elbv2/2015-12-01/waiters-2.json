@@ -1,0 +1,31 @@
+{
+    "version":2,
+    "waiters":{
+        "AnyTargetHealthy":{
+            "acceptors":[
+                {
+                    "argument":"TargetHealthDescriptions[].TargetHealth.State",
+                    "expected":"healthy",
+                    "matcher":"pathAny",
+                    "state":"success"
+                }
+            ],
+            "delay":15,
+            "maxAttempts":40,
+            "operation":"DescribeTargetHealth"
+        },
+        "TargetHealthy":{
+            "acceptors":[
+                {
+                    "argument":"TargetHealthDescriptions[].TargetHealth.State",
+                    "expected":"healthy",
+                    "matcher":"pathAll",
+                    "state":"success"
+                }
+            ],
+            "delay":15,
+            "maxAttempts":40,
+            "operation":"DescribeTargetHealth"
+        }
+    }
+}
