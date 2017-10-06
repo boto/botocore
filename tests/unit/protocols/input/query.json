@@ -41,6 +41,9 @@
         },
         "serialized": {
           "uri": "/",
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&Foo=val1&Bar=val2"
         }
       },
@@ -56,6 +59,9 @@
         },
         "serialized": {
           "uri": "/",
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&Baz=true"
         }
       },
@@ -71,6 +77,9 @@
         },
         "serialized": {
           "uri": "/",
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&Baz=false"
         }
       }
@@ -118,6 +127,9 @@
         },
         "serialized": {
           "uri": "/",
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&StructArg.ScalarArg=foo"
         }
       }
@@ -165,6 +177,9 @@
         },
         "serialized": {
           "uri": "/",
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&ListArg.member.1=foo&ListArg.member.2=bar&ListArg.member.3=baz"
         }
       },
@@ -180,6 +195,9 @@
         },
         "serialized": {
           "uri": "/",
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&ListArg="
         }
       }
@@ -243,6 +261,9 @@
         },
         "serialized": {
           "uri": "/",
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&ScalarArg=foo&ListArg.1=a&ListArg.2=b&ListArg.3=c"
         }
       },
@@ -260,6 +281,9 @@
         },
         "serialized": {
           "uri": "/",
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&Foo.1=a"
         }
       }
@@ -310,6 +334,9 @@
         },
         "serialized": {
           "uri": "/",
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&MapArg.1.key=key1&MapArg.1.value=val1&MapArg.2.key=key2&MapArg.2.value=val2"
         }
       }
@@ -358,6 +385,9 @@
         },
         "serialized": {
           "uri": "/",
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&ListArg.item.1=a&ListArg.item.2=b&ListArg.item.3=c"
         }
       }
@@ -411,6 +441,9 @@
         },
         "serialized": {
           "uri": "/",
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&ScalarArg=foo&ListArgLocation.1=a&ListArgLocation.2=b&ListArgLocation.3=c"
         }
       }
@@ -460,6 +493,9 @@
         },
         "serialized": {
           "uri": "/",
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&MapArg.entry.1.key=key1&MapArg.entry.1.value=val1&MapArg.entry.2.key=key2&MapArg.entry.2.value=val2"
         }
       }
@@ -511,6 +547,9 @@
         },
         "serialized": {
           "uri": "/",
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&MapArg.entry.1.TheKey=key1&MapArg.entry.1.TheValue=val1&MapArg.entry.2.TheKey=key2&MapArg.entry.2.TheValue=val2"
         }
       }
@@ -548,6 +587,9 @@
         },
         "serialized": {
           "uri": "/",
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&BlobArg=Zm9v"
         }
       }
@@ -585,6 +627,9 @@
         },
         "serialized": {
           "uri": "/",
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&TimeArg=2015-01-25T08%3A00%3A00Z"
         }
       }
@@ -656,6 +701,9 @@
         },
         "serialized": {
           "uri": "/",
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&RecursiveStruct.NoRecurse=foo"
         }
       },
@@ -675,6 +723,9 @@
         },
         "serialized": {
           "uri": "/",
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&RecursiveStruct.RecursiveStruct.NoRecurse=foo"
         }
       },
@@ -698,6 +749,9 @@
         },
         "serialized": {
           "uri": "/",
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&RecursiveStruct.RecursiveStruct.RecursiveStruct.RecursiveStruct.NoRecurse=foo"
         }
       },
@@ -722,6 +776,9 @@
         },
         "serialized": {
           "uri": "/",
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&RecursiveStruct.RecursiveList.member.1.NoRecurse=foo&RecursiveStruct.RecursiveList.member.2.NoRecurse=bar"
         }
       },
@@ -748,6 +805,9 @@
         },
         "serialized": {
           "uri": "/",
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&RecursiveStruct.RecursiveList.member.1.NoRecurse=foo&RecursiveStruct.RecursiveList.member.2.RecursiveStruct.NoRecurse=bar"
         }
       },
@@ -772,6 +832,9 @@
         },
         "serialized": {
           "uri": "/",
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&RecursiveStruct.RecursiveMap.entry.1.key=foo&RecursiveStruct.RecursiveMap.entry.1.value.NoRecurse=foo&RecursiveStruct.RecursiveMap.entry.2.key=bar&RecursiveStruct.RecursiveMap.entry.2.value.NoRecurse=bar"
         }
       }
@@ -813,7 +876,9 @@
         },
         "serialized": {
           "uri": "/",
-          "headers": {},
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&Token=abc123"
         }
       },
@@ -831,7 +896,9 @@
         },
         "serialized": {
           "uri": "/",
-          "headers": {},
+          "headers": {
+	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+	  },
           "body": "Action=OperationName&Version=2014-01-01&Token=00000000-0000-4000-8000-000000000000"
         }
       }

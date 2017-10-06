@@ -171,6 +171,9 @@ class QuerySerializer(Serializer):
         serialized = self._create_default_request()
         serialized['method'] = operation_model.http.get('method',
                                                         self.DEFAULT_METHOD)
+        serialized['headers'] = {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
+        }
         # The query serializer only deals with body params so
         # that's what we hand off the _serialize_* methods.
         body_params = self.MAP_TYPE()
