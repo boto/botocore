@@ -1,0 +1,31 @@
+{
+  "version": 2,
+  "waiters": {
+    "LifecycleStateInService": {
+      "operation": "DescribeAutoScalingInstances",
+      "maxAttempts": 40,
+      "delay": 15,
+      "acceptors": [
+        {
+          "state": "success",
+          "matcher": "pathAll",
+          "argument": "AutoScalingInstances[].LifecycleState",
+          "expected": "InService"
+        }
+      ]
+    },
+    "LifecycleStateStandby": {
+      "operation": "DescribeAutoScalingInstances",
+      "maxAttempts": 40,
+      "delay": 15,
+      "acceptors": [
+        {
+          "state": "success",
+          "matcher": "pathAll",
+          "argument": "AutoScalingInstances[].LifecycleState",
+          "expected": "Standby"
+        }
+      ]
+    }
+  }
+}
