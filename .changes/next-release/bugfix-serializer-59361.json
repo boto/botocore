@@ -1,0 +1,5 @@
+{
+  "category": "serializer",
+  "type": "bugfix",
+  "description": "Update query serializer to automatically include the application/x-www-form-urlencoded; charset=utf-8 Content-Type header."
+}

@@ -2,6 +2,32 @@
 CHANGELOG
 =========
 
+1.7.24
+======
+
+* api-change:``redshift``: Update redshift client to latest version
+
+
+1.7.23
+======
+
+* api-change:``route53domains``: Update route53domains client to latest version
+* api-change:``kinesisanalytics``: Update kinesisanalytics client to latest version
+
+
+1.7.22
+======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.7.21
+======
+
+* api-change:``cloudhsm``: Update cloudhsm client to latest version
+
+
 1.7.20
 ======
 
