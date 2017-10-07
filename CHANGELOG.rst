@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.7.25
+======
+
+* api-change:``sqs``: Update sqs client to latest version
+* bugfix:serializer: Update query serializer to automatically include the application/x-www-form-urlencoded; charset=utf-8 Content-Type header.
+
+
 1.7.24
 ======
 
