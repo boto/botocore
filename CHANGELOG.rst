@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.7.26
+======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+
+
 1.7.25
 ======
 
