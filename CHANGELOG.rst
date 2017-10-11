@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.7.27
+======
+
+* api-change:``ecr``: Update ecr client to latest version
+* api-change:``ses``: Update ses client to latest version
+
+
 1.7.26
 ======
 
