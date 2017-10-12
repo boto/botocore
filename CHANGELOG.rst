@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.7.28
+======
+
+* api-change:``polly``: Update polly client to latest version
+* api-change:``dms``: Update dms client to latest version
+* api-change:``codecommit``: Update codecommit client to latest version
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* bugfix:Paginator: Fixes an issue when `build_full_result` is used repeatedly that results in the same token being returned multiple times.
+* api-change:``rds``: Update rds client to latest version
+
+
 1.7.27
 ======
 
