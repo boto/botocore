@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``polly``", 
+    "description": "Update polly client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``dms``", 
+    "description": "Update dms client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codecommit``", 
+    "description": "Update codecommit client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``elasticbeanstalk``", 
+    "description": "Update elasticbeanstalk client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "Paginator", 
+    "description": "Fixes an issue when `build_full_result` is used repeatedly that results in the same token being returned multiple times.", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``rds``", 
+    "description": "Update rds client to latest version", 
+    "type": "api-change"
+  }
+]
