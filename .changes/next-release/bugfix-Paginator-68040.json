@@ -1,5 +1,0 @@
-{
-  "type": "bugfix",
-  "category": "Paginator",
-  "description": "Fixes an issue when `build_full_result` is used repeatedly that results in the same token being returned multiple times."
-}
