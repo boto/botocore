@@ -565,6 +565,10 @@ class BaseClient(object):
 
     def _make_api_call(self, operation_name, api_params):
         operation_model = self._service_model.operation_model(operation_name)
+        service_name = self._service_model.service_name
+        if operation_model.deprecated:
+            logger.debug('Warning: %s.%s() is deprecated',
+                         service_name, operation_name)
         request_context = {
             'client_region': self.meta.region_name,
             'client_config': self.meta.config,
