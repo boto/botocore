@@ -338,3 +338,19 @@ class TestDocumentModelDrivenMethod(BaseDocsTest):
         # The line in the parameter description
         self.assert_contains_line(
             ':type Body: bytes or seekable file-like object')
+
+    def test_deprecated(self):
+        self.json_model['operations']['SampleOperation']['deprecated'] = True
+        document_model_driven_method(
+            self.doc_structure, 'foo', self.operation_model,
+            event_emitter=self.event_emitter,
+            method_description='This describes the foo method.',
+            example_prefix='response = client.foo'
+        )
+        # The line in the example
+        self.assert_contains_lines_in_order([
+            '  .. danger::',
+            '        This operation is deprecated and may not function as '
+            'expected. This operation should not be used going forward and is '
+            'only kept for the purpose of backwards compatiblity.'
+        ])

@@ -105,6 +105,27 @@ class TestStyle(unittest.TestCase):
         self.assertEqual(style.doc.getvalue(),
                          six.b('::\n\n  foobar\n\n\n'))
 
+    def test_important(self):
+        style = ReSTStyle(ReSTDocument())
+        style.start_important()
+        style.end_important()
+        self.assertEqual(style.doc.getvalue(),
+                         six.b('\n\n.. warning::\n\n  \n\n'))
+
+    def test_note(self):
+        style = ReSTStyle(ReSTDocument())
+        style.start_note()
+        style.end_note()
+        self.assertEqual(style.doc.getvalue(),
+                         six.b('\n\n.. note::\n\n  \n\n'))
+
+    def test_danger(self):
+        style = ReSTStyle(ReSTDocument())
+        style.start_danger()
+        style.end_danger()
+        self.assertEqual(style.doc.getvalue(),
+                         six.b('\n\n.. danger::\n\n  \n\n'))
+
     def test_toctree_html(self):
         style = ReSTStyle(ReSTDocument())
         style.doc.target = 'html'
