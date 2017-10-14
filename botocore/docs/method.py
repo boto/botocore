@@ -174,6 +174,13 @@ def document_model_driven_method(section, method_name, operation_model,
     # Add the description for the method.
     method_intro_section = section.add_new_section('method-intro')
     method_intro_section.include_doc_string(method_description)
+    if operation_model.deprecated:
+        method_intro_section.style.start_danger()
+        method_intro_section.writeln(
+                'This operation is deprecated and may not function as '
+                'expected. This operation should not be used going forward '
+                'and is only kept for the purpose of backwards compatiblity.')
+        method_intro_section.style.end_danger()
     service_uid = operation_model.service_model.metadata.get('uid')
     if service_uid is not None:
         method_intro_section.style.new_paragraph()

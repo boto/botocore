@@ -397,6 +397,10 @@ class OperationModel(object):
         return self._operation_model.get('documentation', '')
 
     @CachedProperty
+    def deprecated(self):
+        return self._operation_model.get('deprecated', False)
+
+    @CachedProperty
     def input_shape(self):
         if 'input' not in self._operation_model:
             # Some operations do not accept any input and do not define an

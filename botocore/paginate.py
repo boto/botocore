@@ -239,6 +239,12 @@ class PageIterator(object):
         current_kwargs = self._op_kwargs
         previous_next_token = None
         next_token = dict((key, None) for key in self._input_token)
+        if self._starting_token is not None:
+            # If the starting token exists, populate the next_token with the
+            # values inside it. This ensures that we have the service's
+            # pagination token on hand if we need to truncate after the
+            # first response.
+            next_token = self._parse_starting_token()[0]
         # The number of items from result_key we've seen so far.
         total_items = 0
         first_request = True
