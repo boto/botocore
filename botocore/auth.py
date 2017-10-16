@@ -175,14 +175,21 @@ class SigV4Auth(BaseSigner):
         in the StringToSign.
         """
         header_map = HTTPHeaders()
-        split = urlsplit(request.url)
         for name, value in request.headers.items():
             lname = name.lower()
             if lname not in SIGNED_HEADERS_BLACKLIST:
                 header_map[lname] = value
         if 'host' not in header_map:
-            header_map['host'] = split.netloc
+            header_map['host'] = self._canonical_host(request.url)
         return header_map
+
+    def _canonical_host(self, url):
+        url_parts = urlsplit(url)
+        if url_parts.port == 80:
+            # No need to include the port if it's the default port.
+            return url_parts.hostname
+        # Strip out auth if it's present in the netloc.
+        return url_parts.netloc.rsplit('@', 1)[-1]
 
     def canonical_query_string(self, request):
         # The query string can come from two parts.  One is the

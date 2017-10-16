@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "sigv4",
+  "description": "Strip out the default port and http auth info when computing the host header for sigv4 signing."
+}
