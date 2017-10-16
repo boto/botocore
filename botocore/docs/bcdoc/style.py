@@ -186,6 +186,16 @@ class ReSTStyle(BaseStyle):
         self.dedent()
         self.new_paragraph()
 
+    def start_danger(self, attrs=None):
+        self.new_paragraph()
+        self.doc.write('.. danger::')
+        self.indent()
+        self.new_paragraph()
+
+    def end_danger(self):
+        self.dedent()
+        self.new_paragraph()
+
     def start_a(self, attrs=None):
         if attrs:
             for attr_key, attr_value in attrs:
