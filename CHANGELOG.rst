@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.7.29
+======
+
+* api-change:``waf``: Update waf client to latest version
+* api-change:``cloudhsm``: Update cloudhsm client to latest version
+* api-change:``es``: Update es client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``waf-regional``: Update waf-regional client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
 1.7.28
 ======
 
