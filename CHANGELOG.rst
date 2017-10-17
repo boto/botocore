@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.7.30
+======
+
+* api-change:``es``: Update es client to latest version
+
+
 1.7.29
 ======
 
