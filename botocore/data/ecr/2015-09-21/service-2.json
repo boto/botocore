@@ -1401,7 +1401,7 @@
       "min":1
     },
     "LifecyclePolicyText":{
-      "type":"string",
+      "type":"structure",
       "max":10240,
       "min":100
     },
