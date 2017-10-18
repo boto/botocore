@@ -185,7 +185,12 @@ class SigV4Auth(BaseSigner):
 
     def _canonical_host(self, url):
         url_parts = urlsplit(url)
-        if url_parts.port == 80:
+        default_ports = {
+            'http': 80,
+            'https': 443
+        }
+        if any(url_parts.scheme == scheme and url_parts.port == port
+               for scheme, port in default_ports.items()):
             # No need to include the port if it's the default port.
             return url_parts.hostname
         # Strip out auth if it's present in the netloc.

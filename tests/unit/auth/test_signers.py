@@ -559,9 +559,18 @@ class TestSigV4(unittest.TestCase):
         headers = auth.canonical_headers(original)
         self.assertEqual(headers, 'foo:leading and trailing')
 
-    def test_strips_default_port(self):
+    def test_strips_http_default_port(self):
         request = AWSRequest()
-        request.url = 'https://s3.us-west-2.amazonaws.com:80/'
+        request.url = 'http://s3.us-west-2.amazonaws.com:80/'
+        request.method = 'GET'
+        auth = self.create_signer('s3', 'us-west-2')
+        actual = auth.headers_to_sign(request)['host']
+        expected = 's3.us-west-2.amazonaws.com'
+        self.assertEqual(actual, expected)
+
+    def test_strips_https_default_port(self):
+        request = AWSRequest()
+        request.url = 'https://s3.us-west-2.amazonaws.com:443/'
         request.method = 'GET'
         auth = self.create_signer('s3', 'us-west-2')
         actual = auth.headers_to_sign(request)['host']
@@ -579,7 +588,7 @@ class TestSigV4(unittest.TestCase):
 
     def test_strips_default_port_and_http_auth(self):
         request = AWSRequest()
-        request.url = 'https://username:password@s3.us-west-2.amazonaws.com:80'
+        request.url = 'http://username:password@s3.us-west-2.amazonaws.com:80/'
         request.method = 'GET'
         auth = self.create_signer('s3', 'us-west-2')
         actual = auth.headers_to_sign(request)['host']
