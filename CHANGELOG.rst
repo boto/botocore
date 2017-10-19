@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.7.32
+======
+
+* api-change:``ssm``: Update ssm client to latest version
+* bugfix:sigv4: Strip out the default port and http auth info when computing the host header for sigv4 signing.
+* api-change:``sqs``: Update sqs client to latest version
+
+
 1.7.31
 ======
 
