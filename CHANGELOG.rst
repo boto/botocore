@@ -2,6 +2,37 @@
 CHANGELOG
 =========
 
+1.7.32
+======
+
+* api-change:``ssm``: Update ssm client to latest version
+* bugfix:sigv4: Strip out the default port and http auth info when computing the host header for sigv4 signing.
+* api-change:``sqs``: Update sqs client to latest version
+
+
+1.7.31
+======
+
+* api-change:``lightsail``: Update lightsail client to latest version
+
+
+1.7.30
+======
+
+* api-change:``es``: Update es client to latest version
+
+
+1.7.29
+======
+
+* api-change:``waf``: Update waf client to latest version
+* api-change:``cloudhsm``: Update cloudhsm client to latest version
+* api-change:``es``: Update es client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``waf-regional``: Update waf-regional client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
 1.7.28
 ======
 
