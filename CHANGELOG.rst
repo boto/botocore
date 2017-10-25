@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.7.35
+======
+
+* api-change:``elasticache``: Update elasticache client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``config``: Update config client to latest version
+* api-change:``glue``: Update glue client to latest version
+
+
 1.7.34
 ======
 
