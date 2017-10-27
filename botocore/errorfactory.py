@@ -10,8 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from botocore.exceptions import ClientError
-from botocore.utils import get_service_module_name
+from .exceptions import ClientError
+from .utils import get_service_module_name
 
 
 class BaseClientExceptions(object):

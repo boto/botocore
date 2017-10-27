@@ -19,15 +19,15 @@ import warnings
 import hashlib
 import logging
 
-from botocore.vendored import six
-from botocore.exceptions import MD5UnavailableError
-from botocore.vendored.requests.packages.urllib3 import exceptions
+from .vendored import six
+from .exceptions import MD5UnavailableError
+from .vendored.requests.packages.urllib3 import exceptions
 
 logger = logging.getLogger(__name__)
 
 
 if six.PY3:
-    from botocore.vendored.six.moves import http_client
+    from .vendored.six.moves import http_client
 
     class HTTPHeaders(http_client.HTTPMessage):
         pass

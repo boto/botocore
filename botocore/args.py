@@ -19,10 +19,10 @@ considered internal, and *not* a public API.
 import copy
 import logging
 
-import botocore.serialize
-from botocore.signers import RequestSigner
-from botocore.config import Config
-from botocore.endpoint import EndpointCreator
+from . import serialize, parsers
+from .signers import RequestSigner
+from .config import Config
+from .endpoint import EndpointCreator
 
 
 logger = logging.getLogger(__name__)
@@ -78,9 +78,9 @@ class ClientArgsCreator(object):
             proxies=new_config.proxies,
             timeout=(new_config.connect_timeout, new_config.read_timeout))
 
-        serializer = botocore.serialize.create_serializer(
+        serializer = serialize.create_serializer(
             protocol, parameter_validation)
-        response_parser = botocore.parsers.create_parser(protocol)
+        response_parser = parsers.create_parser(protocol)
         return {
             'serializer': serializer,
             'endpoint': endpoint,

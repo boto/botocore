@@ -15,15 +15,15 @@ import weakref
 import json
 import base64
 
-import botocore
-import botocore.auth
-from botocore.compat import six, OrderedDict
-from botocore.awsrequest import create_request_object, prepare_request_dict
-from botocore.exceptions import UnknownSignatureVersionError
-from botocore.exceptions import UnknownClientMethodError
-from botocore.exceptions import UnsupportedSignatureVersionError
-from botocore.utils import fix_s3_host, datetime2timestamp
-
+from . import UNSIGNED
+from . import auth as botocore_auth
+from .compat import six, OrderedDict
+from .awsrequest import create_request_object, prepare_request_dict
+from .exceptions import NoRegionError
+from .exceptions import UnknownSignatureVersionError
+from .exceptions import UnknownClientMethodError
+from .exceptions import UnsupportedSignatureVersionError
+from .utils import fix_s3_host, datetime2timestamp
 
 class RequestSigner(object):
     """
@@ -133,7 +133,7 @@ class RequestSigner(object):
             region_name=self._region_name,
             signature_version=signature_version, request_signer=self)
 
-        if signature_version != botocore.UNSIGNED:
+        if signature_version != UNSIGNED:
             kwargs = {
                 'signing_name': signing_name,
                 'region_name': region_name,
@@ -170,7 +170,7 @@ class RequestSigner(object):
         suffix = signing_type_suffix_map.get(signing_type, '')
 
         signature_version = self._signature_version
-        if signature_version is not botocore.UNSIGNED and not \
+        if signature_version is not UNSIGNED and not \
                 signature_version.endswith(suffix):
             signature_version += suffix
 
@@ -183,7 +183,7 @@ class RequestSigner(object):
             signature_version = response
             # The suffix needs to be checked again in case we get an improper
             # signature version from choose-signer.
-            if signature_version is not botocore.UNSIGNED and not \
+            if signature_version is not UNSIGNED and not \
                     signature_version.endswith(suffix):
                 signature_version += suffix
 
@@ -212,7 +212,7 @@ class RequestSigner(object):
         if signature_version is None:
             signature_version = self._signature_version
 
-        cls = botocore.auth.AUTH_TYPE_MAPS.get(signature_version)
+        cls = botocore_auth.AUTH_TYPE_MAPS.get(signature_version)
         if cls is None:
             raise UnknownSignatureVersionError(
                 signature_version=signature_version)
@@ -226,7 +226,7 @@ class RequestSigner(object):
         kwargs['credentials'] = frozen_credentials
         if cls.REQUIRES_REGION:
             if self._region_name is None:
-                raise botocore.exceptions.NoRegionError()
+                raise NoRegionError()
             kwargs['region_name'] = region_name
             kwargs['service_name'] = signing_name
         auth = cls(**kwargs)
@@ -506,7 +506,7 @@ class S3PostPresigner(object):
         # Create an expiration date for the policy
         datetime_now = datetime.datetime.utcnow()
         expire_date = datetime_now + datetime.timedelta(seconds=expires_in)
-        policy['expiration'] = expire_date.strftime(botocore.auth.ISO8601)
+        policy['expiration'] = expire_date.strftime(botocore_auth.ISO8601)
 
         # Append all of the conditions that the user supplied.
         policy['conditions'] = []

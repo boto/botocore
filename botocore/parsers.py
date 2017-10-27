@@ -96,9 +96,9 @@ import json
 import xml.etree.cElementTree
 import logging
 
-from botocore.compat import six, XMLParseError
+from .compat import six, XMLParseError
 
-from botocore.utils import parse_timestamp, merge_dicts, \
+from .utils import parse_timestamp, merge_dicts, \
     is_json_value_header
 
 LOG = logging.getLogger(__name__)

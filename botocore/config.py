@@ -11,12 +11,12 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import copy
-from botocore.compat import OrderedDict
+from .compat import OrderedDict
 
-from botocore.endpoint import DEFAULT_TIMEOUT, MAX_POOL_CONNECTIONS
-from botocore.exceptions import InvalidS3AddressingStyleError
-from botocore.exceptions import InvalidRetryConfigurationError
-from botocore.exceptions import InvalidMaxRetryAttemptsError
+from .endpoint import DEFAULT_TIMEOUT, MAX_POOL_CONNECTIONS
+from .exceptions import InvalidS3AddressingStyleError
+from .exceptions import InvalidRetryConfigurationError
+from .exceptions import InvalidMaxRetryAttemptsError
 
 
 class Config(object):
