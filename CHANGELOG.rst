@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.7.37
+======
+
+* api-change:``acm``: Update acm client to latest version
+* api-change:``cloudhsmv2``: Update cloudhsmv2 client to latest version
+* api-change:``directconnect``: Update directconnect client to latest version
+
+
 1.7.36
 ======
 
