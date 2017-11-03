@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.7.38
+======
+
+* api-change:``apigateway``: Update apigateway client to latest version
+
+
 1.7.37
 ======
 
