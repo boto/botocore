@@ -2,6 +2,36 @@
 CHANGELOG
 =========
 
+1.7.40
+======
+
+* api-change:``stepfunctions``: Update stepfunctions client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``kms``: Update kms client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``pricing``: Update pricing client to latest version
+
+
+1.7.39
+======
+
+* api-change:``ecs``: Update ecs client to latest version
+
+
+1.7.38
+======
+
+* api-change:``apigateway``: Update apigateway client to latest version
+
+
+1.7.37
+======
+
+* api-change:``acm``: Update acm client to latest version
+* api-change:``cloudhsmv2``: Update cloudhsmv2 client to latest version
+* api-change:``directconnect``: Update directconnect client to latest version
+
+
 1.7.36
 ======
 
