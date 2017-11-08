@@ -263,7 +263,7 @@ class TestRegionRedirect(BaseS3OperationTest):
         self.assertEqual(self.http_session_send_mock.call_count, 2)
 
         calls = [c[0][0] for c in self.http_session_send_mock.call_args_list]
-        initial_url = ('https://s3-us-west-2.amazonaws.com/foo'
+        initial_url = ('https://s3.us-west-2.amazonaws.com/foo'
                        '?encoding-type=url')
         self.assertEqual(calls[0].url, initial_url)
 
@@ -285,7 +285,7 @@ class TestRegionRedirect(BaseS3OperationTest):
 
         self.assertEqual(self.http_session_send_mock.call_count, 3)
         calls = [c[0][0] for c in self.http_session_send_mock.call_args_list]
-        initial_url = ('https://s3-us-west-2.amazonaws.com/foo'
+        initial_url = ('https://s3.us-west-2.amazonaws.com/foo'
                        '?encoding-type=url')
         self.assertEqual(calls[0].url, initial_url)
 
@@ -375,23 +375,23 @@ def test_correct_url_used_for_s3():
     yield t.case(region='us-west-2', bucket='bucket', key='key',
                  signature_version='s3v4',
                  expected_url=(
-                     'https://s3-us-west-2.amazonaws.com/bucket/key'))
+                     'https://s3.us-west-2.amazonaws.com/bucket/key'))
     yield t.case(region='us-east-1', bucket='bucket', key='key',
                  signature_version='s3v4',
                  expected_url='https://s3.amazonaws.com/bucket/key')
     yield t.case(region='us-west-1', bucket='bucket', key='key',
                  signature_version='s3v4',
                  expected_url=(
-                     'https://s3-us-west-1.amazonaws.com/bucket/key'))
+                     'https://s3.us-west-1.amazonaws.com/bucket/key'))
     yield t.case(region='us-west-1', bucket='bucket', key='key',
                  signature_version='s3v4', is_secure=False,
                  expected_url=(
-                     'http://s3-us-west-1.amazonaws.com/bucket/key'))
+                     'http://s3.us-west-1.amazonaws.com/bucket/key'))
 
     # If you don't have a DNS compatible bucket, we use path style.
     yield t.case(
         region='us-west-2', bucket='bucket.dot', key='key',
-        expected_url='https://s3-us-west-2.amazonaws.com/bucket.dot/key')
+        expected_url='https://s3.us-west-2.amazonaws.com/bucket.dot/key')
     yield t.case(
         region='us-east-1', bucket='bucket.dot', key='key',
         expected_url='https://s3.amazonaws.com/bucket.dot/key')
@@ -421,7 +421,7 @@ def test_correct_url_used_for_s3():
     yield t.case(
         region='us-west-2', bucket='bucket', key='key',
         s3_config=virtual_hosting,
-        expected_url='https://bucket.s3-us-west-2.amazonaws.com/key')
+        expected_url='https://bucket.s3.us-west-2.amazonaws.com/key')
     yield t.case(
         region='eu-central-1', bucket='bucket', key='key',
         s3_config=virtual_hosting,
@@ -436,13 +436,13 @@ def test_correct_url_used_for_s3():
     yield t.case(
         region='us-gov-west-1', bucket='bucket', key='key',
         s3_config=virtual_hosting,
-        expected_url='https://bucket.s3-us-gov-west-1.amazonaws.com/key')
+        expected_url='https://bucket.s3.us-gov-west-1.amazonaws.com/key')
 
     # Test restricted regions not do virtual host by default
     yield t.case(
         region='us-gov-west-1', bucket='bucket', key='key',
         signature_version='s3',
-        expected_url='https://s3-us-gov-west-1.amazonaws.com/bucket/key')
+        expected_url='https://s3.us-gov-west-1.amazonaws.com/bucket/key')
     yield t.case(
         region='fips-us-gov-west-1', bucket='bucket', key='key',
         signature_version='s3',
