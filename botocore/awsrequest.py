@@ -18,20 +18,18 @@ import functools
 import socket
 import inspect
 
-from botocore.compat import six
-from botocore.compat import HTTPHeaders, HTTPResponse, urlunsplit, urlsplit,\
-    urlparse
-from botocore.exceptions import UnseekableStreamError
-from botocore.utils import percent_encode_sequence
-from botocore.vendored.requests import models
-from botocore.vendored.requests.sessions import REDIRECT_STATI
-from botocore.vendored.requests.packages.urllib3.connection import \
+from .compat import six
+from .compat import HTTPHeaders, HTTPResponse, urlunsplit, urlsplit, urlparse
+from .exceptions import UnseekableStreamError
+from .utils import percent_encode_sequence
+from .vendored.requests import models
+from .vendored.requests.sessions import REDIRECT_STATI
+from .vendored.requests.packages.urllib3.connection import \
     VerifiedHTTPSConnection
-from botocore.vendored.requests.packages.urllib3.connection import \
-    HTTPConnection
-from botocore.vendored.requests.packages.urllib3.connectionpool import \
+from .vendored.requests.packages.urllib3.connection import HTTPConnection
+from .vendored.requests.packages.urllib3.connectionpool import \
     HTTPConnectionPool
-from botocore.vendored.requests.packages.urllib3.connectionpool import \
+from .vendored.requests.packages.urllib3.connectionpool import \
     HTTPSConnectionPool
 
 

@@ -13,15 +13,15 @@
 
 from itertools import tee
 
-from botocore.compat import six
+from .compat import six
 
 import jmespath
 import json
 import base64
 import logging
-from botocore.exceptions import PaginationError
-from botocore.compat import zip
-from botocore.utils import set_value_from_jmespath, merge_dicts
+from .exceptions import PaginationError
+from .compat import zip
+from .utils import set_value_from_jmespath, merge_dicts
 
 
 log = logging.getLogger(__name__)

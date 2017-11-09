@@ -17,21 +17,21 @@ import logging
 import time
 import threading
 
-from botocore.vendored.requests.adapters import HTTPAdapter
-from botocore.vendored.requests.sessions import Session
-from botocore.vendored.requests.utils import get_environ_proxies
-from botocore.vendored.requests.exceptions import ConnectionError
-from botocore.vendored import six
+from .vendored.requests.adapters import HTTPAdapter
+from .vendored.requests.sessions import Session
+from .vendored.requests.utils import get_environ_proxies
+from .vendored.requests.exceptions import ConnectionError
+from .vendored import six
 
-from botocore.awsrequest import create_request_object
-from botocore.exceptions import UnknownEndpointError
-from botocore.exceptions import EndpointConnectionError
-from botocore.exceptions import ConnectionClosedError
-from botocore.compat import filter_ssl_warnings
-from botocore.utils import is_valid_endpoint_url
-from botocore.hooks import first_non_none_response
-from botocore.response import StreamingBody
-from botocore import parsers
+from .awsrequest import create_request_object
+from .exceptions import UnknownEndpointError
+from .exceptions import EndpointConnectionError
+from .exceptions import ConnectionClosedError
+from .compat import filter_ssl_warnings
+from .utils import is_valid_endpoint_url
+from .hooks import first_non_none_response
+from .response import StreamingBody
+from . import parsers
 
 
 logger = logging.getLogger(__name__)
@@ -40,7 +40,7 @@ MAX_POOL_CONNECTIONS = 10
 filter_ssl_warnings()
 
 try:
-    from botocore.vendored.requests.packages.urllib3.contrib import pyopenssl
+    from .vendored.requests.packages.urllib3.contrib import pyopenssl
     pyopenssl.extract_from_urllib3()
 except ImportError:
     pass

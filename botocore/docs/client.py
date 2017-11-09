@@ -12,11 +12,11 @@
 # language governing permissions and limitations under the License.
 import inspect
 
-from botocore.docs.utils import get_official_service_name
-from botocore.docs.method import document_custom_method
-from botocore.docs.method import document_model_driven_method
-from botocore.docs.method import get_instance_public_methods
-from botocore.docs.sharedexample import document_shared_examples
+from .utils import get_official_service_name
+from .method import document_custom_method
+from .method import document_model_driven_method
+from .method import get_instance_public_methods
+from .sharedexample import document_shared_examples
 
 
 class ClientDocumenter(object):

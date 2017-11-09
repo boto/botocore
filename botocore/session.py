@@ -21,10 +21,10 @@ import logging
 import os
 import platform
 
-from botocore import __version__
-import botocore.configloader
-import botocore.credentials
-import botocore.client
+from . import __version__
+from . import configloader
+from . import credentials as botocore_credentials
+from . import client as botocore_client
 from botocore.exceptions import ConfigNotFound, ProfileNotFound
 from botocore.exceptions import UnknownServiceError, PartialCredentialsError
 from botocore.errorfactory import ClientExceptionsFactory
@@ -176,7 +176,7 @@ class Session(object):
     def _register_credential_provider(self):
         self._components.lazy_register_component(
             'credential_provider',
-            lambda:  botocore.credentials.create_credential_resolver(self))
+            lambda:  botocore_credentials.create_credential_resolver(self))
 
     def _register_data_loader(self):
         self._components.lazy_register_component(
@@ -397,7 +397,7 @@ class Session(object):
         if self._config is None:
             try:
                 config_file = self.get_config_variable('config_file')
-                self._config = botocore.configloader.load_config(config_file)
+                self._config = configloader.load_config(config_file)
             except ConfigNotFound:
                 self._config = {'profiles': {}}
             try:
@@ -407,7 +407,7 @@ class Session(object):
                 # can validate the user is not referring to a nonexistent
                 # profile.
                 cred_file = self.get_config_variable('credentials_file')
-                cred_profiles = botocore.configloader.raw_config_parse(
+                cred_profiles = configloader.raw_config_parse(
                     cred_file)
                 for profile in cred_profiles:
                     cred_vars = cred_profiles[profile]
@@ -456,7 +456,7 @@ class Session(object):
         :param token: An option session token used by STS session
             credentials.
         """
-        self._credentials = botocore.credentials.Credentials(access_key,
+        self._credentials = botocore_credentials.Credentials(access_key,
                                                              secret_key,
                                                              token)
 
@@ -836,7 +836,7 @@ class Session(object):
         response_parser_factory = self.get_component(
             'response_parser_factory')
         if aws_access_key_id is not None and aws_secret_access_key is not None:
-            credentials = botocore.credentials.Credentials(
+            credentials = botocore_credentials.Credentials(
                 access_key=aws_access_key_id,
                 secret_key=aws_secret_access_key,
                 token=aws_session_token)
@@ -850,7 +850,7 @@ class Session(object):
             credentials = self.get_credentials()
         endpoint_resolver = self.get_component('endpoint_resolver')
         exceptions_factory = self.get_component('exceptions_factory')
-        client_creator = botocore.client.ClientCreator(
+        client_creator = botocore_client.ClientCreator(
             loader, endpoint_resolver, self.user_agent(), event_emitter,
             retryhandler, translate, response_parser_factory,
             exceptions_factory)

@@ -42,13 +42,13 @@ import base64
 from xml.etree import ElementTree
 import calendar
 
-from botocore.compat import six
+from .compat import six
 
-from botocore.compat import json, formatdate
-from botocore.utils import parse_to_aware_datetime
-from botocore.utils import percent_encode
-from botocore.utils import is_json_value_header
-from botocore import validate
+from .compat import json, formatdate
+from .utils import parse_to_aware_datetime
+from .utils import percent_encode
+from .utils import is_json_value_header
+from . import validate
 
 
 # From the spec, the default timestamp format if not specified is iso8601.

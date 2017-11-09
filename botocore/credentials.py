@@ -22,18 +22,18 @@ from collections import namedtuple
 from dateutil.parser import parse
 from dateutil.tz import tzlocal
 
-import botocore.configloader
-import botocore.compat
-from botocore.compat import total_seconds
-from botocore.exceptions import UnknownCredentialError
-from botocore.exceptions import PartialCredentialsError
-from botocore.exceptions import ConfigNotFound
-from botocore.exceptions import InvalidConfigError
-from botocore.exceptions import RefreshWithMFAUnsupportedError
-from botocore.exceptions import MetadataRetrievalError
-from botocore.exceptions import CredentialRetrievalError
-from botocore.utils import InstanceMetadataFetcher, parse_key_val_file
-from botocore.utils import ContainerMetadataFetcher
+from . import configloader
+from . import compat
+from .compat import total_seconds
+from .exceptions import UnknownCredentialError
+from .exceptions import PartialCredentialsError
+from .exceptions import ConfigNotFound
+from .exceptions import InvalidConfigError
+from .exceptions import RefreshWithMFAUnsupportedError
+from .exceptions import MetadataRetrievalError
+from .exceptions import CredentialRetrievalError
+from .utils import InstanceMetadataFetcher, parse_key_val_file
+from .utils import ContainerMetadataFetcher
 
 
 logger = logging.getLogger(__name__)
@@ -182,8 +182,8 @@ class Credentials(object):
         #
         # Eventually the service will decide whether to accept the credential.
         # This also complies with the behavior in Python 3.
-        self.access_key = botocore.compat.ensure_unicode(self.access_key)
-        self.secret_key = botocore.compat.ensure_unicode(self.secret_key)
+        self.access_key = compat.ensure_unicode(self.access_key)
+        self.secret_key = compat.ensure_unicode(self.secret_key)
 
     def get_frozen_credentials(self):
         return ReadOnlyCredentials(self.access_key,
@@ -227,8 +227,8 @@ class RefreshableCredentials(Credentials):
         self._normalize()
 
     def _normalize(self):
-        self._access_key = botocore.compat.ensure_unicode(self._access_key)
-        self._secret_key = botocore.compat.ensure_unicode(self._secret_key)
+        self._access_key = compat.ensure_unicode(self._access_key)
+        self._secret_key = compat.ensure_unicode(self._secret_key)
 
     @classmethod
     def create_from_metadata(cls, metadata, refresh_using, method):
@@ -659,7 +659,7 @@ class SharedCredentialProvider(CredentialProvider):
             profile_name = 'default'
         self._profile_name = profile_name
         if ini_parser is None:
-            ini_parser = botocore.configloader.raw_config_parse
+            ini_parser = configloader.raw_config_parse
         self._ini_parser = ini_parser
 
     def load(self):
@@ -707,7 +707,7 @@ class ConfigProvider(CredentialProvider):
         self._config_filename = config_filename
         self._profile_name = profile_name
         if config_parser is None:
-            config_parser = botocore.configloader.load_config
+            config_parser = configloader.load_config
         self._config_parser = config_parser
 
     def load(self):
@@ -750,7 +750,7 @@ class BotoProvider(CredentialProvider):
         if environ is None:
             environ = os.environ
         if ini_parser is None:
-            ini_parser = botocore.configloader.raw_config_parse
+            ini_parser = configloader.raw_config_parse
         self._environ = environ
         self._ini_parser = ini_parser
 

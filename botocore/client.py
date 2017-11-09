@@ -13,30 +13,30 @@
 import logging
 import functools
 
-from botocore import waiter, xform_name
-from botocore.auth import AUTH_TYPE_MAPS
-from botocore.awsrequest import prepare_request_dict
-from botocore.docs.docstring import ClientMethodDocstring
-from botocore.docs.docstring import PaginatorDocstring
-from botocore.exceptions import ClientError, DataNotFoundError
-from botocore.exceptions import OperationNotPageableError
-from botocore.exceptions import UnknownSignatureVersionError
-from botocore.hooks import first_non_none_response
-from botocore.model import ServiceModel
-from botocore.paginate import Paginator
-from botocore.utils import CachedProperty
-from botocore.utils import get_service_module_name
-from botocore.utils import switch_host_s3_accelerate
-from botocore.utils import S3RegionRedirector
-from botocore.utils import fix_s3_host
-from botocore.utils import switch_to_virtual_host_style
-from botocore.utils import S3_ACCELERATE_WHITELIST
-from botocore.args import ClientArgsCreator
-from botocore.compat import urlsplit
-from botocore import UNSIGNED
+from . import waiter, xform_name
+from .auth import AUTH_TYPE_MAPS
+from .awsrequest import prepare_request_dict
+from .docs.docstring import ClientMethodDocstring
+from .docs.docstring import PaginatorDocstring
+from .exceptions import ClientError, DataNotFoundError
+from .exceptions import OperationNotPageableError
+from .exceptions import UnknownSignatureVersionError
+from .hooks import first_non_none_response
+from .model import ServiceModel
+from .paginate import Paginator
+from .utils import CachedProperty
+from .utils import get_service_module_name
+from .utils import switch_host_s3_accelerate
+from .utils import S3RegionRedirector
+from .utils import fix_s3_host
+from .utils import switch_to_virtual_host_style
+from .utils import S3_ACCELERATE_WHITELIST
+from .args import ClientArgsCreator
+from .compat import urlsplit
+from . import UNSIGNED
 # Keep this imported.  There's pre-existing code that uses
 # "from botocore.client import Config".
-from botocore.config import Config
+from .config import Config
 
 
 logger = logging.getLogger(__name__)

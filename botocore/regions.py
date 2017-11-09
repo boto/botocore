@@ -19,7 +19,7 @@ in a specific AWS partition.
 import logging
 import re
 
-from botocore.exceptions import NoRegionError
+from .exceptions import NoRegionError
 
 LOG = logging.getLogger(__name__)
 DEFAULT_URI_TEMPLATE = '{service}.{region}.{dnsSuffix}'

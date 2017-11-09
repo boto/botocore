@@ -23,13 +23,13 @@ import random
 import dateutil.parser
 from dateutil.tz import tzlocal, tzutc
 
-import botocore
-from botocore.exceptions import InvalidExpressionError, ConfigNotFound
-from botocore.exceptions import InvalidDNSNameError, ClientError
-from botocore.exceptions import MetadataRetrievalError
-from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
-from botocore.vendored import requests
-from botocore.compat import OrderedDict, six
+from .exceptions import InvalidExpressionError, ConfigNotFound
+from .exceptions import InvalidDNSNameError, ClientError
+from .exceptions import MetadataRetrievalError
+from .compat import json, quote, zip_longest, urlparse, urlsplit, urlunsplit
+from .vendored import requests
+from .compat import OrderedDict, six
+from . import UNSIGNED
 
 
 logger = logging.getLogger(__name__)
@@ -684,7 +684,7 @@ def fix_s3_host(request, signature_version, region_name,
     """
     # By default we do not use virtual hosted style addressing when
     # signed with signature version 4.
-    if signature_version is not botocore.UNSIGNED and \
+    if signature_version is not UNSIGNED and \
             's3v4' in signature_version:
         return
     elif not _allowed_region(region_name):
@@ -1025,7 +1025,7 @@ class ContainerMetadataFetcher(object):
         return self._retrieve_credentials(full_url, headers)
 
     def _validate_allowed_url(self, full_url):
-        parsed = botocore.compat.urlparse(full_url)
+        parsed = urlparse(full_url)
         is_whitelisted_host = self._check_if_whitelisted_host(
             parsed.hostname)
         if not is_whitelisted_host:

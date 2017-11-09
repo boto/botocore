@@ -14,10 +14,10 @@ import copy
 from collections import deque
 from pprint import pformat
 
-from botocore.validate import validate_parameters
-from botocore.exceptions import ParamValidationError, \
+from .validate import validate_parameters
+from .exceptions import ParamValidationError, \
     StubResponseError, StubAssertionError
-from botocore.vendored.requests.models import Response
+from .vendored.requests.models import Response
 
 
 class _ANY(object):

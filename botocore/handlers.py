@@ -24,25 +24,25 @@ import re
 import warnings
 import uuid
 
-from botocore.compat import unquote, json, six, unquote_str, \
+from .compat import unquote, json, six, unquote_str, \
     ensure_bytes, get_md5, MD5_AVAILABLE
-from botocore.docs.utils import AutoPopulatedParam
-from botocore.docs.utils import HideParamFromOperations
-from botocore.docs.utils import AppendParamDocumentation
-from botocore.signers import add_generate_presigned_url
-from botocore.signers import add_generate_presigned_post
-from botocore.signers import add_generate_db_auth_token
-from botocore.exceptions import ParamValidationError
-from botocore.exceptions import AliasConflictParameterError
-from botocore.exceptions import UnsupportedTLSVersionWarning
-from botocore.utils import percent_encode, SAFE_CHARS
-from botocore.utils import switch_host_with_param
+from .docs.utils import AutoPopulatedParam
+from .docs.utils import HideParamFromOperations
+from .docs.utils import AppendParamDocumentation
+from .signers import add_generate_presigned_url
+from .signers import add_generate_presigned_post
+from .signers import add_generate_db_auth_token
+from .exceptions import ParamValidationError
+from .exceptions import AliasConflictParameterError
+from .exceptions import UnsupportedTLSVersionWarning
+from .utils import percent_encode, SAFE_CHARS
+from .utils import switch_host_with_param
 
-from botocore import retryhandler
-from botocore import utils
-from botocore import translate
-import botocore
-import botocore.auth
+from . import retryhandler
+from . import utils
+from . import translate
+from . import UNSIGNED
+from . import auth
 
 
 logger = logging.getLogger(__name__)
@@ -116,7 +116,7 @@ def set_operation_specific_signer(context, signing_name, **kwargs):
     # Auth type will be the string value 'none' if the operation should not
     # be signed at all.
     if auth_type == 'none':
-        return botocore.UNSIGNED
+        return UNSIGNED
 
     if auth_type.startswith('v4'):
         signature_version = 'v4'
@@ -309,7 +309,7 @@ def disable_signing(**kwargs):
     This handler disables request signing by setting the signer
     name to a special sentinel value.
     """
-    return botocore.UNSIGNED
+    return UNSIGNED
 
 
 def add_expect_header(model, params, **kwargs):

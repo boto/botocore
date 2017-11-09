@@ -24,16 +24,16 @@ import time
 import calendar
 import json
 
-from botocore.exceptions import NoCredentialsError
-from botocore.utils import normalize_url_path, percent_encode_sequence
-from botocore.compat import HTTPHeaders
-from botocore.compat import quote, unquote, urlsplit, parse_qs
-from botocore.compat import urlunsplit
-from botocore.compat import encodebytes
-from botocore.compat import six
-from botocore.compat import json
-from botocore.compat import MD5_AVAILABLE
-from botocore.compat import ensure_unicode
+from .exceptions import NoCredentialsError
+from .utils import normalize_url_path, percent_encode_sequence
+from .compat import HTTPHeaders
+from .compat import quote, unquote, urlsplit, parse_qs
+from .compat import urlunsplit
+from .compat import encodebytes
+from .compat import six
+from .compat import json
+from .compat import MD5_AVAILABLE
+from .compat import ensure_unicode
 
 logger = logging.getLogger(__name__)
 
