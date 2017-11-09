@@ -36,6 +36,7 @@ SERVICE_RENAMES = {
     'resourcegroupstaggingapi': 'tagging',
     'lex-models': 'models.lex',
     'marketplace-entitlement': 'entitlement.marketplace',
+    'pricing': 'api.pricing',
 }
 
 BLACKLIST = [
