@@ -37,9 +37,11 @@ from botocore import UNSIGNED
 # Keep this imported.  There's pre-existing code that uses
 # "from botocore.client import Config".
 from botocore.config import Config
+from botocore.history import get_global_history_recorder
 
 
 logger = logging.getLogger(__name__)
+history_recorder = get_global_history_recorder()
 
 
 class ClientCreator(object):
@@ -566,6 +568,11 @@ class BaseClient(object):
     def _make_api_call(self, operation_name, api_params):
         operation_model = self._service_model.operation_model(operation_name)
         service_name = self._service_model.service_name
+        history_recorder.record('API_CALL', {
+            'service': service_name,
+            'operation': operation_name,
+            'params': api_params,
+        })
         if operation_model.deprecated:
             logger.debug('Warning: %s.%s() is deprecated',
                          service_name, operation_name)
