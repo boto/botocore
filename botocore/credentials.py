@@ -788,8 +788,8 @@ class AssumeRoleProvider(CredentialProvider):
     # EXPIRY_WINDOW.
     EXPIRY_WINDOW_SECONDS = 60 * 15
 
-    def __init__(self, load_config, client_creator, cache, profile_name,
-                 prompter=getpass.getpass):
+    def __init__(self, load_config, client_creator, cache,
+                 profile_name, prompter=getpass.getpass):
         """
 
         :type load_config: callable
@@ -839,11 +839,31 @@ class AssumeRoleProvider(CredentialProvider):
     def load(self):
         self._loaded_config = self._load_config()
         if self._has_assume_role_config_vars():
-            return self._load_creds_via_assume_role()
+            if self._source_profile_has_keys():
+                return self._load_creds_via_assume_role()
+            else:
+                return self._load_creds_via_assume_role_from_indirect()
 
     def _has_assume_role_config_vars(self):
         profiles = self._loaded_config.get('profiles', {})
-        return self.ROLE_CONFIG_VAR in profiles.get(self._profile_name, {})
+        profile_config = profiles.get(self._profile_name, {})
+        if self.ROLE_CONFIG_VAR not in profile_config:
+            return False
+
+        if 'source_profile' not in profile_config:
+            msg = ('Profile (%s) has no source_profile defined.' %
+                   (self._profile_name,))
+            raise PartialCredentialsError(provider=self.METHOD,
+                                          cred_var=msg)
+
+        return True
+
+    def _source_profile_has_keys(self):
+        source_profile = (self._loaded_config['profiles']
+                          .get(self._profile_name, {})['source_profile'])
+        source_profile_config = (
+            self._loaded_config['profiles'].get(source_profile, {}))
+        return 'aws_access_key_id' in source_profile_config
 
     def _load_creds_via_assume_role(self):
         # We can get creds in one of two ways:
@@ -851,19 +871,22 @@ class AssumeRoleProvider(CredentialProvider):
         # * Cache doesn't have the creds (or is expired) so we need to make
         #   an assume role call to get temporary creds, which we then cache
         #   for subsequent requests.
-        creds = self._load_creds_from_cache()
+        role_config = self._get_role_config_values()
+        client = self._create_client_from_config(role_config)
+        creds = self._load_creds_from_cache(client)
         if creds is not None:
             logger.debug("Credentials for role retrieved from cache.")
             return creds
         else:
             # We get the Credential used by botocore as well
             # as the original parsed response from the server.
-            creds, response = self._retrieve_temp_credentials()
+            creds, response = self._retrieve_temp_credentials(role_config,
+                                                              client)
             cache_key = self._create_cache_key()
             self._write_cached_credentials(response, cache_key)
             return creds
 
-    def _load_creds_from_cache(self):
+    def _load_creds_from_cache(self, client):
         cache_key = self._create_cache_key()
         try:
             from_cache = self.cache[cache_key]
@@ -875,7 +898,7 @@ class AssumeRoleProvider(CredentialProvider):
                     "Credentials were found in cache, but they are expired.")
                 return None
             else:
-                return self._create_creds_from_response(from_cache)
+                return self._create_creds_from_response(from_cache, client)
         except KeyError:
             return None
 
@@ -885,17 +908,17 @@ class AssumeRoleProvider(CredentialProvider):
         seconds = total_seconds(end_time - now)
         return seconds < self.EXPIRY_WINDOW_SECONDS
 
-    def _create_cache_key(self):
+    def _create_cache_key(self, prefix=''):
         role_config = self._get_role_config_values()
         # On windows, ':' is not allowed in filenames, so we'll
         # replace them with '_' instead.
         role_arn = role_config['role_arn'].replace(':', '_')
         role_session_name = role_config.get('role_session_name')
         if role_session_name:
-            cache_key = '%s--%s--%s' % (self._profile_name, role_arn,
-                                        role_session_name)
+            cache_key = '%s%s--%s--%s' % (prefix, self._profile_name, role_arn,
+                                          role_session_name)
         else:
-            cache_key = '%s--%s' % (self._profile_name, role_arn)
+            cache_key = '%s%s--%s' % (prefix, self._profile_name, role_arn)
 
         return cache_key.replace('/', '-')
 
@@ -905,13 +928,9 @@ class AssumeRoleProvider(CredentialProvider):
     def _get_role_config_values(self):
         # This returns the role related configuration.
         profiles = self._loaded_config.get('profiles', {})
-        try:
-            source_profile = profiles[self._profile_name]['source_profile']
-            role_arn = profiles[self._profile_name]['role_arn']
-            mfa_serial = profiles[self._profile_name].get('mfa_serial')
-        except KeyError as e:
-            raise PartialCredentialsError(provider=self.METHOD,
-                                          cred_var=str(e))
+        role_arn = profiles[self._profile_name]['role_arn']
+        source_profile = profiles[self._profile_name]['source_profile']
+        mfa_serial = profiles[self._profile_name].get('mfa_serial')
         external_id = profiles[self._profile_name].get('external_id')
         role_session_name = \
             profiles[self._profile_name].get('role_session_name')
@@ -931,7 +950,7 @@ class AssumeRoleProvider(CredentialProvider):
             'role_session_name': role_session_name
         }
 
-    def _create_creds_from_response(self, response):
+    def _create_creds_from_response(self, response, client):
         config = self._get_role_config_values()
         if config.get('mfa_serial') is not None:
             # MFA would require getting a new TokenCode which would require
@@ -940,8 +959,7 @@ class AssumeRoleProvider(CredentialProvider):
             refresh_func = create_mfa_serial_refresher()
         else:
             refresh_func = create_assume_role_refresher(
-                self._create_client_from_config(config),
-                self._assume_role_base_kwargs(config))
+                client, self._assume_role_base_kwargs(config))
         return RefreshableCredentials(
             access_key=response['Credentials']['AccessKeyId'],
             secret_key=response['Credentials']['SecretAccessKey'],
@@ -960,15 +978,13 @@ class AssumeRoleProvider(CredentialProvider):
         )
         return client
 
-    def _retrieve_temp_credentials(self):
+    def _retrieve_temp_credentials(self, config, client):
         logger.debug("Retrieving credentials via AssumeRole.")
-        config = self._get_role_config_values()
-        client = self._create_client_from_config(config)
 
         assume_role_kwargs = self._assume_role_base_kwargs(config)
 
         response = client.assume_role(**assume_role_kwargs)
-        creds = self._create_creds_from_response(response)
+        creds = self._create_creds_from_response(response, client)
         return creds, response
 
     def _assume_role_base_kwargs(self, config):
@@ -985,6 +1001,57 @@ class AssumeRoleProvider(CredentialProvider):
             role_session_name = 'AWS-CLI-session-%s' % (int(time.time()))
             assume_role_kwargs['RoleSessionName'] = role_session_name
         return assume_role_kwargs
+
+    def _load_creds_via_assume_role_from_indirect(self):
+        role_config = self._get_role_config_values()
+        client = self._create_client_from_indirect_config(role_config)
+        creds = self._load_indirect_creds_from_cache(client)
+        if creds is not None:
+            logger.debug("Credentials for role retrieved from cache.")
+            return creds
+        else:
+            # We get the Credential used by botocore as well
+            # as the original parsed response from the server.
+            creds, response = self._retrieve_temp_credentials(role_config,
+                                                              client)
+            cache_key = self._create_indirect_cache_key()
+            self._write_cached_credentials(response, cache_key)
+            return creds
+
+    def _load_indirect_creds_from_cache(self, client):
+        cache_key = self._create_indirect_cache_key()
+        try:
+            from_cache = self.cache[cache_key]
+            if self._is_expired(from_cache):
+                # Don't need to delete the cache entry,
+                # when we refresh via AssumeRole, we'll
+                # update the cache with the new entry.
+                logger.debug(
+                    "Credentials were found in cache, but they are expired.")
+                return None
+            else:
+                return self._create_creds_from_response(from_cache, client)
+        except KeyError:
+            return None
+
+    def _create_indirect_cache_key(self):
+        return self._create_cache_key(prefix='indirect---')
+
+    def _create_client_from_indirect_config(self, config):
+        source_cred_values = config['source_cred_values']
+        provider = AssumeRoleProvider(
+            load_config=lambda: self._loaded_config,
+            client_creator=self._client_creator,
+            cache=self.cache,
+            profile_name=self._loaded_config['profiles'][self._profile_name]['source_profile'],
+        )
+        source_profile_creds = provider.load()
+        client = self._client_creator(
+            'sts', aws_access_key_id=source_profile_creds.access_key,
+            aws_secret_access_key=source_profile_creds.secret_key,
+            aws_session_token=source_profile_creds.token,
+        )
+        return client
 
 
 class ContainerProvider(CredentialProvider):

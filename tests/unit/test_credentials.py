@@ -833,6 +833,10 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
     def setUp(self):
         self.fake_config = {
             'profiles': {
+                'development2': {
+                    'role_arn': 'myrole2',
+                    'source_profile': 'development',
+                },
                 'development': {
                     'role_arn': 'myrole',
                     'source_profile': 'longterm',
@@ -1214,6 +1218,109 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         # source_profile is required, we shoudl get an error.
         with self.assertRaises(botocore.exceptions.InvalidConfigError):
             provider.load()
+
+    def test_assume_indirect_role_with_no_cache(self):
+        responses = [
+            {
+                'Credentials': {
+                    'AccessKeyId': 'foo0',
+                    'SecretAccessKey': 'bar0',
+                    'SessionToken': 'baz0',
+                    'Expiration': self.some_future_time().isoformat()
+                },
+            },
+            {
+                'Credentials': {
+                    'AccessKeyId': 'foo1',
+                    'SecretAccessKey': 'bar1',
+                    'SessionToken': 'baz1',
+                    'Expiration': self.some_future_time().isoformat()
+                },
+            },
+        ]
+        client_creator = self.create_client_creator(with_response=responses)
+        provider = credentials.AssumeRoleProvider(
+            self.create_config_loader(),
+            client_creator, cache={}, profile_name='development2')
+
+        creds = provider.load()
+
+        self.assertEqual(creds.access_key, 'foo1')
+        self.assertEqual(creds.secret_key, 'bar1')
+        self.assertEqual(creds.token, 'baz1')
+
+    def test_assume_indirect_role_retrieves_from_cache(self):
+        date_in_future = datetime.utcnow() + timedelta(seconds=1000)
+        utc_timestamp = date_in_future.isoformat() + 'Z'
+        self.fake_config['profiles']['development']['role_arn'] = 'myrole'
+        cache = {
+            'development--myrole': {
+                'Credentials': {
+                    'AccessKeyId': 'foo-dev-cached',
+                    'SecretAccessKey': 'bar-dev-cached',
+                    'SessionToken': 'baz-dev-cached',
+                    'Expiration': utc_timestamp,
+                }
+            },
+            'indirect---development2--myrole2': {
+                'Credentials': {
+                    'AccessKeyId': 'foo-dev2-cached',
+                    'SecretAccessKey': 'bar-dev2-cached',
+                    'SessionToken': 'baz-dev2-cached',
+                    'Expiration': utc_timestamp,
+                }
+            }
+        }
+        provider = credentials.AssumeRoleProvider(
+            self.create_config_loader(), mock.Mock(),
+            cache=cache, profile_name='development2')
+
+        creds = provider.load()
+
+        self.assertEqual(creds.access_key, 'foo-dev2-cached')
+        self.assertEqual(creds.secret_key, 'bar-dev2-cached')
+        self.assertEqual(creds.token, 'baz-dev2-cached')
+
+    def test_assume_indirect_role_in_cache_but_expired(self):
+        expired_creds = datetime.utcnow()
+        valid_creds = expired_creds + timedelta(seconds=60)
+        utc_timestamp = expired_creds.isoformat() + 'Z'
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': valid_creds.isoformat() + 'Z',
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        cache = {
+            'development--myrole': {
+                'Credentials': {
+                    'AccessKeyId': 'foo-dev-cached',
+                    'SecretAccessKey': 'bar-dev-cached',
+                    'SessionToken': 'baz-dev-cached',
+                    'Expiration': valid_creds.isoformat() + 'Z'
+                }
+            },
+            'indirect---development2--myrole2': {
+                'Credentials': {
+                    'AccessKeyId': 'foo-dev2-cached',
+                    'SecretAccessKey': 'bar-dev2-cached',
+                    'SessionToken': 'baz-dev2-cached',
+                    'Expiration': utc_timestamp,
+                }
+            }
+        }
+        provider = credentials.AssumeRoleProvider(
+            self.create_config_loader(), client_creator,
+            cache=cache, profile_name='development2')
+
+        creds = provider.load()
+
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
 
 
 class TestRefreshLogic(unittest.TestCase):
