@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.7.44
+======
+
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``route53``: Update route53 client to latest version
+
+
 1.7.43
 ======
 
