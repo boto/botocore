@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.7.45
+======
+
+* api-change:``ses``: Update ses client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``stepfunctions``: Update stepfunctions client to latest version
+* api-change:``polly``: Update polly client to latest version
+
+
 1.7.44
 ======
 
