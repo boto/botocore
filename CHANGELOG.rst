@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.7.46
+======
+
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.7.45
 ======
 
