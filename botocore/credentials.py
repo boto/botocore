@@ -153,13 +153,23 @@ def create_assume_role_refresher(client, params):
     return refresh
 
 
-def create_mfa_serial_refresher():
-    def _refresher():
-        # We can explore an option in the future to support
-        # reprompting for MFA, but for now we just error out
-        # when the temp creds expire.
-        raise RefreshWithMFAUnsupportedError()
-    return _refresher
+def create_mfa_serial_refresher(actual_refresh):
+
+    class _Refresher(object):
+        def __init__(self, refresh):
+            self._refresh = refresh
+            self._has_been_called = False
+
+        def __call__(self):
+            if self._has_been_called:
+                # We can explore an option in the future to support
+                # reprompting for MFA, but for now we just error out
+                # when the temp creds expire.
+                raise RefreshWithMFAUnsupportedError()
+            self._has_been_called = True
+            return self._refresh()
+
+    return _Refresher(actual_refresh)
 
 
 class Credentials(object):
@@ -444,7 +454,91 @@ class RefreshableCredentials(Credentials):
         return self._frozen_credentials
 
 
-class AssumeRoleCredentialFetcher(object):
+class DeferredRefreshableCredentials(RefreshableCredentials):
+    """Refreshable credentials that don't require initial credentials.
+
+    refresh_using will be called upon first access.
+    """
+    def __init__(self, refresh_using, method, time_fetcher=_local_now):
+        self._refresh_using = refresh_using
+        self._access_key = None
+        self._secret_key = None
+        self._token = None
+        self._expiry_time = None
+        self._time_fetcher = time_fetcher
+        self._refresh_lock = threading.Lock()
+        self.method = method
+        self._frozen_credentials = None
+
+    def refresh_needed(self, refresh_in=None):
+        if any(part is None for part in [self._access_key, self._secret_key]):
+            return True
+        return super(DeferredRefreshableCredentials, self).refresh_needed(
+            refresh_in
+        )
+
+
+class CachedCredentialFetcher(object):
+    def __init__(self, cache=None, expiry_window_seconds=60 * 15):
+        if cache is None:
+            cache = {}
+        self._cache = cache
+        self._cache_key = self._create_cache_key()
+        self._expiry_window_seconds = expiry_window_seconds
+
+    def _create_cache_key(self):
+        raise NotImplementedError('_create_cache_key()')
+
+    def _get_credentials(self):
+        raise NotImplementedError('_get_credentials()')
+
+    def fetch_credentials(self):
+        return self._get_cached_credentials()
+
+    def _get_cached_credentials(self):
+        """Get up-to-date credentials.
+
+        This will check the cache for up-to-date credentials, calling assume
+        role if none are available.
+        """
+        response = self._load_from_cache()
+        if response is None:
+            response = self._get_credentials()
+            self._write_to_cache(response)
+        else:
+            logger.debug("Credentials for role retrieved from cache.")
+
+        creds = response['Credentials']
+        expiration = _serialize_if_needed(creds['Expiration'])
+        return {
+            'access_key': creds['AccessKeyId'],
+            'secret_key': creds['SecretAccessKey'],
+            'token': creds['SessionToken'],
+            'expiry_time': expiration,
+        }
+
+    def _load_from_cache(self):
+        if self._cache_key in self._cache:
+            creds = deepcopy(self._cache[self._cache_key])
+            if not self._is_expired(creds):
+                return creds
+            else:
+                logger.debug(
+                    "Credentials were found in cache, but they are expired."
+                )
+        return None
+
+    def _write_to_cache(self, response):
+        self._cache[self._cache_key] = deepcopy(response)
+
+    def _is_expired(self, credentials):
+        """Check if credentials are expired."""
+        end_time = _parse_if_needed(credentials['Credentials']['Expiration'])
+        seconds = total_seconds(end_time - _local_now())
+        return seconds < self._expiry_window_seconds
+
+
+class AssumeRoleCredentialFetcher(CachedCredentialFetcher):
     def __init__(self, client_creator, source_credentials, role_arn,
                  extra_args=None, mfa_prompter=None, cache=None,
                  expiry_window_seconds=60 * 15):
@@ -545,18 +639,20 @@ class AssumeRoleCredentialFetcher(object):
             self._write_to_cache(response)
         else:
             logger.debug("Credentials for role retrieved from cache.")
+
+        creds = response['Credentials']
+        expiration = _serialize_if_needed(creds['Expiration'])
         return {
-            'access_key': response['Credentials']['AccessKeyId'],
-            'secret_key': response['Credentials']['SecretAccessKey'],
-            'token': response['Credentials']['SessionToken'],
-            'expiry_time': response['Credentials']['Expiration'],
+            'access_key': creds['AccessKeyId'],
+            'secret_key': creds['SecretAccessKey'],
+            'token': creds['SessionToken'],
+            'expiry_time': expiration,
         }
 
     def _is_expired(self, credentials):
         """Check if credentials are expired."""
         end_time = _parse_if_needed(credentials['Credentials']['Expiration'])
-        now = datetime.datetime.now(tzlocal())
-        seconds = total_seconds(end_time - now)
+        seconds = total_seconds(end_time - _local_now())
         return seconds < self._expiry_window_seconds
 
     def _get_credentials(self):
@@ -1064,19 +1160,14 @@ class AssumeRoleProvider(CredentialProvider):
             mfa_prompter=self._prompter,
             cache=self.cache,
         )
-        base_credentials = fetcher.fetch_credentials()
-
+        refresher = fetcher.fetch_credentials
         if mfa_serial is not None:
-            refresher = create_mfa_serial_refresher()
-        else:
-            refresher = fetcher.fetch_credentials
+            refresher = create_mfa_serial_refresher(refresher)
 
-        expiration = _parse_if_needed(base_credentials['expiry_time'])
-        return RefreshableCredentials(
-            access_key=base_credentials['access_key'],
-            secret_key=base_credentials['secret_key'],
-            token=base_credentials['token'],
-            expiry_time=expiration,
+        # The initial credentials are empty and the expiration time is set
+        # to now so that we can delay the call to assume role until it is
+        # strictly needed.
+        return DeferredRefreshableCredentials(
             method=self.METHOD,
             refresh_using=refresher,
             time_fetcher=_local_now
