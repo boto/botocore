@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.7.47
+======
+
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``dms``: Update dms client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+
+
 1.7.46
 ======
 
