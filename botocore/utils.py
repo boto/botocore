@@ -930,7 +930,6 @@ class S3RegionRedirector(object):
             " %s; Please configure the proper region to avoid multiple "
             "unnecessary redirects and signing attempts." % (
                 client_region, bucket, new_region))
-
         endpoint = self._endpoint_resolver.resolve('s3', new_region)
         endpoint = endpoint['endpoint_url']
 
