@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.7.48
+======
+
+* api-change:``workdocs``: Update workdocs client to latest version
+* api-change:``kinesis``: Update kinesis client to latest version
+* api-change:``codecommit``: Update codecommit client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``firehose``: Update firehose client to latest version
+* api-change:``ce``: Update ce client to latest version
+
+
 1.7.47
 ======
 
