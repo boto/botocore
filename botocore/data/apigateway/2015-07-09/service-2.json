@@ -5,6 +5,7 @@
     "endpointPrefix":"apigateway",
     "protocol":"rest-json",
     "serviceFullName":"Amazon API Gateway",
+    "serviceId":"API Gateway",
     "signatureVersion":"v4",
     "uid":"apigateway-2015-07-09"
   },
@@ -960,7 +961,7 @@
         {"shape":"NotFoundException"},
         {"shape":"TooManyRequestsException"}
       ],
-      "documentation":"<p>Represents a get integration.</p>"
+      "documentation":"<p>Get the integration settings.</p>"
     },
     "GetIntegrationResponse":{
       "name":"GetIntegrationResponse",
@@ -1853,6 +1854,20 @@
     }
   },
   "shapes":{
+    "AccessLogSettings":{
+      "type":"structure",
+      "members":{
+        "format":{
+          "shape":"String",
+          "documentation":"<p>A single line format of the access logs of data, as specified by selected <a href=\"http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html#context-variable-reference\">$context variables</a>. The format must include at least <code>$context.requestId</code>.</p>"
+        },
+        "destinationArn":{
+          "shape":"String",
+          "documentation":"<p>The ARN of the CloudWatch Logs log group to receive access logs.</p>"
+        }
+      },
+      "documentation":"<p>Access log settings, including the access log format and access log destination ARN.</p>"
+    },
     "Account":{
       "type":"structure",
       "members":{
@@ -3229,6 +3244,10 @@
           "shape":"String",
           "documentation":"<p>The domain name associated with the regional endpoint for this custom domain name. You set up this association by adding a DNS record that points the custom domain name to this regional domain name. The regional domain name is returned by Amazon API Gateway when you create a regional endpoint.</p>"
         },
+        "regionalHostedZoneId":{
+          "shape":"String",
+          "documentation":"<p>The region-specific Amazon Route 53 Hosted Zone ID of the regional endpoint. For more information, see <a href=\"https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-regional-api-custom-domain-create.html\">Set up a Regional Custom Domain Name</a> and <a href=\"http://docs.aws.amazon.com/general/latest/gr/rande.html#apigateway_region\">AWS Regions and Endpoints for API Gateway</a>. </p>"
+        },
         "regionalCertificateName":{
           "shape":"String",
           "documentation":"<p>The name of the certificate that will be used for validating the regional domain name.</p>"
@@ -3240,6 +3259,10 @@
         "distributionDomainName":{
           "shape":"String",
           "documentation":"<p>The domain name of the Amazon CloudFront distribution associated with this custom domain name for an edge-optimized endpoint. You set up this association when adding a DNS record pointing the custom domain name to this distribution name. For more information about CloudFront distributions, see the <a href=\"http://aws.amazon.com/documentation/cloudfront/\" target=\"_blank\">Amazon CloudFront documentation</a>.</p>"
+        },
+        "distributionHostedZoneId":{
+          "shape":"String",
+          "documentation":"<p>The region-agnostic Amazon Route 53 Hosted Zone ID of the edge-optimized endpoint. The valid value is <code>Z2FDTNDATAQYW2</code> for all the regions. For more information, see <a href=\"https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-regional-api-custom-domain-create.html\">Set up a Regional Custom Domain Name</a> and <a href=\"http://docs.aws.amazon.com/general/latest/gr/rande.html#apigateway_region\">AWS Regions and Endpoints for API Gateway</a>. </p>"
         },
         "endpointConfiguration":{
           "shape":"EndpointConfiguration",
@@ -3719,6 +3742,12 @@
           "documentation":"<p>The maximum number of returned results per page.</p>",
           "location":"querystring",
           "locationName":"limit"
+        },
+        "locationStatus":{
+          "shape":"LocationStatusType",
+          "documentation":"<p>The status of the API documentation parts to retrieve. Valid values are <code>DOCUMENTED</code> for retrieving <a>DocumentationPart</a> resources with content and <code>UNDOCUMENTED</code> for <a>DocumentationPart</a> resources without content.</p>",
+          "location":"querystring",
+          "locationName":"locationStatus"
         }
       },
       "documentation":"<p>Gets the documentation parts of an API. The result may be filtered by the type, name, or path of API entities (targets).</p>"
@@ -3915,7 +3944,7 @@
           "locationName":"http_method"
         }
       },
-      "documentation":"<p>Represents a get integration request.</p>"
+      "documentation":"<p>Represents a request to get the integration configuration.</p>"
     },
     "GetIntegrationResponseRequest":{
       "type":"structure",
@@ -4252,7 +4281,7 @@
         },
         "sdkType":{
           "shape":"String",
-          "documentation":"<p>The language for the generated SDK. Currently <code>java</code>, <code>javascript</code>, <code>android</code>, <code>objectivec</code> and <code>swift</code> (for iOS) are supported.</p>",
+          "documentation":"<p>The language for the generated SDK. Currently <code>java</code>, <code>javascript</code>, <code>android</code>, <code>objectivec</code> (for iOS), <code>swift</code> (for iOS), and <code>ruby</code> are supported.</p>",
           "location":"uri",
           "locationName":"sdk_type"
         },
@@ -4545,7 +4574,7 @@
         },
         "parameters":{
           "shape":"MapOfStringToString",
-          "documentation":"<p>Custom header parameters as part of the request. For example, to exclude <a>DocumentationParts</a> from an imported API, set <code>ignore=documentation</code> as a <code>parameters</code> value, as in the AWS CLI command of <code>aws apigateway import-rest-api --parameters ignore=documentation --body 'file:///path/to/imported-api-body.json</code>.</p>",
+          "documentation":"<p>A key-value map of context-specific query string parameters specifying the behavior of different API importing operations. The following shows operation-specific parameters and their supported values.</p> <p> To exclude <a>DocumentationParts</a> from the import, set <code>parameters</code> as <code>ignore=documentation</code>.</p> <p> To configure the endpoint type, set <code>parameters</code> as <code>endpointConfigurationTypes=EDGE</code> or<code>endpointConfigurationTypes=REGIONAL</code>. The default endpoint type is <code>EDGE</code>.</p> <p> To handle imported <code>basePath</code>, set <code>parameters</code> as <code>basePath=ignore</code>, <code>basePath=prepend</code> or <code>basePath=split</code>.</p> <p>For example, the AWS CLI command to exclude documentation from the imported API is:</p> <pre><code>aws apigateway import-rest-api --parameters ignore=documentation --body 'file:///path/to/imported-api-body.json</code></pre> <p>The AWS CLI command to set the regional endpoint on the imported API is:</p> <pre><code>aws apigateway import-rest-api --parameters endpointConfigurationTypes=REGIONAL --body 'file:///path/to/imported-api-body.json</code></pre>",
           "location":"querystring"
         },
         "body":{
@@ -4591,6 +4620,10 @@
         "contentHandling":{
           "shape":"ContentHandlingStrategy",
           "documentation":"<p>Specifies how to handle request payload content type conversions. Supported values are <code>CONVERT_TO_BINARY</code> and <code>CONVERT_TO_TEXT</code>, with the following behaviors:</p> <ul> <li><p><code>CONVERT_TO_BINARY</code>: Converts a request payload from a Base64-encoded string to the corresponding binary blob.</p></li> <li><p><code>CONVERT_TO_TEXT</code>: Converts a request payload from a binary blob to a Base64-encoded string.</p></li> </ul> <p>If this property is not defined, the request payload will be passed through from the method request to integration request without modification, provided that the <code>passthroughBehaviors</code> is configured to support payload pass-through.</p>"
+        },
+        "timeoutInMillis":{
+          "shape":"Integer",
+          "documentation":"<p>Custom timeout between 50 and 29,000 milliseconds. The default value is 29,000 milliseconds or 29 seconds.</p>"
         },
         "cacheNamespace":{
           "shape":"String",
@@ -4762,6 +4795,13 @@
     "ListOfUsagePlanKey":{
       "type":"list",
       "member":{"shape":"UsagePlanKey"}
+    },
+    "LocationStatusType":{
+      "type":"string",
+      "enum":[
+        "DOCUMENTED",
+        "UNDOCUMENTED"
+      ]
     },
     "Long":{"type":"long"},
     "MapOfHeaderValues":{
@@ -5127,6 +5167,10 @@
         "contentHandling":{
           "shape":"ContentHandlingStrategy",
           "documentation":"<p>Specifies how to handle request payload content type conversions. Supported values are <code>CONVERT_TO_BINARY</code> and <code>CONVERT_TO_TEXT</code>, with the following behaviors:</p> <ul> <li><p><code>CONVERT_TO_BINARY</code>: Converts a request payload from a Base64-encoded string to the corresponding binary blob.</p></li> <li><p><code>CONVERT_TO_TEXT</code>: Converts a request payload from a binary blob to a Base64-encoded string.</p></li> </ul> <p>If this property is not defined, the request payload will be passed through from the method request to integration request without modification, provided that the <code>passthroughBehaviors</code> is configured to support payload pass-through.</p>"
+        },
+        "timeoutInMillis":{
+          "shape":"NullableInteger",
+          "documentation":"<p>Custom timeout between 50 and 29,000 milliseconds. The default value is 29,000 milliseconds or 29 seconds.</p>"
         }
       },
       "documentation":"<p>Sets up a method's integration.</p>"
@@ -5618,6 +5662,10 @@
         "documentationVersion":{
           "shape":"String",
           "documentation":"<p>The version of the associated API documentation.</p>"
+        },
+        "accessLogSettings":{
+          "shape":"AccessLogSettings",
+          "documentation":"<p>The access log settings in this stage.</p>"
         },
         "createdDate":{
           "shape":"Timestamp",

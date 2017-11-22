@@ -2,6 +2,73 @@
 CHANGELOG
 =========
 
+1.8.0
+=====
+
+* api-change:``rekognition``: Update rekognition client to latest version
+* api-change:``emr``: Update emr client to latest version
+* api-change:``xray``: Update xray client to latest version
+* feature:Credentials: When creating an assume role profile, you can now specify a credential source outside of the config file using the `credential_source` key.
+* api-change:``shield``: Update shield client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* feature:Credentials: When creating an assume role profile, you can now specify another assume role profile as the source. This allows for chaining assume role calls.
+* api-change:``codebuild``: Update codebuild client to latest version
+* feature:credentials: Adds support for the process credential provider, allowing users to specify a process to call to get credentials.
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* enhancement:Response: Allow reads of zero on streaming bodies, fixes `#1309 <https://github.com/boto/botocore/issues/1309>`__.
+
+
+1.7.48
+======
+
+* api-change:``workdocs``: Update workdocs client to latest version
+* api-change:``kinesis``: Update kinesis client to latest version
+* api-change:``codecommit``: Update codecommit client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``firehose``: Update firehose client to latest version
+* api-change:``ce``: Update ce client to latest version
+
+
+1.7.47
+======
+
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``dms``: Update dms client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+
+
+1.7.46
+======
+
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.7.45
+======
+
+* api-change:``ses``: Update ses client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``stepfunctions``: Update stepfunctions client to latest version
+* api-change:``polly``: Update polly client to latest version
+
+
+1.7.44
+======
+
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``route53``: Update route53 client to latest version
+
+
 1.7.43
 ======
 

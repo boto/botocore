@@ -79,6 +79,7 @@
           }
         },
         "endpoints" : {
+          "ap-south-1" : { },
           "us-east-1" : { }
         }
       },
@@ -474,6 +475,17 @@
           "ap-southeast-2" : { },
           "eu-west-1" : { },
           "us-east-1" : { },
+          "us-west-2" : { }
+        }
+      },
+      "dax" : {
+        "endpoints" : {
+          "ap-northeast-1" : { },
+          "ap-south-1" : { },
+          "eu-west-1" : { },
+          "sa-east-1" : { },
+          "us-east-1" : { },
+          "us-west-1" : { },
           "us-west-2" : { }
         }
       },
@@ -1135,9 +1147,18 @@
       "polly" : {
         "endpoints" : {
           "ap-northeast-1" : { },
+          "ap-northeast-2" : { },
+          "ap-south-1" : { },
+          "ap-southeast-1" : { },
+          "ap-southeast-2" : { },
+          "ca-central-1" : { },
+          "eu-central-1" : { },
           "eu-west-1" : { },
+          "eu-west-2" : { },
+          "sa-east-1" : { },
           "us-east-1" : { },
           "us-east-2" : { },
+          "us-west-1" : { },
           "us-west-2" : { }
         }
       },
@@ -1640,6 +1661,11 @@
       }
     },
     "services" : {
+      "apigateway" : {
+        "endpoints" : {
+          "cn-north-1" : { }
+        }
+      },
       "application-autoscaling" : {
         "defaults" : {
           "credentialScope" : {
@@ -1942,9 +1968,20 @@
           "us-gov-west-1" : { }
         }
       },
-      "dynamodb" : {
+      "dms" : {
         "endpoints" : {
           "us-gov-west-1" : { }
+        }
+      },
+      "dynamodb" : {
+        "endpoints" : {
+          "us-gov-west-1" : { },
+          "us-gov-west-1-fips" : {
+            "credentialScope" : {
+              "region" : "us-gov-west-1"
+            },
+            "hostname" : "dynamodb.us-gov-west-1.amazonaws.com"
+          }
         }
       },
       "ec2" : {
@@ -1953,6 +1990,11 @@
         }
       },
       "elasticache" : {
+        "endpoints" : {
+          "us-gov-west-1" : { }
+        }
+      },
+      "elasticbeanstalk" : {
         "endpoints" : {
           "us-gov-west-1" : { }
         }
@@ -2089,7 +2131,13 @@
           }
         },
         "endpoints" : {
-          "us-gov-west-1" : { }
+          "us-gov-west-1" : { },
+          "us-gov-west-1-fips" : {
+            "credentialScope" : {
+              "region" : "us-gov-west-1"
+            },
+            "hostname" : "dynamodb.us-gov-west-1.amazonaws.com"
+          }
         }
       },
       "sts" : {

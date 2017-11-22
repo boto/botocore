@@ -3629,7 +3629,10 @@
     },
     "InventoryFormat":{
       "type":"string",
-      "enum":["CSV"]
+      "enum":[
+        "CSV",
+        "ORC"
+      ]
     },
     "InventoryFrequency":{
       "type":"string",
