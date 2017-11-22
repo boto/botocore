@@ -2455,8 +2455,8 @@ class TestProcessProvider(BaseEnvVar):
         self.assertEqual(creds.token, 'baz')
         self.assertEqual(creds.method, 'custom-process')
         self.popen_mock.assert_called_with(
-            ['my-process'],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            'my-process',
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
         )
 
     def test_can_pass_arguments_through(self):
@@ -2477,8 +2477,8 @@ class TestProcessProvider(BaseEnvVar):
         creds = provider.load()
         self.assertIsNotNone(creds)
         self.popen_mock.assert_called_with(
-            ['my-process', '--foo', '--bar', 'one two'],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            'my-process --foo --bar "one two"',
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
         )
 
     def test_can_refresh_credentials(self):

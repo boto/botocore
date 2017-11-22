@@ -18,7 +18,6 @@ import os
 import getpass
 import threading
 import subprocess
-import shlex
 from collections import namedtuple
 from copy import deepcopy
 from hashlib import sha256
@@ -740,12 +739,13 @@ class ProcessProvider(CredentialProvider):
         )
 
     def _retrieve_credentials_using(self, credential_process):
-        # We're not using shell=True, so we need to pass the
-        # command and all arguments as a list.
-        process_list = shlex.split(credential_process)
-        p = self._popen(process_list,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE)
+        # We have to use shell=True to make Windows work
+        p = self._popen(
+            credential_process,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=True
+        )
         stdout, stderr = p.communicate()
         if p.returncode != 0:
             raise CredentialRetrievalError(
