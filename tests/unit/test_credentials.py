@@ -197,7 +197,7 @@ class TestAssumeRoleCredentialRefresher(BaseEnvVar):
     def get_expected_creds_from_response(self, response):
         expiration = response['Credentials']['Expiration']
         if isinstance(expiration, datetime):
-            expiration = expiration.strftime('%Y-%m-%dT%H:%M:%S%Z')
+            expiration = expiration.isoformat()
         return {
             'access_key': response['Credentials']['AccessKeyId'],
             'secret_key': response['Credentials']['SecretAccessKey'],
