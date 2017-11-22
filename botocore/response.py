@@ -73,7 +73,7 @@ class StreamingBody(object):
         """
         chunk = self._raw_stream.read(amt)
         self._amount_read += len(chunk)
-        if not chunk or amt is None:
+        if amt is None or (not chunk and amt > 0):
             # If the server sends empty contents or
             # we ask to read all of the contents, then we know
             # we need to verify the content length.
