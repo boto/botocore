@@ -2,6 +2,23 @@
 CHANGELOG
 =========
 
+1.8.0
+=====
+
+* api-change:``rekognition``: Update rekognition client to latest version
+* api-change:``emr``: Update emr client to latest version
+* api-change:``xray``: Update xray client to latest version
+* feature:Credentials: When creating an assume role profile, you can now specify a credential source outside of the config file using the `credential_source` key.
+* api-change:``shield``: Update shield client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* feature:Credentials: When creating an assume role profile, you can now specify another assume role profile as the source. This allows for chaining assume role calls.
+* api-change:``codebuild``: Update codebuild client to latest version
+* feature:credentials: Adds support for the process credential provider, allowing users to specify a process to call to get credentials.
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* enhancement:Response: Allow reads of zero on streaming bodies, fixes `#1309 <https://github.com/boto/botocore/issues/1309>`__.
+
+
 1.7.48
 ======
 

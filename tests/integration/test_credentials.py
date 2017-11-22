@@ -132,7 +132,10 @@ class TestCredentialPrecedence(BaseEnvVar):
 
 class TestAssumeRoleCredentials(BaseEnvVar):
     def setUp(self):
+        self.env_original = os.environ.copy()
+        self.environ_copy = os.environ.copy()
         super(TestAssumeRoleCredentials, self).setUp()
+        os.environ = self.environ_copy
         self.parent_session = Session()
         self.iam = self.parent_session.create_client('iam')
         self.sts = self.parent_session.create_client('sts')
@@ -158,6 +161,7 @@ class TestAssumeRoleCredentials(BaseEnvVar):
     def tearDown(self):
         super(TestAssumeRoleCredentials, self).tearDown()
         shutil.rmtree(self.tempdir)
+        os.environ = self.env_original.copy()
 
     def random_name(self):
         return 'botocoretest-' + random_chars(10)
@@ -203,7 +207,7 @@ class TestAssumeRoleCredentials(BaseEnvVar):
         return creds
 
     def wait_for_assume_role(self, role_arn, access_key, secret_key,
-                             token=None, attempts=5, delay=5):
+                             token=None, attempts=20, delay=5):
         # "Why not use the policy simulator?" you might ask. The answer is
         # that the policy simulator will return success far before you can
         # actually make the calls.
@@ -313,7 +317,7 @@ class TestAssumeRoleCredentials(BaseEnvVar):
         )
 
         # Configure our credentials file to be THE credentials file
-        self.environ['AWS_CONFIG_FILE'] = self.config_file
+        os.environ['AWS_CONFIG_FILE'] = self.config_file
 
         self.assert_s3_read_only_session(Session(profile='final'))
 
@@ -347,8 +351,8 @@ class TestAssumeRoleCredentials(BaseEnvVar):
         # Setup the environment so that our new config file is THE config
         # file and add the expected credentials since we're using the
         # environment as our credential source.
-        self.environ['AWS_CONFIG_FILE'] = self.config_file
-        self.environ['AWS_SECRET_ACCESS_KEY'] = user_creds['SecretAccessKey']
-        self.environ['AWS_ACCESS_KEY_ID'] = user_creds['AccessKeyId']
+        os.environ['AWS_CONFIG_FILE'] = self.config_file
+        os.environ['AWS_SECRET_ACCESS_KEY'] = user_creds['SecretAccessKey']
+        os.environ['AWS_ACCESS_KEY_ID'] = user_creds['AccessKeyId']
 
         self.assert_s3_read_only_session(Session(profile='assume'))
