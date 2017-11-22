@@ -18,11 +18,14 @@ import mock
 import tempfile
 import shutil
 from datetime import datetime, timedelta
+import sys
 
 from botocore.vendored import requests
 from dateutil.tz import tzlocal
+from botocore.exceptions import CredentialRetrievalError
 
 from tests import unittest, IntegerRefresher, BaseEnvVar, random_chars
+from tests import temporary_file
 from botocore.credentials import EnvProvider, ContainerProvider
 from botocore.credentials import InstanceMetadataProvider
 from botocore.credentials import Credentials, ReadOnlyCredentials
@@ -400,3 +403,65 @@ class TestAssumeRole(BaseEnvVar):
         actual_creds = session.get_credentials()
         self.assert_creds_equal(actual_creds, expected_creds)
         stubber.assert_no_pending_responses()
+
+
+class TestProcessProvider(unittest.TestCase):
+    def setUp(self):
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        credential_process = os.path.join(
+            current_dir, 'utils', 'credentialprocess.py'
+        )
+        self.credential_process = '%s %s' % (
+            sys.executable, credential_process
+        )
+        self.environ = os.environ.copy()
+        self.environ_patch = mock.patch('os.environ', self.environ)
+        self.environ_patch.start()
+
+    def tearDown(self):
+        self.environ_patch.stop()
+
+    def test_credential_process(self):
+        config = (
+            '[profile processcreds]\n'
+            'credential_process = %s\n'
+        )
+        config = config % self.credential_process
+        with temporary_file('w') as f:
+            f.write(config)
+            f.flush()
+            self.environ['AWS_CONFIG_FILE'] = f.name
+
+            credentials = Session(profile='processcreds').get_credentials()
+            self.assertEqual(credentials.access_key, 'spam')
+            self.assertEqual(credentials.secret_key, 'eggs')
+
+    def test_credential_process_returns_error(self):
+        config = (
+            '[profile processcreds]\n'
+            'credential_process = %s --raise-error\n'
+        )
+        config = config % self.credential_process
+        with temporary_file('w') as f:
+            f.write(config)
+            f.flush()
+            self.environ['AWS_CONFIG_FILE'] = f.name
+
+            session = Session(profile='processcreds')
+
+            # This regex validates that there is no substring: b'
+            # The reason why we want to validate that is that we want to
+            # make sure that stderr is actually decoded so that in
+            # exceptional cases the error is properly formatted.
+            # As for how the regex works:
+            # `(?!b').` is a negative lookahead, meaning that it will only
+            # match if it is not followed by the pattern `b'`. Since it is
+            # followed by a `.` it will match any character not followed by
+            # that pattern. `((?!hede).)*` does that zero or more times. The
+            # final pattern adds `^` and `$` to anchor the beginning and end
+            # of the string so we can know the whole string is consumed.
+            # Finally `(?s)` at the beginning makes dots match newlines so
+            # we can handle a multi-line string.
+            reg = r"(?s)^((?!b').)*$"
+            with self.assertRaisesRegexp(CredentialRetrievalError, reg):
+                session.get_credentials()

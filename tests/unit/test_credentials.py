@@ -12,6 +12,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from datetime import datetime, timedelta
+import subprocess
 import mock
 import os
 import json
@@ -21,6 +22,7 @@ from dateutil.tz import tzlocal, tzutc
 
 from botocore import credentials
 from botocore.utils import ContainerMetadataFetcher
+from botocore.compat import json
 from botocore.credentials import EnvProvider, create_assume_role_refresher
 from botocore.credentials import CredentialProvider, AssumeRoleProvider
 from botocore.credentials import ConfigProvider, SharedCredentialProvider
@@ -2397,3 +2399,258 @@ class TestContainerProvider(BaseEnvVar):
         self.assertEqual(creds.secret_key, 'secret_key')
         self.assertEqual(creds.token, 'token')
         self.assertEqual(creds.method, 'container-role')
+
+
+class TestProcessProvider(BaseEnvVar):
+    def setUp(self):
+        super(TestProcessProvider, self).setUp()
+        self.loaded_config = {}
+        self.load_config = mock.Mock(return_value=self.loaded_config)
+        self.invoked_process = mock.Mock()
+        self.popen_mock = mock.Mock(return_value=self.invoked_process,
+                                    spec=subprocess.Popen)
+
+    def create_process_provider(self, profile_name='default'):
+        provider = credentials.ProcessProvider(profile_name, self.load_config,
+                                               popen=self.popen_mock)
+        return provider
+
+    def _get_output(self, stdout, stderr=''):
+        return json.dumps(stdout).encode('utf-8'), stderr.encode('utf-8')
+
+    def _set_process_return_value(self, stdout, stderr='', rc=0):
+        output = self._get_output(stdout, stderr)
+        self.invoked_process.communicate.return_value = output
+        self.invoked_process.returncode = rc
+
+    def test_process_not_invoked_if_profile_does_not_exist(self):
+        # self.loaded_config is an empty dictionary with no profile
+        # information.
+        provider = self.create_process_provider()
+        self.assertIsNone(provider.load())
+
+    def test_process_not_invoked_if_not_configured_for_empty_config(self):
+        # No credential_process configured so we skip this provider.
+        self.loaded_config['profiles'] = {'default': {}}
+        provider = self.create_process_provider()
+        self.assertIsNone(provider.load())
+
+    def test_can_retrieve_via_process(self):
+        self.loaded_config['profiles'] = {
+            'default': {'credential_process': 'my-process'}
+        }
+        self._set_process_return_value({
+            'Version': 1,
+            'AccessKeyId': 'foo',
+            'SecretAccessKey': 'bar',
+            'SessionToken': 'baz',
+            'Expiration': '2020-01-01T00:00:00Z',
+        })
+
+        provider = self.create_process_provider()
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+        self.assertEqual(creds.method, 'custom-process')
+        self.popen_mock.assert_called_with(
+            ['my-process'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+
+    def test_can_pass_arguments_through(self):
+        self.loaded_config['profiles'] = {
+            'default': {
+                'credential_process': 'my-process --foo --bar "one two"'
+            }
+        }
+        self._set_process_return_value({
+            'Version': 1,
+            'AccessKeyId': 'foo',
+            'SecretAccessKey': 'bar',
+            'SessionToken': 'baz',
+            'Expiration': '2020-01-01T00:00:00Z',
+        })
+
+        provider = self.create_process_provider()
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.popen_mock.assert_called_with(
+            ['my-process', '--foo', '--bar', 'one two'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+
+    def test_can_refresh_credentials(self):
+        # We given a time that's already expired so .access_key
+        # will trigger the refresh worfklow.  We just need to verify
+        # that the refresh function gives the same result as the
+        # initial retrieval.
+        expired_date = '2016-01-01T00:00:00Z'
+        future_date = str(datetime.now(tzlocal()) + timedelta(hours=24))
+        self.loaded_config['profiles'] = {
+            'default': {'credential_process': 'my-process'}
+        }
+        old_creds = self._get_output({
+            'Version': 1,
+            'AccessKeyId': 'foo',
+            'SecretAccessKey': 'bar',
+            'SessionToken': 'baz',
+            'Expiration': expired_date,
+        })
+        new_creds = self._get_output({
+            'Version': 1,
+            'AccessKeyId': 'foo2',
+            'SecretAccessKey': 'bar2',
+            'SessionToken': 'baz2',
+            'Expiration': future_date,
+        })
+        self.invoked_process.communicate.side_effect = [old_creds, new_creds]
+        self.invoked_process.returncode = 0
+
+        provider = self.create_process_provider()
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'foo2')
+        self.assertEqual(creds.secret_key, 'bar2')
+        self.assertEqual(creds.token, 'baz2')
+        self.assertEqual(creds.method, 'custom-process')
+
+    def test_non_zero_rc_raises_exception(self):
+        self.loaded_config['profiles'] = {
+            'default': {'credential_process': 'my-process'}
+        }
+        self._set_process_return_value('', 'Error Message', 1)
+
+        provider = self.create_process_provider()
+        exception = botocore.exceptions.CredentialRetrievalError
+        with self.assertRaisesRegexp(exception, 'Error Message'):
+            provider.load()
+
+    def test_unsupported_version_raises_mismatch(self):
+        self.loaded_config['profiles'] = {
+            'default': {'credential_process': 'my-process'}
+        }
+        bad_version = 100
+        self._set_process_return_value({
+            'Version': bad_version,
+            'AccessKeyId': 'foo',
+            'SecretAccessKey': 'bar',
+            'SessionToken': 'baz',
+            'Expiration': '2020-01-01T00:00:00Z',
+        })
+
+        provider = self.create_process_provider()
+        exception = botocore.exceptions.CredentialRetrievalError
+        with self.assertRaisesRegexp(exception, 'Unsupported version'):
+            provider.load()
+
+    def test_missing_version_in_payload_returned_raises_exception(self):
+        self.loaded_config['profiles'] = {
+            'default': {'credential_process': 'my-process'}
+        }
+        self._set_process_return_value({
+            # Let's say they forget a 'Version' key.
+            'AccessKeyId': 'foo',
+            'SecretAccessKey': 'bar',
+            'SessionToken': 'baz',
+            'Expiration': '2020-01-01T00:00:00Z',
+        })
+
+        provider = self.create_process_provider()
+        exception = botocore.exceptions.CredentialRetrievalError
+        with self.assertRaisesRegexp(exception, 'Unsupported version'):
+            provider.load()
+
+    def test_missing_access_key_raises_exception(self):
+        self.loaded_config['profiles'] = {
+            'default': {'credential_process': 'my-process'}
+        }
+        self._set_process_return_value({
+            'Version': 1,
+            # Missing access key.
+            'SecretAccessKey': 'bar',
+            'SessionToken': 'baz',
+            'Expiration': '2020-01-01T00:00:00Z',
+        })
+
+        provider = self.create_process_provider()
+        exception = botocore.exceptions.CredentialRetrievalError
+        with self.assertRaisesRegexp(exception, 'Missing required key'):
+            provider.load()
+
+    def test_missing_secret_key_raises_exception(self):
+        self.loaded_config['profiles'] = {
+            'default': {'credential_process': 'my-process'}
+        }
+        self._set_process_return_value({
+            'Version': 1,
+            'AccessKeyId': 'foo',
+            # Missing secret key.
+            'SessionToken': 'baz',
+            'Expiration': '2020-01-01T00:00:00Z',
+        })
+
+        provider = self.create_process_provider()
+        exception = botocore.exceptions.CredentialRetrievalError
+        with self.assertRaisesRegexp(exception, 'Missing required key'):
+            provider.load()
+
+    def test_missing_session_token(self):
+        self.loaded_config['profiles'] = {
+            'default': {'credential_process': 'my-process'}
+        }
+        self._set_process_return_value({
+            'Version': 1,
+            'AccessKeyId': 'foo',
+            'SecretAccessKey': 'bar',
+            # Missing session token.
+            'Expiration': '2020-01-01T00:00:00Z',
+        })
+
+        provider = self.create_process_provider()
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertIsNone(creds.token)
+        self.assertEqual(creds.method, 'custom-process')
+
+    def test_missing_expiration(self):
+        self.loaded_config['profiles'] = {
+            'default': {'credential_process': 'my-process'}
+        }
+        self._set_process_return_value({
+            'Version': 1,
+            'AccessKeyId': 'foo',
+            'SecretAccessKey': 'bar',
+            'SessionToken': 'baz',
+            # Missing expiration.
+        })
+
+        provider = self.create_process_provider()
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+        self.assertEqual(creds.method, 'custom-process')
+
+    def test_missing_expiration_and_session_token(self):
+        self.loaded_config['profiles'] = {
+            'default': {'credential_process': 'my-process'}
+        }
+        self._set_process_return_value({
+            'Version': 1,
+            'AccessKeyId': 'foo',
+            'SecretAccessKey': 'bar',
+            # Missing session token and expiration
+        })
+
+        provider = self.create_process_provider()
+        creds = provider.load()
+        self.assertIsNotNone(creds)
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertIsNone(creds.token)
+        self.assertEqual(creds.method, 'custom-process')
