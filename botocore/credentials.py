@@ -132,8 +132,10 @@ def _parse_if_needed(value):
     return parse(value)
 
 
-def _serialize_if_needed(value):
+def _serialize_if_needed(value, iso=False):
     if isinstance(value, datetime.datetime):
+        if iso:
+            return value.isoformat()
         return value.strftime('%Y-%m-%dT%H:%M:%S%Z')
     return value
 
@@ -509,7 +511,7 @@ class CachedCredentialFetcher(object):
             logger.debug("Credentials for role retrieved from cache.")
 
         creds = response['Credentials']
-        expiration = _serialize_if_needed(creds['Expiration'])
+        expiration = _serialize_if_needed(creds['Expiration'], iso=True)
         return {
             'access_key': creds['AccessKeyId'],
             'secret_key': creds['SecretAccessKey'],
