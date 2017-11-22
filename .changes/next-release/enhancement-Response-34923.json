@@ -1,5 +1,0 @@
-{
-  "type": "enhancement",
-  "description": "Allow reads of zero on streaming bodies, fixes `#1309 <https://github.com/boto/botocore/issues/1309>`__.",
-  "category": "Response"
-}
