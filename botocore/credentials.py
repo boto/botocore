@@ -495,6 +495,11 @@ class CachedCredentialFetcher(object):
     def _create_cache_key(self):
         raise NotImplementedError('_create_cache_key()')
 
+    def _make_file_safe(self, filename):
+        # Replace :, path sep, and / to make it the string filename safe.
+        filename = filename.replace(':', '_').replace(os.path.sep, '_')
+        return filename.replace('/', '_')
+
     def _get_credentials(self):
         raise NotImplementedError('_get_credentials()')
 
@@ -625,11 +630,8 @@ class AssumeRoleCredentialFetcher(CachedCredentialFetcher):
 
         args = json.dumps(args, sort_keys=True)
         argument_hash = sha256(args.encode('utf-8')).hexdigest()
-
-        # Prefix the cache key with the role arn to aid human-readability.
-        # Replace : and path sep to make it file safe.
-        arn = self._role_arn.replace(':', '_').replace(os.path.sep, '_')
-        return '%s--%s' % (arn, argument_hash)
+        cache_key = '%s--%s' % (self._role_arn, argument_hash)
+        return self._make_file_safe(cache_key)
 
     def _get_credentials(self):
         """Get credentials by calling assume role."""
