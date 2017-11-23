@@ -180,9 +180,9 @@ class TestDeferredRefreshableCredentials(unittest.TestCase):
         self.assertEqual(self.refresher.call_count, 1)
 
 
-class TestAssumeRoleCredentialRefresher(BaseEnvVar):
+class TestAssumeRoleCredentialFetcher(BaseEnvVar):
     def setUp(self):
-        super(TestAssumeRoleCredentialRefresher, self).setUp()
+        super(TestAssumeRoleCredentialFetcher, self).setUp()
         self.source_creds = credentials.Credentials('a', 'b', 'c')
         self.role_arn = 'myrole'
 
@@ -296,7 +296,7 @@ class TestAssumeRoleCredentialRefresher(BaseEnvVar):
         cache = {}
         client_creator = self.create_client_creator(with_response=response)
 
-        role_arn = 'arn:aws:iam::foo-role'
+        role_arn = 'arn:aws:iam::role/foo-role'
         refresher = credentials.AssumeRoleCredentialFetcher(
             client_creator, self.source_creds, role_arn, cache=cache
         )
@@ -306,8 +306,8 @@ class TestAssumeRoleCredentialRefresher(BaseEnvVar):
         # On windows, you cannot use a a ':' in the filename, so
         # we need to make sure that it doesn't make it into the cache key.
         cache_key = (
-            'arn_aws_iam__foo-role--'
-            '2658f5f4e4ba3dce28e1c7eaf23dc91ccf512a3cface8cf9b48fed7dfc81a2db'
+            'arn_aws_iam__role_foo-role--'
+            'a812859ff24fa3e52c0f5f3e02bf7ee35d37d994268ed246b7565432feaa9b8c'
         )
         self.assertIn(cache_key, cache)
         self.assertEqual(cache[cache_key], response)
