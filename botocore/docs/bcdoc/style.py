@@ -186,6 +186,16 @@ class ReSTStyle(BaseStyle):
         self.dedent()
         self.new_paragraph()
 
+    def start_danger(self, attrs=None):
+        self.new_paragraph()
+        self.doc.write('.. danger::')
+        self.indent()
+        self.new_paragraph()
+
+    def end_danger(self):
+        self.dedent()
+        self.new_paragraph()
+
     def start_a(self, attrs=None):
         if attrs:
             for attr_key, attr_value in attrs:
@@ -220,19 +230,18 @@ class ReSTStyle(BaseStyle):
                 if ':' in last_write:
                     last_write = last_write.replace(':', r'\:')
                 self.doc.push_write(last_write)
-                self.doc.hrefs[last_write] = self.a_href
-                self.doc.write('`_')
+                self.doc.push_write(' <%s>`__' % self.a_href)
             elif last_write == '`':
                 # Look at start_a().  It will do a self.doc.write('`')
                 # which is the start of the link title.  If that is the
                 # case then there was no link text.  We should just
                 # use an inline link.  The syntax of this is
                 # `<http://url>`_
-                self.doc.push_write('`<%s>`_' % self.a_href)
+                self.doc.push_write('`<%s>`__' % self.a_href)
             else:
                 self.doc.push_write(self.a_href)
                 self.doc.hrefs[self.a_href] = self.a_href
-                self.doc.write('`_')
+                self.doc.write('`__')
             self.a_href = None
         self.doc.write(' ')
 

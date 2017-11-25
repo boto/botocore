@@ -15,6 +15,8 @@ from botocore.compat import OrderedDict
 
 from botocore.endpoint import DEFAULT_TIMEOUT, MAX_POOL_CONNECTIONS
 from botocore.exceptions import InvalidS3AddressingStyleError
+from botocore.exceptions import InvalidRetryConfigurationError
+from botocore.exceptions import InvalidMaxRetryAttemptsError
 
 
 class Config(object):
@@ -54,6 +56,12 @@ class Config(object):
         keep in a connection pool.  If this value is not set, the default
         value of 10 is used.
 
+    :type proxies: dict
+    :param proxies: A dictionary of proxy servers to use by protocol or
+        endpoint, e.g.:
+        {'http': 'foo.bar:3128', 'http://hostname': 'foo.bar:4012'}.
+        The proxies are used on each request.
+
     :type s3: dict
     :param s3: A dictionary of s3 specific configurations.
         Valid keys are:
@@ -82,6 +90,18 @@ class Config(object):
 
           * path -- Addressing style is always by path. Endpoints will be
             addressed as such: s3.amazonaws.com/mybucket
+
+    :type retries: dict
+    :param retries: A dictionary for retry specific configurations.
+        Valid keys are:
+
+        * 'max_attempts' -- An integer representing the maximum number of
+          retry attempts that will be made on a single request. For
+          example, setting this value to 2 will result in the request
+          being retried at most two times after the initial request. Setting
+          this value to 0 will result in no retries ever being attempted on
+          the initial request. If not provided, the number of retries will
+          default to whatever is modeled, which is typically four retries.
     """
     OPTION_DEFAULTS = OrderedDict([
         ('region_name', None),
@@ -92,7 +112,9 @@ class Config(object):
         ('read_timeout', DEFAULT_TIMEOUT),
         ('parameter_validation', True),
         ('max_pool_connections', MAX_POOL_CONNECTIONS),
-        ('s3', None)
+        ('proxies', None),
+        ('s3', None),
+        ('retries', None)
     ])
 
     def __init__(self, *args, **kwargs):
@@ -109,6 +131,8 @@ class Config(object):
 
         # Validate the s3 options
         self._validate_s3_configuration(self.s3)
+
+        self._validate_retry_configuration(self.retries)
 
     def _record_user_provided_options(self, args, kwargs):
         option_order = list(self.OPTION_DEFAULTS)
@@ -149,6 +173,17 @@ class Config(object):
             if addressing_style not in ['virtual', 'auto', 'path', None]:
                 raise InvalidS3AddressingStyleError(
                     s3_addressing_style=addressing_style)
+
+    def _validate_retry_configuration(self, retries):
+        if retries is not None:
+            for key in retries:
+                if key not in ['max_attempts']:
+                    raise InvalidRetryConfigurationError(
+                        retry_config_option=key)
+                if key == 'max_attempts' and retries[key] < 0:
+                    raise InvalidMaxRetryAttemptsError(
+                        provided_max_attempts=retries[key]
+                    )
 
     def merge(self, other_config):
         """Merges the config object with another config object

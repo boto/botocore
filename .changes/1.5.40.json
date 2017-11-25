@@ -1,0 +1,12 @@
+[
+  {
+    "category": "mturk", 
+    "description": "Fix naming on list_hits_for_qualification_type for mturk. The old method name will still be supported.", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``lambda``", 
+    "description": "Update lambda client to latest version", 
+    "type": "api-change"
+  }
+]

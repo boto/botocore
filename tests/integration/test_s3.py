@@ -544,11 +544,11 @@ class TestS3PresignUsStandard(BaseS3PresignTest):
     def setUp(self):
         super(TestS3PresignUsStandard, self).setUp()
         self.region = 'us-east-1'
-        self.bucket_name = self.create_bucket(self.region)
         self.client_config = Config(
             region_name=self.region, signature_version='s3')
         self.client = self.session.create_client(
             's3', config=self.client_config)
+        self.bucket_name = self.create_bucket(self.region)
         self.setup_bucket()
 
     def test_presign_sigv2(self):
@@ -687,7 +687,7 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
 
         self.assertTrue(
             presigned_url.startswith(
-                'https://s3-us-west-2.amazonaws.com/%s/%s' % (
+                'https://s3.us-west-2.amazonaws.com/%s/%s' % (
                     self.bucket_name, self.key)),
             "Host was suppose to be the us-west-2 endpoint, instead "
             "got: %s" % presigned_url)
@@ -748,7 +748,7 @@ class TestS3PresignNonUsStandard(BaseS3PresignTest):
         # Make sure the correct endpoint is being used
         self.assertTrue(
             post_args['url'].startswith(
-                'https://s3-us-west-2.amazonaws.com/%s' % self.bucket_name),
+                'https://s3.us-west-2.amazonaws.com/%s' % self.bucket_name),
             "Host was suppose to use DNS style, instead "
             "got: %s" % post_args['url'])
 
@@ -888,6 +888,14 @@ class TestS3SigV4Client(BaseS3ClientTest):
         self.assertEqual(len(response['Uploads']), 1)
         # Make sure the upload id is as expected.
         self.assertEqual(response['Uploads'][0]['UploadId'], upload_id)
+
+    def test_can_add_double_space_metadata(self):
+        # Ensure we get no sigv4 errors when we send
+        # metadata with consecutive spaces.
+        response = self.client.put_object(
+            Bucket=self.bucket_name, Key='foo.txt',
+            Body=b'foobar', Metadata={'foo': '  multi    spaces  '})
+        self.assert_status_code(response, 200)
 
 
 class TestSSEKeyParamValidation(BaseS3ClientTest):

@@ -14,16 +14,49 @@
 # language governing permissions and limitations under the License.
 from tests import unittest, BaseEnvVar
 import os
+import mock
+import tempfile
+import shutil
+
 import botocore.exceptions
 from botocore.configloader import raw_config_parse, load_config, \
     multi_file_load_config
+from botocore.compat import six
 
 
 def path(filename):
-    return os.path.join(os.path.dirname(__file__), 'cfg', filename)
+    directory = os.path.join(os.path.dirname(__file__), 'cfg')
+    if isinstance(filename, six.binary_type):
+        directory = six.b(directory)
+    return os.path.join(directory, filename)
 
 
 class TestConfigLoader(BaseEnvVar):
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
+    def create_config_file(self, filename):
+        contents = (
+            '[default]\n'
+            'aws_access_key_id = foo\n'
+            'aws_secret_access_key = bar\n\n'
+            '[profile "personal"]\n'
+            'aws_access_key_id = fie\n'
+            'aws_secret_access_key = baz\n'
+            'aws_security_token = fiebaz\n'
+        )
+
+        directory = self.tempdir
+        if isinstance(filename, six.binary_type):
+            directory = six.b(directory)
+        full_path = os.path.join(directory, filename)
+
+        with open(full_path, 'w') as f:
+            f.write(contents)
+        return full_path
 
     def test_config_not_found(self):
         with self.assertRaises(botocore.exceptions.ConfigNotFound):
@@ -102,6 +135,20 @@ class TestConfigLoader(BaseEnvVar):
         self.assertEqual(third_config['aws_access_key_id'], 'third_fie')
         self.assertEqual(third_config['aws_secret_access_key'], 'third_baz')
         self.assertEqual(third_config['aws_security_token'], 'third_fiebaz')
+
+    def test_unicode_bytes_path_not_found(self):
+        with self.assertRaises(botocore.exceptions.ConfigNotFound):
+            with mock.patch('sys.getfilesystemencoding') as encoding:
+                encoding.return_value = 'utf-8'
+                load_config(path(b'\xe2\x9c\x93'))
+
+    def test_unicode_bytes_path(self):
+        filename = self.create_config_file(b'aws_config_unicode\xe2\x9c\x93')
+        with mock.patch('sys.getfilesystemencoding') as encoding:
+            encoding.return_value = 'utf-8'
+            loaded_config = load_config(filename)
+        self.assertIn('default', loaded_config['profiles'])
+        self.assertIn('personal', loaded_config['profiles'])
 
 
 if __name__ == "__main__":

@@ -55,6 +55,13 @@ class TestStreamWrapper(unittest.TestCase):
             # an IncompleteReadError because we were expectd 10 bytes, not 9.
             stream.read()
 
+    def test_streaming_body_with_zero_read(self):
+        body = six.BytesIO(b'1234567890')
+        stream = response.StreamingBody(body, content_length=10)
+        chunk = stream.read(0)
+        self.assertEqual(chunk, b'')
+        self.assertEqual(stream.read(), b'1234567890')
+
     def test_streaming_body_with_single_read(self):
         body = six.BytesIO(b'123456789')
         stream = response.StreamingBody(body, content_length=10)

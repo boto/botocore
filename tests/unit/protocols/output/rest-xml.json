@@ -718,7 +718,7 @@
     ]
   },
   {
-    "description": "Parse XML Attributes",
+    "description": "JSON value trait",
     "metadata": {
       "protocol": "rest-xml"
     },
@@ -726,37 +726,17 @@
       "OutputShape": {
         "type": "structure",
         "members": {
-          "Grants": {
-            "shape": "Grants",
-	    "locationName": "AccessControlList"
+          "Attr": {
+            "shape": "StringType",
+              "jsonvalue": true,
+              "location": "header",
+              "locationName": "X-Amz-Foo"
           }
         }
       },
-      "Grants": {
-        "type": "list",
-	"member": {
-          "shape": "Grant"
-	}
-      },
-      "Grant": {
-        "type": "structure",
-	"members": {
-          "Grantee": {"shape": "Grantee"}
-	}
-      },
-      "Grantee": {
-        "type": "structure",
-	"members": {
-          "DisplayName": {"shape": "String"},
-          "ID": {"shape": "String"},
-          "Type": {
-            "shape": "String",
-	    "locationName": "xsi:type",
-	    "xmlAttribute": true
-	  }
-	}
-      },
-      "String": {"type": "string"}
+      "StringType": {
+        "type": "string"
+      }
     },
     "cases": [
       {
@@ -767,22 +747,15 @@
           "name": "OperationName"
         },
         "result": {
-          "Grants": [
-            {
-              "Grantee": {
-                "DisplayName": "name",
-                "ID": "id",
-                "Type": "CanonicalUser"
-              }
-            }
-          ]
+          "Attr": {"Foo":"Bar"}
         },
         "response": {
           "status_code": 200,
-          "headers": {},
-          "body": "<OperationNameResponse><AccessControlList><Grant><Grantee xmlns:xsi=\"http://foo/bar\"  xsi:type=\"CanonicalUser\"><ID>id</ID> <DisplayName>name</DisplayName></Grantee></Grant></AccessControlList></OperationNameResponse>"
-	}
+          "headers": {"X-Amz-Foo": "eyJGb28iOiJCYXIifQ=="},
+          "body": ""
+        }
       }
     ]
   }
+
 ]

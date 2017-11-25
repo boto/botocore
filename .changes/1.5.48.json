@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``lex-models``", 
+    "description": "Update lex-models client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``elb``", 
+    "description": "Update elb client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``organizations``", 
+    "description": "Update organizations client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``elbv2``", 
+    "description": "Update elbv2 client to latest version", 
+    "type": "api-change"
+  }
+]

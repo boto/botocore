@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 if six.PY3:
-    from six.moves import http_client
+    from botocore.vendored.six.moves import http_client
 
     class HTTPHeaders(http_client.HTTPMessage):
         pass
@@ -165,7 +165,7 @@ if sys.version_info[:2] == (2, 6):
             'ignore',
             message="Certificate has no.*subjectAltName.*",
             category=exceptions.SecurityWarning,
-            module=".*urllib3\.connection")
+            module=r".*urllib3\.connection")
 else:
     import xml.etree.cElementTree
     XMLParseError = xml.etree.cElementTree.ParseError
@@ -183,7 +183,7 @@ def filter_ssl_warnings():
         'ignore',
         message="A true SSLContext object is not available.*",
         category=exceptions.InsecurePlatformWarning,
-        module=".*urllib3\.util\.ssl_")
+        module=r".*urllib3\.util\.ssl_")
     filter_ssl_san_warnings()
 
 

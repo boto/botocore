@@ -31,10 +31,12 @@ from botocore.compat import filter_ssl_warnings
 from botocore.utils import is_valid_endpoint_url
 from botocore.hooks import first_non_none_response
 from botocore.response import StreamingBody
+from botocore.history import get_global_history_recorder
 from botocore import parsers
 
 
 logger = logging.getLogger(__name__)
+history_recorder = get_global_history_recorder()
 DEFAULT_TIMEOUT = 60
 MAX_POOL_CONNECTIONS = 10
 filter_ssl_warnings()
@@ -198,6 +200,13 @@ class Endpoint(object):
         # If no exception occurs then exception is None.
         try:
             logger.debug("Sending http request: %s", request)
+            history_recorder.record('HTTP_REQUEST', {
+                'method': request.method,
+                'headers': request.headers,
+                'streaming': operation_model.has_streaming_input,
+                'url': request.url,
+                'body': request.body
+            })
             http_response = self.http_session.send(
                 request, verify=self.verify,
                 stream=operation_model.has_streaming_output,
@@ -227,10 +236,17 @@ class Endpoint(object):
         # This returns the http_response and the parsed_data.
         response_dict = convert_to_response_dict(http_response,
                                                  operation_model)
+
+        http_response_record_dict = response_dict.copy()
+        http_response_record_dict['streaming'] = \
+            operation_model.has_streaming_output
+        history_recorder.record('HTTP_RESPONSE', http_response_record_dict)
+
         parser = self._response_parser_factory.create_parser(
             operation_model.metadata['protocol'])
         parsed_response = parser.parse(
             response_dict, operation_model.output_shape)
+        history_recorder.record('PARSED_RESPONSE', parsed_response)
         return (http_response, parsed_response), None
 
     def _looks_like_dns_error(self, e):
@@ -266,15 +282,18 @@ class EndpointCreator(object):
     def create_endpoint(self, service_model, region_name, endpoint_url,
                         verify=None, response_parser_factory=None,
                         timeout=DEFAULT_TIMEOUT,
-                        max_pool_connections=MAX_POOL_CONNECTIONS):
+                        max_pool_connections=MAX_POOL_CONNECTIONS,
+                        proxies=None):
         if not is_valid_endpoint_url(endpoint_url):
 
             raise ValueError("Invalid endpoint: %s" % endpoint_url)
+        if proxies is None:
+            proxies = self._get_proxies(endpoint_url)
         return Endpoint(
             endpoint_url,
             endpoint_prefix=service_model.endpoint_prefix,
             event_emitter=self._event_emitter,
-            proxies=self._get_proxies(endpoint_url),
+            proxies=proxies,
             verify=self._get_verify_value(verify),
             timeout=timeout,
             max_pool_connections=max_pool_connections,

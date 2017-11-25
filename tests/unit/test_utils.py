@@ -14,10 +14,12 @@
 from tests import unittest
 from dateutil.tz import tzutc, tzoffset
 import datetime
-import six
+from botocore.compat import six
+import copy
 
 import mock
 
+import botocore
 from botocore import xform_name
 from botocore.compat import OrderedDict, json
 from botocore.awsrequest import AWSRequest
@@ -26,6 +28,7 @@ from botocore.exceptions import ClientError
 from botocore.exceptions import InvalidDNSNameError, MetadataRetrievalError
 from botocore.model import ServiceModel
 from botocore.vendored import requests
+from botocore.utils import is_json_value_header
 from botocore.utils import remove_dot_segments
 from botocore.utils import normalize_url_path
 from botocore.utils import validate_jmespath_for_set
@@ -46,6 +49,7 @@ from botocore.utils import instance_cache
 from botocore.utils import merge_dicts
 from botocore.utils import get_service_module_name
 from botocore.utils import percent_encode_sequence
+from botocore.utils import percent_encode
 from botocore.utils import switch_host_s3_accelerate
 from botocore.utils import deep_merge
 from botocore.utils import S3RegionRedirector
@@ -53,6 +57,48 @@ from botocore.utils import ContainerMetadataFetcher
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
 from botocore.config import Config
+
+
+class TestIsJSONValueHeader(unittest.TestCase):
+    def test_no_serialization_section(self):
+        shape = mock.Mock()
+        shape.type_name = 'string'
+        self.assertFalse(is_json_value_header(shape))
+
+    def test_non_jsonvalue_shape(self):
+        shape = mock.Mock()
+        shape.serialization = {
+            'location': 'header'
+        }
+        shape.type_name = 'string'
+        self.assertFalse(is_json_value_header(shape))
+
+    def test_non_header_jsonvalue_shape(self):
+        shape = mock.Mock()
+        shape.serialization = {
+            'jsonvalue': True
+        }
+        shape.type_name = 'string'
+        self.assertFalse(is_json_value_header(shape))
+
+    def test_non_string_jsonvalue_shape(self):
+        shape = mock.Mock()
+        shape.serialization = {
+            'location': 'header',
+            'jsonvalue': True
+        }
+        shape.type_name = 'integer'
+        self.assertFalse(is_json_value_header(shape))
+
+    def test_json_value_header(self):
+        shape = mock.Mock()
+        shape.serialization = {
+            'jsonvalue': True,
+            'location': 'header'
+        }
+        shape.type_name = 'string'
+        self.assertTrue(is_json_value_header(shape))
+
 
 
 class TestURINormalization(unittest.TestCase):
@@ -369,6 +415,17 @@ class TestArgumentGenerator(unittest.TestCase):
                 'A': ''
             }
         )
+
+    def test_generate_string_enum(self):
+        enum_values = ['A', 'B', 'C']
+        model = {
+            'A': {'type': 'string', 'enum': enum_values}
+        }
+        shape = DenormalizedStructureBuilder().with_members(
+            model).build_model()
+        actual = self.arg_generator.generate_skeleton(shape)
+
+        self.assertIn(actual['A'], enum_values)
 
     def test_generate_scalars(self):
         self.assert_skeleton_from_model_is(
@@ -1014,6 +1071,27 @@ class TestPercentEncodeSequence(unittest.TestCase):
                              ('k2', ['another', 'list'])])),
             'k1=a&k1=list&k2=another&k2=list')
 
+class TestPercentEncode(unittest.TestCase):
+    def test_percent_encode_obj(self):
+        self.assertEqual(percent_encode(1), '1')
+
+    def test_percent_encode_text(self):
+        self.assertEqual(percent_encode(u''), '')
+        self.assertEqual(percent_encode(u'a'), 'a')
+        self.assertEqual(percent_encode(u'\u0000'), '%00')
+        # Codepoint > 0x7f
+        self.assertEqual(percent_encode(u'\u2603'), '%E2%98%83')
+        # Codepoint > 0xffff
+        self.assertEqual(percent_encode(u'\U0001f32e'), '%F0%9F%8C%AE')
+
+    def test_percent_encode_bytes(self):
+        self.assertEqual(percent_encode(b''), '')
+        self.assertEqual(percent_encode(b'a'), u'a')
+        self.assertEqual(percent_encode(b'\x00'), u'%00')
+        # UTF-8 Snowman
+        self.assertEqual(percent_encode(b'\xe2\x98\x83'), '%E2%98%83')
+        # Arbitrary bytes (not valid UTF-8).
+        self.assertEqual(percent_encode(b'\x80\x00'), '%80%00')
 
 class TestSwitchHostS3Accelerate(unittest.TestCase):
     def setUp(self):
@@ -1420,6 +1498,41 @@ class TestContainerMetadataFetcher(unittest.TestCase):
             http_responses.append(http_response)
         self.http.get.side_effect = http_responses
 
+    def assert_can_retrieve_metadata_from(self, full_uri):
+        response_body = {'foo': 'bar'}
+        self.set_http_responses_to(response_body)
+        fetcher = self.create_fetcher()
+        response = fetcher.retrieve_full_uri(full_uri)
+        self.assertEqual(response, response_body)
+        self.http.get.assert_called_with(
+            full_uri, headers={'Accept': 'application/json'},
+            timeout=fetcher.TIMEOUT_SECONDS,
+        )
+
+    def assert_host_is_not_allowed(self, full_uri):
+        response_body = {'foo': 'bar'}
+        self.set_http_responses_to(response_body)
+        fetcher = self.create_fetcher()
+        with self.assertRaisesRegexp(ValueError, 'Unsupported host'):
+            fetcher.retrieve_full_uri(full_uri)
+        self.assertFalse(self.http.get.called)
+
+    def test_can_specify_extra_headers_are_merged(self):
+        headers = {
+            # The 'Accept' header will override the
+            # default Accept header of application/json.
+            'Accept': 'application/not-json',
+            'X-Other-Header': 'foo',
+        }
+        self.set_http_responses_to({'foo': 'bar'})
+        fetcher = self.create_fetcher()
+        response = fetcher.retrieve_full_uri(
+            'http://localhost', headers)
+        self.http.get.assert_called_with(
+            'http://localhost', headers=headers,
+            timeout=fetcher.TIMEOUT_SECONDS,
+        )
+
     def test_can_retrieve_uri(self):
         json_body =  {
             "AccessKeyId" : "a",
@@ -1501,6 +1614,47 @@ class TestContainerMetadataFetcher(unittest.TestCase):
         # Should have tried up to RETRY_ATTEMPTS.
         self.assertEqual(self.http.get.call_count, fetcher.RETRY_ATTEMPTS)
 
+    def test_can_retrieve_full_uri_with_fixed_ip(self):
+        self.assert_can_retrieve_metadata_from(
+            'http://%s/foo?id=1' % ContainerMetadataFetcher.IP_ADDRESS)
+
+    def test_localhost_http_is_allowed(self):
+        self.assert_can_retrieve_metadata_from('http://localhost/foo')
+
+    def test_localhost_with_port_http_is_allowed(self):
+        self.assert_can_retrieve_metadata_from('http://localhost:8000/foo')
+
+    def test_localhost_https_is_allowed(self):
+        self.assert_can_retrieve_metadata_from('https://localhost/foo')
+
+    def test_can_use_127_ip_addr(self):
+        self.assert_can_retrieve_metadata_from('https://127.0.0.1/foo')
+
+    def test_can_use_127_ip_addr_with_port(self):
+        self.assert_can_retrieve_metadata_from('https://127.0.0.1:8080/foo')
+
+    def test_link_local_http_is_not_allowed(self):
+        self.assert_host_is_not_allowed('http://169.254.0.1/foo')
+
+    def test_link_local_https_is_not_allowed(self):
+        self.assert_host_is_not_allowed('https://169.254.0.1/foo')
+
+    def test_non_link_local_nonallowed_url(self):
+        self.assert_host_is_not_allowed('http://169.1.2.3/foo')
+
+    def test_error_raised_on_nonallowed_url(self):
+        self.assert_host_is_not_allowed('http://somewhere.com/foo')
+
+    def test_external_host_not_allowed_if_https(self):
+        self.assert_host_is_not_allowed('https://somewhere.com/foo')
+
+
+class TestUnsigned(unittest.TestCase):
+    def test_copy_returns_same_object(self):
+        self.assertIs(botocore.UNSIGNED, copy.copy(botocore.UNSIGNED))
+
+    def test_deepcopy_returns_same_object(self):
+        self.assertIs(botocore.UNSIGNED, copy.deepcopy(botocore.UNSIGNED))
 
 if __name__ == '__main__':
     unittest.main()

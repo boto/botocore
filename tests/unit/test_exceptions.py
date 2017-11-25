@@ -11,7 +11,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from nose.tools import assert_equals
+from nose.tools import assert_equal
 
 from botocore import exceptions
 
@@ -19,7 +19,7 @@ from botocore import exceptions
 def test_client_error_can_handle_missing_code_or_message():
     response = {'Error': {}}
     expect = 'An error occurred (Unknown) when calling the blackhole operation: Unknown'
-    assert_equals(str(exceptions.ClientError(response, 'blackhole')), expect)
+    assert_equal(str(exceptions.ClientError(response, 'blackhole')), expect)
 
 
 def test_client_error_has_operation_name_set():
@@ -31,7 +31,7 @@ def test_client_error_has_operation_name_set():
 def test_client_error_set_correct_operation_name():
     response = {'Error': {}}
     exception = exceptions.ClientError(response, 'blackhole')
-    assert_equals(exception.operation_name, 'blackhole')
+    assert_equal(exception.operation_name, 'blackhole')
 
 
 def test_retry_info_added_when_present():
@@ -62,3 +62,19 @@ def test_retry_info_not_added_if_retry_attempts_not_present():
         raise AssertionError("Retry information should not be in exception "
                              "message when retry attempts not in response "
                              "metadata: %s" % error_msg)
+
+
+def test_can_handle_when_response_missing_error_key():
+    response = {
+        'ResponseMetadata': {
+            'HTTPHeaders': {},
+            'HTTPStatusCode': 503,
+            'MaxAttemptsReached': True,
+            'RetryAttempts': 4
+        }
+    }
+    e = exceptions.ClientError(response, 'SomeOperation')
+    if 'An error occurred (Unknown)' not in str(e):
+        raise AssertionError(
+            "Error code should default to 'Unknown' "
+            "when missing error response, instead got: %s" % str(e))

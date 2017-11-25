@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``workdocs``", 
+    "description": "Update workdocs client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kinesisanalytics``", 
+    "description": "Update kinesisanalytics client to latest version", 
+    "type": "api-change"
+  }
+]

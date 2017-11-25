@@ -32,6 +32,11 @@ SERVICE_RENAMES = {
     'ses': 'email',
     'stepfunctions': 'states',
     'lex-runtime': 'runtime.lex',
+    'mturk': 'mturk-requester',
+    'resourcegroupstaggingapi': 'tagging',
+    'lex-models': 'models.lex',
+    'marketplace-entitlement': 'entitlement.marketplace',
+    'pricing': 'api.pricing',
 }
 
 BLACKLIST = [
@@ -85,5 +90,6 @@ def _assert_service_name_matches_endpoint_prefix(loader, service_name):
     expected_endpoint_prefix = SERVICE_RENAMES.get(service_name, service_name)
     assert_equal(
         endpoint_prefix, expected_endpoint_prefix,
-        "Service name `%s` does not match endpoint prefix `%s`." % (
-            service_name, expected_endpoint_prefix))
+        "Service name `%s` does not match expected endpoint "
+        "prefix `%s`, actual: `%s`" % (
+            service_name, expected_endpoint_prefix, endpoint_prefix))

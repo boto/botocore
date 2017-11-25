@@ -13,6 +13,7 @@
 import re
 import numbers
 from botocore.utils import parse_timestamp
+from botocore.docs.utils import escape_controls
 from botocore.compat import six
 
 
@@ -165,7 +166,8 @@ class SharedExampleDocumenter(object):
     def _document_str(self, section, value, path):
         # We do the string conversion because this might accept a type that
         # we don't specifically address.
-        section.write(u"'%s'," % six.text_type(value))
+        safe_value = escape_controls(value)
+        section.write(u"'%s'," % six.text_type(safe_value))
 
     def _document_number(self, section, value, path):
         section.write("%s," % str(value))
@@ -178,7 +180,7 @@ class SharedExampleDocumenter(object):
         section.write("datetime(%s)," % datetime_str)
 
     def _get_comment(self, path, comments):
-        key = re.sub('^\.', '', ''.join(path))
+        key = re.sub(r'^\.', '', ''.join(path))
         if comments and key in comments:
             return '# ' + comments[key]
         else:

@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``cloudfront``", 
+    "description": "Update cloudfront client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iot``", 
+    "description": "Update iot client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``acm``", 
+    "description": "Update acm client to latest version", 
+    "type": "api-change"
+  }
+]

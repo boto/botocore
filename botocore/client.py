@@ -33,12 +33,15 @@ from botocore.utils import switch_to_virtual_host_style
 from botocore.utils import S3_ACCELERATE_WHITELIST
 from botocore.args import ClientArgsCreator
 from botocore.compat import urlsplit
+from botocore import UNSIGNED
 # Keep this imported.  There's pre-existing code that uses
 # "from botocore.client import Config".
 from botocore.config import Config
+from botocore.history import get_global_history_recorder
 
 
 logger = logging.getLogger(__name__)
+history_recorder = get_global_history_recorder()
 
 
 class ClientCreator(object):
@@ -69,7 +72,10 @@ class ClientCreator(object):
             service_model, region_name, is_secure, endpoint_url,
             verify, credentials, scoped_config, client_config, endpoint_bridge)
         service_client = cls(**client_args)
-        self._register_s3_events(service_client, endpoint_bridge, endpoint_url)
+        self._register_retries(service_client)
+        self._register_s3_events(
+            service_client, endpoint_bridge, endpoint_url, client_config,
+            scoped_config)
         return service_client
 
     def create_client_class(self, service_name, api_version=None):
@@ -92,11 +98,10 @@ class ClientCreator(object):
         json_model = self._loader.load_service_model(service_name, 'service-2',
                                                      api_version=api_version)
         service_model = ServiceModel(json_model, service_name=service_name)
-        self._register_retries(service_model)
         return service_model
 
-    def _register_retries(self, service_model):
-        endpoint_prefix = service_model.endpoint_prefix
+    def _register_retries(self, client):
+        endpoint_prefix = client.meta.service_model.endpoint_prefix
 
         # First, we load the entire retry config for all services,
         # then pull out just the information we need.
@@ -106,17 +111,20 @@ class ClientCreator(object):
 
         retry_config = self._retry_config_translator.build_retry_config(
             endpoint_prefix, original_config.get('retry', {}),
-            original_config.get('definitions', {}))
+            original_config.get('definitions', {}),
+            client.meta.config.retries
+        )
 
         logger.debug("Registering retry handlers for service: %s",
-                     service_model.service_name)
+                     client.meta.service_model.service_name)
         handler = self._retry_handler_factory.create_retry_handler(
             retry_config, endpoint_prefix)
         unique_id = 'retry-config-%s' % endpoint_prefix
-        self._event_emitter.register('needs-retry.%s' % endpoint_prefix,
-                                     handler, unique_id=unique_id)
+        client.meta.events.register('needs-retry.%s' % endpoint_prefix,
+                                    handler, unique_id=unique_id)
 
-    def _register_s3_events(self, client, endpoint_bridge, endpoint_url):
+    def _register_s3_events(self, client, endpoint_bridge, endpoint_url,
+                            client_config, scoped_config):
         if client.meta.service_model.service_name != 's3':
             return
         S3RegionRedirector(endpoint_bridge, client).register()
@@ -129,6 +137,9 @@ class ClientCreator(object):
             # s3-accelerate.amazonaws.com
             client.meta.events.register_first(
                 'request-created.s3', switch_host_s3_accelerate)
+
+        self._set_s3_presign_signature_version(
+            client.meta, client_config, scoped_config)
 
     def _set_s3_addressing_style(self, endpoint_url, s3_config, event_emitter):
         if s3_config is None:
@@ -211,6 +222,56 @@ class ClientCreator(object):
 
         # Remaining parts must all be in the whitelist.
         return all(p in S3_ACCELERATE_WHITELIST for p in feature_parts)
+
+    def _set_s3_presign_signature_version(self, client_meta,
+                                          client_config, scoped_config):
+        # This will return the manually configured signature version, or None
+        # if none was manually set. If a customer manually sets the signature
+        # version, we always want to use what they set.
+        provided_signature_version = _get_configured_signature_version(
+            's3', client_config, scoped_config)
+        if provided_signature_version is not None:
+            return
+
+        # Check to see if the region is a region that we know about. If we
+        # don't know about a region, then we can safely assume it's a new
+        # region that is sigv4 only, since all new S3 regions only allow sigv4.
+        regions = self._endpoint_resolver.get_available_endpoints(
+            's3', client_meta.partition)
+        if client_meta.region_name not in regions:
+            return
+
+        # If it is a region we know about, we want to default to sigv2, so here
+        # we check to see if it is available.
+        endpoint = self._endpoint_resolver.construct_endpoint(
+            's3', client_meta.region_name)
+        signature_versions = endpoint['signatureVersions']
+        if 's3' not in signature_versions:
+            return
+
+        # We now know that we're in a known region that supports sigv2 and
+        # the customer hasn't set a signature version so we default the
+        # signature version to sigv2.
+        client_meta.events.register(
+            'choose-signer.s3', self._default_s3_presign_to_sigv2)
+
+    def _default_s3_presign_to_sigv2(self, signature_version, **kwargs):
+        """
+        Returns the 's3' (sigv2) signer if presigning an s3 request. This is
+        intended to be used to set the default signature version for the signer
+        to sigv2.
+
+        :type signature_version: str
+        :param signature_version: The current client signature version.
+
+        :type signing_name: str
+        :param signing_name: The signing name of the service.
+
+        :return: 's3' if the request is an s3 presign request, None otherwise
+        """
+        for suffix in ['-query', '-presign-post']:
+            if signature_version.endswith(suffix):
+                return 's3' + suffix
 
     def _get_client_args(self, service_model, region_name, is_secure,
                          endpoint_url, verify, credentials,
@@ -433,31 +494,16 @@ class ClientEndpointBridge(object):
         return region_name, signing_region
 
     def _resolve_signature_version(self, service_name, resolved):
-        # Client config overrides everything.
-        client = self.client_config
-        if client and client.signature_version is not None:
-            return client.signature_version
-        # Scoped config overrides picking from the endpoint metadata.
-        scoped = self.scoped_config
-        if scoped is not None:
-            service_config = scoped.get(service_name)
-            if service_config is not None and isinstance(service_config, dict):
-                version = service_config.get('signature_version')
-                if version:
-                    logger.debug(
-                        "Switching signature version for service %s "
-                        "to version %s based on config file override.",
-                        service_name, version)
-                    return version
+        configured_version = _get_configured_signature_version(
+            service_name, self.client_config, self.scoped_config)
+        if configured_version is not None:
+            return configured_version
+
         # Pick a signature version from the endpoint metadata if present.
         if 'signatureVersions' in resolved:
             potential_versions = resolved['signatureVersions']
             if service_name == 's3':
-                # We currently prefer s3 over s3v4.
-                if 's3' in potential_versions:
-                    return 's3'
-                elif 's3v4' in potential_versions:
-                    return 's3v4'
+                return 's3v4'
             if 'v4' in potential_versions:
                 return 'v4'
             # Now just iterate over the signature versions in order until we
@@ -496,6 +542,19 @@ class BaseClient(object):
         self._exceptions = None
         self._register_handlers()
 
+    def __getattr__(self, item):
+        event_name = 'getattr.%s.%s' % (self._service_model.service_name, item)
+        handler, event_response = self.meta.events.emit_until_response(
+            event_name, client=self)
+
+        if event_response is not None:
+            return event_response
+
+        raise AttributeError(
+            "'%s' object has no attribute '%s'" % (
+                self.__class__.__name__, item)
+        )
+
     def _register_handlers(self):
         # Register the handler required to sign requests.
         self.meta.events.register('request-created.%s' %
@@ -508,10 +567,20 @@ class BaseClient(object):
 
     def _make_api_call(self, operation_name, api_params):
         operation_model = self._service_model.operation_model(operation_name)
+        service_name = self._service_model.service_name
+        history_recorder.record('API_CALL', {
+            'service': service_name,
+            'operation': operation_name,
+            'params': api_params,
+        })
+        if operation_model.deprecated:
+            logger.debug('Warning: %s.%s() is deprecated',
+                         service_name, operation_name)
         request_context = {
             'client_region': self.meta.region_name,
             'client_config': self.meta.config,
-            'has_streaming_input': operation_model.has_streaming_input
+            'has_streaming_input': operation_model.has_streaming_input,
+            'auth_type': operation_model.auth_type,
         }
         request_dict = self._convert_to_request_dict(
             api_params, operation_model, context=request_context)
@@ -625,9 +694,11 @@ class BaseClient(object):
             documented_paginator_cls = type(
                 paginator_class_name, (Paginator,), {'paginate': paginate})
 
+            operation_model = self._service_model.operation_model(actual_operation_name)
             paginator = documented_paginator_cls(
                 getattr(self, operation_name),
-                paginator_config)
+                paginator_config,
+                operation_model)
             return paginator
 
     def can_paginate(self, operation_name):
@@ -750,3 +821,31 @@ class ClientMeta(object):
     @property
     def partition(self):
         return self._partition
+
+
+def _get_configured_signature_version(service_name, client_config,
+                                      scoped_config):
+    """
+    Gets the manually configured signature version.
+
+    :returns: the customer configured signature version, or None if no
+        signature version was configured.
+    """
+    # Client config overrides everything.
+    if client_config and client_config.signature_version is not None:
+        return client_config.signature_version
+
+    # Scoped config overrides picking from the endpoint metadata.
+    if scoped_config is not None:
+        # A given service may have service specific configuration in the
+        # config file, so we need to check there as well.
+        service_config = scoped_config.get(service_name)
+        if service_config is not None and isinstance(service_config, dict):
+            version = service_config.get('signature_version')
+            if version:
+                logger.debug(
+                    "Switching signature version for service %s "
+                    "to version %s based on config file override.",
+                    service_name, version)
+                return version
+    return None

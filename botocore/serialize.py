@@ -47,6 +47,7 @@ from botocore.compat import six
 from botocore.compat import json, formatdate
 from botocore.utils import parse_to_aware_datetime
 from botocore.utils import percent_encode
+from botocore.utils import is_json_value_header
 from botocore import validate
 
 
@@ -170,6 +171,9 @@ class QuerySerializer(Serializer):
         serialized = self._create_default_request()
         serialized['method'] = operation_model.http.get('method',
                                                         self.DEFAULT_METHOD)
+        serialized['headers'] = {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
+        }
         # The query serializer only deals with body params so
         # that's what we hand off the _serialize_* methods.
         body_params = self.MAP_TYPE()
@@ -515,6 +519,10 @@ class BaseRestSerializer(Serializer):
             datetime_obj = parse_to_aware_datetime(value)
             timestamp = calendar.timegm(datetime_obj.utctimetuple())
             return self._timestamp_rfc822(timestamp)
+        elif is_json_value_header(shape):
+            # Serialize with no spaces after separators to save space in
+            # the header.
+            return self._get_base64(json.dumps(value, separators=(',', ':')))
         else:
             return value
 

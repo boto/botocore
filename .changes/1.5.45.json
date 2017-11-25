@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``cloudformation``", 
+    "description": "Update cloudformation client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``snowball``", 
+    "description": "Update snowball client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sqs``", 
+    "description": "Update sqs client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``rekognition``", 
+    "description": "Update rekognition client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "Paginator", 
+    "description": "Fixes bug where pagination would fail if the pagination token contained bytes.", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``rds``", 
+    "description": "Update rds client to latest version", 
+    "type": "api-change"
+  }
+]

@@ -48,7 +48,8 @@ class Shape(object):
     # the attributes that should be moved.
     SERIALIZED_ATTRS = ['locationName', 'queryName', 'flattened', 'location',
                         'payload', 'streaming', 'timestampFormat',
-                        'xmlNamespace', 'resultWrapper', 'xmlAttribute']
+                        'xmlNamespace', 'resultWrapper', 'xmlAttribute',
+                        'jsonvalue']
     METADATA_ATTRS = ['required', 'min', 'max', 'sensitive', 'enum',
                       'idempotencyToken', 'error', 'exception']
     MAP_TYPE = OrderedDict
@@ -103,6 +104,7 @@ class Shape(object):
             * xmlNamespace
             * resultWrapper
             * xmlAttribute
+            * jsonvalue
 
         :rtype: dict
         :return: Serialization information about the shape.
@@ -395,6 +397,10 @@ class OperationModel(object):
         return self._operation_model.get('documentation', '')
 
     @CachedProperty
+    def deprecated(self):
+        return self._operation_model.get('deprecated', False)
+
+    @CachedProperty
     def input_shape(self):
         if 'input' not in self._operation_model:
             # Some operations do not accept any input and do not define an
@@ -422,6 +428,10 @@ class OperationModel(object):
         return [name for (name, shape) in input_shape.members.items()
                 if 'idempotencyToken' in shape.metadata and
                 shape.metadata['idempotencyToken']]
+
+    @CachedProperty
+    def auth_type(self):
+        return self._operation_model.get('authtype')
 
     @CachedProperty
     def error_shapes(self):

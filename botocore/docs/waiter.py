@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from botocore import xform_name
+from botocore.compat import OrderedDict
+from botocore.docs.utils import DocumentedShape
 from botocore.utils import get_service_module_name
 from botocore.docs.method import document_model_driven_method
 
@@ -82,6 +84,29 @@ def document_wait_method(section, waiter_name, event_emitter,
     operation_model = service_model.operation_model(
         waiter_model.operation)
 
+    waiter_config_members = OrderedDict()
+
+    waiter_config_members['Delay'] = DocumentedShape(
+        name='Delay', type_name='integer',
+        documentation=(
+            '<p>The amount of time in seconds to wait between '
+            'attempts. Default: {0}</p>'.format(waiter_model.delay)))
+
+    waiter_config_members['MaxAttempts'] = DocumentedShape(
+        name='MaxAttempts', type_name='integer',
+        documentation=(
+            '<p>The maximum number of attempts to be made. '
+            'Default: {0}</p>'.format(waiter_model.max_attempts)))
+
+    botocore_waiter_params = [
+        DocumentedShape(
+            name='WaiterConfig', type_name='structure',
+            documentation=(
+                '<p>A dictionary that provides parameters to control '
+                'waiting behavior.</p>'),
+            members=waiter_config_members)
+    ]
+
     wait_description = (
         'Polls :py:meth:`{0}.Client.{1}` every {2} '
         'seconds until a successful state is reached. An error is '
@@ -96,6 +121,7 @@ def document_wait_method(section, waiter_name, event_emitter,
         event_emitter=event_emitter,
         method_description=wait_description,
         example_prefix='waiter.wait',
+        include_input=botocore_waiter_params,
         document_output=False,
         include_signature=include_signature
     )

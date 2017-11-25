@@ -16,7 +16,7 @@ import os
 import re
 import logging
 
-__version__ = '1.5.16'
+__version__ = '1.8.1'
 
 
 class NullHandler(logging.Handler):
@@ -45,6 +45,8 @@ _xform_cache = {
     ('DescribeStorediSCSIVolumes', '-'): 'describe-stored-iscsi-volumes',
     ('CreateStorediSCSIVolume', '_'): 'create_stored_iscsi_volume',
     ('CreateStorediSCSIVolume', '-'): 'create-stored-iscsi-volume',
+    ('ListHITsForQualificationType', '_'): 'list_hits_for_qualification_type',
+    ('ListHITsForQualificationType', '-'): 'list-hits-for-qualification-type',
 }
 # The items in this dict represent partial renames to apply globally to all
 # services which might have a matching argument or operation. This way a
@@ -58,8 +60,17 @@ ScalarTypes = ('string', 'integer', 'boolean', 'timestamp', 'float', 'double')
 
 BOTOCORE_ROOT = os.path.dirname(os.path.abspath(__file__))
 
+
 # Used to specify anonymous (unsigned) request signature
-UNSIGNED = object()
+class UNSIGNED(object):
+    def __copy__(self):
+        return self
+
+    def __deepcopy__(self, memodict):
+        return self
+
+
+UNSIGNED = UNSIGNED()
 
 
 def xform_name(name, sep='_', _xform_cache=_xform_cache,

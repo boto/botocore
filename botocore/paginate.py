@@ -13,7 +13,7 @@
 
 from itertools import tee
 
-from six import string_types
+from botocore.compat import six
 
 import jmespath
 import json
@@ -25,6 +25,152 @@ from botocore.utils import set_value_from_jmespath, merge_dicts
 
 
 log = logging.getLogger(__name__)
+
+
+class TokenEncoder(object):
+    """Encodes dictionaries into opaque strings.
+
+    This for the most part json dumps + base64 encoding, but also supports
+    having bytes in the dictionary in addition to the types that json can
+    handle by default.
+
+    This is intended for use in encoding pagination tokens, which in some
+    cases can be complex structures and / or contain bytes.
+    """
+
+    def encode(self, token):
+        """Encodes a dictionary to an opaque string.
+
+        :type token: dict
+        :param token: A dictionary containing pagination information,
+            particularly the service pagination token(s) but also other boto
+            metadata.
+
+        :rtype: str
+        :returns: An opaque string
+        """
+        try:
+            # Try just using json dumps first to avoid having to traverse
+            # and encode the dict. In 99.9999% of cases this will work.
+            json_string = json.dumps(token)
+        except (TypeError, UnicodeDecodeError):
+            # If normal dumping failed, go through and base64 encode all bytes.
+            encoded_token, encoded_keys = self._encode(token, [])
+
+            # Save the list of all the encoded key paths. We can safely
+            # assume that no service will ever use this key.
+            encoded_token['boto_encoded_keys'] = encoded_keys
+
+            # Now that the bytes are all encoded, dump the json.
+            json_string = json.dumps(encoded_token)
+
+        # base64 encode the json string to produce an opaque token string.
+        return base64.b64encode(json_string.encode('utf-8')).decode('utf-8')
+
+    def _encode(self, data, path):
+        """Encode bytes in given data, keeping track of the path traversed."""
+        if isinstance(data, dict):
+            return self._encode_dict(data, path)
+        elif isinstance(data, list):
+            return self._encode_list(data, path)
+        elif isinstance(data, six.binary_type):
+            return self._encode_bytes(data, path)
+        else:
+            return data, []
+
+    def _encode_list(self, data, path):
+        """Encode any bytes in a list, noting the index of what is encoded."""
+        new_data = []
+        encoded = []
+        for i, value in enumerate(data):
+            new_path = path + [i]
+            new_value, new_encoded = self._encode(value, new_path)
+            new_data.append(new_value)
+            encoded.extend(new_encoded)
+        return new_data, encoded
+
+    def _encode_dict(self, data, path):
+        """Encode any bytes in a dict, noting the index of what is encoded."""
+        new_data = {}
+        encoded = []
+        for key, value in data.items():
+            new_path = path + [key]
+            new_value, new_encoded = self._encode(value, new_path)
+            new_data[key] = new_value
+            encoded.extend(new_encoded)
+        return new_data, encoded
+
+    def _encode_bytes(self, data, path):
+        """Base64 encode a byte string."""
+        return base64.b64encode(data).decode('utf-8'), [path]
+
+
+class TokenDecoder(object):
+    """Decodes token strings back into dictionaries.
+
+    This performs the inverse operation to the TokenEncoder, accepting
+    opaque strings and decoding them into a useable form.
+    """
+
+    def decode(self, token):
+        """Decodes an opaque string to a dictionary.
+
+        :type token: str
+        :param token: A token string given by the botocore pagination
+            interface.
+
+        :rtype: dict
+        :returns: A dictionary containing pagination information,
+            particularly the service pagination token(s) but also other boto
+            metadata.
+        """
+        json_string = base64.b64decode(token.encode('utf-8')).decode('utf-8')
+        decoded_token = json.loads(json_string)
+
+        # Remove the encoding metadata as it is read since it will no longer
+        # be needed.
+        encoded_keys = decoded_token.pop('boto_encoded_keys', None)
+        if encoded_keys is None:
+            return decoded_token
+        else:
+            return self._decode(decoded_token, encoded_keys)
+
+    def _decode(self, token, encoded_keys):
+        """Find each encoded value and decode it."""
+        for key in encoded_keys:
+            encoded = self._path_get(token, key)
+            decoded = base64.b64decode(encoded.encode('utf-8'))
+            self._path_set(token, key, decoded)
+        return token
+
+    def _path_get(self, data, path):
+        """Return the nested data at the given path.
+
+        For instance:
+            data = {'foo': ['bar', 'baz']}
+            path = ['foo', 0]
+            ==> 'bar'
+        """
+        # jmespath isn't used here because it would be difficult to actually
+        # create the jmespath query when taking all of the unknowns of key
+        # structure into account. Gross though this is, it is simple and not
+        # very error prone.
+        d = data
+        for step in path:
+            d = d[step]
+        return d
+
+    def _path_set(self, data, path, value):
+        """Set the value of a key in the given data.
+
+        Example:
+            data = {'foo': ['bar', 'baz']}
+            path = ['foo', 1]
+            value = 'bin'
+            ==> data = {'foo': ['bar', 'bin']}
+        """
+        container = self._path_get(data, path[:-1])
+        container[path[-1]] = value
 
 
 class PaginatorModel(object):
@@ -57,6 +203,8 @@ class PageIterator(object):
         self._resume_token = None
         self._non_aggregate_key_exprs = non_aggregate_keys
         self._non_aggregate_part = {}
+        self._token_encoder = TokenEncoder()
+        self._token_decoder = TokenDecoder()
 
     @property
     def result_keys(self):
@@ -79,8 +227,7 @@ class PageIterator(object):
         dict_keys = sorted(value.keys())
 
         if token_keys == dict_keys:
-            self._resume_token = base64.b64encode(
-                json.dumps(value).encode('utf-8')).decode('utf-8')
+            self._resume_token = self._token_encoder.encode(value)
         else:
             raise ValueError("Bad starting token: %s" % value)
 
@@ -92,6 +239,12 @@ class PageIterator(object):
         current_kwargs = self._op_kwargs
         previous_next_token = None
         next_token = dict((key, None) for key in self._input_token)
+        if self._starting_token is not None:
+            # If the starting token exists, populate the next_token with the
+            # values inside it. This ensures that we have the service's
+            # pagination token on hand if we need to truncate after the
+            # first response.
+            next_token = self._parse_starting_token()[0]
         # The number of items from result_key we've seen so far.
         total_items = 0
         first_request = True
@@ -110,6 +263,11 @@ class PageIterator(object):
                         parsed, primary_result_key, starting_truncation)
                 first_request = False
                 self._record_non_aggregate_key_values(parsed)
+            else:
+                # If this isn't the first request, we have already sliced into
+                # the first request and had to make additional requests after.
+                # We no longer need to add this to truncation.
+                starting_truncation = 0
             current_response = primary_result_key.search(parsed)
             if current_response is None:
                 current_response = []
@@ -211,7 +369,7 @@ class PageIterator(object):
         # and only return the truncated amount.
         starting_truncation = self._parse_starting_token()[1]
         all_data = primary_result_key.search(parsed)
-        if isinstance(all_data, (list, string_types)):
+        if isinstance(all_data, (list, six.string_types)):
             data = all_data[starting_truncation:]
         else:
             data = None
@@ -229,7 +387,7 @@ class PageIterator(object):
             sample = token.search(parsed)
             if isinstance(sample, list):
                 empty_value = []
-            elif isinstance(sample, string_types):
+            elif isinstance(sample, six.string_types):
                 empty_value = ''
             elif isinstance(sample, (int, float)):
                 empty_value = 0
@@ -321,7 +479,7 @@ class PageIterator(object):
                 # Now both result_value and existing_value contain something
                 if isinstance(result_value, list):
                     existing_value.extend(result_value)
-                elif isinstance(result_value, (int, float, string_types)):
+                elif isinstance(result_value, (int, float, six.string_types)):
                     # Modify the existing result with the sum or concatenation
                     set_value_from_jmespath(
                         complete_result, result_expression.expression,
@@ -338,8 +496,7 @@ class PageIterator(object):
         # The starting token is a dict passed as a base64 encoded string.
         next_token = self._starting_token
         try:
-            next_token = json.loads(
-                base64.b64decode(next_token).decode('utf-8'))
+            next_token = self._token_decoder.decode(next_token)
             index = 0
             if 'boto_truncate_amount' in next_token:
                 index = next_token.get('boto_truncate_amount')
@@ -394,7 +551,8 @@ class PageIterator(object):
 class Paginator(object):
     PAGE_ITERATOR_CLS = PageIterator
 
-    def __init__(self, method, pagination_config):
+    def __init__(self, method, pagination_config, model):
+        self._model = model
         self._method = method
         self._pagination_cfg = pagination_config
         self._output_token = self._get_output_tokens(self._pagination_cfg)
@@ -472,11 +630,17 @@ class Paginator(object):
             max_items = int(max_items)
         page_size = pagination_config.get('PageSize', None)
         if page_size is not None:
-            if self._pagination_cfg.get('limit_key', None) is None:
+            if self._limit_key is None:
                 raise PaginationError(
                     message="PageSize parameter is not supported for the "
                             "pagination interface for this operation.")
-            page_size = int(page_size)
+            input_members = self._model.input_shape.members
+            limit_key_shape = input_members.get(self._limit_key)
+            if limit_key_shape.type_name == 'string':
+                if not isinstance(page_size, six.string_types):
+                    page_size = str(page_size)
+            else:
+                page_size = int(page_size)
         return {
             'MaxItems': max_items,
             'StartingToken': pagination_config.get('StartingToken', None),

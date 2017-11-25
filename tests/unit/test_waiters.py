@@ -493,6 +493,41 @@ class TestWaitersObjects(unittest.TestCase):
         self.assertEqual(sleep_mock.call_count, 2)
         sleep_mock.assert_called_with(delay_time)
 
+    @mock.patch('time.sleep')
+    def test_waiter_invocation_config_honors_delay(self, sleep_mock):
+        config = self.create_waiter_config()
+        operation_method = mock.Mock()
+        self.client_responses_are(
+            {'Success': False},
+            {'Success': False},
+            {'Success': False},
+            for_operation=operation_method
+        )
+        waiter = Waiter('MyWaiter', config, operation_method)
+        custom_delay = 3
+        with self.assertRaises(WaiterError):
+            waiter.wait(WaiterConfig={'Delay': custom_delay})
+
+        # We attempt three times, which means we need to sleep
+        # twice, once before each subsequent request.
+        self.assertEqual(sleep_mock.call_count, 2)
+        sleep_mock.assert_called_with(custom_delay)
+
+    def test_waiter_invocation_config_honors_max_attempts(self):
+        config = self.create_waiter_config()
+        operation_method = mock.Mock()
+        self.client_responses_are(
+            {'Success': False},
+            {'Success': False},
+            for_operation=operation_method
+        )
+        waiter = Waiter('MyWaiter', config, operation_method)
+        custom_max = 2
+        with self.assertRaises(WaiterError):
+            waiter.wait(WaiterConfig={'MaxAttempts': custom_max})
+
+        self.assertEqual(operation_method.call_count, 2)
+
 
 class TestCreateWaiter(unittest.TestCase):
     def setUp(self):

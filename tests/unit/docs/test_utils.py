@@ -10,8 +10,6 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import mock
-
 from tests import unittest
 from tests.unit.docs import BaseDocsTest
 from botocore.docs.utils import py_type_name
@@ -20,6 +18,7 @@ from botocore.docs.utils import get_official_service_name
 from botocore.docs.utils import AutoPopulatedParam
 from botocore.docs.utils import HideParamFromOperations
 from botocore.docs.utils import AppendParamDocumentation
+from botocore.docs.utils import escape_controls
 
 
 class TestPythonTypeName(unittest.TestCase):
@@ -219,3 +218,10 @@ class TestAppendParamDocumentation(BaseDocsTest):
             'docs.request-params', self.doc_structure)
         self.assert_contains_line('foo\n')
         self.assert_contains_line('hello!')
+
+
+class TestEscapeControls(unittest.TestCase):
+    def test_escapes_controls(self):
+        escaped = escape_controls('\na\rb\tc\fd\be')
+        self.assertEquals(escaped, '\\na\\rb\\tc\\fd\\be')
+

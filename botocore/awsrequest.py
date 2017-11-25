@@ -19,7 +19,8 @@ import socket
 import inspect
 
 from botocore.compat import six
-from botocore.compat import HTTPHeaders, HTTPResponse, urlunsplit, urlsplit
+from botocore.compat import HTTPHeaders, HTTPResponse, urlunsplit, urlsplit,\
+    urlparse
 from botocore.exceptions import UnseekableStreamError
 from botocore.utils import percent_encode_sequence
 from botocore.vendored.requests import models

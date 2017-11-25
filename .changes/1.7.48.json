@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``workdocs``", 
+    "description": "Update workdocs client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kinesis``", 
+    "description": "Update kinesis client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codecommit``", 
+    "description": "Update codecommit client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``apigateway``", 
+    "description": "Update apigateway client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``firehose``", 
+    "description": "Update firehose client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ce``", 
+    "description": "Update ce client to latest version", 
+    "type": "api-change"
+  }
+]

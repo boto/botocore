@@ -62,7 +62,7 @@
         {"shape":"TooManyRequestsException"},
         {"shape":"ResourceNotFoundException"}
       ],
-      "documentation":"<p>Identifies a stream as an event source for a Lambda function. It can be either an Amazon Kinesis stream or an Amazon DynamoDB stream. AWS Lambda invokes the specified function when records are posted to the stream.</p> <p>This association between a stream source and a Lambda function is called the event source mapping.</p> <important><p>This event source mapping is relevant only in the AWS Lambda pull model, where AWS Lambda invokes the function. For more information, see <a href=\"http://docs.aws.amazon.com/lambda/latest/dg/lambda-introduction.html\">AWS Lambda: How it Works</a> in the <i>AWS Lambda Developer Guide</i>.</p> </important> <p>You provide mapping information (for example, which stream to read from and which Lambda function to invoke) in the request body.</p> <p>Each event source, such as an Amazon Kinesis or a DynamoDB stream, can be associated with multiple AWS Lambda function. A given Lambda function can be associated with multiple AWS event sources.</p> <p>If you are using versioning, you can specify a specific function version or an alias via the function name parameter. For more information about versioning, see <a href=\"http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html\">AWS Lambda Function Versioning and Aliases</a>. </p> <p>This operation requires permission for the <code>lambda:CreateEventSourceMapping</code> action.</p>"
+      "documentation":"<p>Identifies a stream as an event source for a Lambda function. It can be either an Amazon Kinesis stream or an Amazon DynamoDB stream. AWS Lambda invokes the specified function when records are posted to the stream.</p> <p>This association between a stream source and a Lambda function is called the event source mapping.</p> <important> <p>This event source mapping is relevant only in the AWS Lambda pull model, where AWS Lambda invokes the function. For more information, see <a href=\"http://docs.aws.amazon.com/lambda/latest/dg/lambda-introduction.html\">AWS Lambda: How it Works</a> in the <i>AWS Lambda Developer Guide</i>.</p> </important> <p>You provide mapping information (for example, which stream to read from and which Lambda function to invoke) in the request body.</p> <p>Each event source, such as an Amazon Kinesis or a DynamoDB stream, can be associated with multiple AWS Lambda function. A given Lambda function can be associated with multiple AWS event sources.</p> <p>If you are using versioning, you can specify a specific function version or an alias via the function name parameter. For more information about versioning, see <a href=\"http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html\">AWS Lambda Function Versioning and Aliases</a>. </p> <p>This operation requires permission for the <code>lambda:CreateEventSourceMapping</code> action.</p>"
     },
     "CreateFunction":{
       "name":"CreateFunction",
@@ -230,7 +230,7 @@
         {"shape":"TooManyRequestsException"},
         {"shape":"InvalidParameterValueException"}
       ],
-      "documentation":"<p>Returns the resource policy associated with the specified Lambda function.</p> <p> If you are using the versioning feature, you can get the resource policy associated with the specific Lambda function version or alias by specifying the version or alias name using the <code>Qualifier</code> parameter. For more information about versioning, see <a href=\"http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html\">AWS Lambda Function Versioning and Aliases</a>. </p> <p>For information about adding permissions, see <a>AddPermission</a>.</p> <p>You need permission for the <code>lambda:GetPolicy action.</code> </p>"
+      "documentation":"<p>Returns the resource policy associated with the specified Lambda function.</p> <p> If you are using the versioning feature, you can get the resource policy associated with the specific Lambda function version or alias by specifying the version or alias name using the <code>Qualifier</code> parameter. For more information about versioning, see <a href=\"http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html\">AWS Lambda Function Versioning and Aliases</a>. </p> <p>You need permission for the <code>lambda:GetPolicy action.</code> </p>"
     },
     "Invoke":{
       "name":"Invoke",
@@ -259,7 +259,8 @@
         {"shape":"KMSDisabledException"},
         {"shape":"KMSInvalidStateException"},
         {"shape":"KMSAccessDeniedException"},
-        {"shape":"KMSNotFoundException"}
+        {"shape":"KMSNotFoundException"},
+        {"shape":"InvalidRuntimeException"}
       ],
       "documentation":"<p>Invokes a specific Lambda function. For an example, see <a href=\"http://docs.aws.amazon.com/lambda/latest/dg/with-dynamodb-create-function.html#with-dbb-invoke-manually\">Create the Lambda Function and Test It Manually</a>. </p> <p>If you are using the versioning feature, you can invoke the specific function version by providing function version or alias name that is pointing to the function version using the <code>Qualifier</code> parameter in the request. If you don't provide the <code>Qualifier</code> parameter, the <code>$LATEST</code> version of the Lambda function is invoked. Invocations occur at least once in response to an event and functions must be idempotent to handle this. For information about the versioning feature, see <a href=\"http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html\">AWS Lambda Function Versioning and Aliases</a>. </p> <p>This operation requires permission for the <code>lambda:InvokeFunction</code> action.</p>"
     },
@@ -275,9 +276,10 @@
       "errors":[
         {"shape":"ServiceException"},
         {"shape":"ResourceNotFoundException"},
-        {"shape":"InvalidRequestContentException"}
+        {"shape":"InvalidRequestContentException"},
+        {"shape":"InvalidRuntimeException"}
       ],
-      "documentation":"<important><p>This API is deprecated. We recommend you use <code>Invoke</code> API (see <a>Invoke</a>).</p> </important> <p>Submits an invocation request to AWS Lambda. Upon receiving the request, Lambda executes the specified function asynchronously. To see the logs generated by the Lambda function execution, see the CloudWatch Logs console.</p> <p>This operation requires permission for the <code>lambda:InvokeFunction</code> action.</p>",
+      "documentation":"<important> <p>This API is deprecated. We recommend you use <code>Invoke</code> API (see <a>Invoke</a>).</p> </important> <p>Submits an invocation request to AWS Lambda. Upon receiving the request, Lambda executes the specified function asynchronously. To see the logs generated by the Lambda function execution, see the CloudWatch Logs console.</p> <p>This operation requires permission for the <code>lambda:InvokeFunction</code> action.</p>",
       "deprecated":true
     },
     "ListAliases":{
@@ -325,9 +327,26 @@
       "output":{"shape":"ListFunctionsResponse"},
       "errors":[
         {"shape":"ServiceException"},
+        {"shape":"TooManyRequestsException"},
+        {"shape":"InvalidParameterValueException"}
+      ],
+      "documentation":"<p>Returns a list of your Lambda functions. For each function, the response includes the function configuration information. You must use <a>GetFunction</a> to retrieve the code for your function.</p> <p>This operation requires permission for the <code>lambda:ListFunctions</code> action.</p> <p>If you are using the versioning feature, you can list all of your functions or only <code>$LATEST</code> versions. For information about the versioning feature, see <a href=\"http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html\">AWS Lambda Function Versioning and Aliases</a>. </p>"
+    },
+    "ListTags":{
+      "name":"ListTags",
+      "http":{
+        "method":"GET",
+        "requestUri":"/2017-03-31/tags/{ARN}"
+      },
+      "input":{"shape":"ListTagsRequest"},
+      "output":{"shape":"ListTagsResponse"},
+      "errors":[
+        {"shape":"ServiceException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"InvalidParameterValueException"},
         {"shape":"TooManyRequestsException"}
       ],
-      "documentation":"<p>Returns a list of your Lambda functions. For each function, the response includes the function configuration information. You must use <a>GetFunction</a> to retrieve the code for your function.</p> <p>This operation requires permission for the <code>lambda:ListFunctions</code> action.</p> <p>If you are using versioning feature, the response returns list of $LATEST versions of your functions. For information about the versioning feature, see <a href=\"http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html\">AWS Lambda Function Versioning and Aliases</a>. </p>"
+      "documentation":"<p>Returns a list of tags assigned to a function when supplied the function ARN (Amazon Resource Name).</p>"
     },
     "ListVersionsByFunction":{
       "name":"ListVersionsByFunction",
@@ -379,6 +398,38 @@
         {"shape":"TooManyRequestsException"}
       ],
       "documentation":"<p>You can remove individual permissions from an resource policy associated with a Lambda function by providing a statement ID that you provided when you added the permission.</p> <p>If you are using versioning, the permissions you remove are specific to the Lambda function version or alias you specify in the <code>AddPermission</code> request via the <code>Qualifier</code> parameter. For more information about versioning, see <a href=\"http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html\">AWS Lambda Function Versioning and Aliases</a>. </p> <p>Note that removal of a permission will cause an active event source to lose permission to the function.</p> <p>You need permission for the <code>lambda:RemovePermission</code> action.</p>"
+    },
+    "TagResource":{
+      "name":"TagResource",
+      "http":{
+        "method":"POST",
+        "requestUri":"/2017-03-31/tags/{ARN}",
+        "responseCode":204
+      },
+      "input":{"shape":"TagResourceRequest"},
+      "errors":[
+        {"shape":"ServiceException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"TooManyRequestsException"}
+      ],
+      "documentation":"<p>Creates a list of tags (key-value pairs) on the Lambda function. Requires the Lambda function ARN (Amazon Resource Name). If a key is specified without a value, Lambda creates a tag with the specified key and a value of null. </p>"
+    },
+    "UntagResource":{
+      "name":"UntagResource",
+      "http":{
+        "method":"DELETE",
+        "requestUri":"/2017-03-31/tags/{ARN}",
+        "responseCode":204
+      },
+      "input":{"shape":"UntagResourceRequest"},
+      "errors":[
+        {"shape":"ServiceException"},
+        {"shape":"ResourceNotFoundException"},
+        {"shape":"InvalidParameterValueException"},
+        {"shape":"TooManyRequestsException"}
+      ],
+      "documentation":"<p>Removes tags from a Lambda function. Requires the function ARN (Amazon Resource Name). </p>"
     },
     "UpdateAlias":{
       "name":"UpdateAlias",
@@ -446,7 +497,8 @@
         {"shape":"ServiceException"},
         {"shape":"ResourceNotFoundException"},
         {"shape":"InvalidParameterValueException"},
-        {"shape":"TooManyRequestsException"}
+        {"shape":"TooManyRequestsException"},
+        {"shape":"ResourceConflictException"}
       ],
       "documentation":"<p>Updates the configuration parameters for the specified Lambda function by using the values provided in the request. You provide only the parameters you want to change. This operation must only be used on an existing Lambda function and cannot be used to update the function's code.</p> <p>If you are using the versioning feature, note this API will always update the $LATEST version of your Lambda function. For information about the versioning feature, see <a href=\"http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html\">AWS Lambda Function Versioning and Aliases</a>. </p> <p>This operation requires permission for the <code>lambda:UpdateFunctionConfiguration</code> action.</p>"
     }
@@ -457,7 +509,7 @@
       "members":{
         "TotalCodeSize":{
           "shape":"Long",
-          "documentation":"<p>Maximum size, in megabytes, of a code package you can upload per region. The default size is 75 GB. </p>"
+          "documentation":"<p>Maximum size, in bytes, of a code package you can upload per region. The default size is 75 GB. </p>"
         },
         "CodeSizeUnzipped":{
           "shape":"Long",
@@ -503,7 +555,7 @@
       "members":{
         "FunctionName":{
           "shape":"FunctionName",
-          "documentation":"<p>Name of the Lambda function whose resource policy you are updating by adding a new permission.</p> <p> You can specify a function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). AWS Lambda also allows you to specify partial ARN (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 character in length. </p>",
+          "documentation":"<p>Name of the Lambda function whose resource policy you are updating by adding a new permission.</p> <p> You can specify a function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). AWS Lambda also allows you to specify partial ARN (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 characters in length. </p>",
           "location":"uri",
           "locationName":"FunctionName"
         },
@@ -521,11 +573,11 @@
         },
         "SourceArn":{
           "shape":"Arn",
-          "documentation":"<p>This is optional; however, when granting Amazon S3 permission to invoke your function, you should specify this field with the Amazon Resource Name (ARN) as its value. This ensures that only events generated from the specified source can invoke the function.</p> <important><p>If you add a permission for the Amazon S3 principal without providing the source ARN, any AWS account that creates a mapping to your function ARN can send events to invoke your Lambda function from Amazon S3.</p> </important>"
+          "documentation":"<p>This is optional; however, when granting permission to invoke your function, you should specify this field with the Amazon Resource Name (ARN) as its value. This ensures that only events generated from the specified source can invoke the function.</p> <important> <p>If you add a permission without providing the source ARN, any AWS account that creates a mapping to your function ARN can send events to invoke your Lambda function.</p> </important>"
         },
         "SourceAccount":{
           "shape":"SourceOwner",
-          "documentation":"<p>This parameter is used for S3, SES, CloudWatch Logs and CloudWatch Rules only. The AWS account ID (without a hyphen) of the source owner. For example, if the <code>SourceArn</code> identifies a bucket, then this is the bucket owner's account ID. You can use this additional condition to ensure the bucket you specify is owned by a specific account (it is possible the bucket owner deleted the bucket and some other AWS account created the bucket). You can also use this condition to specify all sources (that is, you don't specify the <code>SourceArn</code>) owned by a specific account. </p>"
+          "documentation":"<p>This parameter is used for S3 and SES. The AWS account ID (without a hyphen) of the source owner. For example, if the <code>SourceArn</code> identifies a bucket, then this is the bucket owner's account ID. You can use this additional condition to ensure the bucket you specify is owned by a specific account (it is possible the bucket owner deleted the bucket and some other AWS account created the bucket). You can also use this condition to specify all sources (that is, you don't specify the <code>SourceArn</code>) owned by a specific account. </p>"
         },
         "EventSourceToken":{
           "shape":"EventSourceToken",
@@ -623,7 +675,7 @@
       "members":{
         "FunctionName":{
           "shape":"FunctionName",
-          "documentation":"<p>Name of the Lambda function for which you want to create an alias.</p>",
+          "documentation":"<p>Name of the Lambda function for which you want to create an alias. Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 characters in length.</p>",
           "location":"uri",
           "locationName":"FunctionName"
         },
@@ -655,7 +707,7 @@
         },
         "FunctionName":{
           "shape":"FunctionName",
-          "documentation":"<p>The Lambda function to invoke when AWS Lambda detects an event on the stream.</p> <p> You can specify the function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). </p> <p> If you are using versioning, you can also provide a qualified function ARN (ARN that is qualified with function version or alias name as suffix). For more information about versioning, see <a href=\"http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html\">AWS Lambda Function Versioning and Aliases</a> </p> <p>AWS Lambda also allows you to specify only the function name with the account ID qualifier (for example, <code>account-id:Thumbnail</code>). </p> <p>Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 character in length.</p>"
+          "documentation":"<p>The Lambda function to invoke when AWS Lambda detects an event on the stream.</p> <p> You can specify the function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). </p> <p> If you are using versioning, you can also provide a qualified function ARN (ARN that is qualified with function version or alias name as suffix). For more information about versioning, see <a href=\"http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html\">AWS Lambda Function Versioning and Aliases</a> </p> <p>AWS Lambda also allows you to specify only the function name with the account ID qualifier (for example, <code>account-id:Thumbnail</code>). </p> <p>Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 characters in length.</p>"
         },
         "Enabled":{
           "shape":"Enabled",
@@ -688,11 +740,11 @@
       "members":{
         "FunctionName":{
           "shape":"FunctionName",
-          "documentation":"<p>The name you want to assign to the function you are uploading. The function names appear in the console and are returned in the <a>ListFunctions</a> API. Function names are used to specify functions to other AWS Lambda API operations, such as <a>Invoke</a>. </p>"
+          "documentation":"<p>The name you want to assign to the function you are uploading. The function names appear in the console and are returned in the <a>ListFunctions</a> API. Function names are used to specify functions to other AWS Lambda API operations, such as <a>Invoke</a>. Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 characters in length. </p>"
         },
         "Runtime":{
           "shape":"Runtime",
-          "documentation":"<p>The runtime environment for the Lambda function you are uploading.</p> <p>To use the Node.js runtime v4.3, set the value to \"nodejs4.3\". To use earlier runtime (v0.10.42), set the value to \"nodejs\".</p> <note> <p>You can no longer create functions using the v0.10.42 runtime version as of November, 2016. Existing functions will be supported until early 2017, but we recommend you migrate them to nodejs4.3 runtime version as soon as possible.</p> </note>"
+          "documentation":"<p>The runtime environment for the Lambda function you are uploading.</p> <p>To use the Python runtime v3.6, set the value to \"python3.6\". To use the Python runtime v2.7, set the value to \"python2.7\". To use the Node.js runtime v6.10, set the value to \"nodejs6.10\". To use the Node.js runtime v4.3, set the value to \"nodejs4.3\".</p> <note> <p>Node v0.10.42 is currently marked as deprecated. You must migrate existing functions to the newer Node.js runtime versions available on AWS Lambda (nodejs4.3 or nodejs6.10) as soon as possible. You can request a one-time extension until June 30, 2017 by going to the Lambda console and following the instructions provided. Failure to do so will result in an invalid parmaeter error being returned. Note that you will have to follow this procedure for each region that contains functions written in the Node v0.10.42 runtime.</p> </note>"
         },
         "Role":{
           "shape":"RoleArn",
@@ -728,12 +780,20 @@
         },
         "DeadLetterConfig":{
           "shape":"DeadLetterConfig",
-          "documentation":"<p>The parent object that contains the target Amazon Resource Name (ARN) of an Amazon SQS queue or Amazon SNS topic. </p>"
+          "documentation":"<p>The parent object that contains the target ARN (Amazon Resource Name) of an Amazon SQS queue or Amazon SNS topic. </p>"
         },
         "Environment":{"shape":"Environment"},
         "KMSKeyArn":{
           "shape":"KMSKeyArn",
           "documentation":"<p>The Amazon Resource Name (ARN) of the KMS key used to encrypt your function's environment variables. If not provided, AWS Lambda will use a default service key.</p>"
+        },
+        "TracingConfig":{
+          "shape":"TracingConfig",
+          "documentation":"<p>The parent object that contains your function's tracing settings.</p>"
+        },
+        "Tags":{
+          "shape":"Tags",
+          "documentation":"<p>The list of tags (key-value pairs) assigned to the new function.</p>"
         }
       },
       "documentation":"<p/>"
@@ -747,7 +807,7 @@
           "documentation":"<p>The Amazon Resource Name (ARN) of an Amazon SQS queue or Amazon SNS topic you specify as your Dead Letter Queue (DLQ).</p>"
         }
       },
-      "documentation":"<p>The parent object that contains the target Amazon Resource Name (ARN) of an Amazon SQS queue or Amazon SNS topic.</p>"
+      "documentation":"<p>The parent object that contains the target ARN (Amazon Resource Name) of an Amazon SQS queue or Amazon SNS topic.</p>"
     },
     "DeleteAliasRequest":{
       "type":"structure",
@@ -758,7 +818,7 @@
       "members":{
         "FunctionName":{
           "shape":"FunctionName",
-          "documentation":"<p>The Lambda function name for which the alias is created. Deleting an alias does not delete the function version to which it is pointing.</p>",
+          "documentation":"<p>The Lambda function name for which the alias is created. Deleting an alias does not delete the function version to which it is pointing. Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 characters in length.</p>",
           "location":"uri",
           "locationName":"FunctionName"
         },
@@ -789,7 +849,7 @@
       "members":{
         "FunctionName":{
           "shape":"FunctionName",
-          "documentation":"<p>The Lambda function to delete.</p> <p> You can specify the function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). If you are using versioning, you can also provide a qualified function ARN (ARN that is qualified with function version or alias name as suffix). AWS Lambda also allows you to specify only the function name with the account ID qualifier (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 character in length. </p>",
+          "documentation":"<p>The Lambda function to delete.</p> <p> You can specify the function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). If you are using versioning, you can also provide a qualified function ARN (ARN that is qualified with function version or alias name as suffix). AWS Lambda also allows you to specify only the function name with the account ID qualifier (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 characters in length. </p>",
           "location":"uri",
           "locationName":"FunctionName"
         },
@@ -853,7 +913,7 @@
       "members":{
         "Variables":{
           "shape":"EnvironmentVariables",
-          "documentation":"<p>The key-value pairs that represent your environment's configuration settings. The value you specify cannot contain a \",\".</p>"
+          "documentation":"<p>The key-value pairs that represent your environment's configuration settings.</p>"
         }
       },
       "documentation":"<p>The parent object that contains your environment's configuration settings.</p>"
@@ -890,7 +950,6 @@
     },
     "EnvironmentVariableValue":{
       "type":"string",
-      "pattern":"[^,]*",
       "sensitive":true
     },
     "EnvironmentVariables":{
@@ -999,16 +1058,16 @@
       "type":"structure",
       "members":{
         "FunctionName":{
-          "shape":"FunctionName",
-          "documentation":"<p>The name of the function.</p>"
+          "shape":"NamespacedFunctionName",
+          "documentation":"<p>The name of the function. Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 characters in length.</p>"
         },
         "FunctionArn":{
-          "shape":"FunctionArn",
+          "shape":"NameSpacedFunctionArn",
           "documentation":"<p>The Amazon Resource Name (ARN) assigned to the function.</p>"
         },
         "Runtime":{
           "shape":"Runtime",
-          "documentation":"<p>The runtime environment for the Lambda function.</p> <p>To use the Node.js runtime v4.3, set the value to \"nodejs4.3\". To use earlier runtime (v0.10.42), set the value to \"nodejs\".</p>"
+          "documentation":"<p>The runtime environment for the Lambda function.</p>"
         },
         "Role":{
           "shape":"RoleArn",
@@ -1036,7 +1095,7 @@
         },
         "LastModified":{
           "shape":"Timestamp",
-          "documentation":"<p>The time stamp of the last time you updated the function.</p>"
+          "documentation":"<p>The time stamp of the last time you updated the function. The time stamp is conveyed as a string complying with ISO-8601 in this way YYYY-MM-DDThh:mm:ssTZD (e.g., 1997-07-16T19:20:30+01:00). For more information, see <a href=\"https://www.w3.org/TR/NOTE-datetime\">Date and Time Formats</a>.</p>"
         },
         "CodeSha256":{
           "shape":"String",
@@ -1052,7 +1111,7 @@
         },
         "DeadLetterConfig":{
           "shape":"DeadLetterConfig",
-          "documentation":"<p>The parent object that contains the target Amazon Resource Name (ARN) of an Amazon SQS queue or Amazon SNS topic.</p>"
+          "documentation":"<p>The parent object that contains the target ARN (Amazon Resource Name) of an Amazon SQS queue or Amazon SNS topic.</p>"
         },
         "Environment":{
           "shape":"EnvironmentResponse",
@@ -1061,6 +1120,14 @@
         "KMSKeyArn":{
           "shape":"KMSKeyArn",
           "documentation":"<p>The Amazon Resource Name (ARN) of the KMS key used to encrypt your function's environment variables. If empty, it means you are using the AWS Lambda default service key.</p>"
+        },
+        "TracingConfig":{
+          "shape":"TracingConfigResponse",
+          "documentation":"<p>The parent object that contains your function's tracing settings.</p>"
+        },
+        "MasterArn":{
+          "shape":"FunctionArn",
+          "documentation":"<p>Returns the ARN (Amazon Resource Name) of the master function.</p>"
         }
       },
       "documentation":"<p>A complex type that describes function metadata.</p>"
@@ -1074,6 +1141,10 @@
       "max":140,
       "min":1,
       "pattern":"(arn:aws:lambda:)?([a-z]{2}-[a-z]+-\\d{1}:)?(\\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\\$LATEST|[a-zA-Z0-9-_]+))?"
+    },
+    "FunctionVersion":{
+      "type":"string",
+      "enum":["ALL"]
     },
     "GetAccountSettingsRequest":{
       "type":"structure",
@@ -1096,7 +1167,7 @@
       "members":{
         "FunctionName":{
           "shape":"FunctionName",
-          "documentation":"<p>Function name for which the alias is created. An alias is a subresource that exists only in the context of an existing Lambda function so you must specify the function name.</p>",
+          "documentation":"<p>Function name for which the alias is created. An alias is a subresource that exists only in the context of an existing Lambda function so you must specify the function name. Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 characters in length.</p>",
           "location":"uri",
           "locationName":"FunctionName"
         },
@@ -1126,8 +1197,8 @@
       "required":["FunctionName"],
       "members":{
         "FunctionName":{
-          "shape":"FunctionName",
-          "documentation":"<p>The name of the Lambda function for which you want to retrieve the configuration information.</p> <p> You can specify a function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). AWS Lambda also allows you to specify a partial ARN (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 character in length. </p>",
+          "shape":"NamespacedFunctionName",
+          "documentation":"<p>The name of the Lambda function for which you want to retrieve the configuration information.</p> <p> You can specify a function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). AWS Lambda also allows you to specify a partial ARN (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 characters in length. </p>",
           "location":"uri",
           "locationName":"FunctionName"
         },
@@ -1145,8 +1216,8 @@
       "required":["FunctionName"],
       "members":{
         "FunctionName":{
-          "shape":"FunctionName",
-          "documentation":"<p>The Lambda function name.</p> <p> You can specify a function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). AWS Lambda also allows you to specify a partial ARN (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 character in length. </p>",
+          "shape":"NamespacedFunctionName",
+          "documentation":"<p>The Lambda function name.</p> <p> You can specify a function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). AWS Lambda also allows you to specify a partial ARN (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 characters in length. </p>",
           "location":"uri",
           "locationName":"FunctionName"
         },
@@ -1163,7 +1234,11 @@
       "type":"structure",
       "members":{
         "Configuration":{"shape":"FunctionConfiguration"},
-        "Code":{"shape":"FunctionCodeLocation"}
+        "Code":{"shape":"FunctionCodeLocation"},
+        "Tags":{
+          "shape":"Tags",
+          "documentation":"<p>Returns the list of tags associated with the function.</p>"
+        }
       },
       "documentation":"<p>This response contains the object for the Lambda function location (see <a>FunctionCodeLocation</a>.</p>"
     },
@@ -1172,8 +1247,8 @@
       "required":["FunctionName"],
       "members":{
         "FunctionName":{
-          "shape":"FunctionName",
-          "documentation":"<p>Function name whose resource policy you want to retrieve.</p> <p> You can specify the function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). If you are using versioning, you can also provide a qualified function ARN (ARN that is qualified with function version or alias name as suffix). AWS Lambda also allows you to specify only the function name with the account ID qualifier (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 character in length. </p>",
+          "shape":"NamespacedFunctionName",
+          "documentation":"<p>Function name whose resource policy you want to retrieve.</p> <p> You can specify the function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). If you are using versioning, you can also provide a qualified function ARN (ARN that is qualified with function version or alias name as suffix). AWS Lambda also allows you to specify only the function name with the account ID qualifier (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 characters in length. </p>",
           "location":"uri",
           "locationName":"FunctionName"
         },
@@ -1215,7 +1290,7 @@
           "documentation":"<p/>"
         }
       },
-      "documentation":"<p>One of the parameters in the request is invalid. For example, if you provided an IAM role for AWS Lambda to assume in the <code>CreateFunction</code> or the <code>UpdateFunctionConfiguration</code> API, that AWS Lambda is unable to assume you will get this exception. </p>",
+      "documentation":"<p>One of the parameters in the request is invalid. For example, if you provided an IAM role for AWS Lambda to assume in the <code>CreateFunction</code> or the <code>UpdateFunctionConfiguration</code> API, that AWS Lambda is unable to assume you will get this exception. You will also get this exception if you have selected a deprecated runtime, such as Node v0.10.42. </p>",
       "error":{"httpStatusCode":400},
       "exception":true
     },
@@ -1233,6 +1308,16 @@
       },
       "documentation":"<p>The request body could not be parsed as JSON.</p>",
       "error":{"httpStatusCode":400},
+      "exception":true
+    },
+    "InvalidRuntimeException":{
+      "type":"structure",
+      "members":{
+        "Type":{"shape":"String"},
+        "Message":{"shape":"String"}
+      },
+      "documentation":"<p>The runtime or runtime version specified is not supported.</p>",
+      "error":{"httpStatusCode":502},
       "exception":true
     },
     "InvalidSecurityGroupIDException":{
@@ -1270,8 +1355,8 @@
       "required":["FunctionName"],
       "members":{
         "FunctionName":{
-          "shape":"FunctionName",
-          "documentation":"<p>The Lambda function name.</p> <p> You can specify a function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). AWS Lambda also allows you to specify a partial ARN (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 character in length. </p>",
+          "shape":"NamespacedFunctionName",
+          "documentation":"<p>The Lambda function name.</p> <p> You can specify a function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). AWS Lambda also allows you to specify a partial ARN (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 characters in length. </p>",
           "location":"uri",
           "locationName":"FunctionName"
         },
@@ -1312,7 +1397,7 @@
       "members":{
         "StatusCode":{
           "shape":"Integer",
-          "documentation":"<p>The HTTP status code will be in the 200 range for successful request. For the <code>RequestResonse</code> invocation type this status code will be 200. For the <code>Event</code> invocation type this status code will be 202. For the <code>DryRun</code> invocation type the status code will be 204. </p>",
+          "documentation":"<p>The HTTP status code will be in the 200 range for successful request. For the <code>RequestResponse</code> invocation type this status code will be 200. For the <code>Event</code> invocation type this status code will be 202. For the <code>DryRun</code> invocation type the status code will be 204. </p>",
           "location":"statusCode"
         },
         "FunctionError":{
@@ -1351,8 +1436,8 @@
       ],
       "members":{
         "FunctionName":{
-          "shape":"FunctionName",
-          "documentation":"<p>The Lambda function name.</p>",
+          "shape":"NamespacedFunctionName",
+          "documentation":"<p>The Lambda function name. Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 characters in length.</p>",
           "location":"uri",
           "locationName":"FunctionName"
         },
@@ -1427,7 +1512,7 @@
       "members":{
         "FunctionName":{
           "shape":"FunctionName",
-          "documentation":"<p>Lambda function name for which the alias is created.</p>",
+          "documentation":"<p>Lambda function name for which the alias is created. Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 characters in length.</p>",
           "location":"uri",
           "locationName":"FunctionName"
         },
@@ -1475,7 +1560,7 @@
         },
         "FunctionName":{
           "shape":"FunctionName",
-          "documentation":"<p>The name of the Lambda function.</p> <p> You can specify the function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). If you are using versioning, you can also provide a qualified function ARN (ARN that is qualified with function version or alias name as suffix). AWS Lambda also allows you to specify only the function name with the account ID qualifier (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 character in length. </p>",
+          "documentation":"<p>The name of the Lambda function.</p> <p> You can specify the function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). If you are using versioning, you can also provide a qualified function ARN (ARN that is qualified with function version or alias name as suffix). AWS Lambda also allows you to specify only the function name with the account ID qualifier (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 characters in length. </p>",
           "location":"querystring",
           "locationName":"FunctionName"
         },
@@ -1511,6 +1596,18 @@
     "ListFunctionsRequest":{
       "type":"structure",
       "members":{
+        "MasterRegion":{
+          "shape":"MasterRegion",
+          "documentation":"<p>Optional string. If not specified, will return only regular function versions (i.e., non-replicated versions).</p> <p>Valid values are:</p> <p>The region from which the functions are replicated. For example, if you specify <code>us-east-1</code>, only functions replicated from that region will be returned.</p> <p> <code>ALL</code> _ Will return all functions from any region. If specified, you also must specify a valid FunctionVersion parameter.</p>",
+          "location":"querystring",
+          "locationName":"MasterRegion"
+        },
+        "FunctionVersion":{
+          "shape":"FunctionVersion",
+          "documentation":"<p>Optional string. If not specified, only the unqualified functions ARNs (Amazon Resource Names) will be returned.</p> <p>Valid value:</p> <p> <code>ALL</code> _ Will return all versions, including <code>$LATEST</code> which will have fully qualified ARNs (Amazon Resource Names).</p>",
+          "location":"querystring",
+          "locationName":"FunctionVersion"
+        },
         "Marker":{
           "shape":"String",
           "documentation":"<p>Optional string. An opaque pagination token returned from a previous <code>ListFunctions</code> operation. If present, indicates where to continue the listing. </p>",
@@ -1540,13 +1637,34 @@
       },
       "documentation":"<p>Contains a list of AWS Lambda function configurations (see <a>FunctionConfiguration</a>.</p>"
     },
+    "ListTagsRequest":{
+      "type":"structure",
+      "required":["Resource"],
+      "members":{
+        "Resource":{
+          "shape":"FunctionArn",
+          "documentation":"<p>The ARN (Amazon Resource Name) of the function.</p>",
+          "location":"uri",
+          "locationName":"ARN"
+        }
+      }
+    },
+    "ListTagsResponse":{
+      "type":"structure",
+      "members":{
+        "Tags":{
+          "shape":"Tags",
+          "documentation":"<p>The list of tags assigned to the function.</p>"
+        }
+      }
+    },
     "ListVersionsByFunctionRequest":{
       "type":"structure",
       "required":["FunctionName"],
       "members":{
         "FunctionName":{
-          "shape":"FunctionName",
-          "documentation":"<p>Function name whose versions to list. You can specify a function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). AWS Lambda also allows you to specify a partial ARN (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 character in length. </p>",
+          "shape":"NamespacedFunctionName",
+          "documentation":"<p>Function name whose versions to list. You can specify a function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). AWS Lambda also allows you to specify a partial ARN (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 characters in length. </p>",
           "location":"uri",
           "locationName":"FunctionName"
         },
@@ -1587,6 +1705,10 @@
       ]
     },
     "Long":{"type":"long"},
+    "MasterRegion":{
+      "type":"string",
+      "pattern":"ALL|[a-z]{2}(-gov)?-[a-z]+-\\d{1}"
+    },
     "MaxListItems":{
       "type":"integer",
       "max":10000,
@@ -1596,6 +1718,22 @@
       "type":"integer",
       "max":1536,
       "min":128
+    },
+    "NameSpacedFunctionArn":{
+      "type":"string",
+      "pattern":"arn:aws:lambda:[a-z]{2}-[a-z]+-\\d{1}:\\d{12}:function:[a-zA-Z0-9-_\\.]+(:(\\$LATEST|[a-zA-Z0-9-_]+))?"
+    },
+    "NamespacedFunctionName":{
+      "type":"string",
+      "max":170,
+      "min":1,
+      "pattern":"(arn:aws:lambda:)?([a-z]{2}-[a-z]+-\\d{1}:)?(\\d{12}:)?(function:)?([a-zA-Z0-9-_\\.]+)(:(\\$LATEST|[a-zA-Z0-9-_]+))?"
+    },
+    "NamespacedStatementId":{
+      "type":"string",
+      "max":100,
+      "min":1,
+      "pattern":"([a-zA-Z0-9-_.]+)"
     },
     "PolicyLengthExceededException":{
       "type":"structure",
@@ -1617,7 +1755,7 @@
       "members":{
         "FunctionName":{
           "shape":"FunctionName",
-          "documentation":"<p>The Lambda function name. You can specify a function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). AWS Lambda also allows you to specify a partial ARN (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 character in length. </p>",
+          "documentation":"<p>The Lambda function name. You can specify a function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). AWS Lambda also allows you to specify a partial ARN (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 characters in length. </p>",
           "location":"uri",
           "locationName":"FunctionName"
         },
@@ -1647,12 +1785,12 @@
       "members":{
         "FunctionName":{
           "shape":"FunctionName",
-          "documentation":"<p>Lambda function whose resource policy you want to remove a permission from.</p> <p> You can specify a function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). AWS Lambda also allows you to specify a partial ARN (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 character in length. </p>",
+          "documentation":"<p>Lambda function whose resource policy you want to remove a permission from.</p> <p> You can specify a function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). AWS Lambda also allows you to specify a partial ARN (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 characters in length. </p>",
           "location":"uri",
           "locationName":"FunctionName"
         },
         "StatementId":{
-          "shape":"StatementId",
+          "shape":"NamespacedStatementId",
           "documentation":"<p>Statement ID of the permission to remove.</p>",
           "location":"uri",
           "locationName":"StatementId"
@@ -1715,8 +1853,10 @@
       "enum":[
         "nodejs",
         "nodejs4.3",
+        "nodejs6.10",
         "java8",
         "python2.7",
+        "python3.6",
         "dotnetcore1.0",
         "nodejs4.3-edge"
       ]
@@ -1784,6 +1924,36 @@
       "member":{"shape":"SubnetId"},
       "max":16
     },
+    "TagKey":{"type":"string"},
+    "TagKeyList":{
+      "type":"list",
+      "member":{"shape":"TagKey"}
+    },
+    "TagResourceRequest":{
+      "type":"structure",
+      "required":[
+        "Resource",
+        "Tags"
+      ],
+      "members":{
+        "Resource":{
+          "shape":"FunctionArn",
+          "documentation":"<p>The ARN (Amazon Resource Name) of the Lambda function.</p>",
+          "location":"uri",
+          "locationName":"ARN"
+        },
+        "Tags":{
+          "shape":"Tags",
+          "documentation":"<p>The list of tags (key-value pairs) you are assigning to the Lambda function.</p>"
+        }
+      }
+    },
+    "TagValue":{"type":"string"},
+    "Tags":{
+      "type":"map",
+      "key":{"shape":"TagKey"},
+      "value":{"shape":"TagValue"}
+    },
     "ThrottleReason":{
       "type":"string",
       "enum":[
@@ -1814,6 +1984,33 @@
       "error":{"httpStatusCode":429},
       "exception":true
     },
+    "TracingConfig":{
+      "type":"structure",
+      "members":{
+        "Mode":{
+          "shape":"TracingMode",
+          "documentation":"<p>Can be either PassThrough or Active. If PassThrough, Lambda will only trace the request from an upstream service if it contains a tracing header with \"sampled=1\". If Active, Lambda will respect any tracing header it receives from an upstream service. If no tracing header is received, Lambda will call X-Ray for a tracing decision.</p>"
+        }
+      },
+      "documentation":"<p>The parent object that contains your function's tracing settings.</p>"
+    },
+    "TracingConfigResponse":{
+      "type":"structure",
+      "members":{
+        "Mode":{
+          "shape":"TracingMode",
+          "documentation":"<p>The tracing mode associated with your Lambda function.</p>"
+        }
+      },
+      "documentation":"<p>Parent object of the tracing information associated with your Lambda function.</p>"
+    },
+    "TracingMode":{
+      "type":"string",
+      "enum":[
+        "Active",
+        "PassThrough"
+      ]
+    },
     "UnsupportedMediaTypeException":{
       "type":"structure",
       "members":{
@@ -1824,6 +2021,27 @@
       "error":{"httpStatusCode":415},
       "exception":true
     },
+    "UntagResourceRequest":{
+      "type":"structure",
+      "required":[
+        "Resource",
+        "TagKeys"
+      ],
+      "members":{
+        "Resource":{
+          "shape":"FunctionArn",
+          "documentation":"<p>The ARN (Amazon Resource Name) of the function.</p>",
+          "location":"uri",
+          "locationName":"ARN"
+        },
+        "TagKeys":{
+          "shape":"TagKeyList",
+          "documentation":"<p>The list of tag keys to be deleted from the function.</p>",
+          "location":"querystring",
+          "locationName":"tagKeys"
+        }
+      }
+    },
     "UpdateAliasRequest":{
       "type":"structure",
       "required":[
@@ -1833,7 +2051,7 @@
       "members":{
         "FunctionName":{
           "shape":"FunctionName",
-          "documentation":"<p>The function name for which the alias is created.</p>",
+          "documentation":"<p>The function name for which the alias is created. Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 characters in length.</p>",
           "location":"uri",
           "locationName":"FunctionName"
         },
@@ -1865,7 +2083,7 @@
         },
         "FunctionName":{
           "shape":"FunctionName",
-          "documentation":"<p>The Lambda function to which you want the stream records sent.</p> <p> You can specify a function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). AWS Lambda also allows you to specify a partial ARN (for example, <code>account-id:Thumbnail</code>). </p> <p>If you are using versioning, you can also provide a qualified function ARN (ARN that is qualified with function version or alias name as suffix). For more information about versioning, see <a href=\"http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html\">AWS Lambda Function Versioning and Aliases</a> </p> <p>Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 character in length.</p>"
+          "documentation":"<p>The Lambda function to which you want the stream records sent.</p> <p> You can specify a function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). AWS Lambda also allows you to specify a partial ARN (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 characters in length. </p> <p>If you are using versioning, you can also provide a qualified function ARN (ARN that is qualified with function version or alias name as suffix). For more information about versioning, see <a href=\"http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html\">AWS Lambda Function Versioning and Aliases</a> </p> <p>Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 character in length.</p>"
         },
         "Enabled":{
           "shape":"Enabled",
@@ -1884,7 +2102,7 @@
       "members":{
         "FunctionName":{
           "shape":"FunctionName",
-          "documentation":"<p>The existing Lambda function name whose code you want to replace.</p> <p> You can specify a function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). AWS Lambda also allows you to specify a partial ARN (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 character in length. </p>",
+          "documentation":"<p>The existing Lambda function name whose code you want to replace.</p> <p> You can specify a function name (for example, <code>Thumbnail</code>) or you can specify Amazon Resource Name (ARN) of the function (for example, <code>arn:aws:lambda:us-west-2:account-id:function:ThumbNail</code>). AWS Lambda also allows you to specify a partial ARN (for example, <code>account-id:Thumbnail</code>). Note that the length constraint applies only to the ARN. If you specify only the function name, it is limited to 64 characters in length. </p>",
           "location":"uri",
           "locationName":"FunctionName"
         },
@@ -1907,6 +2125,10 @@
         "Publish":{
           "shape":"Boolean",
           "documentation":"<p>This boolean parameter can be used to request AWS Lambda to update the Lambda function and publish a version as an atomic operation.</p>"
+        },
+        "DryRun":{
+          "shape":"Boolean",
+          "documentation":"<p>This boolean parameter can be used to test your request to AWS Lambda to update the Lambda function and publish a version as an atomic operation. It will do all necessary computation and validation of your code but will not upload it or a publish a version. Each time this operation is invoked, the <code>CodeSha256</code> hash value the provided code will also be computed and returned in the response.</p>"
         }
       },
       "documentation":"<p/>"
@@ -1948,15 +2170,19 @@
         },
         "Runtime":{
           "shape":"Runtime",
-          "documentation":"<p>The runtime environment for the Lambda function.</p> <p>To use the Node.js runtime v4.3, set the value to \"nodejs4.3\". To use earlier runtime (v0.10.42), set the value to \"nodejs\".</p> <note> <p>You can no longer downgrade to the v0.10.42 runtime version. This version will no longer be supported as of early 2017.</p> </note>"
+          "documentation":"<p>The runtime environment for the Lambda function.</p> <p>To use the Python runtime v3.6, set the value to \"python3.6\". To use the Python runtime v2.7, set the value to \"python2.7\". To use the Node.js runtime v6.10, set the value to \"nodejs6.10\". To use the Node.js runtime v4.3, set the value to \"nodejs4.3\". To use the Python runtime v3.6, set the value to \"python3.6\".</p> <note> <p>Node v0.10.42 is currently marked as deprecated. You must migrate existing functions to the newer Node.js runtime versions available on AWS Lambda (nodejs4.3 or nodejs6.10) as soon as possible. You can request a one-time extension until June 30, 2017 by going to the Lambda console and following the instructions provided. Failure to do so will result in an invalid parameter error being returned. Note that you will have to follow this procedure for each region that contains functions written in the Node v0.10.42 runtime.</p> </note>"
         },
         "DeadLetterConfig":{
           "shape":"DeadLetterConfig",
-          "documentation":"<p>The parent object that contains the target Amazon Resource Name (ARN) of an Amazon SQS queue or Amazon SNS topic.</p>"
+          "documentation":"<p>The parent object that contains the target ARN (Amazon Resource Name) of an Amazon SQS queue or Amazon SNS topic.</p>"
         },
         "KMSKeyArn":{
           "shape":"KMSKeyArn",
           "documentation":"<p>The Amazon Resource Name (ARN) of the KMS key used to encrypt your function's environment variables. If you elect to use the AWS Lambda default service key, pass in an empty string (\"\") for this parameter.</p>"
+        },
+        "TracingConfig":{
+          "shape":"TracingConfig",
+          "documentation":"<p>The parent object that contains your function's tracing settings.</p>"
         }
       },
       "documentation":"<p/>"

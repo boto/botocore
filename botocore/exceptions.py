@@ -350,9 +350,10 @@ class ClientError(Exception):
 
     def __init__(self, error_response, operation_name):
         retry_info = self._get_retry_info(error_response)
+        error = error_response.get('Error', {})
         msg = self.MSG_TEMPLATE.format(
-            error_code=error_response['Error'].get('Code', 'Unknown'),
-            error_message=error_response['Error'].get('Message', 'Unknown'),
+            error_code=error.get('Code', 'Unknown'),
+            error_message=error.get('Message', 'Unknown'),
             operation_name=operation_name,
             retry_info=retry_info,
         )
@@ -399,6 +400,21 @@ class InvalidS3AddressingStyleError(BotoCoreError):
     )
 
 
+class InvalidRetryConfigurationError(BotoCoreError):
+    """Error when invalid retry configuration is specified"""
+    fmt = (
+        'Cannot provide retry configuration for "{retry_config_option}". '
+        'Valid retry configuration options are: \'max_attempts\''
+    )
+
+
+class InvalidMaxRetryAttemptsError(InvalidRetryConfigurationError):
+    """Error when invalid retry configuration is specified"""
+    fmt = (
+        'Value provided to "max_attempts": {provided_max_attempts} must '
+        'be an integer greater than or equal to zero.'
+    )
+
 class StubResponseError(BotoCoreError):
     fmt = 'Error getting response stub for operation {operation_name}: {reason}'
 
@@ -409,6 +425,14 @@ class StubAssertionError(StubResponseError, AssertionError):
 
 class InvalidConfigError(BotoCoreError):
     fmt = '{error_msg}'
+
+
+class InfiniteLoopConfigError(InvalidConfigError):
+    fmt = (
+        'Infinite loop in credential configuration detected. Attempting to '
+        'load from profile {source_profile} which has already been visited. '
+        'Visited profiles: {visited_profiles}'
+    )
 
 
 class RefreshWithMFAUnsupportedError(BotoCoreError):

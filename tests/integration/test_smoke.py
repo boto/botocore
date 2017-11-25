@@ -14,7 +14,7 @@ import os
 import mock
 from pprint import pformat
 import warnings
-from nose.tools import assert_equals, assert_true
+from nose.tools import assert_equal, assert_true
 
 from botocore import xform_name
 import botocore.session
@@ -40,7 +40,7 @@ SMOKE_TESTS = {
                     'ListStacks': {}},
  'cloudfront': {'ListDistributions': {},
                 'ListStreamingDistributions': {}},
- 'cloudhsm': {'ListAvailableZones': {}},
+ 'cloudhsmv2': {'DescribeBackups': {}},
  'cloudsearch': {'DescribeDomains': {},
                  'ListDomainNames': {}},
  'cloudtrail': {'DescribeTrails': {}},
@@ -127,7 +127,7 @@ ERROR_TESTS = {
         'TemplateURL': 'http://s3.amazonaws.com/foo/bar',
         }},
     'cloudfront': {'GetDistribution': {'Id': 'fake-id'}},
-    'cloudhsm': {'DescribeHapg': {'HapgArn': 'bogus-arn'}},
+    'cloudhsmv2': {'ListTags': {'ResourceId': 'fake-id'}},
     'cloudsearch': {'DescribeIndexFields': {'DomainName': 'fakedomain'}},
     'cloudtrail': {'DeleteTrail': {'Name': 'fake-trail'}},
     'cloudwatch': {'SetAlarmState': {
@@ -246,9 +246,9 @@ def _make_client_call(client, operation_name, kwargs):
     method = getattr(client, operation_name)
     with warnings.catch_warnings(record=True) as caught_warnings:
         response = method(**kwargs)
-        assert_equals(len(caught_warnings), 0,
-                      "Warnings were emitted during smoke test: %s"
-                      % caught_warnings)
+        assert_equal(len(caught_warnings), 0,
+                     "Warnings were emitted during smoke test: %s"
+                     % caught_warnings)
         assert_true('Errors' not in response)
 
 
