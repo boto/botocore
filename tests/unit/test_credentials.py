@@ -254,6 +254,31 @@ class TestAssumeRoleCredentialFetcher(BaseEnvVar):
 
         self.assertEqual(response, expected_response)
 
+    def test_cache_always_serializes_datetime(self):
+        cache = {}
+        expiration = self.some_future_time()
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': expiration
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        refresher = credentials.AssumeRoleCredentialFetcher(
+            client_creator, self.source_creds, self.role_arn, cache=cache
+        )
+        refresher.fetch_credentials()
+
+        cache_key = (
+            'myrole--'
+            'c317144bac72cf0af5958944e842acc49158de1532778e43569566b76c826f1f'
+        )
+        cache_expiration = cache[cache_key]['Credentials']['Expiration']
+        self.assertNotIsInstance(cache_expiration, datetime)
+        self.assertEqual(cache_expiration, expiration.isoformat())
+
     def test_retrieves_from_cache(self):
         date_in_future = datetime.utcnow() + timedelta(seconds=1000)
         utc_timestamp = date_in_future.isoformat() + 'Z'
