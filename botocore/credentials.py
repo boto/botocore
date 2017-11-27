@@ -540,7 +540,11 @@ class CachedCredentialFetcher(object):
         return None
 
     def _write_to_cache(self, response):
-        self._cache[self._cache_key] = deepcopy(response)
+        cache_response = deepcopy(response)
+        expiration = cache_response['Credentials']['Expiration']
+        expiration = _serialize_if_needed(expiration, iso=True)
+        cache_response['Credentials']['Expiration'] = expiration
+        self._cache[self._cache_key] = cache_response
 
     def _is_expired(self, credentials):
         """Check if credentials are expired."""
