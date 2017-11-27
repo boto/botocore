@@ -258,8 +258,7 @@ class TestAssumeRoleCredentialFetcher(BaseEnvVar):
         date_in_future = datetime.utcnow() + timedelta(seconds=1000)
         utc_timestamp = date_in_future.isoformat() + 'Z'
         cache_key = (
-            'myrole--'
-            'c317144bac72cf0af5958944e842acc49158de1532778e43569566b76c826f1f'
+            '793d6e2f27667ab2da104824407e486bfec24a47'
         )
         cache = {
             cache_key: {
@@ -306,8 +305,7 @@ class TestAssumeRoleCredentialFetcher(BaseEnvVar):
         # On windows, you cannot use a a ':' in the filename, so
         # we need to make sure that it doesn't make it into the cache key.
         cache_key = (
-            'arn_aws_iam__role_foo-role--'
-            'a812859ff24fa3e52c0f5f3e02bf7ee35d37d994268ed246b7565432feaa9b8c'
+            '75c539f0711ba78c5b9e488d0add95f178a54d74'
         )
         self.assertIn(cache_key, cache)
         self.assertEqual(cache[cache_key], response)
@@ -333,8 +331,7 @@ class TestAssumeRoleCredentialFetcher(BaseEnvVar):
 
         # This is the sha256 hex digest of the expected assume role args.
         cache_key = (
-            'myrole--'
-            'e1d8b3cff6b4198df3db001d5719fa40842e623bed271eb93afd3b46faaad847'
+            '2964201f5648c8be5b9460a9cf842d73a266daf2'
         )
         self.assertIn(cache_key, cache)
         self.assertEqual(cache[cache_key], response)
@@ -369,8 +366,7 @@ class TestAssumeRoleCredentialFetcher(BaseEnvVar):
 
         # This is the sha256 hex digest of the expected assume role args.
         cache_key = (
-            'myrole--'
-            'f56c4c34a846dcb116b7ab180767960a583b0697cd7d6f736696b5ec01291321'
+            '176f223d915e82456c253545e192aa21d68f5ab8'
         )
         self.assertIn(cache_key, cache)
         self.assertEqual(cache[cache_key], response)
@@ -1571,8 +1567,7 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         self.fake_config['profiles']['development']['role_arn'] = 'myrole'
 
         cache_key = (
-            'myrole--'
-            'c317144bac72cf0af5958944e842acc49158de1532778e43569566b76c826f1f'
+            '793d6e2f27667ab2da104824407e486bfec24a47'
         )
         cache = {
             cache_key: {
@@ -1602,8 +1597,7 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         # is sourcing from does not. This should result in the cached
         # credentials being used, and the source profile not being called.
         cache_key = (
-            'chained-role--'
-            '3c84bd9fee47cf6be518796a56e77b9ed2a407ecbff0ebf322cd025cfff83abf'
+            '3d440bf424caf7a5ee664fbf89139a84409f95c2'
         )
         cache = {
             cache_key: {
@@ -1652,8 +1646,7 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         # On windows, you cannot use a a ':' in the filename, so
         # we need to make sure it doesn't come up in the cache key.
         cache_key = (
-            'arn_aws_iam__foo-role--'
-            '2658f5f4e4ba3dce28e1c7eaf23dc91ccf512a3cface8cf9b48fed7dfc81a2db'
+            '3f8e35c8dca6211d496e830a2de723b2387921e3'
         )
         self.assertIn(cache_key, cache)
         self.assertEqual(cache[cache_key], response)
@@ -1682,8 +1675,7 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         provider.load().get_frozen_credentials()
 
         cache_key = (
-            'arn_aws_iam__foo-role--'
-            '3c29738019009f3a0bec23a6ade81f946d016400572f5c2b399084ed68432a60'
+            '5e75ce21b6a64ab183b29c4a159b6f0248121d51'
         )
         self.assertIn(cache_key, cache)
         self.assertEqual(cache[cache_key], response)
