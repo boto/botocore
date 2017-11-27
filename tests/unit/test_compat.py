@@ -110,6 +110,8 @@ def test_compat_shell_split_windows():
         '" "': [' '],
         '"\t"': ['\t'],
         '\\\\': ['\\\\'],
+        '\\\\ ': ['\\\\'],
+        '\\\\\t': ['\\\\'],
         # The following four test cases are official test cases given in
         # Microsoft's documentation.
         r'"abc" d e': [r'abc', r'd', r'e'],
@@ -137,6 +139,8 @@ def test_compat_shell_split_unix():
         '" "': [' '],
         '"\t"': ['\t'],
         '\\\\': ['\\'],
+        '\\\\ ': ['\\'],
+        '\\\\\t': ['\\'],
         # The following four test cases are official test cases given in
         # Microsoft's documentation, but adapted to unix shell splitting.
         r'"abc" d e': [r'abc', r'd', r'e'],
