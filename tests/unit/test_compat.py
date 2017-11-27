@@ -158,5 +158,4 @@ class ShellSplitTestRunner(object):
         assert_equal(compat_shell_split(s, platform), expected)
 
     def assert_raises(self, s, exception_cls, platform):
-        with assert_raises(exception_cls):
-            compat_shell_split(s, platform)
+        assert_raises(exception_cls, compat_shell_split, s, platform)
