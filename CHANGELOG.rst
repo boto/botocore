@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.8.2
+=====
+
+* api-change:``mediapackage``: Update mediapackage client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``mediastore``: Update mediastore client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``mediastore-data``: Update mediastore-data client to latest version
+
+
 1.8.1
 =====
 
