@@ -37,6 +37,7 @@ SERVICE_RENAMES = {
     'lex-models': 'models.lex',
     'marketplace-entitlement': 'entitlement.marketplace',
     'pricing': 'api.pricing',
+    'mediastore-data': 'data.mediastore'
 }
 
 BLACKLIST = [
