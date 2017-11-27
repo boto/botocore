@@ -18,7 +18,6 @@ import os
 import getpass
 import threading
 import subprocess
-import shlex
 from collections import namedtuple
 from copy import deepcopy
 from hashlib import sha256
@@ -30,6 +29,7 @@ from dateutil.tz import tzlocal
 import botocore.configloader
 import botocore.compat
 from botocore.compat import total_seconds
+from botocore.compat import compat_shell_split
 from botocore.exceptions import UnknownCredentialError
 from botocore.exceptions import PartialCredentialsError
 from botocore.exceptions import ConfigNotFound
@@ -742,7 +742,7 @@ class ProcessProvider(CredentialProvider):
     def _retrieve_credentials_using(self, credential_process):
         # We're not using shell=True, so we need to pass the
         # command and all arguments as a list.
-        process_list = shlex.split(credential_process)
+        process_list = compat_shell_split(credential_process)
         p = self._popen(process_list,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE)
