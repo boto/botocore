@@ -39,6 +39,8 @@ SERVICE_RENAMES = {
     'pricing': 'api.pricing',
     'mediastore-data': 'data.mediastore',
     'iot-jobs-data': 'data.jobs.iot',
+    'kinesis-video-media': 'kinesisvideo',
+    'kinesis-video-archived-media': 'kinesisvideo',
 }
 
 BLACKLIST = [
