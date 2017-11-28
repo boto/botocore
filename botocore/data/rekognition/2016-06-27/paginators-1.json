@@ -4,7 +4,7 @@
       "input_token": "NextToken",
       "limit_key": "MaxResults",
       "output_token": "NextToken",
-      "result_key": "CollectionIds"
+      "result_key": ["CollectionIds", "FaceModelVersions"]
     },
     "ListFaces": {
       "input_token": "NextToken",
