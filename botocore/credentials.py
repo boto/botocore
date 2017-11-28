@@ -21,7 +21,7 @@ import subprocess
 import shlex
 from collections import namedtuple
 from copy import deepcopy
-from hashlib import sha256
+from hashlib import sha1
 import json
 
 from dateutil.parser import parse
@@ -629,9 +629,8 @@ class AssumeRoleCredentialFetcher(CachedCredentialFetcher):
             args['Policy'] = json.loads(args['Policy'])
 
         args = json.dumps(args, sort_keys=True)
-        argument_hash = sha256(args.encode('utf-8')).hexdigest()
-        cache_key = '%s--%s' % (self._role_arn, argument_hash)
-        return self._make_file_safe(cache_key)
+        argument_hash = sha1(args.encode('utf-8')).hexdigest()
+        return self._make_file_safe(argument_hash)
 
     def _get_credentials(self):
         """Get credentials by calling assume role."""
