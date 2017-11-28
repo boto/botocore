@@ -10,7 +10,8 @@
       "input_token": "NextToken",
       "limit_key": "MaxResults",
       "output_token": "NextToken",
-      "result_key": "Faces"
+      "result_key": "Faces",
+      "non_aggregate_keys": ["FaceModelVersion"]
     }
   }
 }
