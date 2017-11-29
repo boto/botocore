@@ -10,15 +10,15 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
 import datetime
 import mock
 
+from nose.tools import assert_equal, assert_raises
+
 from botocore.exceptions import MD5UnavailableError
 from botocore.compat import (
-    total_seconds, unquote_str, six, ensure_bytes, get_md5
+    total_seconds, unquote_str, six, ensure_bytes, get_md5, compat_shell_split
 )
-
 from tests import BaseEnvVar, unittest
 
 
@@ -95,3 +95,73 @@ class TestGetMD5(unittest.TestCase):
         with mock.patch('botocore.compat.MD5_AVAILABLE', False):
             with self.assertRaises(MD5UnavailableError):
                 get_md5()
+
+
+def test_compat_shell_split_windows():
+    windows_cases = {
+        r'': [],
+        r'spam \\': [r'spam', '\\\\'],
+        r'spam ': [r'spam'],
+        r' spam': [r'spam'],
+        'spam eggs': [r'spam', r'eggs'],
+        'spam\teggs': [r'spam', r'eggs'],
+        'spam\neggs': ['spam\neggs'],
+        '""': [''],
+        '" "': [' '],
+        '"\t"': ['\t'],
+        '\\\\': ['\\\\'],
+        '\\\\ ': ['\\\\'],
+        '\\\\\t': ['\\\\'],
+        r'\"': ['"'],
+        # The following four test cases are official test cases given in
+        # Microsoft's documentation.
+        r'"abc" d e': [r'abc', r'd', r'e'],
+        r'a\\b d"e f"g h': [r'a\\b', r'de fg', r'h'],
+        r'a\\\"b c d': [r'a\"b', r'c', r'd'],
+        r'a\\\\"b c" d e': [r'a\\b c', r'd', r'e']
+    }
+    runner = ShellSplitTestRunner()
+    for input_string, expected_output in windows_cases.items():
+        yield runner.assert_equal, input_string, expected_output, "win32"
+
+    yield runner.assert_raises, r'"', ValueError, "win32"
+
+
+def test_compat_shell_split_unix():
+    unix_cases = {
+        r'': [],
+        r'spam \\': [r'spam', '\\'],
+        r'spam ': [r'spam'],
+        r' spam': [r'spam'],
+        'spam eggs': [r'spam', r'eggs'],
+        'spam\teggs': [r'spam', r'eggs'],
+        'spam\neggs': ['spam', 'eggs'],
+        '""': [''],
+        '" "': [' '],
+        '"\t"': ['\t'],
+        '\\\\': ['\\'],
+        '\\\\ ': ['\\'],
+        '\\\\\t': ['\\'],
+        r'\"': ['"'],
+        # The following four test cases are official test cases given in
+        # Microsoft's documentation, but adapted to unix shell splitting.
+        r'"abc" d e': [r'abc', r'd', r'e'],
+        r'a\\b d"e f"g h': [r'a\b', r'de fg', r'h'],
+        r'a\\\"b c d': [r'a\"b', r'c', r'd'],
+        r'a\\\\"b c" d e': [r'a\\b c', r'd', r'e']
+    }
+    runner = ShellSplitTestRunner()
+    for input_string, expected_output in unix_cases.items():
+        yield runner.assert_equal, input_string, expected_output, "linux2"
+        yield runner.assert_equal, input_string, expected_output, "darwin"
+
+    yield runner.assert_raises, r'"', ValueError, "linux2"
+    yield runner.assert_raises, r'"', ValueError, "darwin"
+
+
+class ShellSplitTestRunner(object):
+    def assert_equal(self, s, expected, platform):
+        assert_equal(compat_shell_split(s, platform), expected)
+
+    def assert_raises(self, s, exception_cls, platform):
+        assert_raises(exception_cls, compat_shell_split, s, platform)

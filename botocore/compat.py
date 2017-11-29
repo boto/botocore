@@ -18,6 +18,8 @@ import inspect
 import warnings
 import hashlib
 import logging
+import shlex
+from math import floor
 
 from botocore.vendored import six
 from botocore.exceptions import MD5UnavailableError
@@ -271,3 +273,107 @@ def get_md5(*args, **kwargs):
         return hashlib.md5(*args, **kwargs)
     else:
         raise MD5UnavailableError()
+
+
+def compat_shell_split(s, platform=None):
+    if platform is None:
+        platform = sys.platform
+
+    if platform == "win32":
+        return _windows_shell_split(s)
+    else:
+        return shlex.split(s)
+
+
+def _windows_shell_split(s):
+    """Splits up a windows command as the built-in command parser would.
+
+    Windows has potentially bizarre rules depending on where you look. When
+    spawning a process via the Windows C runtime (which is what python does
+    when you call popen) the rules are as follows:
+
+    https://docs.microsoft.com/en-us/cpp/cpp/parsing-cpp-command-line-arguments
+
+    To summarize:
+
+    * Only space and tab are valid delimiters
+    * Double quotes are the only valid quotes
+    * Backslash is interpreted literally unless it is part of a chain that
+      leads up to a double quote. Then the backslashes escape the backslashes,
+      and if there is an odd number the final backslash escapes the quote.
+
+    :param s: The command string to split up into parts.
+    :return: A list of command components.
+    """
+    if not s:
+        return []
+
+    components = []
+    buff = []
+    is_quoted = False
+    num_backslashes = 0
+    for character in s:
+        if character == '\\':
+            # We can't simply append backslashes because we don't know if
+            # they are being used as escape characters or not. Instead we
+            # keep track of how many we've encountered and handle them when
+            # we encounter a different character.
+            num_backslashes += 1
+        elif character == '"':
+            if num_backslashes > 0:
+                # The backslashes are in a chain leading up to a double
+                # quote, so they are escaping each other.
+                buff.append('\\' * int(floor(num_backslashes / 2)))
+                remainder = num_backslashes % 2
+                num_backslashes = 0
+                if remainder == 1:
+                    # The number of backslashes is uneven, so they are also
+                    # escaping the double quote, so it needs to be added to
+                    # the current component buffer.
+                    buff.append('"')
+                    continue
+
+            # We've encountered a double quote that is not escaped,
+            # so we toggle is_quoted.
+            is_quoted = not is_quoted
+
+            # If there are quotes, then we may want an empty string. To be
+            # safe, we add an empty string to the buffer so that we make
+            # sure it sticks around if there's nothing else between quotes.
+            # If there is other stuff between quotes, the empty string will
+            # disappear during the joining process.
+            buff.append('')
+        elif character in [' ', '\t'] and not is_quoted:
+            # Since the backslashes aren't leading up to a quote, we put in
+            # the exact number of backslashes.
+            if num_backslashes > 0:
+                buff.append('\\' * num_backslashes)
+                num_backslashes = 0
+
+            # Excess whitespace is ignored, so only add the components list
+            # if there is anything in the buffer.
+            if buff:
+                components.append(''.join(buff))
+                buff = []
+        else:
+            # Since the backslashes aren't leading up to a quote, we put in
+            # the exact number of backslashes.
+            if num_backslashes > 0:
+                buff.append('\\' * num_backslashes)
+                num_backslashes = 0
+            buff.append(character)
+
+    # Quotes must be terminated.
+    if is_quoted:
+        raise ValueError('No closing quotation in string: %s' % s)
+
+    # There may be some leftover backslashes, so we need to add them in.
+    # There's no quote so we add the exact number.
+    if num_backslashes > 0:
+        buff.append('\\' * num_backslashes)
+
+    # Add the final component in if there is anything in the buffer.
+    if buff:
+        components.append(''.join(buff))
+
+    return components
