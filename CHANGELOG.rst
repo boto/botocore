@@ -2,6 +2,22 @@
 CHANGELOG
 =========
 
+1.8.3
+=====
+
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``appsync``: Update appsync client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``batch``: Update batch client to latest version
+* bugfix:rekognition: Fixed a bug causing the rekognition paginator to not return FaceModelVersions.
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``mq``: Update mq client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+* bugfix:Credentials: Fixes an issue where cache keys would be too long to use as file names.
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.8.2
 =====
 

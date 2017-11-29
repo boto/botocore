@@ -1,5 +1,0 @@
-{
-  "description": "Fixed a bug causing the rekognition paginator to not return FaceModelVersions.",
-  "category": "rekognition",
-  "type": "bugfix"
-}
