@@ -2,6 +2,27 @@
 CHANGELOG
 =========
 
+1.8.4
+=====
+
+* api-change:``kinesis-video-media``: Update kinesis-video-media client to latest version
+* api-change:``translate``: Update translate client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``iot-jobs-data``: Update iot-jobs-data client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``runtime.sagemaker``: Update runtime.sagemaker client to latest version
+* api-change:``kinesisvideo``: Update kinesisvideo client to latest version
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``greengrass``: Update greengrass client to latest version
+* api-change:``glacier``: Update glacier client to latest version
+* api-change:``kinesis-video-archived-media``: Update kinesis-video-archived-media client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* bugfix:Credentials: Fixed a bug causing issues in configuring the process provider on windows when paths were used.
+* api-change:``iot``: Update iot client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
 1.8.3
 =====
 

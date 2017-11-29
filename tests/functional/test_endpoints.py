@@ -37,7 +37,10 @@ SERVICE_RENAMES = {
     'lex-models': 'models.lex',
     'marketplace-entitlement': 'entitlement.marketplace',
     'pricing': 'api.pricing',
-    'mediastore-data': 'data.mediastore'
+    'mediastore-data': 'data.mediastore',
+    'iot-jobs-data': 'data.jobs.iot',
+    'kinesis-video-media': 'kinesisvideo',
+    'kinesis-video-archived-media': 'kinesisvideo',
 }
 
 BLACKLIST = [
