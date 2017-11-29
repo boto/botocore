@@ -115,6 +115,12 @@ class AWSConnection(object):
                 break
 
     def _send_request(self, method, url, body, headers, *args, **kwargs):
+        if headers.get('Content-Length') == '0':
+            # From RFC: https://tools.ietf.org/html/rfc7231#section-5.1.1
+            # Requirement for clients:
+            # - A client MUST NOT generate a 100-continue expectation
+            #   in a request that does not include a message body.
+            headers.pop('Expect', None)
         self._response_received = False
         if headers.get('Expect', b'') == b'100-continue':
             self._expect_header_set = True
@@ -230,7 +236,7 @@ class AWSConnection(object):
 
     def send(self, str):
         if self._response_received:
-            logger.debug("send() called, but reseponse already received. "
+            logger.debug("send() called, but response already received. "
                          "Not sending data.")
             return
         return super(AWSConnection, self).send(str)

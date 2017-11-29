@@ -436,6 +436,14 @@ class TestAWSHTTPConnection(unittest.TestCase):
         response = conn.getresponse()
         self.assertEqual(response.status, 200)
 
+    def test_no_expect_header_set_no_body(self):
+        s = FakeSocket(b'HTTP/1.1 200 OK\r\n')
+        conn = AWSHTTPConnection('s3.amazonaws.com', 443)
+        conn.sock = s
+        conn.request('PUT', '/bucket/foo', b'')
+        response = conn.getresponse()
+        self.assertEqual(response.status, 200)
+
     def test_tunnel_readline_none_bugfix(self):
         # Tests whether ``_tunnel`` function is able to work around the
         # py26 bug of avoiding infinite while loop if nothing is returned.
