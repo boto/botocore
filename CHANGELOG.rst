@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.8.6
+=====
+
+* api-change:``cloud9``: Update cloud9 client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+* api-change:``serverlessrepo``: Update serverlessrepo client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.8.5
 =====
 
