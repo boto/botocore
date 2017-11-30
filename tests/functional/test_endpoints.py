@@ -41,6 +41,7 @@ SERVICE_RENAMES = {
     'iot-jobs-data': 'data.jobs.iot',
     'kinesis-video-media': 'kinesisvideo',
     'kinesis-video-archived-media': 'kinesisvideo',
+    'alexaforbusiness': 'a4b',
 }
 
 BLACKLIST = [
