@@ -2,6 +2,76 @@
 CHANGELOG
 =========
 
+1.8.6
+=====
+
+* api-change:``cloud9``: Update cloud9 client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+* api-change:``serverlessrepo``: Update serverlessrepo client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.8.5
+=====
+
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``waf``: Update waf client to latest version
+* api-change:``waf-regional``: Update waf-regional client to latest version
+* api-change:``resource-groups``: Update resource-groups client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.8.4
+=====
+
+* api-change:``kinesis-video-media``: Update kinesis-video-media client to latest version
+* api-change:``translate``: Update translate client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``iot-jobs-data``: Update iot-jobs-data client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``runtime.sagemaker``: Update runtime.sagemaker client to latest version
+* api-change:``kinesisvideo``: Update kinesisvideo client to latest version
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``greengrass``: Update greengrass client to latest version
+* api-change:``glacier``: Update glacier client to latest version
+* api-change:``kinesis-video-archived-media``: Update kinesis-video-archived-media client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* bugfix:Credentials: Fixed a bug causing issues in configuring the process provider on windows when paths were used.
+* api-change:``iot``: Update iot client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
+1.8.3
+=====
+
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``appsync``: Update appsync client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``batch``: Update batch client to latest version
+* bugfix:rekognition: Fixed a bug causing the rekognition paginator to not return FaceModelVersions.
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``mq``: Update mq client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+* bugfix:Credentials: Fixes an issue where cache keys would be too long to use as file names.
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.8.2
+=====
+
+* api-change:``mediapackage``: Update mediapackage client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``mediastore``: Update mediastore client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``mediastore-data``: Update mediastore-data client to latest version
+
+
 1.8.1
 =====
 
