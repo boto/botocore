@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.8.5
+=====
+
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``waf``: Update waf client to latest version
+* api-change:``waf-regional``: Update waf-regional client to latest version
+* api-change:``resource-groups``: Update resource-groups client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.8.4
 =====
 
