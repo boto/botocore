@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.8.7
+=====
+
+* api-change:``budgets``: Update budgets client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+
+
 1.8.6
 =====
 
