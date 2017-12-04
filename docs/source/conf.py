@@ -15,7 +15,7 @@ import sys, os
 from botocore.session import get_session
 from botocore.docs import generate_docs
 
-generate_docs(os.path.dirname(os.path.abspath(__file__)), get_session())
+#generate_docs(os.path.dirname(os.path.abspath(__file__)), get_session())
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the

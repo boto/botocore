@@ -37,6 +37,5 @@ env
 env2
 env3
 
-docs/source/reference/services
 tests/coverage.xml
 tests/nosetests.xml
