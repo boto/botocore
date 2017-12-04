@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``budgets``", 
+    "description": "Update budgets client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ecs``", 
+    "description": "Update ecs client to latest version", 
+    "type": "api-change"
+  }
+]
