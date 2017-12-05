@@ -225,7 +225,7 @@ class TestAssumeRoleCredentials(BaseEnvVar):
                 return result['Credentials']
             except ClientError as e:
                 code = e.response.get('Error', {}).get('Code')
-                if code == "InvalidClientTokenId":
+                if code in ["InvalidClientTokenId", "AccessDenied"]:
                     time.sleep(delay)
                 else:
                     raise
