@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.8.8
+=====
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``servicediscovery``: Update servicediscovery client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+
+
 1.8.7
 =====
 
