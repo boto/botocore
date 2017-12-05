@@ -198,6 +198,20 @@
         }
       }
     },
+    "glacier": {
+      "__default__": {
+        "policies": {
+          "timeouts": {
+            "applies_when": {
+              "response": {
+                "http_status_code": 408,
+                "service_error_code": "RequestTimeoutException"
+              }
+            }
+          }
+        }
+      }
+    },
     "route53": {
       "__default__": {
         "policies": {
