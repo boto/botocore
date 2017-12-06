@@ -16,7 +16,6 @@ from nose.tools import assert_true
 from botocore.session import get_session
 
 BLACKLIST = [
-    'runtime.sagemaker',
 ]
 
 

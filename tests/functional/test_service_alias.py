@@ -11,16 +11,12 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import botocore.session
-
-# service_name => alias
-ALIAS_CASES = {
-    'sagemaker-runtime': 'runtime.sagemaker'
-}
+from botocore.handlers import SERVICE_NAME_ALIASES
 
 
 def test_can_use_service_alias():
     session = botocore.session.get_session()
-    for (name, alias) in ALIAS_CASES.items():
+    for (alias, name) in SERVICE_NAME_ALIASES.items():
         yield _instantiates_the_same_client, session, name, alias
 
 

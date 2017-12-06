@@ -57,12 +57,13 @@ REGISTER_LAST = object()
 VALID_BUCKET = re.compile(r'^[a-zA-Z0-9.\-_]{1,255}$')
 VERSION_ID_SUFFIX = re.compile(r'\?versionId=[^\s]+$')
 
-_SERVICE_NAME_ALIASES = {
+SERVICE_NAME_ALIASES = {
     'runtime.sagemaker': 'sagemaker-runtime'
 }
 
+
 def handle_service_name_alias(service_name, **kwargs):
-    return _SERVICE_NAME_ALIASES.get(service_name, service_name)
+    return SERVICE_NAME_ALIASES.get(service_name, service_name)
 
 
 def check_for_200_error(response, **kwargs):
