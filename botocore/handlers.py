@@ -57,6 +57,13 @@ REGISTER_LAST = object()
 VALID_BUCKET = re.compile(r'^[a-zA-Z0-9.\-_]{1,255}$')
 VERSION_ID_SUFFIX = re.compile(r'\?versionId=[^\s]+$')
 
+_SERVICE_NAME_ALIASES = {
+    'runtime.sagemaker': 'sagemaker-runtime'
+}
+
+def handle_service_name_alias(service_name, **kwargs):
+    return _SERVICE_NAME_ALIASES.get(service_name, service_name)
+
 
 def check_for_200_error(response, **kwargs):
     # From: http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectCOPY.html
@@ -840,6 +847,7 @@ class ClientMethodAlias(object):
 # automatically registered with that Session.
 
 BUILTIN_HANDLERS = [
+    ('choose-service-name', handle_service_name_alias),
     ('getattr.mturk.list_hi_ts_for_qualification_type',
      ClientMethodAlias('list_hits_for_qualification_type')),
     ('before-parameter-build.s3.UploadPart',
