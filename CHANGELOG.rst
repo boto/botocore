@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.8.9
+=====
+
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* api-change:``clouddirectory``: Update clouddirectory client to latest version
+
+
 1.8.8
 =====
 
