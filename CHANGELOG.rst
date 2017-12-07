@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.8.10
+======
+
+* api-change:``ses``: Update ses client to latest version
+* api-change:``es``: Update es client to latest version
+
+
 1.8.9
 =====
 
