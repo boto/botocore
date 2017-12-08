@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.8.11
+======
+
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+
+
 1.8.10
 ======
 
