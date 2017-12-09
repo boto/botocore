@@ -1776,46 +1776,6 @@
       },
       "documentation": "Placeholder documentation for ConflictException"
     },
-    "CreateChannel": {
-      "type": "structure",
-      "members": {
-        "Destinations": {
-          "shape": "ListOfOutputDestination",
-          "locationName": "destinations"
-        },
-        "EncoderSettings": {
-          "shape": "EncoderSettings",
-          "locationName": "encoderSettings"
-        },
-        "InputAttachments": {
-          "shape": "ListOfInputAttachment",
-          "locationName": "inputAttachments",
-          "documentation": "List of input attachments for channel."
-        },
-        "Name": {
-          "shape": "__string",
-          "locationName": "name",
-          "documentation": "Name of channel."
-        },
-        "RequestId": {
-          "shape": "__string",
-          "locationName": "requestId",
-          "documentation": "Unique request ID to be specified. This is needed to prevent retries from\ncreating multiple resources.\n",
-          "idempotencyToken": true
-        },
-        "Reserved": {
-          "shape": "__string",
-          "locationName": "reserved",
-          "documentation": "Reserved for future use."
-        },
-        "RoleArn": {
-          "shape": "__string",
-          "locationName": "roleArn",
-          "documentation": "An optional Amazon Resource Name (ARN) of the role to assume when running the Channel."
-        }
-      },
-      "documentation": "Placeholder documentation for CreateChannel"
-    },
     "CreateChannelRequest": {
       "type": "structure",
       "members": {
@@ -1875,42 +1835,6 @@
         }
       },
       "documentation": "Placeholder documentation for CreateChannelResultModel"
-    },
-    "CreateInput": {
-      "type": "structure",
-      "members": {
-        "Destinations": {
-          "shape": "ListOfInputDestinationRequest",
-          "locationName": "destinations",
-          "documentation": "settings required for PUSH-type inputs; one per redundancy group.\nOnly one of sources and destinations can be specified.\nNote: there are currently no settings required for PUSH-type inputs\n"
-        },
-        "InputSecurityGroups": {
-          "shape": "ListOf__string",
-          "locationName": "inputSecurityGroups",
-          "documentation": "A list of security groups referenced by IDs to attach to the input."
-        },
-        "Name": {
-          "shape": "__string",
-          "locationName": "name",
-          "documentation": "Name of the input."
-        },
-        "RequestId": {
-          "shape": "__string",
-          "locationName": "requestId",
-          "documentation": "Unique identifier of the request to ensure the request is handled\nexactly once in case of retries\n",
-          "idempotencyToken": true
-        },
-        "Sources": {
-          "shape": "ListOfInputSourceRequest",
-          "locationName": "sources",
-          "documentation": "settings required for PULL-type inputs; one per redundancy group\nOnly one of sources and destinations can be specified\n"
-        },
-        "Type": {
-          "shape": "InputType",
-          "locationName": "type"
-        }
-      },
-      "documentation": "Placeholder documentation for CreateInput"
     },
     "CreateInputRequest": {
       "type": "structure",
