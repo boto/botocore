@@ -2,6 +2,43 @@
 CHANGELOG
 =========
 
+1.8.11
+======
+
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+
+
+1.8.10
+======
+
+* api-change:``ses``: Update ses client to latest version
+* api-change:``es``: Update es client to latest version
+
+
+1.8.9
+=====
+
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* api-change:``clouddirectory``: Update clouddirectory client to latest version
+
+
+1.8.8
+=====
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``servicediscovery``: Update servicediscovery client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+
+
+1.8.7
+=====
+
+* api-change:``budgets``: Update budgets client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+
+
 1.8.6
 =====
 
