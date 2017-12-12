@@ -75,6 +75,18 @@ class TestStreamWrapper(unittest.TestCase):
         stream.close()
         self.assertTrue(body.closed)
 
+    def test_streaming_body_iterator(self):
+        body = six.BytesIO(b'123456789\n' * 10)
+        stream = response.StreamingBody(body, content_length=100)
+        for line in stream:
+            self.assertEqual(line, b'123456789\n')
+
+    def test_streaming_body_iterator(self):
+        body = six.BytesIO(b'123456789\r\n' * 10)
+        stream = response.StreamingBody(body, content_length=100)
+        for line in stream:
+            self.assertEqual(line, b'123456789\r\n')
+
 
 class TestGetResponse(BaseResponseTest):
     maxDiff = None

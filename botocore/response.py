@@ -15,6 +15,7 @@
 import sys
 import xml.etree.cElementTree
 import logging
+from botocore.compat import six
 
 from botocore import ScalarTypes
 from botocore.hooks import first_non_none_response
@@ -26,7 +27,7 @@ from botocore import parsers
 logger = logging.getLogger(__name__)
 
 
-class StreamingBody(object):
+class StreamingBody(six.Iterator):
     """Wrapper class for an http response body.
 
     This provides a few additional conveniences that do not exist
@@ -93,6 +94,21 @@ class StreamingBody(object):
     def close(self):
         """Close the underlying http response stream."""
         self._raw_stream.close()
+
+    def __iter__(self):
+        """Return self as an iterator, allows body to be used in iterator
+        contexts."""
+        return self
+
+    def __next__(self):
+        """Return the next line from the raw stream, at conclusion, verify
+        that the correct amount of data was read."""
+        line = self._raw_stream.readline()
+        self._amount_read += len(line)
+        if not line:
+            self._verify_content_length()
+            raise StopIteration
+        return line
 
 
 def get_response(operation_model, http_response):
