@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.8.12
+======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+
+
 1.8.11
 ======
 

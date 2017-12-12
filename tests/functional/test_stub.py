@@ -18,7 +18,7 @@ import botocore.session
 import botocore.stub as stub
 from botocore.stub import Stubber
 from botocore.exceptions import StubResponseError, ClientError, \
-    StubAssertionError
+    StubAssertionError, UnStubbedResponseError
 from botocore.exceptions import ParamValidationError
 import botocore.client
 import botocore.retryhandler
@@ -51,8 +51,8 @@ class TestStubber(unittest.TestCase):
     def test_activated_stubber_errors_with_no_registered_stubs(self):
         self.stubber.activate()
         # Params one per line for readability.
-        with self.assertRaisesRegexp(StubResponseError,
-                                     "'Bucket': 'asdfasdfasdfasdf',\n"):
+        with self.assertRaisesRegexp(UnStubbedResponseError,
+                                     "Unexpected API Call"):
             self.client.list_objects(
                 Bucket='asdfasdfasdfasdf',
                 Delimiter='asdfasdfasdfasdf',
@@ -64,7 +64,7 @@ class TestStubber(unittest.TestCase):
         self.stubber.activate()
         self.client.list_objects(Bucket='foo')
 
-        with self.assertRaises(StubResponseError):
+        with self.assertRaises(UnStubbedResponseError):
             self.client.list_objects(Bucket='foo')
 
     def test_client_error_response(self):

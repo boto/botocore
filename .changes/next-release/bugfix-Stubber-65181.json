@@ -1,0 +1,5 @@
+{
+  "category": "Stubber", 
+  "type": "bugfix", 
+  "description": "This change makes the error handling more verbose in the case where  a stubbed method has been called, but the Stubber is not expecting a call."
+}
