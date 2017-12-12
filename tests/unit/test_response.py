@@ -81,9 +81,9 @@ class TestStreamWrapper(unittest.TestCase):
         for line in stream:
             self.assertEqual(line, b'123456789\n')
 
-    def test_streaming_body_iterator(self):
+    def test_streaming_body_iterator_dos_newlines(self):
         body = six.BytesIO(b'123456789\r\n' * 10)
-        stream = response.StreamingBody(body, content_length=100)
+        stream = response.StreamingBody(body, content_length=110)
         for line in stream:
             self.assertEqual(line, b'123456789\r\n')
 
