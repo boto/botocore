@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``codedeploy``", 
+    "description": "Update codedeploy client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "sagemaker-runtime", 
+    "description": "Renamed the runtime.sagemaker service to sagemaker-runtime to be more consistent with existing services. The old service name is now aliased to sagemaker-runtime to maintain backwards compatibility.", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "Stubber", 
+    "description": "This change makes the error handling more verbose in the case where  a stubbed method has been called, but the Stubber is not expecting a call.", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``workmail``", 
+    "description": "Update workmail client to latest version", 
+    "type": "api-change"
+  }
+]
