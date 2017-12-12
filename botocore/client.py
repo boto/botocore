@@ -63,6 +63,9 @@ class ClientCreator(object):
                       credentials=None, scoped_config=None,
                       api_version=None,
                       client_config=None):
+        responses = self._event_emitter.emit(
+            'choose-service-name', service_name=service_name)
+        service_name = first_non_none_response(responses, default=service_name)
         service_model = self._load_service_model(service_name, api_version)
         cls = self._create_client_class(service_name, service_model)
         endpoint_bridge = ClientEndpointBridge(

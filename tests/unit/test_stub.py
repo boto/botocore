@@ -15,7 +15,7 @@ from tests import unittest
 import mock
 
 from botocore.stub import Stubber
-from botocore.exceptions import ParamValidationError, StubResponseError
+from botocore.exceptions import ParamValidationError, StubResponseError, UnStubbedResponseError
 from botocore.model import ServiceModel
 from botocore import hooks
 
@@ -177,7 +177,7 @@ class TestStubber(unittest.TestCase):
 
     def test_get_response_errors_with_no_stubs(self):
         self.stubber.activate()
-        with self.assertRaises(StubResponseError):
+        with self.assertRaises(UnStubbedResponseError):
             self.emit_get_response_event()
 
     def test_assert_no_responses_remaining(self):

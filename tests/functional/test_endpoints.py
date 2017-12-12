@@ -34,6 +34,7 @@ SERVICE_RENAMES = {
     'lex-runtime': 'runtime.lex',
     'mturk': 'mturk-requester',
     'resourcegroupstaggingapi': 'tagging',
+    'sagemaker-runtime': 'runtime.sagemaker',
     'lex-models': 'models.lex',
     'marketplace-entitlement': 'entitlement.marketplace',
     'pricing': 'api.pricing',
