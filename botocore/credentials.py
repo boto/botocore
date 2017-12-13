@@ -48,7 +48,7 @@ ReadOnlyCredentials = namedtuple('ReadOnlyCredentials',
                                  ['access_key', 'secret_key', 'token'])
 
 
-def create_credential_resolver(session):
+def create_credential_resolver(session, cache=None):
     """Create a default credential resolver.
 
     This creates a pre-configured credential resolver
@@ -61,6 +61,8 @@ def create_credential_resolver(session):
     config_file = session.get_config_variable('config_file')
     metadata_timeout = session.get_config_variable('metadata_service_timeout')
     num_attempts = session.get_config_variable('metadata_service_num_attempts')
+    if cache is None:
+        cache = {}
 
     env_provider = EnvProvider()
     container_provider = ContainerProvider()
@@ -72,7 +74,7 @@ def create_credential_resolver(session):
     assume_role_provider = AssumeRoleProvider(
         load_config=lambda: session.full_config,
         client_creator=session.create_client,
-        cache=JSONFileCache(),
+        cache=cache,
         profile_name=profile_name,
         credential_sourcer=CanonicalNameCredentialSourcer([
             env_provider, container_provider, instance_metadata_provider

@@ -1319,6 +1319,20 @@ class TestCreateCredentialResolver(BaseEnvVar):
         self.assertTrue(
             any(isinstance(p, EnvProvider) for p in resolver.providers))
 
+    def test_default_cache(self):
+        resolver = credentials.create_credential_resolver(self.session)
+        cache = resolver.get_provider('assume-role').cache
+        self.assertIsInstance(cache, dict)
+        self.assertEqual(cache, {})
+
+    def test_custom_cache(self):
+        custom_cache = credentials.JSONFileCache()
+        resolver = credentials.create_credential_resolver(
+            self.session, custom_cache
+        )
+        cache = resolver.get_provider('assume-role').cache
+        self.assertIs(cache, custom_cache)
+
 
 class TestCanonicalNameSourceProvider(BaseEnvVar):
     def setUp(self):
