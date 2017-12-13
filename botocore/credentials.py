@@ -17,6 +17,7 @@ import logging
 import os
 import getpass
 import threading
+import json
 import subprocess
 from collections import namedtuple
 from copy import deepcopy
@@ -60,6 +61,15 @@ def create_credential_resolver(session):
     config_file = session.get_config_variable('config_file')
     metadata_timeout = session.get_config_variable('metadata_service_timeout')
     num_attempts = session.get_config_variable('metadata_service_num_attempts')
+    credential_cache = session.get_config_variable('credential_cache')
+    credential_cache_directory = session.get_config_variable(
+        'credential_cache_directory')
+    if credential_cache == 'file':
+        cache = JSONFileCache(credential_cache_directory)
+    elif credential_cache == 'memory':
+        cache = {}
+    else:
+        cache = {}
 
     env_provider = EnvProvider()
     container_provider = ContainerProvider()
@@ -71,7 +81,7 @@ def create_credential_resolver(session):
     assume_role_provider = AssumeRoleProvider(
         load_config=lambda: session.full_config,
         client_creator=session.create_client,
-        cache={},
+        cache=cache,
         profile_name=profile_name,
         credential_sourcer=CanonicalNameCredentialSourcer([
             env_provider, container_provider, instance_metadata_provider
@@ -176,6 +186,51 @@ def create_mfa_serial_refresher(actual_refresh):
             return self._refresh()
 
     return _Refresher(actual_refresh)
+
+
+class JSONFileCache(object):
+    """JSON file cache.
+    This provides a dict like interface that stores JSON serializable
+    objects.
+    The objects are serialized to JSON and stored in a file.  These
+    values can be retrieved at a later time.
+    """
+
+    CACHE_DIR = os.path.expanduser(os.path.join('~', '.aws', 'cache'))
+
+    def __init__(self, working_dir=CACHE_DIR):
+        self._working_dir = working_dir
+
+    def __contains__(self, cache_key):
+        actual_key = self._convert_cache_key(cache_key)
+        return os.path.isfile(actual_key)
+
+    def __getitem__(self, cache_key):
+        """Retrieve value from a cache key."""
+        actual_key = self._convert_cache_key(cache_key)
+        try:
+            with open(actual_key) as f:
+                return json.load(f)
+        except (OSError, ValueError, IOError):
+            raise KeyError(cache_key)
+
+    def __setitem__(self, cache_key, value):
+        full_key = self._convert_cache_key(cache_key)
+        try:
+            file_content = json.dumps(value, default=_serialize_if_needed)
+        except (TypeError, ValueError):
+            raise ValueError("Value cannot be cached, must be "
+                             "JSON serializable: %s" % value)
+        if not os.path.isdir(self._working_dir):
+            os.makedirs(self._working_dir)
+        with os.fdopen(os.open(full_key,
+                               os.O_WRONLY | os.O_CREAT, 0o600), 'w') as f:
+            f.truncate()
+            f.write(file_content)
+
+    def _convert_cache_key(self, cache_key):
+        full_path = os.path.join(self._working_dir, cache_key + '.json')
+        return full_path
 
 
 class Credentials(object):
