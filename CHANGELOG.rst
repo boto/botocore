@@ -2,6 +2,23 @@
 CHANGELOG
 =========
 
+1.8.14
+======
+
+* api-change:``ses``: Update ses client to latest version
+* enhancement:credentials: Moved the JSONFileCache from the CLI into botocore so that it can be used without importing from the cli.
+* api-change:``apigateway``: Update apigateway client to latest version
+
+
+1.8.13
+======
+
+* api-change:``codedeploy``: Update codedeploy client to latest version
+* bugfix:sagemaker-runtime: Renamed the runtime.sagemaker service to sagemaker-runtime to be more consistent with existing services. The old service name is now aliased to sagemaker-runtime to maintain backwards compatibility.
+* bugfix:Stubber: This change makes the error handling more verbose in the case where  a stubbed method has been called, but the Stubber is not expecting a call.
+* api-change:``workmail``: Update workmail client to latest version
+
+
 1.8.12
 ======
 
