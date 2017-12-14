@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``ses``", 
+    "description": "Update ses client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "credentials", 
+    "description": "Moved the JSONFileCache from the CLI into botocore so that it can be used without importing from the cli.", 
+    "type": "enhancement"
+  }, 
+  {
+    "category": "``apigateway``", 
+    "description": "Update apigateway client to latest version", 
+    "type": "api-change"
+  }
+]

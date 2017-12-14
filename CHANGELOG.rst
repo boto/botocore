@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.8.14
+======
+
+* api-change:``ses``: Update ses client to latest version
+* enhancement:credentials: Moved the JSONFileCache from the CLI into botocore so that it can be used without importing from the cli.
+* api-change:``apigateway``: Update apigateway client to latest version
+
+
 1.8.13
 ======
 
