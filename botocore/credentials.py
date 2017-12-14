@@ -189,7 +189,7 @@ class JSONFileCache(object):
     values can be retrieved at a later time.
     """
 
-    CACHE_DIR = os.path.expanduser(os.path.join('~', '.aws', 'cli', 'cache'))
+    CACHE_DIR = os.path.expanduser(os.path.join('~', '.aws', 'boto', 'cache'))
 
     def __init__(self, working_dir=CACHE_DIR):
         self._working_dir = working_dir
