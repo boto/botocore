@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "presigned-url",
+  "description": "Fixes a bug where content-type would be set on presigned requests for query services."
+}

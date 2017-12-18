@@ -34,9 +34,13 @@ if sys.version_info[:2] == (2, 6):
 else:
     import unittest
 
+from nose.tools import assert_equal
 
 import botocore.loaders
 import botocore.session
+from botocore.compat import six
+from botocore.compat import urlparse
+from botocore.compat import parse_qs
 from botocore import utils
 from botocore import credentials
 
@@ -331,3 +335,27 @@ class IntegerRefresher(credentials.RefreshableCredentials):
 
     def _current_datetime(self):
         return datetime.datetime.now(tzlocal())
+
+
+def _urlparse(url):
+    if isinstance(url, six.binary_type):
+        # Not really necessary, but it helps to reduce noise on Python 2.x
+        url = url.decode('utf8')
+    return urlparse(url)
+
+def assert_url_equal(url1, url2):
+    parts1 = _urlparse(url1)
+    parts2 = _urlparse(url2)
+
+    # Because the query string ordering isn't relevant, we have to parse
+    # every single part manually and then handle the query string.
+    assert_equal(parts1.scheme, parts2.scheme)
+    assert_equal(parts1.netloc, parts2.netloc)
+    assert_equal(parts1.path, parts2.path)
+    assert_equal(parts1.params, parts2.params)
+    assert_equal(parts1.fragment, parts2.fragment)
+    assert_equal(parts1.username, parts2.username)
+    assert_equal(parts1.password, parts2.password)
+    assert_equal(parts1.hostname, parts2.hostname)
+    assert_equal(parts1.port, parts2.port)
+    assert_equal(parse_qs(parts1.query), parse_qs(parts2.query))

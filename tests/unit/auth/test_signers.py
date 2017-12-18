@@ -877,6 +877,18 @@ class TestSigV4Presign(BasePresignTest):
         }
         self.assertEqual(query_string, expected_query_string)
 
+    def test_presign_content_type_form_encoded_not_signed(self):
+        request = AWSRequest()
+        request.method = 'GET'
+        request.url = 'https://myservice.us-east-1.amazonaws.com/'
+        request.headers['Content-Type'] = (
+            'application/x-www-form-urlencoded; charset=utf-8'
+        )
+        self.auth.add_auth(request)
+        query_string = self.get_parsed_query_string(request)
+        signed_headers = query_string.get('X-Amz-SignedHeaders')
+        self.assertNotIn('content-type', signed_headers)
+
 
 class BaseS3PresignPostTest(unittest.TestCase):
     def setUp(self):
