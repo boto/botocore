@@ -19,7 +19,6 @@ from dateutil.tz import tzutc
 import botocore
 import botocore.session
 import botocore.auth
-from botocore.compat import six, urlparse, parse_qs
 from botocore.config import Config
 from botocore.credentials import Credentials
 from botocore.credentials import ReadOnlyCredentials
@@ -30,6 +29,7 @@ from botocore.signers import RequestSigner, S3PostPresigner, CloudFrontSigner
 from botocore.signers import generate_db_auth_token
 
 from tests import unittest
+from tests import assert_url_equal
 
 
 class BaseSignerTest(unittest.TestCase):
@@ -41,29 +41,6 @@ class BaseSignerTest(unittest.TestCase):
             'service_name', 'region_name', 'signing_name',
             'v4', self.credentials, self.emitter)
         self.fixed_credentials = self.credentials.get_frozen_credentials()
-
-    def _urlparse(self, url):
-        if isinstance(url, six.binary_type):
-            # Not really necessary, but it helps to reduce noise on Python 2.x
-            url = url.decode('utf8')
-        return urlparse(url)
-
-    def assert_url_equal(self, url1, url2):
-        parts1 = self._urlparse(url1)
-        parts2 = self._urlparse(url2)
-
-        # Because the query string ordering isn't relevant, we have to parse
-        # every single part manually and then handle the query string.
-        self.assertEqual(parts1.scheme, parts2.scheme)
-        self.assertEqual(parts1.netloc, parts2.netloc)
-        self.assertEqual(parts1.path, parts2.path)
-        self.assertEqual(parts1.params, parts2.params)
-        self.assertEqual(parts1.fragment, parts2.fragment)
-        self.assertEqual(parts1.username, parts2.username)
-        self.assertEqual(parts1.password, parts2.password)
-        self.assertEqual(parts1.hostname, parts2.hostname)
-        self.assertEqual(parts1.port, parts2.port)
-        self.assertEqual(parse_qs(parts1.query), parse_qs(parts2.query))
 
 
 class TestSigner(BaseSignerTest):
@@ -555,7 +532,7 @@ class TestCloudfrontSigner(BaseSignerTest):
         expected = (
             'http://test.com/foo.txt?Expires=1451606400&Signature=c2lnbmVk'
             '&Key-Pair-Id=MY_KEY_ID')
-        self.assert_url_equal(signed_url, expected)
+        assert_url_equal(signed_url, expected)
 
     def test_generate_presign_url_with_custom_policy(self):
         policy = self.signer.build_policy(
@@ -572,7 +549,7 @@ class TestCloudfrontSigner(BaseSignerTest):
             '6IjEyLjM0LjU2Ljc4LzkifSwiRGF0ZUdyZWF0ZXJUaGFuIjp7IkFX'
             'UzpFcG9jaFRpbWUiOjE0NDg5MjgwMDB9fX1dfQ__'
             '&Signature=c2lnbmVk&Key-Pair-Id=MY_KEY_ID')
-        self.assert_url_equal(signed_url, expected)
+        assert_url_equal(signed_url, expected)
 
 
 class TestS3PostPresigner(BaseSignerTest):
@@ -910,7 +887,7 @@ class TestGeneratePresignedPost(unittest.TestCase):
 
 class TestGenerateDBAuthToken(BaseSignerTest):
     maxDiff = None
-    
+
     def setUp(self):
         self.session = botocore.session.get_session()
         self.client = self.session.create_client(
@@ -940,7 +917,7 @@ class TestGenerateDBAuthToken(BaseSignerTest):
 
         # A scheme needs to be appended to the beginning or urlsplit may fail
         # on certain systems.
-        self.assert_url_equal(
+        assert_url_equal(
             'https://' + result, 'https://' + expected_result)
 
     def test_custom_region(self):
