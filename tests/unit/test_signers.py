@@ -22,6 +22,7 @@ import botocore.auth
 from botocore.config import Config
 from botocore.credentials import Credentials
 from botocore.credentials import ReadOnlyCredentials
+from botocore.hooks import HierarchicalEmitter
 from botocore.exceptions import NoRegionError, UnknownSignatureVersionError
 from botocore.exceptions import UnknownClientMethodError, ParamValidationError
 from botocore.exceptions import UnsupportedSignatureVersionError
@@ -128,7 +129,7 @@ class TestSigner(BaseSignerTest):
             'before-sign.service_name.operation_name',
             request=mock.ANY, signing_name='signing_name',
             region_name='region_name', signature_version='v4',
-            request_signer=self.signer)
+            request_signer=self.signer, operation_name='operation_name')
 
     def test_disable_signing(self):
         # Returning botocore.UNSIGNED from choose-signer disables signing!
@@ -727,7 +728,7 @@ class TestGenerateUrl(unittest.TestCase):
             'query_string': {},
             'url_path': u'/mybucket/mykey',
             'method': u'GET',
-            'context': {}}
+            'context': mock.ANY}
         self.generate_url_mock.assert_called_with(
             request_dict=ref_request_dict, expires_in=3600,
             operation_name='GetObject')
@@ -748,7 +749,7 @@ class TestGenerateUrl(unittest.TestCase):
             'query_string': {u'response-content-disposition': disposition},
             'url_path': u'/mybucket/mykey',
             'method': u'GET',
-            'context': {}}
+            'context': mock.ANY}
         self.generate_url_mock.assert_called_with(
             request_dict=ref_request_dict, expires_in=3600,
             operation_name='GetObject')
@@ -772,7 +773,7 @@ class TestGenerateUrl(unittest.TestCase):
             'query_string': {},
             'url_path': u'/mybucket/mykey',
             'method': u'GET',
-            'context': {}}
+            'context': mock.ANY}
         self.generate_url_mock.assert_called_with(
             request_dict=ref_request_dict, expires_in=20,
             operation_name='GetObject')
@@ -788,10 +789,27 @@ class TestGenerateUrl(unittest.TestCase):
             'query_string': {},
             'url_path': u'/mybucket/mykey',
             'method': u'PUT',
-            'context': {}}
+            'context': mock.ANY}
         self.generate_url_mock.assert_called_with(
             request_dict=ref_request_dict, expires_in=3600,
             operation_name='GetObject')
+
+    def test_generate_presigned_url_emits_param_events(self):
+        emitter = mock.Mock(HierarchicalEmitter)
+        emitter.emit.return_value = []
+        self.client.meta.events = emitter
+        self.client.generate_presigned_url(
+            'get_object', Params={'Bucket': self.bucket, 'Key': self.key})
+        events_emitted = [
+            emit_call[0][0] for emit_call in emitter.emit.call_args_list
+        ]
+        self.assertEqual(
+            events_emitted,
+            [
+                'provide-client-params.s3.GetObject',
+                'before-parameter-build.s3.GetObject'
+            ]
+        )
 
 
 class TestGeneratePresignedPost(unittest.TestCase):
