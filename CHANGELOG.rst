@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.8.17
+======
+
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``mediastore-data``: Update mediastore-data client to latest version
+
+
 1.8.16
 ======
 
