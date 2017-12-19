@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.8.16
+======
+
+* bugfix:presigned-url: Fixes a bug where content-type would be set on presigned requests for query services.
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+
+
 1.8.15
 ======
 
