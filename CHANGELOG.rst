@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.8.18
+======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``config``: Update config client to latest version
+
+
 1.8.17
 ======
 
