@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.8.19
+======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* enhancement:Paginator: Added paginator support for lambda list aliases operation.
+* api-change:``kinesisanalytics``: Update kinesisanalytics client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+
+
 1.8.18
 ======
 
