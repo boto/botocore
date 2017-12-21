@@ -321,6 +321,20 @@ class TestAssumeRole(BaseEnvVar):
             session, _ = self.create_session(profile='A')
             session.get_credentials()
 
+    def test_misconfigured_source_profile(self):
+        config = (
+            '[profile A]\n'
+            'role_arn = arn:aws:iam::123456789:role/RoleA\n'
+            'source_profile = B\n'
+            '[profile B]\n'
+            'credential_process = command\n'
+        )
+        self.write_config(config)
+
+        with self.assertRaises(InvalidConfigError):
+            session, _ = self.create_session(profile='A')
+            session.get_credentials()
+
     def test_recursive_assume_role(self):
         config = (
             '[profile A]\n'

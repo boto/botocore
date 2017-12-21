@@ -1207,12 +1207,14 @@ class AssumeRoleProvider(CredentialProvider):
 
     def load(self):
         self._loaded_config = self._load_config()
-        if self._has_assume_role_config_vars():
+        profiles = self._loaded_config.get('profiles', {})
+        profile = profiles.get(self._profile_name, {})
+        if self._has_assume_role_config_vars(profile):
             return self._load_creds_via_assume_role(self._profile_name)
 
-    def _has_assume_role_config_vars(self):
-        profiles = self._loaded_config.get('profiles', {})
-        return self.ROLE_CONFIG_VAR in profiles.get(self._profile_name, {})
+    def _has_assume_role_config_vars(self, profile):
+        assume_role_keys = [self.ROLE_CONFIG_VAR]
+        return any(key in profile for key in assume_role_keys)
 
     def _load_creds_via_assume_role(self, profile_name):
         role_config = self._get_role_config(profile_name)
@@ -1321,6 +1323,18 @@ class AssumeRoleProvider(CredentialProvider):
                 )
             )
 
+        profile = profiles[source_profile]
+
+        #ensure the profile has valid credential type
+        if not self._has_static_credentials(profile) and \
+           not self._has_assume_role_config_vars(profile):
+            raise InvalidConfigError(
+                error_msg=(
+                    'The source_profile "%s" must specify either static '
+                    'credentials or a role arn to assume.' % (source_profile)
+                )
+            )
+
         # Make sure we aren't going into an infinite loop. If we haven't
         # visited the profile yet, we're good.
         if source_profile not in self._visited_profiles:
@@ -1339,7 +1353,7 @@ class AssumeRoleProvider(CredentialProvider):
         # profile. This will only ever work for the top level assume
         # role because the static credentials will otherwise take
         # precedence.
-        if not self._has_static_credentials(profiles[source_profile]):
+        if not self._has_static_credentials(profile):
             raise InfiniteLoopConfigError(
                 source_profile=source_profile,
                 visited_profiles=self._visited_profiles
