@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.8.20
+======
+
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``inspector``: Update inspector client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+
+
 1.8.19
 ======
 
