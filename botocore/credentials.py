@@ -19,6 +19,7 @@ import getpass
 import threading
 import json
 import subprocess
+import sys
 from collections import namedtuple
 from copy import deepcopy
 from hashlib import sha1
@@ -792,7 +793,7 @@ class ProcessProvider(CredentialProvider):
         process_list = compat_shell_split(credential_process)
         p = self._popen(process_list,
                         stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE)
+                        stderr=sys.stderr)
         stdout, stderr = p.communicate()
         if p.returncode != 0:
             raise CredentialRetrievalError(
