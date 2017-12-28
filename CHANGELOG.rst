@@ -2,6 +2,31 @@
 CHANGELOG
 =========
 
+1.8.20
+======
+
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``inspector``: Update inspector client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+
+
+1.8.19
+======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* enhancement:Paginator: Added paginator support for lambda list aliases operation.
+* api-change:``kinesisanalytics``: Update kinesisanalytics client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+
+
+1.8.18
+======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``config``: Update config client to latest version
+
+
 1.8.17
 ======
 
