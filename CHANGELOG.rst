@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.8.21
+======
+
+* api-change:``workspaces``: Update workspaces client to latest version
+
+
 1.8.20
 ======
 
