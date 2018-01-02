@@ -1213,8 +1213,7 @@ class AssumeRoleProvider(CredentialProvider):
             return self._load_creds_via_assume_role(self._profile_name)
 
     def _has_assume_role_config_vars(self, profile):
-        assume_role_keys = [self.ROLE_CONFIG_VAR]
-        return any(key in profile for key in assume_role_keys)
+        return self.ROLE_CONFIG_VAR in profile
 
     def _load_creds_via_assume_role(self, profile_name):
         role_config = self._get_role_config(profile_name)
@@ -1312,6 +1311,12 @@ class AssumeRoleProvider(CredentialProvider):
                 'valid.' % (credential_source, parent_profile)
             ))
 
+    def _source_profile_has_credentials(self, profile):
+        return any([
+            self._has_static_credentials(profile),
+            self._has_assume_role_config_vars(profile),
+        ])
+
     def _validate_source_profile(self, parent_profile, source_profile):
         profiles = self._loaded_config.get('profiles', {})
         if source_profile not in profiles:
@@ -1325,13 +1330,13 @@ class AssumeRoleProvider(CredentialProvider):
 
         profile = profiles[source_profile]
 
-        #ensure the profile has valid credential type
-        if not self._has_static_credentials(profile) and \
-           not self._has_assume_role_config_vars(profile):
+        # Ensure the profile has valid credential type
+        if not self._source_profile_has_credentials(profile):
             raise InvalidConfigError(
                 error_msg=(
                     'The source_profile "%s" must specify either static '
-                    'credentials or a role arn to assume.' % (source_profile)
+                    'credentials or an assume role configuration' % (
+                        source_profile)
                 )
             )
 
