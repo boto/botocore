@@ -317,6 +317,11 @@ class TestParseTimestamps(unittest.TestCase):
         with self.assertRaises(ValueError):
             parse_timestamp('invalid date')
 
+    def test_parse_quoted_timestamp(self):
+        self.assertEqual(
+            parse_timestamp('Thu,%2031%20Dec%202099%2020:00:00%20GMT'),
+            datetime.datetime(2099, 12, 31, 20, 0, tzinfo=tzutc()))
+
 
 class TestDatetime2Timestamp(unittest.TestCase):
     def test_datetime2timestamp_naive(self):

@@ -27,7 +27,7 @@ import botocore
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.exceptions import InvalidDNSNameError, ClientError
 from botocore.exceptions import MetadataRetrievalError
-from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
+from botocore.compat import json, quote, unquote, zip_longest, urlsplit, urlunsplit
 from botocore.vendored import requests
 from botocore.compat import OrderedDict, six
 
@@ -357,7 +357,7 @@ def parse_timestamp(value):
         # In certain cases, a timestamp marked with GMT can be parsed into a
         # different time zone, so here we provide a context which will
         # enforce that GMT == UTC.
-        return dateutil.parser.parse(value, tzinfos={'GMT': tzutc()})
+        return dateutil.parser.parse(unquote(value), tzinfos={'GMT': tzutc()})
     except (TypeError, ValueError) as e:
         raise ValueError('Invalid timestamp "%s": %s' % (value, e))
 
