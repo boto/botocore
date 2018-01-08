@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.8.23
+======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``inspector``: Update inspector client to latest version
+* api-change:``snowball``: Update snowball client to latest version
+
+
 1.8.22
 ======
 
