@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.8.24
+======
+
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``discovery``: Update discovery client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+
+
 1.8.23
 ======
 
