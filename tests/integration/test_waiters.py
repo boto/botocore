@@ -11,12 +11,15 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from tests import unittest, random_chars
+from tests.integration.test_s3 import random_bucketname, clear_out_bucket
 
 from nose.plugins.attrib import attr
 
 import botocore.session
 from botocore.exceptions import WaiterError
 
+import logging
+LOG = logging.getLogger('botocore.tests.integration')
 
 # This is the same test as above, except using the client interface.
 @attr('slow')
@@ -65,3 +68,90 @@ class TestMatchersWithErrors(unittest.TestCase):
         waiter.config.max_attempts = 1
         with self.assertRaises(WaiterError):
             waiter.wait(InstanceIds=['i-12345'])
+
+
+@attr('slow')
+class TestWaiterForAthena(unittest.TestCase):
+    REGION = 'us-west-2'
+
+    @classmethod
+    def setUpClass(cls):
+        cls.output_bucket = random_bucketname()
+        cls.output_location = 's3://{}/'.format(cls.output_bucket)
+        cls.session = botocore.session.get_session()
+        s3 = cls.session.create_client('s3')
+        waiter = s3.get_waiter('bucket_exists')
+        try:
+            s3.create_bucket(Bucket=cls.output_bucket,
+                             CreateBucketConfiguration={
+                                 'LocationConstraint': cls.REGION
+                             })
+        except Exception as e:
+            # A create_bucket can fail for a number of reasons.
+            # We're going to defer to the waiter below to make the
+            # final call as to whether or not the bucket exists.
+            LOG.debug("create_bucket() raised an exception: %s", e, exc_info=True)
+        waiter.wait(Bucket=cls.output_bucket)
+
+    @classmethod
+    def tearDownClass(cls):
+        clear_out_bucket(cls.output_bucket, cls.REGION, True)
+
+    def setUp(self):
+        self.client = self.session.create_client(
+            'athena', region_name=self.REGION)
+
+    def test_waiter_query_succeeded(self):
+        """Test query_succeeded waiter"""
+        query = self.client.start_query_execution(
+            QueryString='SELECT current_date',
+            ResultConfiguration={
+                'OutputLocation': self.output_location
+            }
+        )
+        query_id = query['QueryExecutionId']
+        waiter = self.client.get_waiter('query_succeeded')
+        waiter.wait(QueryExecutionId=query_id)
+        execution = self.client.get_query_execution(QueryExecutionId=query_id)
+        self.assertEqual(execution['QueryExecution']['Status']['State'], 'SUCCEEDED')
+
+    def test_waiter_query_succeeded_error(self):
+        """Test query_succeeded waiter failed case"""
+        # Without QueryExecutionContext["Database"], this query is doomed to fail
+        query = self.client.start_query_execution(
+            QueryString='SELECT * FROM non_existent_table',
+            ResultConfiguration={
+                'OutputLocation': self.output_location
+            }
+        )
+        query_id = query['QueryExecutionId']
+        waiter = self.client.get_waiter('query_succeeded')
+        with self.assertRaises(WaiterError):
+            waiter.wait(QueryExecutionId=query_id)
+
+    def test_waiter_queries_finished(self):
+        """
+        Test queries_finished waiter. It comes back after all queries either
+        processed or can't be processed.
+        """
+        query_1 = self.client.start_query_execution(
+            QueryString='SELECT current_date',
+            ResultConfiguration={
+                'OutputLocation': self.output_location
+            }
+        )
+        # Without QueryExecutionContext["Database"], this query is doomed to fail
+        query_2 = self.client.start_query_execution(
+            QueryString='SELECT * FROM non_existent_table',
+            ResultConfiguration={
+                'OutputLocation': self.output_location
+            }
+        )
+        query_ids = [query_1['QueryExecutionId'], query_2['QueryExecutionId']]
+        waiter = self.client.get_waiter('queries_finished')
+        waiter.wait(QueryExecutionIds=query_ids)
+        execution = self.client.batch_get_query_execution(QueryExecutionIds=query_ids)
+        self.assertNotEqual(execution['QueryExecutions'][0]['Status']['State'], 'RUNNING')
+        self.assertNotEqual(execution['QueryExecutions'][1]['Status']['State'], 'RUNNING')
+
+

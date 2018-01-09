@@ -1,0 +1,43 @@
+{
+  "version": 2,
+  "waiters": {
+    "QuerySucceeded": {
+      "delay": 15,
+      "operation": "GetQueryExecution",
+      "maxAttempts": 40,
+      "acceptors": [
+        {
+          "expected": "SUCCEEDED",
+          "matcher": "path",
+          "state": "success",
+          "argument": "QueryExecution.Status.State"
+        },
+        {
+          "expected": "FAILED",
+          "matcher": "path",
+          "state": "failure",
+          "argument": "QueryExecution.Status.State"
+        },
+        {
+          "expected": "CANCELED",
+          "matcher": "path",
+          "state": "failure",
+          "argument": "QueryExecution.Status.State"
+        }
+      ]
+    },
+    "QueriesFinished": {
+      "delay": 15,
+      "operation": "BatchGetQueryExecution",
+      "maxAttempts": 40,
+      "acceptors": [
+        {
+          "expected": 0,
+          "matcher": "path",
+          "state": "success",
+          "argument": "length(QueryExecutions[?Status.State == `RUNNING`])"
+        }
+      ]
+    }
+  }
+}
