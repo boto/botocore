@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.8.25
+======
+
+* api-change:``ds``: Update ds client to latest version
+
+
 1.8.24
 ======
 
