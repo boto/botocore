@@ -32,10 +32,10 @@
       "maxAttempts": 40,
       "acceptors": [
         {
-          "expected": 0,
+          "expected": true,
           "matcher": "path",
           "state": "success",
-          "argument": "length(QueryExecutions[?Status.State == `RUNNING`])"
+          "argument": "length(QueryExecutions[?Status.State == `RUNNING`]) == `0`"
         }
       ]
     }

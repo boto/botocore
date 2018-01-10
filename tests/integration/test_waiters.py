@@ -130,10 +130,7 @@ class TestWaiterForAthena(unittest.TestCase):
             waiter.wait(QueryExecutionId=query_id)
 
     def test_waiter_queries_finished(self):
-        """
-        Test queries_finished waiter. It comes back after all queries either
-        processed or can't be processed.
-        """
+        """Test queries_finished waiter."""
         query_1 = self.client.start_query_execution(
             QueryString='SELECT current_date',
             ResultConfiguration={
@@ -149,6 +146,7 @@ class TestWaiterForAthena(unittest.TestCase):
         )
         query_ids = [query_1['QueryExecutionId'], query_2['QueryExecutionId']]
         waiter = self.client.get_waiter('queries_finished')
+        # It comes back after all queries either processed or can't be processed.
         waiter.wait(QueryExecutionIds=query_ids)
         execution = self.client.batch_get_query_execution(QueryExecutionIds=query_ids)
         self.assertNotEqual(execution['QueryExecutions'][0]['Status']['State'], 'RUNNING')
