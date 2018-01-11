@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.8.27
+======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``elb``: Update elb client to latest version
+
+
 1.8.26
 ======
 
