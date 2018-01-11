@@ -16,6 +16,8 @@ import sys
 import xml.etree.cElementTree
 import logging
 
+from io import IOBase
+
 from botocore import ScalarTypes
 from botocore.hooks import first_non_none_response
 from botocore.compat import json, set_socket_timeout, XMLParseError
@@ -26,7 +28,7 @@ from botocore import parsers
 logger = logging.getLogger(__name__)
 
 
-class StreamingBody(object):
+class StreamingBody(IOBase):
     """Wrapper class for an http response body.
 
     This provides a few additional conveniences that do not exist
@@ -42,6 +44,9 @@ class StreamingBody(object):
         self._raw_stream = raw_stream
         self._content_length = content_length
         self._amount_read = 0
+
+    def readable(self):
+        return not self.closed
 
     def set_socket_timeout(self, timeout):
         """Set the timeout seconds on the socket."""
@@ -91,8 +96,9 @@ class StreamingBody(object):
                 expected_bytes=int(self._content_length))
 
     def close(self):
-        """Close the underlying http response stream."""
+        """Close the underlying http response stream and IOBase."""
         self._raw_stream.close()
+        super(StreamingBody, self).close()
 
 
 def get_response(operation_model, http_response):
