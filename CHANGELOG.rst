@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.8.28
+======
+
+* api-change:``glue``: Update glue client to latest version
+
+
 1.8.27
 ======
 
