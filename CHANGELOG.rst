@@ -2,6 +2,41 @@
 CHANGELOG
 =========
 
+1.8.28
+======
+
+* api-change:``glue``: Update glue client to latest version
+
+
+1.8.27
+======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``elb``: Update elb client to latest version
+
+
+1.8.26
+======
+
+* api-change:``kms``: Update kms client to latest version
+
+
+1.8.25
+======
+
+* api-change:``ds``: Update ds client to latest version
+
+
+1.8.24
+======
+
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``discovery``: Update discovery client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+
+
 1.8.23
 ======
 
