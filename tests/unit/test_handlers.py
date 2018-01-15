@@ -17,9 +17,11 @@ import base64
 import mock
 import copy
 import os
+import json
 
 import botocore
 import botocore.session
+from botocore.compat import OrderedDict
 from botocore.exceptions import ParamValidationError, MD5UnavailableError
 from botocore.exceptions import AliasConflictParameterError
 from botocore.awsrequest import AWSRequest
@@ -575,6 +577,24 @@ class TestHandlers(BaseSessionTest):
         # an error response.
         self.assertEqual(original, handler_input)
 
+    def test_does_decode_template_body_in_order(self):
+        expected_ordering = OrderedDict([
+            ('TemplateVersion', 1.0),
+            ('APropertyOfSomeKind', 'a value'),
+            ('list', [1, 2, 3]),
+            ('nested', OrderedDict([('key', 'value'),
+                                    ('foo', 'bar')]))
+        ])
+        template_string = json.dumps(expected_ordering)
+        parsed_response = {'TemplateBody': template_string}
+
+        handlers.json_decode_template_body(parsed=parsed_response)
+        result = parsed_response['TemplateBody']
+
+        self.assertTrue(isinstance(result, OrderedDict))
+        for element, expected_element in zip(result, expected_ordering):
+            self.assertEqual(element, expected_element)
+
     def test_decode_json_policy(self):
         parsed = {
             'Document': '{"foo": "foobarbaz"}',
@@ -709,8 +729,6 @@ class TestHandlers(BaseSessionTest):
         request.url = url
         handlers.switch_host_with_param(request, 'PredictEndpoint')
         self.assertEqual(request.url, new_endpoint)
-
-
 
     def test_invalid_char_in_bucket_raises_exception(self):
         params = {
