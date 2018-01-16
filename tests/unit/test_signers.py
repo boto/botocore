@@ -815,6 +815,22 @@ class TestGenerateUrl(unittest.TestCase):
             ]
         )
 
+    def test_generate_presign_url_emits_is_presign_in_context(self):
+        emitter = mock.Mock(HierarchicalEmitter)
+        emitter.emit.return_value = []
+        self.client.meta.events = emitter
+        self.client.generate_presigned_url(
+            'get_object', Params={'Bucket': self.bucket, 'Key': self.key})
+        kwargs_emitted = [
+            emit_call[1] for emit_call in emitter.emit.call_args_list
+        ]
+        for kwargs in kwargs_emitted:
+            self.assertTrue(
+                kwargs.get('context', {}).get('is_presign_request'),
+                'The context did not have is_presign_request set to True for '
+                'the following kwargs emitted: %s' % kwargs
+            )
+
 
 class TestGeneratePresignedPost(unittest.TestCase):
     def setUp(self):

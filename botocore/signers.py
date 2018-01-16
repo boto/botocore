@@ -557,7 +557,9 @@ def generate_presigned_url(self, ClientMethod, Params=None, ExpiresIn=3600,
         params = {}
     expires_in = ExpiresIn
     http_method = HttpMethod
-    context = {}
+    context = {
+        'is_presign_request': True
+    }
 
     request_signer = self._request_signer
     serializer = self._serializer

@@ -331,12 +331,14 @@ class Stubber(object):
                 operation_name=model.name,
                 reason='Operation mismatch: found response for %s.' % name)
 
-    def _get_response_handler(self, model, params, **kwargs):
+    def _get_response_handler(self, model, params, context, **kwargs):
         self._assert_expected_call_order(model, params)
         # Pop off the entire response once everything has been validated
         return self._queue.popleft()['response']
 
-    def _assert_expected_params(self, model, params, **kwargs):
+    def _assert_expected_params(self, model, params, context, **kwargs):
+        if self._should_not_stub(context):
+            return
         self._assert_expected_call_order(model, params)
         expected_params = self._queue[0]['expected_params']
         if expected_params is None:
@@ -356,6 +358,13 @@ class Stubber(object):
                 operation_name=model.name,
                 reason='Expected parameters:\n%s,\nbut received:\n%s' % (
                     pformat(expected_params), pformat(params)))
+
+    def _should_not_stub(self, context):
+        # Do not include presign requests when processing stubbed client calls
+        # as a presign request will never have an HTTP request sent over the
+        # wire for it and therefore not receive a response back.
+        if context and context.get('is_presign_request'):
+            return True
 
     def _validate_response(self, operation_name, service_response):
         service_model = self.client.meta.service_model

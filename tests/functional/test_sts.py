@@ -23,6 +23,9 @@ class TestSTSPresignedUrl(BaseSessionTest):
     def setUp(self):
         super(TestSTSPresignedUrl, self).setUp()
         self.client = self.session.create_client('sts', 'us-west-2')
+        # Makes sure that no requests will go through
+        self.stubber = Stubber(self.client)
+        self.stubber.activate()
 
     def test_presigned_url_contains_no_content_type(self):
         timestamp = datetime(2017, 3, 22, 0, 0)
