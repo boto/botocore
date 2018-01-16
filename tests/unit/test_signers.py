@@ -728,6 +728,10 @@ class TestGenerateUrl(unittest.TestCase):
             'query_string': {},
             'url_path': u'/mybucket/mykey',
             'method': u'GET',
+            # mock.ANY is used because client parameter related events
+            # inject values into the context. So using the context's exact
+            # value for these tests will be a maintenance burden if
+            # anymore customizations are added that inject into the context.
             'context': mock.ANY}
         self.generate_url_mock.assert_called_with(
             request_dict=ref_request_dict, expires_in=3600,
