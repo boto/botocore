@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.8.29
+======
+
+* api-change:``lambda``: Update lambda client to latest version
+* enhancement:cloudformation get_template template body ordering: fixes boto/boto3`#1378 <https://github.com/boto/boto3/issues/1378>`__
+
+
 1.8.28
 ======
 
