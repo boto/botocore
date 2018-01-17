@@ -1241,7 +1241,9 @@ class GetSessionTokenProvider(CredentialProvider):
             profile=profile
         )
 
-        extra_args = {}
+        extra_args = {
+            'DurationSeconds': role_config['session_token_duration']
+        }
         mfa_serial = role_config.get('mfa_serial')
         if mfa_serial is not None:
             extra_args['SerialNumber'] = mfa_serial
