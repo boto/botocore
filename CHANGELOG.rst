@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.8.30
+======
+
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``autoscaling-plans``: Update autoscaling-plans client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
 1.8.29
 ======
 
