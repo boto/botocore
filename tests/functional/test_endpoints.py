@@ -20,6 +20,7 @@ from botocore.session import get_session
 SERVICE_RENAMES = {
     'application-autoscaling': 'autoscaling',
     'appstream': 'appstream2',
+    'autoscaling-plans': 'autoscaling',
     'dynamodbstreams': 'streams.dynamodb',
     'cloudwatch': 'monitoring',
     'efs': 'elasticfilesystem',
