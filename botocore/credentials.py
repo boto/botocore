@@ -1213,11 +1213,12 @@ class GetSessionTokenProvider(CredentialProvider):
 
     GET_SESSION_TOKEN_CONFIG_VAR = 'session_token_duration'
 
-    def __init__(self, load_config, client_creator, profile_name, cache):
+    def __init__(self, load_config, client_creator, profile_name, cache, prompter=getpass.getpass):
         self._load_config = load_config
         self._client_creator = client_creator
         self._profile_name = profile_name
-        self.cache=cache
+        self.cache = cache
+        self._prompter = prompter
 
     def load(self):
         self._loaded_config = self._load_config()
@@ -1237,10 +1238,17 @@ class GetSessionTokenProvider(CredentialProvider):
             profile=profile
         )
 
+        extra_args = {}
+        mfa_serial = role_config.get('mfa_serial')
+        if mfa_serial is not None:
+            extra_args['SerialNumber'] = mfa_serial
+
         fetcher = GetSessionTokenCredentialFetcher(
             client_creator=self._client_creator,
             source_credentials=source_credentials,
             cache=self.cache,
+            mfa_prompter=self._prompter,
+            extra_args=extra_args,
         )
         refresher = fetcher.fetch_credentials
 
