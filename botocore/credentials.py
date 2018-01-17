@@ -744,7 +744,10 @@ class GetSessionTokenCredentialFetcher(CachedCredentialFetcher):
 
         The cache key is intended to be compatible with file names.
         """
-        args = deepcopy({'a':'1'})
+        args = deepcopy(self._session_token_kwargs)
+        # access_key_id is added on top of DurationSeconds and SerialNumber
+        # in order to create a unique key
+        args['access_key_id'] = self._source_credentials.get_frozen_credentials().access_key
 
         args = json.dumps(args, sort_keys=True)
         argument_hash = sha1(args.encode('utf-8')).hexdigest()
