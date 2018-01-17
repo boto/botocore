@@ -1532,11 +1532,21 @@ class AssumeRoleProvider(CredentialProvider):
         profile = profiles[profile_name]
 
         if self._has_static_credentials(profile):
-            return self._resolve_static_credentials_from_profile(profile)
+            return self._resolve_static_credentials_from_profile(profile, profile_name)
 
         return self._load_creds_via_assume_role(profile_name)
 
-    def _resolve_static_credentials_from_profile(self, profile):
+    def _resolve_static_credentials_from_profile(self, profile, profile_name):
+        get_session_token_provider = GetSessionTokenProvider(
+            load_config=self._load_config,
+            client_creator=self._client_creator,
+            profile_name=profile_name,
+            cache=self.cache,
+        )
+        get_session_token_credentials = get_session_token_provider.load()
+        if get_session_token_credentials:
+            return get_session_token_credentials
+
         try:
             return Credentials(
                 access_key=profile['aws_access_key_id'],
