@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.8.32
+======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+
+
 1.8.31
 ======
 
