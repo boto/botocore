@@ -26,7 +26,8 @@ from botocore.exceptions import CredentialRetrievalError
 
 from tests import unittest, IntegerRefresher, BaseEnvVar, random_chars
 from tests import temporary_file
-from botocore.credentials import EnvProvider, ContainerProvider
+from botocore.credentials import EnvProvider, ContainerProvider, \
+    GetSessionTokenProvider
 from botocore.credentials import InstanceMetadataProvider
 from botocore.credentials import Credentials, ReadOnlyCredentials
 from botocore.credentials import AssumeRoleProvider
@@ -445,6 +446,176 @@ class TestAssumeRole(BaseEnvVar):
 
         actual_creds = session.get_credentials()
         self.assert_creds_equal(actual_creds, expected_creds)
+        stubber.assert_no_pending_responses()
+
+
+class TestGetSessionTokenProvider(BaseEnvVar):
+    def setUp(self):
+        super(TestGetSessionTokenProvider, self).setUp()
+        self.tempdir = tempfile.mkdtemp()
+        self.config_file = os.path.join(self.tempdir, 'config')
+        self.environ['AWS_CONFIG_FILE'] = self.config_file
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
+    def create_session(self, profile=None):
+        session = Session(profile=profile)
+
+        # We have to set bogus credentials here or otherwise we'll trigger
+        # an early credential chain resolution.
+        sts = session.create_client(
+            'sts',
+            aws_access_key_id='spam',
+            aws_secret_access_key='eggs',
+        )
+        stubber = Stubber(sts)
+        stubber.activate()
+        get_session_token_provider = GetSessionTokenProvider(
+            load_config=lambda: session.full_config,
+            client_creator=lambda *args, **kwargs: sts,
+            cache={},
+            profile_name=profile,
+        )
+
+        def _get_session_token_provider_creator(profile_name):
+            return GetSessionTokenProvider(
+                load_config=lambda: session.full_config,
+                client_creator=lambda *args, **kwargs: sts,
+                profile_name=profile_name,
+                cache={},
+            )
+
+        assume_role_provider = AssumeRoleProvider(
+            load_config=lambda: session.full_config,
+            client_creator=lambda *args, **kwargs: sts,
+            cache={},
+            profile_name=profile,
+            get_session_token_provider_creator=
+            _get_session_token_provider_creator
+        )
+
+        component_name = 'credential_provider'
+        resolver = session.get_component(component_name)
+        available_methods = [p.METHOD for p in resolver.providers]
+        replacements = {
+            'get-session-token': get_session_token_provider,
+            'assume-role': assume_role_provider,
+        }
+        for name, provider in replacements.items():
+            try:
+                index = available_methods.index(name)
+            except ValueError:
+                # The provider isn't in the session
+                continue
+
+            resolver.providers[index] = provider
+
+        session.register_component(
+            'credential_provider', resolver
+        )
+        return session, stubber
+
+    def create_assume_role_response(self, credentials, expiration=None):
+        if expiration is None:
+            expiration = self.some_future_time()
+
+        response = {
+            'Credentials': {
+                'AccessKeyId': credentials.access_key,
+                'SecretAccessKey': credentials.secret_key,
+                'SessionToken': credentials.token,
+                'Expiration': expiration
+            },
+            'AssumedRoleUser': {
+                'AssumedRoleId': 'myroleid',
+                'Arn': 'arn:aws:iam::1234567890:user/myuser'
+            }
+        }
+
+        return response
+
+    def create_get_session_token_response(self, credentials, expiration=None):
+        if expiration is None:
+            expiration = self.some_future_time()
+
+        response = {
+            'Credentials': {
+                'AccessKeyId': credentials.access_key,
+                'SecretAccessKey': credentials.secret_key,
+                'SessionToken': credentials.token,
+                'Expiration': expiration
+            },
+        }
+
+        return response
+
+    def create_random_credentials(self):
+        return Credentials(
+            'fake-%s' % random_chars(15),
+            'fake-%s' % random_chars(35),
+            'fake-%s' % random_chars(45)
+        )
+
+    def some_future_time(self):
+        timeobj = datetime.now(tzlocal())
+        return timeobj + timedelta(hours=24)
+
+    def write_config(self, config):
+        with open(self.config_file, 'w') as f:
+            f.write(config)
+
+    def assert_creds_equal(self, c1, c2):
+        c1_frozen = c1
+        if not isinstance(c1_frozen, ReadOnlyCredentials):
+            c1_frozen = c1.get_frozen_credentials()
+        c2_frozen = c2
+        if not isinstance(c2_frozen, ReadOnlyCredentials):
+            c2_frozen = c2.get_frozen_credentials()
+        self.assertEqual(c1_frozen, c2_frozen)
+
+    def test_get_session_token_static_credentials(self):
+        config = (
+            '[profile A]\n'
+            'aws_access_key_id = abc123\n'
+            'aws_secret_access_key = def456\n'
+            'session_token_duration = 3600\n'
+        )
+        self.write_config(config)
+
+        expected_creds = self.create_random_credentials()
+        response = self.create_get_session_token_response(expected_creds)
+        session, stubber = self.create_session(profile='A')
+        stubber.add_response('get_session_token', response)
+
+        actual_creds = session.get_credentials()
+        self.assert_creds_equal(actual_creds, expected_creds)
+        stubber.assert_no_pending_responses()
+
+    def test_get_session_token_source_profile(self):
+        config = (
+            '[profile A]\n'
+            'aws_access_key_id = abc123\n'
+            'aws_secret_access_key = def456\n'
+            'session_token_duration = 3600\n'
+            '[profile B]\n'
+            'role_arn = arn:aws:iam::123456789:role/RoleB\n'
+            'source_profile = A\n'
+        )
+        self.write_config(config)
+
+        get_session_token_creds = self.create_random_credentials()
+        assume_role_creds = self.create_random_credentials()
+        response_get_session_token = self.create_get_session_token_response(
+            get_session_token_creds)
+        response_assume_role = self.create_assume_role_response(
+            assume_role_creds)
+        session, stubber = self.create_session(profile='B')
+        stubber.add_response('get_session_token', response_get_session_token)
+        stubber.add_response('assume_role', response_assume_role)
+
+        actual_creds = session.get_credentials()
+        self.assert_creds_equal(actual_creds, assume_role_creds)
         stubber.assert_no_pending_responses()
 
 
