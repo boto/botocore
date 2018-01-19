@@ -384,7 +384,7 @@ class TestAssumeRoleCredentialFetcher(BaseEnvVar):
         }
         client_creator = self.create_client_creator(with_response=response)
         cache = {
-            'development--myrole': {
+            '793d6e2f27667ab2da104824407e486bfec24a47': {
                 'Credentials': {
                     'AccessKeyId': 'foo-cached',
                     'SecretAccessKey': 'bar-cached',
@@ -2078,7 +2078,7 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         }
         client_creator = self.create_client_creator(with_response=response)
         cache = {
-            'development--myrole': {
+            '793d6e2f27667ab2da104824407e486bfec24a47': {
                 'Credentials': {
                     'AccessKeyId': 'foo-cached',
                     'SecretAccessKey': 'bar-cached',
