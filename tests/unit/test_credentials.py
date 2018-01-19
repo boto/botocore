@@ -2358,7 +2358,7 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         provider = credentials.AssumeRoleProvider(
             self.create_config_loader(),
             mock.Mock(), cache={}, profile_name='development',
-            get_session_token_provider=None
+            get_session_token_provider_creator=None
         )
 
         with self.assertRaises(botocore.exceptions.InvalidConfigError):
@@ -2569,7 +2569,8 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         provider = credentials.AssumeRoleProvider(
             self.create_config_loader(),
             client_creator=client_creator, cache={}, profile_name='development',
-            get_session_token_provider=mock_get_session_token_provider
+            get_session_token_provider_creator=
+            lambda profile_name: mock_get_session_token_provider
         )
 
         # The credentials won't actually be assumed until they're requested.

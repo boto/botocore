@@ -78,6 +78,15 @@ def create_credential_resolver(session, cache=None):
         profile_name=profile_name,
         cache=cache,
     )
+
+    def _get_session_token_provider_creator(profile_name):
+        return GetSessionTokenProvider(
+            load_config=lambda: session.full_config,
+            client_creator=session.create_client,
+            profile_name=profile_name,
+            cache=cache,
+        )
+
     assume_role_provider = AssumeRoleProvider(
         load_config=lambda: session.full_config,
         client_creator=session.create_client,
@@ -86,7 +95,7 @@ def create_credential_resolver(session, cache=None):
         credential_sourcer=CanonicalNameCredentialSourcer([
             env_provider, container_provider, instance_metadata_provider
         ]),
-        get_session_token_provider=get_session_token_provider
+        get_session_token_provider_creator=_get_session_token_provider_creator
     )
 
     providers = [
@@ -1318,7 +1327,7 @@ class AssumeRoleProvider(CredentialProvider):
 
     def __init__(self, load_config, client_creator, cache, profile_name,
                  prompter=getpass.getpass, credential_sourcer=None,
-                 get_session_token_provider=None):
+                 get_session_token_provider_creator=None):
         """
         :type load_config: callable
         :param load_config: A function that accepts no arguments, and
@@ -1368,7 +1377,8 @@ class AssumeRoleProvider(CredentialProvider):
         # instantiated).
         self._loaded_config = {}
         self._credential_sourcer = credential_sourcer
-        self._get_session_token_provider = get_session_token_provider
+        self._get_session_token_provider_creator = \
+            get_session_token_provider_creator
         self._visited_profiles = [self._profile_name]
 
     def load(self):
@@ -1507,7 +1517,7 @@ class AssumeRoleProvider(CredentialProvider):
                 )
             )
 
-        if not self._get_session_token_provider and \
+        if not self._get_session_token_provider_creator and \
                 GetSessionTokenProvider.GET_SESSION_TOKEN_CONFIG_VAR in \
                 profiles[source_profile]:
             raise InvalidConfigError(error_msg=(
@@ -1561,15 +1571,23 @@ class AssumeRoleProvider(CredentialProvider):
         profile = profiles[profile_name]
 
         if self._has_static_credentials(profile):
-            if self._get_session_token_provider:
+            if self._get_session_token_provider_creator:
                 get_session_token_credentials = \
-                    self._get_session_token_provider.load()
+                    self._get_session_token_credentials(profile_name)
                 if get_session_token_credentials:
                     return get_session_token_credentials
 
             return self._resolve_static_credentials_from_profile(profile)
 
         return self._load_creds_via_assume_role(profile_name)
+
+    def _get_session_token_credentials(self, profile_name):
+        get_session_token_provider = self._get_session_token_provider_creator(
+            profile_name=profile_name
+        )
+        get_session_token_credentials = \
+            get_session_token_provider.load()
+        return get_session_token_credentials
 
     def _resolve_static_credentials_from_profile(self, profile):
         try:
