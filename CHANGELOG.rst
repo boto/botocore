@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.8.33
+======
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``transcribe``: Update transcribe client to latest version
+
+
 1.8.32
 ======
 

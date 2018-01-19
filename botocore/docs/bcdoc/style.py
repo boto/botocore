@@ -402,3 +402,9 @@ class ReSTStyle(BaseStyle):
             self.doc.write('`%s <%s>`_' % (title, link))
         else:
             self.doc.write(title)
+
+    def internal_link(self, title, page):
+        if self.doc.target == 'html':
+            self.doc.write(':doc:`%s <%s>`' % (title, page))
+        else:
+            self.doc.write(title)
