@@ -733,6 +733,33 @@ class AssumeRoleCredentialFetcher(CachedCredentialFetcher):
 class GetSessionTokenCredentialFetcher(CachedCredentialFetcher):
     def __init__(self, client_creator, source_credentials, extra_args=None, mfa_prompter=None, cache=None,
                  expiry_window_seconds=60 * 15):
+        """
+        :type client_creator: callable
+        :param client_creator: A callable that creates a client taking
+            arguments like ``Session.create_client``.
+
+        :type source_credentials: Credentials
+        :param source_credentials: The credentials to use to create the
+            client for the call to GetSessionToken.
+
+        :type extra_args: dict
+        :param extra_args: Any additional arguments to add to the get session
+            token request using the format of the botocore operation.
+            Possible keys include, but may not be limited to,
+            DurationSeconds and SerialNumber.
+
+        :type mfa_prompter: callable
+        :param mfa_prompter: A callable that returns input provided by the
+            user (i.e raw_input, getpass.getpass, etc.).
+
+        :type cache: dict
+        :param cache: An object that supports ``__getitem__``,
+            ``__setitem__``, and ``__contains__``.  An example of this is
+            the ``JSONFileCache`` class in aws-cli.
+
+        :type expiry_window_seconds: int
+        :param expiry_window_seconds: The amount of time, in seconds,
+        """
         self._client_creator = client_creator
         self._source_credentials = source_credentials
 
@@ -770,7 +797,9 @@ class GetSessionTokenCredentialFetcher(CachedCredentialFetcher):
         return client.get_session_token(**kwargs)
 
     def _get_session_token_kwargs(self):
-        """Get the arguments for GetSessionToken based on current configuration."""
+        """Get the arguments for GetSessionToken based on
+        current configuration.
+        """
         get_session_token_kwargs = self._session_token_kwargs
         mfa_serial = get_session_token_kwargs.get('SerialNumber')
 
@@ -1226,7 +1255,31 @@ class GetSessionTokenProvider(CredentialProvider):
 
     GET_SESSION_TOKEN_CONFIG_VAR = 'session_token_duration'
 
-    def __init__(self, load_config, client_creator, profile_name, cache, prompter=getpass.getpass):
+    def __init__(self, load_config, client_creator, cache, profile_name,
+                 prompter=getpass.getpass):
+        """
+        :type load_config: callable
+        :param load_config: A function that accepts no arguments, and
+            when called, will return the full configuration dictionary
+            for the session (``session.full_config``).
+
+        :type client_creator: callable
+        :param client_creator: A factory function that will create
+            a client when called.  Has the same interface as
+            ``botocore.session.Session.create_client``.
+
+        :type cache: dict
+        :param cache: An object that supports ``__getitem__``,
+            ``__setitem__``, and ``__contains__``.  An example
+            of this is the ``JSONFileCache`` class in the CLI.
+
+        :type profile_name: str
+        :param profile_name: The name of the profile.
+
+        :type prompter: callable
+        :param prompter: A callable that returns input provided
+            by the user (i.e raw_input, getpass.getpass, etc.).
+        """
         self._load_config = load_config
         self._client_creator = client_creator
         self._profile_name = profile_name
@@ -1355,6 +1408,12 @@ class AssumeRoleProvider(CredentialProvider):
         :param credential_sourcer: A credential provider that takes a
             configuration, which is used to provide the source credentials
             for the STS call.
+
+        :type get_session_token_provider_creator: callable
+        :param get_session_token_provider_creator: A function that accepts a
+            profile name as an argument, and when called, will return a
+            GetSessionTokenProvider instance configured with the provided
+            profile name.
         """
         #: The cache used to first check for assumed credentials.
         #: This is checked before making the AssumeRole API
