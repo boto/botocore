@@ -778,8 +778,8 @@ class TestGetSessionTokenCredentialFetcher(BaseEnvVar):
         }
         cache = {}
         client_creator = self.create_client_creator(with_response=response)
-        serial_number = 'arn:aws:iam::111122223333:mfa/username'
-        token_code = '123456'
+        serial_number = 'mfa'
+        token_code = 'token-code'
 
         refresher = credentials.GetSessionTokenCredentialFetcher(
             client_creator, self.source_creds, cache=cache,
@@ -789,7 +789,7 @@ class TestGetSessionTokenCredentialFetcher(BaseEnvVar):
 
         # This is the sha256 hex digest of the expected get session token args.
         cache_key = (
-            '0db79e62534824a7c6c19fb80cc37931003f286d'
+            'efa35a9b921539cc9036f5cfb13fc7733476af94'
         )
         self.assertIn(cache_key, cache)
         self.assertEqual(cache[cache_key], response)
@@ -855,8 +855,8 @@ class TestGetSessionTokenCredentialFetcher(BaseEnvVar):
             },
         }
         client_creator = self.create_client_creator(with_response=response)
-        serial_number = 'arn:aws:iam::111122223333:mfa/username'
-        token_code = '123456'
+        serial_number = 'mfa'
+        token_code = 'token-code'
 
         refresher = credentials.GetSessionTokenCredentialFetcher(
             client_creator, self.source_creds, mfa_prompter=mock.Mock(return_value=token_code),
@@ -2675,10 +2675,9 @@ class TestGetSessionTokenCredentialProvider(unittest.TestCase):
         cache = {}
         self.fake_config['profiles']['development']['session_token_duration'] \
             = '10800'
-        self.fake_config['profiles']['development']['mfa_serial'] = \
-            'arn:aws:iam::111122223333:mfa/username'
+        self.fake_config['profiles']['development']['mfa_serial'] = 'mfa'
 
-        token_code = '123456'
+        token_code = 'token-code'
 
         client_creator = self.create_client_creator(with_response=response)
         provider = credentials.GetSessionTokenProvider(
@@ -2690,7 +2689,7 @@ class TestGetSessionTokenCredentialProvider(unittest.TestCase):
         provider.load().get_frozen_credentials()
 
         cache_key = (
-            '20bf2133ccc884a2c21310081319de25ffbd199a'
+            '4a99f5bf3fdf2d26a8dbe0aeb976c357d9a4c9b4'
         )
         self.assertIn(cache_key, cache)
         self.assertEqual(cache[cache_key], response)
@@ -2753,7 +2752,7 @@ class TestGetSessionTokenCredentialProvider(unittest.TestCase):
     def test_serial_number_provided(self):
         dev_profile = self.fake_config['profiles']['development']
         dev_profile['session_token_duration'] = '20000'
-        dev_profile['mfa_serial'] = 'arn:aws:iam::111122223333:mfa/username'
+        dev_profile['mfa_serial'] = 'mfa'
         response = {
             'Credentials': {
                 'AccessKeyId': 'foo',
@@ -2762,7 +2761,7 @@ class TestGetSessionTokenCredentialProvider(unittest.TestCase):
                 'Expiration': self.some_future_time().isoformat(),
             },
         }
-        token_code = '123456'
+        token_code = 'token-code'
         client_creator = self.create_client_creator(with_response=response)
         provider = credentials.GetSessionTokenProvider(
             self.create_config_loader(),
@@ -2775,7 +2774,7 @@ class TestGetSessionTokenCredentialProvider(unittest.TestCase):
         client = client_creator.return_value
         client.get_session_token.assert_called_with(
             DurationSeconds=20000,
-            SerialNumber='arn:aws:iam::111122223333:mfa/username',
+            SerialNumber='mfa',
             TokenCode=token_code,
         )
 
