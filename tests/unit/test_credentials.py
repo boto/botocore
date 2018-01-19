@@ -2529,6 +2529,427 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         ])
 
 
+class TestGetSessionTokenCredentialProvider(unittest.TestCase):
+    def setUp(self):
+        self.fake_config = {
+            'profiles': {
+                'development': {
+                    'aws_access_key_id': 'akid',
+                    'aws_secret_access_key': 'skid',
+                    'session_token_duration': '3600',
+                },
+            }
+        }
+
+    def create_config_loader(self, with_config=None):
+        if with_config is None:
+            with_config = self.fake_config
+        load_config = mock.Mock()
+        load_config.return_value = with_config
+        return load_config
+
+    def create_client_creator(self, with_response):
+        # Create a mock sts client that returns a specific response
+        # for get_session_token.
+        client = mock.Mock()
+        if isinstance(with_response, list):
+            client.get_session_token.side_effect = with_response
+        else:
+            client.get_session_token.return_value = with_response
+        return mock.Mock(return_value=client)
+
+    def some_future_time(self):
+        timeobj = datetime.now(tzlocal())
+        return timeobj + timedelta(hours=24)
+
+    def test_get_session_token_with_no_cache(self):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat()
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        provider = credentials.GetSessionTokenProvider(
+            self.create_config_loader(),
+            client_creator, cache={}, profile_name='development')
+
+        creds = provider.load()
+
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+
+    def test_get_session_token_with_datetime(self):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                # Note the lack of isoformat(), we're using
+                # a datetime.datetime type.  This will ensure
+                # we test both parsing as well as serializing
+                # from a given datetime because the credentials
+                # are immediately expired.
+                'Expiration': datetime.now(tzlocal()) + timedelta(hours=20)
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        provider = credentials.GetSessionTokenProvider(
+            self.create_config_loader(),
+            client_creator, cache={}, profile_name='development')
+
+        creds = provider.load()
+
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+
+    def test_get_session_token_retrieves_from_cache(self):
+        date_in_future = datetime.utcnow() + timedelta(seconds=1000)
+        utc_timestamp = date_in_future.isoformat() + 'Z'
+        self.fake_config['profiles']['development']['session_token_duration'] \
+            = '10800'
+
+        cache_key = (
+            '442c2e4543b38cc9453c5a946b152ae6714c83db'
+        )
+        cache = {
+            cache_key: {
+                'Credentials': {
+                    'AccessKeyId': 'foo-cached',
+                    'SecretAccessKey': 'bar-cached',
+                    'SessionToken': 'baz-cached',
+                    'Expiration': utc_timestamp,
+                }
+            }
+        }
+        provider = credentials.GetSessionTokenProvider(
+            self.create_config_loader(), mock.Mock(),
+            cache=cache, profile_name='development')
+
+        creds = provider.load()
+
+        self.assertEqual(creds.access_key, 'foo-cached')
+        self.assertEqual(creds.secret_key, 'bar-cached')
+        self.assertEqual(creds.token, 'baz-cached')
+
+    def test_cache_key_is_windows_safe(self):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat()
+            },
+        }
+        cache = {}
+        self.fake_config['profiles']['development']['session_token_duration'] \
+            = '10800'
+
+        client_creator = self.create_client_creator(with_response=response)
+        provider = credentials.GetSessionTokenProvider(
+            self.create_config_loader(),
+            client_creator, cache=cache, profile_name='development')
+
+        provider.load().get_frozen_credentials()
+        # On windows, you cannot use a a ':' in the filename, so
+        # we need to make sure it doesn't come up in the cache key.
+        cache_key = (
+            '442c2e4543b38cc9453c5a946b152ae6714c83db'
+        )
+        self.assertIn(cache_key, cache)
+        self.assertEqual(cache[cache_key], response)
+
+    def test_cache_key_with_mfa_serial(self):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat()
+            },
+        }
+        cache = {}
+        self.fake_config['profiles']['development']['session_token_duration'] \
+            = '10800'
+        self.fake_config['profiles']['development']['mfa_serial'] = \
+            'arn:aws:iam::111122223333:mfa/username'
+
+        token_code = '123456'
+
+        client_creator = self.create_client_creator(with_response=response)
+        provider = credentials.GetSessionTokenProvider(
+            self.create_config_loader(),
+            client_creator, cache=cache, profile_name='development',
+            prompter=mock.Mock(return_value=token_code))
+
+        # The credentials won't actually be assumed until they're requested.
+        provider.load().get_frozen_credentials()
+
+        cache_key = (
+            '20bf2133ccc884a2c21310081319de25ffbd199a'
+        )
+        self.assertIn(cache_key, cache)
+        self.assertEqual(cache[cache_key], response)
+
+    def test_get_session_token_in_cache_but_expired(self):
+        expired_creds = datetime.now(tzlocal())
+        valid_creds = expired_creds + timedelta(hours=1)
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': valid_creds,
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        cache = {
+            '3bde8d90e0b1ed1adcb8cb8fc3f655307ffd4e8f': {
+                'Credentials': {
+                    'AccessKeyId': 'foo-cached',
+                    'SecretAccessKey': 'bar-cached',
+                    'SessionToken': 'baz-cached',
+                    'Expiration': expired_creds,
+                }
+            }
+        }
+        provider = credentials.GetSessionTokenProvider(
+            self.create_config_loader(), client_creator,
+            cache=cache, profile_name='development')
+
+        creds = provider.load()
+
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+
+    def test_session_token_duration_provided(self):
+        dev_profile = self.fake_config['profiles']['development']
+        dev_profile['session_token_duration'] = '20000'
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat(),
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        provider = credentials.GetSessionTokenProvider(
+            self.create_config_loader(),
+            client_creator, cache={}, profile_name='development')
+
+        # The credentials won't actually be fetched until they're requested.
+        provider.load().get_frozen_credentials()
+
+        client = client_creator.return_value
+        client.get_session_token.assert_called_with(
+            DurationSeconds=20000,)
+
+    def test_serial_number_provided(self):
+        dev_profile = self.fake_config['profiles']['development']
+        dev_profile['session_token_duration'] = '20000'
+        dev_profile['mfa_serial'] = 'arn:aws:iam::111122223333:mfa/username'
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat(),
+            },
+        }
+        token_code = '123456'
+        client_creator = self.create_client_creator(with_response=response)
+        provider = credentials.GetSessionTokenProvider(
+            self.create_config_loader(),
+            client_creator, cache={}, profile_name='development',
+            prompter=mock.Mock(return_value=token_code))
+
+        # The credentials won't actually be fetched until they're requested.
+        provider.load().get_frozen_credentials()
+
+        client = client_creator.return_value
+        client.get_session_token.assert_called_with(
+            DurationSeconds=20000,
+            SerialNumber='arn:aws:iam::111122223333:mfa/username',
+            TokenCode=token_code,
+        )
+
+    def test_get_session_token_with_mfa(self):
+        self.fake_config['profiles']['development']['mfa_serial'] = 'mfa'
+        self.fake_config['profiles']['development']['session_token_duration'] \
+            = '20000'
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat(),
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        prompter = mock.Mock(return_value='token-code')
+        provider = credentials.GetSessionTokenProvider(
+            self.create_config_loader(), client_creator,
+            cache={}, profile_name='development', prompter=prompter)
+
+        # The credentials won't actually be fetched until they're requested.
+        provider.load().get_frozen_credentials()
+
+        client = client_creator.return_value
+        # In addition to the normal get session token args, we should also
+        # inject the serial number from the config as well as the
+        # token code that comes from prompting the user (the prompter
+        # object).
+        client.get_session_token.assert_called_with(
+            DurationSeconds=20000, SerialNumber='mfa',
+            TokenCode='token-code')
+
+    def test_get_session_token_populates_session_name_on_refresh(self):
+        expiration_time = self.some_future_time()
+        next_expiration_time = expiration_time + timedelta(hours=4)
+        responses = [{
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                # We're creating an expiry time in the past so as
+                # soon as we try to access the credentials, the
+                # refresh behavior will be triggered.
+                'Expiration': expiration_time.isoformat(),
+            },
+        }, {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': next_expiration_time.isoformat(),
+            }
+        }]
+        client_creator = self.create_client_creator(with_response=responses)
+        provider = credentials.GetSessionTokenProvider(
+            self.create_config_loader(), client_creator,
+            cache={}, profile_name='development',)
+
+        local_now = mock.Mock(return_value=datetime.now(tzlocal()))
+        with mock.patch('botocore.credentials._local_now', local_now):
+            # This will trigger the first get_session_token() call. It returns
+            # credentials that are expired and will trigger a refresh.
+            creds = provider.load()
+            creds.get_frozen_credentials()
+
+            # This will trigger the second get_session_token() call because
+            # a refresh is needed.
+            local_now.return_value = expiration_time
+            creds.get_frozen_credentials()
+
+        client = client_creator.return_value
+        get_session_token_calls = client.get_session_token.call_args_list
+        self.assertEqual(len(get_session_token_calls), 2,
+                         get_session_token_calls)
+        # The args should be identical. That is, the second
+        # get_session_token call should have the exact same args as the
+        # initial assume_role call.
+        self.assertEqual(get_session_token_calls[0], get_session_token_calls[1])
+
+    def test_get_session_token_mfa_cannot_refresh_credentials(self):
+        # Note: we should look into supporting optional behavior
+        # in the future that allows for reprompting for credentials.
+        # But for now, if we get temp creds with MFA then when those
+        # creds expire, we can't refresh the credentials.
+        self.fake_config['profiles']['development']['mfa_serial'] = 'mfa'
+        expiration_time = self.some_future_time()
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                # We're creating an expiry time in the past so as
+                # soon as we try to access the credentials, the
+                # refresh behavior will be triggered.
+                'Expiration': expiration_time.isoformat(),
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        provider = credentials.GetSessionTokenProvider(
+            self.create_config_loader(), client_creator,
+            cache={}, profile_name='development',
+            prompter=mock.Mock(return_value='token-code'))
+
+        local_now = mock.Mock(return_value=datetime.now(tzlocal()))
+        with mock.patch('botocore.credentials._local_now', local_now):
+            # Loads the credentials, resulting in the first get session token
+            # call.
+            creds = provider.load()
+            creds.get_frozen_credentials()
+
+            local_now.return_value = expiration_time
+            with self.assertRaises(credentials.RefreshWithMFAUnsupportedError):
+                # access_key is a property that will refresh credentials
+                # if they're expired.  Because we set the expiry time to
+                # something in the past, this will trigger the refresh
+                # behavior, with with MFA will currently raise an exception.
+                creds.access_key
+
+    def test_no_config_is_noop(self):
+        self.fake_config['profiles']['development'] = {
+            'aws_access_key_id': 'foo',
+            'aws_secret_access_key': 'bar',
+        }
+        provider = credentials.GetSessionTokenProvider(
+            self.create_config_loader(),
+            mock.Mock(), cache={}, profile_name='development')
+
+        # Because a session_token_duration was not specified, the
+        # GetSessionTokenProvider is a noop and will not return credentials
+        # (which means we move on to the next provider).
+        creds = provider.load()
+        self.assertIsNone(creds)
+
+    def test_incomplete_source_credentials_raises_error(self):
+        del self.fake_config['profiles']['development']['aws_access_key_id']
+        provider = credentials.GetSessionTokenProvider(
+            self.create_config_loader(),
+            mock.Mock(), cache={}, profile_name='development')
+
+        with self.assertRaises(botocore.exceptions.PartialCredentialsError):
+            provider.load()
+
+    def test_session_token_duration_string(self):
+        profile = self.fake_config['profiles']['development']
+        profile['session_token_duration'] = 'some-string'
+        provider = credentials.GetSessionTokenProvider(
+            self.create_config_loader(),
+            mock.Mock(), cache={}, profile_name='development')
+
+        with self.assertRaises(botocore.exceptions.InvalidConfigError):
+            provider.load()
+
+    def test_session_token_duration_float(self):
+        profile = self.fake_config['profiles']['development']
+        profile['session_token_duration'] = '1.0'
+        provider = credentials.GetSessionTokenProvider(
+            self.create_config_loader(),
+            mock.Mock(), cache={}, profile_name='development')
+
+        with self.assertRaises(botocore.exceptions.InvalidConfigError):
+            provider.load()
+
+    def test_session_token_duration_negative(self):
+        profile = self.fake_config['profiles']['development']
+        profile['session_token_duration'] = '-1'
+        provider = credentials.GetSessionTokenProvider(
+            self.create_config_loader(),
+            mock.Mock(), cache={}, profile_name='development')
+
+        with self.assertRaises(botocore.exceptions.InvalidConfigError):
+            provider.load()
+
+
 class TestJSONCache(unittest.TestCase):
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()

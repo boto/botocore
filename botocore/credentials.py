@@ -1256,6 +1256,8 @@ class GetSessionTokenProvider(CredentialProvider):
             extra_args=extra_args,
         )
         refresher = fetcher.fetch_credentials
+        if mfa_serial is not None:
+            refresher = create_mfa_serial_refresher(refresher)
 
         return DeferredRefreshableCredentials(
             method=self.METHOD,
@@ -1269,7 +1271,16 @@ class GetSessionTokenProvider(CredentialProvider):
         profile = profiles[profile_name]
 
         mfa_serial = profile.get('mfa_serial')
-        session_token_duration = int(profile[self.GET_SESSION_TOKEN_CONFIG_VAR])
+        session_token_duration = profile[self.GET_SESSION_TOKEN_CONFIG_VAR]
+
+        if not session_token_duration.isdigit():
+            raise InvalidConfigError(
+                error_msg=(
+                    'session_token_duration must be an integer'
+                )
+            )
+
+        session_token_duration = int(session_token_duration)
 
         role_config = {
             'mfa_serial': mfa_serial,
