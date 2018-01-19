@@ -1859,6 +1859,11 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
                 'chained': {
                     'role_arn': 'chained-role',
                     'source_profile': 'development'
+                },
+                'with-session-token-duration': {
+                    'aws_access_key_id': 'akid',
+                    'aws_secret_access_key': 'skid',
+                    'session_token_duration': '3600',
                 }
             }
         }
@@ -2347,6 +2352,18 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         with self.assertRaises(botocore.exceptions.InvalidConfigError):
             provider.load()
 
+    def test_source_profile_with_no_get_session_token_configured(self):
+        profile = self.fake_config['profiles']['development']
+        profile['source_profile'] = 'with-session-token-duration'
+        provider = credentials.AssumeRoleProvider(
+            self.create_config_loader(),
+            mock.Mock(), cache={}, profile_name='development',
+            get_session_token_provider=None
+        )
+
+        with self.assertRaises(botocore.exceptions.InvalidConfigError):
+            provider.load()
+
     def test_assume_role_with_credential_source(self):
         response = {
             'Credentials': {
@@ -2527,6 +2544,43 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
                 aws_session_token=assume_responses[0].token
             ),
         ])
+
+    def test_get_session_token_provider_loads(self):
+        profile = self.fake_config['profiles']['development']
+        profile['source_profile'] = 'with-session-token-duration'
+
+        mock_credentials = Credentials(
+            access_key='foo1',
+            secret_key='bar1',
+            token='baz1',
+        )
+        mock_get_session_token_provider = mock.Mock()
+        mock_get_session_token_provider.load.return_value = mock_credentials
+
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo2',
+                'SecretAccessKey': 'bar2',
+                'SessionToken': 'baz2',
+                'Expiration': self.some_future_time().isoformat()
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        provider = credentials.AssumeRoleProvider(
+            self.create_config_loader(),
+            client_creator=client_creator, cache={}, profile_name='development',
+            get_session_token_provider=mock_get_session_token_provider
+        )
+
+        # The credentials won't actually be assumed until they're requested.
+        provider.load().get_frozen_credentials()
+
+        client_creator.assert_called_with(
+            'sts',
+            aws_access_key_id='foo1',
+            aws_secret_access_key='bar1',
+            aws_session_token='baz1'
+        )
 
 
 class TestGetSessionTokenCredentialProvider(unittest.TestCase):

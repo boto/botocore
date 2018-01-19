@@ -72,6 +72,12 @@ def create_credential_resolver(session, cache=None):
             num_attempts=num_attempts,
             user_agent=session.user_agent())
     )
+    get_session_token_provider = GetSessionTokenProvider(
+        load_config=lambda: session.full_config,
+        client_creator=session.create_client,
+        profile_name=profile_name,
+        cache=cache,
+    )
     assume_role_provider = AssumeRoleProvider(
         load_config=lambda: session.full_config,
         client_creator=session.create_client,
@@ -79,13 +85,8 @@ def create_credential_resolver(session, cache=None):
         profile_name=profile_name,
         credential_sourcer=CanonicalNameCredentialSourcer([
             env_provider, container_provider, instance_metadata_provider
-        ])
-    )
-    get_session_token_provider = GetSessionTokenProvider(
-        load_config=lambda: session.full_config,
-        client_creator=session.create_client,
-        profile_name=profile_name,
-        cache=cache,
+        ]),
+        get_session_token_provider=get_session_token_provider
     )
 
     providers = [
@@ -1316,7 +1317,8 @@ class AssumeRoleProvider(CredentialProvider):
     EXPIRY_WINDOW_SECONDS = 60 * 15
 
     def __init__(self, load_config, client_creator, cache, profile_name,
-                 prompter=getpass.getpass, credential_sourcer=None):
+                 prompter=getpass.getpass, credential_sourcer=None,
+                 get_session_token_provider=None):
         """
         :type load_config: callable
         :param load_config: A function that accepts no arguments, and
@@ -1366,6 +1368,7 @@ class AssumeRoleProvider(CredentialProvider):
         # instantiated).
         self._loaded_config = {}
         self._credential_sourcer = credential_sourcer
+        self._get_session_token_provider = get_session_token_provider
         self._visited_profiles = [self._profile_name]
 
     def load(self):
@@ -1504,6 +1507,16 @@ class AssumeRoleProvider(CredentialProvider):
                 )
             )
 
+        if not self._get_session_token_provider and \
+                GetSessionTokenProvider.GET_SESSION_TOKEN_CONFIG_VAR in \
+                profiles[source_profile]:
+            raise InvalidConfigError(error_msg=(
+                    'The %s parameter is specified in profile "%s", '
+                    'but no get session token provider was configured.' % (
+                        GetSessionTokenProvider.GET_SESSION_TOKEN_CONFIG_VAR,
+                        parent_profile)
+            ))
+
         # Make sure we aren't going into an infinite loop. If we haven't
         # visited the profile yet, we're good.
         if source_profile_name not in self._visited_profiles:
@@ -1548,21 +1561,17 @@ class AssumeRoleProvider(CredentialProvider):
         profile = profiles[profile_name]
 
         if self._has_static_credentials(profile):
-            return self._resolve_static_credentials_from_profile(profile, profile_name)
+            if self._get_session_token_provider:
+                get_session_token_credentials = \
+                    self._get_session_token_provider.load()
+                if get_session_token_credentials:
+                    return get_session_token_credentials
+
+            return self._resolve_static_credentials_from_profile(profile)
 
         return self._load_creds_via_assume_role(profile_name)
 
-    def _resolve_static_credentials_from_profile(self, profile, profile_name):
-        get_session_token_provider = GetSessionTokenProvider(
-            load_config=self._load_config,
-            client_creator=self._client_creator,
-            profile_name=profile_name,
-            cache=self.cache,
-        )
-        get_session_token_credentials = get_session_token_provider.load()
-        if get_session_token_credentials:
-            return get_session_token_credentials
-
+    def _resolve_static_credentials_from_profile(self, profile):
         try:
             return Credentials(
                 access_key=profile['aws_access_key_id'],
