@@ -1306,8 +1306,9 @@ class TestCreateCredentialResolver(BaseEnvVar):
             all(not isinstance(p, EnvProvider) for p in resolver.providers))
 
     def test_no_profile_checks_env_provider(self):
-        # If no profile is provided,
+        # If neither profile nor role_arn is provided,
         self.session_instance_vars.pop('profile', None)
+        self.session_instance_vars.pop('role_arn', None)
         resolver = credentials.create_credential_resolver(self.session)
         # Then an EnvProvider should be part of our credential lookup chain.
         self.assertTrue(
@@ -1315,6 +1316,18 @@ class TestCreateCredentialResolver(BaseEnvVar):
 
     def test_env_provider_added_if_profile_from_env_set(self):
         self.fake_env_vars['profile'] = 'profile-from-env'
+        resolver = credentials.create_credential_resolver(self.session)
+        self.assertTrue(
+            any(isinstance(p, EnvProvider) for p in resolver.providers))
+
+    def test_explicit_role_arn_ignores_env_provider(self):
+        self.session_instance_vars['role_arn'] = 'arn:aws:iam::00000:role/a'
+        resolver = credentials.create_credential_resolver(self.session)
+        self.assertTrue(
+            all(not isinstance(p, EnvProvider) for p in resolver.providers))
+
+    def test_env_provider_added_if_role_arn_from_env_set(self):
+        self.fake_env_vars['role_arn'] = 'arn:aws:iam::00000:role/env'
         resolver = credentials.create_credential_resolver(self.session)
         self.assertTrue(
             any(isinstance(p, EnvProvider) for p in resolver.providers))
@@ -1466,6 +1479,10 @@ class TestCanonicalNameSourceProvider(BaseEnvVar):
             provider.source_credentials('SharedConfig')
         with self.assertRaises(botocore.exceptions.UnknownCredentialError):
             provider.source_credentials('SharedCredentials')
+    
+    def test_get_get_first_successful_credentials(self):
+        # TODO
+        pass
 
 
 class TestAssumeRoleCredentialProvider(unittest.TestCase):
@@ -1633,6 +1650,52 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         provider = credentials.AssumeRoleProvider(
             self.create_config_loader(), client_creator,
             cache=cache, profile_name='chained')
+
+        creds = provider.load()
+
+        self.assertEqual(creds.access_key, 'foo-cached')
+        self.assertEqual(creds.secret_key, 'bar-cached')
+        self.assertEqual(creds.token, 'baz-cached')
+    
+    def test_chain_prefers_cache_with_role_arn(self):
+        date_in_future = datetime.utcnow() + timedelta(seconds=1000)
+        utc_timestamp = date_in_future.isoformat() + 'Z'
+
+        # The role we will be assuming has a cache entry. This should result
+        # in the cached credentials being used, and the base provider not
+        # being called.
+        cache_key = (
+            'cf97defae2f68aa26ce4d89b828f58b76a7cc1f5'
+        )
+        cache = {
+            cache_key: {
+                'Credentials': {
+                    'AccessKeyId': 'foo-cached',
+                    'SecretAccessKey': 'bar-cached',
+                    'SessionToken': 'baz-cached',
+                    'Expiration': utc_timestamp,
+                }
+            }
+        }
+
+        client_creator = self.create_client_creator([
+            Exception("Attempted to call assume role when not needed.")
+        ])
+
+        fake_provider = mock.Mock()
+        fake_provider.CANONICAL_NAME = 'CustomMockProvider'
+        fake_creds = credentials.Credentials(
+            'akid', 'skid', 'token'
+        )
+        fake_provider.load.return_value = fake_creds
+
+        provider = credentials.AssumeRoleProvider(
+            self.create_config_loader(), client_creator,
+            cache=cache, role_arn='', profile_name=None,
+            credential_sourcer=credentials.CanonicalNameCredentialSourcer(
+                [fake_provider]
+            )
+        )
 
         creds = provider.load()
 
@@ -2021,6 +2084,103 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
             aws_secret_access_key=fake_creds.secret_key,
             aws_session_token=fake_creds.token
         )
+    
+    def test_assume_role_with_role_arn(self):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat()
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+
+        config = {}
+        config_loader = self.create_config_loader(with_config=config)
+
+        fake_provider = mock.Mock()
+        fake_provider.CANONICAL_NAME = 'CustomMockProvider'
+        fake_creds = credentials.Credentials(
+            'akid', 'skid', 'token'
+        )
+        fake_provider.load.return_value = fake_creds
+
+        provider = credentials.AssumeRoleProvider(
+            config_loader, client_creator, cache={}, role_arn='my_role_arn',
+            profile_name=None,
+            credential_sourcer=credentials.CanonicalNameCredentialSourcer(
+                [fake_provider])
+        )
+
+        creds = provider.load()
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+        client_creator.assert_called_with(
+            'sts', aws_access_key_id=fake_creds.access_key,
+            aws_secret_access_key=fake_creds.secret_key,
+            aws_session_token=fake_creds.token
+        )
+    
+    def test_assume_role_with_role_arn_and_profile(self):
+        assume_responses = [
+            Credentials('foo', 'bar', 'baz'),
+            Credentials('spam', 'eggs', 'spamandegss'),
+        ]
+        responses = []
+        for credential_set in assume_responses:
+            responses.append({
+                'Credentials': {
+                    'AccessKeyId': credential_set.access_key,
+                    'SecretAccessKey': credential_set.secret_key,
+                    'SessionToken': credential_set.token,
+                    'Expiration': self.some_future_time().isoformat()
+                }
+            })
+        client_creator = self.create_client_creator(with_response=responses)
+
+        static_credentials = Credentials('akid', 'skid')
+        config = {
+            'profiles': {
+                'first': {
+                    'role_arn': 'first',
+                    'source_profile': 'second'
+                },
+                'second': {
+                    'aws_access_key_id': static_credentials.access_key,
+                    'aws_secret_access_key': static_credentials.secret_key,
+                }
+            }
+        }
+        client_creator = self.create_client_creator(with_response=responses)
+        config_loader = self.create_config_loader(with_config=config)
+
+
+        provider = credentials.AssumeRoleProvider(
+            config_loader, client_creator, cache={}, role_arn='my_role_arn',
+            profile_name='first',
+            credential_sourcer=credentials.CanonicalNameCredentialSourcer([])
+        )
+
+        creds = provider.load()
+        expected_creds = assume_responses[-1]
+        self.assertEqual(creds.access_key, expected_creds.access_key)
+        self.assertEqual(creds.secret_key, expected_creds.secret_key)
+        self.assertEqual(creds.token, expected_creds.token)
+
+        client_creator.assert_has_calls([
+            mock.call(
+                'sts', aws_access_key_id=static_credentials.access_key,
+                aws_secret_access_key=static_credentials.secret_key,
+                aws_session_token=static_credentials.token
+            ),
+            mock.call(
+                'sts', aws_access_key_id=assume_responses[0].access_key,
+                aws_secret_access_key=assume_responses[0].secret_key,
+                aws_session_token=assume_responses[0].token
+            ),
+        ])
 
     def test_credential_source_returns_none(self):
         config = {

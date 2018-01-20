@@ -102,10 +102,11 @@ def create_credential_resolver(session, cache=None):
 
     explicit_profile = session.get_config_variable('profile',
                                                    methods=('instance',))
-    if explicit_profile is None:
-        providers.insert(0, env_provider)
-    else:
-        # An explicitly provided profile will negate an EnvProvider.
+    explicit_role_arn = session.get_config_variable('role_arn',
+                                                   methods=('instance',))
+
+    if explicit_profile is None and explicit_role_arn is None:
+        # An explicitly provided profile/role_arn will negate an EnvProvider.
         # We will defer to providers that understand the "profile"
         # concept to retrieve credentials.
         # The one edge case if is all three values are provided via
@@ -116,10 +117,12 @@ def create_credential_resolver(session, cache=None):
         # Then, just like our client() calls, the explicit credentials
         # will take precedence.
         #
-        # This precedence is enforced by leaving the EnvProvider in the chain.
+        # This precedence is enforced by having the EnvProvider in the chain.
         # This means that the only way a "profile" would win is if the
         # EnvProvider does not return credentials, which is what we want
         # in this scenario.
+        providers.insert(0, env_provider)
+    else:
         logger.debug('Skipping environment variable credential check'
                      ' because profile name was explicitly set.')
 
@@ -1226,7 +1229,12 @@ class AssumeRoleProvider(CredentialProvider):
 
     def _load_creds_via_role_arn(self, role_arn):
         role_config = self._get_role_config_from_role_arn(role_arn)
-        source_credentials = self._credential_sourcer.get_first_successful_credentials()
+        # TODO: is this OK?
+        if self._profile_name is not None and self._profile_name != 'default':
+            self._visited_profiles.append(self._profile_name)
+            source_credentials = self._resolve_credentials_from_profile(self._profile_name)
+        else:
+            source_credentials = self._credential_sourcer.get_first_successful_credentials()
 
         if source_credentials is None:
             raise PartialCredentialsError(
