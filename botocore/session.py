@@ -80,6 +80,7 @@ class Session(object):
     SESSION_VARIABLES = {
         # logical:  config_file, env_var,        default_value, conversion_func
         'profile': (None, ['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'], None, None),
+        'role_arn': (None, None, None, None),
         'region': ('region', 'AWS_DEFAULT_REGION', None, None),
         'data_path': ('data_path', 'AWS_DATA_PATH', None, None),
         'config_file': (None, 'AWS_CONFIG_FILE', '~/.aws/config', None),
@@ -109,7 +110,7 @@ class Session(object):
     LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
     def __init__(self, session_vars=None, event_hooks=None,
-                 include_builtin_handlers=True, profile=None):
+                 include_builtin_handlers=True, profile=None, role_arn=None):
         """
         Create a new Session object.
 
@@ -158,6 +159,8 @@ class Session(object):
         self._session_instance_vars = {}
         if profile is not None:
             self._session_instance_vars['profile'] = profile
+        if role_arn is not None:
+            self._session_instance_vars['role_arn'] = role_arn
         self._client_config = None
         self._components = ComponentLocator()
         self._register_components()

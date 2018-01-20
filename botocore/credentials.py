@@ -61,6 +61,7 @@ def create_credential_resolver(session, cache=None):
     config_file = session.get_config_variable('config_file')
     metadata_timeout = session.get_config_variable('metadata_service_timeout')
     num_attempts = session.get_config_variable('metadata_service_num_attempts')
+    role_arn = session.get_config_variable('role_arn')
     if cache is None:
         cache = {}
 
@@ -71,18 +72,8 @@ def create_credential_resolver(session, cache=None):
             timeout=metadata_timeout,
             num_attempts=num_attempts)
     )
-    assume_role_provider = AssumeRoleProvider(
-        load_config=lambda: session.full_config,
-        client_creator=session.create_client,
-        cache=cache,
-        profile_name=profile_name,
-        credential_sourcer=CanonicalNameCredentialSourcer([
-            env_provider, container_provider, instance_metadata_provider
-        ])
-    )
+
     providers = [
-        env_provider,
-        assume_role_provider,
         SharedCredentialProvider(
             creds_filename=credential_file,
             profile_name=profile_name
@@ -98,9 +89,22 @@ def create_credential_resolver(session, cache=None):
         instance_metadata_provider
     ]
 
+    assume_role_provider = AssumeRoleProvider(
+        load_config=lambda: session.full_config,
+        client_creator=session.create_client,
+        cache=cache,
+        profile_name=profile_name,
+        role_arn=role_arn,
+        credential_sourcer=CanonicalNameCredentialSourcer([env_provider]+providers)
+    )
+
+    providers.insert(0, assume_role_provider)
+
     explicit_profile = session.get_config_variable('profile',
                                                    methods=('instance',))
-    if explicit_profile is not None:
+    if explicit_profile is None:
+        providers.insert(0, env_provider)
+    else:
         # An explicitly provided profile will negate an EnvProvider.
         # We will defer to providers that understand the "profile"
         # concept to retrieve credentials.
@@ -116,7 +120,6 @@ def create_credential_resolver(session, cache=None):
         # This means that the only way a "profile" would win is if the
         # EnvProvider does not return credentials, which is what we want
         # in this scenario.
-        providers.remove(env_provider)
         logger.debug('Skipping environment variable credential check'
                      ' because profile name was explicitly set.')
 
@@ -1153,7 +1156,7 @@ class AssumeRoleProvider(CredentialProvider):
     EXPIRY_WINDOW_SECONDS = 60 * 15
 
     def __init__(self, load_config, client_creator, cache, profile_name,
-                 prompter=getpass.getpass, credential_sourcer=None):
+                 role_arn=None, prompter=getpass.getpass, credential_sourcer=None):
         """
         :type load_config: callable
         :param load_config: A function that accepts no arguments, and
@@ -1172,6 +1175,9 @@ class AssumeRoleProvider(CredentialProvider):
 
         :type profile_name: str
         :param profile_name: The name of the profile.
+
+        :type role_arn: str
+        :param role_arn: The name of a role to assume
 
         :type prompter: callable
         :param prompter: A callable that returns input provided
@@ -1193,6 +1199,7 @@ class AssumeRoleProvider(CredentialProvider):
         # It's basically session.create_client
         self._client_creator = client_creator
         self._profile_name = profile_name
+        self._role_arn = role_arn
         self._prompter = prompter
         # The _loaded_config attribute will be populated from the
         # load_config() function once the configuration is actually
@@ -1207,19 +1214,39 @@ class AssumeRoleProvider(CredentialProvider):
 
     def load(self):
         self._loaded_config = self._load_config()
-        if self._has_assume_role_config_vars():
-            return self._load_creds_via_assume_role(self._profile_name)
+
+        if self._role_arn is not None:
+            return self._load_creds_via_role_arn(self._role_arn)
+        elif self._has_assume_role_config_vars():
+            return self._load_creds_via_profile(self._profile_name)
 
     def _has_assume_role_config_vars(self):
         profiles = self._loaded_config.get('profiles', {})
         return self.ROLE_CONFIG_VAR in profiles.get(self._profile_name, {})
 
-    def _load_creds_via_assume_role(self, profile_name):
-        role_config = self._get_role_config(profile_name)
+    def _load_creds_via_role_arn(self, role_arn):
+        role_config = self._get_role_config_from_role_arn(role_arn)
+        source_credentials = self._credential_sourcer.get_first_successful_credentials()
+
+        if source_credentials is None:
+            raise PartialCredentialsError(
+                provider = self.METHOD,
+                cred_var='source creds' # TODO
+            )
+
+        return self._load_creds_via_assume_role(role_config, source_credentials)
+
+
+    def _load_creds_via_profile(self, profile_name):
+        role_config = self._get_role_config_from_profile(profile_name)
         source_credentials = self._resolve_source_credentials(
             role_config, profile_name
         )
 
+        return self._load_creds_via_assume_role(role_config, source_credentials)
+
+
+    def _load_creds_via_assume_role(self, role_config, source_credentials):
         extra_args = {}
         role_session_name = role_config.get('role_session_name')
         if role_session_name is not None:
@@ -1253,8 +1280,35 @@ class AssumeRoleProvider(CredentialProvider):
             refresh_using=refresher,
             time_fetcher=_local_now
         )
+    
+    def _get_role_config_from_role_arn(self, role_arn, profile_name=None):
+        """Retrieves and validates the role configuration from a specified role_arn."""
+        if profile_name is not None:
+            source_profile = profile_name
+            credential_source = None
+        else:
+            source_profile = None
+            credential_source = 'auto' # TODO
+        
+        # TODO
+        mfa_serial = None
+        external_id = None
+        role_session_name = None
 
-    def _get_role_config(self, profile_name):
+        role_config = {
+            'role_arn': role_arn,
+            'external_id': external_id,
+            'mfa_serial': mfa_serial,
+            'role_session_name': role_session_name,
+            'source_profile': source_profile,
+            'credential_source': credential_source
+        }
+
+        self._validate_role_config(role_config)
+
+        return role_config
+
+    def _get_role_config_from_profile(self, profile_name):
         """Retrieves and validates the role configuration for the profile."""
         profiles = self._loaded_config.get('profiles', {})
 
@@ -1274,6 +1328,16 @@ class AssumeRoleProvider(CredentialProvider):
             'source_profile': source_profile,
             'credential_source': credential_source
         }
+
+        self._validate_role_config(role_config, profile_name)
+
+        return role_config
+
+    def _validate_role_config(self, role_config, profile_name=None):
+        """Validates a role config."""
+
+        credential_source = role_config.get('credential_source')
+        source_profile = role_config.get('source_profile')
 
         # Either the credential source or the source profile must be
         # specified, but not both.
@@ -1295,30 +1359,48 @@ class AssumeRoleProvider(CredentialProvider):
         else:
             self._validate_source_profile(profile_name, source_profile)
 
-        return role_config
-
     def _validate_credential_source(self, parent_profile, credential_source):
         if self._credential_sourcer is None:
-            raise InvalidConfigError(error_msg=(
-                'The credential_source "%s" is specified in profile "%s", '
-                'but no source provider was configured.' % (
-                    credential_source, parent_profile)
-            ))
-        if not self._credential_sourcer.is_supported(credential_source):
-            raise InvalidConfigError(error_msg=(
-                'The credential source "%s" referenced in profile "%s" is not '
-                'valid.' % (credential_source, parent_profile)
-            ))
+            if parent_profile is not None:
+                error_msg = (
+                    'The credential_source "%s" is specified in profile "%s", '
+                    'but no source provider was configured.' % (
+                        credential_source, parent_profile)
+                )
+            else:
+                error_msg = (
+                    'The credential_source "%s" was going to be used, but no '
+                    'source provider was configured.' % (credential_source)
+                )
+            raise InvalidConfigError(error_msg=error_msg)
+        if parent_profile is None and credential_source == 'auto':
+            pass # ok
+        elif not self._credential_sourcer.is_supported(credential_source):
+            if parent_profile is not None:
+                error_msg = (
+                    'The credential source "%s" referenced in profile "%s" is '
+                    'not valid.' % (credential_source, parent_profile)
+                )
+            else:
+                error_msg = (
+                    'The credential source "%s" is not valid'
+                    % credential_source
+                )
+            raise InvalidConfigError(error_msg=error_msg)
 
     def _validate_source_profile(self, parent_profile, source_profile):
         profiles = self._loaded_config.get('profiles', {})
         if source_profile not in profiles:
-            raise InvalidConfigError(
-                error_msg=(
+            if parent_profile is not None:
+                error_msg = (
                     'The source_profile "%s" referenced in '
                     'the profile "%s" does not exist.' % (
                         source_profile, parent_profile)
                 )
+            else:
+                error_msg = 'The source profile "%s" does not exist.'
+            raise InvalidConfigError(
+                error_msg=error_msg
             )
 
         # Make sure we aren't going into an infinite loop. If we haven't
@@ -1356,7 +1438,7 @@ class AssumeRoleProvider(CredentialProvider):
                 credential_source, profile_name
             )
 
-        source_profile = role_config['source_profile']
+        source_profile = role_config.get('source_profile')
         self._visited_profiles.append(source_profile)
         return self._resolve_credentials_from_profile(source_profile)
 
@@ -1367,7 +1449,7 @@ class AssumeRoleProvider(CredentialProvider):
         if self._has_static_credentials(profile):
             return self._resolve_static_credentials_from_profile(profile)
 
-        return self._load_creds_via_assume_role(profile_name)
+        return self._load_creds_via_profile(profile_name)
 
     def _resolve_static_credentials_from_profile(self, profile):
         try:
@@ -1398,6 +1480,20 @@ class AssumeRoleProvider(CredentialProvider):
 class CanonicalNameCredentialSourcer(object):
     def __init__(self, providers):
         self._providers = providers
+    
+    def get_first_successful_credentials(self):
+        """Returns the first successful credentials to load"""
+        for source in self._providers:
+            logger.debug("Looking for credentials via: %s", source.METHOD)
+            if isinstance(source, CredentialResolver):
+                creds = source.load_credentials()
+            else:
+                creds = source.load()
+            
+            if creds is not None:
+                return creds
+
+        return None
 
     def is_supported(self, source_name):
         """Validates a given source name.
