@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 from tests import unittest
 from tests.unit import BaseResponseTest
+import mock
 import datetime
 
 from dateutil.tz import tzutc
@@ -70,10 +71,14 @@ class TestStreamWrapper(unittest.TestCase):
 
     def test_streaming_body_closes(self):
         body = six.BytesIO(b'1234567890')
+        body._connection = mock.Mock()
+        body.release_conn = mock.Mock()
         stream = response.StreamingBody(body, content_length=10)
         self.assertFalse(body.closed)
         stream.close()
         self.assertTrue(body.closed)
+        body._connection.close.assert_called_once_with()
+        body.release_conn.assert_called_once_with()
 
 
 class TestGetResponse(BaseResponseTest):
