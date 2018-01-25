@@ -131,7 +131,9 @@ class RequestSigner(object):
             'before-sign.{0}.{1}'.format(self._service_name, operation_name),
             request=request, signing_name=signing_name,
             region_name=self._region_name,
-            signature_version=signature_version, request_signer=self)
+            signature_version=signature_version, request_signer=self,
+            operation_name=operation_name
+        )
 
         if signature_version != botocore.UNSIGNED:
             kwargs = {
@@ -551,8 +553,13 @@ def generate_presigned_url(self, ClientMethod, Params=None, ExpiresIn=3600,
     """
     client_method = ClientMethod
     params = Params
+    if params is None:
+        params = {}
     expires_in = ExpiresIn
     http_method = HttpMethod
+    context = {
+        'is_presign_request': True
+    }
 
     request_signer = self._request_signer
     serializer = self._serializer
@@ -565,6 +572,8 @@ def generate_presigned_url(self, ClientMethod, Params=None, ExpiresIn=3600,
     operation_model = self.meta.service_model.operation_model(
         operation_name)
 
+    params = self._emit_api_params(params, operation_model, context)
+
     # Create a request dict based on the params to serialize.
     request_dict = serializer.serialize_to_request(
         params, operation_model)
@@ -575,8 +584,7 @@ def generate_presigned_url(self, ClientMethod, Params=None, ExpiresIn=3600,
 
     # Prepare the request dict by including the client's endpoint url.
     prepare_request_dict(
-        request_dict, endpoint_url=self.meta.endpoint_url
-    )
+        request_dict, endpoint_url=self.meta.endpoint_url, context=context)
 
     # Generate the presigned url.
     return request_signer.generate_presigned_url(

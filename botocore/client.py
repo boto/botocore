@@ -139,7 +139,7 @@ class ClientCreator(object):
             # Also make sure that the hostname gets switched to
             # s3-accelerate.amazonaws.com
             client.meta.events.register_first(
-                'request-created.s3', switch_host_s3_accelerate)
+                'before-sign.s3', switch_host_s3_accelerate)
 
         self._set_s3_presign_signature_version(
             client.meta, client_config, scoped_config)
@@ -618,6 +618,16 @@ class BaseClient(object):
 
     def _convert_to_request_dict(self, api_params, operation_model,
                                  context=None):
+        api_params = self._emit_api_params(
+            api_params, operation_model, context)
+        request_dict = self._serializer.serialize_to_request(
+            api_params, operation_model)
+        prepare_request_dict(request_dict, endpoint_url=self._endpoint.host,
+                             user_agent=self._client_config.user_agent,
+                             context=context)
+        return request_dict
+
+    def _emit_api_params(self, api_params, operation_model, context):
         # Given the API params provided by the user and the operation_model
         # we can serialize the request to a request_dict.
         operation_name = operation_model.name
@@ -639,13 +649,7 @@ class BaseClient(object):
                 endpoint_prefix=self._service_model.endpoint_prefix,
                 operation_name=operation_name),
             params=api_params, model=operation_model, context=context)
-
-        request_dict = self._serializer.serialize_to_request(
-            api_params, operation_model)
-        prepare_request_dict(request_dict, endpoint_url=self._endpoint.host,
-                             user_agent=self._client_config.user_agent,
-                             context=context)
-        return request_dict
+        return api_params
 
     def get_paginator(self, operation_name):
         """Create a paginator for an operation.
