@@ -1,3 +1,10 @@
 {
-  "pagination": {}
+  "pagination": {
+    "DescribeDomainControllers": {
+      "result_key": "DomainControllers",
+      "output_token": "NextToken",
+      "input_token": "NextToken",
+      "limit_key": "Limit"
+    }
+  }
 }

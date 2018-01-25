@@ -47,6 +47,18 @@
       "output_token": "NextToken",
       "limit_key": "MaxResults",
       "result_key": "Parameters"
+    },
+    "GetParameterHistory": {
+      "result_key": "Parameters",
+      "output_token": "NextToken",
+      "input_token": "NextToken",
+      "limit_key": "MaxResults"
+    },
+    "GetParametersByPath": {
+      "result_key": "Parameters",
+      "output_token": "NextToken",
+      "input_token": "NextToken",
+      "limit_key": "MaxResults"
     }
   }
 }
