@@ -52,6 +52,11 @@ def _lint_single_waiter(client, waiter_name, service_model):
     for acceptor in acceptors:
         _validate_acceptor(acceptor, op_model, waiter.name)
 
+    if not waiter.name.isalnum():
+        raise AssertionError(
+            "Waiter name %s is not alphanumeric." % waiter_name
+        )
+
 
 def _validate_acceptor(acceptor, op_model, waiter_name):
     if acceptor.matcher.startswith('path'):
