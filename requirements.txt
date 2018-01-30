@@ -6,3 +6,4 @@ wheel==0.24.0
 docutils>=0.10
 behave==1.2.5
 -e git://github.com/boto/jmespath.git@develop#egg=jmespath
+jsonschema==2.5.1
