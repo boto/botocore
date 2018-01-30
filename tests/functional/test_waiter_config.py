@@ -98,7 +98,7 @@ def test_lint_waiter_configs():
         except UnknownServiceError:
             # The service doesn't have waiters
             continue
-        validator.validate(waiter_model)
+        yield _validate_schema, validator, waiter_model
         for waiter_name in client.waiter_names:
             yield _lint_single_waiter, client, waiter_name, service_model
 
