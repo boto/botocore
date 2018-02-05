@@ -1207,12 +1207,13 @@ class AssumeRoleProvider(CredentialProvider):
 
     def load(self):
         self._loaded_config = self._load_config()
-        if self._has_assume_role_config_vars():
+        profiles = self._loaded_config.get('profiles', {})
+        profile = profiles.get(self._profile_name, {})
+        if self._has_assume_role_config_vars(profile):
             return self._load_creds_via_assume_role(self._profile_name)
 
-    def _has_assume_role_config_vars(self):
-        profiles = self._loaded_config.get('profiles', {})
-        return self.ROLE_CONFIG_VAR in profiles.get(self._profile_name, {})
+    def _has_assume_role_config_vars(self, profile):
+        return self.ROLE_CONFIG_VAR in profile
 
     def _load_creds_via_assume_role(self, profile_name):
         role_config = self._get_role_config(profile_name)
@@ -1310,27 +1311,46 @@ class AssumeRoleProvider(CredentialProvider):
                 'valid.' % (credential_source, parent_profile)
             ))
 
-    def _validate_source_profile(self, parent_profile, source_profile):
+    def _source_profile_has_credentials(self, profile):
+        return any([
+            self._has_static_credentials(profile),
+            self._has_assume_role_config_vars(profile),
+        ])
+
+    def _validate_source_profile(self, parent_profile_name,
+                                 source_profile_name):
         profiles = self._loaded_config.get('profiles', {})
-        if source_profile not in profiles:
+        if source_profile_name not in profiles:
             raise InvalidConfigError(
                 error_msg=(
                     'The source_profile "%s" referenced in '
                     'the profile "%s" does not exist.' % (
-                        source_profile, parent_profile)
+                        source_profile_name, parent_profile_name)
+                )
+            )
+
+        source_profile = profiles[source_profile_name]
+
+        # Ensure the profile has valid credential type
+        if not self._source_profile_has_credentials(source_profile):
+            raise InvalidConfigError(
+                error_msg=(
+                    'The source_profile "%s" must specify either static '
+                    'credentials or an assume role configuration' % (
+                        source_profile_name)
                 )
             )
 
         # Make sure we aren't going into an infinite loop. If we haven't
         # visited the profile yet, we're good.
-        if source_profile not in self._visited_profiles:
+        if source_profile_name not in self._visited_profiles:
             return
 
         # If we have visited the profile and the profile isn't simply
         # referencing itself, that's an infinite loop.
-        if source_profile != parent_profile:
+        if source_profile_name != parent_profile_name:
             raise InfiniteLoopConfigError(
-                source_profile=source_profile,
+                source_profile=source_profile_name,
                 visited_profiles=self._visited_profiles
             )
 
@@ -1339,9 +1359,9 @@ class AssumeRoleProvider(CredentialProvider):
         # profile. This will only ever work for the top level assume
         # role because the static credentials will otherwise take
         # precedence.
-        if not self._has_static_credentials(profiles[source_profile]):
+        if not self._has_static_credentials(source_profile):
             raise InfiniteLoopConfigError(
-                source_profile=source_profile,
+                source_profile=source_profile_name,
                 visited_profiles=self._visited_profiles
             )
 

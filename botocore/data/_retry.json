@@ -24,6 +24,14 @@
         }
       }
     },
+    "request_throttled_exception": {
+      "applies_when": {
+        "response": {
+          "service_error_code": "RequestThrottledException",
+          "http_status_code": 400
+        }
+      }
+    },
     "too_many_requests": {
       "applies_when": {
         "response": {
@@ -89,6 +97,7 @@
           "limit_exceeded": {"$ref": "limit_exceeded"},
           "throttling_exception": {"$ref": "throttling_exception"},
           "throttled_exception": {"$ref": "throttled_exception"},
+          "request_throttled_exception": {"$ref": "request_throttled_exception"},
           "throttling": {"$ref": "throttling"},
           "too_many_requests": {"$ref": "too_many_requests"}
       }

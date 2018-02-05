@@ -350,6 +350,49 @@ class TestGeneratePresigned(BaseS3OperationTest):
         self.assertEqual(
             'https://s3.us-east-2.amazonaws.com/', url)
 
+    def test_presign_url_with_ssec(self):
+        config = Config(signature_version='s3')
+        client = self.session.create_client('s3', 'us-east-1', config=config)
+        url = client.generate_presigned_url(
+            ClientMethod='get_object',
+            Params={
+                'Bucket': 'mybucket',
+                'Key': 'mykey',
+                'SSECustomerKey': 'a' * 32,
+                'SSECustomerAlgorithm': 'AES256'
+            }
+        )
+        # The md5 of the sse-c key will be injected when parameters are
+        # built so it should show up in the presigned url as well.
+        self.assertIn(
+            'x-amz-server-side-encryption-customer-key-md5=', url
+        )
+
+    def test_presign_s3_accelerate(self):
+        config = Config(signature_version=botocore.UNSIGNED,
+                        s3={'use_accelerate_endpoint': True})
+        client = self.session.create_client('s3', 'us-east-1', config=config)
+        url = client.generate_presigned_url(
+            ClientMethod='get_object',
+            Params={'Bucket': 'mybucket', 'Key': 'mykey'}
+        )
+        # The url should be the accelerate endpoint
+        self.assertEqual(
+            'https://mybucket.s3-accelerate.amazonaws.com/mykey', url)
+
+    def test_presign_post_s3_accelerate(self):
+        config = Config(signature_version=botocore.UNSIGNED,
+                        s3={'use_accelerate_endpoint': True})
+        client = self.session.create_client('s3', 'us-east-1', config=config)
+        parts = client.generate_presigned_post(
+            Bucket='mybucket', Key='mykey')
+        # The url should be the accelerate endpoint
+        expected = {
+            'fields': {'key': 'mykey'},
+            'url': 'https://mybucket.s3-accelerate.amazonaws.com/'
+        }
+        self.assertEqual(parts, expected)
+
 
 def test_correct_url_used_for_s3():
     # Test that given various sets of config options and bucket names,

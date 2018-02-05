@@ -11,16 +11,94 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import jmespath
+from jsonschema import Draft4Validator
 
 import botocore.session
+from botocore.exceptions import UnknownServiceError
 from botocore.utils import ArgumentGenerator
+
+
+WAITER_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "version": {"type": "number"},
+        "waiters": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": ["api"]
+                    },
+                    "operation": {"type": "string"},
+                    "description": {"type": "string"},
+                    "delay": {
+                        "type": "number",
+                        "minimum": 0,
+                    },
+                    "maxAttempts": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "acceptors": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "state": {
+                                    "type": "string",
+                                    "enum": ["success", "retry", "failure"]
+                                },
+                                "matcher": {
+                                    "type": "string",
+                                    "enum": [
+                                        "path", "pathAll", "pathAny",
+                                        "status", "error"
+                                    ]
+                                },
+                                "argument": {"type": "string"},
+                                "expected": {
+                                    "oneOf": [
+                                        {"type": "string"},
+                                        {"type": "number"},
+                                        {"type": "boolean"}
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "state", "matcher", "expected"
+                            ],
+                            "additionalProperties": False
+                        }
+                    }
+                },
+                "required": ["operation", "delay", "maxAttempts", "acceptors"],
+                "additionalProperties": False
+            }
+        }
+    },
+    "additionalProperties": False
+}
 
 
 def test_lint_waiter_configs():
     session = botocore.session.get_session()
+    validator = Draft4Validator(WAITER_SCHEMA)
     for service_name in session.get_available_services():
         client = session.create_client(service_name, 'us-east-1')
         service_model = client.meta.service_model
+        try:
+            # We use the loader directly here because we need the entire
+            # json document, not just the portions exposed (either
+            # internally or externally) by the WaiterModel class.
+            loader = session.get_component('data_loader')
+            waiter_model = loader.load_service_model(
+                service_name, 'waiters-2')
+        except UnknownServiceError:
+            # The service doesn't have waiters
+            continue
+        yield _validate_schema, validator, waiter_model
         for waiter_name in client.waiter_names:
             yield _lint_single_waiter, client, waiter_name, service_model
 
@@ -51,6 +129,17 @@ def _lint_single_waiter(client, waiter_name, service_model):
     op_model = service_model.operation_model(operation_name)
     for acceptor in acceptors:
         _validate_acceptor(acceptor, op_model, waiter.name)
+
+    if not waiter.name.isalnum():
+        raise AssertionError(
+            "Waiter name %s is not alphanumeric." % waiter_name
+        )
+
+
+def _validate_schema(validator, waiter_json):
+    errors = list(e.message for e in validator.iter_errors(waiter_json))
+    if errors:
+        raise AssertionError('\n'.join(errors))
 
 
 def _validate_acceptor(acceptor, op_model, waiter_name):

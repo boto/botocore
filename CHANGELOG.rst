@@ -2,6 +2,67 @@
 CHANGELOG
 =========
 
+1.8.36
+======
+
+* api-change:``mturk``: Update mturk client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``devicefarm``: Update devicefarm client to latest version
+
+
+1.8.35
+======
+
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+* bugfix:Presign: Fix issue where some events were not fired during the presigning of a request thus not including a variety of customizations (`#1340 <https://github.com/boto/botocore/issues/1340>`__)
+* enhancement:Credentials: Improved error message when the source profile for an assume role is misconfigured. Fixes aws/aws-cli`#2763 <https://github.com/aws/aws-cli/issues/2763>`__
+* api-change:``guardduty``: Update guardduty client to latest version
+* enhancment:Paginator: Added paginators for a number of services where the result key is unambiguous.
+
+
+1.8.34
+======
+
+* api-change:``budgets``: Update budgets client to latest version
+
+
+1.8.33
+======
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``transcribe``: Update transcribe client to latest version
+
+
+1.8.32
+======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+
+
+1.8.31
+======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``autoscaling-plans``: Update autoscaling-plans client to latest version
+
+
+1.8.30
+======
+
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``autoscaling-plans``: Update autoscaling-plans client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
+1.8.29
+======
+
+* api-change:``lambda``: Update lambda client to latest version
+* enhancement:cloudformation get_template template body ordering: fixes boto/boto3`#1378 <https://github.com/boto/boto3/issues/1378>`__
+
+
 1.8.28
 ======
 
