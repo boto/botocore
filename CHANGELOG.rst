@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.8.38
+======
+
+* api-change:``servicediscovery``: Update servicediscovery client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``glue``: Update glue client to latest version
+
+
 1.8.37
 ======
 
