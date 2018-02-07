@@ -2,6 +2,24 @@
 CHANGELOG
 =========
 
+1.8.38
+======
+
+* api-change:``servicediscovery``: Update servicediscovery client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``glue``: Update glue client to latest version
+
+
+1.8.37
+======
+
+* api-change:``cloud9``: Update cloud9 client to latest version
+* api-change:``acm``: Update acm client to latest version
+* api-change:``kinesis``: Update kinesis client to latest version
+* api-change:``opsworks``: Update opsworks client to latest version
+
+
 1.8.36
 ======
 
