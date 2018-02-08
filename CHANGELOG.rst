@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+1.8.39
+======
+
+* api-change:``ds``: Update ds client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``budgets``: Update budgets client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``dms``: Update dms client to latest version
+* api-change:``mediastore``: Update mediastore client to latest version
+
+
 1.8.38
 ======
 
