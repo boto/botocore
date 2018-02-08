@@ -1,10 +1,28 @@
 {
   "pagination": {
+    "DescribeDBClusterParameterGroups": {
+      "input_token": "Marker",
+      "output_token": "Marker",
+      "limit_key": "MaxRecords",
+      "result_key": "DBClusterParameterGroups"
+    },
+    "DescribeDBClusterParameters": {
+      "input_token": "Marker",
+      "output_token": "Marker",
+      "limit_key": "MaxRecords",
+      "result_key": "Parameters"
+    },
     "DescribeDBClusterSnapshots": {
       "input_token": "Marker",
       "output_token": "Marker",
       "limit_key": "MaxRecords",
       "result_key": "DBClusterSnapshots"
+    },
+    "DescribeDBClusters": {
+      "input_token": "Marker",
+      "output_token": "Marker",
+      "limit_key": "MaxRecords",
+      "result_key": "DBClusters"
     },
     "DescribeDBEngineVersions": {
       "input_token": "Marker",
