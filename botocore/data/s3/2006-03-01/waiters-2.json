@@ -12,6 +12,16 @@
           "state": "success"
         },
         {
+          "expected": 301,
+          "matcher": "status",
+          "state": "success"
+        },
+        {
+          "expected": 403,
+          "matcher": "status",
+          "state": "success"
+        },
+        {
           "expected": 404,
           "matcher": "status",
           "state": "retry"
