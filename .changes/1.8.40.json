@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``lex-runtime``", 
+    "description": "Update lex-runtime client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``lex-models``", 
+    "description": "Update lex-models client to latest version", 
+    "type": "api-change"
+  }
+]
