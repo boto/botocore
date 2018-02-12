@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.8.41
+======
+
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``kms``: Update kms client to latest version
+
+
 1.8.40
 ======
 
