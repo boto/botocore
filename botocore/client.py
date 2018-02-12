@@ -132,7 +132,9 @@ class ClientCreator(object):
             return
         S3RegionRedirector(endpoint_bridge, client).register()
         self._set_s3_addressing_style(
-            endpoint_url, client.meta.config.s3, client.meta.events)
+            endpoint_url, client.meta.config.s3, client.meta.events,
+            client.meta.partition
+        )
         # Enable accelerate if the configuration is set to to true or the
         # endpoint being used matches one of the accelerate endpoints.
         if self._is_s3_accelerate(endpoint_url, client.meta.config.s3):
@@ -144,14 +146,15 @@ class ClientCreator(object):
         self._set_s3_presign_signature_version(
             client.meta, client_config, scoped_config)
 
-    def _set_s3_addressing_style(self, endpoint_url, s3_config, event_emitter):
+    def _set_s3_addressing_style(self, endpoint_url, s3_config, event_emitter,
+                                 partition):
         if s3_config is None:
             s3_config = {}
 
         addressing_style = self._get_s3_addressing_style(
             endpoint_url, s3_config)
         handler = self._get_s3_addressing_handler(
-            endpoint_url, s3_config, addressing_style)
+            endpoint_url, s3_config, addressing_style, partition)
         if handler is not None:
             event_emitter.register('before-sign.s3', handler)
 
@@ -168,7 +171,7 @@ class ClientCreator(object):
             return configured_addressing_style
 
     def _get_s3_addressing_handler(self, endpoint_url, s3_config,
-                                   addressing_style):
+                                   addressing_style, partition):
         # If virtual host style was configured, use it regardless of whether
         # or not the bucket looks dns compatible.
         if addressing_style == 'virtual':
@@ -188,7 +191,11 @@ class ClientCreator(object):
 
         # For dual stack mode, we need to clear the default endpoint url in
         # order to use the existing netloc if the bucket is dns compatible.
-        if s3_config.get('use_dualstack_endpoint', False):
+        # Also, the default_endpoint_url of 's3.amazonaws.com' only works
+        # if we're in the 'aws' partition.  Anywhere else we should
+        # just use the existing netloc.
+        if s3_config.get('use_dualstack_endpoint', False) or \
+                partition != 'aws':
             return functools.partial(
                 fix_s3_host, default_endpoint_url=None)
 

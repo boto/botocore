@@ -16,6 +16,7 @@ from nose.tools import assert_equal
 import botocore.session
 from botocore.config import Config
 from botocore.exceptions import ParamValidationError
+from botocore import UNSIGNED
 
 
 class TestS3BucketValidation(unittest.TestCase):
@@ -430,6 +431,46 @@ def test_correct_url_used_for_s3():
                  signature_version='s3v4', is_secure=False,
                  expected_url=(
                      'http://s3.us-west-1.amazonaws.com/bucket/key'))
+
+    # Regions outside of the 'aws' partition.
+    # We're expecting path style because this is the default with
+    # 's3v4'.
+    yield t.case(region='cn-north-1', bucket='bucket', key='key',
+                 signature_version='s3v4',
+                 expected_url=(
+                     'https://s3.cn-north-1.amazonaws.com.cn/bucket/key'))
+    # This isn't actually supported because cn-north-1 is sigv4 only,
+    # but we'll still double check that our internal logic is correct
+    # when building the expected url.
+    yield t.case(region='cn-north-1', bucket='bucket', key='key',
+                 signature_version='s3',
+                 expected_url=(
+                     'https://bucket.s3.cn-north-1.amazonaws.com.cn/key'))
+    # If the request is unsigned, we should have the default
+    # fix_s3_host behavior which is to use virtual hosting where
+    # possible but fall back to path style when needed.
+    yield t.case(region='cn-north-1', bucket='bucket', key='key',
+                 signature_version=UNSIGNED,
+                 expected_url=(
+                     'https://bucket.s3.cn-north-1.amazonaws.com.cn/key'))
+    yield t.case(region='cn-north-1', bucket='bucket.dot', key='key',
+                 signature_version=UNSIGNED,
+                 expected_url=(
+                     'https://s3.cn-north-1.amazonaws.com.cn/bucket.dot/key'))
+
+    # And of course you can explicitly specify which style to use.
+    virtual_hosting = {'addressing_style': 'virtual'}
+    yield t.case(region='cn-north-1', bucket='bucket', key='key',
+                 signature_version=UNSIGNED,
+                 s3_config=virtual_hosting,
+                 expected_url=(
+                     'https://bucket.s3.cn-north-1.amazonaws.com.cn/key'))
+    path_style = {'addressing_style': 'path'}
+    yield t.case(region='cn-north-1', bucket='bucket', key='key',
+                 signature_version=UNSIGNED,
+                 s3_config=path_style,
+                 expected_url=(
+                     'https://s3.cn-north-1.amazonaws.com.cn/bucket/key'))
 
     # If you don't have a DNS compatible bucket, we use path style.
     yield t.case(
