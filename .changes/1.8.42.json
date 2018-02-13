@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``glacier``", 
+    "description": "Update glacier client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``route53``", 
+    "description": "Update route53 client to latest version", 
+    "type": "api-change"
+  }
+]
