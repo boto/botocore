@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.8.42
+======
+
+* api-change:``glacier``: Update glacier client to latest version
+* api-change:``route53``: Update route53 client to latest version
+
+
 1.8.41
 ======
 
