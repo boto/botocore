@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.8.43
+======
+
+* api-change:``appsync``: Update appsync client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+
+
 1.8.42
 ======
 
