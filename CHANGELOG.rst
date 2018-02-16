@@ -2,6 +2,58 @@
 CHANGELOG
 =========
 
+1.8.44
+======
+
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+
+
+1.8.43
+======
+
+* api-change:``appsync``: Update appsync client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+
+
+1.8.42
+======
+
+* api-change:``glacier``: Update glacier client to latest version
+* api-change:``route53``: Update route53 client to latest version
+
+
+1.8.41
+======
+
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``kms``: Update kms client to latest version
+
+
+1.8.40
+======
+
+* api-change:``lex-runtime``: Update lex-runtime client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+
+
+1.8.39
+======
+
+* api-change:``ds``: Update ds client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``budgets``: Update budgets client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``dms``: Update dms client to latest version
+* api-change:``mediastore``: Update mediastore client to latest version
+
+
 1.8.38
 ======
 

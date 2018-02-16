@@ -16,6 +16,7 @@ import tempfile
 import shutil
 import json
 import time
+from uuid import uuid4
 
 from botocore.session import Session
 from botocore.exceptions import ClientError
@@ -136,6 +137,10 @@ class TestAssumeRoleCredentials(BaseEnvVar):
         self.environ_copy = os.environ.copy()
         super(TestAssumeRoleCredentials, self).setUp()
         os.environ = self.environ_copy
+        # The tests rely on manipulating AWS_CONFIG_FILE,
+        # but we also need to make sure we don't accidentally
+        # pick up the ~/.aws/credentials file either.
+        os.environ['AWS_SHARED_CREDENTIALS_FILE'] = str(uuid4())
         self.parent_session = Session()
         self.iam = self.parent_session.create_client('iam')
         self.sts = self.parent_session.create_client('sts')
@@ -207,7 +212,17 @@ class TestAssumeRoleCredentials(BaseEnvVar):
         return creds
 
     def wait_for_assume_role(self, role_arn, access_key, secret_key,
-                             token=None, attempts=30, delay=10):
+                             token=None, attempts=30, delay=10,
+                             success_delay=1,
+                             num_success=4):
+        for _ in range(num_success):
+            creds = self._wait_for_assume_role(
+                role_arn, access_key, secret_key, token, attempts, delay)
+            time.sleep(success_delay)
+        return creds
+
+    def _wait_for_assume_role(self, role_arn, access_key, secret_key,
+                              token, attempts, delay):
         # "Why not use the policy simulator?" you might ask. The answer is
         # that the policy simulator will return success far before you can
         # actually make the calls.

@@ -153,7 +153,6 @@
         }
       ]
     },
-
     "ChangeSetCreateComplete": {
       "delay": 30,
       "operation": "DescribeChangeSet",
