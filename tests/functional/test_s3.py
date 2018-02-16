@@ -564,15 +564,14 @@ def test_correct_url_used_for_s3():
         s3_config=virtual_hosting,
         expected_url='https://bucket.s3.us-gov-west-1.amazonaws.com/key')
 
-    # Test restricted regions not do virtual host by default
     yield t.case(
         region='us-gov-west-1', bucket='bucket', key='key',
         signature_version='s3',
-        expected_url='https://s3.us-gov-west-1.amazonaws.com/bucket/key')
+        expected_url='https://bucket.s3.us-gov-west-1.amazonaws.com/key')
     yield t.case(
         region='fips-us-gov-west-1', bucket='bucket', key='key',
         signature_version='s3',
-        expected_url='https://s3-fips-us-gov-west-1.amazonaws.com/bucket/key')
+        expected_url='https://bucket.s3-fips-us-gov-west-1.amazonaws.com/key')
 
 
     # Test path style addressing.

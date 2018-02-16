@@ -41,10 +41,6 @@ METADATA_SECURITY_CREDENTIALS_URL = (
 # Based on rfc2986, section 2.3
 SAFE_CHARS = '-._~'
 LABEL_RE = re.compile(r'[a-z0-9][a-z0-9\-]*[a-z0-9]')
-RESTRICTED_REGIONS = [
-    'us-gov-west-1',
-    'fips-us-gov-west-1',
-]
 RETRYABLE_HTTP_ERRORS = (requests.Timeout, requests.ConnectionError)
 S3_ACCELERATE_WHITELIST = ['dualstack']
 
@@ -679,11 +675,9 @@ def fix_s3_host(request, signature_version, region_name,
     ListAllBuckets) it checks to see if that bucket name conforms to
     the DNS naming conventions.  If it does, it alters the request to
     use ``virtual hosting`` style addressing rather than ``path-style``
-    addressing.  This allows us to avoid 301 redirects for all
-    bucket names that can be CNAME'd.
+    addressing.
+
     """
-    if not _allowed_region(region_name):
-        return
     try:
         switch_to_virtual_host_style(
             request, signature_version, default_endpoint_url)
@@ -758,10 +752,6 @@ def switch_to_virtual_host_style(request, signature_version,
 
 def _is_get_bucket_location_request(request):
     return request.url.endswith('?location')
-
-
-def _allowed_region(region_name):
-    return region_name not in RESTRICTED_REGIONS
 
 
 def instance_cache(func):
