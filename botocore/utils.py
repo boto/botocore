@@ -889,8 +889,12 @@ class S3RegionRedirector(object):
         error = response[1].get('Error', {})
         error_code = error.get('Code')
 
-        is_raw_redirect = (
-            error_code == '301' and
+        # We have to account for 400 responses because
+        # if we sign a Head* request with the wrong region,
+        # we'll get a 400 Bad Request but we won't get a
+        # body saying it's an "AuthorizationHeaderMalformed".
+        is_special_head_object = (
+            error_code in ['301', '400'] and
             operation.name in ['HeadObject', 'HeadBucket']
         )
         is_wrong_signing_region = (
@@ -898,7 +902,7 @@ class S3RegionRedirector(object):
             'Region' in error
         )
         is_permanent_redirect = error_code == 'PermanentRedirect'
-        if not any([is_raw_redirect, is_wrong_signing_region,
+        if not any([is_special_head_object, is_wrong_signing_region,
                     is_permanent_redirect]):
             return
 
