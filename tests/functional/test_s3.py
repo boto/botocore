@@ -330,11 +330,11 @@ class TestRegionRedirect(BaseS3OperationTest):
 
         self.assertEqual(self.http_session_send_mock.call_count, 2)
         calls = [c[0][0] for c in self.http_session_send_mock.call_args_list]
-        initial_url = ('https://foo.s3.amazonaws.com/'
+        initial_url = ('https://foo.s3.us-west-2.amazonaws.com/'
                        '?encoding-type=url')
         self.assertEqual(calls[0].url, initial_url)
 
-        fixed_url = ('https://foo.s3.amazonaws.com/'
+        fixed_url = ('https://foo.s3.eu-central-1.amazonaws.com/'
                      '?encoding-type=url')
         self.assertEqual(calls[1].url, fixed_url)
 
@@ -349,7 +349,7 @@ class TestGeneratePresigned(BaseS3OperationTest):
                 'Bucket': 'foo',
                 'Key': 'bar'
             })
-        self.assertEqual(url, 'https://foo.s3.amazonaws.com/bar')
+        self.assertEqual(url, 'https://foo.s3.us-west-2.amazonaws.com/bar')
 
     def test_generate_unauthed_post(self):
         config = Config(signature_version=botocore.UNSIGNED)
@@ -357,7 +357,7 @@ class TestGeneratePresigned(BaseS3OperationTest):
         parts = client.generate_presigned_post(Bucket='foo', Key='bar')
         expected = {
             'fields': {'key': 'bar'},
-            'url': 'https://foo.s3.amazonaws.com/'
+            'url': 'https://foo.s3.us-west-2.amazonaws.com/'
         }
         self.assertEqual(parts, expected)
 
@@ -446,33 +446,33 @@ def test_correct_url_used_for_s3():
     # The default behavior for sigv2. DNS compatible buckets
     yield t.case(region='us-west-2', bucket='bucket', key='key',
                  signature_version='s3',
-                 expected_url='https://bucket.s3.amazonaws.com/key')
+                 expected_url='https://bucket.s3.us-west-2.amazonaws.com/key')
     yield t.case(region='us-east-1', bucket='bucket', key='key',
                  signature_version='s3',
                  expected_url='https://bucket.s3.amazonaws.com/key')
     yield t.case(region='us-west-1', bucket='bucket', key='key',
                  signature_version='s3',
-                 expected_url='https://bucket.s3.amazonaws.com/key')
+                 expected_url='https://bucket.s3.us-west-1.amazonaws.com/key')
     yield t.case(region='us-west-1', bucket='bucket', key='key',
                  signature_version='s3', is_secure=False,
-                 expected_url='http://bucket.s3.amazonaws.com/key')
+                 expected_url='http://bucket.s3.us-west-1.amazonaws.com/key')
 
     # Virtual host addressing is independent of signature version.
     yield t.case(region='us-west-2', bucket='bucket', key='key',
                  signature_version='s3v4',
                  expected_url=(
-                     'https://bucket.s3.amazonaws.com/key'))
+                     'https://bucket.s3.us-west-2.amazonaws.com/key'))
     yield t.case(region='us-east-1', bucket='bucket', key='key',
                  signature_version='s3v4',
                  expected_url='https://bucket.s3.amazonaws.com/key')
     yield t.case(region='us-west-1', bucket='bucket', key='key',
                  signature_version='s3v4',
                  expected_url=(
-                     'https://bucket.s3.amazonaws.com/key'))
+                     'https://bucket.s3.us-west-1.amazonaws.com/key'))
     yield t.case(region='us-west-1', bucket='bucket', key='key',
                  signature_version='s3v4', is_secure=False,
                  expected_url=(
-                     'http://bucket.s3.amazonaws.com/key'))
+                     'http://bucket.s3.us-west-1.amazonaws.com/key'))
 
     # Regions outside of the 'aws' partition.
     # These should still default to virtual hosted addressing

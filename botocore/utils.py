@@ -672,7 +672,7 @@ def check_dns_name(bucket_name):
 
 
 def fix_s3_host(request, signature_version, region_name,
-                default_endpoint_url='s3.amazonaws.com', **kwargs):
+                default_endpoint_url=None, **kwargs):
     """
     This handler looks at S3 requests just before they are signed.
     If there is a bucket name on the path (true for everything except
