@@ -81,7 +81,7 @@ class TestS3Addressing(BaseSessionTest):
         prepared_request = self.get_prepared_request('list_objects', params)
         self.assertEqual(
             prepared_request.url,
-            ('https://s3.eu-central-1.amazonaws.com/safename'
+            ('https://safename.s3.amazonaws.com/'
              '?marker=%C3%A4%C3%B6%C3%BC-01.txt')
         )
 

@@ -682,12 +682,7 @@ def fix_s3_host(request, signature_version, region_name,
     addressing.  This allows us to avoid 301 redirects for all
     bucket names that can be CNAME'd.
     """
-    # By default we do not use virtual hosted style addressing when
-    # signed with signature version 4.
-    if signature_version is not botocore.UNSIGNED and \
-            's3v4' in signature_version:
-        return
-    elif not _allowed_region(region_name):
+    if not _allowed_region(region_name):
         return
     try:
         switch_to_virtual_host_style(
@@ -904,14 +899,17 @@ class S3RegionRedirector(object):
         error = response[1].get('Error', {})
         error_code = error.get('Code')
 
-        if error_code == '301':
-            # A raw 301 error might be returned for several reasons, but we
-            # only want to try to redirect it if it's a HeadObject or
-            # HeadBucket  because all other operations will return
-            # PermanentRedirect if region is incorrect.
-            if operation.name not in ['HeadObject', 'HeadBucket']:
-                return
-        elif error_code != 'PermanentRedirect':
+        is_raw_redirect = (
+            error_code == '301' and
+            operation.name in ['HeadObject', 'HeadBucket']
+        )
+        is_wrong_signing_region = (
+            error_code == 'AuthorizationHeaderMalformed' and
+            'Region' in error
+        )
+        is_permanent_redirect = error_code == 'PermanentRedirect'
+        if not any([is_raw_redirect, is_wrong_signing_region,
+                    is_permanent_redirect]):
             return
 
         bucket = request_dict['context']['signing']['bucket']
