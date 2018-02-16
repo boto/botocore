@@ -677,13 +677,13 @@ class TestFixS3Host(unittest.TestCase):
             request=request, signature_version=signature_version,
             region_name=region_name)
         self.assertEqual(request.url,
-                         'https://bucket.s3.amazonaws.com/key.txt')
+                         'https://bucket.s3-us-west-2.amazonaws.com/key.txt')
         self.assertEqual(request.auth_path, '/bucket/key.txt')
 
     def test_fix_s3_host_only_applied_once(self):
         request = AWSRequest(
             method='PUT', headers={},
-            url='https://s3-us-west-2.amazonaws.com/bucket/key.txt'
+            url='https://s3.us-west-2.amazonaws.com/bucket/key.txt'
         )
         region_name = 'us-west-2'
         signature_version = 's3'
@@ -695,7 +695,7 @@ class TestFixS3Host(unittest.TestCase):
             request=request, signature_version=signature_version,
             region_name=region_name)
         self.assertEqual(request.url,
-                         'https://bucket.s3.amazonaws.com/key.txt')
+                         'https://bucket.s3.us-west-2.amazonaws.com/key.txt')
         # This was a bug previously.  We want to make sure that
         # calling fix_s3_host() again does not alter the auth_path.
         # Otherwise we'll get signature errors.
