@@ -189,16 +189,6 @@ class ClientCreator(object):
         logger.debug("Defaulting to S3 virtual host style addressing with "
                      "path style addressing fallback.")
 
-        # For dual stack mode, we need to clear the default endpoint url in
-        # order to use the existing netloc if the bucket is dns compatible.
-        # Also, the default_endpoint_url of 's3.amazonaws.com' only works
-        # if we're in the 'aws' partition.  Anywhere else we should
-        # just use the existing netloc.
-        if s3_config.get('use_dualstack_endpoint', False) or \
-                partition != 'aws':
-            return functools.partial(
-                fix_s3_host, default_endpoint_url=None)
-
         # By default, try to use virtual style with path fallback.
         return fix_s3_host
 
