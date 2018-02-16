@@ -1393,6 +1393,26 @@ class TestS3RegionRedirector(unittest.TestCase):
             request_dict, response, self.operation)
         self.assertIsNone(redirect_response)
 
+    def test_redirects_400_head_bucket(self):
+        request_dict = {'url': 'https://us-west-2.amazonaws.com/foo',
+                        'context': {'signing': {'bucket': 'foo'}}}
+        response = (None, {
+            'Error': {'Code': '400', 'Message': 'Bad Request'},
+            'ResponseMetadata': {
+                'HTTPHeaders': {'x-amz-bucket-region': 'eu-central-1'}
+            }
+        })
+
+        self.operation.name = 'HeadObject'
+        redirect_response = self.redirector.redirect_from_error(
+            request_dict, response, self.operation)
+        self.assertEqual(redirect_response, 0)
+
+        self.operation.name = 'ListObjects'
+        redirect_response = self.redirector.redirect_from_error(
+            request_dict, response, self.operation)
+        self.assertIsNone(redirect_response)
+
     def test_does_not_redirect_if_None_response(self):
         request_dict = {'url': 'https://us-west-2.amazonaws.com/foo',
                         'context': {'signing': {'bucket': 'foo'}}}
