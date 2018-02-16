@@ -223,7 +223,10 @@ class TestRegionRedirect(BaseS3OperationTest):
     def setUp(self):
         super(TestRegionRedirect, self).setUp()
         self.client = self.session.create_client(
-            's3', 'us-west-2', config=Config(signature_version='s3v4'))
+            's3', 'us-west-2', config=Config(
+                signature_version='s3v4',
+                s3={'addressing_style': 'path'},
+            ))
 
         self.redirect_response = mock.Mock()
         self.redirect_response.headers = {
@@ -241,6 +244,23 @@ class TestRegionRedirect(BaseS3OperationTest):
             b'    <Bucket>foo</Bucket>'
             b'    <Endpoint>foo.s3.eu-central-1.amazonaws.com</Endpoint>'
             b'</Error>')
+
+        self.bad_signing_region_response = mock.Mock()
+        self.bad_signing_region_response.headers = {
+            'x-amz-bucket-region': 'eu-central-1'
+        }
+        self.bad_signing_region_response.status_code = 400
+        self.bad_signing_region_response.content = (
+            b'<?xml version="1.0" encoding="UTF-8"?>'
+            b'<Error>'
+            b'  <Code>AuthorizationHeaderMalformed</Code>'
+            b'  <Message>the region us-west-2 is wrong; '
+            b'expecting eu-central-1</Message>'
+            b'  <Region>eu-central-1</Region>'
+            b'  <RequestId>BD9AA1730D454E39</RequestId>'
+            b'  <HostId></HostId>'
+            b'</Error>'
+        )
 
         self.success_response = mock.Mock()
         self.success_response.headers = {}
@@ -294,6 +314,29 @@ class TestRegionRedirect(BaseS3OperationTest):
                      '?encoding-type=url')
         self.assertEqual(calls[1].url, fixed_url)
         self.assertEqual(calls[2].url, fixed_url)
+
+    def test_resign_request_with_region_when_needed(self):
+        self.http_session_send_mock.side_effect = [
+            self.bad_signing_region_response, self.success_response,
+        ]
+
+        # Create a client with no explicit configuration so we can
+        # verify the default behavior.
+        client = self.session.create_client(
+            's3', 'us-west-2')
+        first_response = client.list_objects(Bucket='foo')
+        self.assertEqual(
+            first_response['ResponseMetadata']['HTTPStatusCode'], 200)
+
+        self.assertEqual(self.http_session_send_mock.call_count, 2)
+        calls = [c[0][0] for c in self.http_session_send_mock.call_args_list]
+        initial_url = ('https://foo.s3.amazonaws.com/'
+                       '?encoding-type=url')
+        self.assertEqual(calls[0].url, initial_url)
+
+        fixed_url = ('https://foo.s3.amazonaws.com/'
+                     '?encoding-type=url')
+        self.assertEqual(calls[1].url, fixed_url)
 
 
 class TestGeneratePresigned(BaseS3OperationTest):
@@ -414,31 +457,30 @@ def test_correct_url_used_for_s3():
                  signature_version='s3', is_secure=False,
                  expected_url='http://bucket.s3.amazonaws.com/key')
 
-    # The default behavior for sigv4. DNS compatible buckets still get path
-    # style addresses.
+    # Virtual host addressing is independent of signature version.
     yield t.case(region='us-west-2', bucket='bucket', key='key',
                  signature_version='s3v4',
                  expected_url=(
-                     'https://s3.us-west-2.amazonaws.com/bucket/key'))
+                     'https://bucket.s3.amazonaws.com/key'))
     yield t.case(region='us-east-1', bucket='bucket', key='key',
                  signature_version='s3v4',
-                 expected_url='https://s3.amazonaws.com/bucket/key')
+                 expected_url='https://bucket.s3.amazonaws.com/key')
     yield t.case(region='us-west-1', bucket='bucket', key='key',
                  signature_version='s3v4',
                  expected_url=(
-                     'https://s3.us-west-1.amazonaws.com/bucket/key'))
+                     'https://bucket.s3.amazonaws.com/key'))
     yield t.case(region='us-west-1', bucket='bucket', key='key',
                  signature_version='s3v4', is_secure=False,
                  expected_url=(
-                     'http://s3.us-west-1.amazonaws.com/bucket/key'))
+                     'http://bucket.s3.amazonaws.com/key'))
 
     # Regions outside of the 'aws' partition.
-    # We're expecting path style because this is the default with
-    # 's3v4'.
+    # These should still default to virtual hosted addressing
+    # unless explicitly configured otherwise.
     yield t.case(region='cn-north-1', bucket='bucket', key='key',
                  signature_version='s3v4',
                  expected_url=(
-                     'https://s3.cn-north-1.amazonaws.com.cn/bucket/key'))
+                     'https://bucket.s3.cn-north-1.amazonaws.com.cn/key'))
     # This isn't actually supported because cn-north-1 is sigv4 only,
     # but we'll still double check that our internal logic is correct
     # when building the expected url.
@@ -608,11 +650,11 @@ def test_correct_url_used_for_s3():
     yield t.case(
         region='us-east-1', bucket='bucket', key='key',
         s3_config=use_dualstack, signature_version='s3v4',
-        expected_url='https://s3.dualstack.us-east-1.amazonaws.com/bucket/key')
+        expected_url='https://bucket.s3.dualstack.us-east-1.amazonaws.com/key')
     yield t.case(
         region='us-west-2', bucket='bucket', key='key',
         s3_config=use_dualstack, signature_version='s3v4',
-        expected_url='https://s3.dualstack.us-west-2.amazonaws.com/bucket/key')
+        expected_url='https://bucket.s3.dualstack.us-west-2.amazonaws.com/key')
     # Non DNS compatible buckets use path style for dual stack.
     yield t.case(
         region='us-west-2', bucket='bucket.dot', key='key',
