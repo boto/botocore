@@ -6078,7 +6078,7 @@
       },
       "documentation": "Placeholder documentation for UnprocessableEntityException"
     },
-    "UpdateChannel": {
+    "UpdateChannelResponse": {
       "type": "structure",
       "members": {
         "Destinations": {
