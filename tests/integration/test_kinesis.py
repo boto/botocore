@@ -51,7 +51,6 @@ class TestKinesisListStreams(unittest.TestCase):
         self.client.put_record(
             StreamName=self.stream_name, PartitionKey='foo', Data=unique_data)
         # Give it a few seconds for the record to get into the stream.
-        time.sleep(10)
         records = self.wait_for_stream_data()
         self.assert_record_data_contains(records, unique_data.encode('ascii'))
         self.assertTrue(len(records['Records']) > 0)
@@ -67,8 +66,6 @@ class TestKinesisListStreams(unittest.TestCase):
                 'PartitionKey': 'foo'
             }]
         )
-        # Give it a few seconds for the record to get into the stream.
-        time.sleep(10)
         records = self.wait_for_stream_data()
         self.assert_record_data_contains(records, unique_data.encode('ascii'))
 
@@ -84,14 +81,13 @@ class TestKinesisListStreams(unittest.TestCase):
                 'PartitionKey': 'foo'
             }]
         )
-        # Give it a few seconds for the record to get into the stream.
-        time.sleep(10)
         records = self.wait_for_stream_data()
         self.assert_record_data_contains(records, b'foobar', b'barfoo')
 
     def wait_for_stream_data(self, num_attempts=6, poll_time=10):
         # Poll until we get records returned from get_records().
         for i in range(num_attempts):
+            time.sleep(poll_time)
             stream = self.client.describe_stream(StreamName=self.stream_name)
             shard = stream['StreamDescription']['Shards'][0]
             shard_iterator = self.client.get_shard_iterator(
@@ -101,7 +97,6 @@ class TestKinesisListStreams(unittest.TestCase):
                 ShardIterator=shard_iterator['ShardIterator'])
             if records['Records']:
                 return records
-            time.sleep(poll_time)
         raise RuntimeError("Unable to retrieve data from kinesis stream after "
                            "%s attempts with delay of %s seconds."
                            % (num_attempts, poll_time))
