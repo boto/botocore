@@ -15,6 +15,7 @@ from nose.tools import assert_equal
 
 import botocore.session
 from botocore.config import Config
+from botocore.compat import urlsplit
 from botocore.exceptions import ParamValidationError
 from botocore import UNSIGNED
 
@@ -349,7 +350,7 @@ class TestGeneratePresigned(BaseS3OperationTest):
                 'Bucket': 'foo',
                 'Key': 'bar'
             })
-        self.assertEqual(url, 'https://foo.s3.us-west-2.amazonaws.com/bar')
+        self.assertEqual(url, 'https://foo.s3.amazonaws.com/bar')
 
     def test_generate_unauthed_post(self):
         config = Config(signature_version=botocore.UNSIGNED)
@@ -357,7 +358,7 @@ class TestGeneratePresigned(BaseS3OperationTest):
         parts = client.generate_presigned_post(Bucket='foo', Key='bar')
         expected = {
             'fields': {'key': 'bar'},
-            'url': 'https://foo.s3.us-west-2.amazonaws.com/'
+            'url': 'https://foo.s3.amazonaws.com/'
         }
         self.assertEqual(parts, expected)
 
@@ -775,6 +776,7 @@ def _verify_expected_endpoint_url(region, bucket, key, s3_config,
         environ['AWS_ACCESS_KEY_ID'] = 'access_key'
         environ['AWS_SECRET_ACCESS_KEY'] = 'secret_key'
         environ['AWS_CONFIG_FILE'] = 'no-exist-foo'
+        environ['AWS_SHARED_CREDENTIALS_FILE'] = 'no-exist-foo'
         session = create_session()
         session.config_filename = 'no-exist-foo'
         config = Config(
@@ -790,3 +792,113 @@ def _verify_expected_endpoint_url(region, bucket, key, s3_config,
                           Key=key, Body=b'bar')
             request_sent = mock_send.call_args[0][0]
             assert_equal(request_sent.url, expected_url)
+
+
+def _create_s3_client(region, is_secure, endpoint_url, s3_config,
+                      signature_version):
+    environ = {}
+    with mock.patch('os.environ', environ):
+        environ['AWS_ACCESS_KEY_ID'] = 'access_key'
+        environ['AWS_SECRET_ACCESS_KEY'] = 'secret_key'
+        environ['AWS_CONFIG_FILE'] = 'no-exist-foo'
+        environ['AWS_SHARED_CREDENTIALS_FILE'] = 'no-exist-foo'
+        session = create_session()
+        session.config_filename = 'no-exist-foo'
+        config = Config(
+            signature_version=signature_version,
+            s3=s3_config
+        )
+        s3 = session.create_client('s3', region_name=region, use_ssl=is_secure,
+                                   config=config,
+                                   endpoint_url=endpoint_url)
+        return s3
+
+
+def test_addressing_for_presigned_urls():
+    # See TestGeneratePresigned for more detailed test cases
+    # on presigned URLs.  Here's we're just focusing on the
+    # adddressing mode used for presigned URLs.
+    # We special case presigned URLs due to backwards
+    # compatibility.
+    t = S3AddressingCases(_verify_presigned_url_addressing)
+
+    # us-east-1, or the "global" endpoint. A signature version of
+    # None means the user doesn't have signature version configured.
+    yield t.case(region='us-east-1', bucket='bucket', key='key',
+                 signature_version=None,
+                 expected_url='https://bucket.s3.amazonaws.com/key')
+    yield t.case(region='us-east-1', bucket='bucket', key='key',
+                 signature_version='s3',
+                 expected_url='https://bucket.s3.amazonaws.com/key')
+    yield t.case(region='us-east-1', bucket='bucket', key='key',
+                 signature_version='s3v4',
+                 expected_url='https://bucket.s3.amazonaws.com/key')
+    yield t.case(region='us-east-1', bucket='bucket', key='key',
+                 signature_version='s3v4',
+                 s3_config={'addressing_style': 'path'},
+                 expected_url='https://s3.amazonaws.com/bucket/key')
+
+    # A region that supports both 's3' and 's3v4'.
+    yield t.case(region='us-west-2', bucket='bucket', key='key',
+                 signature_version=None,
+                 expected_url='https://bucket.s3.amazonaws.com/key')
+    yield t.case(region='us-west-2', bucket='bucket', key='key',
+                 signature_version='s3',
+                 expected_url='https://bucket.s3.amazonaws.com/key')
+    yield t.case(region='us-west-2', bucket='bucket', key='key',
+                 signature_version='s3v4',
+                 expected_url='https://bucket.s3.amazonaws.com/key')
+    yield t.case(region='us-west-2', bucket='bucket', key='key',
+                 signature_version='s3v4',
+                 s3_config={'addressing_style': 'path'},
+                 expected_url='https://s3.us-west-2.amazonaws.com/bucket/key')
+
+    # An 's3v4' only region.
+    yield t.case(region='us-east-2', bucket='bucket', key='key',
+                 signature_version=None,
+                 expected_url='https://bucket.s3.amazonaws.com/key')
+    yield t.case(region='us-east-2', bucket='bucket', key='key',
+                 signature_version='s3',
+                 expected_url='https://bucket.s3.amazonaws.com/key')
+    yield t.case(region='us-east-2', bucket='bucket', key='key',
+                 signature_version='s3v4',
+                 expected_url='https://bucket.s3.amazonaws.com/key')
+    yield t.case(region='us-east-2', bucket='bucket', key='key',
+                 signature_version='s3v4',
+                 s3_config={'addressing_style': 'path'},
+                 expected_url='https://s3.us-east-2.amazonaws.com/bucket/key')
+
+    # Dualstack endpoints
+    yield t.case(region='us-west-2', bucket='bucket', key='key',
+                 signature_version=None,
+                 s3_config={'use_dualstack_endpoint': True},
+                 expected_url='https://bucket.s3.amazonaws.com/key')
+
+    # Accelerate
+    yield t.case(region='us-west-2', bucket='bucket', key='key',
+                 signature_version=None,
+                 s3_config={'use_accelerate_endpoint': True},
+                 expected_url='https://bucket.s3-accelerate.amazonaws.com/key')
+
+    # A region that we don't know about.
+    yield t.case(region='us-west-50', bucket='bucket', key='key',
+                 signature_version=None,
+                 expected_url='https://bucket.s3.amazonaws.com/key')
+
+
+def _verify_presigned_url_addressing(region, bucket, key, s3_config,
+                                     is_secure=True,
+                                     customer_provided_endpoint=None,
+                                     expected_url=None,
+                                     signature_version=None):
+    s3 = _create_s3_client(region=region, is_secure=is_secure,
+                           endpoint_url=customer_provided_endpoint,
+                           s3_config=s3_config,
+                           signature_version=signature_version)
+    url = s3.generate_presigned_url(
+        'get_object', {'Bucket': bucket, 'Key': key})
+    # We're not trying to verify the params for URL presigning,
+    # those are tested elsewhere.  We just care about the hostname/path.
+    parts = urlsplit(url)
+    actual = '%s://%s%s' % parts[:3]
+    assert_equal(actual, expected_url)
