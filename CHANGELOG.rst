@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.8.47
+======
+
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``waf-regional``: Update waf-regional client to latest version
+* api-change:``waf``: Update waf client to latest version
+
+
 1.8.46
 ======
 
