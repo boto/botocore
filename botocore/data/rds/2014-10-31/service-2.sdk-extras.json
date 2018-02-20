@@ -6,7 +6,7 @@
         "members": {
           "SourceRegion": {
             "shape": "String",
-            "documentation": "<p>The ID of the region that contains the snapshot to be copied.</p>"
+            "documentation": "<p>The ID of the region that contains the snapshot to be copied. This is only needed if the source DB is a different region</p>"
           }
         }
       },
@@ -14,7 +14,7 @@
         "members": {
           "SourceRegion": {
             "shape": "String",
-            "documentation": "<p>The ID of the region that contains the source for the db cluster.</p>"
+            "documentation": "<p>The ID of the region that contains the source for the db cluster. This is only needed if the source DB is in a different region.</p>"
           }
         }
       },
@@ -22,7 +22,7 @@
         "members": {
           "SourceRegion": {
             "shape": "String",
-            "documentation": "<p>The ID of the region that contains the snapshot to be copied.</p>"
+            "documentation": "<p>The ID of the region that contains the snapshot to be copied. This is only needed if the source snapshot is in a different region.</p>"
           }
         }
       },
@@ -30,7 +30,7 @@
         "members": {
           "SourceRegion": {
             "shape": "String",
-            "documentation": "<p>The ID of the region that contains the source for the read replica.</p>"
+            "documentation": "<p>The ID of the region that contains the source for the read replica. This is only required if the source DB is in a different region.</p>"
           }
         }
       }
