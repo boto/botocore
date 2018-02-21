@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.8.48
+======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``serverlessrepo``: Update serverlessrepo client to latest version
+* api-change:``codecommit``: Update codecommit client to latest version
+
+
 1.8.47
 ======
 
