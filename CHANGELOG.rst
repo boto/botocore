@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.8.50
+======
+
+* api-change:``appstream``: Update appstream client to latest version
+
+
 1.8.49
 ======
 
