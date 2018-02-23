@@ -869,10 +869,21 @@ def test_addressing_for_presigned_urls():
                  expected_url='https://s3.us-east-2.amazonaws.com/bucket/key')
 
     # Dualstack endpoints
-    yield t.case(region='us-west-2', bucket='bucket', key='key',
-                 signature_version=None,
-                 s3_config={'use_dualstack_endpoint': True},
-                 expected_url='https://bucket.s3.amazonaws.com/key')
+    yield t.case(
+        region='us-west-2', bucket='bucket', key='key',
+        signature_version=None,
+        s3_config={'use_dualstack_endpoint': True},
+        expected_url='https://bucket.s3.dualstack.us-west-2.amazonaws.com/key')
+    yield t.case(
+        region='us-west-2', bucket='bucket', key='key',
+        signature_version='s3',
+        s3_config={'use_dualstack_endpoint': True},
+        expected_url='https://bucket.s3.dualstack.us-west-2.amazonaws.com/key')
+    yield t.case(
+        region='us-west-2', bucket='bucket', key='key',
+        signature_version='s3v4',
+        s3_config={'use_dualstack_endpoint': True},
+        expected_url='https://bucket.s3.dualstack.us-west-2.amazonaws.com/key')
 
     # Accelerate
     yield t.case(region='us-west-2', bucket='bucket', key='key',
@@ -884,6 +895,12 @@ def test_addressing_for_presigned_urls():
     yield t.case(region='us-west-50', bucket='bucket', key='key',
                  signature_version=None,
                  expected_url='https://bucket.s3.amazonaws.com/key')
+
+    # Customer provided URL results in us leaving the host untouched.
+    yield t.case(region='us-west-2', bucket='bucket', key='key',
+                 signature_version=None,
+                 customer_provided_endpoint='https://foo.com/',
+                 expected_url='https://foo.com/bucket/key')
 
 
 def _verify_presigned_url_addressing(region, bucket, key, s3_config,

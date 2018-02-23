@@ -678,9 +678,8 @@ def fix_s3_host(request, signature_version, region_name,
     addressing.
 
     """
-    if request.context.get('is_presign_request', False):
-        if request.context.get('partition', '') == 'aws':
-            default_endpoint_url = 's3.amazonaws.com'
+    if request.context.get('use_global_endpoint', False):
+        default_endpoint_url = 's3.amazonaws.com'
     try:
         switch_to_virtual_host_style(
             request, signature_version, default_endpoint_url)
