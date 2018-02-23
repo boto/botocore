@@ -559,7 +559,7 @@ def generate_presigned_url(self, ClientMethod, Params=None, ExpiresIn=3600,
     http_method = HttpMethod
     context = {
         'is_presign_request': True,
-        'partition': self.meta.partition,
+        'use_global_endpoint': _should_use_global_endpoint(self),
     }
 
     request_signer = self._request_signer
@@ -586,8 +586,6 @@ def generate_presigned_url(self, ClientMethod, Params=None, ExpiresIn=3600,
     # Prepare the request dict by including the client's endpoint url.
     prepare_request_dict(
         request_dict, endpoint_url=self.meta.endpoint_url, context=context)
-
-    request_dict['context']['partition'] = self.meta.partition
 
     # Generate the presigned url.
     return request_signer.generate_presigned_url(
@@ -690,7 +688,10 @@ def generate_presigned_post(self, Bucket, Key, Fields=None, Conditions=None,
     # Prepare the request dict by including the client's endpoint url.
     prepare_request_dict(
         request_dict, endpoint_url=self.meta.endpoint_url,
-        context={'is_presign_request': True, 'partition': self.meta.partition},
+        context={
+            'is_presign_request': True,
+            'use_global_endpoint': _should_use_global_endpoint(self),
+        },
     )
 
     # Append that the bucket name to the list of conditions.
@@ -709,3 +710,12 @@ def generate_presigned_post(self, Bucket, Key, Fields=None, Conditions=None,
     return post_presigner.generate_presigned_post(
         request_dict=request_dict, fields=fields, conditions=conditions,
         expires_in=expires_in)
+
+
+def _should_use_global_endpoint(client):
+    use_dualstack_endpoint = False
+    if client.meta.config.s3 is not None:
+        use_dualstack_endpoint = client.meta.config.s3.get(
+            'use_dualstack_endpoint', False)
+    return (client.meta.partition == 'aws' and
+            not use_dualstack_endpoint)
