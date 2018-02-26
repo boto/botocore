@@ -1,0 +1,5 @@
+{
+  "type": "enhancement",
+  "category": "Stubber",
+  "description": "Added the ability to add items to response metadata with the stubber."
+}
