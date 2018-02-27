@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.9.1
+=====
+
+* api-change:``ecr``: Update ecr client to latest version
+
+
 1.9.0
 =====
 
