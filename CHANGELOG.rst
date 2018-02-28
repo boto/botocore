@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.9.2
+=====
+
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+
+
 1.9.1
 =====
 
