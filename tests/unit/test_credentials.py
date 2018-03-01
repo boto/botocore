@@ -182,6 +182,271 @@ class TestDeferredRefreshableCredentials(unittest.TestCase):
         self.assertEqual(self.refresher.call_count, 1)
 
 
+class TestSessionTokenServiceCredentialFetcher(BaseEnvVar):
+    def setUp(self):
+        super(TestSessionTokenServiceCredentialFetcher, self).setUp()
+        self.source_creds = credentials.Credentials('a', 'b', 'c')
+
+    def create_client_creator(self, with_response):
+        # Create a mock sts client that returns a specific response
+        # for assume_role.
+        client = mock.Mock()
+        if isinstance(with_response, list):
+            client.get_session_token.side_effect = with_response
+        else:
+            client.get_session_token.return_value = with_response
+        return mock.Mock(return_value=client)
+
+    def get_expected_creds_from_response(self, response):
+        expiration = response['Credentials']['Expiration']
+        if isinstance(expiration, datetime):
+            expiration = expiration.isoformat()
+        return {
+            'access_key': response['Credentials']['AccessKeyId'],
+            'secret_key': response['Credentials']['SecretAccessKey'],
+            'token': response['Credentials']['SessionToken'],
+            'expiry_time': expiration
+        }
+
+    def some_future_time(self):
+        timeobj = datetime.now(tzlocal())
+        return timeobj + timedelta(hours=24)
+
+    def test_no_cache(self):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat()
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        refresher = credentials.SessionTokenServiceCredentialFetcher(
+            client_creator, self.source_creds
+        )
+
+        expected_response = self.get_expected_creds_from_response(response)
+        response = refresher.fetch_credentials()
+
+        self.assertEqual(response, expected_response)
+
+    def test_expiration_in_datetime_format(self):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                # Note the lack of isoformat(), we're using
+                # a datetime.datetime type.  This will ensure
+                # we test both parsing as well as serializing
+                # from a given datetime because the credentials
+                # are immediately expired.
+                'Expiration': self.some_future_time()
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        refresher = credentials.SessionTokenServiceCredentialFetcher(
+            client_creator, self.source_creds
+        )
+
+        expected_response = self.get_expected_creds_from_response(response)
+        response = refresher.fetch_credentials()
+
+        self.assertEqual(response, expected_response)
+
+    def test_retrieves_from_cache(self):
+        date_in_future = datetime.utcnow() + timedelta(seconds=1000)
+        utc_timestamp = date_in_future.isoformat() + 'Z'
+        cache_key = (
+            'bf21a9e8fbc5a3846fb05b4fa0859e0917b2202f'
+        )
+        cache = {
+            cache_key: {
+                'Credentials': {
+                    'AccessKeyId': 'foo-cached',
+                    'SecretAccessKey': 'bar-cached',
+                    'SessionToken': 'baz-cached',
+                    'Expiration': utc_timestamp,
+                }
+            }
+        }
+        client_creator = mock.Mock()
+        refresher = credentials.SessionTokenServiceCredentialFetcher(
+            client_creator, self.source_creds, cache=cache
+        )
+
+        expected_response = self.get_expected_creds_from_response(
+            cache[cache_key]
+        )
+        response = refresher.fetch_credentials()
+
+        self.assertEqual(response, expected_response)
+        client_creator.assert_not_called()
+
+    def test_cache_key_is_windows_safe(self):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat()
+            },
+        }
+        cache = {}
+        client_creator = self.create_client_creator(with_response=response)
+
+        refresher = credentials.SessionTokenServiceCredentialFetcher(
+            client_creator, self.source_creds, cache=cache
+        )
+
+        refresher.fetch_credentials()
+
+        # On windows, you cannot use a a ':' in the filename, so
+        # we need to make sure that it doesn't make it into the cache key.
+        cache_key = (
+            'bf21a9e8fbc5a3846fb05b4fa0859e0917b2202f'
+        )
+        self.assertIn(cache_key, cache)
+        self.assertEqual(cache[cache_key], response)
+
+    def test_get_session_token_in_cache_but_expired(self):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat(),
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        cache = {
+            'development--myrole': {
+                'Credentials': {
+                    'AccessKeyId': 'foo-cached',
+                    'SecretAccessKey': 'bar-cached',
+                    'SessionToken': 'baz-cached',
+                    'Expiration': datetime.now(tzlocal()),
+                }
+            }
+        }
+
+        refresher = credentials.SessionTokenServiceCredentialFetcher(
+            client_creator, self.source_creds, cache=cache
+        )
+        expected = self.get_expected_creds_from_response(response)
+        response = refresher.fetch_credentials()
+
+        self.assertEqual(response, expected)
+
+    def test_mfa(self):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat(),
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        prompter = mock.Mock(return_value='token-code')
+        mfa_serial = 'mfa'
+
+        refresher = credentials.SessionTokenServiceCredentialFetcher(
+            client_creator, self.source_creds,
+            extra_args={'SerialNumber': mfa_serial}, mfa_prompter=prompter
+        )
+        refresher.fetch_credentials()
+
+        client = client_creator.return_value
+        client.get_session_token.assert_called_with(
+            SerialNumber='mfa', TokenCode='token-code')
+
+    def test_refreshes(self):
+        responses = [{
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                # We're creating an expiry time in the past so as
+                # soon as we try to access the credentials, the
+                # refresh behavior will be triggered.
+                'Expiration': (
+                        datetime.now(tzlocal()) -
+                        timedelta(seconds=100)).isoformat(),
+            },
+        }, {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat(),
+            }
+        }]
+        client_creator = self.create_client_creator(with_response=responses)
+
+        refresher = credentials.SessionTokenServiceCredentialFetcher(
+            client_creator, self.source_creds,
+        )
+
+        # The first call will simply use whatever credentials it is given.
+        # The second will check the cache, and only make a call if the
+        # cached credentials are expired.
+        refresher.fetch_credentials()
+        refresher.fetch_credentials()
+
+        client = client_creator.return_value
+        get_session_token_calls = client.get_session_token.call_args_list
+        self.assertEqual(len(get_session_token_calls), 2, get_session_token_calls)
+
+    def test_mfa_refresh_enabled(self):
+        responses = [{
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                # We're creating an expiry time in the past so as
+                # soon as we try to access the credentials, the
+                # refresh behavior will be triggered.
+                'Expiration': (
+                        datetime.now(tzlocal()) -
+                        timedelta(seconds=100)).isoformat(),
+            },
+        }, {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat(),
+            }
+        }]
+        client_creator = self.create_client_creator(with_response=responses)
+
+        token_code = 'token-code-1'
+        prompter = mock.Mock(side_effect=[token_code])
+        mfa_serial = 'mfa'
+
+        refresher = credentials.SessionTokenServiceCredentialFetcher(
+            client_creator, self.source_creds,
+            extra_args={'SerialNumber': mfa_serial}, mfa_prompter=prompter
+        )
+
+        # This is will refresh credentials if they're expired. Because
+        # we set the expiry time to something in the past, this will
+        # trigger the refresh behavior.
+        refresher.fetch_credentials()
+
+        get_session_token = client_creator.return_value.get_session_token
+        calls = [c[1] for c in get_session_token.call_args_list]
+        expected_calls = [
+            {
+                'SerialNumber': mfa_serial,
+                'TokenCode': token_code
+            }
+        ]
+        self.assertEqual(calls, expected_calls)
+
+
 class TestAssumeRoleCredentialFetcher(BaseEnvVar):
     def setUp(self):
         super(TestAssumeRoleCredentialFetcher, self).setUp()
