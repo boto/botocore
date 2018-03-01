@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.9.3
+=====
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``events``: Update events client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.9.2
 =====
 
