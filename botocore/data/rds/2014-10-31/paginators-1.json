@@ -18,6 +18,12 @@
       "limit_key": "MaxRecords",
       "result_key": "DBInstances"
     },
+    "DescribeDBClusters": {
+      "input_token": "Marker",
+      "output_token": "Marker",
+      "limit_key": "MaxRecords",
+      "result_key": "DBClusters"
+    },
     "DescribeDBLogFiles": {
       "input_token": "Marker",
       "output_token": "Marker",
