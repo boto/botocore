@@ -41,10 +41,6 @@ METADATA_SECURITY_CREDENTIALS_URL = (
 # Based on rfc2986, section 2.3
 SAFE_CHARS = '-._~'
 LABEL_RE = re.compile(r'[a-z0-9][a-z0-9\-]*[a-z0-9]')
-RESTRICTED_REGIONS = [
-    'us-gov-west-1',
-    'fips-us-gov-west-1',
-]
 RETRYABLE_HTTP_ERRORS = (requests.Timeout, requests.ConnectionError)
 S3_ACCELERATE_WHITELIST = ['dualstack']
 
@@ -672,23 +668,18 @@ def check_dns_name(bucket_name):
 
 
 def fix_s3_host(request, signature_version, region_name,
-                default_endpoint_url='s3.amazonaws.com', **kwargs):
+                default_endpoint_url=None, **kwargs):
     """
     This handler looks at S3 requests just before they are signed.
     If there is a bucket name on the path (true for everything except
     ListAllBuckets) it checks to see if that bucket name conforms to
     the DNS naming conventions.  If it does, it alters the request to
     use ``virtual hosting`` style addressing rather than ``path-style``
-    addressing.  This allows us to avoid 301 redirects for all
-    bucket names that can be CNAME'd.
+    addressing.
+
     """
-    # By default we do not use virtual hosted style addressing when
-    # signed with signature version 4.
-    if signature_version is not botocore.UNSIGNED and \
-            's3v4' in signature_version:
-        return
-    elif not _allowed_region(region_name):
-        return
+    if request.context.get('use_global_endpoint', False):
+        default_endpoint_url = 's3.amazonaws.com'
     try:
         switch_to_virtual_host_style(
             request, signature_version, default_endpoint_url)
@@ -763,10 +754,6 @@ def switch_to_virtual_host_style(request, signature_version,
 
 def _is_get_bucket_location_request(request):
     return request.url.endswith('?location')
-
-
-def _allowed_region(region_name):
-    return region_name not in RESTRICTED_REGIONS
 
 
 def instance_cache(func):
@@ -904,14 +891,21 @@ class S3RegionRedirector(object):
         error = response[1].get('Error', {})
         error_code = error.get('Code')
 
-        if error_code == '301':
-            # A raw 301 error might be returned for several reasons, but we
-            # only want to try to redirect it if it's a HeadObject or
-            # HeadBucket  because all other operations will return
-            # PermanentRedirect if region is incorrect.
-            if operation.name not in ['HeadObject', 'HeadBucket']:
-                return
-        elif error_code != 'PermanentRedirect':
+        # We have to account for 400 responses because
+        # if we sign a Head* request with the wrong region,
+        # we'll get a 400 Bad Request but we won't get a
+        # body saying it's an "AuthorizationHeaderMalformed".
+        is_special_head_object = (
+            error_code in ['301', '400'] and
+            operation.name in ['HeadObject', 'HeadBucket']
+        )
+        is_wrong_signing_region = (
+            error_code == 'AuthorizationHeaderMalformed' and
+            'Region' in error
+        )
+        is_permanent_redirect = error_code == 'PermanentRedirect'
+        if not any([is_special_head_object, is_wrong_signing_region,
+                    is_permanent_redirect]):
             return
 
         bucket = request_dict['context']['signing']['bucket']

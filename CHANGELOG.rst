@@ -2,6 +2,58 @@
 CHANGELOG
 =========
 
+1.9.3
+=====
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``events``: Update events client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.9.2
+=====
+
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+
+
+1.9.1
+=====
+
+* api-change:``ecr``: Update ecr client to latest version
+
+
+1.9.0
+=====
+
+* enhancement:Stubber: Added the ability to add items to response metadata with the stubber.
+* api-change:``sts``: Update sts client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* feature:``s3``: Default to virtual hosted addressing regardless of signature version (boto/botocore`#1387 <https://github.com/boto/botocore/issues/1387>`__)
+
+
+1.8.50
+======
+
+* api-change:``appstream``: Update appstream client to latest version
+
+
+1.8.49
+======
+
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``ce``: Update ce client to latest version
+
+
+1.8.48
+======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``serverlessrepo``: Update serverlessrepo client to latest version
+* api-change:``codecommit``: Update codecommit client to latest version
+
+
 1.8.47
 ======
 

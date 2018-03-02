@@ -47,10 +47,22 @@ class TestStyle(unittest.TestCase):
         style.bold('foobar')
         self.assertEqual(style.doc.getvalue(), six.b('**foobar** '))
 
+    def test_empty_bold(self):
+        style = ReSTStyle(ReSTDocument())
+        style.start_b()
+        style.end_b()
+        self.assertEqual(style.doc.getvalue(), six.b(''))
+
     def test_italics(self):
         style = ReSTStyle(ReSTDocument())
         style.italics('foobar')
         self.assertEqual(style.doc.getvalue(), six.b('*foobar* '))
+
+    def test_empty_italics(self):
+        style = ReSTStyle(ReSTDocument())
+        style.start_i()
+        style.end_i()
+        self.assertEqual(style.doc.getvalue(), six.b(''))
 
     def test_p(self):
         style = ReSTStyle(ReSTDocument())
@@ -63,6 +75,12 @@ class TestStyle(unittest.TestCase):
         style = ReSTStyle(ReSTDocument())
         style.code('foobar')
         self.assertEqual(style.doc.getvalue(), six.b('``foobar`` '))
+
+    def test_empty_code(self):
+        style = ReSTStyle(ReSTDocument())
+        style.start_code()
+        style.end_code()
+        self.assertEqual(style.doc.getvalue(), six.b(''))
 
     def test_h1(self):
         style = ReSTStyle(ReSTDocument())

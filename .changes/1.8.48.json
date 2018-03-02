@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``serverlessrepo``", 
+    "description": "Update serverlessrepo client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codecommit``", 
+    "description": "Update codecommit client to latest version", 
+    "type": "api-change"
+  }
+]
