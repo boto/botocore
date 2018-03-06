@@ -144,6 +144,10 @@ class ResponseParamsDocumenter(BaseParamsDocumenter):
             documentation_section.include_doc_string(shape.documentation)
         section.style.new_paragraph()
 
+    def document_shape_type_event_stream(self, section, shape, history,
+                                         **kwargs):
+        self.document_shape_type_structure(section, shape, history, **kwargs)
+
 
 class RequestParamsDocumenter(BaseParamsDocumenter):
     """Generates the description for the request parameters"""

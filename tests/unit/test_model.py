@@ -243,6 +243,121 @@ class TestOperationModelFromService(unittest.TestCase):
         self.assertFalse(operation_two.deprecated)
 
 
+class TestOperationModelEventStreamTypes(unittest.TestCase):
+    def setUp(self):
+        super(TestOperationModelEventStreamTypes, self).setUp()
+        self.model = {
+            'metadata': {'protocol': 'rest-xml', 'endpointPrefix': 'foo'},
+            'documentation': '',
+            'operations': {
+                'OperationName': {
+                    'http': {
+                        'method': 'POST',
+                        'requestUri': '/',
+                    },
+                    'name': 'OperationName',
+                    'input': {'shape': 'OperationRequest'},
+                    'output': {'shape': 'OperationResponse'},
+                }
+            },
+            'shapes': {
+                'NormalStructure': {
+                    'type': 'structure',
+                    'members': {
+                        'Input': {'shape': 'StringType'}
+                    }
+                },
+                'OperationRequest': {
+                    'type': 'structure',
+                    'members': {
+                        'String': {'shape': 'StringType'},
+                        "Body": {'shape': 'EventStreamStructure'}
+                    },
+                    'payload': 'Body'
+                },
+                'OperationResponse': {
+                    'type': 'structure',
+                    'members': {
+                        'String': {'shape': 'StringType'},
+                        "Body": {'shape': 'EventStreamStructure'}
+                    },
+                    'payload': 'Body'
+                },
+                'StringType': {'type': 'string'},
+                'BlobType': {'type': 'blob'},
+                'EventStreamStructure': {
+                    'eventstream': True,
+                    'type': 'structure',
+                    'members': {
+                        'EventA': {'shape': 'EventAStructure'},
+                        'EventB': {'shape': 'EventBStructure'}
+                    }
+                },
+                'EventAStructure': {
+                    'event': True,
+                    'type': 'structure',
+                    'members': {
+                        'Payload': {
+                            'shape': 'BlobType',
+                            'eventpayload': True
+                        },
+                        'Header': {
+                            'shape': 'StringType',
+                            'eventheader': True
+                        }
+                    }
+                },
+                'EventBStructure': {
+                    'event': True,
+                    'type': 'structure',
+                    'members': {
+                        'Records': {'shape': 'StringType'}
+                    }
+                }
+            }
+        }
+
+    def update_operation(self, **kwargs):
+        operation = self.model['operations']['OperationName']
+        operation.update(kwargs)
+
+    def test_event_stream_input_for_operation(self):
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertTrue(operation.has_event_stream_input)
+        event_stream_input = operation.get_event_stream_input()
+        self.assertEqual(event_stream_input.name, 'EventStreamStructure')
+
+    def test_no_event_stream_input_for_operation(self):
+        self.update_operation(input={'shape': 'NormalStructure'})
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertFalse(operation.has_event_stream_input)
+        self.assertEqual(operation.get_event_stream_input(), None)
+
+    def test_event_stream_output_for_operation(self):
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertTrue(operation.has_event_stream_output)
+        output = operation.get_event_stream_output()
+        self.assertEqual(output.name, 'EventStreamStructure')
+
+    def test_no_event_stream_output_for_operation(self):
+        self.update_operation(output={'shape': 'NormalStructure'})
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertFalse(operation.has_event_stream_output)
+        self.assertEqual(operation.get_event_stream_output(), None)
+
+    def test_no_output_shape(self):
+        self.update_operation(output=None)
+        del self.model['operations']['OperationName']['output']
+        service_model = model.ServiceModel(self.model)
+        operation = service_model.operation_model('OperationName')
+        self.assertFalse(operation.has_event_stream_output)
+        self.assertEqual(operation.get_event_stream_output(), None)
+
+
 class TestOperationModelStreamingTypes(unittest.TestCase):
     def setUp(self):
         super(TestOperationModelStreamingTypes, self).setUp()

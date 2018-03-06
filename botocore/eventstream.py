@@ -14,6 +14,7 @@
 
 from binascii import crc32
 from struct import unpack
+from botocore.exceptions import EventStreamError
 
 # byte length of the prelude (total_length + header_length + prelude_crc)
 _PRELUDE_LENGTH = 12
@@ -310,6 +311,15 @@ class EventStreamMessage(object):
         self.payload = payload
         self.crc = crc
 
+    def to_response_dict(self, status_code=200):
+        if self.headers.get(':message-type') == 'error':
+            status_code = 400
+        return {
+            'status_code': status_code,
+            'headers': self.headers,
+            'body': self.payload
+        }
+
 
 class EventStreamHeaderParser(object):
     """ Parses the event headers from an event stream message.
@@ -492,3 +502,67 @@ class EventStreamBuffer(object):
 
     def __iter__(self):
         return self
+
+
+class EventStream(object):
+    """Wrapper class for an event stream body.
+
+    This wraps the underlying streaming body, parsing it for individual events
+    and yielding them as they come available through the iterator interface.
+
+    The following example uses the S3 select API to get structured data out of
+    an object stored in S3 using an event stream.
+
+    **Example:**
+    ::
+        from botocore.session import Session
+
+        s3 = Session().create_client('s3')
+        response = s3.select_object_content(
+            Bucket='bucketname',
+            Key='keyname',
+            ExpressionType='SQL',
+            RequestProgress={'Enabled': True},
+            Expression="SELECT * FROM S3Object s",
+            InputSerialization={'CSV': {}},
+            OutputSerialization={'CSV': {}},
+        )
+        # This is the event stream in the response
+        event_stream = response['Payload']
+        with open('output', 'wb') as f:
+            # Iterate over events in the event stream as they come
+            for event in event_stream:
+                # If we received a records event, write the data to a file
+                if 'Records' in event:
+                    data = event['Records']['Payload']
+                    f.write(data)
+                # If we received a progress event, print the details
+                elif 'Progress' in event:
+                    print(event['Progress']['Details'])
+    """
+    def __init__(self, raw_stream, output_shape, parser, operation_name):
+        self._raw_stream = raw_stream
+        self._output_shape = output_shape
+        self._operation_name = operation_name
+        self._parser = parser
+        self._buffer = EventStreamBuffer()
+
+    def __iter__(self):
+        for data in self._raw_stream.stream():
+            self._buffer.add_data(data)
+            for event in self._buffer:
+                parsed_event = self._parse_event(event)
+                if parsed_event:
+                    yield parsed_event
+
+    def _parse_event(self, event):
+        response_dict = event.to_response_dict()
+        parsed_response = self._parser.parse(response_dict, self._output_shape)
+        if response_dict['status_code'] == 200:
+            return parsed_response
+        else:
+            raise EventStreamError(parsed_response, self._operation_name)
+
+    def close(self):
+        """Closes the underlying streaming body. """
+        self._raw_stream.close()

@@ -12,13 +12,16 @@
 # language governing permissions and limitations under the License.
 """Unit tests for the binary event stream decoder. """
 
+from mock import Mock
 from nose.tools import assert_equal, raises
 
+from botocore.parsers import EventStreamXMLParser
 from botocore.eventstream import (
     EventStreamMessage, MessagePrelude, EventStreamBuffer,
     ChecksumMismatch, InvalidPayloadLength, InvalidHeadersLength,
-    DuplicateHeader, EventStreamHeaderParser, DecodeUtils
+    DuplicateHeader, EventStreamHeaderParser, DecodeUtils, EventStream,
 )
+from botocore.exceptions import EventStreamError
 
 EMPTY_MESSAGE = (
     b'\x00\x00\x00\x10\x00\x00\x00\x00\x05\xc2H\xeb}\x98\xc8\xff',
@@ -108,6 +111,28 @@ ALL_HEADERS_TYPES = (
     )
 )
 
+ERROR_EVENT_MESSAGE = (
+    (b"\x00\x00\x00\x52\x00\x00\x00\x42\xbf\x23\x63\x7e"
+     b"\x0d:message-type\x07\x00\x05error"
+     b"\x0b:error-code\x07\x00\x04code"
+     b"\x0e:error-message\x07\x00\x07message"
+     b"\x6b\x6c\xea\x3d"),
+    EventStreamMessage(
+        prelude=MessagePrelude(
+            total_length=0x52,
+            headers_length=0x42,
+            crc=0xbf23637e,
+        ),
+        headers={
+            ':message-type': 'error',
+            ':error-code': 'code',
+            ':error-message': 'message',
+        },
+        payload=b'',
+        crc=0x6b6cea3d,
+    )
+)
+
 # Tuples of encoded messages and their expected decoded output
 POSITIVE_CASES = [
     EMPTY_MESSAGE,
@@ -115,6 +140,7 @@ POSITIVE_CASES = [
     PAYLOAD_NO_HEADERS,
     PAYLOAD_ONE_STR_HEADER,
     ALL_HEADERS_TYPES,
+    ERROR_EVENT_MESSAGE,
 ]
 
 CORRUPTED_HEADER_LENGTH = (
@@ -174,22 +200,22 @@ def assert_message_equal(message_a, message_b):
 def test_partial_message():
     """ Ensure that we can receive partial payloads. """
     data = EMPTY_MESSAGE[0]
-    buffer = EventStreamBuffer()
+    event_buffer = EventStreamBuffer()
     # This mid point is an arbitrary break in the middle of the headers
     mid_point = 15
-    buffer.add_data(data[:mid_point])
-    messages = list(buffer)
+    event_buffer.add_data(data[:mid_point])
+    messages = list(event_buffer)
     assert_equal(messages, [])
-    buffer.add_data(data[mid_point:len(data)])
-    for message in buffer:
+    event_buffer.add_data(data[mid_point:len(data)])
+    for message in event_buffer:
         assert_message_equal(message, EMPTY_MESSAGE[1])
 
 
 def check_message_decodes(encoded, decoded):
     """ Ensure the message decodes to what we expect. """
-    buffer = EventStreamBuffer()
-    buffer.add_data(encoded)
-    messages = list(buffer)
+    event_buffer = EventStreamBuffer()
+    event_buffer.add_data(encoded)
+    messages = list(event_buffer)
     assert len(messages) == 1
     assert_message_equal(messages[0], decoded)
 
@@ -202,14 +228,14 @@ def test_positive_cases():
 
 def test_all_positive_cases():
     """Test all positive cases can be decoded on the same buffer. """
-    buffer = EventStreamBuffer()
+    event_buffer = EventStreamBuffer()
     # add all positive test cases to the same buffer
     for (encoded, _) in POSITIVE_CASES:
-        buffer.add_data(encoded)
+        event_buffer.add_data(encoded)
     # collect all of the expected messages
     expected_messages = [decoded for (_, decoded) in POSITIVE_CASES]
     # collect all of the decoded messages
-    decoded_messages = list(buffer)
+    decoded_messages = list(event_buffer)
     # assert all messages match what we expect
     for (expected, decoded) in zip(expected_messages, decoded_messages):
         assert_message_equal(expected, decoded)
@@ -256,6 +282,25 @@ def test_message_prelude_properties():
     assert_equal(prelude.payload_length, 9)
     assert_equal(prelude.headers_end, 27)
     assert_equal(prelude.payload_end, 36)
+
+
+def test_message_to_response_dict():
+    response_dict = INT32_HEADER[1].to_response_dict()
+    assert_equal(response_dict['status_code'], 200)
+    assert_equal(response_dict['headers'], {'event-id': 0x0000a00c})
+    assert_equal(response_dict['body'], b"{'foo':'bar'}")
+
+
+def test_message_to_response_dict_error():
+    response_dict = ERROR_EVENT_MESSAGE[1].to_response_dict()
+    assert_equal(response_dict['status_code'], 400)
+    headers = {
+        ':message-type': 'error',
+        ':error-code': 'code',
+        ':error-message': 'message',
+    }
+    assert_equal(response_dict['headers'], headers)
+    assert_equal(response_dict['body'], b'')
 
 
 def test_unpack_uint8():
@@ -316,3 +361,43 @@ def test_unpack_prelude():
     data = b'\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00\x03'
     prelude = DecodeUtils.unpack_prelude(data)
     assert_equal(prelude, ((1, 2, 3), 12))
+
+
+def test_event_stream_wrapper_iteration():
+    raw_stream = Mock()
+    raw_stream.stream.return_value = [
+        b"\x00\x00\x00+\x00\x00\x00\x0e4\x8b\xec{\x08event-id\x04\x00",
+        b"\x00\xa0\x0c{'foo':'bar'}\xd3\x89\x02\x85",
+    ]
+    parser = Mock(spec=EventStreamXMLParser)
+    output_shape = Mock()
+    event_stream = EventStream(raw_stream, output_shape, parser, '')
+    events = list(event_stream)
+    assert_equal(len(events), 1)
+
+    response_dict = {
+        'headers': {'event-id': 0x0000a00c},
+        'body': b"{'foo':'bar'}",
+        'status_code': 200,
+    }
+    parser.parse.assert_called_with(response_dict, output_shape)
+
+
+@raises(EventStreamError)
+def test_eventstream_wrapper_iteration_error():
+    raw_stream = Mock()
+    raw_stream.stream.return_value = [
+        ERROR_EVENT_MESSAGE[0]
+    ]
+    parser = Mock(spec=EventStreamXMLParser)
+    parser.parse.return_value = {}
+    output_shape = Mock()
+    event_stream = EventStream(raw_stream, output_shape, parser, '')
+    list(event_stream)
+
+
+def test_event_stream_wrapper_close():
+    raw_stream = Mock()
+    event_stream = EventStream(raw_stream, None, None, '')
+    event_stream.close()
+    raw_stream.close.assert_called_once_with()
