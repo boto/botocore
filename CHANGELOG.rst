@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.9.4
+=====
+
+* api-change:``ecs``: Update ecs client to latest version
+
+
 1.9.3
 =====
 
