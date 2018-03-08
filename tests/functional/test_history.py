@@ -4,6 +4,7 @@ import mock
 
 from tests import BaseSessionTest
 from botocore.history import BaseHistoryHandler
+from botocore.history import HistoryRecorderScope
 from botocore.history import get_global_history_recorder
 
 
@@ -15,10 +16,9 @@ class RecordingHandler(BaseHistoryHandler):
         self.recorded_calls.append((event_type, payload, source))
 
 
-class TestRecordStatementsInjections(BaseSessionTest):
-
+class BaseHistoryRecorderTest(BaseSessionTest):
     def setUp(self):
-        super(TestRecordStatementsInjections, self).setUp()
+        super(BaseHistoryRecorderTest, self).setUp()
         self.client = self.session.create_client('s3', 'us-west-2')
         self.s3_response_body = (
             '<ListAllMyBucketsResult '
@@ -36,15 +36,8 @@ class TestRecordStatementsInjections(BaseSessionTest):
             '</ListAllMyBucketsResult>'
         ).encode('utf-8')
         self.recording_handler = RecordingHandler()
-        history_recorder = get_global_history_recorder()
-        history_recorder.enable()
-        history_recorder.add_handler(self.recording_handler)
-
-    def _get_all_events_of_type(self, event_type):
-        recorded_calls = self.recording_handler.recorded_calls
-        matching = [call for call in recorded_calls
-                    if call[0] == event_type]
-        return matching
+        self.history_recorder = get_global_history_recorder()
+        self.history_recorder.enable()
 
     @contextmanager
     def patch_http_layer(self, response, status_code=200):
@@ -53,6 +46,18 @@ class TestRecordStatementsInjections(BaseSessionTest):
                                           headers={},
                                           content=response)
             yield send
+
+
+class TestRecordStatementsInjections(BaseHistoryRecorderTest):
+    def setUp(self):
+        super(TestRecordStatementsInjections, self).setUp()
+        self.history_recorder.add_handler(self.recording_handler)
+
+    def _get_all_events_of_type(self, event_type):
+        recorded_calls = self.recording_handler.recorded_calls
+        matching = [call for call in recorded_calls
+                    if call[0] == event_type]
+        return matching
 
     def test_does_record_api_call(self):
         with self.patch_http_layer(self.s3_response_body):
@@ -149,3 +154,93 @@ class TestRecordStatementsInjections(BaseSessionTest):
             'HTTPStatusCode': 200,
             'RetryAttempts': 0
         })
+
+
+class TestScopedClientEvents(BaseHistoryRecorderTest):
+    def setUp(self):
+        super(TestScopedClientEvents, self).setUp()
+        self.expected_client_call_events = [
+            'API_CALL',
+            'HTTP_REQUEST',
+            'HTTP_RESPONSE',
+            'PARSED_RESPONSE'
+        ]
+
+    def get_recorded_events(self, recording_handler):
+        return [
+            call[0] for call in recording_handler.recorded_calls
+        ]
+
+    def test_captures_client_events_with_scope(self):
+        history_scope = HistoryRecorderScope()
+        self.history_recorder.add_scope(history_scope)
+        history_scope.register_client(self.client)
+        history_scope.add_handler(self.recording_handler)
+
+        with self.patch_http_layer(self.s3_response_body):
+            self.client.list_buckets()
+
+        self.assertEqual(
+            self.get_recorded_events(self.recording_handler),
+            self.expected_client_call_events
+        )
+
+    def test_ignores_client_events_not_registered_to_scope(self):
+        history_scope = HistoryRecorderScope()
+        self.history_recorder.add_scope(history_scope)
+        history_scope.add_handler(self.recording_handler)
+
+        with self.patch_http_layer(self.s3_response_body):
+            self.client.list_buckets()
+
+        self.assertEqual(
+            self.get_recorded_events(self.recording_handler),
+            []
+        )
+
+    def test_differentiates_between_clients_registered_to_scope(self):
+        history_scope = HistoryRecorderScope()
+        self.history_recorder.add_scope(history_scope)
+        history_scope.register_client(self.client)
+        history_scope.add_handler(self.recording_handler)
+
+        with self.patch_http_layer(self.s3_response_body):
+            self.client.list_buckets()
+
+        self.assertEqual(
+            self.get_recorded_events(self.recording_handler),
+            self.expected_client_call_events
+        )
+
+        other_client = self.session.create_client('s3', 'us-west-2')
+        with self.patch_http_layer(self.s3_response_body):
+            other_client.list_buckets()
+
+        # The events from the recorder should be the same as before
+        # which sourced from the original client call as this new client
+        # is not registered to the scope.
+        self.assertEqual(
+            self.get_recorded_events(self.recording_handler),
+            self.expected_client_call_events
+        )
+
+    def test_captures_multiple_client_events_in_same_scope(self):
+        history_scope = HistoryRecorderScope()
+        self.history_recorder.add_scope(history_scope)
+        history_scope.register_client(self.client)
+        history_scope.add_handler(self.recording_handler)
+
+        with self.patch_http_layer(self.s3_response_body):
+            self.client.list_buckets()
+
+        other_client = self.session.create_client('s3', 'us-west-2')
+        history_scope.register_client(other_client)
+        with self.patch_http_layer(self.s3_response_body):
+            other_client.list_buckets()
+
+        # Both clients are registered to the scope so both of their calls
+        # should have been recorded.
+        self.assertEqual(
+            self.get_recorded_events(self.recording_handler),
+            self.expected_client_call_events + self.expected_client_call_events
+        )
