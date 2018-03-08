@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.9.5
+=====
+
+* api-change:``medialive``: Update medialive client to latest version
+
+
 1.9.4
 =====
 
