@@ -2,6 +2,24 @@
 CHANGELOG
 =========
 
+1.9.7
+=====
+
+* api-change:``cloudhsmv2``: Update cloudhsmv2 client to latest version
+* api-change:``discovery``: Update discovery client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+
+
+1.9.6
+=====
+
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``mgh``: Update mgh client to latest version
+
+
 1.9.5
 =====
 
