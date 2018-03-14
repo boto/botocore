@@ -12,9 +12,6 @@ REPO_ROOT = _dname(_dname(_dname(os.path.abspath(__file__))))
 os.chdir(os.path.join(REPO_ROOT, 'tests'))
 
 
-def run(command):
-    return check_call(command, shell=True)
-
-
-run('nosetests --with-coverage --cover-erase --cover-package botocore '
-    '--with-xunit --cover-xml -v unit/ functional/')
+check_call(['nosetests', '--with-coverage', '--cover-erase',
+            '--cover-package', 'botocore', '--with-xunit', '--cover-xml',
+            '-v', 'unit/', 'functional/'])
