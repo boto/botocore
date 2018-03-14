@@ -2445,6 +2445,23 @@
       "member":{"shape":"Event"},
       "flattened":true
     },
+    "ExistingObjectReplication":{
+      "type":"structure",
+      "members":{
+        "Status":{
+          "shape":"ExistingObjectReplicationStatus",
+          "documentation":"The replication of existing S3 objects is not Enabled."
+        }
+      },
+      "documentation":"Container for enabling existing S3 object replication."
+    },
+    "ExistingObjectReplicationStatus":{
+      "type":"string",
+      "enum":[
+        "Enabled",
+        "Disabled"
+      ]
+    },
     "Expiration":{"type":"string"},
     "ExpirationStatus":{
       "type":"string",
@@ -5950,6 +5967,10 @@
         "Destination":{
           "shape":"Destination",
           "documentation":"Container for replication destination information."
+        },
+        "ExistingObjectReplication":{
+          "shape":"ExistingObjectReplication",
+          "documentation":"Defines whether existing objects are replicated."
         }
       },
       "documentation":"Container for information about a particular replication rule."
