@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.9.8
+=====
+
+* api-change:``servicediscovery``: Update servicediscovery client to latest version
+
+
 1.9.7
 =====
 
