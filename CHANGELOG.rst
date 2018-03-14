@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.9.9
+=====
+
+* api-change:``lightsail``: Update lightsail client to latest version
+
+
 1.9.8
 =====
 
