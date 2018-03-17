@@ -2,6 +2,26 @@
 CHANGELOG
 =========
 
+1.9.11
+======
+
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+
+
+1.9.10
+======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+
+
+1.9.9
+=====
+
+* api-change:``lightsail``: Update lightsail client to latest version
+
+
 1.9.8
 =====
 
