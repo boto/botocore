@@ -444,6 +444,8 @@ class RefreshableCredentials(Credentials):
             # set of temporary credentials we have.
             return
         self._set_from_data(metadata)
+        self._frozen_credentials = ReadOnlyCredentials(
+            self._access_key, self._secret_key, self._token)
         if self._is_expired():
             # We successfully refreshed credentials but for whatever
             # reason, our refreshing function returned credentials
@@ -454,8 +456,6 @@ class RefreshableCredentials(Credentials):
                    "refreshed credentials are still expired.")
             logger.warning(msg)
             raise RuntimeError(msg)
-        self._frozen_credentials = ReadOnlyCredentials(
-            self._access_key, self._secret_key, self._token)
 
     @staticmethod
     def _expiry_datetime(time_str):
@@ -525,7 +525,7 @@ class DeferredRefreshableCredentials(RefreshableCredentials):
         self._frozen_credentials = None
 
     def refresh_needed(self, refresh_in=None):
-        if any(part is None for part in [self._access_key, self._secret_key]):
+        if self._frozen_credentials is None:
             return True
         return super(DeferredRefreshableCredentials, self).refresh_needed(
             refresh_in
