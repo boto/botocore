@@ -19,6 +19,7 @@ import binascii
 import functools
 import weakref
 import random
+import os
 
 import dateutil.parser
 from dateutil.tz import tzlocal, tzutc
@@ -159,12 +160,21 @@ def set_value_from_jmespath(source, expression, value, is_first=True):
 
 class InstanceMetadataFetcher(object):
     def __init__(self, timeout=DEFAULT_METADATA_SERVICE_TIMEOUT,
-                 num_attempts=1, url=METADATA_SECURITY_CREDENTIALS_URL):
+                 num_attempts=1, url=METADATA_SECURITY_CREDENTIALS_URL,
+                 env=None):
         self._timeout = timeout
         self._num_attempts = num_attempts
         self._url = url
+        if env is None:
+            env = os.environ.copy()
+        self._disabled = env.get('AWS_EC2_METADATA_DISABLED', 'false').lower()
+        self._disabled = self._disabled == 'true'
 
     def _get_request(self, url, timeout, num_attempts=1):
+        if self._disabled:
+            logger.debug("Access to EC2 metadata has been disabled.")
+            raise _RetriesExceededError()
+
         for i in range(num_attempts):
             try:
                 response = requests.get(url, timeout=timeout)
@@ -193,7 +203,8 @@ class InstanceMetadataFetcher(object):
                         val = self._get_request(
                             url + field,
                             timeout=timeout,
-                            num_attempts=num_attempts).content.decode('utf-8')
+                            num_attempts=num_attempts,
+                        ).content.decode('utf-8')
                         if val[0] == '{':
                             val = json.loads(val)
                         data[field] = val

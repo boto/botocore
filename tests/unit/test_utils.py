@@ -10,18 +10,16 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
 from tests import unittest
 from dateutil.tz import tzutc, tzoffset
 import datetime
-from botocore.compat import six
 import copy
-
 import mock
 
 import botocore
 from botocore import xform_name
 from botocore.compat import OrderedDict, json
+from botocore.compat import six
 from botocore.awsrequest import AWSRequest
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.exceptions import ClientError
@@ -54,6 +52,7 @@ from botocore.utils import switch_host_s3_accelerate
 from botocore.utils import deep_merge
 from botocore.utils import S3RegionRedirector
 from botocore.utils import ContainerMetadataFetcher
+from botocore.utils import InstanceMetadataFetcher
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
 from botocore.config import Config
@@ -1676,5 +1675,58 @@ class TestUnsigned(unittest.TestCase):
     def test_deepcopy_returns_same_object(self):
         self.assertIs(botocore.UNSIGNED, copy.deepcopy(botocore.UNSIGNED))
 
-if __name__ == '__main__':
-    unittest.main()
+
+class TestInstanceMetadataFetcher(unittest.TestCase):
+    def setUp(self):
+        self._requests_patch = mock.patch('botocore.utils.requests')
+        self._requests = self._requests_patch.start()
+
+    def tearDown(self):
+        self._requests_patch.stop()
+
+    def test_disabled_by_environment(self):
+        env = {'AWS_EC2_METADATA_DISABLED': 'true'}
+        fetcher = InstanceMetadataFetcher(env=env)
+        result = fetcher.retrieve_iam_role_credentials()
+        self.assertEqual(result, {})
+        self._requests.assert_not_called()
+
+    def test_disabled_by_environment_mixed_case(self):
+        env = {'AWS_EC2_METADATA_DISABLED': 'tRuE'}
+        fetcher = InstanceMetadataFetcher(env=env)
+        result = fetcher.retrieve_iam_role_credentials()
+        self.assertEqual(result, {})
+        self._requests.get.assert_not_called()
+
+    def test_disabling_env_var_not_true(self):
+        url = 'https://example.com/'
+        env = {'AWS_EC2_METADATA_DISABLED': 'false'}
+        creds = {
+            'AccessKeyId': 'spam',
+            'SecretAccessKey': 'eggs',
+            'Token': 'spam-token',
+            'Expiration': 'something',
+        }
+
+        profiles_response = mock.Mock()
+        profiles_response.status_code = 200
+        profiles_response.content = b'role-name'
+
+        creds_response = mock.Mock()
+        creds_response.status_code = 200
+        creds_response.content = json.dumps(creds).encode('utf-8')
+
+        self._requests.get.side_effect = [profiles_response, creds_response]
+
+        fetcher = InstanceMetadataFetcher(url=url, env=env)
+        result = fetcher.retrieve_iam_role_credentials()
+
+        expected_result = {
+            'access_key': 'spam',
+            'secret_key': 'eggs',
+            'token': 'spam-token',
+            'expiry_time': 'something',
+            'role_name': 'role-name'
+        }
+        self.assertEqual(result, expected_result)
+
