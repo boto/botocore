@@ -2,6 +2,20 @@
 CHANGELOG
 =========
 
+1.9.12
+======
+
+* api-change:``ce``: Update ce client to latest version
+* enhancement:Credentials: Add the ability to disable fetching credentials from EC2 metadata by setting the environment variable AWS_EC2_METADATA_DISABLED to 'true'.
+* api-change:``config``: Update config client to latest version
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* bugfix:Credentials: Fix a race condition related to assuming a role for the first time (`#1405 <https://github.com/boto/botocore/pull/1405>`__)
+* api-change:``events``: Update events client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+
+
 1.9.11
 ======
 

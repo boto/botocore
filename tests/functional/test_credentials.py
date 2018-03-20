@@ -31,6 +31,7 @@ from botocore.credentials import InstanceMetadataProvider
 from botocore.credentials import Credentials, ReadOnlyCredentials
 from botocore.credentials import AssumeRoleProvider
 from botocore.credentials import CanonicalNameCredentialSourcer
+from botocore.credentials import DeferredRefreshableCredentials
 from botocore.session import Session
 from botocore.exceptions import InvalidConfigError, InfiniteLoopConfigError
 from botocore.stub import Stubber
@@ -39,14 +40,7 @@ from botocore.stub import Stubber
 class TestCredentialRefreshRaces(unittest.TestCase):
     def assert_consistent_credentials_seen(self, creds, func):
         collected = []
-        threads = []
-        for _ in range(20):
-            threads.append(threading.Thread(target=func, args=(collected,)))
-        start = time.time()
-        for thread in threads:
-            thread.start()
-        for thread in threads:
-            thread.join()
+        self._run_threads(20, func, collected)
         for creds in collected:
             # During testing, the refresher uses it's current
             # refresh count as the values for the access, secret, and
@@ -70,6 +64,21 @@ class TestCredentialRefreshRaces(unittest.TestCase):
             # the second refresh ('2'), and the token from the
             # first refresh ('1').
             self.assertTrue(creds[0] == creds[1] == creds[2], creds)
+
+    def assert_non_none_retrieved_credentials(self, func):
+        collected = []
+        self._run_threads(50, func, collected)
+        for cred in collected:
+            self.assertIsNotNone(cred)
+
+    def _run_threads(self, num_threads, func, collected):
+        threads = []
+        for _ in range(num_threads):
+            threads.append(threading.Thread(target=func, args=(collected,)))
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
 
     def test_has_no_race_conditions(self):
         creds = IntegerRefresher(
@@ -109,6 +118,26 @@ class TestCredentialRefreshRaces(unittest.TestCase):
                                   frozen.secret_key,
                                   frozen.token))
         self.assert_consistent_credentials_seen(creds, _run_in_thread)
+
+    def test_no_race_for_initial_refresh_of_deferred_refreshable(self):
+        def get_credentials():
+            expiry_time = (
+                datetime.now(tzlocal()) + timedelta(hours=24)).isoformat()
+            return {
+                'access_key': 'my-access-key',
+                'secret_key': 'my-secret-key',
+                'token': 'my-token',
+                'expiry_time': expiry_time
+            }
+
+        deferred_creds = DeferredRefreshableCredentials(
+            get_credentials, 'fixed')
+
+        def _run_in_thread(collected):
+            frozen = deferred_creds.get_frozen_credentials()
+            collected.append(frozen)
+
+        self.assert_non_none_retrieved_credentials(_run_in_thread)
 
 
 class TestAssumeRole(BaseEnvVar):
