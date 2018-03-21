@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.9.13
+======
+
+* bugfix:s3: Fixed a bug where head object and bucket calls would attempt redirects incorrectly.
+* api-change:``serverlessrepo``: Update serverlessrepo client to latest version
+
+
 1.9.12
 ======
 
