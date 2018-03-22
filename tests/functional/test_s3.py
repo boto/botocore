@@ -339,6 +339,51 @@ class TestRegionRedirect(BaseS3OperationTest):
                      '?encoding-type=url')
         self.assertEqual(calls[1].url, fixed_url)
 
+    def test_resign_request_in_us_east_1(self):
+        bad_request_response = mock.Mock()
+        bad_request_response.headers = {}
+        bad_request_response.content = b''
+        bad_request_response.status_code = 400
+
+        bad_head_bucket_response = mock.Mock()
+        bad_head_bucket_response.headers = {
+            'x-amz-bucket-region': 'eu-central-1'
+        }
+        bad_head_bucket_response.content = b''
+        bad_head_bucket_response.status_code = 400
+
+        head_bucket_response = mock.Mock()
+        head_bucket_response.headers = {
+            'x-amz-bucket-region': 'eu-central-1'
+        }
+        head_bucket_response.content = b''
+        head_bucket_response.status_code = 200
+
+        request_response = mock.Mock()
+        request_response.headers = {}
+        request_response.content = b''
+        request_response.status_code = 200
+
+        self.http_session_send_mock.side_effect = [
+            bad_request_response,
+            bad_head_bucket_response,
+            head_bucket_response,
+            request_response,
+        ]
+
+        # Verify that the default behavior in us-east-1 will redirect
+        client = self.session.create_client('s3', 'us-east-1')
+        response = client.head_object(Bucket='foo', Key='bar')
+        self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 200)
+
+        self.assertEqual(self.http_session_send_mock.call_count, 4)
+        calls = [c[0][0] for c in self.http_session_send_mock.call_args_list]
+        initial_url = ('https://foo.s3.amazonaws.com/bar')
+        self.assertEqual(calls[0].url, initial_url)
+
+        fixed_url = ('https://foo.s3.eu-central-1.amazonaws.com/bar')
+        self.assertEqual(calls[-1].url, fixed_url)
+
 
 class TestGeneratePresigned(BaseS3OperationTest):
     def test_generate_unauthed_url(self):
