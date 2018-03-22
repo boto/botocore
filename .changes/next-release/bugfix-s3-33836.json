@@ -1,5 +1,0 @@
-{
-  "category": "``s3``", 
-  "type": "bugfix", 
-  "description": "Fix regression in redirects in using wrong region"
-}

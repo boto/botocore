@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.9.14
+======
+
+* bugfix:``s3``: Fix regression in redirects in using wrong region
+
+
 1.9.13
 ======
 
