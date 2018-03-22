@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.9.15
+======
+
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+
+
 1.9.14
 ======
 
