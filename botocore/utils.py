@@ -902,21 +902,13 @@ class S3RegionRedirector(object):
         error = response[1].get('Error', {})
         error_code = error.get('Code')
 
-        is_special_head_object = (
-            error_code == '301' and
-            operation.name in ['HeadObject', 'HeadBucket']
-        )
         # We have to account for 400 responses because
         # if we sign a Head* request with the wrong region,
-        # and it gets redirected by a temporary redirect
         # we'll get a 400 Bad Request but we won't get a
         # body saying it's an "AuthorizationHeaderMalformed".
-        is_special_400_head_object = (
-            error_code == '400' and
-            operation.name in ['HeadObject', 'HeadBucket'] and
-            response[0].history and
-            response[0].history[-1].status_code == 307 and
-            response[0].history[-1].url != response[0].url
+        is_special_head_object = (
+            error_code in ['301', '400'] and
+            operation.name in ['HeadObject', 'HeadBucket']
         )
         is_wrong_signing_region = (
             error_code == 'AuthorizationHeaderMalformed' and
@@ -924,7 +916,7 @@ class S3RegionRedirector(object):
         )
         is_permanent_redirect = error_code == 'PermanentRedirect'
         if not any([is_special_head_object, is_wrong_signing_region,
-                    is_special_400_head_object, is_permanent_redirect]):
+                    is_permanent_redirect]):
             return
 
         bucket = request_dict['context']['signing']['bucket']
@@ -951,13 +943,6 @@ class S3RegionRedirector(object):
             'bucket': bucket,
             'endpoint': endpoint
         }
-        # if the signing context doesn't change, don't retry
-        if request_dict['context']['signing'] == signing_context:
-            logger.debug(
-                "S3 client attempted a redirect that resulted in the same "
-                "signing context as the previous request. Aborting redirect."
-            )
-            return
         request_dict['context']['signing'] = signing_context
 
         self._cache[bucket] = signing_context
