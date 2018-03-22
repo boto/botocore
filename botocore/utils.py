@@ -899,6 +899,9 @@ class S3RegionRedirector(object):
             # transport error.
             return
 
+        if request_dict.get('context', {}).get('s3_redirected'):
+            return
+
         error = response[1].get('Error', {})
         error_code = error.get('Code')
 
@@ -947,6 +950,8 @@ class S3RegionRedirector(object):
 
         self._cache[bucket] = signing_context
         self.set_request_url(request_dict, request_dict['context'])
+
+        request_dict['context']['s3_redirected'] = True
 
         # Return 0 so it doesn't wait to retry
         return 0
