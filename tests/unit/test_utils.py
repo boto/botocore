@@ -1395,11 +1395,7 @@ class TestS3RegionRedirector(unittest.TestCase):
     def test_redirects_400_head_bucket(self):
         request_dict = {'url': 'https://us-west-2.amazonaws.com/foo',
                         'context': {'signing': {'bucket': 'foo'}}}
-        raw_response = mock.Mock()
-        previous_response = mock.Mock()
-        previous_response.status_code = 307
-        raw_response.history = [previous_response]
-        response = (raw_response, {
+        response = (None, {
             'Error': {'Code': '400', 'Message': 'Bad Request'},
             'ResponseMetadata': {
                 'HTTPHeaders': {'x-amz-bucket-region': 'eu-central-1'}
@@ -1412,29 +1408,6 @@ class TestS3RegionRedirector(unittest.TestCase):
         self.assertEqual(redirect_response, 0)
 
         self.operation.name = 'ListObjects'
-        redirect_response = self.redirector.redirect_from_error(
-            request_dict, response, self.operation)
-        self.assertIsNone(redirect_response)
-
-    def test_does_not_redirect_on_same_context(self):
-        signing_context = {
-            'bucket': 'foo',
-            'region': 'eu-central-1',
-            'endpoint': 'https://eu-central-1.amazonaws.com',
-        }
-        request_dict = {'url': 'https://eu-central-1.amazonaws.com/foo',
-                        'context': {'signing': signing_context}}
-        response = (None, {
-            'Error': {
-                'Code': '301',
-                'Message': 'Moved Permanently'
-            },
-            'ResponseMetadata': {
-                'HTTPHeaders': {'x-amz-bucket-region': 'eu-central-1'}
-            }
-        })
-
-        self.operation.name = 'HeadObject'
         redirect_response = self.redirector.redirect_from_error(
             request_dict, response, self.operation)
         self.assertIsNone(redirect_response)
