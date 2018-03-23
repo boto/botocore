@@ -1,0 +1,5 @@
+{
+  "category": "``s3``", 
+  "type": "bugfix", 
+  "description": "Fix bug where invalidate head_object requests would cause an infinite loop (alternate fix to `#1400 <https://github.com/boto/botocore/issues/1400>`__)"
+}
