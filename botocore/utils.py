@@ -900,6 +900,8 @@ class S3RegionRedirector(object):
             return
 
         if request_dict.get('context', {}).get('s3_redirected'):
+            logger.debug(
+                'S3 request was previously redirected, not redirecting.')
             return
 
         error = response[1].get('Error', {})

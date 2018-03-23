@@ -1341,6 +1341,28 @@ class TestS3RegionRedirector(unittest.TestCase):
         }
         signing_context = request_dict['context'].get('signing')
         self.assertEqual(signing_context, expected_signing_context)
+        self.assertTrue(request_dict['context'].get('s3_redirected'))
+
+    def test_does_not_redirect_if_previously_redirected(self):
+        request_dict = {
+            'context': {
+                'signing': {'bucket': 'foo', 'region': 'us-west-2'},
+                's3_redirected': True,
+            },
+            'url': 'https://us-west-2.amazonaws.com/foo'
+        }
+        response = (None, {
+            'Error': {
+                'Code': '400',
+                'Message': 'Bad Request',
+            },
+            'ResponseMetadata': {
+                'HTTPHeaders': {'x-amz-bucket-region': 'us-west-2'}
+            }
+        })
+        redirect_response = self.redirector.redirect_from_error(
+            request_dict, response, self.operation)
+        self.assertIsNone(redirect_response)
 
     def test_does_not_redirect_unless_permanentredirect_recieved(self):
         request_dict = {}
