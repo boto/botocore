@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.9.16
+======
+
+* api-change:``rds``: Update rds client to latest version
+
+
 1.9.15
 ======
 
