@@ -16,7 +16,7 @@ from nose.tools import assert_equal
 import botocore.session
 from botocore.config import Config
 from botocore.compat import urlsplit
-from botocore.exceptions import ParamValidationError
+from botocore.exceptions import ParamValidationError, ClientError
 from botocore import UNSIGNED
 
 
@@ -277,6 +277,16 @@ class TestRegionRedirect(BaseS3OperationTest):
             b'    <IsTruncated>false</IsTruncated>'
             b'</ListBucketResult>')
 
+    def create_response(self, content=b'',
+                        status_code=200, headers=None):
+        response = mock.Mock()
+        if headers is None:
+            headers = {}
+        response.headers = headers
+        response.content = content
+        response.status_code = status_code
+        return response
+
     def test_region_redirect(self):
         self.http_session_send_mock.side_effect = [
             self.redirect_response, self.success_response]
@@ -340,30 +350,18 @@ class TestRegionRedirect(BaseS3OperationTest):
         self.assertEqual(calls[1].url, fixed_url)
 
     def test_resign_request_in_us_east_1(self):
-        bad_request_response = mock.Mock()
-        bad_request_response.headers = {}
-        bad_request_response.content = b''
-        bad_request_response.status_code = 400
-
-        bad_head_bucket_response = mock.Mock()
-        bad_head_bucket_response.headers = {
-            'x-amz-bucket-region': 'eu-central-1'
-        }
-        bad_head_bucket_response.content = b''
-        bad_head_bucket_response.status_code = 400
-
-        head_bucket_response = mock.Mock()
-        head_bucket_response.headers = {
-            'x-amz-bucket-region': 'eu-central-1'
-        }
-        head_bucket_response.content = b''
-        head_bucket_response.status_code = 200
-
-        request_response = mock.Mock()
-        request_response.headers = {}
-        request_response.content = b''
-        request_response.status_code = 200
-
+        bad_request_response = self.create_response(status_code=400)
+        bad_head_bucket_response = self.create_response(
+            status_code=400,
+            headers={'x-amz-bucket-region': 'eu-central-1'}
+        )
+        head_bucket_response = self.create_response(
+            headers={
+                'x-amz-bucket-region': 'eu-central-1'
+            },
+            status_code=200,
+        )
+        request_response = self.create_response(status_code=200)
         self.http_session_send_mock.side_effect = [
             bad_request_response,
             bad_head_bucket_response,
@@ -383,6 +381,33 @@ class TestRegionRedirect(BaseS3OperationTest):
 
         fixed_url = ('https://foo.s3.eu-central-1.amazonaws.com/bar')
         self.assertEqual(calls[-1].url, fixed_url)
+
+    def test_resign_request_in_us_east_1_fails(self):
+        bad_request_response = self.create_response(status_code=400)
+        bad_head_bucket_response = self.create_response(
+            status_code=400,
+            headers={'x-amz-bucket-region': 'eu-central-1'}
+        )
+        head_bucket_response = self.create_response(
+            headers={
+                'x-amz-bucket-region': 'eu-central-1'
+            }
+        )
+        # The final request still fails with a 400.
+        request_response = self.create_response(status_code=400)
+
+        self.http_session_send_mock.side_effect = [
+            bad_request_response,
+            bad_head_bucket_response,
+            head_bucket_response,
+            request_response,
+        ]
+
+        # Verify that the final 400 response is propagated
+        # back to the user.
+        client = self.session.create_client('s3', 'us-east-1')
+        with self.assertRaises(ClientError) as e:
+            client.head_object(Bucket='foo', Key='bar')
 
 
 class TestGeneratePresigned(BaseS3OperationTest):
