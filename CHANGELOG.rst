@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.9.17
+======
+
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* bugfix:``s3``: Fix bug where invalid head_object requests would cause an infinite loop (alternate fix to `#1400 <https://github.com/boto/botocore/issues/1400>`__)
+
+
 1.9.16
 ======
 
