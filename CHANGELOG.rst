@@ -2,6 +2,47 @@
 CHANGELOG
 =========
 
+1.9.16
+======
+
+* api-change:``rds``: Update rds client to latest version
+
+
+1.9.15
+======
+
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+
+
+1.9.14
+======
+
+* bugfix:``s3``: Fix regression in redirects in using wrong region
+
+
+1.9.13
+======
+
+* bugfix:s3: Fixed a bug where head object and bucket calls would attempt redirects incorrectly.
+* api-change:``serverlessrepo``: Update serverlessrepo client to latest version
+
+
+1.9.12
+======
+
+* api-change:``ce``: Update ce client to latest version
+* enhancement:Credentials: Add the ability to disable fetching credentials from EC2 metadata by setting the environment variable AWS_EC2_METADATA_DISABLED to 'true'.
+* api-change:``config``: Update config client to latest version
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* bugfix:Credentials: Fix a race condition related to assuming a role for the first time (`#1405 <https://github.com/boto/botocore/pull/1405>`__)
+* api-change:``events``: Update events client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+
+
 1.9.11
 ======
 
