@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.9.18
+======
+
+* api-change:``acm``: Update acm client to latest version
+
+
 1.9.17
 ======
 
