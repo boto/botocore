@@ -904,6 +904,31 @@ class TestS3SigV4Client(BaseS3ClientTest):
             Body=b'foobar', Metadata={'foo': '  multi    spaces  '})
         self.assert_status_code(response, 200)
 
+    def test_bad_request_on_invalid_credentials(self):
+        # A previous bug would cause this to hang.  We want
+        # to verify we get the 400 response.
+        # In order to test we need a key that actually
+        # exists so we use the properly configured self.client.
+        self.client.put_object(Bucket=self.bucket_name,
+                               Key='foo.txt',
+                               Body=b'asdfasdf')
+        # Now we create a client with a bad session token
+        # which should give us a 400 response.
+        creds = self.session.get_credentials()
+        client = self.session.create_client(
+            's3', self.region,
+            config=Config(signature_version='s3v4'),
+            aws_access_key_id=creds.access_key,
+            aws_secret_access_key=creds.secret_key,
+            aws_session_token='bad-token-causes-400',
+        )
+        with self.assertRaises(ClientError) as e:
+            client.head_object(
+                Bucket=self.bucket_name,
+                Key='foo.txt',
+            )
+        self.assertEqual(e.exception.response['Error']['Code'], '400')
+
 
 class TestSSEKeyParamValidation(BaseS3ClientTest):
     def test_make_request_with_sse(self):
