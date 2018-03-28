@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.9.19
+======
+
+* api-change:``mturk``: Update mturk client to latest version
+* api-change:``sts``: Update sts client to latest version
+* api-change:``iam``: Update iam client to latest version
+
+
 1.9.18
 ======
 
