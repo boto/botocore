@@ -419,7 +419,8 @@ class AWSPreparedRequest(models.PreparedRequest):
         # the entire body contents again if we need to).
         # Same case if the body is a string/bytes type.
         if self.body is None or isinstance(self.body, six.text_type) or \
-                isinstance(self.body, six.binary_type):
+                isinstance(self.body, six.binary_type) or \
+                (six.PY3 and isinstance(self.body, bytearray)):
             return
         try:
             logger.debug("Rewinding stream: %s", self.body)
