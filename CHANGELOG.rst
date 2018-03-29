@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.9.20
+======
+
+* api-change:``greengrass``: Update greengrass client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+
+
 1.9.19
 ======
 
