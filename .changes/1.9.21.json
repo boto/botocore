@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``connect``", 
+    "description": "Update connect client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``acm``", 
+    "description": "Update acm client to latest version", 
+    "type": "api-change"
+  }
+]
