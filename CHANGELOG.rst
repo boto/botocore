@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.9.22
+======
+
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``es``: Update es client to latest version
+
+
 1.9.21
 ======
 
