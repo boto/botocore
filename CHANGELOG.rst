@@ -2,6 +2,36 @@
 CHANGELOG
 =========
 
+1.9.21
+======
+
+* api-change:``connect``: Update connect client to latest version
+* api-change:``acm``: Update acm client to latest version
+
+
+1.9.20
+======
+
+* api-change:``greengrass``: Update greengrass client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+
+
+1.9.19
+======
+
+* api-change:``mturk``: Update mturk client to latest version
+* api-change:``sts``: Update sts client to latest version
+* api-change:``iam``: Update iam client to latest version
+
+
+1.9.18
+======
+
+* api-change:``acm``: Update acm client to latest version
+
+
 1.9.17
 ======
 
