@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.9.23
+======
+
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``devicefarm``: Update devicefarm client to latest version
+* api-change:``translate``: Update translate client to latest version
+
+
 1.9.22
 ======
 
