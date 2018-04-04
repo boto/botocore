@@ -1,0 +1,174 @@
+[
+  {
+    "description": "REST XML Event Stream",
+    "metadata": {
+      "protocol": "rest-xml"
+    },
+    "shapes": {
+      "OutputShape": {
+        "type": "structure",
+        "members": {
+            "Payload": {"shape": "EventStream"}
+        },
+        "payload": "Payload"
+      },
+      "EventStream": {
+          "type": "structure",
+          "eventstream": true,
+          "members": {
+              "TypeA": {"shape": "TypeAEvent"},
+              "TypeB": {"shape": "TypeBEvent"},
+              "TypeC": {"shape": "TypeCEvent"}
+          }
+      },
+      "TypeAEvent": {
+          "type": "structure",
+          "event": true,
+          "members": {
+              "Payload": {
+                  "shape": "BlobType",
+                  "eventpayload": true
+              }
+          }
+      },
+      "TypeBEvent": {
+          "type": "structure",
+          "event": true,
+          "members": {
+              "Details": {
+                  "shape": "Details",
+                  "eventpayload": true
+              }
+          }
+      },
+      "TypeCEvent": {
+          "type": "structure",
+          "event": true,
+          "members": {
+              "Details": {
+                  "shape": "Details",
+                  "eventpayload": true
+              },
+              "Boolean": {
+                  "shape": "BooleanType",
+                  "eventheader": true
+              },
+              "Integer": {
+                  "shape": "IntegerType",
+                  "eventheader": true
+              },
+              "Blob": {
+                  "shape": "BlobType",
+                  "eventheader": true
+              },
+              "String": {
+                  "shape": "StringType",
+                  "eventheader": true
+              },
+              "Timestamp": {
+                  "shape": "TimestampType",
+                  "eventheader": true
+              }
+          }
+      },
+      "Details": {
+          "type": "structure",
+          "members": {
+              "StringField": {"shape": "StringType"},
+              "IntegerField": {"shape": "IntegerType"}
+          }
+      },
+      "StringType": {
+        "type": "string"
+      },
+      "IntegerType": {
+        "type": "integer"
+      },
+      "BooleanType": {
+        "type": "boolean"
+      },
+      "TimestampType": {
+        "type": "timestamp"
+      },
+      "BlobType": {
+        "type": "blob"
+      }
+    },
+    "cases": [
+      {
+        "given": {
+          "output": {
+            "shape": "OutputShape"
+          },
+          "name": "OperationName"
+        },
+        "result": {
+          "Payload": [
+              {
+                  "TypeA": {"Payload": "somebytes"}
+              },
+              {
+                  "TypeB": {
+                      "Details": {
+                          "StringField": "somestring",
+                          "IntegerField": 123
+                      }
+                  }
+              }
+          ]
+        },
+        "response": {
+          "status_code": 200,
+          "headers": {},
+          "body": "AAAAbAAAAFPLgkVrDTptZXNzYWdlLXR5cGUHAAVldmVudAs6ZXZlbnQtdHlwZQcABVR5cGVBDTpjb250ZW50LXR5cGUHABhhcHBsaWNhdGlvbi9vY3RldC1zdHJlYW1zb21lYnl0ZXMesj2HAAAAsAAAAEOaMMdXDTptZXNzYWdlLXR5cGUHAAVldmVudAs6ZXZlbnQtdHlwZQcABVR5cGVCDTpjb250ZW50LXR5cGUHAAh0ZXh0L3htbDxUeXBlQiB4bWxucz0iIj48U3RyaW5nRmllbGQ+c29tZXN0cmluZzwvU3RyaW5nRmllbGQ+PEludGVnZXJGaWVsZD4xMjM8L0ludGVnZXJGaWVsZD48L1R5cGVCPiwthPo="
+        }
+      },
+      {
+        "given": {
+          "output": {
+            "shape": "OutputShape"
+          },
+          "name": "OperationName"
+        },
+        "result": {
+          "Payload": [
+              {
+                  "TypeC": {
+                      "Boolean": true,
+                      "Integer": 123,
+                      "Blob": "someblob",
+                      "String": "somestring",
+                      "Timestamp": 1422172800,
+                      "Details": {
+                          "StringField": "somestring",
+                          "IntegerField": 123
+                      }
+                  }
+              }
+          ]
+        },
+        "response": {
+          "status_code": 200,
+          "headers": {},
+          "body": "AAABAQAAAJBjEbY4DTptZXNzYWdlLXR5cGUHAAVldmVudAs6ZXZlbnQtdHlwZQcABVR5cGVDDTpjb250ZW50LXR5cGUHAAh0ZXh0L3htbAdCb29sZWFuAAdJbnRlZ2VyBAAAAHsEQmxvYgYACHNvbWVibG9iBlN0cmluZwcACnNvbWVzdHJpbmcJVGltZXN0YW1wCAAAAUsgGsQAPERldGFpbHMgeG1sbnM9IiI+PFN0cmluZ0ZpZWxkPnNvbWVzdHJpbmc8L1N0cmluZ0ZpZWxkPjxJbnRlZ2VyRmllbGQ+MTIzPC9JbnRlZ2VyRmllbGQ+PC9EZXRhaWxzPhGUvKo="
+        }
+      },
+      {
+        "given": {
+          "output": {
+            "shape": "OutputShape"
+          },
+          "name": "OperationName"
+        },
+        "result": {
+          "Payload": []
+        },
+        "response": {
+          "status_code": 200,
+          "headers": {},
+          "body": ""
+        }
+      }
+    ]
+  }
+]

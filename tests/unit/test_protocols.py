@@ -53,9 +53,11 @@ can set the BOTOCORE_TEST_ID env var with the ``suite_id:test_id`` syntax.
 import os
 import copy
 
+from base64 import b64decode
 from dateutil.tz import tzutc
 
 from botocore.compat import json, OrderedDict
+from botocore.eventstream import EventStream
 from botocore.model import ServiceModel, OperationModel
 from botocore.serialize import EC2Serializer, QuerySerializer, \
         JSONSerializer, RestJSONSerializer, RestXMLSerializer
@@ -131,11 +133,21 @@ def _assert_request_body_is_bytes(body):
                              "bytes(), instead got: %s" % type(body))
 
 
+class MockRawResponse(object):
+    def __init__(self, data):
+        self._data = b64decode(data)
+
+    def stream(self):
+        yield self._data
+
+
 def _test_output(json_description, case, basename):
     service_description = copy.deepcopy(json_description)
+    operation_name = case.get('name', 'OperationName')
     service_description['operations'] = {
-        case.get('name', 'OperationName'): case,
+        operation_name: case,
     }
+    case['response']['context'] = {'operation_name': operation_name}
     try:
         model = ServiceModel(service_description)
         operation_model = OperationModel(case['given'], model)
@@ -143,8 +155,11 @@ def _test_output(json_description, case, basename):
             timestamp_parser=_compliance_timestamp_parser)
         # We load the json as utf-8, but the response parser is at the
         # botocore boundary, so it expects to work with bytes.
-        body = case['response']['body']
-        case['response']['body'] = body.encode('utf-8')
+        body_bytes = case['response']['body'].encode('utf-8')
+        case['response']['body'] = body_bytes
+        # If this is an event stream fake the raw streamed response
+        if operation_model.has_event_stream_output:
+            case['response']['body'] = MockRawResponse(body_bytes)
         parsed = parser.parse(case['response'], operation_model.output_shape)
         parsed = _fixup_parsed_result(parsed)
     except Exception as e:
@@ -180,6 +195,11 @@ def _fixup_parsed_result(parsed):
     # any bytes type, and decode it as utf-8 because we know that's safe for
     # the compliance tests.
     parsed = _convert_bytes_to_str(parsed)
+    # 3. We need to expand the event stream object into the list of events
+    for key, value in parsed.items():
+        if isinstance(value, EventStream):
+            parsed[key] = _convert_bytes_to_str(list(value))
+            break
     return parsed
 
 
