@@ -112,7 +112,8 @@ class TestRecordStatementsInjections(BaseSessionTest):
                 'status_code': 200,
                 'headers': {},
                 'streaming': False,
-                'body': self.s3_response_body
+                'body': self.s3_response_body,
+                'context': {'operation_name': 'ListBuckets'}
             }
         )
         self.assertEqual(source, 'BOTOCORE')

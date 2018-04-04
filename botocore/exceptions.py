@@ -372,6 +372,10 @@ class ClientError(Exception):
         return retry_info
 
 
+class EventStreamError(ClientError):
+    pass
+
+
 class UnsupportedTLSVersionWarning(Warning):
     """Warn when an openssl version that uses TLS 1.2 is required"""
     pass

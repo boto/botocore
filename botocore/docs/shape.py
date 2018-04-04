@@ -59,6 +59,8 @@ class ShapeDocumenter(object):
         :param is_required: If the shape is a required member.
         """
         param_type = shape.type_name
+        if getattr(shape, 'serialization', {}).get('eventstream'):
+            param_type = 'event_stream'
         if shape.name in history:
             self.document_recursive_shape(section, shape, name=name)
         else:
@@ -90,7 +92,8 @@ class ShapeDocumenter(object):
         special_defaults = {
             'jsonvalue_header': '{...}|[...]|123|123.4|\'string\'|True|None',
             'streaming_input_shape': 'b\'bytes\'|file',
-            'streaming_output_shape': 'StreamingBody()'
+            'streaming_output_shape': 'StreamingBody()',
+            'eventstream_output_shape': 'EventStream()',
         }
         return self._get_value_for_special_type(shape, special_defaults)
 
@@ -98,7 +101,8 @@ class ShapeDocumenter(object):
         special_type_names = {
             'jsonvalue_header': 'JSON serializable',
             'streaming_input_shape': 'bytes or seekable file-like object',
-            'streaming_output_shape': ':class:`.StreamingBody`'
+            'streaming_output_shape': ':class:`.StreamingBody`',
+            'eventstream_output_shape': ':class:`.EventStream`',
         }
         return self._get_value_for_special_type(shape, special_type_names)
 
