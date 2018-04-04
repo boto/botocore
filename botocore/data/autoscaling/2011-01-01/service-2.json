@@ -820,7 +820,6 @@
       "required":[
         "ActivityId",
         "AutoScalingGroupName",
-        "Cause",
         "StartTime",
         "StatusCode"
       ],
