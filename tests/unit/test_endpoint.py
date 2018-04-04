@@ -52,6 +52,7 @@ class TestEndpointBase(unittest.TestCase):
     def setUp(self):
         self.op = Mock()
         self.op.has_streaming_output = False
+        self.op.has_event_stream_output = False
         self.op.metadata = {'protocol': 'json'}
         self.event_emitter = Mock()
         self.event_emitter.emit.return_value = []
@@ -156,6 +157,7 @@ class TestRetryInterface(TestEndpointBase):
         op.name = 'DescribeInstances'
         op.metadata = {'protocol': 'query'}
         op.has_streaming_output = False
+        op.has_event_stream_output = False
         self.endpoint.make_request(op, request_dict())
         call_args = self.event_emitter.emit.call_args
         self.assertEqual(call_args[0][0],
@@ -165,6 +167,7 @@ class TestRetryInterface(TestEndpointBase):
         op = Mock()
         op.name = 'DescribeInstances'
         op.metadata = {'protocol': 'json'}
+        op.has_event_stream_output = False
         self.event_emitter.emit.side_effect = [
             [(None, None)],    # Request created.
             [(None, 0)],       # Check if retry needed. Retry needed.
@@ -187,6 +190,7 @@ class TestRetryInterface(TestEndpointBase):
     def test_retry_on_socket_errors(self):
         op = Mock()
         op.name = 'DescribeInstances'
+        op.has_event_stream_output = False
         self.event_emitter.emit.side_effect = [
             [(None, None)],    # Request created.
             [(None, 0)],       # Check if retry needed. Retry needed.
@@ -211,6 +215,7 @@ class TestRetryInterface(TestEndpointBase):
     def test_retry_attempts_added_to_response_metadata(self):
         op = Mock(name='DescribeInstances')
         op.metadata = {'protocol': 'query'}
+        op.has_event_stream_output = False
         self.event_emitter.emit.side_effect = [
             [(None, None)],    # Request created.
             [(None, 0)],       # Check if retry needed. Retry needed.
@@ -225,6 +230,7 @@ class TestRetryInterface(TestEndpointBase):
 
     def test_retry_attempts_is_zero_when_not_retried(self):
         op = Mock(name='DescribeInstances', metadata={'protocol': 'query'})
+        op.has_event_stream_output = False
         self.event_emitter.emit.side_effect = [
             [(None, None)],    # Request created.
             [(None, None)],    # Check if retry needed. Retry needed.
@@ -255,6 +261,7 @@ class TestS3ResetStreamOnRetry(TestEndpointBase):
         body = RecordStreamResets('foobar')
         op.name = 'PutObject'
         op.has_streaming_output = True
+        op.has_event_stream_output = False
         op.metadata = {'protocol': 'rest-xml'}
         request = request_dict()
         request['body'] = body
@@ -268,6 +275,16 @@ class TestS3ResetStreamOnRetry(TestEndpointBase):
         ]
         self.endpoint.make_request(op, request)
         self.assertEqual(body.total_resets, 2)
+
+
+class TestEventStreamBody(TestEndpointBase):
+
+    def test_event_stream_body_is_streaming(self):
+        self.op.has_event_stream_output = True
+        request = request_dict()
+        self.endpoint.make_request(self.op, request)
+        args = self.http_session.send.call_args[1]
+        self.assertTrue(args.get('stream'))
 
 
 class TestEndpointCreator(unittest.TestCase):

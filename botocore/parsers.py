@@ -65,6 +65,30 @@ come from other parts of the HTTP response.  Classes like the
 XML body parsing logic and the ``BaseRestParser`` to get the HTTP
 header/status code/query string parsing.
 
+Additionally, there are event stream parsers that are used by the other parsers
+to wrap streaming bodies that represent a stream of events. The
+BaseEventStreamParser extends from ResponseParser and defines the logic for
+parsing values from the headers and payload of a message from the underlying
+binary encoding protocol. Currently, event streams support parsing bodies
+encoded as JSON and XML through the following hierarchy.
+
+
+                                  +--------------+
+                                  |ResponseParser|
+                                  +--------------+
+                                    ^    ^    ^
+               +--------------------+    |    +------------------+
+               |                         |                       |
+    +----------+----------+   +----------+----------+    +-------+------+
+    |BaseXMLResponseParser|   |BaseEventStreamParser|    |BaseJSONParser|
+    +---------------------+   +---------------------+    +--------------+
+                     ^                ^        ^                 ^
+                     |                |        |                 |
+                     |                |        |                 |
+                   +-+----------------+-+    +-+-----------------+-+
+                   |EventStreamXMLParser|    |EventStreamJSONParser|
+                   +--------------------+    +---------------------+
+
 Return Values
 =============
 
@@ -97,6 +121,7 @@ import xml.etree.cElementTree
 import logging
 
 from botocore.compat import six, XMLParseError
+from botocore.eventstream import EventStream
 
 from botocore.utils import parse_timestamp, merge_dicts, \
     is_json_value_header
@@ -169,6 +194,7 @@ class ResponseParser(object):
 
     """
     DEFAULT_ENCODING = 'utf-8'
+    EVENT_STREAM_PARSER_CLS = None
 
     def __init__(self, timestamp_parser=None, blob_parser=None):
         if timestamp_parser is None:
@@ -177,6 +203,10 @@ class ResponseParser(object):
         if blob_parser is None:
             blob_parser = self._default_blob_parser
         self._blob_parser = blob_parser
+        self._event_stream_parser = None
+        if self.EVENT_STREAM_PARSER_CLS is not None:
+            self._event_stream_parser = self.EVENT_STREAM_PARSER_CLS(
+                timestamp_parser, blob_parser)
 
     def _default_blob_parser(self, value):
         # Blobs are always returned as bytes type (this matters on python3).
@@ -210,6 +240,10 @@ class ResponseParser(object):
                 parsed = self._do_error_parse(response, shape)
         else:
             parsed = self._do_parse(response, shape)
+
+        # We don't want to decorate event stream responses with metadata
+        if shape and shape.serialization.get('eventstream'):
+            return parsed
 
         # Add ResponseMetadata if it doesn't exist and inject the HTTP
         # status code and headers from the response.
@@ -319,7 +353,8 @@ class BaseXMLResponseParser(ResponseParser):
         xml_dict = self._build_name_to_xml_node(node)
         for member_name in members:
             member_shape = members[member_name]
-            if 'location' in member_shape.serialization:
+            if 'location' in member_shape.serialization or \
+               member_shape.serialization.get('eventheader'):
                 # All members with locations have already been handled,
                 # so we don't need to parse these members.
                 continue
@@ -600,6 +635,86 @@ class JSONParser(BaseJSONParser):
         return parsed
 
 
+class BaseEventStreamParser(ResponseParser):
+
+    def _do_parse(self, response, shape):
+        final_parsed = {}
+        if shape.serialization.get('eventstream'):
+            event_type = response['headers'].get(':event-type')
+            event_shape = shape.members.get(event_type)
+            if event_shape:
+                final_parsed[event_type] = self._do_parse(response, event_shape)
+        else:
+            self._parse_non_payload_attrs(response, shape,
+                                          shape.members, final_parsed)
+            self._parse_payload(response, shape, shape.members, final_parsed)
+        return final_parsed
+
+    def _do_error_parse(self, response, shape):
+        error = {
+            'Error': {
+                'Code': response['headers'].get(':error-code', ''),
+                'Message': response['headers'].get(':error-message', ''),
+            }
+        }
+        return error
+
+    def _parse_payload(self, response, shape, member_shapes, final_parsed):
+        if shape.serialization.get('event'):
+            for name in member_shapes:
+                member_shape = member_shapes[name]
+                if member_shape.serialization.get('eventpayload'):
+                    body = response['body']
+                    if member_shape.type_name == 'blob':
+                        parsed_body = body
+                    elif member_shape.type_name == 'string':
+                        parsed_body = body.decode(self.DEFAULT_ENCODING)
+                    else:
+                        raw_parse = self._initial_body_parse(body)
+                        parsed_body = self._parse_shape(member_shape, raw_parse)
+                    final_parsed[name] = parsed_body
+                    return
+            # If we didn't find an explicit payload, use the current shape
+            original_parsed = self._initial_body_parse(response['body'])
+            body_parsed = self._parse_shape(shape, original_parsed)
+            final_parsed.update(body_parsed)
+
+    def _parse_non_payload_attrs(self, response, shape,
+                                 member_shapes, final_parsed):
+        headers = response['headers']
+        for name in member_shapes:
+            member_shape = member_shapes[name]
+            if member_shape.serialization.get('eventheader'):
+                if name in headers:
+                    value = headers[name]
+                    if member_shape.type_name == 'timestamp':
+                        # Event stream timestamps are an in milleseconds so we
+                        # divide by 1000 to convert to seconds.
+                        value = self._timestamp_parser(value / 1000.0)
+                    final_parsed[name] = value
+
+    def _initial_body_parse(self, body_contents):
+        # This method should do the initial xml/json parsing of the
+        # body.  We we still need to walk the parsed body in order
+        # to convert types, but this method will do the first round
+        # of parsing.
+        raise NotImplementedError("_initial_body_parse")
+
+
+class EventStreamJSONParser(BaseEventStreamParser, BaseJSONParser):
+
+    def _initial_body_parse(self, body_contents):
+        return self._parse_body_as_json(body_contents)
+
+
+class EventStreamXMLParser(BaseEventStreamParser, BaseXMLResponseParser):
+
+    def _initial_body_parse(self, xml_string):
+        if not xml_string:
+            return xml.etree.cElementTree.Element('')
+        return self._parse_xml_string_to_dom(xml_string)
+
+
 class BaseRestParser(ResponseParser):
 
     def _do_parse(self, response, shape):
@@ -633,7 +748,12 @@ class BaseRestParser(ResponseParser):
             # shape is used for the body payload.
             payload_member_name = shape.serialization['payload']
             body_shape = member_shapes[payload_member_name]
-            if body_shape.type_name in ['string', 'blob']:
+            if body_shape.serialization.get('eventstream'):
+                parser = self._event_stream_parser
+                name = response['context'].get('operation_name')
+                body = EventStream(response['body'], body_shape, parser, name)
+                final_parsed[payload_member_name] = body
+            elif body_shape.type_name in ['string', 'blob']:
                 # This is a stream
                 body = response['body']
                 if isinstance(body, bytes):
@@ -698,6 +818,8 @@ class BaseRestParser(ResponseParser):
 
 class RestJSONParser(BaseRestParser, BaseJSONParser):
 
+    EVENT_STREAM_PARSER_CLS = EventStreamJSONParser
+
     def _initial_body_parse(self, body_contents):
         return self._parse_body_as_json(body_contents)
 
@@ -722,6 +844,8 @@ class RestJSONParser(BaseRestParser, BaseJSONParser):
 
 
 class RestXMLParser(BaseRestParser, BaseXMLResponseParser):
+
+    EVENT_STREAM_PARSER_CLS = EventStreamXMLParser
 
     def _initial_body_parse(self, xml_string):
         if not xml_string:

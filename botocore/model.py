@@ -49,6 +49,7 @@ class Shape(object):
     SERIALIZED_ATTRS = ['locationName', 'queryName', 'flattened', 'location',
                         'payload', 'streaming', 'timestampFormat',
                         'xmlNamespace', 'resultWrapper', 'xmlAttribute',
+                        'eventstream', 'event', 'eventheader', 'eventpayload',
                         'jsonvalue']
     METADATA_ATTRS = ['required', 'min', 'max', 'sensitive', 'enum',
                       'idempotencyToken', 'error', 'exception']
@@ -437,6 +438,29 @@ class OperationModel(object):
     def error_shapes(self):
         shapes = self._operation_model.get("errors", [])
         return list(self._service_model.resolve_shape_ref(s) for s in shapes)
+
+    @CachedProperty
+    def has_event_stream_input(self):
+        return self.get_event_stream_input() is not None
+
+    @CachedProperty
+    def has_event_stream_output(self):
+        return self.get_event_stream_output() is not None
+
+    def get_event_stream_input(self):
+        return self._get_event_stream(self.input_shape)
+
+    def get_event_stream_output(self):
+        return self._get_event_stream(self.output_shape)
+
+    def _get_event_stream(self, shape):
+        """Returns the event stream member's shape if any or None otherwise."""
+        if shape is None:
+            return None
+        for member in shape.members.values():
+            if member.serialization.get('eventstream'):
+                return member
+        return None
 
     @CachedProperty
     def has_streaming_input(self):

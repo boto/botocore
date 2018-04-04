@@ -30,8 +30,8 @@ from botocore.exceptions import ConnectionClosedError
 from botocore.compat import filter_ssl_warnings
 from botocore.utils import is_valid_endpoint_url
 from botocore.hooks import first_non_none_response
-from botocore.response import StreamingBody
 from botocore.history import get_global_history_recorder
+from botocore.response import StreamingBody
 from botocore import parsers
 
 
@@ -67,12 +67,17 @@ def convert_to_response_dict(http_response, operation_model):
     response_dict = {
         'headers': http_response.headers,
         'status_code': http_response.status_code,
+        'context': {
+            'operation_name': operation_model.name,
+        }
     }
     if response_dict['status_code'] >= 300:
         response_dict['body'] = http_response.content
+    elif operation_model.has_event_stream_output:
+        response_dict['body'] = http_response.raw
     elif operation_model.has_streaming_output:
-        response_dict['body'] = StreamingBody(
-            http_response.raw, response_dict['headers'].get('content-length'))
+        length = response_dict['headers'].get('content-length')
+        response_dict['body'] = StreamingBody(http_response.raw, length)
     else:
         response_dict['body'] = http_response.content
     return response_dict
@@ -207,9 +212,13 @@ class Endpoint(object):
                 'url': request.url,
                 'body': request.body
             })
+            streaming = any([
+                operation_model.has_streaming_output,
+                operation_model.has_event_stream_output
+            ])
             http_response = self.http_session.send(
                 request, verify=self.verify,
-                stream=operation_model.has_streaming_output,
+                stream=streaming,
                 proxies=self.proxies, timeout=self.timeout)
         except ConnectionError as e:
             # For a connection error, if it looks like it's a DNS
@@ -234,16 +243,15 @@ class Endpoint(object):
                          exc_info=True)
             return (None, e)
         # This returns the http_response and the parsed_data.
-        response_dict = convert_to_response_dict(http_response,
-                                                 operation_model)
+        response_dict = convert_to_response_dict(http_response, operation_model)
 
         http_response_record_dict = response_dict.copy()
         http_response_record_dict['streaming'] = \
             operation_model.has_streaming_output
         history_recorder.record('HTTP_RESPONSE', http_response_record_dict)
 
-        parser = self._response_parser_factory.create_parser(
-            operation_model.metadata['protocol'])
+        protocol = operation_model.metadata['protocol']
+        parser = self._response_parser_factory.create_parser(protocol)
         parsed_response = parser.parse(
             response_dict, operation_model.output_shape)
         history_recorder.record('PARSED_RESPONSE', parsed_response)
