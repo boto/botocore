@@ -6283,32 +6283,6 @@
       },
       "documentation": "The updated channel's description."
     },
-    "UpdateInput": {
-      "type": "structure",
-      "members": {
-        "Destinations": {
-          "shape": "__listOfInputDestinationRequest",
-          "locationName": "destinations",
-          "documentation": "Destination settings for PUSH type inputs."
-        },
-        "InputSecurityGroups": {
-          "shape": "__listOf__string",
-          "locationName": "inputSecurityGroups",
-          "documentation": "A list of security groups referenced by IDs to attach to the input."
-        },
-        "Name": {
-          "shape": "__string",
-          "locationName": "name",
-          "documentation": "Name of the input."
-        },
-        "Sources": {
-          "shape": "__listOfInputSourceRequest",
-          "locationName": "sources",
-          "documentation": "The source URLs for a PULL-type input. Every PULL type input needs\nexactly two source URLs for redundancy.\nOnly specify sources for PULL type Inputs. Leave Destinations empty.\n"
-        }
-      },
-      "documentation": "Placeholder documentation for UpdateInput"
-    },
     "UpdateInputRequest": {
       "type": "structure",
       "members": {
