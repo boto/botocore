@@ -1,0 +1,5 @@
+{
+  "type": "enhancement",
+  "category": "shield",
+  "description": "Added paginator for list_protections operation."
+}
