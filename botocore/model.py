@@ -52,7 +52,8 @@ class Shape(object):
                         'eventstream', 'event', 'eventheader', 'eventpayload',
                         'jsonvalue']
     METADATA_ATTRS = ['required', 'min', 'max', 'sensitive', 'enum',
-                      'idempotencyToken', 'error', 'exception']
+                      'idempotencyToken', 'error', 'exception',
+                      'cliArgumentName']
     MAP_TYPE = OrderedDict
 
     def __init__(self, shape_name, shape_model, shape_resolver=None):
@@ -133,6 +134,7 @@ class Shape(object):
             * sensitive
             * required
             * idempotencyToken
+            * cliArgumentName
 
         :rtype: dict
         :return: Metadata about the shape.

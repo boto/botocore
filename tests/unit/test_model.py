@@ -616,6 +616,10 @@ class TestShapeResolver(unittest.TestCase):
                 'members': {
                     'OldPassword': {'shape': 'passwordType'},
                     'NewPassword': {'shape': 'passwordType'},
+                    'Region': {
+                        'shape': 'Region',
+                        'cliArgumentName': 'password-region',
+                    }
                 }
             },
             'passwordType': {
@@ -623,7 +627,8 @@ class TestShapeResolver(unittest.TestCase):
                 "min":1,
                 "max":128,
                 "sensitive":True
-            }
+            },
+            'Region': {"type": "string"}
         }
         resolver = model.ShapeResolver(shapes)
         shape = resolver.get_shape_by_name('ChangePasswordRequest')
@@ -633,6 +638,8 @@ class TestShapeResolver(unittest.TestCase):
         self.assertEqual(member.metadata['min'], 1)
         self.assertEqual(member.metadata['max'], 128)
         self.assertEqual(member.metadata['sensitive'], True)
+        member = shape.members["Region"]
+        self.assertEqual(member.metadata["cliArgumentName"], "password-region")
 
     def test_shape_list(self):
         shapes = {
