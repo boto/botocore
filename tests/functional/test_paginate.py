@@ -40,9 +40,9 @@ def mock_endpoints(endpoint_services=['s3', 's3', 'dynamodb', 's3'],
                                    'Action': '*', 'Resource': '*'}]}),
                 'RouteTableIds': ['rtb-{}'.format(str(uuid.uuid4())[0:8])],
                 'SubnetIds': [],
-                'Groups': [{ 'GroupId': 'string', 'GroupName': 'string' }],
+                'Groups': [{'GroupId': 'string', 'GroupName': 'string'}],
                 'PrivateDnsEnabled': False,
-                'DnsEntries': [{'DnsName': 'string','HostedZoneId': 'string'}],
+                'DnsEntries': [{'DnsName': 'string', 'HostedZoneId': 'string'}],  # noqa E501
                 'NetworkInterfaceIds': ['string'],
                 'CreationTimestamp': '1952-03-11T12:29:42Z'
         })
@@ -66,11 +66,11 @@ class TestVPCEndpointPagination(BaseSessionTest):
             expected_responses = len(stubber._queue)
             expected_endpoint_services = sorted(e['ServiceName'] for q in stubber._queue for e in q['response'][1]['VpcEndpoints'])  # noqa E501
             paginator = self.client.get_paginator('describe_vpc_endpoints')
-            response = paginator.paginate(**{'MaxResults': 100})  # MaxResults doesnt work in Stubber is done via AWS.
+            response = paginator.paginate(**{'MaxResults': 100})  # noqa E501 MaxResults doesnt work in Stubber is done via AWS.
             for entry in response:
                 self.assertEqual(entry.get('NextToken'), next_token.pop(0))
                 endpoints.extend(entry['VpcEndpoints'])
-        self.assertEqual(len(endpoints), expected_responses * 2)  # two endpoints per pagination
+        self.assertEqual(len(endpoints), expected_responses * 2)  # noqa E501 two endpoints per pagination
         self.assertEqual(sorted(e['ServiceName'] for e in endpoints), expected_endpoint_services)    # noqa E501
         stubber.assert_no_pending_responses()
 
@@ -86,7 +86,7 @@ class TestVPCEndpointPagination(BaseSessionTest):
             expected_responses = len(stubber._queue)
             expected_endpoint_services = sorted(e['ServiceName'] for q in stubber._queue for e in q['response'][1]['VpcEndpoints'])  # noqa E501
             paginator = self.client.get_paginator('describe_vpc_endpoints')
-            response = paginator.paginate(**{'MaxResults': 2})  # MaxResults doesnt work in Stubber is done via AWS.
+            response = paginator.paginate(**{'MaxResults': 2})  # noqa E501 MaxResults doesnt work in Stubber is done via AWS.
             for entry in response:
                 self.assertEqual(entry.get('NextToken'), next_token.pop(0))
                 endpoints.extend(entry['VpcEndpoints'])
@@ -127,7 +127,7 @@ class TestVPCEndpointPagination(BaseSessionTest):
             for entry in response:
                 self.assertEqual(entry.get('NextToken'), next_token.pop(0))
                 endpoints.extend(entry['VpcEndpoints'])
-        self.assertEqual(len(endpoints), expected_responses * 0)  # should be no endpoints
+        self.assertEqual(len(endpoints), expected_responses * 0)  # noqa E501 should be no endpoints
         self.assertEqual(sorted(e['ServiceName'] for e in endpoints), expected_endpoint_services)                                    # noqa E501
         stubber.assert_no_pending_responses()
 
@@ -188,7 +188,7 @@ class TestAutoscalingPagination(BaseSessionTest):
         self.stubber.activate()
 
     def _setup_scaling_pagination(self, page_size=200, max_items=100,
-                                 total_items=600):
+                                  total_items=600):
         """
         Add to the stubber to test paginating describe_scaling_activities.
 
