@@ -29,16 +29,16 @@ def mock_endpoints(endpoint_services=['s3', 's3', 'dynamodb', 's3'],
     endpoints = {'VpcEndpoints': []}
     for service in endpoint_services:
         endpoints['VpcEndpoints'].append({
-                'VpcEndpointId': 'vpce-{}'.format(str(uuid.uuid4())[0:8]),
+                'VpcEndpointId': 'vpce-{0}'.format(str(uuid.uuid4())[0:8]),
                 'VpcEndpointType': 'Gateway',  # Interface
-                'VpcId': 'vpc-{}'.format(str(uuid.uuid4())[0:8]),
-                'ServiceName': 'com.amazonaws.{}.{}'.format(region, service),
+                'VpcId': 'vpc-{0}'.format(str(uuid.uuid4())[0:8]),
+                'ServiceName': 'com.amazonaws.{0}.{1}'.format(region, service),
                 'State': 'Available',
                 'PolicyDocument': json.dumps({
                     'Version': '2008-10-17',
                     'Statement': [{'Effect': 'Allow', 'Principal': '*',
                                    'Action': '*', 'Resource': '*'}]}),
-                'RouteTableIds': ['rtb-{}'.format(str(uuid.uuid4())[0:8])],
+                'RouteTableIds': ['rtb-{0}'.format(str(uuid.uuid4())[0:8])],
                 'SubnetIds': [],
                 'Groups': [{'GroupId': 'string', 'GroupName': 'string'}],
                 'PrivateDnsEnabled': False,
