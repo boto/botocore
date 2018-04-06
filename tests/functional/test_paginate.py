@@ -11,16 +11,125 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from __future__ import division
+
+import json
+import uuid
 from math import ceil
 from datetime import datetime
-
 from nose.tools import assert_equal
-
 from tests import random_chars
 from tests import BaseSessionTest
 from botocore.stub import Stubber, StubAssertionError
 from botocore.paginate import TokenDecoder, TokenEncoder
 from botocore.compat import six
+
+
+def mock_endpoints(endpoint_services=['s3', 's3', 'dynamodb', 's3'],
+                   more_endpoints=None, region='us-west-2'):
+    endpoints = {'VpcEndpoints': []}
+    for service in endpoint_services:
+        endpoints['VpcEndpoints'].append({
+                'VpcEndpointId': 'vpce-{}'.format(str(uuid.uuid4())[0:8]),
+                'VpcEndpointType': 'Gateway',  # Interface
+                'VpcId': 'vpc-{}'.format(str(uuid.uuid4())[0:8]),
+                'ServiceName': 'com.amazonaws.{}.{}'.format(region, service),
+                'State': 'Available',
+                'PolicyDocument': json.dumps({
+                    'Version': '2008-10-17',
+                    'Statement': [{'Effect': 'Allow', 'Principal': '*',
+                                   'Action': '*', 'Resource': '*'}]}),
+                'RouteTableIds': ['rtb-{}'.format(str(uuid.uuid4())[0:8])],
+                'SubnetIds': [],
+                'Groups': [{ 'GroupId': 'string', 'GroupName': 'string' }],
+                'PrivateDnsEnabled': False,
+                'DnsEntries': [{'DnsName': 'string','HostedZoneId': 'string'}],
+                'NetworkInterfaceIds': ['string'],
+                'CreationTimestamp': '1952-03-11T12:29:42Z'
+        })
+    if more_endpoints:
+        endpoints['NextToken'] = more_endpoints
+    return endpoints
+
+
+class TestVPCEndpointPagination(BaseSessionTest):
+    def setUp(self):
+        super(TestVPCEndpointPagination, self).setUp()
+        self.region = 'us-west-2'
+        self.client = self.session.create_client('ec2', self.region)
+
+    def test_paginate_describe_vpcendpoints_no_paginated_data(self):
+        endpoints = []
+        next_token = [None]
+        self.assertTrue(self.client.can_paginate('describe_vpc_endpoints'))
+        with Stubber(self.client) as stubber:
+            stubber.add_response('describe_vpc_endpoints', mock_endpoints(['s3', 'dynamodb']))                                       # noqa E501
+            expected_responses = len(stubber._queue)
+            expected_endpoint_services = sorted(e['ServiceName'] for q in stubber._queue for e in q['response'][1]['VpcEndpoints'])  # noqa E501
+            paginator = self.client.get_paginator('describe_vpc_endpoints')
+            response = paginator.paginate(**{'MaxResults': 100})  # MaxResults doesnt work in Stubber is done via AWS.
+            for entry in response:
+                self.assertEqual(entry.get('NextToken'), next_token.pop(0))
+                endpoints.extend(entry['VpcEndpoints'])
+        self.assertEqual(len(endpoints), expected_responses * 2)  # two endpoints per pagination
+        self.assertEqual(sorted(e['ServiceName'] for e in endpoints), expected_endpoint_services)    # noqa E501
+        stubber.assert_no_pending_responses()
+
+    def test_can_paginate_describe_vpcendpoints(self):
+        endpoints = []
+        next_token = ['moreData1', 'moreData2', 'moreData3', None]
+        self.assertTrue(self.client.can_paginate('describe_vpc_endpoints'))
+        with Stubber(self.client) as stubber:
+            stubber.add_response('describe_vpc_endpoints', mock_endpoints(['s3', 's3'], next_token[0]))                     # noqa E501
+            stubber.add_response('describe_vpc_endpoints', mock_endpoints(['dynamodb', 'dynamodb'], next_token[1]))         # noqa E501
+            stubber.add_response('describe_vpc_endpoints', mock_endpoints(['dynamodb', 's3'], next_token[2]))               # noqa E501
+            stubber.add_response('describe_vpc_endpoints', mock_endpoints(['s3', 'elb']))                                   # noqa E501
+            expected_responses = len(stubber._queue)
+            expected_endpoint_services = sorted(e['ServiceName'] for q in stubber._queue for e in q['response'][1]['VpcEndpoints'])  # noqa E501
+            paginator = self.client.get_paginator('describe_vpc_endpoints')
+            response = paginator.paginate(**{'MaxResults': 2})  # MaxResults doesnt work in Stubber is done via AWS.
+            for entry in response:
+                self.assertEqual(entry.get('NextToken'), next_token.pop(0))
+                endpoints.extend(entry['VpcEndpoints'])
+        self.assertEqual(len(endpoints), expected_responses * 2)
+        self.assertEqual(sorted(e['ServiceName'] for e in endpoints), expected_endpoint_services)    # noqa E501
+        stubber.assert_no_pending_responses()
+
+    def test_paginate_describe_vpcendpoint_honour_next_token(self):
+        endpoints = []
+        next_token = ['moreData1', None]
+        self.assertTrue(self.client.can_paginate('describe_vpc_endpoints'))
+        with Stubber(self.client) as stubber:
+            stubber.add_response('describe_vpc_endpoints', mock_endpoints(['s3', 's3'], next_token[0]))                     # noqa E501
+            stubber.add_response('describe_vpc_endpoints', mock_endpoints(['dynamodb', 'dynamodb']))                        # noqa E501
+            expected_responses = len(stubber._queue)
+            stubber.add_response('describe_vpc_endpoints', mock_endpoints(['dynamodb', 's3']))          # noqa E501
+            stubber.add_response('describe_vpc_endpoints', mock_endpoints(['s3', 'elb']))               # noqa E501
+            expected_endpoint_services = sorted(e['ServiceName'] for q in stubber._queue for e in q['response'][1]['VpcEndpoints'])  # noqa E501
+            paginator = self.client.get_paginator('describe_vpc_endpoints')
+            response = paginator.paginate(**{'MaxResults': 2})
+            for entry in response:
+                self.assertEqual(entry.get('NextToken'), next_token.pop(0))
+                endpoints.extend(entry['VpcEndpoints'])
+        self.assertEqual(len(endpoints), expected_responses * 2)
+        self.assertNotEqual(sorted(e['ServiceName'] for e in endpoints), expected_endpoint_services)                                # noqa E501
+        self.assertTrue(len(stubber._queue) == 2)
+
+    def test_paginate_describe_vpcendpoints_no_endpoints(self):
+        endpoints = []
+        next_token = [None]
+        self.assertTrue(self.client.can_paginate('describe_vpc_endpoints'))
+        with Stubber(self.client) as stubber:
+            stubber.add_response('describe_vpc_endpoints', mock_endpoints(endpoint_services=[]))                                     # noqa E501
+            expected_responses = len(stubber._queue)
+            expected_endpoint_services = sorted(e['ServiceName'] for q in stubber._queue for e in q['response'][1]['VpcEndpoints'])  # noqa E501
+            paginator = self.client.get_paginator('describe_vpc_endpoints')
+            response = paginator.paginate(**{'MaxResults': 100})
+            for entry in response:
+                self.assertEqual(entry.get('NextToken'), next_token.pop(0))
+                endpoints.extend(entry['VpcEndpoints'])
+        self.assertEqual(len(endpoints), expected_responses * 0)  # should be no endpoints
+        self.assertEqual(sorted(e['ServiceName'] for e in endpoints), expected_endpoint_services)                                    # noqa E501
+        stubber.assert_no_pending_responses()
 
 
 class TestRDSPagination(BaseSessionTest):
