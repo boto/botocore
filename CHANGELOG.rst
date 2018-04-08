@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+1.10.2
+======
+
+* api-change:``batch``: Update batch client to latest version
+
+
+1.10.1
+======
+
+* enhancement:shield: Added paginator for list_protections operation.
+* api-change:``ssm``: Update ssm client to latest version
+
+
 1.10.0
 ======
 
