@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.10.3
+======
+
+* api-change:``clouddirectory``: Update clouddirectory client to latest version
+
+
 1.10.2
 ======
 
