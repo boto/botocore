@@ -24,9 +24,12 @@ def find_version(*file_paths):
 
 
 requires = ['jmespath>=0.7.1,<1.0.0',
-            'python-dateutil>=2.1,<2.7.0',
             'docutils>=0.10']
-
+if sys.version_info <= (2, 7):
+    # python-dateutil 2.7.0 dropped support for py26.
+    requires.append('python-dateutil>=2.1,<2.7.0')
+else:
+    requires.append('python-dateutil>=2.1,<3.0.0')
 
 if sys.version_info[:2] == (2, 6):
     # For python2.6 we have a few other dependencies.
