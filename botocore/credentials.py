@@ -1269,7 +1269,7 @@ class AssumeRoleProvider(CredentialProvider):
         credential_source = profile.get('credential_source')
         mfa_serial = profile.get('mfa_serial')
         external_id = profile.get('external_id')
-        duration_seconds = int(profile.get('duration_seconds'))
+        duration_seconds = int(profile.get('duration_seconds') or 3600)
         role_session_name = profile.get('role_session_name')
 
         role_config = {
