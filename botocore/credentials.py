@@ -1234,6 +1234,10 @@ class AssumeRoleProvider(CredentialProvider):
         if mfa_serial is not None:
             extra_args['SerialNumber'] = mfa_serial
 
+        duration_seconds = role_config.get('duration_seconds')
+        if duration_seconds is not None:
+            extra_args['DurationSeconds'] = duration_seconds
+
         fetcher = AssumeRoleCredentialFetcher(
             client_creator=self._client_creator,
             source_credentials=source_credentials,
@@ -1265,12 +1269,14 @@ class AssumeRoleProvider(CredentialProvider):
         credential_source = profile.get('credential_source')
         mfa_serial = profile.get('mfa_serial')
         external_id = profile.get('external_id')
+        duration_seconds = int(profile.get('duration_seconds'))
         role_session_name = profile.get('role_session_name')
 
         role_config = {
             'role_arn': role_arn,
             'external_id': external_id,
             'mfa_serial': mfa_serial,
+            'duration_seconds': duration_seconds,
             'role_session_name': role_session_name,
             'source_profile': source_profile,
             'credential_source': credential_source
