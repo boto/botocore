@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.10.4
+======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``workmail``: Update workmail client to latest version
+* api-change:``dms``: Update dms client to latest version
+* api-change:``mediapackage``: Update mediapackage client to latest version
+* api-change:``glue``: Update glue client to latest version
+
+
 1.10.3
 ======
 
