@@ -23,23 +23,17 @@ def find_version(*file_paths):
     raise RuntimeError("Unable to find version string.")
 
 
-requires = ['jmespath>=0.7.1,<1.0.0',
-            'python-dateutil>=2.1,<2.7.0',
-            'docutils>=0.10']
-
-
-if sys.version_info[:2] == (2, 6):
-    # For python2.6 we have a few other dependencies.
-    # First we need an ordered dictionary so we use the
-    # 2.6 backport.
-    requires.append('ordereddict==1.1')
-    # Then we need simplejson.  This is because we need
-    # a json version that allows us to specify we want to
-    # use an ordereddict instead of a normal dict for the
-    # JSON objects.  The 2.7 json module has this.  For 2.6
-    # we need simplejson.
-    requires.append('simplejson==3.3.0')
-
+requires = [ 'docutils>=0.10',
+             'jmespath>=0.7.1,<1.0.0',
+             # required for ordered dictionary support in python2.6
+             'ordereddict==1.1;python_version=="2.6"',
+             # the latest version that supports python2.6 is 2.6.*
+             'python-dateutil>=2.1,<2.7.0;python_version=="2.6"',
+             'python-dateutil>=2.1,<3.0.0;python_version>="2.7"',
+             # requrired for a json version that allows specification of
+             # ordereddict use instead of a normal dict for json objects
+             # in python2.6
+             'simplejson==3.3.0;python_version=="2.6"' ]
 
 setup(
     name='botocore',
