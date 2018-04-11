@@ -1,0 +1,27 @@
+[
+  {
+    "category": "``ssm``", 
+    "description": "Update ssm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``workmail``", 
+    "description": "Update workmail client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``dms``", 
+    "description": "Update dms client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``mediapackage``", 
+    "description": "Update mediapackage client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``glue``", 
+    "description": "Update glue client to latest version", 
+    "type": "api-change"
+  }
+]
