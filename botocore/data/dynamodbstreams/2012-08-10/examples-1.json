@@ -8,7 +8,7 @@
         },
         "output": {
           "StreamDescription": {
-            "CreationRequestDateTime": "Wed May 20 13:51:10 PDT 2015",
+            "CreationRequestDateTime": "Wed May 20 13:51:10 UTC 2015",
             "KeySchema": [
               {
                 "AttributeName": "ForumName",
