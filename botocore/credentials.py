@@ -1236,7 +1236,7 @@ class AssumeRoleProvider(CredentialProvider):
 
         duration_seconds = role_config.get('duration_seconds')
         if duration_seconds is not None:
-            extra_args['DurationSeconds'] = duration_seconds
+            extra_args['DurationSeconds'] = int(duration_seconds)
 
         fetcher = AssumeRoleCredentialFetcher(
             client_creator=self._client_creator,
@@ -1269,7 +1269,7 @@ class AssumeRoleProvider(CredentialProvider):
         credential_source = profile.get('credential_source')
         mfa_serial = profile.get('mfa_serial')
         external_id = profile.get('external_id')
-        duration_seconds = int(profile.get('duration_seconds') or 3600)
+        duration_seconds = profile.get('duration_seconds')
         role_session_name = profile.get('role_session_name')
 
         role_config = {
