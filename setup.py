@@ -54,6 +54,7 @@ setup(
                   'botocore.vendored.requests': ['*.pem']},
     include_package_data=True,
     install_requires=requires,
+    python_requires=">=2.6, !=3.0.*, !=3.1.*, !=3.2.*",
     extras_require={
         ':python_version=="2.6"': [
             'ordereddict==1.1',
