@@ -1578,12 +1578,12 @@ class AssumeRoleProvider(CredentialProvider):
 
         if not self._get_session_token_provider_creator and \
                 GetSessionTokenProvider.GET_SESSION_TOKEN_CONFIG_VAR in \
-                profiles[source_profile]:
+                source_profile:
             raise InvalidConfigError(error_msg=(
                     'The %s parameter is specified in profile "%s", '
                     'but no get session token provider was configured.' % (
                         GetSessionTokenProvider.GET_SESSION_TOKEN_CONFIG_VAR,
-                        parent_profile)
+                        parent_profile_name)
             ))
 
         # Make sure we aren't going into an infinite loop. If we haven't
