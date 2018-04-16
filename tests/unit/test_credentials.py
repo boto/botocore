@@ -1773,6 +1773,28 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         client.assume_role.assert_called_with(
             RoleArn='myrole', ExternalId='myid', RoleSessionName=mock.ANY)
 
+    def test_duration_seconds_provided(self):
+        self.fake_config['profiles']['development']['duration_seconds'] = '9001'
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat(),
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        provider = credentials.AssumeRoleProvider(
+            self.create_config_loader(),
+            client_creator, cache={}, profile_name='development')
+
+        # The credentials won't actually be assumed until they're requested.
+        provider.load().get_frozen_credentials()
+
+        client = client_creator.return_value
+        client.assume_role.assert_called_with(
+            RoleArn='myrole', DurationSeconds=9001, RoleSessionName=mock.ANY)
+
     def test_assume_role_with_mfa(self):
         self.fake_config['profiles']['development']['mfa_serial'] = 'mfa'
         response = {
