@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.10.6
+======
+
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``firehose``: Update firehose client to latest version
+
+
 1.10.5
 ======
 
