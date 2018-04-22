@@ -2,6 +2,25 @@
 CHANGELOG
 =========
 
+1.10.6
+======
+
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``firehose``: Update firehose client to latest version
+
+
+1.10.5
+======
+
+* api-change:``ce``: Update ce client to latest version
+* api-change:``codepipeline``: Update codepipeline client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``devicefarm``: Update devicefarm client to latest version
+
+
 1.10.4
 ======
 
