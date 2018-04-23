@@ -170,5 +170,95 @@
         }
       }
     ]
+  },
+  {
+    "description": "RPC JSON Event Stream",
+    "metadata": {
+      "protocol": "json"
+    },
+    "shapes": {
+      "OutputShape": {
+        "type": "structure",
+        "members": {
+            "Payload": {"shape": "EventStream"},
+            "InitialResponse": {"shape": "StringType"}
+        }
+      },
+      "EventStream": {
+          "type": "structure",
+          "eventstream": true,
+          "members": {
+              "TypeA": {"shape": "TypeAEvent"},
+              "TypeB": {"shape": "TypeBEvent"}
+          }
+      },
+      "TypeAEvent": {
+          "type": "structure",
+          "event": true,
+          "members": {
+              "Payload": {
+                  "shape": "BlobType",
+                  "eventpayload": true
+              }
+          }
+      },
+      "TypeBEvent": {
+          "type": "structure",
+          "event": true,
+          "members": {
+              "Details": {
+                  "shape": "Details",
+                  "eventpayload": true
+              }
+          }
+      },
+      "Details": {
+          "type": "structure",
+          "members": {
+              "StringField": {"shape": "StringType"},
+              "IntegerField": {"shape": "IntegerType"}
+          }
+      },
+      "StringType": {
+        "type": "string"
+      },
+      "IntegerType": {
+        "type": "integer"
+      },
+      "BlobType": {
+        "type": "blob"
+      }
+    },
+    "cases": [
+      {
+        "given": {
+          "output": {
+            "shape": "OutputShape"
+          },
+          "name": "OperationName"
+        },
+        "result": {
+          "InitialResponse": "sometext",
+          "Payload": [
+              {
+                  "TypeA": {"Payload": "somebytes"}
+              },
+              {
+                  "TypeB": {
+                      "Details": {
+                          "StringField": "somestring",
+                          "IntegerField": 123
+                      }
+                  }
+              }
+          ]
+        },
+        "response": {
+          "status_code": 200,
+          "headers": {},
+          "body": "AAAAfgAAAE/Fo93GDTptZXNzYWdlLXR5cGUHAAVldmVudAs6ZXZlbnQtdHlwZQcAEGluaXRpYWwtcmVzcG9uc2UNOmNvbnRlbnQtdHlwZQcACXRleHQvanNvbnsiSW5pdGlhbFJlc3BvbnNlIjogInNvbWV0ZXh0In32mCSDAAAAbAAAAFPLgkVrDTptZXNzYWdlLXR5cGUHAAVldmVudAs6ZXZlbnQtdHlwZQcABVR5cGVBDTpjb250ZW50LXR5cGUHABhhcHBsaWNhdGlvbi9vY3RldC1zdHJlYW1zb21lYnl0ZXMesj2HAAAAhgAAAEQqNR/SDTptZXNzYWdlLXR5cGUHAAVldmVudAs6ZXZlbnQtdHlwZQcABVR5cGVCDTpjb250ZW50LXR5cGUHAAl0ZXh0L2pzb257IlN0cmluZ0ZpZWxkIjogInNvbWVzdHJpbmciLCAiSW50ZWdlckZpZWxkIjogMTIzfffGN30="
+        }
+      }
+    ]
   }
 ]

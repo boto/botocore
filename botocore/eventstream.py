@@ -61,6 +61,17 @@ class ChecksumMismatch(ParserError):
         super(ChecksumMismatch, self).__init__(message)
 
 
+class NoInitialResponseError(ParserError):
+    """An event of type initial-response was not received.
+
+    This exception is raised when the event stream produced no events or
+    the first event in the stream was not of the initial-response type.
+    """
+    def __init__(self):
+        message = 'First event was not of the initial-response type'
+        super(NoInitialResponseError, self).__init__(message)
+
+
 class DecodeUtils(object):
     """Unpacking utility functions used in the decoder.
 
@@ -312,7 +323,8 @@ class EventStreamMessage(object):
         self.crc = crc
 
     def to_response_dict(self, status_code=200):
-        if self.headers.get(':message-type') == 'error':
+        message_type = self.headers.get(':message-type')
+        if message_type == 'error' or message_type == 'exception':
             status_code = 400
         return {
             'status_code': status_code,
@@ -552,15 +564,20 @@ class EventStream(object):
         self._output_shape = output_shape
         self._operation_name = operation_name
         self._parser = parser
-        self._buffer = EventStreamBuffer()
+        self._event_generator = self._create_raw_event_generator()
 
     def __iter__(self):
-        for data in self._raw_stream.stream():
-            self._buffer.add_data(data)
-            for event in self._buffer:
-                parsed_event = self._parse_event(event)
-                if parsed_event:
-                    yield parsed_event
+        for event in self._event_generator:
+            parsed_event = self._parse_event(event)
+            if parsed_event:
+                yield parsed_event
+
+    def _create_raw_event_generator(self):
+        event_stream_buffer = EventStreamBuffer()
+        for chunk in self._raw_stream.stream():
+            event_stream_buffer.add_data(chunk)
+            for event in event_stream_buffer:
+                yield event
 
     def _parse_event(self, event):
         response_dict = event.to_response_dict()
@@ -569,6 +586,16 @@ class EventStream(object):
             return parsed_response
         else:
             raise EventStreamError(parsed_response, self._operation_name)
+
+    def get_initial_response(self):
+        try:
+            initial_event = next(self._event_generator)
+            event_type = initial_event.headers.get(':event-type')
+            if event_type == 'initial-response':
+                return initial_event
+        except StopIteration:
+            pass
+        raise NoInitialResponseError()
 
     def close(self):
         """Closes the underlying streaming body. """

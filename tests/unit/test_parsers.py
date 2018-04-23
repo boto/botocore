@@ -626,6 +626,7 @@ class TestEventStreamParsers(unittest.TestCase):
                     'EventB': {'shape': 'EventBStructure'},
                     'EventC': {'shape': 'EventCStructure'},
                     'EventD': {'shape': 'EventDStructure'},
+                    'EventException': {'shape': 'ExceptionShape'},
                 }
             },
             model.ShapeResolver({
@@ -684,7 +685,14 @@ class TestEventStreamParsers(unittest.TestCase):
                 },
                 'BlobShape': {'type': 'blob'},
                 'StringShape': {'type': 'string'},
-                'IntShape': {'type': 'integer'}
+                'IntShape': {'type': 'integer'},
+                'ExceptionShape': {
+                    'exception': True,
+                    'type': 'structure',
+                    'members': {
+                        'message': {'shape': 'StringShape'}
+                    }
+                },
             })
         )
 
@@ -767,7 +775,7 @@ class TestEventStreamParsers(unittest.TestCase):
         self.assertEqual(parsed, expected)
 
     def test_parses_error_event(self):
-        error_code = 'client/SomeError',
+        error_code = 'client/SomeError'
         error_message = 'You did something wrong'
         headers = {
             ':message-type': 'error',
@@ -780,6 +788,23 @@ class TestEventStreamParsers(unittest.TestCase):
             'Error': {
                 'Code': error_code,
                 'Message': error_message
+            }
+        }
+        self.assertEqual(parsed, expected)
+
+    def test_parses_exception_event(self):
+        self.parser = parsers.EventStreamJSONParser()
+        error_code = 'EventException'
+        headers = {
+            ':message-type': 'exception',
+            ':exception-type': error_code,
+        }
+        body = b'{"message": "You did something wrong"}'
+        parsed = self.parse_event(headers, body, status_code=400)
+        expected = {
+            'Error': {
+                'Code': error_code,
+                'Message': 'You did something wrong'
             }
         }
         self.assertEqual(parsed, expected)
