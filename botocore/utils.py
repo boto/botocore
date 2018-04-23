@@ -25,6 +25,7 @@ import dateutil.parser
 from dateutil.tz import tzlocal, tzutc
 
 import botocore
+from botocore import __version__ as botocore_version
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.exceptions import InvalidDNSNameError, ClientError
 from botocore.exceptions import MetadataRetrievalError
@@ -175,9 +176,16 @@ class InstanceMetadataFetcher(object):
             logger.debug("Access to EC2 metadata has been disabled.")
             raise _RetriesExceededError()
 
+        headers = {
+            'User-Agent': 'aws-sdk-botocore/{}'.format(botocore_version),
+            'Accept-Encoding': ', '.join(('gzip', 'deflate')),
+            'Accept': '*/*',
+            'Connection': 'keep-alive',
+        }
+
         for i in range(num_attempts):
             try:
-                response = requests.get(url, timeout=timeout)
+                response = requests.get(url, timeout=timeout, headers=headers)
             except RETRYABLE_HTTP_ERRORS as e:
                 logger.debug("Caught exception while trying to retrieve "
                              "credentials: %s", e, exc_info=True)
