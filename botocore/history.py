@@ -10,8 +10,6 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
-import threading
 import logging
 
 
@@ -28,7 +26,6 @@ class HistoryRecorder(object):
     def __init__(self):
         self._enabled = False
         self._handlers = []
-        self._lock = threading.Lock()
 
     def enable(self):
         self._enabled = True
@@ -41,15 +38,14 @@ class HistoryRecorder(object):
 
     def record(self, event_type, payload, source='BOTOCORE'):
         if self._enabled and self._handlers:
-            with self._lock:
-                for handler in self._handlers:
-                    try:
-                        handler.emit(event_type, payload, source)
-                    except Exception:
-                        # Never let the process die because we had a failure in
-                        # a record collection handler.
-                        logger.debug("Exception raised in %s.", handler,
-                                     exc_info=True)
+            for handler in self._handlers:
+                try:
+                    handler.emit(event_type, payload, source)
+                except Exception:
+                    # Never let the process die because we had a failure in
+                    # a record collection handler.
+                    logger.debug("Exception raised in %s.", handler,
+                                 exc_info=True)
 
 
 def get_global_history_recorder():
