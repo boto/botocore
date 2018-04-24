@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.10.8
+======
+
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+
+
 1.10.7
 ======
 
