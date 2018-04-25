@@ -34,6 +34,24 @@ from botocore.vendored.requests.packages.urllib3.connectionpool import \
 from botocore.vendored.requests.packages.urllib3.connectionpool import \
     HTTPSConnectionPool
 
+if six.PY3:
+    from weakref import WeakMethod
+else:
+    import weakref
+
+    class WeakMethod(object):
+        """A callable object. Takes one argument to init: 'object.method'.
+        Once created, call this object -- MyWeakMethod() --
+        and pass args/kwargs as you normally would.
+        """
+        def __init__(self, object_dot_method):
+            self.target = weakref.proxy(object_dot_method.__self__)
+            self.method = weakref.proxy(object_dot_method.__func__)
+
+        def __call__(self, *args, **kwargs):
+            """Call the method with args and kwargs as needed."""
+            return self.method(self.target, *args, **kwargs)
+
 
 logger = logging.getLogger(__name__)
 
@@ -401,7 +419,7 @@ class AWSPreparedRequest(models.PreparedRequest):
         self.original = original_request
         super(AWSPreparedRequest, self).__init__()
         self.hooks.setdefault('response', []).append(
-            self.reset_stream_on_redirect)
+            WeakMethod(self.reset_stream_on_redirect))
 
     def reset_stream_on_redirect(self, response, **kwargs):
         if response.status_code in REDIRECT_STATI and \
