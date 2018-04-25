@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.10.9
+======
+
+* api-change:``rekognition``: Update rekognition client to latest version
+* api-change:``xray``: Update xray client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+
+
 1.10.8
 ======
 
