@@ -529,6 +529,7 @@ class EventStream(object):
         )
         # This is the event stream in the response
         event_stream = response['Payload']
+        end_event_received = False
         with open('output', 'wb') as f:
             # Iterate over events in the event stream as they come
             for event in event_stream:
@@ -539,6 +540,12 @@ class EventStream(object):
                 # If we received a progress event, print the details
                 elif 'Progress' in event:
                     print(event['Progress']['Details'])
+                # End event indicates that the request finished successfully
+                elif 'End' in event:
+                    print('Result is complete')
+                    end_event_received = True
+        if not end_event_received:
+            raise Exception("End event not received, request incomplete.")
     """
     def __init__(self, raw_stream, output_shape, parser, operation_name):
         self._raw_stream = raw_stream
