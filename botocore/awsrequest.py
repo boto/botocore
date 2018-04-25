@@ -34,7 +34,7 @@ from botocore.vendored.requests.packages.urllib3.connectionpool import \
 from botocore.vendored.requests.packages.urllib3.connectionpool import \
     HTTPSConnectionPool
 
-if six.PY3:
+if six.PY34:
     from weakref import WeakMethod
 else:
     import weakref
