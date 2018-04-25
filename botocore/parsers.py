@@ -208,7 +208,8 @@ class ResponseParser(object):
             self._event_stream_parser = self.EVENT_STREAM_PARSER_CLS(
                 timestamp_parser, blob_parser)
 
-    def _default_blob_parser(self, value):
+    @staticmethod
+    def _default_blob_parser(value):
         # Blobs are always returned as bytes type (this matters on python3).
         # We don't decode this to a str because it's entirely possible that the
         # blob contains binary data that actually can't be decoded.
