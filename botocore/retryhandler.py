@@ -21,6 +21,7 @@ from botocore.vendored.requests import ConnectionError, Timeout
 from botocore.vendored.requests.packages.urllib3.exceptions import ClosedPoolError
 
 from botocore.exceptions import ChecksumError, EndpointConnectionError
+from socket import timeout as SocketTimeout
 
 
 logger = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ logger = logging.getLogger(__name__)
 EXCEPTION_MAP = {
     'GENERAL_CONNECTION_ERROR': [
         ConnectionError, ClosedPoolError, Timeout,
-        EndpointConnectionError
+        EndpointConnectionError, SocketTimeout
     ],
 }
 
