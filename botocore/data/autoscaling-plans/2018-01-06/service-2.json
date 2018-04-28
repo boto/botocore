@@ -373,7 +373,7 @@
       "members":{
         "PredefinedScalingMetricType":{
           "shape":"ScalingMetricType",
-          "documentation":"<p>The metric type. The <code>ALBRequestCountPerTarget</code> metric type applies only to Auto Scaling groups, Sport Fleet requests, and ECS services.</p>"
+          "documentation":"<p>The metric type. The <code>ALBRequestCountPerTarget</code> metric type applies only to Auto Scaling groups, Spot Fleet requests, and ECS services.</p>"
         },
         "ResourceLabel":{
           "shape":"ResourceLabel",
