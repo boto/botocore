@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``glacier``", 
+    "description": "Update glacier client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``secretsmanager``", 
+    "description": "Update secretsmanager client to latest version", 
+    "type": "api-change"
+  }
+]
