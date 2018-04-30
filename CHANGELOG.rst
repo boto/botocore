@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.10.11
+=======
+
+* api-change:``guardduty``: Update guardduty client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+* api-change:``route53domains``: Update route53domains client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+
+
 1.10.10
 =======
 
