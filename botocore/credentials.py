@@ -616,7 +616,71 @@ class CachedCredentialFetcher(object):
         return seconds < self._expiry_window_seconds
 
 
-class AssumeRoleCredentialFetcher(CachedCredentialFetcher):
+class STSCachedCredentialFetcher(CachedCredentialFetcher):
+    def __init__(self, method, client_creator, source_credentials,
+                 mfa_prompter=None, cache=None,
+                 expiry_window_seconds=60 * 15):
+        self._method = method
+        self._client_creator = client_creator
+        self._source_credentials = source_credentials
+
+        self._mfa_prompter = mfa_prompter
+        if self._mfa_prompter is None:
+            self._mfa_prompter = getpass.getpass
+
+        super(STSCachedCredentialFetcher, self).__init__(
+            cache, expiry_window_seconds
+        )
+
+    def _init_method_kwargs(self, extra_args):
+        if extra_args is None:
+            self._method_kwargs = {}
+        else:
+            self._method_kwargs = deepcopy(extra_args)
+
+    def _get_cache_key_args(self):
+        raise NotImplementedError('_get_cache_key_args()')
+
+    def _create_cache_key(self):
+        args = self._get_cache_key_args()
+        args = json.dumps(args, sort_keys=True)
+        argument_hash = sha1(args.encode('utf-8')).hexdigest()
+        return self._make_file_safe(argument_hash)
+
+    def _get_credentials(self):
+        """Get credentials by calling the method on the STS client."""
+        kwargs = self._get_method_kwargs()
+        client = self._create_client()
+        return getattr(client, self._method)(**kwargs)
+
+    def _get_method_kwargs(self):
+        """Get the arguments for the method based on
+        current configuration.
+        """
+        method_kwargs = self._method_kwargs
+        mfa_serial = method_kwargs.get('SerialNumber')
+
+        if mfa_serial is not None:
+            prompt = 'Enter MFA code for %s: ' % mfa_serial
+            token_code = self._mfa_prompter(prompt)
+
+            method_kwargs = deepcopy(method_kwargs)
+            method_kwargs['TokenCode'] = token_code
+
+        return method_kwargs
+
+    def _create_client(self):
+        """Create an STS client using the source credentials."""
+        frozen_credentials = self._source_credentials.get_frozen_credentials()
+        return self._client_creator(
+            'sts',
+            aws_access_key_id=frozen_credentials.access_key,
+            aws_secret_access_key=frozen_credentials.secret_key,
+            aws_session_token=frozen_credentials.token,
+        )
+
+
+class AssumeRoleCredentialFetcher(STSCachedCredentialFetcher):
     def __init__(self, client_creator, source_credentials, role_arn,
                  extra_args=None, mfa_prompter=None, cache=None,
                  expiry_window_seconds=60 * 15):
@@ -651,38 +715,26 @@ class AssumeRoleCredentialFetcher(CachedCredentialFetcher):
         :type expiry_window_seconds: int
         :param expiry_window_seconds: The amount of time, in seconds,
         """
-        self._client_creator = client_creator
-        self._source_credentials = source_credentials
         self._role_arn = role_arn
 
-        if extra_args is None:
-            self._assume_kwargs = {}
-        else:
-            self._assume_kwargs = deepcopy(extra_args)
-        self._assume_kwargs['RoleArn'] = self._role_arn
+        self._init_method_kwargs(extra_args)
+        self._method_kwargs['RoleArn'] = self._role_arn
 
-        self._role_session_name = self._assume_kwargs.get('RoleSessionName')
+        self._role_session_name = self._method_kwargs.get('RoleSessionName')
         self._using_default_session_name = False
         if not self._role_session_name:
             self._role_session_name = 'botocore-session-%s' % (
                 int(time.time()))
-            self._assume_kwargs['RoleSessionName'] = self._role_session_name
+            self._method_kwargs['RoleSessionName'] = self._role_session_name
             self._using_default_session_name = True
 
-        self._mfa_prompter = mfa_prompter
-        if self._mfa_prompter is None:
-            self._mfa_prompter = getpass.getpass
-
         super(AssumeRoleCredentialFetcher, self).__init__(
-            cache, expiry_window_seconds
+            'assume_role', client_creator, source_credentials,
+            mfa_prompter, cache, expiry_window_seconds
         )
 
-    def _create_cache_key(self):
-        """Create a predictable cache key for the current configuration.
-
-        The cache key is intended to be compatible with file names.
-        """
-        args = deepcopy(self._assume_kwargs)
+    def _get_cache_key_args(self):
+        args = deepcopy(self._method_kwargs)
 
         # The role session name gets randomly generated, so we don't want it
         # in the hash.
@@ -695,42 +747,10 @@ class AssumeRoleCredentialFetcher(CachedCredentialFetcher):
             # later on.
             args['Policy'] = json.loads(args['Policy'])
 
-        args = json.dumps(args, sort_keys=True)
-        argument_hash = sha1(args.encode('utf-8')).hexdigest()
-        return self._make_file_safe(argument_hash)
-
-    def _get_credentials(self):
-        """Get credentials by calling assume role."""
-        kwargs = self._assume_role_kwargs()
-        client = self._create_client()
-        return client.assume_role(**kwargs)
-
-    def _assume_role_kwargs(self):
-        """Get the arguments for assume role based on current configuration."""
-        assume_role_kwargs = self._assume_kwargs
-        mfa_serial = assume_role_kwargs.get('SerialNumber')
-
-        if mfa_serial is not None:
-            prompt = 'Enter MFA code for %s: ' % mfa_serial
-            token_code = self._mfa_prompter(prompt)
-
-            assume_role_kwargs = deepcopy(assume_role_kwargs)
-            assume_role_kwargs['TokenCode'] = token_code
-
-        return assume_role_kwargs
-
-    def _create_client(self):
-        """Create an STS client using the source credentials."""
-        frozen_credentials = self._source_credentials.get_frozen_credentials()
-        return self._client_creator(
-            'sts',
-            aws_access_key_id=frozen_credentials.access_key,
-            aws_secret_access_key=frozen_credentials.secret_key,
-            aws_session_token=frozen_credentials.token,
-        )
+        return args
 
 
-class GetSessionTokenCredentialFetcher(CachedCredentialFetcher):
+class GetSessionTokenCredentialFetcher(STSCachedCredentialFetcher):
     def __init__(self, client_creator, source_credentials, extra_args=None, mfa_prompter=None, cache=None,
                  expiry_window_seconds=60 * 15):
         """
@@ -760,67 +780,20 @@ class GetSessionTokenCredentialFetcher(CachedCredentialFetcher):
         :type expiry_window_seconds: int
         :param expiry_window_seconds: The amount of time, in seconds,
         """
-        self._client_creator = client_creator
-        self._source_credentials = source_credentials
-
-        if extra_args is None:
-            self._session_token_kwargs = {}
-        else:
-            self._session_token_kwargs = deepcopy(extra_args)
-
-        self._mfa_prompter = mfa_prompter
-        if self._mfa_prompter is None:
-            self._mfa_prompter = getpass.getpass
+        self._init_method_kwargs(extra_args)
 
         super(GetSessionTokenCredentialFetcher, self).__init__(
-            cache, expiry_window_seconds
+            'get_session_token', client_creator, source_credentials,
+            mfa_prompter, cache, expiry_window_seconds
         )
 
-    def _create_cache_key(self):
-        """Create a predictable cache key for the current configuration.
-
-        The cache key is intended to be compatible with file names.
-        """
-        args = deepcopy(self._session_token_kwargs)
+    def _get_cache_key_args(self):
+        args = deepcopy(self._method_kwargs)
         # access_key_id is added on top of DurationSeconds and SerialNumber
         # in order to create a unique key
         args['access_key_id'] = self._source_credentials.get_frozen_credentials().access_key
 
-        args = json.dumps(args, sort_keys=True)
-        argument_hash = sha1(args.encode('utf-8')).hexdigest()
-        return self._make_file_safe(argument_hash)
-
-    def _get_credentials(self):
-        """Get credentials by calling GetSessionToken."""
-        kwargs = self._get_session_token_kwargs()
-        client = self._create_client()
-        return client.get_session_token(**kwargs)
-
-    def _get_session_token_kwargs(self):
-        """Get the arguments for GetSessionToken based on
-        current configuration.
-        """
-        get_session_token_kwargs = self._session_token_kwargs
-        mfa_serial = get_session_token_kwargs.get('SerialNumber')
-
-        if mfa_serial is not None:
-            prompt = 'Enter MFA code for %s: ' % mfa_serial
-            token_code = self._mfa_prompter(prompt)
-
-            get_session_token_kwargs = deepcopy(get_session_token_kwargs)
-            get_session_token_kwargs['TokenCode'] = token_code
-
-        return get_session_token_kwargs
-
-    def _create_client(self):
-        """Create an STS client using the source credentials."""
-        frozen_credentials = self._source_credentials.get_frozen_credentials()
-        return self._client_creator(
-            'sts',
-            aws_access_key_id=frozen_credentials.access_key,
-            aws_secret_access_key=frozen_credentials.secret_key,
-            aws_session_token=frozen_credentials.token,
-        )
+        return args
 
 
 class CredentialProvider(object):
