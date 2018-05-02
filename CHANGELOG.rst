@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.10.12
+=======
+
+* api-change:``acm``: Update acm client to latest version
+* api-change:``codepipeline``: Update codepipeline client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.10.11
 =======
 
