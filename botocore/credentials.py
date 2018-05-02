@@ -1223,7 +1223,72 @@ class BotoProvider(CredentialProvider):
                                        method=self.METHOD)
 
 
-class GetSessionTokenProvider(CredentialProvider):
+class STSProvider(CredentialProvider):
+    def __init__(self, load_config, cache, profile_name):
+        self._load_config = load_config
+        self._profile_name = profile_name
+        # The _loaded_config attribute will be populated from the
+        # load_config() function once the configuration is actually
+        # loaded.  The reason we go through all this instead of just
+        # requiring that the loaded_config be passed to us is to that
+        # we can defer configuration loaded until we actually try
+        # to load credentials (as opposed to when the object is
+        # instantiated).
+        self._loaded_config = {}
+        #: The cache used to first check for temporary credentials.
+        #: This is checked before making the STS API
+        #: calls and can be useful if you have short lived
+        #: scripts and you'd like to avoid calling STS
+        #: until the credentials are expired.
+        self.cache = cache
+
+    def load(self):
+        self._loaded_config = self._load_config()
+        if self._can_load():
+            return self._load_creds_via_sts(self._profile_name)
+
+    def _can_load(self):
+        raise NotImplementedError('_can_load()')
+
+    def _load_creds_via_sts(self, profile_name):
+        fetcher = self._get_credential_fetcher(profile_name)
+        refresher = self._get_credential_refresher(profile_name, fetcher)
+
+        # The initial credentials are empty and the expiration time is set
+        # to now so that we can delay the call to STS until it is
+        # strictly needed.
+        return DeferredRefreshableCredentials(
+            method=self.METHOD,
+            refresh_using=refresher,
+            time_fetcher=_local_now
+        )
+
+    def _get_credential_fetcher(self, profile_name):
+        raise NotImplementedError('_get_credential_fetcher()')
+
+    def _get_credential_refresher(self, profile_name, credential_fetcher):
+        raise NotImplementedError('_get_credential_refresher()')
+
+    def _resolve_static_credentials_from_profile(self, profile):
+        try:
+            return Credentials(
+                access_key=profile['aws_access_key_id'],
+                secret_key=profile['aws_secret_access_key'],
+                token=profile.get('aws_session_token')
+            )
+        except KeyError as e:
+            raise PartialCredentialsError(
+                provider=self.METHOD, cred_var=str(e))
+
+    def _get_profile(self, profile_name, strict=True):
+        profiles = self._loaded_config.get('profiles', {})
+        if strict is True:
+            return profiles[profile_name]
+        else:
+            return profiles.get(profile_name, {})
+
+
+class GetSessionTokenProvider(STSProvider):
     METHOD = 'get-session-token'
 
     GET_SESSION_TOKEN_CONFIG_VAR = 'session_token_duration'
@@ -1253,58 +1318,54 @@ class GetSessionTokenProvider(CredentialProvider):
         :param prompter: A callable that returns input provided
             by the user (i.e raw_input, getpass.getpass, etc.).
         """
-        self._load_config = load_config
+        # client_creator is a callable that creates function.
+        # It's basically session.create_client
         self._client_creator = client_creator
-        self._profile_name = profile_name
-        self.cache = cache
         self._prompter = prompter
 
-    def load(self):
-        self._loaded_config = self._load_config()
-        if self._has_get_session_token_config_vars():
-            return self._load_creds_via_get_session_token(self._profile_name)
+        super(GetSessionTokenProvider, self).__init__(
+            load_config, cache, profile_name
+        )
+
+    def _can_load(self):
+        return self._has_get_session_token_config_vars()
 
     def _has_get_session_token_config_vars(self):
         profiles = self._loaded_config.get('profiles', {})
         return self.GET_SESSION_TOKEN_CONFIG_VAR in profiles.get(self._profile_name, {})
 
-    def _load_creds_via_get_session_token(self, profile_name):
-        role_config = self._get_role_config(profile_name)
-        profiles = self._loaded_config.get('profiles', {})
-
-        profile = profiles[profile_name]
+    def _get_credential_fetcher(self, profile_name):
+        get_session_token_config = self._get_session_token_config(profile_name)
+        profile = self._get_profile(profile_name)
         source_credentials = self._resolve_static_credentials_from_profile(
             profile=profile
         )
 
         extra_args = {
-            'DurationSeconds': role_config['session_token_duration']
+            'DurationSeconds': get_session_token_config['session_token_duration']
         }
-        mfa_serial = role_config.get('mfa_serial')
+        mfa_serial = get_session_token_config.get('mfa_serial')
         if mfa_serial is not None:
             extra_args['SerialNumber'] = mfa_serial
 
-        fetcher = GetSessionTokenCredentialFetcher(
+        return GetSessionTokenCredentialFetcher(
             client_creator=self._client_creator,
             source_credentials=source_credentials,
             cache=self.cache,
             mfa_prompter=self._prompter,
             extra_args=extra_args,
         )
-        refresher = fetcher.fetch_credentials
-        if mfa_serial is not None:
+
+    def _get_credential_refresher(self, profile_name, credential_fetcher):
+        profile = self._get_profile(profile_name)
+        refresher = credential_fetcher.fetch_credentials
+        if profile.get('mfa_serial') is not None:
             refresher = create_mfa_serial_refresher(refresher)
 
-        return DeferredRefreshableCredentials(
-            method=self.METHOD,
-            refresh_using=refresher,
-            time_fetcher=_local_now
-        )
+        return refresher
 
-    def _get_role_config(self, profile_name):
-        profiles = self._loaded_config.get('profiles', {})
-
-        profile = profiles[profile_name]
+    def _get_session_token_config(self, profile_name):
+        profile = self._get_profile(profile_name)
 
         mfa_serial = profile.get('mfa_serial')
         session_token_duration = profile[self.GET_SESSION_TOKEN_CONFIG_VAR]
@@ -1318,26 +1379,15 @@ class GetSessionTokenProvider(CredentialProvider):
 
         session_token_duration = int(session_token_duration)
 
-        role_config = {
+        get_session_token_config = {
             'mfa_serial': mfa_serial,
             'session_token_duration': session_token_duration,
         }
 
-        return role_config
-
-    def _resolve_static_credentials_from_profile(self, profile):
-        try:
-            return Credentials(
-                access_key=profile['aws_access_key_id'],
-                secret_key=profile['aws_secret_access_key'],
-                token=profile.get('aws_session_token')
-            )
-        except KeyError as e:
-            raise PartialCredentialsError(
-                provider=self.METHOD, cred_var=str(e))
+        return get_session_token_config
 
 
-class AssumeRoleProvider(CredentialProvider):
+class AssumeRoleProvider(STSProvider):
     METHOD = 'assume-role'
     # The AssumeRole provider is logically part of the SharedConfig and
     # SharedCredentials providers. Since the purpose of the canonical name
@@ -1388,42 +1438,28 @@ class AssumeRoleProvider(CredentialProvider):
             GetSessionTokenProvider instance configured with the provided
             profile name.
         """
-        #: The cache used to first check for assumed credentials.
-        #: This is checked before making the AssumeRole API
-        #: calls and can be useful if you have short lived
-        #: scripts and you'd like to avoid calling AssumeRole
-        #: until the credentials are expired.
-        self.cache = cache
-        self._load_config = load_config
         # client_creator is a callable that creates function.
         # It's basically session.create_client
         self._client_creator = client_creator
-        self._profile_name = profile_name
         self._prompter = prompter
-        # The _loaded_config attribute will be populated from the
-        # load_config() function once the configuration is actually
-        # loaded.  The reason we go through all this instead of just
-        # requiring that the loaded_config be passed to us is to that
-        # we can defer configuration loaded until we actually try
-        # to load credentials (as opposed to when the object is
-        # instantiated).
-        self._loaded_config = {}
+
         self._credential_sourcer = credential_sourcer
         self._get_session_token_provider_creator = \
             get_session_token_provider_creator
-        self._visited_profiles = [self._profile_name]
+        self._visited_profiles = [profile_name]
 
-    def load(self):
-        self._loaded_config = self._load_config()
-        profiles = self._loaded_config.get('profiles', {})
-        profile = profiles.get(self._profile_name, {})
-        if self._has_assume_role_config_vars(profile):
-            return self._load_creds_via_assume_role(self._profile_name)
+        super(AssumeRoleProvider, self).__init__(
+            load_config, cache, profile_name
+        )
+
+    def _can_load(self):
+        profile = self._get_profile(self._profile_name, strict=False)
+        return self._has_assume_role_config_vars(profile)
 
     def _has_assume_role_config_vars(self, profile):
         return self.ROLE_CONFIG_VAR in profile
 
-    def _load_creds_via_assume_role(self, profile_name):
+    def _get_credential_fetcher(self, profile_name):
         role_config = self._get_role_config(profile_name)
         source_credentials = self._resolve_source_credentials(
             role_config, profile_name
@@ -1442,7 +1478,7 @@ class AssumeRoleProvider(CredentialProvider):
         if mfa_serial is not None:
             extra_args['SerialNumber'] = mfa_serial
 
-        fetcher = AssumeRoleCredentialFetcher(
+        return AssumeRoleCredentialFetcher(
             client_creator=self._client_creator,
             source_credentials=source_credentials,
             role_arn=role_config['role_arn'],
@@ -1450,24 +1486,18 @@ class AssumeRoleProvider(CredentialProvider):
             mfa_prompter=self._prompter,
             cache=self.cache,
         )
-        refresher = fetcher.fetch_credentials
-        if mfa_serial is not None:
+
+    def _get_credential_refresher(self, profile_name, credential_fetcher):
+        profile = self._get_profile(profile_name)
+        refresher = credential_fetcher.fetch_credentials
+        if profile.get('mfa_serial') is not None:
             refresher = create_mfa_serial_refresher(refresher)
 
-        # The initial credentials are empty and the expiration time is set
-        # to now so that we can delay the call to assume role until it is
-        # strictly needed.
-        return DeferredRefreshableCredentials(
-            method=self.METHOD,
-            refresh_using=refresher,
-            time_fetcher=_local_now
-        )
+        return refresher
 
     def _get_role_config(self, profile_name):
         """Retrieves and validates the role configuration for the profile."""
-        profiles = self._loaded_config.get('profiles', {})
-
-        profile = profiles[profile_name]
+        profile = self._get_profile(profile_name)
         source_profile = profile.get('source_profile')
         role_arn = profile['role_arn']
         credential_source = profile.get('credential_source')
@@ -1611,7 +1641,7 @@ class AssumeRoleProvider(CredentialProvider):
 
             return self._resolve_static_credentials_from_profile(profile)
 
-        return self._load_creds_via_assume_role(profile_name)
+        return self._load_creds_via_sts(profile_name)
 
     def _get_session_token_credentials(self, profile_name):
         get_session_token_provider = self._get_session_token_provider_creator(
@@ -1620,17 +1650,6 @@ class AssumeRoleProvider(CredentialProvider):
         get_session_token_credentials = \
             get_session_token_provider.load()
         return get_session_token_credentials
-
-    def _resolve_static_credentials_from_profile(self, profile):
-        try:
-            return Credentials(
-                access_key=profile['aws_access_key_id'],
-                secret_key=profile['aws_secret_access_key'],
-                token=profile.get('aws_session_token')
-            )
-        except KeyError as e:
-            raise PartialCredentialsError(
-                provider=self.METHOD, cred_var=str(e))
 
     def _resolve_credentials_from_source(self, credential_source,
                                          profile_name):
