@@ -116,9 +116,9 @@ class Stubber(object):
         assert service_response == response
 
 
-    If you have an input paramter that is a randomly generated value, or you
-    otherwise don't care about its value, you can use stub.ANY to ignore it in
-    validation.
+    If you have an input parameter that is a randomly generated value, or you
+    otherwise don't care about its value, you can use ``stub.ANY`` to ignore
+    it in validation.
 
     **Example:**
     ::
