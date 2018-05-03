@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.10.13
+=======
+
+* api-change:``config``: Update config client to latest version
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+* api-change:``appsync``: Update appsync client to latest version
+
+
 1.10.12
 =======
 
