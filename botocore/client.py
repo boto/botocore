@@ -745,6 +745,15 @@ class BaseClient(object):
         return self._cache['waiter_config']
 
     def get_waiter(self, waiter_name):
+        """Returns an object that can wait for some condition.
+
+        :type waiter_name: str
+        :param waiter_name: The name of the waiter to get. See the waiters
+            section of the service docs for a list of available waiters.
+
+        :returns: The specified waiter object.
+        :rtype: botocore.waiter.Waiter
+        """
         config = self._get_waiter_config()
         if not config:
             raise ValueError("Waiter does not exist: %s" % waiter_name)
