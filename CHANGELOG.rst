@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.10.14
+=======
+
+* api-change:``guardduty``: Update guardduty client to latest version
+
+
 1.10.13
 =======
 
