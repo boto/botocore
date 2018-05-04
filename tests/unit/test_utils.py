@@ -1558,6 +1558,12 @@ class TestContainerMetadataFetcher(unittest.TestCase):
             fetcher.retrieve_full_uri(full_uri)
         self.assertFalse(self.http.get.called)
 
+    def test_default_session_disables_proxies(self):
+        with mock.patch('botocore.utils.requests.Session') as session:
+            fetcher = ContainerMetadataFetcher()
+            self.assertFalse(session.return_value.trust_env)
+            self.assertEqual(session.return_value.proxies, {})
+
     def test_can_specify_extra_headers_are_merged(self):
         headers = {
             # The 'Accept' header will override the
