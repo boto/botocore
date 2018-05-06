@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cloudfront``", 
+    "description": "Update cloudfront client to latest version", 
+    "type": "api-change"
+  }
+]

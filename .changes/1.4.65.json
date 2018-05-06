@@ -1,0 +1,17 @@
+[
+  {
+    "category": "Waiters", 
+    "description": "Add back missing fail fail states to cloudformation waiters (`#1056 <https://github.com/boto/botocore/issues/1056>`__)", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``waf``", 
+    "description": "Update waf client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``budgets``", 
+    "description": "Update budgets client to latest version", 
+    "type": "feature"
+  }
+]

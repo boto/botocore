@@ -1,0 +1,12 @@
+[
+  {
+    "category": "S3", 
+    "description": "Fixed a bug where the S3 region redirector was potentially causing a memory leak on python 2.6.", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``s3``", 
+    "description": "Update s3 client to latest version", 
+    "type": "feature"
+  }
+]

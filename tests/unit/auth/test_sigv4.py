@@ -1,24 +1,16 @@
-# Copyright (c) 2013 Amazon.com, Inc. or its affiliates.  All Rights Reserved
+# Copyright 2012-2014 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the
-# "Software"), to deal in the Software without restriction, including
-# without limitation the rights to use, copy, modify, merge, publish, dis-
-# tribute, sublicense, and/or sell copies of the Software, and to permit
-# persons to whom the Software is furnished to do so, subject to the fol-
-# lowing conditions:
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
 #
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
+# http://aws.amazon.com/apache2.0/
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABIL-
-# ITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
-# SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-# WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-# IN THE SOFTWARE.
-#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+
 """Signature Version 4 test suite.
 
 AWS provides a test suite for signature version 4:
@@ -34,12 +26,8 @@ import os
 import logging
 import io
 import datetime
-from six import BytesIO
-from six.moves import BaseHTTPServer
-import six
+from botocore.compat import six
 
-import nose.tools as t
-from nose import with_setup
 import mock
 
 import botocore.auth
@@ -86,11 +74,11 @@ if not six.PY3:
 log = logging.getLogger(__name__)
 
 
-class RawHTTPRequest(BaseHTTPServer.BaseHTTPRequestHandler):
+class RawHTTPRequest(six.moves.BaseHTTPServer.BaseHTTPRequestHandler):
     def __init__(self, raw_request):
         if isinstance(raw_request, six.text_type):
             raw_request = raw_request.encode('utf-8')
-        self.rfile = BytesIO(raw_request)
+        self.rfile = six.BytesIO(raw_request)
         self.raw_requestline = self.rfile.readline()
         self.error_code = None
         self.error_message = None
@@ -103,11 +91,16 @@ class RawHTTPRequest(BaseHTTPServer.BaseHTTPRequestHandler):
 
 def test_generator():
     datetime_patcher = mock.patch.object(
-        botocore.auth.datetime, 'datetime',  
+        botocore.auth.datetime, 'datetime',
         mock.Mock(wraps=datetime.datetime)
     )
     mocked_datetime = datetime_patcher.start()
     mocked_datetime.utcnow.return_value = datetime.datetime(2011, 9, 9, 23, 36)
+    formatdate_patcher = mock.patch('botocore.auth.formatdate')
+    formatdate = formatdate_patcher.start()
+    # We have to change this because Sep 9, 2011 was actually
+    # a Friday, but the tests have this set to a Monday.
+    formatdate.return_value = 'Mon, 09 Sep 2011 23:36:00 GMT'
     for test_case in set(os.path.splitext(i)[0]
                          for i in os.listdir(TESTSUITE_DIR)):
         if test_case in TESTS_TO_IGNORE:
@@ -115,6 +108,7 @@ def test_generator():
             continue
         yield (_test_signature_version_4, test_case)
     datetime_patcher.stop()
+    formatdate_patcher.stop()
 
 
 def create_request_from_raw_request(raw_request):
@@ -124,9 +118,11 @@ def create_request_from_raw_request(raw_request):
     if raw.error_code is not None:
         raise Exception(raw.error_message)
     request.method = raw.command
+    datetime_now = datetime.datetime(2011, 9, 9, 23, 36)
+    request.context['timestamp'] = datetime_now.strftime('%Y%m%dT%H%M%SZ')
     for key, val in raw.headers.items():
         request.headers[key] = val
-    request.data = raw.rfile.read().decode('utf-8')
+    request.data = raw.rfile.read()
     host = raw.headers.get('host', '')
     # For whatever reason, the BaseHTTPRequestHandler encodes
     # the first line of the response as 'iso-8859-1',

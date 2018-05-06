@@ -8,8 +8,7 @@
             <Arn>arn:aws:iam::123456789012:group/Admins</Arn>
          </member>
          <member>
-            <Path>/division_abc/subdivision_xyz/product_1234/engineering/
-            </Path>
+            <Path>/division_abc/subdivision_xyz/product_1234/engineering/</Path>
             <GroupName>Test</GroupName>
             <GroupId>AGP2MAB8DPLSRHEXAMPLE</GroupId>
             <Arn>arn:aws:iam::123456789012:group/division_abc/subdivision_xyz/product_1234/engineering/Test</Arn>

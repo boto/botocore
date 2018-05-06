@@ -1,0 +1,27 @@
+[
+  {
+    "category": "Config", 
+    "description": "Add ``parameter_validation`` option in config file to disable parameter validation when making API calls (`#905 <https://github.com/boto/botocore/issues/905>`__)", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``dynamodbstreams``", 
+    "description": "Update dynamodbstreams client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "s3", 
+    "description": "Make the stubber work with get_bucket_location", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``iot``", 
+    "description": "Update iot client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``machinelearning``", 
+    "description": "Update machinelearning client to latest version", 
+    "type": "feature"
+  }
+]

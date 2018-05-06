@@ -1,0 +1,42 @@
+[
+  {
+    "category": "``kms``", 
+    "description": "Update kms client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``kinesisanalytics``", 
+    "description": "Update kinesisanalytics client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``autoscaling``", 
+    "description": "Update autoscaling client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``elb``", 
+    "description": "Update elb client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``ecs``", 
+    "description": "Update ecs client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "s3", 
+    "description": "Add support for s3 dualstack configuration", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``snowball``", 
+    "description": "Update snowball client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``elbv2``", 
+    "description": "Update elbv2 client to latest version", 
+    "type": "feature"
+  }
+]

@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``ssm``", 
+    "description": "Update ssm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "sigv4", 
+    "description": "Strip out the default port and http auth info when computing the host header for sigv4 signing.", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``sqs``", 
+    "description": "Update sqs client to latest version", 
+    "type": "api-change"
+  }
+]

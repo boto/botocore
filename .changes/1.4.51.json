@@ -1,0 +1,37 @@
+[
+  {
+    "category": "``rds``", 
+    "description": "Update rds client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "ResponseMetadata", 
+    "description": "Add MaxAttemptsReached and RetryAttempts keys to the returned ResonseMetadata dictionary (`#1024 <https://github.com/boto/botocore/issues/1024>`__, `#965 <https://github.com/boto/botocore/issues/965>`__, `#926 <https://github.com/boto/botocore/issues/926>`__)", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``application-autoscaling``", 
+    "description": "Update application-autoscaling client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``cognito-idp``", 
+    "description": "Update cognito-idp client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "Waiters", 
+    "description": "Add last_response attribute to WaiterError (`#1023 <https://github.com/boto/botocore/issues/1023>`__, `#957 <https://github.com/boto/botocore/issues/957>`__)", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``config``", 
+    "description": "Update config client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``gamelift``", 
+    "description": "Update gamelift client to latest version", 
+    "type": "feature"
+  }
+]

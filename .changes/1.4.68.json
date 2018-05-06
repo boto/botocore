@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``cloudformation``", 
+    "description": "Update cloudformation client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "Stub", 
+    "description": "Made ANY usable for nested parameters", 
+    "type": "feature"
+  }
+]

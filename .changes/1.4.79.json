@@ -1,0 +1,17 @@
+[
+  {
+    "category": "s3", 
+    "description": "fixes `#1059 <https://github.com/boto/botocore/issues/1059>`__ (presigned s3v4 URL bug related to blank query parameters being filtered incorrectly)", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``s3``", 
+    "description": "Update s3 client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "Presigner", 
+    "description": "Support presigning rest-json services.", 
+    "type": "bugfix"
+  }
+]

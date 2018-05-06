@@ -1,0 +1,7 @@
+[
+  {
+    "category": "``kms``", 
+    "description": "Update kms client to latest version", 
+    "type": "feature"
+  }
+]

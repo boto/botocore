@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``ssm``", 
+    "description": "Update ssm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``inspector``", 
+    "description": "Update inspector client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``snowball``", 
+    "description": "Update snowball client to latest version", 
+    "type": "api-change"
+  }
+]

@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``iam``", 
+    "description": "Update iam client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``codepipeline``", 
+    "description": "Update codepipeline client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``efs``", 
+    "description": "Update efs client to latest version", 
+    "type": "feature"
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "category": "shield", 
+    "description": "Added paginator for list_protections operation.", 
+    "type": "enhancement"
+  }, 
+  {
+    "category": "``ssm``", 
+    "description": "Update ssm client to latest version", 
+    "type": "api-change"
+  }
+]

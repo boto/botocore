@@ -4,13 +4,13 @@
             "DhcpConfigurations": [
                 {
                     "Values": [
-                        "us-west-2.compute.internal"
+                        {"Value": "us-west-2.compute.internal"}
                     ], 
                     "Key": "domain-name"
                 }, 
                 {
                     "Values": [
-                        "AmazonProvidedDNS"
+                        {"Value": "AmazonProvidedDNS"}
                     ], 
                     "Key": "domain-name-servers"
                 }

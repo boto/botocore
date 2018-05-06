@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``greengrass``", 
+    "description": "Update greengrass client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codebuild``", 
+    "description": "Update codebuild client to latest version", 
+    "type": "api-change"
+  }
+]

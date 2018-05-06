@@ -1,0 +1,27 @@
+[
+  {
+    "category": "``route53``", 
+    "description": "Update route53 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``directconnect``", 
+    "description": "Update directconnect client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``devicefarm``", 
+    "description": "Update devicefarm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kms``", 
+    "description": "Update kms client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``route53domains``", 
+    "description": "Update route53domains client to latest version", 
+    "type": "api-change"
+  }
+]

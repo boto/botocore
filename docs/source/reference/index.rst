@@ -1,11 +1,9 @@
-The botocore Session Object
-***************************
+Available Services
+==================
 
-.. automodule:: botocore
+.. toctree::
+  :maxdepth: 1
+  :titlesonly:
+  :glob:
 
-Session Object
-==============
-
-
-.. automodule:: botocore.session
-   :members:
+  services/*

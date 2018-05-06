@@ -11,12 +11,12 @@
             "ChangeSeverity": "RestartApplicationServer",
             "Namespace": "aws:elasticbeanstalk:application:environment",
             "MaxLength": 200,
-            "DefaultValue": null
+            "DefaultValue": ""
         },
         {
             "Name": "PARAM1",
             "UserDefined": false,
-            "DefaultValue": null,
+            "DefaultValue": "",
             "ChangeSeverity": "RestartApplicationServer",
             "Namespace": "aws:elasticbeanstalk:application:environment",
             "MaxLength": 200,
@@ -33,12 +33,12 @@
             "ChangeSeverity": "RestartApplicationServer",
             "Namespace": "aws:elasticbeanstalk:application:environment",
             "MaxLength": 200,
-            "DefaultValue": null
+            "DefaultValue": ""
         },
         {
             "Name": "PARAM2",
             "UserDefined": false,
-            "DefaultValue": null,
+            "DefaultValue": "",
             "ChangeSeverity": "RestartApplicationServer",
             "Namespace": "aws:elasticbeanstalk:application:environment",
             "MaxLength": 200,
@@ -55,12 +55,12 @@
             "ChangeSeverity": "RestartApplicationServer",
             "Namespace": "aws:elasticbeanstalk:application:environment",
             "MaxLength": 200,
-            "DefaultValue": null
+            "DefaultValue": ""
         },
         {
             "Name": "PARAM3",
             "UserDefined": false,
-            "DefaultValue": null,
+            "DefaultValue": "",
             "ChangeSeverity": "RestartApplicationServer",
             "Namespace": "aws:elasticbeanstalk:application:environment",
             "MaxLength": 200,
@@ -69,7 +69,7 @@
         {
             "Name": "PARAM4",
             "UserDefined": false,
-            "DefaultValue": null,
+            "DefaultValue": "",
             "ChangeSeverity": "RestartApplicationServer",
             "Namespace": "aws:elasticbeanstalk:application:environment",
             "MaxLength": 200,
@@ -78,7 +78,7 @@
         {
             "Name": "PARAM5",
             "UserDefined": false,
-            "DefaultValue": null,
+            "DefaultValue": "",
             "ChangeSeverity": "RestartApplicationServer",
             "Namespace": "aws:elasticbeanstalk:application:environment",
             "MaxLength": 200,
@@ -126,7 +126,7 @@
         {
             "Name": "JVM Options",
             "UserDefined": false,
-            "DefaultValue": null,
+            "DefaultValue": "",
             "ChangeSeverity": "RestartApplicationServer",
             "Namespace": "aws:elasticbeanstalk:container:tomcat:jvmoptions",
             "MaxLength": 200,
@@ -135,7 +135,7 @@
         {
             "Name": "Notification Endpoint",
             "UserDefined": false,
-            "DefaultValue": null,
+            "DefaultValue": "",
             "ChangeSeverity": "NoInterruption",
             "Namespace": "aws:elasticbeanstalk:sns:topics",
             "MaxLength": 200,
@@ -144,7 +144,7 @@
         {
             "Name": "Notification Topic ARN",
             "UserDefined": false,
-            "DefaultValue": null,
+            "DefaultValue": "",
             "ChangeSeverity": "NoInterruption",
             "Namespace": "aws:elasticbeanstalk:sns:topics",
             "MaxLength": 200,
@@ -168,7 +168,7 @@
         {
             "Name": "Notification Topic Name",
             "UserDefined": false,
-            "DefaultValue": null,
+            "DefaultValue": "",
             "ChangeSeverity": "NoInterruption",
             "Namespace": "aws:elasticbeanstalk:sns:topics",
             "MaxLength": 200,
@@ -260,7 +260,7 @@
         {
             "Name": "SSLCertificateId",
             "UserDefined": false,
-            "DefaultValue": null,
+            "DefaultValue": "",
             "ChangeSeverity": "NoInterruption",
             "Namespace": "aws:elb:loadbalancer",
             "MaxLength": 200,
@@ -424,7 +424,7 @@
         {
             "Name": "Custom Availability Zones",
             "UserDefined": false,
-            "DefaultValue": null,
+            "DefaultValue": "",
             "ChangeSeverity": "NoInterruption",
             "Namespace": "aws:autoscaling:asg",
             "ValueType": "List",
@@ -449,7 +449,7 @@
         {
             "Name": "EC2KeyName",
             "UserDefined": false,
-            "DefaultValue": null,
+            "DefaultValue": "",
             "ChangeSeverity": "RestartEnvironment",
             "Namespace": "aws:autoscaling:launchconfiguration",
             "MaxLength": 200,

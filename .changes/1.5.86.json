@@ -1,0 +1,7 @@
+[
+  {
+    "category": "``emr``", 
+    "description": "Update emr client to latest version", 
+    "type": "api-change"
+  }
+]

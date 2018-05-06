@@ -1,86 +1,22 @@
-# Copyright 2013 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright 2012-2014 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the
-# "Software"), to deal in the Software without restriction, including
-# without limitation the rights to use, copy, modify, merge, publish, dis-
-# tribute, sublicense, and/or sell copies of the Software, and to permit
-# persons to whom the Software is furnished to do so, subject to the fol-
-# lowing conditions:
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
 #
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
+# http://aws.amazon.com/apache2.0/
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABIL-
-# ITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
-# SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-# WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-# IN THE SOFTWARE.
-#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+import copy
+import functools
+
 from tests import unittest
 from functools import partial
 
-from botocore.hooks import EventHooks, HierarchicalEmitter, \
-        first_non_none_response
-
-
-class TestEventHooks(unittest.TestCase):
-
-    def setUp(self):
-        self.dispatch = EventHooks()
-        self.called = False
-        self.kwargs = {}
-
-    def tearDown(self):
-        pass
-
-    def hook(self, **kwargs):
-        self.called = True
-        self.kwargs = kwargs
-        return 'hook_response'
-
-    def no_kwarg_hook(self):
-        pass
-
-    def test_register_then_emit_event(self):
-        self.dispatch.register('before_send', self.hook)
-        responses = self.dispatch.emit('before_send')
-
-        self.assertEqual(len(responses), 1)
-        self.assertEqual(responses[0][0], self.hook)
-        self.assertEqual(responses[0][1], 'hook_response')
-        self.assertTrue(self.called)
-
-    def test_kwargs_passed_through_to_handlers(self):
-        self.dispatch.register('before_send', self.hook)
-        responses = self.dispatch.emit('before_send', foo='bar')
-        self.assertEqual(self.kwargs, {'event_name': 'before_send',
-                                       'foo': 'bar'})
-
-    def test_register_must_accept_kwargs(self):
-        with self.assertRaisesRegexp(ValueError,
-                                     "must accept keyword arguments"):
-            self.dispatch.register('before_send', self.no_kwarg_hook)
-
-    def test_handler_must_be_callable(self):
-        with self.assertRaisesRegexp(ValueError,
-                                     "must be callable"):
-            self.dispatch.register('before_send', "foo")
-
-    def test_unregister_hook(self):
-        self.dispatch.register('before_send', self.hook)
-        self.dispatch.unregister('before_send', self.hook)
-        self.dispatch.emit('before_send')
-
-        self.assertFalse(self.called)
-
-    def test_unregister_hook_that_does_not_exist(self):
-        # should not raise an exception
-        self.dispatch.unregister('before_send', self.hook)
-        self.dispatch.emit('before_send')
-        self.assertFalse(self.called)
+from botocore.hooks import HierarchicalEmitter, first_non_none_response
 
 
 class TestHierarchicalEventEmitter(unittest.TestCase):
@@ -123,6 +59,63 @@ class TestHierarchicalEventEmitter(unittest.TestCase):
 
         self.emitter.emit('foo.bar.baz')
         self.assertEqual(calls, ['foo.bar.baz', 'foo.bar', 'foo'])
+
+
+class TestStopProcessing(unittest.TestCase):
+    def setUp(self):
+        self.emitter = HierarchicalEmitter()
+        self.hook_calls = []
+
+    def hook1(self, **kwargs):
+        self.hook_calls.append('hook1')
+
+    def hook2(self, **kwargs):
+        self.hook_calls.append('hook2')
+        return 'hook2-response'
+
+    def hook3(self, **kwargs):
+        self.hook_calls.append('hook3')
+        return 'hook3-response'
+
+    def test_all_hooks(self):
+        # Here we register three hooks and sanity check
+        # that all three would be called by a normal emit.
+        # This ensures our hook calls are setup properly for
+        # later tests.
+        self.emitter.register('foo', self.hook1)
+        self.emitter.register('foo', self.hook2)
+        self.emitter.register('foo', self.hook3)
+        self.emitter.emit('foo')
+
+        self.assertEqual(self.hook_calls, ['hook1', 'hook2', 'hook3'])
+
+    def test_stop_processing_after_first_response(self):
+        # Here we register three hooks, but only the first
+        # two should ever execute.
+        self.emitter.register('foo', self.hook1)
+        self.emitter.register('foo', self.hook2)
+        self.emitter.register('foo', self.hook3)
+        handler, response = self.emitter.emit_until_response('foo')
+
+        self.assertEqual(response, 'hook2-response')
+        self.assertEqual(self.hook_calls, ['hook1', 'hook2'])
+
+    def test_no_responses(self):
+        # Here we register a handler that will not return a response
+        # and ensure we get back proper values.
+        self.emitter.register('foo', self.hook1)
+        responses = self.emitter.emit('foo')
+
+        self.assertEqual(self.hook_calls, ['hook1'])
+        self.assertEqual(responses, [(self.hook1, None)])
+
+    def test_no_handlers(self):
+        # Here we have no handlers, but still expect a tuple of return
+        # values.
+        handler, response = self.emitter.emit_until_response('foo')
+
+        self.assertIsNone(handler)
+        self.assertIsNone(response)
 
 
 class TestFirstNonNoneResponse(unittest.TestCase):
@@ -336,6 +329,236 @@ class TestWildcardHandlers(unittest.TestCase):
         self.emitter.unregister('foo.bar.baz', self.hook)
         self.emitter.emit('foo.bar.baz')
         self.assertEqual(len(self.hook_calls), 0)
+
+    def test_register_with_uses_count_initially(self):
+        self.emitter.register('foo', self.hook, unique_id='foo',
+                              unique_id_uses_count=True)
+        # Subsequent calls must set ``unique_id_uses_count`` to True.
+        with self.assertRaises(ValueError):
+            self.emitter.register('foo', self.hook, unique_id='foo')
+
+    def test_register_with_uses_count_not_initially(self):
+        self.emitter.register('foo', self.hook, unique_id='foo')
+        # Subsequent calls must set ``unique_id_uses_count`` to False.
+        with self.assertRaises(ValueError):
+            self.emitter.register('foo', self.hook, unique_id='foo',
+                                  unique_id_uses_count=True)
+
+    def test_register_with_uses_count_unregister(self):
+        self.emitter.register('foo', self.hook, unique_id='foo',
+                              unique_id_uses_count=True)
+        self.emitter.register('foo', self.hook, unique_id='foo',
+                              unique_id_uses_count=True)
+        # Event was registered to use a count so it must be specified
+        # that a count is used when unregistering
+        with self.assertRaises(ValueError):
+            self.emitter.unregister('foo', self.hook, unique_id='foo')
+        # Event should not have been unregistered.
+        self.emitter.emit('foo')
+        self.assertEqual(len(self.hook_calls), 1)
+        self.emitter.unregister('foo', self.hook, unique_id='foo',
+                                unique_id_uses_count=True)
+        # Event still should not be unregistered.
+        self.hook_calls = []
+        self.emitter.emit('foo')
+        self.assertEqual(len(self.hook_calls), 1)
+        self.emitter.unregister('foo', self.hook, unique_id='foo',
+                                unique_id_uses_count=True)
+        # Now the event should be unregistered.
+        self.hook_calls = []
+        self.emitter.emit('foo')
+        self.assertEqual(len(self.hook_calls), 0)
+
+    def test_register_with_no_uses_count_unregister(self):
+        self.emitter.register('foo', self.hook, unique_id='foo')
+        # The event was not registered to use a count initially
+        with self.assertRaises(ValueError):
+            self.emitter.unregister('foo', self.hook, unique_id='foo',
+                                    unique_id_uses_count=True)
+
+    def test_handlers_called_in_order(self):
+        def handler(call_number, **kwargs):
+            kwargs['call_number'] = call_number
+            self.hook_calls.append(kwargs)
+
+        self.emitter.register('foo', partial(handler, call_number=1))
+        self.emitter.register('foo', partial(handler, call_number=2))
+        self.emitter.emit('foo')
+        self.assertEqual([k['call_number'] for k in self.hook_calls],
+                         [1, 2])
+
+    def test_handler_call_order_with_hierarchy(self):
+        def handler(call_number, **kwargs):
+            kwargs['call_number'] = call_number
+            self.hook_calls.append(kwargs)
+
+        # We go from most specific to least specific, and each level is called
+        # in the order they were registered for that particular hierarchy
+        # level.
+        self.emitter.register('foo.bar.baz', partial(handler, call_number=1))
+        self.emitter.register('foo.bar', partial(handler, call_number=3))
+        self.emitter.register('foo', partial(handler, call_number=5))
+        self.emitter.register('foo.bar.baz', partial(handler, call_number=2))
+        self.emitter.register('foo.bar', partial(handler, call_number=4))
+        self.emitter.register('foo', partial(handler, call_number=6))
+
+        self.emitter.emit('foo.bar.baz')
+        self.assertEqual([k['call_number'] for k in self.hook_calls],
+                         [1, 2, 3, 4, 5, 6])
+
+    def test_register_first_single_level(self):
+        def handler(call_number, **kwargs):
+            kwargs['call_number'] = call_number
+            self.hook_calls.append(kwargs)
+
+        # Handlers registered through register_first() are always called
+        # before handlers registered with register().
+        self.emitter.register('foo', partial(handler, call_number=3))
+        self.emitter.register('foo', partial(handler, call_number=4))
+        self.emitter.register_first('foo', partial(handler, call_number=1))
+        self.emitter.register_first('foo', partial(handler, call_number=2))
+        self.emitter.register('foo', partial(handler, call_number=5))
+
+        self.emitter.emit('foo')
+        self.assertEqual([k['call_number'] for k in self.hook_calls],
+                         [1, 2, 3, 4, 5])
+
+    def test_register_first_hierarchy(self):
+        def handler(call_number, **kwargs):
+            kwargs['call_number'] = call_number
+            self.hook_calls.append(kwargs)
+
+        self.emitter.register('foo', partial(handler, call_number=5))
+        self.emitter.register('foo.bar', partial(handler, call_number=2))
+
+        self.emitter.register_first('foo', partial(handler, call_number=4))
+        self.emitter.register_first('foo.bar', partial(handler, call_number=1))
+
+        self.emitter.register('foo', partial(handler, call_number=6))
+        self.emitter.register('foo.bar', partial(handler, call_number=3))
+
+        self.emitter.emit('foo.bar')
+        self.assertEqual([k['call_number'] for k in self.hook_calls],
+                         [1, 2, 3, 4, 5, 6])
+
+    def test_register_last_hierarchy(self):
+        def handler(call_number, **kwargs):
+            kwargs['call_number'] = call_number
+            self.hook_calls.append(kwargs)
+
+        self.emitter.register_last('foo', partial(handler, call_number=3))
+        self.emitter.register('foo', partial(handler, call_number=2))
+        self.emitter.register_first('foo', partial(handler, call_number=1))
+        self.emitter.emit('foo')
+        self.assertEqual([k['call_number'] for k in self.hook_calls],
+                         [1, 2, 3])
+
+    def test_register_unregister_first_last(self):
+        self.emitter.register('foo', self.hook)
+        self.emitter.register_last('foo.bar', self.hook)
+        self.emitter.register_first('foo.bar.baz', self.hook)
+
+        self.emitter.unregister('foo.bar.baz', self.hook)
+        self.emitter.unregister('foo.bar', self.hook)
+        self.emitter.unregister('foo', self.hook)
+
+        self.emitter.emit('foo')
+        self.assertEqual(self.hook_calls, [])
+
+    def test_copy_emitter(self):
+        # Here we're not testing copy directly, we're testing
+        # the observable behavior from copying an event emitter.
+        first = []
+        def first_handler(id_name, **kwargs):
+            first.append(id_name)
+
+        second = []
+        def second_handler(id_name, **kwargs):
+            second.append(id_name)
+
+        self.emitter.register('foo.bar.baz', first_handler)
+        # First time we emit, only the first handler should be called.
+        self.emitter.emit('foo.bar.baz', id_name='first-time')
+        self.assertEqual(first, ['first-time'])
+        self.assertEqual(second, [])
+
+        copied_emitter = copy.copy(self.emitter)
+        # If we emit from the copied emitter, we should still
+        # only see the first handler called.
+        copied_emitter.emit('foo.bar.baz', id_name='second-time')
+        self.assertEqual(first, ['first-time', 'second-time'])
+        self.assertEqual(second, [])
+
+        # However, if we register an event handler with the copied
+        # emitter, the first emitter will not see this.
+        copied_emitter.register('foo.bar.baz', second_handler)
+
+        copied_emitter.emit('foo.bar.baz', id_name='third-time')
+        self.assertEqual(first, ['first-time', 'second-time', 'third-time'])
+        # And now the second handler is called.
+        self.assertEqual(second, ['third-time'])
+
+        # And vice-versa, emitting from the original emitter
+        # will not trigger the second_handler.
+        # We'll double check this by unregistering/re-registering
+        # the event handler.
+        self.emitter.unregister('foo.bar.baz', first_handler)
+        self.emitter.register('foo.bar.baz', first_handler)
+        self.emitter.emit('foo.bar.baz', id_name='last-time')
+        self.assertEqual(second, ['third-time'])
+
+    def test_copy_emitter_with_unique_id_event(self):
+        # Here we're not testing copy directly, we're testing
+        # the observable behavior from copying an event emitter.
+        first = []
+        def first_handler(id_name, **kwargs):
+            first.append(id_name)
+
+        second = []
+        def second_handler(id_name, **kwargs):
+            second.append(id_name)
+
+        self.emitter.register('foo', first_handler, 'bar')
+        self.emitter.emit('foo', id_name='first-time')
+        self.assertEqual(first, ['first-time'])
+        self.assertEqual(second, [])
+
+        copied_emitter = copy.copy(self.emitter)
+
+        # If we register an event handler with the copied
+        # emitter, the event should not get registered again
+        # because the unique id was already used.
+        copied_emitter.register('foo', second_handler, 'bar')
+        copied_emitter.emit('foo', id_name='second-time')
+        self.assertEqual(first, ['first-time', 'second-time'])
+        self.assertEqual(second, [])
+
+        # If we unregister the first event from the copied emitter,
+        # We should be able to register the second handler.
+        copied_emitter.unregister('foo', first_handler, 'bar')
+        copied_emitter.register('foo', second_handler, 'bar')
+        copied_emitter.emit('foo', id_name='third-time')
+        self.assertEqual(first, ['first-time', 'second-time'])
+        self.assertEqual(second, ['third-time'])
+
+        # The original event emitter should have the unique id event still
+        # registered though.
+        self.emitter.emit('foo', id_name='fourth-time')
+        self.assertEqual(first, ['first-time', 'second-time', 'fourth-time'])
+        self.assertEqual(second, ['third-time'])
+
+    def test_copy_events_with_partials(self):
+        # There's a bug in python2.6 where you can't deepcopy
+        # a partial object.  We want to ensure that doesn't
+        # break when a partial is hooked up as an event handler.
+        def handler(a, b, **kwargs):
+            return b
+
+        f = functools.partial(handler, 1)
+        self.emitter.register('a.b', f)
+        copied = copy.copy(self.emitter)
+        self.assertEqual(copied.emit_until_response(
+            'a.b', b='return-val')[1], 'return-val')
 
 
 if __name__ == '__main__':

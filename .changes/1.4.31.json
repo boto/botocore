@@ -1,0 +1,37 @@
+[
+  {
+    "category": "RequestSigner", 
+    "description": "`RequestSigner.generate_presigned_url` now requires the operation name to be passed in. This does not affect using `generate_presigned_url` through a client.", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``rds``", 
+    "description": "Update rds client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``directconnect``", 
+    "description": "Update directconnect client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "RequestSigner", 
+    "description": "Allow `botocore.UNSIGNED` to be used with `generate_presigned_url` and `generate_presigned_post`.", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``cognito-identity``", 
+    "description": "Update cognito-identity client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``iam``", 
+    "description": "Update iam client to latest version", 
+    "type": "feature"
+  }
+]

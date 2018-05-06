@@ -1,6 +1,5 @@
 {
-    "UploadIdMarker": null, 
-    "CommonPrefixes": [], 
+    "UploadIdMarker": "", 
     "ResponseMetadata": {}, 
     "NextKeyMarker": "my-movie.m2ts", 
     "Bucket": "bucket", 
@@ -49,7 +48,7 @@
             }
         }
     ], 
-    "KeyMarker": null, 
+    "KeyMarker": "", 
     "MaxUploads": 3, 
     "IsTruncated": true
 }

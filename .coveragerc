@@ -1,0 +1,10 @@
+[run]
+branch = True
+omit =
+    botocore/vendored/*
+
+[report]
+exclude_lines =
+    raise NotImplementedError.*
+include =
+    botocore/*

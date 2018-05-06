@@ -19,11 +19,13 @@
                 {
                     "GatewayId": "local",
                     "DestinationCidrBlock": "10.0.0.0/16",
+                    "Origin": "CreateRouteTable",
                     "State": "active"
                 },
                 {
                     "GatewayId": "igw-6228110b",
                     "DestinationCidrBlock": "0.0.0.0/0",
+                    "Origin": "CreateRoute",
                     "State": "active"
                 }
             ]
@@ -44,6 +46,7 @@
                 {
                     "GatewayId": "local",
                     "DestinationCidrBlock": "10.0.0.0/16",
+                    "Origin": "CreateRouteTable",
                     "State": "active"
                 }
             ]

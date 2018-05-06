@@ -1,0 +1,52 @@
+[
+  {
+    "category": "Credentials", 
+    "description": "Include timezone information when storing refresh time (`#869 <https://github.com/boto/botocore/issues/869>`__)", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "EC2", 
+    "description": "Add support for two new EBS volume types", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``S3``", 
+    "description": "Add support for s3 accelerate configuration", 
+    "type": "feature"
+  }, 
+  {
+    "category": "CognitoIdentityProvider", 
+    "description": "Add support for new service, CognitoIdedentityProvider", 
+    "type": "feature"
+  }, 
+  {
+    "category": "S3", 
+    "description": "Add support for Amazon S3 Transfer Acceleration", 
+    "type": "feature"
+  }, 
+  {
+    "category": "CodeCommit", 
+    "description": "Add paginators for CodeCommit (`#881 <https://github.com/boto/botocore/issues/881>`__)", 
+    "type": "feature"
+  }, 
+  {
+    "category": "Kinesis", 
+    "description": "Update Kinesis client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "ElasticBeanstalk", 
+    "description": "Add support for automatic platform version upgrades with managed updates", 
+    "type": "feature"
+  }, 
+  {
+    "category": "DeviceFarm", 
+    "description": "Update DeviceFarm client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "FireHose", 
+    "description": "Update FireHose client to latest version", 
+    "type": "feature"
+  }
+]

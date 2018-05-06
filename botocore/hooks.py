@@ -1,30 +1,37 @@
-# Copyright 2013 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright 2012-2014 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the
-# "Software"), to deal in the Software without restriction, including
-# without limitation the rights to use, copy, modify, merge, publish, dis-
-# tribute, sublicense, and/or sell copies of the Software, and to permit
-# persons to whom the Software is furnished to do so, subject to the fol-
-# lowing conditions:
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
 #
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
+# http://aws.amazon.com/apache2.0/
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABIL-
-# ITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
-# SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-# WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-# IN THE SOFTWARE.
-#
-import inspect
-import six
-from collections import defaultdict, deque
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+import copy
 import logging
+from collections import defaultdict, deque, namedtuple
+from botocore.compat import accepts_kwargs, six
 
 logger = logging.getLogger(__name__)
+
+
+_NodeList = namedtuple('NodeList', ['first', 'middle', 'last'])
+_FIRST = 0
+_MIDDLE = 1
+_LAST = 2
+
+
+class NodeList(_NodeList):
+
+    def __copy__(self):
+        first_copy = copy.copy(self.first)
+        middle_copy = copy.copy(self.middle)
+        last_copy = copy.copy(self.last)
+        copied = NodeList(first_copy, middle_copy, last_copy)
+        return copied
 
 
 def first_non_none_response(responses, default=None):
@@ -57,14 +64,81 @@ def first_non_none_response(responses, default=None):
 
 class BaseEventHooks(object):
     def emit(self, event_name, **kwargs):
+        """Call all handlers subscribed to an event.
+
+        :type event_name: str
+        :param event_name: The name of the event to emit.
+
+        :type **kwargs: dict
+        :param **kwargs: Arbitrary kwargs to pass through to the
+            subscribed handlers.  The ``event_name`` will be injected
+            into the kwargs so it's not necesary to add this to **kwargs.
+
+        :rtype: list of tuples
+        :return: A list of ``(handler_func, handler_func_return_value)``
+
+        """
         return []
 
-    def register(self, event_name, handler, unique_id=None):
+    def register(self, event_name, handler, unique_id=None,
+                 unique_id_uses_count=False):
+        """Register an event handler for a given event.
+
+        If a ``unique_id`` is given, the handler will not be registered
+        if a handler with the ``unique_id`` has already been registered.
+
+        Handlers are called in the order they have been registered.
+        Note handlers can also be registered with ``register_first()``
+        and ``register_last()``.  All handlers registered with
+        ``register_first()`` are called before handlers registered
+        with ``register()`` which are called before handlers registered
+        with ``register_last()``.
+
+        """
+        self._verify_and_register(event_name, handler, unique_id,
+                                  register_method=self._register,
+                                  unique_id_uses_count=unique_id_uses_count)
+
+    def register_first(self, event_name, handler, unique_id=None,
+                       unique_id_uses_count=False):
+        """Register an event handler to be called first for an event.
+
+        All event handlers registered with ``register_first()`` will
+        be called before handlers registered with ``register()`` and
+        ``register_last()``.
+
+        """
+        self._verify_and_register(event_name, handler, unique_id,
+                                  register_method=self._register_first,
+                                  unique_id_uses_count=unique_id_uses_count)
+
+    def register_last(self, event_name, handler, unique_id=None,
+                      unique_id_uses_count=False):
+        """Register an event handler to be called last for an event.
+
+        All event handlers registered with ``register_last()`` will be called
+        after handlers registered with ``register_first()`` and ``register()``.
+
+        """
+        self._verify_and_register(event_name, handler, unique_id,
+                                  register_method=self._register_last,
+                                  unique_id_uses_count=unique_id_uses_count)
+
+    def _verify_and_register(self, event_name, handler, unique_id,
+                             register_method, unique_id_uses_count):
         self._verify_is_callable(handler)
         self._verify_accept_kwargs(handler)
-        self._register(event_name, handler, unique_id)
+        register_method(event_name, handler, unique_id, unique_id_uses_count)
 
-    def unregister(self, event_name, handler=None, unique_id=None):
+    def unregister(self, event_name, handler=None, unique_id=None,
+                   unique_id_uses_count=False):
+        """Unregister an event handler for a given event.
+
+        If no ``unique_id`` was given during registration, then the
+        first instance of the event handler is removed (if the event
+        handler has been registered multiple times).
+
+        """
         pass
 
     def _verify_is_callable(self, func):
@@ -81,50 +155,11 @@ class BaseEventHooks(object):
 
         """
         try:
-            argspec = inspect.getargspec(func)
-        except TypeError:
-            return False
-        else:
-            if argspec[2] is None:
+            if not accepts_kwargs(func):
                 raise ValueError("Event handler %s must accept keyword "
                                  "arguments (**kwargs)" % func)
-
-
-class EventHooks(BaseEventHooks):
-    def __init__(self):
-        # event_name -> [handler, ...]
-        self._handlers = defaultdict(list)
-
-    def emit(self, event_name, **kwargs):
-        """Call all handlers subscribed to an event.
-
-        :type event_name: str
-        :param event_name: The name of the event to emit.
-
-        :type **kwargs: dict
-        :param **kwargs: Arbitrary kwargs to pass through to the
-            subscribed handlers.  The ``event_name`` will be injected
-            into the kwargs so it's not necesary to add this to **kwargs.
-
-        :rtype: list of tuples
-        :return: A list of ``(handler_func, handler_func_return_value)``
-
-        """
-        kwargs['event_name'] = event_name
-        responses = []
-        for handler in self._handlers[event_name]:
-            response = handler(**kwargs)
-            responses.append((handler, response))
-        return responses
-
-    def _register(self, event_name, handler, unique_id=None):
-        self._handlers[event_name].append(handler)
-
-    def unregister(self, event_name, handler, unique_id=None):
-        try:
-            self._handlers[event_name].remove(handler)
-        except ValueError:
-            pass
+        except TypeError:
+            return False
 
 
 class HierarchicalEmitter(BaseEventHooks):
@@ -136,9 +171,26 @@ class HierarchicalEmitter(BaseEventHooks):
         self._handlers = _PrefixTrie()
         # This is used to ensure that unique_id's are only
         # registered once.
-        self._unique_id_cache = {}
+        self._unique_id_handlers = {}
 
-    def emit(self, event_name, **kwargs):
+    def _emit(self, event_name, kwargs, stop_on_response=False):
+        """
+        Emit an event with optional keyword arguments.
+
+        :type event_name: string
+        :param event_name: Name of the event
+        :type kwargs: dict
+        :param kwargs: Arguments to be passed to the handler functions.
+        :type stop_on_response: boolean
+        :param stop_on_response: Whether to stop on the first non-None
+                                response. If False, then all handlers
+                                will be called. This is especially useful
+                                to handlers which mutate data and then
+                                want to stop propagation of the event.
+        :rtype: list
+        :return: List of (handler, response) tuples from all processed
+                 handlers.
+        """
         responses = []
         # Invoke the event handlers from most specific
         # to least specific, each time stripping off a dot.
@@ -157,39 +209,138 @@ class HierarchicalEmitter(BaseEventHooks):
             logger.debug('Event %s: calling handler %s', event_name, handler)
             response = handler(**kwargs)
             responses.append((handler, response))
+            if stop_on_response and response is not None:
+                return responses
         return responses
 
-    def _register(self, event_name, handler, unique_id=None):
+    def emit(self, event_name, **kwargs):
+        """
+        Emit an event by name with arguments passed as keyword args.
+
+            >>> responses = emitter.emit(
+            ...     'my-event.service.operation', arg1='one', arg2='two')
+
+        :rtype: list
+        :return: List of (handler, response) tuples from all processed
+                 handlers.
+        """
+        return self._emit(event_name, kwargs)
+
+    def emit_until_response(self, event_name, **kwargs):
+        """
+        Emit an event by name with arguments passed as keyword args,
+        until the first non-``None`` response is received. This
+        method prevents subsequent handlers from being invoked.
+
+            >>> handler, response = emitter.emit_until_response(
+                'my-event.service.operation', arg1='one', arg2='two')
+
+        :rtype: tuple
+        :return: The first (handler, response) tuple where the response
+                 is not ``None``, otherwise (``None``, ``None``).
+        """
+        responses = self._emit(event_name, kwargs, stop_on_response=True)
+        if responses:
+            return responses[-1]
+        else:
+            return (None, None)
+
+    def _register(self, event_name, handler, unique_id=None,
+                  unique_id_uses_count=False):
+        self._register_section(event_name, handler, unique_id,
+                               unique_id_uses_count, section=_MIDDLE)
+
+    def _register_first(self, event_name, handler, unique_id=None,
+                        unique_id_uses_count=False):
+        self._register_section(event_name, handler, unique_id,
+                               unique_id_uses_count, section=_FIRST)
+
+    def _register_last(self, event_name, handler, unique_id,
+                       unique_id_uses_count=False):
+        self._register_section(event_name, handler, unique_id,
+                               unique_id_uses_count, section=_LAST)
+
+    def _register_section(self, event_name, handler, unique_id,
+                          unique_id_uses_count, section):
         if unique_id is not None:
-            if unique_id in self._unique_id_cache:
+            if unique_id in self._unique_id_handlers:
                 # We've already registered a handler using this unique_id
                 # so we don't need to register it again.
+                count = self._unique_id_handlers[unique_id].get('count', None)
+                if unique_id_uses_count:
+                    if not count:
+                        raise ValueError(
+                            "Initial registration of  unique id %s was "
+                            "specified to use a counter. Subsequent register "
+                            "calls to unique id must specify use of a counter "
+                            "as well." % unique_id)
+                    else:
+                        self._unique_id_handlers[unique_id]['count'] += 1
+                else:
+                    if count:
+                        raise ValueError(
+                            "Initial registration of unique id %s was "
+                            "specified to not use a counter. Subsequent "
+                            "register calls to unique id must specify not to "
+                            "use a counter as well." % unique_id)
                 return
             else:
                 # Note that the trie knows nothing about the unique
                 # id.  We track uniqueness in this class via the
-                # _unique_id_cache.
-                self._handlers.append_item(event_name, handler)
-                self._unique_id_cache[unique_id] = handler
+                # _unique_id_handlers.
+                self._handlers.append_item(event_name, handler,
+                                           section=section)
+                unique_id_handler_item = {'handler': handler}
+                if unique_id_uses_count:
+                    unique_id_handler_item['count'] = 1
+                self._unique_id_handlers[unique_id] = unique_id_handler_item
         else:
-            self._handlers.append_item(event_name, handler)
+            self._handlers.append_item(event_name, handler, section=section)
         # Super simple caching strategy for now, if we change the registrations
         # clear the cache.  This has the opportunity for smarter invalidations.
         self._lookup_cache = {}
 
-    def unregister(self, event_name, handler=None, unique_id=None):
+    def unregister(self, event_name, handler=None, unique_id=None,
+                   unique_id_uses_count=False):
         if unique_id is not None:
             try:
-                handler = self._unique_id_cache.pop(unique_id)
+                count = self._unique_id_handlers[unique_id].get('count', None)
             except KeyError:
                 # There's no handler matching that unique_id so we have
                 # nothing to unregister.
                 return
+            if unique_id_uses_count:
+                if count is None:
+                    raise ValueError(
+                        "Initial registration of unique id %s was specified to "
+                        "use a counter. Subsequent unregister calls to unique "
+                        "id must specify use of a counter as well." % unique_id)
+                elif count == 1:
+                    handler = self._unique_id_handlers.pop(unique_id)['handler']
+                else:
+                    self._unique_id_handlers[unique_id]['count'] -= 1
+                    return
+            else:
+                if count:
+                    raise ValueError(
+                        "Initial registration of unique id %s was specified "
+                        "to not use a counter. Subsequent unregister calls "
+                        "to unique id must specify not to use a counter as "
+                        "well." % unique_id)
+                handler = self._unique_id_handlers.pop(unique_id)['handler']
         try:
             self._handlers.remove_item(event_name, handler)
             self._lookup_cache = {}
         except ValueError:
             pass
+
+    def __copy__(self):
+        new_instance = self.__class__()
+        new_state = self.__dict__.copy()
+        new_state['_handlers'] = copy.copy(self._handlers)
+        new_state['_unique_id_handlers'] = copy.copy(self._unique_id_handlers)
+        new_instance.__dict__ = new_state
+        return new_instance
 
 
 class _PrefixTrie(object):
@@ -222,7 +373,7 @@ class _PrefixTrie(object):
         # {'foo': {'children': {'bar': {...}}}}.
         self._root = {'chunk': None, 'children': {}, 'values': None}
 
-    def append_item(self, key, value):
+    def append_item(self, key, value, section=_MIDDLE):
         """Add an item to a key.
 
         If a value is already associated with that key, the new
@@ -238,9 +389,8 @@ class _PrefixTrie(object):
             else:
                 current = current['children'][part]
         if current['values'] is None:
-            current['values'] = [value]
-        else:
-            current['values'].append(value)
+            current['values'] = NodeList([], [], [])
+        current['values'][section].append(value)
 
     def prefix_search(self, key):
         """Collect all items that are prefixes of key.
@@ -266,12 +416,17 @@ class _PrefixTrie(object):
         while stack:
             current_node, index = stack.pop()
             if current_node['values']:
-                seq = reversed(current_node['values'])
                 # We're using extendleft because we want
                 # the values associated with the node furthest
                 # from the root to come before nodes closer
-                # to the root.
-                collected.extendleft(seq)
+                # to the root.  extendleft() also adds its items
+                # in right-left order so .extendleft([1, 2, 3])
+                # will result in final_list = [3, 2, 1], which is
+                # why we reverse the lists.
+                node_list = current_node['values']
+                complete_order = (node_list.first + node_list.middle +
+                                  node_list.last)
+                collected.extendleft(reversed(complete_order))
             if not index == key_parts_len:
                 children = current_node['children']
                 directs = children.get(key_parts[index])
@@ -302,7 +457,13 @@ class _PrefixTrie(object):
             if next_node is not None:
                 self._remove_item(next_node, key_parts, value, index + 1)
                 if index == len(key_parts) - 1:
-                    next_node['values'].remove(value)
+                    node_list = next_node['values']
+                    if value in node_list.first:
+                        node_list.first.remove(value)
+                    elif value in node_list.middle:
+                        node_list.middle.remove(value)
+                    elif value in node_list.last:
+                        node_list.last.remove(value)
                 if not next_node['children'] and not next_node['values']:
                     # Then this is a leaf node with no values so
                     # we can just delete this link from the parent node.
@@ -312,3 +473,27 @@ class _PrefixTrie(object):
             else:
                 raise ValueError(
                     "key is not in trie: %s" % '.'.join(key_parts))
+
+    def __copy__(self):
+        # The fact that we're using a nested dict under the covers
+        # is an implementation detail, and the user shouldn't have
+        # to know that they'd normally need a deepcopy so we expose
+        # __copy__ instead of __deepcopy__.
+        new_copy = self.__class__()
+        copied_attrs = self._recursive_copy(self.__dict__)
+        new_copy.__dict__ = copied_attrs
+        return new_copy
+
+    def _recursive_copy(self, node):
+        # We can't use copy.deepcopy because we actually only want to copy
+        # the structure of the trie, not the handlers themselves.
+        # Each node has a chunk, children, and values.
+        copied_node = {}
+        for key, value in node.items():
+            if isinstance(value, NodeList):
+                copied_node[key] = copy.copy(value)
+            elif isinstance(value, dict):
+                copied_node[key] = self._recursive_copy(value)
+            else:
+                copied_node[key] = value
+        return copied_node

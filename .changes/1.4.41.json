@@ -1,0 +1,47 @@
+[
+  {
+    "category": "``ds``", 
+    "description": "Update ds client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``ses``", 
+    "description": "Update ses client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "s3", 
+    "description": "S3 region redirector will now honor the orginial url scheme.", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``sts``", 
+    "description": "Update sts client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``cognito-idp``", 
+    "description": "Update cognito-idp client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``es``", 
+    "description": "Update es client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``apigateway``", 
+    "description": "Update apigateway client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "Credentials", 
+    "description": "Raise error when partial hard coded creds are provided when creating a client.", 
+    "type": "bugfix"
+  }
+]

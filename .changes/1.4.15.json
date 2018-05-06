@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``route53domains``", 
+    "description": "Update route53domains client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``opsworks``", 
+    "description": "Update opsworks client to latest version", 
+    "type": "feature"
+  }
+]

@@ -1,34 +1,26 @@
 # Copyright (c) 2012-2013 Mitch Garnaat http://garnaat.org/
-# Copyright 2012-2013 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright 2012-2014 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the
-# "Software"), to deal in the Software without restriction, including
-# without limitation the rights to use, copy, modify, merge, publish, dis-
-# tribute, sublicense, and/or sell copies of the Software, and to permit
-# persons to whom the Software is furnished to do so, subject to the fol-
-# lowing conditions:
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
 #
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
+# http://aws.amazon.com/apache2.0/
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABIL-
-# ITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
-# SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-# WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-# IN THE SOFTWARE.
-#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+
 import random
 import functools
 import logging
 from binascii import crc32
 
-from botocore.vendored.requests import ConnectionError
+from botocore.vendored.requests import ConnectionError, Timeout
 from botocore.vendored.requests.packages.urllib3.exceptions import ClosedPoolError
 
-from botocore.exceptions import ChecksumError
+from botocore.exceptions import ChecksumError, EndpointConnectionError
 
 
 logger = logging.getLogger(__name__)
@@ -37,7 +29,10 @@ logger = logging.getLogger(__name__)
 # to get more specific exceptions from requests we can update
 # this mapping with more specific exceptions.
 EXCEPTION_MAP = {
-    'GENERAL_CONNECTION_ERROR': [ConnectionError, ClosedPoolError],
+    'GENERAL_CONNECTION_ERROR': [
+        ConnectionError, ClosedPoolError, Timeout,
+        EndpointConnectionError
+    ],
 }
 
 
@@ -224,7 +219,8 @@ class BaseChecker(object):
         if response is not None:
             return self._check_response(attempt_number, response)
         elif caught_exception is not None:
-            return self._check_caught_exception(attempt_number, caught_exception)
+            return self._check_caught_exception(
+                attempt_number, caught_exception)
         else:
             raise ValueError("Both response and caught_exception are None.")
 
@@ -255,6 +251,9 @@ class MaxAttemptsDecorator(BaseChecker):
                                           caught_exception)
         if should_retry:
             if attempt_number >= self._max_attempts:
+                # explicitly set MaxAttemptsReached
+                if response is not None and 'ResponseMetadata' in response[1]:
+                    response[1]['ResponseMetadata']['MaxAttemptsReached'] = True
                 logger.debug("Reached the maximum number of retry "
                              "attempts: %s", attempt_number)
                 return False
@@ -299,8 +298,8 @@ class ServiceErrorCodeChecker(BaseChecker):
 
     def _check_response(self, attempt_number, response):
         if response[0].status_code == self._status_code:
-            if any([e.get('Code') == self._error_code
-                    for e in response[1].get('Errors', [])]):
+            actual_error_code = response[1].get('Error', {}).get('Code')
+            if actual_error_code == self._error_code:
                 logger.debug(
                     "retry needed: matching HTTP status and error code seen: "
                     "%s, %s", self._status_code, self._error_code)

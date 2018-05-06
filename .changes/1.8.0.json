@@ -1,0 +1,62 @@
+[
+  {
+    "category": "``rekognition``", 
+    "description": "Update rekognition client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``emr``", 
+    "description": "Update emr client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``xray``", 
+    "description": "Update xray client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "Credentials", 
+    "description": "When creating an assume role profile, you can now specify a credential source outside of the config file using the `credential_source` key.", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``shield``", 
+    "description": "Update shield client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cloudformation``", 
+    "description": "Update cloudformation client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "Credentials", 
+    "description": "When creating an assume role profile, you can now specify another assume role profile as the source. This allows for chaining assume role calls.", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``codebuild``", 
+    "description": "Update codebuild client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "credentials", 
+    "description": "Adds support for the process credential provider, allowing users to specify a process to call to get credentials.", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``apigateway``", 
+    "description": "Update apigateway client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``storagegateway``", 
+    "description": "Update storagegateway client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "Response", 
+    "description": "Allow reads of zero on streaming bodies, fixes `#1309 <https://github.com/boto/botocore/issues/1309>`__.", 
+    "type": "enhancement"
+  }
+]

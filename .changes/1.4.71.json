@@ -1,0 +1,17 @@
+[
+  {
+    "category": "Parsers", 
+    "description": "ResponseMetadata will now always be populated, provided the response was able to be parsed into a dict.", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "``cloudformation``", 
+    "description": "Update cloudformation client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``logs``", 
+    "description": "Update logs client to latest version", 
+    "type": "feature"
+  }
+]

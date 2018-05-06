@@ -1,0 +1,27 @@
+[
+  {
+    "category": "``redshift``", 
+    "description": "Update redshift client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "Stubber", 
+    "description": "Add ability to specify expected params when using `add_client_error` (`#1025 <https://github.com/boto/botocore/issues/1025>`__)", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``emr``", 
+    "description": "Update emr client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``codedeploy``", 
+    "description": "Update codedeploy client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``rds``", 
+    "description": "Update rds client to latest version", 
+    "type": "feature"
+  }
+]

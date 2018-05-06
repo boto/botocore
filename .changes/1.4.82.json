@@ -1,0 +1,12 @@
+[
+  {
+    "category": "Exceptions", 
+    "description": "Allow parsing of json error responses with non-json bodies.", 
+    "type": "bugfix"
+  }, 
+  {
+    "category": "opsworks-cm", 
+    "description": "Added waiter for Opsworks CM", 
+    "type": "feature"
+  }
+]

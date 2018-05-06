@@ -1,0 +1,77 @@
+[
+  {
+    "category": "parameter", 
+    "description": "Automatically inject an idempotency token into parameters marked with the idempotencyToken trait", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``appstream``", 
+    "description": "Update appstream client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``directconnect``", 
+    "description": "Update directconnect client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``elasticbeanstalk``", 
+    "description": "Update elasticbeanstalk client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``shield``", 
+    "description": "Update shield client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``opsworkscm``", 
+    "description": "Update opsworkscm client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``lambda``", 
+    "description": "Update lambda client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``codebuild``", 
+    "description": "Update codebuild client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``xray``", 
+    "description": "Update xray client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``stepfunctions``", 
+    "description": "Update stepfunctions client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``ssm``", 
+    "description": "Update ssm client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``health``", 
+    "description": "Update health client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``apigateway``", 
+    "description": "Update apigateway client to latest version", 
+    "type": "feature"
+  }, 
+  {
+    "category": "``pinpoint``", 
+    "description": "Update pinpoint client to latest version", 
+    "type": "feature"
+  }
+]

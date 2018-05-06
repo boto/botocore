@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``RDS``",
+    "description": "Add support for customizing the order in which Aurora Replicas are promoted to primary instance during a failover",
+    "type": "feature"
+  },
+  {
+    "category": "Signature Version 4",
+    "description": "Fix issue when calculating signature version 4 signature for certain urls (`issue 827 <https://github.com/boto/botocore/pull/827>`__)",
+    "type": "bugfix"
+  }
+]

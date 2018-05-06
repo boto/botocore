@@ -1,9 +1,21 @@
+sudo: false
 language: python
 python:
   - "2.6"
   - "2.7"
   - "3.3"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+cache: pip
+before_install:
+  - if [ "$TRAVIS_PULL_REQUEST" != "false" ] && [ "$TRAVIS_BRANCH" == "master" ]; then
+      echo "No pull requests can be sent to the master branch" 1>&2;
+      exit 1;
+    fi
+  - pip install codecov
 install:
-  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install --use-mirrors unittest2; pip install --use-mirrors -r requirements26.txt; fi
-  - pip install --use-mirrors -r requirements.txt
-script: nosetests tests/unit
+  - python scripts/ci/install
+script: python scripts/ci/run-tests
+after_success:
+  - rm tests/coverage.xml && mv tests/.coverage ./ && codecov

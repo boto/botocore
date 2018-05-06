@@ -1,0 +1,37 @@
+[
+  {
+    "category": "``CodeCommit``",
+    "description": "Update model to latest version",
+    "type": "feature"
+  },
+  {
+    "category": "``Config``",
+    "description": "Update model to latest version",
+    "type": "feature"
+  },
+  {
+    "category": "``DeviceFarm``",
+    "description": "Update model to latest version",
+    "type": "feature"
+  },
+  {
+    "category": "``DirectConnect``",
+    "description": "Update model to latest version",
+    "type": "feature"
+  },
+  {
+    "category": "``Events``",
+    "description": "Update model to latest version",
+    "type": "feature"
+  },
+  {
+    "category": "``DynamoDB Local``",
+    "description": "Fix issue when using the ``local`` region with ``dynamodb`` (`issue 819 <https://github.com/boto/botocore/pull/819>`__)",
+    "type": "bugfix"
+  },
+  {
+    "category": "``CloudSearchDomain``",
+    "description": "Fix issue when signing requests for ``cloudsearchdomain`` (`boto3 issue 538 <https://github.com/boto/boto3/issues/538>`__)",
+    "type": "bugfix"
+  }
+]

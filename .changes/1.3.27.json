@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``EMR``",
+    "description": "Added support for adding EBS storage to EMR instances.",
+    "type": "feature"
+  },
+  {
+    "category": "pagination",
+    "description": "Refactored pagination to handle non-string service tokens.",
+    "type": "bugfix"
+  },
+  {
+    "category": "credentials",
+    "description": "Fix race condition in credential provider.",
+    "type": "bugfix"
+  }
+]

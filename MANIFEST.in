@@ -3,3 +3,6 @@ include LICENSE.txt
 include requirements.txt
 include botocore/vendored/requests/cacert.pem
 recursive-include botocore/data *.json
+graft docs
+prune docs/build
+graft tests

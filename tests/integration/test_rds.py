@@ -1,25 +1,16 @@
-# Copyright (c) 2013 Amazon.com, Inc. or its affiliates.  All Rights Reserved
+# Copyright 2012-2014 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the
-# "Software"), to deal in the Software without restriction, including
-# without limitation the rights to use, copy, modify, merge, publish, dis-
-# tribute, sublicense, and/or sell copies of the Software, and to permit
-# persons to whom the Software is furnished to do so, subject to the fol-
-# lowing conditions:
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
 #
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
+# http://aws.amazon.com/apache2.0/
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABIL-
-# ITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
-# SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-# WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-# IN THE SOFTWARE.
-#
-import unittest
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+from tests import unittest
 import itertools
 
 import botocore.session
@@ -28,23 +19,24 @@ import botocore.session
 class TestRDSPagination(unittest.TestCase):
     def setUp(self):
         self.session = botocore.session.get_session()
-        self.service = self.session.get_service('rds')
-        self.endpoint = self.service.get_endpoint('us-west-2')
+        self.client = self.session.create_client('rds', 'us-west-2')
 
     def test_can_paginate_reserved_instances(self):
         # Using an operation that we know will paginate.
-        operation = self.service.get_operation('DescribeReservedDBInstancesOfferings')
-        generator = operation.paginate(self.endpoint)
+        paginator = self.client.get_paginator(
+            'describe_reserved_db_instances_offerings')
+        generator = paginator.paginate()
         results = list(itertools.islice(generator, 0, 3))
         self.assertEqual(len(results), 3)
-        self.assertTrue(results[0][1]['Marker'] != results[1][1]['Marker'])
+        self.assertTrue(results[0]['Marker'] != results[1]['Marker'])
 
     def test_can_paginate_orderable_db(self):
-        operation = self.service.get_operation('DescribeOrderableDBInstanceOptions')
-        generator = operation.paginate(self.endpoint, engine='mysql')
+        paginator = self.client.get_paginator(
+            'describe_orderable_db_instance_options')
+        generator = paginator.paginate(Engine='mysql')
         results = list(itertools.islice(generator, 0, 2))
         self.assertEqual(len(results), 2)
-        self.assertTrue(results[0][1].get('Marker') != results[1][1].get('Marker'))
+        self.assertTrue(results[0].get('Marker') != results[1].get('Marker'))
 
 
 if __name__ == '__main__':

@@ -43,7 +43,7 @@ example ``s3.ListObjects.bar``.
      - Ignored.
    * - **after-call.<service>.<operation>**
      - After an operation has been called, but before the response is parsed.
-     - ``response`` - The HTTP response, ``parsed`` - The parsed data.
+     - ``http_response`` - The HTTP response, ``parsed`` - The parsed data.
      - Ignored.
 
 

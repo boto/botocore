@@ -1,8 +1,8 @@
 [default]
-foo_access_key = foo
-foo_secret_key = bar
+aws_access_key_id = foo
+aws_secret_access_key = bar
 foo_region = us-west-1
 
 [profile "foo"]
-foo_access_key = fie
-foo_secret_key = baz
+aws_access_key_id = fie
+aws_secret_access_key = baz

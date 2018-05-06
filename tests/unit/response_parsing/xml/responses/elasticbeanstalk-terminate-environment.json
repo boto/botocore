@@ -12,8 +12,6 @@
     "SolutionStackName": "32bit Amazon Linux running Tomcat 7", 
     "CNAME": "SampleApp-jxb293wg7n.elasticbeanstalk.amazonaws.com", 
     "Health": "Grey", 
-    "Tier": {}, 
     "DateUpdated": "2010-11-17T17:10:41.976Z", 
-    "DateCreated": "2010-11-17T03:59:33.520Z", 
-    "Resources": {}
+    "DateCreated": "2010-11-17T03:59:33.520Z"
 }

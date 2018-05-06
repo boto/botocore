@@ -1,3 +1,4 @@
+.DS_Store
 *.py[co]
 
 # Packages
@@ -28,7 +29,14 @@ pip-log.txt
 # Emacs backup files
 *~
 
+# IDEA / PyCharm IDE
+.idea/
+
 # Virtualenvs
 env
 env2
 env3
+
+docs/source/reference/services
+tests/coverage.xml
+tests/nosetests.xml
