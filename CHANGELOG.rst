@@ -2,6 +2,22 @@
 CHANGELOG
 =========
 
+1.10.16
+=======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.10.15
+=======
+
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``budgets``: Update budgets client to latest version
+* api-change:``es``: Update es client to latest version
+
+
 1.10.14
 =======
 
