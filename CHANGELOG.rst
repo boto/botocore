@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.10.19
+=======
+
+* api-change:``firehose``: Update firehose client to latest version
+
+
 1.10.18
 =======
 
