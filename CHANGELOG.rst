@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.10.20
+=======
+
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``iot1click-devices``: Update iot1click-devices client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``iot1click-projects``: Update iot1click-projects client to latest version
+
+
 1.10.19
 =======
 
