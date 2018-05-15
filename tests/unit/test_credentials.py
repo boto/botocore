@@ -1166,9 +1166,6 @@ class TestInstanceMetadataProvider(BaseEnvVar):
         for arg in mock_get.call_args:
             if isinstance(arg, dict) and arg.get('headers', None):
                 assert(arg.get('headers', {}).get('User-Agent', '').startswith('aws-sdk-botocore/'))
-                self.assertEqual(arg.get('headers', {}).get('Accept-Encoding', ''), 'gzip, deflate')
-                self.assertEqual(arg.get('headers', {}).get('Accept', ''), '*/*')
-                self.assertEqual(arg.get('headers', {}).get('Connection', ''), 'keep-alive')
 
 
 class CredentialResolverTest(BaseEnvVar):
