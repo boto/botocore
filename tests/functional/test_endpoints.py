@@ -27,6 +27,8 @@ SERVICE_RENAMES = {
     'elb': 'elasticloadbalancing',
     'elbv2': 'elasticloadbalancing',
     'emr': 'elasticmapreduce',
+    'iot1click-devices': 'devices.iot1click',
+    'iot1click-projects': 'projects.iot1click',
     'iot-data': 'data.iot',
     'meteringmarketplace': 'metering.marketplace',
     'opsworkscm': 'opsworks-cm',
