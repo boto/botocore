@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.10.21
+=======
+
+* api-change:``config``: Update config client to latest version
+
+
 1.10.20
 =======
 
