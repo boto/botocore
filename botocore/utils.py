@@ -177,10 +177,7 @@ class InstanceMetadataFetcher(object):
             raise _RetriesExceededError()
 
         headers = {
-            'User-Agent': 'aws-sdk-botocore/%s ' % botocore_version,
-            'Accept-Encoding': ', '.join(('gzip', 'deflate')),
-            'Accept': '*/*',
-            'Connection': 'keep-alive',
+            'User-Agent': 'aws-sdk-botocore/%s ' % botocore_version
         }
 
         for i in range(num_attempts):
