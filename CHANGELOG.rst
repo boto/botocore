@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.10.22
+=======
+
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+
+
 1.10.21
 =======
 
