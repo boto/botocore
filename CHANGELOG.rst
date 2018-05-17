@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.10.23
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+
+
 1.10.22
 =======
 
