@@ -29,7 +29,7 @@ from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.exceptions import InvalidDNSNameError, ClientError
 from botocore.exceptions import MetadataRetrievalError
 from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
-from botocore.vendored import requests
+import requests
 from botocore.compat import OrderedDict, six
 
 

@@ -23,16 +23,12 @@ from botocore.compat import HTTPHeaders, HTTPResponse, urlunsplit, urlsplit,\
     urlparse
 from botocore.exceptions import UnseekableStreamError
 from botocore.utils import percent_encode_sequence
-from botocore.vendored.requests import models
-from botocore.vendored.requests.sessions import REDIRECT_STATI
-from botocore.vendored.requests.packages.urllib3.connection import \
-    VerifiedHTTPSConnection
-from botocore.vendored.requests.packages.urllib3.connection import \
-    HTTPConnection
-from botocore.vendored.requests.packages.urllib3.connectionpool import \
-    HTTPConnectionPool
-from botocore.vendored.requests.packages.urllib3.connectionpool import \
-    HTTPSConnectionPool
+from requests import models
+from requests.sessions import REDIRECT_STATI
+from urllib3.connection import VerifiedHTTPSConnection
+from urllib3.connection import HTTPConnection
+from urllib3.connectionpool import HTTPConnectionPool
+from urllib3.connectionpool import HTTPSConnectionPool
 
 
 logger = logging.getLogger(__name__)

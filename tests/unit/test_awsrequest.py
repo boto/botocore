@@ -418,7 +418,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
         conn.sock = s
         # Test that the standard library method was used by patching out
         # the ``_tunnel`` method and seeing if the std lib method was called.
-        with patch('botocore.vendored.requests.packages.urllib3.connection.'
+        with patch('urllib3.connection.'
                    'HTTPConnection._tunnel') as mock_tunnel:
             conn._tunnel()
             self.assertTrue(mock_tunnel.called)
