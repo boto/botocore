@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.10.25
+=======
+
+* api-change:``cloudformation``: Update cloudformation client to latest version
+
+
 1.10.24
 =======
 
