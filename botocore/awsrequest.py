@@ -54,7 +54,7 @@ class AWSHTTPResponse(HTTPResponse):
             return HTTPResponse._read_status(self)
 
 
-class AWSHTTPConnection(HTTPConnection):
+class AWSConnection:
     """HTTPConnection that supports Expect 100-continue.
 
     This is conceptually a subclass of httplib.HTTPConnection (though
@@ -67,7 +67,7 @@ class AWSHTTPConnection(HTTPConnection):
 
     """
     def __init__(self, *args, **kwargs):
-        HTTPConnection.__init__(self, *args, **kwargs)
+        super(AWSConnection, self).__init__(*args, **kwargs)
         self._original_response_cls = self.response_class
         # We'd ideally hook into httplib's states, but they're all
         # __mangled_vars so we use our own state var.  This variable is set
@@ -81,7 +81,7 @@ class AWSHTTPConnection(HTTPConnection):
         self._expect_header_set = False
 
     def close(self):
-        HTTPConnection.close(self)
+        super(AWSConnection, self).close()
         # Reset all of our instance state we were tracking.
         self._response_received = False
         self._expect_header_set = False
@@ -96,7 +96,7 @@ class AWSHTTPConnection(HTTPConnection):
         # difference from py26 to py3 is very minimal.  We're essentially
         # just overriding the while loop.
         if sys.version_info[:2] != (2, 6):
-            return HTTPConnection._tunnel(self)
+            return super(AWSConnection, self)._tunnel()
 
         # Otherwise we workaround the issue.
         self._set_hostport(self._tunnel_host, self._tunnel_port)
@@ -126,8 +126,8 @@ class AWSHTTPConnection(HTTPConnection):
         else:
             self._expect_header_set = False
             self.response_class = self._original_response_cls
-        rval = HTTPConnection._send_request(
-            self, method, url, body, headers, *args, **kwargs)
+        rval = super(AWSConnection, self)._send_request(
+            method, url, body, headers, *args, **kwargs)
         self._expect_header_set = False
         return rval
 
@@ -239,7 +239,7 @@ class AWSHTTPConnection(HTTPConnection):
             logger.debug("send() called, but reseponse already received. "
                          "Not sending data.")
             return
-        return HTTPConnection.send(self, str)
+        return super(AWSConnection, self).send(str)
 
     def _is_100_continue_status(self, maybe_status_line):
         parts = maybe_status_line.split(None, 2)
@@ -249,16 +249,12 @@ class AWSHTTPConnection(HTTPConnection):
             parts[1] == b'100')
 
 
-class AWSHTTPSConnection(VerifiedHTTPSConnection):
+class AWSHTTPConnection(AWSConnection, HTTPConnection):
     pass
 
 
-# Now we need to set the methods we overrode from AWSHTTPConnection
-# onto AWSHTTPSConnection.  This is just a shortcut to avoid
-# copy/pasting the same code into AWSHTTPSConnection.
-for name, function in AWSHTTPConnection.__dict__.items():
-    if inspect.isfunction(function):
-        setattr(AWSHTTPSConnection, name, function)
+class AWSHTTPSConnection(AWSConnection, VerifiedHTTPSConnection):
+    pass
 
 
 def prepare_request_dict(request_dict, endpoint_url, context=None,
