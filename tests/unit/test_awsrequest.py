@@ -174,58 +174,6 @@ class TestAWSRequest(unittest.TestCase):
         self.assertTrue(looks_like_file.seek_called)
 
 
-class TestAWSPreparedRequest(unittest.TestCase):
-    def setUp(self):
-        self.tempdir = tempfile.mkdtemp()
-        self.filename = os.path.join(self.tempdir, 'foo')
-        self.request = AWSRequest(url='http://example.com')
-        self.prepared_request = AWSPreparedRequest(self.request)
-        self.prepared_request.prepare_headers(self.request.headers)
-
-    def tearDown(self):
-        shutil.rmtree(self.tempdir)
-
-    def test_prepare_body_content_adds_content_length(self):
-        content = b'foobarbaz'
-        with open(self.filename, 'wb') as f:
-            f.write(content)
-        with open(self.filename, 'rb') as f:
-            data = Seekable(f)
-            self.prepared_request.prepare_body(data=data, files=None)
-        self.assertEqual(
-            self.prepared_request.headers['Content-Length'],
-            str(len(content)))
-
-    def test_prepare_body_removes_transfer_encoding(self):
-        self.prepared_request.headers['Transfer-Encoding'] = 'chunked'
-        content = b'foobarbaz'
-        with open(self.filename, 'wb') as f:
-            f.write(content)
-        with open(self.filename, 'rb') as f:
-            data = Seekable(f)
-            self.prepared_request.prepare_body(data=data, files=None)
-        self.assertEqual(
-            self.prepared_request.headers['Content-Length'],
-            str(len(content)))
-        self.assertNotIn('Transfer-Encoding', self.prepared_request.headers)
-
-    def test_prepare_body_ignores_existing_transfer_encoding(self):
-        content = b'foobarbaz'
-        self.prepared_request.headers['Transfer-Encoding'] = 'chunked'
-        with open(self.filename, 'wb') as f:
-            f.write(content)
-        with open(self.filename, 'rb') as f:
-            self.prepared_request.prepare_body(data=f, files=None)
-        # The Transfer-Encoding should not be removed if Content-Length
-        # is not added via the custom logic in the ``prepare_body`` method.
-        # Note requests' ``prepare_body`` is the method that adds the
-        # Content-Length header for this case as the ``data`` is a
-        # regular file handle.
-        self.assertEqual(
-            self.prepared_request.headers['Transfer-Encoding'],
-            'chunked')
-
-
 class TestAWSHTTPConnection(unittest.TestCase):
     def create_tunneled_connection(self, url, port, response):
         s = FakeSocket(response)
