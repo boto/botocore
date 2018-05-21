@@ -13,7 +13,6 @@
 # language governing permissions and limitations under the License.
 import sys
 import logging
-import select
 import functools
 import socket
 import inspect
@@ -29,6 +28,7 @@ from urllib3.connection import VerifiedHTTPSConnection
 from urllib3.connection import HTTPConnection
 from urllib3.connectionpool import HTTPConnectionPool
 from urllib3.connectionpool import HTTPSConnectionPool
+from urllib3.util import wait_for_read
 
 
 logger = logging.getLogger(__name__)
@@ -156,8 +156,7 @@ class AWSConnection:
             # set, it will trigger this custom behavior.
             logger.debug("Waiting for 100 Continue response.")
             # Wait for 1 second for the server to send a response.
-            read, write, exc = select.select([self.sock], [], [self.sock], 1)
-            if read:
+            if wait_for_read(self.sock, 1):
                 self._handle_expect_response(message_body)
                 return
             else:
