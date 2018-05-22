@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.10.26
+=======
+
+* api-change:``inspector``: Update inspector client to latest version
+* enhancement:Credentials: Disable proxy configuration when fetching container credentials
+* api-change:``ecs``: Update ecs client to latest version
+
+
 1.10.25
 =======
 

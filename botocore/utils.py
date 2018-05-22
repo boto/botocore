@@ -1020,6 +1020,8 @@ class ContainerMetadataFetcher(object):
     def __init__(self, session=None, sleep=time.sleep):
         if session is None:
             session = requests.Session()
+            session.trust_env = False
+            session.proxies = {}
         self._session = session
         self._sleep = sleep
 
