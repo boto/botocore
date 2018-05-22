@@ -28,7 +28,7 @@ from urllib3.connection import VerifiedHTTPSConnection
 from urllib3.connection import HTTPConnection
 from urllib3.connectionpool import HTTPConnectionPool
 from urllib3.connectionpool import HTTPSConnectionPool
-from urllib3.util import wait_for_read
+import urllib3.util
 
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ class AWSHTTPResponse(HTTPResponse):
             return HTTPResponse._read_status(self)
 
 
-class AWSConnection:
+class AWSConnection(object):
     """HTTPConnection that supports Expect 100-continue.
 
     This is conceptually a subclass of httplib.HTTPConnection (though
@@ -156,7 +156,7 @@ class AWSConnection:
             # set, it will trigger this custom behavior.
             logger.debug("Waiting for 100 Continue response.")
             # Wait for 1 second for the server to send a response.
-            if wait_for_read(self.sock, 1):
+            if urllib3.util.wait_for_read([self.sock], 1):
                 self._handle_expect_response(message_body)
                 return
             else:
