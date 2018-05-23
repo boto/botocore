@@ -203,6 +203,7 @@ class Endpoint(object):
         # (http_response, parsed_dict).
         # If an exception occurs then the success_response is None.
         # If no exception occurs then exception is None.
+        client_id = request.original.context.get('client_id')
         try:
             logger.debug("Sending http request: %s", request)
             history_recorder.record('HTTP_REQUEST', {
@@ -211,7 +212,7 @@ class Endpoint(object):
                 'streaming': operation_model.has_streaming_input,
                 'url': request.url,
                 'body': request.body
-            })
+            }, scope_id=client_id)
             streaming = any([
                 operation_model.has_streaming_output,
                 operation_model.has_event_stream_output
@@ -248,13 +249,15 @@ class Endpoint(object):
         http_response_record_dict = response_dict.copy()
         http_response_record_dict['streaming'] = \
             operation_model.has_streaming_output
-        history_recorder.record('HTTP_RESPONSE', http_response_record_dict)
+        history_recorder.record(
+            'HTTP_RESPONSE', http_response_record_dict, scope_id=client_id)
 
         protocol = operation_model.metadata['protocol']
         parser = self._response_parser_factory.create_parser(protocol)
         parsed_response = parser.parse(
             response_dict, operation_model.output_shape)
-        history_recorder.record('PARSED_RESPONSE', parsed_response)
+        history_recorder.record(
+            'PARSED_RESPONSE', parsed_response, scope_id=client_id)
         return (http_response, parsed_response), None
 
     def _looks_like_dns_error(self, e):

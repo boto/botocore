@@ -568,11 +568,12 @@ class BaseClient(object):
     def _make_api_call(self, operation_name, api_params):
         operation_model = self._service_model.operation_model(operation_name)
         service_name = self._service_model.service_name
+        client_id = id(self)
         history_recorder.record('API_CALL', {
             'service': service_name,
             'operation': operation_name,
             'params': api_params,
-        })
+        }, scope_id=client_id)
         if operation_model.deprecated:
             logger.debug('Warning: %s.%s() is deprecated',
                          service_name, operation_name)
@@ -581,6 +582,7 @@ class BaseClient(object):
             'client_config': self.meta.config,
             'has_streaming_input': operation_model.has_streaming_input,
             'auth_type': operation_model.auth_type,
+            'client_id': client_id,
         }
         request_dict = self._convert_to_request_dict(
             api_params, operation_model, context=request_context)
