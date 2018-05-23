@@ -2,6 +2,35 @@
 CHANGELOG
 =========
 
+1.10.26
+=======
+
+* api-change:``inspector``: Update inspector client to latest version
+* enhancement:Credentials: Disable proxy configuration when fetching container credentials
+* api-change:``ecs``: Update ecs client to latest version
+
+
+1.10.25
+=======
+
+* api-change:``cloudformation``: Update cloudformation client to latest version
+
+
+1.10.24
+=======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``ses``: Update ses client to latest version
+
+
+1.10.23
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+
+
 1.10.22
 =======
 
