@@ -20,6 +20,7 @@ import copy
 import logging
 
 import botocore.serialize
+import botocore.utils
 from botocore.signers import RequestSigner
 from botocore.config import Config
 from botocore.endpoint import EndpointCreator
@@ -103,9 +104,9 @@ class ClientArgsCreator(object):
         if client_config and not client_config.parameter_validation:
             parameter_validation = False
         elif scoped_config:
-            raw_value = str(scoped_config.get('parameter_validation', ''))
-            if raw_value.lower() == 'false':
-                parameter_validation = False
+            raw_value = scoped_config.get('parameter_validation')
+            if raw_value is not None:
+                parameter_validation = botocore.utils.ensure_boolean(raw_value)
 
         endpoint_config = endpoint_bridge.resolve(
             service_name, region_name, endpoint_url, is_secure)
@@ -191,11 +192,7 @@ class ClientArgsCreator(object):
         config_copy = config_dict.copy()
         present_keys = [k for k in keys if k in config_copy]
         for key in present_keys:
-            # Normalize on different possible values of True
-            if config_copy[key] in [True, 'True', 'true']:
-                config_copy[key] = True
-            else:
-                config_copy[key] = False
+            config_copy[key] = botocore.utils.ensure_boolean(config_copy[key])
         return config_copy
 
     def _get_default_s3_region(self, service_name, endpoint_bridge):
