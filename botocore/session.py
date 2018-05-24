@@ -20,6 +20,7 @@ import copy
 import logging
 import os
 import platform
+import socket
 import warnings
 import collections
 
@@ -41,9 +42,11 @@ from botocore.loaders import create_loader
 from botocore.parsers import ResponseParserFactory
 from botocore.regions import EndpointResolver
 from botocore.model import ServiceModel
+from botocore import monitoring
 from botocore import paginate
 from botocore import waiter
 from botocore import retryhandler, translate
+from botocore import utils
 from botocore.utils import EVENT_ALIASES
 
 
@@ -130,6 +133,7 @@ class Session(object):
         self._register_response_parser_factory()
         self._register_exceptions_factory()
         self._register_config_store()
+        self._register_monitor()
 
     def _register_event_emitter(self):
         self._components.register_component('event_emitter', self._events)
@@ -179,6 +183,26 @@ class Session(object):
         )
         self._components.register_component('config_store',
                                             config_store_component)
+    def _register_monitor(self):
+        self._internal_components.lazy_register_component(
+            'monitor', self._create_csm_monitor)
+
+    def _create_csm_monitor(self):
+        if self.get_config_variable('csm_enabled'):
+            client_id = self.get_config_variable('csm_client_id')
+            port = self.get_config_variable('csm_port')
+            handler = monitoring.Monitor(
+                adapter=monitoring.MonitorEventAdapter(),
+                publisher=monitoring.SocketPublisher(
+                    socket=socket.socket(socket.AF_INET, socket.SOCK_DGRAM),
+                    host='127.0.0.1',
+                    port=port,
+                    serializer=monitoring.CSMSerializer(
+                        csm_client_id=client_id)
+                )
+            )
+            return handler
+        return None
 
     @property
     def available_profiles(self):
@@ -807,6 +831,9 @@ class Session(object):
             is_secure=use_ssl, endpoint_url=endpoint_url, verify=verify,
             credentials=credentials, scoped_config=self.get_scoped_config(),
             client_config=config, api_version=api_version)
+        monitor = self._get_internal_component('monitor')
+        if monitor is not None:
+            monitor.register(client.meta.events)
         return client
 
     def _missing_cred_vars(self, access_key, secret_key):

@@ -607,8 +607,8 @@ class BaseClient(object):
         if event_response is not None:
             http, parsed_response = event_response
         else:
-            http, parsed_response = self._endpoint.make_request(
-                operation_model, request_dict)
+            http, parsed_response = self._make_request(
+                operation_model, request_dict, request_context)
 
         self.meta.events.emit(
             'after-call.{service_id}.{operation_name}'.format(
@@ -624,6 +624,18 @@ class BaseClient(object):
             raise error_class(parsed_response, operation_name)
         else:
             return parsed_response
+
+    def _make_request(self, operation_model, request_dict, request_context):
+        try:
+            return self._endpoint.make_request(operation_model, request_dict)
+        except Exception as e:
+            self.meta.events.emit(
+                'after-call-error.{endpoint_prefix}.{operation_name}'.format(
+                    endpoint_prefix=self._service_model.endpoint_prefix,
+                    operation_name=operation_model.name),
+                exception=e, context=request_context
+            )
+            raise
 
     def _convert_to_request_dict(self, api_params, operation_model,
                                  context=None):

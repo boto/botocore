@@ -162,6 +162,25 @@ class Endpoint(object):
         # (http_response, parsed_dict).
         # If an exception occurs then the success_response is None.
         # If no exception occurs then exception is None.
+        success_response, exception = self._do_get_response(
+            request, operation_model)
+        kwargs_to_emit = {
+            'response_dict': None,
+            'parsed_response': None,
+            'context': request.original.context,
+            'exception': exception,
+        }
+        if success_response is not None:
+            http_response, parsed_response = success_response
+            kwargs_to_emit['parsed_response'] = parsed_response
+            kwargs_to_emit['response_dict'] = convert_to_response_dict(
+                http_response, operation_model)
+        self._event_emitter.emit(
+            'response-received.%s.%s' % (
+                self._endpoint_prefix, operation_model.name), **kwargs_to_emit)
+        return success_response, exception
+
+    def _do_get_response(self, request, operation_model):
         try:
             logger.debug("Sending http request: %s", request)
             history_recorder.record('HTTP_REQUEST', {

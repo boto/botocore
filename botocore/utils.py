@@ -130,6 +130,22 @@ EVENT_ALIASES = {
 }
 
 
+class _RetriesExceededError(Exception):
+    """Internal exception used when the number of retries are exceeded."""
+    pass
+
+
+def ensure_boolean(val):
+    """Ensures a boolean value if a string or boolean is provided
+
+    For strings, the value for True/False is case insensitive
+    """
+    if isinstance(val, bool):
+        return val
+    else:
+        return val.lower() == 'true'
+
+
 def is_json_value_header(shape):
     """Determines if the provided shape is the special header type jsonvalue.
 

@@ -27,6 +27,7 @@ from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.exceptions import ClientError, ConnectionClosedError
 from botocore.exceptions import InvalidDNSNameError, MetadataRetrievalError
 from botocore.model import ServiceModel
+from botocore.utils import ensure_boolean
 from botocore.utils import is_json_value_header
 from botocore.utils import remove_dot_segments
 from botocore.utils import normalize_url_path
@@ -59,6 +60,23 @@ from botocore.utils import InstanceMetadataFetcher
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
 from botocore.config import Config
+
+
+class TestEnsureBoolean(unittest.TestCase):
+    def test_boolean_true(self):
+        self.assertEqual(ensure_boolean(True), True)
+
+    def test_boolean_false(self):
+        self.assertEqual(ensure_boolean(False), False)
+
+    def test_string_true(self):
+        self.assertEqual(ensure_boolean('True'), True)
+
+    def test_string_false(self):
+        self.assertEqual(ensure_boolean('False'), False)
+
+    def test_string_lowercase_true(self):
+        self.assertEqual(ensure_boolean('true'), True)
 
 
 class TestIsJSONValueHeader(unittest.TestCase):
