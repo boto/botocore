@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.10.28
+=======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``config``: Update config client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``glue``: Update glue client to latest version
+
+
 1.10.27
 =======
 
