@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.10.29
+=======
+
+* api-change:``pi``: Update pi client to latest version
+
+
 1.10.28
 =======
 
