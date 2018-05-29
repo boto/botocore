@@ -544,6 +544,10 @@ def test_correct_url_used_for_s3():
                  signature_version='s3v4', is_secure=False,
                  expected_url=(
                      'http://bucket.s3.us-west-1.amazonaws.com/key'))
+    yield t.case(
+        region='us-west-1', bucket='bucket-with-num-1', key='key',
+        signature_version='s3v4', is_secure=False,
+        expected_url='http://bucket-with-num-1.s3.us-west-1.amazonaws.com/key')
 
     # Regions outside of the 'aws' partition.
     # These should still default to virtual hosted addressing
@@ -592,6 +596,25 @@ def test_correct_url_used_for_s3():
     yield t.case(
         region='us-east-1', bucket='bucket.dot', key='key',
         expected_url='https://s3.amazonaws.com/bucket.dot/key')
+    yield t.case(
+        region='us-east-1', bucket='BucketName', key='key',
+        expected_url='https://s3.amazonaws.com/BucketName/key')
+    yield t.case(
+        region='us-west-1', bucket='bucket_name', key='key',
+        expected_url='https://s3.us-west-1.amazonaws.com/bucket_name/key')
+    yield t.case(
+        region='us-west-1', bucket='-bucket-name', key='key',
+        expected_url='https://s3.us-west-1.amazonaws.com/-bucket-name/key')
+    yield t.case(
+        region='us-west-1', bucket='bucket-name-', key='key',
+        expected_url='https://s3.us-west-1.amazonaws.com/bucket-name-/key')
+    yield t.case(
+        region='us-west-1', bucket='aa', key='key',
+        expected_url='https://s3.us-west-1.amazonaws.com/aa/key')
+    yield t.case(
+        region='us-west-1', bucket='a'*64, key='key',
+        expected_url=('https://s3.us-west-1.amazonaws.com/%s/key' % ('a' * 64))
+    )
 
     # Custom endpoint url should always be used.
     yield t.case(
