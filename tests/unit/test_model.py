@@ -35,7 +35,8 @@ class TestServiceModel(unittest.TestCase):
     def setUp(self):
         self.model = {
             'metadata': {'protocol': 'query',
-                         'endpointPrefix': 'endpoint-prefix'},
+                         'endpointPrefix': 'endpoint-prefix',
+                         'serviceId': 'MyService'},
             'documentation': 'Documentation value',
             'operations': {},
             'shapes': {
@@ -56,6 +57,9 @@ class TestServiceModel(unittest.TestCase):
 
     def test_service_name_defaults_to_endpoint_prefix(self):
         self.assertEqual(self.service_model.service_name, 'endpoint-prefix')
+
+    def test_service_id(self):
+        self.assertEqual(self.service_model.service_id, 'MyService')
 
     def test_operation_does_not_exist(self):
         with self.assertRaises(model.OperationNotFoundError):
