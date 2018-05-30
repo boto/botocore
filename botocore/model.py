@@ -284,6 +284,10 @@ class ServiceModel(object):
             return self.endpoint_prefix
 
     @CachedProperty
+    def service_id(self):
+        return self._get_metadata_property('serviceId')
+
+    @CachedProperty
     def signing_name(self):
         """The name to use when computing signatures.
 
