@@ -1,0 +1,24 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14",
+      "methods" : {
+         "CreateChannel" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/CreateChannel",
+         "CreateInput" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/CreateInput",
+         "CreateInputSecurityGroup" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/CreateInputSecurityGroup",
+         "DeleteChannel" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/DeleteChannel",
+         "DeleteInput" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/DeleteInput",
+         "DeleteInputSecurityGroup" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/DeleteInputSecurityGroup",
+         "DescribeChannel" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/DescribeChannel",
+         "DescribeInput" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/DescribeInput",
+         "DescribeInputSecurityGroup" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/DescribeInputSecurityGroup",
+         "ListChannels" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/ListChannels",
+         "ListInputSecurityGroups" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/ListInputSecurityGroups",
+         "ListInputs" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/ListInputs",
+         "StartChannel" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/StartChannel",
+         "StopChannel" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/StopChannel",
+         "UpdateChannel" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/UpdateChannel",
+         "UpdateInput" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/UpdateInput",
+         "UpdateInputSecurityGroup" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/UpdateInputSecurityGroup"
+      }
+   }
+}

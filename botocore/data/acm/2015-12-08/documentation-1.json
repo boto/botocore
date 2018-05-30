@@ -1,0 +1,19 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/acm-2015-12-08",
+      "methods" : {
+         "AddTagsToCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm/AddTagsToCertificate",
+         "DeleteCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm/DeleteCertificate",
+         "DescribeCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm/DescribeCertificate",
+         "ExportCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm/ExportCertificate",
+         "GetCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm/GetCertificate",
+         "ImportCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm/ImportCertificate",
+         "ListCertificates" : "https://docs.aws.amazon.com/goto/WebAPI/acm/ListCertificates",
+         "ListTagsForCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm/ListTagsForCertificate",
+         "RemoveTagsFromCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm/RemoveTagsFromCertificate",
+         "RequestCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm/RequestCertificate",
+         "ResendValidationEmail" : "https://docs.aws.amazon.com/goto/WebAPI/acm/ResendValidationEmail",
+         "UpdateCertificateOptions" : "https://docs.aws.amazon.com/goto/WebAPI/acm/UpdateCertificateOptions"
+      }
+   }
+}

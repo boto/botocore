@@ -1,0 +1,9 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/connect-2017-08-08",
+      "methods" : {
+         "StartOutboundVoiceContact" : "https://docs.aws.amazon.com/goto/WebAPI/connect/StartOutboundVoiceContact",
+         "StopContact" : "https://docs.aws.amazon.com/goto/WebAPI/connect/StopContact"
+      }
+   }
+}

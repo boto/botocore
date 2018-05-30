@@ -1,0 +1,13 @@
+{
+   "documentation" : {
+      "api_url" : "https://aws.amazon.com/documentation/account-billing/",
+      "methods" : {
+         "GetCostAndUsage" : "https://docs.aws.amazon.com/goto/WebAPI/ce/GetCostAndUsage",
+         "GetDimensionValues" : "https://docs.aws.amazon.com/goto/WebAPI/ce/GetDimensionValues",
+         "GetReservationCoverage" : "https://docs.aws.amazon.com/goto/WebAPI/ce/GetReservationCoverage",
+         "GetReservationPurchaseRecommendation" : "https://docs.aws.amazon.com/goto/WebAPI/ce/GetReservationPurchaseRecommendation",
+         "GetReservationUtilization" : "https://docs.aws.amazon.com/goto/WebAPI/ce/GetReservationUtilization",
+         "GetTags" : "https://docs.aws.amazon.com/goto/WebAPI/ce/GetTags"
+      }
+   }
+}

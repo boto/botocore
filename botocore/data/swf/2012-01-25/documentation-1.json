@@ -1,0 +1,38 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/swf-2012-01-25",
+      "methods" : {
+         "CountClosedWorkflowExecutions" : "https://docs.aws.amazon.com/goto/WebAPI/swf/CountClosedWorkflowExecutions",
+         "CountOpenWorkflowExecutions" : "https://docs.aws.amazon.com/goto/WebAPI/swf/CountOpenWorkflowExecutions",
+         "CountPendingActivityTasks" : "https://docs.aws.amazon.com/goto/WebAPI/swf/CountPendingActivityTasks",
+         "CountPendingDecisionTasks" : "https://docs.aws.amazon.com/goto/WebAPI/swf/CountPendingDecisionTasks",
+         "DeprecateActivityType" : "https://docs.aws.amazon.com/goto/WebAPI/swf/DeprecateActivityType",
+         "DeprecateDomain" : "https://docs.aws.amazon.com/goto/WebAPI/swf/DeprecateDomain",
+         "DeprecateWorkflowType" : "https://docs.aws.amazon.com/goto/WebAPI/swf/DeprecateWorkflowType",
+         "DescribeActivityType" : "https://docs.aws.amazon.com/goto/WebAPI/swf/DescribeActivityType",
+         "DescribeDomain" : "https://docs.aws.amazon.com/goto/WebAPI/swf/DescribeDomain",
+         "DescribeWorkflowExecution" : "https://docs.aws.amazon.com/goto/WebAPI/swf/DescribeWorkflowExecution",
+         "DescribeWorkflowType" : "https://docs.aws.amazon.com/goto/WebAPI/swf/DescribeWorkflowType",
+         "GetWorkflowExecutionHistory" : "https://docs.aws.amazon.com/goto/WebAPI/swf/GetWorkflowExecutionHistory",
+         "ListActivityTypes" : "https://docs.aws.amazon.com/goto/WebAPI/swf/ListActivityTypes",
+         "ListClosedWorkflowExecutions" : "https://docs.aws.amazon.com/goto/WebAPI/swf/ListClosedWorkflowExecutions",
+         "ListDomains" : "https://docs.aws.amazon.com/goto/WebAPI/swf/ListDomains",
+         "ListOpenWorkflowExecutions" : "https://docs.aws.amazon.com/goto/WebAPI/swf/ListOpenWorkflowExecutions",
+         "ListWorkflowTypes" : "https://docs.aws.amazon.com/goto/WebAPI/swf/ListWorkflowTypes",
+         "PollForActivityTask" : "https://docs.aws.amazon.com/goto/WebAPI/swf/PollForActivityTask",
+         "PollForDecisionTask" : "https://docs.aws.amazon.com/goto/WebAPI/swf/PollForDecisionTask",
+         "RecordActivityTaskHeartbeat" : "https://docs.aws.amazon.com/goto/WebAPI/swf/RecordActivityTaskHeartbeat",
+         "RegisterActivityType" : "https://docs.aws.amazon.com/goto/WebAPI/swf/RegisterActivityType",
+         "RegisterDomain" : "https://docs.aws.amazon.com/goto/WebAPI/swf/RegisterDomain",
+         "RegisterWorkflowType" : "https://docs.aws.amazon.com/goto/WebAPI/swf/RegisterWorkflowType",
+         "RequestCancelWorkflowExecution" : "https://docs.aws.amazon.com/goto/WebAPI/swf/RequestCancelWorkflowExecution",
+         "RespondActivityTaskCanceled" : "https://docs.aws.amazon.com/goto/WebAPI/swf/RespondActivityTaskCanceled",
+         "RespondActivityTaskCompleted" : "https://docs.aws.amazon.com/goto/WebAPI/swf/RespondActivityTaskCompleted",
+         "RespondActivityTaskFailed" : "https://docs.aws.amazon.com/goto/WebAPI/swf/RespondActivityTaskFailed",
+         "RespondDecisionTaskCompleted" : "https://docs.aws.amazon.com/goto/WebAPI/swf/RespondDecisionTaskCompleted",
+         "SignalWorkflowExecution" : "https://docs.aws.amazon.com/goto/WebAPI/swf/SignalWorkflowExecution",
+         "StartWorkflowExecution" : "https://docs.aws.amazon.com/goto/WebAPI/swf/StartWorkflowExecution",
+         "TerminateWorkflowExecution" : "https://docs.aws.amazon.com/goto/WebAPI/swf/TerminateWorkflowExecution"
+      }
+   }
+}

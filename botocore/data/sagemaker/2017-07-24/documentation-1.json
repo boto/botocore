@@ -1,0 +1,41 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24",
+      "methods" : {
+         "AddTags" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/AddTags",
+         "CreateEndpoint" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/CreateEndpoint",
+         "CreateEndpointConfig" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/CreateEndpointConfig",
+         "CreateModel" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/CreateModel",
+         "CreateNotebookInstance" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/CreateNotebookInstance",
+         "CreateNotebookInstanceLifecycleConfig" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/CreateNotebookInstanceLifecycleConfig",
+         "CreatePresignedNotebookInstanceUrl" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/CreatePresignedNotebookInstanceUrl",
+         "CreateTrainingJob" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/CreateTrainingJob",
+         "DeleteEndpoint" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/DeleteEndpoint",
+         "DeleteEndpointConfig" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/DeleteEndpointConfig",
+         "DeleteModel" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/DeleteModel",
+         "DeleteNotebookInstance" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/DeleteNotebookInstance",
+         "DeleteNotebookInstanceLifecycleConfig" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/DeleteNotebookInstanceLifecycleConfig",
+         "DeleteTags" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/DeleteTags",
+         "DescribeEndpoint" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/DescribeEndpoint",
+         "DescribeEndpointConfig" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/DescribeEndpointConfig",
+         "DescribeModel" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/DescribeModel",
+         "DescribeNotebookInstance" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/DescribeNotebookInstance",
+         "DescribeNotebookInstanceLifecycleConfig" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/DescribeNotebookInstanceLifecycleConfig",
+         "DescribeTrainingJob" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/DescribeTrainingJob",
+         "ListEndpointConfigs" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/ListEndpointConfigs",
+         "ListEndpoints" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/ListEndpoints",
+         "ListModels" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/ListModels",
+         "ListNotebookInstanceLifecycleConfigs" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/ListNotebookInstanceLifecycleConfigs",
+         "ListNotebookInstances" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/ListNotebookInstances",
+         "ListTags" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/ListTags",
+         "ListTrainingJobs" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/ListTrainingJobs",
+         "StartNotebookInstance" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/StartNotebookInstance",
+         "StopNotebookInstance" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/StopNotebookInstance",
+         "StopTrainingJob" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/StopTrainingJob",
+         "UpdateEndpoint" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/UpdateEndpoint",
+         "UpdateEndpointWeightsAndCapacities" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/UpdateEndpointWeightsAndCapacities",
+         "UpdateNotebookInstance" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/UpdateNotebookInstance",
+         "UpdateNotebookInstanceLifecycleConfig" : "https://docs.aws.amazon.com/goto/WebAPI/sagemaker/UpdateNotebookInstanceLifecycleConfig"
+      }
+   }
+}

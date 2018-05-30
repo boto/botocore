@@ -1,0 +1,38 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01",
+      "methods" : {
+         "AssociateDelegateToResource" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/AssociateDelegateToResource",
+         "AssociateMemberToGroup" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/AssociateMemberToGroup",
+         "CreateAlias" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/CreateAlias",
+         "CreateGroup" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/CreateGroup",
+         "CreateResource" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/CreateResource",
+         "CreateUser" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/CreateUser",
+         "DeleteAlias" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/DeleteAlias",
+         "DeleteGroup" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/DeleteGroup",
+         "DeleteMailboxPermissions" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/DeleteMailboxPermissions",
+         "DeleteResource" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/DeleteResource",
+         "DeleteUser" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/DeleteUser",
+         "DeregisterFromWorkMail" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/DeregisterFromWorkMail",
+         "DescribeGroup" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/DescribeGroup",
+         "DescribeOrganization" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/DescribeOrganization",
+         "DescribeResource" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/DescribeResource",
+         "DescribeUser" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/DescribeUser",
+         "DisassociateDelegateFromResource" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/DisassociateDelegateFromResource",
+         "DisassociateMemberFromGroup" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/DisassociateMemberFromGroup",
+         "ListAliases" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/ListAliases",
+         "ListGroupMembers" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/ListGroupMembers",
+         "ListGroups" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/ListGroups",
+         "ListMailboxPermissions" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/ListMailboxPermissions",
+         "ListOrganizations" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/ListOrganizations",
+         "ListResourceDelegates" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/ListResourceDelegates",
+         "ListResources" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/ListResources",
+         "ListUsers" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/ListUsers",
+         "PutMailboxPermissions" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/PutMailboxPermissions",
+         "RegisterToWorkMail" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/RegisterToWorkMail",
+         "ResetPassword" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/ResetPassword",
+         "UpdatePrimaryEmailAddress" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/UpdatePrimaryEmailAddress",
+         "UpdateResource" : "https://docs.aws.amazon.com/goto/WebAPI/workmail/UpdateResource"
+      }
+   }
+}

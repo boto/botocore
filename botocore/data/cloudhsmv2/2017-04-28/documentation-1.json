@@ -1,0 +1,17 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28",
+      "methods" : {
+         "CreateCluster" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2/CreateCluster",
+         "CreateHsm" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2/CreateHsm",
+         "DeleteCluster" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2/DeleteCluster",
+         "DeleteHsm" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2/DeleteHsm",
+         "DescribeBackups" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2/DescribeBackups",
+         "DescribeClusters" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2/DescribeClusters",
+         "InitializeCluster" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2/InitializeCluster",
+         "ListTags" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2/ListTags",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2/UntagResource"
+      }
+   }
+}

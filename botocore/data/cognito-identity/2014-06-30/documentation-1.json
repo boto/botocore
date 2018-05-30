@@ -1,0 +1,25 @@
+{
+   "documentation" : {
+      "api_url" : "https://aws.amazon.com/documentation/cognito/",
+      "methods" : {
+         "CreateIdentityPool" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/CreateIdentityPool",
+         "DeleteIdentities" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/DeleteIdentities",
+         "DeleteIdentityPool" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/DeleteIdentityPool",
+         "DescribeIdentity" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/DescribeIdentity",
+         "DescribeIdentityPool" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/DescribeIdentityPool",
+         "GetCredentialsForIdentity" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/GetCredentialsForIdentity",
+         "GetId" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/GetId",
+         "GetIdentityPoolRoles" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/GetIdentityPoolRoles",
+         "GetOpenIdToken" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/GetOpenIdToken",
+         "GetOpenIdTokenForDeveloperIdentity" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/GetOpenIdTokenForDeveloperIdentity",
+         "ListIdentities" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/ListIdentities",
+         "ListIdentityPools" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/ListIdentityPools",
+         "LookupDeveloperIdentity" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/LookupDeveloperIdentity",
+         "MergeDeveloperIdentities" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/MergeDeveloperIdentities",
+         "SetIdentityPoolRoles" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/SetIdentityPoolRoles",
+         "UnlinkDeveloperIdentity" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/UnlinkDeveloperIdentity",
+         "UnlinkIdentity" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/UnlinkIdentity",
+         "UpdateIdentityPool" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/UpdateIdentityPool"
+      }
+   }
+}

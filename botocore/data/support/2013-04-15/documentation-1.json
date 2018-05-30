@@ -1,0 +1,21 @@
+{
+   "documentation" : {
+      "api_url" : "https://aws.amazon.com/documentation/aws-support/",
+      "methods" : {
+         "AddAttachmentsToSet" : "https://docs.aws.amazon.com/goto/WebAPI/support/AddAttachmentsToSet",
+         "AddCommunicationToCase" : "https://docs.aws.amazon.com/goto/WebAPI/support/AddCommunicationToCase",
+         "CreateCase" : "https://docs.aws.amazon.com/goto/WebAPI/support/CreateCase",
+         "DescribeAttachment" : "https://docs.aws.amazon.com/goto/WebAPI/support/DescribeAttachment",
+         "DescribeCases" : "https://docs.aws.amazon.com/goto/WebAPI/support/DescribeCases",
+         "DescribeCommunications" : "https://docs.aws.amazon.com/goto/WebAPI/support/DescribeCommunications",
+         "DescribeServices" : "https://docs.aws.amazon.com/goto/WebAPI/support/DescribeServices",
+         "DescribeSeverityLevels" : "https://docs.aws.amazon.com/goto/WebAPI/support/DescribeSeverityLevels",
+         "DescribeTrustedAdvisorCheckRefreshStatuses" : "https://docs.aws.amazon.com/goto/WebAPI/support/DescribeTrustedAdvisorCheckRefreshStatuses",
+         "DescribeTrustedAdvisorCheckResult" : "https://docs.aws.amazon.com/goto/WebAPI/support/DescribeTrustedAdvisorCheckResult",
+         "DescribeTrustedAdvisorCheckSummaries" : "https://docs.aws.amazon.com/goto/WebAPI/support/DescribeTrustedAdvisorCheckSummaries",
+         "DescribeTrustedAdvisorChecks" : "https://docs.aws.amazon.com/goto/WebAPI/support/DescribeTrustedAdvisorChecks",
+         "RefreshTrustedAdvisorCheck" : "https://docs.aws.amazon.com/goto/WebAPI/support/RefreshTrustedAdvisorCheck",
+         "ResolveCase" : "https://docs.aws.amazon.com/goto/WebAPI/support/ResolveCase"
+      }
+   }
+}

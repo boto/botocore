@@ -1,0 +1,21 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01",
+      "methods" : {
+         "AddTags" : "https://docs.aws.amazon.com/goto/WebAPI/cloudtrail/AddTags",
+         "CreateTrail" : "https://docs.aws.amazon.com/goto/WebAPI/cloudtrail/CreateTrail",
+         "DeleteTrail" : "https://docs.aws.amazon.com/goto/WebAPI/cloudtrail/DeleteTrail",
+         "DescribeTrails" : "https://docs.aws.amazon.com/goto/WebAPI/cloudtrail/DescribeTrails",
+         "GetEventSelectors" : "https://docs.aws.amazon.com/goto/WebAPI/cloudtrail/GetEventSelectors",
+         "GetTrailStatus" : "https://docs.aws.amazon.com/goto/WebAPI/cloudtrail/GetTrailStatus",
+         "ListPublicKeys" : "https://docs.aws.amazon.com/goto/WebAPI/cloudtrail/ListPublicKeys",
+         "ListTags" : "https://docs.aws.amazon.com/goto/WebAPI/cloudtrail/ListTags",
+         "LookupEvents" : "https://docs.aws.amazon.com/goto/WebAPI/cloudtrail/LookupEvents",
+         "PutEventSelectors" : "https://docs.aws.amazon.com/goto/WebAPI/cloudtrail/PutEventSelectors",
+         "RemoveTags" : "https://docs.aws.amazon.com/goto/WebAPI/cloudtrail/RemoveTags",
+         "StartLogging" : "https://docs.aws.amazon.com/goto/WebAPI/cloudtrail/StartLogging",
+         "StopLogging" : "https://docs.aws.amazon.com/goto/WebAPI/cloudtrail/StopLogging",
+         "UpdateTrail" : "https://docs.aws.amazon.com/goto/WebAPI/cloudtrail/UpdateTrail"
+      }
+   }
+}

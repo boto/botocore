@@ -1,0 +1,23 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10",
+      "methods" : {
+         "CancelJob" : "https://docs.aws.amazon.com/goto/WebAPI/batch/CancelJob",
+         "CreateComputeEnvironment" : "https://docs.aws.amazon.com/goto/WebAPI/batch/CreateComputeEnvironment",
+         "CreateJobQueue" : "https://docs.aws.amazon.com/goto/WebAPI/batch/CreateJobQueue",
+         "DeleteComputeEnvironment" : "https://docs.aws.amazon.com/goto/WebAPI/batch/DeleteComputeEnvironment",
+         "DeleteJobQueue" : "https://docs.aws.amazon.com/goto/WebAPI/batch/DeleteJobQueue",
+         "DeregisterJobDefinition" : "https://docs.aws.amazon.com/goto/WebAPI/batch/DeregisterJobDefinition",
+         "DescribeComputeEnvironments" : "https://docs.aws.amazon.com/goto/WebAPI/batch/DescribeComputeEnvironments",
+         "DescribeJobDefinitions" : "https://docs.aws.amazon.com/goto/WebAPI/batch/DescribeJobDefinitions",
+         "DescribeJobQueues" : "https://docs.aws.amazon.com/goto/WebAPI/batch/DescribeJobQueues",
+         "DescribeJobs" : "https://docs.aws.amazon.com/goto/WebAPI/batch/DescribeJobs",
+         "ListJobs" : "https://docs.aws.amazon.com/goto/WebAPI/batch/ListJobs",
+         "RegisterJobDefinition" : "https://docs.aws.amazon.com/goto/WebAPI/batch/RegisterJobDefinition",
+         "SubmitJob" : "https://docs.aws.amazon.com/goto/WebAPI/batch/SubmitJob",
+         "TerminateJob" : "https://docs.aws.amazon.com/goto/WebAPI/batch/TerminateJob",
+         "UpdateComputeEnvironment" : "https://docs.aws.amazon.com/goto/WebAPI/batch/UpdateComputeEnvironment",
+         "UpdateJobQueue" : "https://docs.aws.amazon.com/goto/WebAPI/batch/UpdateJobQueue"
+      }
+   }
+}

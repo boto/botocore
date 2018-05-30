@@ -1,0 +1,22 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/secretsmanager-2017-10-17",
+      "methods" : {
+         "CancelRotateSecret" : "https://docs.aws.amazon.com/goto/WebAPI/secretsmanager/CancelRotateSecret",
+         "CreateSecret" : "https://docs.aws.amazon.com/goto/WebAPI/secretsmanager/CreateSecret",
+         "DeleteSecret" : "https://docs.aws.amazon.com/goto/WebAPI/secretsmanager/DeleteSecret",
+         "DescribeSecret" : "https://docs.aws.amazon.com/goto/WebAPI/secretsmanager/DescribeSecret",
+         "GetRandomPassword" : "https://docs.aws.amazon.com/goto/WebAPI/secretsmanager/GetRandomPassword",
+         "GetSecretValue" : "https://docs.aws.amazon.com/goto/WebAPI/secretsmanager/GetSecretValue",
+         "ListSecretVersionIds" : "https://docs.aws.amazon.com/goto/WebAPI/secretsmanager/ListSecretVersionIds",
+         "ListSecrets" : "https://docs.aws.amazon.com/goto/WebAPI/secretsmanager/ListSecrets",
+         "PutSecretValue" : "https://docs.aws.amazon.com/goto/WebAPI/secretsmanager/PutSecretValue",
+         "RestoreSecret" : "https://docs.aws.amazon.com/goto/WebAPI/secretsmanager/RestoreSecret",
+         "RotateSecret" : "https://docs.aws.amazon.com/goto/WebAPI/secretsmanager/RotateSecret",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/secretsmanager/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/secretsmanager/UntagResource",
+         "UpdateSecret" : "https://docs.aws.amazon.com/goto/WebAPI/secretsmanager/UpdateSecret",
+         "UpdateSecretVersionStage" : "https://docs.aws.amazon.com/goto/WebAPI/secretsmanager/UpdateSecretVersionStage"
+      }
+   }
+}

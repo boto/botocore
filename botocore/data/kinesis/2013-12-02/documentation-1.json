@@ -1,0 +1,30 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis-2013-12-02",
+      "methods" : {
+         "AddTagsToStream" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/AddTagsToStream",
+         "CreateStream" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/CreateStream",
+         "DecreaseStreamRetentionPeriod" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/DecreaseStreamRetentionPeriod",
+         "DeleteStream" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/DeleteStream",
+         "DescribeLimits" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/DescribeLimits",
+         "DescribeStream" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/DescribeStream",
+         "DescribeStreamSummary" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/DescribeStreamSummary",
+         "DisableEnhancedMonitoring" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/DisableEnhancedMonitoring",
+         "EnableEnhancedMonitoring" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/EnableEnhancedMonitoring",
+         "GetRecords" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/GetRecords",
+         "GetShardIterator" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/GetShardIterator",
+         "IncreaseStreamRetentionPeriod" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/IncreaseStreamRetentionPeriod",
+         "ListShards" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/ListShards",
+         "ListStreams" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/ListStreams",
+         "ListTagsForStream" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/ListTagsForStream",
+         "MergeShards" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/MergeShards",
+         "PutRecord" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/PutRecord",
+         "PutRecords" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/PutRecords",
+         "RemoveTagsFromStream" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/RemoveTagsFromStream",
+         "SplitShard" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/SplitShard",
+         "StartStreamEncryption" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/StartStreamEncryption",
+         "StopStreamEncryption" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/StopStreamEncryption",
+         "UpdateShardCount" : "https://docs.aws.amazon.com/goto/WebAPI/kinesis/UpdateShardCount"
+      }
+   }
+}

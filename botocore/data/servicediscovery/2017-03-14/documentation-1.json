@@ -1,0 +1,25 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/servicediscovery-2017-03-14",
+      "methods" : {
+         "CreatePrivateDnsNamespace" : "https://docs.aws.amazon.com/goto/WebAPI/servicediscovery/CreatePrivateDnsNamespace",
+         "CreatePublicDnsNamespace" : "https://docs.aws.amazon.com/goto/WebAPI/servicediscovery/CreatePublicDnsNamespace",
+         "CreateService" : "https://docs.aws.amazon.com/goto/WebAPI/servicediscovery/CreateService",
+         "DeleteNamespace" : "https://docs.aws.amazon.com/goto/WebAPI/servicediscovery/DeleteNamespace",
+         "DeleteService" : "https://docs.aws.amazon.com/goto/WebAPI/servicediscovery/DeleteService",
+         "DeregisterInstance" : "https://docs.aws.amazon.com/goto/WebAPI/servicediscovery/DeregisterInstance",
+         "GetInstance" : "https://docs.aws.amazon.com/goto/WebAPI/servicediscovery/GetInstance",
+         "GetInstancesHealthStatus" : "https://docs.aws.amazon.com/goto/WebAPI/servicediscovery/GetInstancesHealthStatus",
+         "GetNamespace" : "https://docs.aws.amazon.com/goto/WebAPI/servicediscovery/GetNamespace",
+         "GetOperation" : "https://docs.aws.amazon.com/goto/WebAPI/servicediscovery/GetOperation",
+         "GetService" : "https://docs.aws.amazon.com/goto/WebAPI/servicediscovery/GetService",
+         "ListInstances" : "https://docs.aws.amazon.com/goto/WebAPI/servicediscovery/ListInstances",
+         "ListNamespaces" : "https://docs.aws.amazon.com/goto/WebAPI/servicediscovery/ListNamespaces",
+         "ListOperations" : "https://docs.aws.amazon.com/goto/WebAPI/servicediscovery/ListOperations",
+         "ListServices" : "https://docs.aws.amazon.com/goto/WebAPI/servicediscovery/ListServices",
+         "RegisterInstance" : "https://docs.aws.amazon.com/goto/WebAPI/servicediscovery/RegisterInstance",
+         "UpdateInstanceCustomHealthStatus" : "https://docs.aws.amazon.com/goto/WebAPI/servicediscovery/UpdateInstanceCustomHealthStatus",
+         "UpdateService" : "https://docs.aws.amazon.com/goto/WebAPI/servicediscovery/UpdateService"
+      }
+   }
+}

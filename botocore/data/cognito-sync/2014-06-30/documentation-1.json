@@ -1,0 +1,24 @@
+{
+   "documentation" : {
+      "api_url" : "https://aws.amazon.com/documentation/cognito/",
+      "methods" : {
+         "BulkPublish" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-sync/BulkPublish",
+         "DeleteDataset" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-sync/DeleteDataset",
+         "DescribeDataset" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-sync/DescribeDataset",
+         "DescribeIdentityPoolUsage" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-sync/DescribeIdentityPoolUsage",
+         "DescribeIdentityUsage" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-sync/DescribeIdentityUsage",
+         "GetBulkPublishDetails" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-sync/GetBulkPublishDetails",
+         "GetCognitoEvents" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-sync/GetCognitoEvents",
+         "GetIdentityPoolConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-sync/GetIdentityPoolConfiguration",
+         "ListDatasets" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-sync/ListDatasets",
+         "ListIdentityPoolUsage" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-sync/ListIdentityPoolUsage",
+         "ListRecords" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-sync/ListRecords",
+         "RegisterDevice" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-sync/RegisterDevice",
+         "SetCognitoEvents" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-sync/SetCognitoEvents",
+         "SetIdentityPoolConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-sync/SetIdentityPoolConfiguration",
+         "SubscribeToDataset" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-sync/SubscribeToDataset",
+         "UnsubscribeFromDataset" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-sync/UnsubscribeFromDataset",
+         "UpdateRecords" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-sync/UpdateRecords"
+      }
+   }
+}

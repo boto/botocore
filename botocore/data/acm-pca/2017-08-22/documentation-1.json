@@ -1,0 +1,23 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca-2017-08-22",
+      "methods" : {
+         "CreateCertificateAuthority" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/CreateCertificateAuthority",
+         "CreateCertificateAuthorityAuditReport" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/CreateCertificateAuthorityAuditReport",
+         "DeleteCertificateAuthority" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/DeleteCertificateAuthority",
+         "DescribeCertificateAuthority" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/DescribeCertificateAuthority",
+         "DescribeCertificateAuthorityAuditReport" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/DescribeCertificateAuthorityAuditReport",
+         "GetCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/GetCertificate",
+         "GetCertificateAuthorityCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/GetCertificateAuthorityCertificate",
+         "GetCertificateAuthorityCsr" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/GetCertificateAuthorityCsr",
+         "ImportCertificateAuthorityCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/ImportCertificateAuthorityCertificate",
+         "IssueCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/IssueCertificate",
+         "ListCertificateAuthorities" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/ListCertificateAuthorities",
+         "ListTags" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/ListTags",
+         "RevokeCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/RevokeCertificate",
+         "TagCertificateAuthority" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/TagCertificateAuthority",
+         "UntagCertificateAuthority" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/UntagCertificateAuthority",
+         "UpdateCertificateAuthority" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/UpdateCertificateAuthority"
+      }
+   }
+}

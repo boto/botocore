@@ -1,0 +1,28 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/dax-2017-04-19",
+      "methods" : {
+         "CreateCluster" : "https://docs.aws.amazon.com/goto/WebAPI/dax/CreateCluster",
+         "CreateParameterGroup" : "https://docs.aws.amazon.com/goto/WebAPI/dax/CreateParameterGroup",
+         "CreateSubnetGroup" : "https://docs.aws.amazon.com/goto/WebAPI/dax/CreateSubnetGroup",
+         "DecreaseReplicationFactor" : "https://docs.aws.amazon.com/goto/WebAPI/dax/DecreaseReplicationFactor",
+         "DeleteCluster" : "https://docs.aws.amazon.com/goto/WebAPI/dax/DeleteCluster",
+         "DeleteParameterGroup" : "https://docs.aws.amazon.com/goto/WebAPI/dax/DeleteParameterGroup",
+         "DeleteSubnetGroup" : "https://docs.aws.amazon.com/goto/WebAPI/dax/DeleteSubnetGroup",
+         "DescribeClusters" : "https://docs.aws.amazon.com/goto/WebAPI/dax/DescribeClusters",
+         "DescribeDefaultParameters" : "https://docs.aws.amazon.com/goto/WebAPI/dax/DescribeDefaultParameters",
+         "DescribeEvents" : "https://docs.aws.amazon.com/goto/WebAPI/dax/DescribeEvents",
+         "DescribeParameterGroups" : "https://docs.aws.amazon.com/goto/WebAPI/dax/DescribeParameterGroups",
+         "DescribeParameters" : "https://docs.aws.amazon.com/goto/WebAPI/dax/DescribeParameters",
+         "DescribeSubnetGroups" : "https://docs.aws.amazon.com/goto/WebAPI/dax/DescribeSubnetGroups",
+         "IncreaseReplicationFactor" : "https://docs.aws.amazon.com/goto/WebAPI/dax/IncreaseReplicationFactor",
+         "ListTags" : "https://docs.aws.amazon.com/goto/WebAPI/dax/ListTags",
+         "RebootNode" : "https://docs.aws.amazon.com/goto/WebAPI/dax/RebootNode",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/dax/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/dax/UntagResource",
+         "UpdateCluster" : "https://docs.aws.amazon.com/goto/WebAPI/dax/UpdateCluster",
+         "UpdateParameterGroup" : "https://docs.aws.amazon.com/goto/WebAPI/dax/UpdateParameterGroup",
+         "UpdateSubnetGroup" : "https://docs.aws.amazon.com/goto/WebAPI/dax/UpdateSubnetGroup"
+      }
+   }
+}

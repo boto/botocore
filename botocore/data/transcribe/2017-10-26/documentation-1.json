@@ -1,0 +1,15 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/transcribe-2017-10-26",
+      "methods" : {
+         "CreateVocabulary" : "https://docs.aws.amazon.com/goto/WebAPI/transcribe/CreateVocabulary",
+         "DeleteVocabulary" : "https://docs.aws.amazon.com/goto/WebAPI/transcribe/DeleteVocabulary",
+         "GetTranscriptionJob" : "https://docs.aws.amazon.com/goto/WebAPI/transcribe/GetTranscriptionJob",
+         "GetVocabulary" : "https://docs.aws.amazon.com/goto/WebAPI/transcribe/GetVocabulary",
+         "ListTranscriptionJobs" : "https://docs.aws.amazon.com/goto/WebAPI/transcribe/ListTranscriptionJobs",
+         "ListVocabularies" : "https://docs.aws.amazon.com/goto/WebAPI/transcribe/ListVocabularies",
+         "StartTranscriptionJob" : "https://docs.aws.amazon.com/goto/WebAPI/transcribe/StartTranscriptionJob",
+         "UpdateVocabulary" : "https://docs.aws.amazon.com/goto/WebAPI/transcribe/UpdateVocabulary"
+      }
+   }
+}

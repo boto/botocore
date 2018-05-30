@@ -1,0 +1,26 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/discovery-2015-11-01",
+      "methods" : {
+         "AssociateConfigurationItemsToApplication" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/AssociateConfigurationItemsToApplication",
+         "CreateApplication" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/CreateApplication",
+         "CreateTags" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/CreateTags",
+         "DeleteApplications" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/DeleteApplications",
+         "DeleteTags" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/DeleteTags",
+         "DescribeAgents" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/DescribeAgents",
+         "DescribeConfigurations" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/DescribeConfigurations",
+         "DescribeExportConfigurations" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/DescribeExportConfigurations",
+         "DescribeExportTasks" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/DescribeExportTasks",
+         "DescribeTags" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/DescribeTags",
+         "DisassociateConfigurationItemsFromApplication" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/DisassociateConfigurationItemsFromApplication",
+         "ExportConfigurations" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/ExportConfigurations",
+         "GetDiscoverySummary" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/GetDiscoverySummary",
+         "ListConfigurations" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/ListConfigurations",
+         "ListServerNeighbors" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/ListServerNeighbors",
+         "StartDataCollectionByAgentIds" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/StartDataCollectionByAgentIds",
+         "StartExportTask" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/StartExportTask",
+         "StopDataCollectionByAgentIds" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/StopDataCollectionByAgentIds",
+         "UpdateApplication" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/UpdateApplication"
+      }
+   }
+}

@@ -1,0 +1,23 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06",
+      "methods" : {
+         "BatchDeleteBuilds" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/BatchDeleteBuilds",
+         "BatchGetBuilds" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/BatchGetBuilds",
+         "BatchGetProjects" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/BatchGetProjects",
+         "CreateProject" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/CreateProject",
+         "CreateWebhook" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/CreateWebhook",
+         "DeleteProject" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/DeleteProject",
+         "DeleteWebhook" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/DeleteWebhook",
+         "InvalidateProjectCache" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/InvalidateProjectCache",
+         "ListBuilds" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/ListBuilds",
+         "ListBuildsForProject" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/ListBuildsForProject",
+         "ListCuratedEnvironmentImages" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/ListCuratedEnvironmentImages",
+         "ListProjects" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/ListProjects",
+         "StartBuild" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/StartBuild",
+         "StopBuild" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/StopBuild",
+         "UpdateProject" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/UpdateProject",
+         "UpdateWebhook" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/UpdateWebhook"
+      }
+   }
+}

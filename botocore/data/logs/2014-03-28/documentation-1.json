@@ -1,0 +1,40 @@
+{
+   "documentation" : {
+      "api_url" : "https://aws.amazon.com/documentation/cloudwatch/",
+      "methods" : {
+         "AssociateKmsKey" : "https://docs.aws.amazon.com/goto/WebAPI/logs/AssociateKmsKey",
+         "CancelExportTask" : "https://docs.aws.amazon.com/goto/WebAPI/logs/CancelExportTask",
+         "CreateExportTask" : "https://docs.aws.amazon.com/goto/WebAPI/logs/CreateExportTask",
+         "CreateLogGroup" : "https://docs.aws.amazon.com/goto/WebAPI/logs/CreateLogGroup",
+         "CreateLogStream" : "https://docs.aws.amazon.com/goto/WebAPI/logs/CreateLogStream",
+         "DeleteDestination" : "https://docs.aws.amazon.com/goto/WebAPI/logs/DeleteDestination",
+         "DeleteLogGroup" : "https://docs.aws.amazon.com/goto/WebAPI/logs/DeleteLogGroup",
+         "DeleteLogStream" : "https://docs.aws.amazon.com/goto/WebAPI/logs/DeleteLogStream",
+         "DeleteMetricFilter" : "https://docs.aws.amazon.com/goto/WebAPI/logs/DeleteMetricFilter",
+         "DeleteResourcePolicy" : "https://docs.aws.amazon.com/goto/WebAPI/logs/DeleteResourcePolicy",
+         "DeleteRetentionPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/logs/DeleteRetentionPolicy",
+         "DeleteSubscriptionFilter" : "https://docs.aws.amazon.com/goto/WebAPI/logs/DeleteSubscriptionFilter",
+         "DescribeDestinations" : "https://docs.aws.amazon.com/goto/WebAPI/logs/DescribeDestinations",
+         "DescribeExportTasks" : "https://docs.aws.amazon.com/goto/WebAPI/logs/DescribeExportTasks",
+         "DescribeLogGroups" : "https://docs.aws.amazon.com/goto/WebAPI/logs/DescribeLogGroups",
+         "DescribeLogStreams" : "https://docs.aws.amazon.com/goto/WebAPI/logs/DescribeLogStreams",
+         "DescribeMetricFilters" : "https://docs.aws.amazon.com/goto/WebAPI/logs/DescribeMetricFilters",
+         "DescribeResourcePolicies" : "https://docs.aws.amazon.com/goto/WebAPI/logs/DescribeResourcePolicies",
+         "DescribeSubscriptionFilters" : "https://docs.aws.amazon.com/goto/WebAPI/logs/DescribeSubscriptionFilters",
+         "DisassociateKmsKey" : "https://docs.aws.amazon.com/goto/WebAPI/logs/DisassociateKmsKey",
+         "FilterLogEvents" : "https://docs.aws.amazon.com/goto/WebAPI/logs/FilterLogEvents",
+         "GetLogEvents" : "https://docs.aws.amazon.com/goto/WebAPI/logs/GetLogEvents",
+         "ListTagsLogGroup" : "https://docs.aws.amazon.com/goto/WebAPI/logs/ListTagsLogGroup",
+         "PutDestination" : "https://docs.aws.amazon.com/goto/WebAPI/logs/PutDestination",
+         "PutDestinationPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/logs/PutDestinationPolicy",
+         "PutLogEvents" : "https://docs.aws.amazon.com/goto/WebAPI/logs/PutLogEvents",
+         "PutMetricFilter" : "https://docs.aws.amazon.com/goto/WebAPI/logs/PutMetricFilter",
+         "PutResourcePolicy" : "https://docs.aws.amazon.com/goto/WebAPI/logs/PutResourcePolicy",
+         "PutRetentionPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/logs/PutRetentionPolicy",
+         "PutSubscriptionFilter" : "https://docs.aws.amazon.com/goto/WebAPI/logs/PutSubscriptionFilter",
+         "TagLogGroup" : "https://docs.aws.amazon.com/goto/WebAPI/logs/TagLogGroup",
+         "TestMetricFilter" : "https://docs.aws.amazon.com/goto/WebAPI/logs/TestMetricFilter",
+         "UntagLogGroup" : "https://docs.aws.amazon.com/goto/WebAPI/logs/UntagLogGroup"
+      }
+   }
+}

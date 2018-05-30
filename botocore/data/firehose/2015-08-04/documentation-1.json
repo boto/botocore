@@ -1,0 +1,17 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/firehose-2015-08-04",
+      "methods" : {
+         "CreateDeliveryStream" : "https://docs.aws.amazon.com/goto/WebAPI/firehose/CreateDeliveryStream",
+         "DeleteDeliveryStream" : "https://docs.aws.amazon.com/goto/WebAPI/firehose/DeleteDeliveryStream",
+         "DescribeDeliveryStream" : "https://docs.aws.amazon.com/goto/WebAPI/firehose/DescribeDeliveryStream",
+         "ListDeliveryStreams" : "https://docs.aws.amazon.com/goto/WebAPI/firehose/ListDeliveryStreams",
+         "ListTagsForDeliveryStream" : "https://docs.aws.amazon.com/goto/WebAPI/firehose/ListTagsForDeliveryStream",
+         "PutRecord" : "https://docs.aws.amazon.com/goto/WebAPI/firehose/PutRecord",
+         "PutRecordBatch" : "https://docs.aws.amazon.com/goto/WebAPI/firehose/PutRecordBatch",
+         "TagDeliveryStream" : "https://docs.aws.amazon.com/goto/WebAPI/firehose/TagDeliveryStream",
+         "UntagDeliveryStream" : "https://docs.aws.amazon.com/goto/WebAPI/firehose/UntagDeliveryStream",
+         "UpdateDestination" : "https://docs.aws.amazon.com/goto/WebAPI/firehose/UpdateDestination"
+      }
+   }
+}

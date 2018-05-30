@@ -1,0 +1,34 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31",
+      "methods" : {
+         "AddInstanceFleet" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/AddInstanceFleet",
+         "AddInstanceGroups" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/AddInstanceGroups",
+         "AddJobFlowSteps" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/AddJobFlowSteps",
+         "AddTags" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/AddTags",
+         "CancelSteps" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/CancelSteps",
+         "CreateSecurityConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/CreateSecurityConfiguration",
+         "DeleteSecurityConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/DeleteSecurityConfiguration",
+         "DescribeCluster" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/DescribeCluster",
+         "DescribeJobFlows" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/DescribeJobFlows",
+         "DescribeSecurityConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/DescribeSecurityConfiguration",
+         "DescribeStep" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/DescribeStep",
+         "ListBootstrapActions" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/ListBootstrapActions",
+         "ListClusters" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/ListClusters",
+         "ListInstanceFleets" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/ListInstanceFleets",
+         "ListInstanceGroups" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/ListInstanceGroups",
+         "ListInstances" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/ListInstances",
+         "ListSecurityConfigurations" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/ListSecurityConfigurations",
+         "ListSteps" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/ListSteps",
+         "ModifyInstanceFleet" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/ModifyInstanceFleet",
+         "ModifyInstanceGroups" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/ModifyInstanceGroups",
+         "PutAutoScalingPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/PutAutoScalingPolicy",
+         "RemoveAutoScalingPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/RemoveAutoScalingPolicy",
+         "RemoveTags" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/RemoveTags",
+         "RunJobFlow" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/RunJobFlow",
+         "SetTerminationProtection" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/SetTerminationProtection",
+         "SetVisibleToAllUsers" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/SetVisibleToAllUsers",
+         "TerminateJobFlows" : "https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce/TerminateJobFlows"
+      }
+   }
+}

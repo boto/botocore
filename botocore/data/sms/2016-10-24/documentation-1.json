@@ -1,0 +1,18 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/sms-2016-10-24",
+      "methods" : {
+         "CreateReplicationJob" : "https://docs.aws.amazon.com/goto/WebAPI/sms/CreateReplicationJob",
+         "DeleteReplicationJob" : "https://docs.aws.amazon.com/goto/WebAPI/sms/DeleteReplicationJob",
+         "DeleteServerCatalog" : "https://docs.aws.amazon.com/goto/WebAPI/sms/DeleteServerCatalog",
+         "DisassociateConnector" : "https://docs.aws.amazon.com/goto/WebAPI/sms/DisassociateConnector",
+         "GetConnectors" : "https://docs.aws.amazon.com/goto/WebAPI/sms/GetConnectors",
+         "GetReplicationJobs" : "https://docs.aws.amazon.com/goto/WebAPI/sms/GetReplicationJobs",
+         "GetReplicationRuns" : "https://docs.aws.amazon.com/goto/WebAPI/sms/GetReplicationRuns",
+         "GetServers" : "https://docs.aws.amazon.com/goto/WebAPI/sms/GetServers",
+         "ImportServerCatalog" : "https://docs.aws.amazon.com/goto/WebAPI/sms/ImportServerCatalog",
+         "StartOnDemandReplicationRun" : "https://docs.aws.amazon.com/goto/WebAPI/sms/StartOnDemandReplicationRun",
+         "UpdateReplicationJob" : "https://docs.aws.amazon.com/goto/WebAPI/sms/UpdateReplicationJob"
+      }
+   }
+}

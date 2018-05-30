@@ -1,0 +1,26 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/datapipeline-2012-10-29",
+      "methods" : {
+         "ActivatePipeline" : "https://docs.aws.amazon.com/goto/WebAPI/datapipeline/ActivatePipeline",
+         "AddTags" : "https://docs.aws.amazon.com/goto/WebAPI/datapipeline/AddTags",
+         "CreatePipeline" : "https://docs.aws.amazon.com/goto/WebAPI/datapipeline/CreatePipeline",
+         "DeactivatePipeline" : "https://docs.aws.amazon.com/goto/WebAPI/datapipeline/DeactivatePipeline",
+         "DeletePipeline" : "https://docs.aws.amazon.com/goto/WebAPI/datapipeline/DeletePipeline",
+         "DescribeObjects" : "https://docs.aws.amazon.com/goto/WebAPI/datapipeline/DescribeObjects",
+         "DescribePipelines" : "https://docs.aws.amazon.com/goto/WebAPI/datapipeline/DescribePipelines",
+         "EvaluateExpression" : "https://docs.aws.amazon.com/goto/WebAPI/datapipeline/EvaluateExpression",
+         "GetPipelineDefinition" : "https://docs.aws.amazon.com/goto/WebAPI/datapipeline/GetPipelineDefinition",
+         "ListPipelines" : "https://docs.aws.amazon.com/goto/WebAPI/datapipeline/ListPipelines",
+         "PollForTask" : "https://docs.aws.amazon.com/goto/WebAPI/datapipeline/PollForTask",
+         "PutPipelineDefinition" : "https://docs.aws.amazon.com/goto/WebAPI/datapipeline/PutPipelineDefinition",
+         "QueryObjects" : "https://docs.aws.amazon.com/goto/WebAPI/datapipeline/QueryObjects",
+         "RemoveTags" : "https://docs.aws.amazon.com/goto/WebAPI/datapipeline/RemoveTags",
+         "ReportTaskProgress" : "https://docs.aws.amazon.com/goto/WebAPI/datapipeline/ReportTaskProgress",
+         "ReportTaskRunnerHeartbeat" : "https://docs.aws.amazon.com/goto/WebAPI/datapipeline/ReportTaskRunnerHeartbeat",
+         "SetStatus" : "https://docs.aws.amazon.com/goto/WebAPI/datapipeline/SetStatus",
+         "SetTaskStatus" : "https://docs.aws.amazon.com/goto/WebAPI/datapipeline/SetTaskStatus",
+         "ValidatePipelineDefinition" : "https://docs.aws.amazon.com/goto/WebAPI/datapipeline/ValidatePipelineDefinition"
+      }
+   }
+}

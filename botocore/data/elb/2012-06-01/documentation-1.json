@@ -1,0 +1,36 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing-2012-06-01",
+      "methods" : {
+         "AddTags" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/AddTags",
+         "ApplySecurityGroupsToLoadBalancer" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/ApplySecurityGroupsToLoadBalancer",
+         "AttachLoadBalancerToSubnets" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/AttachLoadBalancerToSubnets",
+         "ConfigureHealthCheck" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/ConfigureHealthCheck",
+         "CreateAppCookieStickinessPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/CreateAppCookieStickinessPolicy",
+         "CreateLBCookieStickinessPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/CreateLBCookieStickinessPolicy",
+         "CreateLoadBalancer" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/CreateLoadBalancer",
+         "CreateLoadBalancerListeners" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/CreateLoadBalancerListeners",
+         "CreateLoadBalancerPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/CreateLoadBalancerPolicy",
+         "DeleteLoadBalancer" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DeleteLoadBalancer",
+         "DeleteLoadBalancerListeners" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DeleteLoadBalancerListeners",
+         "DeleteLoadBalancerPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DeleteLoadBalancerPolicy",
+         "DeregisterInstancesFromLoadBalancer" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DeregisterInstancesFromLoadBalancer",
+         "DescribeAccountLimits" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DescribeAccountLimits",
+         "DescribeInstanceHealth" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DescribeInstanceHealth",
+         "DescribeLoadBalancerAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DescribeLoadBalancerAttributes",
+         "DescribeLoadBalancerPolicies" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DescribeLoadBalancerPolicies",
+         "DescribeLoadBalancerPolicyTypes" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DescribeLoadBalancerPolicyTypes",
+         "DescribeLoadBalancers" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DescribeLoadBalancers",
+         "DescribeTags" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DescribeTags",
+         "DetachLoadBalancerFromSubnets" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DetachLoadBalancerFromSubnets",
+         "DisableAvailabilityZonesForLoadBalancer" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DisableAvailabilityZonesForLoadBalancer",
+         "EnableAvailabilityZonesForLoadBalancer" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/EnableAvailabilityZonesForLoadBalancer",
+         "ModifyLoadBalancerAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/ModifyLoadBalancerAttributes",
+         "RegisterInstancesWithLoadBalancer" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/RegisterInstancesWithLoadBalancer",
+         "RemoveTags" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/RemoveTags",
+         "SetLoadBalancerListenerSSLCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/SetLoadBalancerListenerSSLCertificate",
+         "SetLoadBalancerPoliciesForBackendServer" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/SetLoadBalancerPoliciesForBackendServer",
+         "SetLoadBalancerPoliciesOfListener" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/SetLoadBalancerPoliciesOfListener"
+      }
+   }
+}

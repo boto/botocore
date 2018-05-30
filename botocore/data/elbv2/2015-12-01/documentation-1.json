@@ -1,0 +1,41 @@
+{
+   "documentation" : {
+      "api_url" : null,
+      "methods" : {
+         "AddListenerCertificates" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/AddListenerCertificates",
+         "AddTags" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/AddTags",
+         "CreateListener" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/CreateListener",
+         "CreateLoadBalancer" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/CreateLoadBalancer",
+         "CreateRule" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/CreateRule",
+         "CreateTargetGroup" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/CreateTargetGroup",
+         "DeleteListener" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DeleteListener",
+         "DeleteLoadBalancer" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DeleteLoadBalancer",
+         "DeleteRule" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DeleteRule",
+         "DeleteTargetGroup" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DeleteTargetGroup",
+         "DeregisterTargets" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DeregisterTargets",
+         "DescribeAccountLimits" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DescribeAccountLimits",
+         "DescribeListenerCertificates" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DescribeListenerCertificates",
+         "DescribeListeners" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DescribeListeners",
+         "DescribeLoadBalancerAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DescribeLoadBalancerAttributes",
+         "DescribeLoadBalancers" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DescribeLoadBalancers",
+         "DescribeRules" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DescribeRules",
+         "DescribeSSLPolicies" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DescribeSSLPolicies",
+         "DescribeTags" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DescribeTags",
+         "DescribeTargetGroupAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DescribeTargetGroupAttributes",
+         "DescribeTargetGroups" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DescribeTargetGroups",
+         "DescribeTargetHealth" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/DescribeTargetHealth",
+         "ModifyListener" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/ModifyListener",
+         "ModifyLoadBalancerAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/ModifyLoadBalancerAttributes",
+         "ModifyRule" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/ModifyRule",
+         "ModifyTargetGroup" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/ModifyTargetGroup",
+         "ModifyTargetGroupAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/ModifyTargetGroupAttributes",
+         "RegisterTargets" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/RegisterTargets",
+         "RemoveListenerCertificates" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/RemoveListenerCertificates",
+         "RemoveTags" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/RemoveTags",
+         "SetIpAddressType" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/SetIpAddressType",
+         "SetRulePriorities" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/SetRulePriorities",
+         "SetSecurityGroups" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/SetSecurityGroups",
+         "SetSubnets" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/SetSubnets"
+      }
+   }
+}

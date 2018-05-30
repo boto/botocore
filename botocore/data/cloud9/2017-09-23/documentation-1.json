@@ -1,0 +1,17 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/cloud9-2017-09-23",
+      "methods" : {
+         "CreateEnvironmentEC2" : "https://docs.aws.amazon.com/goto/WebAPI/cloud9/CreateEnvironmentEC2",
+         "CreateEnvironmentMembership" : "https://docs.aws.amazon.com/goto/WebAPI/cloud9/CreateEnvironmentMembership",
+         "DeleteEnvironment" : "https://docs.aws.amazon.com/goto/WebAPI/cloud9/DeleteEnvironment",
+         "DeleteEnvironmentMembership" : "https://docs.aws.amazon.com/goto/WebAPI/cloud9/DeleteEnvironmentMembership",
+         "DescribeEnvironmentMemberships" : "https://docs.aws.amazon.com/goto/WebAPI/cloud9/DescribeEnvironmentMemberships",
+         "DescribeEnvironmentStatus" : "https://docs.aws.amazon.com/goto/WebAPI/cloud9/DescribeEnvironmentStatus",
+         "DescribeEnvironments" : "https://docs.aws.amazon.com/goto/WebAPI/cloud9/DescribeEnvironments",
+         "ListEnvironments" : "https://docs.aws.amazon.com/goto/WebAPI/cloud9/ListEnvironments",
+         "UpdateEnvironment" : "https://docs.aws.amazon.com/goto/WebAPI/cloud9/UpdateEnvironment",
+         "UpdateEnvironmentMembership" : "https://docs.aws.amazon.com/goto/WebAPI/cloud9/UpdateEnvironmentMembership"
+      }
+   }
+}

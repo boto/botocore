@@ -1,0 +1,18 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend-2017-11-27",
+      "methods" : {
+         "BatchDetectDominantLanguage" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/BatchDetectDominantLanguage",
+         "BatchDetectEntities" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/BatchDetectEntities",
+         "BatchDetectKeyPhrases" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/BatchDetectKeyPhrases",
+         "BatchDetectSentiment" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/BatchDetectSentiment",
+         "DescribeTopicsDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/DescribeTopicsDetectionJob",
+         "DetectDominantLanguage" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/DetectDominantLanguage",
+         "DetectEntities" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/DetectEntities",
+         "DetectKeyPhrases" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/DetectKeyPhrases",
+         "DetectSentiment" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/DetectSentiment",
+         "ListTopicsDetectionJobs" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/ListTopicsDetectionJobs",
+         "StartTopicsDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StartTopicsDetectionJob"
+      }
+   }
+}

@@ -1,0 +1,9 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/runtime.lex-2016-11-28",
+      "methods" : {
+         "PostContent" : "https://docs.aws.amazon.com/goto/WebAPI/runtime.lex/PostContent",
+         "PostText" : "https://docs.aws.amazon.com/goto/WebAPI/runtime.lex/PostText"
+      }
+   }
+}

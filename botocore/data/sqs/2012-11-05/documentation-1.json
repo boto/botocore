@@ -1,0 +1,27 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/sqs-2012-11-05",
+      "methods" : {
+         "AddPermission" : "https://docs.aws.amazon.com/goto/WebAPI/sqs/AddPermission",
+         "ChangeMessageVisibility" : "https://docs.aws.amazon.com/goto/WebAPI/sqs/ChangeMessageVisibility",
+         "ChangeMessageVisibilityBatch" : "https://docs.aws.amazon.com/goto/WebAPI/sqs/ChangeMessageVisibilityBatch",
+         "CreateQueue" : "https://docs.aws.amazon.com/goto/WebAPI/sqs/CreateQueue",
+         "DeleteMessage" : "https://docs.aws.amazon.com/goto/WebAPI/sqs/DeleteMessage",
+         "DeleteMessageBatch" : "https://docs.aws.amazon.com/goto/WebAPI/sqs/DeleteMessageBatch",
+         "DeleteQueue" : "https://docs.aws.amazon.com/goto/WebAPI/sqs/DeleteQueue",
+         "GetQueueAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/sqs/GetQueueAttributes",
+         "GetQueueUrl" : "https://docs.aws.amazon.com/goto/WebAPI/sqs/GetQueueUrl",
+         "ListDeadLetterSourceQueues" : "https://docs.aws.amazon.com/goto/WebAPI/sqs/ListDeadLetterSourceQueues",
+         "ListQueueTags" : "https://docs.aws.amazon.com/goto/WebAPI/sqs/ListQueueTags",
+         "ListQueues" : "https://docs.aws.amazon.com/goto/WebAPI/sqs/ListQueues",
+         "PurgeQueue" : "https://docs.aws.amazon.com/goto/WebAPI/sqs/PurgeQueue",
+         "ReceiveMessage" : "https://docs.aws.amazon.com/goto/WebAPI/sqs/ReceiveMessage",
+         "RemovePermission" : "https://docs.aws.amazon.com/goto/WebAPI/sqs/RemovePermission",
+         "SendMessage" : "https://docs.aws.amazon.com/goto/WebAPI/sqs/SendMessage",
+         "SendMessageBatch" : "https://docs.aws.amazon.com/goto/WebAPI/sqs/SendMessageBatch",
+         "SetQueueAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/sqs/SetQueueAttributes",
+         "TagQueue" : "https://docs.aws.amazon.com/goto/WebAPI/sqs/TagQueue",
+         "UntagQueue" : "https://docs.aws.amazon.com/goto/WebAPI/sqs/UntagQueue"
+      }
+   }
+}

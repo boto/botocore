@@ -1,0 +1,19 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/fms-2018-01-01",
+      "methods" : {
+         "AssociateAdminAccount" : "https://docs.aws.amazon.com/goto/WebAPI/fms/AssociateAdminAccount",
+         "DeleteNotificationChannel" : "https://docs.aws.amazon.com/goto/WebAPI/fms/DeleteNotificationChannel",
+         "DeletePolicy" : "https://docs.aws.amazon.com/goto/WebAPI/fms/DeletePolicy",
+         "DisassociateAdminAccount" : "https://docs.aws.amazon.com/goto/WebAPI/fms/DisassociateAdminAccount",
+         "GetAdminAccount" : "https://docs.aws.amazon.com/goto/WebAPI/fms/GetAdminAccount",
+         "GetComplianceDetail" : "https://docs.aws.amazon.com/goto/WebAPI/fms/GetComplianceDetail",
+         "GetNotificationChannel" : "https://docs.aws.amazon.com/goto/WebAPI/fms/GetNotificationChannel",
+         "GetPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/fms/GetPolicy",
+         "ListComplianceStatus" : "https://docs.aws.amazon.com/goto/WebAPI/fms/ListComplianceStatus",
+         "ListPolicies" : "https://docs.aws.amazon.com/goto/WebAPI/fms/ListPolicies",
+         "PutNotificationChannel" : "https://docs.aws.amazon.com/goto/WebAPI/fms/PutNotificationChannel",
+         "PutPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/fms/PutPolicy"
+      }
+   }
+}

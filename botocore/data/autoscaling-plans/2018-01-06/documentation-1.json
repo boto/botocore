@@ -1,0 +1,12 @@
+{
+   "documentation" : {
+      "api_url" : null,
+      "methods" : {
+         "CreateScalingPlan" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/CreateScalingPlan",
+         "DeleteScalingPlan" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/DeleteScalingPlan",
+         "DescribeScalingPlanResources" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/DescribeScalingPlanResources",
+         "DescribeScalingPlans" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/DescribeScalingPlans",
+         "UpdateScalingPlan" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/UpdateScalingPlan"
+      }
+   }
+}

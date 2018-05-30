@@ -1,0 +1,31 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15",
+      "methods" : {
+         "CheckDomainAvailability" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/CheckDomainAvailability",
+         "CheckDomainTransferability" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/CheckDomainTransferability",
+         "DeleteTagsForDomain" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/DeleteTagsForDomain",
+         "DisableDomainAutoRenew" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/DisableDomainAutoRenew",
+         "DisableDomainTransferLock" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/DisableDomainTransferLock",
+         "EnableDomainAutoRenew" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/EnableDomainAutoRenew",
+         "EnableDomainTransferLock" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/EnableDomainTransferLock",
+         "GetContactReachabilityStatus" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/GetContactReachabilityStatus",
+         "GetDomainDetail" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/GetDomainDetail",
+         "GetDomainSuggestions" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/GetDomainSuggestions",
+         "GetOperationDetail" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/GetOperationDetail",
+         "ListDomains" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/ListDomains",
+         "ListOperations" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/ListOperations",
+         "ListTagsForDomain" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/ListTagsForDomain",
+         "RegisterDomain" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/RegisterDomain",
+         "RenewDomain" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/RenewDomain",
+         "ResendContactReachabilityEmail" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/ResendContactReachabilityEmail",
+         "RetrieveDomainAuthCode" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/RetrieveDomainAuthCode",
+         "TransferDomain" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/TransferDomain",
+         "UpdateDomainContact" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/UpdateDomainContact",
+         "UpdateDomainContactPrivacy" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/UpdateDomainContactPrivacy",
+         "UpdateDomainNameservers" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/UpdateDomainNameservers",
+         "UpdateTagsForDomain" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/UpdateTagsForDomain",
+         "ViewBilling" : "https://docs.aws.amazon.com/goto/WebAPI/route53domains/ViewBilling"
+      }
+   }
+}

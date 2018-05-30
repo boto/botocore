@@ -1,0 +1,17 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30",
+      "methods" : {
+         "CreateStream" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo/CreateStream",
+         "DeleteStream" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo/DeleteStream",
+         "DescribeStream" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo/DescribeStream",
+         "GetDataEndpoint" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo/GetDataEndpoint",
+         "ListStreams" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo/ListStreams",
+         "ListTagsForStream" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo/ListTagsForStream",
+         "TagStream" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo/TagStream",
+         "UntagStream" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo/UntagStream",
+         "UpdateDataRetention" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo/UpdateDataRetention",
+         "UpdateStream" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo/UpdateStream"
+      }
+   }
+}

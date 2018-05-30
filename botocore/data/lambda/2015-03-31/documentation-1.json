@@ -1,0 +1,37 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31",
+      "methods" : {
+         "AddPermission" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/AddPermission",
+         "CreateAlias" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/CreateAlias",
+         "CreateEventSourceMapping" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/CreateEventSourceMapping",
+         "CreateFunction" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/CreateFunction",
+         "DeleteAlias" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/DeleteAlias",
+         "DeleteEventSourceMapping" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/DeleteEventSourceMapping",
+         "DeleteFunction" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/DeleteFunction",
+         "DeleteFunctionConcurrency" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/DeleteFunctionConcurrency",
+         "GetAccountSettings" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/GetAccountSettings",
+         "GetAlias" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/GetAlias",
+         "GetEventSourceMapping" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/GetEventSourceMapping",
+         "GetFunction" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/GetFunction",
+         "GetFunctionConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/GetFunctionConfiguration",
+         "GetPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/GetPolicy",
+         "Invoke" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/Invoke",
+         "InvokeAsync" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/InvokeAsync",
+         "ListAliases" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/ListAliases",
+         "ListEventSourceMappings" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/ListEventSourceMappings",
+         "ListFunctions" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/ListFunctions",
+         "ListTags" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/ListTags",
+         "ListVersionsByFunction" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/ListVersionsByFunction",
+         "PublishVersion" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/PublishVersion",
+         "PutFunctionConcurrency" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/PutFunctionConcurrency",
+         "RemovePermission" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/RemovePermission",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/UntagResource",
+         "UpdateAlias" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/UpdateAlias",
+         "UpdateEventSourceMapping" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/UpdateEventSourceMapping",
+         "UpdateFunctionCode" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/UpdateFunctionCode",
+         "UpdateFunctionConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/lambda/UpdateFunctionConfiguration"
+      }
+   }
+}

@@ -1,0 +1,13 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/polly-2016-06-10",
+      "methods" : {
+         "DeleteLexicon" : "https://docs.aws.amazon.com/goto/WebAPI/polly/DeleteLexicon",
+         "DescribeVoices" : "https://docs.aws.amazon.com/goto/WebAPI/polly/DescribeVoices",
+         "GetLexicon" : "https://docs.aws.amazon.com/goto/WebAPI/polly/GetLexicon",
+         "ListLexicons" : "https://docs.aws.amazon.com/goto/WebAPI/polly/ListLexicons",
+         "PutLexicon" : "https://docs.aws.amazon.com/goto/WebAPI/polly/PutLexicon",
+         "SynthesizeSpeech" : "https://docs.aws.amazon.com/goto/WebAPI/polly/SynthesizeSpeech"
+      }
+   }
+}

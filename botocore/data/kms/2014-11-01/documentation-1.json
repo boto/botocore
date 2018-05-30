@@ -1,0 +1,42 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/kms-2014-11-01",
+      "methods" : {
+         "CancelKeyDeletion" : "https://docs.aws.amazon.com/goto/WebAPI/kms/CancelKeyDeletion",
+         "CreateAlias" : "https://docs.aws.amazon.com/goto/WebAPI/kms/CreateAlias",
+         "CreateGrant" : "https://docs.aws.amazon.com/goto/WebAPI/kms/CreateGrant",
+         "CreateKey" : "https://docs.aws.amazon.com/goto/WebAPI/kms/CreateKey",
+         "Decrypt" : "https://docs.aws.amazon.com/goto/WebAPI/kms/Decrypt",
+         "DeleteAlias" : "https://docs.aws.amazon.com/goto/WebAPI/kms/DeleteAlias",
+         "DeleteImportedKeyMaterial" : "https://docs.aws.amazon.com/goto/WebAPI/kms/DeleteImportedKeyMaterial",
+         "DescribeKey" : "https://docs.aws.amazon.com/goto/WebAPI/kms/DescribeKey",
+         "DisableKey" : "https://docs.aws.amazon.com/goto/WebAPI/kms/DisableKey",
+         "DisableKeyRotation" : "https://docs.aws.amazon.com/goto/WebAPI/kms/DisableKeyRotation",
+         "EnableKey" : "https://docs.aws.amazon.com/goto/WebAPI/kms/EnableKey",
+         "EnableKeyRotation" : "https://docs.aws.amazon.com/goto/WebAPI/kms/EnableKeyRotation",
+         "Encrypt" : "https://docs.aws.amazon.com/goto/WebAPI/kms/Encrypt",
+         "GenerateDataKey" : "https://docs.aws.amazon.com/goto/WebAPI/kms/GenerateDataKey",
+         "GenerateDataKeyWithoutPlaintext" : "https://docs.aws.amazon.com/goto/WebAPI/kms/GenerateDataKeyWithoutPlaintext",
+         "GenerateRandom" : "https://docs.aws.amazon.com/goto/WebAPI/kms/GenerateRandom",
+         "GetKeyPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/kms/GetKeyPolicy",
+         "GetKeyRotationStatus" : "https://docs.aws.amazon.com/goto/WebAPI/kms/GetKeyRotationStatus",
+         "GetParametersForImport" : "https://docs.aws.amazon.com/goto/WebAPI/kms/GetParametersForImport",
+         "ImportKeyMaterial" : "https://docs.aws.amazon.com/goto/WebAPI/kms/ImportKeyMaterial",
+         "ListAliases" : "https://docs.aws.amazon.com/goto/WebAPI/kms/ListAliases",
+         "ListGrants" : "https://docs.aws.amazon.com/goto/WebAPI/kms/ListGrants",
+         "ListKeyPolicies" : "https://docs.aws.amazon.com/goto/WebAPI/kms/ListKeyPolicies",
+         "ListKeys" : "https://docs.aws.amazon.com/goto/WebAPI/kms/ListKeys",
+         "ListResourceTags" : "https://docs.aws.amazon.com/goto/WebAPI/kms/ListResourceTags",
+         "ListRetirableGrants" : "https://docs.aws.amazon.com/goto/WebAPI/kms/ListRetirableGrants",
+         "PutKeyPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/kms/PutKeyPolicy",
+         "ReEncrypt" : "https://docs.aws.amazon.com/goto/WebAPI/kms/ReEncrypt",
+         "RetireGrant" : "https://docs.aws.amazon.com/goto/WebAPI/kms/RetireGrant",
+         "RevokeGrant" : "https://docs.aws.amazon.com/goto/WebAPI/kms/RevokeGrant",
+         "ScheduleKeyDeletion" : "https://docs.aws.amazon.com/goto/WebAPI/kms/ScheduleKeyDeletion",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/kms/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/kms/UntagResource",
+         "UpdateAlias" : "https://docs.aws.amazon.com/goto/WebAPI/kms/UpdateAlias",
+         "UpdateKeyDescription" : "https://docs.aws.amazon.com/goto/WebAPI/kms/UpdateKeyDescription"
+      }
+   }
+}

@@ -1,0 +1,30 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08",
+      "methods" : {
+         "AssociateIpGroups" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/AssociateIpGroups",
+         "AuthorizeIpRules" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/AuthorizeIpRules",
+         "CreateIpGroup" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/CreateIpGroup",
+         "CreateTags" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/CreateTags",
+         "CreateWorkspaces" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/CreateWorkspaces",
+         "DeleteIpGroup" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/DeleteIpGroup",
+         "DeleteTags" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/DeleteTags",
+         "DescribeIpGroups" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/DescribeIpGroups",
+         "DescribeTags" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/DescribeTags",
+         "DescribeWorkspaceBundles" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/DescribeWorkspaceBundles",
+         "DescribeWorkspaceDirectories" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/DescribeWorkspaceDirectories",
+         "DescribeWorkspaces" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/DescribeWorkspaces",
+         "DescribeWorkspacesConnectionStatus" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/DescribeWorkspacesConnectionStatus",
+         "DisassociateIpGroups" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/DisassociateIpGroups",
+         "ModifyWorkspaceProperties" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/ModifyWorkspaceProperties",
+         "ModifyWorkspaceState" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/ModifyWorkspaceState",
+         "RebootWorkspaces" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/RebootWorkspaces",
+         "RebuildWorkspaces" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/RebuildWorkspaces",
+         "RevokeIpRules" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/RevokeIpRules",
+         "StartWorkspaces" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/StartWorkspaces",
+         "StopWorkspaces" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/StopWorkspaces",
+         "TerminateWorkspaces" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/TerminateWorkspaces",
+         "UpdateRulesOfIpGroup" : "https://docs.aws.amazon.com/goto/WebAPI/workspaces/UpdateRulesOfIpGroup"
+      }
+   }
+}

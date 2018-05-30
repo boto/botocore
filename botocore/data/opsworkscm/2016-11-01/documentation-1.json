@@ -1,0 +1,22 @@
+{
+   "documentation" : {
+      "api_url" : "https://aws.amazon.com/documentation/opsworks/",
+      "methods" : {
+         "AssociateNode" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_AssociateNode.html",
+         "CreateBackup" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_CreateBackup.html",
+         "CreateServer" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_CreateServer.html",
+         "DeleteBackup" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_DeleteBackup.html",
+         "DeleteServer" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_DeleteServer.html",
+         "DescribeAccountAttributes" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_DescribeAccountAttributes.html",
+         "DescribeBackups" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_DescribeBackups.html",
+         "DescribeEvents" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_DescribeEvents.html",
+         "DescribeNodeAssociationStatus" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_DescribeNodeAssociationStatus.html",
+         "DescribeServers" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_DescribeServers.html",
+         "DisassociateNode" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_DisassociateNode.html",
+         "RestoreServer" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_RestoreServer.html",
+         "StartMaintenance" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_StartMaintenance.html",
+         "UpdateServer" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_UpdateServer.html",
+         "UpdateServerEngineAttributes" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_UpdateServerEngineAttributes.html"
+      }
+   }
+}

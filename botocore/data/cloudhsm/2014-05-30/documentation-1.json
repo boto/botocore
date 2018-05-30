@@ -1,0 +1,27 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsm-2014-05-30",
+      "methods" : {
+         "AddTagsToResource" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsm/AddTagsToResource",
+         "CreateHapg" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsm/CreateHapg",
+         "CreateHsm" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsm/CreateHsm",
+         "CreateLunaClient" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsm/CreateLunaClient",
+         "DeleteHapg" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsm/DeleteHapg",
+         "DeleteHsm" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsm/DeleteHsm",
+         "DeleteLunaClient" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsm/DeleteLunaClient",
+         "DescribeHapg" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsm/DescribeHapg",
+         "DescribeHsm" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsm/DescribeHsm",
+         "DescribeLunaClient" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsm/DescribeLunaClient",
+         "GetConfig" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsm/GetConfig",
+         "ListAvailableZones" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsm/ListAvailableZones",
+         "ListHapgs" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsm/ListHapgs",
+         "ListHsms" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsm/ListHsms",
+         "ListLunaClients" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsm/ListLunaClients",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsm/ListTagsForResource",
+         "ModifyHapg" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsm/ModifyHapg",
+         "ModifyHsm" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsm/ModifyHsm",
+         "ModifyLunaClient" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsm/ModifyLunaClient",
+         "RemoveTagsFromResource" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsm/RemoveTagsFromResource"
+      }
+   }
+}

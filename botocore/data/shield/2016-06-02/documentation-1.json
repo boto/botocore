@@ -1,0 +1,17 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02",
+      "methods" : {
+         "CreateProtection" : "https://docs.aws.amazon.com/goto/WebAPI/shield/CreateProtection",
+         "CreateSubscription" : "https://docs.aws.amazon.com/goto/WebAPI/shield/CreateSubscription",
+         "DeleteProtection" : "https://docs.aws.amazon.com/goto/WebAPI/shield/DeleteProtection",
+         "DeleteSubscription" : "https://docs.aws.amazon.com/goto/WebAPI/shield/DeleteSubscription",
+         "DescribeAttack" : "https://docs.aws.amazon.com/goto/WebAPI/shield/DescribeAttack",
+         "DescribeProtection" : "https://docs.aws.amazon.com/goto/WebAPI/shield/DescribeProtection",
+         "DescribeSubscription" : "https://docs.aws.amazon.com/goto/WebAPI/shield/DescribeSubscription",
+         "GetSubscriptionState" : "https://docs.aws.amazon.com/goto/WebAPI/shield/GetSubscriptionState",
+         "ListAttacks" : "https://docs.aws.amazon.com/goto/WebAPI/shield/ListAttacks",
+         "ListProtections" : "https://docs.aws.amazon.com/goto/WebAPI/shield/ListProtections"
+      }
+   }
+}

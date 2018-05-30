@@ -1,0 +1,18 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18",
+      "methods" : {
+         "BatchGetNamedQuery" : "https://docs.aws.amazon.com/goto/WebAPI/athena/BatchGetNamedQuery",
+         "BatchGetQueryExecution" : "https://docs.aws.amazon.com/goto/WebAPI/athena/BatchGetQueryExecution",
+         "CreateNamedQuery" : "https://docs.aws.amazon.com/goto/WebAPI/athena/CreateNamedQuery",
+         "DeleteNamedQuery" : "https://docs.aws.amazon.com/goto/WebAPI/athena/DeleteNamedQuery",
+         "GetNamedQuery" : "https://docs.aws.amazon.com/goto/WebAPI/athena/GetNamedQuery",
+         "GetQueryExecution" : "https://docs.aws.amazon.com/goto/WebAPI/athena/GetQueryExecution",
+         "GetQueryResults" : "https://docs.aws.amazon.com/goto/WebAPI/athena/GetQueryResults",
+         "ListNamedQueries" : "https://docs.aws.amazon.com/goto/WebAPI/athena/ListNamedQueries",
+         "ListQueryExecutions" : "https://docs.aws.amazon.com/goto/WebAPI/athena/ListQueryExecutions",
+         "StartQueryExecution" : "https://docs.aws.amazon.com/goto/WebAPI/athena/StartQueryExecution",
+         "StopQueryExecution" : "https://docs.aws.amazon.com/goto/WebAPI/athena/StopQueryExecution"
+      }
+   }
+}

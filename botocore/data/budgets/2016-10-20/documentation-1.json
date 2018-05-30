@@ -1,0 +1,20 @@
+{
+   "documentation" : {
+      "api_url" : "https://aws.amazon.com/documentation/account-billing/",
+      "methods" : {
+         "CreateBudget" : "https://docs.aws.amazon.com/goto/WebAPI/budgets/CreateBudget",
+         "CreateNotification" : "https://docs.aws.amazon.com/goto/WebAPI/budgets/CreateNotification",
+         "CreateSubscriber" : "https://docs.aws.amazon.com/goto/WebAPI/budgets/CreateSubscriber",
+         "DeleteBudget" : "https://docs.aws.amazon.com/goto/WebAPI/budgets/DeleteBudget",
+         "DeleteNotification" : "https://docs.aws.amazon.com/goto/WebAPI/budgets/DeleteNotification",
+         "DeleteSubscriber" : "https://docs.aws.amazon.com/goto/WebAPI/budgets/DeleteSubscriber",
+         "DescribeBudget" : "https://docs.aws.amazon.com/goto/WebAPI/budgets/DescribeBudget",
+         "DescribeBudgets" : "https://docs.aws.amazon.com/goto/WebAPI/budgets/DescribeBudgets",
+         "DescribeNotificationsForBudget" : "https://docs.aws.amazon.com/goto/WebAPI/budgets/DescribeNotificationsForBudget",
+         "DescribeSubscribersForNotification" : "https://docs.aws.amazon.com/goto/WebAPI/budgets/DescribeSubscribersForNotification",
+         "UpdateBudget" : "https://docs.aws.amazon.com/goto/WebAPI/budgets/UpdateBudget",
+         "UpdateNotification" : "https://docs.aws.amazon.com/goto/WebAPI/budgets/UpdateNotification",
+         "UpdateSubscriber" : "https://docs.aws.amazon.com/goto/WebAPI/budgets/UpdateSubscriber"
+      }
+   }
+}

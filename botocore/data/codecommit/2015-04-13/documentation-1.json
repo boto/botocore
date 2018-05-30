@@ -1,0 +1,43 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13",
+      "methods" : {
+         "BatchGetRepositories" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/BatchGetRepositories",
+         "CreateBranch" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/CreateBranch",
+         "CreatePullRequest" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/CreatePullRequest",
+         "CreateRepository" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/CreateRepository",
+         "DeleteBranch" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/DeleteBranch",
+         "DeleteCommentContent" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/DeleteCommentContent",
+         "DeleteRepository" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/DeleteRepository",
+         "DescribePullRequestEvents" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/DescribePullRequestEvents",
+         "GetBlob" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/GetBlob",
+         "GetBranch" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/GetBranch",
+         "GetComment" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/GetComment",
+         "GetCommentsForComparedCommit" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/GetCommentsForComparedCommit",
+         "GetCommentsForPullRequest" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/GetCommentsForPullRequest",
+         "GetCommit" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/GetCommit",
+         "GetDifferences" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/GetDifferences",
+         "GetMergeConflicts" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/GetMergeConflicts",
+         "GetPullRequest" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/GetPullRequest",
+         "GetRepository" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/GetRepository",
+         "GetRepositoryTriggers" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/GetRepositoryTriggers",
+         "ListBranches" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/ListBranches",
+         "ListPullRequests" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/ListPullRequests",
+         "ListRepositories" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/ListRepositories",
+         "MergePullRequestByFastForward" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/MergePullRequestByFastForward",
+         "PostCommentForComparedCommit" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/PostCommentForComparedCommit",
+         "PostCommentForPullRequest" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/PostCommentForPullRequest",
+         "PostCommentReply" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/PostCommentReply",
+         "PutFile" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/PutFile",
+         "PutRepositoryTriggers" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/PutRepositoryTriggers",
+         "TestRepositoryTriggers" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/TestRepositoryTriggers",
+         "UpdateComment" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/UpdateComment",
+         "UpdateDefaultBranch" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/UpdateDefaultBranch",
+         "UpdatePullRequestDescription" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/UpdatePullRequestDescription",
+         "UpdatePullRequestStatus" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/UpdatePullRequestStatus",
+         "UpdatePullRequestTitle" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/UpdatePullRequestTitle",
+         "UpdateRepositoryDescription" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/UpdateRepositoryDescription",
+         "UpdateRepositoryName" : "https://docs.aws.amazon.com/goto/WebAPI/codecommit/UpdateRepositoryName"
+      }
+   }
+}

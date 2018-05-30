@@ -1,0 +1,9 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30",
+      "methods" : {
+         "GetMediaForFragmentList" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo/GetMediaForFragmentList",
+         "ListFragments" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo/ListFragments"
+      }
+   }
+}

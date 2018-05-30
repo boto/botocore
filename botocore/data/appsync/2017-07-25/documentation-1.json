@@ -1,0 +1,34 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25",
+      "methods" : {
+         "CreateApiKey" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/CreateApiKey",
+         "CreateDataSource" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/CreateDataSource",
+         "CreateGraphqlApi" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/CreateGraphqlApi",
+         "CreateResolver" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/CreateResolver",
+         "CreateType" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/CreateType",
+         "DeleteApiKey" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/DeleteApiKey",
+         "DeleteDataSource" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/DeleteDataSource",
+         "DeleteGraphqlApi" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/DeleteGraphqlApi",
+         "DeleteResolver" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/DeleteResolver",
+         "DeleteType" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/DeleteType",
+         "GetDataSource" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/GetDataSource",
+         "GetGraphqlApi" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/GetGraphqlApi",
+         "GetIntrospectionSchema" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/GetIntrospectionSchema",
+         "GetResolver" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/GetResolver",
+         "GetSchemaCreationStatus" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/GetSchemaCreationStatus",
+         "GetType" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/GetType",
+         "ListApiKeys" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/ListApiKeys",
+         "ListDataSources" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/ListDataSources",
+         "ListGraphqlApis" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/ListGraphqlApis",
+         "ListResolvers" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/ListResolvers",
+         "ListTypes" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/ListTypes",
+         "StartSchemaCreation" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/StartSchemaCreation",
+         "UpdateApiKey" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/UpdateApiKey",
+         "UpdateDataSource" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/UpdateDataSource",
+         "UpdateGraphqlApi" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/UpdateGraphqlApi",
+         "UpdateResolver" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/UpdateResolver",
+         "UpdateType" : "https://docs.aws.amazon.com/goto/WebAPI/appsync/UpdateType"
+      }
+   }
+}

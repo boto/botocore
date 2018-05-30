@@ -1,0 +1,35 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning-2014-12-12",
+      "methods" : {
+         "AddTags" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/AddTags",
+         "CreateBatchPrediction" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/CreateBatchPrediction",
+         "CreateDataSourceFromRDS" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/CreateDataSourceFromRDS",
+         "CreateDataSourceFromRedshift" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/CreateDataSourceFromRedshift",
+         "CreateDataSourceFromS3" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/CreateDataSourceFromS3",
+         "CreateEvaluation" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/CreateEvaluation",
+         "CreateMLModel" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/CreateMLModel",
+         "CreateRealtimeEndpoint" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/CreateRealtimeEndpoint",
+         "DeleteBatchPrediction" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/DeleteBatchPrediction",
+         "DeleteDataSource" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/DeleteDataSource",
+         "DeleteEvaluation" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/DeleteEvaluation",
+         "DeleteMLModel" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/DeleteMLModel",
+         "DeleteRealtimeEndpoint" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/DeleteRealtimeEndpoint",
+         "DeleteTags" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/DeleteTags",
+         "DescribeBatchPredictions" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/DescribeBatchPredictions",
+         "DescribeDataSources" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/DescribeDataSources",
+         "DescribeEvaluations" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/DescribeEvaluations",
+         "DescribeMLModels" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/DescribeMLModels",
+         "DescribeTags" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/DescribeTags",
+         "GetBatchPrediction" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/GetBatchPrediction",
+         "GetDataSource" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/GetDataSource",
+         "GetEvaluation" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/GetEvaluation",
+         "GetMLModel" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/GetMLModel",
+         "Predict" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/Predict",
+         "UpdateBatchPrediction" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/UpdateBatchPrediction",
+         "UpdateDataSource" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/UpdateDataSource",
+         "UpdateEvaluation" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/UpdateEvaluation",
+         "UpdateMLModel" : "https://docs.aws.amazon.com/goto/WebAPI/machinelearning/UpdateMLModel"
+      }
+   }
+}

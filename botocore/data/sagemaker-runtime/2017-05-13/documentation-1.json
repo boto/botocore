@@ -1,0 +1,8 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/runtime.sagemaker-2017-05-13",
+      "methods" : {
+         "InvokeEndpoint" : "https://docs.aws.amazon.com/goto/WebAPI/runtime.sagemaker/InvokeEndpoint"
+      }
+   }
+}

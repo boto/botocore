@@ -1,0 +1,18 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/elasticfilesystem-2015-02-01",
+      "methods" : {
+         "CreateFileSystem" : "https://docs.aws.amazon.com/goto/WebAPI/elasticfilesystem/CreateFileSystem",
+         "CreateMountTarget" : "https://docs.aws.amazon.com/goto/WebAPI/elasticfilesystem/CreateMountTarget",
+         "CreateTags" : "https://docs.aws.amazon.com/goto/WebAPI/elasticfilesystem/CreateTags",
+         "DeleteFileSystem" : "https://docs.aws.amazon.com/goto/WebAPI/elasticfilesystem/DeleteFileSystem",
+         "DeleteMountTarget" : "https://docs.aws.amazon.com/goto/WebAPI/elasticfilesystem/DeleteMountTarget",
+         "DeleteTags" : "https://docs.aws.amazon.com/goto/WebAPI/elasticfilesystem/DeleteTags",
+         "DescribeFileSystems" : "https://docs.aws.amazon.com/goto/WebAPI/elasticfilesystem/DescribeFileSystems",
+         "DescribeMountTargetSecurityGroups" : "https://docs.aws.amazon.com/goto/WebAPI/elasticfilesystem/DescribeMountTargetSecurityGroups",
+         "DescribeMountTargets" : "https://docs.aws.amazon.com/goto/WebAPI/elasticfilesystem/DescribeMountTargets",
+         "DescribeTags" : "https://docs.aws.amazon.com/goto/WebAPI/elasticfilesystem/DescribeTags",
+         "ModifyMountTargetSecurityGroups" : "https://docs.aws.amazon.com/goto/WebAPI/elasticfilesystem/ModifyMountTargetSecurityGroups"
+      }
+   }
+}

@@ -1,0 +1,25 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/codestar-2017-04-19",
+      "methods" : {
+         "AssociateTeamMember" : "https://docs.aws.amazon.com/goto/WebAPI/codestar/AssociateTeamMember",
+         "CreateProject" : "https://docs.aws.amazon.com/goto/WebAPI/codestar/CreateProject",
+         "CreateUserProfile" : "https://docs.aws.amazon.com/goto/WebAPI/codestar/CreateUserProfile",
+         "DeleteProject" : "https://docs.aws.amazon.com/goto/WebAPI/codestar/DeleteProject",
+         "DeleteUserProfile" : "https://docs.aws.amazon.com/goto/WebAPI/codestar/DeleteUserProfile",
+         "DescribeProject" : "https://docs.aws.amazon.com/goto/WebAPI/codestar/DescribeProject",
+         "DescribeUserProfile" : "https://docs.aws.amazon.com/goto/WebAPI/codestar/DescribeUserProfile",
+         "DisassociateTeamMember" : "https://docs.aws.amazon.com/goto/WebAPI/codestar/DisassociateTeamMember",
+         "ListProjects" : "https://docs.aws.amazon.com/goto/WebAPI/codestar/ListProjects",
+         "ListResources" : "https://docs.aws.amazon.com/goto/WebAPI/codestar/ListResources",
+         "ListTagsForProject" : "https://docs.aws.amazon.com/goto/WebAPI/codestar/ListTagsForProject",
+         "ListTeamMembers" : "https://docs.aws.amazon.com/goto/WebAPI/codestar/ListTeamMembers",
+         "ListUserProfiles" : "https://docs.aws.amazon.com/goto/WebAPI/codestar/ListUserProfiles",
+         "TagProject" : "https://docs.aws.amazon.com/goto/WebAPI/codestar/TagProject",
+         "UntagProject" : "https://docs.aws.amazon.com/goto/WebAPI/codestar/UntagProject",
+         "UpdateProject" : "https://docs.aws.amazon.com/goto/WebAPI/codestar/UpdateProject",
+         "UpdateTeamMember" : "https://docs.aws.amazon.com/goto/WebAPI/codestar/UpdateTeamMember",
+         "UpdateUserProfile" : "https://docs.aws.amazon.com/goto/WebAPI/codestar/UpdateUserProfile"
+      }
+   }
+}

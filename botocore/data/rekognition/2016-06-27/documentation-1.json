@@ -1,0 +1,40 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition-2016-06-27",
+      "methods" : {
+         "CompareFaces" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/CompareFaces",
+         "CreateCollection" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/CreateCollection",
+         "CreateStreamProcessor" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/CreateStreamProcessor",
+         "DeleteCollection" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/DeleteCollection",
+         "DeleteFaces" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/DeleteFaces",
+         "DeleteStreamProcessor" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/DeleteStreamProcessor",
+         "DescribeStreamProcessor" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/DescribeStreamProcessor",
+         "DetectFaces" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/DetectFaces",
+         "DetectLabels" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/DetectLabels",
+         "DetectModerationLabels" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/DetectModerationLabels",
+         "DetectText" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/DetectText",
+         "GetCelebrityInfo" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/GetCelebrityInfo",
+         "GetCelebrityRecognition" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/GetCelebrityRecognition",
+         "GetContentModeration" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/GetContentModeration",
+         "GetFaceDetection" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/GetFaceDetection",
+         "GetFaceSearch" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/GetFaceSearch",
+         "GetLabelDetection" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/GetLabelDetection",
+         "GetPersonTracking" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/GetPersonTracking",
+         "IndexFaces" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/IndexFaces",
+         "ListCollections" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/ListCollections",
+         "ListFaces" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/ListFaces",
+         "ListStreamProcessors" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/ListStreamProcessors",
+         "RecognizeCelebrities" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/RecognizeCelebrities",
+         "SearchFaces" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/SearchFaces",
+         "SearchFacesByImage" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/SearchFacesByImage",
+         "StartCelebrityRecognition" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/StartCelebrityRecognition",
+         "StartContentModeration" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/StartContentModeration",
+         "StartFaceDetection" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/StartFaceDetection",
+         "StartFaceSearch" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/StartFaceSearch",
+         "StartLabelDetection" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/StartLabelDetection",
+         "StartPersonTracking" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/StartPersonTracking",
+         "StartStreamProcessor" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/StartStreamProcessor",
+         "StopStreamProcessor" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/StopStreamProcessor"
+      }
+   }
+}

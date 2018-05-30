@@ -1,0 +1,14 @@
+{
+   "documentation" : {
+      "api_url" : "https://aws.amazon.com/documentation/iam/",
+      "methods" : {
+         "AssumeRole" : "https://docs.aws.amazon.com/goto/WebAPI/sts/AssumeRole",
+         "AssumeRoleWithSAML" : "https://docs.aws.amazon.com/goto/WebAPI/sts/AssumeRoleWithSAML",
+         "AssumeRoleWithWebIdentity" : "https://docs.aws.amazon.com/goto/WebAPI/sts/AssumeRoleWithWebIdentity",
+         "DecodeAuthorizationMessage" : "https://docs.aws.amazon.com/goto/WebAPI/sts/DecodeAuthorizationMessage",
+         "GetCallerIdentity" : "https://docs.aws.amazon.com/goto/WebAPI/sts/GetCallerIdentity",
+         "GetFederationToken" : "https://docs.aws.amazon.com/goto/WebAPI/sts/GetFederationToken",
+         "GetSessionToken" : "https://docs.aws.amazon.com/goto/WebAPI/sts/GetSessionToken"
+      }
+   }
+}

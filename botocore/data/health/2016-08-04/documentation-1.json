@@ -1,0 +1,13 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/health-2016-08-04",
+      "methods" : {
+         "DescribeAffectedEntities" : "https://docs.aws.amazon.com/goto/WebAPI/health/DescribeAffectedEntities",
+         "DescribeEntityAggregates" : "https://docs.aws.amazon.com/goto/WebAPI/health/DescribeEntityAggregates",
+         "DescribeEventAggregates" : "https://docs.aws.amazon.com/goto/WebAPI/health/DescribeEventAggregates",
+         "DescribeEventDetails" : "https://docs.aws.amazon.com/goto/WebAPI/health/DescribeEventDetails",
+         "DescribeEventTypes" : "https://docs.aws.amazon.com/goto/WebAPI/health/DescribeEventTypes",
+         "DescribeEvents" : "https://docs.aws.amazon.com/goto/WebAPI/health/DescribeEvents"
+      }
+   }
+}

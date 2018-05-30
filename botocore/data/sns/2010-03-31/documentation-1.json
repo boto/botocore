@@ -1,0 +1,37 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31",
+      "methods" : {
+         "AddPermission" : "https://docs.aws.amazon.com/goto/WebAPI/sns/AddPermission",
+         "CheckIfPhoneNumberIsOptedOut" : "https://docs.aws.amazon.com/goto/WebAPI/sns/CheckIfPhoneNumberIsOptedOut",
+         "ConfirmSubscription" : "https://docs.aws.amazon.com/goto/WebAPI/sns/ConfirmSubscription",
+         "CreatePlatformApplication" : "https://docs.aws.amazon.com/goto/WebAPI/sns/CreatePlatformApplication",
+         "CreatePlatformEndpoint" : "https://docs.aws.amazon.com/goto/WebAPI/sns/CreatePlatformEndpoint",
+         "CreateTopic" : "https://docs.aws.amazon.com/goto/WebAPI/sns/CreateTopic",
+         "DeleteEndpoint" : "https://docs.aws.amazon.com/goto/WebAPI/sns/DeleteEndpoint",
+         "DeletePlatformApplication" : "https://docs.aws.amazon.com/goto/WebAPI/sns/DeletePlatformApplication",
+         "DeleteTopic" : "https://docs.aws.amazon.com/goto/WebAPI/sns/DeleteTopic",
+         "GetEndpointAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/sns/GetEndpointAttributes",
+         "GetPlatformApplicationAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/sns/GetPlatformApplicationAttributes",
+         "GetSMSAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/sns/GetSMSAttributes",
+         "GetSubscriptionAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/sns/GetSubscriptionAttributes",
+         "GetTopicAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/sns/GetTopicAttributes",
+         "ListEndpointsByPlatformApplication" : "https://docs.aws.amazon.com/goto/WebAPI/sns/ListEndpointsByPlatformApplication",
+         "ListPhoneNumbersOptedOut" : "https://docs.aws.amazon.com/goto/WebAPI/sns/ListPhoneNumbersOptedOut",
+         "ListPlatformApplications" : "https://docs.aws.amazon.com/goto/WebAPI/sns/ListPlatformApplications",
+         "ListSubscriptions" : "https://docs.aws.amazon.com/goto/WebAPI/sns/ListSubscriptions",
+         "ListSubscriptionsByTopic" : "https://docs.aws.amazon.com/goto/WebAPI/sns/ListSubscriptionsByTopic",
+         "ListTopics" : "https://docs.aws.amazon.com/goto/WebAPI/sns/ListTopics",
+         "OptInPhoneNumber" : "https://docs.aws.amazon.com/goto/WebAPI/sns/OptInPhoneNumber",
+         "Publish" : "https://docs.aws.amazon.com/goto/WebAPI/sns/Publish",
+         "RemovePermission" : "https://docs.aws.amazon.com/goto/WebAPI/sns/RemovePermission",
+         "SetEndpointAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/sns/SetEndpointAttributes",
+         "SetPlatformApplicationAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/sns/SetPlatformApplicationAttributes",
+         "SetSMSAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/sns/SetSMSAttributes",
+         "SetSubscriptionAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/sns/SetSubscriptionAttributes",
+         "SetTopicAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/sns/SetTopicAttributes",
+         "Subscribe" : "https://docs.aws.amazon.com/goto/WebAPI/sns/Subscribe",
+         "Unsubscribe" : "https://docs.aws.amazon.com/goto/WebAPI/sns/Unsubscribe"
+      }
+   }
+}

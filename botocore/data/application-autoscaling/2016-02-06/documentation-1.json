@@ -1,0 +1,17 @@
+{
+   "documentation" : {
+      "api_url" : null,
+      "methods" : {
+         "DeleteScalingPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/DeleteScalingPolicy",
+         "DeleteScheduledAction" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/DeleteScheduledAction",
+         "DeregisterScalableTarget" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/DeregisterScalableTarget",
+         "DescribeScalableTargets" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/DescribeScalableTargets",
+         "DescribeScalingActivities" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/DescribeScalingActivities",
+         "DescribeScalingPolicies" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/DescribeScalingPolicies",
+         "DescribeScheduledActions" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/DescribeScheduledActions",
+         "PutScalingPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/PutScalingPolicy",
+         "PutScheduledAction" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/PutScheduledAction",
+         "RegisterScalableTarget" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/RegisterScalableTarget"
+      }
+   }
+}

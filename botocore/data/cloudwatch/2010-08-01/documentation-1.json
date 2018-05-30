@@ -1,0 +1,23 @@
+{
+   "documentation" : {
+      "api_url" : "https://aws.amazon.com/documentation/cloudwatch/",
+      "methods" : {
+         "DeleteAlarms" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/DeleteAlarms",
+         "DeleteDashboards" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/DeleteDashboards",
+         "DescribeAlarmHistory" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/DescribeAlarmHistory",
+         "DescribeAlarms" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/DescribeAlarms",
+         "DescribeAlarmsForMetric" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/DescribeAlarmsForMetric",
+         "DisableAlarmActions" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/DisableAlarmActions",
+         "EnableAlarmActions" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/EnableAlarmActions",
+         "GetDashboard" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/GetDashboard",
+         "GetMetricData" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/GetMetricData",
+         "GetMetricStatistics" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/GetMetricStatistics",
+         "ListDashboards" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/ListDashboards",
+         "ListMetrics" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/ListMetrics",
+         "PutDashboard" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/PutDashboard",
+         "PutMetricAlarm" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/PutMetricAlarm",
+         "PutMetricData" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/PutMetricData",
+         "SetAlarmState" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/SetAlarmState"
+      }
+   }
+}

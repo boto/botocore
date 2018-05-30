@@ -1,0 +1,22 @@
+{
+   "documentation" : {
+      "api_url" : "https://aws.amazon.com/documentation/cloudwatch/",
+      "methods" : {
+         "DeleteRule" : "https://docs.aws.amazon.com/goto/WebAPI/events/DeleteRule",
+         "DescribeEventBus" : "https://docs.aws.amazon.com/goto/WebAPI/events/DescribeEventBus",
+         "DescribeRule" : "https://docs.aws.amazon.com/goto/WebAPI/events/DescribeRule",
+         "DisableRule" : "https://docs.aws.amazon.com/goto/WebAPI/events/DisableRule",
+         "EnableRule" : "https://docs.aws.amazon.com/goto/WebAPI/events/EnableRule",
+         "ListRuleNamesByTarget" : "https://docs.aws.amazon.com/goto/WebAPI/events/ListRuleNamesByTarget",
+         "ListRules" : "https://docs.aws.amazon.com/goto/WebAPI/events/ListRules",
+         "ListTargetsByRule" : "https://docs.aws.amazon.com/goto/WebAPI/events/ListTargetsByRule",
+         "PutEvents" : "https://docs.aws.amazon.com/goto/WebAPI/events/PutEvents",
+         "PutPermission" : "https://docs.aws.amazon.com/goto/WebAPI/events/PutPermission",
+         "PutRule" : "https://docs.aws.amazon.com/goto/WebAPI/events/PutRule",
+         "PutTargets" : "https://docs.aws.amazon.com/goto/WebAPI/events/PutTargets",
+         "RemovePermission" : "https://docs.aws.amazon.com/goto/WebAPI/events/RemovePermission",
+         "RemoveTargets" : "https://docs.aws.amazon.com/goto/WebAPI/events/RemoveTargets",
+         "TestEventPattern" : "https://docs.aws.amazon.com/goto/WebAPI/events/TestEventPattern"
+      }
+   }
+}

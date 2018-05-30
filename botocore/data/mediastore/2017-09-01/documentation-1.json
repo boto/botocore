@@ -1,0 +1,17 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01",
+      "methods" : {
+         "CreateContainer" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/CreateContainer",
+         "DeleteContainer" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/DeleteContainer",
+         "DeleteContainerPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/DeleteContainerPolicy",
+         "DeleteCorsPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/DeleteCorsPolicy",
+         "DescribeContainer" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/DescribeContainer",
+         "GetContainerPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/GetContainerPolicy",
+         "GetCorsPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/GetCorsPolicy",
+         "ListContainers" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/ListContainers",
+         "PutContainerPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/PutContainerPolicy",
+         "PutCorsPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/PutCorsPolicy"
+      }
+   }
+}

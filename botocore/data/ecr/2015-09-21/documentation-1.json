@@ -1,0 +1,29 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21",
+      "methods" : {
+         "BatchCheckLayerAvailability" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/BatchCheckLayerAvailability",
+         "BatchDeleteImage" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/BatchDeleteImage",
+         "BatchGetImage" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/BatchGetImage",
+         "CompleteLayerUpload" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/CompleteLayerUpload",
+         "CreateRepository" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/CreateRepository",
+         "DeleteLifecyclePolicy" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/DeleteLifecyclePolicy",
+         "DeleteRepository" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/DeleteRepository",
+         "DeleteRepositoryPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/DeleteRepositoryPolicy",
+         "DescribeImages" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/DescribeImages",
+         "DescribeRepositories" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/DescribeRepositories",
+         "GetAuthorizationToken" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/GetAuthorizationToken",
+         "GetDownloadUrlForLayer" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/GetDownloadUrlForLayer",
+         "GetLifecyclePolicy" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/GetLifecyclePolicy",
+         "GetLifecyclePolicyPreview" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/GetLifecyclePolicyPreview",
+         "GetRepositoryPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/GetRepositoryPolicy",
+         "InitiateLayerUpload" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/InitiateLayerUpload",
+         "ListImages" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/ListImages",
+         "PutImage" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/PutImage",
+         "PutLifecyclePolicy" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/PutLifecyclePolicy",
+         "SetRepositoryPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/SetRepositoryPolicy",
+         "StartLifecyclePolicyPreview" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/StartLifecyclePolicyPreview",
+         "UploadLayerPart" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/UploadLayerPart"
+      }
+   }
+}

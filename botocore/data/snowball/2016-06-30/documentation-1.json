@@ -1,0 +1,24 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/snowball-2016-06-30",
+      "methods" : {
+         "CancelCluster" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/CancelCluster",
+         "CancelJob" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/CancelJob",
+         "CreateAddress" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/CreateAddress",
+         "CreateCluster" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/CreateCluster",
+         "CreateJob" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/CreateJob",
+         "DescribeAddress" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/DescribeAddress",
+         "DescribeAddresses" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/DescribeAddresses",
+         "DescribeCluster" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/DescribeCluster",
+         "DescribeJob" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/DescribeJob",
+         "GetJobManifest" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/GetJobManifest",
+         "GetJobUnlockCode" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/GetJobUnlockCode",
+         "GetSnowballUsage" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/GetSnowballUsage",
+         "ListClusterJobs" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/ListClusterJobs",
+         "ListClusters" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/ListClusters",
+         "ListJobs" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/ListJobs",
+         "UpdateCluster" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/UpdateCluster",
+         "UpdateJob" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/UpdateJob"
+      }
+   }
+}

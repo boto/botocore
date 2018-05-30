@@ -1,0 +1,19 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/resource-groups-2017-11-27",
+      "methods" : {
+         "CreateGroup" : "https://docs.aws.amazon.com/goto/WebAPI/resource-groups/CreateGroup",
+         "DeleteGroup" : "https://docs.aws.amazon.com/goto/WebAPI/resource-groups/DeleteGroup",
+         "GetGroup" : "https://docs.aws.amazon.com/goto/WebAPI/resource-groups/GetGroup",
+         "GetGroupQuery" : "https://docs.aws.amazon.com/goto/WebAPI/resource-groups/GetGroupQuery",
+         "GetTags" : "https://docs.aws.amazon.com/goto/WebAPI/resource-groups/GetTags",
+         "ListGroupResources" : "https://docs.aws.amazon.com/goto/WebAPI/resource-groups/ListGroupResources",
+         "ListGroups" : "https://docs.aws.amazon.com/goto/WebAPI/resource-groups/ListGroups",
+         "SearchResources" : "https://docs.aws.amazon.com/goto/WebAPI/resource-groups/SearchResources",
+         "Tag" : "https://docs.aws.amazon.com/goto/WebAPI/resource-groups/Tag",
+         "Untag" : "https://docs.aws.amazon.com/goto/WebAPI/resource-groups/Untag",
+         "UpdateGroup" : "https://docs.aws.amazon.com/goto/WebAPI/resource-groups/UpdateGroup",
+         "UpdateGroupQuery" : "https://docs.aws.amazon.com/goto/WebAPI/resource-groups/UpdateGroupQuery"
+      }
+   }
+}

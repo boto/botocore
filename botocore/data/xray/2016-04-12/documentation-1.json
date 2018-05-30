@@ -1,0 +1,15 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12",
+      "methods" : {
+         "BatchGetTraces" : "https://docs.aws.amazon.com/goto/WebAPI/xray/BatchGetTraces",
+         "GetEncryptionConfig" : "https://docs.aws.amazon.com/goto/WebAPI/xray/GetEncryptionConfig",
+         "GetServiceGraph" : "https://docs.aws.amazon.com/goto/WebAPI/xray/GetServiceGraph",
+         "GetTraceGraph" : "https://docs.aws.amazon.com/goto/WebAPI/xray/GetTraceGraph",
+         "GetTraceSummaries" : "https://docs.aws.amazon.com/goto/WebAPI/xray/GetTraceSummaries",
+         "PutEncryptionConfig" : "https://docs.aws.amazon.com/goto/WebAPI/xray/PutEncryptionConfig",
+         "PutTelemetryRecords" : "https://docs.aws.amazon.com/goto/WebAPI/xray/PutTelemetryRecords",
+         "PutTraceSegments" : "https://docs.aws.amazon.com/goto/WebAPI/xray/PutTraceSegments"
+      }
+   }
+}

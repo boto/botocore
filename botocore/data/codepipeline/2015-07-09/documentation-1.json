@@ -1,0 +1,39 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline-2015-07-09",
+      "methods" : {
+         "AcknowledgeJob" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/AcknowledgeJob",
+         "AcknowledgeThirdPartyJob" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/AcknowledgeThirdPartyJob",
+         "CreateCustomActionType" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/CreateCustomActionType",
+         "CreatePipeline" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/CreatePipeline",
+         "DeleteCustomActionType" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/DeleteCustomActionType",
+         "DeletePipeline" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/DeletePipeline",
+         "DeleteWebhook" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/DeleteWebhook",
+         "DeregisterWebhookWithThirdParty" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/DeregisterWebhookWithThirdParty",
+         "DisableStageTransition" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/DisableStageTransition",
+         "EnableStageTransition" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/EnableStageTransition",
+         "GetJobDetails" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/GetJobDetails",
+         "GetPipeline" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/GetPipeline",
+         "GetPipelineExecution" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/GetPipelineExecution",
+         "GetPipelineState" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/GetPipelineState",
+         "GetThirdPartyJobDetails" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/GetThirdPartyJobDetails",
+         "ListActionTypes" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/ListActionTypes",
+         "ListPipelineExecutions" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/ListPipelineExecutions",
+         "ListPipelines" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/ListPipelines",
+         "ListWebhooks" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/ListWebhooks",
+         "PollForJobs" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/PollForJobs",
+         "PollForThirdPartyJobs" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/PollForThirdPartyJobs",
+         "PutActionRevision" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/PutActionRevision",
+         "PutApprovalResult" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/PutApprovalResult",
+         "PutJobFailureResult" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/PutJobFailureResult",
+         "PutJobSuccessResult" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/PutJobSuccessResult",
+         "PutThirdPartyJobFailureResult" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/PutThirdPartyJobFailureResult",
+         "PutThirdPartyJobSuccessResult" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/PutThirdPartyJobSuccessResult",
+         "PutWebhook" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/PutWebhook",
+         "RegisterWebhookWithThirdParty" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/RegisterWebhookWithThirdParty",
+         "RetryStageExecution" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/RetryStageExecution",
+         "StartPipelineExecution" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/StartPipelineExecution",
+         "UpdatePipeline" : "https://docs.aws.amazon.com/goto/WebAPI/codepipeline/UpdatePipeline"
+      }
+   }
+}
