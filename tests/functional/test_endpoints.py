@@ -46,6 +46,7 @@ SERVICE_RENAMES = {
     'kinesis-video-media': 'kinesisvideo',
     'kinesis-video-archived-media': 'kinesisvideo',
     'alexaforbusiness': 'a4b',
+    'neptune': 'rds',
 }
 
 BLACKLIST = [
