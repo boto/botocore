@@ -29,8 +29,6 @@ from botocore.credentials import EnvProvider, create_assume_role_refresher
 from botocore.credentials import CredentialProvider, AssumeRoleProvider
 from botocore.credentials import ConfigProvider, SharedCredentialProvider
 from botocore.credentials import Credentials
-from botocore.vendored import requests
-from botocore.utils import InstanceMetadataFetcher
 import botocore.exceptions
 import botocore.session
 from tests import unittest, BaseEnvVar, IntegerRefresher, skip_if_windows
@@ -1156,16 +1154,6 @@ class TestInstanceMetadataProvider(BaseEnvVar):
         creds = provider.load()
         self.assertIsNone(creds)
         fetcher.retrieve_iam_role_credentials.assert_called_with()
-
-    @mock.patch('botocore.vendored.requests.get')
-    def test_metadata_header(self, mock_get):
-        instance_metadata_provider = credentials.InstanceMetadataProvider(
-            iam_role_fetcher=InstanceMetadataFetcher()
-        )
-        creds = instance_metadata_provider.load()
-        for arg in mock_get.call_args:
-            if isinstance(arg, dict) and arg.get('headers', None):
-                assert(arg.get('headers', {}).get('User-Agent', '').startswith('aws-sdk-botocore/'))
 
 
 class CredentialResolverTest(BaseEnvVar):

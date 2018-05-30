@@ -25,7 +25,6 @@ import dateutil.parser
 from dateutil.tz import tzlocal, tzutc
 
 import botocore
-from botocore import __version__ as botocore_version
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.exceptions import InvalidDNSNameError, ClientError
 from botocore.exceptions import MetadataRetrievalError
@@ -162,7 +161,7 @@ def set_value_from_jmespath(source, expression, value, is_first=True):
 class InstanceMetadataFetcher(object):
     def __init__(self, timeout=DEFAULT_METADATA_SERVICE_TIMEOUT,
                  num_attempts=1, url=METADATA_SECURITY_CREDENTIALS_URL,
-                 env=None):
+                 env=None, user_agent=None):
         self._timeout = timeout
         self._num_attempts = num_attempts
         self._url = url
@@ -170,15 +169,16 @@ class InstanceMetadataFetcher(object):
             env = os.environ.copy()
         self._disabled = env.get('AWS_EC2_METADATA_DISABLED', 'false').lower()
         self._disabled = self._disabled == 'true'
+        self._user_agent = user_agent
 
     def _get_request(self, url, timeout, num_attempts=1):
         if self._disabled:
             logger.debug("Access to EC2 metadata has been disabled.")
             raise _RetriesExceededError()
 
-        headers = {
-            'User-Agent': 'aws-sdk-botocore/%s ' % botocore_version
-        }
+        headers = {}
+        if self._user_agent is not None:
+            headers['User-Agent'] = self._user_agent
 
         for i in range(num_attempts):
             try:
