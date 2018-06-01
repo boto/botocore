@@ -23,10 +23,11 @@ from botocore.endpoint import EndpointCreator
 from botocore.endpoint import BotocoreHTTPSession
 from botocore.exceptions import EndpointConnectionError
 from botocore.exceptions import ConnectionClosedError
+from botocore.parsers import ResponseParser
 
 
-def request_dict():
-    return {
+def request_dict(**kwargs):
+    base = {
         'headers': {},
         'body': '',
         'url_path': '/',
@@ -35,6 +36,8 @@ def request_dict():
         'url': 'https://example.com',
         'context': {}
     }
+    base.update(kwargs)
+    return base
 
 
 class RecordStreamResets(six.StringIO):
@@ -72,8 +75,38 @@ class TestEndpointBase(unittest.TestCase):
     def tearDown(self):
         self.factory_patch.stop()
 
+    def get_emitter_responses(self, num_retries=0, sleep_time=0):
+        emitter_responses = []
+        response_request_emitter_responses = [
+            [(None, None)],  # emit() response for request-created
+            [(None, None)],  # emit() response for response-received
+        ]
+        for _ in range(num_retries):
+            emitter_responses.extend(response_request_emitter_responses)
+            # emit() response for retry for sleep time
+            emitter_responses.append([(None, sleep_time)])
+        emitter_responses.extend(response_request_emitter_responses)
+        # emit() response for no retry
+        emitter_responses.append([(None, None)])
+        return emitter_responses
+
+    def get_events_emitted(self, event_emitter):
+        return [
+            call_arg[0][0] for call_arg in event_emitter.emit.call_args_list
+        ]
+
 
 class TestEndpointFeatures(TestEndpointBase):
+    def get_kwargs_for_emitted_event(self, event_emitter, event_name):
+        for call_arg in event_emitter.emit.call_args_list:
+            if call_arg[0][0] == event_name:
+                return call_arg[1]
+        raise ValueError(
+            'Could not find an event corresponding to %s. Found the following '
+            'events instead: %s' % (
+                event_name, self.get_events_emitted(event_emitter)
+            )
+        )
 
     def test_timeout_can_be_specified(self):
         timeout_override = 120
@@ -146,11 +179,60 @@ class TestEndpointFeatures(TestEndpointBase):
                             self.event_emitter, proxies=proxies)
         self.assertEqual(endpoint.proxies, proxies)
 
+    def test_emit_response_received(self):
+        self.op.name = 'DescribeRegions'
+        parser = Mock(ResponseParser)
+        parser.parse.return_value = {'ResponseMetadata': {}}
+        self.factory.return_value.create_parser.return_value = parser
+        self.endpoint.make_request(self.op, request_dict(context={
+            'context-key': 'context-value'
+        }))
+        actual_event_kwargs = self.get_kwargs_for_emitted_event(
+            self.event_emitter, 'response-received.ec2.DescribeRegions')
+        self.assertEqual(
+            actual_event_kwargs,
+            {
+                'exception': None,
+                'response_dict': {
+                    'body': b'{"Foo": "bar"}',
+                    'headers': {},
+                    'context': {'operation_name': 'DescribeRegions'},
+                    'status_code': 200
+                },
+                'parsed_response': {'ResponseMetadata': {'RetryAttempts': 0}},
+                'context': {'context-key': 'context-value'}
+            }
+        )
+
+    def test_emit_response_received_for_exception(self):
+        self.op.name = 'DescribeRegions'
+        raised_exception = RuntimeError('Unexpected exception')
+        self.http_session.send.side_effect = raised_exception
+        with self.assertRaises(RuntimeError):
+            self.endpoint.make_request(self.op, request_dict(context={
+                'context-key': 'context-value'
+            }))
+        actual_event_kwargs = self.get_kwargs_for_emitted_event(
+            self.event_emitter, 'response-received.ec2.DescribeRegions')
+        self.assertEqual(
+            actual_event_kwargs,
+            {
+                'exception': raised_exception,
+                'response_dict': None,
+                'parsed_response': None,
+                'context': {'context-key': 'context-value'}
+            }
+        )
+
 
 class TestRetryInterface(TestEndpointBase):
     def setUp(self):
         super(TestRetryInterface, self).setUp()
         self.retried_on_exception = None
+
+    def assert_events_emitted(self, event_emitter, expected_events):
+        self.assertEqual(
+            self.get_events_emitted(event_emitter), expected_events)
 
     def test_retry_events_are_emitted(self):
         op = Mock()
@@ -168,60 +250,42 @@ class TestRetryInterface(TestEndpointBase):
         op.name = 'DescribeInstances'
         op.metadata = {'protocol': 'json'}
         op.has_event_stream_output = False
-        self.event_emitter.emit.side_effect = [
-            [(None, None)],    # Request created.
-            [(None, 0)],       # Check if retry needed. Retry needed.
-            [(None, None)],    # Request created.
-            [(None, None)]     # Check if retry needed. Retry not needed.
-        ]
+        self.event_emitter.emit.side_effect = self.get_emitter_responses(
+            num_retries=1)
         self.endpoint.make_request(op, request_dict())
-        call_args = self.event_emitter.emit.call_args_list
-        self.assertEqual(self.event_emitter.emit.call_count, 4)
-        # Check that all of the events are as expected.
-        self.assertEqual(call_args[0][0][0],
-                         'request-created.ec2.DescribeInstances')
-        self.assertEqual(call_args[1][0][0],
-                         'needs-retry.ec2.DescribeInstances')
-        self.assertEqual(call_args[2][0][0],
-                         'request-created.ec2.DescribeInstances')
-        self.assertEqual(call_args[3][0][0],
-                         'needs-retry.ec2.DescribeInstances')
+        self.assert_events_emitted(
+            self.event_emitter,
+            expected_events=[
+                'request-created.ec2.DescribeInstances',
+                'response-received.ec2.DescribeInstances',
+                'needs-retry.ec2.DescribeInstances',
+            ] * 2
+        )
 
     def test_retry_on_socket_errors(self):
         op = Mock()
         op.name = 'DescribeInstances'
         op.has_event_stream_output = False
-        self.event_emitter.emit.side_effect = [
-            [(None, None)],    # Request created.
-            [(None, 0)],       # Check if retry needed. Retry needed.
-            [(None, None)],    # Request created
-            [(None, None)]     # Check if retry needed. Retry not needed.
-        ]
+        self.event_emitter.emit.side_effect = self.get_emitter_responses(
+            num_retries=1)
         self.http_session.send.side_effect = ConnectionError()
         with self.assertRaises(ConnectionError):
             self.endpoint.make_request(op, request_dict())
-        call_args = self.event_emitter.emit.call_args_list
-        self.assertEqual(self.event_emitter.emit.call_count, 4)
-        # Check that all of the events are as expected.
-        self.assertEqual(call_args[0][0][0],
-                         'request-created.ec2.DescribeInstances')
-        self.assertEqual(call_args[1][0][0],
-                         'needs-retry.ec2.DescribeInstances')
-        self.assertEqual(call_args[2][0][0],
-                         'request-created.ec2.DescribeInstances')
-        self.assertEqual(call_args[3][0][0],
-                         'needs-retry.ec2.DescribeInstances')
+        self.assert_events_emitted(
+            self.event_emitter,
+            expected_events=[
+                'request-created.ec2.DescribeInstances',
+                'response-received.ec2.DescribeInstances',
+                'needs-retry.ec2.DescribeInstances',
+            ] * 2
+        )
 
     def test_retry_attempts_added_to_response_metadata(self):
         op = Mock(name='DescribeInstances')
         op.metadata = {'protocol': 'query'}
         op.has_event_stream_output = False
-        self.event_emitter.emit.side_effect = [
-            [(None, None)],    # Request created.
-            [(None, 0)],       # Check if retry needed. Retry needed.
-            [(None, None)],    # Request created.
-            [(None, None)]     # Check if retry needed. Retry not needed.
-        ]
+        self.event_emitter.emit.side_effect = self.get_emitter_responses(
+            num_retries=1)
         parser = Mock()
         parser.parse.return_value = {'ResponseMetadata': {}}
         self.factory.return_value.create_parser.return_value = parser
@@ -231,10 +295,8 @@ class TestRetryInterface(TestEndpointBase):
     def test_retry_attempts_is_zero_when_not_retried(self):
         op = Mock(name='DescribeInstances', metadata={'protocol': 'query'})
         op.has_event_stream_output = False
-        self.event_emitter.emit.side_effect = [
-            [(None, None)],    # Request created.
-            [(None, None)],    # Check if retry needed. Retry needed.
-        ]
+        self.event_emitter.emit.side_effect = self.get_emitter_responses(
+            num_retries=0)
         parser = Mock()
         parser.parse.return_value = {'ResponseMetadata': {}}
         self.factory.return_value.create_parser.return_value = parser
@@ -265,14 +327,9 @@ class TestS3ResetStreamOnRetry(TestEndpointBase):
         op.metadata = {'protocol': 'rest-xml'}
         request = request_dict()
         request['body'] = body
-        self.event_emitter.emit.side_effect = [
-            [(None, None)],   # Request created.
-            [(None, 0)],      # Check if retry needed. Needs Retry.
-            [(None, None)],   # Request created.
-            [(None, 0)],      # Check if retry needed again. Needs Retry.
-            [(None, None)],   # Request created.
-            [(None, None)],   # Finally emit no rety is needed.
-        ]
+        self.event_emitter.emit.side_effect = self.get_emitter_responses(
+            num_retries=2
+        )
         self.endpoint.make_request(op, request)
         self.assertEqual(body.total_resets, 2)
 
