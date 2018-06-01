@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.10.31
+=======
+
+* api-change:``ds``: Update ds client to latest version
+* api-change:``mediatailor``: Update mediatailor client to latest version
+* api-change:``sns``: Update sns client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``iot``: Update iot client to latest version
+
+
 1.10.30
 =======
 
