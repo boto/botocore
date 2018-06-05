@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.10.32
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``mgh``: Update mgh client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``eks``: Update eks client to latest version
+
+
 1.10.31
 =======
 
