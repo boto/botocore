@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.10.33
+=======
+
+* api-change:``polly``: Update polly client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+* api-change:``shield``: Update shield client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
 1.10.32
 =======
 
