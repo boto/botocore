@@ -1758,3 +1758,9 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         }
         self.assertEqual(result, expected_result)
 
+    def test_includes_user_agent_header(self):
+        user_agent = 'my-user-agent'
+        InstanceMetadataFetcher(
+            user_agent=user_agent).retrieve_iam_role_credentials()
+        headers = self._requests.get.call_args[1]['headers']
+        self.assertEqual(headers['User-Agent'], user_agent)
