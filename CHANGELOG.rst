@@ -2,6 +2,44 @@
 CHANGELOG
 =========
 
+1.10.33
+=======
+
+* api-change:``polly``: Update polly client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+* api-change:``shield``: Update shield client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
+1.10.32
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``mgh``: Update mgh client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``eks``: Update eks client to latest version
+
+
+1.10.31
+=======
+
+* api-change:``ds``: Update ds client to latest version
+* api-change:``mediatailor``: Update mediatailor client to latest version
+* api-change:``sns``: Update sns client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``iot``: Update iot client to latest version
+
+
+1.10.30
+=======
+
+* api-change:``neptune``: Update neptune client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+
+
 1.10.29
 =======
 
