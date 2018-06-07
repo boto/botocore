@@ -69,7 +69,8 @@ def create_credential_resolver(session, cache=None):
     instance_metadata_provider = InstanceMetadataProvider(
         iam_role_fetcher=InstanceMetadataFetcher(
             timeout=metadata_timeout,
-            num_attempts=num_attempts)
+            num_attempts=num_attempts,
+            user_agent=session.user_agent())
     )
     assume_role_provider = AssumeRoleProvider(
         load_config=lambda: session.full_config,
