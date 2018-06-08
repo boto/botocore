@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.10.35
+=======
+
+* api-change:``mediatailor``: Update mediatailor client to latest version
+
+
 1.10.34
 =======
 
