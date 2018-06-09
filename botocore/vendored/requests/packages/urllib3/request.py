@@ -1,9 +1,7 @@
-try:
-    from urllib.parse import urlencode
-except ImportError:
-    from urllib import urlencode
+from __future__ import absolute_import
 
 from .filepost import encode_multipart_formdata
+from .packages.six.moves.urllib.parse import urlencode
 
 
 __all__ = ['RequestMethods']
@@ -46,8 +44,8 @@ class RequestMethods(object):
     def urlopen(self, method, url, body=None, headers=None,
                 encode_multipart=True, multipart_boundary=None,
                 **kw):  # Abstract
-        raise NotImplemented("Classes extending RequestMethods must implement "
-                             "their own ``urlopen`` method.")
+        raise NotImplementedError("Classes extending RequestMethods must implement "
+                                  "their own ``urlopen`` method.")
 
     def request(self, method, url, fields=None, headers=None, **urlopen_kw):
         """
@@ -62,6 +60,8 @@ class RequestMethods(object):
         """
         method = method.upper()
 
+        urlopen_kw['request_url'] = url
+
         if method in self._encode_url_methods:
             return self.request_encode_url(method, url, fields=fields,
                                            headers=headers,
@@ -71,14 +71,22 @@ class RequestMethods(object):
                                             headers=headers,
                                             **urlopen_kw)
 
-    def request_encode_url(self, method, url, fields=None, **urlopen_kw):
+    def request_encode_url(self, method, url, fields=None, headers=None,
+                           **urlopen_kw):
         """
         Make a request using :meth:`urlopen` with the ``fields`` encoded in
         the url. This is useful for request methods like GET, HEAD, DELETE, etc.
         """
+        if headers is None:
+            headers = self.headers
+
+        extra_kw = {'headers': headers}
+        extra_kw.update(urlopen_kw)
+
         if fields:
             url += '?' + urlencode(fields)
-        return self.urlopen(method, url, **urlopen_kw)
+
+        return self.urlopen(method, url, **extra_kw)
 
     def request_encode_body(self, method, url, fields=None, headers=None,
                             encode_multipart=True, multipart_boundary=None,
@@ -111,7 +119,7 @@ class RequestMethods(object):
             }
 
         When uploading a file, providing a filename (the first parameter of the
-        tuple) is optional but recommended to best mimick behavior of browsers.
+        tuple) is optional but recommended to best mimic behavior of browsers.
 
         Note that if ``headers`` are supplied, the 'Content-Type' header will
         be overwritten because it depends on the dynamic random boundary string
@@ -125,7 +133,8 @@ class RequestMethods(object):
 
         if fields:
             if 'body' in urlopen_kw:
-                raise TypeError('request got values for both \'fields\' and \'body\', can only specify one.')
+                raise TypeError(
+                    "request got values for both 'fields' and 'body', can only specify one.")
 
             if encode_multipart:
                 body, content_type = encode_multipart_formdata(fields, boundary=multipart_boundary)

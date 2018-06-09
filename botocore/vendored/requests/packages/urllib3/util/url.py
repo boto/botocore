@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from collections import namedtuple
 
 from ..exceptions import LocationParseError
@@ -5,18 +6,27 @@ from ..exceptions import LocationParseError
 
 url_attrs = ['scheme', 'auth', 'host', 'port', 'path', 'query', 'fragment']
 
+# We only want to normalize urls with an HTTP(S) scheme.
+# urllib3 infers URLs without a scheme (None) to be http.
+NORMALIZABLE_SCHEMES = ('http', 'https', None)
+
 
 class Url(namedtuple('Url', url_attrs)):
     """
     Datastructure for representing an HTTP URL. Used as a return value for
-    :func:`parse_url`.
+    :func:`parse_url`. Both the scheme and host are normalized as they are
+    both case-insensitive according to RFC 3986.
     """
-    slots = ()
+    __slots__ = ()
 
     def __new__(cls, scheme=None, auth=None, host=None, port=None, path=None,
                 query=None, fragment=None):
         if path and not path.startswith('/'):
             path = '/' + path
+        if scheme:
+            scheme = scheme.lower()
+        if host and scheme in NORMALIZABLE_SCHEMES:
+            host = host.lower()
         return super(Url, cls).__new__(cls, scheme, auth, host, port, path,
                                        query, fragment)
 
@@ -85,6 +95,7 @@ class Url(namedtuple('Url', url_attrs)):
     def __str__(self):
         return self.url
 
+
 def split_first(s, delims):
     """
     Given a string and an iterable of delimiters, split on the first found
@@ -115,7 +126,7 @@ def split_first(s, delims):
     if min_idx is None or min_idx < 0:
         return s, '', None
 
-    return s[:min_idx], s[min_idx+1:], min_delim
+    return s[:min_idx], s[min_idx + 1:], min_delim
 
 
 def parse_url(url):
@@ -182,10 +193,14 @@ def parse_url(url):
             host = _host
 
         if port:
-            # If given, ports must be integers.
+            # If given, ports must be integers. No whitespace, no plus or
+            # minus prefixes, no non-integer digits such as ^2 (superscript).
             if not port.isdigit():
                 raise LocationParseError(url)
-            port = int(port)
+            try:
+                port = int(port)
+            except ValueError:
+                raise LocationParseError(url)
         else:
             # Blank ports are cool, too. (rfc3986#section-3.2.3)
             port = None
@@ -206,9 +221,10 @@ def parse_url(url):
 
     return Url(scheme, auth, host, port, path, query, fragment)
 
+
 def get_host(url):
     """
-    Deprecated. Use :func:`.parse_url` instead.
+    Deprecated. Use :func:`parse_url` instead.
     """
     p = parse_url(url)
     return p.scheme or 'http', p.hostname, p.port
