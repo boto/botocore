@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.10.36
+=======
+
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``clouddirectory``: Update clouddirectory client to latest version
+
+
 1.10.35
 =======
 
