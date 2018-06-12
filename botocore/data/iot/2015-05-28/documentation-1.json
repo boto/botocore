@@ -10,6 +10,7 @@
          "AttachThingPrincipal" : "https://docs.aws.amazon.com/goto/WebAPI/iot/AttachThingPrincipal",
          "CancelCertificateTransfer" : "https://docs.aws.amazon.com/goto/WebAPI/iot/CancelCertificateTransfer",
          "CancelJob" : "https://docs.aws.amazon.com/goto/WebAPI/iot/CancelJob",
+         "CancelJobExecution" : "https://docs.aws.amazon.com/goto/WebAPI/iot/CancelJobExecution",
          "ClearDefaultAuthorizer" : "https://docs.aws.amazon.com/goto/WebAPI/iot/ClearDefaultAuthorizer",
          "CreateAuthorizer" : "https://docs.aws.amazon.com/goto/WebAPI/iot/CreateAuthorizer",
          "CreateCertificateFromCsr" : "https://docs.aws.amazon.com/goto/WebAPI/iot/CreateCertificateFromCsr",

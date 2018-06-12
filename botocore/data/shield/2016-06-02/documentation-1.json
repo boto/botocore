@@ -2,16 +2,24 @@
    "documentation" : {
       "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02",
       "methods" : {
+         "AssociateDRTLogBucket" : "https://docs.aws.amazon.com/goto/WebAPI/shield/AssociateDRTLogBucket",
+         "AssociateDRTRole" : "https://docs.aws.amazon.com/goto/WebAPI/shield/AssociateDRTRole",
          "CreateProtection" : "https://docs.aws.amazon.com/goto/WebAPI/shield/CreateProtection",
          "CreateSubscription" : "https://docs.aws.amazon.com/goto/WebAPI/shield/CreateSubscription",
          "DeleteProtection" : "https://docs.aws.amazon.com/goto/WebAPI/shield/DeleteProtection",
          "DeleteSubscription" : "https://docs.aws.amazon.com/goto/WebAPI/shield/DeleteSubscription",
          "DescribeAttack" : "https://docs.aws.amazon.com/goto/WebAPI/shield/DescribeAttack",
+         "DescribeDRTAccess" : "https://docs.aws.amazon.com/goto/WebAPI/shield/DescribeDRTAccess",
+         "DescribeEmergencyContactSettings" : "https://docs.aws.amazon.com/goto/WebAPI/shield/DescribeEmergencyContactSettings",
          "DescribeProtection" : "https://docs.aws.amazon.com/goto/WebAPI/shield/DescribeProtection",
          "DescribeSubscription" : "https://docs.aws.amazon.com/goto/WebAPI/shield/DescribeSubscription",
+         "DisassociateDRTLogBucket" : "https://docs.aws.amazon.com/goto/WebAPI/shield/DisassociateDRTLogBucket",
+         "DisassociateDRTRole" : "https://docs.aws.amazon.com/goto/WebAPI/shield/DisassociateDRTRole",
          "GetSubscriptionState" : "https://docs.aws.amazon.com/goto/WebAPI/shield/GetSubscriptionState",
          "ListAttacks" : "https://docs.aws.amazon.com/goto/WebAPI/shield/ListAttacks",
-         "ListProtections" : "https://docs.aws.amazon.com/goto/WebAPI/shield/ListProtections"
+         "ListProtections" : "https://docs.aws.amazon.com/goto/WebAPI/shield/ListProtections",
+         "UpdateEmergencyContactSettings" : "https://docs.aws.amazon.com/goto/WebAPI/shield/UpdateEmergencyContactSettings",
+         "UpdateSubscription" : "https://docs.aws.amazon.com/goto/WebAPI/shield/UpdateSubscription"
       }
    }
 }
