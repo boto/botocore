@@ -268,20 +268,21 @@ class SigV4Auth(BaseSigner):
             # When payload signing is disabled, we use this static string in
             # place of the payload checksum.
             return UNSIGNED_PAYLOAD
-        if request.body and hasattr(request.body, 'seek'):
-            position = request.body.tell()
-            read_chunksize = functools.partial(request.body.read,
+        request_body = request.body
+        if request_body and hasattr(request_body, 'seek'):
+            position = request_body.tell()
+            read_chunksize = functools.partial(request_body.read,
                                                PAYLOAD_BUFFER)
             checksum = sha256()
             for chunk in iter(read_chunksize, b''):
                 checksum.update(chunk)
             hex_checksum = checksum.hexdigest()
-            request.body.seek(position)
+            request_body.seek(position)
             return hex_checksum
-        elif request.body:
+        elif request_body:
             # The request serialization has ensured that
             # request.body is a bytes() type.
-            return sha256(request.body).hexdigest()
+            return sha256(request_body).hexdigest()
         else:
             return EMPTY_SHA256_HASH
 
