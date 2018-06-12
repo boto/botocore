@@ -17,7 +17,7 @@ from tests import unittest
 
 import mock
 from botocore.vendored.requests import ConnectionError, Timeout
-from botocore.vendored.requests.packages.urllib3.exceptions import ClosedPoolError
+from urllib3.exceptions import ClosedPoolError
 
 from botocore import retryhandler
 from botocore.exceptions import ChecksumError

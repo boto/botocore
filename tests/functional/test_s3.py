@@ -35,7 +35,7 @@ class BaseS3OperationTest(BaseSessionTest):
         self.region = 'us-west-2'
         self.client = self.session.create_client(
             's3', self.region)
-        self.session_send_patch = mock.patch('botocore.endpoint.Session.send')
+        self.session_send_patch = mock.patch('botocore.endpoint.Urllib3Session.send')
         self.http_session_send_mock = self.session_send_patch.start()
 
     def tearDown(self):
@@ -166,7 +166,7 @@ class TestS3SigV4(BaseS3OperationTest):
 
     def test_content_md5_set(self):
         self.client.put_object(Bucket='foo', Key='bar', Body='baz')
-        self.assertIn('content-md5', self.get_sent_headers())
+        self.assertIn('Content-MD5', self.get_sent_headers())
 
     def test_content_sha256_set_if_config_value_is_true(self):
         config = Config(signature_version='s3v4', s3={
@@ -176,7 +176,7 @@ class TestS3SigV4(BaseS3OperationTest):
             's3', self.region, config=config)
         self.client.put_object(Bucket='foo', Key='bar', Body='baz')
         sent_headers = self.get_sent_headers()
-        sha_header = sent_headers.get('x-amz-content-sha256')
+        sha_header = sent_headers['X-Amz-Content-SHA256']
         self.assertNotEqual(sha_header, b'UNSIGNED-PAYLOAD')
 
     def test_content_sha256_not_set_if_config_value_is_false(self):
@@ -187,7 +187,7 @@ class TestS3SigV4(BaseS3OperationTest):
             's3', self.region, config=config)
         self.client.put_object(Bucket='foo', Key='bar', Body='baz')
         sent_headers = self.get_sent_headers()
-        sha_header = sent_headers.get('x-amz-content-sha256')
+        sha_header = sent_headers['X-Amz-Content-SHA256']
         self.assertEqual(sha_header, b'UNSIGNED-PAYLOAD')
 
     def test_content_sha256_set_if_md5_is_unavailable(self):
@@ -196,8 +196,8 @@ class TestS3SigV4(BaseS3OperationTest):
                 self.client.put_object(Bucket='foo', Key='bar', Body='baz')
         sent_headers = self.get_sent_headers()
         unsigned = 'UNSIGNED-PAYLOAD'
-        self.assertNotEqual(sent_headers['x-amz-content-sha256'], unsigned)
-        self.assertNotIn('content-md5', sent_headers)
+        self.assertNotEqual(sent_headers['X-Amz-Content-SHA256'], unsigned)
+        self.assertNotIn('Content-MD5', sent_headers)
 
 
 
@@ -206,7 +206,7 @@ class TestCanSendIntegerHeaders(BaseSessionTest):
     def test_int_values_with_sigv4(self):
         s3 = self.session.create_client(
             's3', config=Config(signature_version='s3v4'))
-        with mock.patch('botocore.endpoint.Session.send') as mock_send:
+        with mock.patch('botocore.endpoint.Urllib3Session.send') as mock_send:
             mock_send.return_value = mock.Mock(status_code=200,
                                                content=b'',
                                                headers={})
@@ -216,7 +216,7 @@ class TestCanSendIntegerHeaders(BaseSessionTest):
             # Verify that the request integer value of 3 has been converted to
             # string '3'.  This also means we've made it pass the signer which
             # expects string values in order to sign properly.
-            self.assertEqual(headers['Content-Length'], '3')
+            self.assertEqual(headers['Content-Length'], b'3')
 
 
 
@@ -879,7 +879,7 @@ def _verify_expected_endpoint_url(region, bucket, key, s3_config,
         s3 = session.create_client('s3', region_name=region, use_ssl=is_secure,
                                    config=config,
                                    endpoint_url=customer_provided_endpoint)
-        with mock.patch('botocore.endpoint.Session.send') as mock_send:
+        with mock.patch('botocore.endpoint.Urllib3Session.send') as mock_send:
             mock_send.return_value = http_response
             s3.put_object(Bucket=bucket,
                           Key=key, Body=b'bar')

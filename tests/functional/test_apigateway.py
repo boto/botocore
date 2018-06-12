@@ -32,7 +32,7 @@ class TestApiGateway(BaseSessionTest):
             'accepts': 'application/yaml'
         }
 
-        with mock.patch('botocore.endpoint.Session.send') as _send:
+        with mock.patch('botocore.endpoint.Urllib3Session.send') as _send:
             _send.return_value = mock.Mock(
                 status_code=200, headers={}, content=b'{}')
             self.client.get_export(**params)

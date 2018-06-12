@@ -35,7 +35,7 @@ class TestLex(BaseSessionTest):
 
         with mock.patch('botocore.auth.datetime') as _datetime:
             _datetime.datetime.utcnow.return_value = timestamp
-            with mock.patch('botocore.endpoint.Session.send') as _send:
+            with mock.patch('botocore.endpoint.Urllib3Session.send') as _send:
                 _send.return_value = mock.Mock(
                     status_code=200, headers={}, content=b'{}')
                 self.client.post_content(**params)
@@ -45,7 +45,7 @@ class TestLex(BaseSessionTest):
         # signature. The signature will be part of the authorization header.
         # Since we don't have direct access to the payload signature,
         # we compare the authorization instead.
-        authorization = request.headers.get('authorization')
+        authorization = request.headers.get('Authorization')
 
         expected_authorization = (
             b'AWS4-HMAC-SHA256 '
@@ -56,5 +56,5 @@ class TestLex(BaseSessionTest):
         )
         self.assertEqual(authorization, expected_authorization)
 
-        content_header = request.headers.get('x-amz-content-sha256')
+        content_header = request.headers.get('X-Amz-Content-SHA256')
         self.assertEqual(content_header, b'UNSIGNED-PAYLOAD')

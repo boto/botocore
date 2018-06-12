@@ -97,83 +97,6 @@ class Seekable(object):
         return self._stream.tell()
 
 
-class TestAWSRequest(unittest.TestCase):
-
-    def setUp(self):
-        self.tempdir = tempfile.mkdtemp()
-        self.request = AWSRequest(url='http://example.com')
-        self.prepared_request = self.request.prepare()
-        self.filename = os.path.join(self.tempdir, 'foo')
-
-    def tearDown(self):
-        shutil.rmtree(self.tempdir)
-
-    def test_should_reset_stream(self):
-        with open(self.filename, 'wb') as f:
-            f.write(b'foobarbaz')
-        with open(self.filename, 'rb') as body:
-            self.prepared_request.body = body
-
-            # Now pretend we try to send the request.
-            # This means that we read the body:
-            body.read()
-            # And create a response object that indicates
-            # a redirect.
-            fake_response = Mock()
-            fake_response.status_code = 307
-
-            # Then requests calls our reset_stream hook.
-            self.prepared_request.reset_stream_on_redirect(fake_response)
-
-            # The stream should now be reset.
-            self.assertEqual(body.tell(), 0)
-
-    def test_cannot_reset_stream_raises_error(self):
-        with open(self.filename, 'wb') as f:
-            f.write(b'foobarbaz')
-        with open(self.filename, 'rb') as body:
-            self.prepared_request.body = Unseekable(body)
-
-            # Now pretend we try to send the request.
-            # This means that we read the body:
-            body.read()
-            # And create a response object that indicates
-            # a redirect
-            fake_response = Mock()
-            fake_response.status_code = 307
-
-            # Then requests calls our reset_stream hook.
-            with self.assertRaises(UnseekableStreamError):
-                self.prepared_request.reset_stream_on_redirect(fake_response)
-
-    def test_duck_type_for_file_check(self):
-        # As part of determining whether or not we can rewind a stream
-        # we first need to determine if the thing is a file like object.
-        # We should not be using an isinstance check.  Instead, we should
-        # be using duck type checks.
-        class LooksLikeFile(object):
-            def __init__(self):
-                self.seek_called = False
-
-            def read(self, amount=None):
-                pass
-
-            def seek(self, where):
-                self.seek_called = True
-
-        looks_like_file = LooksLikeFile()
-        self.prepared_request.body = looks_like_file
-
-        fake_response = Mock()
-        fake_response.status_code = 307
-
-        # Then requests calls our reset_stream hook.
-        self.prepared_request.reset_stream_on_redirect(fake_response)
-
-        # The stream should now be reset.
-        self.assertTrue(looks_like_file.seek_called)
-
-
 class TestAWSPreparedRequest(unittest.TestCase):
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
@@ -191,7 +114,7 @@ class TestAWSPreparedRequest(unittest.TestCase):
             f.write(content)
         with open(self.filename, 'rb') as f:
             data = Seekable(f)
-            self.prepared_request.prepare_body(data=data, files=None)
+            self.prepared_request.prepare_body(data)
         self.assertEqual(
             self.prepared_request.headers['Content-Length'],
             str(len(content)))
@@ -203,24 +126,22 @@ class TestAWSPreparedRequest(unittest.TestCase):
             f.write(content)
         with open(self.filename, 'rb') as f:
             data = Seekable(f)
-            self.prepared_request.prepare_body(data=data, files=None)
+            self.prepared_request.prepare_body(data)
         self.assertEqual(
             self.prepared_request.headers['Content-Length'],
             str(len(content)))
         self.assertNotIn('Transfer-Encoding', self.prepared_request.headers)
 
     def test_prepare_body_ignores_existing_transfer_encoding(self):
+        # TODO this test is weird. requests will never add both the
+        # content-length and transfer-encoding as they're mutually exclusive
         content = b'foobarbaz'
+        self.prepared_request.headers['Content-Length'] = '9'
         self.prepared_request.headers['Transfer-Encoding'] = 'chunked'
         with open(self.filename, 'wb') as f:
             f.write(content)
         with open(self.filename, 'rb') as f:
-            self.prepared_request.prepare_body(data=f, files=None)
-        # The Transfer-Encoding should not be removed if Content-Length
-        # is not added via the custom logic in the ``prepare_body`` method.
-        # Note requests' ``prepare_body`` is the method that adds the
-        # Content-Length header for this case as the ``data`` is a
-        # regular file handle.
+            self.prepared_request.prepare_body(f)
         self.assertEqual(
             self.prepared_request.headers['Transfer-Encoding'],
             'chunked')
@@ -418,8 +339,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
         conn.sock = s
         # Test that the standard library method was used by patching out
         # the ``_tunnel`` method and seeing if the std lib method was called.
-        with patch('botocore.vendored.requests.packages.urllib3.connection.'
-                   'HTTPConnection._tunnel') as mock_tunnel:
+        with patch('urllib3.connection.HTTPConnection._tunnel') as mock_tunnel:
             conn._tunnel()
             self.assertTrue(mock_tunnel.called)
 
