@@ -21,6 +21,8 @@ import weakref
 import random
 import os
 
+from urllib3 import PoolManager
+from urllib3.exceptions import ConnectionError, TimeoutError
 import dateutil.parser
 from dateutil.tz import tzlocal, tzutc
 
@@ -29,7 +31,6 @@ from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.exceptions import InvalidDNSNameError, ClientError
 from botocore.exceptions import MetadataRetrievalError
 from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
-from botocore.vendored import requests
 from botocore.compat import OrderedDict, six
 
 
@@ -42,7 +43,7 @@ METADATA_SECURITY_CREDENTIALS_URL = (
 # Based on rfc2986, section 2.3
 SAFE_CHARS = '-._~'
 LABEL_RE = re.compile(r'[a-z0-9][a-z0-9\-]*[a-z0-9]')
-RETRYABLE_HTTP_ERRORS = (requests.Timeout, requests.ConnectionError)
+RETRYABLE_HTTP_ERRORS = (TimeoutError, ConnectionError)
 S3_ACCELERATE_WHITELIST = ['dualstack']
 
 
@@ -170,6 +171,7 @@ class InstanceMetadataFetcher(object):
         self._disabled = env.get('AWS_EC2_METADATA_DISABLED', 'false').lower()
         self._disabled = self._disabled == 'true'
         self._user_agent = user_agent
+        self._session = PoolManager(retries=False)
 
     def _get_request(self, url, timeout, num_attempts=1):
         if self._disabled:
@@ -182,12 +184,13 @@ class InstanceMetadataFetcher(object):
 
         for i in range(num_attempts):
             try:
-                response = requests.get(url, timeout=timeout, headers=headers)
+                response = self._session.request('GET', url, timeout=timeout,
+                                                 headers=headers)
             except RETRYABLE_HTTP_ERRORS as e:
                 logger.debug("Caught exception while trying to retrieve "
                              "credentials: %s", e, exc_info=True)
             else:
-                if response.status_code == 200:
+                if response.status == 200:
                     return response
         raise _RetriesExceededError()
 
@@ -198,8 +201,8 @@ class InstanceMetadataFetcher(object):
         num_attempts = self._num_attempts
         try:
             r = self._get_request(url, timeout, num_attempts)
-            if r.content:
-                fields = r.content.decode('utf-8').split('\n')
+            if r.data:
+                fields = r.data.decode('utf-8').split('\n')
                 for field in fields:
                     if field.endswith('/'):
                         data[field[0:-1]] = self.retrieve_iam_role_credentials(
@@ -209,14 +212,14 @@ class InstanceMetadataFetcher(object):
                             url + field,
                             timeout=timeout,
                             num_attempts=num_attempts,
-                        ).content.decode('utf-8')
+                        ).data.decode('utf-8')
                         if val[0] == '{':
                             val = json.loads(val)
                         data[field] = val
             else:
                 logger.debug("Metadata service returned non 200 status code "
                              "of %s for url: %s, content body: %s",
-                             r.status_code, url, r.content)
+                             r.status, url, r.data)
         except _RetriesExceededError:
             logger.debug("Max number of attempts exceeded (%s) when "
                          "attempting to retrieve data from metadata service.",
@@ -930,9 +933,12 @@ class S3RegionRedirector(object):
             error_code == 'AuthorizationHeaderMalformed' and
             'Region' in error
         )
+        is_redirect_status = response[0] is not None and \
+                response[0].status_code in [301, 302, 307]
         is_permanent_redirect = error_code == 'PermanentRedirect'
         if not any([is_special_head_object, is_wrong_signing_region,
-                    is_permanent_redirect, is_special_head_bucket]):
+                    is_permanent_redirect, is_special_head_bucket,
+                    is_redirect_status]):
             return
 
         bucket = request_dict['context']['signing']['bucket']
@@ -1030,9 +1036,7 @@ class ContainerMetadataFetcher(object):
 
     def __init__(self, session=None, sleep=time.sleep):
         if session is None:
-            session = requests.Session()
-            session.trust_env = False
-            session.proxies = {}
+            session = PoolManager(retries=False)
         self._session = session
         self._sleep = sleep
 
@@ -1093,18 +1097,18 @@ class ContainerMetadataFetcher(object):
 
     def _get_response(self, full_url, headers, timeout):
         try:
-            response = self._session.get(full_url, headers=headers,
+            response = self._session.request('GET', full_url, headers=headers,
                                          timeout=timeout)
-            if response.status_code != 200:
+            if response.status != 200:
                 raise MetadataRetrievalError(
                     error_msg="Received non 200 response (%s) from ECS metadata: %s"
-                    % (response.status_code, response.text))
+                    % (response.status, response.data))
             try:
-                return json.loads(response.text)
+                return json.loads(response.data.decode('utf-8'))
             except ValueError:
                 raise MetadataRetrievalError(
                     error_msg=("Unable to parse JSON returned from "
-                               "ECS metadata: %s" % response.text))
+                               "ECS metadata: %s" % response.data))
         except RETRYABLE_HTTP_ERRORS as e:
             error_msg = ("Received error when attempting to retrieve "
                          "ECS metadata: %s" % e)

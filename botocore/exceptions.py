@@ -12,7 +12,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from __future__ import unicode_literals
-from botocore.vendored.requests.exceptions import ConnectionError
 
 
 class BotoCoreError(Exception):
@@ -60,20 +59,19 @@ class ApiVersionNotFoundError(BotoCoreError):
     fmt = 'Unable to load data {data_path} for: {api_version}'
 
 
-class EndpointConnectionError(BotoCoreError):
+class HTTPClientError(BotoCoreError):
+    fmt = ('Generic error when an HTTP Client raises an exception')
+
+
+class EndpointConnectionError(HTTPClientError):
     fmt = (
         'Could not connect to the endpoint URL: "{endpoint_url}"')
 
 
-class ConnectionClosedError(ConnectionError):
+class ConnectionClosedError(HTTPClientError):
     fmt = (
         'Connection was closed before we received a valid response '
         'from endpoint URL: "{endpoint_url}".')
-
-    def __init__(self, **kwargs):
-        msg = self.fmt.format(**kwargs)
-        kwargs.pop('endpoint_url')
-        super(ConnectionClosedError, self).__init__(msg, **kwargs)
 
 
 class NoCredentialsError(BotoCoreError):

@@ -108,7 +108,7 @@ class UnsignedOperationTestCase(object):
     def run(self):
         operation = getattr(self._client, self._operation_name)
 
-        with mock.patch('botocore.endpoint.Urllib3Session.send') as _send:
+        with mock.patch('botocore.endpoint.Endpoint.send') as _send:
             _send.return_value = mock.Mock(
                 status_code=200, headers={}, content=b'{}')
             operation(**self._parameters)

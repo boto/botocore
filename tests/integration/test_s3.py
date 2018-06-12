@@ -25,8 +25,8 @@ from contextlib import closing
 
 from nose.plugins.attrib import attr
 
-from botocore.vendored.requests import adapters
-from botocore.vendored.requests.exceptions import ConnectionError
+from botocore.endpoint import Endpoint
+from urllib3.exceptions import ConnectionError
 from botocore.compat import six, zip_longest
 import botocore.session
 import botocore.auth
@@ -813,18 +813,17 @@ class TestS3SigV4Client(BaseS3ClientTest):
     def test_request_retried_for_sigv4(self):
         body = six.BytesIO(b"Hello world!")
 
-        original_send = adapters.HTTPAdapter.send
+        original_send = Endpoint.send
         state = mock.Mock()
         state.error_raised = False
 
-        def mock_http_adapter_send(self, *args, **kwargs):
+        def mock_endpoint_send(self, *args, **kwargs):
             if not state.error_raised:
                 state.error_raised = True
                 raise ConnectionError("Simulated ConnectionError raised.")
             else:
                 return original_send(self, *args, **kwargs)
-        with mock.patch('botocore.vendored.requests.adapters.HTTPAdapter.send',
-                        mock_http_adapter_send):
+        with mock.patch('botocore.endpoint.Endpoint.send', mock_endpoint_send):
             response = self.client.put_object(Bucket=self.bucket_name,
                                               Key='foo.txt', Body=body)
             self.assert_status_code(response, 200)

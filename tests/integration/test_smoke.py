@@ -19,8 +19,8 @@ from nose.tools import assert_equal, assert_true
 from botocore import xform_name
 import botocore.session
 from botocore.client import ClientError
-from botocore.vendored.requests import adapters
-from botocore.vendored.requests.exceptions import ConnectionError
+from botocore.endpoint import Endpoint
+from urllib3.exceptions import ConnectionError
 
 
 # Mapping of service -> api calls to try.
@@ -285,15 +285,14 @@ def test_client_can_retry_request_properly():
 
 def _make_client_call_with_errors(client, operation_name, kwargs):
     operation = getattr(client, xform_name(operation_name))
-    original_send = adapters.HTTPAdapter.send
-    def mock_http_adapter_send(self, *args, **kwargs):
+    original_send = Endpoint.send
+    def mock_endpoint_send(self, *args, **kwargs):
         if not getattr(self, '_integ_test_error_raised', False):
             self._integ_test_error_raised = True
             raise ConnectionError("Simulated ConnectionError raised.")
         else:
             return original_send(self, *args, **kwargs)
-    with mock.patch('botocore.vendored.requests.adapters.HTTPAdapter.send',
-                    mock_http_adapter_send):
+    with mock.patch('botocore.endpoint.Endpoint.send', mock_endpoint_send):
         try:
             response = operation(**kwargs)
         except ClientError as e:

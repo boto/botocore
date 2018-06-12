@@ -12,7 +12,7 @@ from botocore.compat import filter_ssl_warnings, urlparse
 from botocore.exceptions import ConnectionClosedError, EndpointConnectionError
 
 try:
-    from botocore.vendored.requests.packages.urllib3.contrib import pyopenssl
+    from urllib3.contrib import pyopenssl
     pyopenssl.extract_from_urllib3()
 except ImportError:
     pass

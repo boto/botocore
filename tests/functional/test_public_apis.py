@@ -46,7 +46,7 @@ class EarlyExit(BaseException):
 
 
 def _test_public_apis_will_not_be_signed(func, kwargs):
-    with mock.patch('botocore.endpoint.Urllib3Session.send') as _send:
+    with mock.patch('botocore.endpoint.Endpoint.send') as _send:
         _send.side_effect = EarlyExit("we don't care about response here")
         try:
             func(**kwargs)

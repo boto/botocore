@@ -20,7 +20,7 @@ import botocore
 from botocore import response
 from botocore.compat import six
 from botocore.exceptions import IncompleteReadError
-from botocore.vendored.requests.models import Response, Request
+from botocore.awsrequest import AWSRequest, AWSResponse
 
 XMLBODY1 = (b'<?xml version="1.0" encoding="UTF-8"?><Error>'
             b'<Code>AccessDenied</Code>'
@@ -141,7 +141,7 @@ class TestGetResponse(BaseResponseTest):
     maxDiff = None
 
     def test_get_response_streaming_ok(self):
-        http_response = Response()
+        http_response = AWSResponse()
         http_response.headers = {
             'content-type': 'image/png',
             'server': 'AmazonS3',
@@ -152,7 +152,6 @@ class TestGetResponse(BaseResponseTest):
         http_response.raw = six.BytesIO(b'\x89PNG\r\n\x1a\n\x00\x00')
 
         http_response.status_code = 200
-        http_response.reason = 'OK'
 
         session = botocore.session.get_session()
         service_model = session.get_service_model('s3')
@@ -164,7 +163,7 @@ class TestGetResponse(BaseResponseTest):
                          '"00000000000000000000000000000000"')
 
     def test_get_response_streaming_ng(self):
-        http_response = Response()
+        http_response = AWSResponse()
         http_response.headers = {
             'content-type': 'application/xml',
             'date': 'Sat, 08 Mar 2014 12:05:44 GMT',
@@ -174,7 +173,6 @@ class TestGetResponse(BaseResponseTest):
             'x-amz-request-id': 'XXXXXXXXXXXXXXXX'}
         http_response.raw = six.BytesIO(XMLBODY1)
         http_response.status_code = 403
-        http_response.reason = 'Forbidden'
 
         session = botocore.session.get_session()
         service_model = session.get_service_model('s3')
@@ -191,7 +189,7 @@ class TestGetResponse(BaseResponseTest):
         )
 
     def test_get_response_nonstreaming_ok(self):
-        http_response = Response()
+        http_response = AWSResponse()
         http_response.headers = {
             'content-type': 'application/xml',
             'date': 'Sun, 09 Mar 2014 02:55:43 GMT',
@@ -201,8 +199,7 @@ class TestGetResponse(BaseResponseTest):
             'x-amz-request-id': 'XXXXXXXXXXXXXXXX'}
         http_response.raw = six.BytesIO(XMLBODY1)
         http_response.status_code = 403
-        http_response.reason = 'Forbidden'
-        http_response.request = Request()
+        http_response.request = AWSRequest()
 
         session = botocore.session.get_session()
         service_model = session.get_service_model('s3')
@@ -223,7 +220,7 @@ class TestGetResponse(BaseResponseTest):
             })
 
     def test_get_response_nonstreaming_ng(self):
-        http_response = Response()
+        http_response = AWSResponse()
         http_response.headers = {
             'content-type': 'application/xml',
             'date': 'Sat, 08 Mar 2014 12:05:44 GMT',
@@ -233,8 +230,7 @@ class TestGetResponse(BaseResponseTest):
             'x-amz-request-id': 'XXXXXXXXXXXXXXXX'}
         http_response.raw = six.BytesIO(XMLBODY2)
         http_response.status_code = 200
-        http_response.reason = 'ok'
-        http_response.request = Request()
+        http_response.request = AWSRequest()
 
         session = botocore.session.get_session()
         service_model = session.get_service_model('s3')

@@ -16,8 +16,7 @@
 from tests import unittest
 
 import mock
-from botocore.vendored.requests import ConnectionError, Timeout
-from urllib3.exceptions import ClosedPoolError
+from urllib3.exceptions import ClosedPoolError, ConnectionError, TimeoutError
 
 from botocore import retryhandler
 from botocore.exceptions import ChecksumError
@@ -221,7 +220,7 @@ class TestCreateRetryConfiguration(unittest.TestCase):
         handler = retryhandler.create_retry_handler(
             self.retry_config, operation_name='OperationBar')
         sleep_time = handler(response=None, attempts=1,
-                             caught_exception=Timeout())
+                             caught_exception=TimeoutError())
         self.assertEqual(sleep_time, 1)
 
     def test_retry_pool_closed_errors(self):

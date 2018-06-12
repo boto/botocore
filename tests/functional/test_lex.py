@@ -35,7 +35,7 @@ class TestLex(BaseSessionTest):
 
         with mock.patch('botocore.auth.datetime') as _datetime:
             _datetime.datetime.utcnow.return_value = timestamp
-            with mock.patch('botocore.endpoint.Urllib3Session.send') as _send:
+            with mock.patch('botocore.endpoint.Endpoint.send') as _send:
                 _send.return_value = mock.Mock(
                     status_code=200, headers={}, content=b'{}')
                 self.client.post_content(**params)

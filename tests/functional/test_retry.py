@@ -38,7 +38,7 @@ class TestRetry(BaseSessionTest):
 
     def assert_will_retry_n_times(self, method, num_retries):
         num_responses = num_retries + 1
-        with mock.patch('botocore.endpoint.Urllib3Session.send') as mock_send:
+        with mock.patch('botocore.endpoint.Endpoint.send') as mock_send:
             self.add_n_retryable_responses(mock_send, num_responses)
             with self.assertRaisesRegexp(
                     ClientError, 'reached max retries: %s' % num_retries):
