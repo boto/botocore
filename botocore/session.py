@@ -16,10 +16,12 @@ This module contains the main interface to the botocore package, the
 Session object.
 """
 
+import collections
 import copy
 import logging
 import os
 import platform
+import threading
 
 from botocore import __version__
 import botocore.configloader
@@ -915,8 +917,10 @@ class ComponentLocator(object):
     def __init__(self):
         self._components = {}
         self._deferred = {}
+        self._deferred_locks = collections.defaultdict(threading.Lock)
 
     def get_component(self, name):
+        self._deferred_locks[name].acquire()
         if name in self._deferred:
             factory = self._deferred[name]
             self._components[name] = factory()
@@ -925,9 +929,12 @@ class ComponentLocator(object):
             # injecting the instantiated value into the _components dict.
             del self._deferred[name]
         try:
-            return self._components[name]
+            ret = self._components[name]
         except KeyError:
+            self._deferred_locks[name].release()
             raise ValueError("Unknown component: %s" % name)
+        self._deferred_locks[name].release()
+        return ret
 
     def register_component(self, name, component):
         self._components[name] = component
