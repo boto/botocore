@@ -224,6 +224,7 @@ class EndpointCreator(object):
                         verify=None, response_parser_factory=None,
                         timeout=DEFAULT_TIMEOUT,
                         max_pool_connections=MAX_POOL_CONNECTIONS,
+                        http_session_cls=Urllib3Session,
                         proxies=None):
         if not is_valid_endpoint_url(endpoint_url):
 
@@ -233,7 +234,7 @@ class EndpointCreator(object):
         endpoint_prefix = service_model.endpoint_prefix
 
         logger.debug('Setting %s timeout as %s', endpoint_prefix, timeout)
-        http_session = Urllib3Session(
+        http_session = http_session_cls(
             timeout=timeout,
             proxies=proxies,
             verify=self._get_verify_value(verify),

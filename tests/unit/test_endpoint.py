@@ -20,7 +20,6 @@ from botocore.compat import six
 from botocore.awsrequest import AWSRequest
 from botocore.endpoint import Endpoint, DEFAULT_TIMEOUT
 from botocore.endpoint import EndpointCreator
-from botocore.endpoint import BotocoreHTTPSession
 from botocore.exceptions import EndpointConnectionError
 from botocore.exceptions import ConnectionClosedError
 
@@ -75,22 +74,6 @@ class TestEndpointBase(unittest.TestCase):
 
 class TestEndpointFeatures(TestEndpointBase):
 
-    def test_timeout_can_be_specified(self):
-        timeout_override = 120
-        self.endpoint.timeout = timeout_override
-        self.endpoint.make_request(self.op, request_dict())
-        kwargs = self.http_session.send.call_args[1]
-        self.assertEqual(kwargs['timeout'], timeout_override)
-
-    def test_make_request_with_proxies(self):
-        proxies = {'http': 'http://localhost:8888'}
-        self.endpoint.proxies = proxies
-        self.endpoint.make_request(self.op, request_dict())
-        prepared_request = self.http_session.send.call_args[0][0]
-        self.http_session.send.assert_called_with(
-            prepared_request, verify=True, stream=False,
-            proxies=proxies, timeout=DEFAULT_TIMEOUT)
-
     def test_make_request_with_no_auth(self):
         self.endpoint.auth = None
         self.endpoint.make_request(self.op, request_dict())
@@ -108,23 +91,6 @@ class TestEndpointFeatures(TestEndpointBase):
         prepared_request = self.http_session.send.call_args[0][0]
         self.assertNotIn('Authorization', prepared_request.headers)
 
-    def test_make_request_injects_better_dns_error_msg(self):
-        fake_request = Mock(url='https://ec2.us-west-2.amazonaws.com')
-        self.http_session.send.side_effect = ConnectionError(
-            "Fake gaierror(8, node or host not known)", request=fake_request)
-        with self.assertRaisesRegexp(EndpointConnectionError,
-                                     'Could not connect'):
-            self.endpoint.make_request(self.op, request_dict())
-
-    def test_make_request_injects_better_bad_status_line_error_msg(self):
-        fake_request = Mock(url='https://ec2.us-west-2.amazonaws.com')
-        self.http_session.send.side_effect = ConnectionError(
-            """'Connection aborted.', BadStatusLine("''",)""",
-            request=fake_request)
-        with self.assertRaisesRegexp(ConnectionClosedError,
-                                     'Connection was closed'):
-            self.endpoint.make_request(self.op, request_dict())
-
     def test_make_request_with_context(self):
         r = request_dict()
         r['context'] = {'signing': {'region': 'us-west-2'}}
@@ -132,20 +98,6 @@ class TestEndpointFeatures(TestEndpointBase):
             self.endpoint.make_request(self.op, r)
         request = prepare.call_args[0][0]
         self.assertEqual(request.context['signing']['region'], 'us-west-2')
-
-    def test_can_specify_max_pool_connections(self):
-        endpoint = Endpoint('https://ec2.us-west-2.amazonaws.com', 'ec2',
-                            self.event_emitter, max_pool_connections=50)
-        # We can look in endpoint.http_session.adapters[0]._pool_maxsize,
-        # but that feels like testing too much implementation detail.
-        self.assertEqual(endpoint.max_pool_connections, 50)
-
-    def test_can_specify_proxies(self):
-        proxies = {'http': 'http://foo.bar:1234'}
-        endpoint = Endpoint('https://ec2.us-west-2.amazonaws.com', 'ec2',
-                            self.event_emitter, proxies=proxies)
-        self.assertEqual(endpoint.proxies, proxies)
-
 
 class TestRetryInterface(TestEndpointBase):
     def setUp(self):
@@ -285,7 +237,7 @@ class TestEventStreamBody(TestEndpointBase):
         request = request_dict()
         self.endpoint.make_request(self.op, request)
         args = self.http_session.send.call_args[1]
-        self.assertTrue(args.get('stream'))
+        self.assertTrue(args.get('streaming'))
 
 
 class TestEndpointCreator(unittest.TestCase):
@@ -308,98 +260,75 @@ class TestEndpointCreator(unittest.TestCase):
         self.assertEqual(endpoint.host, 'https://endpoint.url')
 
     def test_create_endpoint_with_default_timeout(self):
+        mock_session = Mock()
         endpoint = self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
-            endpoint_url='https://example.com')
-        self.assertEqual(endpoint.timeout, DEFAULT_TIMEOUT)
+            endpoint_url='https://example.com', http_session_cls=mock_session)
+        session_args = mock_session.call_args[1]
+        self.assertEqual(session_args.get('timeout'), DEFAULT_TIMEOUT)
 
     def test_create_endpoint_with_customized_timeout(self):
+        mock_session = Mock()
         endpoint = self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
-            endpoint_url='https://example.com', timeout=123)
-        self.assertEqual(endpoint.timeout, 123)
+            endpoint_url='https://example.com', timeout=123,
+            http_session_cls=mock_session)
+        session_args = mock_session.call_args[1]
+        self.assertEqual(session_args.get('timeout'), 123)
 
     def test_get_endpoint_default_verify_ssl(self):
+        mock_session = Mock()
         endpoint = self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
-            endpoint_url='https://example.com')
-        self.assertTrue(endpoint.verify)
+            endpoint_url='https://example.com', http_session_cls=mock_session)
+        session_args = mock_session.call_args[1]
+        self.assertTrue(session_args.get('verify'))
 
     def test_verify_ssl_can_be_disabled(self):
+        mock_session = Mock()
         endpoint = self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
-            endpoint_url='https://example.com', verify=False)
-        self.assertFalse(endpoint.verify)
+            endpoint_url='https://example.com', verify=False,
+            http_session_cls=mock_session)
+        session_args = mock_session.call_args[1]
+        self.assertFalse(session_args.get('verify'))
 
     def test_verify_ssl_can_specify_cert_bundle(self):
+        mock_session = Mock()
         endpoint = self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
-            endpoint_url='https://example.com', verify='/path/cacerts.pem')
-        self.assertEqual(endpoint.verify, '/path/cacerts.pem')
+            endpoint_url='https://example.com', verify='/path/cacerts.pem',
+            http_session_cls=mock_session)
+        session_args = mock_session.call_args[1]
+        self.assertEqual(session_args.get('verify'), '/path/cacerts.pem')
 
     def test_honor_cert_bundle_env_var(self):
         self.environ['REQUESTS_CA_BUNDLE'] = '/env/cacerts.pem'
+        mock_session = Mock()
         endpoint = self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
-            endpoint_url='https://example.com')
-        self.assertEqual(endpoint.verify, '/env/cacerts.pem')
+            endpoint_url='https://example.com', http_session_cls=mock_session)
+        session_args = mock_session.call_args[1]
+        self.assertEqual(session_args.get('verify'), '/env/cacerts.pem')
 
     def test_env_ignored_if_explicitly_passed(self):
         self.environ['REQUESTS_CA_BUNDLE'] = '/env/cacerts.pem'
+        mock_session = Mock()
         endpoint = self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
-            endpoint_url='https://example.com', verify='/path/cacerts.pem')
+            endpoint_url='https://example.com', verify='/path/cacerts.pem',
+            http_session_cls=mock_session)
+        session_args = mock_session.call_args[1]
         # /path/cacerts.pem wins over the value from the env var.
-        self.assertEqual(endpoint.verify, '/path/cacerts.pem')
+        self.assertEqual(session_args.get('verify'), '/path/cacerts.pem')
 
     def test_can_specify_max_pool_conns(self):
+        mock_session = Mock()
         endpoint = self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
             endpoint_url='https://example.com',
-            max_pool_connections=100
+            max_pool_connections=100,
+            http_session_cls=mock_session,
         )
-        self.assertEqual(endpoint.max_pool_connections, 100)
-
-
-class TestAWSSession(unittest.TestCase):
-    def test_auth_header_preserved_from_s3_redirects(self):
-        request = AWSRequest()
-        request.url = 'https://bucket.s3.amazonaws.com/'
-        request.method = 'GET'
-        request.headers['Authorization'] = 'original auth header'
-        prepared_request = request.prepare()
-
-        fake_response = Mock()
-        fake_response.headers = {
-            'location': 'https://bucket.s3-us-west-2.amazonaws.com'}
-        fake_response.url = request.url
-        fake_response.status_code = 307
-        fake_response.is_permanent_redirect = False
-        # This line is needed to disable the cookie handling
-        # code in requests.
-        fake_response.raw._original_response = None
-
-        success_response = Mock()
-        success_response.raw._original_response = None
-        success_response.is_redirect = False
-        success_response.status_code = 200
-        session = BotocoreHTTPSession()
-        session.send = Mock(return_value=success_response)
-
-        list(session.resolve_redirects(
-            fake_response, prepared_request, stream=False))
-
-        redirected_request = session.send.call_args[0][0]
-        # The Authorization header for the newly sent request should
-        # still have our original Authorization header.
-        self.assertEqual(
-            redirected_request.headers['Authorization'],
-            'original auth header')
-
-    def test_max_pool_conns_injects_custom_adapter(self):
-        http_adapter_cls = Mock(return_value=sentinel.HTTP_ADAPTER)
-        session = BotocoreHTTPSession(max_pool_connections=20,
-                                      http_adapter_cls=http_adapter_cls)
-        http_adapter_cls.assert_called_with(pool_maxsize=20)
-        self.assertEqual(session.adapters['https://'], sentinel.HTTP_ADAPTER)
-        self.assertEqual(session.adapters['http://'], sentinel.HTTP_ADAPTER)
+        session_args = mock_session.call_args[1]
+        self.assertEqual(session_args.get('max_pool_connections'), 100)
