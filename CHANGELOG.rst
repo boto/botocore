@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.10.39
+=======
+
+* api-change:``iotanalytics``: Update iotanalytics client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+
+
 1.10.38
 =======
 
