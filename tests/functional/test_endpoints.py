@@ -16,70 +16,122 @@ from nose.tools import assert_equal
 from botocore.session import get_session
 
 
-# Several services have names that don't match for one reason or another.
 SERVICE_RENAMES = {
-    'application-autoscaling': 'autoscaling',
-    'appstream': 'appstream2',
-    'autoscaling-plans': 'autoscaling',
-    'dynamodbstreams': 'streams.dynamodb',
-    'cloudwatch': 'monitoring',
-    'efs': 'elasticfilesystem',
-    'elb': 'elasticloadbalancing',
-    'elbv2': 'elasticloadbalancing',
-    'emr': 'elasticmapreduce',
-    'iot1click-devices': 'devices.iot1click',
-    'iot1click-projects': 'projects.iot1click',
-    'iot-data': 'data.iot',
-    'meteringmarketplace': 'metering.marketplace',
-    'opsworkscm': 'opsworks-cm',
-    'ses': 'email',
-    'stepfunctions': 'states',
-    'lex-runtime': 'runtime.lex',
-    'mturk': 'mturk-requester',
-    'resourcegroupstaggingapi': 'tagging',
-    'sagemaker-runtime': 'runtime.sagemaker',
-    'lex-models': 'models.lex',
-    'marketplace-entitlement': 'entitlement.marketplace',
-    'pricing': 'api.pricing',
-    'mediastore-data': 'data.mediastore',
-    'iot-jobs-data': 'data.jobs.iot',
-    'kinesis-video-media': 'kinesisvideo',
-    'kinesis-video-archived-media': 'kinesisvideo',
+    # Actual service name we use -> Allowed computed service name.
     'alexaforbusiness': 'a4b',
-    'neptune': 'rds',
-    'mediatailor': 'api.mediatailor',
+    'apigateway': 'api-gateway',
+    'application-autoscaling': 'application-auto-scaling',
+    'autoscaling-plans': 'auto-scaling-plans',
+    'ce': 'cost-explorer',
+    'cloudhsmv2': 'cloudhsm-v2',
+    'cloudwatch': 'monitoring',
+    'config': 'config-service',
+    'devicefarm': 'device-farm',
+    'discovery': 'application-discovery-service',
+    'dms': 'database-migration-service',
+    'ds': 'directory-service',
+    'dynamodbstreams': 'streams.dynamodb',
+    'efs': 'elasticfilesystem',
+    'elasticbeanstalk': 'elastic-beanstalk',
+    'elb': 'elasticloadbalancing',
+    'elbv2': 'elastic-load-balancing-v2',
+    'emr': 'elasticmapreduce',
+    'es': 'elasticsearch-service',
+    'events': 'cloudwatch-events',
+    'iot-data': 'data.iot',
+    'iot-jobs-data': 'data.jobs.iot',
+    'iot1click-devices': 'iot-1click-devices-service',
+    'iot1click-projects': 'iot-1click-projects',
+    'kinesisanalytics': 'kinesis-analytics',
+    'kinesisvideo': 'kinesis-video',
+    'lex-models': 'lex-model-building-service',
+    'lex-runtime': 'lex-runtime-service',
+    'marketplace-entitlement': 'entitlement.marketplace',
+    'meteringmarketplace': 'metering.marketplace',
+    'pricing': 'api.pricing',
+    'resourcegroupstaggingapi': 'tagging',
+    'route53': 'route-53',
+    'secretsmanager': 'secrets-manager',
+    'serverlessrepo': 'serverlessapplicationrepository',
+    'servicecatalog': 'service-catalog',
+    'stepfunctions': 'sfn',
+    'storagegateway': 'storage-gateway',
 }
 
-BLACKLIST = [
+
+ENDPOINT_PREFIX_OVERRIDE = {
+    # entry in endpoints.json -> actual endpoint prefix.
+    # The autoscaling-* services actually send requests to the
+    # autoscaling service, but they're exposed as separate clients
+    # in botocore.
+    'autoscaling-plans': 'autoscaling',
+    'application-autoscaling': 'autoscaling',
+    # For neptune, we send requests to the RDS endpoint.
+    'neptune': 'rds',
+}
+NOT_SUPPORTED_IN_SDK = [
     'mobileanalytics',
 ]
 
 
 def test_endpoint_matches_service():
-    backwards_renames = dict((v, k) for k, v in SERVICE_RENAMES.items())
+    # This verifies client names match up with data from the endpoints.json
+    # file.  We want to verify that every entry in the endpoints.json
+    # file corresponds to a client we can construct via
+    # session.create_client(...).
+    # So first we get a list of all the service names in the endpoints
+    # file.
     session = get_session()
     loader = session.get_component('data_loader')
-    expected_services = set(loader.list_available_services('service-2'))
+    endpoints = loader.load_data('endpoints')
+    # A service can be in multiple partitions so we're using
+    # a set here to remove dupes.
+    services_in_endpoints_file = set([])
+    for partition in endpoints['partitions']:
+        for service in partition['services']:
+            # There are some services we don't support in the SDK
+            # so we don't need to add them to the list of services
+            # we need to check.
+            if service not in NOT_SUPPORTED_IN_SDK:
+                services_in_endpoints_file.add(service)
 
-    pdir = os.path.dirname
-    endpoints_path = os.path.join(pdir(pdir(pdir(__file__))),
-                                  'botocore', 'data', 'endpoints.json')
-    with open(endpoints_path, 'r') as f:
-        data = json.loads(f.read())
-    for partition in data['partitions']:
-        for service in partition['services'].keys():
-            service = backwards_renames.get(service, service)
-            if service not in BLACKLIST:
-                yield _assert_endpoint_is_service, service, expected_services
+    # Now we need to cross check them against services we know about.
+    # The entries in endpoints.json are keyed off of the endpoint
+    # prefix.  We don't directly have that data, so we have to load
+    # every service model and look up its endpoint prefix in its
+    # ``metadata`` section.
+    known_services = loader.list_available_services('service-2')
+    known_endpoint_prefixes = [
+        loader.load_service_model(
+            service_name, 'service-2')['metadata']['endpointPrefix']
+        for service_name in known_services
+    ]
+
+    # Now we go through every known endpoint prefix in the endpoints.json
+    # file and ensure it maps to an endpoint prefix we've seen
+    # in a service model.
+    for endpoint_prefix in services_in_endpoints_file:
+        # Check for an override where we know that an entry
+        # in the endpoints.json actually maps to a different endpoint
+        # prefix.
+        endpoint_prefix = ENDPOINT_PREFIX_OVERRIDE.get(endpoint_prefix,
+                                                       endpoint_prefix)
+        yield (_assert_known_endpoint_prefix,
+               endpoint_prefix,
+               known_endpoint_prefixes)
 
 
-def _assert_endpoint_is_service(service, expected_services):
-    assert service in expected_services
+def _assert_known_endpoint_prefix(endpoint_prefix, known_endpoint_prefixes):
+    assert endpoint_prefix in known_endpoint_prefixes
 
 
 def test_service_name_matches_endpoint_prefix():
-    # Generates tests for each service to verify that the endpoint prefix
-    # matches the service name unless there is an explicit exception.
+    # Generates tests for each service to verify that the computed service
+    # named based on the service id matches the service name used to
+    # create a client (i.e the directory name in botocore/data)
+    # unless there is an explicit exception.
+    # If there model has no serviceId then we fall back to the endpoint
+    # prefix.
     session = get_session()
     loader = session.get_component('data_loader')
 
@@ -92,15 +144,22 @@ def test_service_name_matches_endpoint_prefix():
 
 
 def _assert_service_name_matches_endpoint_prefix(loader, service_name):
-    # Load the service model and grab its endpoint prefix
     service_model = loader.load_service_model(service_name, 'service-2')
-    endpoint_prefix = service_model['metadata']['endpointPrefix']
+    computed_name = _get_computed_service_name(service_model['metadata'])
 
     # Handle known exceptions where we have renamed the service directory
     # for one reason or another.
-    expected_endpoint_prefix = SERVICE_RENAMES.get(service_name, service_name)
+    actual_service_name = SERVICE_RENAMES.get(service_name, service_name)
     assert_equal(
-        endpoint_prefix, expected_endpoint_prefix,
-        "Service name `%s` does not match expected endpoint "
-        "prefix `%s`, actual: `%s`" % (
-            service_name, expected_endpoint_prefix, endpoint_prefix))
+        computed_name, actual_service_name,
+        "Actual service name `%s` does not match expected service name "
+        "we computed: `%s`" % (
+            actual_service_name, computed_name))
+
+
+def _get_computed_service_name(service_metadata):
+    if 'serviceId' not in service_metadata:
+        return service_metadata['endpointPrefix']
+    else:
+        service_id = service_metadata['serviceId']
+        return service_id.replace(' ', '-').lower()
