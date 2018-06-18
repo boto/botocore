@@ -2,6 +2,34 @@
 CHANGELOG
 =========
 
+1.10.40
+=======
+
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
+1.10.39
+=======
+
+* api-change:``iotanalytics``: Update iotanalytics client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+
+
+1.10.38
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+
+
+1.10.37
+=======
+
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``devicefarm``: Update devicefarm client to latest version
+
+
 1.10.36
 =======
 
