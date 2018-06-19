@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.10.41
+=======
+
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
 1.10.40
 =======
 
