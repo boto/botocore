@@ -55,6 +55,8 @@ _xform_cache = {
 _partial_renames = {
     'ipv-6': 'ipv6',
     'ipv_6': 'ipv6',
+    's_3_resources': 's3_resources',
+    's-3-resources': 's3-resources',
 }
 ScalarTypes = ('string', 'integer', 'boolean', 'timestamp', 'float', 'double')
 
