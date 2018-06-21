@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.10.43
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``macie``: Update macie client to latest version
+* api-change:``neptune``: Update neptune client to latest version
+
+
 1.10.42
 =======
 
