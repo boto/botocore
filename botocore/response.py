@@ -38,6 +38,8 @@ class StreamingBody(object):
           is raised.
 
     """
+    _DEFAULT_CHUNK_SIZE = 1024
+
     def __init__(self, raw_stream, content_length):
         self._raw_stream = raw_stream
         self._content_length = content_length
@@ -83,20 +85,16 @@ class StreamingBody(object):
     def __iter__(self):
         """Return an iterator to yield lines from the raw stream.
         """
-        # Reading 1024 bytes at a time seems a sane choice [citation needed].
-        # If the user needs to specify something different they can always call
-        # streaming_body._iter_lines(<other-chunk-size>)
-        default_chunk_size = 1024
-        return self._iter_lines(default_chunk_size)
+        return self.iter_chunks(self._DEFAULT_CHUNK_SIZE)
 
-    def _iter_lines(self, chunk_size):
+    def iter_lines(self, chunk_size=1024):
         """Return an iterator to yield lines from the raw stream.
 
         This is achieved by reading chunk of bytes (of size chunk_size) at a
         time from the raw stream, and then yielding lines from there.
         """
         pending = None
-        for chunk in self._iter_chunks(chunk_size):
+        for chunk in self.iter_chunks(chunk_size):
             if pending is not None:
                 chunk = pending + chunk
 
@@ -115,7 +113,7 @@ class StreamingBody(object):
         if pending is not None:
             yield pending
 
-    def _iter_chunks(self, chunk_size):
+    def iter_chunks(self, chunk_size=_DEFAULT_CHUNK_SIZE):
         """Return an iterator to yield chunks of chunk_size bytes from the raw
         stream.
         """

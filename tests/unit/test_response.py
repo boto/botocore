@@ -41,6 +41,17 @@ XMLBODY2 = (b'<?xml version="1.0" encoding="UTF-8"?>'
 
 
 class TestStreamWrapper(unittest.TestCase):
+
+    def assert_lines(self, line_iterator, expected_lines):
+        for expected_line in expected_lines:
+            self.assertEqual(
+                next(line_iterator),
+                expected_line,
+            )
+        # We should have exhausted the iterator.
+        with self.assertRaises(StopIteration):
+            next(line_iterator)
+
     def test_streaming_wrapper_validates_content_length(self):
         body = six.BytesIO(b'1234567890')
         stream = response.StreamingBody(body, content_length=10)
@@ -68,19 +79,44 @@ class TestStreamWrapper(unittest.TestCase):
         stream.close()
         self.assertTrue(body.closed)
 
+    def test_default_iter_behavior(self):
+        body = six.BytesIO(b'a' * 2048)
+        stream = response.StreamingBody(body, content_length=2048)
+        chunks = list(stream)
+        self.assertEqual(len(chunks), 2)
+        self.assertEqual(chunks, [b'a' * 1024, b'a' * 1024])
+
+    def test_iter_chunks_single_byte(self):
+        body = six.BytesIO(b'abcde')
+        stream = response.StreamingBody(body, content_length=5)
+        chunks = list(stream.iter_chunks(chunk_size=1))
+        self.assertEqual(chunks, [b'a', b'b', b'c', b'd', b'e'])
+
+    def test_iter_chunks_with_leftover(self):
+        body = six.BytesIO(b'abcde')
+        stream = response.StreamingBody(body, content_length=5)
+        chunks = list(stream.iter_chunks(chunk_size=2))
+        self.assertEqual(chunks, [b'ab', b'cd', b'e'])
+
+    def test_iter_chunks_single_chunk(self):
+        body = six.BytesIO(b'abcde')
+        stream = response.StreamingBody(body, content_length=5)
+        chunks = list(stream.iter_chunks(chunk_size=1024))
+        self.assertEqual(chunks, [b'abcde'])
+
     def test_streaming_line_iterator(self):
         body = six.BytesIO(b'1234567890\n1234567890\n12345')
         stream = response.StreamingBody(body, content_length=27)
-        self._assert_lines(
-            iter(stream),
+        self.assert_lines(
+            stream.iter_lines(),
             [b'1234567890', b'1234567890', b'12345'],
         )
 
     def test_streaming_line_iterator_ends_newline(self):
         body = six.BytesIO(b'1234567890\n1234567890\n12345\n')
         stream = response.StreamingBody(body, content_length=28)
-        self._assert_lines(
-            iter(stream),
+        self.assert_lines(
+            stream.iter_lines(),
             [b'1234567890', b'1234567890', b'12345'],
         )
 
@@ -88,20 +124,10 @@ class TestStreamWrapper(unittest.TestCase):
         for chunk_size in range(1, 30):
             body = six.BytesIO(b'1234567890\n1234567890\n12345')
             stream = response.StreamingBody(body, content_length=27)
-            self._assert_lines(
-                stream._iter_lines(chunk_size),
+            self.assert_lines(
+                stream.iter_lines(chunk_size),
                 [b'1234567890', b'1234567890', b'12345'],
             )
-
-    def _assert_lines(self, line_iterator, expected_lines):
-        for expected_line in expected_lines:
-            self.assertEqual(
-                next(line_iterator),
-                expected_line,
-            )
-        # We should have exhausted the iterator.
-        with self.assertRaises(StopIteration):
-            next(line_iterator)
 
 
 class TestGetResponse(BaseResponseTest):
