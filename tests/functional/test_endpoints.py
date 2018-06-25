@@ -109,8 +109,7 @@ def test_endpoint_matches_service():
     # ``metadata`` section.
     known_services = loader.list_available_services('service-2')
     known_endpoint_prefixes = [
-        loader.load_service_model(
-            service_name, 'service-2')['metadata']['endpointPrefix']
+        session.get_service_model(service_name).endpoint_prefix
         for service_name in known_services
     ]
 
@@ -147,13 +146,12 @@ def test_service_name_matches_endpoint_prefix():
     services = loader.list_available_services('service-2')
 
     for service in services:
-        yield _assert_service_name_matches_endpoint_prefix, loader, service
+        yield _assert_service_name_matches_endpoint_prefix, session, service
 
 
-def _assert_service_name_matches_endpoint_prefix(loader, service_name):
-    service_model = loader.load_service_model(service_name, 'service-2')
-    computed_name = _get_computed_service_name(
-        service_name, service_model['metadata'])
+def _assert_service_name_matches_endpoint_prefix(session, service_name):
+    service_model = session.get_service_model(service_name)
+    computed_name = service_model.service_id.replace(' ', '-').lower()
 
     # Handle known exceptions where we have renamed the service directory
     # for one reason or another.
@@ -163,10 +161,3 @@ def _assert_service_name_matches_endpoint_prefix(loader, service_name):
         "Actual service name `%s` does not match expected service name "
         "we computed: `%s`" % (
             actual_service_name, computed_name))
-
-
-def _get_computed_service_name(service_name, service_metadata):
-    if 'serviceId' not in service_metadata:
-        raise AssertionError("Service is missing serviceId metadata: %s"
-                             % service_name)
-    return service_metadata['serviceId'].replace(' ', '-').lower()
