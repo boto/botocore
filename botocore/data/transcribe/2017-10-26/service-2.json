@@ -6,7 +6,7 @@
     "jsonVersion":"1.1",
     "protocol":"json",
     "serviceFullName":"Amazon Transcribe Service",
-    "serviceId":"Transcribe Service",
+    "serviceId":"Transcribe",
     "signatureVersion":"v4",
     "signingName":"transcribe",
     "targetPrefix":"Transcribe",

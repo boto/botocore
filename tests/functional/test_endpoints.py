@@ -63,7 +63,6 @@ SERVICE_RENAMES = {
     'servicecatalog': 'service-catalog',
     'stepfunctions': 'sfn',
     'storagegateway': 'storage-gateway',
-    'transcribe': 'transcribe-service',
 }
 
 
