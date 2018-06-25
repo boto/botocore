@@ -83,7 +83,7 @@ class StreamingBody(object):
         return chunk
 
     def __iter__(self):
-        """Return an iterator to yield lines from the raw stream.
+        """Return an iterator to yield 1k chunks from the raw stream.
         """
         return self.iter_chunks(self._DEFAULT_CHUNK_SIZE)
 
