@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.10.46
+=======
+
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``inspector``: Update inspector client to latest version
+
+
 1.10.45
 =======
 
