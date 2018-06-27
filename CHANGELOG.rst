@@ -2,6 +2,59 @@
 CHANGELOG
 =========
 
+1.10.47
+=======
+
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``codepipeline``: Update codepipeline client to latest version
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+* enhancement:StreamingResponses: Add ``iter_lines()`` and ``iter_chunks()`` to streaming responses (`#1195 <https://github.com/boto/botocore/issues/1195>`__)
+
+
+1.10.46
+=======
+
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``inspector``: Update inspector client to latest version
+
+
+1.10.45
+=======
+
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+
+
+1.10.44
+=======
+
+* api-change:``clouddirectory``: Update clouddirectory client to latest version
+
+
+1.10.43
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``macie``: Update macie client to latest version
+* api-change:``neptune``: Update neptune client to latest version
+
+
+1.10.42
+=======
+
+* api-change:``acm-pca``: Update acm-pca client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+
+
+1.10.41
+=======
+
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
 1.10.40
 =======
 

@@ -176,6 +176,12 @@ class TestTransformName(unittest.TestCase):
         transformed = xform_name('IPV6', '_')
         self.assertEqual(transformed, 'ipv6')
 
+    def test_s3_partial_rename(self):
+        transformed = xform_name('s3Resources', '-')
+        self.assertEqual(transformed, 's3-resources')
+        transformed = xform_name('s3Resources', '_')
+        self.assertEqual(transformed, 's3_resources')
+
 
 class TestValidateJMESPathForSet(unittest.TestCase):
     def setUp(self):
