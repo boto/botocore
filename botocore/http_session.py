@@ -107,16 +107,13 @@ class Urllib3Session(object):
 
         return self._proxy_managers[proxy_url]
 
-    def _get_connection(self, url):
-        scheme = urlparse(url.lower()).scheme
-        proxy = self._proxies.get(scheme)
-
-        if proxy:
-            connection_manager = self._get_proxy_manager(proxy)
-        else:
-            connection_manager = self._http_pool
-
-        return connection_manager.connection_from_url(url)
+    def _path_url(self, parsed_url):
+        path = parsed_url.path
+        if not path:
+            path = '/'
+        if parsed_url.query:
+            path = path + '?' + parsed_url.query
+        return path
 
     def _verify_cert(self, conn, url, verify):
         if url.lower().startswith('https') and verify:
@@ -128,11 +125,22 @@ class Urllib3Session(object):
 
     def send(self, request):
         try:
-            conn = self._get_connection(request.url)
+            parsed_url = urlparse(request.url)
+            proxy = self._proxies.get(parsed_url.scheme)
+            url = self._path_url(parsed_url)
+
+            if proxy:
+                if parsed_url.scheme == 'http':
+                    url = request.url
+                connection_manager = self._get_proxy_manager(proxy)
+            else:
+                connection_manager = self._http_pool
+
+            conn = connection_manager.connection_from_url(request.url)
             self._verify_cert(conn, request.url, self._verify)
             urllib_response = conn.urlopen(
                 method=request.method,
-                url=request.url,
+                url=url,
                 body=request.body,
                 headers=request.headers,
                 retries=False,

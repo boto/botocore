@@ -80,7 +80,7 @@ class TestUrllib3Session(unittest.TestCase):
     def setUp(self):
         self.request = AWSRequest(
             method='GET',
-            url='http://example.com',
+            url='http://example.com/',
             headers={},
             data=b'',
         )
@@ -104,13 +104,13 @@ class TestUrllib3Session(unittest.TestCase):
     def tearDown(self):
         self.pool_patch.stop()
 
-    def asert_request_sent(self, headers=None, body=None):
+    def assert_request_sent(self, headers=None, body=None, url='/'):
         if headers is None:
             headers = {}
 
         self.connection.urlopen.assert_called_once_with(
             method=self.request.method,
-            url=self.request.url,
+            url=url,
             body=body,
             headers=headers,
             retries=False,
@@ -127,7 +127,7 @@ class TestUrllib3Session(unittest.TestCase):
     def test_basic_request(self):
         session = Urllib3Session()
         session.send(self.request.prepare())
-        self.asert_request_sent()
+        self.assert_request_sent()
         self.response.stream.assert_called_once_with()
 
     def test_basic_streaming_request(self):
@@ -139,14 +139,14 @@ class TestUrllib3Session(unittest.TestCase):
 
     def test_basic_https_request(self):
         session = Urllib3Session()
-        self.request.url = 'https://example.com'
+        self.request.url = 'https://example.com/'
         session.send(self.request.prepare())
-        self.asert_request_sent()
+        self.assert_request_sent()
 
-    def test_basic_proxy_request(self):
+    def test_basic_https_proxy_request(self):
         proxies = {'https': 'http://proxy.com'}
         session = Urllib3Session(proxies=proxies)
-        self.request.url = 'https://example.com'
+        self.request.url = 'https://example.com/'
         session.send(self.request.prepare())
         self.proxy_manager_fun.assert_any_call(
             proxies['https'],
@@ -155,7 +155,20 @@ class TestUrllib3Session(unittest.TestCase):
             timeout=ANY,
             strict=True,
         )
-        self.asert_request_sent()
+        self.assert_request_sent()
+
+    def test_basic_http_proxy_request(self):
+        proxies = {'http': 'http://proxy.com'}
+        session = Urllib3Session(proxies=proxies)
+        session.send(self.request.prepare())
+        self.proxy_manager_fun.assert_any_call(
+            proxies['http'],
+            proxy_headers={},
+            maxsize=ANY,
+            timeout=ANY,
+            strict=True,
+        )
+        self.assert_request_sent(url=self.request.url)
 
     def make_request_with_error(self, error):
         self.connection.urlopen.side_effect = error

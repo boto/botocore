@@ -84,8 +84,10 @@ class TestClientHTTPBehavior(unittest.TestCase):
             self.fail('Excepted exception was not thrown')
 
     def test_invalid_host_gaierror(self):
+        config = Config(retries={'max_attempts': 0})
         endpoint = 'https://ec2.us-weast-1.amazonaws.com/'
-        client = self.session.create_client('ec2', endpoint_url=endpoint)
+        client = self.session.create_client('ec2', endpoint_url=endpoint,
+                                            config=config)
         try:
             client.describe_regions()
         except EndpointConnectionError:
