@@ -38,6 +38,8 @@ class StreamingBody(object):
           is raised.
 
     """
+    _DEFAULT_CHUNK_SIZE = 1024
+
     def __init__(self, raw_stream, content_length):
         self._raw_stream = raw_stream
         self._content_length = content_length
@@ -79,6 +81,47 @@ class StreamingBody(object):
             # we need to verify the content length.
             self._verify_content_length()
         return chunk
+
+    def __iter__(self):
+        """Return an iterator to yield 1k chunks from the raw stream.
+        """
+        return self.iter_chunks(self._DEFAULT_CHUNK_SIZE)
+
+    def iter_lines(self, chunk_size=1024):
+        """Return an iterator to yield lines from the raw stream.
+
+        This is achieved by reading chunk of bytes (of size chunk_size) at a
+        time from the raw stream, and then yielding lines from there.
+        """
+        pending = None
+        for chunk in self.iter_chunks(chunk_size):
+            if pending is not None:
+                chunk = pending + chunk
+
+            lines = chunk.splitlines()
+
+            if lines and lines[-1] and chunk and lines[-1][-1] == chunk[-1]:
+                # We might be in the 'middle' of a line. Hence we keep the
+                # last line as pending.
+                pending = lines.pop()
+            else:
+                pending = None
+
+            for line in lines:
+                yield line
+
+        if pending is not None:
+            yield pending
+
+    def iter_chunks(self, chunk_size=_DEFAULT_CHUNK_SIZE):
+        """Return an iterator to yield chunks of chunk_size bytes from the raw
+        stream.
+        """
+        while True:
+            current_chunk = self.read(chunk_size)
+            if current_chunk == b"":
+                break
+            yield current_chunk
 
     def _verify_content_length(self):
         # See: https://github.com/kennethreitz/requests/issues/1855
