@@ -3,8 +3,8 @@ import logging
 import socket
 from base64 import b64encode
 
-from urllib3 import PoolManager, proxy_from_url
-from urllib3.exceptions import NewConnectionError
+from urllib3 import PoolManager, proxy_from_url, Timeout
+from urllib3.exceptions import NewConnectionError, ProtocolError
 
 from botocore.vendored import six
 from botocore.vendored.six.moves.urllib_parse import unquote
@@ -82,10 +82,16 @@ class Urllib3Session(object):
     ):
         self._verify = verify
         self._proxies = proxies or {}
+        if not isinstance(timeout, (int, float)):
+            timeout = Timeout(connect=timeout[0], read=timeout[1])
         self._timeout = timeout
         self._max_pool_connections = max_pool_connections
         self._proxy_managers = {}
-        self._http_pool = PoolManager(maxsize=self._max_pool_connections)
+        self._http_pool = PoolManager(
+            strict=True,
+            timeout=self._timeout,
+            maxsize=self._max_pool_connections,
+        )
 
     def _get_proxy_manager(self, proxy_url):
         proxy_url = fix_proxy_url(proxy_url)
@@ -93,6 +99,8 @@ class Urllib3Session(object):
             proxy_headers = get_proxy_headers(proxy_url)
             self._proxy_managers[proxy_url] = proxy_from_url(
                 proxy_url,
+                strict=True,
+                timeout=self._timeout,
                 proxy_headers=proxy_headers,
                 maxsize=self._max_pool_connections
             )
@@ -147,7 +155,7 @@ class Urllib3Session(object):
             return http_response
         except (NewConnectionError, socket.gaierror) as e:
             raise EndpointConnectionError(endpoint_url=request.url, error=e)
-        except six.moves.http_client.BadStatusLine as e:
+        except ProtocolError as e:
             raise ConnectionClosedError(
                 request=request,
                 endpoint_url=request.url

@@ -1,7 +1,7 @@
-from mock import patch, Mock
+from mock import patch, Mock, ANY
 from tests import unittest
 from nose.tools import raises
-from urllib3.exceptions import NewConnectionError
+from urllib3.exceptions import NewConnectionError, ProtocolError
 
 from botocore.http_session import (
     construct_basic_auth,
@@ -121,7 +121,8 @@ class TestUrllib3Session(unittest.TestCase):
 
     def test_forwards_max_pool_size(self):
         Urllib3Session(max_pool_connections=22)
-        self.pool_manager_cls.assert_called_with(maxsize=22)
+        self.pool_manager_cls.assert_called_with(maxsize=22, timeout=ANY,
+                                                 strict=True)
 
     def test_basic_request(self):
         session = Urllib3Session()
@@ -150,7 +151,9 @@ class TestUrllib3Session(unittest.TestCase):
         self.proxy_manager_fun.assert_any_call(
             proxies['https'],
             proxy_headers={},
-            maxsize=10,
+            maxsize=ANY,
+            timeout=ANY,
+            strict=True,
         )
         self.asert_request_sent()
 
@@ -166,5 +169,5 @@ class TestUrllib3Session(unittest.TestCase):
 
     @raises(ConnectionClosedError)
     def test_catches_bad_status_line(self):
-        error = six.moves.http_client.BadStatusLine(None)
+        error = ProtocolError(None)
         self.make_request_with_error(error)
