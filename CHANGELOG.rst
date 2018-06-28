@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.10.48
+=======
+
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+
+
 1.10.47
 =======
 
