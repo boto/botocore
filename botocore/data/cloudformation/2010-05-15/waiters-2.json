@@ -177,6 +177,37 @@
           "state": "failure"
         }
       ]
+    },
+    "StackSetOperationComplete": {
+      "delay": 30,
+      "operation": "DescribeStackSetOperation",
+      "maxAttempts": 120,
+      "description": "Wait until stack set operation status is SUCCEEDED.",
+      "acceptors": [
+        {
+          "argument": "StackSetOperation.Status",
+          "expected": "SUCCEEDED",
+          "matcher": "path",
+          "state": "success"
+        },
+        {
+          "argument": "StackSetOperation.Status",
+          "expected": "FAILED",
+          "matcher": "path",
+          "state": "failure"
+        },
+        {
+          "argument": "StackSetOperation.Status",
+          "expected": "STOPPED",
+          "matcher": "path",
+          "state": "failure"
+        },
+        {
+          "expected": "ValidationError",
+          "matcher": "error",
+          "state": "failure"
+        }
+      ]
     }
   }
 }
