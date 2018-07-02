@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.10.49
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+
+
 1.10.48
 =======
 
