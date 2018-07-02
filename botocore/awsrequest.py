@@ -400,6 +400,13 @@ class AWSPreparedRequest(object):
         self.stream_output = original.stream_output
         self.original = original
 
+    def __repr__(self):
+        fmt = (
+            '<AWSPreparedRequest stream_output=%s, method=%s, url=%s, '
+            'headers=%s>'
+        )
+        return fmt % (self.stream_output, self.method, self.url, self.headers)
+
     def reset_stream(self):
         # Trying to reset a stream when there is a no stream will
         # just immediately return.  It's not an error, it will produce
