@@ -1,3 +1,4 @@
+import os.path
 import logging
 import socket
 from base64 import b64encode
@@ -21,7 +22,10 @@ filter_ssl_warnings()
 logger = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 60
 MAX_POOL_CONNECTIONS = 10
-DEFAULT_CA_BUNDLE = 'TODO'
+# TODO: move the vendored cacert when we drop requests
+DEFAULT_CA_BUNDLE = os.path.join(
+    os.path.dirname(__file__), 'vendored', 'requests', 'cacert.pem'
+)
 
 try:
     from certifi import where
