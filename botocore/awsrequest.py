@@ -335,7 +335,8 @@ class AWSRequest(object):
                  headers=None,
                  data=None,
                  params=None,
-                 auth_path=None):
+                 auth_path=None,
+                 stream_output=False):
 
         # Default empty dicts for dict params.
         data = [] if data is None else data
@@ -347,6 +348,7 @@ class AWSRequest(object):
         self.data = data
         self.params = params
         self.auth_path = auth_path
+        self.stream_output = stream_output
 
         if headers is not None:
             for key, value in headers.items():
@@ -363,15 +365,7 @@ class AWSRequest(object):
 
     def prepare(self):
         """Constructs a :class:`AWSPreparedRequest <AWSPreparedRequest>`."""
-        # Eventually I think it would be nice to add hooks into this process.
-        p = AWSPreparedRequest(self)
-        #p.prepare_method(self.method)
-        #p.prepare_url(self.url, self.params)
-        p.method = self.method
-        p.url = self.url
-        p.prepare_headers(self.headers)
-        p.prepare_body(self.data)
-        return p
+        return AWSPreparedRequest(self)
 
     @property
     def body(self):
@@ -399,10 +393,11 @@ class AWSPreparedRequest(object):
 
     """
     def __init__(self, original):
-        self.method = None
-        self.url = None
-        self.headers = {}
-        self.body = None
+        self.method = original.method
+        self.url = original.url
+        self.prepare_headers(original.headers)
+        self.prepare_body(original.data)
+        self.stream_output = original.stream_output
         self.original = original
 
     def reset_stream(self):
@@ -423,6 +418,7 @@ class AWSPreparedRequest(object):
 
     def prepare_headers(self, headers):
         # TODO: make case insensitive ?
+        headers = headers or {}
         self.headers = dict((k,v) for (k,v) in headers.items())
 
     def prepare_body(self, data):

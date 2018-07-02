@@ -114,7 +114,7 @@ class Urllib3Session(object):
             conn.cert_reqs = 'CERT_NONE'
             conn.ca_certs = None
 
-    def send(self, request, streaming=False):
+    def send(self, request):
         try:
             conn = self._get_connection(request.url)
             self._verify_cert(conn, request.url, self._verify)
@@ -135,7 +135,7 @@ class Urllib3Session(object):
             http_response.headers = dict(urllib_response.headers.items())
             http_response.raw = urllib_response
 
-            if not streaming:
+            if not request.stream_output:
                 # Cause the raw stream to be exhausted immediatly
                 http_response.content
 

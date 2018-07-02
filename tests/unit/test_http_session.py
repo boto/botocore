@@ -131,7 +131,8 @@ class TestUrllib3Session(unittest.TestCase):
 
     def test_basic_streaming_request(self):
         session = Urllib3Session()
-        session.send(self.request.prepare(), streaming=True)
+        self.request.stream_output = True
+        session.send(self.request.prepare())
         self.asert_request_sent()
         self.response.stream.assert_not_called()
 

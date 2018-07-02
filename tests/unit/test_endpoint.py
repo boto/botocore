@@ -236,8 +236,8 @@ class TestEventStreamBody(TestEndpointBase):
         self.op.has_event_stream_output = True
         request = request_dict()
         self.endpoint.make_request(self.op, request)
-        args = self.http_session.send.call_args[1]
-        self.assertTrue(args.get('streaming'))
+        sent_request = self.http_session.send.call_args[0][0]
+        self.assertTrue(sent_request.stream_output)
 
 
 class TestEndpointCreator(unittest.TestCase):

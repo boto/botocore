@@ -105,6 +105,10 @@ class Endpoint(object):
     def create_request(self, params, operation_model=None):
         request = create_request_object(params)
         if operation_model:
+            request.stream_output = any([
+                operation_model.has_streaming_output,
+                operation_model.has_event_stream_output
+            ])
             event_name = 'request-created.{endpoint_prefix}.{op_name}'.format(
                 endpoint_prefix=self._endpoint_prefix,
                 op_name=operation_model.name)
@@ -167,11 +171,7 @@ class Endpoint(object):
                 'url': request.url,
                 'body': request.body
             })
-            streaming = any([
-                operation_model.has_streaming_output,
-                operation_model.has_event_stream_output
-            ])
-            http_response = self.send(request, streaming)
+            http_response = self.send(request)
         except HTTPClientError as e:
             return (None, e)
         except Exception as e:
@@ -212,8 +212,8 @@ class Endpoint(object):
             time.sleep(handler_response)
             return True
 
-    def send(self, request, streaming=False):
-        return self.http_session.send(request, streaming=streaming)
+    def send(self, request):
+        return self.http_session.send(request)
 
 
 class EndpointCreator(object):
