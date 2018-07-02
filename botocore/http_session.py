@@ -129,11 +129,12 @@ class Urllib3Session(object):
                 decode_content=False,
             )
 
-            http_response = AWSResponse()
-            http_response.url = request.url
-            http_response.status_code = urllib_response.status
-            http_response.headers = dict(urllib_response.headers.items())
-            http_response.raw = urllib_response
+            http_response = AWSResponse(
+                url=request.url,
+                raw=urllib_response,
+                status_code=urllib_response.status,
+                headers=dict(urllib_response.headers.items()),
+            )
 
             if not request.stream_output:
                 # Cause the raw stream to be exhausted immediatly
