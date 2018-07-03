@@ -20,6 +20,7 @@ import functools
 import weakref
 import random
 import os
+import socket
 
 from urllib3 import PoolManager
 from urllib3.exceptions import ConnectionError, TimeoutError
@@ -31,7 +32,8 @@ from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.exceptions import InvalidDNSNameError, ClientError
 from botocore.exceptions import MetadataRetrievalError
 from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
-from botocore.compat import OrderedDict, six
+from botocore.compat import OrderedDict, six, urlparse
+from botocore.vendored.six.moves.urllib.request import getproxies, proxy_bypass
 
 
 logger = logging.getLogger(__name__)
@@ -1116,3 +1118,31 @@ class ContainerMetadataFetcher(object):
 
     def full_url(self, relative_uri):
         return 'http://%s%s' % (self.IP_ADDRESS, relative_uri)
+
+
+def get_environ_proxies(url):
+    if should_bypass_proxies(url):
+        return {}
+    else:
+        return getproxies()
+
+
+def should_bypass_proxies(url):
+    """
+    Returns whether we should bypass proxies or not.
+    """
+    # NOTE: requests allowed for ip/cidr entries in no_proxy env that we don't
+    # support current as urllib only checks DNS suffix
+    # If the system proxy settings indicate that this URL should be bypassed,
+    # don't proxy.
+    # The proxy_bypass function is incredibly buggy on OS X in early versions
+    # of Python 2.6, so allow this call to fail. Only catch the specific
+    # exceptions we've seen, though: this call failing in other ways can reveal
+    # legitimate problems.
+    try:
+        if proxy_bypass(urlparse(url).netloc):
+            return True
+    except (TypeError, socket.gaierror):
+        pass
+
+    return False

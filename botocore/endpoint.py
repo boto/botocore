@@ -17,13 +17,12 @@ import logging
 import time
 import threading
 
-from botocore.vendored.requests.utils import get_environ_proxies
 from botocore.vendored import six
 
 from botocore.awsrequest import create_request_object
 from botocore.exceptions import HTTPClientError
 from botocore.http_session import Urllib3Session
-from botocore.utils import is_valid_endpoint_url
+from botocore.utils import is_valid_endpoint_url, get_environ_proxies
 from botocore.hooks import first_non_none_response
 from botocore.history import get_global_history_recorder
 from botocore.response import StreamingBody
