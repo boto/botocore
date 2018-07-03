@@ -22,7 +22,6 @@ import random
 import os
 import socket
 
-from urllib3 import PoolManager
 from urllib3.exceptions import ConnectionError, TimeoutError
 import dateutil.parser
 from dateutil.tz import tzlocal, tzutc
@@ -34,6 +33,8 @@ from botocore.exceptions import MetadataRetrievalError
 from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
 from botocore.compat import OrderedDict, six, urlparse
 from botocore.vendored.six.moves.urllib.request import getproxies, proxy_bypass
+from botocore.http_session import Urllib3Session
+from botocore.awsrequest import AWSRequest
 
 
 logger = logging.getLogger(__name__)
@@ -173,7 +174,10 @@ class InstanceMetadataFetcher(object):
         self._disabled = env.get('AWS_EC2_METADATA_DISABLED', 'false').lower()
         self._disabled = self._disabled == 'true'
         self._user_agent = user_agent
-        self._session = PoolManager(retries=False)
+        self._session = Urllib3Session(
+            timeout=self._timeout,
+            proxies=get_environ_proxies(self._url),
+        )
 
     def _get_request(self, url, timeout, num_attempts=1):
         if self._disabled:
@@ -186,13 +190,13 @@ class InstanceMetadataFetcher(object):
 
         for i in range(num_attempts):
             try:
-                response = self._session.request('GET', url, timeout=timeout,
-                                                 headers=headers)
+                request = AWSRequest(method='GET', url=url, headers=headers)
+                response = self._session.send(request)
             except RETRYABLE_HTTP_ERRORS as e:
                 logger.debug("Caught exception while trying to retrieve "
                              "credentials: %s", e, exc_info=True)
             else:
-                if response.status == 200:
+                if response.status_code == 200:
                     return response
         raise _RetriesExceededError()
 
@@ -203,8 +207,8 @@ class InstanceMetadataFetcher(object):
         num_attempts = self._num_attempts
         try:
             r = self._get_request(url, timeout, num_attempts)
-            if r.data:
-                fields = r.data.decode('utf-8').split('\n')
+            if r.content:
+                fields = r.content.decode('utf-8').split('\n')
                 for field in fields:
                     if field.endswith('/'):
                         data[field[0:-1]] = self.retrieve_iam_role_credentials(
@@ -214,14 +218,14 @@ class InstanceMetadataFetcher(object):
                             url + field,
                             timeout=timeout,
                             num_attempts=num_attempts,
-                        ).data.decode('utf-8')
+                        ).content.decode('utf-8')
                         if val[0] == '{':
                             val = json.loads(val)
                         data[field] = val
             else:
                 logger.debug("Metadata service returned non 200 status code "
                              "of %s for url: %s, content body: %s",
-                             r.status, url, r.data)
+                             r.status_code, url, r.content)
         except _RetriesExceededError:
             logger.debug("Max number of attempts exceeded (%s) when "
                          "attempting to retrieve data from metadata service.",
@@ -1038,7 +1042,7 @@ class ContainerMetadataFetcher(object):
 
     def __init__(self, session=None, sleep=time.sleep):
         if session is None:
-            session = PoolManager(retries=False)
+            session = Urllib3Session(timeout=self.TIMEOUT_SECONDS)
         self._session = session
         self._sleep = sleep
 
@@ -1099,18 +1103,18 @@ class ContainerMetadataFetcher(object):
 
     def _get_response(self, full_url, headers, timeout):
         try:
-            response = self._session.request('GET', full_url, headers=headers,
-                                         timeout=timeout)
-            if response.status != 200:
+            request = AWSRequest(method='GET', url=full_url, headers=headers)
+            response = self._session.send(request)
+            if response.status_code != 200:
                 raise MetadataRetrievalError(
                     error_msg="Received non 200 response (%s) from ECS metadata: %s"
-                    % (response.status, response.data))
+                    % (response.status_code, response.text))
             try:
-                return json.loads(response.data.decode('utf-8'))
+                return json.loads(response.text)
             except ValueError:
                 raise MetadataRetrievalError(
                     error_msg=("Unable to parse JSON returned from "
-                               "ECS metadata: %s" % response.data))
+                               "ECS metadata: %s" % response.text))
         except RETRYABLE_HTTP_ERRORS as e:
             error_msg = ("Received error when attempting to retrieve "
                          "ECS metadata: %s" % e)

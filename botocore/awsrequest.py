@@ -495,6 +495,13 @@ class AWSResponse(object):
 
         return self._content
 
+    @property
+    def text(self):
+        if not self.content:
+            return str('')
+
+        return self.content.encode('utf-8')
+
 
 HTTPSConnectionPool.ConnectionCls = AWSHTTPSConnection
 HTTPConnectionPool.ConnectionCls = AWSHTTPConnection
