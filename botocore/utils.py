@@ -29,7 +29,7 @@ from dateutil.tz import tzlocal, tzutc
 import botocore
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.exceptions import InvalidDNSNameError, ClientError
-from botocore.exceptions import MetadataRetrievalError
+from botocore.exceptions import MetadataRetrievalError, EndpointConnectionError
 from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
 from botocore.compat import OrderedDict, six, urlparse
 from botocore.vendored.six.moves.urllib.request import getproxies, proxy_bypass
@@ -46,7 +46,7 @@ METADATA_SECURITY_CREDENTIALS_URL = (
 # Based on rfc2986, section 2.3
 SAFE_CHARS = '-._~'
 LABEL_RE = re.compile(r'[a-z0-9][a-z0-9\-]*[a-z0-9]')
-RETRYABLE_HTTP_ERRORS = (TimeoutError, ConnectionError)
+RETRYABLE_HTTP_ERRORS = (TimeoutError, ConnectionError, EndpointConnectionError)
 S3_ACCELERATE_WHITELIST = ['dualstack']
 
 
@@ -191,7 +191,7 @@ class InstanceMetadataFetcher(object):
         for i in range(num_attempts):
             try:
                 request = AWSRequest(method='GET', url=url, headers=headers)
-                response = self._session.send(request)
+                response = self._session.send(request.prepare())
             except RETRYABLE_HTTP_ERRORS as e:
                 logger.debug("Caught exception while trying to retrieve "
                              "credentials: %s", e, exc_info=True)
@@ -1104,7 +1104,7 @@ class ContainerMetadataFetcher(object):
     def _get_response(self, full_url, headers, timeout):
         try:
             request = AWSRequest(method='GET', url=full_url, headers=headers)
-            response = self._session.send(request)
+            response = self._session.send(request.prepare())
             if response.status_code != 200:
                 raise MetadataRetrievalError(
                     error_msg="Received non 200 response (%s) from ECS metadata: %s"

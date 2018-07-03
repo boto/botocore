@@ -77,11 +77,13 @@ class Urllib3Session(object):
     def __init__(self,
                  verify=True,
                  proxies=None,
-                 timeout=DEFAULT_TIMEOUT,
+                 timeout=None,
                  max_pool_connections=MAX_POOL_CONNECTIONS,
     ):
         self._verify = verify
         self._proxies = proxies or {}
+        if timeout is None:
+            timeout=DEFAULT_TIMEOUT
         if not isinstance(timeout, (int, float)):
             timeout = Timeout(connect=timeout[0], read=timeout[1])
         self._timeout = timeout

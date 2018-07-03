@@ -1546,8 +1546,8 @@ class TestContainerMetadataFetcher(unittest.TestCase):
 
     def fake_response(self, status, body):
         response = mock.Mock()
-        response.status = status
-        response.data = body
+        response.status_code = status
+        response.text = body
         return response
 
     def set_http_responses_to(self, *responses):
@@ -1561,9 +1561,15 @@ class TestContainerMetadataFetcher(unittest.TestCase):
                 http_response = response
             else:
                 http_response = self.fake_response(
-                    status=200, body=json.dumps(response).encode('utf-8'))
+                    status=200, body=json.dumps(response))
             http_responses.append(http_response)
-        self.http.request.side_effect = http_responses
+        self.http.send.side_effect = http_responses
+
+    def assert_request(self, method, url, headers):
+        request = self.http.send.call_args[0][0]
+        self.assertEqual(request.method, method)
+        self.assertEqual(request.url, url)
+        self.assertEqual(request.headers, headers)
 
     def assert_can_retrieve_metadata_from(self, full_uri):
         response_body = {'foo': 'bar'}
@@ -1571,10 +1577,7 @@ class TestContainerMetadataFetcher(unittest.TestCase):
         fetcher = self.create_fetcher()
         response = fetcher.retrieve_full_uri(full_uri)
         self.assertEqual(response, response_body)
-        self.http.request.assert_called_with(
-            'GET', full_uri, headers={'Accept': 'application/json'},
-            timeout=fetcher.TIMEOUT_SECONDS,
-        )
+        self.assert_request('GET', full_uri, {'Accept': 'application/json'})
 
     def assert_host_is_not_allowed(self, full_uri):
         response_body = {'foo': 'bar'}
@@ -1582,7 +1585,7 @@ class TestContainerMetadataFetcher(unittest.TestCase):
         fetcher = self.create_fetcher()
         with self.assertRaisesRegexp(ValueError, 'Unsupported host'):
             fetcher.retrieve_full_uri(full_uri)
-        self.assertFalse(self.http.request.called)
+        self.assertFalse(self.http.send.called)
 
     def test_can_specify_extra_headers_are_merged(self):
         headers = {
@@ -1595,10 +1598,7 @@ class TestContainerMetadataFetcher(unittest.TestCase):
         fetcher = self.create_fetcher()
         response = fetcher.retrieve_full_uri(
             'http://localhost', headers)
-        self.http.request.assert_called_with(
-            'GET', 'http://localhost', headers=headers,
-            timeout=fetcher.TIMEOUT_SECONDS,
-        )
+        self.assert_request('GET', 'http://localhost', headers)
 
     def test_can_retrieve_uri(self):
         json_body =  {
@@ -1614,11 +1614,8 @@ class TestContainerMetadataFetcher(unittest.TestCase):
 
         self.assertEqual(response, json_body)
         # Ensure we made calls to the right endpoint.
-        self.http.request.assert_called_with(
-            'GET', 'http://169.254.170.2/foo?id=1',
-            headers={'Accept': 'application/json'},
-            timeout=fetcher.TIMEOUT_SECONDS,
-        )
+        headers = {'Accept': 'application/json'}
+        self.assert_request('GET', 'http://169.254.170.2/foo?id=1', headers)
 
     def test_can_retry_requests(self):
         success_response = {
@@ -1652,34 +1649,34 @@ class TestContainerMetadataFetcher(unittest.TestCase):
         fetcher = self.create_fetcher()
         with self.assertRaises(MetadataRetrievalError):
             fetcher.retrieve_uri('/foo?id=1')
-        self.assertEqual(self.http.request.call_count, fetcher.RETRY_ATTEMPTS)
+        self.assertEqual(self.http.send.call_count, fetcher.RETRY_ATTEMPTS)
 
     def test_error_raised_on_non_200_response(self):
         self.set_http_responses_to(
-            self.fake_response(status=404, body=b'Error not found'),
-            self.fake_response(status=404, body=b'Error not found'),
-            self.fake_response(status=404, body=b'Error not found'),
+            self.fake_response(status=404, body='Error not found'),
+            self.fake_response(status=404, body='Error not found'),
+            self.fake_response(status=404, body='Error not found'),
         )
         fetcher = self.create_fetcher()
         with self.assertRaises(MetadataRetrievalError):
             fetcher.retrieve_uri('/foo?id=1')
         # Should have tried up to RETRY_ATTEMPTS.
-        self.assertEqual(self.http.request.call_count, fetcher.RETRY_ATTEMPTS)
+        self.assertEqual(self.http.send.call_count, fetcher.RETRY_ATTEMPTS)
 
     def test_error_raised_on_no_json_response(self):
         # If the service returns a sucess response but with a body that
         # does not contain JSON, we should still retry up to RETRY_ATTEMPTS,
         # but after exhausting retries we propagate the exception.
         self.set_http_responses_to(
-            self.fake_response(status=200, body=b'Not JSON'),
-            self.fake_response(status=200, body=b'Not JSON'),
-            self.fake_response(status=200, body=b'Not JSON'),
+            self.fake_response(status=200, body='Not JSON'),
+            self.fake_response(status=200, body='Not JSON'),
+            self.fake_response(status=200, body='Not JSON'),
         )
         fetcher = self.create_fetcher()
         with self.assertRaises(MetadataRetrievalError):
             fetcher.retrieve_uri('/foo?id=1')
         # Should have tried up to RETRY_ATTEMPTS.
-        self.assertEqual(self.http.request.call_count, fetcher.RETRY_ATTEMPTS)
+        self.assertEqual(self.http.send.call_count, fetcher.RETRY_ATTEMPTS)
 
     def test_can_retrieve_full_uri_with_fixed_ip(self):
         self.assert_can_retrieve_metadata_from(
@@ -1726,8 +1723,8 @@ class TestUnsigned(unittest.TestCase):
 
 class TestInstanceMetadataFetcher(unittest.TestCase):
     def setUp(self):
-        self._urllib3_patch = mock.patch('botocore.utils.PoolManager.request')
-        self._request = self._urllib3_patch.start()
+        self._urllib3_patch = mock.patch('botocore.utils.Urllib3Session.send')
+        self._send = self._urllib3_patch.start()
 
     def tearDown(self):
         self._urllib3_patch.stop()
@@ -1737,14 +1734,14 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         fetcher = InstanceMetadataFetcher(env=env)
         result = fetcher.retrieve_iam_role_credentials()
         self.assertEqual(result, {})
-        self._request.assert_not_called()
+        self._send.assert_not_called()
 
     def test_disabled_by_environment_mixed_case(self):
         env = {'AWS_EC2_METADATA_DISABLED': 'tRuE'}
         fetcher = InstanceMetadataFetcher(env=env)
         result = fetcher.retrieve_iam_role_credentials()
         self.assertEqual(result, {})
-        self._request.assert_not_called()
+        self._send.assert_not_called()
 
     def test_disabling_env_var_not_true(self):
         url = 'https://example.com/'
@@ -1757,14 +1754,14 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         }
 
         profiles_response = mock.Mock()
-        profiles_response.status = 200
-        profiles_response.data = b'role-name'
+        profiles_response.status_code = 200
+        profiles_response.content = b'role-name'
 
         creds_response = mock.Mock()
-        creds_response.status = 200
-        creds_response.data = json.dumps(creds).encode('utf-8')
+        creds_response.status_code = 200
+        creds_response.content = json.dumps(creds).encode('utf-8')
 
-        self._request.side_effect = [profiles_response, creds_response]
+        self._send.side_effect = [profiles_response, creds_response]
 
         fetcher = InstanceMetadataFetcher(url=url, env=env)
         result = fetcher.retrieve_iam_role_credentials()
@@ -1782,5 +1779,5 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         user_agent = 'my-user-agent'
         InstanceMetadataFetcher(
             user_agent=user_agent).retrieve_iam_role_credentials()
-        headers = self._request.call_args[1]['headers']
+        headers = self._send.call_args[0][0].headers
         self.assertEqual(headers['User-Agent'], user_agent)

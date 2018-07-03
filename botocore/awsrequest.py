@@ -22,11 +22,11 @@ from urllib3.connection import HTTPConnection
 from urllib3.connectionpool import HTTPConnectionPool
 from urllib3.connectionpool import HTTPSConnectionPool
 
+import botocore.utils
 from botocore.compat import six
 from botocore.compat import HTTPHeaders, HTTPResponse, urlunsplit, urlsplit, \
      urlencode
 from botocore.exceptions import UnseekableStreamError
-from botocore.utils import percent_encode_sequence
 
 
 logger = logging.getLogger(__name__)
@@ -275,6 +275,7 @@ def prepare_request_dict(request_dict, endpoint_url, context=None,
         headers['User-Agent'] = user_agent
     url = _urljoin(endpoint_url, r['url_path'])
     if r['query_string']:
+        percent_encode_sequence = botocore.utils.percent_encode_sequence
         encoded_query_string = percent_encode_sequence(r['query_string'])
         if '?' not in url:
             url += '?%s' % encoded_query_string
@@ -340,7 +341,6 @@ class AWSRequest(object):
                  stream_output=False):
 
         # Default empty dicts for dict params.
-        data = [] if data is None else data
         params = {} if params is None else params
 
         self.method = method
@@ -435,6 +435,9 @@ class AWSPreparedRequest(object):
 
         if self.body == b'':
             self.body = None
+
+        if not self.body and self.method == 'GET':
+            return
 
         if isinstance(self.body, dict):
             params = list(self.body.items())
