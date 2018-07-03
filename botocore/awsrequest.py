@@ -16,16 +16,17 @@ import logging
 import functools
 import socket
 
-from botocore.compat import six
-from botocore.compat import HTTPHeaders, HTTPResponse, urlunsplit, urlsplit, \
-     urlencode
-from botocore.exceptions import UnseekableStreamError
-from botocore.utils import percent_encode_sequence
 import urllib3.util
 from urllib3.connection import VerifiedHTTPSConnection
 from urllib3.connection import HTTPConnection
 from urllib3.connectionpool import HTTPConnectionPool
 from urllib3.connectionpool import HTTPSConnectionPool
+
+from botocore.compat import six
+from botocore.compat import HTTPHeaders, HTTPResponse, urlunsplit, urlsplit, \
+     urlencode
+from botocore.exceptions import UnseekableStreamError
+from botocore.utils import percent_encode_sequence
 
 
 logger = logging.getLogger(__name__)
@@ -424,13 +425,12 @@ class AWSPreparedRequest(object):
             raise UnseekableStreamError(stream_object=self.body)
 
     def prepare_headers(self, headers):
-        # TODO: make case insensitive ?
+        # NOTE: This was case-insensitive previously.
         headers = headers or {}
-        self.headers = dict((k,v) for (k,v) in headers.items())
+        self.headers = dict((k, v) for (k, v) in headers.items())
 
     def prepare_body(self, data):
         """Prepares the given HTTP body data."""
-        # TODO figure out what situtations we actually want to inject headers
         self.body = data
 
         if self.body == b'':
