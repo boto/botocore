@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.10.50
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``acm``: Update acm client to latest version
+
+
 1.10.49
 =======
 
