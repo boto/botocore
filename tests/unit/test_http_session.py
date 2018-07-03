@@ -134,7 +134,7 @@ class TestUrllib3Session(unittest.TestCase):
         session = Urllib3Session()
         self.request.stream_output = True
         session.send(self.request.prepare())
-        self.asert_request_sent()
+        self.assert_request_sent()
         self.response.stream.assert_not_called()
 
     def test_basic_https_request(self):
