@@ -16,7 +16,6 @@
          "DeleteFieldLevelEncryptionConfig" : "https://docs.aws.amazon.com/goto/WebAPI/cloudfront/DeleteFieldLevelEncryptionConfig",
          "DeleteFieldLevelEncryptionProfile" : "https://docs.aws.amazon.com/goto/WebAPI/cloudfront/DeleteFieldLevelEncryptionProfile",
          "DeletePublicKey" : "https://docs.aws.amazon.com/goto/WebAPI/cloudfront/DeletePublicKey",
-         "DeleteServiceLinkedRole" : "https://docs.aws.amazon.com/goto/WebAPI/cloudfront/DeleteServiceLinkedRole",
          "DeleteStreamingDistribution" : "https://docs.aws.amazon.com/goto/WebAPI/cloudfront/DeleteStreamingDistribution",
          "GetCloudFrontOriginAccessIdentity" : "https://docs.aws.amazon.com/goto/WebAPI/cloudfront/GetCloudFrontOriginAccessIdentity",
          "GetCloudFrontOriginAccessIdentityConfig" : "https://docs.aws.amazon.com/goto/WebAPI/cloudfront/GetCloudFrontOriginAccessIdentityConfig",

@@ -6,13 +6,29 @@
          "BatchDetectEntities" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/BatchDetectEntities",
          "BatchDetectKeyPhrases" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/BatchDetectKeyPhrases",
          "BatchDetectSentiment" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/BatchDetectSentiment",
+         "DescribeDominantLanguageDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/DescribeDominantLanguageDetectionJob",
+         "DescribeEntitiesDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/DescribeEntitiesDetectionJob",
+         "DescribeKeyPhrasesDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/DescribeKeyPhrasesDetectionJob",
+         "DescribeSentimentDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/DescribeSentimentDetectionJob",
          "DescribeTopicsDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/DescribeTopicsDetectionJob",
          "DetectDominantLanguage" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/DetectDominantLanguage",
          "DetectEntities" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/DetectEntities",
          "DetectKeyPhrases" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/DetectKeyPhrases",
          "DetectSentiment" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/DetectSentiment",
+         "ListDominantLanguageDetectionJobs" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/ListDominantLanguageDetectionJobs",
+         "ListEntitiesDetectionJobs" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/ListEntitiesDetectionJobs",
+         "ListKeyPhrasesDetectionJobs" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/ListKeyPhrasesDetectionJobs",
+         "ListSentimentDetectionJobs" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/ListSentimentDetectionJobs",
          "ListTopicsDetectionJobs" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/ListTopicsDetectionJobs",
-         "StartTopicsDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StartTopicsDetectionJob"
+         "StartDominantLanguageDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StartDominantLanguageDetectionJob",
+         "StartEntitiesDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StartEntitiesDetectionJob",
+         "StartKeyPhrasesDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StartKeyPhrasesDetectionJob",
+         "StartSentimentDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StartSentimentDetectionJob",
+         "StartTopicsDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StartTopicsDetectionJob",
+         "StopDominantLanguageDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StopDominantLanguageDetectionJob",
+         "StopEntitiesDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StopEntitiesDetectionJob",
+         "StopKeyPhrasesDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StopKeyPhrasesDetectionJob",
+         "StopSentimentDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StopSentimentDetectionJob"
       }
    }
 }

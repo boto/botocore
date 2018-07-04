@@ -14,6 +14,7 @@
          "IssueCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/IssueCertificate",
          "ListCertificateAuthorities" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/ListCertificateAuthorities",
          "ListTags" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/ListTags",
+         "RestoreCertificateAuthority" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/RestoreCertificateAuthority",
          "RevokeCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/RevokeCertificate",
          "TagCertificateAuthority" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/TagCertificateAuthority",
          "UntagCertificateAuthority" : "https://docs.aws.amazon.com/goto/WebAPI/acm-pca/UntagCertificateAuthority",

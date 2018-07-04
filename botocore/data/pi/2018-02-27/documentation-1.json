@@ -1,6 +1,9 @@
 {
    "documentation" : {
-      "api_url" : null,
-      "methods" : {}
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/pi-2018-02-27",
+      "methods" : {
+         "DescribeDimensionKeys" : "https://docs.aws.amazon.com/goto/WebAPI/pi/DescribeDimensionKeys",
+         "GetResourceMetrics" : "https://docs.aws.amazon.com/goto/WebAPI/pi/GetResourceMetrics"
+      }
    }
 }

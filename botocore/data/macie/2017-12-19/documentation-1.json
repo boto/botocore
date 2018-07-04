@@ -1,0 +1,14 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/macie-2017-12-19",
+      "methods" : {
+         "AssociateMemberAccount" : "https://docs.aws.amazon.com/goto/WebAPI/macie/AssociateMemberAccount",
+         "AssociateS3Resources" : "https://docs.aws.amazon.com/goto/WebAPI/macie/AssociateS3Resources",
+         "DisassociateMemberAccount" : "https://docs.aws.amazon.com/goto/WebAPI/macie/DisassociateMemberAccount",
+         "DisassociateS3Resources" : "https://docs.aws.amazon.com/goto/WebAPI/macie/DisassociateS3Resources",
+         "ListMemberAccounts" : "https://docs.aws.amazon.com/goto/WebAPI/macie/ListMemberAccounts",
+         "ListS3Resources" : "https://docs.aws.amazon.com/goto/WebAPI/macie/ListS3Resources",
+         "UpdateS3Resources" : "https://docs.aws.amazon.com/goto/WebAPI/macie/UpdateS3Resources"
+      }
+   }
+}
