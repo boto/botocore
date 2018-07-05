@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.10.51
+=======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+
+
 1.10.50
 =======
 
