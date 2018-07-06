@@ -15,6 +15,7 @@ import sys
 import logging
 import functools
 import socket
+import collections
 
 import urllib3.util
 from urllib3.connection import VerifiedHTTPSConnection
@@ -425,9 +426,8 @@ class AWSPreparedRequest(object):
             raise UnseekableStreamError(stream_object=self.body)
 
     def prepare_headers(self, headers):
-        # NOTE: This was case-insensitive previously.
         headers = headers or {}
-        self.headers = dict((k, v) for (k, v) in headers.items())
+        self.headers = HeadersDict(headers.items())
 
     def prepare_body(self, data):
         """Prepares the given HTTP body data."""
@@ -473,7 +473,7 @@ class AWSResponse(object):
     def __init__(self, url=None, status_code=None, headers=None, raw=None):
         self.url = url
         self.status_code = status_code
-        self.headers = headers
+        self.headers = HeadersDict(headers or {})
         self.raw = raw
 
         self._content = None
@@ -504,6 +504,51 @@ class AWSResponse(object):
             return str('')
 
         return self.content.encode('utf-8')
+
+
+class _HeaderKey(object):
+    def __init__(self, key):
+        self._key = key
+        self._lower = key.lower()
+
+    def __hash__(self):
+        return hash(self._lower)
+
+    def __eq__(self, other):
+        return self._lower == other._lower
+
+    def __str__(self):
+        return self._key
+
+    def __repr__(self):
+        return repr(self._key)
+
+
+class HeadersDict(collections.MutableMapping):
+    def __init__(self, *args, **kwargs):
+        self._dict = {}
+        self.update(*args, **kwargs)
+
+    def __setitem__(self, key, value):
+        self._dict[_HeaderKey(key)] = value
+
+    def __getitem__(self, key):
+        return self._dict[_HeaderKey(key)]
+
+    def __delitem__(self, key):
+        del self._dict[_HeaderKey(key)]
+
+    def __iter__(self):
+        return (str(key) for key in self._dict)
+
+    def __len__(self):
+        return len(self._dict)
+
+    def __repr__(self):
+        return repr(self._dict)
+
+    def copy(self):
+        return HeadersDict(self.items())
 
 
 HTTPSConnectionPool.ConnectionCls = AWSHTTPSConnection

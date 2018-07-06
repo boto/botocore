@@ -155,7 +155,7 @@ class Urllib3Session(object):
                 url=request.url,
                 raw=urllib_response,
                 status_code=urllib_response.status,
-                headers=dict(urllib_response.headers.items()),
+                headers=urllib_response.headers,
             )
 
             if not request.stream_output:
