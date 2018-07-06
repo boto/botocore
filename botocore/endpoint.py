@@ -142,6 +142,9 @@ class Endpoint(object):
     def __repr__(self):
         return '%s(%s)' % (self._endpoint_prefix, self.host)
 
+    def __del__(self):
+        self.http_session.close()
+
     def make_request(self, operation_model, request_dict):
         logger.debug("Making request for %s (verify_ssl=%s) with params: %s",
                      operation_model, self.verify, request_dict)
