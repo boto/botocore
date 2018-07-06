@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.10.52
+=======
+
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``serverlessrepo``: Update serverlessrepo client to latest version
+
+
 1.10.51
 =======
 
