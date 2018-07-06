@@ -146,6 +146,11 @@ class TestEndpointFeatures(TestEndpointBase):
                             self.event_emitter, proxies=proxies)
         self.assertEqual(endpoint.proxies, proxies)
 
+    def test_closes_session_on_destruction(self):
+        with patch.object(self.endpoint.http_session, 'close') as mock_close:
+            del self.endpoint
+            mock_close.assert_called_once_with()
+
 
 class TestRetryInterface(TestEndpointBase):
     def setUp(self):
