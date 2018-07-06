@@ -396,7 +396,7 @@ class AWSPreparedRequest(object):
     """
     def __init__(self, original):
         self.method = original.method
-        self.url = original.url
+        self.prepare_url(original.url, original.params)
         self.prepare_headers(original.headers)
         self.prepare_body(original.data)
         self.stream_output = original.stream_output
@@ -424,6 +424,13 @@ class AWSPreparedRequest(object):
         except Exception as e:
             logger.debug("Unable to rewind stream: %s", e)
             raise UnseekableStreamError(stream_object=self.body)
+
+    def prepare_url(self, url, params):
+        if params:
+            params = urlencode(list(params.items()), doseq=True)
+            self.url = '%s?%s' % (url, params)
+        else:
+            self.url = url
 
     def prepare_headers(self, headers):
         headers = headers or {}
