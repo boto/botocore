@@ -497,13 +497,6 @@ class AWSResponse(object):
 
         return self._content
 
-    @property
-    def text(self):
-        if not self.content:
-            return str('')
-
-        return self.content.encode('utf-8')
-
 
 class _HeaderKey(object):
     def __init__(self, key):

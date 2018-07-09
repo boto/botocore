@@ -1105,16 +1105,17 @@ class ContainerMetadataFetcher(object):
         try:
             request = AWSRequest(method='GET', url=full_url, headers=headers)
             response = self._session.send(request.prepare())
+            response_text = response.content.decode('utf-8')
             if response.status_code != 200:
                 raise MetadataRetrievalError(
                     error_msg="Received non 200 response (%s) from ECS metadata: %s"
-                    % (response.status_code, response.text))
+                    % (response.status_code, response_text))
             try:
-                return json.loads(response.text)
+                return json.loads(response_text)
             except ValueError:
                 raise MetadataRetrievalError(
                     error_msg=("Unable to parse JSON returned from "
-                               "ECS metadata: %s" % response.text))
+                               "ECS metadata: %s" % response_text))
         except RETRYABLE_HTTP_ERRORS as e:
             error_msg = ("Received error when attempting to retrieve "
                          "ECS metadata: %s" % e)

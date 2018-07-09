@@ -1547,7 +1547,7 @@ class TestContainerMetadataFetcher(unittest.TestCase):
     def fake_response(self, status, body):
         response = mock.Mock()
         response.status_code = status
-        response.text = body
+        response.content = body
         return response
 
     def set_http_responses_to(self, *responses):
@@ -1561,7 +1561,7 @@ class TestContainerMetadataFetcher(unittest.TestCase):
                 http_response = response
             else:
                 http_response = self.fake_response(
-                    status=200, body=json.dumps(response))
+                    status=200, body=json.dumps(response).encode('utf-8'))
             http_responses.append(http_response)
         self.http.send.side_effect = http_responses
 
@@ -1653,9 +1653,9 @@ class TestContainerMetadataFetcher(unittest.TestCase):
 
     def test_error_raised_on_non_200_response(self):
         self.set_http_responses_to(
-            self.fake_response(status=404, body='Error not found'),
-            self.fake_response(status=404, body='Error not found'),
-            self.fake_response(status=404, body='Error not found'),
+            self.fake_response(status=404, body=b'Error not found'),
+            self.fake_response(status=404, body=b'Error not found'),
+            self.fake_response(status=404, body=b'Error not found'),
         )
         fetcher = self.create_fetcher()
         with self.assertRaises(MetadataRetrievalError):
@@ -1668,9 +1668,9 @@ class TestContainerMetadataFetcher(unittest.TestCase):
         # does not contain JSON, we should still retry up to RETRY_ATTEMPTS,
         # but after exhausting retries we propagate the exception.
         self.set_http_responses_to(
-            self.fake_response(status=200, body='Not JSON'),
-            self.fake_response(status=200, body='Not JSON'),
-            self.fake_response(status=200, body='Not JSON'),
+            self.fake_response(status=200, body=b'Not JSON'),
+            self.fake_response(status=200, body=b'Not JSON'),
+            self.fake_response(status=200, body=b'Not JSON'),
         )
         fetcher = self.create_fetcher()
         with self.assertRaises(MetadataRetrievalError):
