@@ -1106,7 +1106,9 @@
         "private",
         "public-read",
         "public-read-write",
-        "authenticated-read"
+        "authenticated-read",
+        "aws-exec-read",
+        "log-delivery-write"
       ]
     },
     "BucketLifecycleConfiguration":{
