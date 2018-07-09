@@ -137,6 +137,15 @@ class TestStreamWrapper(unittest.TestCase):
             )
 
 
+class FakeRawResponse(six.BytesIO):
+    def stream(self, amt=1024, decode_content=None):
+        while True:
+            chunk = self.read(amt)
+            if not chunk:
+                break
+            yield chunk
+
+
 class TestGetResponse(BaseResponseTest):
     maxDiff = None
 
@@ -149,7 +158,7 @@ class TestGetResponse(BaseResponseTest):
             'transfer-encoding': 'chunked',
             'ETag': '"00000000000000000000000000000000"',
         }
-        http_response.raw = six.BytesIO(b'\x89PNG\r\n\x1a\n\x00\x00')
+        http_response.raw = FakeRawResponse(b'\x89PNG\r\n\x1a\n\x00\x00')
 
         http_response.status_code = 200
 
@@ -171,7 +180,7 @@ class TestGetResponse(BaseResponseTest):
             'transfer-encoding': 'chunked',
             'x-amz-id-2': 'AAAAAAAAAAAAAAAAAAA',
             'x-amz-request-id': 'XXXXXXXXXXXXXXXX'}
-        http_response.raw = six.BytesIO(XMLBODY1)
+        http_response.raw = FakeRawResponse(XMLBODY1)
         http_response.status_code = 403
 
         session = botocore.session.get_session()
@@ -197,7 +206,7 @@ class TestGetResponse(BaseResponseTest):
             'transfer-encoding': 'chunked',
             'x-amz-id-2': 'AAAAAAAAAAAAAAAAAAA',
             'x-amz-request-id': 'XXXXXXXXXXXXXXXX'}
-        http_response.raw = six.BytesIO(XMLBODY1)
+        http_response.raw = FakeRawResponse(XMLBODY1)
         http_response.status_code = 403
         http_response.request = AWSRequest()
 
@@ -228,7 +237,7 @@ class TestGetResponse(BaseResponseTest):
             'transfer-encoding': 'chunked',
             'x-amz-id-2': 'AAAAAAAAAAAAAAAAAAA',
             'x-amz-request-id': 'XXXXXXXXXXXXXXXX'}
-        http_response.raw = six.BytesIO(XMLBODY2)
+        http_response.raw = FakeRawResponse(XMLBODY2)
         http_response.status_code = 200
         http_response.request = AWSRequest()
 

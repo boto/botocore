@@ -31,7 +31,6 @@ from botocore.exceptions import UnseekableStreamError
 
 
 logger = logging.getLogger(__name__)
-DEFAULT_CHUNK_SIZE = 10 * 1024  # This is the default chunk size for requests
 
 
 class AWSHTTPResponse(HTTPResponse):
@@ -491,17 +490,10 @@ class AWSResponse(object):
 
         if self._content is None:
             # Read the contents.
-            try:
-                data_generator = self.raw.stream()
-            except AttributeError:
-                def stream():
-                    while True:
-                        chunk = self.raw.read(DEFAULT_CHUNK_SIZE)
-                        if not chunk:
-                            break
-                        yield chunk
-                data_generator = stream()
-            self._content = bytes().join(data_generator) or bytes()
+            # NOTE: requests would attempt to call stream and fall back
+            # to a custom generator that would call read in a loop, but
+            # we don't rely on this behavior
+            self._content = bytes().join(self.raw.stream()) or bytes()
 
         return self._content
 
