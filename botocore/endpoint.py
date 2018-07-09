@@ -21,7 +21,7 @@ from botocore.vendored import six
 
 from botocore.awsrequest import create_request_object
 from botocore.exceptions import HTTPClientError
-from botocore.http_session import Urllib3Session
+from botocore.http_session import URLLib3Session
 from botocore.utils import is_valid_endpoint_url, get_environ_proxies
 from botocore.hooks import first_non_none_response
 from botocore.history import get_global_history_recorder
@@ -91,7 +91,7 @@ class Endpoint(object):
         self._response_parser_factory = response_parser_factory
         self.http_session = http_session
         if self.http_session is None:
-            self.http_session = Urllib3Session()
+            self.http_session = URLLib3Session()
 
     def __repr__(self):
         return '%s(%s)' % (self._endpoint_prefix, self.host)
@@ -223,7 +223,7 @@ class EndpointCreator(object):
                         verify=None, response_parser_factory=None,
                         timeout=DEFAULT_TIMEOUT,
                         max_pool_connections=MAX_POOL_CONNECTIONS,
-                        http_session_cls=Urllib3Session,
+                        http_session_cls=URLLib3Session,
                         proxies=None):
         if not is_valid_endpoint_url(endpoint_url):
 

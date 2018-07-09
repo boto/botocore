@@ -13,7 +13,7 @@ from botocore.http_session import (
 
 from botocore.vendored import six
 from botocore.awsrequest import AWSRequest
-from botocore.http_session import Urllib3Session
+from botocore.http_session import URLLib3Session
 from botocore.exceptions import ConnectionClosedError, EndpointConnectionError
 
 
@@ -75,7 +75,7 @@ class TestHttpSessionUtils(unittest.TestCase):
             self.assertEqual(path, cert_path)
 
 
-class TestUrllib3Session(unittest.TestCase):
+class TestURLLib3Session(unittest.TestCase):
 
     def setUp(self):
         self.request = AWSRequest(
@@ -120,32 +120,32 @@ class TestUrllib3Session(unittest.TestCase):
         )
 
     def test_forwards_max_pool_size(self):
-        Urllib3Session(max_pool_connections=22)
+        URLLib3Session(max_pool_connections=22)
         self.pool_manager_cls.assert_called_with(maxsize=22, timeout=ANY,
                                                  strict=True)
 
     def test_basic_request(self):
-        session = Urllib3Session()
+        session = URLLib3Session()
         session.send(self.request.prepare())
         self.assert_request_sent()
         self.response.stream.assert_called_once_with()
 
     def test_basic_streaming_request(self):
-        session = Urllib3Session()
+        session = URLLib3Session()
         self.request.stream_output = True
         session.send(self.request.prepare())
         self.assert_request_sent()
         self.response.stream.assert_not_called()
 
     def test_basic_https_request(self):
-        session = Urllib3Session()
+        session = URLLib3Session()
         self.request.url = 'https://example.com/'
         session.send(self.request.prepare())
         self.assert_request_sent()
 
     def test_basic_https_proxy_request(self):
         proxies = {'https': 'http://proxy.com'}
-        session = Urllib3Session(proxies=proxies)
+        session = URLLib3Session(proxies=proxies)
         self.request.url = 'https://example.com/'
         session.send(self.request.prepare())
         self.proxy_manager_fun.assert_any_call(
@@ -159,7 +159,7 @@ class TestUrllib3Session(unittest.TestCase):
 
     def test_basic_http_proxy_request(self):
         proxies = {'http': 'http://proxy.com'}
-        session = Urllib3Session(proxies=proxies)
+        session = URLLib3Session(proxies=proxies)
         session.send(self.request.prepare())
         self.proxy_manager_fun.assert_any_call(
             proxies['http'],
@@ -172,7 +172,7 @@ class TestUrllib3Session(unittest.TestCase):
 
     def make_request_with_error(self, error):
         self.connection.urlopen.side_effect = error
-        session = Urllib3Session()
+        session = URLLib3Session()
         session.send(self.request.prepare())
 
     @raises(EndpointConnectionError)

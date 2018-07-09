@@ -33,7 +33,7 @@ from botocore.exceptions import MetadataRetrievalError, EndpointConnectionError
 from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
 from botocore.compat import OrderedDict, six, urlparse
 from botocore.vendored.six.moves.urllib.request import getproxies, proxy_bypass
-from botocore.http_session import Urllib3Session
+from botocore.http_session import URLLib3Session
 from botocore.awsrequest import AWSRequest
 
 
@@ -174,7 +174,7 @@ class InstanceMetadataFetcher(object):
         self._disabled = env.get('AWS_EC2_METADATA_DISABLED', 'false').lower()
         self._disabled = self._disabled == 'true'
         self._user_agent = user_agent
-        self._session = Urllib3Session(
+        self._session = URLLib3Session(
             timeout=self._timeout,
             proxies=get_environ_proxies(self._url),
         )
@@ -1042,7 +1042,7 @@ class ContainerMetadataFetcher(object):
 
     def __init__(self, session=None, sleep=time.sleep):
         if session is None:
-            session = Urllib3Session(timeout=self.TIMEOUT_SECONDS)
+            session = URLLib3Session(timeout=self.TIMEOUT_SECONDS)
         self._session = session
         self._sleep = sleep
 

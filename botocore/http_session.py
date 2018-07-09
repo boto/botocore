@@ -70,7 +70,7 @@ def get_cert_path(verify):
     return where()
 
 
-class Urllib3Session(object):
+class URLLib3Session(object):
     def __init__(self,
                  verify=True,
                  proxies=None,
