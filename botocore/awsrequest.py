@@ -50,9 +50,9 @@ class AWSHTTPResponse(HTTPResponse):
 
 
 class AWSConnection(object):
-    """HTTPConnection that supports Expect 100-continue.
+    """Mixin for HTTPConnection that supports Expect 100-continue.
 
-    This is conceptually a subclass of httplib.HTTPConnection (though
+    This when mixed with a subclass of httplib.HTTPConnection (though
     technically we subclass from urllib3, which subclasses
     httplib.HTTPConnection) and we only override this class to support Expect
     100-continue, which we need for S3.  As far as I can tell, this is
@@ -244,11 +244,11 @@ class AWSConnection(object):
 
 
 class AWSHTTPConnection(AWSConnection, HTTPConnection):
-    pass
+    """ An HTTPConnection that supports 100 Continue behavior. """
 
 
 class AWSHTTPSConnection(AWSConnection, VerifiedHTTPSConnection):
-    pass
+    """ An HTTPSConnection that supports 100 Continue behavior. """
 
 
 def prepare_request_dict(request_dict, endpoint_url, context=None,
