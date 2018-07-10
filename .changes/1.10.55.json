@@ -1,0 +1,27 @@
+[
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codebuild``", 
+    "description": "Update codebuild client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``glue``", 
+    "description": "Update glue client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``opsworks``", 
+    "description": "Update opsworks client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``appstream``", 
+    "description": "Update appstream client to latest version", 
+    "type": "api-change"
+  }
+]
