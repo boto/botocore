@@ -3,65 +3,51 @@ from tests import unittest
 from nose.tools import raises
 from urllib3.exceptions import NewConnectionError, ProtocolError
 
-from botocore.http_session import (
-    construct_basic_auth,
-    get_auth_from_url,
-    get_proxy_headers,
-    get_cert_path,
-    fix_proxy_url,
-)
-
 from botocore.vendored import six
 from botocore.awsrequest import AWSRequest
-from botocore.http_session import URLLib3Session
+from botocore.http_session import get_cert_path
+from botocore.http_session import URLLib3Session, ProxyConfiguration
 from botocore.exceptions import ConnectionClosedError, EndpointConnectionError
 
 
-class TestHttpSessionUtils(unittest.TestCase):
-
+class TestProxyConfiguration(unittest.TestCase):
     def setUp(self):
         self.url = 'http://localhost/'
         self.auth_url = 'http://user:pass@localhost/'
+        self.proxy_config = ProxyConfiguration(
+            proxies={'http': 'http://localhost:8081/'}
+        )
 
-    def test_construct_basic_auth(self):
-        auth = construct_basic_auth('user', 'pass')
-        self.assertEqual('Basic dXNlcjpwYXNz', auth)
+    def update_http_proxy(self, url):
+        self.proxy_config = ProxyConfiguration(
+            proxies={'http': url}
+        )
 
-    def test_get_auth_from_url(self):
-        username, password = get_auth_from_url(self.auth_url)
-        self.assertEqual('user', username)
-        self.assertEqual('pass', password)
-
-    def test_get_auth_from_url_no_auth(self):
-        username, password = get_auth_from_url(self.url)
-        self.assertIsNone(username)
-        self.assertIsNone(password)
-
-    def test_get_proxy_headers(self):
-        headers = get_proxy_headers(self.auth_url)
+    def test_construct_proxy_headers_with_auth(self):
+        headers = self.proxy_config.proxy_headers_for(self.auth_url)
         proxy_auth = headers.get('Proxy-Authorization')
         self.assertEqual('Basic dXNlcjpwYXNz', proxy_auth)
 
-    def test_fix_proxy_url_no_slashes(self):
-        url = 'localhost:8081/'
-        fixed_url = fix_proxy_url(url)
-        self.assertEqual('http://localhost:8081/', fixed_url)
+    def test_construct_proxy_headers_without_auth(self):
+        headers = self.proxy_config.proxy_headers_for(self.url)
+        self.assertEqual({}, headers)
 
-    def test_fix_proxy_url_no_protocol(self):
-        url = '//localhost:8081/'
-        fixed_url = fix_proxy_url(url)
-        self.assertEqual('http://localhost:8081/', fixed_url)
+    def test_proxy_for_url_no_slashes(self):
+        self.update_http_proxy('localhost:8081/')
+        proxy_url = self.proxy_config.proxy_url_for(self.url)
+        self.assertEqual('http://localhost:8081/', proxy_url)
+
+    def test_proxy_for_url_no_protocol(self):
+        self.update_http_proxy('//localhost:8081/')
+        proxy_url = self.proxy_config.proxy_url_for(self.url)
+        self.assertEqual('http://localhost:8081/', proxy_url)
 
     def test_fix_proxy_url_has_protocol_http(self):
-        url = 'http://localhost:8081/'
-        fixed_url = fix_proxy_url(url)
-        self.assertEqual(url, fixed_url)
+        proxy_url = self.proxy_config.proxy_url_for(self.url)
+        self.assertEqual('http://localhost:8081/', proxy_url)
 
-    def test_fix_proxy_url_has_protocol_https(self):
-        url = 'https://localhost:8081/'
-        fixed_url = fix_proxy_url(url)
-        self.assertEqual(url, fixed_url)
 
+class TestHttpSessionUtils(unittest.TestCase):
     def test_get_cert_path_path(self):
         path = '/some/path'
         cert_path = get_cert_path(path)
@@ -76,7 +62,6 @@ class TestHttpSessionUtils(unittest.TestCase):
 
 
 class TestURLLib3Session(unittest.TestCase):
-
     def setUp(self):
         self.request = AWSRequest(
             method='GET',

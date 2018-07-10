@@ -3,7 +3,7 @@ import logging
 import socket
 from base64 import b64encode
 
-from urllib3 import PoolManager, proxy_from_url, Timeout
+from urllib3 import PoolManager, ProxyManager, proxy_from_url, Timeout
 from urllib3.exceptions import NewConnectionError, ProtocolError
 
 from botocore.vendored import six
@@ -11,7 +11,6 @@ from botocore.vendored.six.moves.urllib_parse import unquote
 from botocore.awsrequest import AWSResponse
 from botocore.compat import filter_ssl_warnings, urlparse
 from botocore.exceptions import ConnectionClosedError, EndpointConnectionError
-
 try:
     from urllib3.contrib import pyopenssl
     pyopenssl.extract_from_urllib3()
@@ -31,43 +30,53 @@ except ImportError:
         return DEFAULT_CA_BUNDLE
 
 
-def construct_basic_auth(username, password):
-    auth_str = '{0}:{1}'.format(username, password)
-    encoded_str = b64encode(auth_str.encode('ascii')).strip().decode()
-    return 'Basic {0}'.format(encoded_str)
-
-
-def get_auth_from_url(url):
-    parsed_url = urlparse(url)
-    try:
-        return unquote(parsed_url.username), unquote(parsed_url.password)
-    except (AttributeError, TypeError):
-        return None, None
-
-
-def get_proxy_headers(proxy_url):
-    headers = {}
-    username, password = get_auth_from_url(proxy_url)
-    if username and password:
-        basic_auth = construct_basic_auth(username, password)
-        headers['Proxy-Authorization'] = basic_auth
-    return headers
-
-
-def fix_proxy_url(proxy_url):
-    if proxy_url.startswith('http:') or proxy_url.startswith('https:'):
-        return proxy_url
-    elif proxy_url.startswith('//'):
-        return 'http:' + proxy_url
-    else:
-        return 'http://' + proxy_url
-
-
 def get_cert_path(verify):
     if verify is not True:
         return verify
 
     return where()
+
+
+class ProxyConfiguration(object):
+    def __init__(self, proxies=None):
+        if proxies is None:
+            proxies = {}
+        self._proxies = proxies
+
+    def proxy_url_for(self, url):
+        parsed_url = urlparse(url)
+        proxy = self._proxies.get(parsed_url.scheme)
+        if proxy:
+            proxy = self._fix_proxy_url(proxy)
+        return proxy
+
+    def proxy_headers_for(self, proxy_url):
+        headers = {}
+        username, password = self._get_auth_from_url(proxy_url)
+        if username and password:
+            basic_auth = self._construct_basic_auth(username, password)
+            headers['Proxy-Authorization'] = basic_auth
+        return headers
+
+    def _fix_proxy_url(self, proxy_url):
+        if proxy_url.startswith('http:') or proxy_url.startswith('https:'):
+            return proxy_url
+        elif proxy_url.startswith('//'):
+            return 'http:' + proxy_url
+        else:
+            return 'http://' + proxy_url
+
+    def _construct_basic_auth(self, username, password):
+        auth_str = '{0}:{1}'.format(username, password)
+        encoded_str = b64encode(auth_str.encode('ascii')).strip().decode()
+        return 'Basic {0}'.format(encoded_str)
+
+    def _get_auth_from_url(self, url):
+        parsed_url = urlparse(url)
+        try:
+            return unquote(parsed_url.username), unquote(parsed_url.password)
+        except (AttributeError, TypeError):
+            return None, None
 
 
 class URLLib3Session(object):
@@ -78,9 +87,7 @@ class URLLib3Session(object):
                  max_pool_connections=MAX_POOL_CONNECTIONS,
     ):
         self._verify = verify
-        if proxies is None:
-            proxies = {}
-        self._proxies = proxies
+        self._proxy_config = ProxyConfiguration(proxies=proxies)
         if timeout is None:
             timeout = DEFAULT_TIMEOUT
         if not isinstance(timeout, (int, float)):
@@ -88,16 +95,15 @@ class URLLib3Session(object):
         self._timeout = timeout
         self._max_pool_connections = max_pool_connections
         self._proxy_managers = {}
-        self._http_pool = PoolManager(
+        self._manager = PoolManager(
             strict=True,
             timeout=self._timeout,
             maxsize=self._max_pool_connections,
         )
 
     def _get_proxy_manager(self, proxy_url):
-        proxy_url = fix_proxy_url(proxy_url)
         if proxy_url not in self._proxy_managers:
-            proxy_headers = get_proxy_headers(proxy_url)
+            proxy_headers = self._proxy_config.proxy_headers_for(proxy_url)
             self._proxy_managers[proxy_url] = proxy_from_url(
                 proxy_url,
                 strict=True,
@@ -108,7 +114,8 @@ class URLLib3Session(object):
 
         return self._proxy_managers[proxy_url]
 
-    def _path_url(self, parsed_url):
+    def _path_url(self, url):
+        parsed_url = urlparse(url)
         path = parsed_url.path
         if not path:
             path = '/'
@@ -126,22 +133,23 @@ class URLLib3Session(object):
 
     def send(self, request):
         try:
-            parsed_url = urlparse(request.url)
-            proxy = self._proxies.get(parsed_url.scheme)
-            url = self._path_url(parsed_url)
+            request_target = self._path_url(request.url)
 
+            proxy = self._proxy_config.proxy_url_for(request.url)
             if proxy:
-                if parsed_url.scheme == 'http':
-                    url = request.url
-                connection_manager = self._get_proxy_manager(proxy)
+                manager = self._get_proxy_manager(proxy)
             else:
-                connection_manager = self._http_pool
+                manager = self._manager
 
-            conn = connection_manager.connection_from_url(request.url)
+            if proxy and request.url.startswith('http:'):
+                # If an http request is being proxied use the full url
+                request_target = request.url
+
+            conn = manager.connection_from_url(request.url)
             self._setup_ssl_cert(conn, request.url, self._verify)
             urllib_response = conn.urlopen(
                 method=request.method,
-                url=url,
+                url=request_target,
                 body=request.body,
                 headers=request.headers,
                 retries=False,
