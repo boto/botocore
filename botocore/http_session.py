@@ -114,7 +114,7 @@ class URLLib3Session(object):
             path = path + '?' + parsed_url.query
         return path
 
-    def _verify_cert(self, conn, url, verify):
+    def _setup_ssl_cert(self, conn, url, verify):
         if url.lower().startswith('https') and verify:
             conn.cert_reqs = 'CERT_REQUIRED'
             conn.ca_certs = get_cert_path(verify)
@@ -136,7 +136,7 @@ class URLLib3Session(object):
                 connection_manager = self._http_pool
 
             conn = connection_manager.connection_from_url(request.url)
-            self._verify_cert(conn, request.url, self._verify)
+            self._setup_ssl_cert(conn, request.url, self._verify)
             urllib_response = conn.urlopen(
                 method=request.method,
                 url=url,
