@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.10.55
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``opsworks``: Update opsworks client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+
+
 1.10.54
 =======
 
