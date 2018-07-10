@@ -452,7 +452,7 @@ class AWSPreparedRequest(object):
         try:
             length = len(self.body)
             self.headers['Content-Length'] = str(length)
-        except TypeError as e:
+        except (AttributeError, TypeError) as e:
             pass
 
         if 'Content-Length' not in self.headers:
