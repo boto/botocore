@@ -15,9 +15,5 @@ from tests import BaseSessionTest
 class TestKinesis(BaseSessionTest):
     def test_subscribe_to_shard_removed(self):
         kinesis = self.session.create_client('kinesis', 'us-west-2')
-        try:
+        with self.assertRaises(AttributeError):
             kinesis.subscribe_to_shard
-        except AttributeError:
-            pass
-        else:
-            self.fail('subscribe_to_shard was available on the kinesis client')

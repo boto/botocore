@@ -847,6 +847,7 @@ class ClientMethodAlias(object):
 
 def remove_subscribe_to_shard(class_attributes, **kwargs):
     if 'subscribe_to_shard' in class_attributes:
+        # subscribe_to_shard requires HTTP 2 support
         del class_attributes['subscribe_to_shard']
 
 # This is a list of (event_name, handler).
