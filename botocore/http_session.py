@@ -159,10 +159,10 @@ class URLLib3Session(object):
             )
 
             http_response = AWSResponse(
-                url=request.url,
-                raw=urllib_response,
-                status_code=urllib_response.status,
-                headers=urllib_response.headers,
+                request.url,
+                urllib_response.status,
+                urllib_response.headers,
+                urllib_response,
             )
 
             if not request.stream_output:

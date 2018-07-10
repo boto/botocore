@@ -233,8 +233,7 @@ class Stubber(object):
                 % (self.client.meta.service_model.service_name, method))
 
         # Create a successful http response
-        http_response = AWSResponse()
-        http_response.status_code = 200
+        http_response = AWSResponse(None, 200, {}, None)
 
         operation_name = self.client.meta.method_to_api_mapping.get(method)
         self._validate_response(operation_name, service_response)
@@ -284,8 +283,7 @@ class Stubber(object):
         :type response_meta: dict
 
         """
-        http_response = AWSResponse()
-        http_response.status_code = http_status_code
+        http_response = AWSResponse(None, http_status_code, {}, None)
 
         # We don't look to the model to build this because the caller would
         # need to know the details of what the HTTP body would need to

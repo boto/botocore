@@ -476,10 +476,10 @@ class AWSPreparedRequest(object):
 
 class AWSResponse(object):
 
-    def __init__(self, url=None, status_code=None, headers=None, raw=None):
+    def __init__(self, url, status_code, headers, raw):
         self.url = url
         self.status_code = status_code
-        self.headers = HeadersDict(headers or {})
+        self.headers = HeadersDict(headers)
         self.raw = raw
 
         self._content = None
