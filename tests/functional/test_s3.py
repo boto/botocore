@@ -166,7 +166,7 @@ class TestS3SigV4(BaseS3OperationTest):
 
     def test_content_md5_set(self):
         self.client.put_object(Bucket='foo', Key='bar', Body='baz')
-        self.assertIn('Content-MD5', self.get_sent_headers())
+        self.assertIn('content-md5', self.get_sent_headers())
 
     def test_content_sha256_set_if_config_value_is_true(self):
         config = Config(signature_version='s3v4', s3={
@@ -176,7 +176,7 @@ class TestS3SigV4(BaseS3OperationTest):
             's3', self.region, config=config)
         self.client.put_object(Bucket='foo', Key='bar', Body='baz')
         sent_headers = self.get_sent_headers()
-        sha_header = sent_headers['X-Amz-Content-SHA256']
+        sha_header = sent_headers.get('x-amz-content-sha256')
         self.assertNotEqual(sha_header, b'UNSIGNED-PAYLOAD')
 
     def test_content_sha256_not_set_if_config_value_is_false(self):
@@ -187,7 +187,7 @@ class TestS3SigV4(BaseS3OperationTest):
             's3', self.region, config=config)
         self.client.put_object(Bucket='foo', Key='bar', Body='baz')
         sent_headers = self.get_sent_headers()
-        sha_header = sent_headers['X-Amz-Content-SHA256']
+        sha_header = sent_headers.get('x-amz-content-sha256')
         self.assertEqual(sha_header, b'UNSIGNED-PAYLOAD')
 
     def test_content_sha256_set_if_md5_is_unavailable(self):
@@ -196,8 +196,8 @@ class TestS3SigV4(BaseS3OperationTest):
                 self.client.put_object(Bucket='foo', Key='bar', Body='baz')
         sent_headers = self.get_sent_headers()
         unsigned = 'UNSIGNED-PAYLOAD'
-        self.assertNotEqual(sent_headers['X-Amz-Content-SHA256'], unsigned)
-        self.assertNotIn('Content-MD5', sent_headers)
+        self.assertNotEqual(sent_headers['x-amz-content-sha256'], unsigned)
+        self.assertNotIn('content-md5', sent_headers)
 
 
 

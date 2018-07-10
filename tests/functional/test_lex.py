@@ -45,7 +45,7 @@ class TestLex(BaseSessionTest):
         # signature. The signature will be part of the authorization header.
         # Since we don't have direct access to the payload signature,
         # we compare the authorization instead.
-        authorization = request.headers.get('Authorization')
+        authorization = request.headers.get('authorization')
 
         expected_authorization = (
             b'AWS4-HMAC-SHA256 '
@@ -56,5 +56,5 @@ class TestLex(BaseSessionTest):
         )
         self.assertEqual(authorization, expected_authorization)
 
-        content_header = request.headers.get('X-Amz-Content-SHA256')
+        content_header = request.headers.get('x-amz-content-sha256')
         self.assertEqual(content_header, b'UNSIGNED-PAYLOAD')
