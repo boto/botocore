@@ -60,7 +60,7 @@ class ApiVersionNotFoundError(BotoCoreError):
 
 
 class HTTPClientError(BotoCoreError):
-    fmt = ('Generic error when an HTTP Client raises an exception')
+    fmt = 'Generic error when an HTTP Client raises an exception'
 
 
 class EndpointConnectionError(HTTPClientError):
