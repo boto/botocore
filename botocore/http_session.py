@@ -78,9 +78,11 @@ class URLLib3Session(object):
                  max_pool_connections=MAX_POOL_CONNECTIONS,
     ):
         self._verify = verify
-        self._proxies = proxies or {}
+        if proxies is None:
+            proxies = {}
+        self._proxies = proxies
         if timeout is None:
-            timeout=DEFAULT_TIMEOUT
+            timeout = DEFAULT_TIMEOUT
         if not isinstance(timeout, (int, float)):
             timeout = Timeout(connect=timeout[0], read=timeout[1])
         self._timeout = timeout
@@ -156,7 +158,9 @@ class URLLib3Session(object):
             )
 
             if not request.stream_output:
-                # Cause the raw stream to be exhausted immediatly
+                # Cause the raw stream to be exhausted immediately. We do it
+                # this way instead of using preload_content because
+                # preload_content will never buffer chunked responses
                 http_response.content
 
             return http_response
