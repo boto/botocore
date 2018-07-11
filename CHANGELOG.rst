@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.10.56
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``ce``: Update ce client to latest version
+
+
 1.10.55
 =======
 
