@@ -38,12 +38,19 @@ def get_cert_path(verify):
 
 
 class ProxyConfiguration(object):
+    """Represents a proxy configuration dictionary.
+
+    This class represents a proxy configuration dictionary and provides utility
+    functions to retreive well structured proxy urls and proxy headers from the
+    proxy configuration dictionary.
+    """
     def __init__(self, proxies=None):
         if proxies is None:
             proxies = {}
         self._proxies = proxies
 
     def proxy_url_for(self, url):
+        """Retrirves the corresponding proxy url for a given url. """
         parsed_url = urlparse(url)
         proxy = self._proxies.get(parsed_url.scheme)
         if proxy:
@@ -51,6 +58,7 @@ class ProxyConfiguration(object):
         return proxy
 
     def proxy_headers_for(self, proxy_url):
+        """Retrirves the corresponding proxy headers for a given proxy url. """
         headers = {}
         username, password = self._get_auth_from_url(proxy_url)
         if username and password:
@@ -80,6 +88,16 @@ class ProxyConfiguration(object):
 
 
 class URLLib3Session(object):
+    """A basic HTTP client that supports connection pooling and proxies.
+
+    This class is inspired by requests.adapters.HTTPAdapter, but has been
+    boiled down to meet the use cases needed by botocore. For the most part
+    this classes matches the functionality of HTTPAdapter in requests v2.7.0
+    (the same as our vendored version). The only major difference of note is
+    that we currently do not support sending chunked requests. While requests
+    v2.7.0 implemented this themselves, later version urllib3 support this
+    directly via a flag to urlopen so enabling it if needed should be trivial.
+    """
     def __init__(self,
                  verify=True,
                  proxies=None,

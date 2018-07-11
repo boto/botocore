@@ -275,6 +275,9 @@ def prepare_request_dict(request_dict, endpoint_url, context=None,
         headers['User-Agent'] = user_agent
     url = _urljoin(endpoint_url, r['url_path'])
     if r['query_string']:
+        # NOTE: This is to avoid circular import with utils. This is being
+        # done to avoid moving classes to different modules as to not cause
+        # breaking chainges.
         percent_encode_sequence = botocore.utils.percent_encode_sequence
         encoded_query_string = percent_encode_sequence(r['query_string'])
         if '?' not in url:
@@ -330,6 +333,12 @@ def _urljoin(endpoint_url, url_path):
 
 
 class AWSRequest(object):
+    """Represents the elements of an HTTP request.
+
+    This class is originally inspired by requests.models.Request, but has been
+    boiled down to meet the specific use cases in botocore. That being said this
+    class (even in requests) is effectively a named-tuple.
+    """
 
     def __init__(self,
                  method=None,
@@ -380,18 +389,29 @@ class AWSRequest(object):
 class AWSPreparedRequest(object):
     """Represents a prepared request.
 
+    This class is originally inspired by requests.models.PreparedRequest, but
+    has been boiled down to meet the specific use cases in botocore. Of note
+    there are the following differences:
+        This class does not heavily prepare the URL. Requests performed many
+        validations and corrections to ensure the URL is properly formatted.
+        Botocore either performs this validations elsewhere or otherwise
+        consistently provides well formatted URLs.
+
+        This class does not heavily prepare the body. Body preperation is
+        simple and supports only the cases that we document: bytes and
+        file-like objects to determine the content-length. This will also
+        additionally prepare a body that is a dict to be url encoded params
+        string as some signers rely on this. Finally, this class does not
+        support multipart file uploads.
+
+        This class does not prepare the method, auth or cookies.
+
     :ivar method: HTTP Method
     :ivar url: The full url
     :ivar headers: The HTTP headers to send.
     :ivar body: The HTTP body.
-    :ivar hooks: The set of callback hooks.
-
-    In addition to the above attributes, the following attributes are
-    available:
-
-    :ivar query_params: The original query parameters.
-    :ivar post_param: The original POST params (dict).
-
+    :ivar stream_output: If the response for this request should be streamed.
+    :ivar original: The original AWSRequest
     """
     def __init__(self, original):
         self.method = original.method
@@ -462,19 +482,20 @@ class AWSPreparedRequest(object):
                 end_file_pos = data.tell()
                 self.headers['Content-Length'] = str(end_file_pos - orig_pos)
                 data.seek(orig_pos)
-                # If the Content-Length was added this way, a
-                # Transfer-Encoding was added by requests because it did
-                # not add a Content-Length header. However, the
-                # Transfer-Encoding header is not supported for
-                # AWS Services so remove it if it is added.
-                if 'Transfer-Encoding' in self.headers:
-                    self.headers.pop('Transfer-Encoding')
 
         if self.body and 'Content-Length' not in self.headers:
+            # NOTE: This should probably never happen, we don't use chunked
             self.headers['Transfer-Encoding'] = 'chunked'
 
 
 class AWSResponse(object):
+    """
+    This class is originally inspired by requests.models.Response, but
+    has been boiled down to meet the specific use cases in botocore. This
+    has effectively been reduced to a named tuple for our use case. Most of
+    the more interesting functionality from the requests version has been
+    put onto our botocore.response.StreamingBody class.
+    """
 
     def __init__(self, url, status_code, headers, raw):
         self.url = url
@@ -517,6 +538,7 @@ class _HeaderKey(object):
 
 
 class HeadersDict(collections.MutableMapping):
+    """A case-insenseitive dictionary to represent HTTP headers. """
     def __init__(self, *args, **kwargs):
         self._dict = {}
         self.update(*args, **kwargs)
