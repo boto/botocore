@@ -170,7 +170,7 @@ class Endpoint(object):
                 'url': request.url,
                 'body': request.body
             })
-            http_response = self.send(request)
+            http_response = self._send(request)
         except HTTPClientError as e:
             return (None, e)
         except Exception as e:
@@ -211,7 +211,7 @@ class Endpoint(object):
             time.sleep(handler_response)
             return True
 
-    def send(self, request):
+    def _send(self, request):
         return self.http_session.send(request)
 
 

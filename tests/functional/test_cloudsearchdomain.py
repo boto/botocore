@@ -23,7 +23,7 @@ class TestCloudsearchdomain(BaseSessionTest):
             'cloudsearchdomain', self.region)
 
     def test_search(self):
-        with mock.patch('botocore.endpoint.Endpoint.send') as _send:
+        with mock.patch('botocore.endpoint.Endpoint._send') as _send:
             _send.return_value = mock.Mock(
                 status_code=200, headers={}, content=b'{}')
             self.client.search(query='foo')

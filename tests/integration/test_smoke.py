@@ -285,14 +285,14 @@ def test_client_can_retry_request_properly():
 
 def _make_client_call_with_errors(client, operation_name, kwargs):
     operation = getattr(client, xform_name(operation_name))
-    original_send = Endpoint.send
+    original_send = Endpoint._send
     def mock_endpoint_send(self, *args, **kwargs):
         if not getattr(self, '_integ_test_error_raised', False):
             self._integ_test_error_raised = True
             raise ConnectionError("Simulated ConnectionError raised.")
         else:
             return original_send(self, *args, **kwargs)
-    with mock.patch('botocore.endpoint.Endpoint.send', mock_endpoint_send):
+    with mock.patch('botocore.endpoint.Endpoint._send', mock_endpoint_send):
         try:
             response = operation(**kwargs)
         except ClientError as e:

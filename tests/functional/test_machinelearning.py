@@ -23,7 +23,7 @@ class TestMachineLearning(BaseSessionTest):
             'machinelearning', self.region)
 
     def test_predict(self):
-        with mock.patch('botocore.endpoint.Endpoint.send') as \
+        with mock.patch('botocore.endpoint.Endpoint._send') as \
                 http_session_send_patch:
             http_response = mock.Mock()
             http_response.status_code = 200

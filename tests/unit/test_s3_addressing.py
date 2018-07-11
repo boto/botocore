@@ -40,7 +40,7 @@ class TestS3Addressing(BaseSessionTest):
                              force_hmacv1=False):
         if force_hmacv1:
             self.session.register('choose-signer', self.enable_hmacv1)
-        with patch('botocore.endpoint.Endpoint.send') as mock_send:
+        with patch('botocore.endpoint.Endpoint._send') as mock_send:
             mock_send.return_value = self.mock_response
             client = self.session.create_client('s3', self.region_name)
             getattr(client, operation)(**params)

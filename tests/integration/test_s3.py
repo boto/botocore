@@ -813,7 +813,7 @@ class TestS3SigV4Client(BaseS3ClientTest):
     def test_request_retried_for_sigv4(self):
         body = six.BytesIO(b"Hello world!")
 
-        original_send = Endpoint.send
+        original_send = Endpoint._send
         state = mock.Mock()
         state.error_raised = False
 
@@ -823,7 +823,7 @@ class TestS3SigV4Client(BaseS3ClientTest):
                 raise ConnectionError("Simulated ConnectionError raised.")
             else:
                 return original_send(self, *args, **kwargs)
-        with mock.patch('botocore.endpoint.Endpoint.send', mock_endpoint_send):
+        with mock.patch('botocore.endpoint.Endpoint._send', mock_endpoint_send):
             response = self.client.put_object(Bucket=self.bucket_name,
                                               Key='foo.txt', Body=body)
             self.assert_status_code(response, 200)
