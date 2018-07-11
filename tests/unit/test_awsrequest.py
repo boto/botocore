@@ -119,33 +119,6 @@ class TestAWSPreparedRequest(unittest.TestCase):
             self.prepared_request.headers['Content-Length'],
             str(len(content)))
 
-    def test_prepare_body_removes_transfer_encoding(self):
-        self.prepared_request.headers['Transfer-Encoding'] = 'chunked'
-        content = b'foobarbaz'
-        with open(self.filename, 'wb') as f:
-            f.write(content)
-        with open(self.filename, 'rb') as f:
-            data = Seekable(f)
-            self.prepared_request.prepare_body(data)
-        self.assertEqual(
-            self.prepared_request.headers['Content-Length'],
-            str(len(content)))
-        self.assertNotIn('Transfer-Encoding', self.prepared_request.headers)
-
-    def test_prepare_body_ignores_existing_transfer_encoding(self):
-        # TODO this test is weird. requests will never add both the
-        # content-length and transfer-encoding as they're mutually exclusive
-        content = b'foobarbaz'
-        self.prepared_request.headers['Content-Length'] = '9'
-        self.prepared_request.headers['Transfer-Encoding'] = 'chunked'
-        with open(self.filename, 'wb') as f:
-            f.write(content)
-        with open(self.filename, 'rb') as f:
-            self.prepared_request.prepare_body(f)
-        self.assertEqual(
-            self.prepared_request.headers['Transfer-Encoding'],
-            'chunked')
-
 
 class TestAWSHTTPConnection(unittest.TestCase):
     def create_tunneled_connection(self, url, port, response):
