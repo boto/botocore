@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.10.57
+=======
+
+* api-change:``iam``: Update iam client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+* api-change:``appsync``: Update appsync client to latest version
+* api-change:``efs``: Update efs client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``emr``: Update emr client to latest version
+
+
 1.10.56
 =======
 
