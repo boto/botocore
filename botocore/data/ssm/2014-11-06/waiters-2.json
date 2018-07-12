@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "waiters": {
+      "AgentIsOnline": {
+          "delay": 15,
+          "operation": "DescribeInstanceInformation",
+          "maxAttempts": 40,
+          "acceptors": [
+              {
+                  "expected": "Online",
+                  "matcher": "pathAny",
+                  "state": "success",
+                  "argument": "InstanceInformationList[].PingStatus"
+              },
+              {
+                  "expected": "ConnectionLost",
+                  "matcher": "pathAny",
+                  "state": "retry",
+                  "argument": "InstanceInformationList[].PingStatus"
+              },
+              {
+                  "expected": "Inactive",
+                  "matcher": "pathAny",
+                  "state": "failure",
+                  "argument": "InstanceInformationList[].PingStatus"
+              }
+          ]
+      }
+  }
+}
