@@ -27,14 +27,14 @@ import dateutil.parser
 from dateutil.tz import tzlocal, tzutc
 
 import botocore
+import botocore.awsrequest
+import botocore.http_session
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
 from botocore.exceptions import InvalidDNSNameError, ClientError
 from botocore.exceptions import MetadataRetrievalError, EndpointConnectionError
 from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
 from botocore.compat import OrderedDict, six, urlparse
 from botocore.vendored.six.moves.urllib.request import getproxies, proxy_bypass
-from botocore.http_session import URLLib3Session
-from botocore.awsrequest import AWSRequest
 
 
 logger = logging.getLogger(__name__)
@@ -174,7 +174,7 @@ class InstanceMetadataFetcher(object):
         self._disabled = env.get('AWS_EC2_METADATA_DISABLED', 'false').lower()
         self._disabled = self._disabled == 'true'
         self._user_agent = user_agent
-        self._session = URLLib3Session(
+        self._session = botocore.http_session.URLLib3Session(
             timeout=self._timeout,
             proxies=get_environ_proxies(self._url),
         )
@@ -190,6 +190,7 @@ class InstanceMetadataFetcher(object):
 
         for i in range(num_attempts):
             try:
+                AWSRequest = botocore.awsrequest.AWSRequest
                 request = AWSRequest(method='GET', url=url, headers=headers)
                 response = self._session.send(request.prepare())
             except RETRYABLE_HTTP_ERRORS as e:
@@ -1042,7 +1043,9 @@ class ContainerMetadataFetcher(object):
 
     def __init__(self, session=None, sleep=time.sleep):
         if session is None:
-            session = URLLib3Session(timeout=self.TIMEOUT_SECONDS)
+            session = botocore.http_session.URLLib3Session(
+                timeout=self.TIMEOUT_SECONDS
+            )
         self._session = session
         self._sleep = sleep
 
@@ -1103,6 +1106,7 @@ class ContainerMetadataFetcher(object):
 
     def _get_response(self, full_url, headers, timeout):
         try:
+            AWSRequest = botocore.awsrequest.AWSRequest
             request = AWSRequest(method='GET', url=full_url, headers=headers)
             response = self._session.send(request.prepare())
             response_text = response.content.decode('utf-8')

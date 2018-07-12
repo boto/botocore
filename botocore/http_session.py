@@ -6,9 +6,9 @@ from base64 import b64encode
 from urllib3 import PoolManager, ProxyManager, proxy_from_url, Timeout
 from urllib3.exceptions import NewConnectionError, ProtocolError
 
+import botocore.awsrequest
 from botocore.vendored import six
 from botocore.vendored.six.moves.urllib_parse import unquote
-from botocore.awsrequest import AWSResponse
 from botocore.compat import filter_ssl_warnings, urlparse
 from botocore.exceptions import ConnectionClosedError, EndpointConnectionError
 try:
@@ -176,7 +176,7 @@ class URLLib3Session(object):
                 decode_content=False,
             )
 
-            http_response = AWSResponse(
+            http_response = botocore.awsrequest.AWSResponse(
                 request.url,
                 urllib_response.status,
                 urllib_response.headers,
