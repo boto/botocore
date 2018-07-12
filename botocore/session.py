@@ -20,6 +20,7 @@ import copy
 import logging
 import os
 import platform
+import warnings
 
 from botocore import __version__
 import botocore.configloader
@@ -160,6 +161,7 @@ class Session(object):
             self._session_instance_vars['profile'] = profile
         self._client_config = None
         self._components = ComponentLocator()
+        self._internal_components = ComponentLocator()
         self._register_components()
 
     def _register_components(self):
@@ -188,7 +190,7 @@ class Session(object):
             loader = self.get_component('data_loader')
             endpoints = loader.load_data('endpoints')
             return EndpointResolver(endpoints)
-        self._components.lazy_register_component(
+        self._internal_components.lazy_register_component(
             'endpoint_resolver', create_default_resolver)
 
     def _register_response_parser_factory(self):
@@ -196,7 +198,7 @@ class Session(object):
                                             ResponseParserFactory())
 
     def _register_exceptions_factory(self):
-        self._components.register_component(
+        self._internal_components.register_component(
             'exceptions_factory', ClientExceptionsFactory())
 
     def _register_builtin_handlers(self, events):
@@ -723,7 +725,29 @@ class Session(object):
         return first_non_none_response(responses)
 
     def get_component(self, name):
-        return self._components.get_component(name)
+        try:
+            return self._components.get_component(name)
+        except ValueError:
+            if name in ['endpoint_resolver', 'exceptions_factory']:
+                warnings.warn(
+                    'Fetching the %s component with the get_component() '
+                    'method is deprecated as the component has always been '
+                    'considered an internal interface of botocore' % name,
+                    DeprecationWarning)
+                return self._internal_components.get_component(name)
+            raise
+
+    def _get_internal_component(self, name):
+        # While this method may be called by botocore classes outside of the
+        # Session, this method should **never** be used by a class that lives
+        # outside of botocore.
+        return self._internal_components.get_component(name)
+
+    def _register_internal_component(self, name, component):
+        # While this method may be called by botocore classes outside of the
+        # Session, this method should **never** be used by a class that lives
+        # outside of botocore.
+        return self._internal_components.register_component(name, component)
 
     def register_component(self, name, component):
         self._components.register_component(name, component)
@@ -848,8 +872,8 @@ class Session(object):
                                                  aws_secret_access_key))
         else:
             credentials = self.get_credentials()
-        endpoint_resolver = self.get_component('endpoint_resolver')
-        exceptions_factory = self.get_component('exceptions_factory')
+        endpoint_resolver = self._get_internal_component('endpoint_resolver')
+        exceptions_factory = self._get_internal_component('exceptions_factory')
         client_creator = botocore.client.ClientCreator(
             loader, endpoint_resolver, self.user_agent(), event_emitter,
             retryhandler, translate, response_parser_factory,
@@ -874,7 +898,7 @@ class Session(object):
         :rtype: list
         :return: Returns a list of partition names (e.g., ["aws", "aws-cn"])
         """
-        resolver = self.get_component('endpoint_resolver')
+        resolver = self._get_internal_component('endpoint_resolver')
         return resolver.get_available_partitions()
 
     def get_available_regions(self, service_name, partition_name='aws',
@@ -897,7 +921,7 @@ class Session(object):
              fips-us-gov-west-1, etc).
         :return: Returns a list of endpoint names (e.g., ["us-east-1"]).
         """
-        resolver = self.get_component('endpoint_resolver')
+        resolver = self._get_internal_component('endpoint_resolver')
         results = []
         try:
             service_data = self.get_service_data(service_name)
