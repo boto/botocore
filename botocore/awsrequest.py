@@ -528,7 +528,7 @@ class _HeaderKey(object):
         return hash(self._lower)
 
     def __eq__(self, other):
-        return self._lower == other._lower
+        return isinstance(other, _HeaderKey) and self._lower == other._lower
 
     def __str__(self):
         return self._key
