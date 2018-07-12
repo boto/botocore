@@ -394,7 +394,7 @@ class AWSPreparedRequest(object):
     there are the following differences:
         This class does not heavily prepare the URL. Requests performed many
         validations and corrections to ensure the URL is properly formatted.
-        Botocore either performs this validations elsewhere or otherwise
+        Botocore either performs these validations elsewhere or otherwise
         consistently provides well formatted URLs.
 
         This class does not heavily prepare the body. Body preperation is
