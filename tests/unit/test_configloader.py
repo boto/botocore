@@ -67,6 +67,13 @@ class TestConfigLoader(BaseEnvVar):
         with self.assertRaises(botocore.exceptions.ConfigParseError):
             raw_config_parse(filename)
 
+    def test_config_parse_error_filesystem_encoding_none(self):
+        filename = path('aws_config_bad')
+        with mock.patch('sys.getfilesystemencoding') as encoding:
+            encoding.return_value = None
+            with self.assertRaises(botocore.exceptions.ConfigParseError):
+                raw_config_parse(filename)
+
     def test_config(self):
         loaded_config = raw_config_parse(path('aws_config'))
         self.assertIn('default', loaded_config)
@@ -118,6 +125,13 @@ class TestConfigLoader(BaseEnvVar):
         with self.assertRaises(botocore.exceptions.ConfigParseError):
             loaded_config = load_config(filename)
 
+    def test_nested_bad_config_filesystem_encoding_none(self):
+        filename = path('aws_config_nested_bad')
+        with mock.patch('sys.getfilesystemencoding') as encoding:
+            encoding.return_value = None
+            with self.assertRaises(botocore.exceptions.ConfigParseError):
+                loaded_config = load_config(filename)
+
     def test_multi_file_load(self):
         filenames = [path('aws_config_other'),
                      path('aws_config'),
@@ -140,6 +154,12 @@ class TestConfigLoader(BaseEnvVar):
         with self.assertRaises(botocore.exceptions.ConfigNotFound):
             with mock.patch('sys.getfilesystemencoding') as encoding:
                 encoding.return_value = 'utf-8'
+                load_config(path(b'\xe2\x9c\x93'))
+
+    def test_unicode_bytes_path_not_found_filesystem_encoding_none(self):
+        with mock.patch('sys.getfilesystemencoding') as encoding:
+            encoding.return_value = None
+            with self.assertRaises(botocore.exceptions.ConfigNotFound):
                 load_config(path(b'\xe2\x9c\x93'))
 
     def test_unicode_bytes_path(self):
