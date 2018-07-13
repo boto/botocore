@@ -2,6 +2,88 @@
 CHANGELOG
 =========
 
+1.10.57
+=======
+
+* api-change:``iam``: Update iam client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+* api-change:``appsync``: Update appsync client to latest version
+* api-change:``efs``: Update efs client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``emr``: Update emr client to latest version
+
+
+1.10.56
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``ce``: Update ce client to latest version
+
+
+1.10.55
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``opsworks``: Update opsworks client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+
+
+1.10.54
+=======
+
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+
+
+1.10.53
+=======
+
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``dms``: Update dms client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``transcribe``: Update transcribe client to latest version
+
+
+1.10.52
+=======
+
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``serverlessrepo``: Update serverlessrepo client to latest version
+
+
+1.10.51
+=======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+
+
+1.10.50
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``acm``: Update acm client to latest version
+
+
+1.10.49
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+
+
+1.10.48
+=======
+
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+
+
 1.10.47
 =======
 

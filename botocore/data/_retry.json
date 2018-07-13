@@ -102,6 +102,20 @@
           "too_many_requests": {"$ref": "too_many_requests"}
       }
     },
+    "organizations": {
+      "__default__": {
+        "policies": {
+          "too_many_requests": {
+            "applies_when": {
+              "response": {
+                "service_error_code": "TooManyRequestsException",
+                "http_status_code": 400
+              }
+            }
+          }
+        }
+      }
+    },
     "dynamodb": {
       "__default__": {
         "max_attempts": 10,
