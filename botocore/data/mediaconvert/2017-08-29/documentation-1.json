@@ -19,6 +19,9 @@
          "ListJobs" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/ListJobs",
          "ListPresets" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/ListPresets",
          "ListQueues" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/ListQueues",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/ListTagsForResource",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/UntagResource",
          "UpdateJobTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/UpdateJobTemplate",
          "UpdatePreset" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/UpdatePreset",
          "UpdateQueue" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/UpdateQueue"

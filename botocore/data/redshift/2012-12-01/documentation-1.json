@@ -2,6 +2,7 @@
    "documentation" : {
       "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01",
       "methods" : {
+         "AcceptReservedNodeExchange" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/AcceptReservedNodeExchange",
          "AuthorizeClusterSecurityGroupIngress" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/AuthorizeClusterSecurityGroupIngress",
          "AuthorizeSnapshotAccess" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/AuthorizeSnapshotAccess",
          "CopyClusterSnapshot" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/CopyClusterSnapshot",
@@ -25,6 +26,7 @@
          "DeleteHsmConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/DeleteHsmConfiguration",
          "DeleteSnapshotCopyGrant" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/DeleteSnapshotCopyGrant",
          "DeleteTags" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/DeleteTags",
+         "DescribeClusterDbRevisions" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/DescribeClusterDbRevisions",
          "DescribeClusterParameterGroups" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/DescribeClusterParameterGroups",
          "DescribeClusterParameters" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/DescribeClusterParameters",
          "DescribeClusterSecurityGroups" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/DescribeClusterSecurityGroups",
@@ -51,7 +53,9 @@
          "EnableLogging" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/EnableLogging",
          "EnableSnapshotCopy" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/EnableSnapshotCopy",
          "GetClusterCredentials" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/GetClusterCredentials",
+         "GetReservedNodeExchangeOfferings" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/GetReservedNodeExchangeOfferings",
          "ModifyCluster" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/ModifyCluster",
+         "ModifyClusterDbRevision" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/ModifyClusterDbRevision",
          "ModifyClusterIamRoles" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/ModifyClusterIamRoles",
          "ModifyClusterParameterGroup" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/ModifyClusterParameterGroup",
          "ModifyClusterSubnetGroup" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/ModifyClusterSubnetGroup",

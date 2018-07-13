@@ -15,6 +15,7 @@
          "DescribeAccountLimits" : "https://docs.aws.amazon.com/goto/WebAPI/cloudformation/DescribeAccountLimits",
          "DescribeChangeSet" : "https://docs.aws.amazon.com/goto/WebAPI/cloudformation/DescribeChangeSet",
          "DescribeStackEvents" : "https://docs.aws.amazon.com/goto/WebAPI/cloudformation/DescribeStackEvents",
+         "DescribeStackInstance" : "https://docs.aws.amazon.com/goto/WebAPI/cloudformation/DescribeStackInstance",
          "DescribeStackResource" : "https://docs.aws.amazon.com/goto/WebAPI/cloudformation/DescribeStackResource",
          "DescribeStackResources" : "https://docs.aws.amazon.com/goto/WebAPI/cloudformation/DescribeStackResources",
          "DescribeStackSet" : "https://docs.aws.amazon.com/goto/WebAPI/cloudformation/DescribeStackSet",

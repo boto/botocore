@@ -12,7 +12,8 @@
          "DescribeMountTargetSecurityGroups" : "https://docs.aws.amazon.com/goto/WebAPI/elasticfilesystem/DescribeMountTargetSecurityGroups",
          "DescribeMountTargets" : "https://docs.aws.amazon.com/goto/WebAPI/elasticfilesystem/DescribeMountTargets",
          "DescribeTags" : "https://docs.aws.amazon.com/goto/WebAPI/elasticfilesystem/DescribeTags",
-         "ModifyMountTargetSecurityGroups" : "https://docs.aws.amazon.com/goto/WebAPI/elasticfilesystem/ModifyMountTargetSecurityGroups"
+         "ModifyMountTargetSecurityGroups" : "https://docs.aws.amazon.com/goto/WebAPI/elasticfilesystem/ModifyMountTargetSecurityGroups",
+         "UpdateFileSystem" : "https://docs.aws.amazon.com/goto/WebAPI/elasticfilesystem/UpdateFileSystem"
       }
    }
 }

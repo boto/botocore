@@ -1,0 +1,12 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12",
+      "methods" : {
+         "CreateLifecyclePolicy" : "https://docs.aws.amazon.com/goto/WebAPI/dlm/CreateLifecyclePolicy",
+         "DeleteLifecyclePolicy" : "https://docs.aws.amazon.com/goto/WebAPI/dlm/DeleteLifecyclePolicy",
+         "GetLifecyclePolicies" : "https://docs.aws.amazon.com/goto/WebAPI/dlm/GetLifecyclePolicies",
+         "GetLifecyclePolicy" : "https://docs.aws.amazon.com/goto/WebAPI/dlm/GetLifecyclePolicy",
+         "UpdateLifecyclePolicy" : "https://docs.aws.amazon.com/goto/WebAPI/dlm/UpdateLifecyclePolicy"
+      }
+   }
+}
