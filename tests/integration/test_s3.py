@@ -26,7 +26,7 @@ from contextlib import closing
 from nose.plugins.attrib import attr
 
 from botocore.endpoint import Endpoint
-from urllib3.exceptions import ConnectionError
+from botocore.exceptions import ConnectionClosedError
 from botocore.compat import six, zip_longest
 import botocore.session
 import botocore.auth
@@ -820,7 +820,7 @@ class TestS3SigV4Client(BaseS3ClientTest):
         def mock_endpoint_send(self, *args, **kwargs):
             if not state.error_raised:
                 state.error_raised = True
-                raise ConnectionError("Simulated ConnectionError raised.")
+                raise ConnectionClosedError(endpoint_url='')
             else:
                 return original_send(self, *args, **kwargs)
         with mock.patch('botocore.endpoint.Endpoint._send', mock_endpoint_send):

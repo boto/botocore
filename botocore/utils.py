@@ -22,19 +22,20 @@ import random
 import os
 import socket
 
-from urllib3.exceptions import ConnectionError, TimeoutError
 import dateutil.parser
 from dateutil.tz import tzlocal, tzutc
 
 import botocore
 import botocore.awsrequest
 import botocore.http_session
-from botocore.exceptions import InvalidExpressionError, ConfigNotFound
-from botocore.exceptions import InvalidDNSNameError, ClientError
-from botocore.exceptions import MetadataRetrievalError, EndpointConnectionError
 from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
 from botocore.compat import OrderedDict, six, urlparse
 from botocore.vendored.six.moves.urllib.request import getproxies, proxy_bypass
+from botocore.exceptions import (
+    InvalidExpressionError, ConfigNotFound, InvalidDNSNameError, ClientError,
+    MetadataRetrievalError, EndpointConnectionError, ReadTimeoutError,
+    ConnectionClosedError,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -46,7 +47,9 @@ METADATA_SECURITY_CREDENTIALS_URL = (
 # Based on rfc2986, section 2.3
 SAFE_CHARS = '-._~'
 LABEL_RE = re.compile(r'[a-z0-9][a-z0-9\-]*[a-z0-9]')
-RETRYABLE_HTTP_ERRORS = (TimeoutError, ConnectionError, EndpointConnectionError)
+RETRYABLE_HTTP_ERRORS = (
+    ReadTimeoutError, EndpointConnectionError, ConnectionClosedError
+)
 S3_ACCELERATE_WHITELIST = ['dualstack']
 
 

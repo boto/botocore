@@ -64,14 +64,21 @@ class HTTPClientError(BotoCoreError):
 
 
 class EndpointConnectionError(HTTPClientError):
-    fmt = (
-        'Could not connect to the endpoint URL: "{endpoint_url}"')
+    fmt = 'Could not connect to the endpoint URL: "{endpoint_url}"'
 
 
 class ConnectionClosedError(HTTPClientError):
     fmt = (
         'Connection was closed before we received a valid response '
         'from endpoint URL: "{endpoint_url}".')
+
+
+class ReadTimeoutError(HTTPClientError):
+    fmt = 'Read timeout on endpoint URL: "{endpoint_url}"'
+
+
+class ProxyConnectionError(HTTPClientError):
+    fmt = 'Failed to connect to proxy URL: "{proxy_url}"'
 
 
 class NoCredentialsError(BotoCoreError):

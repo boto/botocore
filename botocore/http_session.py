@@ -4,13 +4,19 @@ import socket
 from base64 import b64encode
 
 from urllib3 import PoolManager, ProxyManager, proxy_from_url, Timeout
-from urllib3.exceptions import NewConnectionError, ProtocolError
+from urllib3.exceptions import ReadTimeoutError as URLLib3ReadTimeoutError
+from urllib3.exceptions import (
+    NewConnectionError, ProtocolError, ProxyError, ConnectTimeoutError
+)
 
 import botocore.awsrequest
 from botocore.vendored import six
 from botocore.vendored.six.moves.urllib_parse import unquote
 from botocore.compat import filter_ssl_warnings, urlparse
-from botocore.exceptions import ConnectionClosedError, EndpointConnectionError
+from botocore.exceptions import (
+    ConnectionClosedError, EndpointConnectionError, HTTPClientError,
+    ReadTimeoutError, ProxyConnectionError
+)
 try:
     from urllib3.contrib import pyopenssl
     pyopenssl.extract_from_urllib3()
@@ -153,13 +159,13 @@ class URLLib3Session(object):
         try:
             request_target = self._path_url(request.url)
 
-            proxy = self._proxy_config.proxy_url_for(request.url)
-            if proxy:
-                manager = self._get_proxy_manager(proxy)
+            proxy_url = self._proxy_config.proxy_url_for(request.url)
+            if proxy_url:
+                manager = self._get_proxy_manager(proxy_url)
             else:
                 manager = self._manager
 
-            if proxy and request.url.startswith('http:'):
+            if proxy_url and request.url.startswith('http:'):
                 # If an http request is being proxied use the full url
                 request_target = request.url
 
@@ -190,10 +196,17 @@ class URLLib3Session(object):
                 http_response.content
 
             return http_response
-        except (NewConnectionError, socket.gaierror) as e:
+        except (NewConnectionError, ConnectTimeoutError, socket.gaierror) as e:
             raise EndpointConnectionError(endpoint_url=request.url, error=e)
+        except URLLib3ReadTimeoutError as e:
+            raise ReadTimeoutError(endpoint_url=request.url, error=e)
+        except ProxyError as e:
+            raise ProxyConnectionError(proxy_url=proxy_url, error=e)
         except ProtocolError as e:
             raise ConnectionClosedError(
+                error=e,
                 request=request,
                 endpoint_url=request.url
             )
+        except Exception as e:
+            raise HTTPClientError(error=e)

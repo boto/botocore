@@ -16,14 +16,13 @@ import datetime
 import copy
 import mock
 
-import urllib3
 import botocore
 from botocore import xform_name
 from botocore.compat import OrderedDict, json
 from botocore.compat import six
 from botocore.awsrequest import AWSRequest
 from botocore.exceptions import InvalidExpressionError, ConfigNotFound
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, ConnectionClosedError
 from botocore.exceptions import InvalidDNSNameError, MetadataRetrievalError
 from botocore.model import ServiceModel
 from botocore.utils import is_json_value_header
@@ -1627,7 +1626,7 @@ class TestContainerMetadataFetcher(unittest.TestCase):
         self.set_http_responses_to(
             # First response is a connection error, should
             # be retried.
-            urllib3.exceptions.ConnectionError(),
+            ConnectionClosedError(endpoint_url=''),
             # Second response is the successful JSON response
             # with credentials.
             success_response,
@@ -1639,11 +1638,11 @@ class TestContainerMetadataFetcher(unittest.TestCase):
     def test_propagates_credential_error_on_http_errors(self):
         self.set_http_responses_to(
             # In this scenario, we never get a successful response.
-            urllib3.exceptions.ConnectionError(),
-            urllib3.exceptions.ConnectionError(),
-            urllib3.exceptions.ConnectionError(),
-            urllib3.exceptions.ConnectionError(),
-            urllib3.exceptions.ConnectionError(),
+            ConnectionClosedError(endpoint_url=''),
+            ConnectionClosedError(endpoint_url=''),
+            ConnectionClosedError(endpoint_url=''),
+            ConnectionClosedError(endpoint_url=''),
+            ConnectionClosedError(endpoint_url=''),
         )
         # As a result, we expect an appropriate error to be raised.
         fetcher = self.create_fetcher()

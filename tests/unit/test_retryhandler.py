@@ -16,10 +16,11 @@
 from tests import unittest
 
 import mock
-from urllib3.exceptions import ClosedPoolError, ConnectionError, TimeoutError
 
 from botocore import retryhandler
-from botocore.exceptions import ChecksumError
+from botocore.exceptions import (
+    ChecksumError, EndpointConnectionError, ReadTimeoutError,
+)
 
 
 HTTP_500_RESPONSE = mock.Mock()
@@ -201,12 +202,13 @@ class TestCreateRetryConfiguration(unittest.TestCase):
     def test_create_retry_handler_with_socket_errors(self):
         handler = retryhandler.create_retry_handler(
             self.retry_config, operation_name='OperationBar')
-        with self.assertRaises(ConnectionError):
+        exception = EndpointConnectionError(endpoint_url='')
+        with self.assertRaises(EndpointConnectionError):
             handler(response=None, attempts=10,
-                    caught_exception=ConnectionError())
+                    caught_exception=exception)
         # No connection error raised because attempts < max_attempts.
         sleep_time = handler(response=None, attempts=1,
-                             caught_exception=ConnectionError())
+                             caught_exception=exception)
         self.assertEqual(sleep_time, 1)
         # But any other exception should be raised even if
         # attempts < max_attempts.
@@ -220,23 +222,8 @@ class TestCreateRetryConfiguration(unittest.TestCase):
         handler = retryhandler.create_retry_handler(
             self.retry_config, operation_name='OperationBar')
         sleep_time = handler(response=None, attempts=1,
-                             caught_exception=TimeoutError())
+                             caught_exception=ReadTimeoutError(endpoint_url=''))
         self.assertEqual(sleep_time, 1)
-
-    def test_retry_pool_closed_errors(self):
-        # A ClosedPoolError is retried (this is a workaround for a urllib3
-        # bug).  Can be removed once we upgrade to requests 2.0.0.
-        handler = retryhandler.create_retry_handler(
-            self.retry_config, operation_name='OperationBar')
-        # 4th attempt is retried.
-        sleep_time = handler(
-            response=None, attempts=4,
-            caught_exception=ClosedPoolError('FakePool', 'Message'))
-        self.assertEqual(sleep_time, 8)
-        # But the 5th time propogates the error.
-        with self.assertRaises(ClosedPoolError):
-            handler(response=None, attempts=10,
-                    caught_exception=ClosedPoolError('FakePool', 'Message'))
 
     def test_create_retry_handler_with_no_operation(self):
         handler = retryhandler.create_retry_handler(

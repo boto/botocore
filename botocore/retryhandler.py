@@ -17,11 +17,10 @@ import functools
 import logging
 from binascii import crc32
 
-from urllib3.exceptions import (
-    ClosedPoolError, ProxyError, TimeoutError, ConnectionError
+from botocore.exceptions import (
+    ChecksumError, EndpointConnectionError, ReadTimeoutError,
+    ProxyConnectionError, ConnectionClosedError,
 )
-
-from botocore.exceptions import ChecksumError, EndpointConnectionError
 
 
 logger = logging.getLogger(__name__)
@@ -31,8 +30,8 @@ logger = logging.getLogger(__name__)
 # this mapping with more specific exceptions.
 EXCEPTION_MAP = {
     'GENERAL_CONNECTION_ERROR': [
-        ConnectionError, ClosedPoolError, TimeoutError,
-        ProxyError, EndpointConnectionError
+        ReadTimeoutError, ProxyConnectionError, EndpointConnectionError,
+        ConnectionClosedError,
     ],
 }
 

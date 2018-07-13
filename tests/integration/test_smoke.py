@@ -20,7 +20,7 @@ from botocore import xform_name
 import botocore.session
 from botocore.client import ClientError
 from botocore.endpoint import Endpoint
-from urllib3.exceptions import ConnectionError
+from botocore.exceptions import ConnectionClosedError
 
 
 # Mapping of service -> api calls to try.
@@ -289,7 +289,7 @@ def _make_client_call_with_errors(client, operation_name, kwargs):
     def mock_endpoint_send(self, *args, **kwargs):
         if not getattr(self, '_integ_test_error_raised', False):
             self._integ_test_error_raised = True
-            raise ConnectionError("Simulated ConnectionError raised.")
+            raise ConnectionClosedError(endpoint_url='')
         else:
             return original_send(self, *args, **kwargs)
     with mock.patch('botocore.endpoint.Endpoint._send', mock_endpoint_send):
