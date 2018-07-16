@@ -6253,7 +6253,7 @@
     "Rule":{
       "type":"structure",
       "required":[
-        "Filter",
+        "Prefix",
         "Status"
       ],
       "members":{
