@@ -171,7 +171,12 @@ def raw_config_parse(config_filename, parse_subsections=True):
 def _unicode_path(path):
     if isinstance(path, six.text_type):
         return path
-    return path.decode(sys.getfilesystemencoding(), 'replace')
+    # According to the documentation getfilesystemencoding can return None
+    # on unix in which case the default encoding is used instead.
+    filesystem_encoding = sys.getfilesystemencoding()
+    if filesystem_encoding is None:
+        filesystem_encoding = sys.getdefaultencoding()
+    return path.decode(filesystem_encoding, 'replace')
 
 
 def _parse_nested(config_value):

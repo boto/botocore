@@ -327,13 +327,15 @@ class TestSessionPartitionFiles(BaseSessionTest):
     def test_lists_partitions_on_disk(self):
         mock_resolver = mock.Mock()
         mock_resolver.get_available_partitions.return_value = ['foo']
-        self.session.register_component('endpoint_resolver', mock_resolver)
+        self.session._register_internal_component(
+            'endpoint_resolver', mock_resolver)
         self.assertEqual(['foo'], self.session.get_available_partitions())
 
     def test_proxies_list_endpoints_to_resolver(self):
         resolver = mock.Mock()
         resolver.get_available_endpoints.return_value = ['a', 'b']
-        self.session.register_component('endpoint_resolver', resolver)
+        self.session._register_internal_component(
+            'endpoint_resolver', resolver)
         self.session.get_available_regions('foo', 'bar', True)
 
     def test_provides_empty_list_for_unknown_service_regions(self):
@@ -651,6 +653,30 @@ class TestCreateClient(BaseSessionTest):
             call_kwargs = client_creator.return_value.\
                 create_client.call_args[1]
             self.assertEqual(call_kwargs['api_version'], override_api_version)
+
+
+class TestSessionComponent(BaseSessionTest):
+    def test_internal_component(self):
+        component = object()
+        self.session._register_internal_component('internal', component)
+        self.assertIs(
+            self.session._get_internal_component('internal'), component)
+        with self.assertRaises(ValueError):
+            self.session.get_component('internal')
+
+    def test_internal_endpoint_resolver_is_same_as_deprecated_public(self):
+        endpoint_resolver = self.session._get_internal_component(
+            'endpoint_resolver')
+        self.assertIs(
+            self.session.get_component('endpoint_resolver'), endpoint_resolver)
+
+    def test_internal_exceptions_factory_is_same_as_deprecated_public(self):
+        exceptions_factory = self.session._get_internal_component(
+            'exceptions_factory')
+        self.assertIs(
+            self.session.get_component('exceptions_factory'),
+            exceptions_factory
+        )
 
 
 class TestComponentLocator(unittest.TestCase):
