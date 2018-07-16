@@ -6495,28 +6495,6 @@
       },
       "documentation": "Placeholder documentation for PassThroughSettings"
     },
-    "PurchaseOffering": {
-      "type": "structure",
-      "members": {
-        "Count": {
-          "shape": "__integerMin1",
-          "locationName": "count",
-          "documentation": "Number of resources"
-        },
-        "Name": {
-          "shape": "__string",
-          "locationName": "name",
-          "documentation": "Name for the new reservation"
-        },
-        "RequestId": {
-          "shape": "__string",
-          "locationName": "requestId",
-          "documentation": "Unique request ID to be specified. This is needed to prevent retries from creating multiple resources.",
-          "idempotencyToken": true
-        }
-      },
-      "documentation": "PurchaseOffering request"
-    },
     "PurchaseOfferingRequest": {
       "type": "structure",
       "members": {
