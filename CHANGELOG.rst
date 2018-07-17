@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.10.59
+=======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``polly``: Update polly client to latest version
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``snowball``: Update snowball client to latest version
+
+
 1.10.58
 =======
 
