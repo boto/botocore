@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.10.60
+=======
+
+* api-change:``iotanalytics``: Update iotanalytics client to latest version
+
+
 1.10.59
 =======
 
