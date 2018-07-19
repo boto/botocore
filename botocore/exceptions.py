@@ -357,6 +357,11 @@ class ClientError(Exception):
             operation_name=operation_name,
             retry_info=retry_info,
         )
+        if not isinstance(msg, str):
+            # The __str__ implmentation for Exception on Python 2 will attempt
+            # to convert unicode into ascii, which will fail if there is
+            # actually any unicode in the str
+            msg = msg.encode('utf-8')
         super(ClientError, self).__init__(msg)
         self.response = error_response
         self.operation_name = operation_name

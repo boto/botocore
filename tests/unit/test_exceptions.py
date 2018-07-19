@@ -78,3 +78,17 @@ def test_can_handle_when_response_missing_error_key():
         raise AssertionError(
             "Error code should default to 'Unknown' "
             "when missing error response, instead got: %s" % str(e))
+
+
+def test_client_error_can_convert_to_str_unicode():
+    response = {
+        'Error': {
+            'Code': 'TestError',
+            'Message': u'\u30c6\u30b9\u30c8',
+        }
+    }
+    e = exceptions.ClientError(response, 'TestOperation')
+    try:
+        str(e)
+    except UnicodeEncodeError:
+        raise AssertionError('Failed to convert exception to printable message')
