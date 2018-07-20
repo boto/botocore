@@ -50,7 +50,7 @@ class Shape(object):
                         'payload', 'streaming', 'timestampFormat',
                         'xmlNamespace', 'resultWrapper', 'xmlAttribute',
                         'eventstream', 'event', 'eventheader', 'eventpayload',
-                        'jsonvalue']
+                        'jsonvalue', 'timestampFormat']
     METADATA_ATTRS = ['required', 'min', 'max', 'sensitive', 'enum',
                       'idempotencyToken', 'error', 'exception']
     MAP_TYPE = OrderedDict
@@ -106,6 +106,7 @@ class Shape(object):
             * resultWrapper
             * xmlAttribute
             * jsonvalue
+            * timestampFormat
 
         :rtype: dict
         :return: Serialization information about the shape.
