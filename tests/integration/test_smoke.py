@@ -142,7 +142,7 @@ ERROR_TESTS = {
     'cognito-identity': {'DescribeIdentityPool': {'IdentityPoolId': 'fake'}},
     'cognito-sync': {'DescribeIdentityPoolUsage': {'IdentityPoolId': 'fake'}},
     'config': {
-        'GetResourceConfigHistory': {'resourceType': '', 'resourceId': ''},
+        'GetResourceConfigHistory': {'resourceType': '', 'resourceId': 'fake'},
         },
     'datapipeline': {'GetPipelineDefinition': {'pipelineId': 'fake'}},
     'devicefarm': {'GetDevice': {'arn': 'arn:aws:devicefarm:REGION::device:f'}},
