@@ -333,7 +333,7 @@ def percent_encode(input_str, safe=SAFE_CHARS):
 
     If given the binary type, will simply URL encode it. If given the
     text type, will produce the binary type by UTF-8 encoding the
-    text. If given something else, will convert it to the the text type
+    text. If given something else, will convert it to the text type
     first.
     """
     # If its not a binary or text string, make it a text string.
