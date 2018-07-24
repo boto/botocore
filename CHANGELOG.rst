@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.10.63
+=======
+
+* api-change:``dynamodb``: Update dynamodb client to latest version
+
+
 1.10.62
 =======
 
