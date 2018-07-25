@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``ecs``", 
+    "description": "Update ecs client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``elbv2``", 
+    "description": "Update elbv2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }
+]
