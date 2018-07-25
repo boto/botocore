@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.10.64
+=======
+
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.10.63
 =======
 
