@@ -136,8 +136,6 @@ def test_service_name_matches_endpoint_prefix():
     # named based on the service id matches the service name used to
     # create a client (i.e the directory name in botocore/data)
     # unless there is an explicit exception.
-    # If there model has no serviceId then we fall back to the endpoint
-    # prefix.
     session = get_session()
     loader = session.get_component('data_loader')
 

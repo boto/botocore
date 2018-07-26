@@ -2,6 +2,48 @@
 CHANGELOG
 =========
 
+1.10.64
+=======
+
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.10.63
+=======
+
+* api-change:``dynamodb``: Update dynamodb client to latest version
+
+
+1.10.62
+=======
+
+* api-change:``config``: Update config client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+
+
+1.10.61
+=======
+
+* api-change:``mediapackage``: Update mediapackage client to latest version
+
+
+1.10.60
+=======
+
+* api-change:``iotanalytics``: Update iotanalytics client to latest version
+
+
+1.10.59
+=======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``polly``: Update polly client to latest version
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``snowball``: Update snowball client to latest version
+
+
 1.10.58
 =======
 

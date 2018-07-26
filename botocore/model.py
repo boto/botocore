@@ -316,7 +316,7 @@ class ServiceModel(object):
             return self.metadata[name]
         except KeyError:
             raise UndefinedModelAttributeError(
-                '"%s" not defined in the metadata of the the model: %s' %
+                '"%s" not defined in the metadata of the model: %s' %
                 (name, self))
 
     # Signature version is one of the rare properties
