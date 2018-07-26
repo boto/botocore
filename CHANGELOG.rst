@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.10.65
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``greengrass``: Update greengrass client to latest version
+* api-change:``inspector``: Update inspector client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+
+
 1.10.64
 =======
 
