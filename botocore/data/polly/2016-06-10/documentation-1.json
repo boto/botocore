@@ -5,8 +5,11 @@
          "DeleteLexicon" : "https://docs.aws.amazon.com/goto/WebAPI/polly/DeleteLexicon",
          "DescribeVoices" : "https://docs.aws.amazon.com/goto/WebAPI/polly/DescribeVoices",
          "GetLexicon" : "https://docs.aws.amazon.com/goto/WebAPI/polly/GetLexicon",
+         "GetSpeechSynthesisTask" : "https://docs.aws.amazon.com/goto/WebAPI/polly/GetSpeechSynthesisTask",
          "ListLexicons" : "https://docs.aws.amazon.com/goto/WebAPI/polly/ListLexicons",
+         "ListSpeechSynthesisTasks" : "https://docs.aws.amazon.com/goto/WebAPI/polly/ListSpeechSynthesisTasks",
          "PutLexicon" : "https://docs.aws.amazon.com/goto/WebAPI/polly/PutLexicon",
+         "StartSpeechSynthesisTask" : "https://docs.aws.amazon.com/goto/WebAPI/polly/StartSpeechSynthesisTask",
          "SynthesizeSpeech" : "https://docs.aws.amazon.com/goto/WebAPI/polly/SynthesizeSpeech"
       }
    }

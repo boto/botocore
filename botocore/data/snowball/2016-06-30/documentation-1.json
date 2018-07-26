@@ -16,6 +16,7 @@
          "GetSnowballUsage" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/GetSnowballUsage",
          "ListClusterJobs" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/ListClusterJobs",
          "ListClusters" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/ListClusters",
+         "ListCompatibleImages" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/ListCompatibleImages",
          "ListJobs" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/ListJobs",
          "UpdateCluster" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/UpdateCluster",
          "UpdateJob" : "https://docs.aws.amazon.com/goto/WebAPI/snowball/UpdateJob"
