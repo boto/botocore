@@ -2331,6 +2331,11 @@
           "location":"uri",
           "locationName":"Bucket"
         },
+        "ContentMD5":{
+          "shape":"ContentMD5",
+          "location":"header",
+          "locationName":"Content-MD5"
+        },
         "Delete":{
           "shape":"Delete",
           "locationName":"Delete",
@@ -6153,6 +6158,11 @@
           "shape":"BucketName",
           "location":"uri",
           "locationName":"Bucket"
+        },
+        "ContentMD5":{
+          "shape":"ContentMD5",
+          "location":"header",
+          "locationName":"Content-MD5"
         },
         "Key":{
           "shape":"ObjectKey",
