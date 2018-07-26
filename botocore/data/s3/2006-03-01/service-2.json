@@ -1767,6 +1767,12 @@
           "location":"uri",
           "locationName":"Bucket"
         },
+        "ContentLength":{
+          "shape":"ContentLength",
+          "documentation":"Size of the body in bytes.",
+          "location":"header",
+          "locationName":"Content-Length"
+        },
         "CreateBucketConfiguration":{
           "shape":"CreateBucketConfiguration",
           "locationName":"CreateBucketConfiguration",
@@ -2330,6 +2336,12 @@
           "shape":"BucketName",
           "location":"uri",
           "locationName":"Bucket"
+        },
+        "ContentLength":{
+          "shape":"ContentLength",
+          "documentation":"Size of the body in bytes.",
+          "location":"header",
+          "locationName":"Content-Length"
         },
         "ContentMD5":{
           "shape":"ContentMD5",
@@ -5092,6 +5104,12 @@
           "location":"uri",
           "locationName":"Bucket"
         },
+        "ContentLength":{
+          "shape":"ContentLength",
+          "documentation":"Size of the body in bytes.",
+          "location":"header",
+          "locationName":"Content-Length"
+        },
         "AccelerateConfiguration":{
           "shape":"AccelerateConfiguration",
           "documentation":"Specifies the Accelerate Configuration you want to set for the bucket.",
@@ -5125,6 +5143,12 @@
           "shape":"ContentMD5",
           "location":"header",
           "locationName":"Content-MD5"
+        },
+        "ContentLength":{
+          "shape":"ContentLength",
+          "documentation":"Size of the body in bytes.",
+          "location":"header",
+          "locationName":"Content-Length"
         },
         "GrantFullControl":{
           "shape":"GrantFullControl",
@@ -5173,6 +5197,12 @@
           "location":"uri",
           "locationName":"Bucket"
         },
+        "ContentLength":{
+          "shape":"ContentLength",
+          "documentation":"Size of the body in bytes.",
+          "location":"header",
+          "locationName":"Content-Length"
+        },
         "Id":{
           "shape":"AnalyticsId",
           "documentation":"The identifier used to represent an analytics configuration.",
@@ -5199,6 +5229,12 @@
           "shape":"BucketName",
           "location":"uri",
           "locationName":"Bucket"
+        },
+        "ContentLength":{
+          "shape":"ContentLength",
+          "documentation":"Size of the body in bytes.",
+          "location":"header",
+          "locationName":"Content-Length"
         },
         "CORSConfiguration":{
           "shape":"CORSConfiguration",
@@ -5232,6 +5268,12 @@
           "location":"header",
           "locationName":"Content-MD5"
         },
+        "ContentLength":{
+          "shape":"ContentLength",
+          "documentation":"Size of the body in bytes.",
+          "location":"header",
+          "locationName":"Content-Length"
+        },
         "ServerSideEncryptionConfiguration":{
           "shape":"ServerSideEncryptionConfiguration",
           "locationName":"ServerSideEncryptionConfiguration",
@@ -5253,6 +5295,12 @@
           "documentation":"The name of the bucket where the inventory configuration will be stored.",
           "location":"uri",
           "locationName":"Bucket"
+        },
+        "ContentLength":{
+          "shape":"ContentLength",
+          "documentation":"Size of the body in bytes.",
+          "location":"header",
+          "locationName":"Content-Length"
         },
         "Id":{
           "shape":"InventoryId",
@@ -5300,6 +5348,12 @@
           "location":"header",
           "locationName":"Content-MD5"
         },
+        "ContentLength":{
+          "shape":"ContentLength",
+          "documentation":"Size of the body in bytes.",
+          "location":"header",
+          "locationName":"Content-Length"
+        },
         "LifecycleConfiguration":{
           "shape":"LifecycleConfiguration",
           "locationName":"LifecycleConfiguration",
@@ -5319,6 +5373,12 @@
           "shape":"BucketName",
           "location":"uri",
           "locationName":"Bucket"
+        },
+        "ContentLength":{
+          "shape":"ContentLength",
+          "documentation":"Size of the body in bytes.",
+          "location":"header",
+          "locationName":"Content-Length"
         },
         "BucketLoggingStatus":{
           "shape":"BucketLoggingStatus",
@@ -5346,6 +5406,12 @@
           "documentation":"The name of the bucket for which the metrics configuration is set.",
           "location":"uri",
           "locationName":"Bucket"
+        },
+        "ContentLength":{
+          "shape":"ContentLength",
+          "documentation":"Size of the body in bytes.",
+          "location":"header",
+          "locationName":"Content-Length"
         },
         "Id":{
           "shape":"MetricsId",
@@ -5394,6 +5460,12 @@
           "location":"uri",
           "locationName":"Bucket"
         },
+        "ContentLength":{
+          "shape":"ContentLength",
+          "documentation":"Size of the body in bytes.",
+          "location":"header",
+          "locationName":"Content-Length"
+        },
         "ContentMD5":{
           "shape":"ContentMD5",
           "location":"header",
@@ -5418,6 +5490,12 @@
           "shape":"BucketName",
           "location":"uri",
           "locationName":"Bucket"
+        },
+        "ContentLength":{
+          "shape":"ContentLength",
+          "documentation":"Size of the body in bytes.",
+          "location":"header",
+          "locationName":"Content-Length"
         },
         "ContentMD5":{
           "shape":"ContentMD5",
@@ -5449,6 +5527,12 @@
           "location":"uri",
           "locationName":"Bucket"
         },
+        "ContentLength":{
+          "shape":"ContentLength",
+          "documentation":"Size of the body in bytes.",
+          "location":"header",
+          "locationName":"Content-Length"
+        },
         "ContentMD5":{
           "shape":"ContentMD5",
           "location":"header",
@@ -5473,6 +5557,12 @@
           "shape":"BucketName",
           "location":"uri",
           "locationName":"Bucket"
+        },
+        "ContentLength":{
+          "shape":"ContentLength",
+          "documentation":"Size of the body in bytes.",
+          "location":"header",
+          "locationName":"Content-Length"
         },
         "ContentMD5":{
           "shape":"ContentMD5",
@@ -5499,6 +5589,12 @@
           "location":"uri",
           "locationName":"Bucket"
         },
+        "ContentLength":{
+          "shape":"ContentLength",
+          "documentation":"Size of the body in bytes.",
+          "location":"header",
+          "locationName":"Content-Length"
+        },
         "ContentMD5":{
           "shape":"ContentMD5",
           "location":"header",
@@ -5523,6 +5619,12 @@
           "shape":"BucketName",
           "location":"uri",
           "locationName":"Bucket"
+        },
+        "ContentLength":{
+          "shape":"ContentLength",
+          "documentation":"Size of the body in bytes.",
+          "location":"header",
+          "locationName":"Content-Length"
         },
         "ContentMD5":{
           "shape":"ContentMD5",
@@ -5554,6 +5656,12 @@
           "shape":"BucketName",
           "location":"uri",
           "locationName":"Bucket"
+        },
+        "ContentLength":{
+          "shape":"ContentLength",
+          "documentation":"Size of the body in bytes.",
+          "location":"header",
+          "locationName":"Content-Length"
         },
         "ContentMD5":{
           "shape":"ContentMD5",
@@ -5600,6 +5708,12 @@
           "shape":"BucketName",
           "location":"uri",
           "locationName":"Bucket"
+        },
+        "ContentLength":{
+          "shape":"ContentLength",
+          "documentation":"Size of the body in bytes.",
+          "location":"header",
+          "locationName":"Content-Length"
         },
         "ContentMD5":{
           "shape":"ContentMD5",
@@ -5903,6 +6017,12 @@
           "shape":"ObjectVersionId",
           "location":"querystring",
           "locationName":"versionId"
+        },
+        "ContentLength":{
+          "shape":"ContentLength",
+          "documentation":"Size of the body in bytes.",
+          "location":"header",
+          "locationName":"Content-Length"
         },
         "ContentMD5":{
           "shape":"ContentMD5",
