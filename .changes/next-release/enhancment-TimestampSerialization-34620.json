@@ -1,5 +1,0 @@
-{
-  "type": "enhancment",
-  "category": "Timestamp Serialization",
-  "description": "Support explicit timestamp serialization per timestamp shape."
-}
