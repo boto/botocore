@@ -69,6 +69,7 @@
          "GetParametersByPath" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/GetParametersByPath",
          "GetPatchBaseline" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/GetPatchBaseline",
          "GetPatchBaselineForPatchGroup" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/GetPatchBaselineForPatchGroup",
+         "LabelParameterVersion" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/LabelParameterVersion",
          "ListAssociationVersions" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/ListAssociationVersions",
          "ListAssociations" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/ListAssociations",
          "ListCommandInvocations" : "https://docs.aws.amazon.com/goto/WebAPI/ssm/ListCommandInvocations",

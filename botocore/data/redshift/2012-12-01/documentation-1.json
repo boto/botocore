@@ -32,6 +32,7 @@
          "DescribeClusterSecurityGroups" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/DescribeClusterSecurityGroups",
          "DescribeClusterSnapshots" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/DescribeClusterSnapshots",
          "DescribeClusterSubnetGroups" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/DescribeClusterSubnetGroups",
+         "DescribeClusterTracks" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/DescribeClusterTracks",
          "DescribeClusterVersions" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/DescribeClusterVersions",
          "DescribeClusters" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/DescribeClusters",
          "DescribeDefaultClusterParameters" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/DescribeDefaultClusterParameters",
