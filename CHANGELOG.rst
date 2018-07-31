@@ -2,6 +2,29 @@
 CHANGELOG
 =========
 
+1.10.67
+=======
+
+* api-change:``kms``: Update kms client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``es``: Update es client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``connect``: Update connect client to latest version
+
+
+1.10.66
+=======
+
+* api-change:``directconnect``: Update directconnect client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``cloudhsmv2``: Update cloudhsmv2 client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``mq``: Update mq client to latest version
+* enhancment:Timestamp Serialization: Support explicit timestamp serialization per timestamp shape.
+* api-change:``glacier``: Update glacier client to latest version
+
+
 1.10.65
 =======
 

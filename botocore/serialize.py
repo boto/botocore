@@ -39,8 +39,9 @@ and if a str/unicode type is passed in, it will be encoded as utf-8.
 """
 import re
 import base64
-from xml.etree import ElementTree
 import calendar
+import datetime
+from xml.etree import ElementTree
 
 from botocore.compat import six
 
@@ -138,12 +139,17 @@ class Serializer(object):
         return int(calendar.timegm(value.timetuple()))
 
     def _timestamp_rfc822(self, value):
+        if isinstance(value, datetime.datetime):
+            value = self._timestamp_unixtimestamp(value)
         return formatdate(value, usegmt=True)
 
-    def _convert_timestamp_to_str(self, value):
+    def _convert_timestamp_to_str(self, value, timestamp_format=None):
+        if timestamp_format is None:
+            timestamp_format = self.TIMESTAMP_FORMAT
+        timestamp_format = timestamp_format.lower()
         datetime_obj = parse_to_aware_datetime(value)
         converter = getattr(
-            self, '_timestamp_%s' % self.TIMESTAMP_FORMAT.lower())
+            self, '_timestamp_%s' % timestamp_format)
         final_value = converter(datetime_obj)
         return final_value
 
@@ -245,7 +251,8 @@ class QuerySerializer(Serializer):
         serialized[prefix] = self._get_base64(value)
 
     def _serialize_type_timestamp(self, serialized, value, shape, prefix=''):
-        serialized[prefix] = self._convert_timestamp_to_str(value)
+        serialized[prefix] = self._convert_timestamp_to_str(
+            value, shape.serialization.get('timestampFormat'))
 
     def _serialize_type_boolean(self, serialized, value, shape, prefix=''):
         if value:
@@ -304,7 +311,7 @@ class JSONSerializer(Serializer):
             'X-Amz-Target': target,
             'Content-Type': 'application/x-amz-json-%s' % json_version,
         }
-        body = {}
+        body = self.MAP_TYPE()
         input_shape = operation_model.input_shape
         if input_shape is not None:
             self._serialize(body, parameters, input_shape)
@@ -355,7 +362,8 @@ class JSONSerializer(Serializer):
         serialized[key] = value
 
     def _serialize_type_timestamp(self, serialized, value, shape, key):
-        serialized[key] = self._convert_timestamp_to_str(value)
+        serialized[key] = self._convert_timestamp_to_str(
+            value, shape.serialization.get('timestampFormat'))
 
     def _serialize_type_blob(self, serialized, value, shape, key):
         serialized[key] = self._get_base64(value)
@@ -371,6 +379,8 @@ class BaseRestSerializer(Serializer):
     Subclasses must implement the ``_serialize_body_params`` method.
 
     """
+    QUERY_STRING_TIMESTAMP_FORMAT = 'iso8601'
+    HEADER_TIMESTAMP_FORMAT = 'rfc822'
     # This is a list of known values for the "location" key in the
     # serialization dict.  The location key tells us where on the request
     # to put the serialized value.
@@ -486,6 +496,13 @@ class BaseRestSerializer(Serializer):
             elif isinstance(param_value, bool):
                 partitioned['query_string_kwargs'][
                     key_name] = str(param_value).lower()
+            elif member.type_name == 'timestamp':
+                timestamp_format = member.serialization.get(
+                    'timestampFormat', self.QUERY_STRING_TIMESTAMP_FORMAT)
+                partitioned['query_string_kwargs'][
+                    key_name] = self._convert_timestamp_to_str(
+                        param_value, timestamp_format
+                    )
             else:
                 partitioned['query_string_kwargs'][key_name] = param_value
         elif location == 'header':
@@ -518,7 +535,9 @@ class BaseRestSerializer(Serializer):
         if shape.type_name == 'timestamp':
             datetime_obj = parse_to_aware_datetime(value)
             timestamp = calendar.timegm(datetime_obj.utctimetuple())
-            return self._timestamp_rfc822(timestamp)
+            timestamp_format = shape.serialization.get(
+                'timestampFormat', self.HEADER_TIMESTAMP_FORMAT)
+            return self._convert_timestamp_to_str(timestamp, timestamp_format)
         elif is_json_value_header(shape):
             # Serialize with no spaces after separators to save space in
             # the header.
@@ -623,7 +642,8 @@ class RestXMLSerializer(BaseRestSerializer):
 
     def _serialize_type_timestamp(self, xmlnode, params, shape, name):
         node = ElementTree.SubElement(xmlnode, name)
-        node.text = self._convert_timestamp_to_str(params)
+        node.text = self._convert_timestamp_to_str(
+            params, shape.serialization.get('timestampFormat'))
 
     def _default_serialize(self, xmlnode, params, shape, name):
         node = ElementTree.SubElement(xmlnode, name)
