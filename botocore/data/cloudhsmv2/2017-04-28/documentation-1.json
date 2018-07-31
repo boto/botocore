@@ -2,6 +2,7 @@
    "documentation" : {
       "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28",
       "methods" : {
+         "CopyBackupToRegion" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2/CopyBackupToRegion",
          "CreateCluster" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2/CreateCluster",
          "CreateHsm" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2/CreateHsm",
          "DeleteCluster" : "https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2/DeleteCluster",

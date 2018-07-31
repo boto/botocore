@@ -2,8 +2,23 @@
    "documentation" : {
       "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/connect-2017-08-08",
       "methods" : {
+         "CreateUser" : "https://docs.aws.amazon.com/goto/WebAPI/connect/CreateUser",
+         "DeleteUser" : "https://docs.aws.amazon.com/goto/WebAPI/connect/DeleteUser",
+         "DescribeUser" : "https://docs.aws.amazon.com/goto/WebAPI/connect/DescribeUser",
+         "DescribeUserHierarchyGroup" : "https://docs.aws.amazon.com/goto/WebAPI/connect/DescribeUserHierarchyGroup",
+         "DescribeUserHierarchyStructure" : "https://docs.aws.amazon.com/goto/WebAPI/connect/DescribeUserHierarchyStructure",
+         "GetFederationToken" : "https://docs.aws.amazon.com/goto/WebAPI/connect/GetFederationToken",
+         "ListRoutingProfiles" : "https://docs.aws.amazon.com/goto/WebAPI/connect/ListRoutingProfiles",
+         "ListSecurityProfiles" : "https://docs.aws.amazon.com/goto/WebAPI/connect/ListSecurityProfiles",
+         "ListUserHierarchyGroups" : "https://docs.aws.amazon.com/goto/WebAPI/connect/ListUserHierarchyGroups",
+         "ListUsers" : "https://docs.aws.amazon.com/goto/WebAPI/connect/ListUsers",
          "StartOutboundVoiceContact" : "https://docs.aws.amazon.com/goto/WebAPI/connect/StartOutboundVoiceContact",
-         "StopContact" : "https://docs.aws.amazon.com/goto/WebAPI/connect/StopContact"
+         "StopContact" : "https://docs.aws.amazon.com/goto/WebAPI/connect/StopContact",
+         "UpdateUserHierarchy" : "https://docs.aws.amazon.com/goto/WebAPI/connect/UpdateUserHierarchy",
+         "UpdateUserIdentityInfo" : "https://docs.aws.amazon.com/goto/WebAPI/connect/UpdateUserIdentityInfo",
+         "UpdateUserPhoneConfig" : "https://docs.aws.amazon.com/goto/WebAPI/connect/UpdateUserPhoneConfig",
+         "UpdateUserRoutingProfile" : "https://docs.aws.amazon.com/goto/WebAPI/connect/UpdateUserRoutingProfile",
+         "UpdateUserSecurityProfiles" : "https://docs.aws.amazon.com/goto/WebAPI/connect/UpdateUserSecurityProfiles"
       }
    }
 }
