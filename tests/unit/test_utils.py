@@ -1440,6 +1440,26 @@ class TestS3RegionRedirector(unittest.TestCase):
             request_dict, response, self.operation)
         self.assertIsNone(redirect_response)
 
+    def test_does_not_redirect_400_head_bucket_no_region_header(self):
+        # We should not redirect a 400 Head* if the region header is not
+        # present as this will lead to infinitely calling HeadBucket.
+        request_dict = {'url': 'https://us-west-2.amazonaws.com/foo',
+                        'context': {'signing': {'bucket': 'foo'}}}
+        response = (None, {
+            'Error': {'Code': '400', 'Message': 'Bad Request'},
+            'ResponseMetadata': {
+                'HTTPHeaders': {}
+            }
+        })
+
+        self.operation.name = 'HeadBucket'
+        redirect_response = self.redirector.redirect_from_error(
+            request_dict, response, self.operation)
+        head_bucket_calls = self.client.head_bucket.call_count
+        self.assertIsNone(redirect_response)
+        # We should not have made an additional head bucket call
+        self.assertEqual(head_bucket_calls, 0)
+
     def test_does_not_redirect_if_None_response(self):
         request_dict = {'url': 'https://us-west-2.amazonaws.com/foo',
                         'context': {'signing': {'bucket': 'foo'}}}
