@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.10.67
+=======
+
+* api-change:``kms``: Update kms client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``es``: Update es client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``connect``: Update connect client to latest version
+
+
 1.10.66
 =======
 
