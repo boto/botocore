@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.10.68
+=======
+
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``transcribe``: Update transcribe client to latest version
+
+
 1.10.67
 =======
 
