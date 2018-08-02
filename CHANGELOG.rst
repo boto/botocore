@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.10.69
+=======
+
+* api-change:``polly``: Update polly client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``kinesis``: Update kinesis client to latest version
+* api-change:``resource-groups``: Update resource-groups client to latest version
+
+
 1.10.68
 =======
 
