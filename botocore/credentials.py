@@ -83,7 +83,6 @@ def create_credential_resolver(session, cache=None):
     )
     providers = [
         env_provider,
-        assume_role_provider,
         SharedCredentialProvider(
             creds_filename=credential_file,
             profile_name=profile_name
@@ -93,6 +92,7 @@ def create_credential_resolver(session, cache=None):
         # The new config file has precedence over the legacy
         # config file.
         ConfigProvider(config_filename=config_file, profile_name=profile_name),
+        assume_role_provider,
         OriginalEC2Provider(),
         BotoProvider(),
         container_provider,
