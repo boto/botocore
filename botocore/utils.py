@@ -911,6 +911,7 @@ class S3RegionRedirector(object):
 
         error = response[1].get('Error', {})
         error_code = error.get('Code')
+        response_metadata = response[1].get('ResponseMetadata', {})
 
         # We have to account for 400 responses because
         # if we sign a Head* request with the wrong region,
@@ -918,7 +919,12 @@ class S3RegionRedirector(object):
         # body saying it's an "AuthorizationHeaderMalformed".
         is_special_head_object = (
             error_code in ['301', '400'] and
-            operation.name in ['HeadObject', 'HeadBucket']
+            operation.name == 'HeadObject'
+        )
+        is_special_head_bucket = (
+            error_code in ['301', '400'] and
+            operation.name == 'HeadBucket' and
+            'x-amz-bucket-region' in response_metadata.get('HTTPHeaders', {})
         )
         is_wrong_signing_region = (
             error_code == 'AuthorizationHeaderMalformed' and
@@ -926,7 +932,7 @@ class S3RegionRedirector(object):
         )
         is_permanent_redirect = error_code == 'PermanentRedirect'
         if not any([is_special_head_object, is_wrong_signing_region,
-                    is_permanent_redirect]):
+                    is_permanent_redirect, is_special_head_bucket]):
             return
 
         bucket = request_dict['context']['signing']['bucket']

@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``polly``", 
+    "description": "Update polly client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ssm``", 
+    "description": "Update ssm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``kinesis``", 
+    "description": "Update kinesis client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``resource-groups``", 
+    "description": "Update resource-groups client to latest version", 
+    "type": "api-change"
+  }
+]

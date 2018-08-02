@@ -1171,7 +1171,7 @@ class TestIncludeNonResultKeys(unittest.TestCase):
             {'Result': {'Key': ['bar', 'baz'], 'Inner': 'v3'},
              'Outer': 'v4', 'NextToken': 't2'},
             {'Result': {'Key': ['qux'], 'Inner': 'v5'},
-             'Outer': 'v6', 'NextToken': 't3'},
+             'Outer': 'v6'},
         ]
         pages = self.paginator.paginate()
         actual = pages.build_full_result()
@@ -1404,7 +1404,7 @@ class TestStringPageSize(unittest.TestCase):
         self.service = model.ServiceModel(self.service_model)
         self.model = self.service.operation_model('ListStuff')
         self.method = mock.Mock()
-        self.method.side_effect = []
+        self.method.side_effect = [{}]
         self.paginator = Paginator(self.method, self.paginate_config, self.model)
 
     def test_int_page_size(self):
