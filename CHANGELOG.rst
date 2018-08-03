@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.10.70
+=======
+
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+
+
 1.10.69
 =======
 
