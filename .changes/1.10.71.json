@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``health``", 
+    "description": "Update health client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``dynamodb``", 
+    "description": "Update dynamodb client to latest version", 
+    "type": "api-change"
+  }
+]
