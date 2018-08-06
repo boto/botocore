@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.10.71
+=======
+
+* api-change:``health``: Update health client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+
+
 1.10.70
 =======
 
