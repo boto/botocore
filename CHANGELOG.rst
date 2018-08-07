@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.10.72
+=======
+
+* api-change:``logs``: Update logs client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+
+
 1.10.71
 =======
 
