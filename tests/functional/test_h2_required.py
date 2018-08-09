@@ -10,7 +10,6 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from nose.tools import assert_is, assert_in
 from botocore.session import get_session
 
 _H2_REQUIRED = object()
@@ -41,11 +40,11 @@ def test_all_uses_of_h2_are_known():
 def _assert_h2_service_is_known(service):
     # Validates that a service that requires HTTP 2 for all operations is known
     message = 'Found unknown HTTP 2 service: %s' % service
-    assert_is(_KNOWN_SERVICES.get(service), _H2_REQUIRED, message)
+    assert _KNOWN_SERVICES.get(service) is _H2_REQUIRED, message
 
 
 def _assert_h2_operation_is_known(service, operation):
     # Validates that an operation that requires HTTP 2 is known
     known_operations = _KNOWN_SERVICES.get(service, [])
     message = 'Found unknown HTTP 2 operation: %s.%s' % (service, operation)
-    assert_in(operation, known_operations, message)
+    assert operation in known_operations, message
