@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.10.74
+=======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``dax``: Update dax client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+
+
 1.10.73
 =======
 
