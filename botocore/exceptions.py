@@ -62,7 +62,7 @@ class ApiVersionNotFoundError(BotoCoreError):
 
 
 class HTTPClientError(BotoCoreError):
-    fmt = 'Generic error when an HTTP Client raises an exception'
+    fmt = 'An HTTP Client raised and unhandled exception: {error}'
     def __init__(self, request=None, response=None, **kwargs):
         self.request = request
         self.response = response
