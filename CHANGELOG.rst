@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.10.75
+=======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
 1.10.74
 =======
 
