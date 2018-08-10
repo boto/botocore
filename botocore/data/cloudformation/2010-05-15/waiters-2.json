@@ -177,6 +177,38 @@
           "state": "failure"
         }
       ]
+    },
+    "ChangeSetExecuteComplete": {
+      "delay": 30,
+      "operation": "DescribeChangeSet",
+      "maxAttempts": 120,
+      "description": "Wait until change set status is EXECUTE_COMPLETE.",
+      "acceptors": [
+        {
+          "argument": "ExecutionStatus",
+          "expected": "EXECUTE_COMPLETE",
+          "matcher": "path",
+          "state": "success"
+        },
+        {
+          "argument": "ExecutionStatus",
+          "expected": "EXECUTE_FAILED",
+          "matcher": "path",
+          "state": "failure"
+        },
+        {
+          "argument": "ExecutionStatus",
+          "expected": "OBSOLETE",
+          "matcher": "path",
+          "state": "failure"
+        },
+        {
+          "argument": "ExecutionStatus",
+          "expected": "UNAVAILABLE",
+          "matcher": "path",
+          "state": "failure"
+        }
+      ]
     }
   }
 }
