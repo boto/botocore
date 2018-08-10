@@ -35,7 +35,7 @@ from botocore.vendored.six.moves.urllib.request import getproxies, proxy_bypass
 from botocore.exceptions import (
     InvalidExpressionError, ConfigNotFound, InvalidDNSNameError, ClientError,
     MetadataRetrievalError, EndpointConnectionError, ReadTimeoutError,
-    ConnectionClosedError,
+    ConnectionClosedError, ConnectTimeoutError,
 )
 
 
@@ -49,7 +49,8 @@ METADATA_SECURITY_CREDENTIALS_URL = (
 SAFE_CHARS = '-._~'
 LABEL_RE = re.compile(r'[a-z0-9][a-z0-9\-]*[a-z0-9]')
 RETRYABLE_HTTP_ERRORS = (
-    ReadTimeoutError, EndpointConnectionError, ConnectionClosedError
+    ReadTimeoutError, EndpointConnectionError, ConnectionClosedError,
+    ConnectTimeoutError,
 )
 S3_ACCELERATE_WHITELIST = ['dualstack']
 

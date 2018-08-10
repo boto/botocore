@@ -8,9 +8,11 @@ from contextlib import contextmanager
 
 import botocore.session
 from botocore.config import Config
-from botocore.exceptions import EndpointConnectionError, ConnectionClosedError
 from botocore.vendored.six.moves import BaseHTTPServer, socketserver
-from botocore.exceptions import ReadTimeoutError, EndpointConnectionError
+from botocore.exceptions import (
+    ConnectTimeoutError, ReadTimeoutError, EndpointConnectionError,
+    ConnectionClosedError,
+)
 
 
 class TestClientHTTPBehavior(unittest.TestCase):
@@ -76,7 +78,7 @@ class TestClientHTTPBehavior(unittest.TestCase):
             with background(no_accept_server):
                 time.sleep(2)
                 client.describe_regions()
-        except EndpointConnectionError:
+        except ConnectTimeoutError:
             pass
         except BackgroundTaskFailed:
             self.fail('Server failed to exit in a timely manner.')

@@ -4,10 +4,10 @@ import socket
 from base64 import b64encode
 
 from urllib3 import PoolManager, ProxyManager, proxy_from_url, Timeout
+from urllib3.exceptions import SSLError as URLLib3SSLError
 from urllib3.exceptions import ReadTimeoutError as URLLib3ReadTimeoutError
-from urllib3.exceptions import (
-    NewConnectionError, ProtocolError, ProxyError, ConnectTimeoutError
-)
+from urllib3.exceptions import ConnectTimeoutError as URLLib3ConnectTimeoutError
+from urllib3.exceptions import NewConnectionError, ProtocolError, ProxyError
 
 import botocore.awsrequest
 from botocore.vendored import six
@@ -15,7 +15,7 @@ from botocore.vendored.six.moves.urllib_parse import unquote
 from botocore.compat import filter_ssl_warnings, urlparse
 from botocore.exceptions import (
     ConnectionClosedError, EndpointConnectionError, HTTPClientError,
-    ReadTimeoutError, ProxyConnectionError
+    ReadTimeoutError, ProxyConnectionError, ConnectTimeoutError, SSLError
 )
 try:
     from urllib3.contrib import pyopenssl
@@ -196,12 +196,16 @@ class URLLib3Session(object):
                 http_response.content
 
             return http_response
-        except (NewConnectionError, ConnectTimeoutError, socket.gaierror) as e:
+        except URLLib3SSLError as e:
+            raise SSLError(endpoint_url=request.url, error=e)
+        except (NewConnectionError, socket.gaierror) as e:
             raise EndpointConnectionError(endpoint_url=request.url, error=e)
-        except URLLib3ReadTimeoutError as e:
-            raise ReadTimeoutError(endpoint_url=request.url, error=e)
         except ProxyError as e:
             raise ProxyConnectionError(proxy_url=proxy_url, error=e)
+        except URLLib3ConnectTimeoutError as e:
+            raise ConnectTimeoutError(endpoint_url=request.url, error=e)
+        except URLLib3ReadTimeoutError as e:
+            raise ReadTimeoutError(endpoint_url=request.url, error=e)
         except ProtocolError as e:
             raise ConnectionClosedError(
                 error=e,

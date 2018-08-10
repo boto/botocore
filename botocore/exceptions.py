@@ -12,6 +12,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from __future__ import unicode_literals
+from botocore.vendored import requests
+from botocore.vendored.requests.packages import urllib3
 
 
 class BotoCoreError(Exception):
@@ -61,10 +63,18 @@ class ApiVersionNotFoundError(BotoCoreError):
 
 class HTTPClientError(BotoCoreError):
     fmt = 'Generic error when an HTTP Client raises an exception'
+    def __init__(self, request=None, response=None, **kwargs):
+        self.request = request
+        self.response = response
+        super(HTTPClientError, self).__init__(**kwargs)
 
 
 class EndpointConnectionError(HTTPClientError):
     fmt = 'Could not connect to the endpoint URL: "{endpoint_url}"'
+
+
+class SSLError(HTTPClientError):
+    fmt = 'SSL validation failed for {endpoint_url} {error}'
 
 
 class ConnectionClosedError(HTTPClientError):
@@ -73,11 +83,16 @@ class ConnectionClosedError(HTTPClientError):
         'from endpoint URL: "{endpoint_url}".')
 
 
-class ReadTimeoutError(HTTPClientError):
+class ReadTimeoutError(HTTPClientError, requests.exceptions.ReadTimeout,
+                       urllib3.exceptions.ReadTimeoutError):
     fmt = 'Read timeout on endpoint URL: "{endpoint_url}"'
 
 
-class ProxyConnectionError(HTTPClientError):
+class ConnectTimeoutError(HTTPClientError, requests.exceptions.ConnectTimeout):
+    fmt = 'Connect timeout on endpoint URL: "{endpoint_url}"'
+
+
+class ProxyConnectionError(HTTPClientError, requests.exceptions.ProxyError):
     fmt = 'Failed to connect to proxy URL: "{proxy_url}"'
 
 
