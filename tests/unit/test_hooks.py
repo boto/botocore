@@ -17,6 +17,7 @@ from tests import unittest
 from functools import partial
 
 from botocore.hooks import HierarchicalEmitter, first_non_none_response
+from botocore.hooks import AliasedEventEmitter
 
 
 class TestHierarchicalEventEmitter(unittest.TestCase):
@@ -59,6 +60,68 @@ class TestHierarchicalEventEmitter(unittest.TestCase):
 
         self.emitter.emit('foo.bar.baz')
         self.assertEqual(calls, ['foo.bar.baz', 'foo.bar', 'foo'])
+
+
+class TestAliasedEventEmitter(unittest.TestCase):
+    def setUp(self):
+        self.hook_calls = []
+
+    def hook(self, **kwargs):
+        self.hook_calls.append(kwargs)
+
+    def test_event_emitted(self):
+        aliases = {'bar': 'bear'}
+        emitter = AliasedEventEmitter(event_aliases=aliases)
+        emitter.register('foo.bear.baz', self.hook)
+        emitter.emit('foo.bear.baz')
+        calls = [e['event_name'] for e in self.hook_calls]
+        self.assertEqual(calls, ['foo.bear.baz'])
+
+    def test_aliased_event_emitted(self):
+        aliases = {'bar': 'bear'}
+        emitter = AliasedEventEmitter(event_aliases=aliases)
+        emitter.register('foo.bear.baz', self.hook)
+        emitter.emit('foo.bar.baz')
+        calls = [e['event_name'] for e in self.hook_calls]
+        self.assertEqual(calls, ['foo.bear.baz'])
+
+    def test_aliased_event_registered(self):
+        aliases = {'bar': 'bear'}
+        emitter = AliasedEventEmitter(event_aliases=aliases)
+        emitter.register('foo.bar.baz', self.hook)
+        emitter.emit('foo.bear.baz')
+        calls = [e['event_name'] for e in self.hook_calls]
+        self.assertEqual(calls, ['foo.bear.baz'])
+
+    def test_event_unregistered(self):
+        aliases = {'bar': 'bear'}
+        emitter = AliasedEventEmitter(event_aliases=aliases)
+
+        emitter.register('foo.bar.baz', self.hook)
+        emitter.emit('foo.bear.baz')
+        calls = [e['event_name'] for e in self.hook_calls]
+        self.assertEqual(calls, ['foo.bear.baz'])
+
+        self.hook_calls = []
+        emitter.unregister('foo.bear.baz', self.hook)
+        emitter.emit('foo.bear.baz')
+        calls = [e['event_name'] for e in self.hook_calls]
+        self.assertEqual(calls, [])
+
+    def test_aliased_event_unregistered(self):
+        aliases = {'bar': 'bear'}
+        emitter = AliasedEventEmitter(event_aliases=aliases)
+
+        emitter.register('foo.bar.baz', self.hook)
+        emitter.emit('foo.bear.baz')
+        calls = [e['event_name'] for e in self.hook_calls]
+        self.assertEqual(calls, ['foo.bear.baz'])
+
+        self.hook_calls = []
+        emitter.unregister('foo.bar.baz', self.hook)
+        emitter.emit('foo.bear.baz')
+        calls = [e['event_name'] for e in self.hook_calls]
+        self.assertEqual(calls, [])
 
 
 class TestStopProcessing(unittest.TestCase):

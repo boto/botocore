@@ -1667,7 +1667,7 @@
         "isRegionalized" : true,
         "partitionEndpoint" : "us-east-1"
       },
-      "sagemaker" : {
+      "api.sagemaker" : {
         "endpoints" : {
           "ap-northeast-1" : { },
           "ap-northeast-2" : { },
