@@ -183,7 +183,8 @@ class BackgroundTaskFailed(Exception):
 
 @contextmanager
 def background(target, args=(), timeout=10):
-    thread = threading.Thread(target=target, args=args, daemon=True)
+    thread = threading.Thread(target=target, args=args)
+    thread.daemon = True
     thread.start()
     yield target
     thread.join(timeout=timeout)
