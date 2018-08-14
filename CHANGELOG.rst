@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.10.77
+=======
+
+* api-change:``es``: Update es client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+
+
 1.10.76
 =======
 
