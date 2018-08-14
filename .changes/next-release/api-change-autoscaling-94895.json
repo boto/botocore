@@ -1,0 +1,5 @@
+{
+  "category": "``autoscaling``", 
+  "type": "api-change", 
+  "description": "Update autoscaling client to latest version"
+}
