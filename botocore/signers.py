@@ -531,7 +531,7 @@ def add_generate_presigned_url(class_attributes, **kwargs):
 
 
 def generate_presigned_url(self, ClientMethod, Params=None, ExpiresIn=3600,
-                           HttpMethod=None):
+                           HttpMethod=None, Headers=None):
     """Generate a presigned url given a client, its method, and arguments
 
     :type ClientMethod: string
@@ -555,6 +555,7 @@ def generate_presigned_url(self, ClientMethod, Params=None, ExpiresIn=3600,
     params = Params
     if params is None:
         params = {}
+    headers = Headers
     expires_in = ExpiresIn
     http_method = HttpMethod
     context = {
@@ -582,6 +583,9 @@ def generate_presigned_url(self, ClientMethod, Params=None, ExpiresIn=3600,
     # Switch out the http method if user specified it.
     if http_method is not None:
         request_dict['method'] = http_method
+
+    if headers is not None:
+        request_dict['headers'].update(headers)
 
     # Prepare the request dict by including the client's endpoint url.
     prepare_request_dict(
