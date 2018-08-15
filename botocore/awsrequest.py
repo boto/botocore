@@ -521,7 +521,10 @@ class AWSResponse(object):
     @property
     def text(self):
         encoding = botocore.utils.get_encoding_from_headers(self.headers)
-        return self.content.decode(encoding)
+        if encoding:
+            return self.content.decode(encoding)
+        else:
+            return self.content.decode()
 
 
 class _HeaderKey(object):

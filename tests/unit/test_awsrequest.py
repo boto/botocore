@@ -23,8 +23,8 @@ import sys
 from mock import Mock, patch
 
 from botocore.exceptions import UnseekableStreamError
-from botocore.awsrequest import AWSRequest, AWSPreparedRequest
-from botocore.awsrequest import AWSHTTPConnection
+from botocore.awsrequest import AWSRequest, AWSPreparedRequest, AWSResponse
+from botocore.awsrequest import AWSHTTPConnection, HeadersDict
 from botocore.awsrequest import prepare_request_dict, create_request_object
 from botocore.compat import file_type, six
 
@@ -97,16 +97,44 @@ class Seekable(object):
         return self._stream.tell()
 
 
-class TestAWSPreparedRequest(unittest.TestCase):
+class TestAWSRequest(unittest.TestCase):
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
         self.filename = os.path.join(self.tempdir, 'foo')
-        self.request = AWSRequest(url='http://example.com')
-        self.prepared_request = AWSPreparedRequest(self.request)
+        self.request = AWSRequest(method='GET', url='http://example.com')
+        self.prepared_request = self.request.prepare()
         self.prepared_request.prepare_headers(self.request.headers)
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
+
+    def test_prepared_request_repr(self):
+        expected_repr = (
+            '<AWSPreparedRequest stream_output=False, method=GET, '
+            'url=http://example.com, headers={}>'
+        )
+        request_repr = repr(self.prepared_request)
+        self.assertEqual(request_repr, expected_repr)
+
+    def test_can_prepare_url_params(self):
+        request = AWSRequest(url='http://example.com/', params={'foo': 'bar'})
+        prepared_request = request.prepare()
+        self.assertEqual(prepared_request.url, 'http://example.com/?foo=bar')
+
+    def test_can_prepare_dict_body(self):
+        body = {'foo': 'baz', 'dead': 'beef'}
+        request = AWSRequest(url='http://example.com/', data=body)
+        prepared_request = request.prepare()
+        self.assertEqual(prepared_request.body, 'foo=baz&dead=beef')
+
+    def test_can_prepare_empty_body(self):
+        request = AWSRequest(url='http://example.com/', data=b'')
+        prepared_request = request.prepare()
+        self.assertEqual(prepared_request.body, None)
+
+    def test_request_body_is_prepared(self):
+        request = AWSRequest(url='http://example.com/', data='body')
+        self.assertEqual(request.body, b'body')
 
     def test_prepare_body_content_adds_content_length(self):
         content = b'foobarbaz'
@@ -118,6 +146,86 @@ class TestAWSPreparedRequest(unittest.TestCase):
         self.assertEqual(
             self.prepared_request.headers['Content-Length'],
             str(len(content)))
+
+    def test_can_reset_stream_handles_binary(self):
+        contents = b'notastream'
+        self.prepared_request.body = contents
+        self.prepared_request.reset_stream()
+        # assert the request body doesn't change after reset_stream is called
+        self.assertEqual(self.prepared_request.body, contents)
+
+    def test_can_reset_stream(self):
+        contents = b'foobarbaz'
+        with open(self.filename, 'wb') as f:
+            f.write(contents)
+        with open(self.filename, 'rb') as body:
+            self.prepared_request.body = body
+            # pretend the request body was partially sent
+            body.read()
+            self.assertNotEqual(body.tell(), 0)
+            # have the prepared request reset its stream
+            self.prepared_request.reset_stream()
+            # the stream should be reset
+            self.assertEqual(body.tell(), 0)
+
+    def test_cannot_reset_stream_raises_error(self):
+        contents = b'foobarbaz'
+        with open(self.filename, 'wb') as f:
+            f.write(contents)
+        with open(self.filename, 'rb') as body:
+            self.prepared_request.body = Unseekable(body)
+            # pretend the request body was partially sent
+            body.read()
+            self.assertNotEqual(body.tell(), 0)
+            # reset stream should fail
+            with self.assertRaises(UnseekableStreamError):
+                self.prepared_request.reset_stream()
+
+    def test_duck_type_for_file_check(self):
+        # As part of determining whether or not we can rewind a stream
+        # we first need to determine if the thing is a file like object.
+        # We should not be using an isinstance check.  Instead, we should
+        # be using duck type checks.
+        class LooksLikeFile(object):
+            def __init__(self):
+                self.seek_called = False
+            def read(self, amount=None):
+                pass
+            def seek(self, where):
+                self.seek_called = True
+        looks_like_file = LooksLikeFile()
+        self.prepared_request.body = looks_like_file
+        self.prepared_request.reset_stream()
+        # The stream should now be reset.
+        self.assertTrue(looks_like_file.seek_called)
+
+
+class TestAWSResponse(unittest.TestCase):
+    def setUp(self):
+        self.response = AWSResponse('http://url.com', 200, HeadersDict(), None)
+        self.response.raw = Mock()
+
+    def set_raw_stream(self, blobs):
+        def stream(*args, **kwargs):
+            for blob in blobs:
+                yield blob
+        self.response.raw.stream.return_value = stream()
+
+    def test_content_property(self):
+        self.set_raw_stream([b'some', b'data'])
+        self.assertEqual(self.response.content, b'somedata')
+        self.assertEqual(self.response.content, b'somedata')
+        # assert that stream was not called more than once
+        self.assertEqual(self.response.raw.stream.call_count, 1)
+
+    def test_text_property(self):
+        self.set_raw_stream([b'\xe3\x82\xb8\xe3\x83\xa7\xe3\x82\xb0'])
+        self.response.headers['content-type'] = 'text/plain; charset=utf-8'
+        self.assertEquals(self.response.text, u'\u30b8\u30e7\u30b0')
+
+    def test_text_property_defaults_utf8(self):
+        self.set_raw_stream([b'\xe3\x82\xb8\xe3\x83\xa7\xe3\x82\xb0'])
+        self.assertEquals(self.response.text, u'\u30b8\u30e7\u30b0')
 
 
 class TestAWSHTTPConnection(unittest.TestCase):
@@ -502,6 +610,34 @@ class TestCreateRequestObject(unittest.TestCase):
         self.assertEqual(request.data, self.request_dict['body'])
         self.assertEqual(request.context, self.request_dict['context'])
         self.assertIn('User-Agent', request.headers)
+
+
+class TestHeadersDict(unittest.TestCase):
+    def setUp(self):
+        self.headers = HeadersDict()
+
+    def test_get_insensitive(self):
+        self.headers['foo'] = 'bar'
+        self.assertEqual(self.headers['FOO'], 'bar')
+
+    def test_set_insensitive(self):
+        self.headers['foo'] = 'bar'
+        self.headers['FOO'] = 'baz'
+        self.assertEqual(self.headers['foo'], 'baz')
+
+    def test_del_insensitive(self):
+        self.headers['foo'] = 'bar'
+        self.assertEqual(self.headers['FOO'], 'bar')
+        del self.headers['FoO']
+        with self.assertRaises(KeyError):
+            self.headers['foo']
+
+    def test_iteration(self):
+        self.headers['FOO'] = 'bar'
+        self.headers['dead'] = 'beef'
+        self.assertEqual(list(self.headers), ['FOO', 'dead'])
+        headers_items = list(self.headers.items())
+        self.assertEqual(headers_items, [('FOO', 'bar'), ('dead', 'beef')])
 
 
 if __name__ == "__main__":
