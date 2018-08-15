@@ -1,4 +1,3 @@
-import time
 import select
 import socket
 import contextlib
@@ -41,6 +40,7 @@ class TestClientHTTPBehavior(unittest.TestCase):
         config = Config(read_timeout=0.1, retries={'max_attempts': 0})
         client = self.session.create_client('ec2', endpoint_url=self.localhost,
                                             config=config)
+        client_call_ended_event = threading.Event()
 
         class FakeEC2(SimpleHandler):
             msg = b'<response/>'
@@ -48,7 +48,7 @@ class TestClientHTTPBehavior(unittest.TestCase):
                 return len(self.msg)
 
             def get_body(self):
-                time.sleep(1)
+                client_call_ended_event.wait(timeout=1)
                 return self.msg
 
         try:
@@ -60,23 +60,28 @@ class TestClientHTTPBehavior(unittest.TestCase):
         except BackgroundTaskFailed:
             self.fail('Fake EC2 service was not called.')
         else:
-            self.fail('Excepted exception was not thrown')
+            self.fail('Expected exception was not thrown')
+        finally:
+            client_call_ended_event.set()
 
     def test_connect_timeout_exception(self):
         config = Config(connect_timeout=0.2, retries={'max_attempts': 0})
         client = self.session.create_client('ec2', endpoint_url=self.localhost,
                                             config=config)
+        server_bound_event = threading.Event()
+        client_call_ended_event = threading.Event()
 
         def no_accept_server():
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.bind(('', self.port))
-            time.sleep(4)
+            server_bound_event.set()
+            client_call_ended_event.wait(timeout=2)
             sock.close()
 
         try:
             with background(no_accept_server):
-                time.sleep(2)
+                server_bound_event.wait(timeout=2)
                 client.describe_regions()
         except ConnectTimeoutError:
             pass
@@ -84,6 +89,8 @@ class TestClientHTTPBehavior(unittest.TestCase):
             self.fail('Server failed to exit in a timely manner.')
         else:
             self.fail('Excepted exception was not thrown')
+        finally:
+            client_call_ended_event.set()
 
     def test_invalid_host_gaierror(self):
         config = Config(retries={'max_attempts': 0})
