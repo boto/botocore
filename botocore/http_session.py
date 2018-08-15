@@ -155,22 +155,30 @@ class URLLib3Session(object):
             conn.cert_reqs = 'CERT_NONE'
             conn.ca_certs = None
 
+    def _get_connection_manager(self, url, proxy_url=None):
+        if proxy_url:
+            manager = self._get_proxy_manager(proxy_url)
+        else:
+            manager = self._manager
+        return manager
+
+    def _get_request_target(self, url, proxy_url):
+        if proxy_url and url.startswith('http:'):
+            # HTTP proxies expect the request_target to be the absolute url to
+            # know which host to establish a connection to
+            return url
+        else:
+            # otherwise just set the request target to the url path
+            return self._path_url(url)
+
     def send(self, request):
         try:
-            request_target = self._path_url(request.url)
-
             proxy_url = self._proxy_config.proxy_url_for(request.url)
-            if proxy_url:
-                manager = self._get_proxy_manager(proxy_url)
-            else:
-                manager = self._manager
-
-            if proxy_url and request.url.startswith('http:'):
-                # If an http request is being proxied use the full url
-                request_target = request.url
-
+            manager = self._get_connection_manager(request.url, proxy_url)
             conn = manager.connection_from_url(request.url)
             self._setup_ssl_cert(conn, request.url, self._verify)
+
+            request_target = self._get_request_target(request.url, proxy_url)
             urllib_response = conn.urlopen(
                 method=request.method,
                 url=request_target,
