@@ -1,7 +1,7 @@
 import time
 import select
 import socket
-import random
+import contextlib
 import threading
 from tests import unittest
 from contextlib import contextmanager
@@ -17,7 +17,7 @@ from botocore.exceptions import (
 
 class TestClientHTTPBehavior(unittest.TestCase):
     def setUp(self):
-        self.port = random_port()
+        self.port = unused_port()
         self.localhost = 'http://localhost:%s/' % self.port
         self.session = botocore.session.get_session()
 
@@ -115,8 +115,10 @@ class TestClientHTTPBehavior(unittest.TestCase):
             self.fail('Excepted exception was not thrown')
 
 
-def random_port():
-    return random.randint(8080, 9000)
+def unused_port():
+    with contextlib.closing(socket.socket()) as sock:
+        sock.bind(('127.0.0.1', 0))
+        return sock.getsockname()[1]
 
 
 class SimpleHandler(BaseHTTPServer.BaseHTTPRequestHandler):
