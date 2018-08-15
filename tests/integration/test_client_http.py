@@ -186,11 +186,13 @@ def background(target, args=(), timeout=10):
     thread = threading.Thread(target=target, args=args)
     thread.daemon = True
     thread.start()
-    yield target
-    thread.join(timeout=timeout)
-    if thread.is_alive():
-        msg = 'Background task did not exit in a timely manner.'
-        raise BackgroundTaskFailed(msg)
+    try:
+        yield target
+    finally:
+        thread.join(timeout=timeout)
+        if thread.is_alive():
+            msg = 'Background task did not exit in a timely manner.'
+            raise BackgroundTaskFailed(msg)
 
 
 def run_server(handler, port):
