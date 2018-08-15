@@ -142,6 +142,23 @@ class TestURLLib3Session(unittest.TestCase):
         )
         self.assert_request_sent()
 
+    def test_basic_proxy_request_caches_manager(self):
+        proxies = {'https': 'http://proxy.com'}
+        session = URLLib3Session(proxies=proxies)
+        self.request.url = 'https://example.com/'
+        session.send(self.request.prepare())
+        # assert we created the proxy manager
+        self.proxy_manager_fun.assert_any_call(
+            proxies['https'],
+            proxy_headers={},
+            maxsize=ANY,
+            timeout=ANY,
+            strict=True,
+        )
+        session.send(self.request.prepare())
+        # assert that we did not create another proxy manager
+        self.assertEqual(self.proxy_manager_fun.call_count, 1)
+
     def test_basic_http_proxy_request(self):
         proxies = {'http': 'http://proxy.com'}
         session = URLLib3Session(proxies=proxies)
