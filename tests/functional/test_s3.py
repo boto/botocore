@@ -35,6 +35,7 @@ class BaseS3OperationTest(BaseSessionTest):
         self.region = 'us-west-2'
         self.client = self.session.create_client(
             's3', self.region)
+        # TODO: fix with stubber / before send event
         self.session_send_patch = mock.patch('botocore.endpoint.Endpoint._send')
         self.http_session_send_mock = self.session_send_patch.start()
 
@@ -206,6 +207,7 @@ class TestCanSendIntegerHeaders(BaseSessionTest):
     def test_int_values_with_sigv4(self):
         s3 = self.session.create_client(
             's3', config=Config(signature_version='s3v4'))
+        # TODO: fix with stubber / before send event
         with mock.patch('botocore.endpoint.Endpoint._send') as mock_send:
             mock_send.return_value = mock.Mock(status_code=200,
                                                content=b'',
@@ -879,6 +881,7 @@ def _verify_expected_endpoint_url(region, bucket, key, s3_config,
         s3 = session.create_client('s3', region_name=region, use_ssl=is_secure,
                                    config=config,
                                    endpoint_url=customer_provided_endpoint)
+        # TODO: fix with stubber / before send event
         with mock.patch('botocore.endpoint.Endpoint._send') as mock_send:
             mock_send.return_value = http_response
             s3.put_object(Bucket=bucket,

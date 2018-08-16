@@ -35,6 +35,7 @@ class TestLex(BaseSessionTest):
 
         with mock.patch('botocore.auth.datetime') as _datetime:
             _datetime.datetime.utcnow.return_value = timestamp
+            # TODO: fix with stubber / before send event
             with mock.patch('botocore.endpoint.Endpoint._send') as _send:
                 _send.return_value = mock.Mock(
                     status_code=200, headers={}, content=b'{}')

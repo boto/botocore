@@ -40,6 +40,7 @@ class TestS3Addressing(BaseSessionTest):
                              force_hmacv1=False):
         if force_hmacv1:
             self.session.register('choose-signer', self.enable_hmacv1)
+        # TODO: fix with stubber / before send event
         with patch('botocore.endpoint.Endpoint._send') as mock_send:
             mock_send.return_value = self.mock_response
             client = self.session.create_client('s3', self.region_name)

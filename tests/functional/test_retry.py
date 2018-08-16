@@ -38,6 +38,7 @@ class TestRetry(BaseSessionTest):
 
     def assert_will_retry_n_times(self, method, num_retries):
         num_responses = num_retries + 1
+        # TODO: fix with stubber / before send event... this one might be hard
         with mock.patch('botocore.endpoint.Endpoint._send') as mock_send:
             self.add_n_retryable_responses(mock_send, num_responses)
             with self.assertRaisesRegexp(

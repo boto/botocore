@@ -823,6 +823,7 @@ class TestS3SigV4Client(BaseS3ClientTest):
                 raise ConnectionClosedError(endpoint_url='')
             else:
                 return original_send(self, *args, **kwargs)
+        # TODO: fix with stubber / before send event
         with mock.patch('botocore.endpoint.Endpoint._send', mock_endpoint_send):
             response = self.client.put_object(Bucket=self.bucket_name,
                                               Key='foo.txt', Body=body)

@@ -292,6 +292,7 @@ def _make_client_call_with_errors(client, operation_name, kwargs):
             raise ConnectionClosedError(endpoint_url='')
         else:
             return original_send(self, *args, **kwargs)
+    # TODO: fix with stubber / before send event
     with mock.patch('botocore.endpoint.Endpoint._send', mock_endpoint_send):
         try:
             response = operation(**kwargs)

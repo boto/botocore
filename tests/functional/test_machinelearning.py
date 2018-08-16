@@ -23,6 +23,7 @@ class TestMachineLearning(BaseSessionTest):
             'machinelearning', self.region)
 
     def test_predict(self):
+        # TODO: fix with stubber / before send event
         with mock.patch('botocore.endpoint.Endpoint._send') as \
                 http_session_send_patch:
             http_response = mock.Mock()
