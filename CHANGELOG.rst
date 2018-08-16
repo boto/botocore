@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.10.79
+=======
+
+* api-change:``discovery``: Update discovery client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
 1.10.78
 =======
 
