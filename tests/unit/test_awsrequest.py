@@ -275,8 +275,10 @@ class TestAWSHTTPConnection(unittest.TestCase):
             conn.sock = s
             wait_mock.return_value = True
             conn.request('GET', '/bucket/foo', b'body',
-                         {'Expect': '100-continue'})
+                         {'Expect': b'100-continue'})
             response = conn.getresponse()
+            # Assert that we waited for the 100-continue response
+            self.assertEqual(wait_mock.call_count, 1)
             # Now we should verify that our final response is the 200 OK
             self.assertEqual(response.status, 200)
 
@@ -289,10 +291,12 @@ class TestAWSHTTPConnection(unittest.TestCase):
             conn.sock = s
             wait_mock.return_value = True
             conn.request('GET', '/bucket/foo', six.BytesIO(b'body'),
-                         {'Expect': '100-continue', 'Content-Length': '4'})
+                         {'Expect': b'100-continue', 'Content-Length': b'4'})
             response = conn.getresponse()
             # Now we should verify that our final response is the 200 OK.
             self.assertEqual(response.status, 200)
+            # Assert that we waited for the 100-continue response
+            self.assertEqual(wait_mock.call_count, 1)
             # Verify that we went the request body because we got a 100
             # continue.
             self.assertIn(b'body', s.sent_data)
@@ -315,7 +319,9 @@ class TestAWSHTTPConnection(unittest.TestCase):
             conn.sock = s
             wait_mock.return_value = True
             conn.request('GET', '/bucket/foo', b'body',
-                         {'Expect': '100-continue'})
+                         {'Expect': b'100-continue'})
+            # Assert that we waited for the 100-continue response
+            self.assertEqual(wait_mock.call_count, 1)
             response = conn.getresponse()
             self.assertEqual(response.status, 500)
 
@@ -332,7 +338,9 @@ class TestAWSHTTPConnection(unittest.TestCase):
             conn.sock = s
             wait_mock.return_value = True
             conn.request('GET', '/bucket/foo', b'body',
-                         {'Expect': '100-continue'})
+                         {'Expect': b'100-continue'})
+            # Assert that we waited for the 100-continue response
+            self.assertEqual(wait_mock.call_count, 1)
             response = conn.getresponse()
             # Now we should verify that our final response is the 307.
             self.assertEqual(response.status, 307)
@@ -351,7 +359,9 @@ class TestAWSHTTPConnection(unittest.TestCase):
             # we should just send the request anyways.
             wait_mock.return_value = False
             conn.request('GET', '/bucket/foo', b'body',
-                         {'Expect': '100-continue'})
+                         {'Expect': b'100-continue'})
+            # Assert that we waited for the 100-continue response
+            self.assertEqual(wait_mock.call_count, 1)
             response = conn.getresponse()
             self.assertEqual(response.status, 307)
 
@@ -468,7 +478,9 @@ class TestAWSHTTPConnection(unittest.TestCase):
             wait_mock.return_value = True
 
             conn.request('GET', '/bucket/foo', b'body',
-                        {'Expect': '100-continue'})
+                        {'Expect': b'100-continue'})
+            # Assert that we waited for the 100-continue response
+            self.assertEqual(wait_mock.call_count, 1)
             response = conn.getresponse()
             # This should be 200.  If it's a 500 then
             # the prior response was leaking into our
