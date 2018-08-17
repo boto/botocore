@@ -12,6 +12,7 @@ from botocore.exceptions import (
     ConnectTimeoutError, ReadTimeoutError, EndpointConnectionError,
     ConnectionClosedError,
 )
+from botocore.vendored.requests import exceptions as requests_exceptions
 
 
 class TestClientHTTPBehavior(unittest.TestCase):
@@ -36,7 +37,7 @@ class TestClientHTTPBehavior(unittest.TestCase):
         except BackgroundTaskFailed:
             self.fail('Background task did not exit, proxy was not used.')
 
-    def test_read_timeout_exception(self):
+    def _read_timeout_server(self):
         config = Config(read_timeout=0.1, retries={'max_attempts': 0})
         client = self.session.create_client('ec2', endpoint_url=self.localhost,
                                             config=config)
@@ -54,15 +55,18 @@ class TestClientHTTPBehavior(unittest.TestCase):
         try:
             with background(run_server, args=(FakeEC2, self.port)):
                 client.describe_regions()
-        except ReadTimeoutError:
-            # Note: This was vendored requests ConnectionError & ReadTimeout
-            pass
         except BackgroundTaskFailed:
             self.fail('Fake EC2 service was not called.')
-        else:
-            self.fail('Expected exception was not thrown')
         finally:
             client_call_ended_event.set()
+
+    def test_read_timeout_exception(self):
+        with self.assertRaises(ReadTimeoutError):
+            self._read_timeout_server()
+
+    def test_old_read_timeout_exception(self):
+        with self.assertRaises(requests_exceptions.ReadTimeout):
+            self._read_timeout_server()
 
     def test_connect_timeout_exception(self):
         config = Config(connect_timeout=0.2, retries={'max_attempts': 0})
@@ -82,13 +86,8 @@ class TestClientHTTPBehavior(unittest.TestCase):
         try:
             with background(no_accept_server):
                 server_bound_event.wait(timeout=2)
-                client.describe_regions()
-        except ConnectTimeoutError:
-            pass
-        except BackgroundTaskFailed:
-            self.fail('Server failed to exit in a timely manner.')
-        else:
-            self.fail('Excepted exception was not thrown')
+                with self.assertRaises(ConnectTimeoutError):
+                    client.describe_regions()
         finally:
             client_call_ended_event.set()
 
@@ -97,10 +96,8 @@ class TestClientHTTPBehavior(unittest.TestCase):
         endpoint = 'https://ec2.us-weast-1.amazonaws.com/'
         client = self.session.create_client('ec2', endpoint_url=endpoint,
                                             config=config)
-        try:
+        with self.assertRaises(EndpointConnectionError):
             client.describe_regions()
-        except EndpointConnectionError:
-            pass
 
     def test_bad_status_line(self):
         config = Config(retries={'max_attempts': 0})
@@ -111,15 +108,9 @@ class TestClientHTTPBehavior(unittest.TestCase):
             def do_POST(self):
                 self.wfile.write(b'garbage')
 
-        try:
-            with background(run_server, args=(BadStatusHandler, self.port)):
+        with background(run_server, args=(BadStatusHandler, self.port)):
+            with self.assertRaises(ConnectionClosedError):
                 client.describe_regions()
-        except ConnectionClosedError:
-            pass
-        except BackgroundTaskFailed:
-            self.fail('Fake EC2 service was not called.')
-        else:
-            self.fail('Excepted exception was not thrown')
 
 
 def unused_port():
