@@ -77,7 +77,7 @@ class EndpointConnectionError(HTTPClientError):
     fmt = 'Could not connect to the endpoint URL: "{endpoint_url}"'
 
 
-class SSLError(ConnectionError):
+class SSLError(ConnectionError, requests.exceptions.SSLError):
     fmt = 'SSL validation failed for {endpoint_url} {error}'
 
 
