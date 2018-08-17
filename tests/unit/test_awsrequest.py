@@ -122,10 +122,10 @@ class TestAWSRequest(unittest.TestCase):
         self.assertEqual(prepared_request.url, 'http://example.com/?foo=bar')
 
     def test_can_prepare_dict_body(self):
-        body = {'foo': 'baz', 'dead': 'beef'}
+        body = {'dead': 'beef'}
         request = AWSRequest(url='http://example.com/', data=body)
         prepared_request = request.prepare()
-        self.assertEqual(prepared_request.body, 'foo=baz&dead=beef')
+        self.assertEqual(prepared_request.body, 'dead=beef')
 
     def test_can_prepare_empty_body(self):
         request = AWSRequest(url='http://example.com/', data=b'')
@@ -458,7 +458,8 @@ class TestAWSHTTPConnection(unittest.TestCase):
             wait_mock.return_value = True
 
             conn.request('GET', '/bucket/foo', b'body',
-                        {'Expect': '100-continue'})
+                        {'Expect': b'100-continue'})
+            self.assertEqual(wait_mock.call_count, 1)
             response = conn.getresponse()
             self.assertEqual(response.status, 500)
 
@@ -480,7 +481,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
             conn.request('GET', '/bucket/foo', b'body',
                         {'Expect': b'100-continue'})
             # Assert that we waited for the 100-continue response
-            self.assertEqual(wait_mock.call_count, 1)
+            self.assertEqual(wait_mock.call_count, 2)
             response = conn.getresponse()
             # This should be 200.  If it's a 500 then
             # the prior response was leaking into our
@@ -647,9 +648,11 @@ class TestHeadersDict(unittest.TestCase):
     def test_iteration(self):
         self.headers['FOO'] = 'bar'
         self.headers['dead'] = 'beef'
-        self.assertEqual(list(self.headers), ['FOO', 'dead'])
+        self.assertIn('FOO', list(self.headers))
+        self.assertIn('dead', list(self.headers))
         headers_items = list(self.headers.items())
-        self.assertEqual(headers_items, [('FOO', 'bar'), ('dead', 'beef')])
+        self.assertIn(('FOO', 'bar'), headers_items)
+        self.assertIn(('dead', 'beef'), headers_items)
 
 
 if __name__ == "__main__":

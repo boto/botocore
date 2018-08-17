@@ -524,7 +524,7 @@ class AWSResponse(object):
         if encoding:
             return self.content.decode(encoding)
         else:
-            return self.content.decode()
+            return self.content.decode('utf-8')
 
 
 class _HeaderKey(object):
