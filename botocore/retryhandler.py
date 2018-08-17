@@ -19,7 +19,7 @@ from binascii import crc32
 
 from botocore.exceptions import (
     ChecksumError, EndpointConnectionError, ReadTimeoutError,
-    ProxyConnectionError, ConnectionClosedError,
+    ConnectionError, ConnectionClosedError,
 )
 
 
@@ -30,8 +30,8 @@ logger = logging.getLogger(__name__)
 # this mapping with more specific exceptions.
 EXCEPTION_MAP = {
     'GENERAL_CONNECTION_ERROR': [
-        ReadTimeoutError, ProxyConnectionError, EndpointConnectionError,
-        ConnectionClosedError,
+        ConnectionError, ConnectionClosedError, ReadTimeoutError,
+        EndpointConnectionError
     ],
 }
 

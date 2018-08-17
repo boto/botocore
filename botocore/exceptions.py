@@ -69,11 +69,15 @@ class HTTPClientError(BotoCoreError):
         super(HTTPClientError, self).__init__(**kwargs)
 
 
+class ConnectionError(BotoCoreError):
+    fmt = 'An HTTP Client failed to establish a connection: {error}'
+
+
 class EndpointConnectionError(HTTPClientError):
     fmt = 'Could not connect to the endpoint URL: "{endpoint_url}"'
 
 
-class SSLError(HTTPClientError):
+class SSLError(ConnectionError):
     fmt = 'SSL validation failed for {endpoint_url} {error}'
 
 
@@ -88,11 +92,11 @@ class ReadTimeoutError(HTTPClientError, requests.exceptions.ReadTimeout,
     fmt = 'Read timeout on endpoint URL: "{endpoint_url}"'
 
 
-class ConnectTimeoutError(HTTPClientError, requests.exceptions.ConnectTimeout):
+class ConnectTimeoutError(ConnectionError, requests.exceptions.ConnectTimeout):
     fmt = 'Connect timeout on endpoint URL: "{endpoint_url}"'
 
 
-class ProxyConnectionError(HTTPClientError, requests.exceptions.ProxyError):
+class ProxyConnectionError(ConnectionError, requests.exceptions.ProxyError):
     fmt = 'Failed to connect to proxy URL: "{proxy_url}"'
 
 
