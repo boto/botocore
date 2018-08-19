@@ -65,6 +65,7 @@
          "PurchaseReservedNodeOffering" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/PurchaseReservedNodeOffering",
          "RebootCluster" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/RebootCluster",
          "ResetClusterParameterGroup" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/ResetClusterParameterGroup",
+         "ResizeCluster" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/ResizeCluster",
          "RestoreFromClusterSnapshot" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/RestoreFromClusterSnapshot",
          "RestoreTableFromClusterSnapshot" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/RestoreTableFromClusterSnapshot",
          "RevokeClusterSecurityGroupIngress" : "https://docs.aws.amazon.com/goto/WebAPI/redshift/RevokeClusterSecurityGroupIngress",

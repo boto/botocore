@@ -5,6 +5,8 @@
          "AttachInstances" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/AttachInstances",
          "AttachLoadBalancerTargetGroups" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/AttachLoadBalancerTargetGroups",
          "AttachLoadBalancers" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/AttachLoadBalancers",
+         "BatchDeleteScheduledAction" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/BatchDeleteScheduledAction",
+         "BatchPutScheduledUpdateGroupAction" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/BatchPutScheduledUpdateGroupAction",
          "CompleteLifecycleAction" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/CompleteLifecycleAction",
          "CreateAutoScalingGroup" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/CreateAutoScalingGroup",
          "CreateLaunchConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/CreateLaunchConfiguration",

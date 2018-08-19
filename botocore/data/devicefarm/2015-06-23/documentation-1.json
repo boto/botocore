@@ -56,6 +56,7 @@
          "PurchaseOffering" : "https://docs.aws.amazon.com/goto/WebAPI/devicefarm/PurchaseOffering",
          "RenewOffering" : "https://docs.aws.amazon.com/goto/WebAPI/devicefarm/RenewOffering",
          "ScheduleRun" : "https://docs.aws.amazon.com/goto/WebAPI/devicefarm/ScheduleRun",
+         "StopJob" : "https://docs.aws.amazon.com/goto/WebAPI/devicefarm/StopJob",
          "StopRemoteAccessSession" : "https://docs.aws.amazon.com/goto/WebAPI/devicefarm/StopRemoteAccessSession",
          "StopRun" : "https://docs.aws.amazon.com/goto/WebAPI/devicefarm/StopRun",
          "UpdateDeviceInstance" : "https://docs.aws.amazon.com/goto/WebAPI/devicefarm/UpdateDeviceInstance",
@@ -63,6 +64,7 @@
          "UpdateInstanceProfile" : "https://docs.aws.amazon.com/goto/WebAPI/devicefarm/UpdateInstanceProfile",
          "UpdateNetworkProfile" : "https://docs.aws.amazon.com/goto/WebAPI/devicefarm/UpdateNetworkProfile",
          "UpdateProject" : "https://docs.aws.amazon.com/goto/WebAPI/devicefarm/UpdateProject",
+         "UpdateUpload" : "https://docs.aws.amazon.com/goto/WebAPI/devicefarm/UpdateUpload",
          "UpdateVPCEConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/devicefarm/UpdateVPCEConfiguration"
       }
    }

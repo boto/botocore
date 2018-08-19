@@ -9,6 +9,7 @@
          "DeleteTags" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/DeleteTags",
          "DescribeAgents" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/DescribeAgents",
          "DescribeConfigurations" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/DescribeConfigurations",
+         "DescribeContinuousExports" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/DescribeContinuousExports",
          "DescribeExportConfigurations" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/DescribeExportConfigurations",
          "DescribeExportTasks" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/DescribeExportTasks",
          "DescribeTags" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/DescribeTags",
@@ -17,8 +18,10 @@
          "GetDiscoverySummary" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/GetDiscoverySummary",
          "ListConfigurations" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/ListConfigurations",
          "ListServerNeighbors" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/ListServerNeighbors",
+         "StartContinuousExport" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/StartContinuousExport",
          "StartDataCollectionByAgentIds" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/StartDataCollectionByAgentIds",
          "StartExportTask" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/StartExportTask",
+         "StopContinuousExport" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/StopContinuousExport",
          "StopDataCollectionByAgentIds" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/StopDataCollectionByAgentIds",
          "UpdateApplication" : "https://docs.aws.amazon.com/goto/WebAPI/discovery/UpdateApplication"
       }

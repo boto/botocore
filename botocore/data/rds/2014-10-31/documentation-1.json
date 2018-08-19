@@ -67,6 +67,7 @@
          "DownloadDBLogFilePortion" : "https://docs.aws.amazon.com/goto/WebAPI/rds/DownloadDBLogFilePortion",
          "FailoverDBCluster" : "https://docs.aws.amazon.com/goto/WebAPI/rds/FailoverDBCluster",
          "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/rds/ListTagsForResource",
+         "ModifyCurrentDBClusterCapacity" : "https://docs.aws.amazon.com/goto/WebAPI/rds/ModifyCurrentDBClusterCapacity",
          "ModifyDBCluster" : "https://docs.aws.amazon.com/goto/WebAPI/rds/ModifyDBCluster",
          "ModifyDBClusterParameterGroup" : "https://docs.aws.amazon.com/goto/WebAPI/rds/ModifyDBClusterParameterGroup",
          "ModifyDBClusterSnapshotAttribute" : "https://docs.aws.amazon.com/goto/WebAPI/rds/ModifyDBClusterSnapshotAttribute",
