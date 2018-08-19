@@ -2,6 +2,76 @@
 CHANGELOG
 =========
 
+1.10.80
+=======
+
+* api-change:``dax``: Update dax client to latest version
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+
+
+1.10.79
+=======
+
+* api-change:``discovery``: Update discovery client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
+1.10.78
+=======
+
+* api-change:``devicefarm``: Update devicefarm client to latest version
+
+
+1.10.77
+=======
+
+* api-change:``es``: Update es client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+
+
+1.10.76
+=======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+
+
+1.10.75
+=======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
+1.10.74
+=======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``dax``: Update dax client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+
+
+1.10.73
+=======
+
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+
+
+1.10.72
+=======
+
+* api-change:``logs``: Update logs client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+
+
 1.10.71
 =======
 

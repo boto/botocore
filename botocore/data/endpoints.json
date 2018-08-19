@@ -118,6 +118,18 @@
           "us-east-1" : { }
         }
       },
+      "api.sagemaker" : {
+        "endpoints" : {
+          "ap-northeast-1" : { },
+          "ap-northeast-2" : { },
+          "ap-southeast-2" : { },
+          "eu-central-1" : { },
+          "eu-west-1" : { },
+          "us-east-1" : { },
+          "us-east-2" : { },
+          "us-west-2" : { }
+        }
+      },
       "apigateway" : {
         "endpoints" : {
           "ap-northeast-1" : { },
@@ -559,6 +571,7 @@
           "protocols" : [ "https" ]
         },
         "endpoints" : {
+          "ap-southeast-2" : { },
           "eu-west-1" : { },
           "us-east-1" : { },
           "us-east-2" : { },
@@ -869,7 +882,7 @@
       },
       "elasticmapreduce" : {
         "defaults" : {
-          "protocols" : [ "http", "https" ],
+          "protocols" : [ "https" ],
           "sslCommonName" : "{region}.{service}.{dnsSuffix}"
         },
         "endpoints" : {
@@ -1036,6 +1049,7 @@
           "ap-south-1" : { },
           "ap-southeast-1" : { },
           "ap-southeast-2" : { },
+          "ca-central-1" : { },
           "eu-central-1" : { },
           "eu-west-1" : { },
           "eu-west-2" : { },
@@ -1289,6 +1303,7 @@
         "endpoints" : {
           "ap-northeast-1" : { },
           "ap-northeast-2" : { },
+          "ap-south-1" : { },
           "ap-southeast-1" : { },
           "ap-southeast-2" : { },
           "eu-central-1" : { },
@@ -1666,18 +1681,6 @@
         },
         "isRegionalized" : true,
         "partitionEndpoint" : "us-east-1"
-      },
-      "sagemaker" : {
-        "endpoints" : {
-          "ap-northeast-1" : { },
-          "ap-northeast-2" : { },
-          "ap-southeast-2" : { },
-          "eu-central-1" : { },
-          "eu-west-1" : { },
-          "us-east-1" : { },
-          "us-east-2" : { },
-          "us-west-2" : { }
-        }
       },
       "sdb" : {
         "defaults" : {
@@ -2337,7 +2340,7 @@
       },
       "elasticmapreduce" : {
         "defaults" : {
-          "protocols" : [ "http", "https" ]
+          "protocols" : [ "https" ]
         },
         "endpoints" : {
           "cn-north-1" : { },
@@ -2575,6 +2578,17 @@
           "us-gov-west-1" : { }
         }
       },
+      "data.iot" : {
+        "defaults" : {
+          "credentialScope" : {
+            "service" : "iotdata"
+          },
+          "protocols" : [ "https" ]
+        },
+        "endpoints" : {
+          "us-gov-west-1" : { }
+        }
+      },
       "directconnect" : {
         "endpoints" : {
           "us-gov-west-1" : { }
@@ -2637,7 +2651,7 @@
       "elasticmapreduce" : {
         "endpoints" : {
           "us-gov-west-1" : {
-            "protocols" : [ "http", "https" ]
+            "protocols" : [ "https" ]
           }
         }
       },
@@ -2671,6 +2685,16 @@
         "partitionEndpoint" : "aws-us-gov-global"
       },
       "inspector" : {
+        "endpoints" : {
+          "us-gov-west-1" : { }
+        }
+      },
+      "iot" : {
+        "defaults" : {
+          "credentialScope" : {
+            "service" : "execute-api"
+          }
+        },
         "endpoints" : {
           "us-gov-west-1" : { }
         }
