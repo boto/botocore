@@ -2443,16 +2443,6 @@
       },
       "documentation": "Placeholder documentation for CreateInput"
     },
-    "CreateInputResponse": {
-      "type": "structure",
-      "members": {
-        "Input": {
-          "shape": "Input",
-          "locationName": "input"
-        }
-      },
-      "documentation": "Placeholder documentation for CreateInputResponse"
-    },
     "CreateInputResultModel": {
       "type": "structure",
       "members": {
@@ -7524,16 +7514,6 @@
       "required": [
         "ChannelId"
       ]
-    },
-    "UpdateChannelResponse": {
-      "type": "structure",
-      "members": {
-        "Channel": {
-          "shape": "Channel",
-          "locationName": "channel"
-        }
-      },
-      "documentation": "Placeholder documentation for UpdateChannelResponse"
     },
     "UpdateChannelResultModel": {
       "type": "structure",
