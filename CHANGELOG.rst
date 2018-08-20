@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.10.81
+=======
+
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+
+
 1.10.80
 =======
 
