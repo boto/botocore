@@ -15,11 +15,12 @@ from tests.unit import BaseResponseTest
 import datetime
 
 from dateutil.tz import tzutc
+from urllib3.exceptions import ReadTimeoutError as URLLib3ReadTimeoutError
 
 import botocore
 from botocore import response
 from botocore.compat import six
-from botocore.exceptions import IncompleteReadError
+from botocore.exceptions import IncompleteReadError, ReadTimeoutError
 from botocore.awsrequest import AWSRequest, AWSResponse
 
 XMLBODY1 = (b'<?xml version="1.0" encoding="UTF-8"?><Error>'
@@ -135,6 +136,18 @@ class TestStreamWrapper(unittest.TestCase):
                 stream.iter_lines(chunk_size),
                 [b'1234567890', b'1234567890', b'12345'],
             )
+
+    def test_catches_urllib3_read_timeout(self):
+        class TimeoutBody(object):
+            def read(*args, **kwargs):
+                raise URLLib3ReadTimeoutError(None, None, None)
+
+            def geturl(*args, **kwargs):
+                return 'http://example.com'
+
+        stream = response.StreamingBody(TimeoutBody(), content_length=None)
+        with self.assertRaises(ReadTimeoutError):
+            stream.read()
 
 
 class FakeRawResponse(six.BytesIO):
