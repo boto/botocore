@@ -53,7 +53,7 @@ setup(
     url='https://github.com/boto/botocore',
     scripts=[],
     packages=find_packages(exclude=['tests*']),
-    package_data={'botocore': ['data/*.json', 'data/*/*.json'],
+    package_data={'botocore': ['cacert.pem', 'data/*.json', 'data/*/*.json'],
                   'botocore.vendored.requests': ['*.pem']},
     include_package_data=True,
     install_requires=requires,
