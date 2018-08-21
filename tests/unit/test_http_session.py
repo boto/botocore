@@ -5,8 +5,8 @@ from urllib3.exceptions import NewConnectionError, ProtocolError
 
 from botocore.vendored import six
 from botocore.awsrequest import AWSRequest
-from botocore.http_session import get_cert_path
-from botocore.http_session import URLLib3Session, ProxyConfiguration
+from botocore.httpsession import get_cert_path
+from botocore.httpsession import URLLib3Session, ProxyConfiguration
 from botocore.exceptions import ConnectionClosedError, EndpointConnectionError
 
 
@@ -54,7 +54,7 @@ class TestHttpSessionUtils(unittest.TestCase):
         self.assertEqual(path, cert_path)
 
     def test_get_cert_path_certifi_or_default(self):
-        with patch('botocore.http_session.where') as where:
+        with patch('botocore.httpsession.where') as where:
             path = '/bundle/path'
             where.return_value = path
             cert_path = get_cert_path(True)
@@ -79,8 +79,8 @@ class TestURLLib3Session(unittest.TestCase):
         self.connection.urlopen.return_value = self.response
         self.pool_manager.connection_from_url.return_value = self.connection
 
-        self.pool_patch = patch('botocore.http_session.PoolManager')
-        self.proxy_patch = patch('botocore.http_session.proxy_from_url')
+        self.pool_patch = patch('botocore.httpsession.PoolManager')
+        self.proxy_patch = patch('botocore.httpsession.proxy_from_url')
         self.pool_manager_cls = self.pool_patch.start()
         self.proxy_manager_fun = self.proxy_patch.start()
         self.pool_manager_cls.return_value = self.pool_manager

@@ -28,7 +28,7 @@ from dateutil.tz import tzlocal, tzutc
 
 import botocore
 import botocore.awsrequest
-import botocore.http_session
+import botocore.httpsession
 from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
 from botocore.compat import OrderedDict, six, urlparse
 from botocore.vendored.six.moves.urllib.request import getproxies, proxy_bypass
@@ -179,7 +179,7 @@ class InstanceMetadataFetcher(object):
         self._disabled = env.get('AWS_EC2_METADATA_DISABLED', 'false').lower()
         self._disabled = self._disabled == 'true'
         self._user_agent = user_agent
-        self._session = botocore.http_session.URLLib3Session(
+        self._session = botocore.httpsession.URLLib3Session(
             timeout=self._timeout,
             proxies=get_environ_proxies(self._url),
         )
@@ -1048,7 +1048,7 @@ class ContainerMetadataFetcher(object):
 
     def __init__(self, session=None, sleep=time.sleep):
         if session is None:
-            session = botocore.http_session.URLLib3Session(
+            session = botocore.httpsession.URLLib3Session(
                 timeout=self.TIMEOUT_SECONDS
             )
         self._session = session

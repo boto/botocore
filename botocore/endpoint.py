@@ -21,7 +21,7 @@ from botocore.vendored import six
 
 from botocore.awsrequest import create_request_object
 from botocore.exceptions import HTTPClientError
-from botocore.http_session import URLLib3Session
+from botocore.httpsession import URLLib3Session
 from botocore.utils import is_valid_endpoint_url, get_environ_proxies
 from botocore.hooks import first_non_none_response
 from botocore.history import get_global_history_recorder

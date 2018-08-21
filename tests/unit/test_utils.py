@@ -1722,7 +1722,7 @@ class TestUnsigned(unittest.TestCase):
 
 class TestInstanceMetadataFetcher(unittest.TestCase):
     def setUp(self):
-        urllib3_session_send = 'botocore.http_session.URLLib3Session.send'
+        urllib3_session_send = 'botocore.httpsession.URLLib3Session.send'
         self._urllib3_patch = mock.patch(urllib3_session_send)
         self._send = self._urllib3_patch.start()
 
