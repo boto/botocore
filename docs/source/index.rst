@@ -25,6 +25,19 @@ Contents:
 Upgrade Notes
 =============
 
+Upgrading to 1.11.0
+---------------------
+* The vendored versions of ``requests`` and ``urllib3`` are no longer being
+  used and have been replaced with a direct dependency on upstream ``urllib3``
+  and ``requests`` is no longer a dependency of ``botocore``.  While these
+  vendored dependencies are still in the ``botocore`` package they should not
+  be used as they will be removed in the future. Any code that imports from
+  ``botocore.vendored.requests.*`` should be updated accordingly. Specifically,
+  the use of ``botocore.vendored.requests.exceptions.*`` or
+  ``botocore.vendored.requests.packages.urllib3.exceptions.*`` must be updated
+  to the corresponding exception classes in ``botocore.exceptions``.
+* The version of ``urllib3`` used to make HTTP requests has been updated.
+
 Upgrading to 1.0.0rc1
 ---------------------
 
