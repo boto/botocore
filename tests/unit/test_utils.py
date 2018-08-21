@@ -1756,6 +1756,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         url = 'https://example.com/'
         env = {'AWS_EC2_METADATA_DISABLED': 'false'}
         creds = {
+            'Code': 'Success',
             'AccessKeyId': 'spam',
             'SecretAccessKey': 'eggs',
             'Token': 'spam-token',
