@@ -250,7 +250,13 @@ class ResponseParser(object):
         if isinstance(parsed, dict):
             response_metadata = parsed.get('ResponseMetadata', {})
             response_metadata['HTTPStatusCode'] = response['status_code']
-            response_metadata['HTTPHeaders'] = dict(response['headers'])
+            http_headers = {}
+            # Ensure that the http header keys are all lower cased. Older
+            # versions of urllib3 (< 1.11) would unintentionally do this for us
+            # (see urllib3#633). We need to do this conversion manually now.
+            for header in response['headers']:
+                http_headers[header.lower()] = response['headers'][header]
+            response_metadata['HTTPHeaders'] = http_headers
             parsed['ResponseMetadata'] = response_metadata
         return parsed
 
