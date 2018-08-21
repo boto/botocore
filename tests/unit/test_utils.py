@@ -1785,6 +1785,31 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         }
         self.assertEqual(result, expected_result)
 
+    def test_metadata_server_error_result(self):
+        url = 'https://example.com/'
+        env = {'AWS_EC2_METADATA_DISABLED': 'false'}
+        error = {
+            'Code': 'AssumeRoleUnauthorizedAccess',
+            'Message': 'something about the error',
+            'LastUpdated': 'something',
+        }
+
+        profiles_response = mock.Mock()
+        profiles_response.status_code = 200
+        profiles_response.content = b'role-name'
+
+        creds_response = mock.Mock()
+        creds_response.status_code = 200
+        creds_response.content = json.dumps(error).encode('utf-8')
+
+        self._requests.get.side_effect = [profiles_response, creds_response]
+
+        fetcher = InstanceMetadataFetcher(url=url, env=env)
+        result = fetcher.retrieve_iam_role_credentials()
+
+        expected_result = {}
+        self.assertEqual(result, expected_result)
+
     def test_includes_user_agent_header(self):
         user_agent = 'my-user-agent'
         InstanceMetadataFetcher(
