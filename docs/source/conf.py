@@ -12,10 +12,6 @@
 # serve to show the default.
 
 import sys, os
-from botocore.session import get_session
-from botocore.docs import generate_docs
-
-generate_docs(os.path.dirname(os.path.abspath(__file__)), get_session())
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -137,10 +133,7 @@ html_static_path = ['_static']
 # Custom sidebar templates, maps document names to template names.
 html_show_sourcelink = False
 html_sidebars = {
-    '**': ['logo-text.html',
-           'globaltoc.html',
-           'localtoc.html',
-           'searchbox.html']
+    '**': []
 }
 
 # Additional templates that should be rendered to pages, maps page names to
@@ -189,6 +182,9 @@ html_theme_options = {
     "google_analytics_account": os.getenv('TRACKING', False),
     "base_url": "http://docs.aws.amazon.com/aws-sdk-php/guide/latest/"
 }
+
+def setup(app):
+    app.add_javascript('redirect.js')
 
 # -- Options for LaTeX output --------------------------------------------------
 
