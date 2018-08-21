@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.10.82
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+
+
 1.10.81
 =======
 

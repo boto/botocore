@@ -108,6 +108,12 @@
       "limit_key": "NumberOfLines",
       "more_results": "AdditionalDataPending",
       "result_key": "LogFileData"
+    },
+    "DescribeDBClusters": {
+      "input_token": "Marker",
+      "limit_key": "MaxRecords",
+      "output_token": "Marker",
+      "result_key": "DBClusters"
     }
   }
 }
