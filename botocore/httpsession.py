@@ -222,4 +222,6 @@ class URLLib3Session(object):
                 endpoint_url=request.url
             )
         except Exception as e:
+            message = 'Exception received when sending urllib3 HTTP request'
+            logger.debug(message, exc_info=True)
             raise HTTPClientError(error=e)
