@@ -22,6 +22,7 @@ from botocore.endpoint import Endpoint, DEFAULT_TIMEOUT
 from botocore.endpoint import EndpointCreator
 from botocore.exceptions import EndpointConnectionError
 from botocore.exceptions import ConnectionClosedError
+from botocore.httpsession import URLLib3Session
 
 
 def request_dict():
@@ -249,6 +250,7 @@ class TestEndpointCreator(unittest.TestCase):
         self.environ_patch = patch('os.environ', self.environ)
         self.environ_patch.start()
         self.creator = EndpointCreator(Mock())
+        self.mock_session = Mock(spec=URLLib3Session)
 
     def tearDown(self):
         self.environ_patch.stop()
@@ -260,75 +262,70 @@ class TestEndpointCreator(unittest.TestCase):
         self.assertEqual(endpoint.host, 'https://endpoint.url')
 
     def test_create_endpoint_with_default_timeout(self):
-        mock_session = Mock()
         endpoint = self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
-            endpoint_url='https://example.com', http_session_cls=mock_session)
-        session_args = mock_session.call_args[1]
+            endpoint_url='https://example.com',
+            http_session_cls=self.mock_session)
+        session_args = self.mock_session.call_args[1]
         self.assertEqual(session_args.get('timeout'), DEFAULT_TIMEOUT)
 
     def test_create_endpoint_with_customized_timeout(self):
-        mock_session = Mock()
         endpoint = self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
             endpoint_url='https://example.com', timeout=123,
-            http_session_cls=mock_session)
-        session_args = mock_session.call_args[1]
+            http_session_cls=self.mock_session)
+        session_args = self.mock_session.call_args[1]
         self.assertEqual(session_args.get('timeout'), 123)
 
     def test_get_endpoint_default_verify_ssl(self):
-        mock_session = Mock()
         endpoint = self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
-            endpoint_url='https://example.com', http_session_cls=mock_session)
-        session_args = mock_session.call_args[1]
+            endpoint_url='https://example.com',
+            http_session_cls=self.mock_session)
+        session_args = self.mock_session.call_args[1]
         self.assertTrue(session_args.get('verify'))
 
     def test_verify_ssl_can_be_disabled(self):
-        mock_session = Mock()
         endpoint = self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
             endpoint_url='https://example.com', verify=False,
-            http_session_cls=mock_session)
-        session_args = mock_session.call_args[1]
+            http_session_cls=self.mock_session)
+        session_args = self.mock_session.call_args[1]
         self.assertFalse(session_args.get('verify'))
 
     def test_verify_ssl_can_specify_cert_bundle(self):
-        mock_session = Mock()
         endpoint = self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
             endpoint_url='https://example.com', verify='/path/cacerts.pem',
-            http_session_cls=mock_session)
-        session_args = mock_session.call_args[1]
+            http_session_cls=self.mock_session)
+        session_args = self.mock_session.call_args[1]
         self.assertEqual(session_args.get('verify'), '/path/cacerts.pem')
 
     def test_honor_cert_bundle_env_var(self):
         self.environ['REQUESTS_CA_BUNDLE'] = '/env/cacerts.pem'
-        mock_session = Mock()
         endpoint = self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
-            endpoint_url='https://example.com', http_session_cls=mock_session)
-        session_args = mock_session.call_args[1]
+            endpoint_url='https://example.com',
+            http_session_cls=self.mock_session)
+        session_args = self.mock_session.call_args[1]
         self.assertEqual(session_args.get('verify'), '/env/cacerts.pem')
 
     def test_env_ignored_if_explicitly_passed(self):
         self.environ['REQUESTS_CA_BUNDLE'] = '/env/cacerts.pem'
-        mock_session = Mock()
         endpoint = self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
             endpoint_url='https://example.com', verify='/path/cacerts.pem',
-            http_session_cls=mock_session)
-        session_args = mock_session.call_args[1]
+            http_session_cls=self.mock_session)
+        session_args = self.mock_session.call_args[1]
         # /path/cacerts.pem wins over the value from the env var.
         self.assertEqual(session_args.get('verify'), '/path/cacerts.pem')
 
     def test_can_specify_max_pool_conns(self):
-        mock_session = Mock()
         endpoint = self.creator.create_endpoint(
             self.service_model, region_name='us-west-2',
             endpoint_url='https://example.com',
             max_pool_connections=100,
-            http_session_cls=mock_session,
+            http_session_cls=self.mock_session,
         )
-        session_args = mock_session.call_args[1]
+        session_args = self.mock_session.call_args[1]
         self.assertEqual(session_args.get('max_pool_connections'), 100)
