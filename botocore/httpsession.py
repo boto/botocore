@@ -112,6 +112,10 @@ class URLLib3Session(object):
     ):
         self._verify = verify
         self._proxy_config = ProxyConfiguration(proxies=proxies)
+        self._pool_classes_by_scheme = {
+            'http': botocore.awsrequest.AWSHTTPConnectionPool,
+            'https': botocore.awsrequest.AWSHTTPSConnectionPool,
+        }
         if timeout is None:
             timeout = DEFAULT_TIMEOUT
         if not isinstance(timeout, (int, float)):
@@ -124,17 +128,20 @@ class URLLib3Session(object):
             timeout=self._timeout,
             maxsize=self._max_pool_connections,
         )
+        self._manager.pool_classes_by_scheme = self._pool_classes_by_scheme
 
     def _get_proxy_manager(self, proxy_url):
         if proxy_url not in self._proxy_managers:
             proxy_headers = self._proxy_config.proxy_headers_for(proxy_url)
-            self._proxy_managers[proxy_url] = proxy_from_url(
+            proxy_manager = proxy_from_url(
                 proxy_url,
                 strict=True,
                 timeout=self._timeout,
                 proxy_headers=proxy_headers,
                 maxsize=self._max_pool_connections
             )
+            proxy_manager.pool_classes_by_scheme = self._pool_classes_by_scheme
+            self._proxy_managers[proxy_url] = proxy_manager
 
         return self._proxy_managers[proxy_url]
 

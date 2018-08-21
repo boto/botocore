@@ -251,6 +251,14 @@ class AWSHTTPSConnection(AWSConnection, VerifiedHTTPSConnection):
     """ An HTTPSConnection that supports 100 Continue behavior. """
 
 
+class AWSHTTPConnectionPool(HTTPConnectionPool):
+    ConnectionCls = AWSHTTPConnection
+
+
+class AWSHTTPSConnectionPool(HTTPSConnectionPool):
+    ConnectionCls = AWSHTTPSConnection
+
+
 def prepare_request_dict(request_dict, endpoint_url, context=None,
                          user_agent=None):
     """
@@ -571,7 +579,3 @@ class HeadersDict(collections.MutableMapping):
 
     def copy(self):
         return HeadersDict(self.items())
-
-
-HTTPSConnectionPool.ConnectionCls = AWSHTTPSConnection
-HTTPConnectionPool.ConnectionCls = AWSHTTPConnection
