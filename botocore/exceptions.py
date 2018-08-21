@@ -73,7 +73,7 @@ class ConnectionError(BotoCoreError):
     fmt = 'An HTTP Client failed to establish a connection: {error}'
 
 
-class EndpointConnectionError(HTTPClientError):
+class EndpointConnectionError(ConnectionError):
     fmt = 'Could not connect to the endpoint URL: "{endpoint_url}"'
 
 
