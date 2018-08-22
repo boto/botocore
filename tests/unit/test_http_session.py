@@ -107,8 +107,12 @@ class TestURLLib3Session(unittest.TestCase):
 
     def test_forwards_max_pool_size(self):
         URLLib3Session(max_pool_connections=22)
-        self.pool_manager_cls.assert_called_with(maxsize=22, timeout=ANY,
-                                                 strict=True)
+        self.pool_manager_cls.assert_called_with(
+            maxsize=22,
+            timeout=ANY,
+            strict=True,
+            ssl_context=ANY,
+        )
 
     def test_basic_request(self):
         session = URLLib3Session()
@@ -140,6 +144,7 @@ class TestURLLib3Session(unittest.TestCase):
             maxsize=ANY,
             timeout=ANY,
             strict=True,
+            ssl_context=ANY,
         )
         self.assert_request_sent()
 
@@ -155,6 +160,7 @@ class TestURLLib3Session(unittest.TestCase):
             maxsize=ANY,
             timeout=ANY,
             strict=True,
+            ssl_context=ANY,
         )
         session.send(self.request.prepare())
         # assert that we did not create another proxy manager
@@ -170,6 +176,7 @@ class TestURLLib3Session(unittest.TestCase):
             maxsize=ANY,
             timeout=ANY,
             strict=True,
+            ssl_context=ANY,
         )
         self.assert_request_sent(url=self.request.url)
 

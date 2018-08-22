@@ -4,10 +4,18 @@ import socket
 from base64 import b64encode
 
 from urllib3 import PoolManager, ProxyManager, proxy_from_url, Timeout
+from urllib3.util.ssl_ import (
+    ssl, OP_NO_SSLv2, OP_NO_SSLv3, OP_NO_COMPRESSION, DEFAULT_CIPHERS,
+)
 from urllib3.exceptions import SSLError as URLLib3SSLError
 from urllib3.exceptions import ReadTimeoutError as URLLib3ReadTimeoutError
 from urllib3.exceptions import ConnectTimeoutError as URLLib3ConnectTimeoutError
 from urllib3.exceptions import NewConnectionError, ProtocolError, ProxyError
+try:
+    # Always import the original SSLContext, even if it has been patched
+    from urllib3.contrib.pyopenssl import orig_util_SSLContext as SSLContext
+except ImportError:
+    from urllib3.util.ssl_ import SSLContext
 
 import botocore.awsrequest
 from botocore.vendored import six
@@ -17,11 +25,6 @@ from botocore.exceptions import (
     ConnectionClosedError, EndpointConnectionError, HTTPClientError,
     ReadTimeoutError, ProxyConnectionError, ConnectTimeoutError, SSLError
 )
-try:
-    from urllib3.contrib import pyopenssl
-    pyopenssl.extract_from_urllib3()
-except ImportError:
-    pass
 
 filter_ssl_warnings()
 logger = logging.getLogger(__name__)
@@ -41,6 +44,43 @@ def get_cert_path(verify):
         return verify
 
     return where()
+
+
+def create_urllib3_context(ssl_version=None, cert_reqs=None,
+                           options=None, ciphers=None):
+    """ This function is a vendored version of the same function in urllib3
+
+        We vendor this function to ensure that the SSL contexts we construct
+        always use the std lib SSLContext instead of pyopenssl.
+    """
+    context = SSLContext(ssl_version or ssl.PROTOCOL_SSLv23)
+
+    # Setting the default here, as we may have no ssl module on import
+    cert_reqs = ssl.CERT_REQUIRED if cert_reqs is None else cert_reqs
+
+    if options is None:
+        options = 0
+        # SSLv2 is easily broken and is considered harmful and dangerous
+        options |= OP_NO_SSLv2
+        # SSLv3 has several problems and is now dangerous
+        options |= OP_NO_SSLv3
+        # Disable compression to prevent CRIME attacks for OpenSSL 1.0+
+        # (issue urllib3#309)
+        options |= OP_NO_COMPRESSION
+
+    context.options |= options
+
+    if getattr(context, 'supports_set_ciphers', True):
+        # Platform-specific: Python 2.6
+        context.set_ciphers(ciphers or DEFAULT_CIPHERS)
+
+    context.verify_mode = cert_reqs
+    if getattr(context, 'check_hostname', None) is not None:
+        # Platform-specific: Python 3.2
+        # We do our own verification, including fingerprints and alternative
+        # hostnames. So disable it here
+        context.check_hostname = False
+    return context
 
 
 class ProxyConfiguration(object):
@@ -127,8 +167,12 @@ class URLLib3Session(object):
             strict=True,
             timeout=self._timeout,
             maxsize=self._max_pool_connections,
+            ssl_context=self._get_ssl_context(),
         )
         self._manager.pool_classes_by_scheme = self._pool_classes_by_scheme
+
+    def _get_ssl_context(self):
+        return create_urllib3_context()
 
     def _get_proxy_manager(self, proxy_url):
         if proxy_url not in self._proxy_managers:
@@ -138,7 +182,8 @@ class URLLib3Session(object):
                 strict=True,
                 timeout=self._timeout,
                 proxy_headers=proxy_headers,
-                maxsize=self._max_pool_connections
+                maxsize=self._max_pool_connections,
+                ssl_context=self._get_ssl_context(),
             )
             proxy_manager.pool_classes_by_scheme = self._pool_classes_by_scheme
             self._proxy_managers[proxy_url] = proxy_manager
