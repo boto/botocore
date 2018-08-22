@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.10.83
+=======
+
+* api-change:``snowball``: Update snowball client to latest version
+
+
 1.10.82
 =======
 
