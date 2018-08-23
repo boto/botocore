@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.10.84
+=======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``iotanalytics``: Update iotanalytics client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+
+
 1.10.83
 =======
 
