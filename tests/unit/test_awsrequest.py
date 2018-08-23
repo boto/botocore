@@ -21,10 +21,11 @@ import socket
 import sys
 
 from mock import Mock, patch
+from urllib3.connectionpool import HTTPConnectionPool, HTTPSConnectionPool
 
 from botocore.exceptions import UnseekableStreamError
 from botocore.awsrequest import AWSRequest, AWSPreparedRequest, AWSResponse
-from botocore.awsrequest import AWSHTTPConnection, HeadersDict
+from botocore.awsrequest import AWSHTTPConnection, AWSHTTPSConnection, HeadersDict
 from botocore.awsrequest import prepare_request_dict, create_request_object
 from botocore.compat import file_type, six
 
@@ -487,6 +488,14 @@ class TestAWSHTTPConnection(unittest.TestCase):
             # the prior response was leaking into our
             # current response.,
             self.assertEqual(response.status, 200)
+
+
+class TestAWSHTTPConnectionPool(unittest.TestCase):
+    def test_global_urllib3_pool_is_unchanged(self):
+        http_connection_class = HTTPConnectionPool.ConnectionCls
+        self.assertIsNot(http_connection_class, AWSHTTPConnection)
+        https_connection_class = HTTPSConnectionPool.ConnectionCls
+        self.assertIsNot(https_connection_class, AWSHTTPSConnection)
 
 
 class TestPrepareRequestDict(unittest.TestCase):
