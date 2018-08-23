@@ -180,6 +180,19 @@ class TestURLLib3Session(unittest.TestCase):
         )
         self.assert_request_sent(url=self.request.url)
 
+    def test_ssl_context_is_explicit(self):
+        session = URLLib3Session()
+        session.send(self.request.prepare())
+        _, manager_kwargs = self.pool_manager_cls.call_args
+        self.assertIsNotNone(manager_kwargs.get('ssl_context'))
+
+    def test_proxy_request_ssl_context_is_explicit(self):
+        proxies = {'http': 'http://proxy.com'}
+        session = URLLib3Session(proxies=proxies)
+        session.send(self.request.prepare())
+        _, proxy_kwargs = self.proxy_manager_fun.call_args
+        self.assertIsNotNone(proxy_kwargs.get('ssl_context'))
+
     def make_request_with_error(self, error):
         self.connection.urlopen.side_effect = error
         session = URLLib3Session()
