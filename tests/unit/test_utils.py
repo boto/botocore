@@ -44,6 +44,7 @@ from botocore.utils import fix_s3_host
 from botocore.utils import switch_to_virtual_host_style
 from botocore.utils import instance_cache
 from botocore.utils import merge_dicts
+from botocore.utils import lowercase_dict
 from botocore.utils import get_service_module_name
 from botocore.utils import percent_encode_sequence
 from botocore.utils import percent_encode
@@ -987,6 +988,33 @@ class TestMergeDicts(unittest.TestCase):
         merge_dicts(dict1, dict2, append_lists=True)
         self.assertEqual(
             dict1, {'Foo': ['foo_value']})
+
+
+class TestLowercaseDict(unittest.TestCase):
+    def test_lowercase_dict_empty(self):
+        original = {}
+        copy = lowercase_dict(original)
+        self.assertEqual(original, copy)
+
+    def test_lowercase_dict_original_keys_lower(self):
+        original = {
+            'lower_key1': 1,
+            'lower_key2': 2,
+        }
+        copy = lowercase_dict(original)
+        self.assertEqual(original, copy)
+
+    def test_lowercase_dict_original_keys_mixed(self):
+        original = {
+            'SOME_KEY': 'value',
+            'AnOTher_OnE': 'anothervalue',
+        }
+        copy = lowercase_dict(original)
+        expected = {
+            'some_key': 'value',
+            'another_one': 'anothervalue',
+        }
+        self.assertEqual(expected, copy)
 
 
 class TestGetServiceModuleName(unittest.TestCase):

@@ -279,6 +279,14 @@ def merge_dicts(dict1, dict2, append_lists=False):
             dict1[key] = dict2[key]
 
 
+def lowercase_dict(original):
+    """Copies the given dictionary ensuring all keys are lowercase strings. """
+    copy = {}
+    for key in original:
+        copy[key.lower()] = original[key]
+    return copy
+
+
 def parse_key_val_file(filename, _open=open):
     try:
         with _open(filename) as f:
