@@ -5,6 +5,7 @@ from urllib3.exceptions import NewConnectionError, ProtocolError
 
 from botocore.vendored import six
 from botocore.awsrequest import AWSRequest
+from botocore.awsrequest import AWSHTTPConnectionPool, AWSHTTPSConnectionPool
 from botocore.httpsession import get_cert_path
 from botocore.httpsession import URLLib3Session, ProxyConfiguration
 from botocore.exceptions import ConnectionClosedError, EndpointConnectionError
@@ -207,3 +208,11 @@ class TestURLLib3Session(unittest.TestCase):
     def test_catches_bad_status_line(self):
         error = ProtocolError(None)
         self.make_request_with_error(error)
+
+    def test_aws_connection_classes_are_used(self):
+        session = URLLib3Session()
+        # ensure the pool manager is using the correct classes
+        http_class = self.pool_manager.pool_classes_by_scheme.get('http')
+        self.assertIs(http_class, AWSHTTPConnectionPool)
+        https_class = self.pool_manager.pool_classes_by_scheme.get('https')
+        self.assertIs(https_class, AWSHTTPSConnectionPool)
