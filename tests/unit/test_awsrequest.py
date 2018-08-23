@@ -174,58 +174,6 @@ class TestAWSRequest(unittest.TestCase):
         self.assertTrue(looks_like_file.seek_called)
 
 
-class TestAWSPreparedRequest(unittest.TestCase):
-    def setUp(self):
-        self.tempdir = tempfile.mkdtemp()
-        self.filename = os.path.join(self.tempdir, 'foo')
-        self.request = AWSRequest(url='http://example.com')
-        self.prepared_request = AWSPreparedRequest(self.request)
-        self.prepared_request.prepare_headers(self.request.headers)
-
-    def tearDown(self):
-        shutil.rmtree(self.tempdir)
-
-    def test_prepare_body_content_adds_content_length(self):
-        content = b'foobarbaz'
-        with open(self.filename, 'wb') as f:
-            f.write(content)
-        with open(self.filename, 'rb') as f:
-            data = Seekable(f)
-            self.prepared_request.prepare_body(data=data, files=None)
-        self.assertEqual(
-            self.prepared_request.headers['Content-Length'],
-            str(len(content)))
-
-    def test_prepare_body_removes_transfer_encoding(self):
-        self.prepared_request.headers['Transfer-Encoding'] = 'chunked'
-        content = b'foobarbaz'
-        with open(self.filename, 'wb') as f:
-            f.write(content)
-        with open(self.filename, 'rb') as f:
-            data = Seekable(f)
-            self.prepared_request.prepare_body(data=data, files=None)
-        self.assertEqual(
-            self.prepared_request.headers['Content-Length'],
-            str(len(content)))
-        self.assertNotIn('Transfer-Encoding', self.prepared_request.headers)
-
-    def test_prepare_body_ignores_existing_transfer_encoding(self):
-        content = b'foobarbaz'
-        self.prepared_request.headers['Transfer-Encoding'] = 'chunked'
-        with open(self.filename, 'wb') as f:
-            f.write(content)
-        with open(self.filename, 'rb') as f:
-            self.prepared_request.prepare_body(data=f, files=None)
-        # The Transfer-Encoding should not be removed if Content-Length
-        # is not added via the custom logic in the ``prepare_body`` method.
-        # Note requests' ``prepare_body`` is the method that adds the
-        # Content-Length header for this case as the ``data`` is a
-        # regular file handle.
-        self.assertEqual(
-            self.prepared_request.headers['Transfer-Encoding'],
-            'chunked')
-
-
 class TestAWSHTTPConnection(unittest.TestCase):
     def create_tunneled_connection(self, url, port, response):
         s = FakeSocket(response)
@@ -265,13 +213,13 @@ class TestAWSHTTPConnection(unittest.TestCase):
         return conn
 
     def test_expect_100_continue_returned(self):
-        with patch('select.select') as select_mock:
+        with patch('urllib3.util.wait_for_read') as wait_for_read_mock:
             # Shows the server first sending a 100 continue response
             # then a 200 ok response.
             s = FakeSocket(b'HTTP/1.1 100 Continue\r\n\r\nHTTP/1.1 200 OK\r\n')
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
-            select_mock.return_value = ([s], [], [])
+            wait_for_read_mock.return_value = [s]
             conn.request('GET', '/bucket/foo', b'body',
                          {'Expect': '100-continue'})
             response = conn.getresponse()
@@ -279,13 +227,13 @@ class TestAWSHTTPConnection(unittest.TestCase):
             self.assertEqual(response.status, 200)
 
     def test_handles_expect_100_with_different_reason_phrase(self):
-        with patch('select.select') as select_mock:
+        with patch('urllib3.util.wait_for_read') as wait_for_read_mock:
             # Shows the server first sending a 100 continue response
             # then a 200 ok response.
             s = FakeSocket(b'HTTP/1.1 100 (Continue)\r\n\r\nHTTP/1.1 200 OK\r\n')
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
-            select_mock.return_value = ([s], [], [])
+            wait_for_read_mock.return_value = [s]
             conn.request('GET', '/bucket/foo', six.BytesIO(b'body'),
                          {'Expect': '100-continue', 'Content-Length': '4'})
             response = conn.getresponse()
@@ -299,7 +247,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
         # When using squid as an HTTP proxy, it will also send
         # a Connection: keep-alive header back with the 100 continue
         # response.  We need to ensure we handle this case.
-        with patch('select.select') as select_mock:
+        with patch('urllib3.util.wait_for_read') as wait_for_read_mock:
             # Shows the server first sending a 100 continue response
             # then a 500 response.  We're picking 500 to confirm we
             # actually parse the response instead of getting the
@@ -311,7 +259,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
                            b'HTTP/1.1 500 Internal Service Error\r\n')
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
-            select_mock.return_value = ([s], [], [])
+            wait_for_read_mock.return_value = [s]
             conn.request('GET', '/bucket/foo', b'body',
                          {'Expect': '100-continue'})
             response = conn.getresponse()
@@ -320,7 +268,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
     def test_expect_100_continue_sends_307(self):
         # This is the case where we send a 100 continue and the server
         # immediately sends a 307
-        with patch('select.select') as select_mock:
+        with patch('urllib3.util.wait_for_read') as wait_for_read_mock:
             # Shows the server first sending a 100 continue response
             # then a 200 ok response.
             s = FakeSocket(
@@ -328,7 +276,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
                 b'Location: http://example.org\r\n')
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
-            select_mock.return_value = ([s], [], [])
+            wait_for_read_mock.return_value = [s]
             conn.request('GET', '/bucket/foo', b'body',
                          {'Expect': '100-continue'})
             response = conn.getresponse()
@@ -336,7 +284,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
             self.assertEqual(response.status, 307)
 
     def test_expect_100_continue_no_response_from_server(self):
-        with patch('select.select') as select_mock:
+        with patch('urllib3.util.wait_for_read') as wait_for_read_mock:
             # Shows the server first sending a 100 continue response
             # then a 200 ok response.
             s = FakeSocket(
@@ -344,10 +292,10 @@ class TestAWSHTTPConnection(unittest.TestCase):
                 b'Location: http://example.org\r\n')
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
-            # By settings select_mock to return empty lists, this indicates
-            # that the server did not send any response.  In this situation
-            # we should just send the request anyways.
-            select_mock.return_value = ([], [], [])
+            # By setting the wait_for_read mocks return value to empty list,
+            # this indicates that the server did not send any response. 
+            # In this situation we should just send the request anyways.
+            wait_for_read_mock.return_value = []
             conn.request('GET', '/bucket/foo', b'body',
                          {'Expect': '100-continue'})
             response = conn.getresponse()
@@ -418,7 +366,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
         conn.sock = s
         # Test that the standard library method was used by patching out
         # the ``_tunnel`` method and seeing if the std lib method was called.
-        with patch('botocore.vendored.requests.packages.urllib3.connection.'
+        with patch('urllib3.connection.'
                    'HTTPConnection._tunnel') as mock_tunnel:
             conn._tunnel()
             self.assertTrue(mock_tunnel.called)
@@ -437,14 +385,14 @@ class TestAWSHTTPConnection(unittest.TestCase):
     def test_state_reset_on_connection_close(self):
         # This simulates what urllib3 does with connections
         # in its connection pool logic.
-        with patch('select.select') as select_mock:
+        with patch('urllib3.util.wait_for_read') as wait_for_read_mock:
 
             # First fast fail with a 500 response when we first
             # send the expect header.
             s = FakeSocket(b'HTTP/1.1 500 Internal Server Error\r\n')
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
-            select_mock.return_value = ([s], [], [])
+            wait_for_read_mock.return_value = [s]
 
             conn.request('GET', '/bucket/foo', b'body',
                         {'Expect': '100-continue'})
@@ -464,7 +412,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
 
             # And we make a request, we should see the 200 response
             # that was sent back.
-            select_mock.return_value = ([new_conn], [], [])
+            wait_for_read_mock.return_value = [new_conn]
 
             conn.request('GET', '/bucket/foo', b'body',
                         {'Expect': '100-continue'})

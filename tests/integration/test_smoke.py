@@ -19,8 +19,8 @@ from nose.tools import assert_equal, assert_true
 from botocore import xform_name
 import botocore.session
 from botocore.client import ClientError
-from botocore.vendored.requests import adapters
-from botocore.vendored.requests.exceptions import ConnectionError
+from requests import adapters
+from requests.exceptions import ConnectionError
 
 
 # Mapping of service -> api calls to try.
@@ -292,7 +292,7 @@ def _make_client_call_with_errors(client, operation_name, kwargs):
             raise ConnectionError("Simulated ConnectionError raised.")
         else:
             return original_send(self, *args, **kwargs)
-    with mock.patch('botocore.vendored.requests.adapters.HTTPAdapter.send',
+    with mock.patch('requests.adapters.HTTPAdapter.send',
                     mock_http_adapter_send):
         try:
             response = operation(**kwargs)

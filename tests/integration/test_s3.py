@@ -25,13 +25,13 @@ from contextlib import closing
 
 from nose.plugins.attrib import attr
 
-from botocore.vendored.requests import adapters
-from botocore.vendored.requests.exceptions import ConnectionError
+from requests import adapters
+from requests.exceptions import ConnectionError
 from botocore.compat import six, zip_longest
 import botocore.session
 import botocore.auth
 import botocore.credentials
-import botocore.vendored.requests as requests
+import requests
 from botocore.config import Config
 from botocore.exceptions import ClientError
 
@@ -823,7 +823,7 @@ class TestS3SigV4Client(BaseS3ClientTest):
                 raise ConnectionError("Simulated ConnectionError raised.")
             else:
                 return original_send(self, *args, **kwargs)
-        with mock.patch('botocore.vendored.requests.adapters.HTTPAdapter.send',
+        with mock.patch('requests.adapters.HTTPAdapter.send',
                         mock_http_adapter_send):
             response = self.client.put_object(Bucket=self.bucket_name,
                                               Key='foo.txt', Body=body)
