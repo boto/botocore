@@ -36,7 +36,8 @@ Upgrading to 1.11.0
   the use of ``botocore.vendored.requests.exceptions.*`` or
   ``botocore.vendored.requests.packages.urllib3.exceptions.*`` must be updated
   to the corresponding exception classes in ``botocore.exceptions``.
-* The version of ``urllib3`` used to make HTTP requests has been updated.
+* The version of ``urllib3`` used to make HTTP requests has been updated from
+  v1.10.4 to the range >=1.20,<1.24.
 
 Upgrading to 1.0.0rc1
 ---------------------
