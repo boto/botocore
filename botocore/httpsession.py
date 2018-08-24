@@ -234,7 +234,6 @@ class URLLib3Session(object):
             urllib_response = conn.urlopen(
                 method=request.method,
                 url=request_target,
-                request_url=request.url,
                 body=request.body,
                 headers=request.headers,
                 retries=False,
