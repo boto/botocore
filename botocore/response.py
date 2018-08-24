@@ -77,8 +77,8 @@ class StreamingBody(object):
         try:
             chunk = self._raw_stream.read(amt)
         except URLLib3ReadTimeoutError as e:
-            url = self._raw_stream.geturl()
-            raise ReadTimeoutError(endpoint_url=url, error=e)
+            # TODO: the url will be None as urllib3 isn't setting it yet
+            raise ReadTimeoutError(endpoint_url=e.url, error=e)
         self._amount_read += len(chunk)
         if amt is None or (not chunk and amt > 0):
             # If the server sends empty contents or

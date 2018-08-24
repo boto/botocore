@@ -103,7 +103,6 @@ class TestURLLib3Session(unittest.TestCase):
             assert_same_host=False,
             preload_content=False,
             decode_content=False,
-            request_url=ANY,
         )
 
     def test_forwards_max_pool_size(self):
