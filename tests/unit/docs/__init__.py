@@ -92,7 +92,8 @@ class BaseDocsTest(unittest.TestCase):
                 'signatureVersion': 'v4',
                 'serviceFullName': 'AWS MyService',
                 'uid': 'myservice-2014-01-01',
-                'protocol': 'query'
+                'protocol': 'query',
+                'serviceId': 'MyService',
             },
             'operations': {
                 'SampleOperation': {

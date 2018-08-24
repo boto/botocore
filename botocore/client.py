@@ -31,6 +31,7 @@ from botocore.utils import S3RegionRedirector
 from botocore.utils import fix_s3_host
 from botocore.utils import switch_to_virtual_host_style
 from botocore.utils import S3_ACCELERATE_WHITELIST
+from botocore.utils import get_service_event_name
 from botocore.args import ClientArgsCreator
 from botocore.compat import urlsplit
 from botocore import UNSIGNED
@@ -90,9 +91,11 @@ class ClientCreator(object):
         py_name_to_operation_name = self._create_name_mapping(service_model)
         class_attributes['_PY_TO_OP_NAME'] = py_name_to_operation_name
         bases = [BaseClient]
-        self._event_emitter.emit('creating-client-class.%s' % service_name,
-                                 class_attributes=class_attributes,
-                                 base_classes=bases)
+        service_id = get_service_event_name(service_model.service_id)
+        self._event_emitter.emit(
+            'creating-client-class.%s' % service_id,
+            class_attributes=class_attributes,
+            base_classes=bases)
         class_name = get_service_module_name(service_model)
         cls = type(str(class_name), tuple(bases), class_attributes)
         return cls
@@ -543,7 +546,10 @@ class BaseClient(object):
         self._register_handlers()
 
     def __getattr__(self, item):
-        event_name = 'getattr.%s.%s' % (self._service_model.service_name, item)
+
+        event_name = 'getattr.%s.%s' % (
+            get_service_event_name(self._service_model.service_id), item
+        )
         handler, event_response = self.meta.events.emit_until_response(
             event_name, client=self)
 
@@ -585,9 +591,10 @@ class BaseClient(object):
         request_dict = self._convert_to_request_dict(
             api_params, operation_model, context=request_context)
 
+        service_id = get_service_event_name(self._service_model.service_id)
         handler, event_response = self.meta.events.emit_until_response(
-            'before-call.{endpoint_prefix}.{operation_name}'.format(
-                endpoint_prefix=self._service_model.endpoint_prefix,
+            'before-call.{service_id}.{operation_name}'.format(
+                service_id=service_id,
                 operation_name=operation_name),
             model=operation_model, params=request_dict,
             request_signer=self._request_signer, context=request_context)
@@ -599,8 +606,8 @@ class BaseClient(object):
                 operation_model, request_dict)
 
         self.meta.events.emit(
-            'after-call.{endpoint_prefix}.{operation_name}'.format(
-                endpoint_prefix=self._service_model.endpoint_prefix,
+            'after-call.{service_id}.{operation_name}'.format(
+                service_id=service_id,
                 operation_name=operation_name),
             http_response=http, parsed=parsed_response,
             model=operation_model, context=request_context
@@ -632,18 +639,19 @@ class BaseClient(object):
         # Emit an event that allows users to modify the parameters at the
         # beginning of the method. It allows handlers to modify existing
         # parameters or return a new set of parameters to use.
+        service_id = get_service_event_name(self._service_model.service_id)
         responses = self.meta.events.emit(
-            'provide-client-params.{endpoint_prefix}.{operation_name}'.format(
-                endpoint_prefix=self._service_model.endpoint_prefix,
+            'provide-client-params.{service_id}.{operation_name}'.format(
+                service_id=service_id,
                 operation_name=operation_name),
             params=api_params, model=operation_model, context=context)
         api_params = first_non_none_response(responses, default=api_params)
 
         event_name = (
-            'before-parameter-build.{endpoint_prefix}.{operation_name}')
+            'before-parameter-build.{service_id}.{operation_name}')
         self.meta.events.emit(
             event_name.format(
-                endpoint_prefix=self._service_model.endpoint_prefix,
+                service_id=service_id,
                 operation_name=operation_name),
             params=api_params, model=operation_model, context=context)
         return api_params

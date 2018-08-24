@@ -23,6 +23,7 @@ from botocore.awsrequest import create_request_object
 from botocore.exceptions import HTTPClientError
 from botocore.httpsession import URLLib3Session
 from botocore.utils import is_valid_endpoint_url, get_environ_proxies
+from botocore.utils import get_service_event_name
 from botocore.hooks import first_non_none_response
 from botocore.history import get_global_history_recorder
 from botocore.response import StreamingBody
@@ -108,8 +109,11 @@ class Endpoint(object):
                 operation_model.has_streaming_output,
                 operation_model.has_event_stream_output
             ])
-            event_name = 'request-created.{endpoint_prefix}.{op_name}'.format(
-                endpoint_prefix=self._endpoint_prefix,
+            service_id = get_service_event_name(
+                operation_model.service_model.service_id
+            )
+            event_name = 'request-created.{service_id}.{op_name}'.format(
+                service_id=service_id,
                 op_name=operation_model.name)
             self._event_emitter.emit(event_name, request=request,
                                      operation_name=operation_model.name)
@@ -194,8 +198,12 @@ class Endpoint(object):
 
     def _needs_retry(self, attempts, operation_model, request_dict,
                      response=None, caught_exception=None):
-        event_name = 'needs-retry.%s.%s' % (self._endpoint_prefix,
-                                            operation_model.name)
+        service_id = get_service_event_name(
+            operation_model.service_model.service_id
+        )
+        event_name = 'needs-retry.%s.%s' % (
+            service_id,
+            operation_model.name)
         responses = self._event_emitter.emit(
             event_name, response=response, endpoint=self,
             operation=operation_model, attempts=attempts,

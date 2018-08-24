@@ -14,6 +14,7 @@ import copy
 import logging
 from collections import defaultdict, deque, namedtuple
 from botocore.compat import accepts_kwargs, six
+from botocore.utils import EVENT_ALIASES
 
 logger = logging.getLogger(__name__)
 
@@ -344,14 +345,10 @@ class HierarchicalEmitter(BaseEventHooks):
 
 
 class EventAliaser(BaseEventHooks):
-    EVENT_ALIASES = {
-        'api.sagemaker': 'sagemaker'
-    }
-
     def __init__(self, event_emitter, event_aliases=None):
         self._event_aliases = event_aliases
         if event_aliases is None:
-            self._event_aliases = self.EVENT_ALIASES
+            self._event_aliases = EVENT_ALIASES
         self._emitter = event_emitter
 
     def emit(self, event_name, **kwargs):
@@ -394,28 +391,40 @@ class EventAliaser(BaseEventHooks):
         for old_part, new_part in self._event_aliases.items():
 
             # We can't simply do a string replace for everything, otherwise we
-            # might end up tranlating substrings that we never intended to
-            # translate. So for most cases we try to break the event up and
-            # replace by section.
+            # might end up translating substrings that we never intended to
+            # translate. When there aren't any dots in the old event name
+            # part, then we can quickly replace the item in the list if it's
+            # there.
+            event_parts = event_name.split('.')
             if '.' not in old_part:
-                event_parts = event_name.split('.')
                 try:
                     # Theoretically a given event name could have the same part
                     # repeated, but in practice this doesn't happen
                     event_parts[event_parts.index(old_part)] = new_part
                 except ValueError:
                     continue
-                new_name = '.'.join(event_parts)
+
+            # If there's dots in the name, it gets more complicated. Now we
+            # have to replace multiple sections of the original event.
             elif old_part in event_name:
-                new_name = event_name.replace(old_part, new_part)
+                old_parts = old_part.split('.')
+                self._replace_subsection(event_parts, old_parts, new_part)
             else:
                 continue
 
+            new_name = '.'.join(event_parts)
             logger.debug("Changing event name from %s to %s" % (
                 event_name, new_name
             ))
             return new_name
         return event_name
+
+    def _replace_subsection(self, sections, old_parts, new_part):
+        for i in range(len(sections)):
+            if sections[i] == old_parts[0] and \
+                    sections[i:i+len(old_parts)] == old_parts:
+                sections[i:i+len(old_parts)] = [new_part]
+                return
 
     def __copy__(self):
         return self.__class__(

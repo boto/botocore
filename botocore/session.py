@@ -39,6 +39,7 @@ from botocore.model import ServiceModel
 from botocore import paginate
 from botocore import waiter
 from botocore import retryhandler, translate
+from botocore.utils import EVENT_ALIASES
 
 
 logger = logging.getLogger(__name__)
@@ -561,7 +562,8 @@ class Session(object):
             type_name='service-2',
             api_version=api_version
         )
-        self._events.emit('service-data-loaded.%s' % service_name,
+        service_id = EVENT_ALIASES.get(service_name, service_name)
+        self._events.emit('service-data-loaded.%s' % service_id,
                           service_data=service_data,
                           service_name=service_name, session=self)
         return service_data
