@@ -343,47 +343,85 @@ class HierarchicalEmitter(BaseEventHooks):
         return new_instance
 
 
-class AliasedEventEmitter(HierarchicalEmitter):
+class EventAliaser(BaseEventHooks):
     EVENT_ALIASES = {
         'api.sagemaker': 'sagemaker'
     }
 
-    def __init__(self, event_aliases=None):
-        super(AliasedEventEmitter, self).__init__()
+    def __init__(self, event_emitter, event_aliases=None):
         self._event_aliases = event_aliases
         if event_aliases is None:
             self._event_aliases = self.EVENT_ALIASES
+        self._emitter = event_emitter
 
-    def _emit(self, event_name, kwargs, stop_on_response=False):
+    def emit(self, event_name, **kwargs):
         aliased_event_name = self._alias_event_name(event_name)
-        return super(AliasedEventEmitter, self)._emit(
-            aliased_event_name, kwargs, stop_on_response
+        return self._emitter.emit(aliased_event_name, **kwargs)
+
+    def emit_until_response(self, event_name, **kwargs):
+        aliased_event_name = self._alias_event_name(event_name)
+        return self._emitter.emit_until_response(aliased_event_name, **kwargs)
+
+    def register(self, event_name, handler, unique_id=None,
+                 unique_id_uses_count=False):
+        aliased_event_name = self._alias_event_name(event_name)
+        return self._emitter.register(
+            aliased_event_name, handler, unique_id, unique_id_uses_count
         )
 
-    def _verify_and_register(self, event_name, handler, unique_id,
-                             register_method, unique_id_uses_count):
+    def register_first(self, event_name, handler, unique_id=None,
+                       unique_id_uses_count=False):
         aliased_event_name = self._alias_event_name(event_name)
-        super(AliasedEventEmitter, self)._verify_and_register(
-            aliased_event_name, handler, unique_id, register_method,
-            unique_id_uses_count
+        return self._emitter.register_first(
+            aliased_event_name, handler, unique_id, unique_id_uses_count
+        )
+
+    def register_last(self, event_name, handler, unique_id=None,
+                      unique_id_uses_count=False):
+        aliased_event_name = self._alias_event_name(event_name)
+        return self._emitter.register_last(
+            aliased_event_name, handler, unique_id, unique_id_uses_count
         )
 
     def unregister(self, event_name, handler=None, unique_id=None,
                    unique_id_uses_count=False):
         aliased_event_name = self._alias_event_name(event_name)
-        super(AliasedEventEmitter, self).unregister(
+        return self._emitter.unregister(
             aliased_event_name, handler, unique_id, unique_id_uses_count
         )
 
     def _alias_event_name(self, event_name):
         for old_part, new_part in self._event_aliases.items():
-            if old_part in event_name:
+
+            # We can't simply do a string replace for everything, otherwise we
+            # might end up tranlating substrings that we never intended to
+            # translate. So for most cases we try to break the event up and
+            # replace by section.
+            if '.' not in old_part:
+                event_parts = event_name.split('.')
+                try:
+                    # Theoretically a given event name could have the same part
+                    # repeated, but in practice this doesn't happen
+                    event_parts[event_parts.index(old_part)] = new_part
+                except ValueError:
+                    continue
+                new_name = '.'.join(event_parts)
+            elif old_part in event_name:
                 new_name = event_name.replace(old_part, new_part)
-                logger.debug("Changing event name from %s to %s" % (
-                    event_name, new_name
-                ))
-                return new_name
+            else:
+                continue
+
+            logger.debug("Changing event name from %s to %s" % (
+                event_name, new_name
+            ))
+            return new_name
         return event_name
+
+    def __copy__(self):
+        return self.__class__(
+            copy.copy(self._emitter),
+            copy.copy(self._event_aliases)
+        )
 
 
 class _PrefixTrie(object):

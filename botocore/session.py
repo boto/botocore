@@ -30,7 +30,8 @@ from botocore.exceptions import ConfigNotFound, ProfileNotFound
 from botocore.exceptions import UnknownServiceError, PartialCredentialsError
 from botocore.errorfactory import ClientExceptionsFactory
 from botocore import handlers
-from botocore.hooks import AliasedEventEmitter, first_non_none_response
+from botocore.hooks import HierarchicalEmitter, first_non_none_response
+from botocore.hooks import EventAliaser
 from botocore.loaders import create_loader
 from botocore.parsers import ResponseParserFactory
 from botocore.regions import EndpointResolver
@@ -139,9 +140,10 @@ class Session(object):
         if session_vars:
             self.session_var_map.update(session_vars)
         if event_hooks is None:
-            self._events = AliasedEventEmitter()
+            self._original_handler = HierarchicalEmitter()
         else:
-            self._events = event_hooks
+            self._original_handler = event_hooks
+        self._events = EventAliaser(self._original_handler)
         if include_builtin_handlers:
             self._register_builtin_handlers(self._events)
         self.user_agent_name = 'Botocore'
