@@ -473,6 +473,9 @@ class AWSPreparedRequest(object):
         if not self.body and self.method == 'GET':
             return
 
+        if self.body is None:
+            self.headers['Content-Length'] = '0'
+
         if isinstance(self.body, dict):
             params = list(self.body.items())
             self.body = urlencode(params, doseq=True)

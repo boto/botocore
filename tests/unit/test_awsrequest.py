@@ -132,6 +132,8 @@ class TestAWSRequest(unittest.TestCase):
         request = AWSRequest(url='http://example.com/', data=b'')
         prepared_request = request.prepare()
         self.assertEqual(prepared_request.body, None)
+        content_length = prepared_request.headers.get('content-length')
+        self.assertEqual(content_length, '0')
 
     def test_request_body_is_prepared(self):
         request = AWSRequest(url='http://example.com/', data='body')
