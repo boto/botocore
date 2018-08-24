@@ -23,7 +23,7 @@ class TestClientHTTPBehavior(unittest.TestCase):
 
     def test_can_proxy_https_request_with_auth(self):
         proxy_url = 'http://user:pass@localhost:%s/' % self.port
-        config = Config(proxies={'https': proxy_url})
+        config = Config(proxies={'https': proxy_url}, region_name='us-west-1')
         client = self.session.create_client('ec2', config=config)
 
         class AuthProxyHandler(ProxyHandler):
@@ -38,7 +38,11 @@ class TestClientHTTPBehavior(unittest.TestCase):
             self.fail('Background task did not exit, proxy was not used.')
 
     def _read_timeout_server(self):
-        config = Config(read_timeout=0.1, retries={'max_attempts': 0})
+        config = Config(
+            read_timeout=0.1,
+            retries={'max_attempts': 0},
+            region_name='us-weast-2',
+        )
         client = self.session.create_client('ec2', endpoint_url=self.localhost,
                                             config=config)
         client_call_ended_event = threading.Event()
@@ -69,7 +73,11 @@ class TestClientHTTPBehavior(unittest.TestCase):
             self._read_timeout_server()
 
     def test_connect_timeout_exception(self):
-        config = Config(connect_timeout=0.2, retries={'max_attempts': 0})
+        config = Config(
+            connect_timeout=0.2,
+            retries={'max_attempts': 0},
+            region_name='us-weast-2',
+        )
         client = self.session.create_client('ec2', endpoint_url=self.localhost,
                                             config=config)
         server_bound_event = threading.Event()
@@ -92,7 +100,7 @@ class TestClientHTTPBehavior(unittest.TestCase):
             client_call_ended_event.set()
 
     def test_invalid_host_gaierror(self):
-        config = Config(retries={'max_attempts': 0})
+        config = Config(retries={'max_attempts': 0}, region_name='us-weast-1')
         endpoint = 'https://ec2.us-weast-1.amazonaws.com/'
         client = self.session.create_client('ec2', endpoint_url=endpoint,
                                             config=config)
@@ -100,7 +108,7 @@ class TestClientHTTPBehavior(unittest.TestCase):
             client.describe_regions()
 
     def test_bad_status_line(self):
-        config = Config(retries={'max_attempts': 0})
+        config = Config(retries={'max_attempts': 0}, region_name='us-weast-2')
         client = self.session.create_client('ec2', endpoint_url=self.localhost,
                                             config=config)
 
