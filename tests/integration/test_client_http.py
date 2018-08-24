@@ -27,12 +27,15 @@ class TestClientHTTPBehavior(unittest.TestCase):
         client = self.session.create_client('ec2', config=config)
 
         class AuthProxyHandler(ProxyHandler):
+            event = threading.Event()
+
             def validate_auth(self):
                 proxy_auth = self.headers.get('Proxy-Authorization')
                 return proxy_auth == 'Basic dXNlcjpwYXNz'
 
         try:
             with background(run_server, args=(AuthProxyHandler, self.port)):
+                AuthProxyHandler.event.wait(timeout=60)
                 client.describe_regions()
         except BackgroundTaskFailed:
             self.fail('Background task did not exit, proxy was not used.')
@@ -48,21 +51,25 @@ class TestClientHTTPBehavior(unittest.TestCase):
         client_call_ended_event = threading.Event()
 
         class FakeEC2(SimpleHandler):
+            event = threading.Event()
             msg = b'<response/>'
+
             def get_length(self):
                 return len(self.msg)
 
             def get_body(self):
-                client_call_ended_event.wait(timeout=1)
+                client_call_ended_event.wait(timeout=60)
                 return self.msg
 
         try:
             with background(run_server, args=(FakeEC2, self.port)):
-                client.describe_regions()
+                try:
+                    FakeEC2.event.wait(timeout=60)
+                    client.describe_regions()
+                finally:
+                    client_call_ended_event.set()
         except BackgroundTaskFailed:
             self.fail('Fake EC2 service was not called.')
-        finally:
-            client_call_ended_event.set()
 
     def test_read_timeout_exception(self):
         with self.assertRaises(ReadTimeoutError):
@@ -88,15 +95,13 @@ class TestClientHTTPBehavior(unittest.TestCase):
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.bind(('', self.port))
             server_bound_event.set()
-            client_call_ended_event.wait(timeout=2)
+            client_call_ended_event.wait(timeout=60)
             sock.close()
 
-        try:
-            with background(no_accept_server):
-                server_bound_event.wait(timeout=2)
-                with self.assertRaises(ConnectTimeoutError):
-                    client.describe_regions()
-        finally:
+        with background(no_accept_server):
+            server_bound_event.wait(timeout=60)
+            with self.assertRaises(ConnectTimeoutError):
+                client.describe_regions()
             client_call_ended_event.set()
 
     def test_invalid_host_gaierror(self):
@@ -113,11 +118,14 @@ class TestClientHTTPBehavior(unittest.TestCase):
                                             config=config)
 
         class BadStatusHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+            event = threading.Event()
+
             def do_POST(self):
                 self.wfile.write(b'garbage')
 
         with background(run_server, args=(BadStatusHandler, self.port)):
             with self.assertRaises(ConnectionClosedError):
+                BadStatusHandler.event.wait(timeout=60)
                 client.describe_regions()
 
 
@@ -148,6 +156,7 @@ class SimpleHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 class ProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     tunnel_chunk_size = 1024
+
     def _tunnel(self, client, remote):
         client.setblocking(0)
         remote.setblocking(0)
@@ -190,7 +199,7 @@ class BackgroundTaskFailed(Exception):
 
 
 @contextmanager
-def background(target, args=(), timeout=10):
+def background(target, args=(), timeout=60):
     thread = threading.Thread(target=target, args=args)
     thread.daemon = True
     thread.start()
@@ -209,5 +218,6 @@ def run_server(handler, port):
     httpd.allow_reuse_address = True
     httpd.server_bind()
     httpd.server_activate()
+    handler.event.set()
     httpd.handle_request()
     httpd.server_close()
