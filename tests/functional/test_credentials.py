@@ -20,7 +20,6 @@ import shutil
 from datetime import datetime, timedelta
 import sys
 
-from botocore.vendored import requests
 from dateutil.tz import tzlocal
 from botocore.exceptions import CredentialRetrievalError
 

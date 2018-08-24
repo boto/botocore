@@ -21,10 +21,11 @@ import socket
 import sys
 
 from mock import Mock, patch
+from urllib3.connectionpool import HTTPConnectionPool, HTTPSConnectionPool
 
 from botocore.exceptions import UnseekableStreamError
-from botocore.awsrequest import AWSRequest, AWSPreparedRequest
-from botocore.awsrequest import AWSHTTPConnection
+from botocore.awsrequest import AWSRequest, AWSPreparedRequest, AWSResponse
+from botocore.awsrequest import AWSHTTPConnection, AWSHTTPSConnection, HeadersDict
 from botocore.awsrequest import prepare_request_dict, create_request_object
 from botocore.compat import file_type, six
 
@@ -98,53 +99,88 @@ class Seekable(object):
 
 
 class TestAWSRequest(unittest.TestCase):
-
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
-        self.request = AWSRequest(url='http://example.com')
-        self.prepared_request = self.request.prepare()
         self.filename = os.path.join(self.tempdir, 'foo')
+        self.request = AWSRequest(method='GET', url='http://example.com')
+        self.prepared_request = self.request.prepare()
+        self.prepared_request.prepare_headers(self.request.headers)
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
-    def test_should_reset_stream(self):
+    def test_prepared_request_repr(self):
+        expected_repr = (
+            '<AWSPreparedRequest stream_output=False, method=GET, '
+            'url=http://example.com, headers={}>'
+        )
+        request_repr = repr(self.prepared_request)
+        self.assertEqual(request_repr, expected_repr)
+
+    def test_can_prepare_url_params(self):
+        request = AWSRequest(url='http://example.com/', params={'foo': 'bar'})
+        prepared_request = request.prepare()
+        self.assertEqual(prepared_request.url, 'http://example.com/?foo=bar')
+
+    def test_can_prepare_dict_body(self):
+        body = {'dead': 'beef'}
+        request = AWSRequest(url='http://example.com/', data=body)
+        prepared_request = request.prepare()
+        self.assertEqual(prepared_request.body, 'dead=beef')
+
+    def test_can_prepare_empty_body(self):
+        request = AWSRequest(url='http://example.com/', data=b'')
+        prepared_request = request.prepare()
+        self.assertEqual(prepared_request.body, None)
+
+    def test_request_body_is_prepared(self):
+        request = AWSRequest(url='http://example.com/', data='body')
+        self.assertEqual(request.body, b'body')
+
+    def test_prepare_body_content_adds_content_length(self):
+        content = b'foobarbaz'
         with open(self.filename, 'wb') as f:
-            f.write(b'foobarbaz')
+            f.write(content)
+        with open(self.filename, 'rb') as f:
+            data = Seekable(f)
+            self.prepared_request.prepare_body(data)
+        self.assertEqual(
+            self.prepared_request.headers['Content-Length'],
+            str(len(content)))
+
+    def test_can_reset_stream_handles_binary(self):
+        contents = b'notastream'
+        self.prepared_request.body = contents
+        self.prepared_request.reset_stream()
+        # assert the request body doesn't change after reset_stream is called
+        self.assertEqual(self.prepared_request.body, contents)
+
+    def test_can_reset_stream(self):
+        contents = b'foobarbaz'
+        with open(self.filename, 'wb') as f:
+            f.write(contents)
         with open(self.filename, 'rb') as body:
             self.prepared_request.body = body
-
-            # Now pretend we try to send the request.
-            # This means that we read the body:
+            # pretend the request body was partially sent
             body.read()
-            # And create a response object that indicates
-            # a redirect.
-            fake_response = Mock()
-            fake_response.status_code = 307
-
-            # Then requests calls our reset_stream hook.
-            self.prepared_request.reset_stream_on_redirect(fake_response)
-
-            # The stream should now be reset.
+            self.assertNotEqual(body.tell(), 0)
+            # have the prepared request reset its stream
+            self.prepared_request.reset_stream()
+            # the stream should be reset
             self.assertEqual(body.tell(), 0)
 
     def test_cannot_reset_stream_raises_error(self):
+        contents = b'foobarbaz'
         with open(self.filename, 'wb') as f:
-            f.write(b'foobarbaz')
+            f.write(contents)
         with open(self.filename, 'rb') as body:
             self.prepared_request.body = Unseekable(body)
-
-            # Now pretend we try to send the request.
-            # This means that we read the body:
+            # pretend the request body was partially sent
             body.read()
-            # And create a response object that indicates
-            # a redirect
-            fake_response = Mock()
-            fake_response.status_code = 307
-
-            # Then requests calls our reset_stream hook.
+            self.assertNotEqual(body.tell(), 0)
+            # reset stream should fail
             with self.assertRaises(UnseekableStreamError):
-                self.prepared_request.reset_stream_on_redirect(fake_response)
+                self.prepared_request.reset_stream()
 
     def test_duck_type_for_file_check(self):
         # As part of determining whether or not we can rewind a stream
@@ -154,76 +190,43 @@ class TestAWSRequest(unittest.TestCase):
         class LooksLikeFile(object):
             def __init__(self):
                 self.seek_called = False
-
             def read(self, amount=None):
                 pass
-
             def seek(self, where):
                 self.seek_called = True
-
         looks_like_file = LooksLikeFile()
         self.prepared_request.body = looks_like_file
-
-        fake_response = Mock()
-        fake_response.status_code = 307
-
-        # Then requests calls our reset_stream hook.
-        self.prepared_request.reset_stream_on_redirect(fake_response)
-
+        self.prepared_request.reset_stream()
         # The stream should now be reset.
         self.assertTrue(looks_like_file.seek_called)
 
 
-class TestAWSPreparedRequest(unittest.TestCase):
+class TestAWSResponse(unittest.TestCase):
     def setUp(self):
-        self.tempdir = tempfile.mkdtemp()
-        self.filename = os.path.join(self.tempdir, 'foo')
-        self.request = AWSRequest(url='http://example.com')
-        self.prepared_request = AWSPreparedRequest(self.request)
-        self.prepared_request.prepare_headers(self.request.headers)
+        self.response = AWSResponse('http://url.com', 200, HeadersDict(), None)
+        self.response.raw = Mock()
 
-    def tearDown(self):
-        shutil.rmtree(self.tempdir)
+    def set_raw_stream(self, blobs):
+        def stream(*args, **kwargs):
+            for blob in blobs:
+                yield blob
+        self.response.raw.stream.return_value = stream()
 
-    def test_prepare_body_content_adds_content_length(self):
-        content = b'foobarbaz'
-        with open(self.filename, 'wb') as f:
-            f.write(content)
-        with open(self.filename, 'rb') as f:
-            data = Seekable(f)
-            self.prepared_request.prepare_body(data=data, files=None)
-        self.assertEqual(
-            self.prepared_request.headers['Content-Length'],
-            str(len(content)))
+    def test_content_property(self):
+        self.set_raw_stream([b'some', b'data'])
+        self.assertEqual(self.response.content, b'somedata')
+        self.assertEqual(self.response.content, b'somedata')
+        # assert that stream was not called more than once
+        self.assertEqual(self.response.raw.stream.call_count, 1)
 
-    def test_prepare_body_removes_transfer_encoding(self):
-        self.prepared_request.headers['Transfer-Encoding'] = 'chunked'
-        content = b'foobarbaz'
-        with open(self.filename, 'wb') as f:
-            f.write(content)
-        with open(self.filename, 'rb') as f:
-            data = Seekable(f)
-            self.prepared_request.prepare_body(data=data, files=None)
-        self.assertEqual(
-            self.prepared_request.headers['Content-Length'],
-            str(len(content)))
-        self.assertNotIn('Transfer-Encoding', self.prepared_request.headers)
+    def test_text_property(self):
+        self.set_raw_stream([b'\xe3\x82\xb8\xe3\x83\xa7\xe3\x82\xb0'])
+        self.response.headers['content-type'] = 'text/plain; charset=utf-8'
+        self.assertEquals(self.response.text, u'\u30b8\u30e7\u30b0')
 
-    def test_prepare_body_ignores_existing_transfer_encoding(self):
-        content = b'foobarbaz'
-        self.prepared_request.headers['Transfer-Encoding'] = 'chunked'
-        with open(self.filename, 'wb') as f:
-            f.write(content)
-        with open(self.filename, 'rb') as f:
-            self.prepared_request.prepare_body(data=f, files=None)
-        # The Transfer-Encoding should not be removed if Content-Length
-        # is not added via the custom logic in the ``prepare_body`` method.
-        # Note requests' ``prepare_body`` is the method that adds the
-        # Content-Length header for this case as the ``data`` is a
-        # regular file handle.
-        self.assertEqual(
-            self.prepared_request.headers['Transfer-Encoding'],
-            'chunked')
+    def test_text_property_defaults_utf8(self):
+        self.set_raw_stream([b'\xe3\x82\xb8\xe3\x83\xa7\xe3\x82\xb0'])
+        self.assertEquals(self.response.text, u'\u30b8\u30e7\u30b0')
 
 
 class TestAWSHTTPConnection(unittest.TestCase):
@@ -265,32 +268,36 @@ class TestAWSHTTPConnection(unittest.TestCase):
         return conn
 
     def test_expect_100_continue_returned(self):
-        with patch('select.select') as select_mock:
+        with patch('urllib3.util.wait_for_read') as wait_mock:
             # Shows the server first sending a 100 continue response
             # then a 200 ok response.
             s = FakeSocket(b'HTTP/1.1 100 Continue\r\n\r\nHTTP/1.1 200 OK\r\n')
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
-            select_mock.return_value = ([s], [], [])
+            wait_mock.return_value = True
             conn.request('GET', '/bucket/foo', b'body',
-                         {'Expect': '100-continue'})
+                         {'Expect': b'100-continue'})
             response = conn.getresponse()
+            # Assert that we waited for the 100-continue response
+            self.assertEqual(wait_mock.call_count, 1)
             # Now we should verify that our final response is the 200 OK
             self.assertEqual(response.status, 200)
 
     def test_handles_expect_100_with_different_reason_phrase(self):
-        with patch('select.select') as select_mock:
+        with patch('urllib3.util.wait_for_read') as wait_mock:
             # Shows the server first sending a 100 continue response
             # then a 200 ok response.
             s = FakeSocket(b'HTTP/1.1 100 (Continue)\r\n\r\nHTTP/1.1 200 OK\r\n')
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
-            select_mock.return_value = ([s], [], [])
+            wait_mock.return_value = True
             conn.request('GET', '/bucket/foo', six.BytesIO(b'body'),
-                         {'Expect': '100-continue', 'Content-Length': '4'})
+                         {'Expect': b'100-continue', 'Content-Length': b'4'})
             response = conn.getresponse()
             # Now we should verify that our final response is the 200 OK.
             self.assertEqual(response.status, 200)
+            # Assert that we waited for the 100-continue response
+            self.assertEqual(wait_mock.call_count, 1)
             # Verify that we went the request body because we got a 100
             # continue.
             self.assertIn(b'body', s.sent_data)
@@ -299,7 +306,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
         # When using squid as an HTTP proxy, it will also send
         # a Connection: keep-alive header back with the 100 continue
         # response.  We need to ensure we handle this case.
-        with patch('select.select') as select_mock:
+        with patch('urllib3.util.wait_for_read') as wait_mock:
             # Shows the server first sending a 100 continue response
             # then a 500 response.  We're picking 500 to confirm we
             # actually parse the response instead of getting the
@@ -311,16 +318,18 @@ class TestAWSHTTPConnection(unittest.TestCase):
                            b'HTTP/1.1 500 Internal Service Error\r\n')
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
-            select_mock.return_value = ([s], [], [])
+            wait_mock.return_value = True
             conn.request('GET', '/bucket/foo', b'body',
-                         {'Expect': '100-continue'})
+                         {'Expect': b'100-continue'})
+            # Assert that we waited for the 100-continue response
+            self.assertEqual(wait_mock.call_count, 1)
             response = conn.getresponse()
             self.assertEqual(response.status, 500)
 
     def test_expect_100_continue_sends_307(self):
         # This is the case where we send a 100 continue and the server
         # immediately sends a 307
-        with patch('select.select') as select_mock:
+        with patch('urllib3.util.wait_for_read') as wait_mock:
             # Shows the server first sending a 100 continue response
             # then a 200 ok response.
             s = FakeSocket(
@@ -328,15 +337,17 @@ class TestAWSHTTPConnection(unittest.TestCase):
                 b'Location: http://example.org\r\n')
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
-            select_mock.return_value = ([s], [], [])
+            wait_mock.return_value = True
             conn.request('GET', '/bucket/foo', b'body',
-                         {'Expect': '100-continue'})
+                         {'Expect': b'100-continue'})
+            # Assert that we waited for the 100-continue response
+            self.assertEqual(wait_mock.call_count, 1)
             response = conn.getresponse()
             # Now we should verify that our final response is the 307.
             self.assertEqual(response.status, 307)
 
     def test_expect_100_continue_no_response_from_server(self):
-        with patch('select.select') as select_mock:
+        with patch('urllib3.util.wait_for_read') as wait_mock:
             # Shows the server first sending a 100 continue response
             # then a 200 ok response.
             s = FakeSocket(
@@ -344,12 +355,14 @@ class TestAWSHTTPConnection(unittest.TestCase):
                 b'Location: http://example.org\r\n')
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
-            # By settings select_mock to return empty lists, this indicates
+            # By settings wait_mock to return False, this indicates
             # that the server did not send any response.  In this situation
             # we should just send the request anyways.
-            select_mock.return_value = ([], [], [])
+            wait_mock.return_value = False
             conn.request('GET', '/bucket/foo', b'body',
-                         {'Expect': '100-continue'})
+                         {'Expect': b'100-continue'})
+            # Assert that we waited for the 100-continue response
+            self.assertEqual(wait_mock.call_count, 1)
             response = conn.getresponse()
             self.assertEqual(response.status, 307)
 
@@ -418,8 +431,7 @@ class TestAWSHTTPConnection(unittest.TestCase):
         conn.sock = s
         # Test that the standard library method was used by patching out
         # the ``_tunnel`` method and seeing if the std lib method was called.
-        with patch('botocore.vendored.requests.packages.urllib3.connection.'
-                   'HTTPConnection._tunnel') as mock_tunnel:
+        with patch('urllib3.connection.HTTPConnection._tunnel') as mock_tunnel:
             conn._tunnel()
             self.assertTrue(mock_tunnel.called)
 
@@ -437,17 +449,18 @@ class TestAWSHTTPConnection(unittest.TestCase):
     def test_state_reset_on_connection_close(self):
         # This simulates what urllib3 does with connections
         # in its connection pool logic.
-        with patch('select.select') as select_mock:
+        with patch('urllib3.util.wait_for_read') as wait_mock:
 
             # First fast fail with a 500 response when we first
             # send the expect header.
             s = FakeSocket(b'HTTP/1.1 500 Internal Server Error\r\n')
             conn = AWSHTTPConnection('s3.amazonaws.com', 443)
             conn.sock = s
-            select_mock.return_value = ([s], [], [])
+            wait_mock.return_value = True
 
             conn.request('GET', '/bucket/foo', b'body',
-                        {'Expect': '100-continue'})
+                        {'Expect': b'100-continue'})
+            self.assertEqual(wait_mock.call_count, 1)
             response = conn.getresponse()
             self.assertEqual(response.status, 500)
 
@@ -464,15 +477,25 @@ class TestAWSHTTPConnection(unittest.TestCase):
 
             # And we make a request, we should see the 200 response
             # that was sent back.
-            select_mock.return_value = ([new_conn], [], [])
+            wait_mock.return_value = True
 
             conn.request('GET', '/bucket/foo', b'body',
-                        {'Expect': '100-continue'})
+                        {'Expect': b'100-continue'})
+            # Assert that we waited for the 100-continue response
+            self.assertEqual(wait_mock.call_count, 2)
             response = conn.getresponse()
             # This should be 200.  If it's a 500 then
             # the prior response was leaking into our
             # current response.,
             self.assertEqual(response.status, 200)
+
+
+class TestAWSHTTPConnectionPool(unittest.TestCase):
+    def test_global_urllib3_pool_is_unchanged(self):
+        http_connection_class = HTTPConnectionPool.ConnectionCls
+        self.assertIsNot(http_connection_class, AWSHTTPConnection)
+        https_connection_class = HTTPSConnectionPool.ConnectionCls
+        self.assertIsNot(https_connection_class, AWSHTTPSConnection)
 
 
 class TestPrepareRequestDict(unittest.TestCase):
@@ -609,6 +632,36 @@ class TestCreateRequestObject(unittest.TestCase):
         self.assertEqual(request.data, self.request_dict['body'])
         self.assertEqual(request.context, self.request_dict['context'])
         self.assertIn('User-Agent', request.headers)
+
+
+class TestHeadersDict(unittest.TestCase):
+    def setUp(self):
+        self.headers = HeadersDict()
+
+    def test_get_insensitive(self):
+        self.headers['foo'] = 'bar'
+        self.assertEqual(self.headers['FOO'], 'bar')
+
+    def test_set_insensitive(self):
+        self.headers['foo'] = 'bar'
+        self.headers['FOO'] = 'baz'
+        self.assertEqual(self.headers['foo'], 'baz')
+
+    def test_del_insensitive(self):
+        self.headers['foo'] = 'bar'
+        self.assertEqual(self.headers['FOO'], 'bar')
+        del self.headers['FoO']
+        with self.assertRaises(KeyError):
+            self.headers['foo']
+
+    def test_iteration(self):
+        self.headers['FOO'] = 'bar'
+        self.headers['dead'] = 'beef'
+        self.assertIn('FOO', list(self.headers))
+        self.assertIn('dead', list(self.headers))
+        headers_items = list(self.headers.items())
+        self.assertIn(('FOO', 'bar'), headers_items)
+        self.assertIn(('dead', 'beef'), headers_items)
 
 
 if __name__ == "__main__":
