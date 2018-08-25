@@ -441,6 +441,7 @@ class HTTPResponse(io.IOBase):
             # Don't bother reading the body of a HEAD request.
             # FIXME: Can we do this somehow without accessing private httplib _method?
             self._original_response.close()
+            self.release_conn()
             return
 
         while True:
