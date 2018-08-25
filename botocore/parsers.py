@@ -124,7 +124,7 @@ from botocore.compat import six, XMLParseError
 from botocore.eventstream import EventStream
 
 from botocore.utils import parse_timestamp, merge_dicts, \
-    is_json_value_header
+    is_json_value_header, lowercase_dict
 
 LOG = logging.getLogger(__name__)
 
@@ -250,7 +250,11 @@ class ResponseParser(object):
         if isinstance(parsed, dict):
             response_metadata = parsed.get('ResponseMetadata', {})
             response_metadata['HTTPStatusCode'] = response['status_code']
-            response_metadata['HTTPHeaders'] = dict(response['headers'])
+            # Ensure that the http header keys are all lower cased. Older
+            # versions of urllib3 (< 1.11) would unintentionally do this for us
+            # (see urllib3#633). We need to do this conversion manually now.
+            headers = response['headers']
+            response_metadata['HTTPHeaders'] = lowercase_dict(headers)
             parsed['ResponseMetadata'] = response_metadata
         return parsed
 

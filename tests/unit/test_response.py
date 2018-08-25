@@ -15,12 +15,13 @@ from tests.unit import BaseResponseTest
 import datetime
 
 from dateutil.tz import tzutc
+from urllib3.exceptions import ReadTimeoutError as URLLib3ReadTimeoutError
 
 import botocore
 from botocore import response
 from botocore.compat import six
-from botocore.exceptions import IncompleteReadError
-from botocore.vendored.requests.models import Response, Request
+from botocore.exceptions import IncompleteReadError, ReadTimeoutError
+from botocore.awsrequest import AWSRequest, AWSResponse
 
 XMLBODY1 = (b'<?xml version="1.0" encoding="UTF-8"?><Error>'
             b'<Code>AccessDenied</Code>'
@@ -136,23 +137,42 @@ class TestStreamWrapper(unittest.TestCase):
                 [b'1234567890', b'1234567890', b'12345'],
             )
 
+    def test_catches_urllib3_read_timeout(self):
+        class TimeoutBody(object):
+            def read(*args, **kwargs):
+                raise URLLib3ReadTimeoutError(None, None, None)
+
+            def geturl(*args, **kwargs):
+                return 'http://example.com'
+
+        stream = response.StreamingBody(TimeoutBody(), content_length=None)
+        with self.assertRaises(ReadTimeoutError):
+            stream.read()
+
+
+class FakeRawResponse(six.BytesIO):
+    def stream(self, amt=1024, decode_content=None):
+        while True:
+            chunk = self.read(amt)
+            if not chunk:
+                break
+            yield chunk
+
 
 class TestGetResponse(BaseResponseTest):
     maxDiff = None
 
     def test_get_response_streaming_ok(self):
-        http_response = Response()
-        http_response.headers = {
+        headers = {
             'content-type': 'image/png',
             'server': 'AmazonS3',
             'AcceptRanges': 'bytes',
             'transfer-encoding': 'chunked',
             'ETag': '"00000000000000000000000000000000"',
         }
-        http_response.raw = six.BytesIO(b'\x89PNG\r\n\x1a\n\x00\x00')
+        raw = FakeRawResponse(b'\x89PNG\r\n\x1a\n\x00\x00')
 
-        http_response.status_code = 200
-        http_response.reason = 'OK'
+        http_response = AWSResponse(None, 200, headers, raw)
 
         session = botocore.session.get_session()
         service_model = session.get_service_model('s3')
@@ -164,17 +184,15 @@ class TestGetResponse(BaseResponseTest):
                          '"00000000000000000000000000000000"')
 
     def test_get_response_streaming_ng(self):
-        http_response = Response()
-        http_response.headers = {
+        headers = {
             'content-type': 'application/xml',
             'date': 'Sat, 08 Mar 2014 12:05:44 GMT',
             'server': 'AmazonS3',
             'transfer-encoding': 'chunked',
             'x-amz-id-2': 'AAAAAAAAAAAAAAAAAAA',
             'x-amz-request-id': 'XXXXXXXXXXXXXXXX'}
-        http_response.raw = six.BytesIO(XMLBODY1)
-        http_response.status_code = 403
-        http_response.reason = 'Forbidden'
+        raw = FakeRawResponse(XMLBODY1)
+        http_response = AWSResponse(None, 403, headers, raw)
 
         session = botocore.session.get_session()
         service_model = session.get_service_model('s3')
@@ -191,18 +209,15 @@ class TestGetResponse(BaseResponseTest):
         )
 
     def test_get_response_nonstreaming_ok(self):
-        http_response = Response()
-        http_response.headers = {
+        headers = {
             'content-type': 'application/xml',
             'date': 'Sun, 09 Mar 2014 02:55:43 GMT',
             'server': 'AmazonS3',
             'transfer-encoding': 'chunked',
             'x-amz-id-2': 'AAAAAAAAAAAAAAAAAAA',
             'x-amz-request-id': 'XXXXXXXXXXXXXXXX'}
-        http_response.raw = six.BytesIO(XMLBODY1)
-        http_response.status_code = 403
-        http_response.reason = 'Forbidden'
-        http_response.request = Request()
+        raw = FakeRawResponse(XMLBODY1)
+        http_response = AWSResponse(None, 403, headers, raw)
 
         session = botocore.session.get_session()
         service_model = session.get_service_model('s3')
@@ -223,18 +238,15 @@ class TestGetResponse(BaseResponseTest):
             })
 
     def test_get_response_nonstreaming_ng(self):
-        http_response = Response()
-        http_response.headers = {
+        headers = {
             'content-type': 'application/xml',
             'date': 'Sat, 08 Mar 2014 12:05:44 GMT',
             'server': 'AmazonS3',
             'transfer-encoding': 'chunked',
             'x-amz-id-2': 'AAAAAAAAAAAAAAAAAAA',
             'x-amz-request-id': 'XXXXXXXXXXXXXXXX'}
-        http_response.raw = six.BytesIO(XMLBODY2)
-        http_response.status_code = 200
-        http_response.reason = 'ok'
-        http_response.request = Request()
+        raw = FakeRawResponse(XMLBODY2)
+        http_response = AWSResponse(None, 200, headers, raw)
 
         session = botocore.session.get_session()
         service_model = session.get_service_model('s3')

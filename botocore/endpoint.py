@@ -17,18 +17,12 @@ import logging
 import time
 import threading
 
-from botocore.vendored.requests.adapters import HTTPAdapter
-from botocore.vendored.requests.sessions import Session
-from botocore.vendored.requests.utils import get_environ_proxies
-from botocore.vendored.requests.exceptions import ConnectionError
 from botocore.vendored import six
 
 from botocore.awsrequest import create_request_object
-from botocore.exceptions import UnknownEndpointError
-from botocore.exceptions import EndpointConnectionError
-from botocore.exceptions import ConnectionClosedError
-from botocore.compat import filter_ssl_warnings
-from botocore.utils import is_valid_endpoint_url
+from botocore.exceptions import HTTPClientError
+from botocore.httpsession import URLLib3Session
+from botocore.utils import is_valid_endpoint_url, get_environ_proxies
 from botocore.hooks import first_non_none_response
 from botocore.history import get_global_history_recorder
 from botocore.response import StreamingBody
@@ -39,13 +33,6 @@ logger = logging.getLogger(__name__)
 history_recorder = get_global_history_recorder()
 DEFAULT_TIMEOUT = 60
 MAX_POOL_CONNECTIONS = 10
-filter_ssl_warnings()
-
-try:
-    from botocore.vendored.requests.packages.urllib3.contrib import pyopenssl
-    pyopenssl.extract_from_urllib3()
-except ImportError:
-    pass
 
 
 def convert_to_response_dict(http_response, operation_model):
@@ -83,30 +70,6 @@ def convert_to_response_dict(http_response, operation_model):
     return response_dict
 
 
-class BotocoreHTTPSession(Session):
-    """Internal session class used to workaround requests behavior.
-
-    This class is intended to be used only by the Endpoint class.
-
-    """
-    def __init__(self, max_pool_connections=MAX_POOL_CONNECTIONS,
-                 http_adapter_cls=HTTPAdapter):
-        super(BotocoreHTTPSession, self).__init__()
-        # In order to support a user provided "max_pool_connections", we need
-        # to recreate the HTTPAdapter and pass in our max_pool_connections
-        # value.
-        adapter = http_adapter_cls(pool_maxsize=max_pool_connections)
-        # requests uses an HTTPAdapter for mounting both http:// and https://
-        self.mount('https://', adapter)
-        self.mount('http://', adapter)
-
-    def rebuild_auth(self, prepared_request, response):
-        # Keep the existing auth information from the original prepared request.
-        # Normally this method would be where auth is regenerated as needed.
-        # By making this a noop, we're keeping the existing auth info.
-        pass
-
-
 class Endpoint(object):
     """
     Represents an endpoint for a particular service in a specific
@@ -117,39 +80,34 @@ class Endpoint(object):
     :ivar host: The fully qualified endpoint hostname.
     :ivar session: The session object.
     """
-
-    def __init__(self, host, endpoint_prefix,
-                 event_emitter, proxies=None, verify=True,
-                 timeout=DEFAULT_TIMEOUT, response_parser_factory=None,
-                 max_pool_connections=MAX_POOL_CONNECTIONS):
+    def __init__(self, host, endpoint_prefix, event_emitter,
+                 response_parser_factory=None, http_session=None):
         self._endpoint_prefix = endpoint_prefix
         self._event_emitter = event_emitter
         self.host = host
-        self.verify = verify
-        if proxies is None:
-            proxies = {}
-        self.proxies = proxies
-        self.http_session = BotocoreHTTPSession(
-            max_pool_connections=max_pool_connections)
-        self.timeout = timeout
-        self.max_pool_connections = max_pool_connections
-        logger.debug('Setting %s timeout as %s', endpoint_prefix, self.timeout)
         self._lock = threading.Lock()
         if response_parser_factory is None:
             response_parser_factory = parsers.ResponseParserFactory()
         self._response_parser_factory = response_parser_factory
+        self.http_session = http_session
+        if self.http_session is None:
+            self.http_session = URLLib3Session()
 
     def __repr__(self):
         return '%s(%s)' % (self._endpoint_prefix, self.host)
 
     def make_request(self, operation_model, request_dict):
-        logger.debug("Making request for %s (verify_ssl=%s) with params: %s",
-                     operation_model, self.verify, request_dict)
+        logger.debug("Making request for %s with params: %s",
+                     operation_model, request_dict)
         return self._send_request(request_dict, operation_model)
 
     def create_request(self, params, operation_model=None):
         request = create_request_object(params)
         if operation_model:
+            request.stream_output = any([
+                operation_model.has_streaming_output,
+                operation_model.has_event_stream_output
+            ])
             event_name = 'request-created.{endpoint_prefix}.{op_name}'.format(
                 endpoint_prefix=self._endpoint_prefix,
                 op_name=operation_model.name)
@@ -212,32 +170,9 @@ class Endpoint(object):
                 'url': request.url,
                 'body': request.body
             })
-            streaming = any([
-                operation_model.has_streaming_output,
-                operation_model.has_event_stream_output
-            ])
-            http_response = self.http_session.send(
-                request, verify=self.verify,
-                stream=streaming,
-                proxies=self.proxies, timeout=self.timeout)
-        except ConnectionError as e:
-            # For a connection error, if it looks like it's a DNS
-            # lookup issue, 99% of the time this is due to a misconfigured
-            # region/endpoint so we'll raise a more specific error message
-            # to help users.
-            logger.debug("ConnectionError received when sending HTTP request.",
-                         exc_info=True)
-            if self._looks_like_dns_error(e):
-                endpoint_url = e.request.url
-                better_exception = EndpointConnectionError(
-                    endpoint_url=endpoint_url, error=e)
-                return (None, better_exception)
-            elif self._looks_like_bad_status_line(e):
-                better_exception = ConnectionClosedError(
-                    endpoint_url=e.request.url, request=e.request)
-                return (None, better_exception)
-            else:
-                return (None, e)
+            http_response = self._send(request)
+        except HTTPClientError as e:
+            return (None, e)
         except Exception as e:
             logger.debug("Exception received when sending HTTP request.",
                          exc_info=True)
@@ -256,12 +191,6 @@ class Endpoint(object):
             response_dict, operation_model.output_shape)
         history_recorder.record('PARSED_RESPONSE', parsed_response)
         return (http_response, parsed_response), None
-
-    def _looks_like_dns_error(self, e):
-        return 'gaierror' in str(e) and e.request is not None
-
-    def _looks_like_bad_status_line(self, e):
-        return 'BadStatusLine' in str(e) and e.request is not None
 
     def _needs_retry(self, attempts, operation_model, request_dict,
                      response=None, caught_exception=None):
@@ -282,6 +211,9 @@ class Endpoint(object):
             time.sleep(handler_response)
             return True
 
+    def _send(self, request):
+        return self.http_session.send(request)
+
 
 class EndpointCreator(object):
     def __init__(self, event_emitter):
@@ -291,21 +223,30 @@ class EndpointCreator(object):
                         verify=None, response_parser_factory=None,
                         timeout=DEFAULT_TIMEOUT,
                         max_pool_connections=MAX_POOL_CONNECTIONS,
+                        http_session_cls=URLLib3Session,
                         proxies=None):
         if not is_valid_endpoint_url(endpoint_url):
 
             raise ValueError("Invalid endpoint: %s" % endpoint_url)
         if proxies is None:
             proxies = self._get_proxies(endpoint_url)
-        return Endpoint(
-            endpoint_url,
-            endpoint_prefix=service_model.endpoint_prefix,
-            event_emitter=self._event_emitter,
+        endpoint_prefix = service_model.endpoint_prefix
+
+        logger.debug('Setting %s timeout as %s', endpoint_prefix, timeout)
+        http_session = http_session_cls(
+            timeout=timeout,
             proxies=proxies,
             verify=self._get_verify_value(verify),
-            timeout=timeout,
             max_pool_connections=max_pool_connections,
-            response_parser_factory=response_parser_factory)
+        )
+
+        return Endpoint(
+            endpoint_url,
+            endpoint_prefix=endpoint_prefix,
+            event_emitter=self._event_emitter,
+            response_parser_factory=response_parser_factory,
+            http_session=http_session
+        )
 
     def _get_proxies(self, url):
         # We could also support getting proxies from a config file,

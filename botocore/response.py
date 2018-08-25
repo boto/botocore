@@ -19,7 +19,8 @@ import logging
 from botocore import ScalarTypes
 from botocore.hooks import first_non_none_response
 from botocore.compat import json, set_socket_timeout, XMLParseError
-from botocore.exceptions import IncompleteReadError
+from botocore.exceptions import IncompleteReadError, ReadTimeoutError
+from urllib3.exceptions import ReadTimeoutError as URLLib3ReadTimeoutError
 from botocore import parsers
 
 
@@ -73,7 +74,11 @@ class StreamingBody(object):
 
         If the amt argument is omitted, read all data.
         """
-        chunk = self._raw_stream.read(amt)
+        try:
+            chunk = self._raw_stream.read(amt)
+        except URLLib3ReadTimeoutError as e:
+            # TODO: the url will be None as urllib3 isn't setting it yet
+            raise ReadTimeoutError(endpoint_url=e.url, error=e)
         self._amount_read += len(chunk)
         if amt is None or (not chunk and amt > 0):
             # If the server sends empty contents or
