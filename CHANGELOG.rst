@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.11.1
+======
+
+* api-change:``glue``: Update glue client to latest version
+
+
 1.11.0
 ======
 
