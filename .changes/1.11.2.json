@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``iot``", 
+    "description": "Update iot client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``signer``", 
+    "description": "Update signer client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``redshift``", 
+    "description": "Update redshift client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iotanalytics``", 
+    "description": "Update iotanalytics client to latest version", 
+    "type": "api-change"
+  }
+]
