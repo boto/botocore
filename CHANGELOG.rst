@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.11.3
+======
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``xray``: Update xray client to latest version
+
+
 1.11.2
 ======
 
