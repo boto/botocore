@@ -867,7 +867,6 @@ BUILTIN_HANDLERS = [
     ('creating-client-class.kinesis', remove_subscribe_to_shard),
     ('creating-client-class', add_generate_presigned_url),
     ('creating-client-class.s3', add_generate_presigned_post),
-    ('creating-client-class.rds', add_generate_db_auth_token),
     ('creating-client-class.iot-data', check_openssl_supports_tls_version_1_2),
     ('after-call.iam', json_decode_policies),
 
@@ -915,14 +914,6 @@ BUILTIN_HANDLERS = [
     ('before-call.glacier.UploadArchive', add_glacier_checksums),
     ('before-call.glacier.UploadMultipartPart', add_glacier_checksums),
     ('before-call.ec2.CopySnapshot', inject_presigned_url_ec2),
-    ('before-call.rds.CopyDBClusterSnapshot',
-     inject_presigned_url_rds),
-    ('before-call.rds.CreateDBCluster',
-     inject_presigned_url_rds),
-    ('before-call.rds.CopyDBSnapshot',
-     inject_presigned_url_rds),
-    ('before-call.rds.CreateDBInstanceReadReplica',
-     inject_presigned_url_rds),
     ('request-created.machinelearning.Predict', switch_host_machinelearning),
     ('needs-retry.s3.UploadPartCopy', check_for_200_error, REGISTER_FIRST),
     ('needs-retry.s3.CopyObject', check_for_200_error, REGISTER_FIRST),
@@ -977,16 +968,6 @@ BUILTIN_HANDLERS = [
     ('docs.*.autoscaling.CreateLaunchConfiguration.complete-section',
      document_base64_encoding('UserData')),
 
-    # RDS PresignedUrl documentation customizations
-    ('docs.*.rds.CopyDBClusterSnapshot.complete-section',
-     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
-    ('docs.*.rds.CreateDBCluster.complete-section',
-     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
-    ('docs.*.rds.CopyDBSnapshot.complete-section',
-     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
-    ('docs.*.rds.CreateDBInstanceReadReplica.complete-section',
-     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
-
     # EC2 CopySnapshot documentation customizations
     ('docs.*.ec2.CopySnapshot.complete-section',
      AutoPopulatedParam('PresignedUrl').document_auto_populated_param),
@@ -1010,6 +991,44 @@ BUILTIN_HANDLERS = [
           'PutBucketLifecycle', 'PutBucketLogging', 'PutBucketNotification',
           'PutBucketPolicy', 'PutBucketReplication', 'PutBucketRequestPayment',
           'PutBucketTagging', 'PutBucketVersioning', 'PutBucketWebsite',
-          'PutObjectAcl']).hide_param)
+          'PutObjectAcl']).hide_param),
+
+    #############
+    # RDS
+    #############
+    ('creating-client-class.rds', add_generate_db_auth_token),
+
+    ('before-call.rds.CopyDBClusterSnapshot',
+     inject_presigned_url_rds),
+    ('before-call.rds.CreateDBCluster',
+     inject_presigned_url_rds),
+    ('before-call.rds.CopyDBSnapshot',
+     inject_presigned_url_rds),
+    ('before-call.rds.CreateDBInstanceReadReplica',
+     inject_presigned_url_rds),
+
+    # RDS PresignedUrl documentation customizations
+    ('docs.*.rds.CopyDBClusterSnapshot.complete-section',
+     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
+    ('docs.*.rds.CreateDBCluster.complete-section',
+     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
+    ('docs.*.rds.CopyDBSnapshot.complete-section',
+     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
+    ('docs.*.rds.CreateDBInstanceReadReplica.complete-section',
+     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
+
+    #############
+    # Neptune
+    #############
+    ('before-call.neptune.CopyDBClusterSnapshot',
+     inject_presigned_url_rds),
+    ('before-call.neptune.CreateDBCluster',
+     inject_presigned_url_rds),
+
+    # RDS PresignedUrl documentation customizations
+    ('docs.*.neptune.CopyDBClusterSnapshot.complete-section',
+     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
+    ('docs.*.neptune.CreateDBCluster.complete-section',
+     AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
 ]
 _add_parameter_aliases(BUILTIN_HANDLERS)
