@@ -23,7 +23,7 @@ from botocore.endpoint import EndpointCreator
 from botocore.exceptions import EndpointConnectionError
 from botocore.exceptions import ConnectionClosedError
 from botocore.httpsession import URLLib3Session
-from botocore.model import OperationModel
+from botocore.model import OperationModel, ServiceId
 
 
 def request_dict():
@@ -106,7 +106,7 @@ class TestRetryInterface(TestEndpointBase):
         super(TestRetryInterface, self).setUp()
         self.retried_on_exception = None
         self._operation = Mock(spec=OperationModel)
-        self._operation.service_model.service_id = 'ec2'
+        self._operation.service_model.service_id = ServiceId('ec2')
 
     def test_retry_events_are_emitted(self):
         op = self._operation

@@ -13,7 +13,7 @@
 """Abstractions to interact with service models."""
 from collections import defaultdict
 
-from botocore.utils import CachedProperty, instance_cache
+from botocore.utils import CachedProperty, instance_cache, hyphenize_service_id
 from botocore.compat import OrderedDict
 
 
@@ -38,6 +38,11 @@ class InvalidShapeReferenceError(Exception):
 
 class UndefinedModelAttributeError(Exception):
     pass
+
+
+class ServiceId(str):
+    def hyphenize(self):
+        return hyphenize_service_id(self)
 
 
 class Shape(object):
@@ -286,7 +291,7 @@ class ServiceModel(object):
 
     @CachedProperty
     def service_id(self):
-        return self._get_metadata_property('serviceId')
+        return ServiceId(self._get_metadata_property('serviceId'))
 
     @CachedProperty
     def signing_name(self):

@@ -973,7 +973,7 @@ def deep_merge(base, extra):
         base[key] = extra[key]
 
 
-def get_service_event_name(service_id):
+def hyphenize_service_id(service_id):
     """Translate the form used for event emitters.
 
     :param service_id: The service_id to convert.

@@ -37,6 +37,7 @@ from botocore.exceptions import AliasConflictParameterError
 from botocore.exceptions import UnsupportedTLSVersionWarning
 from botocore.utils import percent_encode, SAFE_CHARS
 from botocore.utils import switch_host_with_param
+from botocore.utils import hyphenize_service_id
 
 from botocore import retryhandler
 from botocore import utils
@@ -273,6 +274,8 @@ def _needs_s3_sse_customization(params, sse_member_prefix):
 def register_retries_for_service(service_data, session,
                                  service_name, **kwargs):
     loader = session.get_component('data_loader')
+    service_id = service_data.get('metadata', {}).get('serviceId')
+    service_event_name = hyphenize_service_id(service_id)
     endpoint_prefix = service_data.get('metadata', {}).get('endpointPrefix')
     if endpoint_prefix is None:
         logger.debug("Not registering retry handlers, could not endpoint "
@@ -284,11 +287,10 @@ def register_retries_for_service(service_data, session,
     logger.debug("Registering retry handlers for service: %s", service_name)
     handler = retryhandler.create_retry_handler(
         config, endpoint_prefix)
-    unique_id = 'retry-config-%s' % endpoint_prefix
-    session.register('needs-retry.%s' % endpoint_prefix,
+    unique_id = 'retry-config-%s' % service_event_name
+    session.register('needs-retry.%s' % service_event_name,
                      handler, unique_id=unique_id)
-    _register_for_operations(config, session,
-                             service_name=endpoint_prefix)
+    _register_for_operations(config, session, service_event_name)
 
 
 def _load_retry_config(loader, endpoint_prefix):
@@ -299,7 +301,7 @@ def _load_retry_config(loader, endpoint_prefix):
     return retry_config
 
 
-def _register_for_operations(config, session, service_name):
+def _register_for_operations(config, session, service_event_name):
     # There's certainly a tradeoff for registering the retry config
     # for the operations when the service is created.  In practice,
     # there aren't a whole lot of per operation retry configs so
@@ -308,8 +310,8 @@ def _register_for_operations(config, session, service_name):
         if key == '__default__':
             continue
         handler = retryhandler.create_retry_handler(config, key)
-        unique_id = 'retry-config-%s-%s' % (service_name, key)
-        session.register('needs-retry.%s.%s' % (service_name, key),
+        unique_id = 'retry-config-%s-%s' % (service_event_name, key)
+        session.register('needs-retry.%s.%s' % (service_event_name, key),
                          handler, unique_id=unique_id)
 
 

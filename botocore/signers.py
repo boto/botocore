@@ -23,7 +23,6 @@ from botocore.exceptions import UnknownSignatureVersionError
 from botocore.exceptions import UnknownClientMethodError
 from botocore.exceptions import UnsupportedSignatureVersionError
 from botocore.utils import fix_s3_host, datetime2timestamp
-from botocore.utils import get_service_event_name
 
 
 class RequestSigner(object):
@@ -40,7 +39,7 @@ class RequestSigner(object):
     and disabling signing per operation.
 
 
-    :type service_id: str
+    :type service_id: botocore.model.ServiceId
     :param service_id: The service id for the service, e.g. ``S3``
 
     :type region_name: string
@@ -66,7 +65,7 @@ class RequestSigner(object):
         self._signing_name = signing_name
         self._signature_version = signature_version
         self._credentials = credentials
-        self._service_event_name = get_service_event_name(service_id)
+        self._service_id = service_id
 
         # We need weakref to prevent leaking memory in Python 2.6 on Linux 2.6
         self._event_emitter = weakref.proxy(event_emitter)
@@ -130,7 +129,7 @@ class RequestSigner(object):
         # Allow mutating request before signing
         self._event_emitter.emit(
             'before-sign.{0}.{1}'.format(
-                self._service_event_name, operation_name),
+                self._service_id.hyphenize(), operation_name),
             request=request, signing_name=signing_name,
             region_name=self._region_name,
             signature_version=signature_version, request_signer=self,
@@ -180,7 +179,7 @@ class RequestSigner(object):
 
         handler, response = self._event_emitter.emit_until_response(
             'choose-signer.{0}.{1}'.format(
-                self._service_event_name, operation_name),
+                self._service_id.hyphenize(), operation_name),
             signing_name=self._signing_name, region_name=self._region_name,
             signature_version=signature_version, context=context)
 
