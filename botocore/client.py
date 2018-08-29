@@ -450,7 +450,7 @@ class ClientEndpointBridge(object):
             'region_name': region_name,
             'signing_region': signing_region,
             'signing_name': signing_name,
-            'endpoint_url': endpoint_url,
+            'endpoint_url': endpoint_url.lower(),
             'signature_version': signature_version,
             'metadata': metadata
         }

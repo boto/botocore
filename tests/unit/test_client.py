@@ -1979,3 +1979,13 @@ class TestClientEndpointBridge(unittest.TestCase):
             resolved['endpoint_url'],
             'https://s3.dualstack.cn-north-1.amazonaws.com.cn'
         )
+
+    def test_endpoint_url_is_all_lowerase(self):
+        resolver = mock.Mock()
+        resolver.construct_endpoint.return_value = {
+            'partition': 'aws', 'hostname': 'HoSt.cOm',
+            'signatureVersions': ['v4'],
+            'endpointName': 'us-foo-baz'}
+        bridge = ClientEndpointBridge(resolver)
+        resolved = bridge.resolve('myservice', 'us-foo-baz', is_secure=False)
+        self.assertEqual('http://host.com', resolved['endpoint_url'])
