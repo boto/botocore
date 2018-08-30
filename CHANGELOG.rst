@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.11.5
+======
+
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* bugfix:signing: Fix an issue where mixed endpoint casing could cause a SigV4 signature mismatch.
+
+
 1.11.4
 ======
 
