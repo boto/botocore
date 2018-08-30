@@ -91,6 +91,7 @@ SMOKE_TESTS = {
  's3': {'ListBuckets': {}},
  'sdb': {'ListDomains': {}},
  'ses': {'ListIdentities': {}},
+ 'shield': {'GetSubscriptionState': {}},
  'sns': {'ListTopics': {}},
  'sqs': {'ListQueues': {}},
  'ssm': {'ListDocuments': {}},
