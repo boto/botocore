@@ -126,21 +126,27 @@ class TestRetryInterface(TestEndpointBase):
         op.has_event_stream_output = False
         self.event_emitter.emit.side_effect = [
             [(None, None)],    # Request created.
+            [(None, None)],    # Request sent.
             [(None, 0)],       # Check if retry needed. Retry needed.
             [(None, None)],    # Request created.
+            [(None, None)],    # Request sent.
             [(None, None)]     # Check if retry needed. Retry not needed.
         ]
         self.endpoint.make_request(op, request_dict())
         call_args = self.event_emitter.emit.call_args_list
-        self.assertEqual(self.event_emitter.emit.call_count, 4)
+        self.assertEqual(self.event_emitter.emit.call_count, 6)
         # Check that all of the events are as expected.
         self.assertEqual(call_args[0][0][0],
                          'request-created.ec2.DescribeInstances')
         self.assertEqual(call_args[1][0][0],
-                         'needs-retry.ec2.DescribeInstances')
+                         'send-request.ec2.DescribeInstances')
         self.assertEqual(call_args[2][0][0],
-                         'request-created.ec2.DescribeInstances')
+                         'needs-retry.ec2.DescribeInstances')
         self.assertEqual(call_args[3][0][0],
+                         'request-created.ec2.DescribeInstances')
+        self.assertEqual(call_args[4][0][0],
+                         'send-request.ec2.DescribeInstances')
+        self.assertEqual(call_args[5][0][0],
                          'needs-retry.ec2.DescribeInstances')
 
     def test_retry_on_socket_errors(self):
@@ -149,33 +155,41 @@ class TestRetryInterface(TestEndpointBase):
         op.has_event_stream_output = False
         self.event_emitter.emit.side_effect = [
             [(None, None)],    # Request created.
+            [(None, None)],    # Request sent.
             [(None, 0)],       # Check if retry needed. Retry needed.
             [(None, None)],    # Request created
+            [(None, None)],    # Request sent.
             [(None, None)]     # Check if retry needed. Retry not needed.
         ]
         self.http_session.send.side_effect = ConnectionError()
         with self.assertRaises(ConnectionError):
             self.endpoint.make_request(op, request_dict())
         call_args = self.event_emitter.emit.call_args_list
-        self.assertEqual(self.event_emitter.emit.call_count, 4)
+        self.assertEqual(self.event_emitter.emit.call_count, 6)
         # Check that all of the events are as expected.
         self.assertEqual(call_args[0][0][0],
                          'request-created.ec2.DescribeInstances')
         self.assertEqual(call_args[1][0][0],
-                         'needs-retry.ec2.DescribeInstances')
+                         'send-request.ec2.DescribeInstances')
         self.assertEqual(call_args[2][0][0],
-                         'request-created.ec2.DescribeInstances')
+                         'needs-retry.ec2.DescribeInstances')
         self.assertEqual(call_args[3][0][0],
+                         'request-created.ec2.DescribeInstances')
+        self.assertEqual(call_args[4][0][0],
+                         'send-request.ec2.DescribeInstances')
+        self.assertEqual(call_args[5][0][0],
                          'needs-retry.ec2.DescribeInstances')
 
-    def test_retry_attempts_added_to_response_metadata(self):
+    def est_retry_attempts_added_to_response_metadata(self):
         op = Mock(name='DescribeInstances')
         op.metadata = {'protocol': 'query'}
         op.has_event_stream_output = False
         self.event_emitter.emit.side_effect = [
             [(None, None)],    # Request created.
+            [(None, None)],    # Request sent
             [(None, 0)],       # Check if retry needed. Retry needed.
             [(None, None)],    # Request created.
+            [(None, None)],    # Request sent
             [(None, None)]     # Check if retry needed. Retry not needed.
         ]
         parser = Mock()
@@ -189,6 +203,7 @@ class TestRetryInterface(TestEndpointBase):
         op.has_event_stream_output = False
         self.event_emitter.emit.side_effect = [
             [(None, None)],    # Request created.
+            [(None, None)],    # Request sent.
             [(None, None)],    # Check if retry needed. Retry needed.
         ]
         parser = Mock()
@@ -223,10 +238,13 @@ class TestS3ResetStreamOnRetry(TestEndpointBase):
         request['body'] = body
         self.event_emitter.emit.side_effect = [
             [(None, None)],   # Request created.
+            [(None, None)],   # Request sent.
             [(None, 0)],      # Check if retry needed. Needs Retry.
             [(None, None)],   # Request created.
+            [(None, None)],   # Request sent.
             [(None, 0)],      # Check if retry needed again. Needs Retry.
             [(None, None)],   # Request created.
+            [(None, None)],   # Request sent.
             [(None, None)],   # Finally emit no rety is needed.
         ]
         self.endpoint.make_request(op, request)
