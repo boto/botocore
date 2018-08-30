@@ -180,7 +180,11 @@ class SigV4Auth(BaseSigner):
             if lname not in SIGNED_HEADERS_BLACKLIST:
                 header_map[lname] = value
         if 'host' not in header_map:
-            header_map['host'] = self._canonical_host(request.url)
+            # Ensure we sign the lowercased version of the host, as that
+            # is what will ultimately be sent on the wire.
+            # TODO: We should set the host ourselves, instead of relying on our
+            # HTTP client to set it for us.
+            header_map['host'] = self._canonical_host(request.url).lower()
         return header_map
 
     def _canonical_host(self, url):
