@@ -441,9 +441,10 @@ class AWSPreparedRequest(object):
         # just immediately return.  It's not an error, it will produce
         # the same result as if we had actually reset the stream (we'll send
         # the entire body contents again if we need to).
-        # Same case if the body is a string/bytes type.
-        if self.body is None or isinstance(self.body, six.text_type) or \
-           isinstance(self.body, six.binary_type):
+        # Same case if the body is a string/bytes/bytearray type.
+
+        non_seekable_types = (six.binary_type, six.text_type, bytearray)
+        if self.body is None or isinstance(self.body, non_seekable_types):
             return
         try:
             logger.debug("Rewinding stream: %s", self.body)

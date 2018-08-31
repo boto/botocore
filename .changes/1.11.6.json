@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``waf-regional``", 
+    "description": "Update waf-regional client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``waf``", 
+    "description": "Update waf client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``eks``", 
+    "description": "Update eks client to latest version", 
+    "type": "api-change"
+  }
+]
