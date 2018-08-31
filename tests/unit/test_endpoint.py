@@ -151,6 +151,7 @@ class TestRetryInterface(TestEndpointBase):
         op.name = 'DescribeInstances'
         op.metadata = {'protocol': 'json'}
         op.has_event_stream_output = False
+        op.service_model.service_id = 'EC2'
         self.event_emitter.emit.side_effect = self.get_emitter_responses(
             num_retries=1)
         self.endpoint.make_request(op, request_dict())
@@ -168,6 +169,7 @@ class TestRetryInterface(TestEndpointBase):
         op = self._operation
         op.name = 'DescribeInstances'
         op.has_event_stream_output = False
+        op.service_model.service_id = 'EC2'
         self.event_emitter.emit.side_effect = self.get_emitter_responses(
             num_retries=1)
         self.http_session.send.side_effect = ConnectionError()

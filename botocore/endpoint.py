@@ -175,9 +175,11 @@ class Endpoint(object):
             kwargs_to_emit['parsed_response'] = parsed_response
             kwargs_to_emit['response_dict'] = convert_to_response_dict(
                 http_response, operation_model)
+        service_id = operation_model.service_model.service_id.replace(
+            ' ', '-').lower()
         self._event_emitter.emit(
             'response-received.%s.%s' % (
-                self._endpoint_prefix, operation_model.name), **kwargs_to_emit)
+                service_id, operation_model.name), **kwargs_to_emit)
         return success_response, exception
 
     def _do_get_response(self, request, operation_model):
