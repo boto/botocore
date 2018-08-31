@@ -630,8 +630,9 @@ class BaseClient(object):
             return self._endpoint.make_request(operation_model, request_dict)
         except Exception as e:
             self.meta.events.emit(
-                'after-call-error.{endpoint_prefix}.{operation_name}'.format(
-                    endpoint_prefix=self._service_model.endpoint_prefix,
+                'after-call-error.{service_id}.{operation_name}'.format(
+                    service_id=self._service_model.service_id.replace(
+                        ' ', '-').lower(),
                     operation_name=operation_model.name),
                 exception=e, context=request_context
             )
