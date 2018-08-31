@@ -147,9 +147,12 @@ except ImportError:
     # Python2.6 we use the 3rd party back port.
     from ordereddict import OrderedDict
 
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 if sys.version_info[:2] == (2, 6):
-    import simplejson as json
     # In py26, invalid xml parsed by element tree
     # will raise a plain old SyntaxError instead of
     # a real exception, so we need to abstract this change.
