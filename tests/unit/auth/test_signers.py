@@ -24,7 +24,6 @@ import botocore.auth
 import botocore.credentials
 from botocore.compat import HTTPHeaders, urlsplit, parse_qs, six
 from botocore.awsrequest import AWSRequest
-from botocore.vendored.requests.models import Request
 
 
 class BaseTestWithFixedDate(unittest.TestCase):
@@ -198,7 +197,7 @@ class TestSigV2(unittest.TestCase):
                      u'VCtWuwaOL0yMffAT8W4y0AFW3W4KUykBqah9S40rB+Q='))
 
     def test_fields(self):
-        request = Request()
+        request = AWSRequest()
         request.url = '/'
         request.method = 'POST'
         request.data = {'Foo': u'\u2713'}
@@ -213,7 +212,7 @@ class TestSigV2(unittest.TestCase):
 
     def test_resign(self):
         # Make sure that resigning after e.g. retries works
-        request = Request()
+        request = AWSRequest()
         request.url = '/'
         request.method = 'POST'
         params = {
@@ -226,7 +225,7 @@ class TestSigV2(unittest.TestCase):
                      u'VCtWuwaOL0yMffAT8W4y0AFW3W4KUykBqah9S40rB+Q='))
 
     def test_get(self):
-        request = Request()
+        request = AWSRequest()
         request.url = '/'
         request.method = 'GET'
         request.params = {'Foo': u'\u2713'}

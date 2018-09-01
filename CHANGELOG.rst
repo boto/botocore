@@ -2,6 +2,92 @@
 CHANGELOG
 =========
 
+1.11.6
+======
+
+* api-change:``waf-regional``: Update waf-regional client to latest version
+* api-change:``waf``: Update waf client to latest version
+* api-change:``eks``: Update eks client to latest version
+
+
+1.11.5
+======
+
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* bugfix:signing: Fix an issue where mixed endpoint casing could cause a SigV4 signature mismatch.
+
+
+1.11.4
+======
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``sagemaker-runtime``: Update sagemaker-runtime client to latest version
+* api-change:``mediapackage``: Update mediapackage client to latest version
+
+
+1.11.3
+======
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``xray``: Update xray client to latest version
+
+
+1.11.2
+======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``signer``: Update signer client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``iotanalytics``: Update iotanalytics client to latest version
+
+
+1.11.1
+======
+
+* api-change:``glue``: Update glue client to latest version
+
+
+1.11.0
+======
+
+* api-change:``events``: Update events client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* feature:urllib3: The vendored version of requests and urllib3 are no longer being used and botocore now has a direct dependency on newer versions of upstream urllib3.
+
+
+1.10.84
+=======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+* api-change:``lex-models``: Update lex-models client to latest version
+* api-change:``iotanalytics``: Update iotanalytics client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+
+
+1.10.83
+=======
+
+* api-change:``snowball``: Update snowball client to latest version
+
+
+1.10.82
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+
+
+1.10.81
+=======
+
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+
+
 1.10.80
 =======
 

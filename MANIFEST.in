@@ -1,6 +1,7 @@
 include README.rst
 include LICENSE.txt
 include requirements.txt
+include botocore/cacert.pem
 include botocore/vendored/requests/cacert.pem
 recursive-include botocore/data *.json
 graft docs

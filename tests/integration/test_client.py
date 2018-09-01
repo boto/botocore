@@ -219,3 +219,16 @@ class TestClientInjection(unittest.TestCase):
 
         # We should now have access to the extra_client_method above.
         self.assertEqual(client.extra_client_method('foo'), 'foo')
+
+
+class TestMixedEndpointCasing(unittest.TestCase):
+    def setUp(self):
+        self.url = 'https://EC2.US-WEST-2.amazonaws.com/'
+        self.session = botocore.session.get_session()
+        self.client = self.session.create_client('ec2', 'us-west-2',
+                                                 endpoint_url=self.url)
+
+    def test_sigv4_is_correct_when_mixed_endpoint_casing(self):
+        res = self.client.describe_regions()
+        status_code = res['ResponseMetadata']['HTTPStatusCode']
+        self.assertEqual(status_code, 200)

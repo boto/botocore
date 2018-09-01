@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``glue``", 
+    "description": "Update glue client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sagemaker-runtime``", 
+    "description": "Update sagemaker-runtime client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``mediapackage``", 
+    "description": "Update mediapackage client to latest version", 
+    "type": "api-change"
+  }
+]

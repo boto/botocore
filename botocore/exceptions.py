@@ -12,7 +12,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from __future__ import unicode_literals
-from botocore.vendored.requests.exceptions import ConnectionError
+from botocore.vendored import requests
+from botocore.vendored.requests.packages import urllib3
 
 
 class BotoCoreError(Exception):
@@ -60,20 +61,43 @@ class ApiVersionNotFoundError(BotoCoreError):
     fmt = 'Unable to load data {data_path} for: {api_version}'
 
 
-class EndpointConnectionError(BotoCoreError):
-    fmt = (
-        'Could not connect to the endpoint URL: "{endpoint_url}"')
+class HTTPClientError(BotoCoreError):
+    fmt = 'An HTTP Client raised and unhandled exception: {error}'
+    def __init__(self, request=None, response=None, **kwargs):
+        self.request = request
+        self.response = response
+        super(HTTPClientError, self).__init__(**kwargs)
 
 
-class ConnectionClosedError(ConnectionError):
+class ConnectionError(BotoCoreError):
+    fmt = 'An HTTP Client failed to establish a connection: {error}'
+
+
+class EndpointConnectionError(ConnectionError):
+    fmt = 'Could not connect to the endpoint URL: "{endpoint_url}"'
+
+
+class SSLError(ConnectionError, requests.exceptions.SSLError):
+    fmt = 'SSL validation failed for {endpoint_url} {error}'
+
+
+class ConnectionClosedError(HTTPClientError):
     fmt = (
         'Connection was closed before we received a valid response '
         'from endpoint URL: "{endpoint_url}".')
 
-    def __init__(self, **kwargs):
-        msg = self.fmt.format(**kwargs)
-        kwargs.pop('endpoint_url')
-        super(ConnectionClosedError, self).__init__(msg, **kwargs)
+
+class ReadTimeoutError(HTTPClientError, requests.exceptions.ReadTimeout,
+                       urllib3.exceptions.ReadTimeoutError):
+    fmt = 'Read timeout on endpoint URL: "{endpoint_url}"'
+
+
+class ConnectTimeoutError(ConnectionError, requests.exceptions.ConnectTimeout):
+    fmt = 'Connect timeout on endpoint URL: "{endpoint_url}"'
+
+
+class ProxyConnectionError(ConnectionError, requests.exceptions.ProxyError):
+    fmt = 'Failed to connect to proxy URL: "{proxy_url}"'
 
 
 class NoCredentialsError(BotoCoreError):

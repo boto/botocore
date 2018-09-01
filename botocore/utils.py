@@ -20,17 +20,23 @@ import functools
 import weakref
 import random
 import os
+import socket
+import cgi
 
 import dateutil.parser
 from dateutil.tz import tzlocal, tzutc
 
 import botocore
-from botocore.exceptions import InvalidExpressionError, ConfigNotFound
-from botocore.exceptions import InvalidDNSNameError, ClientError
-from botocore.exceptions import MetadataRetrievalError
+import botocore.awsrequest
+import botocore.httpsession
 from botocore.compat import json, quote, zip_longest, urlsplit, urlunsplit
-from botocore.vendored import requests
-from botocore.compat import OrderedDict, six
+from botocore.compat import OrderedDict, six, urlparse
+from botocore.vendored.six.moves.urllib.request import getproxies, proxy_bypass
+from botocore.exceptions import (
+    InvalidExpressionError, ConfigNotFound, InvalidDNSNameError, ClientError,
+    MetadataRetrievalError, EndpointConnectionError, ReadTimeoutError,
+    ConnectionClosedError, ConnectTimeoutError,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -42,7 +48,10 @@ METADATA_SECURITY_CREDENTIALS_URL = (
 # Based on rfc2986, section 2.3
 SAFE_CHARS = '-._~'
 LABEL_RE = re.compile(r'[a-z0-9][a-z0-9\-]*[a-z0-9]')
-RETRYABLE_HTTP_ERRORS = (requests.Timeout, requests.ConnectionError)
+RETRYABLE_HTTP_ERRORS = (
+    ReadTimeoutError, EndpointConnectionError, ConnectionClosedError,
+    ConnectTimeoutError,
+)
 S3_ACCELERATE_WHITELIST = ['dualstack']
 
 
@@ -170,6 +179,10 @@ class InstanceMetadataFetcher(object):
         self._disabled = env.get('AWS_EC2_METADATA_DISABLED', 'false').lower()
         self._disabled = self._disabled == 'true'
         self._user_agent = user_agent
+        self._session = botocore.httpsession.URLLib3Session(
+            timeout=self._timeout,
+            proxies=get_environ_proxies(self._url),
+        )
 
     def _get_request(self, url, timeout, num_attempts=1):
         if self._disabled:
@@ -182,7 +195,9 @@ class InstanceMetadataFetcher(object):
 
         for i in range(num_attempts):
             try:
-                response = requests.get(url, timeout=timeout, headers=headers)
+                AWSRequest = botocore.awsrequest.AWSRequest
+                request = AWSRequest(method='GET', url=url, headers=headers)
+                response = self._session.send(request.prepare())
             except RETRYABLE_HTTP_ERRORS as e:
                 logger.debug("Caught exception while trying to retrieve "
                              "credentials: %s", e, exc_info=True)
@@ -262,6 +277,14 @@ def merge_dicts(dict1, dict2, append_lists=False):
             # At scalar types, we iterate and merge the
             # current dict that we're on.
             dict1[key] = dict2[key]
+
+
+def lowercase_dict(original):
+    """Copies the given dictionary ensuring all keys are lowercase strings. """
+    copy = {}
+    for key in original:
+        copy[key.lower()] = original[key]
+    return copy
 
 
 def parse_key_val_file(filename, _open=open):
@@ -930,9 +953,12 @@ class S3RegionRedirector(object):
             error_code == 'AuthorizationHeaderMalformed' and
             'Region' in error
         )
+        is_redirect_status = response[0] is not None and \
+                response[0].status_code in [301, 302, 307]
         is_permanent_redirect = error_code == 'PermanentRedirect'
         if not any([is_special_head_object, is_wrong_signing_region,
-                    is_permanent_redirect, is_special_head_bucket]):
+                    is_permanent_redirect, is_special_head_bucket,
+                    is_redirect_status]):
             return
 
         bucket = request_dict['context']['signing']['bucket']
@@ -1030,9 +1056,9 @@ class ContainerMetadataFetcher(object):
 
     def __init__(self, session=None, sleep=time.sleep):
         if session is None:
-            session = requests.Session()
-            session.trust_env = False
-            session.proxies = {}
+            session = botocore.httpsession.URLLib3Session(
+                timeout=self.TIMEOUT_SECONDS
+            )
         self._session = session
         self._sleep = sleep
 
@@ -1093,18 +1119,20 @@ class ContainerMetadataFetcher(object):
 
     def _get_response(self, full_url, headers, timeout):
         try:
-            response = self._session.get(full_url, headers=headers,
-                                         timeout=timeout)
+            AWSRequest = botocore.awsrequest.AWSRequest
+            request = AWSRequest(method='GET', url=full_url, headers=headers)
+            response = self._session.send(request.prepare())
+            response_text = response.content.decode('utf-8')
             if response.status_code != 200:
                 raise MetadataRetrievalError(
                     error_msg="Received non 200 response (%s) from ECS metadata: %s"
-                    % (response.status_code, response.text))
+                    % (response.status_code, response_text))
             try:
-                return json.loads(response.text)
+                return json.loads(response_text)
             except ValueError:
                 raise MetadataRetrievalError(
                     error_msg=("Unable to parse JSON returned from "
-                               "ECS metadata: %s" % response.text))
+                               "ECS metadata: %s" % response_text))
         except RETRYABLE_HTTP_ERRORS as e:
             error_msg = ("Received error when attempting to retrieve "
                          "ECS metadata: %s" % e)
@@ -1112,3 +1140,52 @@ class ContainerMetadataFetcher(object):
 
     def full_url(self, relative_uri):
         return 'http://%s%s' % (self.IP_ADDRESS, relative_uri)
+
+
+def get_environ_proxies(url):
+    if should_bypass_proxies(url):
+        return {}
+    else:
+        return getproxies()
+
+
+def should_bypass_proxies(url):
+    """
+    Returns whether we should bypass proxies or not.
+    """
+    # NOTE: requests allowed for ip/cidr entries in no_proxy env that we don't
+    # support current as urllib only checks DNS suffix
+    # If the system proxy settings indicate that this URL should be bypassed,
+    # don't proxy.
+    # The proxy_bypass function is incredibly buggy on OS X in early versions
+    # of Python 2.6, so allow this call to fail. Only catch the specific
+    # exceptions we've seen, though: this call failing in other ways can reveal
+    # legitimate problems.
+    try:
+        if proxy_bypass(urlparse(url).netloc):
+            return True
+    except (TypeError, socket.gaierror):
+        pass
+
+    return False
+
+
+def get_encoding_from_headers(headers, default='ISO-8859-1'):
+    """Returns encodings from given HTTP Header Dict.
+
+    :param headers: dictionary to extract encoding from.
+    :param default: default encoding if the content-type is text
+    """
+
+    content_type = headers.get('content-type')
+
+    if not content_type:
+        return None
+
+    content_type, params = cgi.parse_header(content_type)
+
+    if 'charset' in params:
+        return params['charset'].strip("'\"")
+
+    if 'text' in content_type:
+        return default

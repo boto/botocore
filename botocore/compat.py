@@ -23,7 +23,7 @@ from math import floor
 
 from botocore.vendored import six
 from botocore.exceptions import MD5UnavailableError
-from botocore.vendored.requests.packages.urllib3 import exceptions
+from urllib3 import exceptions
 
 logger = logging.getLogger(__name__)
 

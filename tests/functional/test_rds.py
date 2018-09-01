@@ -27,7 +27,8 @@ class TestRDSPresignUrlInjection(BaseSessionTest):
 
     @contextmanager
     def patch_http_layer(self, response, status_code=200):
-        with mock.patch('botocore.endpoint.Session.send') as send:
+        # TODO: fix with stubber / before send event
+        with mock.patch('botocore.endpoint.Endpoint._send') as send:
             send.return_value = mock.Mock(status_code=status_code,
                                           headers={},
                                           content=response)
