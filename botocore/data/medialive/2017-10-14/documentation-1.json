@@ -1,7 +1,8 @@
 {
    "documentation" : {
-      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14",
+      "api_url" : null,
       "methods" : {
+         "BatchUpdateSchedule" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/BatchUpdateSchedule",
          "CreateChannel" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/CreateChannel",
          "CreateInput" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/CreateInput",
          "CreateInputSecurityGroup" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/CreateInputSecurityGroup",
@@ -14,6 +15,7 @@
          "DescribeInputSecurityGroup" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/DescribeInputSecurityGroup",
          "DescribeOffering" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/DescribeOffering",
          "DescribeReservation" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/DescribeReservation",
+         "DescribeSchedule" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/DescribeSchedule",
          "ListChannels" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/ListChannels",
          "ListInputSecurityGroups" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/ListInputSecurityGroups",
          "ListInputs" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/ListInputs",

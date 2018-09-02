@@ -1,6 +1,6 @@
 {
    "documentation" : {
-      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12",
+      "api_url" : null,
       "methods" : {
          "CreateChannel" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage/CreateChannel",
          "CreateOriginEndpoint" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage/CreateOriginEndpoint",
@@ -11,6 +11,7 @@
          "ListChannels" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage/ListChannels",
          "ListOriginEndpoints" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage/ListOriginEndpoints",
          "RotateChannelCredentials" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage/RotateChannelCredentials",
+         "RotateIngestEndpointCredentials" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage/RotateIngestEndpointCredentials",
          "UpdateChannel" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage/UpdateChannel",
          "UpdateOriginEndpoint" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage/UpdateOriginEndpoint"
       }

@@ -8,6 +8,7 @@
          "DeleteCollection" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/DeleteCollection",
          "DeleteFaces" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/DeleteFaces",
          "DeleteStreamProcessor" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/DeleteStreamProcessor",
+         "DescribeCollection" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/DescribeCollection",
          "DescribeStreamProcessor" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/DescribeStreamProcessor",
          "DetectFaces" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/DetectFaces",
          "DetectLabels" : "https://docs.aws.amazon.com/goto/WebAPI/rekognition/DetectLabels",

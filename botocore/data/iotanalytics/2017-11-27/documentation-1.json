@@ -21,6 +21,7 @@
          "DescribePipeline" : "https://docs.aws.amazon.com/goto/WebAPI/iotanalytics/DescribePipeline",
          "GetDatasetContent" : "https://docs.aws.amazon.com/goto/WebAPI/iotanalytics/GetDatasetContent",
          "ListChannels" : "https://docs.aws.amazon.com/goto/WebAPI/iotanalytics/ListChannels",
+         "ListDatasetContents" : "https://docs.aws.amazon.com/goto/WebAPI/iotanalytics/ListDatasetContents",
          "ListDatasets" : "https://docs.aws.amazon.com/goto/WebAPI/iotanalytics/ListDatasets",
          "ListDatastores" : "https://docs.aws.amazon.com/goto/WebAPI/iotanalytics/ListDatastores",
          "ListPipelines" : "https://docs.aws.amazon.com/goto/WebAPI/iotanalytics/ListPipelines",

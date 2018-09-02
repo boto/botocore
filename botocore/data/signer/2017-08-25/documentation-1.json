@@ -1,0 +1,16 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/signer-2017-08-25",
+      "methods" : {
+         "CancelSigningProfile" : "https://docs.aws.amazon.com/goto/WebAPI/signer/CancelSigningProfile",
+         "DescribeSigningJob" : "https://docs.aws.amazon.com/goto/WebAPI/signer/DescribeSigningJob",
+         "GetSigningPlatform" : "https://docs.aws.amazon.com/goto/WebAPI/signer/GetSigningPlatform",
+         "GetSigningProfile" : "https://docs.aws.amazon.com/goto/WebAPI/signer/GetSigningProfile",
+         "ListSigningJobs" : "https://docs.aws.amazon.com/goto/WebAPI/signer/ListSigningJobs",
+         "ListSigningPlatforms" : "https://docs.aws.amazon.com/goto/WebAPI/signer/ListSigningPlatforms",
+         "ListSigningProfiles" : "https://docs.aws.amazon.com/goto/WebAPI/signer/ListSigningProfiles",
+         "PutSigningProfile" : "https://docs.aws.amazon.com/goto/WebAPI/signer/PutSigningProfile",
+         "StartSigningJob" : "https://docs.aws.amazon.com/goto/WebAPI/signer/StartSigningJob"
+      }
+   }
+}
