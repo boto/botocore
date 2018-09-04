@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.11.7
+======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
 1.11.6
 ======
 
