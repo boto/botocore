@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.11.8
+======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``elb``: Update elb client to latest version
+
+
 1.11.7
 ======
 
