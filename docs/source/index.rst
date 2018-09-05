@@ -78,9 +78,11 @@ Targets column, you may be impacted if you were relying on those events not
 firing.
 
 If you are registering events using ``*`` in the service place, or are
-registering against any service not in this table, you are not impacted. While
-you still should update your code, you won't have to as we have put in
-backwards compatibility shims for other cases.
+registering against any service not in this table, you will not need a code
+change. In many cases the actual event name will have changed, but for services
+without shared endpoints we do the work of translating the event name at
+registration and emission time. In future versions of botocore we will remove
+this translation, so you may wish to update your code anyway.
 
 How Do I Update My Code
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -111,6 +113,14 @@ To get the new event name, consult this table:
 +------------------------------+----------------------+------------------------------+
 | neptune                      | rds                  | neptune                      |
 +------------------------------+----------------------+------------------------------+
+
+Additionally, you can get the new event name in code like so::
+
+    from botocore.session import Session
+
+    session = Session()
+    client = session.create_client('elbv2')
+    service_event_name = client.meta.service_model.service_id.hyphenize()
 
 Armed with the service event name, simply replace the old service name in the
 handler with the new service event name. If you were registering an event

@@ -549,7 +549,6 @@ class BaseClient(object):
         self._register_handlers()
 
     def __getattr__(self, item):
-
         event_name = 'getattr.%s.%s' % (
             self._service_model.service_id.hyphenize(), item
         )
