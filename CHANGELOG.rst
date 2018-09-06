@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.11.9
+======
+
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``codecommit``: Update codecommit client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
 1.11.8
 ======
 
