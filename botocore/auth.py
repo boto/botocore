@@ -390,6 +390,9 @@ class SigV4Auth(BaseSigner):
             if 'X-Amz-Content-SHA256' in request.headers:
                 del request.headers['X-Amz-Content-SHA256']
             request.headers['X-Amz-Content-SHA256'] = UNSIGNED_PAYLOAD
+        else:
+            request.headers['X-Amz-Content-SHA256'] = self.payload(request)
+
 
     def _set_necessary_date_headers(self, request):
         # The spec allows for either the Date _or_ the X-Amz-Date value to be
