@@ -1,0 +1,105 @@
+{
+  "version": 2,
+  "waiters": {
+    "EfsAvailable": {
+      "delay": 30,
+      "operation": "DescribeFileSystems",
+      "maxAttempts": 60,
+      "acceptors": [
+        {
+          "expected": "available",
+          "matcher": "pathAll",
+          "state": "success",
+          "argument": "FileSystems[].LifeCycleState"
+        },
+        {
+          "expected": "deleting",
+          "matcher": "pathAll",
+          "state": "failure",
+          "argument": "FileSystems[].LifeCycleState"
+        },
+        {
+          "expected": "deleted",
+          "matcher": "pathAll",
+          "state": "failure",
+          "argument": "FileSystems[].LifeCycleState"
+        }
+      ]
+    },
+    "EfsDeleted": {
+      "delay": 30,
+      "operation": "DescribeFileSystems",
+      "maxAttempts": 60,
+      "acceptors": [
+        {
+          "expected": "deleted",
+          "matcher": "pathAll",
+          "state": "success",
+          "argument": "FileSystems[].LifeCycleState"
+        },
+        {
+          "expected": "updating",
+          "matcher": "pathAll",
+          "state": "failure",
+          "argument": "FileSystems[].LifeCycleState"
+        },
+        {
+          "expected": "creating",
+          "matcher": "pathAll",
+          "state": "failure",
+          "argument": "FileSystems[].LifeCycleState"
+        }
+      ]
+    },
+    "MountTargetDeleted": {
+      "delay": 30,
+      "operation": "DescribeMountTargets",
+      "maxAttempts": 90,
+      "acceptors": [
+        {
+          "expected": "deleted",
+          "matcher": "pathAll",
+          "state": "success",
+          "argument": "MountTargets[].LifeCycleState"
+        },
+        {
+          "expected": "updating",
+          "matcher": "pathAll",
+          "state": "failure",
+          "argument": "MountTargets[].LifeCycleState"
+        },
+        {
+          "expected": "creating",
+          "matcher": "pathAll",
+          "state": "failure",
+          "argument": "MountTargets[].LifeCycleState"
+        }
+      ]
+    },
+    "MountTargetAvailable": {
+      "delay": 30,
+      "operation": "DescribeMountTargets",
+      "maxAttempts": 90,
+      "acceptors": [
+        {
+          "expected": "available",
+          "matcher": "pathAll",
+          "state": "success",
+          "argument": "MountTargets[].LifeCycleState"
+        },
+        {
+          "expected": "deleting",
+          "matcher": "pathAll",
+          "state": "failure",
+          "argument": "MountTargets[].LifeCycleState"
+        },
+        {
+          "expected": "deleted",
+          "matcher": "pathAll",
+          "state": "failure",
+          "argument": "MountTargets[].LifeCycleState"
+        }
+      ]
+    }
+  }
+}
