@@ -38,8 +38,9 @@ class RequestSigner(object):
     signing pipeline, including overrides, request path manipulation,
     and disabling signing per operation.
 
-    :type service_name: string
-    :param service_name: Name of the service, e.g. ``S3``
+
+    :type service_id: botocore.model.ServiceId
+    :param service_id: The service id for the service, e.g. ``S3``
 
     :type region_name: string
     :param region_name: Name of the service region, e.g. ``us-east-1``
@@ -57,15 +58,14 @@ class RequestSigner(object):
 
     :type event_emitter: :py:class:`~botocore.hooks.BaseEventHooks`
     :param event_emitter: Extension mechanism to fire events.
-
     """
-    def __init__(self, service_name, region_name, signing_name,
+    def __init__(self, service_id, region_name, signing_name,
                  signature_version, credentials, event_emitter):
-        self._service_name = service_name
         self._region_name = region_name
         self._signing_name = signing_name
         self._signature_version = signature_version
         self._credentials = credentials
+        self._service_id = service_id
 
         # We need weakref to prevent leaking memory in Python 2.6 on Linux 2.6
         self._event_emitter = weakref.proxy(event_emitter)
@@ -128,7 +128,8 @@ class RequestSigner(object):
 
         # Allow mutating request before signing
         self._event_emitter.emit(
-            'before-sign.{0}.{1}'.format(self._service_name, operation_name),
+            'before-sign.{0}.{1}'.format(
+                self._service_id.hyphenize(), operation_name),
             request=request, signing_name=signing_name,
             region_name=self._region_name,
             signature_version=signature_version, request_signer=self,
@@ -177,7 +178,8 @@ class RequestSigner(object):
             signature_version += suffix
 
         handler, response = self._event_emitter.emit_until_response(
-            'choose-signer.{0}.{1}'.format(self._service_name, operation_name),
+            'choose-signer.{0}.{1}'.format(
+                self._service_id.hyphenize(), operation_name),
             signing_name=self._signing_name, region_name=self._region_name,
             signature_version=signature_version, context=context)
 

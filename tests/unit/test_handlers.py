@@ -31,7 +31,7 @@ from botocore.docs.bcdoc.restdoc import DocumentStructure
 from botocore.docs.params import RequestParamsDocumenter
 from botocore.docs.example import RequestExampleDocumenter
 from botocore.hooks import HierarchicalEmitter
-from botocore.model import OperationModel, ServiceModel
+from botocore.model import OperationModel, ServiceModel, ServiceId
 from botocore.model import DenormalizedStructureBuilder
 from botocore.signers import RequestSigner
 from botocore.credentials import Credentials
@@ -139,7 +139,8 @@ class TestHandlers(BaseSessionTest):
         credentials = Credentials('key', 'secret')
         event_emitter = HierarchicalEmitter()
         request_signer = RequestSigner(
-            'ec2', 'us-east-1', 'ec2', 'v4', credentials, event_emitter)
+            ServiceId('ec2'), 'us-east-1', 'ec2', 'v4',
+            credentials, event_emitter)
         handlers.inject_presigned_url_ec2(
             params, request_signer, operation_model)
         self.assertEqual(params['body']['PresignedUrl'], 'https://foo')
@@ -156,7 +157,8 @@ class TestHandlers(BaseSessionTest):
         credentials = Credentials('key', 'secret')
         event_emitter = HierarchicalEmitter()
         request_signer = RequestSigner(
-            'ec2', 'us-east-1', 'ec2', 'v4', credentials, event_emitter)
+            ServiceId('ec2'), 'us-east-1', 'ec2', 'v4', credentials,
+            event_emitter)
         handlers.inject_presigned_url_ec2(
             params, request_signer, operation_model)
         self.assertEqual(params['body']['PresignedUrl'], 'https://foo')
@@ -169,7 +171,8 @@ class TestHandlers(BaseSessionTest):
         credentials = Credentials('key', 'secret')
         event_emitter = HierarchicalEmitter()
         request_signer = RequestSigner(
-            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+            ServiceId('rds'), 'us-east-1', 'rds', 'v4', credentials,
+            event_emitter)
         handlers.inject_presigned_url_rds(
             params, request_signer, operation_model)
         self.assertEqual(params['body']['PreSignedUrl'], 'https://foo')
@@ -186,7 +189,8 @@ class TestHandlers(BaseSessionTest):
         credentials = Credentials('key', 'secret')
         event_emitter = HierarchicalEmitter()
         request_signer = RequestSigner(
-            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+            ServiceId('rds'), 'us-east-1', 'rds', 'v4', credentials,
+            event_emitter)
         handlers.inject_presigned_url_rds(
             params, request_signer, operation_model)
         self.assertEqual(params['body']['PreSignedUrl'], 'https://foo')
@@ -198,7 +202,8 @@ class TestHandlers(BaseSessionTest):
         credentials = Credentials('key', 'secret')
         event_emitter = HierarchicalEmitter()
         request_signer = RequestSigner(
-            'ec2', 'us-east-1', 'ec2', 'v4', credentials, event_emitter)
+            ServiceId('ec2'), 'us-east-1', 'ec2', 'v4', credentials,
+            event_emitter)
         request_dict = {}
         params = {'SourceRegion': 'us-west-2'}
         request_dict['body'] = params
@@ -250,7 +255,8 @@ class TestHandlers(BaseSessionTest):
         credentials = Credentials('key', 'secret')
         event_emitter = HierarchicalEmitter()
         request_signer = RequestSigner(
-            'ec2', actual_region, 'ec2', 'v4', credentials, event_emitter)
+            ServiceId('ec2'), actual_region, 'ec2', 'v4', credentials,
+            event_emitter)
         request_dict = {}
         params = {
             'SourceRegion': 'us-west-2',
@@ -279,7 +285,8 @@ class TestHandlers(BaseSessionTest):
         credentials = Credentials('key', 'secret')
         event_emitter = HierarchicalEmitter()
         request_signer = RequestSigner(
-            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+            ServiceId('rds'), 'us-east-1', 'rds', 'v4', credentials,
+            event_emitter)
         request_dict = {}
         params = {'SourceRegion': 'us-west-2'}
         request_dict['body'] = params
@@ -305,7 +312,9 @@ class TestHandlers(BaseSessionTest):
         credentials = Credentials('key', 'secret')
         event_emitter = HierarchicalEmitter()
         request_signer = RequestSigner(
-            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+            ServiceId('rds'), 'us-east-1', 'rds', 'v4', credentials,
+            event_emitter
+        )
         request_dict = {}
         params = {'SourceRegion': 'us-west-2'}
         request_dict['body'] = params
@@ -328,7 +337,8 @@ class TestHandlers(BaseSessionTest):
         credentials = Credentials('key', 'secret')
         event_emitter = HierarchicalEmitter()
         request_signer = RequestSigner(
-            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+            ServiceId('rds'), 'us-east-1', 'rds', 'v4', credentials,
+            event_emitter)
         request_dict = {}
         params = {'SourceRegion': 'us-west-2', 'PreSignedUrl': 'https://foo'}
         request_dict['body'] = params
@@ -351,7 +361,8 @@ class TestHandlers(BaseSessionTest):
         credentials = Credentials('key', 'secret')
         event_emitter = HierarchicalEmitter()
         request_signer = RequestSigner(
-            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+            ServiceId('rds'), 'us-east-1', 'rds', 'v4', credentials,
+            event_emitter)
         request_dict = {}
         params = {'SourceRegion': 'us-west-2'}
         request_dict['body'] = params
@@ -375,7 +386,8 @@ class TestHandlers(BaseSessionTest):
         credentials = Credentials('key', 'secret')
         event_emitter = HierarchicalEmitter()
         request_signer = RequestSigner(
-            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+            ServiceId('rds'), 'us-east-1', 'rds', 'v4', credentials,
+            event_emitter)
         handlers.inject_presigned_url_rds(
             params=params,
             request_signer=request_signer,
@@ -389,7 +401,8 @@ class TestHandlers(BaseSessionTest):
         credentials = Credentials('key', 'secret')
         event_emitter = HierarchicalEmitter()
         request_signer = RequestSigner(
-            'rds', 'us-east-1', 'rds', 'v4', credentials, event_emitter)
+            ServiceId('rds'), 'us-east-1', 'rds', 'v4', credentials,
+            event_emitter)
         request_dict = {}
         params = {'SourceRegion': 'us-west-2'}
         request_dict['body'] = params
@@ -537,7 +550,7 @@ class TestHandlers(BaseSessionTest):
         self.assertEqual(params, result)
 
     def test_register_retry_for_handlers_with_no_endpoint_prefix(self):
-        no_endpoint_prefix = {'metadata': {}}
+        no_endpoint_prefix = {'metadata': {'serviceId': 'foo'}}
         session = mock.Mock()
         handlers.register_retries_for_service(service_data=no_endpoint_prefix,
                                               session=mock.Mock(),
@@ -546,7 +559,10 @@ class TestHandlers(BaseSessionTest):
 
     def test_register_retry_handlers(self):
         service_data = {
-            'metadata': {'endpointPrefix': 'foo'},
+            'metadata': {
+                'endpointPrefix': 'foo',
+                'serviceId': 'foo',
+            },
         }
         session = mock.Mock()
         loader = mock.Mock()
@@ -1059,7 +1075,7 @@ class TestAddMD5(BaseMD5Test):
     def test_adds_md5_when_v4(self):
         credentials = Credentials('key', 'secret')
         request_signer = RequestSigner(
-            's3', 'us-east-1', 's3', 'v4', credentials, mock.Mock())
+            ServiceId('s3'), 'us-east-1', 's3', 'v4', credentials, mock.Mock())
         request_dict = {'body': b'bar',
                         'url': 'https://s3.us-east-1.amazonaws.com',
                         'method': 'PUT',
@@ -1072,7 +1088,8 @@ class TestAddMD5(BaseMD5Test):
     def test_adds_md5_when_s3v4(self):
         credentials = Credentials('key', 'secret')
         request_signer = RequestSigner(
-            's3', 'us-east-1', 's3', 's3v4', credentials, mock.Mock())
+            ServiceId('s3'), 'us-east-1', 's3', 's3v4', credentials,
+            mock.Mock())
         request_dict = {'body': b'bar',
                         'url': 'https://s3.us-east-1.amazonaws.com',
                         'method': 'PUT',
@@ -1101,7 +1118,7 @@ class TestAddMD5(BaseMD5Test):
     def test_add_md5_raises_error_when_md5_unavailable(self):
         credentials = Credentials('key', 'secret')
         request_signer = RequestSigner(
-            's3', 'us-east-1', 's3', 's3', credentials, mock.Mock())
+            ServiceId('s3'), 'us-east-1', 's3', 's3', credentials, mock.Mock())
         request_dict = {'body': b'bar',
                         'url': 'https://s3.us-east-1.amazonaws.com',
                         'method': 'PUT',
@@ -1115,7 +1132,7 @@ class TestAddMD5(BaseMD5Test):
     def test_adds_md5_when_s3v2(self):
         credentials = Credentials('key', 'secret')
         request_signer = RequestSigner(
-            's3', 'us-east-1', 's3', 's3', credentials, mock.Mock())
+            ServiceId('s3'), 'us-east-1', 's3', 's3', credentials, mock.Mock())
         request_dict = {'body': b'bar',
                         'url': 'https://s3.us-east-1.amazonaws.com',
                         'method': 'PUT',

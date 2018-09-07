@@ -108,8 +108,9 @@ class Endpoint(object):
                 operation_model.has_streaming_output,
                 operation_model.has_event_stream_output
             ])
-            event_name = 'request-created.{endpoint_prefix}.{op_name}'.format(
-                endpoint_prefix=self._endpoint_prefix,
+            service_id = operation_model.service_model.service_id.hyphenize()
+            event_name = 'request-created.{service_id}.{op_name}'.format(
+                service_id=service_id,
                 op_name=operation_model.name)
             self._event_emitter.emit(event_name, request=request,
                                      operation_name=operation_model.name)
@@ -194,8 +195,10 @@ class Endpoint(object):
 
     def _needs_retry(self, attempts, operation_model, request_dict,
                      response=None, caught_exception=None):
-        event_name = 'needs-retry.%s.%s' % (self._endpoint_prefix,
-                                            operation_model.name)
+        service_id = operation_model.service_model.service_id.hyphenize()
+        event_name = 'needs-retry.%s.%s' % (
+            service_id,
+            operation_model.name)
         responses = self._event_emitter.emit(
             event_name, response=response, endpoint=self,
             operation=operation_model, attempts=attempts,

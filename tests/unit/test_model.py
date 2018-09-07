@@ -30,6 +30,16 @@ def test_missing_model_attribute_raises_exception():
         yield _test_attribute_raise_exception, name
 
 
+class TestServiceId(unittest.TestCase):
+    def test_hypenize_replaces_spaces(self):
+        self.assertEqual(
+            model.ServiceId('my service').hyphenize(), 'my-service'
+        )
+
+    def test_hyphenize_lower_cases(self):
+        self.assertEqual(model.ServiceId('MyService').hyphenize(), 'myservice')
+
+
 class TestServiceModel(unittest.TestCase):
 
     def setUp(self):
@@ -60,6 +70,10 @@ class TestServiceModel(unittest.TestCase):
 
     def test_service_id(self):
         self.assertEqual(self.service_model.service_id, 'MyService')
+
+    def test_hyphenize_service_id(self):
+        self.assertEqual(
+            self.service_model.service_id.hyphenize(), 'myservice')
 
     def test_operation_does_not_exist(self):
         with self.assertRaises(model.OperationNotFoundError):
