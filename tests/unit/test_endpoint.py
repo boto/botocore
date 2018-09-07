@@ -23,6 +23,7 @@ from botocore.endpoint import EndpointCreator
 from botocore.exceptions import EndpointConnectionError
 from botocore.exceptions import ConnectionClosedError
 from botocore.httpsession import URLLib3Session
+from botocore.model import OperationModel, ServiceId
 
 
 def request_dict():
@@ -104,9 +105,11 @@ class TestRetryInterface(TestEndpointBase):
     def setUp(self):
         super(TestRetryInterface, self).setUp()
         self.retried_on_exception = None
+        self._operation = Mock(spec=OperationModel)
+        self._operation.service_model.service_id = ServiceId('ec2')
 
     def test_retry_events_are_emitted(self):
-        op = Mock()
+        op = self._operation
         op.name = 'DescribeInstances'
         op.metadata = {'protocol': 'query'}
         op.has_streaming_output = False
@@ -117,7 +120,7 @@ class TestRetryInterface(TestEndpointBase):
                          'needs-retry.ec2.DescribeInstances')
 
     def test_retry_events_can_alter_behavior(self):
-        op = Mock()
+        op = self._operation
         op.name = 'DescribeInstances'
         op.metadata = {'protocol': 'json'}
         op.has_event_stream_output = False
@@ -141,7 +144,7 @@ class TestRetryInterface(TestEndpointBase):
                          'needs-retry.ec2.DescribeInstances')
 
     def test_retry_on_socket_errors(self):
-        op = Mock()
+        op = self._operation
         op.name = 'DescribeInstances'
         op.has_event_stream_output = False
         self.event_emitter.emit.side_effect = [

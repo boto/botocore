@@ -61,10 +61,11 @@ class ClientArgsCreator(object):
 
         event_emitter = copy.copy(self._event_emitter)
         signer = RequestSigner(
-            service_name, signing_region,
+            service_model.service_id, signing_region,
             endpoint_config['signing_name'],
             endpoint_config['signature_version'],
-            credentials, event_emitter)
+            credentials, event_emitter
+        )
 
         config_kwargs['s3'] = s3_config
         new_config = Config(**config_kwargs)

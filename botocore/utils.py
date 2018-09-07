@@ -38,7 +38,6 @@ from botocore.exceptions import (
     ConnectionClosedError, ConnectTimeoutError,
 )
 
-
 logger = logging.getLogger(__name__)
 DEFAULT_METADATA_SERVICE_TIMEOUT = 1
 METADATA_SECURITY_CREDENTIALS_URL = (
@@ -53,6 +52,83 @@ RETRYABLE_HTTP_ERRORS = (
     ConnectTimeoutError,
 )
 S3_ACCELERATE_WHITELIST = ['dualstack']
+# In switching events from using service name / endpoint prefix to service
+# id, we have to preserve compatibility. This maps the instances where either
+# is different than the transformed service id.
+EVENT_ALIASES = {
+    "a4b": "alexa-for-business",
+    "alexaforbusiness": "alexa-for-business",
+    "api.mediatailor": "mediatailor",
+    "api.pricing": "pricing",
+    "api.sagemaker": "sagemaker",
+    "apigateway": "api-gateway",
+    "application-autoscaling": "application-auto-scaling",
+    "appstream2": "appstream",
+    "autoscaling": "auto-scaling",
+    "autoscaling-plans": "auto-scaling-plans",
+    "ce": "cost-explorer",
+    "cloudhsmv2": "cloudhsm-v2",
+    "cloudsearchdomain": "cloudsearch-domain",
+    "cognito-idp": "cognito-identity-provider",
+    "config": "config-service",
+    "cur": "cost-and-usage-report-service",
+    "data.iot": "iot-data-plane",
+    "data.jobs.iot": "iot-jobs-data-plane",
+    "data.mediastore": "mediastore-data",
+    "datapipeline": "data-pipeline",
+    "devicefarm": "device-farm",
+    "devices.iot1click": "iot-1click-devices-service",
+    "directconnect": "direct-connect",
+    "discovery": "application-discovery-service",
+    "dms": "database-migration-service",
+    "ds": "directory-service",
+    "dynamodbstreams": "dynamodb-streams",
+    "elasticbeanstalk": "elastic-beanstalk",
+    "elasticfilesystem": "efs",
+    "elasticloadbalancing": "elastic-load-balancing",
+    "elasticmapreduce": "emr",
+    "elastictranscoder": "elastic-transcoder",
+    "elb": "elastic-load-balancing",
+    "elbv2": "elastic-load-balancing-v2",
+    "email": "ses",
+    "entitlement.marketplace": "marketplace-entitlement-service",
+    "es": "elasticsearch-service",
+    "events": "cloudwatch-events",
+    "iot-data": "iot-data-plane",
+    "iot-jobs-data": "iot-jobs-data-plane",
+    "iot1click-devices": "iot-1click-devices-service",
+    "iot1click-projects": "iot-1click-projects",
+    "kinesisanalytics": "kinesis-analytics",
+    "kinesisvideo": "kinesis-video",
+    "lex-models": "lex-model-building-service",
+    "lex-runtime": "lex-runtime-service",
+    "logs": "cloudwatch-logs",
+    "machinelearning": "machine-learning",
+    "marketplace-entitlement": "marketplace-entitlement-service",
+    "marketplacecommerceanalytics": "marketplace-commerce-analytics",
+    "metering.marketplace": "marketplace-metering",
+    "meteringmarketplace": "marketplace-metering",
+    "mgh": "migration-hub",
+    "models.lex": "lex-model-building-service",
+    "monitoring": "cloudwatch",
+    "mturk-requester": "mturk",
+    "opsworks-cm": "opsworkscm",
+    "projects.iot1click": "iot-1click-projects",
+    "resourcegroupstaggingapi": "resource-groups-tagging-api",
+    "route53": "route-53",
+    "route53domains": "route-53-domains",
+    "runtime.lex": "lex-runtime-service",
+    "runtime.sagemaker": "sagemaker-runtime",
+    "sdb": "simpledb",
+    "secretsmanager": "secrets-manager",
+    "serverlessrepo": "serverlessapplicationrepository",
+    "servicecatalog": "service-catalog",
+    "states": "sfn",
+    "stepfunctions": "sfn",
+    "storagegateway": "storage-gateway",
+    "streams.dynamodb": "dynamodb-streams",
+    "tagging": "resource-groups-tagging-api"
+}
 
 
 class _RetriesExceededError(Exception):
@@ -895,6 +971,14 @@ def deep_merge(base, extra):
 
         # Otherwise, set the key on the base to be the value of the extra.
         base[key] = extra[key]
+
+
+def hyphenize_service_id(service_id):
+    """Translate the form used for event emitters.
+
+    :param service_id: The service_id to convert.
+    """
+    return service_id.replace(' ', '-').lower()
 
 
 class S3RegionRedirector(object):

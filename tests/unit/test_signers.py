@@ -23,6 +23,7 @@ from botocore.config import Config
 from botocore.credentials import Credentials
 from botocore.credentials import ReadOnlyCredentials
 from botocore.hooks import HierarchicalEmitter
+from botocore.model import ServiceId
 from botocore.exceptions import NoRegionError, UnknownSignatureVersionError
 from botocore.exceptions import UnknownClientMethodError, ParamValidationError
 from botocore.exceptions import UnsupportedSignatureVersionError
@@ -39,7 +40,7 @@ class BaseSignerTest(unittest.TestCase):
         self.emitter = mock.Mock()
         self.emitter.emit_until_response.return_value = (None, None)
         self.signer = RequestSigner(
-            'service_name', 'region_name', 'signing_name',
+            ServiceId('service_name'), 'region_name', 'signing_name',
             'v4', self.credentials, self.emitter)
         self.fixed_credentials = self.credentials.get_frozen_credentials()
 
@@ -57,8 +58,9 @@ class TestSigner(BaseSignerTest):
 
     def test_region_required_for_sigv4(self):
         self.signer = RequestSigner(
-            'service_name', None, 'signing_name', 'v4', self.credentials,
-            self.emitter)
+            ServiceId('service_name'), None, 'signing_name', 'v4',
+            self.credentials, self.emitter
+        )
 
         with self.assertRaises(NoRegionError):
             self.signer.sign('operation_name', mock.Mock())
@@ -288,7 +290,7 @@ class TestSigner(BaseSignerTest):
             'context': {}
         }
         self.signer = RequestSigner(
-            'service_name', 'region_name', 'signing_name',
+            ServiceId('service_name'), 'region_name', 'signing_name',
             'foo', self.credentials, self.emitter)
         with self.assertRaises(UnsupportedSignatureVersionError):
             self.signer.generate_presigned_url(
@@ -301,7 +303,7 @@ class TestSigner(BaseSignerTest):
         self.credentials = FakeCredentials('a', 'b', 'c')
 
         self.signer = RequestSigner(
-            'service_name', 'region_name', 'signing_name',
+            ServiceId('service_name'), 'region_name', 'signing_name',
             'v4', self.credentials, self.emitter)
 
         auth_cls = mock.Mock()
@@ -322,7 +324,7 @@ class TestSigner(BaseSignerTest):
         # the error (which they already do).
         self.credentials = None
         self.signer = RequestSigner(
-            'service_name', 'region_name', 'signing_name',
+            ServiceId('service_name'), 'region_name', 'signing_name',
             'v4', self.credentials, self.emitter)
         auth_cls = mock.Mock()
         with mock.patch.dict(botocore.auth.AUTH_TYPE_MAPS,
@@ -557,7 +559,7 @@ class TestS3PostPresigner(BaseSignerTest):
     def setUp(self):
         super(TestS3PostPresigner, self).setUp()
         self.request_signer = RequestSigner(
-            'service_name', 'region_name', 'signing_name',
+            ServiceId('service_name'), 'region_name', 'signing_name',
             's3v4', self.credentials, self.emitter)
         self.signer = S3PostPresigner(self.request_signer)
         self.request_dict = {
@@ -696,7 +698,7 @@ class TestS3PostPresigner(BaseSignerTest):
             'context': {}
         }
         self.request_signer = RequestSigner(
-            'service_name', 'region_name', 'signing_name',
+            ServiceId('service_name'), 'region_name', 'signing_name',
             'foo', self.credentials, self.emitter)
         self.signer = S3PostPresigner(self.request_signer)
         with self.assertRaises(UnsupportedSignatureVersionError):

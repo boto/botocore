@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.0
+======
+
+* api-change:``logs``: Update logs client to latest version
+* api-change:``config``: Update config client to latest version
+* feature:Events: This migrates the event system to using sevice ids instead of either client name or endpoint prefix. This prevents issues that might arise when a service changes their endpoint prefix, also fixes a long-standing bug where you could not register an event to a particular service if it happened to share its endpoint prefix with another service (e.g. ``autoscaling`` and ``application-autoscaling`` both use the endpoint prefix ``autoscaling``). Please see the `upgrade notes <https://botocore.amazonaws.com/v1/documentation/api/latest/index.html#upgrade-notes>`_ to determine if you are impacted and how to proceed if you are.
+
+
 1.11.9
 ======
 
