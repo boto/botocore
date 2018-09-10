@@ -880,6 +880,8 @@ BUILTIN_HANDLERS = [
 
     ('before-parameter-build.s3.ListObjects',
      set_list_objects_encoding_type_url),
+    ('before-parameter-build.s3.ListObjectsV2',
+     set_list_objects_encoding_type_url),
     ('before-call.s3.PutBucketTagging', calculate_md5),
     ('before-call.s3.PutBucketLifecycle', calculate_md5),
     ('before-call.s3.PutBucketLifecycleConfiguration', calculate_md5),
