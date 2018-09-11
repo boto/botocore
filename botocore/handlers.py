@@ -274,13 +274,13 @@ def _needs_s3_sse_customization(params, sse_member_prefix):
 def register_retries_for_service(service_data, session,
                                  service_name, **kwargs):
     loader = session.get_component('data_loader')
-    service_id = service_data.get('metadata', {}).get('serviceId')
-    service_event_name = hyphenize_service_id(service_id)
     endpoint_prefix = service_data.get('metadata', {}).get('endpointPrefix')
     if endpoint_prefix is None:
         logger.debug("Not registering retry handlers, could not endpoint "
                      "prefix from model for service %s", service_name)
         return
+    service_id = service_data.get('metadata', {}).get('serviceId')
+    service_event_name = hyphenize_service_id(service_id)
     config = _load_retry_config(loader, endpoint_prefix)
     if not config:
         return
