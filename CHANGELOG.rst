@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.2
+======
+
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+
+
 1.12.1
 ======
 
