@@ -945,6 +945,7 @@ BUILTIN_HANDLERS = [
     ('before-parameter-build.route53', fix_route53_ids),
     ('before-parameter-build.glacier', inject_account_id),
     ('after-call.s3.ListObjects', decode_list_object),
+    ('after-call.s3.ListObjectsV2', decode_list_object),
 
     # Cloudsearchdomain search operation will be sent by HTTP POST
     ('request-created.cloudsearchdomain.Search',
