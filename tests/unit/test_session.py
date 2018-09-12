@@ -391,7 +391,9 @@ class TestConfigLoaderObject(BaseSessionTest):
 class TestGetServiceModel(BaseSessionTest):
     def test_get_service_model(self):
         loader = mock.Mock()
-        loader.load_service_model.return_value = {}
+        loader.load_service_model.return_value = {
+            'metadata': {'serviceId': 'foo'}
+        }
         self.session.register_component('data_loader', loader)
         model = self.session.get_service_model('made_up')
         self.assertIsInstance(model, ServiceModel)

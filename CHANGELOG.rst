@@ -2,6 +2,53 @@
 CHANGELOG
 =========
 
+1.12.2
+======
+
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+
+
+1.12.1
+======
+
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``cloudhsmv2``: Update cloudhsmv2 client to latest version
+
+
+1.12.0
+======
+
+* api-change:``logs``: Update logs client to latest version
+* api-change:``config``: Update config client to latest version
+* feature:Events: This migrates the event system to using sevice ids instead of either client name or endpoint prefix. This prevents issues that might arise when a service changes their endpoint prefix, also fixes a long-standing bug where you could not register an event to a particular service if it happened to share its endpoint prefix with another service (e.g. ``autoscaling`` and ``application-autoscaling`` both use the endpoint prefix ``autoscaling``). Please see the `upgrade notes <https://botocore.amazonaws.com/v1/documentation/api/latest/index.html#upgrade-notes>`_ to determine if you are impacted and how to proceed if you are.
+
+
+1.11.9
+======
+
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``codecommit``: Update codecommit client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
+1.11.8
+======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``elb``: Update elb client to latest version
+
+
+1.11.7
+======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
 1.11.6
 ======
 
