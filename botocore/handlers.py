@@ -730,41 +730,37 @@ def decode_list_object(parsed, context, **kwargs):
     # Amazon S3 includes this element in the response, and returns encoded key
     # name values in the following response elements:
     # Delimiter, Marker, Prefix, NextMarker, Key.
-    if parsed.get('EncodingType') == 'url' and \
-                    context.get('encoding_type_auto_set'):
-        # URL decode top-level keys in the response if present.
-        top_level_keys = ['Delimiter', 'Marker', 'NextMarker']
-        for key in top_level_keys:
-            if key in parsed:
-                parsed[key] = unquote_str(parsed[key])
-        # URL decode nested keys from the response if present.
-        nested_keys = [('Contents', 'Key'), ('CommonPrefixes', 'Prefix')]
-        for (top_key, child_key) in nested_keys:
-            if top_key in parsed:
-                for member in parsed[top_key]:
-                    member[child_key] = unquote_str(member[child_key])
-
+    _decode_list_object(
+        top_level_keys=['Delimiter', 'Marker', 'NextMarker'],
+        nested_keys=[('Contents', 'Key'), ('CommonPrefixes', 'Prefix')],
+        parsed=parsed,
+        context=context
+    )
 
 def decode_list_object_v2(parsed, context, **kwargs):
     # From the documentation: If you specify encoding-type request parameter,
     # Amazon S3 includes this element in the response, and returns encoded key
     # name values in the following response elements:
     # Delimiter, Prefix, ContinuationToken, Key, and StartAfter.
-
+    _decode_list_object(
+        top_level_keys=['Delimiter', 'Prefix', 'ContinuationToken', 'StartAfter'],
+        nested_keys=[('Contents', 'Key'), ('CommonPrefixes', 'Prefix')],
+        parsed=parsed,
+        context=context
+    )
+                    
+def _decode_list_object(top_level_keys, nested_keys, parsed, context):
     if parsed.get('EncodingType') == 'url' and \
                     context.get('encoding_type_auto_set'):
         # URL decode top-level keys in the response if present.
-        top_level_keys = ['Delimiter', 'Prefix', 'ContinuationToken', 'StartAfter']
         for key in top_level_keys:
             if key in parsed:
                 parsed[key] = unquote_str(parsed[key])
         # URL decode nested keys from the response if present.
-        nested_keys = [('Contents', 'Key'), ('CommonPrefixes', 'Prefix')]
         for (top_key, child_key) in nested_keys:
             if top_key in parsed:
                 for member in parsed[top_key]:
                     member[child_key] = unquote_str(member[child_key])
-
 
 def convert_body_to_file_like_object(params, **kwargs):
     if 'Body' in params:
