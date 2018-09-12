@@ -340,6 +340,97 @@ def _urljoin(endpoint_url, url_path):
     return reconstructed
 
 
+class AWSRequestPreparer(object):
+    """
+    This class performs preparation on AWSRequest objects similar to that of
+    the PreparedRequest class does in the requests library. However, the logic
+    has been boiled down to meet the specific use cases in botocore. Of note
+    there are the following differences:
+        This class does not heavily prepare the URL. Requests performed many
+        validations and corrections to ensure the URL is properly formatted.
+        Botocore either performs these validations elsewhere or otherwise
+        consistently provides well formatted URLs.
+
+        This class does not heavily prepare the body. Body preperation is
+        simple and supports only the cases that we document: bytes and
+        file-like objects to determine the content-length. This will also
+        additionally prepare a body that is a dict to be url encoded params
+        string as some signers rely on this. Finally, this class does not
+        support multipart file uploads.
+
+        This class does not prepare the method, auth or cookies.
+    """
+    def prepare(self, original):
+        method = original.method
+        url = self._prepare_url(original)
+        body = self._prepare_body(original)
+        headers = self._prepare_headers(original, body)
+        stream_output = original.stream_output
+
+        return AWSPreparedRequest(method, url, headers, body, stream_output)
+
+    def _prepare_url(self, original):
+        url = original.url
+        if original.params:
+            params = urlencode(list(original.params.items()), doseq=True)
+            url = '%s?%s' % (url, params)
+        return url
+
+    def _prepare_headers(self, original, prepared_body):
+        headers = HeadersDict(original.headers.items())
+
+        # If the transfer encoding or content length is already set, use that
+        if 'Transfer-Encoding' in headers or 'Content-Length' in headers:
+            return headers
+
+        # Ensure we set the content length when it is expected
+        if original.method not in ('GET', 'HEAD', 'OPTIONS'):
+            length = self._determine_content_length(prepared_body)
+            if length is not None:
+                headers['Content-Length'] = str(length)
+            else:
+                # Failed to determine content length, using chunked
+                # NOTE: This shouldn't ever happen in practice
+                headers['Transfer-Encoding'] = 'chunked'
+
+        return headers
+
+    def _prepare_body(self, original):
+        """Prepares the given HTTP body data."""
+        body = original.data
+        if body == b'':
+            body = None
+
+        if isinstance(body, dict):
+            params = list(body.items())
+            body = urlencode(params, doseq=True)
+
+        return body
+
+    def _determine_content_length(self, body):
+        # No body, content length of 0
+        if not body:
+            return 0
+
+        # Try asking the body for it's length
+        try:
+            length = len(body)
+            return length
+        except (AttributeError, TypeError) as e:
+            pass
+
+        # Try getting the length from a seekable stream
+        if hasattr(body, 'seek') and hasattr(body, 'tell'):
+            orig_pos = body.tell()
+            body.seek(0, 2)
+            end_file_pos = body.tell()
+            body.seek(orig_pos)
+            return end_file_pos - orig_pos
+
+        # Failed to determine the length
+        return None
+
+
 class AWSRequest(object):
     """Represents the elements of an HTTP request.
 
@@ -347,6 +438,8 @@ class AWSRequest(object):
     boiled down to meet the specific use cases in botocore. That being said this
     class (even in requests) is effectively a named-tuple.
     """
+
+    _REQUEST_PREPARER = AWSRequestPreparer()
 
     def __init__(self,
                  method=None,
@@ -383,51 +476,34 @@ class AWSRequest(object):
 
     def prepare(self):
         """Constructs a :class:`AWSPreparedRequest <AWSPreparedRequest>`."""
-        return AWSPreparedRequest(self)
+        return self._REQUEST_PREPARER.prepare(self)
 
     @property
     def body(self):
-        p = AWSPreparedRequest(self)
-        p.prepare_body(self.data)
-        if isinstance(p.body, six.text_type):
-            p.body = p.body.encode('utf-8')
-        return p.body
+        body = self.prepare().body
+        if isinstance(body, six.text_type):
+            body = body.encode('utf-8')
+        return body
 
 
 class AWSPreparedRequest(object):
-    """Represents a prepared request.
+    """Represents a finalized prepared request ready to be sent on the wire.
 
-    This class is originally inspired by requests.models.PreparedRequest, but
-    has been boiled down to meet the specific use cases in botocore. Of note
-    there are the following differences:
-        This class does not heavily prepare the URL. Requests performed many
-        validations and corrections to ensure the URL is properly formatted.
-        Botocore either performs these validations elsewhere or otherwise
-        consistently provides well formatted URLs.
+    Requests at this stage should be treated as final, and the properties of
+    the request should not be modified.
 
-        This class does not heavily prepare the body. Body preperation is
-        simple and supports only the cases that we document: bytes and
-        file-like objects to determine the content-length. This will also
-        additionally prepare a body that is a dict to be url encoded params
-        string as some signers rely on this. Finally, this class does not
-        support multipart file uploads.
-
-        This class does not prepare the method, auth or cookies.
-
-    :ivar method: HTTP Method
+    :ivar method: The HTTP Method
     :ivar url: The full url
     :ivar headers: The HTTP headers to send.
     :ivar body: The HTTP body.
     :ivar stream_output: If the response for this request should be streamed.
-    :ivar original: The original AWSRequest
     """
-    def __init__(self, original):
-        self.method = original.method
-        self.prepare_url(original.url, original.params)
-        self.prepare_headers(original.headers)
-        self.prepare_body(original.data)
-        self.stream_output = original.stream_output
-        self.original = original
+    def __init__(self, method, url, headers, body, stream_output):
+        self.method = method
+        self.url = url
+        self.headers = headers
+        self.body = body
+        self.stream_output = stream_output
 
     def __repr__(self):
         fmt = (
@@ -452,61 +528,6 @@ class AWSPreparedRequest(object):
         except Exception as e:
             logger.debug("Unable to rewind stream: %s", e)
             raise UnseekableStreamError(stream_object=self.body)
-
-    def prepare_url(self, url, params):
-        if params:
-            params = urlencode(list(params.items()), doseq=True)
-            self.url = '%s?%s' % (url, params)
-        else:
-            self.url = url
-
-    def prepare_headers(self, headers):
-        headers = headers or {}
-        self.headers = HeadersDict(headers.items())
-
-    def _to_utf8(self, item):
-        key, value = item
-        if isinstance(key, six.text_type):
-            key = key.encode('utf-8')
-        if isinstance(value, six.text_type):
-            value = value.encode('utf-8')
-
-        return key, value
-
-    def prepare_body(self, data):
-        """Prepares the given HTTP body data."""
-        self.body = data
-
-        if self.body == b'':
-            self.body = None
-
-        if not self.body and self.method == 'GET':
-            return
-
-        if self.body is None:
-            self.headers['Content-Length'] = '0'
-
-        if isinstance(self.body, dict):
-            params = [self._to_utf8(item) for item in self.body.items()]
-            self.body = urlencode(params, doseq=True)
-
-        try:
-            length = len(self.body)
-            self.headers['Content-Length'] = str(length)
-        except (AttributeError, TypeError) as e:
-            pass
-
-        if 'Content-Length' not in self.headers:
-            if hasattr(data, 'seek') and hasattr(data, 'tell'):
-                orig_pos = data.tell()
-                data.seek(0, 2)
-                end_file_pos = data.tell()
-                self.headers['Content-Length'] = str(end_file_pos - orig_pos)
-                data.seek(orig_pos)
-
-        if self.body and 'Content-Length' not in self.headers:
-            # NOTE: This should probably never happen, we don't use chunked
-            self.headers['Transfer-Encoding'] = 'chunked'
 
 
 class AWSResponse(object):
