@@ -549,8 +549,8 @@ class TestHandlers(BaseSessionTest):
                   'UserData': b64_user_data}
         self.assertEqual(params, result)
 
-    def test_register_retry_for_handlers_with_no_endpoint_prefix(self):
-        no_endpoint_prefix = {'metadata': {'serviceId': 'foo'}}
+    def test_register_retry_for_handlers_with_no_metadata(self):
+        no_endpoint_prefix = {'metadata': {}}
         session = mock.Mock()
         handlers.register_retries_for_service(service_data=no_endpoint_prefix,
                                               session=mock.Mock(),
