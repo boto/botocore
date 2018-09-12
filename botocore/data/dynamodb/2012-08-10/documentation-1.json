@@ -12,6 +12,7 @@
          "DeleteTable" : "https://docs.aws.amazon.com/goto/WebAPI/dynamodb/DeleteTable",
          "DescribeBackup" : "https://docs.aws.amazon.com/goto/WebAPI/dynamodb/DescribeBackup",
          "DescribeContinuousBackups" : "https://docs.aws.amazon.com/goto/WebAPI/dynamodb/DescribeContinuousBackups",
+         "DescribeEndpoints" : "https://docs.aws.amazon.com/goto/WebAPI/dynamodb/DescribeEndpoints",
          "DescribeGlobalTable" : "https://docs.aws.amazon.com/goto/WebAPI/dynamodb/DescribeGlobalTable",
          "DescribeGlobalTableSettings" : "https://docs.aws.amazon.com/goto/WebAPI/dynamodb/DescribeGlobalTableSettings",
          "DescribeLimits" : "https://docs.aws.amazon.com/goto/WebAPI/dynamodb/DescribeLimits",
