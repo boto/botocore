@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.3
+======
+
+* api-change:``ses``: Update ses client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``fms``: Update fms client to latest version
+* api-change:``connect``: Update connect client to latest version
+
+
 1.12.2
 ======
 
