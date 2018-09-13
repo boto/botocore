@@ -2,6 +2,22 @@
 CHANGELOG
 =========
 
+1.12.4
+======
+
+* enhancement:s3: Adds encoding and decoding handlers for ListObjectsV2 `#1552 <https://github.com/boto/botocore/issues/1552>`__
+* api-change:``polly``: Update polly client to latest version
+
+
+1.12.3
+======
+
+* api-change:``ses``: Update ses client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``fms``: Update fms client to latest version
+* api-change:``connect``: Update connect client to latest version
+
+
 1.12.2
 ======
 

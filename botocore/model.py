@@ -339,6 +339,10 @@ class ServiceModel(object):
     def signature_version(self, value):
         self._signature_version = value
 
+    def __repr__(self):
+        return '%s(%s)' % (self.__class__.__name__, self.service_name)
+
+
 
 class OperationModel(object):
     def __init__(self, operation_model, service_model, name=None):

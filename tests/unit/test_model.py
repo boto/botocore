@@ -89,6 +89,10 @@ class TestServiceModel(unittest.TestCase):
     def test_shape_names(self):
         self.assertEqual(self.service_model.shape_names, ['StringShape'])
 
+    def test_repr_has_service_name(self):
+        self.assertEqual(repr(self.service_model),
+                         'ServiceModel(endpoint-prefix)')
+
 
 class TestOperationModelFromService(unittest.TestCase):
     def setUp(self):
