@@ -743,7 +743,7 @@ def decode_list_object_v2(parsed, context, **kwargs):
     # name values in the following response elements:
     # Delimiter, Prefix, ContinuationToken, Key, and StartAfter.
     _decode_list_object(
-        top_level_keys=['Delimiter', 'Prefix', 'ContinuationToken', 'StartAfter'],
+        top_level_keys=['Delimiter', 'Prefix', 'StartAfter'],
         nested_keys=[('Contents', 'Key'), ('CommonPrefixes', 'Prefix')],
         parsed=parsed,
         context=context

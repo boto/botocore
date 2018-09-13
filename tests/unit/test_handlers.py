@@ -908,14 +908,15 @@ class TestHandlers(BaseSessionTest):
         handlers.decode_list_object_v2(parsed, context=context)
         self.assertEqual(parsed['Prefix'], u'\xe7\xf6s% asd\x08 c')
         
-    def test_decode_list_objects_v2_with_continuationtoken(self):
+    def test_decode_list_objects_v2_does_not_decode_continuationtoken(self):
         parsed = {
             'ContinuationToken': "%C3%A7%C3%B6s%25%20asd%08+c",
             'EncodingType': 'url',
         }
         context = {'encoding_type_auto_set': True}
         handlers.decode_list_object_v2(parsed, context=context)
-        self.assertEqual(parsed['ContinuationToken'], u'\xe7\xf6s% asd\x08 c')
+        self.assertEqual(
+            parsed['ContinuationToken'], u"%C3%A7%C3%B6s%25%20asd%08+c")
         
     def test_decode_list_objects_v2_with_startafter(self):
         parsed = {
