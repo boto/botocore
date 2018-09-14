@@ -14,7 +14,7 @@ import mock
 
 from nose.tools import assert_false
 
-from tests import create_session
+from tests import create_session, BotocoreHTTPStubber
 
 
 def test_unsigned_operations():
@@ -104,16 +104,15 @@ class UnsignedOperationTestCase(object):
         self._client = client
         self._operation_name = operation_name
         self._parameters = parameters
+        self._http_stubber = BotocoreHTTPStubber()
 
     def run(self):
         operation = getattr(self._client, self._operation_name)
 
-        # TODO: fix with stubber / before send event
-        with mock.patch('botocore.endpoint.Endpoint._send') as _send:
-            _send.return_value = mock.Mock(
-                status_code=200, headers={}, content=b'{}')
+        self._http_stubber.create_response(body=b'{}')
+        with self._http_stubber.wrap_client(self._client):
             operation(**self._parameters)
-            request = _send.call_args[0][0]
+            request = self._http_stubber.requests[0]
 
         assert_false(
             'authorization' in request.headers,

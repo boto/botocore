@@ -25,15 +25,6 @@ class TestRDSPresignUrlInjection(BaseSessionTest):
         super(TestRDSPresignUrlInjection, self).setUp()
         self.client = self.session.create_client('rds', 'us-west-2')
 
-    @contextmanager
-    def patch_http_layer(self, response, status_code=200):
-        # TODO: fix with stubber / before send event
-        with mock.patch('botocore.endpoint.Endpoint._send') as send:
-            send.return_value = mock.Mock(status_code=status_code,
-                                          headers={},
-                                          content=response)
-            yield send
-
     def assert_presigned_url_injected_in_request(self, body):
         self.assertIn('PreSignedUrl', body)
         self.assertNotIn('SourceRegion', body)
@@ -49,9 +40,10 @@ class TestRDSPresignUrlInjection(BaseSessionTest):
                     b'<CopyDBSnapshotResult></CopyDBSnapshotResult>'
                     b'</CopyDBSnapshotResponse>'
         )
-        with self.patch_http_layer(response_body) as send:
+        self.http_stubber.create_response(body=response_body)
+        with self.http_stubber.wrap_client(self.client):
             self.client.copy_db_snapshot(**params)
-            sent_request = send.call_args[0][0]
+            sent_request = self.http_stubber.requests[0]
             self.assert_presigned_url_injected_in_request(sent_request.body)
 
     def test_create_db_instance_read_replica(self):
@@ -66,9 +58,10 @@ class TestRDSPresignUrlInjection(BaseSessionTest):
             b'</CreateDBInstanceReadReplicaResult>'
             b'</CreateDBInstanceReadReplicaResponse>'
         )
-        with self.patch_http_layer(response_body) as send:
+        self.http_stubber.create_response(body=response_body)
+        with self.http_stubber.wrap_client(self.client):
             self.client.create_db_instance_read_replica(**params)
-            sent_request = send.call_args[0][0]
+            sent_request = self.http_stubber.requests[0]
             self.assert_presigned_url_injected_in_request(sent_request.body)
 
 

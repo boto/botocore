@@ -23,6 +23,7 @@ import binascii
 import platform
 import select
 import datetime
+from io import BytesIO
 from subprocess import Popen, PIPE
 
 from dateutil.tz import tzlocal
@@ -38,6 +39,7 @@ from nose.tools import assert_equal
 
 import botocore.loaders
 import botocore.session
+from botocore.awsrequest import AWSResponse
 from botocore.compat import six
 from botocore.compat import urlparse
 from botocore.compat import parse_qs
@@ -150,6 +152,7 @@ class BaseSessionTest(BaseEnvVar):
         self.environ.update(environ)
         self.session = create_session()
         self.session.config_filename = 'no-exist-foo'
+        self.http_stubber = BotocoreHTTPStubber()
 
 
 @skip_unless_has_memory_collection
@@ -359,3 +362,66 @@ def assert_url_equal(url1, url2):
     assert_equal(parts1.hostname, parts2.hostname)
     assert_equal(parts1.port, parts2.port)
     assert_equal(parse_qs(parts1.query), parse_qs(parts2.query))
+
+
+class RawResponse(BytesIO):
+    def stream(self, **kwargs):
+        contents = self.read()
+        while contents:
+            yield contents
+            contents = self.read()
+
+
+class BotocoreHTTPStubber(object):
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self._requests = []
+        self._responses = []
+
+    def add_response(self, response):
+        self._responses.append(response)
+
+    def create_response(self, url=None, status=200, headers=None, body=None):
+        if url is None:
+            url = 'https://example.com'
+
+        if headers is None:
+            headers = {}
+
+        if body is None:
+            body = b''
+
+        raw = RawResponse(body)
+        response = AWSResponse(url, status, headers, raw)
+        self._responses.append(response)
+
+    @property
+    def requests(self):
+        return self._requests
+
+    @property
+    def request_count(self):
+        return len(self._requests)
+
+    @contextlib.contextmanager
+    def wrap_client(self, client):
+        events = client.meta.events
+        events.register('send-request', self)
+        try:
+            yield client
+        finally:
+            events.unregister('send-request', self)
+
+    def __call__(self, **kwargs):
+        request = kwargs.get('request')
+        self._requests.append(request)
+        if self._responses:
+            response = self._responses.pop(0)
+            if isinstance(response, Exception):
+                raise response
+            else:
+                return response
+        else:
+            raise Exception('Need to set responses')

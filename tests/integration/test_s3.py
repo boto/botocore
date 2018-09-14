@@ -11,7 +11,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import unittest, temporary_file, random_chars
+from tests import unittest, temporary_file, random_chars, BotocoreHTTPStubber
 import os
 import time
 from collections import defaultdict
@@ -832,19 +832,10 @@ class TestS3SigV4Client(BaseS3ClientTest):
 
     def test_request_retried_for_sigv4(self):
         body = six.BytesIO(b"Hello world!")
-
-        original_send = Endpoint._send
-        state = mock.Mock()
-        state.error_raised = False
-
-        def mock_endpoint_send(self, *args, **kwargs):
-            if not state.error_raised:
-                state.error_raised = True
-                raise ConnectionClosedError(endpoint_url='')
-            else:
-                return original_send(self, *args, **kwargs)
-        # TODO: fix with stubber / before send event
-        with mock.patch('botocore.endpoint.Endpoint._send', mock_endpoint_send):
+        exception = ConnectionClosedError(endpoint_url='')
+        self.http_stubber.add_response(exception)
+        self.http_stubber.add_response(None)
+        with self.http_stubber.wrap_client(self.client):
             response = self.client.put_object(Bucket=self.bucket_name,
                                               Key='foo.txt', Body=body)
             self.assert_status_code(response, 200)

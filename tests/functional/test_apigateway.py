@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 import mock
 
-from botocore.stub import Stubber
 from tests import BaseSessionTest
 
 
@@ -22,7 +21,6 @@ class TestApiGateway(BaseSessionTest):
         self.region = 'us-west-2'
         self.client = self.session.create_client(
             'apigateway', self.region)
-        self.stubber = Stubber(self.client)
 
     def test_get_export(self):
         params = {
@@ -32,12 +30,9 @@ class TestApiGateway(BaseSessionTest):
             'accepts': 'application/yaml'
         }
 
-        # TODO: fix with stubber / before send event
-        with mock.patch('botocore.endpoint.Endpoint._send') as _send:
-            _send.return_value = mock.Mock(
-                status_code=200, headers={}, content=b'{}')
+        self.http_stubber.create_response(body=b'{}')
+        with self.http_stubber.wrap_client(self.client):
             self.client.get_export(**params)
-            sent_request = _send.call_args[0][0]
-            self.assertEqual(sent_request.method, 'GET')
-            self.assertEqual(
-                sent_request.headers.get('Accept'), b'application/yaml')
+            request = self.http_stubber.requests[0]
+            self.assertEqual(request.method, 'GET')
+            self.assertEqual(request.headers.get('Accept'), b'application/yaml')

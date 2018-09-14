@@ -46,17 +46,9 @@ class TestRecordStatementsInjections(BaseSessionTest):
                     if call[0] == event_type]
         return matching
 
-    @contextmanager
-    def patch_http_layer(self, response, status_code=200):
-        # TODO: fix with before send event
-        with mock.patch('botocore.endpoint.Endpoint._send') as send:
-            send.return_value = mock.Mock(status_code=status_code,
-                                          headers={},
-                                          content=response)
-            yield send
-
     def test_does_record_api_call(self):
-        with self.patch_http_layer(self.s3_response_body):
+        self.http_stubber.create_response(body=self.s3_response_body)
+        with self.http_stubber.wrap_client(self.client):
             self.client.list_buckets()
 
         api_call_events = self._get_all_events_of_type('API_CALL')
@@ -71,7 +63,8 @@ class TestRecordStatementsInjections(BaseSessionTest):
         self.assertEqual(source, 'BOTOCORE')
 
     def test_does_record_http_request(self):
-        with self.patch_http_layer(self.s3_response_body):
+        self.http_stubber.create_response(body=self.s3_response_body)
+        with self.http_stubber.wrap_client(self.client):
             self.client.list_buckets()
 
         http_request_events = self._get_all_events_of_type('HTTP_REQUEST')
@@ -101,7 +94,8 @@ class TestRecordStatementsInjections(BaseSessionTest):
         self.assertEqual(source, 'BOTOCORE')
 
     def test_does_record_http_response(self):
-        with self.patch_http_layer(self.s3_response_body):
+        self.http_stubber.create_response(body=self.s3_response_body)
+        with self.http_stubber.wrap_client(self.client):
             self.client.list_buckets()
 
         http_response_events = self._get_all_events_of_type('HTTP_RESPONSE')
@@ -120,7 +114,8 @@ class TestRecordStatementsInjections(BaseSessionTest):
         self.assertEqual(source, 'BOTOCORE')
 
     def test_does_record_parsed_response(self):
-        with self.patch_http_layer(self.s3_response_body):
+        self.http_stubber.create_response(body=self.s3_response_body)
+        with self.http_stubber.wrap_client(self.client):
             self.client.list_buckets()
 
         parsed_response_events = self._get_all_events_of_type(

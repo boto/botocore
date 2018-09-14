@@ -14,6 +14,7 @@ from collections import defaultdict
 
 import mock
 
+from tests import BotocoreHTTPStubber
 from botocore.session import Session
 from botocore.exceptions import NoCredentialsError
 from botocore import xform_name
@@ -41,27 +42,25 @@ PUBLIC_API_TESTS = {
 }
 
 
-class EarlyExit(BaseException):
+class EarlyExit(Exception):
     pass
 
 
-def _test_public_apis_will_not_be_signed(func, kwargs):
-    # TODO: fix with stubber / before send event
-    with mock.patch('botocore.endpoint.Endpoint._send') as _send:
-        _send.side_effect = EarlyExit("we don't care about response here")
+def _test_public_apis_will_not_be_signed(client, operation, kwargs):
+    http_stubber = BotocoreHTTPStubber()
+    http_stubber.add_response(EarlyExit())
+    with http_stubber.wrap_client(client):
         try:
-            func(**kwargs)
+            operation(**kwargs)
         except EarlyExit:
             pass
-        except NoCredentialsError:
-            assert False, "NoCredentialsError should not be triggered"
-        request = _send.call_args[0][0]
-        sig_v2_disabled = 'SignatureVersion=2' not in request.url
-        assert sig_v2_disabled, "SigV2 is incorrectly enabled"
-        sig_v3_disabled = 'X-Amzn-Authorization' not in request.headers
-        assert sig_v3_disabled, "SigV3 is incorrectly enabled"
-        sig_v4_disabled = 'Authorization' not in request.headers
-        assert sig_v4_disabled, "SigV4 is incorrectly enabled"
+    request = http_stubber.requests[0]
+    sig_v2_disabled = 'SignatureVersion=2' not in request.url
+    assert sig_v2_disabled, "SigV2 is incorrectly enabled"
+    sig_v3_disabled = 'X-Amzn-Authorization' not in request.headers
+    assert sig_v3_disabled, "SigV3 is incorrectly enabled"
+    sig_v4_disabled = 'Authorization' not in request.headers
+    assert sig_v4_disabled, "SigV4 is incorrectly enabled"
 
 
 def test_public_apis_will_not_be_signed():
@@ -75,4 +74,4 @@ def test_public_apis_will_not_be_signed():
         for operation_name in PUBLIC_API_TESTS[service_name]:
             kwargs = PUBLIC_API_TESTS[service_name][operation_name]
             method = getattr(client, xform_name(operation_name))
-            yield (_test_public_apis_will_not_be_signed, method, kwargs)
+            yield _test_public_apis_will_not_be_signed, client, method, kwargs
