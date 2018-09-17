@@ -362,21 +362,21 @@ class AWSRequestPreparer(object):
     """
     def prepare(self, original):
         method = original.method
-        url = self._prepare_url(original)
-        body = self._prepare_body(original)
-        headers = self._prepare_headers(original, body)
+        url = self.prepare_url(original)
+        body = self.prepare_body(original)
+        headers = self.prepare_headers(original, body)
         stream_output = original.stream_output
 
         return AWSPreparedRequest(method, url, headers, body, stream_output)
 
-    def _prepare_url(self, original):
+    def prepare_url(self, original):
         url = original.url
         if original.params:
             params = urlencode(list(original.params.items()), doseq=True)
             url = '%s?%s' % (url, params)
         return url
 
-    def _prepare_headers(self, original, prepared_body):
+    def prepare_headers(self, original, prepared_body=None):
         headers = HeadersDict(original.headers.items())
 
         # If the transfer encoding or content length is already set, use that
@@ -391,11 +391,13 @@ class AWSRequestPreparer(object):
             else:
                 # Failed to determine content length, using chunked
                 # NOTE: This shouldn't ever happen in practice
+                body_type = type(prepared_body)
+                logger.debug('Failed to determine length of %s', body_type)
                 headers['Transfer-Encoding'] = 'chunked'
 
         return headers
 
-    def _prepare_body(self, original):
+    def prepare_body(self, original):
         """Prepares the given HTTP body data."""
         body = original.data
         if body == b'':
@@ -414,8 +416,7 @@ class AWSRequestPreparer(object):
 
         # Try asking the body for it's length
         try:
-            length = len(body)
-            return length
+            return len(body)
         except (AttributeError, TypeError) as e:
             pass
 
@@ -480,7 +481,7 @@ class AWSRequest(object):
 
     @property
     def body(self):
-        body = self.prepare().body
+        body = self._REQUEST_PREPARER.prepare_body(self)
         if isinstance(body, six.text_type):
             body = body.encode('utf-8')
         return body

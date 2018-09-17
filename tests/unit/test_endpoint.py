@@ -180,7 +180,7 @@ class TestRetryInterface(TestEndpointBase):
         self.assertEqual(call_args[5][0][0],
                          'needs-retry.ec2.DescribeInstances')
 
-    def est_retry_attempts_added_to_response_metadata(self):
+    def test_retry_attempts_added_to_response_metadata(self):
         op = Mock(name='DescribeInstances')
         op.metadata = {'protocol': 'query'}
         op.has_event_stream_output = False
