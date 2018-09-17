@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.12.5
+======
+
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``elastictranscoder``: Update elastictranscoder client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+* api-change:``elasticache``: Update elasticache client to latest version
+
+
 1.12.4
 ======
 
