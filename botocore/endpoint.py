@@ -172,7 +172,7 @@ class Endpoint(object):
                 'body': request.body
             })
             service_id = operation_model.service_model.service_id.hyphenize()
-            event_name = 'send-request.%s.%s' % (service_id, operation_model.name)
+            event_name = 'before-send.%s.%s' % (service_id, operation_model.name)
             responses = self._event_emitter.emit(event_name, request=request)
             http_response = first_non_none_response(responses)
             if http_response is None:

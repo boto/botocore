@@ -399,10 +399,10 @@ class BotocoreHTTPStubber(object):
         self.responses.append(response)
 
     def start(self):
-        self._client.meta.events.register('send-request', self)
+        self._client.meta.events.register('before-send', self)
 
     def stop(self):
-        self._client.meta.events.unregister('send-request', self)
+        self._client.meta.events.unregister('before-send', self)
 
     def __enter__(self):
         self.start()

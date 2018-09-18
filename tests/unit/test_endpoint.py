@@ -139,13 +139,13 @@ class TestRetryInterface(TestEndpointBase):
         self.assertEqual(call_args[0][0][0],
                          'request-created.ec2.DescribeInstances')
         self.assertEqual(call_args[1][0][0],
-                         'send-request.ec2.DescribeInstances')
+                         'before-send.ec2.DescribeInstances')
         self.assertEqual(call_args[2][0][0],
                          'needs-retry.ec2.DescribeInstances')
         self.assertEqual(call_args[3][0][0],
                          'request-created.ec2.DescribeInstances')
         self.assertEqual(call_args[4][0][0],
-                         'send-request.ec2.DescribeInstances')
+                         'before-send.ec2.DescribeInstances')
         self.assertEqual(call_args[5][0][0],
                          'needs-retry.ec2.DescribeInstances')
 
@@ -170,13 +170,13 @@ class TestRetryInterface(TestEndpointBase):
         self.assertEqual(call_args[0][0][0],
                          'request-created.ec2.DescribeInstances')
         self.assertEqual(call_args[1][0][0],
-                         'send-request.ec2.DescribeInstances')
+                         'before-send.ec2.DescribeInstances')
         self.assertEqual(call_args[2][0][0],
                          'needs-retry.ec2.DescribeInstances')
         self.assertEqual(call_args[3][0][0],
                          'request-created.ec2.DescribeInstances')
         self.assertEqual(call_args[4][0][0],
-                         'send-request.ec2.DescribeInstances')
+                         'before-send.ec2.DescribeInstances')
         self.assertEqual(call_args[5][0][0],
                          'needs-retry.ec2.DescribeInstances')
 
