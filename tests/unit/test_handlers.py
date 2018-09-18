@@ -24,6 +24,7 @@ import botocore.session
 from botocore.compat import OrderedDict
 from botocore.exceptions import ParamValidationError, MD5UnavailableError
 from botocore.exceptions import AliasConflictParameterError
+from botocore.exceptions import MissingServiceIdError
 from botocore.awsrequest import AWSRequest
 from botocore.compat import quote, six
 from botocore.config import Config
@@ -31,8 +32,10 @@ from botocore.docs.bcdoc.restdoc import DocumentStructure
 from botocore.docs.params import RequestParamsDocumenter
 from botocore.docs.example import RequestExampleDocumenter
 from botocore.hooks import HierarchicalEmitter
+from botocore.loaders import Loader
 from botocore.model import OperationModel, ServiceModel, ServiceId
 from botocore.model import DenormalizedStructureBuilder
+from botocore.session import Session
 from botocore.signers import RequestSigner
 from botocore.credentials import Credentials
 from botocore import handlers
@@ -556,6 +559,23 @@ class TestHandlers(BaseSessionTest):
                                               session=mock.Mock(),
                                               service_name='foo')
         self.assertFalse(session.register.called)
+
+    def test_register_retry_for_handlers_with_no_service_id(self):
+        service_data = {
+            'metadata': {
+                'endpointPrefix': 'foo',
+            },
+        }
+        session = mock.Mock(spec=Session)
+        loader = mock.Mock(spec=Loader)
+        session.get_component.return_value = loader
+        service_name = 'foo'
+        with self.assertRaisesRegexp(MissingServiceIdError, service_name):
+            handlers.register_retries_for_service(
+                service_data=service_data,
+                session=session,
+                service_name=service_name,
+            )
 
     def test_register_retry_handlers(self):
         service_data = {
