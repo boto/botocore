@@ -128,6 +128,20 @@ class TestAWSRequest(unittest.TestCase):
         prepared_request = request.prepare()
         self.assertEqual(prepared_request.body, 'dead=beef')
 
+    def test_can_prepare_dict_body_unicode_values(self):
+        body = {'Text': u'\u30c6\u30b9\u30c8 string'}
+        expected_body = 'Text=%E3%83%86%E3%82%B9%E3%83%88+string'
+        request = AWSRequest(url='http://example.com/', data=body)
+        prepared_request = request.prepare()
+        self.assertEqual(prepared_request.body, expected_body)
+
+    def test_can_prepare_dict_body_unicode_keys(self):
+        body = {u'\u30c6\u30b9\u30c8': 'string'}
+        expected_body = '%E3%83%86%E3%82%B9%E3%83%88=string'
+        request = AWSRequest(url='http://example.com/', data=body)
+        prepared_request = request.prepare()
+        self.assertEqual(prepared_request.body, expected_body)
+
     def test_can_prepare_empty_body(self):
         request = AWSRequest(url='http://example.com/', data=b'')
         prepared_request = request.prepare()
