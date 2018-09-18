@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 import mock
 
-from tests import BaseSessionTest
+from tests import BaseSessionTest, BotocoreHTTPStubber
 
 
 class TestCloudsearchdomain(BaseSessionTest):
@@ -21,10 +21,11 @@ class TestCloudsearchdomain(BaseSessionTest):
         self.region = 'us-west-2'
         self.client = self.session.create_client(
             'cloudsearchdomain', self.region)
+        self.http_stubber = BotocoreHTTPStubber(self.client)
 
     def test_search(self):
         self.http_stubber.create_response(body=b'{}')
-        with self.http_stubber.wrap_client(self.client):
+        with self.http_stubber:
             self.client.search(query='foo')
             request = self.http_stubber.requests[0]
             self.assertIn('q=foo', request.body)

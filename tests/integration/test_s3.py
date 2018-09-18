@@ -819,6 +819,7 @@ class TestS3SigV4Client(BaseS3ClientTest):
         super(TestS3SigV4Client, self).setUp()
         self.client = self.session.create_client(
             's3', self.region, config=Config(signature_version='s3v4'))
+        self.http_stubber = BotocoreHTTPStubber(self.client)
 
     def test_can_get_bucket_location(self):
         # Even though the bucket is in us-west-2, we should still be able to
@@ -833,9 +834,9 @@ class TestS3SigV4Client(BaseS3ClientTest):
     def test_request_retried_for_sigv4(self):
         body = six.BytesIO(b"Hello world!")
         exception = ConnectionClosedError(endpoint_url='')
-        self.http_stubber.add_response(exception)
-        self.http_stubber.add_response(None)
-        with self.http_stubber.wrap_client(self.client):
+        self.http_stubber.responses.append(exception)
+        self.http_stubber.responses.append(None)
+        with self.http_stubber:
             response = self.client.put_object(Bucket=self.bucket_name,
                                               Key='foo.txt', Body=body)
             self.assert_status_code(response, 200)

@@ -104,13 +104,13 @@ class UnsignedOperationTestCase(object):
         self._client = client
         self._operation_name = operation_name
         self._parameters = parameters
-        self._http_stubber = BotocoreHTTPStubber()
+        self._http_stubber = BotocoreHTTPStubber(self._client)
 
     def run(self):
         operation = getattr(self._client, self._operation_name)
 
         self._http_stubber.create_response(body=b'{}')
-        with self._http_stubber.wrap_client(self._client):
+        with self._http_stubber:
             operation(**self._parameters)
             request = self._http_stubber.requests[0]
 

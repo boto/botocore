@@ -290,10 +290,9 @@ def _make_client_call_with_errors(client, operation_name, kwargs):
     state = mock.Mock()
     state.error_raised = False
     exception = ConnectionClosedError(endpoint_url='')
-    http_stubber = BotocoreHTTPStubber()
-    http_stubber.add_response(exception)
-    http_stubber.add_response(None)
-    with http_stubber.wrap_client(client):
+    with BotocoreHTTPStubber(client) as http_stubber:
+        http_stubber.responses.append(exception)
+        http_stubber.responses.append(None)
         try:
             response = operation(**kwargs)
             assert_true(state.error_raised)

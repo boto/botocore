@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 import mock
 
-from tests import BaseSessionTest
+from tests import BaseSessionTest, BotocoreHTTPStubber
 
 
 class TestMachineLearning(BaseSessionTest):
@@ -21,10 +21,11 @@ class TestMachineLearning(BaseSessionTest):
         self.region = 'us-west-2'
         self.client = self.session.create_client(
             'machinelearning', self.region)
+        self.http_stubber = BotocoreHTTPStubber(self.client)
 
     def test_predict(self):
         self.http_stubber.create_response(body=b'{}')
-        with self.http_stubber.wrap_client(self.client):
+        with self.http_stubber:
             custom_endpoint = 'https://myendpoint.amazonaws.com/'
             self.client.predict(
                 MLModelId='ml-foo',

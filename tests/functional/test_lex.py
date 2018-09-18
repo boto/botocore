@@ -13,7 +13,7 @@
 import mock
 from datetime import datetime
 
-from tests import BaseSessionTest
+from tests import BaseSessionTest, BotocoreHTTPStubber
 
 
 class TestLex(BaseSessionTest):
@@ -21,6 +21,7 @@ class TestLex(BaseSessionTest):
         super(TestLex, self).setUp()
         self.region = 'us-west-2'
         self.client = self.session.create_client('lex-runtime', self.region)
+        self.http_stubber = BotocoreHTTPStubber(self.client)
 
     def test_unsigned_payload(self):
         params = {
@@ -36,7 +37,7 @@ class TestLex(BaseSessionTest):
         with mock.patch('botocore.auth.datetime') as _datetime:
             _datetime.datetime.utcnow.return_value = timestamp
             self.http_stubber.create_response(body=b'{}')
-            with self.http_stubber.wrap_client(self.client):
+            with self.http_stubber:
                 self.client.post_content(**params)
                 request = self.http_stubber.requests[0]
 

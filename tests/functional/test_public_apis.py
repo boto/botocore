@@ -47,14 +47,13 @@ class EarlyExit(Exception):
 
 
 def _test_public_apis_will_not_be_signed(client, operation, kwargs):
-    http_stubber = BotocoreHTTPStubber()
-    http_stubber.add_response(EarlyExit())
-    with http_stubber.wrap_client(client):
+    with BotocoreHTTPStubber(client) as http_stubber:
+        http_stubber.responses.append(EarlyExit())
         try:
             operation(**kwargs)
         except EarlyExit:
             pass
-    request = http_stubber.requests[0]
+        request = http_stubber.requests[0]
     sig_v2_disabled = 'SignatureVersion=2' not in request.url
     assert sig_v2_disabled, "SigV2 is incorrectly enabled"
     sig_v3_disabled = 'X-Amzn-Authorization' not in request.headers

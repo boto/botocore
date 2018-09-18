@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import contextlib
-from tests import BaseSessionTest, mock
+from tests import BaseSessionTest, mock, BotocoreHTTPStubber
 
 from botocore.exceptions import ClientError
 from botocore.config import Config
@@ -27,19 +27,16 @@ class TestRetry(BaseSessionTest):
     def tearDown(self):
         self.sleep_patch.stop()
 
-    def add_n_retryable_responses(self, num_responses):
-        for _ in range(num_responses):
-            self.http_stubber.create_response(status=500, body=b'{}')
-
     @contextlib.contextmanager
     def assert_will_retry_n_times(self, client, num_retries):
         num_responses = num_retries + 1
-        self.add_n_retryable_responses(num_responses)
-        with self.http_stubber.wrap_client(client):
+        with BotocoreHTTPStubber(client) as http_stubber:
+            for _ in range(num_responses):
+                http_stubber.create_response(status=500, body=b'{}')
             with self.assertRaisesRegexp(
                     ClientError, 'reached max retries: %s' % num_retries):
                 yield
-            self.assertEqual(self.http_stubber.request_count, num_responses)
+            self.assertEqual(len(http_stubber.requests), num_responses)
 
     def test_can_override_max_attempts(self):
         client = self.session.create_client(
@@ -80,9 +77,6 @@ class TestRetry(BaseSessionTest):
         client = self.session.create_client('dynamodb', self.region)
         with self.assert_will_retry_n_times(client, 9):
             client.list_tables()
-
-        # Reset the stubber to clear previous requests out
-        self.http_stubber.reset()
 
         # A codecommit client is not a special case for retries. It will at
         # most make 5 requests (4 retries) for its default.

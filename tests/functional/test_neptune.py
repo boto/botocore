@@ -14,7 +14,7 @@ import mock
 from contextlib import contextmanager
 
 import botocore.session
-from tests import BaseSessionTest
+from tests import BaseSessionTest, BotocoreHTTPStubber
 from botocore.stub import Stubber
 from tests import unittest
 
@@ -24,6 +24,7 @@ class TestNeptunePresignUrlInjection(BaseSessionTest):
     def setUp(self):
         super(TestNeptunePresignUrlInjection, self).setUp()
         self.client = self.session.create_client('neptune', 'us-west-2')
+        self.http_stubber = BotocoreHTTPStubber(self.client)
 
     def assert_presigned_url_injected_in_request(self, body):
         self.assertIn('PreSignedUrl', body)
@@ -42,7 +43,7 @@ class TestNeptunePresignUrlInjection(BaseSessionTest):
             b'</CreateDBClusterResponse>'
         )
         self.http_stubber.create_response(body=response_body)
-        with self.http_stubber.wrap_client(self.client):
+        with self.http_stubber:
             self.client.create_db_cluster(**params)
             sent_request = self.http_stubber.requests[0]
             self.assert_presigned_url_injected_in_request(sent_request.body)
@@ -60,7 +61,7 @@ class TestNeptunePresignUrlInjection(BaseSessionTest):
             b'</CopyDBClusterSnapshotResponse>'
         )
         self.http_stubber.create_response(body=response_body)
-        with self.http_stubber.wrap_client(self.client):
+        with self.http_stubber:
             self.client.copy_db_cluster_snapshot(**params)
             sent_request = self.http_stubber.requests[0]
             self.assert_presigned_url_injected_in_request(sent_request.body)

@@ -152,7 +152,6 @@ class BaseSessionTest(BaseEnvVar):
         self.environ.update(environ)
         self.session = create_session()
         self.session.config_filename = 'no-exist-foo'
-        self.http_stubber = BotocoreHTTPStubber()
 
 
 @skip_unless_has_memory_collection
@@ -364,6 +363,10 @@ def assert_url_equal(url1, url2):
     assert_equal(parse_qs(parts1.query), parse_qs(parts2.query))
 
 
+class HTTPStubberException(Exception):
+    pass
+
+
 class RawResponse(BytesIO):
     def stream(self, **kwargs):
         contents = self.read()
@@ -373,15 +376,13 @@ class RawResponse(BytesIO):
 
 
 class BotocoreHTTPStubber(object):
-    def __init__(self):
+    def __init__(self, client):
         self.reset()
+        self._client = client
 
     def reset(self):
-        self._requests = []
-        self._responses = []
-
-    def add_response(self, response):
-        self._responses.append(response)
+        self.requests = []
+        self.responses = []
 
     def create_response(self, url=None, status=200, headers=None, body=None):
         if url is None:
@@ -395,33 +396,29 @@ class BotocoreHTTPStubber(object):
 
         raw = RawResponse(body)
         response = AWSResponse(url, status, headers, raw)
-        self._responses.append(response)
+        self.responses.append(response)
 
-    @property
-    def requests(self):
-        return self._requests
+    def start(self):
+        self._client.meta.events.register('send-request', self)
 
-    @property
-    def request_count(self):
-        return len(self._requests)
+    def stop(self):
+        self._client.meta.events.unregister('send-request', self)
 
-    @contextlib.contextmanager
-    def wrap_client(self, client):
-        events = client.meta.events
-        events.register('send-request', self)
-        try:
-            yield client
-        finally:
-            events.unregister('send-request', self)
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.stop()
 
     def __call__(self, **kwargs):
         request = kwargs.get('request')
-        self._requests.append(request)
-        if self._responses:
-            response = self._responses.pop(0)
+        self.requests.append(request)
+        if self.responses:
+            response = self.responses.pop(0)
             if isinstance(response, Exception):
                 raise response
             else:
                 return response
         else:
-            raise Exception('Need to set responses')
+            raise HTTPStubberException('Insufficient responses')

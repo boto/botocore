@@ -362,21 +362,21 @@ class AWSRequestPreparer(object):
     """
     def prepare(self, original):
         method = original.method
-        url = self.prepare_url(original)
-        body = self.prepare_body(original)
-        headers = self.prepare_headers(original, body)
+        url = self._prepare_url(original)
+        body = self._prepare_body(original)
+        headers = self._prepare_headers(original, body)
         stream_output = original.stream_output
 
         return AWSPreparedRequest(method, url, headers, body, stream_output)
 
-    def prepare_url(self, original):
+    def _prepare_url(self, original):
         url = original.url
         if original.params:
             params = urlencode(list(original.params.items()), doseq=True)
             url = '%s?%s' % (url, params)
         return url
 
-    def prepare_headers(self, original, prepared_body=None):
+    def _prepare_headers(self, original, prepared_body=None):
         headers = HeadersDict(original.headers.items())
 
         # If the transfer encoding or content length is already set, use that
@@ -397,7 +397,7 @@ class AWSRequestPreparer(object):
 
         return headers
 
-    def prepare_body(self, original):
+    def _prepare_body(self, original):
         """Prepares the given HTTP body data."""
         body = original.data
         if body == b'':
@@ -440,7 +440,7 @@ class AWSRequest(object):
     class (even in requests) is effectively a named-tuple.
     """
 
-    _REQUEST_PREPARER = AWSRequestPreparer()
+    _REQUEST_PREPARER_CLS = AWSRequestPreparer
 
     def __init__(self,
                  method=None,
@@ -450,6 +450,8 @@ class AWSRequest(object):
                  params=None,
                  auth_path=None,
                  stream_output=False):
+
+        self._request_preparer = self._REQUEST_PREPARER_CLS()
 
         # Default empty dicts for dict params.
         params = {} if params is None else params
@@ -477,11 +479,11 @@ class AWSRequest(object):
 
     def prepare(self):
         """Constructs a :class:`AWSPreparedRequest <AWSPreparedRequest>`."""
-        return self._REQUEST_PREPARER.prepare(self)
+        return self._request_preparer.prepare(self)
 
     @property
     def body(self):
-        body = self._REQUEST_PREPARER.prepare_body(self)
+        body = self.prepare().body
         if isinstance(body, six.text_type):
             body = body.encode('utf-8')
         return body
