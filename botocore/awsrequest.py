@@ -464,6 +464,15 @@ class AWSPreparedRequest(object):
         headers = headers or {}
         self.headers = HeadersDict(headers.items())
 
+    def _to_utf8(self, item):
+        key, value = item
+        if isinstance(key, six.text_type):
+            key = key.encode('utf-8')
+        if isinstance(value, six.text_type):
+            value = value.encode('utf-8')
+
+        return key, value
+
     def prepare_body(self, data):
         """Prepares the given HTTP body data."""
         self.body = data
@@ -478,7 +487,7 @@ class AWSPreparedRequest(object):
             self.headers['Content-Length'] = '0'
 
         if isinstance(self.body, dict):
-            params = list(self.body.items())
+            params = [self._to_utf8(item) for item in self.body.items()]
             self.body = urlencode(params, doseq=True)
 
         try:
