@@ -66,6 +66,7 @@ class TestCreateClientArgs(unittest.TestCase):
             'verify': True,
             'max_pool_connections': 10,
             'proxies': None,
+            'tcp_keepalive': False
         }
         call_kwargs.update(**override_kwargs)
         mock_endpoint.return_value.create_endpoint.assert_called_with(
@@ -206,3 +207,27 @@ class TestCreateClientArgs(unittest.TestCase):
         client_args = self.call_get_client_args(client_config=config)
         self.assertEqual(
             client_args['client_config'].retries, {'max_attempts': 10})
+
+    def test_tcp_keep_alive_enabled(self):
+        scoped_config = {'tcp_keepalive': 'true'}
+        with mock.patch('botocore.args.EndpointCreator') as m:
+            self.call_get_client_args(scoped_config=scoped_config)
+            self.assert_create_endpoint_call(m, tcp_keepalive=True)
+
+    def test_tcp_keep_alive_not_specified(self):
+        scoped_config = {}
+        with mock.patch('botocore.args.EndpointCreator') as m:
+            self.call_get_client_args(scoped_config=scoped_config)
+            self.assert_create_endpoint_call(m, tcp_keepalive=False)
+
+    def test_tcp_keep_alive_explicitly_disabled(self):
+        scoped_config = {'tcp_keepalive': 'false'}
+        with mock.patch('botocore.args.EndpointCreator') as m:
+            self.call_get_client_args(scoped_config=scoped_config)
+            self.assert_create_endpoint_call(m, tcp_keepalive=False)
+
+    def test_tcp_keep_alive_enabled_case_insensitive(self):
+        scoped_config = {'tcp_keepalive': 'True'}
+        with mock.patch('botocore.args.EndpointCreator') as m:
+            self.call_get_client_args(scoped_config=scoped_config)
+            self.assert_create_endpoint_call(m, tcp_keepalive=True)

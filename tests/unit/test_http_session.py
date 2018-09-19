@@ -1,3 +1,5 @@
+import socket
+
 from mock import patch, Mock, ANY
 from tests import unittest
 from nose.tools import raises
@@ -89,6 +91,7 @@ class TestURLLib3Session(unittest.TestCase):
 
     def tearDown(self):
         self.pool_patch.stop()
+        self.proxy_patch.stop()
 
     def assert_request_sent(self, headers=None, body=None, url='/'):
         if headers is None:
@@ -192,6 +195,24 @@ class TestURLLib3Session(unittest.TestCase):
         session.send(self.request.prepare())
         _, proxy_kwargs = self.proxy_manager_fun.call_args
         self.assertIsNotNone(proxy_kwargs.get('ssl_context'))
+
+    def test_session_forwards_tcp_keepalive_to_pool_manager(self):
+        URLLib3Session(tcp_keepalive=True)
+        manager_kwargs = self.pool_manager_cls.call_args[1]
+        self.assertIn(
+            (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1),
+            manager_kwargs['socket_options']
+        )
+
+    def test_session_forwards_tcp_keepalive_to_proxy_manager(self):
+        session = URLLib3Session(
+            proxies={'http': 'http://proxy.com'}, tcp_keepalive=True)
+        session.send(self.request.prepare())
+        manager_kwargs = self.proxy_manager_fun.call_args[1]
+        self.assertIn(
+            (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1),
+            manager_kwargs['socket_options']
+        )
 
     def make_request_with_error(self, error):
         self.connection.urlopen.side_effect = error

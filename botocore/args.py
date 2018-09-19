@@ -51,6 +51,7 @@ class ClientArgsCreator(object):
         config_kwargs = final_args['config_kwargs']
         s3_config = final_args['s3_config']
         partition = endpoint_config['metadata'].get('partition', None)
+        tcp_keepalive = final_args['tcp_keepalive']
 
         signing_region = endpoint_config['signing_region']
         endpoint_region_name = endpoint_config['region_name']
@@ -77,7 +78,8 @@ class ClientArgsCreator(object):
             response_parser_factory=self._response_parser_factory,
             max_pool_connections=new_config.max_pool_connections,
             proxies=new_config.proxies,
-            timeout=(new_config.connect_timeout, new_config.read_timeout))
+            timeout=(new_config.connect_timeout, new_config.read_timeout),
+            tcp_keepalive=tcp_keepalive)
 
         serializer = botocore.serialize.create_serializer(
             protocol, parameter_validation)
@@ -104,9 +106,9 @@ class ClientArgsCreator(object):
         if client_config and not client_config.parameter_validation:
             parameter_validation = False
         elif scoped_config:
-            raw_value = str(scoped_config.get('parameter_validation', ''))
-            if raw_value.lower() == 'false':
-                parameter_validation = False
+            raw_value = scoped_config.get('parameter_validation')
+            if raw_value is not None:
+                parameter_validation = self._ensure_boolean(raw_value)
 
         endpoint_config = endpoint_bridge.resolve(
             service_name, region_name, endpoint_url, is_secure)
@@ -144,6 +146,7 @@ class ClientArgsCreator(object):
             'protocol': protocol,
             'config_kwargs': config_kwargs,
             's3_config': s3_config,
+            'tcp_keepalive': self._compute_tcp_keepalive(scoped_config)
         }
 
     def compute_s3_config(self, scoped_config, client_config):
@@ -192,11 +195,7 @@ class ClientArgsCreator(object):
         config_copy = config_dict.copy()
         present_keys = [k for k in keys if k in config_copy]
         for key in present_keys:
-            # Normalize on different possible values of True
-            if config_copy[key] in [True, 'True', 'true']:
-                config_copy[key] = True
-            else:
-                config_copy[key] = False
+            config_copy[key] = self._ensure_boolean(config_copy[key])
         return config_copy
 
     def _get_default_s3_region(self, service_name, endpoint_bridge):
@@ -207,3 +206,16 @@ class ClientArgsCreator(object):
             endpoint = endpoint_bridge.resolve('s3')
             return endpoint['signing_region'], endpoint['region_name']
         return None, None
+
+    def _compute_tcp_keepalive(self, scoped_config):
+        tcp_keepalive = False
+        if scoped_config:
+            tcp_keepalive = self._ensure_boolean(
+                scoped_config.get('tcp_keepalive', False))
+        return tcp_keepalive
+
+    def _ensure_boolean(self, val):
+        if isinstance(val, bool):
+            return val
+        else:
+            return val.lower() == 'true'

@@ -350,3 +350,11 @@ class TestEndpointCreator(unittest.TestCase):
         )
         session_args = self.mock_session.call_args[1]
         self.assertEqual(session_args.get('max_pool_connections'), 100)
+
+    def test_enable_tcp_keepalive(self):
+        self.creator.create_endpoint(
+            self.service_model, region_name='us-west-2',
+            endpoint_url='https://example.com',
+            http_session_cls=self.mock_session, tcp_keepalive=True)
+        session_args = self.mock_session.call_args[1]
+        self.assertEqual(session_args.get('tcp_keepalive'), True)
