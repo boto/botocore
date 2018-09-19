@@ -2,7 +2,7 @@ from contextlib import contextmanager
 
 import mock
 
-from tests import BaseSessionTest, BotocoreHTTPStubber
+from tests import BaseSessionTest, ClientHTTPStubber
 from botocore.history import BaseHistoryHandler
 from botocore.history import get_global_history_recorder
 
@@ -20,7 +20,7 @@ class TestRecordStatementsInjections(BaseSessionTest):
     def setUp(self):
         super(TestRecordStatementsInjections, self).setUp()
         self.client = self.session.create_client('s3', 'us-west-2')
-        self.http_stubber = BotocoreHTTPStubber(self.client)
+        self.http_stubber = ClientHTTPStubber(self.client)
         self.s3_response_body = (
             '<ListAllMyBucketsResult '
             '    xmlns="http://s3.amazonaws.com/doc/2006-03-01/">'

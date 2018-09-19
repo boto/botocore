@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import contextlib
-from tests import BaseSessionTest, mock, BotocoreHTTPStubber
+from tests import BaseSessionTest, mock, ClientHTTPStubber
 
 from botocore.exceptions import ClientError
 from botocore.config import Config
@@ -30,7 +30,7 @@ class TestRetry(BaseSessionTest):
     @contextlib.contextmanager
     def assert_will_retry_n_times(self, client, num_retries):
         num_responses = num_retries + 1
-        with BotocoreHTTPStubber(client) as http_stubber:
+        with ClientHTTPStubber(client) as http_stubber:
             for _ in range(num_responses):
                 http_stubber.create_response(status=500, body=b'{}')
             with self.assertRaisesRegexp(

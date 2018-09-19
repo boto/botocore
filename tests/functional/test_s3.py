@@ -10,7 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import unittest, mock, BaseSessionTest, create_session, BotocoreHTTPStubber
+from tests import unittest, mock, BaseSessionTest, create_session, ClientHTTPStubber
 from nose.tools import assert_equal
 
 import botocore.session
@@ -35,7 +35,7 @@ class BaseS3OperationTest(BaseSessionTest):
         self.region = 'us-west-2'
         self.client = self.session.create_client(
             's3', self.region)
-        self.http_stubber = BotocoreHTTPStubber(self.client)
+        self.http_stubber = ClientHTTPStubber(self.client)
 
 
 class TestOnlyAsciiCharsAllowed(BaseS3OperationTest):
@@ -83,7 +83,7 @@ class TestS3GetBucketLifecycle(BaseS3OperationTest):
             '</LifecycleConfiguration>'
         ).encode('utf-8')
         s3 = self.session.create_client('s3')
-        with BotocoreHTTPStubber(s3) as http_stubber:
+        with ClientHTTPStubber(s3) as http_stubber:
             http_stubber.create_response(body=response_body)
             response = s3.get_bucket_lifecycle(Bucket='mybucket')
         # Each Transition member should have at least one of the
@@ -123,7 +123,7 @@ class TestS3PutObject(BaseS3OperationTest):
             'Server: AmazonS3\r\n'
         ).encode('utf-8')
         s3 = self.session.create_client('s3')
-        with BotocoreHTTPStubber(s3) as http_stubber:
+        with ClientHTTPStubber(s3) as http_stubber:
             http_stubber.create_response(status=500, body=non_xml_content)
             http_stubber.create_response()
             response = s3.put_object(Bucket='mybucket', Key='mykey', Body=b'foo')
@@ -138,7 +138,7 @@ class TestS3SigV4(BaseS3OperationTest):
         super(TestS3SigV4, self).setUp()
         self.client = self.session.create_client(
             's3', self.region, config=Config(signature_version='s3v4'))
-        self.http_stubber = BotocoreHTTPStubber(self.client)
+        self.http_stubber = ClientHTTPStubber(self.client)
         self.http_stubber.create_response()
 
     def get_sent_headers(self):
@@ -155,7 +155,7 @@ class TestS3SigV4(BaseS3OperationTest):
         })
         self.client = self.session.create_client(
             's3', self.region, config=config)
-        self.http_stubber = BotocoreHTTPStubber(self.client)
+        self.http_stubber = ClientHTTPStubber(self.client)
         self.http_stubber.create_response()
         with self.http_stubber:
             self.client.put_object(Bucket='foo', Key='bar', Body='baz')
@@ -169,7 +169,7 @@ class TestS3SigV4(BaseS3OperationTest):
         })
         self.client = self.session.create_client(
             's3', self.region, config=config)
-        self.http_stubber = BotocoreHTTPStubber(self.client)
+        self.http_stubber = ClientHTTPStubber(self.client)
         self.http_stubber.create_response()
         with self.http_stubber:
             self.client.put_object(Bucket='foo', Key='bar', Body='baz')
@@ -194,7 +194,7 @@ class TestCanSendIntegerHeaders(BaseSessionTest):
     def test_int_values_with_sigv4(self):
         s3 = self.session.create_client(
             's3', config=Config(signature_version='s3v4'))
-        with BotocoreHTTPStubber(s3) as http_stubber:
+        with ClientHTTPStubber(s3) as http_stubber:
             http_stubber.create_response()
             s3.upload_part(Bucket='foo', Key='bar', Body=b'foo',
                            UploadId='bar', PartNumber=1, ContentLength=3)
@@ -214,7 +214,7 @@ class TestRegionRedirect(BaseS3OperationTest):
                 signature_version='s3v4',
                 s3={'addressing_style': 'path'},
             ))
-        self.http_stubber = BotocoreHTTPStubber(self.client)
+        self.http_stubber = ClientHTTPStubber(self.client)
 
         self.redirect_response = {
             'status': 301,
@@ -318,7 +318,7 @@ class TestRegionRedirect(BaseS3OperationTest):
         # Create a client with no explicit configuration so we can
         # verify the default behavior.
         client = self.session.create_client('s3', 'us-west-2')
-        with BotocoreHTTPStubber(client) as http_stubber:
+        with ClientHTTPStubber(client) as http_stubber:
             http_stubber.create_response(**self.bad_signing_region_response)
             http_stubber.create_response(**self.success_response)
             first_response = client.list_objects(Bucket='foo')
@@ -339,7 +339,7 @@ class TestRegionRedirect(BaseS3OperationTest):
 
         # Verify that the default behavior in us-east-1 will redirect
         client = self.session.create_client('s3', 'us-east-1')
-        with BotocoreHTTPStubber(client) as http_stubber:
+        with ClientHTTPStubber(client) as http_stubber:
             http_stubber.create_response(status=400)
             http_stubber.create_response(status=400, headers=region_headers)
             http_stubber.create_response(headers=region_headers)
@@ -360,7 +360,7 @@ class TestRegionRedirect(BaseS3OperationTest):
         # Verify that the final 400 response is propagated
         # back to the user.
         client = self.session.create_client('s3', 'us-east-1')
-        with BotocoreHTTPStubber(client) as http_stubber:
+        with ClientHTTPStubber(client) as http_stubber:
             http_stubber.create_response(status=400)
             http_stubber.create_response(status=400, headers=region_headers)
             http_stubber.create_response(headers=region_headers)
@@ -836,7 +836,7 @@ def _verify_expected_endpoint_url(region, bucket, key, s3_config,
         s3 = session.create_client('s3', region_name=region, use_ssl=is_secure,
                                    config=config,
                                    endpoint_url=customer_provided_endpoint)
-        with BotocoreHTTPStubber(s3) as http_stubber:
+        with ClientHTTPStubber(s3) as http_stubber:
             http_stubber.create_response()
             s3.put_object(Bucket=bucket, Key=key, Body=b'bar')
             assert_equal(http_stubber.requests[0].url, expected_url)

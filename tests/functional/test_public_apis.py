@@ -14,7 +14,7 @@ from collections import defaultdict
 
 import mock
 
-from tests import BotocoreHTTPStubber
+from tests import ClientHTTPStubber
 from botocore.session import Session
 from botocore.exceptions import NoCredentialsError
 from botocore import xform_name
@@ -47,7 +47,7 @@ class EarlyExit(Exception):
 
 
 def _test_public_apis_will_not_be_signed(client, operation, kwargs):
-    with BotocoreHTTPStubber(client) as http_stubber:
+    with ClientHTTPStubber(client) as http_stubber:
         http_stubber.responses.append(EarlyExit())
         try:
             operation(**kwargs)

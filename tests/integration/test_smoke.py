@@ -16,7 +16,7 @@ from pprint import pformat
 import warnings
 from nose.tools import assert_equal, assert_true
 
-from tests import BotocoreHTTPStubber
+from tests import ClientHTTPStubber
 from botocore import xform_name
 import botocore.session
 from botocore.client import ClientError
@@ -290,7 +290,7 @@ def _make_client_call_with_errors(client, operation_name, kwargs):
     state = mock.Mock()
     state.error_raised = False
     exception = ConnectionClosedError(endpoint_url='')
-    with BotocoreHTTPStubber(client) as http_stubber:
+    with ClientHTTPStubber(client) as http_stubber:
         http_stubber.responses.append(exception)
         http_stubber.responses.append(None)
         try:

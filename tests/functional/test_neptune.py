@@ -14,7 +14,7 @@ import mock
 from contextlib import contextmanager
 
 import botocore.session
-from tests import BaseSessionTest, BotocoreHTTPStubber
+from tests import BaseSessionTest, ClientHTTPStubber
 from botocore.stub import Stubber
 from tests import unittest
 
@@ -24,7 +24,7 @@ class TestNeptunePresignUrlInjection(BaseSessionTest):
     def setUp(self):
         super(TestNeptunePresignUrlInjection, self).setUp()
         self.client = self.session.create_client('neptune', 'us-west-2')
-        self.http_stubber = BotocoreHTTPStubber(self.client)
+        self.http_stubber = ClientHTTPStubber(self.client)
 
     def assert_presigned_url_injected_in_request(self, body):
         self.assertIn('PreSignedUrl', body)

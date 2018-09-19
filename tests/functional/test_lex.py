@@ -13,7 +13,7 @@
 import mock
 from datetime import datetime
 
-from tests import BaseSessionTest, BotocoreHTTPStubber
+from tests import BaseSessionTest, ClientHTTPStubber
 
 
 class TestLex(BaseSessionTest):
@@ -21,7 +21,7 @@ class TestLex(BaseSessionTest):
         super(TestLex, self).setUp()
         self.region = 'us-west-2'
         self.client = self.session.create_client('lex-runtime', self.region)
-        self.http_stubber = BotocoreHTTPStubber(self.client)
+        self.http_stubber = ClientHTTPStubber(self.client)
 
     def test_unsigned_payload(self):
         params = {

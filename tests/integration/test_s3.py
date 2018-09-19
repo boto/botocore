@@ -11,7 +11,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import unittest, temporary_file, random_chars, BotocoreHTTPStubber
+from tests import unittest, temporary_file, random_chars, ClientHTTPStubber
 import os
 import time
 from collections import defaultdict
@@ -819,7 +819,7 @@ class TestS3SigV4Client(BaseS3ClientTest):
         super(TestS3SigV4Client, self).setUp()
         self.client = self.session.create_client(
             's3', self.region, config=Config(signature_version='s3v4'))
-        self.http_stubber = BotocoreHTTPStubber(self.client)
+        self.http_stubber = ClientHTTPStubber(self.client)
 
     def test_can_get_bucket_location(self):
         # Even though the bucket is in us-west-2, we should still be able to

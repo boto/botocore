@@ -15,7 +15,7 @@
 
 import os
 
-from tests import BaseSessionTest, BotocoreHTTPStubber
+from tests import BaseSessionTest, ClientHTTPStubber
 from mock import patch, Mock
 
 from botocore.compat import OrderedDict
@@ -36,7 +36,7 @@ class TestS3Addressing(BaseSessionTest):
         if force_hmacv1:
             self.session.register('choose-signer', self.enable_hmacv1)
         client = self.session.create_client('s3', self.region_name)
-        with BotocoreHTTPStubber(client) as http_stubber:
+        with ClientHTTPStubber(client) as http_stubber:
             http_stubber.create_response()
             getattr(client, operation)(**params)
             # Return the request that was sent over the wire.

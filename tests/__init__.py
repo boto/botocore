@@ -375,7 +375,7 @@ class RawResponse(BytesIO):
             contents = self.read()
 
 
-class BotocoreHTTPStubber(object):
+class ClientHTTPStubber(object):
     def __init__(self, client):
         self.reset()
         self._client = client

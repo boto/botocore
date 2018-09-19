@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 import mock
 
-from tests import BaseSessionTest, BotocoreHTTPStubber
+from tests import BaseSessionTest, ClientHTTPStubber
 
 
 class TestApiGateway(BaseSessionTest):
@@ -21,7 +21,7 @@ class TestApiGateway(BaseSessionTest):
         self.region = 'us-west-2'
         self.client = self.session.create_client(
             'apigateway', self.region)
-        self.http_stubber = BotocoreHTTPStubber(self.client)
+        self.http_stubber = ClientHTTPStubber(self.client)
 
     def test_get_export(self):
         params = {

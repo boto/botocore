@@ -14,7 +14,7 @@ import mock
 
 from nose.tools import assert_false
 
-from tests import create_session, BotocoreHTTPStubber
+from tests import create_session, ClientHTTPStubber
 
 
 def test_unsigned_operations():
@@ -104,7 +104,7 @@ class UnsignedOperationTestCase(object):
         self._client = client
         self._operation_name = operation_name
         self._parameters = parameters
-        self._http_stubber = BotocoreHTTPStubber(self._client)
+        self._http_stubber = ClientHTTPStubber(self._client)
 
     def run(self):
         operation = getattr(self._client, self._operation_name)
