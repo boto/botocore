@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.7
+======
+
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+
+
 1.12.6
 ======
 
