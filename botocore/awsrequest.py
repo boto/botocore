@@ -397,6 +397,14 @@ class AWSRequestPreparer(object):
 
         return headers
 
+    def _to_utf8(self, item):
+        key, value = item
+        if isinstance(key, six.text_type):
+            key = key.encode('utf-8')
+        if isinstance(value, six.text_type):
+            value = value.encode('utf-8')
+        return key, value
+
     def _prepare_body(self, original):
         """Prepares the given HTTP body data."""
         body = original.data
@@ -404,7 +412,7 @@ class AWSRequestPreparer(object):
             body = None
 
         if isinstance(body, dict):
-            params = list(body.items())
+            params = [self._to_utf8(item) for item in body.items()]
             body = urlencode(params, doseq=True)
 
         return body
