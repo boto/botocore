@@ -2,6 +2,22 @@
 CHANGELOG
 =========
 
+1.12.7
+======
+
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+
+
+1.12.6
+======
+
+* bugfix:Serialization: Fixes `#1557 <https://github.com/boto/botocore/issues/1557>`__. Fixed a regression in serialization where request bodies would be improperly encoded.
+* api-change:``es``: Update es client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
 1.12.5
 ======
 
