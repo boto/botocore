@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.8
+======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``ds``: Update ds client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.12.7
 ======
 
