@@ -303,7 +303,7 @@ class InstanceMetadataFetcher(object):
                         ).content.decode('utf-8')
                         if val[0] == '{':
                             val = json.loads(val)
-                        data[field] = val
+                            data[field] = val
             else:
                 logger.debug("Metadata service returned non 200 status code "
                              "of %s for url: %s, content body: %s",
