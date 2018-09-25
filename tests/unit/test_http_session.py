@@ -196,23 +196,21 @@ class TestURLLib3Session(unittest.TestCase):
         _, proxy_kwargs = self.proxy_manager_fun.call_args
         self.assertIsNotNone(proxy_kwargs.get('ssl_context'))
 
-    def test_session_forwards_tcp_keepalive_to_pool_manager(self):
-        URLLib3Session(tcp_keepalive=True)
+    def test_session_forwards_socket_options_to_pool_manager(self):
+        socket_option = (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        URLLib3Session(socket_options=[socket_option])
         manager_kwargs = self.pool_manager_cls.call_args[1]
-        self.assertIn(
-            (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1),
-            manager_kwargs['socket_options']
-        )
+        self.assertIn(socket_option, manager_kwargs['socket_options'])
 
-    def test_session_forwards_tcp_keepalive_to_proxy_manager(self):
+    def test_session_forwards_socket_options_to_proxy_manager(self):
+        socket_option = (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         session = URLLib3Session(
-            proxies={'http': 'http://proxy.com'}, tcp_keepalive=True)
+            proxies={'http': 'http://proxy.com'},
+            socket_options=[socket_option]
+        )
         session.send(self.request.prepare())
         manager_kwargs = self.proxy_manager_fun.call_args[1]
-        self.assertIn(
-            (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1),
-            manager_kwargs['socket_options']
-        )
+        self.assertIn(socket_option, manager_kwargs['socket_options'])
 
     def make_request_with_error(self, error):
         self.connection.urlopen.side_effect = error

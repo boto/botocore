@@ -18,6 +18,7 @@ considered internal, and *not* a public API.
 """
 import copy
 import logging
+import socket
 
 import botocore.serialize
 from botocore.signers import RequestSigner
@@ -51,7 +52,7 @@ class ClientArgsCreator(object):
         config_kwargs = final_args['config_kwargs']
         s3_config = final_args['s3_config']
         partition = endpoint_config['metadata'].get('partition', None)
-        tcp_keepalive = final_args['tcp_keepalive']
+        socket_options = final_args['socket_options']
 
         signing_region = endpoint_config['signing_region']
         endpoint_region_name = endpoint_config['region_name']
@@ -79,7 +80,7 @@ class ClientArgsCreator(object):
             max_pool_connections=new_config.max_pool_connections,
             proxies=new_config.proxies,
             timeout=(new_config.connect_timeout, new_config.read_timeout),
-            tcp_keepalive=tcp_keepalive)
+            socket_options=socket_options)
 
         serializer = botocore.serialize.create_serializer(
             protocol, parameter_validation)
@@ -146,7 +147,7 @@ class ClientArgsCreator(object):
             'protocol': protocol,
             'config_kwargs': config_kwargs,
             's3_config': s3_config,
-            'tcp_keepalive': self._compute_tcp_keepalive(scoped_config)
+            'socket_options': self._compute_socket_options(scoped_config)
         }
 
     def compute_s3_config(self, scoped_config, client_config):
@@ -207,12 +208,12 @@ class ClientArgsCreator(object):
             return endpoint['signing_region'], endpoint['region_name']
         return None, None
 
-    def _compute_tcp_keepalive(self, scoped_config):
-        tcp_keepalive = False
+    def _compute_socket_options(self, scoped_config):
         if scoped_config:
-            tcp_keepalive = self._ensure_boolean(
-                scoped_config.get('tcp_keepalive', False))
-        return tcp_keepalive
+            # Enables TCP Keepalive if specified in shared config file.
+            if self._ensure_boolean(scoped_config.get('tcp_keepalive', False)):
+                return [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)]
+        return None
 
     def _ensure_boolean(self, val):
         if isinstance(val, bool):
