@@ -260,70 +260,83 @@ class InstanceMetadataFetcher(object):
             proxies=get_environ_proxies(self._url),
         )
 
-    def _get_request(self, url, timeout, num_attempts=1):
+    def retrieve_iam_role_credentials(self):
+        try:
+            role_name = self._get_iam_role()
+            if role_name:
+                credentials = self._get_credentials(role_name)
+                return {
+                    'role_name': role_name,
+                    'access_key': credentials['AccessKeyId'],
+                    'secret_key': credentials['SecretAccessKey'],
+                    'token': credentials['Token'],
+                    'expiry_time': credentials['Expiration'],
+                }
+        except _RetriesExceededError:
+            logger.debug("Max number of attempts exceeded (%s) when "
+                         "attempting to retrieve data from metadata service.",
+                         self._num_attempts)
+        return {}
+
+    def _get_iam_role(self):
+        return self._get_request(
+            url=self._url,
+            num_attempts=self._num_attempts,
+            needs_retry=self._is_non_ok_response
+        ).text
+
+    def _get_credentials(self, role_name):
+        r = self._get_request(
+            url=self._url + role_name,
+            num_attempts=self._num_attempts,
+            needs_retry=self._does_not_contain_credentials
+        )
+        return json.loads(r.text)
+
+    def _get_request(self, url, num_attempts=1, needs_retry=None):
         if self._disabled:
             logger.debug("Access to EC2 metadata has been disabled.")
             raise _RetriesExceededError()
-
         headers = {}
         if self._user_agent is not None:
             headers['User-Agent'] = self._user_agent
 
         for i in range(num_attempts):
             try:
-                AWSRequest = botocore.awsrequest.AWSRequest
-                request = AWSRequest(method='GET', url=url, headers=headers)
+                request = botocore.awsrequest.AWSRequest(
+                    method='GET', url=url, headers=headers)
                 response = self._session.send(request.prepare())
+                if needs_retry is not None and needs_retry(response):
+                    logger.debug(
+                        "Metadata service returned retryable response with "
+                        "status code of %s for url: %s, content body: %s",
+                        response.status_code, url, response.content
+                    )
+                else:
+                    return response
             except RETRYABLE_HTTP_ERRORS as e:
                 logger.debug("Caught exception while trying to retrieve "
                              "credentials: %s", e, exc_info=True)
-            else:
-                if response.status_code == 200:
-                    return response
         raise _RetriesExceededError()
 
-    def retrieve_iam_role_credentials(self):
-        data = {}
-        url = self._url
-        timeout = self._timeout
-        num_attempts = self._num_attempts
+    def _is_non_ok_response(self, response):
+        return response.status_code != 200
+
+    def _does_not_contain_credentials(self, response):
+        if (self._is_non_ok_response(response) or
+                self._is_empty(response) or
+                self._is_invalid_json(response)):
+            return True
+
+    def _is_empty(self, response):
+        return not response.content
+
+    def _is_invalid_json(self, response):
         try:
-            r = self._get_request(url, timeout, num_attempts)
-            if r.content:
-                fields = r.content.decode('utf-8').split('\n')
-                for field in fields:
-                    if field.endswith('/'):
-                        data[field[0:-1]] = self.retrieve_iam_role_credentials(
-                            url + field, timeout, num_attempts)
-                    else:
-                        val = self._get_request(
-                            url + field,
-                            timeout=timeout,
-                            num_attempts=num_attempts,
-                        ).content.decode('utf-8')
-                        if val[0] == '{':
-                            val = json.loads(val)
-                        data[field] = val
-            else:
-                logger.debug("Metadata service returned non 200 status code "
-                             "of %s for url: %s, content body: %s",
-                             r.status_code, url, r.content)
-        except _RetriesExceededError:
-            logger.debug("Max number of attempts exceeded (%s) when "
-                         "attempting to retrieve data from metadata service.",
-                         num_attempts)
-        # We sort for stable ordering. In practice, this should only consist
-        # of one role, but may need revisiting if this expands in the future.
-        final_data = {}
-        for role_name in sorted(data):
-            final_data = {
-                'role_name': role_name,
-                'access_key': data[role_name]['AccessKeyId'],
-                'secret_key': data[role_name]['SecretAccessKey'],
-                'token': data[role_name]['Token'],
-                'expiry_time': data[role_name]['Expiration'],
-            }
-        return final_data
+            json.loads(response.text)
+            return False
+        except ValueError:
+            return True
 
 
 def merge_dicts(dict1, dict2, append_lists=False):
