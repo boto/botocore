@@ -384,15 +384,10 @@ class ClientHTTPStubber(object):
         self.requests = []
         self.responses = []
 
-    def add_response(self, url=None, status=200, headers=None, body=None):
-        if url is None:
-            url = 'https://example.com'
-
+    def add_response(self, url='https://example.com', status=200, headers=None,
+                     body=b''):
         if headers is None:
             headers = {}
-
-        if body is None:
-            body = b''
 
         raw = RawResponse(body)
         response = AWSResponse(url, status, headers, raw)
@@ -411,8 +406,7 @@ class ClientHTTPStubber(object):
     def __exit__(self, exc_type, exc_value, traceback):
         self.stop()
 
-    def __call__(self, **kwargs):
-        request = kwargs.get('request')
+    def __call__(self, request, **kwargs):
         self.requests.append(request)
         if self.responses:
             response = self.responses.pop(0)
