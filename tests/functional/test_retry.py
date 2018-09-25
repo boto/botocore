@@ -32,7 +32,7 @@ class TestRetry(BaseSessionTest):
         num_responses = num_retries + 1
         with ClientHTTPStubber(client) as http_stubber:
             for _ in range(num_responses):
-                http_stubber.create_response(status=500, body=b'{}')
+                http_stubber.add_response(status=500, body=b'{}')
             with self.assertRaisesRegexp(
                     ClientError, 'reached max retries: %s' % num_retries):
                 yield

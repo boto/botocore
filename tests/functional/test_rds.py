@@ -41,7 +41,7 @@ class TestRDSPresignUrlInjection(BaseSessionTest):
                     b'<CopyDBSnapshotResult></CopyDBSnapshotResult>'
                     b'</CopyDBSnapshotResponse>'
         )
-        self.http_stubber.create_response(body=response_body)
+        self.http_stubber.add_response(body=response_body)
         with self.http_stubber:
             self.client.copy_db_snapshot(**params)
             sent_request = self.http_stubber.requests[0]
@@ -59,7 +59,7 @@ class TestRDSPresignUrlInjection(BaseSessionTest):
             b'</CreateDBInstanceReadReplicaResult>'
             b'</CreateDBInstanceReadReplicaResponse>'
         )
-        self.http_stubber.create_response(body=response_body)
+        self.http_stubber.add_response(body=response_body)
         with self.http_stubber:
             self.client.create_db_instance_read_replica(**params)
             sent_request = self.http_stubber.requests[0]

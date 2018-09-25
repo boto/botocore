@@ -42,7 +42,7 @@ class TestNeptunePresignUrlInjection(BaseSessionTest):
             b'</CreateDBClusterResult>'
             b'</CreateDBClusterResponse>'
         )
-        self.http_stubber.create_response(body=response_body)
+        self.http_stubber.add_response(body=response_body)
         with self.http_stubber:
             self.client.create_db_cluster(**params)
             sent_request = self.http_stubber.requests[0]
@@ -60,7 +60,7 @@ class TestNeptunePresignUrlInjection(BaseSessionTest):
             b'</CopyDBClusterSnapshotResult>'
             b'</CopyDBClusterSnapshotResponse>'
         )
-        self.http_stubber.create_response(body=response_body)
+        self.http_stubber.add_response(body=response_body)
         with self.http_stubber:
             self.client.copy_db_cluster_snapshot(**params)
             sent_request = self.http_stubber.requests[0]

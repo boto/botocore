@@ -109,7 +109,7 @@ class UnsignedOperationTestCase(object):
     def run(self):
         operation = getattr(self._client, self._operation_name)
 
-        self._http_stubber.create_response(body=b'{}')
+        self._http_stubber.add_response(body=b'{}')
         with self._http_stubber:
             operation(**self._parameters)
             request = self._http_stubber.requests[0]

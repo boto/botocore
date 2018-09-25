@@ -36,7 +36,7 @@ class TestLex(BaseSessionTest):
 
         with mock.patch('botocore.auth.datetime') as _datetime:
             _datetime.datetime.utcnow.return_value = timestamp
-            self.http_stubber.create_response(body=b'{}')
+            self.http_stubber.add_response(body=b'{}')
             with self.http_stubber:
                 self.client.post_content(**params)
                 request = self.http_stubber.requests[0]

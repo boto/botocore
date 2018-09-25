@@ -40,7 +40,7 @@ class BaseS3OperationTest(BaseSessionTest):
 
 class TestOnlyAsciiCharsAllowed(BaseS3OperationTest):
     def test_validates_non_ascii_chars_trigger_validation_error(self):
-        self.http_stubber.create_response()
+        self.http_stubber.add_response()
         with self.http_stubber:
             with self.assertRaises(ParamValidationError):
                 self.client.put_object(
@@ -84,7 +84,7 @@ class TestS3GetBucketLifecycle(BaseS3OperationTest):
         ).encode('utf-8')
         s3 = self.session.create_client('s3')
         with ClientHTTPStubber(s3) as http_stubber:
-            http_stubber.create_response(body=response_body)
+            http_stubber.add_response(body=response_body)
             response = s3.get_bucket_lifecycle(Bucket='mybucket')
         # Each Transition member should have at least one of the
         # transitions provided.
@@ -124,8 +124,8 @@ class TestS3PutObject(BaseS3OperationTest):
         ).encode('utf-8')
         s3 = self.session.create_client('s3')
         with ClientHTTPStubber(s3) as http_stubber:
-            http_stubber.create_response(status=500, body=non_xml_content)
-            http_stubber.create_response()
+            http_stubber.add_response(status=500, body=non_xml_content)
+            http_stubber.add_response()
             response = s3.put_object(Bucket='mybucket', Key='mykey', Body=b'foo')
             # The first response should have been retried even though the xml is
             # invalid and eventually return the 200 response.
@@ -139,7 +139,7 @@ class TestS3SigV4(BaseS3OperationTest):
         self.client = self.session.create_client(
             's3', self.region, config=Config(signature_version='s3v4'))
         self.http_stubber = ClientHTTPStubber(self.client)
-        self.http_stubber.create_response()
+        self.http_stubber.add_response()
 
     def get_sent_headers(self):
         return self.http_stubber.requests[0].headers
@@ -156,7 +156,7 @@ class TestS3SigV4(BaseS3OperationTest):
         self.client = self.session.create_client(
             's3', self.region, config=config)
         self.http_stubber = ClientHTTPStubber(self.client)
-        self.http_stubber.create_response()
+        self.http_stubber.add_response()
         with self.http_stubber:
             self.client.put_object(Bucket='foo', Key='bar', Body='baz')
         sent_headers = self.get_sent_headers()
@@ -170,7 +170,7 @@ class TestS3SigV4(BaseS3OperationTest):
         self.client = self.session.create_client(
             's3', self.region, config=config)
         self.http_stubber = ClientHTTPStubber(self.client)
-        self.http_stubber.create_response()
+        self.http_stubber.add_response()
         with self.http_stubber:
             self.client.put_object(Bucket='foo', Key='bar', Body='baz')
         sent_headers = self.get_sent_headers()
@@ -195,7 +195,7 @@ class TestCanSendIntegerHeaders(BaseSessionTest):
         s3 = self.session.create_client(
             's3', config=Config(signature_version='s3v4'))
         with ClientHTTPStubber(s3) as http_stubber:
-            http_stubber.create_response()
+            http_stubber.add_response()
             s3.upload_part(Bucket='foo', Key='bar', Body=b'foo',
                            UploadId='bar', PartNumber=1, ContentLength=3)
             headers = http_stubber.requests[0].headers
@@ -263,19 +263,9 @@ class TestRegionRedirect(BaseS3OperationTest):
             )
         }
 
-    def create_response(self, content=b'',
-                        status_code=200, headers=None):
-        response = mock.Mock()
-        if headers is None:
-            headers = {}
-        response.headers = headers
-        response.content = content
-        response.status_code = status_code
-        return response
-
     def test_region_redirect(self):
-        self.http_stubber.create_response(**self.redirect_response)
-        self.http_stubber.create_response(**self.success_response)
+        self.http_stubber.add_response(**self.redirect_response)
+        self.http_stubber.add_response(**self.success_response)
         with self.http_stubber:
             response = self.client.list_objects(Bucket='foo')
         self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 200)
@@ -290,9 +280,9 @@ class TestRegionRedirect(BaseS3OperationTest):
         self.assertEqual(self.http_stubber.requests[1].url, fixed_url)
 
     def test_region_redirect_cache(self):
-        self.http_stubber.create_response(**self.redirect_response)
-        self.http_stubber.create_response(**self.success_response)
-        self.http_stubber.create_response(**self.success_response)
+        self.http_stubber.add_response(**self.redirect_response)
+        self.http_stubber.add_response(**self.success_response)
+        self.http_stubber.add_response(**self.success_response)
 
         with self.http_stubber:
             first_response = self.client.list_objects(Bucket='foo')
@@ -319,8 +309,8 @@ class TestRegionRedirect(BaseS3OperationTest):
         # verify the default behavior.
         client = self.session.create_client('s3', 'us-west-2')
         with ClientHTTPStubber(client) as http_stubber:
-            http_stubber.create_response(**self.bad_signing_region_response)
-            http_stubber.create_response(**self.success_response)
+            http_stubber.add_response(**self.bad_signing_region_response)
+            http_stubber.add_response(**self.success_response)
             first_response = client.list_objects(Bucket='foo')
             self.assertEqual(
                 first_response['ResponseMetadata']['HTTPStatusCode'], 200)
@@ -340,10 +330,10 @@ class TestRegionRedirect(BaseS3OperationTest):
         # Verify that the default behavior in us-east-1 will redirect
         client = self.session.create_client('s3', 'us-east-1')
         with ClientHTTPStubber(client) as http_stubber:
-            http_stubber.create_response(status=400)
-            http_stubber.create_response(status=400, headers=region_headers)
-            http_stubber.create_response(headers=region_headers)
-            http_stubber.create_response()
+            http_stubber.add_response(status=400)
+            http_stubber.add_response(status=400, headers=region_headers)
+            http_stubber.add_response(headers=region_headers)
+            http_stubber.add_response()
             response = client.head_object(Bucket='foo', Key='bar')
             self.assertEqual(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
@@ -361,11 +351,11 @@ class TestRegionRedirect(BaseS3OperationTest):
         # back to the user.
         client = self.session.create_client('s3', 'us-east-1')
         with ClientHTTPStubber(client) as http_stubber:
-            http_stubber.create_response(status=400)
-            http_stubber.create_response(status=400, headers=region_headers)
-            http_stubber.create_response(headers=region_headers)
+            http_stubber.add_response(status=400)
+            http_stubber.add_response(status=400, headers=region_headers)
+            http_stubber.add_response(headers=region_headers)
             # The final request still fails with a 400.
-            http_stubber.create_response(status=400)
+            http_stubber.add_response(status=400)
             with self.assertRaises(ClientError) as e:
                 client.head_object(Bucket='foo', Key='bar')
             self.assertEqual(len(http_stubber.requests), 4)
@@ -837,7 +827,7 @@ def _verify_expected_endpoint_url(region, bucket, key, s3_config,
                                    config=config,
                                    endpoint_url=customer_provided_endpoint)
         with ClientHTTPStubber(s3) as http_stubber:
-            http_stubber.create_response()
+            http_stubber.add_response()
             s3.put_object(Bucket=bucket, Key=key, Body=b'bar')
             assert_equal(http_stubber.requests[0].url, expected_url)
 

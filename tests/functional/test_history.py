@@ -48,7 +48,7 @@ class TestRecordStatementsInjections(BaseSessionTest):
         return matching
 
     def test_does_record_api_call(self):
-        self.http_stubber.create_response(body=self.s3_response_body)
+        self.http_stubber.add_response(body=self.s3_response_body)
         with self.http_stubber:
             self.client.list_buckets()
 
@@ -64,7 +64,7 @@ class TestRecordStatementsInjections(BaseSessionTest):
         self.assertEqual(source, 'BOTOCORE')
 
     def test_does_record_http_request(self):
-        self.http_stubber.create_response(body=self.s3_response_body)
+        self.http_stubber.add_response(body=self.s3_response_body)
         with self.http_stubber:
             self.client.list_buckets()
 
@@ -95,7 +95,7 @@ class TestRecordStatementsInjections(BaseSessionTest):
         self.assertEqual(source, 'BOTOCORE')
 
     def test_does_record_http_response(self):
-        self.http_stubber.create_response(body=self.s3_response_body)
+        self.http_stubber.add_response(body=self.s3_response_body)
         with self.http_stubber:
             self.client.list_buckets()
 
@@ -115,7 +115,7 @@ class TestRecordStatementsInjections(BaseSessionTest):
         self.assertEqual(source, 'BOTOCORE')
 
     def test_does_record_parsed_response(self):
-        self.http_stubber.create_response(body=self.s3_response_body)
+        self.http_stubber.add_response(body=self.s3_response_body)
         with self.http_stubber:
             self.client.list_buckets()
 

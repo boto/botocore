@@ -37,7 +37,7 @@ class TestS3Addressing(BaseSessionTest):
             self.session.register('choose-signer', self.enable_hmacv1)
         client = self.session.create_client('s3', self.region_name)
         with ClientHTTPStubber(client) as http_stubber:
-            http_stubber.create_response()
+            http_stubber.add_response()
             getattr(client, operation)(**params)
             # Return the request that was sent over the wire.
             return http_stubber.requests[0]

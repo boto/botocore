@@ -31,7 +31,7 @@ class TestApiGateway(BaseSessionTest):
             'accepts': 'application/yaml'
         }
 
-        self.http_stubber.create_response(body=b'{}')
+        self.http_stubber.add_response(body=b'{}')
         with self.http_stubber:
             self.client.get_export(**params)
             request = self.http_stubber.requests[0]

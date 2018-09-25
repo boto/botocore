@@ -24,7 +24,7 @@ class TestMachineLearning(BaseSessionTest):
         self.http_stubber = ClientHTTPStubber(self.client)
 
     def test_predict(self):
-        self.http_stubber.create_response(body=b'{}')
+        self.http_stubber.add_response(body=b'{}')
         with self.http_stubber:
             custom_endpoint = 'https://myendpoint.amazonaws.com/'
             self.client.predict(

@@ -384,7 +384,7 @@ class ClientHTTPStubber(object):
         self.requests = []
         self.responses = []
 
-    def create_response(self, url=None, status=200, headers=None, body=None):
+    def add_response(self, url=None, status=200, headers=None, body=None):
         if url is None:
             url = 'https://example.com'
 

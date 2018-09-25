@@ -24,7 +24,7 @@ class TestCloudsearchdomain(BaseSessionTest):
         self.http_stubber = ClientHTTPStubber(self.client)
 
     def test_search(self):
-        self.http_stubber.create_response(body=b'{}')
+        self.http_stubber.add_response(body=b'{}')
         with self.http_stubber:
             self.client.search(query='foo')
             request = self.http_stubber.requests[0]
