@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.11
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``ds``: Update ds client to latest version
+
+
 1.12.10
 =======
 
