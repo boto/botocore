@@ -209,11 +209,13 @@ class ClientArgsCreator(object):
         return None, None
 
     def _compute_socket_options(self, scoped_config):
+        socket_options = [(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)]
         if scoped_config:
             # Enables TCP Keepalive if specified in shared config file.
             if self._ensure_boolean(scoped_config.get('tcp_keepalive', False)):
-                return [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)]
-        return None
+                socket_options.append(
+                    (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1))
+        return socket_options
 
     def _ensure_boolean(self, val):
         if isinstance(val, bool):

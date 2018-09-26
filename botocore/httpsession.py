@@ -163,7 +163,9 @@ class URLLib3Session(object):
             timeout = Timeout(connect=timeout[0], read=timeout[1])
         self._timeout = timeout
         self._max_pool_connections = max_pool_connections
-        self._extra_socket_options = socket_options
+        self._socket_options = socket_options
+        if socket_options is None:
+            self._socket_options = []
         self._proxy_managers = {}
         self._manager = PoolManager(**self._get_pool_manager_kwargs())
         self._manager.pool_classes_by_scheme = self._pool_classes_by_scheme
@@ -174,19 +176,8 @@ class URLLib3Session(object):
             'timeout': self._timeout,
             'maxsize': self._max_pool_connections,
             'ssl_context': self._get_ssl_context(),
+            'socket_options': self._socket_options
         }
-        if self._extra_socket_options:
-            # HTTP is being used to get the default socket options because
-            # the HTTPS version will inherit the same default socket options,
-            # and urllib3 does not allow you to specify socket options
-            # based on the scheme from the PoolManager interface.
-            # The only way they could differ is if a user explicitly
-            # updated urllib3's connection `default_socket_options` class
-            # variable for HTTPS connections but not HTTP connections.
-            socket_options = self._pool_classes_by_scheme[
-                'http'].ConnectionCls.default_socket_options
-            pool_manager_kwargs[
-                'socket_options'] = socket_options + self._extra_socket_options
         pool_manager_kwargs.update(**extra_kwargs)
         return pool_manager_kwargs
 
