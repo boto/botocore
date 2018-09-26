@@ -498,7 +498,7 @@ class AWSRequest(object):
 
 
 class AWSPreparedRequest(object):
-    """Represents a finalized prepared request ready to be sent on the wire.
+    """A data class representing a finalized request to be sent over the wire.
 
     Requests at this stage should be treated as final, and the properties of
     the request should not be modified.
@@ -524,6 +524,12 @@ class AWSPreparedRequest(object):
         return fmt % (self.stream_output, self.method, self.url, self.headers)
 
     def reset_stream(self):
+        """Resets the streaming body to it's initial position.
+
+        If the request contains a streaming body (a streamable file-like object)
+        seek to the object's initial position to ensure the entire contents of
+        the object is sent. This is a no-op for static bytes-like body types.
+        """
         # Trying to reset a stream when there is a no stream will
         # just immediately return.  It's not an error, it will produce
         # the same result as if we had actually reset the stream (we'll send
@@ -542,12 +548,16 @@ class AWSPreparedRequest(object):
 
 
 class AWSResponse(object):
-    """
-    This class is originally inspired by requests.models.Response, but
-    has been boiled down to meet the specific use cases in botocore. This
-    has effectively been reduced to a named tuple for our use case. Most of
-    the more interesting functionality from the requests version has been
-    put onto our botocore.response.StreamingBody class.
+    """A data class representing an HTTP response.
+
+    This class is originally inspired by requests.models.Response, but has been
+    boiled down to meet the specific use cases in botocore. This has
+    effectively been reduced to a named tuple.
+
+    :ivar url: The full url.
+    :ivar status_code: The status code of the HTTP response.
+    :ivar headers: The HTTP headers received.
+    :ivar body: The HTTP response body.
     """
 
     def __init__(self, url, status_code, headers, raw):
@@ -560,7 +570,7 @@ class AWSResponse(object):
 
     @property
     def content(self):
-        """Content of the response, in bytes."""
+        """Content of the response as bytes."""
 
         if self._content is None:
             # Read the contents.
@@ -573,6 +583,12 @@ class AWSResponse(object):
 
     @property
     def text(self):
+        """Content of the response as a proper text type.
+
+        Uses the encoding type provided in the reponse headers to decode the
+        response content into a proper text type. If the encoding is not
+        present in the headers, UTF-8 is used as a default.
+        """
         encoding = botocore.utils.get_encoding_from_headers(self.headers)
         if encoding:
             return self.content.decode(encoding)
