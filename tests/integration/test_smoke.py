@@ -287,15 +287,12 @@ def test_client_can_retry_request_properly():
 
 def _make_client_call_with_errors(client, operation_name, kwargs):
     operation = getattr(client, xform_name(operation_name))
-    state = mock.Mock()
-    state.error_raised = False
-    exception = ConnectionClosedError(endpoint_url='')
+    exception = ConnectionClosedError(endpoint_url='https://mock.eror')
     with ClientHTTPStubber(client) as http_stubber:
         http_stubber.responses.append(exception)
         http_stubber.responses.append(None)
         try:
             response = operation(**kwargs)
-            assert_true(state.error_raised)
         except ClientError as e:
             assert False, ('Request was not retried properly, '
                            'received error:\n%s' % pformat(e))
