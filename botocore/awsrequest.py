@@ -443,7 +443,7 @@ class AWSRequestPreparer(object):
 class AWSRequest(object):
     """Represents the elements of an HTTP request.
 
-    This class is originally inspired by requests.models.Request, but has been
+    This class was originally inspired by requests.models.Request, but has been
     boiled down to meet the specific use cases in botocore. That being said this
     class (even in requests) is effectively a named-tuple.
     """
@@ -550,8 +550,8 @@ class AWSPreparedRequest(object):
 class AWSResponse(object):
     """A data class representing an HTTP response.
 
-    This class is originally inspired by requests.models.Response, but has been
-    boiled down to meet the specific use cases in botocore. This has
+    This class was originally inspired by requests.models.Response, but has
+    been boiled down to meet the specific use cases in botocore. This has
     effectively been reduced to a named tuple.
 
     :ivar url: The full url.

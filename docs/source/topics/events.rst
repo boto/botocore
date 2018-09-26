@@ -19,39 +19,11 @@ Event Types
 -----------
 
 The list below shows all of the events emitted by botocore.  In some cases, the
-events are listed as ``event-name.<service>.<operations>``, in which
-``<service>`` and ``<operation>`` are replaced with a specific service and
-operation, for example ``event-name.s3.ListObjects``.
+events are listed as ``event-name.<service-id>.<operations>``, in which
+``<service-id>`` and ``<operation>`` are replaced with a specific service
+identifier operation, for example ``event-name.s3.ListObjects``.
 
-* ``'before-call.<service>.<operation>'``
-* ``'before-send.<service>.<operation>'``
-* ``'after-call.<service>.<operation>'``
-
-
-before-call
-~~~~~~~~~~~~~~~~~~~~~
-
-:Full Event Name:
-  ``'before-call.<service>.<operation>'``
-
-:Description:
-  This event is emitted when an operation is called and provides access to the
-  parameters that will be passed when calling the operation.
-
-:Keyword Arguments Emitted:
-
-  :type params: dict
-  :param params: A dictionary representing the keyword arguments that will be
-                 used to invoke the operation call.
-
-  :type context: dict
-  :param context: A dictionary representing the operation context. Additional
-                  information can be stored in this context to share state
-                  between events for the operation call.
-
-:Expected Return Value: A tuple of (http_response, parsed_response) where the
-                        http_response is of type :class:`.AWSResponse` and
-                        parsed_response is of type dict.
+* ``'before-send.<service-id>.<operation>'``
 
 
 before-send
@@ -75,37 +47,20 @@ before-send
 :Expected Return Value: None or an instance of :class:`.AWSResponse`
 
 
-after-call
-~~~~~~~~~~~~~~~~~~~~~
-
-:Full Event Name:
-  ``'after-call.<service>.<operation>'``
-
-:Description:
-  This event is emitted after an operation is called and provides access to the
-  final HTTP response object as well as the parsed response for the operation.
-
-:Keyword Arguments Emitted:
-
-  :type http_response: :class:`.AWSResponse`
-  :param http_response: An object representing the HTTP response.
-
-  :type parsed: dict
-  :param parsed: A dictionary representing the fully parsed result of calling
-                 the operation.
-
-  :type context: dict
-  :param context: A dictionary representing the operation context. Additional
-                  information can be stored in this context to share state
-                  between events for the operation call.
-
-:Expected Return Value: A tuple of (http_response, parsed_response) where the
-                        http_response is of type :class:`.AWSResponse` and
-                        parsed_response is of type dict.
-
-
 Event Emission
 --------------
 
 When an event is emitted, the handlers are invoked in the order that they were
 registered.
+
+
+Service ID
+----------
+To get the service id from a service client use the following::
+
+    import botocore
+    import botocore.session
+
+    session = botocore.session.Session()
+    client = session.create_client('elbv2')
+    service_event_name = client.meta.service_model.service_id.hyphenize()
