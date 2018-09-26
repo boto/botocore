@@ -328,6 +328,7 @@ class InstanceMetadataFetcher(object):
                 self._is_empty(response) or
                 self._is_invalid_json(response)):
             return True
+        return False
 
     def _is_empty(self, response):
         return not response.content
