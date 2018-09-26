@@ -368,6 +368,8 @@ class HTTPStubberException(Exception):
 
 
 class RawResponse(BytesIO):
+    # TODO: There's a few objects similar to this in various tests, let's
+    # try and consolidate to this one in a future commit.
     def stream(self, **kwargs):
         contents = self.read()
         while contents:
