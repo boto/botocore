@@ -315,8 +315,9 @@ class InstanceMetadataFetcher(object):
                 else:
                     return response
             except RETRYABLE_HTTP_ERRORS as e:
-                logger.debug("Caught exception while trying to retrieve "
-                             "credentials: %s", e, exc_info=True)
+                logger.debug(
+                    "Caught retryable HTTP exception while making metadata "
+                    "service request to %s: %s", url, e, exc_info=True)
         raise _RetriesExceededError()
 
     def _is_non_ok_response(self, response):

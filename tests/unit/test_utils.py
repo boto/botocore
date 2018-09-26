@@ -1795,8 +1795,14 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             creds = self._creds
         self.add_imds_response(body=json.dumps(creds).encode('utf-8'))
 
+    def add_imds_connection_error(self, exception):
+        self._imds_responses.append(exception)
+
     def get_imds_response(self, request):
-        return self._imds_responses.pop(0)
+        response = self._imds_responses.pop(0)
+        if isinstance(response, Exception):
+            raise response
+        return response
 
     def test_disabled_by_environment(self):
         env = {'AWS_EC2_METADATA_DISABLED': 'true'}
@@ -1841,6 +1847,73 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
 
         headers = self._send.call_args[0][0].headers
         self.assertEqual(headers['User-Agent'], user_agent)
+
+    def test_non_200_response_for_role_name_is_retried(self):
+        # Response for role name that have a non 200 status code should
+        # be retried.
+        self.add_imds_response(
+            status_code=429, body=b'{"message": "Slow down"}')
+        self.add_get_role_name_imds_response()
+        self.add_get_credentials_imds_response()
+        result = InstanceMetadataFetcher(
+            num_attempts=2).retrieve_iam_role_credentials()
+        expected_result = {
+            'access_key': self._creds['AccessKeyId'],
+            'secret_key': self._creds['SecretAccessKey'],
+            'token': self._creds['Token'],
+            'expiry_time': self._creds['Expiration'],
+            'role_name': self._role_name
+        }
+        self.assertEqual(result, expected_result)
+
+    def test_http_connection_error_for_role_name_is_retried(self):
+        # Connection related errors should be retried
+        self.add_imds_connection_error(ConnectionClosedError(endpoint_url=''))
+        self.add_get_role_name_imds_response()
+        self.add_get_credentials_imds_response()
+        result = InstanceMetadataFetcher(
+            num_attempts=2).retrieve_iam_role_credentials()
+        expected_result = {
+            'access_key': self._creds['AccessKeyId'],
+            'secret_key': self._creds['SecretAccessKey'],
+            'token': self._creds['Token'],
+            'expiry_time': self._creds['Expiration'],
+            'role_name': self._role_name
+        }
+        self.assertEqual(result, expected_result)
+
+    def test_non_200_response_is_retried(self):
+        self.add_get_role_name_imds_response()
+        # Response for creds that have a non 200 status code should be retried.
+        self.add_imds_response(
+            status_code=429, body=b'{"message": "Slow down"}')
+        self.add_get_credentials_imds_response()
+        result = InstanceMetadataFetcher(
+            num_attempts=2).retrieve_iam_role_credentials()
+        expected_result = {
+            'access_key': self._creds['AccessKeyId'],
+            'secret_key': self._creds['SecretAccessKey'],
+            'token': self._creds['Token'],
+            'expiry_time': self._creds['Expiration'],
+            'role_name': self._role_name
+        }
+        self.assertEqual(result, expected_result)
+
+    def test_http_connection_errors_is_retried(self):
+        self.add_get_role_name_imds_response()
+        # Connection related errors should be retried
+        self.add_imds_connection_error(ConnectionClosedError(endpoint_url=''))
+        self.add_get_credentials_imds_response()
+        result = InstanceMetadataFetcher(
+            num_attempts=2).retrieve_iam_role_credentials()
+        expected_result = {
+            'access_key': self._creds['AccessKeyId'],
+            'secret_key': self._creds['SecretAccessKey'],
+            'token': self._creds['Token'],
+            'expiry_time': self._creds['Expiration'],
+            'role_name': self._role_name
+        }
+        self.assertEqual(result, expected_result)
 
     def test_empty_response_is_retried(self):
         self.add_get_role_name_imds_response()
