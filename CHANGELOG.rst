@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.12
+=======
+
+* api-change:``sqs``: Update sqs client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
 1.12.11
 =======
 
