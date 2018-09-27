@@ -1882,9 +1882,27 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         }
         self.assertEqual(result, expected_result)
 
+    def test_empty_response_for_role_name_is_retried(self):
+        # Response for role name that have a non 200 status code should
+        # be retried.
+        self.add_imds_response(body=b'')
+        self.add_get_role_name_imds_response()
+        self.add_get_credentials_imds_response()
+        result = InstanceMetadataFetcher(
+            num_attempts=2).retrieve_iam_role_credentials()
+        expected_result = {
+            'access_key': self._creds['AccessKeyId'],
+            'secret_key': self._creds['SecretAccessKey'],
+            'token': self._creds['Token'],
+            'expiry_time': self._creds['Expiration'],
+            'role_name': self._role_name
+        }
+        self.assertEqual(result, expected_result)
+
     def test_non_200_response_is_retried(self):
         self.add_get_role_name_imds_response()
-        # Response for creds that have a non 200 status code should be retried.
+        # Response for creds that has a 200 status code but has an empty
+        # body should be retried.
         self.add_imds_response(
             status_code=429, body=b'{"message": "Slow down"}')
         self.add_get_credentials_imds_response()
@@ -1960,12 +1978,4 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_imds_response(status_code=400, body=b'')
         result = InstanceMetadataFetcher(
             num_attempts=1).retrieve_iam_role_credentials()
-        self.assertEqual(result, {})
-
-    def test_no_role_name(self):
-        # Have yet to confirm if this is possible. Added this test to
-        # keep parity with what the original implementation would have
-        # done prior to refactoring if an empty name was returned.
-        self.add_imds_response(body=b'')
-        result = InstanceMetadataFetcher().retrieve_iam_role_credentials()
         self.assertEqual(result, {})

@@ -263,15 +263,14 @@ class InstanceMetadataFetcher(object):
     def retrieve_iam_role_credentials(self):
         try:
             role_name = self._get_iam_role()
-            if role_name:
-                credentials = self._get_credentials(role_name)
-                return {
-                    'role_name': role_name,
-                    'access_key': credentials['AccessKeyId'],
-                    'secret_key': credentials['SecretAccessKey'],
-                    'token': credentials['Token'],
-                    'expiry_time': credentials['Expiration'],
-                }
+            credentials = self._get_credentials(role_name)
+            return {
+                'role_name': role_name,
+                'access_key': credentials['AccessKeyId'],
+                'secret_key': credentials['SecretAccessKey'],
+                'token': credentials['Token'],
+                'expiry_time': credentials['Expiration'],
+            }
         except _RetriesExceededError:
             logger.debug("Max number of attempts exceeded (%s) when "
                          "attempting to retrieve data from metadata service.",
@@ -282,7 +281,7 @@ class InstanceMetadataFetcher(object):
         return self._get_request(
             url=self._url,
             num_attempts=self._num_attempts,
-            needs_retry=self._is_non_ok_response
+            needs_retry=self._does_not_contain_role_name
         ).text
 
     def _get_credentials(self, role_name):
@@ -320,15 +319,20 @@ class InstanceMetadataFetcher(object):
                     "service request to %s: %s", url, e, exc_info=True)
         raise _RetriesExceededError()
 
-    def _is_non_ok_response(self, response):
-        return response.status_code != 200
+    def _does_not_contain_role_name(self, response):
+        return (
+            self._is_non_ok_response(response) or
+            self._is_empty(response)
+        )
 
     def _does_not_contain_credentials(self, response):
-        if (self._is_non_ok_response(response) or
+        return (self._is_non_ok_response(response) or
                 self._is_empty(response) or
-                self._is_invalid_json(response)):
-            return True
-        return False
+                self._is_invalid_json(response)
+        )
+
+    def _is_non_ok_response(self, response):
+        return response.status_code != 200
 
     def _is_empty(self, response):
         return not response.content
