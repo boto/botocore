@@ -16,6 +16,7 @@ from pprint import pformat
 import warnings
 from nose.tools import assert_equal, assert_true
 
+from tests import ClientHTTPStubber
 from botocore import xform_name
 import botocore.session
 from botocore.client import ClientError
@@ -286,15 +287,10 @@ def test_client_can_retry_request_properly():
 
 def _make_client_call_with_errors(client, operation_name, kwargs):
     operation = getattr(client, xform_name(operation_name))
-    original_send = Endpoint._send
-    def mock_endpoint_send(self, *args, **kwargs):
-        if not getattr(self, '_integ_test_error_raised', False):
-            self._integ_test_error_raised = True
-            raise ConnectionClosedError(endpoint_url='')
-        else:
-            return original_send(self, *args, **kwargs)
-    # TODO: fix with stubber / before send event
-    with mock.patch('botocore.endpoint.Endpoint._send', mock_endpoint_send):
+    exception = ConnectionClosedError(endpoint_url='https://mock.eror')
+    with ClientHTTPStubber(client) as http_stubber:
+        http_stubber.responses.append(exception)
+        http_stubber.responses.append(None)
         try:
             response = operation(**kwargs)
         except ClientError as e:

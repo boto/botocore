@@ -1,0 +1,5 @@
+{
+  "type": "enhancement",
+  "category": "Event",
+  "description": "Add the `before-send` event which allows finalized requests to be inspected before being sent across the wire and allows for custom responses to be returned."
+}

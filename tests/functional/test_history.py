@@ -2,7 +2,7 @@ from contextlib import contextmanager
 
 import mock
 
-from tests import BaseSessionTest
+from tests import BaseSessionTest, ClientHTTPStubber
 from botocore.history import BaseHistoryHandler
 from botocore.history import get_global_history_recorder
 
@@ -20,6 +20,7 @@ class TestRecordStatementsInjections(BaseSessionTest):
     def setUp(self):
         super(TestRecordStatementsInjections, self).setUp()
         self.client = self.session.create_client('s3', 'us-west-2')
+        self.http_stubber = ClientHTTPStubber(self.client)
         self.s3_response_body = (
             '<ListAllMyBucketsResult '
             '    xmlns="http://s3.amazonaws.com/doc/2006-03-01/">'
@@ -46,17 +47,9 @@ class TestRecordStatementsInjections(BaseSessionTest):
                     if call[0] == event_type]
         return matching
 
-    @contextmanager
-    def patch_http_layer(self, response, status_code=200):
-        # TODO: fix with before send event
-        with mock.patch('botocore.endpoint.Endpoint._send') as send:
-            send.return_value = mock.Mock(status_code=status_code,
-                                          headers={},
-                                          content=response)
-            yield send
-
     def test_does_record_api_call(self):
-        with self.patch_http_layer(self.s3_response_body):
+        self.http_stubber.add_response(body=self.s3_response_body)
+        with self.http_stubber:
             self.client.list_buckets()
 
         api_call_events = self._get_all_events_of_type('API_CALL')
@@ -71,7 +64,8 @@ class TestRecordStatementsInjections(BaseSessionTest):
         self.assertEqual(source, 'BOTOCORE')
 
     def test_does_record_http_request(self):
-        with self.patch_http_layer(self.s3_response_body):
+        self.http_stubber.add_response(body=self.s3_response_body)
+        with self.http_stubber:
             self.client.list_buckets()
 
         http_request_events = self._get_all_events_of_type('HTTP_REQUEST')
@@ -101,7 +95,8 @@ class TestRecordStatementsInjections(BaseSessionTest):
         self.assertEqual(source, 'BOTOCORE')
 
     def test_does_record_http_response(self):
-        with self.patch_http_layer(self.s3_response_body):
+        self.http_stubber.add_response(body=self.s3_response_body)
+        with self.http_stubber:
             self.client.list_buckets()
 
         http_response_events = self._get_all_events_of_type('HTTP_RESPONSE')
@@ -120,7 +115,8 @@ class TestRecordStatementsInjections(BaseSessionTest):
         self.assertEqual(source, 'BOTOCORE')
 
     def test_does_record_parsed_response(self):
-        with self.patch_http_layer(self.s3_response_body):
+        self.http_stubber.add_response(body=self.s3_response_body)
+        with self.http_stubber:
             self.client.list_buckets()
 
         parsed_response_events = self._get_all_events_of_type(
