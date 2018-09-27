@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.13
+=======
+
+* api-change:``mq``: Update mq client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* enhancement:Event: Add the `before-send` event which allows finalized requests to be inspected before being sent across the wire and allows for custom responses to be returned.
+* api-change:``codecommit``: Update codecommit client to latest version
+
+
 1.12.12
 =======
 

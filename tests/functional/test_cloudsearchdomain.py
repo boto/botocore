@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 import mock
 
-from tests import BaseSessionTest
+from tests import BaseSessionTest, ClientHTTPStubber
 
 
 class TestCloudsearchdomain(BaseSessionTest):
@@ -21,16 +21,14 @@ class TestCloudsearchdomain(BaseSessionTest):
         self.region = 'us-west-2'
         self.client = self.session.create_client(
             'cloudsearchdomain', self.region)
+        self.http_stubber = ClientHTTPStubber(self.client)
 
     def test_search(self):
-        # TODO: fix with stubber / before send event
-        with mock.patch('botocore.endpoint.Endpoint._send') as _send:
-            _send.return_value = mock.Mock(
-                status_code=200, headers={}, content=b'{}')
+        self.http_stubber.add_response(body=b'{}')
+        with self.http_stubber:
             self.client.search(query='foo')
-            sent_request = _send.call_args[0][0]
-            self.assertEqual(sent_request.method, 'POST')
-            self.assertEqual(
-                sent_request.headers.get('Content-Type'),
-                b'application/x-www-form-urlencoded')
-            self.assertIn('q=foo', sent_request.body)
+            request = self.http_stubber.requests[0]
+            self.assertIn('q=foo', request.body)
+            self.assertEqual(request.method, 'POST')
+            content_type = b'application/x-www-form-urlencoded'
+            self.assertEqual(request.headers.get('Content-Type'), content_type)

@@ -14,7 +14,7 @@ import mock
 from contextlib import contextmanager
 
 import botocore.session
-from tests import BaseSessionTest
+from tests import BaseSessionTest, ClientHTTPStubber
 from botocore.stub import Stubber
 from tests import unittest
 
@@ -24,15 +24,7 @@ class TestNeptunePresignUrlInjection(BaseSessionTest):
     def setUp(self):
         super(TestNeptunePresignUrlInjection, self).setUp()
         self.client = self.session.create_client('neptune', 'us-west-2')
-
-    @contextmanager
-    def patch_http_layer(self, response, status_code=200):
-        # TODO: fix with stubber / before send event
-        with mock.patch('botocore.endpoint.Endpoint._send') as send:
-            send.return_value = mock.Mock(status_code=status_code,
-                                          headers={},
-                                          content=response)
-            yield send
+        self.http_stubber = ClientHTTPStubber(self.client)
 
     def assert_presigned_url_injected_in_request(self, body):
         self.assertIn('PreSignedUrl', body)
@@ -50,9 +42,10 @@ class TestNeptunePresignUrlInjection(BaseSessionTest):
             b'</CreateDBClusterResult>'
             b'</CreateDBClusterResponse>'
         )
-        with self.patch_http_layer(response_body) as send:
+        self.http_stubber.add_response(body=response_body)
+        with self.http_stubber:
             self.client.create_db_cluster(**params)
-            sent_request = send.call_args[0][0]
+            sent_request = self.http_stubber.requests[0]
             self.assert_presigned_url_injected_in_request(sent_request.body)
 
     def test_copy_db_cluster_snapshot(self):
@@ -67,7 +60,8 @@ class TestNeptunePresignUrlInjection(BaseSessionTest):
             b'</CopyDBClusterSnapshotResult>'
             b'</CopyDBClusterSnapshotResponse>'
         )
-        with self.patch_http_layer(response_body) as send:
+        self.http_stubber.add_response(body=response_body)
+        with self.http_stubber:
             self.client.copy_db_cluster_snapshot(**params)
-            sent_request = send.call_args[0][0]
+            sent_request = self.http_stubber.requests[0]
             self.assert_presigned_url_injected_in_request(sent_request.body)

@@ -10,7 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import BaseSessionTest, mock
+import contextlib
+from tests import BaseSessionTest, mock, ClientHTTPStubber
 
 from botocore.exceptions import ClientError
 from botocore.config import Config
@@ -26,37 +27,30 @@ class TestRetry(BaseSessionTest):
     def tearDown(self):
         self.sleep_patch.stop()
 
-    def add_n_retryable_responses(self, mock_send, num_responses):
-        responses = []
-        for _ in range(num_responses):
-            http_response = mock.Mock()
-            http_response.status_code = 500
-            http_response.headers = {}
-            http_response.content = b'{}'
-            responses.append(http_response)
-        mock_send.side_effect = responses
-
-    def assert_will_retry_n_times(self, method, num_retries):
+    @contextlib.contextmanager
+    def assert_will_retry_n_times(self, client, num_retries):
         num_responses = num_retries + 1
-        # TODO: fix with stubber / before send event... this one might be hard
-        with mock.patch('botocore.endpoint.Endpoint._send') as mock_send:
-            self.add_n_retryable_responses(mock_send, num_responses)
+        with ClientHTTPStubber(client) as http_stubber:
+            for _ in range(num_responses):
+                http_stubber.add_response(status=500, body=b'{}')
             with self.assertRaisesRegexp(
                     ClientError, 'reached max retries: %s' % num_retries):
-                method()
-            self.assertEqual(mock_send.call_count, num_responses)
+                yield
+            self.assertEqual(len(http_stubber.requests), num_responses)
 
     def test_can_override_max_attempts(self):
         client = self.session.create_client(
             'dynamodb', self.region, config=Config(
                 retries={'max_attempts': 1}))
-        self.assert_will_retry_n_times(client.list_tables, 1)
+        with self.assert_will_retry_n_times(client, 1):
+            client.list_tables()
 
     def test_do_not_attempt_retries(self):
         client = self.session.create_client(
             'dynamodb', self.region, config=Config(
                 retries={'max_attempts': 0}))
-        self.assert_will_retry_n_times(client.list_tables, 0)
+        with self.assert_will_retry_n_times(client, 0):
+            client.list_tables()
 
     def test_setting_max_attempts_does_not_set_for_other_clients(self):
         # Make one client with max attempts configured.
@@ -68,7 +62,8 @@ class TestRetry(BaseSessionTest):
         client = self.session.create_client('codecommit', self.region)
         # It should use the default max retries, which should be four retries
         # for this service.
-        self.assert_will_retry_n_times(client.list_repositories, 4)
+        with self.assert_will_retry_n_times(client, 4):
+            client.list_repositories()
 
     def test_service_specific_defaults_do_not_mutate_general_defaults(self):
         # This tests for a bug where if you created a client for a service
@@ -80,19 +75,22 @@ class TestRetry(BaseSessionTest):
         # Make a dynamodb client. It's a special case client that is
         # configured to a make a maximum of 10 requests (9 retries).
         client = self.session.create_client('dynamodb', self.region)
-        self.assert_will_retry_n_times(client.list_tables, 9)
+        with self.assert_will_retry_n_times(client, 9):
+            client.list_tables()
 
         # A codecommit client is not a special case for retries. It will at
         # most make 5 requests (4 retries) for its default.
         client = self.session.create_client('codecommit', self.region)
-        self.assert_will_retry_n_times(client.list_repositories, 4)
+        with self.assert_will_retry_n_times(client, 4):
+            client.list_repositories()
 
     def test_set_max_attempts_on_session(self):
         self.session.set_default_client_config(
             Config(retries={'max_attempts': 1}))
         # Max attempts should be inherited from the session.
         client = self.session.create_client('codecommit', self.region)
-        self.assert_will_retry_n_times(client.list_repositories, 1)
+        with self.assert_will_retry_n_times(client, 1):
+            client.list_repositories()
 
     def test_can_clobber_max_attempts_on_session(self):
         self.session.set_default_client_config(
@@ -101,4 +99,5 @@ class TestRetry(BaseSessionTest):
         client = self.session.create_client(
             'codecommit', self.region, config=Config(
                 retries={'max_attempts': 0}))
-        self.assert_will_retry_n_times(client.list_repositories, 0)
+        with self.assert_will_retry_n_times(client, 0):
+            client.list_repositories()

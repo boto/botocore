@@ -104,7 +104,6 @@ class TestAWSRequest(unittest.TestCase):
         self.filename = os.path.join(self.tempdir, 'foo')
         self.request = AWSRequest(method='GET', url='http://example.com')
         self.prepared_request = self.request.prepare()
-        self.prepared_request.prepare_headers(self.request.headers)
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
@@ -155,14 +154,41 @@ class TestAWSRequest(unittest.TestCase):
 
     def test_prepare_body_content_adds_content_length(self):
         content = b'foobarbaz'
+        expected_len = str(len(content))
         with open(self.filename, 'wb') as f:
             f.write(content)
         with open(self.filename, 'rb') as f:
             data = Seekable(f)
-            self.prepared_request.prepare_body(data)
-        self.assertEqual(
-            self.prepared_request.headers['Content-Length'],
-            str(len(content)))
+            self.request.data = data
+            self.request.method = 'POST'
+            prepared_request = self.request.prepare()
+            calculated_len = prepared_request.headers['Content-Length']
+            self.assertEqual(calculated_len, expected_len)
+
+    def test_prepare_body_doesnt_override_content_length(self):
+        self.request.method = 'PUT'
+        self.request.headers['Content-Length'] = '20'
+        self.request.data = b'asdf'
+        prepared_request = self.request.prepare()
+        self.assertEqual(prepared_request.headers['Content-Length'], '20')
+
+    def test_prepare_body_doesnt_set_content_length_head(self):
+        self.request.method = 'HEAD'
+        self.request.data = b'thisshouldntbehere'
+        prepared_request = self.request.prepare()
+        self.assertEqual(prepared_request.headers.get('Content-Length'), None)
+
+    def test_prepare_body_doesnt_set_content_length_get(self):
+        self.request.method = 'GET'
+        self.request.data = b'thisshouldntbehere'
+        prepared_request = self.request.prepare()
+        self.assertEqual(prepared_request.headers.get('Content-Length'), None)
+
+    def test_prepare_body_doesnt_set_content_length_options(self):
+        self.request.method = 'OPTIONS'
+        self.request.data = b'thisshouldntbehere'
+        prepared_request = self.request.prepare()
+        self.assertEqual(prepared_request.headers.get('Content-Length'), None)
 
     def test_can_reset_stream_handles_binary(self):
         contents = b'notastream'

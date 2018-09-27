@@ -15,7 +15,7 @@
 
 import os
 
-from tests import BaseSessionTest
+from tests import BaseSessionTest, ClientHTTPStubber
 from mock import patch, Mock
 
 from botocore.compat import OrderedDict
@@ -29,24 +29,18 @@ class TestS3Addressing(BaseSessionTest):
         self.region_name = 'us-east-1'
         self.signature_version = 's3'
 
-        self.mock_response = Mock()
-        self.mock_response.content = ''
-        self.mock_response.headers = {}
-        self.mock_response.status_code = 200
         self.session.unregister('before-parameter-build.s3.ListObjects',
                                 set_list_objects_encoding_type_url)
 
-    def get_prepared_request(self, operation, params,
-                             force_hmacv1=False):
+    def get_prepared_request(self, operation, params, force_hmacv1=False):
         if force_hmacv1:
             self.session.register('choose-signer', self.enable_hmacv1)
-        # TODO: fix with stubber / before send event
-        with patch('botocore.endpoint.Endpoint._send') as mock_send:
-            mock_send.return_value = self.mock_response
-            client = self.session.create_client('s3', self.region_name)
+        client = self.session.create_client('s3', self.region_name)
+        with ClientHTTPStubber(client) as http_stubber:
+            http_stubber.add_response()
             getattr(client, operation)(**params)
             # Return the request that was sent over the wire.
-            return mock_send.call_args[0][0]
+            return http_stubber.requests[0]
 
     def enable_hmacv1(self, **kwargs):
         return 's3'
