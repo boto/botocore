@@ -11,10 +11,10 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from tests import unittest
+from tests import RawResponse
 from dateutil.tz import tzutc, tzoffset
 import datetime
 import copy
-from io import BytesIO
 import mock
 
 import botocore
@@ -1750,14 +1750,6 @@ class TestUnsigned(unittest.TestCase):
         self.assertIs(botocore.UNSIGNED, copy.deepcopy(botocore.UNSIGNED))
 
 
-class RawResponse(BytesIO):
-    def stream(self, **kwargs):
-        contents = self.read()
-        while contents:
-            yield contents
-            contents = self.read()
-
-
 class TestInstanceMetadataFetcher(unittest.TestCase):
     def setUp(self):
         urllib3_session_send = 'botocore.httpsession.URLLib3Session.send'
@@ -1978,4 +1970,12 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_imds_response(status_code=400, body=b'')
         result = InstanceMetadataFetcher(
             num_attempts=1).retrieve_iam_role_credentials()
+        self.assertEqual(result, {})
+
+    def test_missing_fields_in_credentials_response(self):
+        self.add_get_role_name_imds_response()
+        # Response for creds that has a 200 status code and a JSON body
+        # representing an error. We do not necessarily want to retry this.
+        self.add_imds_response(body=b'{"message": "error"')
+        result = InstanceMetadataFetcher().retrieve_iam_role_credentials()
         self.assertEqual(result, {})

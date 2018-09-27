@@ -244,6 +244,11 @@ def set_value_from_jmespath(source, expression, value, is_first=True):
 
 
 class InstanceMetadataFetcher(object):
+
+    _REQUIRED_CREDENTIAL_FIELDS = [
+        'AccessKeyId', 'SecretAccessKey', 'Token', 'Expiration'
+    ]
+
     def __init__(self, timeout=DEFAULT_METADATA_SERVICE_TIMEOUT,
                  num_attempts=1, url=METADATA_SECURITY_CREDENTIALS_URL,
                  env=None, user_agent=None):
@@ -264,13 +269,25 @@ class InstanceMetadataFetcher(object):
         try:
             role_name = self._get_iam_role()
             credentials = self._get_credentials(role_name)
-            return {
-                'role_name': role_name,
-                'access_key': credentials['AccessKeyId'],
-                'secret_key': credentials['SecretAccessKey'],
-                'token': credentials['Token'],
-                'expiry_time': credentials['Expiration'],
-            }
+            if self._contains_all_credential_fields(credentials):
+                return {
+                    'role_name': role_name,
+                    'access_key': credentials['AccessKeyId'],
+                    'secret_key': credentials['SecretAccessKey'],
+                    'token': credentials['Token'],
+                    'expiry_time': credentials['Expiration'],
+                }
+            else:
+                # IMDS can return a 200 response that has a JSON formatted
+                # error message (i.e. if ec2 is not trusted entity for the
+                # attached role). We do not necessarily want to retry for
+                # these and we also do not necessarily want to raise a key
+                # error. So at least log the problematic response and return
+                # an empty dictionary to signal that it was not able to
+                # retrieve credentials.
+                logger.debug('Response received %s is missing '
+                             'credentials.', credentials)
+                return {}
         except _RetriesExceededError:
             logger.debug("Max number of attempts exceeded (%s) when "
                          "attempting to retrieve data from metadata service.",
@@ -326,10 +343,17 @@ class InstanceMetadataFetcher(object):
         )
 
     def _does_not_contain_credentials(self, response):
-        return (self._is_non_ok_response(response) or
-                self._is_empty(response) or
-                self._is_invalid_json(response)
+        return (
+            self._is_non_ok_response(response) or
+            self._is_empty(response) or
+            self._is_invalid_json(response)
         )
+
+    def _contains_all_credential_fields(self, credentials):
+        for field in self._REQUIRED_CREDENTIAL_FIELDS:
+            if field not in credentials:
+                return False
+        return True
 
     def _is_non_ok_response(self, response):
         return response.status_code != 200
