@@ -273,9 +273,9 @@ class ResponseParser(object):
         if response['status_code'] >= 500:
             if 'body' not in response or response['body'] is None:
                 return True
-            else:
-                body = response['body'].strip()
-                return body.startswith(b'<html>') or not body
+
+            body = response['body'].strip()
+            return body.startswith(b'<html>') or not body
 
     def _do_generic_error_parse(self, response):
         # There's not really much we can do when we get a generic
