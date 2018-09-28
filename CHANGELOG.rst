@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.14
+=======
+
+* api-change:``codestar``: Update codestar client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.12.13
 =======
 
