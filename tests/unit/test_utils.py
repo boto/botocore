@@ -1976,6 +1976,6 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_get_role_name_imds_response()
         # Response for creds that has a 200 status code and a JSON body
         # representing an error. We do not necessarily want to retry this.
-        self.add_imds_response(body=b'{"message": "error"')
+        self.add_imds_response(body=b'{"message": "error"}')
         result = InstanceMetadataFetcher().retrieve_iam_role_credentials()
         self.assertEqual(result, {})
