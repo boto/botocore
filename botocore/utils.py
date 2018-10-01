@@ -284,9 +284,11 @@ class InstanceMetadataFetcher(object):
                 # these and we also do not necessarily want to raise a key
                 # error. So at least log the problematic response and return
                 # an empty dictionary to signal that it was not able to
-                # retrieve credentials.
-                logger.debug('Response received %s is missing '
-                             'credentials.', credentials)
+                # retrieve credentials. These error will contain both a
+                # Code and Message key.
+                if 'Code' in credentials and 'Message' in credentials:
+                    logger.debug('Error response received when retrieving'
+                                 'credentials: %s.', credentials)
                 return {}
         except _RetriesExceededError:
             logger.debug("Max number of attempts exceeded (%s) when "
@@ -297,19 +299,17 @@ class InstanceMetadataFetcher(object):
     def _get_iam_role(self):
         return self._get_request(
             url=self._url,
-            num_attempts=self._num_attempts,
-            needs_retry=self._does_not_contain_role_name
+            needs_retry=self._needs_retry_for_role_name
         ).text
 
     def _get_credentials(self, role_name):
         r = self._get_request(
             url=self._url + role_name,
-            num_attempts=self._num_attempts,
-            needs_retry=self._does_not_contain_credentials
+            needs_retry=self._needs_retry_for_credentials
         )
         return json.loads(r.text)
 
-    def _get_request(self, url, num_attempts=1, needs_retry=None):
+    def _get_request(self, url, needs_retry):
         if self._disabled:
             logger.debug("Access to EC2 metadata has been disabled.")
             raise _RetriesExceededError()
@@ -317,18 +317,12 @@ class InstanceMetadataFetcher(object):
         if self._user_agent is not None:
             headers['User-Agent'] = self._user_agent
 
-        for i in range(num_attempts):
+        for i in range(self._num_attempts):
             try:
                 request = botocore.awsrequest.AWSRequest(
                     method='GET', url=url, headers=headers)
                 response = self._session.send(request.prepare())
-                if needs_retry is not None and needs_retry(response):
-                    logger.debug(
-                        "Metadata service returned retryable response with "
-                        "status code of %s for url: %s, content body: %s",
-                        response.status_code, url, response.content
-                    )
-                else:
+                if not needs_retry(response):
                     return response
             except RETRYABLE_HTTP_ERRORS as e:
                 logger.debug(
@@ -336,13 +330,13 @@ class InstanceMetadataFetcher(object):
                     "service request to %s: %s", url, e, exc_info=True)
         raise _RetriesExceededError()
 
-    def _does_not_contain_role_name(self, response):
+    def _needs_retry_for_role_name(self, response):
         return (
             self._is_non_ok_response(response) or
             self._is_empty(response)
         )
 
-    def _does_not_contain_credentials(self, response):
+    def _needs_retry_for_credentials(self, response):
         return (
             self._is_non_ok_response(response) or
             self._is_empty(response) or
@@ -352,21 +346,44 @@ class InstanceMetadataFetcher(object):
     def _contains_all_credential_fields(self, credentials):
         for field in self._REQUIRED_CREDENTIAL_FIELDS:
             if field not in credentials:
+                logger.debug(
+                    'Retrieved credentials is missing required field: %s',
+                    field)
                 return False
         return True
 
     def _is_non_ok_response(self, response):
-        return response.status_code != 200
+        if response.status_code != 200:
+            self._log_imds_response(response, 'non-200', log_body=True)
+            return True
+        return False
 
     def _is_empty(self, response):
-        return not response.content
+        if not response.content:
+            self._log_imds_response(response, 'no body', log_body=True)
+            return True
+        return False
 
     def _is_invalid_json(self, response):
         try:
             json.loads(response.text)
             return False
         except ValueError:
+            self._log_imds_response(response, 'invalid json')
             return True
+
+    def _log_imds_response(self, response, reason_to_log, log_body=False):
+        statement = (
+            "Metadata service returned " + reason_to_log + " response "
+            "with status code of %s for url: %s"
+        )
+        logger_args = [
+            response.status_code, response.url
+        ]
+        if log_body:
+            statement += ", content body: %s"
+            logger_args.append(response.content)
+        logger.debug(statement, *logger_args)
 
 
 def merge_dicts(dict1, dict2, append_lists=False):
