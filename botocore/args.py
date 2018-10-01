@@ -209,6 +209,8 @@ class ClientArgsCreator(object):
         return None, None
 
     def _compute_socket_options(self, scoped_config):
+        # This disables Nagle's algorithm and is the default socket options
+        # in urllib3.
         socket_options = [(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)]
         if scoped_config:
             # Enables TCP Keepalive if specified in shared config file.
