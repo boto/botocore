@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.16
+=======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+
+
 1.12.15
 =======
 
