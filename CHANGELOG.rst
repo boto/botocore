@@ -2,6 +2,74 @@
 CHANGELOG
 =========
 
+1.12.16
+=======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+
+
+1.12.15
+=======
+
+* api-change:``rekognition``: Update rekognition client to latest version
+* api-change:``guardduty``: Update guardduty client to latest version
+
+
+1.12.14
+=======
+
+* api-change:``codestar``: Update codestar client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.12.13
+=======
+
+* api-change:``mq``: Update mq client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* enhancement:Event: Add the `before-send` event which allows finalized requests to be inspected before being sent across the wire and allows for custom responses to be returned.
+* api-change:``codecommit``: Update codecommit client to latest version
+
+
+1.12.12
+=======
+
+* api-change:``sqs``: Update sqs client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
+1.12.11
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+* api-change:``ds``: Update ds client to latest version
+
+
+1.12.10
+=======
+
+* api-change:``connect``: Update connect client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
+1.12.9
+======
+
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
+1.12.8
+======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``ds``: Update ds client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.12.7
 ======
 

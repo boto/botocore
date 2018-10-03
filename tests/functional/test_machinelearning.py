@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 import mock
 
-from tests import BaseSessionTest
+from tests import BaseSessionTest, ClientHTTPStubber
 
 
 class TestMachineLearning(BaseSessionTest):
@@ -21,21 +21,16 @@ class TestMachineLearning(BaseSessionTest):
         self.region = 'us-west-2'
         self.client = self.session.create_client(
             'machinelearning', self.region)
+        self.http_stubber = ClientHTTPStubber(self.client)
 
     def test_predict(self):
-        # TODO: fix with stubber / before send event
-        with mock.patch('botocore.endpoint.Endpoint._send') as \
-                http_session_send_patch:
-            http_response = mock.Mock()
-            http_response.status_code = 200
-            http_response.content = b'{}'
-            http_response.headers = {}
-            http_session_send_patch.return_value = http_response
+        self.http_stubber.add_response(body=b'{}')
+        with self.http_stubber:
             custom_endpoint = 'https://myendpoint.amazonaws.com/'
             self.client.predict(
                 MLModelId='ml-foo',
                 Record={'Foo': 'Bar'},
                 PredictEndpoint=custom_endpoint
             )
-            sent_request = http_session_send_patch.call_args[0][0]
+            sent_request = self.http_stubber.requests[0]
             self.assertEqual(sent_request.url, custom_endpoint)

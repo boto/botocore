@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``codestar``", 
+    "description": "Update codestar client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }
+]

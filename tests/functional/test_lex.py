@@ -13,7 +13,7 @@
 import mock
 from datetime import datetime
 
-from tests import BaseSessionTest
+from tests import BaseSessionTest, ClientHTTPStubber
 
 
 class TestLex(BaseSessionTest):
@@ -21,6 +21,7 @@ class TestLex(BaseSessionTest):
         super(TestLex, self).setUp()
         self.region = 'us-west-2'
         self.client = self.session.create_client('lex-runtime', self.region)
+        self.http_stubber = ClientHTTPStubber(self.client)
 
     def test_unsigned_payload(self):
         params = {
@@ -35,12 +36,10 @@ class TestLex(BaseSessionTest):
 
         with mock.patch('botocore.auth.datetime') as _datetime:
             _datetime.datetime.utcnow.return_value = timestamp
-            # TODO: fix with stubber / before send event
-            with mock.patch('botocore.endpoint.Endpoint._send') as _send:
-                _send.return_value = mock.Mock(
-                    status_code=200, headers={}, content=b'{}')
+            self.http_stubber.add_response(body=b'{}')
+            with self.http_stubber:
                 self.client.post_content(**params)
-                request = _send.call_args[0][0]
+                request = self.http_stubber.requests[0]
 
         # The payload gets added to the string to sign, and then part of the
         # signature. The signature will be part of the authorization header.

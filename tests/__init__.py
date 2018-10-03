@@ -23,6 +23,7 @@ import binascii
 import platform
 import select
 import datetime
+from io import BytesIO
 from subprocess import Popen, PIPE
 
 from dateutil.tz import tzlocal
@@ -38,6 +39,7 @@ from nose.tools import assert_equal
 
 import botocore.loaders
 import botocore.session
+from botocore.awsrequest import AWSResponse
 from botocore.compat import six
 from botocore.compat import urlparse
 from botocore.compat import parse_qs
@@ -359,3 +361,60 @@ def assert_url_equal(url1, url2):
     assert_equal(parts1.hostname, parts2.hostname)
     assert_equal(parts1.port, parts2.port)
     assert_equal(parse_qs(parts1.query), parse_qs(parts2.query))
+
+
+class HTTPStubberException(Exception):
+    pass
+
+
+class RawResponse(BytesIO):
+    # TODO: There's a few objects similar to this in various tests, let's
+    # try and consolidate to this one in a future commit.
+    def stream(self, **kwargs):
+        contents = self.read()
+        while contents:
+            yield contents
+            contents = self.read()
+
+
+class ClientHTTPStubber(object):
+    def __init__(self, client):
+        self.reset()
+        self._client = client
+
+    def reset(self):
+        self.requests = []
+        self.responses = []
+
+    def add_response(self, url='https://example.com', status=200, headers=None,
+                     body=b''):
+        if headers is None:
+            headers = {}
+
+        raw = RawResponse(body)
+        response = AWSResponse(url, status, headers, raw)
+        self.responses.append(response)
+
+    def start(self):
+        self._client.meta.events.register('before-send', self)
+
+    def stop(self):
+        self._client.meta.events.unregister('before-send', self)
+
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.stop()
+
+    def __call__(self, request, **kwargs):
+        self.requests.append(request)
+        if self.responses:
+            response = self.responses.pop(0)
+            if isinstance(response, Exception):
+                raise response
+            else:
+                return response
+        else:
+            raise HTTPStubberException('Insufficient responses')

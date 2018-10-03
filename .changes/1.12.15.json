@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``rekognition``", 
+    "description": "Update rekognition client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``guardduty``", 
+    "description": "Update guardduty client to latest version", 
+    "type": "api-change"
+  }
+]
