@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.12.17
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* enhancement:HTTP Session: Added the ability to enable TCP Keepalive via the shared config file's ``tcp_keepalive`` option.
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+
+
 1.12.16
 =======
 
