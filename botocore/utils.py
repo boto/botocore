@@ -296,14 +296,24 @@ class InstanceMetadataFetcher(object):
                         data[field[0:-1]] = self.retrieve_iam_role_credentials(
                             url + field, timeout, num_attempts)
                     else:
-                        val = self._get_request(
-                            url + field,
+                        field_url = url + field
+                        r = self._get_request(
+                            field_url,
                             timeout=timeout,
                             num_attempts=num_attempts,
-                        ).content.decode('utf-8')
+                        )
+                        val = r.content.decode('utf-8')
                         if val[0] == '{':
                             val = json.loads(val)
-                        data[field] = val
+                        code = val['Code']
+                        if code != 'Success':
+                            logger.debug("Metadata service returned non Success"
+                                         " code of %s for url: %s, status code:"
+                                         " %s, content body: %s",
+                                         code, field_url, r.status_code,
+                                         r.content)
+                        else:
+                            data[field] = val
             else:
                 logger.debug("Metadata service returned non 200 status code "
                              "of %s for url: %s, content body: %s",
