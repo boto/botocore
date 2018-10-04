@@ -18,6 +18,7 @@ considered internal, and *not* a public API.
 """
 import copy
 import logging
+import socket
 
 import botocore.serialize
 from botocore.signers import RequestSigner
@@ -51,6 +52,7 @@ class ClientArgsCreator(object):
         config_kwargs = final_args['config_kwargs']
         s3_config = final_args['s3_config']
         partition = endpoint_config['metadata'].get('partition', None)
+        socket_options = final_args['socket_options']
 
         signing_region = endpoint_config['signing_region']
         endpoint_region_name = endpoint_config['region_name']
@@ -77,7 +79,8 @@ class ClientArgsCreator(object):
             response_parser_factory=self._response_parser_factory,
             max_pool_connections=new_config.max_pool_connections,
             proxies=new_config.proxies,
-            timeout=(new_config.connect_timeout, new_config.read_timeout))
+            timeout=(new_config.connect_timeout, new_config.read_timeout),
+            socket_options=socket_options)
 
         serializer = botocore.serialize.create_serializer(
             protocol, parameter_validation)
@@ -104,9 +107,9 @@ class ClientArgsCreator(object):
         if client_config and not client_config.parameter_validation:
             parameter_validation = False
         elif scoped_config:
-            raw_value = str(scoped_config.get('parameter_validation', ''))
-            if raw_value.lower() == 'false':
-                parameter_validation = False
+            raw_value = scoped_config.get('parameter_validation')
+            if raw_value is not None:
+                parameter_validation = self._ensure_boolean(raw_value)
 
         endpoint_config = endpoint_bridge.resolve(
             service_name, region_name, endpoint_url, is_secure)
@@ -144,6 +147,7 @@ class ClientArgsCreator(object):
             'protocol': protocol,
             'config_kwargs': config_kwargs,
             's3_config': s3_config,
+            'socket_options': self._compute_socket_options(scoped_config)
         }
 
     def compute_s3_config(self, scoped_config, client_config):
@@ -192,11 +196,7 @@ class ClientArgsCreator(object):
         config_copy = config_dict.copy()
         present_keys = [k for k in keys if k in config_copy]
         for key in present_keys:
-            # Normalize on different possible values of True
-            if config_copy[key] in [True, 'True', 'true']:
-                config_copy[key] = True
-            else:
-                config_copy[key] = False
+            config_copy[key] = self._ensure_boolean(config_copy[key])
         return config_copy
 
     def _get_default_s3_region(self, service_name, endpoint_bridge):
@@ -207,3 +207,20 @@ class ClientArgsCreator(object):
             endpoint = endpoint_bridge.resolve('s3')
             return endpoint['signing_region'], endpoint['region_name']
         return None, None
+
+    def _compute_socket_options(self, scoped_config):
+        # This disables Nagle's algorithm and is the default socket options
+        # in urllib3.
+        socket_options = [(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)]
+        if scoped_config:
+            # Enables TCP Keepalive if specified in shared config file.
+            if self._ensure_boolean(scoped_config.get('tcp_keepalive', False)):
+                socket_options.append(
+                    (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1))
+        return socket_options
+
+    def _ensure_boolean(self, val):
+        if isinstance(val, bool):
+            return val
+        else:
+            return val.lower() == 'true'

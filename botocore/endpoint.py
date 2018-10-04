@@ -232,7 +232,8 @@ class EndpointCreator(object):
                         timeout=DEFAULT_TIMEOUT,
                         max_pool_connections=MAX_POOL_CONNECTIONS,
                         http_session_cls=URLLib3Session,
-                        proxies=None):
+                        proxies=None,
+                        socket_options=None):
         if not is_valid_endpoint_url(endpoint_url):
 
             raise ValueError("Invalid endpoint: %s" % endpoint_url)
@@ -246,6 +247,7 @@ class EndpointCreator(object):
             proxies=proxies,
             verify=self._get_verify_value(verify),
             max_pool_connections=max_pool_connections,
+            socket_options=socket_options,
         )
 
         return Endpoint(

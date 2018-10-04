@@ -11,6 +11,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import socket
+
 import botocore.config
 from tests import unittest
 import mock
@@ -41,6 +43,9 @@ class TestCreateClientArgs(unittest.TestCase):
             'endpoint_url': self.endpoint_url,
             'signing_name': 'ec2', 'signing_region': self.region,
             'metadata': {}}
+        self.default_socket_options = [
+            (socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        ]
 
     def call_get_client_args(self, **override_kwargs):
         call_kwargs = {
@@ -66,6 +71,7 @@ class TestCreateClientArgs(unittest.TestCase):
             'verify': True,
             'max_pool_connections': 10,
             'proxies': None,
+            'socket_options': self.default_socket_options
         }
         call_kwargs.update(**override_kwargs)
         mock_endpoint.return_value.create_endpoint.assert_called_with(
@@ -206,3 +212,37 @@ class TestCreateClientArgs(unittest.TestCase):
         client_args = self.call_get_client_args(client_config=config)
         self.assertEqual(
             client_args['client_config'].retries, {'max_attempts': 10})
+
+    def test_tcp_keepalive_enabled(self):
+        scoped_config = {'tcp_keepalive': 'true'}
+        with mock.patch('botocore.args.EndpointCreator') as m:
+            self.call_get_client_args(scoped_config=scoped_config)
+            self.assert_create_endpoint_call(
+                m, socket_options=self.default_socket_options + [
+                    (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+                ]
+            )
+
+    def test_tcp_keepalive_not_specified(self):
+        scoped_config = {}
+        with mock.patch('botocore.args.EndpointCreator') as m:
+            self.call_get_client_args(scoped_config=scoped_config)
+            self.assert_create_endpoint_call(
+                m, socket_options=self.default_socket_options)
+
+    def test_tcp_keepalive_explicitly_disabled(self):
+        scoped_config = {'tcp_keepalive': 'false'}
+        with mock.patch('botocore.args.EndpointCreator') as m:
+            self.call_get_client_args(scoped_config=scoped_config)
+            self.assert_create_endpoint_call(
+                m, socket_options=self.default_socket_options)
+
+    def test_tcp_keepalive_enabled_case_insensitive(self):
+        scoped_config = {'tcp_keepalive': 'True'}
+        with mock.patch('botocore.args.EndpointCreator') as m:
+            self.call_get_client_args(scoped_config=scoped_config)
+            self.assert_create_endpoint_call(
+                m, socket_options=self.default_socket_options + [
+                    (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+                ]
+            )

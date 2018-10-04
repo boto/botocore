@@ -149,6 +149,7 @@ class URLLib3Session(object):
                  proxies=None,
                  timeout=None,
                  max_pool_connections=MAX_POOL_CONNECTIONS,
+                 socket_options=None,
     ):
         self._verify = verify
         self._proxy_config = ProxyConfiguration(proxies=proxies)
@@ -162,14 +163,23 @@ class URLLib3Session(object):
             timeout = Timeout(connect=timeout[0], read=timeout[1])
         self._timeout = timeout
         self._max_pool_connections = max_pool_connections
+        self._socket_options = socket_options
+        if socket_options is None:
+            self._socket_options = []
         self._proxy_managers = {}
-        self._manager = PoolManager(
-            strict=True,
-            timeout=self._timeout,
-            maxsize=self._max_pool_connections,
-            ssl_context=self._get_ssl_context(),
-        )
+        self._manager = PoolManager(**self._get_pool_manager_kwargs())
         self._manager.pool_classes_by_scheme = self._pool_classes_by_scheme
+
+    def _get_pool_manager_kwargs(self, **extra_kwargs):
+        pool_manager_kwargs = {
+            'strict': True,
+            'timeout': self._timeout,
+            'maxsize': self._max_pool_connections,
+            'ssl_context': self._get_ssl_context(),
+            'socket_options': self._socket_options
+        }
+        pool_manager_kwargs.update(**extra_kwargs)
+        return pool_manager_kwargs
 
     def _get_ssl_context(self):
         return create_urllib3_context()
@@ -177,14 +187,10 @@ class URLLib3Session(object):
     def _get_proxy_manager(self, proxy_url):
         if proxy_url not in self._proxy_managers:
             proxy_headers = self._proxy_config.proxy_headers_for(proxy_url)
+            proxy_manager_kwargs = self._get_pool_manager_kwargs(
+                proxy_headers=proxy_headers)
             proxy_manager = proxy_from_url(
-                proxy_url,
-                strict=True,
-                timeout=self._timeout,
-                proxy_headers=proxy_headers,
-                maxsize=self._max_pool_connections,
-                ssl_context=self._get_ssl_context(),
-            )
+                proxy_url, **proxy_manager_kwargs)
             proxy_manager.pool_classes_by_scheme = self._pool_classes_by_scheme
             self._proxy_managers[proxy_url] = proxy_manager
 
