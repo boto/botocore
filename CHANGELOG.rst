@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.19
+=======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``iot-jobs-data``: Update iot-jobs-data client to latest version
+
+
 1.12.18
 =======
 
