@@ -102,6 +102,17 @@ class Config(object):
           this value to 0 will result in no retries ever being attempted on
           the initial request. If not provided, the number of retries will
           default to whatever is modeled, which is typically four retries.
+
+    :type client_cert: str, (str, str)
+    :param client_cert: The path to a certificate for TLS client authentication.
+
+        When a str is provided it is treated as a path to a client certificate
+        to be used when creating a TLS connection.
+
+        If a client key is to be provided alongside the client certificate the
+        client_cert should be set to a tuple of length two where the first
+        element is the path to the client certificate and the second element is
+        the path to the certificate key.
     """
     OPTION_DEFAULTS = OrderedDict([
         ('region_name', None),
@@ -114,7 +125,8 @@ class Config(object):
         ('max_pool_connections', MAX_POOL_CONNECTIONS),
         ('proxies', None),
         ('s3', None),
-        ('retries', None)
+        ('retries', None),
+        ('client_cert', None),
     ])
 
     def __init__(self, *args, **kwargs):

@@ -71,7 +71,8 @@ class TestCreateClientArgs(unittest.TestCase):
             'verify': True,
             'max_pool_connections': 10,
             'proxies': None,
-            'socket_options': self.default_socket_options
+            'socket_options': self.default_socket_options,
+            'client_cert': None,
         }
         call_kwargs.update(**override_kwargs)
         mock_endpoint.return_value.create_endpoint.assert_called_with(

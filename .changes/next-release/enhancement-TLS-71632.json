@@ -1,0 +1,5 @@
+{
+  "type": "enhancement",
+  "category": "TLS",
+  "description": "Added support for configuring a client certificate and key when establishing TLS connections."
+}

@@ -80,7 +80,8 @@ class ClientArgsCreator(object):
             max_pool_connections=new_config.max_pool_connections,
             proxies=new_config.proxies,
             timeout=(new_config.connect_timeout, new_config.read_timeout),
-            socket_options=socket_options)
+            socket_options=socket_options,
+            client_cert=new_config.client_cert)
 
         serializer = botocore.serialize.create_serializer(
             protocol, parameter_validation)
@@ -135,7 +136,8 @@ class ClientArgsCreator(object):
                 read_timeout=client_config.read_timeout,
                 max_pool_connections=client_config.max_pool_connections,
                 proxies=client_config.proxies,
-                retries=client_config.retries
+                retries=client_config.retries,
+                client_cert=client_config.client_cert,
             )
         s3_config = self.compute_s3_config(scoped_config,
                                            client_config)
