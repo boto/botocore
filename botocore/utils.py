@@ -374,11 +374,11 @@ class InstanceMetadataFetcher(object):
 
     def _log_imds_response(self, response, reason_to_log, log_body=False):
         statement = (
-            "Metadata service returned " + reason_to_log + " response "
+            "Metadata service returned %s response "
             "with status code of %s for url: %s"
         )
         logger_args = [
-            response.status_code, response.url
+            reason_to_log, response.status_code, response.url
         ]
         if log_body:
             statement += ", content body: %s"
