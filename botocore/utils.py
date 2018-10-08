@@ -244,6 +244,11 @@ def set_value_from_jmespath(source, expression, value, is_first=True):
 
 
 class InstanceMetadataFetcher(object):
+
+    _REQUIRED_CREDENTIAL_FIELDS = [
+        'AccessKeyId', 'SecretAccessKey', 'Token', 'Expiration'
+    ]
+
     def __init__(self, timeout=DEFAULT_METADATA_SERVICE_TIMEOUT,
                  num_attempts=1, url=METADATA_SECURITY_CREDENTIALS_URL,
                  env=None, user_agent=None):
@@ -260,70 +265,125 @@ class InstanceMetadataFetcher(object):
             proxies=get_environ_proxies(self._url),
         )
 
-    def _get_request(self, url, timeout, num_attempts=1):
+    def retrieve_iam_role_credentials(self):
+        try:
+            role_name = self._get_iam_role()
+            credentials = self._get_credentials(role_name)
+            if self._contains_all_credential_fields(credentials):
+                return {
+                    'role_name': role_name,
+                    'access_key': credentials['AccessKeyId'],
+                    'secret_key': credentials['SecretAccessKey'],
+                    'token': credentials['Token'],
+                    'expiry_time': credentials['Expiration'],
+                }
+            else:
+                # IMDS can return a 200 response that has a JSON formatted
+                # error message (i.e. if ec2 is not trusted entity for the
+                # attached role). We do not necessarily want to retry for
+                # these and we also do not necessarily want to raise a key
+                # error. So at least log the problematic response and return
+                # an empty dictionary to signal that it was not able to
+                # retrieve credentials. These error will contain both a
+                # Code and Message key.
+                if 'Code' in credentials and 'Message' in credentials:
+                    logger.debug('Error response received when retrieving'
+                                 'credentials: %s.', credentials)
+                return {}
+        except _RetriesExceededError:
+            logger.debug("Max number of attempts exceeded (%s) when "
+                         "attempting to retrieve data from metadata service.",
+                         self._num_attempts)
+        return {}
+
+    def _get_iam_role(self):
+        return self._get_request(
+            url=self._url,
+            needs_retry=self._needs_retry_for_role_name
+        ).text
+
+    def _get_credentials(self, role_name):
+        r = self._get_request(
+            url=self._url + role_name,
+            needs_retry=self._needs_retry_for_credentials
+        )
+        return json.loads(r.text)
+
+    def _get_request(self, url, needs_retry):
         if self._disabled:
             logger.debug("Access to EC2 metadata has been disabled.")
             raise _RetriesExceededError()
-
         headers = {}
         if self._user_agent is not None:
             headers['User-Agent'] = self._user_agent
 
-        for i in range(num_attempts):
+        for i in range(self._num_attempts):
             try:
-                AWSRequest = botocore.awsrequest.AWSRequest
-                request = AWSRequest(method='GET', url=url, headers=headers)
+                request = botocore.awsrequest.AWSRequest(
+                    method='GET', url=url, headers=headers)
                 response = self._session.send(request.prepare())
-            except RETRYABLE_HTTP_ERRORS as e:
-                logger.debug("Caught exception while trying to retrieve "
-                             "credentials: %s", e, exc_info=True)
-            else:
-                if response.status_code == 200:
+                if not needs_retry(response):
                     return response
+            except RETRYABLE_HTTP_ERRORS as e:
+                logger.debug(
+                    "Caught retryable HTTP exception while making metadata "
+                    "service request to %s: %s", url, e, exc_info=True)
         raise _RetriesExceededError()
 
-    def retrieve_iam_role_credentials(self):
-        data = {}
-        url = self._url
-        timeout = self._timeout
-        num_attempts = self._num_attempts
+    def _needs_retry_for_role_name(self, response):
+        return (
+            self._is_non_ok_response(response) or
+            self._is_empty(response)
+        )
+
+    def _needs_retry_for_credentials(self, response):
+        return (
+            self._is_non_ok_response(response) or
+            self._is_empty(response) or
+            self._is_invalid_json(response)
+        )
+
+    def _contains_all_credential_fields(self, credentials):
+        for field in self._REQUIRED_CREDENTIAL_FIELDS:
+            if field not in credentials:
+                logger.debug(
+                    'Retrieved credentials is missing required field: %s',
+                    field)
+                return False
+        return True
+
+    def _is_non_ok_response(self, response):
+        if response.status_code != 200:
+            self._log_imds_response(response, 'non-200', log_body=True)
+            return True
+        return False
+
+    def _is_empty(self, response):
+        if not response.content:
+            self._log_imds_response(response, 'no body', log_body=True)
+            return True
+        return False
+
+    def _is_invalid_json(self, response):
         try:
-            r = self._get_request(url, timeout, num_attempts)
-            if r.content:
-                fields = r.content.decode('utf-8').split('\n')
-                for field in fields:
-                    if field.endswith('/'):
-                        data[field[0:-1]] = self.retrieve_iam_role_credentials(
-                            url + field, timeout, num_attempts)
-                    else:
-                        val = self._get_request(
-                            url + field,
-                            timeout=timeout,
-                            num_attempts=num_attempts,
-                        ).content.decode('utf-8')
-                        if val[0] == '{':
-                            val = json.loads(val)
-                        data[field] = val
-            else:
-                logger.debug("Metadata service returned non 200 status code "
-                             "of %s for url: %s, content body: %s",
-                             r.status_code, url, r.content)
-        except _RetriesExceededError:
-            logger.debug("Max number of attempts exceeded (%s) when "
-                         "attempting to retrieve data from metadata service.",
-                         num_attempts)
-        # We sort for stable ordering. In practice, this should only consist
-        # of one role, but may need revisiting if this expands in the future.
-        final_data = {}
-        for role_name in sorted(data):
-            final_data = {
-                'role_name': role_name,
-                'access_key': data[role_name]['AccessKeyId'],
-                'secret_key': data[role_name]['SecretAccessKey'],
-                'token': data[role_name]['Token'],
-                'expiry_time': data[role_name]['Expiration'],
-            }
-        return final_data
+            json.loads(response.text)
+            return False
+        except ValueError:
+            self._log_imds_response(response, 'invalid json')
+            return True
+
+    def _log_imds_response(self, response, reason_to_log, log_body=False):
+        statement = (
+            "Metadata service returned %s response "
+            "with status code of %s for url: %s"
+        )
+        logger_args = [
+            reason_to_log, response.status_code, response.url
+        ]
+        if log_body:
+            statement += ", content body: %s"
+            logger_args.append(response.content)
+        logger.debug(statement, *logger_args)
 
 
 def merge_dicts(dict1, dict2, append_lists=False):
