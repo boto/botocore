@@ -322,6 +322,15 @@ class TestEndpointCreator(unittest.TestCase):
         session_args = self.mock_session.call_args[1]
         self.assertEqual(session_args.get('verify'), '/path/cacerts.pem')
 
+    def test_client_cert_can_specify_path(self):
+        client_cert = '/some/path/cert'
+        endpoint = self.creator.create_endpoint(
+            self.service_model, region_name='us-west-2',
+            endpoint_url='https://example.com', client_cert=client_cert,
+            http_session_cls=self.mock_session)
+        session_args = self.mock_session.call_args[1]
+        self.assertEqual(session_args.get('client_cert'), '/some/path/cert')
+
     def test_honor_cert_bundle_env_var(self):
         self.environ['REQUESTS_CA_BUNDLE'] = '/env/cacerts.pem'
         endpoint = self.creator.create_endpoint(

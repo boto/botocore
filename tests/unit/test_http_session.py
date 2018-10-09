@@ -108,15 +108,64 @@ class TestURLLib3Session(unittest.TestCase):
             decode_content=False,
         )
 
+    def _assert_manager_call(self, manager, *assert_args, **assert_kwargs):
+        call_kwargs = {
+            'strict': True,
+            'maxsize': ANY,
+            'timeout': ANY,
+            'ssl_context': ANY,
+            'socket_options': [],
+            'cert_file': None,
+            'key_file': None,
+        }
+        call_kwargs.update(assert_kwargs)
+        manager.assert_called_with(*assert_args, **call_kwargs)
+
+    def assert_pool_manager_call(self, *args, **kwargs):
+        self._assert_manager_call(self.pool_manager_cls, *args, **kwargs)
+
+    def assert_proxy_manager_call(self, *args, **kwargs):
+        self._assert_manager_call(self.proxy_manager_fun, *args, **kwargs)
+
     def test_forwards_max_pool_size(self):
         URLLib3Session(max_pool_connections=22)
-        self.pool_manager_cls.assert_called_with(
-            maxsize=22,
-            timeout=ANY,
-            strict=True,
-            ssl_context=ANY,
-            socket_options=[],
+        self.assert_pool_manager_call(maxsize=22)
+
+    def test_forwards_client_cert(self):
+        URLLib3Session(client_cert='/some/cert')
+        self.assert_pool_manager_call(cert_file='/some/cert', key_file=None)
+
+    def test_forwards_client_cert_and_key_tuple(self):
+        cert = ('/some/cert', '/some/key')
+        URLLib3Session(client_cert=cert)
+        self.assert_pool_manager_call(cert_file=cert[0], key_file=cert[1])
+
+    def test_basic_https_proxy_with_client_cert(self):
+        proxies = {'https': 'http://proxy.com'}
+        session = URLLib3Session(proxies=proxies, client_cert='/some/cert')
+        self.request.url = 'https://example.com/'
+        session.send(self.request.prepare())
+        self.assert_proxy_manager_call(
+            proxies['https'],
+            proxy_headers={},
+            cert_file='/some/cert',
+            key_file=None,
         )
+        self.assert_request_sent()
+
+    def test_basic_https_proxy_with_client_cert_and_key(self):
+        cert = ('/some/cert', '/some/key')
+        proxies = {'https': 'http://proxy.com'}
+        session = URLLib3Session(proxies=proxies, client_cert=cert)
+        self.request.url = 'https://example.com/'
+        session.send(self.request.prepare())
+        self.assert_proxy_manager_call(
+            proxies['https'],
+            proxy_headers={},
+            cert_file=cert[0],
+            key_file=cert[1],
+        )
+        self.assert_request_sent()
 
     def test_basic_request(self):
         session = URLLib3Session()
@@ -142,15 +191,7 @@ class TestURLLib3Session(unittest.TestCase):
         session = URLLib3Session(proxies=proxies)
         self.request.url = 'https://example.com/'
         session.send(self.request.prepare())
-        self.proxy_manager_fun.assert_any_call(
-            proxies['https'],
-            proxy_headers={},
-            maxsize=ANY,
-            timeout=ANY,
-            strict=True,
-            ssl_context=ANY,
-            socket_options=[],
-        )
+        self.assert_proxy_manager_call(proxies['https'], proxy_headers={})
         self.assert_request_sent()
 
     def test_basic_proxy_request_caches_manager(self):
@@ -159,15 +200,7 @@ class TestURLLib3Session(unittest.TestCase):
         self.request.url = 'https://example.com/'
         session.send(self.request.prepare())
         # assert we created the proxy manager
-        self.proxy_manager_fun.assert_any_call(
-            proxies['https'],
-            proxy_headers={},
-            maxsize=ANY,
-            timeout=ANY,
-            strict=True,
-            ssl_context=ANY,
-            socket_options=[],
-        )
+        self.assert_proxy_manager_call(proxies['https'], proxy_headers={})
         session.send(self.request.prepare())
         # assert that we did not create another proxy manager
         self.assertEqual(self.proxy_manager_fun.call_count, 1)
@@ -176,15 +209,7 @@ class TestURLLib3Session(unittest.TestCase):
         proxies = {'http': 'http://proxy.com'}
         session = URLLib3Session(proxies=proxies)
         session.send(self.request.prepare())
-        self.proxy_manager_fun.assert_any_call(
-            proxies['http'],
-            proxy_headers={},
-            maxsize=ANY,
-            timeout=ANY,
-            strict=True,
-            ssl_context=ANY,
-            socket_options=[],
-        )
+        self.assert_proxy_manager_call(proxies['http'], proxy_headers={})
         self.assert_request_sent(url=self.request.url)
 
     def test_ssl_context_is_explicit(self):
@@ -203,18 +228,21 @@ class TestURLLib3Session(unittest.TestCase):
     def test_session_forwards_socket_options_to_pool_manager(self):
         socket_options = [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)]
         URLLib3Session(socket_options=socket_options)
-        manager_kwargs = self.pool_manager_cls.call_args[1]
-        self.assertEqual(socket_options, manager_kwargs['socket_options'])
+        self.assert_pool_manager_call(socket_options=socket_options)
 
     def test_session_forwards_socket_options_to_proxy_manager(self):
+        proxies = {'http': 'http://proxy.com'}
         socket_options = [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)]
         session = URLLib3Session(
-            proxies={'http': 'http://proxy.com'},
-            socket_options=socket_options
+            proxies=proxies,
+            socket_options=socket_options,
         )
         session.send(self.request.prepare())
-        manager_kwargs = self.proxy_manager_fun.call_args[1]
-        self.assertEqual(socket_options, manager_kwargs['socket_options'])
+        self.assert_proxy_manager_call(
+            proxies['http'],
+            proxy_headers={},
+            socket_options=socket_options,
+        )
 
     def make_request_with_error(self, error):
         self.connection.urlopen.side_effect = error
