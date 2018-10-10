@@ -10,7 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
+import socket
 from tests import unittest
 
 from mock import Mock, patch, sentinel
@@ -322,6 +322,15 @@ class TestEndpointCreator(unittest.TestCase):
         session_args = self.mock_session.call_args[1]
         self.assertEqual(session_args.get('verify'), '/path/cacerts.pem')
 
+    def test_client_cert_can_specify_path(self):
+        client_cert = '/some/path/cert'
+        endpoint = self.creator.create_endpoint(
+            self.service_model, region_name='us-west-2',
+            endpoint_url='https://example.com', client_cert=client_cert,
+            http_session_cls=self.mock_session)
+        session_args = self.mock_session.call_args[1]
+        self.assertEqual(session_args.get('client_cert'), '/some/path/cert')
+
     def test_honor_cert_bundle_env_var(self):
         self.environ['REQUESTS_CA_BUNDLE'] = '/env/cacerts.pem'
         endpoint = self.creator.create_endpoint(
@@ -350,3 +359,12 @@ class TestEndpointCreator(unittest.TestCase):
         )
         session_args = self.mock_session.call_args[1]
         self.assertEqual(session_args.get('max_pool_connections'), 100)
+
+    def test_socket_options(self):
+        socket_options = [(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)]
+        self.creator.create_endpoint(
+            self.service_model, region_name='us-west-2',
+            endpoint_url='https://example.com',
+            http_session_cls=self.mock_session, socket_options=socket_options)
+        session_args = self.mock_session.call_args[1]
+        self.assertEqual(session_args.get('socket_options'), socket_options)

@@ -2,6 +2,37 @@
 CHANGELOG
 =========
 
+1.12.20
+=======
+
+* enhancement:TLS: Added support for configuring a client certificate and key when establishing TLS connections.
+* api-change:``ssm``: Update ssm client to latest version
+* bugfix:InstanceMetadataFetcher: Fix failure to retry on empty credentials and invalid JSON returned from IMDS `1049 <https://github.com/boto/botocore/issues/1049>`__ `1403 <https://github.com/boto/botocore/issues/1403>`__
+
+
+1.12.19
+=======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``iot-jobs-data``: Update iot-jobs-data client to latest version
+
+
+1.12.18
+=======
+
+* api-change:``ds``: Update ds client to latest version
+
+
+1.12.17
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* enhancement:HTTP Session: Added the ability to enable TCP Keepalive via the shared config file's ``tcp_keepalive`` option.
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+
+
 1.12.16
 =======
 
