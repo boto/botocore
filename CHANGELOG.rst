@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.21
+=======
+
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``es``: Update es client to latest version
+
+
 1.12.20
 =======
 
