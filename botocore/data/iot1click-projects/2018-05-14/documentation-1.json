@@ -1,6 +1,20 @@
 {
    "documentation" : {
-      "api_url" : null,
-      "methods" : {}
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/projects.iot1click-2018-05-14",
+      "methods" : {
+         "AssociateDeviceWithPlacement" : "https://docs.aws.amazon.com/goto/WebAPI/projects.iot1click/AssociateDeviceWithPlacement",
+         "CreatePlacement" : "https://docs.aws.amazon.com/goto/WebAPI/projects.iot1click/CreatePlacement",
+         "CreateProject" : "https://docs.aws.amazon.com/goto/WebAPI/projects.iot1click/CreateProject",
+         "DeletePlacement" : "https://docs.aws.amazon.com/goto/WebAPI/projects.iot1click/DeletePlacement",
+         "DeleteProject" : "https://docs.aws.amazon.com/goto/WebAPI/projects.iot1click/DeleteProject",
+         "DescribePlacement" : "https://docs.aws.amazon.com/goto/WebAPI/projects.iot1click/DescribePlacement",
+         "DescribeProject" : "https://docs.aws.amazon.com/goto/WebAPI/projects.iot1click/DescribeProject",
+         "DisassociateDeviceFromPlacement" : "https://docs.aws.amazon.com/goto/WebAPI/projects.iot1click/DisassociateDeviceFromPlacement",
+         "GetDevicesInPlacement" : "https://docs.aws.amazon.com/goto/WebAPI/projects.iot1click/GetDevicesInPlacement",
+         "ListPlacements" : "https://docs.aws.amazon.com/goto/WebAPI/projects.iot1click/ListPlacements",
+         "ListProjects" : "https://docs.aws.amazon.com/goto/WebAPI/projects.iot1click/ListProjects",
+         "UpdatePlacement" : "https://docs.aws.amazon.com/goto/WebAPI/projects.iot1click/UpdatePlacement",
+         "UpdateProject" : "https://docs.aws.amazon.com/goto/WebAPI/projects.iot1click/UpdateProject"
+      }
    }
 }

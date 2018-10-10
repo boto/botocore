@@ -1,6 +1,24 @@
 {
    "documentation" : {
-      "api_url" : null,
-      "methods" : {}
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/elastictranscoder-2012-09-25",
+      "methods" : {
+         "CancelJob" : "https://docs.aws.amazon.com/goto/WebAPI/elastictranscoder/CancelJob",
+         "CreateJob" : "https://docs.aws.amazon.com/goto/WebAPI/elastictranscoder/CreateJob",
+         "CreatePipeline" : "https://docs.aws.amazon.com/goto/WebAPI/elastictranscoder/CreatePipeline",
+         "CreatePreset" : "https://docs.aws.amazon.com/goto/WebAPI/elastictranscoder/CreatePreset",
+         "DeletePipeline" : "https://docs.aws.amazon.com/goto/WebAPI/elastictranscoder/DeletePipeline",
+         "DeletePreset" : "https://docs.aws.amazon.com/goto/WebAPI/elastictranscoder/DeletePreset",
+         "ListJobsByPipeline" : "https://docs.aws.amazon.com/goto/WebAPI/elastictranscoder/ListJobsByPipeline",
+         "ListJobsByStatus" : "https://docs.aws.amazon.com/goto/WebAPI/elastictranscoder/ListJobsByStatus",
+         "ListPipelines" : "https://docs.aws.amazon.com/goto/WebAPI/elastictranscoder/ListPipelines",
+         "ListPresets" : "https://docs.aws.amazon.com/goto/WebAPI/elastictranscoder/ListPresets",
+         "ReadJob" : "https://docs.aws.amazon.com/goto/WebAPI/elastictranscoder/ReadJob",
+         "ReadPipeline" : "https://docs.aws.amazon.com/goto/WebAPI/elastictranscoder/ReadPipeline",
+         "ReadPreset" : "https://docs.aws.amazon.com/goto/WebAPI/elastictranscoder/ReadPreset",
+         "TestRole" : "https://docs.aws.amazon.com/goto/WebAPI/elastictranscoder/TestRole",
+         "UpdatePipeline" : "https://docs.aws.amazon.com/goto/WebAPI/elastictranscoder/UpdatePipeline",
+         "UpdatePipelineNotifications" : "https://docs.aws.amazon.com/goto/WebAPI/elastictranscoder/UpdatePipelineNotifications",
+         "UpdatePipelineStatus" : "https://docs.aws.amazon.com/goto/WebAPI/elastictranscoder/UpdatePipelineStatus"
+      }
    }
 }

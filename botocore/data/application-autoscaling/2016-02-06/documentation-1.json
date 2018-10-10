@@ -1,6 +1,6 @@
 {
    "documentation" : {
-      "api_url" : null,
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling-2016-02-06",
       "methods" : {
          "DeleteScalingPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/DeleteScalingPolicy",
          "DeleteScheduledAction" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/DeleteScheduledAction",

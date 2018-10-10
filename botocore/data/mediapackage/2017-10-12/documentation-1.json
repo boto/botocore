@@ -1,6 +1,6 @@
 {
    "documentation" : {
-      "api_url" : null,
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12",
       "methods" : {
          "CreateChannel" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage/CreateChannel",
          "CreateOriginEndpoint" : "https://docs.aws.amazon.com/goto/WebAPI/mediapackage/CreateOriginEndpoint",

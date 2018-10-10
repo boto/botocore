@@ -1,6 +1,12 @@
 {
    "documentation" : {
       "api_url" : "https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/Welcome.html",
-      "methods" : {}
+      "methods" : {
+         "GetResources" : "https://docs.aws.amazon.com/goto/WebAPI/tagging/GetResources",
+         "GetTagKeys" : "https://docs.aws.amazon.com/goto/WebAPI/tagging/GetTagKeys",
+         "GetTagValues" : "https://docs.aws.amazon.com/goto/WebAPI/tagging/GetTagValues",
+         "TagResources" : "https://docs.aws.amazon.com/goto/WebAPI/tagging/TagResources",
+         "UntagResources" : "https://docs.aws.amazon.com/goto/WebAPI/tagging/UntagResources"
+      }
    }
 }

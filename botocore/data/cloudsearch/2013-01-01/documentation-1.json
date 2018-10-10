@@ -1,6 +1,31 @@
 {
    "documentation" : {
-      "api_url" : null,
-      "methods" : {}
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch-2013-01-01",
+      "methods" : {
+         "BuildSuggesters" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/BuildSuggesters",
+         "CreateDomain" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/CreateDomain",
+         "DefineAnalysisScheme" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/DefineAnalysisScheme",
+         "DefineExpression" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/DefineExpression",
+         "DefineIndexField" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/DefineIndexField",
+         "DefineSuggester" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/DefineSuggester",
+         "DeleteAnalysisScheme" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/DeleteAnalysisScheme",
+         "DeleteDomain" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/DeleteDomain",
+         "DeleteExpression" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/DeleteExpression",
+         "DeleteIndexField" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/DeleteIndexField",
+         "DeleteSuggester" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/DeleteSuggester",
+         "DescribeAnalysisSchemes" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/DescribeAnalysisSchemes",
+         "DescribeAvailabilityOptions" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/DescribeAvailabilityOptions",
+         "DescribeDomains" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/DescribeDomains",
+         "DescribeExpressions" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/DescribeExpressions",
+         "DescribeIndexFields" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/DescribeIndexFields",
+         "DescribeScalingParameters" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/DescribeScalingParameters",
+         "DescribeServiceAccessPolicies" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/DescribeServiceAccessPolicies",
+         "DescribeSuggesters" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/DescribeSuggesters",
+         "IndexDocuments" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/IndexDocuments",
+         "ListDomainNames" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/ListDomainNames",
+         "UpdateAvailabilityOptions" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/UpdateAvailabilityOptions",
+         "UpdateScalingParameters" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/UpdateScalingParameters",
+         "UpdateServiceAccessPolicies" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearch/UpdateServiceAccessPolicies"
+      }
    }
 }

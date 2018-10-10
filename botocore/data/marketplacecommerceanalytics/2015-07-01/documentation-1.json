@@ -1,6 +1,9 @@
 {
    "documentation" : {
       "api_url" : "https://docs.aws.amazon.com/marketplace/latest/userguide/commerce-analytics-service.html",
-      "methods" : {}
+      "methods" : {
+         "GenerateDataSet" : "https://docs.aws.amazon.com/goto/WebAPI/marketplacecommerceanalytics/GenerateDataSet",
+         "StartSupportDataExport" : "https://docs.aws.amazon.com/goto/WebAPI/marketplacecommerceanalytics/StartSupportDataExport"
+      }
    }
 }

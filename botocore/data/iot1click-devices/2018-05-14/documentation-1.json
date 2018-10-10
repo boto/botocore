@@ -1,6 +1,17 @@
 {
    "documentation" : {
-      "api_url" : null,
-      "methods" : {}
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/devices.iot1click-2018-05-14",
+      "methods" : {
+         "ClaimDevicesByClaimCode" : "https://docs.aws.amazon.com/goto/WebAPI/devices.iot1click/ClaimDevicesByClaimCode",
+         "DescribeDevice" : "https://docs.aws.amazon.com/goto/WebAPI/devices.iot1click/DescribeDevice",
+         "FinalizeDeviceClaim" : "https://docs.aws.amazon.com/goto/WebAPI/devices.iot1click/FinalizeDeviceClaim",
+         "GetDeviceMethods" : "https://docs.aws.amazon.com/goto/WebAPI/devices.iot1click/GetDeviceMethods",
+         "InitiateDeviceClaim" : "https://docs.aws.amazon.com/goto/WebAPI/devices.iot1click/InitiateDeviceClaim",
+         "InvokeDeviceMethod" : "https://docs.aws.amazon.com/goto/WebAPI/devices.iot1click/InvokeDeviceMethod",
+         "ListDeviceEvents" : "https://docs.aws.amazon.com/goto/WebAPI/devices.iot1click/ListDeviceEvents",
+         "ListDevices" : "https://docs.aws.amazon.com/goto/WebAPI/devices.iot1click/ListDevices",
+         "UnclaimDevice" : "https://docs.aws.amazon.com/goto/WebAPI/devices.iot1click/UnclaimDevice",
+         "UpdateDeviceState" : "https://docs.aws.amazon.com/goto/WebAPI/devices.iot1click/UpdateDeviceState"
+      }
    }
 }

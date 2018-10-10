@@ -1,6 +1,6 @@
 {
    "documentation" : {
-      "api_url" : null,
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14",
       "methods" : {
          "BatchUpdateSchedule" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/BatchUpdateSchedule",
          "CreateChannel" : "https://docs.aws.amazon.com/goto/WebAPI/medialive/CreateChannel",

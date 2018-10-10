@@ -1,6 +1,6 @@
 {
    "documentation" : {
-      "api_url" : null,
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing-2015-12-01",
       "methods" : {
          "AddListenerCertificates" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/AddListenerCertificates",
          "AddTags" : "https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancing/AddTags",

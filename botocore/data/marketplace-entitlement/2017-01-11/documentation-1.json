@@ -1,6 +1,8 @@
 {
    "documentation" : {
       "api_url" : "https://docs.aws.amazon.com/marketplaceentitlement/latest/APIReference/Welcome.html",
-      "methods" : {}
+      "methods" : {
+         "GetEntitlements" : "https://docs.aws.amazon.com/goto/WebAPI/entitlement.marketplace/GetEntitlements"
+      }
    }
 }

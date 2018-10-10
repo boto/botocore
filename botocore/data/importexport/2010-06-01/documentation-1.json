@@ -1,6 +1,13 @@
 {
    "documentation" : {
-      "api_url" : null,
-      "methods" : {}
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/importexport-2010-06-01",
+      "methods" : {
+         "CancelJob" : "https://docs.aws.amazon.com/goto/WebAPI/importexport/CancelJob",
+         "CreateJob" : "https://docs.aws.amazon.com/goto/WebAPI/importexport/CreateJob",
+         "GetShippingLabel" : "https://docs.aws.amazon.com/goto/WebAPI/importexport/GetShippingLabel",
+         "GetStatus" : "https://docs.aws.amazon.com/goto/WebAPI/importexport/GetStatus",
+         "ListJobs" : "https://docs.aws.amazon.com/goto/WebAPI/importexport/ListJobs",
+         "UpdateJob" : "https://docs.aws.amazon.com/goto/WebAPI/importexport/UpdateJob"
+      }
    }
 }

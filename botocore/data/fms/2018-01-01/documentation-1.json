@@ -11,6 +11,7 @@
          "GetNotificationChannel" : "https://docs.aws.amazon.com/goto/WebAPI/fms/GetNotificationChannel",
          "GetPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/fms/GetPolicy",
          "ListComplianceStatus" : "https://docs.aws.amazon.com/goto/WebAPI/fms/ListComplianceStatus",
+         "ListMemberAccounts" : "https://docs.aws.amazon.com/goto/WebAPI/fms/ListMemberAccounts",
          "ListPolicies" : "https://docs.aws.amazon.com/goto/WebAPI/fms/ListPolicies",
          "PutNotificationChannel" : "https://docs.aws.amazon.com/goto/WebAPI/fms/PutNotificationChannel",
          "PutPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/fms/PutPolicy"

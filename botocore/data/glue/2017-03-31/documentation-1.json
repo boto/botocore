@@ -41,6 +41,7 @@
          "GetCrawler" : "https://docs.aws.amazon.com/goto/WebAPI/glue/GetCrawler",
          "GetCrawlerMetrics" : "https://docs.aws.amazon.com/goto/WebAPI/glue/GetCrawlerMetrics",
          "GetCrawlers" : "https://docs.aws.amazon.com/goto/WebAPI/glue/GetCrawlers",
+         "GetDataCatalogEncryptionSettings" : "https://docs.aws.amazon.com/goto/WebAPI/glue/GetDataCatalogEncryptionSettings",
          "GetDatabase" : "https://docs.aws.amazon.com/goto/WebAPI/glue/GetDatabase",
          "GetDatabases" : "https://docs.aws.amazon.com/goto/WebAPI/glue/GetDatabases",
          "GetDataflowGraph" : "https://docs.aws.amazon.com/goto/WebAPI/glue/GetDataflowGraph",

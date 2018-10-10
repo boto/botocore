@@ -1,6 +1,43 @@
 {
    "documentation" : {
-      "api_url" : null,
-      "methods" : {}
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2-2016-12-01",
+      "methods" : {
+         "AssociateFleet" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/AssociateFleet",
+         "CopyImage" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/CopyImage",
+         "CreateDirectoryConfig" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/CreateDirectoryConfig",
+         "CreateFleet" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/CreateFleet",
+         "CreateImageBuilder" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/CreateImageBuilder",
+         "CreateImageBuilderStreamingURL" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/CreateImageBuilderStreamingURL",
+         "CreateStack" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/CreateStack",
+         "CreateStreamingURL" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/CreateStreamingURL",
+         "DeleteDirectoryConfig" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/DeleteDirectoryConfig",
+         "DeleteFleet" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/DeleteFleet",
+         "DeleteImage" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/DeleteImage",
+         "DeleteImageBuilder" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/DeleteImageBuilder",
+         "DeleteImagePermissions" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/DeleteImagePermissions",
+         "DeleteStack" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/DeleteStack",
+         "DescribeDirectoryConfigs" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/DescribeDirectoryConfigs",
+         "DescribeFleets" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/DescribeFleets",
+         "DescribeImageBuilders" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/DescribeImageBuilders",
+         "DescribeImagePermissions" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/DescribeImagePermissions",
+         "DescribeImages" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/DescribeImages",
+         "DescribeSessions" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/DescribeSessions",
+         "DescribeStacks" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/DescribeStacks",
+         "DisassociateFleet" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/DisassociateFleet",
+         "ExpireSession" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/ExpireSession",
+         "ListAssociatedFleets" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/ListAssociatedFleets",
+         "ListAssociatedStacks" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/ListAssociatedStacks",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/ListTagsForResource",
+         "StartFleet" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/StartFleet",
+         "StartImageBuilder" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/StartImageBuilder",
+         "StopFleet" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/StopFleet",
+         "StopImageBuilder" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/StopImageBuilder",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/UntagResource",
+         "UpdateDirectoryConfig" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/UpdateDirectoryConfig",
+         "UpdateFleet" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/UpdateFleet",
+         "UpdateImagePermissions" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/UpdateImagePermissions",
+         "UpdateStack" : "https://docs.aws.amazon.com/goto/WebAPI/appstream2/UpdateStack"
+      }
    }
 }

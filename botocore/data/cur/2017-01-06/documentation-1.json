@@ -1,6 +1,10 @@
 {
    "documentation" : {
       "api_url" : "https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/billing-reports-costusage.html",
-      "methods" : {}
+      "methods" : {
+         "DeleteReportDefinition" : "https://docs.aws.amazon.com/goto/WebAPI/cur/DeleteReportDefinition",
+         "DescribeReportDefinitions" : "https://docs.aws.amazon.com/goto/WebAPI/cur/DescribeReportDefinitions",
+         "PutReportDefinition" : "https://docs.aws.amazon.com/goto/WebAPI/cur/PutReportDefinition"
+      }
    }
 }

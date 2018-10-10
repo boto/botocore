@@ -1,6 +1,10 @@
 {
    "documentation" : {
       "api_url" : "https://docs.aws.amazon.com/marketplacemetering/latest/APIReference/Welcome.html",
-      "methods" : {}
+      "methods" : {
+         "BatchMeterUsage" : "https://docs.aws.amazon.com/goto/WebAPI/metering.marketplace/BatchMeterUsage",
+         "MeterUsage" : "https://docs.aws.amazon.com/goto/WebAPI/metering.marketplace/MeterUsage",
+         "ResolveCustomer" : "https://docs.aws.amazon.com/goto/WebAPI/metering.marketplace/ResolveCustomer"
+      }
    }
 }

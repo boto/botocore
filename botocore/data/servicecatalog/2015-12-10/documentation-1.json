@@ -1,6 +1,6 @@
 {
    "documentation" : {
-      "api_url" : null,
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10",
       "methods" : {
          "AcceptPortfolioShare" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/AcceptPortfolioShare",
          "AssociatePrincipalWithPortfolio" : "https://docs.aws.amazon.com/goto/WebAPI/servicecatalog/AssociatePrincipalWithPortfolio",
