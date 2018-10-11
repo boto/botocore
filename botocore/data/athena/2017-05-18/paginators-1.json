@@ -17,7 +17,10 @@
       "output_token": "NextToken",
       "limit_key": "MaxResults",
       "result_key": "ResultSet.Rows",
-      "non_aggregate_keys": ["ResultSet.ResultSetMetadata"]
+      "non_aggregate_keys": [
+        "ResultSet.ResultSetMetadata",
+        "UpdateCount"
+      ]
     }
   }
 }
