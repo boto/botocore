@@ -378,8 +378,9 @@ class RawResponse(BytesIO):
 
 
 class ClientHTTPStubber(object):
-    def __init__(self, client):
+    def __init__(self, client, strict=True):
         self.reset()
+        self._strict = strict
         self._client = client
 
     def reset(self):
@@ -416,5 +417,7 @@ class ClientHTTPStubber(object):
                 raise response
             else:
                 return response
-        else:
+        elif self._strict:
             raise HTTPStubberException('Insufficient responses')
+        else:
+            return None
