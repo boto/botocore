@@ -3,6 +3,7 @@
       "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/transcribe-2017-10-26",
       "methods" : {
          "CreateVocabulary" : "https://docs.aws.amazon.com/goto/WebAPI/transcribe/CreateVocabulary",
+         "DeleteTranscriptionJob" : "https://docs.aws.amazon.com/goto/WebAPI/transcribe/DeleteTranscriptionJob",
          "DeleteVocabulary" : "https://docs.aws.amazon.com/goto/WebAPI/transcribe/DeleteVocabulary",
          "GetTranscriptionJob" : "https://docs.aws.amazon.com/goto/WebAPI/transcribe/GetTranscriptionJob",
          "GetVocabulary" : "https://docs.aws.amazon.com/goto/WebAPI/transcribe/GetVocabulary",
