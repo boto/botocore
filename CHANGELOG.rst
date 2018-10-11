@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.12.22
+=======
+
+* api-change:``athena``: Update athena client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``directconnect``: Update directconnect client to latest version
+
+
 1.12.21
 =======
 
