@@ -1,6 +1,6 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/opsworks/",
+      "api_url" : "https://docs.aws.amazon.com/opsworks/",
       "methods" : {
          "AssociateNode" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_AssociateNode.html",
          "CreateBackup" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_CreateBackup.html",
@@ -13,6 +13,7 @@
          "DescribeNodeAssociationStatus" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_DescribeNodeAssociationStatus.html",
          "DescribeServers" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_DescribeServers.html",
          "DisassociateNode" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_DisassociateNode.html",
+         "ExportServerEngineAttribute" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_ExportServerEngineAttribute.html",
          "RestoreServer" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_RestoreServer.html",
          "StartMaintenance" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_StartMaintenance.html",
          "UpdateServer" : "https://docs.aws.amazon.com/opsworks-cm/latest/APIReference/API_UpdateServer.html",

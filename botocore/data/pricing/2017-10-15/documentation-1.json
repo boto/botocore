@@ -1,6 +1,10 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/account-billing/",
-      "methods" : {}
+      "api_url" : "https://docs.aws.amazon.com/account-billing/",
+      "methods" : {
+         "DescribeServices" : "https://docs.aws.amazon.com/goto/WebAPI/api.pricing/DescribeServices",
+         "GetAttributeValues" : "https://docs.aws.amazon.com/goto/WebAPI/api.pricing/GetAttributeValues",
+         "GetProducts" : "https://docs.aws.amazon.com/goto/WebAPI/api.pricing/GetProducts"
+      }
    }
 }

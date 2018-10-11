@@ -1,6 +1,24 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/amazon-mq/",
-      "methods" : {}
+      "api_url" : "https://docs.aws.amazon.com/amazon-mq/",
+      "methods" : {
+         "CreateBroker" : "https://docs.aws.amazon.com/goto/WebAPI/mq/CreateBroker",
+         "CreateConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/mq/CreateConfiguration",
+         "CreateUser" : "https://docs.aws.amazon.com/goto/WebAPI/mq/CreateUser",
+         "DeleteBroker" : "https://docs.aws.amazon.com/goto/WebAPI/mq/DeleteBroker",
+         "DeleteUser" : "https://docs.aws.amazon.com/goto/WebAPI/mq/DeleteUser",
+         "DescribeBroker" : "https://docs.aws.amazon.com/goto/WebAPI/mq/DescribeBroker",
+         "DescribeConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/mq/DescribeConfiguration",
+         "DescribeConfigurationRevision" : "https://docs.aws.amazon.com/goto/WebAPI/mq/DescribeConfigurationRevision",
+         "DescribeUser" : "https://docs.aws.amazon.com/goto/WebAPI/mq/DescribeUser",
+         "ListBrokers" : "https://docs.aws.amazon.com/goto/WebAPI/mq/ListBrokers",
+         "ListConfigurationRevisions" : "https://docs.aws.amazon.com/goto/WebAPI/mq/ListConfigurationRevisions",
+         "ListConfigurations" : "https://docs.aws.amazon.com/goto/WebAPI/mq/ListConfigurations",
+         "ListUsers" : "https://docs.aws.amazon.com/goto/WebAPI/mq/ListUsers",
+         "RebootBroker" : "https://docs.aws.amazon.com/goto/WebAPI/mq/RebootBroker",
+         "UpdateBroker" : "https://docs.aws.amazon.com/goto/WebAPI/mq/UpdateBroker",
+         "UpdateConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/mq/UpdateConfiguration",
+         "UpdateUser" : "https://docs.aws.amazon.com/goto/WebAPI/mq/UpdateUser"
+      }
    }
 }

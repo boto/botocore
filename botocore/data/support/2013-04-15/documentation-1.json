@@ -1,6 +1,6 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/aws-support/",
+      "api_url" : "https://docs.aws.amazon.com/aws-support/",
       "methods" : {
          "AddAttachmentsToSet" : "https://docs.aws.amazon.com/goto/WebAPI/support/AddAttachmentsToSet",
          "AddCommunicationToCase" : "https://docs.aws.amazon.com/goto/WebAPI/support/AddCommunicationToCase",

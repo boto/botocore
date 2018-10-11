@@ -1,6 +1,16 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/mobile-hub/",
-      "methods" : {}
+      "api_url" : "https://docs.aws.amazon.com/mobile-hub/",
+      "methods" : {
+         "CreateProject" : "https://docs.aws.amazon.com/goto/WebAPI/mobile/CreateProject",
+         "DeleteProject" : "https://docs.aws.amazon.com/goto/WebAPI/mobile/DeleteProject",
+         "DescribeBundle" : "https://docs.aws.amazon.com/goto/WebAPI/mobile/DescribeBundle",
+         "DescribeProject" : "https://docs.aws.amazon.com/goto/WebAPI/mobile/DescribeProject",
+         "ExportBundle" : "https://docs.aws.amazon.com/goto/WebAPI/mobile/ExportBundle",
+         "ExportProject" : "https://docs.aws.amazon.com/goto/WebAPI/mobile/ExportProject",
+         "ListBundles" : "https://docs.aws.amazon.com/goto/WebAPI/mobile/ListBundles",
+         "ListProjects" : "https://docs.aws.amazon.com/goto/WebAPI/mobile/ListProjects",
+         "UpdateProject" : "https://docs.aws.amazon.com/goto/WebAPI/mobile/UpdateProject"
+      }
    }
 }

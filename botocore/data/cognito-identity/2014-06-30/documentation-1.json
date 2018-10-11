@@ -1,6 +1,6 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/cognito/",
+      "api_url" : "https://docs.aws.amazon.com/cognito/",
       "methods" : {
          "CreateIdentityPool" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/CreateIdentityPool",
          "DeleteIdentities" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-identity/DeleteIdentities",

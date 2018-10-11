@@ -1,6 +1,23 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/migrationhub/",
-      "methods" : {}
+      "api_url" : "https://docs.aws.amazon.com/migrationhub/",
+      "methods" : {
+         "AssociateCreatedArtifact" : "https://docs.aws.amazon.com/goto/WebAPI/mgh/AssociateCreatedArtifact",
+         "AssociateDiscoveredResource" : "https://docs.aws.amazon.com/goto/WebAPI/mgh/AssociateDiscoveredResource",
+         "CreateProgressUpdateStream" : "https://docs.aws.amazon.com/goto/WebAPI/mgh/CreateProgressUpdateStream",
+         "DeleteProgressUpdateStream" : "https://docs.aws.amazon.com/goto/WebAPI/mgh/DeleteProgressUpdateStream",
+         "DescribeApplicationState" : "https://docs.aws.amazon.com/goto/WebAPI/mgh/DescribeApplicationState",
+         "DescribeMigrationTask" : "https://docs.aws.amazon.com/goto/WebAPI/mgh/DescribeMigrationTask",
+         "DisassociateCreatedArtifact" : "https://docs.aws.amazon.com/goto/WebAPI/mgh/DisassociateCreatedArtifact",
+         "DisassociateDiscoveredResource" : "https://docs.aws.amazon.com/goto/WebAPI/mgh/DisassociateDiscoveredResource",
+         "ImportMigrationTask" : "https://docs.aws.amazon.com/goto/WebAPI/mgh/ImportMigrationTask",
+         "ListCreatedArtifacts" : "https://docs.aws.amazon.com/goto/WebAPI/mgh/ListCreatedArtifacts",
+         "ListDiscoveredResources" : "https://docs.aws.amazon.com/goto/WebAPI/mgh/ListDiscoveredResources",
+         "ListMigrationTasks" : "https://docs.aws.amazon.com/goto/WebAPI/mgh/ListMigrationTasks",
+         "ListProgressUpdateStreams" : "https://docs.aws.amazon.com/goto/WebAPI/mgh/ListProgressUpdateStreams",
+         "NotifyApplicationState" : "https://docs.aws.amazon.com/goto/WebAPI/mgh/NotifyApplicationState",
+         "NotifyMigrationTaskState" : "https://docs.aws.amazon.com/goto/WebAPI/mgh/NotifyMigrationTaskState",
+         "PutResourceAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/mgh/PutResourceAttributes"
+      }
    }
 }

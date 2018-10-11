@@ -1,6 +1,6 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/cloudwatch/",
+      "api_url" : "https://docs.aws.amazon.com/cloudwatch/",
       "methods" : {
          "DeleteAlarms" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/DeleteAlarms",
          "DeleteDashboards" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/DeleteDashboards",
@@ -12,6 +12,7 @@
          "GetDashboard" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/GetDashboard",
          "GetMetricData" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/GetMetricData",
          "GetMetricStatistics" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/GetMetricStatistics",
+         "GetMetricWidgetImage" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/GetMetricWidgetImage",
          "ListDashboards" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/ListDashboards",
          "ListMetrics" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/ListMetrics",
          "PutDashboard" : "https://docs.aws.amazon.com/goto/WebAPI/monitoring/PutDashboard",

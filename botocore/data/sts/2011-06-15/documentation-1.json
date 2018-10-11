@@ -1,6 +1,6 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/iam/",
+      "api_url" : "https://docs.aws.amazon.com/iam/",
       "methods" : {
          "AssumeRole" : "https://docs.aws.amazon.com/goto/WebAPI/sts/AssumeRole",
          "AssumeRoleWithSAML" : "https://docs.aws.amazon.com/goto/WebAPI/sts/AssumeRoleWithSAML",

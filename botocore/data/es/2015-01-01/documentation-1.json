@@ -1,6 +1,30 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/elasticsearch-service/",
-      "methods" : {}
+      "api_url" : "https://docs.aws.amazon.com/elasticsearch-service/",
+      "methods" : {
+         "AddTags" : "https://docs.aws.amazon.com/goto/WebAPI/es/AddTags",
+         "CancelElasticsearchServiceSoftwareUpdate" : "https://docs.aws.amazon.com/goto/WebAPI/es/CancelElasticsearchServiceSoftwareUpdate",
+         "CreateElasticsearchDomain" : "https://docs.aws.amazon.com/goto/WebAPI/es/CreateElasticsearchDomain",
+         "DeleteElasticsearchDomain" : "https://docs.aws.amazon.com/goto/WebAPI/es/DeleteElasticsearchDomain",
+         "DeleteElasticsearchServiceRole" : "https://docs.aws.amazon.com/goto/WebAPI/es/DeleteElasticsearchServiceRole",
+         "DescribeElasticsearchDomain" : "https://docs.aws.amazon.com/goto/WebAPI/es/DescribeElasticsearchDomain",
+         "DescribeElasticsearchDomainConfig" : "https://docs.aws.amazon.com/goto/WebAPI/es/DescribeElasticsearchDomainConfig",
+         "DescribeElasticsearchDomains" : "https://docs.aws.amazon.com/goto/WebAPI/es/DescribeElasticsearchDomains",
+         "DescribeElasticsearchInstanceTypeLimits" : "https://docs.aws.amazon.com/goto/WebAPI/es/DescribeElasticsearchInstanceTypeLimits",
+         "DescribeReservedElasticsearchInstanceOfferings" : "https://docs.aws.amazon.com/goto/WebAPI/es/DescribeReservedElasticsearchInstanceOfferings",
+         "DescribeReservedElasticsearchInstances" : "https://docs.aws.amazon.com/goto/WebAPI/es/DescribeReservedElasticsearchInstances",
+         "GetCompatibleElasticsearchVersions" : "https://docs.aws.amazon.com/goto/WebAPI/es/GetCompatibleElasticsearchVersions",
+         "GetUpgradeHistory" : "https://docs.aws.amazon.com/goto/WebAPI/es/GetUpgradeHistory",
+         "GetUpgradeStatus" : "https://docs.aws.amazon.com/goto/WebAPI/es/GetUpgradeStatus",
+         "ListDomainNames" : "https://docs.aws.amazon.com/goto/WebAPI/es/ListDomainNames",
+         "ListElasticsearchInstanceTypes" : "https://docs.aws.amazon.com/goto/WebAPI/es/ListElasticsearchInstanceTypes",
+         "ListElasticsearchVersions" : "https://docs.aws.amazon.com/goto/WebAPI/es/ListElasticsearchVersions",
+         "ListTags" : "https://docs.aws.amazon.com/goto/WebAPI/es/ListTags",
+         "PurchaseReservedElasticsearchInstanceOffering" : "https://docs.aws.amazon.com/goto/WebAPI/es/PurchaseReservedElasticsearchInstanceOffering",
+         "RemoveTags" : "https://docs.aws.amazon.com/goto/WebAPI/es/RemoveTags",
+         "StartElasticsearchServiceSoftwareUpdate" : "https://docs.aws.amazon.com/goto/WebAPI/es/StartElasticsearchServiceSoftwareUpdate",
+         "UpdateElasticsearchDomainConfig" : "https://docs.aws.amazon.com/goto/WebAPI/es/UpdateElasticsearchDomainConfig",
+         "UpgradeElasticsearchDomain" : "https://docs.aws.amazon.com/goto/WebAPI/es/UpgradeElasticsearchDomain"
+      }
    }
 }

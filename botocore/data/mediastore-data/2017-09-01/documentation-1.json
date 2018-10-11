@@ -1,6 +1,12 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/mediastore/",
-      "methods" : {}
+      "api_url" : "https://docs.aws.amazon.com/mediastore/",
+      "methods" : {
+         "DeleteObject" : "https://docs.aws.amazon.com/goto/WebAPI/data.mediastore/DeleteObject",
+         "DescribeObject" : "https://docs.aws.amazon.com/goto/WebAPI/data.mediastore/DescribeObject",
+         "GetObject" : "https://docs.aws.amazon.com/goto/WebAPI/data.mediastore/GetObject",
+         "ListItems" : "https://docs.aws.amazon.com/goto/WebAPI/data.mediastore/ListItems",
+         "PutObject" : "https://docs.aws.amazon.com/goto/WebAPI/data.mediastore/PutObject"
+      }
    }
 }

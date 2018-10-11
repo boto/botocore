@@ -1,6 +1,6 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/account-billing/",
+      "api_url" : "https://docs.aws.amazon.com/account-billing/",
       "methods" : {
          "GetCostAndUsage" : "https://docs.aws.amazon.com/goto/WebAPI/ce/GetCostAndUsage",
          "GetDimensionValues" : "https://docs.aws.amazon.com/goto/WebAPI/ce/GetDimensionValues",

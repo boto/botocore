@@ -1,6 +1,11 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/iot/",
-      "methods" : {}
+      "api_url" : "https://docs.aws.amazon.com/iot/",
+      "methods" : {
+         "DeleteThingShadow" : "https://docs.aws.amazon.com/goto/WebAPI/data.iot/DeleteThingShadow",
+         "GetThingShadow" : "https://docs.aws.amazon.com/goto/WebAPI/data.iot/GetThingShadow",
+         "Publish" : "https://docs.aws.amazon.com/goto/WebAPI/data.iot/Publish",
+         "UpdateThingShadow" : "https://docs.aws.amazon.com/goto/WebAPI/data.iot/UpdateThingShadow"
+      }
    }
 }

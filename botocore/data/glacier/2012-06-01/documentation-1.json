@@ -1,6 +1,40 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/glacier/",
-      "methods" : {}
+      "api_url" : "https://docs.aws.amazon.com/glacier/",
+      "methods" : {
+         "AbortMultipartUpload" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/AbortMultipartUpload",
+         "AbortVaultLock" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/AbortVaultLock",
+         "AddTagsToVault" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/AddTagsToVault",
+         "CompleteMultipartUpload" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/CompleteMultipartUpload",
+         "CompleteVaultLock" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/CompleteVaultLock",
+         "CreateVault" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/CreateVault",
+         "DeleteArchive" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/DeleteArchive",
+         "DeleteVault" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/DeleteVault",
+         "DeleteVaultAccessPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/DeleteVaultAccessPolicy",
+         "DeleteVaultNotifications" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/DeleteVaultNotifications",
+         "DescribeJob" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/DescribeJob",
+         "DescribeVault" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/DescribeVault",
+         "GetDataRetrievalPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/GetDataRetrievalPolicy",
+         "GetJobOutput" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/GetJobOutput",
+         "GetVaultAccessPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/GetVaultAccessPolicy",
+         "GetVaultLock" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/GetVaultLock",
+         "GetVaultNotifications" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/GetVaultNotifications",
+         "InitiateJob" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/InitiateJob",
+         "InitiateMultipartUpload" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/InitiateMultipartUpload",
+         "InitiateVaultLock" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/InitiateVaultLock",
+         "ListJobs" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/ListJobs",
+         "ListMultipartUploads" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/ListMultipartUploads",
+         "ListParts" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/ListParts",
+         "ListProvisionedCapacity" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/ListProvisionedCapacity",
+         "ListTagsForVault" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/ListTagsForVault",
+         "ListVaults" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/ListVaults",
+         "PurchaseProvisionedCapacity" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/PurchaseProvisionedCapacity",
+         "RemoveTagsFromVault" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/RemoveTagsFromVault",
+         "SetDataRetrievalPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/SetDataRetrievalPolicy",
+         "SetVaultAccessPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/SetVaultAccessPolicy",
+         "SetVaultNotifications" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/SetVaultNotifications",
+         "UploadArchive" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/UploadArchive",
+         "UploadMultipartPart" : "https://docs.aws.amazon.com/goto/WebAPI/glacier/UploadMultipartPart"
+      }
    }
 }

@@ -1,6 +1,6 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/ses/",
+      "api_url" : "https://docs.aws.amazon.com/ses/",
       "methods" : {
          "CloneReceiptRuleSet" : "https://docs.aws.amazon.com/goto/WebAPI/email/CloneReceiptRuleSet",
          "CreateConfigurationSet" : "https://docs.aws.amazon.com/goto/WebAPI/email/CreateConfigurationSet",

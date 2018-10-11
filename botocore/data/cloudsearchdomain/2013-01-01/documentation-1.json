@@ -1,6 +1,10 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/cloudsearch/",
-      "methods" : {}
+      "api_url" : "https://docs.aws.amazon.com/cloudsearch/",
+      "methods" : {
+         "Search" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearchdomain/Search",
+         "Suggest" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearchdomain/Suggest",
+         "UploadDocuments" : "https://docs.aws.amazon.com/goto/WebAPI/cloudsearchdomain/UploadDocuments"
+      }
    }
 }

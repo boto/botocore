@@ -1,6 +1,17 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/simpledb/",
-      "methods" : {}
+      "api_url" : "https://docs.aws.amazon.com/simpledb/",
+      "methods" : {
+         "BatchDeleteAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/sdb/BatchDeleteAttributes",
+         "BatchPutAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/sdb/BatchPutAttributes",
+         "CreateDomain" : "https://docs.aws.amazon.com/goto/WebAPI/sdb/CreateDomain",
+         "DeleteAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/sdb/DeleteAttributes",
+         "DeleteDomain" : "https://docs.aws.amazon.com/goto/WebAPI/sdb/DeleteDomain",
+         "DomainMetadata" : "https://docs.aws.amazon.com/goto/WebAPI/sdb/DomainMetadata",
+         "GetAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/sdb/GetAttributes",
+         "ListDomains" : "https://docs.aws.amazon.com/goto/WebAPI/sdb/ListDomains",
+         "PutAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/sdb/PutAttributes",
+         "Select" : "https://docs.aws.amazon.com/goto/WebAPI/sdb/Select"
+      }
    }
 }

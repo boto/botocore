@@ -1,6 +1,6 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/cognito/",
+      "api_url" : "https://docs.aws.amazon.com/cognito/",
       "methods" : {
          "BulkPublish" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-sync/BulkPublish",
          "DeleteDataset" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-sync/DeleteDataset",

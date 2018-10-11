@@ -1,6 +1,6 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/step-functions/",
+      "api_url" : "https://docs.aws.amazon.com/step-functions/",
       "methods" : {
          "CreateActivity" : "https://docs.aws.amazon.com/goto/WebAPI/states/CreateActivity",
          "CreateStateMachine" : "https://docs.aws.amazon.com/goto/WebAPI/states/CreateStateMachine",

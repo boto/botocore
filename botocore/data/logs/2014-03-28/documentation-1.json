@@ -1,6 +1,6 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/cloudwatch/",
+      "api_url" : "https://docs.aws.amazon.com/cloudwatch/",
       "methods" : {
          "AssociateKmsKey" : "https://docs.aws.amazon.com/goto/WebAPI/logs/AssociateKmsKey",
          "CancelExportTask" : "https://docs.aws.amazon.com/goto/WebAPI/logs/CancelExportTask",

@@ -1,6 +1,6 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/cloudwatch/",
+      "api_url" : "https://docs.aws.amazon.com/cloudwatch/",
       "methods" : {
          "DeleteRule" : "https://docs.aws.amazon.com/goto/WebAPI/events/DeleteRule",
          "DescribeEventBus" : "https://docs.aws.amazon.com/goto/WebAPI/events/DescribeEventBus",

@@ -1,6 +1,6 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/directory-service/",
+      "api_url" : "https://docs.aws.amazon.com/directory-service/",
       "methods" : {
          "AddFacetToObject" : "https://docs.aws.amazon.com/goto/WebAPI/clouddirectory/AddFacetToObject",
          "ApplySchema" : "https://docs.aws.amazon.com/goto/WebAPI/clouddirectory/ApplySchema",

@@ -1,6 +1,46 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/mturk/",
-      "methods" : {}
+      "api_url" : "https://docs.aws.amazon.com/mturk/",
+      "methods" : {
+         "AcceptQualificationRequest" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/AcceptQualificationRequest",
+         "ApproveAssignment" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/ApproveAssignment",
+         "AssociateQualificationWithWorker" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/AssociateQualificationWithWorker",
+         "CreateAdditionalAssignmentsForHIT" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/CreateAdditionalAssignmentsForHIT",
+         "CreateHIT" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/CreateHIT",
+         "CreateHITType" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/CreateHITType",
+         "CreateHITWithHITType" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/CreateHITWithHITType",
+         "CreateQualificationType" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/CreateQualificationType",
+         "CreateWorkerBlock" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/CreateWorkerBlock",
+         "DeleteHIT" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/DeleteHIT",
+         "DeleteQualificationType" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/DeleteQualificationType",
+         "DeleteWorkerBlock" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/DeleteWorkerBlock",
+         "DisassociateQualificationFromWorker" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/DisassociateQualificationFromWorker",
+         "GetAccountBalance" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/GetAccountBalance",
+         "GetAssignment" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/GetAssignment",
+         "GetFileUploadURL" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/GetFileUploadURL",
+         "GetHIT" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/GetHIT",
+         "GetQualificationScore" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/GetQualificationScore",
+         "GetQualificationType" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/GetQualificationType",
+         "ListAssignmentsForHIT" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/ListAssignmentsForHIT",
+         "ListBonusPayments" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/ListBonusPayments",
+         "ListHITs" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/ListHITs",
+         "ListHITsForQualificationType" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/ListHITsForQualificationType",
+         "ListQualificationRequests" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/ListQualificationRequests",
+         "ListQualificationTypes" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/ListQualificationTypes",
+         "ListReviewPolicyResultsForHIT" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/ListReviewPolicyResultsForHIT",
+         "ListReviewableHITs" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/ListReviewableHITs",
+         "ListWorkerBlocks" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/ListWorkerBlocks",
+         "ListWorkersWithQualificationType" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/ListWorkersWithQualificationType",
+         "NotifyWorkers" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/NotifyWorkers",
+         "RejectAssignment" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/RejectAssignment",
+         "RejectQualificationRequest" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/RejectQualificationRequest",
+         "SendBonus" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/SendBonus",
+         "SendTestEventNotification" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/SendTestEventNotification",
+         "UpdateExpirationForHIT" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/UpdateExpirationForHIT",
+         "UpdateHITReviewStatus" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/UpdateHITReviewStatus",
+         "UpdateHITTypeOfHIT" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/UpdateHITTypeOfHIT",
+         "UpdateNotificationSettings" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/UpdateNotificationSettings",
+         "UpdateQualificationType" : "https://docs.aws.amazon.com/goto/WebAPI/mturk-requester/UpdateQualificationType"
+      }
    }
 }

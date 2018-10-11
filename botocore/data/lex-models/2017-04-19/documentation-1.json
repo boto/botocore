@@ -1,6 +1,43 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/lex/",
-      "methods" : {}
+      "api_url" : "https://docs.aws.amazon.com/lex/",
+      "methods" : {
+         "CreateBotVersion" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/CreateBotVersion",
+         "CreateIntentVersion" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/CreateIntentVersion",
+         "CreateSlotTypeVersion" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/CreateSlotTypeVersion",
+         "DeleteBot" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/DeleteBot",
+         "DeleteBotAlias" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/DeleteBotAlias",
+         "DeleteBotChannelAssociation" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/DeleteBotChannelAssociation",
+         "DeleteBotVersion" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/DeleteBotVersion",
+         "DeleteIntent" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/DeleteIntent",
+         "DeleteIntentVersion" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/DeleteIntentVersion",
+         "DeleteSlotType" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/DeleteSlotType",
+         "DeleteSlotTypeVersion" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/DeleteSlotTypeVersion",
+         "DeleteUtterances" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/DeleteUtterances",
+         "GetBot" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/GetBot",
+         "GetBotAlias" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/GetBotAlias",
+         "GetBotAliases" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/GetBotAliases",
+         "GetBotChannelAssociation" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/GetBotChannelAssociation",
+         "GetBotChannelAssociations" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/GetBotChannelAssociations",
+         "GetBotVersions" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/GetBotVersions",
+         "GetBots" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/GetBots",
+         "GetBuiltinIntent" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/GetBuiltinIntent",
+         "GetBuiltinIntents" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/GetBuiltinIntents",
+         "GetBuiltinSlotTypes" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/GetBuiltinSlotTypes",
+         "GetExport" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/GetExport",
+         "GetImport" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/GetImport",
+         "GetIntent" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/GetIntent",
+         "GetIntentVersions" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/GetIntentVersions",
+         "GetIntents" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/GetIntents",
+         "GetSlotType" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/GetSlotType",
+         "GetSlotTypeVersions" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/GetSlotTypeVersions",
+         "GetSlotTypes" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/GetSlotTypes",
+         "GetUtterancesView" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/GetUtterancesView",
+         "PutBot" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/PutBot",
+         "PutBotAlias" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/PutBotAlias",
+         "PutIntent" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/PutIntent",
+         "PutSlotType" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/PutSlotType",
+         "StartImport" : "https://docs.aws.amazon.com/goto/WebAPI/models.lex/StartImport"
+      }
    }
 }

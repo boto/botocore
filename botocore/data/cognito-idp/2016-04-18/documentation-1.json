@@ -1,6 +1,6 @@
 {
    "documentation" : {
-      "api_url" : "https://aws.amazon.com/documentation/cognito/",
+      "api_url" : "https://docs.aws.amazon.com/cognito/",
       "methods" : {
          "AddCustomAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-idp/AddCustomAttributes",
          "AdminAddUserToGroup" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-idp/AdminAddUserToGroup",
