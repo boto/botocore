@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.12.23
+=======
+
+* api-change:``cloudtrail``: Update cloudtrail client to latest version
+
+
 1.12.22
 =======
 
