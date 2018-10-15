@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.24
+=======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+
+
 1.12.23
 =======
 
