@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.25
+=======
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``resource-groups``: Update resource-groups client to latest version
+
+
 1.12.24
 =======
 
