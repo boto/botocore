@@ -5308,12 +5308,35 @@
     "GetAppsResponse" : {
       "type" : "structure",
       "members" : {
-        "ApplicationsResponse" : {
-          "shape" : "ApplicationsResponse"
+        "Item" : {
+          "shape" : "ListOfApplicationsResponse",
+          "documentation" : "A list of applications"
+        },
+        "NextToken" : {
+          "shape" : "__string",
+          "documentation" : "The string that you use in a subsequent request to get the next page of results in a paginated response."
         }
       },
-      "required" : [ "ApplicationsResponse" ],
-      "payload" : "ApplicationsResponse"
+      "documentation" : "Application list.",
+      "required" : [ ]
+    },
+    "ListOfApplicationsResponse" : {
+      "type" : "list",
+      "member" : {
+        "shape" : "ApplicationResponse"
+      }
+    },
+    "ApplicationResponse":{
+      "type" : "structure",
+      "members" : {
+        "Name" : {
+          "shape" : "__string"
+        },
+        "Id" : {
+          "shape" : "__string"
+        }
+      },
+      "required" : [ ]
     },
     "GetBaiduChannelRequest" : {
       "type" : "structure",
