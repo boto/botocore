@@ -5309,7 +5309,7 @@
       "type" : "structure",
       "members" : {
         "Item" : {
-          "shape" : "ListOfApplicationsResponse",
+          "shape" : "ListOfApplicationResponse",
           "documentation" : "A list of applications"
         },
         "NextToken" : {
@@ -5318,24 +5318,6 @@
         }
       },
       "documentation" : "Application list.",
-      "required" : [ ]
-    },
-    "ListOfApplicationsResponse" : {
-      "type" : "list",
-      "member" : {
-        "shape" : "ApplicationResponse"
-      }
-    },
-    "ApplicationResponse":{
-      "type" : "structure",
-      "members" : {
-        "Name" : {
-          "shape" : "__string"
-        },
-        "Id" : {
-          "shape" : "__string"
-        }
-      },
       "required" : [ ]
     },
     "GetBaiduChannelRequest" : {
