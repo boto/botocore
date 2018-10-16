@@ -99,8 +99,7 @@ def create_credential_resolver(session, cache=None):
         instance_metadata_provider
     ]
 
-    explicit_profile = session.get_config_variable('profile',
-                                                   methods=('instance',))
+    explicit_profile = session.get_config_variable('profile')
     if explicit_profile is not None:
         # An explicitly provided profile will negate an EnvProvider.
         # We will defer to providers that understand the "profile"

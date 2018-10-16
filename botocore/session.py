@@ -26,6 +26,11 @@ from botocore import __version__
 import botocore.configloader
 import botocore.credentials
 import botocore.client
+from botocore.configprovider import ChainProvider
+from botocore.configprovider import ConfigProvider
+from botocore.configprovider import DictConfigValueProvider
+from botocore.configprovider import ScopedConfigValueProvider
+from botocore.configprovider import ConstantValueProvider
 from botocore.exceptions import ConfigNotFound, ProfileNotFound
 from botocore.exceptions import UnknownServiceError, PartialCredentialsError
 from botocore.errorfactory import ClientExceptionsFactory
@@ -80,38 +85,38 @@ class Session(object):
     #: the ``env var`` is the OS environment variable (``os.environ``) to
     #: use, and ``default_value`` is the value to use if no value is otherwise
     #: found.
-    SESSION_VARIABLES = {
-        # logical:  config_file, env_var,        default_value, conversion_func
-        'profile': (None, ['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'], None, None),
-        'region': ('region', 'AWS_DEFAULT_REGION', None, None),
-        'data_path': ('data_path', 'AWS_DATA_PATH', None, None),
-        'config_file': (None, 'AWS_CONFIG_FILE', '~/.aws/config', None),
-        'ca_bundle': ('ca_bundle', 'AWS_CA_BUNDLE', None, None),
-        'api_versions': ('api_versions', None, {}, None),
+    # SESSION_VARIABLES = {
+    #     # logical:  config_file, env_var,        default_value, conversion_func
+    #     'profile': (None, ['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'], None, None),
+    #     'region': ('region', 'AWS_DEFAULT_REGION', None, None),
+    #     'data_path': ('data_path', 'AWS_DATA_PATH', None, None),
+    #     'config_file': (None, 'AWS_CONFIG_FILE', '~/.aws/config', None),
+    #     'ca_bundle': ('ca_bundle', 'AWS_CA_BUNDLE', None, None),
+    #     'api_versions': ('api_versions', None, {}, None),
 
-        # This is the shared credentials file amongst sdks.
-        'credentials_file': (None, 'AWS_SHARED_CREDENTIALS_FILE',
-                             '~/.aws/credentials', None),
+    #     # This is the shared credentials file amongst sdks.
+    #     'credentials_file': (None, 'AWS_SHARED_CREDENTIALS_FILE',
+    #                          '~/.aws/credentials', None),
 
-        # These variables only exist in the config file.
+    #     # These variables only exist in the config file.
 
-        # This is the number of seconds until we time out a request to
-        # the instance metadata service.
-        'metadata_service_timeout': (
-            'metadata_service_timeout',
-            'AWS_METADATA_SERVICE_TIMEOUT', 1, int),
-        # This is the number of request attempts we make until we give
-        # up trying to retrieve data from the instance metadata service.
-        'metadata_service_num_attempts': (
-            'metadata_service_num_attempts',
-            'AWS_METADATA_SERVICE_NUM_ATTEMPTS', 1, int),
-        'parameter_validation': ('parameter_validation', None, True, None),
-    }
+    #     # This is the number of seconds until we time out a request to
+    #     # the instance metadata service.
+    #     'metadata_service_timeout': (
+    #         'metadata_service_timeout',
+    #         'AWS_METADATA_SERVICE_TIMEOUT', 1, int),
+    #     # This is the number of request attempts we make until we give
+    #     # up trying to retrieve data from the instance metadata service.
+    #     'metadata_service_num_attempts': (
+    #         'metadata_service_num_attempts',
+    #         'AWS_METADATA_SERVICE_NUM_ATTEMPTS', 1, int),
+    #     'parameter_validation': ('parameter_validation', None, True, None),
+    # }
 
     #: The default format string to use when configuring the botocore logger.
     LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
-    def __init__(self, session_vars=None, event_hooks=None,
+    def __init__(self, config_provider=None, event_hooks=None,
                  include_builtin_handlers=True, profile=None):
         """
         Create a new Session object.
@@ -137,9 +142,12 @@ class Session(object):
             the session is created.
 
         """
-        self.session_var_map = copy.copy(self.SESSION_VARIABLES)
-        if session_vars:
-            self.session_var_map.update(session_vars)
+        # self.session_var_map = copy.copy(self.SESSION_VARIABLES)
+        # if session_vars:
+        #     self.session_var_map.update(session_vars)
+        if config_provider is None:
+            config_provider = self._create_default_config_provider()
+        self.config_provider = config_provider
         if event_hooks is None:
             self._original_handler = HierarchicalEmitter()
         else:
@@ -166,6 +174,106 @@ class Session(object):
         self._components = ComponentLocator()
         self._internal_components = ComponentLocator()
         self._register_components()
+
+    def _create_default_config_provider(self):
+        provider = ConfigProvider(
+            mapping={
+                'profile': ChainProvider(providers=[
+                    DictConfigValueProvider(
+                        names=['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'],
+                        source=os.environ,
+                    ),
+                ]),
+                'region': ChainProvider(providers=[
+                    DictConfigValueProvider(
+                        names='AWS_DEFAULT_REGION',
+                        source=os.environ,
+                    ),
+                    ScopedConfigValueProvider(
+                        name='region',
+                        scoped_config_method=self.get_scoped_config,
+                    ),
+                ]),
+                'data_path': ChainProvider(providers=[
+                    DictConfigValueProvider(
+                        names='AWS_DATA_PATH',
+                        source=os.environ,
+                    ),
+                    ScopedConfigValueProvider(
+                        name='data_path',
+                        scoped_config_method=self.get_scoped_config,
+                    ),
+
+                ]),
+                'config_file': ChainProvider(providers=[
+                    DictConfigValueProvider(
+                        names='AWS_CONFIG_FILE',
+                        source=os.environ,
+                    ),
+                    ConstantValueProvider(value='~/.aws/config'),
+                ]),
+                'ca_bundle': ChainProvider(providers=[
+                    DictConfigValueProvider(
+                        names='AWS_CA_BUNDLE',
+                        source=os.environ,
+                    ),
+                    ScopedConfigValueProvider(
+                        name='ca_bundle',
+                        scoped_config_method=self.get_scoped_config,
+                    ),
+                ]),
+                'api_versions': ChainProvider(providers=[
+                    ScopedConfigValueProvider(
+                        name='api_versions',
+                        scoped_config_method=self.get_scoped_config,
+                    ),
+                    ConstantValueProvider(value={}),
+                ]),
+                'credentials_file': ChainProvider(providers=[
+                    DictConfigValueProvider(
+                        names='AWS_SHARED_CREDENTIALS_FILE',
+                        source=os.environ,
+                    ),
+                    ConstantValueProvider(value='~/.aws/credentials'),
+                ]),
+                'metadata_service_timeout': ChainProvider(
+                    providers=[
+                        DictConfigValueProvider(
+                            names='AWS_METADATA_SERVICE_TIMEOUT',
+                            source=os.environ,
+                        ),
+                        ScopedConfigValueProvider(
+                            name='metadata_service_timeout',
+                            scoped_config_method=self.get_scoped_config,
+                        ),
+                        ConstantValueProvider(value=1),
+                    ],
+                    cast=int,
+                ),
+                'metadata_service_num_attempts': ChainProvider(
+                    providers=[
+                        DictConfigValueProvider(
+                            names='AWS_METADATA_SERVICE_NUM_ATTEMPTS',
+                            source=os.environ,
+                        ),
+                        ScopedConfigValueProvider(
+                            name='metadata_service_num_attempts',
+                            scoped_config_method=self.get_scoped_config,
+                        ),
+                        ConstantValueProvider(value=1),
+                    ],
+                    cast=int,
+                ),
+                'parameter_validation': ChainProvider(providers=[
+                    ScopedConfigValueProvider(
+                        name='parameter_validation',
+                        scoped_config_method=self.get_scoped_config,
+                    ),
+                    ConstantValueProvider(value=True),
+                ]),
+            },
+        )
+        return provider
 
     def _register_components(self):
         self._register_credential_provider()
@@ -235,7 +343,10 @@ class Session(object):
             self._profile = profile
         return self._profile
 
-    def get_config_variable(self, logical_name,
+    def get_config_variable(self, logical_name):
+        return self.config_provider.get_config_variable(logical_name)
+
+    def _get_config_variable(self, logical_name,
                             methods=('instance', 'env', 'config')):
         """
         Retrieve the value associated with the specified logical_name
@@ -322,6 +433,9 @@ class Session(object):
         return None
 
     def set_config_variable(self, logical_name, value):
+        self.config_provider.set_config_variable(logical_name, value)
+
+    def _set_config_variable(self, logical_name, value):
         """Set a configuration variable to a specific value.
 
         By using this method, you can override the normal lookup
