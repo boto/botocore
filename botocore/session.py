@@ -31,6 +31,7 @@ from botocore.configprovider import ConfigProvider
 from botocore.configprovider import DictConfigValueProvider
 from botocore.configprovider import ScopedConfigValueProvider
 from botocore.configprovider import ConstantValueProvider
+from botocore.configprovider import LazyConstantValueProvider
 from botocore.exceptions import ConfigNotFound, ProfileNotFound
 from botocore.exceptions import UnknownServiceError, PartialCredentialsError
 from botocore.errorfactory import ClientExceptionsFactory
@@ -45,6 +46,7 @@ from botocore import paginate
 from botocore import waiter
 from botocore import retryhandler, translate
 from botocore.utils import EVENT_ALIASES
+from botocore.utils import InstanceMetadataFetcher
 
 
 logger = logging.getLogger(__name__)
@@ -193,6 +195,9 @@ class Session(object):
                         name='region',
                         scoped_config_method=self.get_scoped_config,
                     ),
+                    LazyConstantValueProvider(
+                        source=self._get_instance_metadata_region,
+                    ),
                 ]),
                 'data_path': ChainProvider(providers=[
                     DictConfigValueProvider(
@@ -271,9 +276,36 @@ class Session(object):
                     ),
                     ConstantValueProvider(value=True),
                 ]),
+                'use_instance_region': ChainProvider(providers=[
+                    ScopedConfigValueProvider(
+                        name='use_instance_region',
+                        scoped_config_method=self.get_scoped_config,
+                    ),
+                    ConstantValueProvider(value=False),
+                ]),
             },
         )
         return provider
+
+    def _get_instance_metadata_region(self):
+        # This is given a boolean input that tells it whehter or not we should
+        # use the instance metadata service to fetch the region. If not we
+        # should just return None, otherwise we try and contact the server
+        # and get our current region.
+        should_use_instance_region = self.get_config_variable()
+        if not should_use_instance_region:
+            return None
+        metadata_timeout = self.get_config_variable(
+            'metadata_service_timeout')
+        metadata_num_attempts = self.get_config_variable(
+            'metadata_service_num_attempts')
+        fetcher = InstanceMetadataFetcher(
+            timeout=metadata_timeout,
+            num_attempts=metadata_num_attempts,
+            user_agent=self.user_agent(),
+        )
+        region = fetcher.retrieve_region()
+        return region
 
     def _register_components(self):
         self._register_credential_provider()

@@ -213,3 +213,12 @@ class ScopedConfigValueProvider(BaseConfigValueProvider):
         scoped_config = self._scoped_config_method()
         value = scoped_config.get(self._name)
         return value
+
+
+class LazyConstantValueProvider(BaseConfigValueProvider):
+    def __init__(self, source):
+        self._source = source
+
+    def provide(self):
+        value = self._source()
+        return value

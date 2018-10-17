@@ -55,6 +55,7 @@ from botocore.utils import deep_merge
 from botocore.utils import S3RegionRedirector
 from botocore.utils import ContainerMetadataFetcher
 from botocore.utils import InstanceMetadataFetcher
+from botocore.utils import InstanceMetadataCredentialFetcher
 from botocore.model import DenormalizedStructureBuilder
 from botocore.model import ShapeResolver
 from botocore.config import Config
@@ -1798,14 +1799,14 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
 
     def test_disabled_by_environment(self):
         env = {'AWS_EC2_METADATA_DISABLED': 'true'}
-        fetcher = InstanceMetadataFetcher(env=env)
+        fetcher = InstanceMetadataCredentialFetcher(env=env)
         result = fetcher.retrieve_iam_role_credentials()
         self.assertEqual(result, {})
         self._send.assert_not_called()
 
     def test_disabled_by_environment_mixed_case(self):
         env = {'AWS_EC2_METADATA_DISABLED': 'tRuE'}
-        fetcher = InstanceMetadataFetcher(env=env)
+        fetcher = InstanceMetadataCredentialFetcher(env=env)
         result = fetcher.retrieve_iam_role_credentials()
         self.assertEqual(result, {})
         self._send.assert_not_called()
@@ -1817,7 +1818,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_get_role_name_imds_response()
         self.add_get_credentials_imds_response()
 
-        fetcher = InstanceMetadataFetcher(url=url, env=env)
+        fetcher = InstanceMetadataCredentialFetcher(base_url=url, env=env)
         result = fetcher.retrieve_iam_role_credentials()
 
         expected_result = {
@@ -1834,7 +1835,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_get_role_name_imds_response()
         self.add_get_credentials_imds_response()
 
-        InstanceMetadataFetcher(
+        InstanceMetadataCredentialFetcher(
             user_agent=user_agent).retrieve_iam_role_credentials()
 
         headers = self._send.call_args[0][0].headers
@@ -1847,7 +1848,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
             status_code=429, body=b'{"message": "Slow down"}')
         self.add_get_role_name_imds_response()
         self.add_get_credentials_imds_response()
-        result = InstanceMetadataFetcher(
+        result = InstanceMetadataCredentialFetcher(
             num_attempts=2).retrieve_iam_role_credentials()
         expected_result = {
             'access_key': self._creds['AccessKeyId'],
@@ -1863,7 +1864,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_imds_connection_error(ConnectionClosedError(endpoint_url=''))
         self.add_get_role_name_imds_response()
         self.add_get_credentials_imds_response()
-        result = InstanceMetadataFetcher(
+        result = InstanceMetadataCredentialFetcher(
             num_attempts=2).retrieve_iam_role_credentials()
         expected_result = {
             'access_key': self._creds['AccessKeyId'],
@@ -1880,7 +1881,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_imds_response(body=b'')
         self.add_get_role_name_imds_response()
         self.add_get_credentials_imds_response()
-        result = InstanceMetadataFetcher(
+        result = InstanceMetadataCredentialFetcher(
             num_attempts=2).retrieve_iam_role_credentials()
         expected_result = {
             'access_key': self._creds['AccessKeyId'],
@@ -1898,7 +1899,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         self.add_imds_response(
             status_code=429, body=b'{"message": "Slow down"}')
         self.add_get_credentials_imds_response()
-        result = InstanceMetadataFetcher(
+        result = InstanceMetadataCredentialFetcher(
             num_attempts=2).retrieve_iam_role_credentials()
         expected_result = {
             'access_key': self._creds['AccessKeyId'],
@@ -1914,7 +1915,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         # Connection related errors should be retried
         self.add_imds_connection_error(ConnectionClosedError(endpoint_url=''))
         self.add_get_credentials_imds_response()
-        result = InstanceMetadataFetcher(
+        result = InstanceMetadataCredentialFetcher(
             num_attempts=2).retrieve_iam_role_credentials()
         expected_result = {
             'access_key': self._creds['AccessKeyId'],
@@ -1931,7 +1932,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         # This should be retried.
         self.add_imds_response(body=b'')
         self.add_get_credentials_imds_response()
-        result = InstanceMetadataFetcher(
+        result = InstanceMetadataCredentialFetcher(
             num_attempts=2).retrieve_iam_role_credentials()
         expected_result = {
             'access_key': self._creds['AccessKeyId'],
@@ -1948,7 +1949,7 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         # This should be retried.
         self.add_imds_response(body=b'{"AccessKey":')
         self.add_get_credentials_imds_response()
-        result = InstanceMetadataFetcher(
+        result = InstanceMetadataCredentialFetcher(
             num_attempts=2).retrieve_iam_role_credentials()
         expected_result = {
             'access_key': self._creds['AccessKeyId'],
@@ -1961,14 +1962,14 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
 
     def test_exhaust_retries_on_role_name_request(self):
         self.add_imds_response(status_code=400, body=b'')
-        result = InstanceMetadataFetcher(
+        result = InstanceMetadataCredentialFetcher(
             num_attempts=1).retrieve_iam_role_credentials()
         self.assertEqual(result, {})
 
     def test_exhaust_retries_on_credentials_request(self):
         self.add_get_role_name_imds_response()
         self.add_imds_response(status_code=400, body=b'')
-        result = InstanceMetadataFetcher(
+        result = InstanceMetadataCredentialFetcher(
             num_attempts=1).retrieve_iam_role_credentials()
         self.assertEqual(result, {})
 
@@ -1978,5 +1979,5 @@ class TestInstanceMetadataFetcher(unittest.TestCase):
         # representing an error. We do not necessarily want to retry this.
         self.add_imds_response(
             body=b'{"Code":"AssumeRoleUnauthorizedAccess","Message":"error"}')
-        result = InstanceMetadataFetcher().retrieve_iam_role_credentials()
+        result = InstanceMetadataCredentialFetcher().retrieve_iam_role_credentials()
         self.assertEqual(result, {})
