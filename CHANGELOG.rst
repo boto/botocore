@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.26
+=======
+
+* api-change:``events``: Update events client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+
+
 1.12.25
 =======
 
