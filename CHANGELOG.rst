@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.27
+=======
+
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+
+
 1.12.26
 =======
 
