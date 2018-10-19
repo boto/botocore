@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.28
+=======
+
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+
+
 1.12.27
 =======
 
