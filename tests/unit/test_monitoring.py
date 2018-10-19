@@ -18,6 +18,7 @@ import time
 
 from botocore.awsrequest import AWSRequest
 from botocore.compat import six
+from botocore.exceptions import ConnectionError
 from botocore.hooks import HierarchicalEmitter
 from botocore.model import OperationModel
 from botocore.model import ServiceModel
@@ -163,7 +164,15 @@ class TestMonitorEventAdapter(unittest.TestCase):
         )
 
         self.mock_time.return_value = 4
-        call_event = self.adapter.feed('after-call', {'context': self.context})
+        call_event = self.adapter.feed('after-call', {
+            'parsed': {
+                'ResponseMetadata': {
+                    'HTTPStatusCode': self.http_status_code,
+                    'HTTPHeaders': self.response_headers
+                }
+            },
+            'context': self.context
+        })
         self.assertEqual(
             call_event,
             APICallEvent(
@@ -231,7 +240,15 @@ class TestMonitorEventAdapter(unittest.TestCase):
         )
 
         self.mock_time.return_value = 7
-        call_event = self.adapter.feed('after-call', {'context': self.context})
+        call_event = self.adapter.feed('after-call', {
+            'parsed': {
+                'ResponseMetadata': {
+                    'HTTPStatusCode': 200,
+                    'HTTPHeaders': self.response_headers
+                }
+            },
+            'context': self.context
+        })
         self.assertEqual(
             call_event,
             APICallEvent(
@@ -243,20 +260,72 @@ class TestMonitorEventAdapter(unittest.TestCase):
             )
         )
 
+    def test_feed_with_retries_exceeded(self):
+        self.feed_before_parameter_build_event(current_time=1)
+        self.feed_request_created_event(current_time=2)
+
+        self.mock_time.return_value = 3
+        first_attempt_event = self.adapter.feed('response-received', {
+            'parsed_response': {
+                'ResponseMetadata': {
+                    'HTTPStatusCode': 500,
+                    'HTTPHeaders': self.response_headers
+                }
+            },
+            'context': self.context,
+            'exception': None
+        })
+        self.feed_request_created_event(current_time=5)
+        self.mock_time.return_value = 6
+        second_attempt_event = self.adapter.feed('response-received', {
+            'parsed_response': {
+                'ResponseMetadata': {
+                    'HTTPStatusCode': 200,
+                    'HTTPHeaders': self.response_headers,
+                    'MaxAttemptsReached': True
+                }
+            },
+            'context': self.context,
+            'exception': None
+        })
+        self.mock_time.return_value = 7
+        call_event = self.adapter.feed('after-call', {
+            'parsed': {
+                'ResponseMetadata': {
+                    'HTTPStatusCode': 200,
+                    'HTTPHeaders': self.response_headers,
+                    'MaxAttemptsReached': True
+                }
+            },
+            'context': self.context
+        })
+        self.assertEqual(
+            call_event,
+            APICallEvent(
+                service=self.service_id,
+                operation=self.wire_name,
+                timestamp=1000,
+                latency=6000,
+                attempts=[first_attempt_event, second_attempt_event],
+                retries_exceeded=True
+            )
+        )
+
     def test_feed_with_parsed_error(self):
         self.feed_before_parameter_build_event(current_time=1)
         self.feed_request_created_event(current_time=2)
 
         self.mock_time.return_value = 3
         parsed_error = {'Code': 'MyErrorCode', 'Message': 'MyMessage'}
+        parsed_response = {
+            'Error': parsed_error,
+            'ResponseMetadata': {
+                'HTTPStatusCode': 400,
+                'HTTPHeaders': self.response_headers
+            }
+        }
         attempt_event = self.adapter.feed('response-received', {
-            'parsed_response': {
-                'Error': parsed_error,
-                'ResponseMetadata': {
-                    'HTTPStatusCode': 400,
-                    'HTTPHeaders': self.response_headers
-                }
-            },
+            'parsed_response': parsed_response,
             'context': self.context,
             'exception': None
         })
@@ -276,7 +345,10 @@ class TestMonitorEventAdapter(unittest.TestCase):
         )
 
         self.mock_time.return_value = 4
-        call_event = self.adapter.feed('after-call', {'context': self.context})
+        call_event = self.adapter.feed('after-call', {
+            'parsed': parsed_response,
+            'context': self.context
+        })
         self.assertEqual(
             call_event,
             APICallEvent(
@@ -313,7 +385,12 @@ class TestMonitorEventAdapter(unittest.TestCase):
         )
 
         self.mock_time.return_value = 4
-        call_event = self.adapter.feed('after-call', {'context': self.context})
+        call_event = self.adapter.feed(
+            'after-call-error', {
+                'exception': wire_exception,
+                'context': self.context
+            }
+        )
         self.assertEqual(
             call_event,
             APICallEvent(
@@ -322,6 +399,37 @@ class TestMonitorEventAdapter(unittest.TestCase):
                 timestamp=1000,
                 latency=3000,
                 attempts=[attempt_event]
+            )
+        )
+
+    def test_feed_with_wire_exception_retries_exceeded(self):
+        self.feed_before_parameter_build_event(current_time=1)
+        self.feed_request_created_event(current_time=2)
+
+        self.mock_time.return_value = 3
+        # Connection errors are retryable
+        wire_exception = ConnectionError(error='connection issue')
+        attempt_event = self.adapter.feed('response-received', {
+            'parsed_response': None,
+            'context': self.context,
+            'exception': wire_exception
+        })
+        self.mock_time.return_value = 4
+        call_event = self.adapter.feed(
+            'after-call-error', {
+                'exception': wire_exception,
+                'context': self.context
+            }
+        )
+        self.assertEqual(
+            call_event,
+            APICallEvent(
+                service=self.service_id,
+                operation=self.wire_name,
+                timestamp=1000,
+                latency=3000,
+                attempts=[attempt_event],
+                retries_exceeded=True
             )
         )
 
@@ -461,6 +569,7 @@ class TestCSMSerializer(unittest.TestCase):
                 'Service': self.service,
                 'Api': self.operation,
                 'ClientId': self.csm_client_id,
+                'MaxRetriesExceeded': 0,
                 'Timestamp': 1000,
                 'AttemptCount': 0,
             }
@@ -479,6 +588,29 @@ class TestCSMSerializer(unittest.TestCase):
         event.new_api_call_attempt(2000)
         serialized_event_dict = self.get_serialized_event_dict(event)
         self.assertEqual(serialized_event_dict['AttemptCount'], 1)
+
+    def test_serialize_api_call_event_region(self):
+        event = APICallEvent(
+            service=self.service, operation=self.operation, timestamp=1000)
+        attempt = event.new_api_call_attempt(2000)
+        auth_value = (
+            'AWS4-HMAC-SHA256 '
+            'Credential=myaccesskey/20180523/my-region-1/ec2/aws4_request,'
+            'SignedHeaders=content-type;host;x-amz-date, '
+            'Signature=somesignature'
+
+        )
+        self.request_headers['Authorization'] = auth_value
+        attempt.request_headers = self.request_headers
+        serialized_event_dict = self.get_serialized_event_dict(event)
+        self.assertEqual(serialized_event_dict['Region'], 'my-region-1')
+
+    def test_serialize_api_call_event_with_retries_exceeded(self):
+        event = APICallEvent(
+            service=self.service, operation=self.operation, timestamp=1000,
+            retries_exceeded=True)
+        serialized_event_dict = self.get_serialized_event_dict(event)
+        self.assertEqual(serialized_event_dict['MaxRetriesExceeded'], 1)
 
     def test_serialize_api_call_attempt_event(self):
         event = APICallAttemptEvent(

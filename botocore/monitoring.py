@@ -16,6 +16,8 @@ import re
 import time
 
 from botocore.compat import ensure_unicode, ensure_bytes, urlparse
+from botocore.retryhandler import EXCEPTION_MAP as RETRYABLE_EXCEPTIONS
+
 
 logger = logging.getLogger(__name__)
 
@@ -121,11 +123,23 @@ class MonitorEventAdapter(object):
             attempt_event.wire_exception = exception
         return attempt_event
 
-    def _handle_after_call(self, context, **kwargs):
+    def _handle_after_call(self, context, parsed, **kwargs):
+        context['current_api_call_event'].retries_exceeded = parsed[
+            'ResponseMetadata'].get('MaxAttemptsReached', False)
         return self._complete_api_call(context)
 
-    def _handle_after_call_error(self, context, **kwargs):
+    def _handle_after_call_error(self, context, exception, **kwargs):
+        # If the after-call-error was emitted and the error being raised
+        # was a retryable connection error, then the retries must have exceeded
+        # for that exception as this event gets emitted **after** retries
+        # happen.
+        context['current_api_call_event'].retries_exceeded = \
+            self._is_retryable_exception(exception)
         return self._complete_api_call(context)
+
+    def _is_retryable_exception(self, exception):
+        return isinstance(
+            exception, tuple(RETRYABLE_EXCEPTIONS['GENERAL_CONNECTION_ERROR']))
 
     def _complete_api_call(self, context):
         call_event = context.pop('current_api_call_event')
@@ -169,7 +183,7 @@ class BaseMonitorEvent(object):
 
 class APICallEvent(BaseMonitorEvent):
     def __init__(self, service, operation, timestamp, latency=None,
-                 attempts=None):
+                 attempts=None, retries_exceeded=False):
         """Monitor event for a single API call
 
         This event corresponds to a single client method call, which includes
@@ -192,6 +206,10 @@ class APICallEvent(BaseMonitorEvent):
         :type attempts: list
         :param attempts: The list of APICallAttempts associated to the
             APICall
+
+        :type retries_exceeded: bool
+        :param retries_exceeded: True if API call exceeded retries. False
+            otherwise
         """
         super(APICallEvent, self).__init__(
             service=service, operation=operation, timestamp=timestamp)
@@ -199,6 +217,7 @@ class APICallEvent(BaseMonitorEvent):
         self.attempts = attempts
         if attempts is None:
             self.attempts = []
+        self.retries_exceeded = retries_exceeded
 
     def new_api_call_attempt(self, timestamp):
         """Instantiates APICallAttemptEvent associated to the APICallEvent
@@ -304,6 +323,7 @@ class CSMSerializer(object):
         'timestamp',
         'attempts',
         'latency',
+        'retries_exceeded',
         'url',
         'request_headers',
         'http_status_code',
@@ -367,12 +387,23 @@ class CSMSerializer(object):
 
     def _serialize_attempts(self, attempts, event_dict, **kwargs):
         event_dict['AttemptCount'] = len(attempts)
+        if attempts:
+            # It does not matter which attempt to use to grab the region
+            # for the ApiCall event, but SDKs typically do the last one.
+            last_attempt = attempts[-1]
+            if last_attempt.request_headers:
+                event_dict['Region'] = self._get_region(
+                    last_attempt.request_headers)
 
     def _serialize_latency(self, latency, event_dict, event_type):
         if event_type == 'ApiCall':
             event_dict['Latency'] = latency
         elif event_type == 'ApiCallAttempt':
             event_dict['AttemptLatency'] = latency
+
+    def _serialize_retries_exceeded(self, retries_exceeded, event_dict,
+                                    **kwargs):
+        event_dict['MaxRetriesExceeded'] = (1 if retries_exceeded else 0)
 
     def _serialize_url(self, url, event_dict, **kwargs):
         event_dict['Fqdn'] = urlparse(url).netloc
