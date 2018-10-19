@@ -14,12 +14,93 @@ from tests import unittest
 import mock
 from nose.tools import assert_equal
 
+import botocore
+import botocore.session as session
 from botocore.configprovider import ConfigProvider
 from botocore.configprovider import BaseConfigValueProvider
 from botocore.configprovider import DictConfigValueProvider
 from botocore.configprovider import ScopedConfigValueProvider
 from botocore.configprovider import ConstantValueProvider
 from botocore.configprovider import ChainProvider
+from botocore.configprovider import DefaultConfigChainBuilder
+
+
+class TestDefaultConfigChainBuilder(unittest.TestCase):
+    def assert_chain_does_provide(self, environ_map, config_map,
+                                  build_config_chain_args,
+                                  expected_value):
+        fake_session = mock.Mock(spec=session.Session)
+        fake_session.get_scoped_config.return_value = config_map
+        builder = DefaultConfigChainBuilder(fake_session, environ=environ_map)
+        chain = builder.build_config_chain(**build_config_chain_args)
+        value = chain.provide()
+        self.assertEqual(value, expected_value)
+
+    def test_chain_builder_can_provide_env_var(self):
+        self.assert_chain_does_provide(
+            environ_map={'FOO': 'bar'},
+            config_map={},
+            build_config_chain_args={
+                'env_vars': 'FOO',
+            },
+            expected_value='bar',
+        )
+
+    def test_chain_builder_can_provide_config_var(self):
+        self.assert_chain_does_provide(
+            environ_map={},
+            config_map={'foo': 'bar'},
+            build_config_chain_args={
+                'config_property': 'foo',
+            },
+            expected_value='bar',
+        )
+
+    def test_chain_builder_can_provide_default(self):
+        self.assert_chain_does_provide(
+            environ_map={},
+            config_map={},
+            build_config_chain_args={
+                'default': 'bar'
+            },
+            expected_value='bar',
+        )
+
+    def test_chain_provider_does_follow_priority_env_var(self):
+        self.assert_chain_does_provide(
+            environ_map={'ENV_VAR': 'foo'},
+            config_map={'config_key': 'bar'},
+            build_config_chain_args={
+                'env_vars': 'ENV_VAR',
+                'config_property': 'config_key',
+                'default': 'baz',
+            },
+            expected_value='foo',
+        )
+
+    def test_chain_provider_does_follow_priority_config(self):
+        self.assert_chain_does_provide(
+            environ_map={'WRONG_ENV_VAR': 'foo'},
+            config_map={'config_key': 'bar'},
+            build_config_chain_args={
+                'env_vars': 'ENV_VAR',
+                'config_property': 'config_key',
+                'default': 'baz',
+            },
+            expected_value='bar',
+        )
+
+    def test_chain_provider_does_follow_priority_default(self):
+        self.assert_chain_does_provide(
+            environ_map={'WRONG_ENV_VAR': 'foo'},
+            config_map={'wrong_config_key': 'baz'},
+            build_config_chain_args={
+                'env_vars': 'ENV_VAR',
+                'config_property': 'config_key',
+                'default': 'baz',
+            },
+            expected_value='baz',
+        )
 
 
 class TestConfigProvider(unittest.TestCase):

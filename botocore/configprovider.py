@@ -13,6 +13,87 @@
 """This module contains the inteface for controlling how configuration
 is loaded.
 """
+import os
+import copy
+
+
+class DefaultConfigChainBuilder(object):
+    """Common config builder.
+
+    This is a convenience class to construct them with that pattern to help
+    prevent ordering them incorrectly, and to make the config chain
+    construction more readable.
+    """
+    def __init__(self, session, environ=None):
+        """Initialzie a DefaultConfigChainBuilder.
+
+        :type session: A botocore session
+        :param session: This is the session that should be used to look up
+            values from the config file.
+
+        :type environ: dict
+        :param environ: A mapping to use for environment variables. If this
+            is not provided it will default to use os.environ.
+        """
+        self._session = session
+        if environ is None:
+            environ = copy.copy(os.environ)
+        self._environ = environ
+
+    def build_config_chain(self, env_vars=None, config_property=None,
+                         default=None):
+        """Build a config chain following the standard botocore pattern.
+
+        In botocore most of our config chains follow the the precendence:
+        environment, config_file, default_value.
+
+        This is a convenience function for creating a chain that follows
+        that precendence.
+
+        :type env_vars: str or list of str or None
+        :param env_vars: One or more environment variable names to search for
+            this value. They are searched in order. If it is None it will
+            not be added to the chain.
+
+        :type config_property: str or None
+        :param config_property: The string name of the key in the config file
+            for this config option. If it is None it will not be added to the
+            chain.
+
+        :type default: Any
+        :param default: Any constant value to be returned. If this is a
+            callable it will be treated as a lazy value, and the callable will
+            be called when the value is needed.
+
+        :rvalue: ConfigChain
+        :returns: A ConfigChain that resolves in the order env_vars ->
+            config_property -> default. Any values that were none are
+            omitted form the chain.
+        """
+        providers = []
+        if env_vars is not None:
+            providers.append(
+                DictConfigValueProvider(
+                    names=env_vars,
+                    source=self._environ
+                )
+            )
+        if config_property is not None:
+            providers.append(
+                ScopedConfigValueProvider(
+                    name=config_property,
+                    scoped_config_method=self._session.get_scoped_config,
+                )
+            )
+        if callable(default):
+            default = LazyConstantValueProvider(source=default)
+        elif default is not None:
+            default = ConstantValueProvider(value=default)
+        if default is not None:
+            providers.append(default)
+
+        return ChainProvider(providers=providers)
+
 
 class ConfigProvider(object):
     """The ConfigProvider object loads configuration values lazily."""
