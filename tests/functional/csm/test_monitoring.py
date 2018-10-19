@@ -21,6 +21,7 @@ import mock
 from nose.tools import assert_equal
 
 from tests import temporary_file
+from tests import ClientHTTPStubber
 from botocore import xform_name
 import botocore.session
 import botocore.exceptions
@@ -107,7 +108,7 @@ def _make_api_call(session, api_call):
         api_call['serviceId'].lower().replace(' ', ''))
     operation_name = api_call['operationName']
     client_method = getattr(client, xform_name(operation_name))
-    with _patch_http_layer(api_call['attemptResponses']):
+    with _stubbed_http_layer(client, api_call['attemptResponses']):
         try:
             client_method(**api_call['params'])
         except (botocore.exceptions.ClientError, NonRetryableException):
@@ -115,35 +116,32 @@ def _make_api_call(session, api_call):
 
 
 @contextlib.contextmanager
-def _patch_http_layer(attempt_responses):
-    with mock.patch('botocore.httpsession.URLLib3Session.send') as send:
-        send.side_effect = _get_mock_responses(attempt_responses)
-        yield send
+def _stubbed_http_layer(client, attempt_responses):
+    with ClientHTTPStubber(client) as stubber:
+        _add_stubbed_responses(stubber, attempt_responses)
+        yield
 
 
-def _get_mock_responses(attempt_responses):
-    mock_responses = []
+def _add_stubbed_responses(stubber, attempt_responses):
     for attempt_response in attempt_responses:
         if 'sdkException' in attempt_response:
             sdk_exception = attempt_response['sdkException']
             _add_sdk_exception(
-                mock_responses, sdk_exception['message'],
+                stubber, sdk_exception['message'],
                 sdk_exception['isRetryable']
             )
         else:
-            mock_responses.append(
-                _get_mock_response(attempt_response))
-    return mock_responses
+            _add_stubbed_response(stubber, attempt_response)
 
 
-def _add_sdk_exception(mock_responses, message, is_retryable):
+def _add_sdk_exception(stubber, message, is_retryable):
     if is_retryable:
-        mock_responses.append(RetryableException(message=message))
+        stubber.responses.append(RetryableException(message=message))
     else:
-        mock_responses.append(NonRetryableException(message))
+        stubber.responses.append(NonRetryableException(message))
 
 
-def _get_mock_response(attempt_response):
+def _add_stubbed_response(stubber, attempt_response):
     headers = attempt_response['responseHeaders']
     status_code = attempt_response['httpStatus']
     if 'errorCode' in attempt_response:
@@ -154,9 +152,7 @@ def _get_mock_response(attempt_response):
         content = json.dumps(error).encode('utf-8')
     else:
         content = b'{}'
-    return mock.Mock(
-        status_code=status_code, headers=headers,
-        content=content)
+    stubber.add_response(status=status_code, headers=headers, body=content)
 
 
 class MonitoringListener(threading.Thread):
@@ -187,4 +183,4 @@ class MonitoringListener(threading.Thread):
             data = self._socket.recv(self._PACKET_SIZE)
             if not data:
                 return
-            self.received_events.append(json.loads(data))
+            self.received_events.append(json.loads(data.decode('utf-8')))
