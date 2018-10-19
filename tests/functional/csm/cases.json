@@ -10,7 +10,9 @@
       "sharedConfigFile": {}
     },
     "optionalEventFields": {
-      "ApiCall": {},
+      "ApiCall": {
+        "ApiCallTimeout": "ANY_INT"
+      },
       "ApiCallAttempt": {
         "DestinationIp": "ANY_STR",
         "AcquireConnectionLatency": "ANY_INT",
@@ -85,7 +87,9 @@
           "ClientId": "",
           "Timestamp": "ANY_INT",
           "Latency": "ANY_INT",
-          "AttemptCount": 1
+          "AttemptCount": 1,
+          "MaxRetriesExceeded": 0,
+          "Region": "us-west-2"
         }
       ]
     },
@@ -131,7 +135,9 @@
           "ClientId": "",
           "Timestamp": "ANY_INT",
           "Latency": "ANY_INT",
-          "AttemptCount": 1
+          "AttemptCount": 1,
+          "MaxRetriesExceeded": 0,
+          "Region": "us-west-2"
         }
       ]
     },
@@ -195,7 +201,9 @@
           "ClientId": "",
           "Timestamp": "ANY_INT",
           "Latency": "ANY_INT",
-          "AttemptCount": 2
+          "AttemptCount": 2,
+          "MaxRetriesExceeded": 0,
+          "Region": "us-west-2"
         }
       ]
     },
@@ -240,7 +248,9 @@
           "ClientId": "",
           "Timestamp": "ANY_INT",
           "Latency": "ANY_INT",
-          "AttemptCount": 1
+          "AttemptCount": 1,
+          "MaxRetriesExceeded": 0,
+          "Region": "us-west-2"
         }
       ]
     },
@@ -303,7 +313,9 @@
           "ClientId": "",
           "Timestamp": "ANY_INT",
           "Latency": "ANY_INT",
-          "AttemptCount": 2
+          "AttemptCount": 2,
+          "MaxRetriesExceeded": 0,
+          "Region": "us-west-2"
         }
       ]
     },
@@ -353,7 +365,9 @@
           "ClientId": "",
           "Timestamp": "ANY_INT",
           "Latency": "ANY_INT",
-          "AttemptCount": 1
+          "AttemptCount": 1,
+          "MaxRetriesExceeded": 0,
+          "Region": "us-west-2"
         }
       ]
     },
@@ -455,7 +469,9 @@
           "ClientId": "",
           "Timestamp": "ANY_INT",
           "Latency": "ANY_INT",
-          "AttemptCount": 1
+          "AttemptCount": 1,
+          "MaxRetriesExceeded": 0,
+          "Region": "us-west-2"
         }
       ]
     },
@@ -533,7 +549,9 @@
           "ClientId": "from-env",
           "Timestamp": "ANY_INT",
           "Latency": "ANY_INT",
-          "AttemptCount": 1
+          "AttemptCount": 1,
+          "MaxRetriesExceeded": 0,
+          "Region": "us-west-2"
         }
       ]
     },
@@ -585,7 +603,9 @@
           "ClientId": "from-config",
           "Timestamp": "ANY_INT",
           "Latency": "ANY_INT",
-          "AttemptCount": 1
+          "AttemptCount": 1,
+          "MaxRetriesExceeded": 0,
+          "Region": "us-west-2"
         }
       ]
     },
@@ -638,7 +658,9 @@
           "ClientId": "from-env",
           "Timestamp": "ANY_INT",
           "Latency": "ANY_INT",
-          "AttemptCount": 1
+          "AttemptCount": 1,
+          "MaxRetriesExceeded": 0,
+          "Region": "us-west-2"
         }
       ]
     },
@@ -690,7 +712,9 @@
           "ClientId": "",
           "Timestamp": "ANY_INT",
           "Latency": "ANY_INT",
-          "AttemptCount": 1
+          "AttemptCount": 1,
+          "MaxRetriesExceeded": 0,
+          "Region": "us-west-2"
         }
       ]
     },
@@ -735,7 +759,9 @@
           "ClientId": "",
           "Timestamp": "ANY_INT",
           "Latency": "ANY_INT",
-          "AttemptCount": 1
+          "AttemptCount": 1,
+          "MaxRetriesExceeded": 0,
+          "Region": "us-west-2"
         }
       ]
     },
@@ -780,7 +806,9 @@
           "ClientId": "",
           "Timestamp": "ANY_INT",
           "Latency": "ANY_INT",
-          "AttemptCount": 1
+          "AttemptCount": 1,
+          "MaxRetriesExceeded": 0,
+          "Region": "us-west-2"
         }
       ]
     },
@@ -825,7 +853,165 @@
           "ClientId": "",
           "Timestamp": "ANY_INT",
           "Latency": "ANY_INT",
-          "AttemptCount": 1
+          "AttemptCount": 1,
+          "MaxRetriesExceeded": 0,
+          "Region": "us-west-2"
+        }
+      ]
+    },
+    {
+      "description": "Test max retries from AWS exception",
+      "configuration": {
+        "accessKey": "myaccesskey",
+        "region": "us-west-2",
+        "environmentVariables": {
+          "AWS_CSM_ENABLED": "true"
+        },
+        "sharedConfigFile": {},
+        "maxRetries": 1
+      },
+      "apiCalls": [
+        {
+          "serviceId": "CSM Test",
+          "operationName": "TestOperation",
+          "params": {},
+          "attemptResponses": [
+            {
+              "httpStatus": 503,
+              "responseHeaders": {},
+              "errorCode": "ServiceUnavailable",
+              "errorMessage": "Service is unavailable"
+            },
+            {
+              "httpStatus": 503,
+              "responseHeaders": {},
+              "errorCode": "ServiceUnavailable",
+              "errorMessage": "Service is unavailable"
+            }
+          ]
+        }
+      ],
+      "expectedMonitoringEvents": [
+        {
+          "Version": 1,
+          "Type": "ApiCallAttempt",
+          "Service": "CSM Test",
+          "Api": "TestOperation",
+          "ClientId": "",
+          "Timestamp": "ANY_INT",
+          "AttemptLatency": "ANY_INT",
+          "Fqdn": "csmtest.us-west-2.amazonaws.com",
+          "Region": "us-west-2",
+          "UserAgent": "ANY_STR",
+          "AccessKey": "myaccesskey",
+          "HttpStatusCode": 503,
+          "AwsException": "ServiceUnavailable",
+          "AwsExceptionMessage": "Service is unavailable"
+        },
+        {
+          "Version": 1,
+          "Type": "ApiCallAttempt",
+          "Service": "CSM Test",
+          "Api": "TestOperation",
+          "ClientId": "",
+          "Timestamp": "ANY_INT",
+          "AttemptLatency": "ANY_INT",
+          "Fqdn": "csmtest.us-west-2.amazonaws.com",
+          "Region": "us-west-2",
+          "UserAgent": "ANY_STR",
+          "AccessKey": "myaccesskey",
+          "HttpStatusCode": 503,
+          "AwsException": "ServiceUnavailable",
+          "AwsExceptionMessage": "Service is unavailable"
+        },
+        {
+          "Version": 1,
+          "Type": "ApiCall",
+          "Service": "CSM Test",
+          "Api": "TestOperation",
+          "ClientId": "",
+          "Timestamp": "ANY_INT",
+          "Latency": "ANY_INT",
+          "AttemptCount": 2,
+          "MaxRetriesExceeded": 1,
+          "Region": "us-west-2"
+        }
+      ]
+    },
+    {
+      "description": "Test max retries from SDK exception",
+      "configuration": {
+        "accessKey": "myaccesskey",
+        "region": "us-west-2",
+        "environmentVariables": {
+          "AWS_CSM_ENABLED": "true"
+        },
+        "sharedConfigFile": {},
+        "maxRetries": 1
+      },
+      "apiCalls": [
+        {
+          "serviceId": "CSM Test",
+          "operationName": "TestOperation",
+          "params": {},
+          "attemptResponses": [
+            {
+              "sdkException": {
+                "isRetryable": true,
+                "message": "Retryable exception was thrown"
+              }
+            },
+            {
+              "sdkException": {
+                "isRetryable": true,
+                "message": "Retryable exception was thrown"
+              }
+            }
+          ]
+        }
+      ],
+      "expectedMonitoringEvents": [
+        {
+          "Version": 1,
+          "Type": "ApiCallAttempt",
+          "Service": "CSM Test",
+          "Api": "TestOperation",
+          "ClientId": "",
+          "Timestamp": "ANY_INT",
+          "AttemptLatency": "ANY_INT",
+          "Fqdn": "csmtest.us-west-2.amazonaws.com",
+          "Region": "us-west-2",
+          "UserAgent": "ANY_STR",
+          "AccessKey": "myaccesskey",
+          "SdkException": "ANY_STR",
+          "SdkExceptionMessage": "Retryable exception was thrown"
+        },
+        {
+          "Version": 1,
+          "Type": "ApiCallAttempt",
+          "Service": "CSM Test",
+          "Api": "TestOperation",
+          "ClientId": "",
+          "Timestamp": "ANY_INT",
+          "AttemptLatency": "ANY_INT",
+          "Fqdn": "csmtest.us-west-2.amazonaws.com",
+          "Region": "us-west-2",
+          "UserAgent": "ANY_STR",
+          "AccessKey": "myaccesskey",
+          "SdkException": "ANY_STR",
+          "SdkExceptionMessage": "Retryable exception was thrown"
+        },
+        {
+          "Version": 1,
+          "Type": "ApiCall",
+          "Service": "CSM Test",
+          "Api": "TestOperation",
+          "ClientId": "",
+          "Timestamp": "ANY_INT",
+          "Latency": "ANY_INT",
+          "AttemptCount": 2,
+          "MaxRetriesExceeded": 1,
+          "Region": "us-west-2"
         }
       ]
     }
