@@ -124,37 +124,32 @@ class TestEndpointFeatures(TestEndpointBase):
         request = prepare.call_args[0][0]
         self.assertEqual(request.context['signing']['region'], 'us-west-2')
 
+
 class TestRetryInterface(TestEndpointBase):
     def setUp(self):
         super(TestRetryInterface, self).setUp()
         self.retried_on_exception = None
         self._operation = Mock(spec=OperationModel)
-        self._operation.service_model.service_id = ServiceId('ec2')
+        self._operation.name = 'DescribeInstances'
+        self._operation.metadata = {'protocol': 'query'}
+        self._operation.service_model.service_id = ServiceId('EC2')
+        self._operation.has_streaming_output = False
+        self._operation.has_event_stream_output = False
 
     def assert_events_emitted(self, event_emitter, expected_events):
         self.assertEqual(
             self.get_events_emitted(event_emitter), expected_events)
 
     def test_retry_events_are_emitted(self):
-        op = self._operation
-        op.name = 'DescribeInstances'
-        op.metadata = {'protocol': 'query'}
-        op.has_streaming_output = False
-        op.has_event_stream_output = False
-        self.endpoint.make_request(op, request_dict())
+        self.endpoint.make_request(self._operation, request_dict())
         call_args = self.event_emitter.emit.call_args
         self.assertEqual(call_args[0][0],
                          'needs-retry.ec2.DescribeInstances')
 
     def test_retry_events_can_alter_behavior(self):
-        op = self._operation
-        op.name = 'DescribeInstances'
-        op.metadata = {'protocol': 'json'}
-        op.has_event_stream_output = False
-        op.service_model.service_id = 'EC2'
         self.event_emitter.emit.side_effect = self.get_emitter_responses(
             num_retries=1)
-        self.endpoint.make_request(op, request_dict())
+        self.endpoint.make_request(self._operation, request_dict())
         self.assert_events_emitted(
             self.event_emitter,
             expected_events=[
@@ -166,15 +161,11 @@ class TestRetryInterface(TestEndpointBase):
         )
 
     def test_retry_on_socket_errors(self):
-        op = self._operation
-        op.name = 'DescribeInstances'
-        op.has_event_stream_output = False
-        op.service_model.service_id = 'EC2'
         self.event_emitter.emit.side_effect = self.get_emitter_responses(
             num_retries=1)
         self.http_session.send.side_effect = ConnectionError()
         with self.assertRaises(ConnectionError):
-            self.endpoint.make_request(op, request_dict())
+            self.endpoint.make_request(self._operation, request_dict())
         self.assert_events_emitted(
             self.event_emitter,
             expected_events=[
@@ -186,26 +177,21 @@ class TestRetryInterface(TestEndpointBase):
         )
 
     def test_retry_attempts_added_to_response_metadata(self):
-        op = Mock(name='DescribeInstances')
-        op.metadata = {'protocol': 'query'}
-        op.has_event_stream_output = False
         self.event_emitter.emit.side_effect = self.get_emitter_responses(
             num_retries=1)
         parser = Mock()
         parser.parse.return_value = {'ResponseMetadata': {}}
         self.factory.return_value.create_parser.return_value = parser
-        response = self.endpoint.make_request(op, request_dict())
+        response = self.endpoint.make_request(self._operation, request_dict())
         self.assertEqual(response[1]['ResponseMetadata']['RetryAttempts'], 1)
 
     def test_retry_attempts_is_zero_when_not_retried(self):
-        op = Mock(name='DescribeInstances', metadata={'protocol': 'query'})
-        op.has_event_stream_output = False
         self.event_emitter.emit.side_effect = self.get_emitter_responses(
             num_retries=0)
         parser = Mock()
         parser.parse.return_value = {'ResponseMetadata': {}}
         self.factory.return_value.create_parser.return_value = parser
-        response = self.endpoint.make_request(op, request_dict())
+        response = self.endpoint.make_request(self._operation, request_dict())
         self.assertEqual(response[1]['ResponseMetadata']['RetryAttempts'], 0)
 
 

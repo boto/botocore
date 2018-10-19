@@ -130,8 +130,9 @@ class Endpoint(object):
     def _send_request(self, request_dict, operation_model):
         attempts = 1
         request = self.create_request(request_dict, operation_model)
+        context = request_dict['context']
         success_response, exception = self._get_response(
-            request, operation_model, attempts)
+            request, operation_model, context)
         while self._needs_retry(attempts, operation_model, request_dict,
                                 success_response, exception):
             attempts += 1
@@ -144,7 +145,7 @@ class Endpoint(object):
             request = self.create_request(
                 request_dict, operation_model)
             success_response, exception = self._get_response(
-                request, operation_model, attempts)
+                request, operation_model, context)
         if success_response is not None and \
                 'ResponseMetadata' in success_response[1]:
             # We want to share num retries, not num attempts.
@@ -156,7 +157,7 @@ class Endpoint(object):
         else:
             return success_response
 
-    def _get_response(self, request, operation_model, attempts):
+    def _get_response(self, request, operation_model, context):
         # This will return a tuple of (success_response, exception)
         # and success_response is itself a tuple of
         # (http_response, parsed_dict).
@@ -167,7 +168,7 @@ class Endpoint(object):
         kwargs_to_emit = {
             'response_dict': None,
             'parsed_response': None,
-            'context': request.original.context,
+            'context': context,
             'exception': exception,
         }
         if success_response is not None:
@@ -175,8 +176,7 @@ class Endpoint(object):
             kwargs_to_emit['parsed_response'] = parsed_response
             kwargs_to_emit['response_dict'] = convert_to_response_dict(
                 http_response, operation_model)
-        service_id = operation_model.service_model.service_id.replace(
-            ' ', '-').lower()
+        service_id = operation_model.service_model.service_id.hyphenize()
         self._event_emitter.emit(
             'response-received.%s.%s' % (
                 service_id, operation_model.name), **kwargs_to_emit)
