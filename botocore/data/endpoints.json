@@ -189,6 +189,19 @@
           "us-west-2" : { }
         }
       },
+      "appsync" : {
+        "endpoints" : {
+          "ap-northeast-1" : { },
+          "ap-south-1" : { },
+          "ap-southeast-1" : { },
+          "ap-southeast-2" : { },
+          "eu-central-1" : { },
+          "eu-west-1" : { },
+          "us-east-1" : { },
+          "us-east-2" : { },
+          "us-west-2" : { }
+        }
+      },
       "athena" : {
         "endpoints" : {
           "ap-northeast-1" : { },
@@ -382,6 +395,21 @@
           "eu-west-1" : { },
           "sa-east-1" : { },
           "us-east-1" : { },
+          "us-west-1" : { },
+          "us-west-2" : { }
+        }
+      },
+      "cloudsearchdomain" : {
+        "endpoints" : {
+          "ap-northeast-1" : { },
+          "ap-northeast-2" : { },
+          "ap-southeast-1" : { },
+          "ap-southeast-2" : { },
+          "eu-central-1" : { },
+          "eu-west-1" : { },
+          "sa-east-1" : { },
+          "us-east-1" : { },
+          "us-east-2" : { },
           "us-west-1" : { },
           "us-west-2" : { }
         }
@@ -597,6 +625,14 @@
           "us-west-2" : { }
         }
       },
+      "connect" : {
+        "endpoints" : {
+          "ap-southeast-2" : { },
+          "eu-central-1" : { },
+          "us-east-1" : { },
+          "us-west-2" : { }
+        }
+      },
       "cur" : {
         "endpoints" : {
           "us-east-1" : { }
@@ -672,6 +708,25 @@
       },
       "discovery" : {
         "endpoints" : {
+          "us-west-2" : { }
+        }
+      },
+      "dlm" : {
+        "endpoints" : {
+          "ap-northeast-1" : { },
+          "ap-northeast-2" : { },
+          "ap-south-1" : { },
+          "ap-southeast-1" : { },
+          "ap-southeast-2" : { },
+          "ca-central-1" : { },
+          "eu-central-1" : { },
+          "eu-west-1" : { },
+          "eu-west-2" : { },
+          "eu-west-3" : { },
+          "sa-east-1" : { },
+          "us-east-1" : { },
+          "us-east-2" : { },
+          "us-west-1" : { },
           "us-west-2" : { }
         }
       },
@@ -798,6 +853,13 @@
           "us-east-1" : { },
           "us-east-2" : { },
           "us-west-1" : { },
+          "us-west-2" : { }
+        }
+      },
+      "eks" : {
+        "endpoints" : {
+          "eu-west-1" : { },
+          "us-east-1" : { },
           "us-west-2" : { }
         }
       },
@@ -1171,6 +1233,21 @@
           "us-west-2" : { }
         }
       },
+      "iot-jobs-data" : {
+        "endpoints" : {
+          "ap-northeast-1" : { },
+          "ap-northeast-2" : { },
+          "ap-south-1" : { },
+          "ap-southeast-1" : { },
+          "ap-southeast-2" : { },
+          "eu-central-1" : { },
+          "eu-west-1" : { },
+          "eu-west-2" : { },
+          "us-east-1" : { },
+          "us-east-2" : { },
+          "us-west-2" : { }
+        }
+      },
       "kinesis" : {
         "endpoints" : {
           "ap-northeast-1" : { },
@@ -1287,6 +1364,12 @@
           "us-east-1" : { }
         }
       },
+      "macie" : {
+        "endpoints" : {
+          "us-east-1" : { },
+          "us-west-2" : { }
+        }
+      },
       "marketplacecommerceanalytics" : {
         "endpoints" : {
           "us-east-1" : { }
@@ -1378,6 +1461,23 @@
           "us-west-2" : { }
         }
       },
+      "mobile" : {
+        "endpoints" : {
+          "ap-northeast-1" : { },
+          "ap-northeast-2" : { },
+          "ap-south-1" : { },
+          "ap-southeast-1" : { },
+          "ap-southeast-2" : { },
+          "eu-central-1" : { },
+          "eu-west-1" : { },
+          "eu-west-2" : { },
+          "sa-east-1" : { },
+          "us-east-1" : { },
+          "us-east-2" : { },
+          "us-west-1" : { },
+          "us-west-2" : { }
+        }
+      },
       "mobileanalytics" : {
         "endpoints" : {
           "us-east-1" : { }
@@ -1411,6 +1511,20 @@
           "eu-west-2" : { },
           "eu-west-3" : { },
           "sa-east-1" : { },
+          "us-east-1" : { },
+          "us-east-2" : { },
+          "us-west-1" : { },
+          "us-west-2" : { }
+        }
+      },
+      "mq" : {
+        "endpoints" : {
+          "ap-northeast-1" : { },
+          "ap-northeast-2" : { },
+          "ap-southeast-1" : { },
+          "ap-southeast-2" : { },
+          "eu-central-1" : { },
+          "eu-west-1" : { },
           "us-east-1" : { },
           "us-east-2" : { },
           "us-west-1" : { },
@@ -1497,6 +1611,25 @@
         },
         "isRegionalized" : false,
         "partitionEndpoint" : "aws-global"
+      },
+      "pi" : {
+        "endpoints" : {
+          "ap-northeast-1" : { },
+          "ap-northeast-2" : { },
+          "ap-south-1" : { },
+          "ap-southeast-1" : { },
+          "ap-southeast-2" : { },
+          "ca-central-1" : { },
+          "eu-central-1" : { },
+          "eu-west-1" : { },
+          "eu-west-2" : { },
+          "eu-west-3" : { },
+          "sa-east-1" : { },
+          "us-east-1" : { },
+          "us-east-2" : { },
+          "us-west-1" : { },
+          "us-west-2" : { }
+        }
       },
       "pinpoint" : {
         "defaults" : {
@@ -2142,6 +2275,16 @@
           "us-east-1" : { },
           "us-east-2" : { },
           "us-west-1" : { },
+          "us-west-2" : { }
+        }
+      },
+      "transcribe" : {
+        "endpoints" : {
+          "ap-southeast-2" : { },
+          "ca-central-1" : { },
+          "eu-west-1" : { },
+          "us-east-1" : { },
+          "us-east-2" : { },
           "us-west-2" : { }
         }
       },
