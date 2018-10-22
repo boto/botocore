@@ -24,8 +24,7 @@ def find_version(*file_paths):
 
 
 requires = ['jmespath>=0.7.1,<1.0.0',
-            'docutils>=0.10',
-            'urllib3>=1.20,<1.24']
+            'docutils>=0.10']
 
 
 if sys.version_info[:2] == (2, 6):
@@ -42,6 +41,13 @@ if sys.version_info[:2] == (2, 6):
     requires.append('python-dateutil>=2.1,<2.7.0')
 else:
     requires.append('python-dateutil>=2.1,<3.0.0')
+
+if sys.version_info[:2] == (2, 6):
+    requires.append('urllib3>=1.20,<1.24')
+elif sys.version_info[:2] == (3, 3):
+    requires.append('urllib3>=1.20,<1.23')
+else:
+    requires.append('urllib3>=1.20,<1.25')
 
 
 setup(
