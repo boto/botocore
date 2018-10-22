@@ -20,47 +20,60 @@ import copy
 def create_botocore_default_config_mapping(chain_builder):
     return {
         'profile': chain_builder.build_config_chain(
+            instance_var='profile',
             env_vars=['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'],
         ),
         'region': chain_builder.build_config_chain(
+            instance_var='region',
             env_vars='AWS_DEFAULT_REGION',
             config_property='region',
             default=None,
         ),
         'data_path': chain_builder.build_config_chain(
+            instance_var='data_path',
             env_vars='AWS_DATA_PATH',
             config_property='data_path',
             default=None
         ),
         'config_file': chain_builder.build_config_chain(
+            instance_var='config_file',
             env_vars='AWS_CONFIG_FILE',
             default='~/.aws/config',
         ),
         'ca_bundle': chain_builder.build_config_chain(
+            instance_var='ca_bundle',
             env_vars='AWS_CA_BUNDLE',
             config_property='ca_bundle',
         ),
         'api_versions': chain_builder.build_config_chain(
+            instance_var='api_versions',
             config_property='api_versions',
             default={},
         ),
         'credentials_file': chain_builder.build_config_chain(
+            instance_var='credentials_file',
             env_vars='AWS_SHARED_CREDENTIALS_FILE',
             default='~/.aws/credentials',
         ),
         'metadata_service_timeout': chain_builder.build_config_chain(
+            instance_var='metadata_service_timeout',
             env_vars='AWS_METADATA_SERVICE_TIMEOUT',
             config_property='metadata_service_timeout',
-            default=1
+            default=1,
+            cast=int,
         ),
         'metadata_service_num_attempts': chain_builder.build_config_chain(
+            instance_var='metadata_service_num_attempts',
             env_vars='AWS_METADATA_SERVICE_NUM_ATTEMPTS',
             config_property='metadata_service_num_attempts',
-            default=1
+            default=1,
+            cast=int,
         ),
         'parameter_validation': chain_builder.build_config_chain(
+            instance_var='parameter_validation',
             config_property='parameter_validation',
             default=True,
+            cast=bool,
         ),
     }
 
@@ -88,8 +101,8 @@ class DefaultConfigChainBuilder(object):
             environ = copy.copy(os.environ)
         self._environ = environ
 
-    def build_config_chain(self, env_vars=None, config_property=None,
-                         default=None):
+    def build_config_chain(self, instance_var=None, env_vars=None,
+                           config_property=None, default=None, cast=None):
         """Build a config chain following the standard botocore pattern.
 
         In botocore most of our config chains follow the the precendence:
@@ -97,6 +110,11 @@ class DefaultConfigChainBuilder(object):
 
         This is a convenience function for creating a chain that follows
         that precendence.
+
+        :type instance_var: str
+        :param instance_var: The insance variable to associate with this key.
+            Instance variables are looked up in the session instance variable
+            mapping.
 
         :type env_vars: str or list of str or None
         :param env_vars: One or more environment variable names to search for
@@ -113,12 +131,24 @@ class DefaultConfigChainBuilder(object):
             callable it will be treated as a lazy value, and the callable will
             be called when the value is needed.
 
+        :type cast: None or callable
+        :param cast: If this value is None then it has no affect on the return
+            type. Otherwise, it is treated as a function that will cast our
+            provided type.
+
         :rvalue: ConfigChain
         :returns: A ConfigChain that resolves in the order env_vars ->
             config_property -> default. Any values that were none are
             omitted form the chain.
         """
         providers = []
+        if instance_var is not None:
+            providers.append(
+                ScopedConfigValueProvider(
+                    name=instance_var,
+                    scoped_config_method=self._session.instance_variables,
+                )
+            )
         if env_vars is not None:
             providers.append(
                 DictConfigValueProvider(
@@ -140,7 +170,7 @@ class DefaultConfigChainBuilder(object):
         if default is not None:
             providers.append(default)
 
-        return ChainProvider(providers=providers)
+        return ChainProvider(providers=providers, cast=cast)
 
 
 class ConfigProviderComponent(object):
@@ -203,9 +233,11 @@ class ConfigProviderComponent(object):
             you want to set.  These are the keys in ``SESSION_VARIABLES``.
 
         :param value: The value to associate with the config variable.
-
         """
-        self._cache[logical_name] = value
+        if value is None:
+            self._cache.pop(logical_name, None)
+        else:
+            self._cache[logical_name] = value
 
     def update_mapping(self, new_mapping):
         """Update the config mapping.
@@ -289,24 +321,6 @@ class ChainProvider(BaseConfigValueProvider):
             providers = []
         self._providers = providers
         self._cast = cast
-
-    def append_provider(self, provider):
-        """Append a new provider to the end of the chain.
-
-        :type provider: Subclass of BaseConfigValueProvider
-        :param provider: The new ConfigValueProvider to add to the end of the
-            lookup chain.
-        """
-        self._providers.append(provider)
-
-    def prepend_provider(self, provider):
-        """Prepend a new provider to the beginning of the chain.
-
-        :type provider: Subclass of BaseConfigValueProvider
-        :param provider: The new ConfigValueProvider to prepend to the
-            beginning of the lookup chain.
-        """
-        self._providers.insert(0, provider)
 
     def provide(self):
         """Provide the value from the first provider to return non-None.

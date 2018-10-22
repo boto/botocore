@@ -26,18 +26,31 @@ from botocore.configprovider import DefaultConfigChainBuilder
 
 
 class TestDefaultConfigChainBuilder(unittest.TestCase):
-    def assert_chain_does_provide(self, environ_map, config_map,
+    def assert_chain_does_provide(self, instance_map, environ_map, config_map,
                                   build_config_chain_args,
                                   expected_value):
         fake_session = mock.Mock(spec=session.Session)
         fake_session.get_scoped_config.return_value = config_map
+        fake_session.instance_variables.return_value = instance_map
         builder = DefaultConfigChainBuilder(fake_session, environ=environ_map)
         chain = builder.build_config_chain(**build_config_chain_args)
         value = chain.provide()
         self.assertEqual(value, expected_value)
 
+    def test_chain_builder_can_provide_instance(self):
+        self.assert_chain_does_provide(
+            instance_map={'foo': 'bar'},
+            environ_map={},
+            config_map={},
+            build_config_chain_args={
+                'instance_var': 'foo',
+            },
+            expected_value='bar',
+        )
+
     def test_chain_builder_can_provide_env_var(self):
         self.assert_chain_does_provide(
+            instance_map={},
             environ_map={'FOO': 'bar'},
             config_map={},
             build_config_chain_args={
@@ -48,6 +61,7 @@ class TestDefaultConfigChainBuilder(unittest.TestCase):
 
     def test_chain_builder_can_provide_config_var(self):
         self.assert_chain_does_provide(
+            instance_map={},
             environ_map={},
             config_map={'foo': 'bar'},
             build_config_chain_args={
@@ -58,6 +72,7 @@ class TestDefaultConfigChainBuilder(unittest.TestCase):
 
     def test_chain_builder_can_provide_default(self):
         self.assert_chain_does_provide(
+            instance_map={},
             environ_map={},
             config_map={},
             build_config_chain_args={
@@ -66,11 +81,27 @@ class TestDefaultConfigChainBuilder(unittest.TestCase):
             expected_value='bar',
         )
 
-    def test_chain_provider_does_follow_priority_env_var(self):
+    def test_chain_provider_does_follow_priority_instance_var(self):
         self.assert_chain_does_provide(
+            instance_map={'instance_var': 'qux'},
             environ_map={'ENV_VAR': 'foo'},
             config_map={'config_key': 'bar'},
             build_config_chain_args={
+                'instance_var': 'instance_var',
+                'env_vars': 'ENV_VAR',
+                'config_property': 'config_key',
+                'default': 'baz',
+            },
+            expected_value='qux',
+        )
+
+    def test_chain_provider_does_follow_priority_env_var(self):
+        self.assert_chain_does_provide(
+            instance_map={'wrong_instance_var': 'qux'},
+            environ_map={'ENV_VAR': 'foo'},
+            config_map={'config_key': 'bar'},
+            build_config_chain_args={
+                'instance_var': 'instance_var',
                 'env_vars': 'ENV_VAR',
                 'config_property': 'config_key',
                 'default': 'baz',
@@ -80,9 +111,11 @@ class TestDefaultConfigChainBuilder(unittest.TestCase):
 
     def test_chain_provider_does_follow_priority_config(self):
         self.assert_chain_does_provide(
+            instance_map={'wrong_instance_var': 'qux'},
             environ_map={'WRONG_ENV_VAR': 'foo'},
             config_map={'config_key': 'bar'},
             build_config_chain_args={
+                'instance_var': 'instance_var',
                 'env_vars': 'ENV_VAR',
                 'config_property': 'config_key',
                 'default': 'baz',
@@ -92,9 +125,11 @@ class TestDefaultConfigChainBuilder(unittest.TestCase):
 
     def test_chain_provider_does_follow_priority_default(self):
         self.assert_chain_does_provide(
+            instance_map={'wrong_instance_var': 'qux'},
             environ_map={'WRONG_ENV_VAR': 'foo'},
             config_map={'wrong_config_key': 'baz'},
             build_config_chain_args={
+                'instance_var': 'instance_var',
                 'env_vars': 'ENV_VAR',
                 'config_property': 'config_key',
                 'default': 'baz',
@@ -301,24 +336,6 @@ def test_chain_provider():
 
 
 class TestChainProvider(unittest.TestCase):
-    def test_can_prepend_to_chain(self):
-        chain_provider = ChainProvider(
-            providers=_make_providers_that_return(['foo'])
-        )
-        bar_provider = _make_provider_that_returns('bar')
-        chain_provider.prepend_provider(bar_provider)
-        value = chain_provider.provide()
-        self.assertEqual(value, 'bar')
-
-    def test_can_append_to_chain(self):
-        chain_provider = ChainProvider(
-            providers=_make_providers_that_return([None])
-        )
-        foo_provider = _make_provider_that_returns('foo')
-        chain_provider.append_provider(foo_provider)
-        value = chain_provider.provide()
-        self.assertEqual(value, 'foo')
-
     def test_can_cast_provided_value(self):
         chain_provider = ChainProvider(
             providers=_make_providers_that_return(['1']),

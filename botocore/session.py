@@ -192,10 +192,6 @@ class Session(object):
             logical_name)
 
     def set_config_variable(self, logical_name, value):
-        self.self.get_component('config_provider').set_config_variable(
-            logical_name, value)
-
-    def _set_config_variable(self, logical_name, value):
         """Set a configuration variable to a specific value.
 
         By using this method, you can override the normal lookup
@@ -225,6 +221,9 @@ class Session(object):
             value,
         )
         self._session_instance_vars[logical_name] = value
+
+    def instance_variables(self):
+        return copy.copy(self._session_instance_vars)
 
     def get_scoped_config(self):
         """
