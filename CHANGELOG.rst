@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.29
+=======
+
+* api-change:``inspector``: Update inspector client to latest version
+* api-change:``shield``: Update shield client to latest version
+
+
 1.12.28
 =======
 
