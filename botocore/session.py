@@ -27,11 +27,8 @@ import botocore.configloader
 import botocore.credentials
 import botocore.client
 from botocore.configprovider import ConfigProviderComponent
-from botocore.configprovider import DictConfigValueProvider
-from botocore.configprovider import ScopedConfigValueProvider
-from botocore.configprovider import ConstantValueProvider
-from botocore.configprovider import LazyConstantValueProvider
 from botocore.configprovider import DefaultConfigChainBuilder
+from botocore.configprovider import create_botocore_default_config_mapping
 from botocore.exceptions import ConfigNotFound, ProfileNotFound
 from botocore.exceptions import UnknownServiceError, PartialCredentialsError
 from botocore.errorfactory import ClientExceptionsFactory
@@ -165,51 +162,9 @@ class Session(object):
 
     def _register_config_provider(self):
         chain_builder = DefaultConfigChainBuilder(session=self)
-        config_provider_component = ConfigProviderComponent(mapping={
-            'profile': chain_builder.build_config_chain(
-                env_vars=['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'],
-            ),
-            'region': chain_builder.build_config_chain(
-                env_vars='AWS_DEFAULT_REGION',
-                config_property='region',
-                default=None,
-            ),
-            'data_path': chain_builder.build_config_chain(
-                env_vars='AWS_DATA_PATH',
-                config_property='data_path',
-                default=None
-            ),
-            'config_file': chain_builder.build_config_chain(
-                env_vars='AWS_CONFIG_FILE',
-                default='~/.aws/config',
-            ),
-            'ca_bundle': chain_builder.build_config_chain(
-                env_vars='AWS_CA_BUNDLE',
-                config_property='ca_bundle',
-            ),
-            'api_versions': chain_builder.build_config_chain(
-                config_property='api_versions',
-                default={},
-            ),
-            'credentials_file': chain_builder.build_config_chain(
-                env_vars='AWS_SHARED_CREDENTIALS_FILE',
-                default='~/.aws/credentials',
-            ),
-            'metadata_service_timeout': chain_builder.build_config_chain(
-                env_vars='AWS_METADATA_SERVICE_TIMEOUT',
-                config_property='metadata_service_timeout',
-                default=1
-            ),
-            'metadata_service_num_attempts': chain_builder.build_config_chain(
-                env_vars='AWS_METADATA_SERVICE_NUM_ATTEMPTS',
-                config_property='metadata_service_num_attempts',
-                default=1
-            ),
-            'parameter_validation': chain_builder.build_config_chain(
-                config_property='parameter_validation',
-                default=True,
-            ),
-        })
+        config_provider_component = ConfigProviderComponent(
+            mapping=create_botocore_default_config_mapping(chain_builder)
+        )
         self._components.register_component('config_provider',
                                             config_provider_component)
 

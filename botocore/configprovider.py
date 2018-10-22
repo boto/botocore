@@ -17,17 +17,65 @@ import os
 import copy
 
 
+def create_botocore_default_config_mapping(chain_builder):
+    return {
+        'profile': chain_builder.build_config_chain(
+            env_vars=['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'],
+        ),
+        'region': chain_builder.build_config_chain(
+            env_vars='AWS_DEFAULT_REGION',
+            config_property='region',
+            default=None,
+        ),
+        'data_path': chain_builder.build_config_chain(
+            env_vars='AWS_DATA_PATH',
+            config_property='data_path',
+            default=None
+        ),
+        'config_file': chain_builder.build_config_chain(
+            env_vars='AWS_CONFIG_FILE',
+            default='~/.aws/config',
+        ),
+        'ca_bundle': chain_builder.build_config_chain(
+            env_vars='AWS_CA_BUNDLE',
+            config_property='ca_bundle',
+        ),
+        'api_versions': chain_builder.build_config_chain(
+            config_property='api_versions',
+            default={},
+        ),
+        'credentials_file': chain_builder.build_config_chain(
+            env_vars='AWS_SHARED_CREDENTIALS_FILE',
+            default='~/.aws/credentials',
+        ),
+        'metadata_service_timeout': chain_builder.build_config_chain(
+            env_vars='AWS_METADATA_SERVICE_TIMEOUT',
+            config_property='metadata_service_timeout',
+            default=1
+        ),
+        'metadata_service_num_attempts': chain_builder.build_config_chain(
+            env_vars='AWS_METADATA_SERVICE_NUM_ATTEMPTS',
+            config_property='metadata_service_num_attempts',
+            default=1
+        ),
+        'parameter_validation': chain_builder.build_config_chain(
+            config_property='parameter_validation',
+            default=True,
+        ),
+    }
+
+
 class DefaultConfigChainBuilder(object):
     """Common config builder.
 
-    This is a convenience class to construct them with that pattern to help
-    prevent ordering them incorrectly, and to make the config chain
-    construction more readable.
+    This is a convenience class to construct configuration chains that follow
+    our most common pattern. This is to prevent ordering them incorrectly,
+    and to make the config chain construction more readable.
     """
     def __init__(self, session, environ=None):
         """Initialzie a DefaultConfigChainBuilder.
 
-        :type session: A botocore session
+        :type session: :class:`botocore.session.Session`
         :param session: This is the session that should be used to look up
             values from the config file.
 
