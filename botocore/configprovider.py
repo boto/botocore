@@ -95,10 +95,10 @@ class DefaultConfigChainBuilder(object):
         return ChainProvider(providers=providers)
 
 
-class ConfigProvider(object):
-    """The ConfigProvider object loads configuration values lazily."""
+class ConfigProviderComponent(object):
+    """The ConfigProviderComponent object loads configuration values lazily."""
     def __init__(self, mapping=None):
-        """Initialize a ConfigProvider.
+        """Initialize a ConfigProviderComponent.
 
         :type mapping: dict
         :param mapping: The mapping parameter is a map of string to a subclass
@@ -158,6 +158,16 @@ class ConfigProvider(object):
 
         """
         self._cache[logical_name] = value
+
+    def update_mapping(self, new_mapping):
+        """Update the config mapping.
+
+        :type new_mapping: dict
+        :param new_mapping: The new mapping of logical names to config
+            providers. Each name in this map will be added to or override an
+            existing mapping.
+        """
+        self._mapping.update(new_mapping)
 
 
 class BaseConfigValueProvider(object):

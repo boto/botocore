@@ -16,7 +16,7 @@ from nose.tools import assert_equal
 
 import botocore
 import botocore.session as session
-from botocore.configprovider import ConfigProvider
+from botocore.configprovider import ConfigProviderComponent
 from botocore.configprovider import BaseConfigValueProvider
 from botocore.configprovider import DictConfigValueProvider
 from botocore.configprovider import ScopedConfigValueProvider
@@ -103,16 +103,16 @@ class TestDefaultConfigChainBuilder(unittest.TestCase):
         )
 
 
-class TestConfigProvider(unittest.TestCase):
+class TestConfigProviderComponent(unittest.TestCase):
     def test_does_provide_none_if_no_variable_exists(self):
-        provider = ConfigProvider()
+        provider = ConfigProviderComponent()
         value = provider.get_config_variable('fake_variable')
         self.assertIsNone(value)
 
     def test_does_provide_value_if_variable_exists(self):
         mock_value_provider = mock.Mock(spec=BaseConfigValueProvider)
         mock_value_provider.provide.return_value = 'foo'
-        provider = ConfigProvider(mapping={
+        provider = ConfigProviderComponent(mapping={
             'fake_variable': mock_value_provider,
         })
         value = provider.get_config_variable('fake_variable')
@@ -121,19 +121,20 @@ class TestConfigProvider(unittest.TestCase):
     def test_provided_value_is_cached(self):
         mock_value_provider = mock.Mock(spec=BaseConfigValueProvider)
         mock_value_provider.provide.return_value = 'foo'
-        provider = ConfigProvider(mapping={
+        provider = ConfigProviderComponent(mapping={
             'fake_variable': mock_value_provider,
         })
         value = provider.get_config_variable('fake_variable')
         self.assertEqual(value, 'foo')
 
         # Change the returned value to bar instead of foo. The value returned
-        # from the ConfigProvider should still be the cached foo from before.
+        # from the ConfigProviderComponent should still be the cached foo from
+        # before.
         mock_value_provider.provide.return_value = 'bar'
         self.assertEqual(value, 'foo')
 
     def test_can_set_variable(self):
-        provider = ConfigProvider()
+        provider = ConfigProviderComponent()
         provider.set_config_variable('fake_variable', 'foo')
         value = provider.get_config_variable('fake_variable')
         self.assertEquals(value, 'foo')
@@ -141,7 +142,7 @@ class TestConfigProvider(unittest.TestCase):
     def test_set_variable_does_override_cache(self):
         mock_value_provider = mock.Mock(spec=BaseConfigValueProvider)
         mock_value_provider.provide.return_value = 'foo'
-        provider = ConfigProvider(mapping={
+        provider = ConfigProviderComponent(mapping={
             'fake_variable': mock_value_provider,
         })
         value = provider.get_config_variable('fake_variable')

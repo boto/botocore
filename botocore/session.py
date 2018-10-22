@@ -26,7 +26,7 @@ from botocore import __version__
 import botocore.configloader
 import botocore.credentials
 import botocore.client
-from botocore.configprovider import ConfigProvider
+from botocore.configprovider import ConfigProviderComponent
 from botocore.configprovider import DictConfigValueProvider
 from botocore.configprovider import ScopedConfigValueProvider
 from botocore.configprovider import ConstantValueProvider
@@ -86,7 +86,6 @@ class Session(object):
             the session is created.
 
         """
-        self.config_provider = self._create_default_config_provider()
         if event_hooks is None:
             self._original_handler = HierarchicalEmitter()
         else:
@@ -114,55 +113,6 @@ class Session(object):
         self._internal_components = ComponentLocator()
         self._register_components()
 
-    def _create_default_config_provider(self):
-        chain_builder = DefaultConfigChainBuilder(session=self)
-        provider = ConfigProvider(mapping={
-            'profile': chain_builder.build_config_chain(
-                env_vars=['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'],
-            ),
-            'region': chain_builder.build_config_chain(
-                env_vars='AWS_DEFAULT_REGION',
-                config_property='region',
-                default=self._get_instance_metadata_region,
-            ),
-            'data_path': chain_builder.build_config_chain(
-                env_vars='AWS_DATA_PATH',
-                config_property='data_path',
-                default=None
-            ),
-            'config_file': chain_builder.build_config_chain(
-                env_vars='AWS_CONFIG_FILE',
-                default='~/.aws/config',
-            ),
-            'ca_bundle': chain_builder.build_config_chain(
-                env_vars='AWS_CA_BUNDLE',
-                config_property='ca_bundle',
-            ),
-            'api_versions': chain_builder.build_config_chain(
-                config_property='api_versions',
-                default={},
-            ),
-            'credentials_file': chain_builder.build_config_chain(
-                env_vars='AWS_SHARED_CREDENTIALS_FILE',
-                default='~/.aws/credentials',
-            ),
-            'metadata_service_timeout': chain_builder.build_config_chain(
-                env_vars='AWS_METADATA_SERVICE_TIMEOUT',
-                config_property='metadata_service_timeout',
-                default=1
-            ),
-            'metadata_service_num_attempts': chain_builder.build_config_chain(
-                env_vars='AWS_METADATA_SERVICE_NUM_ATTEMPTS',
-                config_property='metadata_service_num_attempts',
-                default=1
-            ),
-            'parameter_validation': chain_builder.build_config_chain(
-                config_property='parameter_validation',
-                default=True,
-            ),
-        })
-        return provider
-
     def _register_components(self):
         self._register_credential_provider()
         self._register_data_loader()
@@ -170,6 +120,7 @@ class Session(object):
         self._register_event_emitter()
         self._register_response_parser_factory()
         self._register_exceptions_factory()
+        self._register_config_provider()
 
     def _register_event_emitter(self):
         self._components.register_component('event_emitter', self._events)
@@ -212,6 +163,56 @@ class Session(object):
                 elif register_type is handlers.REGISTER_LAST:
                     self._events.register_last(event_name, handler)
 
+    def _register_config_provider(self):
+        chain_builder = DefaultConfigChainBuilder(session=self)
+        config_provider_component = ConfigProviderComponent(mapping={
+            'profile': chain_builder.build_config_chain(
+                env_vars=['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'],
+            ),
+            'region': chain_builder.build_config_chain(
+                env_vars='AWS_DEFAULT_REGION',
+                config_property='region',
+                default=None,
+            ),
+            'data_path': chain_builder.build_config_chain(
+                env_vars='AWS_DATA_PATH',
+                config_property='data_path',
+                default=None
+            ),
+            'config_file': chain_builder.build_config_chain(
+                env_vars='AWS_CONFIG_FILE',
+                default='~/.aws/config',
+            ),
+            'ca_bundle': chain_builder.build_config_chain(
+                env_vars='AWS_CA_BUNDLE',
+                config_property='ca_bundle',
+            ),
+            'api_versions': chain_builder.build_config_chain(
+                config_property='api_versions',
+                default={},
+            ),
+            'credentials_file': chain_builder.build_config_chain(
+                env_vars='AWS_SHARED_CREDENTIALS_FILE',
+                default='~/.aws/credentials',
+            ),
+            'metadata_service_timeout': chain_builder.build_config_chain(
+                env_vars='AWS_METADATA_SERVICE_TIMEOUT',
+                config_property='metadata_service_timeout',
+                default=1
+            ),
+            'metadata_service_num_attempts': chain_builder.build_config_chain(
+                env_vars='AWS_METADATA_SERVICE_NUM_ATTEMPTS',
+                config_property='metadata_service_num_attempts',
+                default=1
+            ),
+            'parameter_validation': chain_builder.build_config_chain(
+                config_property='parameter_validation',
+                default=True,
+            ),
+        })
+        self._components.register_component('config_provider',
+                                            config_provider_component)
+
     @property
     def available_profiles(self):
         return list(self._build_profile_map().keys())
@@ -232,96 +233,12 @@ class Session(object):
         return self._profile
 
     def get_config_variable(self, logical_name):
-        return self.config_provider.get_config_variable(logical_name)
-
-    def _get_config_variable(self, logical_name,
-                            methods=('instance', 'env', 'config')):
-        """
-        Retrieve the value associated with the specified logical_name
-        from the environment or the config file.  Values found in the
-        environment variable take precedence of values found in the
-        config file.  If no value can be found, a None will be returned.
-
-        :type logical_name: str
-        :param logical_name: The logical name of the session variable
-            you want to retrieve.  This name will be mapped to the
-            appropriate environment variable name for this session as
-            well as the appropriate config file entry.
-
-        :type method: tuple
-        :param method: Defines which methods will be used to find
-            the variable value.  By default, all available methods
-            are tried but you can limit which methods are used
-            by supplying a different value to this parameter.
-            Valid choices are: instance|env|config
-
-        :returns: value of variable or None if not defined.
-
-        """
-        # Handle all the short circuit special cases first.
-        if logical_name not in self.session_var_map:
-            return
-        # Do the actual lookups.  We need to handle
-        # 'instance', 'env', and 'config' locations, in that order.
-        value = None
-        var_config = self.session_var_map[logical_name]
-        if self._found_in_instance_vars(methods, logical_name):
-            value = self._session_instance_vars[logical_name]
-            logger.debug(
-                "Loading variable %s from instance vars with value %r.",
-                logical_name,
-                value,
-            )
-            return value
-        elif self._found_in_env(methods, var_config):
-            value = self._retrieve_from_env(var_config[1], os.environ)
-            logger.debug(
-                "Loading variable %s from environment with value %r.",
-                logical_name,
-                value,
-            )
-        elif self._found_in_config_file(methods, var_config):
-            value = self.get_scoped_config()[var_config[0]]
-            logger.debug(
-                "Loading variable %s from config file with value %r.",
-                logical_name,
-                value,
-            )
-        if value is None:
-            logger.debug("Loading variable %s from defaults.", logical_name)
-            value = var_config[2]
-        if var_config[3] is not None:
-            value = var_config[3](value)
-        return value
-
-    def _found_in_instance_vars(self, methods, logical_name):
-        if 'instance' in methods:
-            return logical_name in self._session_instance_vars
-        return False
-
-    def _found_in_env(self, methods, var_config):
-        return (
-            'env' in methods and
-            var_config[1] is not None and
-            self._retrieve_from_env(var_config[1], os.environ) is not None)
-
-    def _found_in_config_file(self, methods, var_config):
-        if 'config' in methods and var_config[0] is not None:
-            return var_config[0] in self.get_scoped_config()
-        return False
-
-    def _retrieve_from_env(self, names, environ):
-        # We need to handle the case where names is either
-        # a single value or a list of variables.
-        if not isinstance(names, list):
-            names = [names]
-        for name in names:
-            if name in environ:
-                return environ[name]
-        return None
+        return self.get_component('config_provider').get_config_variable(
+            logical_name)
 
     def set_config_variable(self, logical_name, value):
-        self.config_provider.set_config_variable(logical_name, value)
+        self.self.get_component('config_provider').set_config_variable(
+            logical_name, value)
 
     def _set_config_variable(self, logical_name, value):
         """Set a configuration variable to a specific value.
