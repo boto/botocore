@@ -143,22 +143,6 @@ class SessionTest(BaseSessionTest):
         self.environ['BAR_PROFILE'] = 'second'
         self.assertEqual(self.session.get_config_variable('profile'), 'second')
 
-    # def test_profile(self):
-    #     # TODO: I have no idea what this test is tryint to accomplish
-    #     self.assertEqual(self.session.get_config_variable('profile'), 'foo')
-    #     self.assertEqual(self.session.get_config_variable('region'),
-    #                      'us-west-11')
-    #     self.session.get_config_variable('profile') == 'default'
-    #     saved_region = self.environ['FOO_REGION']
-    #     del self.environ['FOO_REGION']
-    #     saved_profile = self.environ['FOO_PROFILE']
-    #     del self.environ['FOO_PROFILE']
-    #     session = create_session()
-    #     self.assertEqual(session.get_config_variable('profile'), None)
-    #     self.assertEqual(session.get_config_variable('region'), 'us-west-1')
-    #     self.environ['FOO_REGION'] = saved_region
-    #     self.environ['FOO_PROFILE'] = saved_profile
-
     def test_profile_does_not_exist_raises_exception(self):
         # Given we have no profile:
         self.environ['FOO_PROFILE'] = 'profile_that_does_not_exist'

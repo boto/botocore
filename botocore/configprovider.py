@@ -14,7 +14,6 @@
 is loaded.
 """
 import os
-import copy
 
 
 def create_botocore_default_config_mapping(chain_builder):
@@ -98,7 +97,7 @@ class DefaultConfigChainBuilder(object):
         """
         self._session = session
         if environ is None:
-            environ = copy.copy(os.environ)
+            environ = os.environ
         self._environ = environ
 
     def build_config_chain(self, instance_var=None, env_vars=None,
@@ -144,23 +143,23 @@ class DefaultConfigChainBuilder(object):
         providers = []
         if instance_var is not None:
             providers.append(
-                ScopedConfigValueProvider(
+                LazyDictValueProvider(
                     name=instance_var,
-                    scoped_config_method=self._session.instance_variables,
+                    source_method=self._session.instance_variables,
                 )
             )
         if env_vars is not None:
             providers.append(
                 DictConfigValueProvider(
                     names=env_vars,
-                    source=self._environ
+                    source=self._environ,
                 )
             )
         if config_property is not None:
             providers.append(
-                ScopedConfigValueProvider(
+                LazyDictValueProvider(
                     name=config_property,
-                    scoped_config_method=self._session.get_scoped_config,
+                    source_method=self._session.get_scoped_config,
                 )
             )
         if callable(default):
@@ -260,45 +259,6 @@ class BaseConfigValueProvider(object):
         raise NotImplementedError('provide')
 
 
-class ConstantValueProvider(object):
-    """This provider provides a constant value."""
-    def __init__(self, value):
-        self._value = value
-
-    def provide(self):
-        """Provide the constant value given during initialization."""
-        return self._value
-
-
-class DictConfigValueProvider(BaseConfigValueProvider):
-    """This class loads config values from an environment variable."""
-    def __init__(self, names, source):
-        """Initialize with the environment variable names to check.
-
-        :type environment_vars: str or list
-        :param environment_vars: If this is a str, the environment variable
-            with that name will be loaded and returned. If this variable is
-            a list, then it must be a list of str. The same process will be
-            repeated for each string in the list, the first that returns non
-            None will be returned.
-
-        :type source: dict
-        :param source: A source dictionary to fetch vairables from.
-        """
-        self._names = names
-        self._source = source
-
-    def provide(self):
-        """Provide a config value from a source."""
-        names = self._names
-        if not isinstance(names, list):
-            names = [names]
-        for name in names:
-            if name in self._source:
-                return self._source[name]
-        return None
-
-
 class ChainProvider(BaseConfigValueProvider):
     """This provider wraps one or more other providers.
 
@@ -341,20 +301,50 @@ class ChainProvider(BaseConfigValueProvider):
         return value
 
 
-class ScopedConfigValueProvider(BaseConfigValueProvider):
-    def __init__(self, name, scoped_config_method):
+class DictConfigValueProvider(BaseConfigValueProvider):
+    """This class loads config values from an environment variable."""
+    def __init__(self, names, source):
+        """Initialize with the environment variable names to check.
+
+        :type environment_vars: str or list
+        :param environment_vars: If this is a str, the environment variable
+            with that name will be loaded and returned. If this variable is
+            a list, then it must be a list of str. The same process will be
+            repeated for each string in the list, the first that returns non
+            None will be returned.
+
+        :type source: dict
+        :param source: A source dictionary to fetch vairables from.
+        """
+        self._names = names
+        self._source = source
+
+    def provide(self):
+        """Provide a config value from a source."""
+        names = self._names
+        if not isinstance(names, list):
+            names = [names]
+        for name in names:
+            if name in self._source:
+                return self._source[name]
+        return None
+
+
+class LazyDictValueProvider(BaseConfigValueProvider):
+    def __init__(self, name, source_method):
         """Initialize ScopedConfigValueProvider
 
         :type name: str
         :param name: The name of the config value to load from the scoped
             config.
 
-        :type scoped_config_method: callable
-        :param scoped_config_method: A function that when called will return a
-            scoped config.
+        :type source_method: callable
+        :param source_method: Method that can be used to fetch the dictionary
+            to look-up the key in. This method will be called at the time that
+            provide.
         """
         self._name = name
-        self._scoped_config_method = scoped_config_method
+        self._source_method = source_method
 
     def provide(self):
         """Provide a value from a scoped config.
@@ -363,15 +353,33 @@ class ScopedConfigValueProvider(BaseConfigValueProvider):
         scoped config. Once loaded it looks up the value in the config and
         reutrns it.
         """
-        scoped_config = self._scoped_config_method()
+        scoped_config = self._source_method()
         value = scoped_config.get(self._name)
         return value
 
 
+class ConstantValueProvider(object):
+    """This provider provides a constant value."""
+    def __init__(self, value):
+        self._value = value
+
+    def provide(self):
+        """Provide the constant value given during initialization."""
+        return self._value
+
+
 class LazyConstantValueProvider(BaseConfigValueProvider):
+    """This provider provides a constant value that is lazy loaded."""
     def __init__(self, source):
+        """Initialize LazyConstantValueProvider.
+
+        :type source: callable
+        :param source: A function that can be called to provide a value. This
+            method will be called to get the value it should provide.
+        """
         self._source = source
 
     def provide(self):
+        """Provide the constant lazy loaded value."""
         value = self._source()
         return value

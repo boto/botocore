@@ -19,7 +19,7 @@ import botocore.session as session
 from botocore.configprovider import ConfigProviderComponent
 from botocore.configprovider import BaseConfigValueProvider
 from botocore.configprovider import DictConfigValueProvider
-from botocore.configprovider import ScopedConfigValueProvider
+from botocore.configprovider import LazyDictValueProvider
 from botocore.configprovider import ConstantValueProvider
 from botocore.configprovider import ChainProvider
 from botocore.configprovider import DefaultConfigChainBuilder
@@ -265,13 +265,13 @@ class TestDictConfigValueProvider(unittest.TestCase):
         )
 
 
-class TestScopedConfigValueProvider(unittest.TestCase):
+class TestLazyDictValueProvider(unittest.TestCase):
     def assert_provides_value(self, source, name, expected_value):
         dict_loader = mock.Mock(autospec=True)
         dict_loader.return_value = source
-        provider = ScopedConfigValueProvider(
+        provider = LazyDictValueProvider(
             name=name,
-            scoped_config_method=dict_loader
+            source_method=dict_loader,
         )
         value = provider.provide()
         self.assertEqual(value, expected_value)
