@@ -21,6 +21,7 @@ import logging
 import os
 import platform
 import warnings
+import collections
 
 from botocore import __version__
 import botocore.configloader
@@ -63,10 +64,16 @@ class Session(object):
     #: The default format string to use when configuring the botocore logger.
     LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
-    def __init__(self, event_hooks=None,
+    def __init__(self, session_vars=None, event_hooks=None,
                  include_builtin_handlers=True, profile=None):
         """
         Create a new Session object.
+
+        :type session_vars: dict
+        :param session_vars: A dictionary that is used to override some or all
+            of the environment variables associated with this session.  The
+            key/value pairs defined in this dictionary will override the
+            corresponding variables defined in ``SESSION_VARIABLES``.
 
         :type event_hooks: BaseEventHooks
         :param event_hooks: The event hooks object to use. If one is not
@@ -109,6 +116,10 @@ class Session(object):
         self._components = ComponentLocator()
         self._internal_components = ComponentLocator()
         self._register_components()
+        if session_vars is not None:
+            self.session_var_map = SessionVarsShim(self, session_vars)
+        else:
+            self.session_var_map = SessionVarsShim(self)
 
     def _register_components(self):
         self._register_credential_provider()
@@ -187,9 +198,48 @@ class Session(object):
             self._profile = profile
         return self._profile
 
-    def get_config_variable(self, logical_name):
+    def get_config_variable(self, logical_name, methods=None):
+        if methods is not None:
+            return self._get_config_variable_with_custom_methods(
+                logical_name, methods)
         return self.get_component('config_provider').get_config_variable(
             logical_name)
+
+    def _get_config_variable_with_custom_methods(self, logical_name, methods):
+        # If a custom list of methods was supplied we need to perserve the
+        # behavior with the new system. To do so a new chain that is a copy of
+        # the old one will be constructed, but only with the supplied methods
+        # being added to the chain. This chain will be consulted for a value
+        # and then thrown out. This is not efficient, nor is the methods arg
+        # used in botocore, this is just for backwards compatibility.
+        chain_builder = DefaultConfigChainBuilder(
+            session=self,
+            methods=methods,
+        )
+        mapping = {}
+        for logical_name, config_options in self.session_var_map.items():
+            config_name, env_vars, default, typecast = config_options
+            build_chain_config_args = {
+                'cast': typecast,
+                'default': default,
+            }
+            if 'instance' not in methods:
+                build_chain_config_args['instance'] = False
+            if 'env' in methods:
+                build_chain_config_args['env_vars'] = env_vars
+            if 'config' in methods:
+                build_chain_config_args['config_property'] = config_name
+            mapping.update(
+                {
+                    logical_name: chain_builder.build_config_chain(
+                        **build_chain_config_args,
+                    )
+                }
+            )
+        config_provider_component = ConfigProviderComponent(
+            mapping=mapping
+        )
+        return config_provider_component.get_config_variable(logical_name)
 
     def set_config_variable(self, logical_name, value):
         """Set a configuration variable to a specific value.
@@ -843,6 +893,52 @@ class ComponentLocator(object):
             del self._components[name]
         except KeyError:
             pass
+
+
+class SessionVarsShim(collections.MutableMapping):
+    def __init__(self, session, *args, **kwargs):
+        self._session = session
+        self._store = dict()
+        self.update(dict(*args, **kwargs))
+
+    def __getitem__(self, key):
+        return self._store[self.__keytransform__(key)]
+
+    def __setitem__(self, key, value):
+        self._store[self.__keytransform__(key)] = value
+        self._update_config_provider_from_session_vars(key, value)
+
+    def __delitem__(self, key):
+        del self._store[self.__keytransform__(key)]
+
+    def __iter__(self):
+        return iter(self._store)
+
+    def __len__(self):
+        return len(self._store)
+
+    def __keytransform__(self, key):
+        return key
+
+    def _update_config_provider_from_session_vars(self, logical_name,
+                                                  config_options):
+        # This is for backwards compatibility. The new preferred way to
+        # modify configuration logic is to use the component system to get
+        # the config_provider component from the session, and then update
+        # a key with a custom config provider(s).
+        # This backwards compatibility method takes the old session_vars
+        # list of tuples and and transforms that into a set of updates to
+        # the config_provider component.
+        config_chain_builder = DefaultConfigChainBuilder(session=self._session)
+        config_name, env_vars, default, typecast = config_options
+        self._session.get_component('config_provider').update_mapping({
+            logical_name: config_chain_builder.build_config_chain(
+                env_vars=env_vars,
+                config_property=config_name,
+                default=default,
+                cast=typecast,
+            ),
+        })
 
 
 def get_session(env_vars=None):

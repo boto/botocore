@@ -28,13 +28,21 @@ from botocore import client
 from botocore.hooks import HierarchicalEmitter
 from botocore.waiter import WaiterModel
 from botocore.paginate import PaginatorModel
-from botocore.configprovider import DefaultConfigChainBuilder
 import botocore.loaders
 
 
 class BaseSessionTest(unittest.TestCase):
 
     def setUp(self):
+        self.env_vars = {
+            'profile': (None, 'FOO_PROFILE', None, None),
+            'region': ('foo_region', 'FOO_REGION', None, None),
+            'data_path': ('data_path', 'FOO_DATA_PATH', None, None),
+            'config_file': (None, 'FOO_CONFIG_FILE', None, None),
+            'credentials_file': (None, None, '/tmp/nowhere', None),
+            'ca_bundle': ('foo_ca_bundle', 'FOO_AWS_CA_BUNDLE', None, None),
+            'api_versions': ('foo_api_versions', None, {}, None)
+        }
         self.environ = {}
         self.environ_patch = mock.patch('os.environ', self.environ)
         self.environ_patch.start()
@@ -45,49 +53,7 @@ class BaseSessionTest(unittest.TestCase):
         config_path = os.path.join(os.path.dirname(__file__), 'cfg',
                                    'foo_config')
         self.environ['FOO_CONFIG_FILE'] = config_path
-        self.session = create_session()
-        config_chain_builder = DefaultConfigChainBuilder(
-            session=self.session,
-            environ=self.environ,
-        )
-        self.session.get_component('config_provider').update_mapping(
-            {
-                'profile': config_chain_builder.build_config_chain(
-                    env_vars='FOO_PROFILE',
-                ),
-                'region': config_chain_builder.build_config_chain(
-                    env_vars='FOO_REGION',
-                    config_property='foo_region',
-                ),
-                'data_path': config_chain_builder.build_config_chain(
-                    env_vars='FOO_DATA_PATH',
-                    config_property='data_path',
-                ),
-                'config_file': config_chain_builder.build_config_chain(
-                    env_vars='FOO_CONFIG_FILE',
-                ),
-                'credentials_file': config_chain_builder.build_config_chain(
-                    default='/tmp/nowhere',
-                ),
-                'ca_bundle': config_chain_builder.build_config_chain(
-                    env_vars='FOO_AWS_CA_BUNDLE',
-                    config_property='foo_ca_bundle',
-                ),
-                'api_versions': config_chain_builder.build_config_chain(
-                    config_property='foo_api_versions',
-                    default={},
-                ),
-            }
-        )
-
-    def update_session_config_mapping(self, logical_name, **kwargs):
-        config_chain_builder = DefaultConfigChainBuilder(
-            session=self.session,
-            environ=self.environ,
-        )
-        self.session.get_component('config_provider').update_mapping({
-            logical_name: config_chain_builder.build_config_chain(**kwargs)
-        })
+        self.session = create_session(session_vars=self.env_vars)
 
     def tearDown(self):
         self.environ_patch.stop()
@@ -111,15 +77,17 @@ class SessionTest(BaseSessionTest):
         shutil.rmtree(tempdir)
 
     def test_supports_multiple_env_vars_for_single_logical_name(self):
-        self.update_session_config_mapping(
-            'profile', env_vars=['BAR_DEFAULT_PROFILE', 'BAR_PROFILE']
-        )
+        env_vars = {
+            'profile': (None, ['BAR_DEFAULT_PROFILE', 'BAR_PROFILE'],
+                        None, None),
+        }
+        session = create_session(session_vars=env_vars)
         self.environ['BAR_DEFAULT_PROFILE'] = 'first'
         self.environ['BAR_PROFILE'] = 'second'
-        self.assertEqual(self.session.get_config_variable('profile'), 'first')
+        self.assertEqual(session.get_config_variable('profile'), 'first')
 
     def test_profile_when_set_explicitly(self):
-        session = create_session(profile='asdf')
+        session = create_session(session_vars=self.env_vars, profile='asdf')
         self.assertEqual(session.profile, 'asdf')
 
     def test_profile_when_pulled_from_env(self):
@@ -129,28 +97,49 @@ class SessionTest(BaseSessionTest):
         self.assertEqual(self.session.profile, 'bar')
 
     def test_multiple_env_vars_uses_second_var(self):
-        self.update_session_config_mapping(
-            'profile', env_vars=['BAR_DEFAULT_PROFILE', 'BAR_PROFILE']
-        )
+        env_vars = {
+            'profile': (None, ['BAR_DEFAULT_PROFILE', 'BAR_PROFILE'],
+                        None, None),
+        }
+        session = create_session(session_vars=env_vars)
         self.environ.pop('BAR_DEFAULT_PROFILE', None)
         self.environ['BAR_PROFILE'] = 'second'
-        self.assertEqual(self.session.get_config_variable('profile'), 'second')
+        self.assertEqual(session.get_config_variable('profile'), 'second')
+
+    def test_profile(self):
+        self.assertEqual(self.session.get_config_variable('profile'), 'foo')
+        self.assertEqual(self.session.get_config_variable('region'),
+                         'us-west-11')
+        self.session.get_config_variable('profile') == 'default'
+        saved_region = self.environ['FOO_REGION']
+        del self.environ['FOO_REGION']
+        saved_profile = self.environ['FOO_PROFILE']
+        del self.environ['FOO_PROFILE']
+        session = create_session(session_vars=self.env_vars)
+        self.assertEqual(session.get_config_variable('profile'), None)
+        self.assertEqual(session.get_config_variable('region'), 'us-west-1')
+        self.environ['FOO_REGION'] = saved_region
+        self.environ['FOO_PROFILE'] = saved_profile
 
     def test_profile_does_not_exist_raises_exception(self):
         # Given we have no profile:
         self.environ['FOO_PROFILE'] = 'profile_that_does_not_exist'
+        session = create_session(session_vars=self.env_vars)
         with self.assertRaises(botocore.exceptions.ProfileNotFound):
-            self.session.get_scoped_config()
+            session.get_scoped_config()
 
     def test_variable_does_not_exist(self):
-        self.assertIsNone(self.session.get_config_variable('foo/bar'))
+        session = create_session(session_vars=self.env_vars)
+        self.assertIsNone(session.get_config_variable('foo/bar'))
 
     def test_get_aws_services_in_alphabetical_order(self):
-        services = self.session.get_available_services()
+        session = create_session(session_vars=self.env_vars)
+        services = session.get_available_services()
         self.assertEqual(sorted(services), services)
 
     def test_profile_does_not_exist_with_default_profile(self):
-        config = self.session.get_scoped_config()
+        session = create_session(session_vars=self.env_vars)
+        config = session.get_scoped_config()
         # We should have loaded this properly, and we'll check
         # that foo_access_key which is defined in the config
         # file should be present in the loaded config dict.
@@ -160,16 +149,14 @@ class SessionTest(BaseSessionTest):
         # Specify that we can retrieve the var from the
         # FOO_TIMEOUT env var, with a conversion function
         # of int().
-        self.update_session_config_mapping(
-            'metadata_service_timeout',
-            env_vars='FOO_TIMEOUT',
-            cast=int,
-        )
+        self.env_vars['metadata_service_timeout'] = (
+            None, 'FOO_TIMEOUT', None, int)
         # Environment variables are always strings.
         self.environ['FOO_TIMEOUT'] = '10'
+        session = create_session(session_vars=self.env_vars)
         # But we should type convert this to a string.
         self.assertEqual(
-            self.session.get_config_variable('metadata_service_timeout'), 10)
+            session.get_config_variable('metadata_service_timeout'), 10)
 
     def test_default_profile_specified_raises_exception(self):
         # If you explicity set the default profile and you don't
@@ -178,11 +165,12 @@ class SessionTest(BaseSessionTest):
                                    'boto_config_empty')
         self.environ['FOO_CONFIG_FILE'] = config_path
         self.environ['FOO_PROFILE'] = 'default'
+        session = create_session(session_vars=self.env_vars)
         # In this case, even though we specified default, because
         # the boto_config_empty config file does not have a default
         # profile, we should be raising an exception.
         with self.assertRaises(botocore.exceptions.ProfileNotFound):
-            self.session.get_scoped_config()
+            session.get_scoped_config()
 
     def test_file_logger(self):
         tempdir = tempfile.mkdtemp()
@@ -236,7 +224,8 @@ class SessionTest(BaseSessionTest):
 
     def test_emitter_can_be_passed_in(self):
         events = HierarchicalEmitter()
-        session = create_session(event_hooks=events)
+        session = create_session(session_vars=self.env_vars,
+                                 event_hooks=events)
         calls = []
         handler = lambda **kwargs: calls.append(kwargs)
         events.register('foo', handler)
@@ -245,10 +234,11 @@ class SessionTest(BaseSessionTest):
         self.assertEqual(len(calls), 1)
 
     def test_emit_first_non_none(self):
-        self.session.register('foo', lambda **kwargs: None)
-        self.session.register('foo', lambda **kwargs: 'first')
-        self.session.register('foo', lambda **kwargs: 'second')
-        response = self.session.emit_first_non_none_response('foo')
+        session = create_session(session_vars=self.env_vars)
+        session.register('foo', lambda **kwargs: None)
+        session.register('foo', lambda **kwargs: 'first')
+        session.register('foo', lambda **kwargs: 'second')
+        response = session.emit_first_non_none_response('foo')
         self.assertEqual(response, 'first')
 
     @mock.patch('logging.getLogger')
@@ -301,18 +291,16 @@ class TestBuiltinEventHandlers(BaseSessionTest):
         self.handler_patch.stop()
 
     def test_registered_builtin_handlers(self):
-        session = create_session(include_builtin_handlers=True)
+        session = botocore.session.Session(self.env_vars, None,
+                                           include_builtin_handlers=True)
         session.emit('foo')
         self.assertTrue(self.foo_called)
 
 
 class TestSessionConfigurationVars(BaseSessionTest):
     def test_per_session_config_vars(self):
-        self.update_session_config_mapping(
-            'foobar',
-            env_vars='FOOBAR',
-            default='default',
-        )
+        self.session.session_var_map['foobar'] = (None, 'FOOBAR',
+                                                  'default', None)
         # Default value.
         self.assertEqual(self.session.get_config_variable('foobar'), 'default')
         # Retrieve from os environment variable.
@@ -324,17 +312,14 @@ class TestSessionConfigurationVars(BaseSessionTest):
         self.assertEqual(self.session.get_config_variable('foobar'),
                          'session-instance')
 
-        # Back to default value.
+        # Can disable this check via the ``methods`` arg.
         del self.environ['FOOBAR']
-        self.session.set_config_variable('foobar', None)
-        self.assertEqual(self.session.get_config_variable('foobar'), 'default')
+        self.assertEqual(self.session.get_config_variable(
+            'foobar', methods=('env', 'config')), 'default')
 
     def test_default_value_can_be_overriden(self):
-        self.update_session_config_mapping(
-            'foobar',
-            env_vars='FOOBAR',
-            default='default',
-        )
+        self.session.session_var_map['foobar'] = (None, 'FOOBAR', 'default',
+                                                  None)
         self.assertEqual(self.session.get_config_variable('foobar'), 'default')
 
 
@@ -389,7 +374,8 @@ class TestSessionUserAgent(BaseSessionTest):
 
 class TestConfigLoaderObject(BaseSessionTest):
     def test_config_loader_delegation(self):
-        session = create_session(profile='credfile-profile')
+        session = create_session(session_vars=self.env_vars,
+                                 profile='credfile-profile')
         with temporary_file('w') as f:
             f.write('[credfile-profile]\naws_access_key_id=a\n')
             f.write('aws_secret_access_key=b\n')
@@ -554,6 +540,7 @@ class TestCreateClient(BaseSessionTest):
         with temporary_file('w') as f:
             del self.environ['FOO_PROFILE']
             self.environ['FOO_CONFIG_FILE'] = f.name
+            self.session = create_session(session_vars=self.env_vars)
             f.write('[default]\n')
             f.write('foo_ca_bundle=config-certs.pem\n')
             f.flush()
@@ -583,6 +570,7 @@ class TestCreateClient(BaseSessionTest):
             # Set the ca cert using the config file
             del self.environ['FOO_PROFILE']
             self.environ['FOO_CONFIG_FILE'] = f.name
+            self.session = create_session(session_vars=self.env_vars)
             f.write('[default]\n')
             f.write('foo_ca_bundle=config-certs.pem\n')
             f.flush()
@@ -611,6 +599,7 @@ class TestCreateClient(BaseSessionTest):
         with temporary_file('w') as f:
             del self.environ['FOO_PROFILE']
             self.environ['FOO_CONFIG_FILE'] = f.name
+            self.session = create_session(session_vars=self.env_vars)
             f.write('[default]\n')
             f.write('foo_api_versions =\n'
                     '    myservice = %s\n' % config_api_version)
@@ -628,6 +617,7 @@ class TestCreateClient(BaseSessionTest):
         with temporary_file('w') as f:
             del self.environ['FOO_PROFILE']
             self.environ['FOO_CONFIG_FILE'] = f.name
+            self.session = create_session(session_vars=self.env_vars)
             f.write('[default]\n')
             f.write('foo_api_versions =\n'
                     '    myservice = %s\n'
@@ -654,6 +644,7 @@ class TestCreateClient(BaseSessionTest):
         with temporary_file('w') as f:
             del self.environ['FOO_PROFILE']
             self.environ['FOO_CONFIG_FILE'] = f.name
+            self.session = create_session(session_vars=self.env_vars)
             f.write('[default]\n')
             f.write('foo_api_versions =\n'
                     '    myservice = %s\n' % config_api_version)

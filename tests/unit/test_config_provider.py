@@ -17,24 +17,25 @@ from nose.tools import assert_equal
 import botocore
 import botocore.session as session
 from botocore.configprovider import ConfigProviderComponent
-from botocore.configprovider import BaseConfigValueProvider
-from botocore.configprovider import DictConfigValueProvider
-from botocore.configprovider import LazyDictValueProvider
-from botocore.configprovider import ConstantValueProvider
+from botocore.configprovider import BaseProvider
+from botocore.configprovider import OpenDictProvider
+from botocore.configprovider import ClosedDictProvider
+from botocore.configprovider import ConstantProvider
 from botocore.configprovider import ChainProvider
+from botocore.configprovider import LazyProvider
 from botocore.configprovider import DefaultConfigChainBuilder
 
 
 class TestDefaultConfigChainBuilder(unittest.TestCase):
     def assert_chain_does_provide(self, instance_map, environ_map, config_map,
                                   build_config_chain_args,
-                                  expected_value):
+                                  logical_name_to_provide, expected_value):
         fake_session = mock.Mock(spec=session.Session)
         fake_session.get_scoped_config.return_value = config_map
         fake_session.instance_variables.return_value = instance_map
         builder = DefaultConfigChainBuilder(fake_session, environ=environ_map)
         chain = builder.build_config_chain(**build_config_chain_args)
-        value = chain.provide()
+        value = chain.provide(logical_name_to_provide)
         self.assertEqual(value, expected_value)
 
     def test_chain_builder_can_provide_instance(self):
@@ -42,10 +43,22 @@ class TestDefaultConfigChainBuilder(unittest.TestCase):
             instance_map={'foo': 'bar'},
             environ_map={},
             config_map={},
-            build_config_chain_args={
-                'instance_var': 'foo',
-            },
+            build_config_chain_args={},
+            logical_name_to_provide='foo',
             expected_value='bar',
+        )
+
+    def test_chain_builder_can_skip_instance(self):
+        self.assert_chain_does_provide(
+            instance_map={'foo': 'bar'},
+            environ_map={'FOO': 'baz'},
+            config_map={},
+            build_config_chain_args={
+                'instance': False,
+                'env_vars': 'FOO',
+            },
+            logical_name_to_provide='foo',
+            expected_value='baz',
         )
 
     def test_chain_builder_can_provide_env_var(self):
@@ -56,6 +69,7 @@ class TestDefaultConfigChainBuilder(unittest.TestCase):
             build_config_chain_args={
                 'env_vars': 'FOO',
             },
+            logical_name_to_provide='foo',
             expected_value='bar',
         )
 
@@ -67,6 +81,7 @@ class TestDefaultConfigChainBuilder(unittest.TestCase):
             build_config_chain_args={
                 'config_property': 'foo',
             },
+            logical_name_to_provide='foo',
             expected_value='bar',
         )
 
@@ -78,20 +93,21 @@ class TestDefaultConfigChainBuilder(unittest.TestCase):
             build_config_chain_args={
                 'default': 'bar'
             },
+            logical_name_to_provide='foo',
             expected_value='bar',
         )
 
     def test_chain_provider_does_follow_priority_instance_var(self):
         self.assert_chain_does_provide(
-            instance_map={'instance_var': 'qux'},
+            instance_map={'foo': 'qux'},
             environ_map={'ENV_VAR': 'foo'},
             config_map={'config_key': 'bar'},
             build_config_chain_args={
-                'instance_var': 'instance_var',
                 'env_vars': 'ENV_VAR',
                 'config_property': 'config_key',
                 'default': 'baz',
             },
+            logical_name_to_provide='foo',
             expected_value='qux',
         )
 
@@ -101,11 +117,11 @@ class TestDefaultConfigChainBuilder(unittest.TestCase):
             environ_map={'ENV_VAR': 'foo'},
             config_map={'config_key': 'bar'},
             build_config_chain_args={
-                'instance_var': 'instance_var',
                 'env_vars': 'ENV_VAR',
                 'config_property': 'config_key',
                 'default': 'baz',
             },
+            logical_name_to_provide='foo',
             expected_value='foo',
         )
 
@@ -115,11 +131,11 @@ class TestDefaultConfigChainBuilder(unittest.TestCase):
             environ_map={'WRONG_ENV_VAR': 'foo'},
             config_map={'config_key': 'bar'},
             build_config_chain_args={
-                'instance_var': 'instance_var',
                 'env_vars': 'ENV_VAR',
                 'config_property': 'config_key',
                 'default': 'baz',
             },
+            logical_name_to_provide='foo',
             expected_value='bar',
         )
 
@@ -129,11 +145,11 @@ class TestDefaultConfigChainBuilder(unittest.TestCase):
             environ_map={'WRONG_ENV_VAR': 'foo'},
             config_map={'wrong_config_key': 'baz'},
             build_config_chain_args={
-                'instance_var': 'instance_var',
                 'env_vars': 'ENV_VAR',
                 'config_property': 'config_key',
                 'default': 'baz',
             },
+            logical_name_to_provide='foo',
             expected_value='baz',
         )
 
@@ -145,7 +161,7 @@ class TestConfigProviderComponent(unittest.TestCase):
         self.assertIsNone(value)
 
     def test_does_provide_value_if_variable_exists(self):
-        mock_value_provider = mock.Mock(spec=BaseConfigValueProvider)
+        mock_value_provider = mock.Mock(spec=BaseProvider)
         mock_value_provider.provide.return_value = 'foo'
         provider = ConfigProviderComponent(mapping={
             'fake_variable': mock_value_provider,
@@ -154,7 +170,7 @@ class TestConfigProviderComponent(unittest.TestCase):
         self.assertEqual(value, 'foo')
 
     def test_provided_value_is_cached(self):
-        mock_value_provider = mock.Mock(spec=BaseConfigValueProvider)
+        mock_value_provider = mock.Mock(spec=BaseProvider)
         mock_value_provider.provide.return_value = 'foo'
         provider = ConfigProviderComponent(mapping={
             'fake_variable': mock_value_provider,
@@ -175,7 +191,7 @@ class TestConfigProviderComponent(unittest.TestCase):
         self.assertEquals(value, 'foo')
 
     def test_set_variable_does_override_cache(self):
-        mock_value_provider = mock.Mock(spec=BaseConfigValueProvider)
+        mock_value_provider = mock.Mock(spec=BaseProvider)
         mock_value_provider.provide.return_value = 'foo'
         provider = ConfigProviderComponent(mapping={
             'fake_variable': mock_value_provider,
@@ -188,10 +204,10 @@ class TestConfigProviderComponent(unittest.TestCase):
         self.assertEqual(value, 'bar')
 
 
-class TestDictConfigValueProvider(unittest.TestCase):
-    def assert_does_provide(self, names, source, expected_value):
-        provider = DictConfigValueProvider(
-            names=names,
+class TestClosedDictProvider(unittest.TestCase):
+    def assert_does_provide(self, keys, source, expected_value):
+        provider = ClosedDictProvider(
+            keys=keys,
             source=source,
         )
         value = provider.provide()
@@ -199,14 +215,14 @@ class TestDictConfigValueProvider(unittest.TestCase):
 
     def test_does_provide_none_if_no_variable_exists(self):
         self.assert_does_provide(
-            names='FOO',
+            keys='FOO',
             source={},
             expected_value=None,
         )
 
     def test_does_provide_value_if_variable_exists(self):
         self.assert_does_provide(
-            names='FOO',
+            keys='FOO',
             source={
                 'FOO': 'bar',
             },
@@ -215,14 +231,14 @@ class TestDictConfigValueProvider(unittest.TestCase):
 
     def test_does_provide_none_if_no_variable_exists_in_list(self):
         self.assert_does_provide(
-            names=['FOO'],
+            keys=['FOO'],
             source={},
             expected_value=None,
         )
 
     def test_does_provide_value_if_variable_exists_in_list(self):
         self.assert_does_provide(
-            names=['FOO'],
+            keys=['FOO'],
             source={
                 'FOO': 'bar',
             },
@@ -231,7 +247,7 @@ class TestDictConfigValueProvider(unittest.TestCase):
 
     def test_does_provide_first_non_none_value_first(self):
         self.assert_does_provide(
-            names=['FOO', 'BAR'],
+            keys=['FOO', 'BAR'],
             source={
                 'FOO': 'baz',
             },
@@ -240,7 +256,7 @@ class TestDictConfigValueProvider(unittest.TestCase):
 
     def test_does_provide_first_non_none_value_second(self):
         self.assert_does_provide(
-            names=['FOO', 'BAR'],
+            keys=['FOO', 'BAR'],
             source={
                 'BAR': 'baz',
             },
@@ -249,14 +265,14 @@ class TestDictConfigValueProvider(unittest.TestCase):
 
     def test_does_provide_none_if_all_list_variables_are_none(self):
         self.assert_does_provide(
-            names=['FOO', 'BAR'],
+            keys=['FOO', 'BAR'],
             source={},
             expected_value=None,
         )
 
     def test_does_provide_first_value_when_both_exist(self):
         self.assert_does_provide(
-            names=['FOO', 'BAR'],
+            keys=['FOO', 'BAR'],
             source={
                 'FOO': 'baz',
                 'BAR': 'buz',
@@ -265,15 +281,12 @@ class TestDictConfigValueProvider(unittest.TestCase):
         )
 
 
-class TestLazyDictValueProvider(unittest.TestCase):
+class TestOpenDictProvider(unittest.TestCase):
     def assert_provides_value(self, source, name, expected_value):
-        dict_loader = mock.Mock(autospec=True)
-        dict_loader.return_value = source
-        provider = LazyDictValueProvider(
-            name=name,
-            source_method=dict_loader,
+        provider = OpenDictProvider(
+            source=source,
         )
-        value = provider.provide()
+        value = provider.provide(name)
         self.assertEqual(value, expected_value)
 
     def test_can_provide_value(self):
@@ -292,7 +305,7 @@ class TestLazyDictValueProvider(unittest.TestCase):
 
 
 def _make_provider_that_returns(return_value):
-    provider = mock.Mock(spec=BaseConfigValueProvider)
+    provider = mock.Mock(spec=BaseProvider)
     provider.provide.return_value = return_value
     return provider
 
@@ -346,8 +359,34 @@ class TestChainProvider(unittest.TestCase):
         self.assertEqual(value, 1)
 
 
-class TestConstantValueProvider(unittest.TestCase):
+class TestConstantProvider(unittest.TestCase):
     def test_can_provide_value(self):
-        provider = ConstantValueProvider(value='foo')
+        provider = ConstantProvider(value='foo')
+        value = provider.provide()
+        self.assertEqual(value, 'foo')
+
+    def test_does_provide_value_when_logical_name_given(self):
+        provider = ConstantProvider(value='foo')
+        value = provider.provide(logical_name='foo_bar_baz')
+        self.assertEqual(value, 'foo')
+
+
+class TestLazyProvider(unittest.TestCase):
+    def test_can_provide_lazy_constant_value(self):
+        provider = LazyProvider(
+            provider_function=lambda: ConstantProvider(value='foo'),
+        )
+        value = provider.provide()
+        self.assertEqual(value, 'foo')
+
+    def test_lazy_provider_does_not_eagerly_load(self):
+        value_getter = mock.Mock(
+            autospec=True,
+            return_value=ConstantProvider(value='foo'),
+        )
+        provider = LazyProvider(
+            provider_function=lambda: value_getter(),
+        )
+        value_getter.assert_not_called()
         value = provider.provide()
         self.assertEqual(value, 'foo')
