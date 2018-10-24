@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.31
+=======
+
+* api-change:``codestar``: Update codestar client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+
+
 1.12.30
 =======
 
