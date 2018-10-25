@@ -454,6 +454,10 @@ class OperationModel(object):
         return list(self._service_model.resolve_shape_ref(s) for s in shapes)
 
     @CachedProperty
+    def endpoint(self):
+        return self._operation_model.get('endpoint')
+
+    @CachedProperty
     def has_event_stream_input(self):
         return self.get_event_stream_input() is not None
 
@@ -475,6 +479,10 @@ class OperationModel(object):
             if member.serialization.get('eventstream'):
                 return member
         return None
+
+    def get_hostname_bindings(self):
+        return [name for name, member in self.input_shape.members.items()
+                if member.serialization.get('location') == 'host']
 
     @CachedProperty
     def has_streaming_input(self):

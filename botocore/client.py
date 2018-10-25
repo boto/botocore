@@ -625,13 +625,33 @@ class BaseClient(object):
         else:
             return parsed_response
 
+    def _expand_hostname(self, api_params, operation_model):
+        operation_endpoint = operation_model.endpoint
+
+        if operation_endpoint is None:
+            return self._endpoint.host
+
+        url_parts = urlsplit(self._endpoint.host)
+        hostname_expression = operation_endpoint['host']
+        hostname_bindings = operation_model.get_hostname_bindings()
+
+        kwargs = dict(((name, api_params[name]) for name in hostname_bindings))
+        kwargs['@'] = url_parts.netloc
+        expanded_hostname = hostname_expression.format(**kwargs)
+
+        return '{scheme}://{netloc}'.format(
+            scheme=url_parts.scheme,
+            netloc=expanded_hostname,
+        )
+
     def _convert_to_request_dict(self, api_params, operation_model,
                                  context=None):
         api_params = self._emit_api_params(
             api_params, operation_model, context)
         request_dict = self._serializer.serialize_to_request(
             api_params, operation_model)
-        prepare_request_dict(request_dict, endpoint_url=self._endpoint.host,
+        endpoint_url = self._expand_hostname(api_params, operation_model)
+        prepare_request_dict(request_dict, endpoint_url=endpoint_url,
                              user_agent=self._client_config.user_agent,
                              context=context)
         return request_dict
