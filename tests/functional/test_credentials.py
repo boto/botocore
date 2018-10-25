@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import uuid
 import threading
 import os
 import math
@@ -24,6 +25,7 @@ from dateutil.tz import tzlocal
 from botocore.exceptions import CredentialRetrievalError
 
 from tests import unittest, IntegerRefresher, BaseEnvVar, random_chars
+from tests import ClientHTTPStubber
 from tests import temporary_file
 from botocore.credentials import EnvProvider, ContainerProvider
 from botocore.credentials import InstanceMetadataProvider
@@ -31,6 +33,7 @@ from botocore.credentials import Credentials, ReadOnlyCredentials
 from botocore.credentials import AssumeRoleProvider
 from botocore.credentials import CanonicalNameCredentialSourcer
 from botocore.credentials import DeferredRefreshableCredentials
+from botocore.credentials import create_credential_resolver
 from botocore.session import Session
 from botocore.exceptions import InvalidConfigError, InfiniteLoopConfigError
 from botocore.stub import Stubber
@@ -145,12 +148,14 @@ class TestAssumeRole(BaseEnvVar):
         self.tempdir = tempfile.mkdtemp()
         self.config_file = os.path.join(self.tempdir, 'config')
         self.environ['AWS_CONFIG_FILE'] = self.config_file
+        self.environ['AWS_SHARED_CREDENTIALS_FILE'] = str(uuid.uuid4())
         self.environ['AWS_ACCESS_KEY_ID'] = 'access_key'
         self.environ['AWS_SECRET_ACCESS_KEY'] = 'secret_key'
 
         self.metadata_provider = self.mock_provider(InstanceMetadataProvider)
         self.env_provider = self.mock_provider(EnvProvider)
         self.container_provider = self.mock_provider(ContainerProvider)
+        self.actual_client_region = None
 
     def mock_provider(self, provider_cls):
         mock_instance = mock.Mock(spec=provider_cls)
@@ -445,6 +450,46 @@ class TestAssumeRole(BaseEnvVar):
         actual_creds = session.get_credentials()
         self.assert_creds_equal(actual_creds, expected_creds)
         stubber.assert_no_pending_responses()
+
+
+    def create_stubbed_sts_client(self, session):
+        expected_creds = self.create_random_credentials()
+        _original_create_client = session.create_client
+
+        def create_client_sts_stub(service, *args, **kwargs):
+            client = _original_create_client(service, *args, **kwargs)
+            stub = Stubber(client)
+            response = self.create_assume_role_response(expected_creds)
+            self.actual_client_region = client.meta.region_name
+            stub.add_response('assume_role', response)
+            stub.activate()
+            return client
+
+        return create_client_sts_stub, expected_creds
+
+    def test_assume_role_uses_correct_region(self):
+        config = (
+            '[profile A]\n'
+            'role_arn = arn:aws:iam::123456789:role/RoleA\n'
+            'source_profile = B\n\n'
+            '[profile B]\n'
+            'aws_access_key_id = abc123\n'
+            'aws_secret_access_key = def456\n'
+        )
+        self.write_config(config)
+        session = Session(profile='A')
+        # Verify that when we configure the session with a specific region
+        # that we use that region when creating the sts client.
+        session.set_config_variable('region', 'cn-north-1')
+
+        create_client, expected_creds = self.create_stubbed_sts_client(session)
+        session.create_client = create_client
+
+        resolver = create_credential_resolver(session)
+        provider = resolver.get_provider('assume-role')
+        creds = provider.load()
+        self.assert_creds_equal(creds, expected_creds)
+        self.assertEqual(self.actual_client_region, 'cn-north-1')
 
 
 class TestProcessProvider(unittest.TestCase):
