@@ -216,6 +216,35 @@ class ConfigProviderComponent(object):
         provider = self._mapping[logical_name]
         return provider.provide(logical_name)
 
+    def set_config_variable(self, logical_name, value):
+        """Set a configuration variable to a specific value.
+
+        By using this method, you can override the normal lookup
+        process used in ``get_config_variable`` by explicitly setting
+        a value.  Subsequent calls to ``get_config_variable`` will
+        use the ``value``.  This gives you per-session specific
+        configuration values.
+
+        ::
+            >>> # Assume logical name 'foo' maps to env var 'FOO'
+            >>> os.environ['FOO'] = 'myvalue'
+            >>> s.get_config_variable('foo')
+            'myvalue'
+            >>> s.set_config_variable('foo', 'othervalue')
+            >>> s.get_config_variable('foo')
+            'othervalue'
+
+        :type logical_name: str
+        :param logical_name: The logical name of the session variable
+            you want to set.  These are the keys in ``SESSION_VARIABLES``.
+
+        :param value: The value to associate with the config variable.
+        """
+        if value is None:
+            self._cache.pop(logical_name, None)
+        else:
+            self._cache[logical_name] = value
+
     def update_mapping(self, new_mapping):
         """Update the config mapping.
 

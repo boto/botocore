@@ -169,6 +169,40 @@ class TestConfigProviderComponent(unittest.TestCase):
         value = provider.get_config_variable('fake_variable')
         self.assertEqual(value, 'foo')
 
+    def test_provided_value_is_cached(self):
+        mock_value_provider = mock.Mock(spec=BaseProvider)
+        mock_value_provider.provide.return_value = 'foo'
+        provider = ConfigProviderComponent(mapping={
+            'fake_variable': mock_value_provider,
+        })
+        value = provider.get_config_variable('fake_variable')
+        self.assertEqual(value, 'foo')
+
+        # Change the returned value to bar instead of foo. The value returned
+        # from the ConfigProviderComponent should still be the cached foo from
+        # before.
+        mock_value_provider.provide.return_value = 'bar'
+        self.assertEqual(value, 'foo')
+
+    def test_can_set_variable(self):
+        provider = ConfigProviderComponent()
+        provider.set_config_variable('fake_variable', 'foo')
+        value = provider.get_config_variable('fake_variable')
+        self.assertEquals(value, 'foo')
+
+    def test_set_variable_does_override_cache(self):
+        mock_value_provider = mock.Mock(spec=BaseProvider)
+        mock_value_provider.provide.return_value = 'foo'
+        provider = ConfigProviderComponent(mapping={
+            'fake_variable': mock_value_provider,
+        })
+        value = provider.get_config_variable('fake_variable')
+        self.assertEqual(value, 'foo')
+
+        provider.set_config_variable('fake_variable', 'bar')
+        value = provider.get_config_variable('fake_variable')
+        self.assertEqual(value, 'bar')
+
 
 class TestClosedDictProvider(unittest.TestCase):
     def assert_does_provide(self, keys, source, expected_value):
