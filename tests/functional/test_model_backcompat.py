@@ -54,3 +54,6 @@ def test_old_model_continues_to_work():
         stubber.add_response('list_functions', {'Functions': []}, {})
         response = client.list_functions()
         assert_equal(response, {'Functions': []})
+
+    # Also verify we can use the paginators as well.
+    assert_equal(client.can_paginate('list_functions'), True)
