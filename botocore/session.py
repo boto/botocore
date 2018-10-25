@@ -230,7 +230,7 @@ class Session(object):
             if 'config' in methods:
                 build_chain_config_args['config_property'] = config_name
             mapping[name] = chain_builder.build_config_chain(
-                **build_chain_config_args,
+                **build_chain_config_args
             )
         config_provider_component = ConfigProviderComponent(
             mapping=mapping
