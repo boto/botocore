@@ -217,7 +217,7 @@ class Session(object):
             methods=methods,
         )
         mapping = {}
-        for logical_name, config_options in self.session_var_map.items():
+        for name, config_options in self.session_var_map.items():
             config_name, env_vars, default, typecast = config_options
             build_chain_config_args = {
                 'cast': typecast,
@@ -229,17 +229,14 @@ class Session(object):
                 build_chain_config_args['env_vars'] = env_vars
             if 'config' in methods:
                 build_chain_config_args['config_property'] = config_name
-            mapping.update(
-                {
-                    logical_name: chain_builder.build_config_chain(
-                        **build_chain_config_args,
-                    )
-                }
+            mapping[name] = chain_builder.build_config_chain(
+                **build_chain_config_args,
             )
         config_provider_component = ConfigProviderComponent(
             mapping=mapping
         )
-        return config_provider_component.get_config_variable(logical_name)
+        value = config_provider_component.get_config_variable(logical_name)
+        return value
 
     def set_config_variable(self, logical_name, value):
         """Set a configuration variable to a specific value.
