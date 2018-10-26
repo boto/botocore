@@ -14,7 +14,7 @@ import os
 
 from nose.tools import assert_equal
 from botocore.session import Session
-from botocore.stub import Stubber
+from tests import ClientHTTPStubber
 
 
 FIXED_MODELS_DIR = os.path.join(
@@ -28,7 +28,8 @@ def test_old_model_continues_to_work():
     # snapshot of a service model.  This test ensures that we can continue
     # to stub an API call using this model.  That way if the models ever
     # change we have a mechanism to ensure that the existing models continue
-    # to work with botocore.  The test should not change, and the files in
+    # to work with botocore.  The test should not change (with the exception
+    # of potential changes to the ClientHTTPStubber), and the files in
     # tests/functional/models should not change!
     session = Session()
     loader = session.get_component('data_loader')
@@ -47,13 +48,33 @@ def test_old_model_continues_to_work():
     # to ensure we're loading our version of the model and not
     # the built in one.
     client = session.create_client(
-        'custom-lambda', region_name='us-west-2',
+        'custom-acm', region_name='us-west-2',
         aws_access_key_id='foo', aws_secret_access_key='bar',
     )
-    with Stubber(client) as stubber:
-        stubber.add_response('list_functions', {'Functions': []}, {})
-        response = client.list_functions()
-        assert_equal(response, {'Functions': []})
+    with ClientHTTPStubber(client) as stubber:
+        stubber.add_response(
+            url='https://acm.us-west-2.amazonaws.com/',
+            headers={'x-amzn-RequestId': 'abcd',
+                     'Date': 'Fri, 26 Oct 2018 01:46:30 GMT',
+                     'Content-Length': '29',
+                     'Content-Type': 'application/x-amz-json-1.1'},
+            body=b'{"CertificateSummaryList":[]}')
+        response = client.list_certificates()
+        assert_equal(
+            response,
+            {'CertificateSummaryList': [],
+             'ResponseMetadata': {
+                 'HTTPHeaders': {
+                     'content-length': '29',
+                     'content-type': 'application/x-amz-json-1.1',
+                     'date': 'Fri, 26 Oct 2018 01:46:30 GMT',
+                     'x-amzn-requestid': 'abcd'},
+                 'HTTPStatusCode': 200,
+                 'RequestId': 'abcd',
+                 'RetryAttempts': 0}
+             }
+        )
 
     # Also verify we can use the paginators as well.
-    assert_equal(client.can_paginate('list_functions'), True)
+    assert_equal(client.can_paginate('list_certificates'), True)
+    assert_equal(client.waiter_names, ['certificate_validated'])
