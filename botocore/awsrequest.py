@@ -281,7 +281,8 @@ def prepare_request_dict(request_dict, endpoint_url, context=None,
     if user_agent is not None:
         headers = r['headers']
         headers['User-Agent'] = user_agent
-    url = _urljoin(endpoint_url, r['url_path'])
+    host_template = r.get('host_template')
+    url = _urljoin(endpoint_url, r['url_path'], host_template)
     if r['query_string']:
         # NOTE: This is to avoid circular import with utils. This is being
         # done to avoid moving classes to different modules as to not cause
@@ -318,7 +319,7 @@ def create_request_object(request_dict):
     return request_object
 
 
-def _urljoin(endpoint_url, url_path):
+def _urljoin(endpoint_url, url_path, host_template):
     p = urlsplit(endpoint_url)
     # <part>   - <index>
     # scheme   - p[0]
@@ -330,13 +331,21 @@ def _urljoin(endpoint_url, url_path):
         # If there's no path component, ensure the URL ends with
         # a '/' for backwards compatibility.
         if not p[2]:
-            return endpoint_url + '/'
-        return endpoint_url
-    if p[2].endswith('/') and url_path.startswith('/'):
+            new_path = '/'
+        else:
+            new_path = p[2]
+    elif p[2].endswith('/') and url_path.startswith('/'):
         new_path = p[2][:-1] + url_path
     else:
         new_path = p[2] + url_path
-    reconstructed = urlunsplit((p[0], p[1], new_path, p[3], p[4]))
+
+    new_netloc = p[1]
+    if host_template is not None:
+        # If the operation uses a hostname template complete it
+        # by filling in the {@} placeholder with the orignal host
+        new_netloc = host_template.format(**{'@': new_netloc})
+
+    reconstructed = urlunsplit((p[0], new_netloc, new_path, p[3], p[4]))
     return reconstructed
 
 
