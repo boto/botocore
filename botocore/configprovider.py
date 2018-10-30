@@ -19,57 +19,57 @@ import os
 def create_botocore_default_config_mapping(chain_builder):
     return {
         'profile': chain_builder.create_config_chain(
-            'profile',
+            instance_name='profile',
             env_var_names=['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'],
         ),
         'region': chain_builder.create_config_chain(
-            'region',
+            instance_name='region',
             env_var_names='AWS_DEFAULT_REGION',
             config_property_name='region',
             default=None,
         ),
         'data_path': chain_builder.create_config_chain(
-            'data_path',
+            instance_name='data_path',
             env_var_names='AWS_DATA_PATH',
             config_property_name='data_path',
             default=None,
         ),
         'config_file': chain_builder.create_config_chain(
-            'config_file',
+            instance_name='config_file',
             env_var_names='AWS_CONFIG_FILE',
             default='~/.aws/config',
         ),
         'ca_bundle': chain_builder.create_config_chain(
-            'ca_bundle',
+            instance_name='ca_bundle',
             env_var_names='AWS_CA_BUNDLE',
             config_property_name='ca_bundle',
         ),
         'api_versions': chain_builder.create_config_chain(
-            'api_versions',
+            instance_name='api_versions',
             config_property_name='api_versions',
             default={},
         ),
         'credentials_file': chain_builder.create_config_chain(
-            'credentials_file',
+            instance_name='credentials_file',
             env_var_names='AWS_SHARED_CREDENTIALS_FILE',
             default='~/.aws/credentials',
         ),
         'metadata_service_timeout': chain_builder.create_config_chain(
-            'metadata_service_timeout',
+            instance_name='metadata_service_timeout',
             env_var_names='AWS_METADATA_SERVICE_TIMEOUT',
             config_property_name='metadata_service_timeout',
             default=1,
             conversion_func=int,
         ),
         'metadata_service_num_attempts': chain_builder.create_config_chain(
-            'metadata_service_num_attempts',
+            instance_name='metadata_service_num_attempts',
             env_var_names='AWS_METADATA_SERVICE_NUM_ATTEMPTS',
             config_property_name='metadata_service_num_attempts',
             default=1,
             conversion_func=int,
         ),
         'parameter_validation': chain_builder.create_config_chain(
-            'parameter_validation',
+            instance_name='parameter_validation',
             config_property_name='parameter_validation',
             default=True,
         ),
@@ -269,7 +269,7 @@ class BaseProvider(object):
     A configuration provider has some method of providing a configuration
     value.
     """
-    def provide(self, logical_name=None):
+    def provide(self):
         """Provide a config value."""
         raise NotImplementedError('provide')
 

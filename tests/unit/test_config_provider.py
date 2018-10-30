@@ -42,47 +42,47 @@ class TestConfigChainFactory(unittest.TestCase):
 
     def test_chain_builder_can_provide_instance(self):
         self.assert_chain_does_provide(
-            instance_map={'instance_var': 'bar'},
+            instance_map={'instance_var': 'from-instance'},
             environ_map={},
             scoped_config_map={},
             create_config_chain_args={
                 'instance_name': 'instance_var',
             },
-            expected_value='bar',
+            expected_value='from-instance',
         )
 
     def test_chain_builder_can_skip_instance(self):
         self.assert_chain_does_provide(
-            instance_map={'wrong-instance-variable': 'foo'},
-            environ_map={'ENV_VAR': 'bar'},
+            instance_map={'wrong_instance_var': 'instance'},
+            environ_map={'ENV_VAR': 'env'},
             scoped_config_map={},
             create_config_chain_args={
-                'instance_name': 'instance-variable',
+                'instance_name': 'instance_var',
                 'env_var_names': 'ENV_VAR',
             },
-            expected_value='bar',
+            expected_value='env',
         )
 
     def test_chain_builder_can_provide_env_var(self):
         self.assert_chain_does_provide(
             instance_map={},
-            environ_map={'ENV_VAR': 'bar'},
+            environ_map={'ENV_VAR': 'from-env'},
             scoped_config_map={},
             create_config_chain_args={
                 'env_var_names': 'ENV_VAR',
             },
-            expected_value='bar',
+            expected_value='from-env',
         )
 
     def test_chain_builder_can_provide_config_var(self):
         self.assert_chain_does_provide(
             instance_map={},
             environ_map={},
-            scoped_config_map={'config-variable': 'bar'},
+            scoped_config_map={'config_var': 'from-config'},
             create_config_chain_args={
-                'config_property_name': 'config-variable',
+                'config_property_name': 'config_var',
             },
-            expected_value='bar',
+            expected_value='from-config',
         )
 
     def test_chain_builder_can_provide_default(self):
@@ -91,65 +91,65 @@ class TestConfigChainFactory(unittest.TestCase):
             environ_map={},
             scoped_config_map={},
             create_config_chain_args={
-                'default': 'bar'
+                'default': 'from-default'
             },
-            expected_value='bar',
+            expected_value='from-default',
         )
 
     def test_chain_provider_does_follow_priority_instance_var(self):
         self.assert_chain_does_provide(
-            instance_map={'instance_var': 'qux'},
-            environ_map={'ENV_VAR': 'foo'},
-            scoped_config_map={'config_key': 'bar'},
+            instance_map={'instance_var': 'from-instance'},
+            environ_map={'ENV_VAR': 'from-env'},
+            scoped_config_map={'config_var': 'from-config'},
             create_config_chain_args={
                 'instance_name': 'instance_var',
                 'env_var_names': 'ENV_VAR',
-                'config_property_name': 'config_key',
-                'default': 'baz',
+                'config_property_name': 'config_var',
+                'default': 'from-default',
             },
-            expected_value='qux',
+            expected_value='from-instance',
         )
 
     def test_chain_provider_does_follow_priority_env_var(self):
         self.assert_chain_does_provide(
-            instance_map={'wrong_instance_var': 'qux'},
-            environ_map={'ENV_VAR': 'foo'},
-            scoped_config_map={'config_key': 'bar'},
+            instance_map={'wrong_instance_var': 'from-instance'},
+            environ_map={'ENV_VAR': 'from-env'},
+            scoped_config_map={'config_var': 'from-confi'},
             create_config_chain_args={
                 'instance_name': 'instance_var',
                 'env_var_names': 'ENV_VAR',
-                'config_property_name': 'config_key',
-                'default': 'baz',
+                'config_property_name': 'config_var',
+                'default': 'from-default',
             },
-            expected_value='foo',
+            expected_value='from-env',
         )
 
     def test_chain_provider_does_follow_priority_config(self):
         self.assert_chain_does_provide(
-            instance_map={'wrong_instance_var': 'qux'},
-            environ_map={'WRONG_ENV_VAR': 'foo'},
-            scoped_config_map={'config_key': 'bar'},
+            instance_map={'wrong_instance_var': 'from-instance'},
+            environ_map={'WRONG_ENV_VAR': 'from-env'},
+            scoped_config_map={'config_var': 'from-config'},
             create_config_chain_args={
                 'instance_name': 'instance_var',
                 'env_var_names': 'ENV_VAR',
-                'config_property_name': 'config_key',
-                'default': 'baz',
+                'config_property_name': 'config_var',
+                'default': 'from-default',
             },
-            expected_value='bar',
+            expected_value='from-config',
         )
 
     def test_chain_provider_does_follow_priority_default(self):
         self.assert_chain_does_provide(
-            instance_map={'wrong_instance_var': 'qux'},
-            environ_map={'WRONG_ENV_VAR': 'foo'},
-            scoped_config_map={'wrong_config_key': 'baz'},
+            instance_map={'wrong_instance_var': 'from-instance'},
+            environ_map={'WRONG_ENV_VAR': 'from-env'},
+            scoped_config_map={'wrong_config_var': 'from-config'},
             create_config_chain_args={
                 'instance_name': 'instance_var',
                 'env_var_names': 'ENV_VAR',
-                'config_property_name': 'config_key',
-                'default': 'baz',
+                'config_property_name': 'config_var',
+                'default': 'from-default',
             },
-            expected_value='baz',
+            expected_value='from-default',
         )
 
 
@@ -168,39 +168,11 @@ class TestConfigValueStore(unittest.TestCase):
         value = provider.get_config_variable('fake_variable')
         self.assertEqual(value, 'foo')
 
-    def test_provided_value_is_cached(self):
-        mock_value_provider = mock.Mock(spec=BaseProvider)
-        mock_value_provider.provide.return_value = 'foo'
-        provider = ConfigValueStore(mapping={
-            'fake_variable': mock_value_provider,
-        })
-        value = provider.get_config_variable('fake_variable')
-        self.assertEqual(value, 'foo')
-
-        # Change the returned value to bar instead of foo. The value returned
-        # from the ConfigValueStore should still be the cached foo from
-        # before.
-        mock_value_provider.provide.return_value = 'bar'
-        self.assertEqual(value, 'foo')
-
     def test_can_set_variable(self):
         provider = ConfigValueStore()
         provider.set_config_variable('fake_variable', 'foo')
         value = provider.get_config_variable('fake_variable')
         self.assertEquals(value, 'foo')
-
-    def test_set_variable_does_override_cache(self):
-        mock_value_provider = mock.Mock(spec=BaseProvider)
-        mock_value_provider.provide.return_value = 'foo'
-        provider = ConfigValueStore(mapping={
-            'fake_variable': mock_value_provider,
-        })
-        value = provider.get_config_variable('fake_variable')
-        self.assertEqual(value, 'foo')
-
-        provider.set_config_variable('fake_variable', 'bar')
-        value = provider.get_config_variable('fake_variable')
-        self.assertEqual(value, 'bar')
 
     def test_can_set_config_provider(self):
         foo_value_provider = mock.Mock(spec=BaseProvider)
