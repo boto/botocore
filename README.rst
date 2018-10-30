@@ -16,7 +16,7 @@ botocore package is the foundation for the
 
 Documentation
 -------------
-Documentation for ``botocore`` can be found on `Read the Docs <https://botocore.amazonaws.com/v1/documentation/api/latest/index.html>`__.
+Documentation for ``botocore`` can be found  `here <https://botocore.amazonaws.com/v1/documentation/api/latest/index.html>`__.
 
 
 Getting Help
