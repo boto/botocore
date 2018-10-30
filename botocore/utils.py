@@ -245,7 +245,7 @@ class _RetriesExceededError(Exception):
 
 class InstanceMetadataFetcher(object):
 
-    _RETRIES_EXCEEDED_ERROR = _RetriesExceededError
+    _RETRIES_EXCEEDED_ERROR_CLS = _RetriesExceededError
 
     def __init__(self, timeout=DEFAULT_METADATA_SERVICE_TIMEOUT,
                  num_attempts=1, base_url=METADATA_BASE_URL,
@@ -278,7 +278,7 @@ class InstanceMetadataFetcher(object):
          """
         if self._disabled:
             logger.debug("Access to EC2 metadata has been disabled.")
-            raise self._RETRIES_EXCEEDED_ERROR
+            raise self._RETRIES_EXCEEDED_ERROR_CLS()
         if retry_func is None:
             retry_func = self._default_retry
         url = self._base_url + url_path
@@ -297,7 +297,7 @@ class InstanceMetadataFetcher(object):
                 logger.debug(
                     "Caught retryable HTTP exception while making metadata "
                     "service request to %s: %s", url, e, exc_info=True)
-        raise self._RETRIES_EXCEEDED_ERROR
+        raise self._RETRIES_EXCEEDED_ERROR_CLS()
 
     def _default_retry(self, response):
         return (
@@ -365,7 +365,7 @@ class InstanceMetadataCredentialFetcher(InstanceMetadataFetcher):
                     logger.debug('Error response received when retrieving'
                                  'credentials: %s.', credentials)
                 return {}
-        except self._RETRIES_EXCEEDED_ERROR:
+        except self._RETRIES_EXCEEDED_ERROR_CLS:
             logger.debug("Max number of attempts exceeded (%s) when "
                          "attempting to retrieve data from metadata service.",
                          self._num_attempts)

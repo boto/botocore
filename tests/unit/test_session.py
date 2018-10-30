@@ -50,52 +50,52 @@ class BaseSessionTest(unittest.TestCase):
             session=self.session,
             environ=self.environ,
         )
-        config_provider = self.session.get_component('config_provider')
+        config_store = self.session.get_component('config_store')
         config_updates = {
-            'profile': config_chain_builder.build_config_chain(
-                'profile',
-                env_vars='FOO_PROFILE',
+            'profile': config_chain_builder.create_config_chain(
+                instance_name='profile',
+                env_var_names='FOO_PROFILE',
             ),
-            'region': config_chain_builder.build_config_chain(
-                'region',
-                env_vars='FOO_REGION',
-                config_property='foo_region',
+            'region': config_chain_builder.create_config_chain(
+                instance_name='region',
+                env_var_names='FOO_REGION',
+                config_property_name='foo_region',
             ),
-            'data_path': config_chain_builder.build_config_chain(
-                'data_path',
-                env_vars='FOO_DATA_PATH',
-                config_property='data_path',
+            'data_path': config_chain_builder.create_config_chain(
+                instance_name='data_path',
+                env_var_names='FOO_DATA_PATH',
+                config_property_name='data_path',
             ),
-            'config_file': config_chain_builder.build_config_chain(
-                'config_file',
-                env_vars='FOO_CONFIG_FILE',
+            'config_file': config_chain_builder.create_config_chain(
+                instance_name='config_file',
+                env_var_names='FOO_CONFIG_FILE',
             ),
-            'credentials_file': config_chain_builder.build_config_chain(
-                'credentials_file',
+            'credentials_file': config_chain_builder.create_config_chain(
+                instance_name='credentials_file',
                 default='/tmp/nowhere',
             ),
-            'ca_bundle': config_chain_builder.build_config_chain(
-                'ca_bundle',
-                env_vars='FOO_AWS_CA_BUNDLE',
-                config_property='foo_ca_bundle',
+            'ca_bundle': config_chain_builder.create_config_chain(
+                instance_name='ca_bundle',
+                env_var_names='FOO_AWS_CA_BUNDLE',
+                config_property_name='foo_ca_bundle',
             ),
-            'api_versions': config_chain_builder.build_config_chain(
-                'api_versions',
-                config_property='foo_api_versions',
+            'api_versions': config_chain_builder.create_config_chain(
+                instance_name='api_versions',
+                config_property_name='foo_api_versions',
                 default={},
             ),
         }
         for name, provider in config_updates.items():
-            config_provider.set_config_provider(name, provider)
+            config_store.set_config_provider(name, provider)
 
     def update_session_config_mapping(self, logical_name, **kwargs):
         config_chain_builder = ConfigChainFactory(
             session=self.session,
             environ=self.environ,
         )
-        self.session.get_component('config_provider').set_config_provider(
+        self.session.get_component('config_store').set_config_provider(
             logical_name,
-            config_chain_builder.build_config_chain(logical_name, **kwargs),
+            config_chain_builder.create_config_chain(**kwargs),
         )
 
     def tearDown(self):
@@ -121,7 +121,7 @@ class SessionTest(BaseSessionTest):
 
     def test_supports_multiple_env_vars_for_single_logical_name(self):
         self.update_session_config_mapping(
-            'profile', env_vars=['BAR_DEFAULT_PROFILE', 'BAR_PROFILE']
+            'profile', env_var_names=['BAR_DEFAULT_PROFILE', 'BAR_PROFILE']
         )
         self.environ['BAR_DEFAULT_PROFILE'] = 'first'
         self.environ['BAR_PROFILE'] = 'second'
@@ -139,7 +139,7 @@ class SessionTest(BaseSessionTest):
 
     def test_multiple_env_vars_uses_second_var(self):
         self.update_session_config_mapping(
-            'profile', env_vars=['BAR_DEFAULT_PROFILE', 'BAR_PROFILE']
+            'profile', env_var_names=['BAR_DEFAULT_PROFILE', 'BAR_PROFILE']
         )
         self.environ.pop('BAR_DEFAULT_PROFILE', None)
         self.environ['BAR_PROFILE'] = 'second'
@@ -171,7 +171,7 @@ class SessionTest(BaseSessionTest):
         # of int().
         self.update_session_config_mapping(
             'metadata_service_timeout',
-            env_vars='FOO_TIMEOUT',
+            env_var_names='FOO_TIMEOUT',
             conversion_func=int,
         )
         # Environment variables are always strings.
@@ -319,15 +319,14 @@ class TestSessionConfigurationVars(BaseSessionTest):
     def test_per_session_config_vars(self):
         self.update_session_config_mapping(
             'foobar',
-            env_vars='FOOBAR',
+            instance_name='foobar',
+            env_var_names='FOOBAR',
             default='default',
         )
         # Default value.
         self.assertEqual(self.session.get_config_variable('foobar'), 'default')
         # Retrieve from os environment variable.
         self.environ['FOOBAR'] = 'fromenv'
-        # Clear the cache
-        self.session.set_config_variable('foobar', None)
         self.assertEqual(self.session.get_config_variable('foobar'), 'fromenv')
 
         # Explicit override.
@@ -343,7 +342,8 @@ class TestSessionConfigurationVars(BaseSessionTest):
     def test_default_value_can_be_overriden(self):
         self.update_session_config_mapping(
             'foobar',
-            env_vars='FOOBAR',
+            instance_name='foobar',
+            env_var_names='FOOBAR',
             default='default',
         )
         self.assertEqual(self.session.get_config_variable('foobar'), 'default')

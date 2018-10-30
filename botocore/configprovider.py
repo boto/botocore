@@ -18,59 +18,59 @@ import os
 
 def create_botocore_default_config_mapping(chain_builder):
     return {
-        'profile': chain_builder.build_config_chain(
+        'profile': chain_builder.create_config_chain(
             'profile',
-            env_vars=['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'],
+            env_var_names=['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'],
         ),
-        'region': chain_builder.build_config_chain(
+        'region': chain_builder.create_config_chain(
             'region',
-            env_vars='AWS_DEFAULT_REGION',
-            config_property='region',
+            env_var_names='AWS_DEFAULT_REGION',
+            config_property_name='region',
             default=None,
         ),
-        'data_path': chain_builder.build_config_chain(
+        'data_path': chain_builder.create_config_chain(
             'data_path',
-            env_vars='AWS_DATA_PATH',
-            config_property='data_path',
+            env_var_names='AWS_DATA_PATH',
+            config_property_name='data_path',
             default=None,
         ),
-        'config_file': chain_builder.build_config_chain(
+        'config_file': chain_builder.create_config_chain(
             'config_file',
-            env_vars='AWS_CONFIG_FILE',
+            env_var_names='AWS_CONFIG_FILE',
             default='~/.aws/config',
         ),
-        'ca_bundle': chain_builder.build_config_chain(
+        'ca_bundle': chain_builder.create_config_chain(
             'ca_bundle',
-            env_vars='AWS_CA_BUNDLE',
-            config_property='ca_bundle',
+            env_var_names='AWS_CA_BUNDLE',
+            config_property_name='ca_bundle',
         ),
-        'api_versions': chain_builder.build_config_chain(
+        'api_versions': chain_builder.create_config_chain(
             'api_versions',
-            config_property='api_versions',
+            config_property_name='api_versions',
             default={},
         ),
-        'credentials_file': chain_builder.build_config_chain(
+        'credentials_file': chain_builder.create_config_chain(
             'credentials_file',
-            env_vars='AWS_SHARED_CREDENTIALS_FILE',
+            env_var_names='AWS_SHARED_CREDENTIALS_FILE',
             default='~/.aws/credentials',
         ),
-        'metadata_service_timeout': chain_builder.build_config_chain(
+        'metadata_service_timeout': chain_builder.create_config_chain(
             'metadata_service_timeout',
-            env_vars='AWS_METADATA_SERVICE_TIMEOUT',
-            config_property='metadata_service_timeout',
+            env_var_names='AWS_METADATA_SERVICE_TIMEOUT',
+            config_property_name='metadata_service_timeout',
             default=1,
             conversion_func=int,
         ),
-        'metadata_service_num_attempts': chain_builder.build_config_chain(
+        'metadata_service_num_attempts': chain_builder.create_config_chain(
             'metadata_service_num_attempts',
-            env_vars='AWS_METADATA_SERVICE_NUM_ATTEMPTS',
-            config_property='metadata_service_num_attempts',
+            env_var_names='AWS_METADATA_SERVICE_NUM_ATTEMPTS',
+            config_property_name='metadata_service_num_attempts',
             default=1,
             conversion_func=int,
         ),
-        'parameter_validation': chain_builder.build_config_chain(
+        'parameter_validation': chain_builder.create_config_chain(
             'parameter_validation',
-            config_property='parameter_validation',
+            config_property_name='parameter_validation',
             default=True,
         ),
     }
@@ -99,9 +99,9 @@ class ConfigChainFactory(object):
             environ = os.environ
         self._environ = environ
 
-    def build_config_chain(self, logical_name, instance=True, env_vars=None,
-                           config_property=None, default=None,
-                           conversion_func=None):
+    def create_config_chain(self, instance_name=None, env_var_names=None,
+                            config_property_name=None, default=None,
+                            conversion_func=None):
         """Build a config chain following the standard botocore pattern.
 
         In botocore most of our config chains follow the the precendence:
@@ -114,20 +114,19 @@ class ConfigChainFactory(object):
         :param logical_name: The logical name of the config value that this
             chain is responsible for loading.
 
-        :type instance: bool
-        :param instance: This indicates whether or not session instance
-            variable lookup should be included in the config chain. By default
-            it is True.
+        :type instance_name: bool
+        :param instance_name: This indicates what session variable corresponds
+            to this config value.
 
-        :type env_vars: str or list of str or None
-        :param env_vars: One or more environment variable names to search for
-            this value. They are searched in order. If it is None it will
-            not be added to the chain.
+        :type env_var_names: str or list of str or None
+        :param env_var_names: One or more environment variable names to
+            search for this value. They are searched in order. If it is None
+            it will not be added to the chain.
 
-        :type config_property: str or None
-        :param config_property: The string name of the key in the config file
-            for this config option. If it is None it will not be added to the
-            chain.
+        :type config_property_name: str or None
+        :param config_property_name: The string name of the key in the config
+            file for this config option. If it is None it will not be added to
+            the chain.
 
         :type default: Any
         :param default: Any constant value to be returned.
@@ -138,36 +137,39 @@ class ConfigChainFactory(object):
             conversion_func our provided type.
 
         :rvalue: ConfigChain
-        :returns: A ConfigChain that resolves in the order env_vars ->
-            config_property -> default. Any values that were none are
+        :returns: A ConfigChain that resolves in the order env_var_names ->
+            config_property_name -> default. Any values that were none are
             omitted form the chain.
         """
         providers = []
-        if instance:
+        if instance_name is not None:
             providers.append(
                 InstanceVarProvider(
-                    instance_var=logical_name,
+                    instance_var=instance_name,
                     session=self._session
                 )
             )
-        if env_vars is not None:
+        if env_var_names is not None:
             providers.append(
                 EnvironmentProvider(
-                    names=env_vars,
+                    names=env_var_names,
                     env=self._environ,
                 )
             )
-        if config_property is not None:
+        if config_property_name is not None:
             providers.append(
-                ConfigPropertyProvider(
-                    config_var_name=config_property,
+                ScopedConfigProvider(
+                    config_var_name=config_property_name,
                     session=self._session,
                 )
             )
         if default is not None:
             providers.append(ConstantProvider(value=default))
 
-        return ChainProvider(providers=providers, conversion_func=conversion_func)
+        return ChainProvider(
+            providers=providers,
+            conversion_func=conversion_func,
+        )
 
 
 class ConfigValueStore(object):
@@ -177,11 +179,11 @@ class ConfigValueStore(object):
 
         :type mapping: dict
         :param mapping: The mapping parameter is a map of string to a subclass
-            of ConfigValueProvider. When a config variable is asked for via the
+            of BaseProvider. When a config variable is asked for via the
             get_config_variable method, the corresponding provider will be
             invoked to load the value.
         """
-        self._cache = {}
+        self._overrides = {}
         self._mapping = {}
         if mapping is not None:
             for logical_name, provider in mapping.items():
@@ -201,14 +203,12 @@ class ConfigValueStore(object):
 
         :returns: value of variable or None if not defined.
         """
-        if logical_name in self._cache:
-            return self._cache[logical_name]
+        if logical_name in self._overrides:
+            return self._overrides[logical_name]
         if logical_name not in self._mapping:
             return None
         provider = self._mapping[logical_name]
-        value = provider.provide()
-        self._cache[logical_name] = value
-        return value
+        return provider.provide()
 
     def set_config_variable(self, logical_name, value):
         """Set a configuration variable to a specific value.
@@ -234,10 +234,16 @@ class ConfigValueStore(object):
 
         :param value: The value to associate with the config variable.
         """
-        if value is None:
-            self._cache.pop(logical_name, None)
-        else:
-            self._cache[logical_name] = value
+        self._overrides[logical_name] = value
+
+    def clear_config_variable(self, logical_name):
+        """Remove an override config variable from the session.
+
+        :type logical_name: str
+        :param logical_name: The name of the parameter to clear the override
+            value from.
+        """
+        self._overrides.pop(logical_name, None)
 
     def set_config_provider(self, logical_name, provider):
         """Set the provider for a config value.
@@ -255,7 +261,6 @@ class ConfigValueStore(object):
             providing a value for the config named ``logical_name``.
         """
         self._mapping[logical_name] = provider
-        self._cache.pop(logical_name, None)
 
 
 class BaseProvider(object):
@@ -342,9 +347,9 @@ class InstanceVarProvider(BaseProvider):
         )
 
 
-class ConfigPropertyProvider(BaseProvider):
+class ScopedConfigProvider(BaseProvider):
     def __init__(self, config_var_name, session):
-        """Initialize ConfigPropertyProvider.
+        """Initialize ScopedConfigProvider.
 
         :type config_var_name: str
         :param config_var_name: The name of the config variable to load from
@@ -364,7 +369,7 @@ class ConfigPropertyProvider(BaseProvider):
         return value
 
     def __repr__(self):
-        return 'ConfigPropertyProvider(config_var_name=%s, session=%s)' % (
+        return 'ScopedConfigProvider(config_var_name=%s, session=%s)' % (
             self._config_var_name,
             self._session,
         )

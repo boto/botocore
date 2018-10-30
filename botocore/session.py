@@ -125,7 +125,7 @@ class Session(object):
         self._register_event_emitter()
         self._register_response_parser_factory()
         self._register_exceptions_factory()
-        self._register_config_provider()
+        self._register_config_store()
 
     def _register_event_emitter(self):
         self._components.register_component('event_emitter', self._events)
@@ -168,13 +168,13 @@ class Session(object):
                 elif register_type is handlers.REGISTER_LAST:
                     self._events.register_last(event_name, handler)
 
-    def _register_config_provider(self):
+    def _register_config_store(self):
         chain_builder = ConfigChainFactory(session=self)
-        config_provider_component = ConfigValueStore(
+        config_store_component = ConfigValueStore(
             mapping=create_botocore_default_config_mapping(chain_builder)
         )
-        self._components.register_component('config_provider',
-                                            config_provider_component)
+        self._components.register_component('config_store',
+                                            config_store_component)
 
     @property
     def available_profiles(self):
@@ -199,7 +199,7 @@ class Session(object):
         if methods is not None:
             return self._get_config_variable_with_custom_methods(
                 logical_name, methods)
-        return self.get_component('config_provider').get_config_variable(
+        return self.get_component('config_store').get_config_variable(
             logical_name)
 
     def _get_config_variable_with_custom_methods(self, logical_name, methods):
@@ -217,20 +217,19 @@ class Session(object):
                 'conversion_func': typecast,
                 'default': default,
             }
-            if 'instance' not in methods:
-                build_chain_config_args['instance'] = False
+            if 'instance' in methods:
+                build_chain_config_args['instance_name'] = name
             if 'env' in methods:
-                build_chain_config_args['env_vars'] = env_vars
+                build_chain_config_args['env_var_names'] = env_vars
             if 'config' in methods:
-                build_chain_config_args['config_property'] = config_name
-            mapping[name] = chain_builder.build_config_chain(
-                name,
+                build_chain_config_args['config_property_name'] = config_name
+            mapping[name] = chain_builder.create_config_chain(
                 **build_chain_config_args
             )
-        config_provider_component = ConfigValueStore(
+        config_store_component = ConfigValueStore(
             mapping=mapping
         )
-        value = config_provider_component.get_config_variable(logical_name)
+        value = config_store_component.get_config_variable(logical_name)
         return value
 
     def set_config_variable(self, logical_name, value):
@@ -263,10 +262,6 @@ class Session(object):
             value,
         )
         self._session_instance_vars[logical_name] = value
-        # Clear the cache in the provider since the new instance variable
-        # probably takes precendence, but maybe not.
-        self.get_component('config_provider'
-        ).set_config_variable(logical_name, None)
 
     def instance_variables(self):
         return copy.copy(self._session_instance_vars)
@@ -904,7 +899,7 @@ class SessionVarDict(collections.MutableMapping):
 
     def __setitem__(self, key, value):
         self._store[key] = value
-        self._update_config_provider_from_session_vars(key, value)
+        self._update_config_store_from_session_vars(key, value)
 
     def __delitem__(self, key):
         del self._store[key]
@@ -915,24 +910,24 @@ class SessionVarDict(collections.MutableMapping):
     def __len__(self):
         return len(self._store)
 
-    def _update_config_provider_from_session_vars(self, logical_name,
+    def _update_config_store_from_session_vars(self, logical_name,
                                                   config_options):
         # This is for backwards compatibility. The new preferred way to
         # modify configuration logic is to use the component system to get
-        # the config_provider component from the session, and then update
+        # the config_store component from the session, and then update
         # a key with a custom config provider(s).
         # This backwards compatibility method takes the old session_vars
         # list of tuples and and transforms that into a set of updates to
-        # the config_provider component.
+        # the config_store component.
         config_chain_builder = ConfigChainFactory(session=self._session)
         config_name, env_vars, default, typecast = config_options
-        config_store = self._session.get_component('config_provider')
+        config_store = self._session.get_component('config_store')
         config_store.set_config_provider(
             logical_name,
-            config_chain_builder.build_config_chain(
-                logical_name,
-                env_vars=env_vars,
-                config_property=config_name,
+            config_chain_builder.create_config_chain(
+                instance_name=logical_name,
+                env_var_names=env_vars,
+                config_property_name=config_name,
                 default=default,
                 conversion_func=typecast,
             )

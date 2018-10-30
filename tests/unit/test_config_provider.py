@@ -20,59 +20,57 @@ from botocore.configprovider import ConfigValueStore
 from botocore.configprovider import BaseProvider
 from botocore.configprovider import InstanceVarProvider
 from botocore.configprovider import EnvironmentProvider
-from botocore.configprovider import ConfigPropertyProvider
+from botocore.configprovider import ScopedConfigProvider
 from botocore.configprovider import ConstantProvider
 from botocore.configprovider import ChainProvider
 from botocore.configprovider import ConfigChainFactory
 
 
 class TestConfigChainFactory(unittest.TestCase):
-    def assert_chain_does_provide(self, instance_map, environ_map, config_map,
-                                  build_config_chain_args,
-                                  logical_name_to_provide, expected_value):
+    def assert_chain_does_provide(self, instance_map, environ_map,
+                                  scoped_config_map, create_config_chain_args,
+                                  expected_value):
         fake_session = mock.Mock(spec=session.Session)
-        fake_session.get_scoped_config.return_value = config_map
+        fake_session.get_scoped_config.return_value = scoped_config_map
         fake_session.instance_variables.return_value = instance_map
         builder = ConfigChainFactory(fake_session, environ=environ_map)
-        chain = builder.build_config_chain(
-            logical_name_to_provide,
-            **build_config_chain_args
+        chain = builder.create_config_chain(
+            **create_config_chain_args
         )
         value = chain.provide()
         self.assertEqual(value, expected_value)
 
     def test_chain_builder_can_provide_instance(self):
         self.assert_chain_does_provide(
-            instance_map={'foo': 'bar'},
+            instance_map={'instance_var': 'bar'},
             environ_map={},
-            config_map={},
-            build_config_chain_args={},
-            logical_name_to_provide='foo',
+            scoped_config_map={},
+            create_config_chain_args={
+                'instance_name': 'instance_var',
+            },
             expected_value='bar',
         )
 
     def test_chain_builder_can_skip_instance(self):
         self.assert_chain_does_provide(
-            instance_map={'foo': 'bar'},
-            environ_map={'FOO': 'baz'},
-            config_map={},
-            build_config_chain_args={
-                'instance': False,
-                'env_vars': 'FOO',
+            instance_map={'wrong-instance-variable': 'foo'},
+            environ_map={'ENV_VAR': 'bar'},
+            scoped_config_map={},
+            create_config_chain_args={
+                'instance_name': 'instance-variable',
+                'env_var_names': 'ENV_VAR',
             },
-            logical_name_to_provide='foo',
-            expected_value='baz',
+            expected_value='bar',
         )
 
     def test_chain_builder_can_provide_env_var(self):
         self.assert_chain_does_provide(
             instance_map={},
-            environ_map={'FOO': 'bar'},
-            config_map={},
-            build_config_chain_args={
-                'env_vars': 'FOO',
+            environ_map={'ENV_VAR': 'bar'},
+            scoped_config_map={},
+            create_config_chain_args={
+                'env_var_names': 'ENV_VAR',
             },
-            logical_name_to_provide='foo',
             expected_value='bar',
         )
 
@@ -80,11 +78,10 @@ class TestConfigChainFactory(unittest.TestCase):
         self.assert_chain_does_provide(
             instance_map={},
             environ_map={},
-            config_map={'foo': 'bar'},
-            build_config_chain_args={
-                'config_property': 'foo',
+            scoped_config_map={'config-variable': 'bar'},
+            create_config_chain_args={
+                'config_property_name': 'config-variable',
             },
-            logical_name_to_provide='foo',
             expected_value='bar',
         )
 
@@ -92,25 +89,24 @@ class TestConfigChainFactory(unittest.TestCase):
         self.assert_chain_does_provide(
             instance_map={},
             environ_map={},
-            config_map={},
-            build_config_chain_args={
+            scoped_config_map={},
+            create_config_chain_args={
                 'default': 'bar'
             },
-            logical_name_to_provide='foo',
             expected_value='bar',
         )
 
     def test_chain_provider_does_follow_priority_instance_var(self):
         self.assert_chain_does_provide(
-            instance_map={'foo': 'qux'},
+            instance_map={'instance_var': 'qux'},
             environ_map={'ENV_VAR': 'foo'},
-            config_map={'config_key': 'bar'},
-            build_config_chain_args={
-                'env_vars': 'ENV_VAR',
-                'config_property': 'config_key',
+            scoped_config_map={'config_key': 'bar'},
+            create_config_chain_args={
+                'instance_name': 'instance_var',
+                'env_var_names': 'ENV_VAR',
+                'config_property_name': 'config_key',
                 'default': 'baz',
             },
-            logical_name_to_provide='foo',
             expected_value='qux',
         )
 
@@ -118,13 +114,13 @@ class TestConfigChainFactory(unittest.TestCase):
         self.assert_chain_does_provide(
             instance_map={'wrong_instance_var': 'qux'},
             environ_map={'ENV_VAR': 'foo'},
-            config_map={'config_key': 'bar'},
-            build_config_chain_args={
-                'env_vars': 'ENV_VAR',
-                'config_property': 'config_key',
+            scoped_config_map={'config_key': 'bar'},
+            create_config_chain_args={
+                'instance_name': 'instance_var',
+                'env_var_names': 'ENV_VAR',
+                'config_property_name': 'config_key',
                 'default': 'baz',
             },
-            logical_name_to_provide='foo',
             expected_value='foo',
         )
 
@@ -132,13 +128,13 @@ class TestConfigChainFactory(unittest.TestCase):
         self.assert_chain_does_provide(
             instance_map={'wrong_instance_var': 'qux'},
             environ_map={'WRONG_ENV_VAR': 'foo'},
-            config_map={'config_key': 'bar'},
-            build_config_chain_args={
-                'env_vars': 'ENV_VAR',
-                'config_property': 'config_key',
+            scoped_config_map={'config_key': 'bar'},
+            create_config_chain_args={
+                'instance_name': 'instance_var',
+                'env_var_names': 'ENV_VAR',
+                'config_property_name': 'config_key',
                 'default': 'baz',
             },
-            logical_name_to_provide='foo',
             expected_value='bar',
         )
 
@@ -146,13 +142,13 @@ class TestConfigChainFactory(unittest.TestCase):
         self.assert_chain_does_provide(
             instance_map={'wrong_instance_var': 'qux'},
             environ_map={'WRONG_ENV_VAR': 'foo'},
-            config_map={'wrong_config_key': 'baz'},
-            build_config_chain_args={
-                'env_vars': 'ENV_VAR',
-                'config_property': 'config_key',
+            scoped_config_map={'wrong_config_key': 'baz'},
+            create_config_chain_args={
+                'instance_name': 'instance_var',
+                'env_var_names': 'ENV_VAR',
+                'config_property_name': 'config_key',
                 'default': 'baz',
             },
-            logical_name_to_provide='foo',
             expected_value='baz',
         )
 
@@ -325,12 +321,12 @@ class TestEnvironmentProvider(unittest.TestCase):
         )
 
 
-class TestConfigPropertyProvider(unittest.TestCase):
+class TestScopedConfigProvider(unittest.TestCase):
     def assert_provides_value(self, config_file_values, config_var_name,
                               expected_value):
         fake_session = mock.Mock(spec=session.Session)
         fake_session.get_scoped_config.return_value = config_file_values
-        property_provider = ConfigPropertyProvider(
+        property_provider = ScopedConfigProvider(
             config_var_name=config_var_name,
             session=fake_session,
         )
