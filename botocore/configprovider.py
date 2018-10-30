@@ -110,13 +110,10 @@ class ConfigChainFactory(object):
         This is a convenience function for creating a chain that follow
         that precendence.
 
-        :type logical_name: str
-        :param logical_name: The logical name of the config value that this
-            chain is responsible for loading.
-
-        :type instance_name: bool
-        :param instance_name: This indicates what session variable corresponds
-            to this config value.
+        :type instance_name: str
+        :param instance_name: This indicates what session instance variable
+            corresponds to this config value. If it is None it will not be
+            added to the chain.
 
         :type env_var_names: str or list of str or None
         :param env_var_names: One or more environment variable names to
