@@ -238,11 +238,14 @@ def set_value_from_jmespath(source, expression, value, is_first=True):
     source[current_key] = value
 
 
+class _RetriesExceededError(Exception):
+    """Internal exception used when the number of retries are exceeded."""
+    pass
+
+
 class InstanceMetadataFetcher(object):
 
-    class _RetriesExceededError(Exception):
-        """Internal exception used when the number of retries are exceeded."""
-        pass
+    _RETRIES_EXCEEDED_ERROR = _RetriesExceededError
 
     def __init__(self, timeout=DEFAULT_METADATA_SERVICE_TIMEOUT,
                  num_attempts=1, base_url=METADATA_BASE_URL,
@@ -275,7 +278,7 @@ class InstanceMetadataFetcher(object):
          """
         if self._disabled:
             logger.debug("Access to EC2 metadata has been disabled.")
-            raise self._RetriesExceededError()
+            raise self._RETRIES_EXCEEDED_ERROR
         url = self._base_url + url_path
         headers = {}
         if self._user_agent is not None:
@@ -292,7 +295,7 @@ class InstanceMetadataFetcher(object):
                 logger.debug(
                     "Caught retryable HTTP exception while making metadata "
                     "service request to %s: %s", url, e, exc_info=True)
-        raise self._RetriesExceededError()
+        raise self._RETRIES_EXCEEDED_ERROR
 
     def _needs_retry(self, response, custom_retry=None):
         bad_response = (
@@ -366,7 +369,7 @@ class InstanceMetadataCredentialFetcher(InstanceMetadataFetcher):
                     logger.debug('Error response received when retrieving'
                                  'credentials: %s.', credentials)
                 return {}
-        except self._RetriesExceededError:
+        except self._RETRIES_EXCEEDED_ERROR:
             logger.debug("Max number of attempts exceeded (%s) when "
                          "attempting to retrieve data from metadata service.",
                          self._num_attempts)
