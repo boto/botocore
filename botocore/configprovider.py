@@ -19,63 +19,72 @@ import os
 def create_botocore_default_config_mapping(chain_builder):
     return {
         'profile': chain_builder.build_config_chain(
+            'profile',
             env_vars=['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'],
         ),
         'region': chain_builder.build_config_chain(
+            'region',
             env_vars='AWS_DEFAULT_REGION',
             config_property='region',
             default=None,
         ),
         'data_path': chain_builder.build_config_chain(
+            'data_path',
             env_vars='AWS_DATA_PATH',
             config_property='data_path',
             default=None,
         ),
         'config_file': chain_builder.build_config_chain(
+            'config_file',
             env_vars='AWS_CONFIG_FILE',
             default='~/.aws/config',
         ),
         'ca_bundle': chain_builder.build_config_chain(
+            'ca_bundle',
             env_vars='AWS_CA_BUNDLE',
             config_property='ca_bundle',
         ),
         'api_versions': chain_builder.build_config_chain(
+            'api_versions',
             config_property='api_versions',
             default={},
         ),
         'credentials_file': chain_builder.build_config_chain(
+            'credentials_file',
             env_vars='AWS_SHARED_CREDENTIALS_FILE',
             default='~/.aws/credentials',
         ),
         'metadata_service_timeout': chain_builder.build_config_chain(
+            'metadata_service_timeout',
             env_vars='AWS_METADATA_SERVICE_TIMEOUT',
             config_property='metadata_service_timeout',
             default=1,
-            cast=int,
+            conversion_func=int,
         ),
         'metadata_service_num_attempts': chain_builder.build_config_chain(
+            'metadata_service_num_attempts',
             env_vars='AWS_METADATA_SERVICE_NUM_ATTEMPTS',
             config_property='metadata_service_num_attempts',
             default=1,
-            cast=int,
+            conversion_func=int,
         ),
         'parameter_validation': chain_builder.build_config_chain(
+            'parameter_validation',
             config_property='parameter_validation',
             default=True,
-            cast=bool,
         ),
     }
 
 
-class DefaultConfigChainBuilder(object):
-    """Common config builder.
+class ConfigChainFactory(object):
+    """Factory class to create our most common configuration chain case.
 
     This is a convenience class to construct configuration chains that follow
     our most common pattern. This is to prevent ordering them incorrectly,
     and to make the config chain construction more readable.
     """
-    def __init__(self, session, environ=None, methods=None):
-        """Initialzie a DefaultConfigChainBuilder.
+    def __init__(self, session, environ=None):
+        """Initialize a ConfigChainFactory.
 
         :type session: :class:`botocore.session.Session`
         :param session: This is the session that should be used to look up
@@ -84,21 +93,15 @@ class DefaultConfigChainBuilder(object):
         :type environ: dict
         :param environ: A mapping to use for environment variables. If this
             is not provided it will default to use os.environ.
-
-        :type methods: tuple
-        :param methods: A tuple of methods to allow in the chain. This is for
-            backwards compatibility, the tuple is of strs with the values
-            instance, env, config. Omitting any of those values will skip
-            adding the corresponding config loading method to the chain.
         """
         self._session = session
         if environ is None:
             environ = os.environ
         self._environ = environ
-        self._methods = methods
 
-    def build_config_chain(self, instance=True, env_vars=None,
-                           config_property=None, default=None, cast=None):
+    def build_config_chain(self, logical_name, instance=True, env_vars=None,
+                           config_property=None, default=None,
+                           conversion_func=None):
         """Build a config chain following the standard botocore pattern.
 
         In botocore most of our config chains follow the the precendence:
@@ -106,6 +109,10 @@ class DefaultConfigChainBuilder(object):
 
         This is a convenience function for creating a chain that follow
         that precendence.
+
+        :type logical_name: str
+        :param logical_name: The logical name of the config value that this
+            chain is responsible for loading.
 
         :type instance: bool
         :param instance: This indicates whether or not session instance
@@ -123,14 +130,12 @@ class DefaultConfigChainBuilder(object):
             chain.
 
         :type default: Any
-        :param default: Any constant value to be returned. If this is a
-            callable it will be treated as a lazy value, and the callable will
-            be called when the value is needed.
+        :param default: Any constant value to be returned.
 
-        :type cast: None or callable
-        :param cast: If this value is None then it has no affect on the return
-            type. Otherwise, it is treated as a function that will cast our
-            provided type.
+        :type conversion_func: None or callable
+        :param conversion_func: If this value is None then it has no effect on
+            the return type. Otherwise, it is treated as a function that will
+            conversion_func our provided type.
 
         :rvalue: ConfigChain
         :returns: A ConfigChain that resolves in the order env_vars ->
@@ -140,49 +145,35 @@ class DefaultConfigChainBuilder(object):
         providers = []
         if instance:
             providers.append(
-                LazyProvider(
-                    provider_function=lambda: OpenDictProvider(
-                        source=self._session.instance_variables(),
-                    ),
+                InstanceVarProvider(
+                    instance_var=logical_name,
+                    session=self._session
                 )
             )
         if env_vars is not None:
             providers.append(
-                ClosedDictProvider(
-                    keys=env_vars,
-                    source=self._environ,
+                EnvironmentProvider(
+                    names=env_vars,
+                    env=self._environ,
                 )
             )
         if config_property is not None:
             providers.append(
-                LazyProvider(
-                    provider_function=lambda: ClosedDictProvider(
-                        keys=config_property,
-                        source=self._session.get_scoped_config(),
-                    ),
+                ConfigPropertyProvider(
+                    config_var_name=config_property,
+                    session=self._session,
                 )
             )
-        if callable(default):
-            default = LazyProvider(
-                provider_function=lambda: ConstantProvider(value=default()),
-            )
-        elif default is not None:
-            default = ConstantProvider(value=default)
         if default is not None:
-            providers.append(default)
+            providers.append(ConstantProvider(value=default))
 
-        return ChainProvider(providers=providers, cast=cast)
-
-    def _should_include_method(self, name):
-        if self._methods is None:
-            return True
-        return name in self._methods
+        return ChainProvider(providers=providers, conversion_func=conversion_func)
 
 
-class ConfigProviderComponent(object):
-    """The ConfigProviderComponent object loads configuration values lazily."""
+class ConfigValueStore(object):
+    """The ConfigValueStore object stores configuration values."""
     def __init__(self, mapping=None):
-        """Initialize a ConfigProviderComponent.
+        """Initialize a ConfigValueStore.
 
         :type mapping: dict
         :param mapping: The mapping parameter is a map of string to a subclass
@@ -190,10 +181,11 @@ class ConfigProviderComponent(object):
             get_config_variable method, the corresponding provider will be
             invoked to load the value.
         """
-        if mapping is None:
-            mapping = {}
-        self._mapping = mapping
         self._cache = {}
+        self._mapping = {}
+        if mapping is not None:
+            for logical_name, provider in mapping.items():
+                self.set_config_provider(logical_name, provider)
 
     def get_config_variable(self, logical_name):
         """
@@ -214,7 +206,9 @@ class ConfigProviderComponent(object):
         if logical_name not in self._mapping:
             return None
         provider = self._mapping[logical_name]
-        return provider.provide(logical_name)
+        value = provider.provide()
+        self._cache[logical_name] = value
+        return value
 
     def set_config_variable(self, logical_name, value):
         """Set a configuration variable to a specific value.
@@ -245,15 +239,23 @@ class ConfigProviderComponent(object):
         else:
             self._cache[logical_name] = value
 
-    def update_mapping(self, new_mapping):
-        """Update the config mapping.
+    def set_config_provider(self, logical_name, provider):
+        """Set the provider for a config value.
 
-        :type new_mapping: dict
-        :param new_mapping: The new mapping of logical names to config
-            providers. Each name in this map will be added to or override an
-            existing mapping.
+        This provides control over how a particular configuration value is
+        loaded. This replaces the provider for ``logical_name`` with the new
+        ``provider``.
+
+        :type logical_name: str
+        :param logical_name: The name of the config value to change the config
+            provider for.
+
+        :type provider: :class:`botocore.configprovider.BaseProvider`
+        :param provider: The new provider that should be responsible for
+            providing a value for the config named ``logical_name``.
         """
-        self._mapping.update(new_mapping)
+        self._mapping[logical_name] = provider
+        self._cache.pop(logical_name, None)
 
 
 class BaseProvider(object):
@@ -273,147 +275,142 @@ class ChainProvider(BaseProvider):
     Each provider in the chain is called, the first one returning a non-None
     value is then returned.
     """
-    def __init__(self, providers=None, cast=None):
+    def __init__(self, providers=None, conversion_func=None):
         """Initalize a ChainProvider.
 
         :type providers: list
         :param providers: The initial list of providers to check for values
             when invoked.
 
-        :type cast: None or callable
-        :param cast: If this value is None then it has no affect on the return
-            type. Otherwise, it is treated as a function that will cast our
-            provided type.
+        :type conversion_func: None or callable
+        :param conversion_func: If this value is None then it has no affect on
+            the return type. Otherwise, it is treated as a function that will
+            transform provided value.
         """
         if providers is None:
             providers = []
         self._providers = providers
-        self._cast = cast
+        self._conversion_func = conversion_func
 
-    def provide(self, logical_name=None):
+    def provide(self):
         """Provide the value from the first provider to return non-None.
 
         Each provider in the chain has its provide method called. The first
         one in the chain to return a non-None value is the returned from the
         ChainProvider. When no non-None value is found, None is returned.
-
-        :type logical_name: str
-        :param logical_name: The logical name of the config value to retrieve.
         """
         for provider in self._providers:
-            value = provider.provide(logical_name)
+            value = provider.provide()
             if value is not None:
                 return self._convert_type(value)
         return None
 
     def _convert_type(self, value):
-        if self._cast is not None:
-            return self._cast(value)
+        if self._conversion_func is not None:
+            return self._conversion_func(value)
         return value
 
     def __repr__(self):
         return '[%s]' % ', '.join([str(p) for p in self._providers])
 
 
-class ClosedDictProvider(BaseProvider):
-    """This class loads config values from a dictionary source.
+class InstanceVarProvider(BaseProvider):
+    """This class loads config values from the session instance vars."""
+    def __init__(self, instance_var, session):
+        """Initialize InstanceVarProvider.
 
-    Closed here refers to the behavior where the logical name that is passed to
-    the provide method is ignored. This provider can only be used to look up
-    the given names in the initializer.
-    """
-    def __init__(self, keys, source):
+        :type instance_var: str
+        :param instance_var: The instance variable to load from the session.
+
+        :type session: :class:`botocore.session.Session`
+        :param session: The botocore session to get the loaded configuration
+            file variables from.
+        """
+        self._instance_var = instance_var
+        self._session = session
+
+    def provide(self):
+        """Provide a config value from the session instance vars."""
+        instance_vars = self._session.instance_variables()
+        value = instance_vars.get(self._instance_var)
+        return value
+
+    def __repr__(self):
+        return 'InstanceVarProvider(instance_var=%s, session=%s)' % (
+            self._instance_var,
+            self._session,
+        )
+
+
+class ConfigPropertyProvider(BaseProvider):
+    def __init__(self, config_var_name, session):
+        """Initialize ConfigPropertyProvider.
+
+        :type config_var_name: str
+        :param config_var_name: The name of the config variable to load from
+            the configuration file.
+
+        :type session: :class:`botocore.session.Session`
+        :param session: The botocore session to get the loaded configuration
+            file variables from.
+        """
+        self._config_var_name = config_var_name
+        self._session = session
+
+    def provide(self):
+        """Provide a value from a config file property."""
+        config = self._session.get_scoped_config()
+        value = config.get(self._config_var_name)
+        return value
+
+    def __repr__(self):
+        return 'ConfigPropertyProvider(config_var_name=%s, session=%s)' % (
+            self._config_var_name,
+            self._session,
+        )
+
+
+class EnvironmentProvider(BaseProvider):
+    """This class loads config values from environment variables."""
+    def __init__(self, names, env):
         """Initialize with the keys in the dictionary to check.
 
-        :type keys: str or list
-        :param keys: If this is a str, the key with that name will
+        :type names: str or list
+        :param names: If this is a str, the key with that name will
             be loaded and returned. If this variable is
             a list, then it must be a list of str. The same process will be
             repeated for each string in the list, the first that returns non
             None will be returned.
 
-        :type source: dict
-        :param source: A source dictionary to fetch variables from.
+        :type env: dict
+        :param env: Environment variables dictionary to get variables from.
         """
-        self._keys = keys
-        self._source = source
+        self._names = names
+        self._env = env
 
-    def provide(self, logical_name=None):
+    def provide(self):
         """Provide a config value from a source dictionary."""
-        names = self._keys
+        names = self._names
         if not isinstance(names, list):
             names = [names]
         for name in names:
-            if name in self._source:
-                return self._source[name]
+            if name in self._env:
+                return self._env[name]
         return None
 
     def __repr__(self):
-        return 'ClosedDictProvider(keys=%s, source=%s)' % (self._keys,
-                                                           self._source)
+        return 'EnvironmentProvider(names=%s, env=%s)' % (self._names,
+                                                          self._env)
 
 
-class OpenDictProvider(BaseProvider):
-    """This class loads config values from a dictionary source.
-
-    Open here refers to the behavior where this provider can look up any key
-    in the dictonary it is initialized with. It is not tied to a particular
-    key like ClosedDictProvider.
-    """
-    def __init__(self, source):
-        """Initialize with the keys in the dictionary to check.
-
-        :type source: dict
-        :param source: A source dictionary to fetch variables from.
-        """
-        self._source = source
-
-    def provide(self, logical_name=None):
-        """Provide a config value from a source.
-
-        :type logical_name: str
-        :param logical_name: The name of the key to look up in the dictionary.
-            Since this is an OpenDictProvider it can be used to look
-            up any key in its source dict.
-        """
-        value = self._source.get(logical_name)
-        return value
-
-    def __repr__(self):
-        return 'OpenDictProvider(source=%s)' % self._source
-
-
-class ConstantProvider(object):
+class ConstantProvider(BaseProvider):
     """This provider provides a constant value."""
     def __init__(self, value):
         self._value = value
 
-    def provide(self, logical_name=None):
+    def provide(self):
         """Provide the constant value given during initialization."""
         return self._value
 
     def __repr__(self):
         return 'ConstantProvider(value=%s)' % self._value
-
-
-class LazyProvider(BaseProvider):
-    """LazyProvider wraps another provider to lazily load it."""
-    def __init__(self, provider_function):
-        """Initialize LazyProvider.
-
-        :type provider_function: callable
-        :param provider_function: A callable that returns a provider. This will
-            be called when the provide method is called on the LazyProvider.
-            Then the returned provider will have it's provide method called,
-            producing the final result that the LazyProvider returns.
-        """
-        self._provider_function = provider_function
-
-    def provide(self, logical_name=None):
-        """Provide a value loaded lazyily at provide time."""
-        provider = self._provider_function()
-        value = provider.provide(logical_name)
-        return value
-
-    def __repr__(self):
-        return 'LazyProvider(provider_function=%s)' % self._provider_function

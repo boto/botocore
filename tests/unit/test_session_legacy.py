@@ -31,6 +31,10 @@ from botocore.paginate import PaginatorModel
 import botocore.loaders
 
 
+# This is an old version of the session tests to ensure backwards compatibility
+# there is a new unit/test_session.py set of tests for the new config interface
+# which should be prefered. When backwards compatibility can be dropped then
+# this test should be removed.
 class BaseSessionTest(unittest.TestCase):
 
     def setUp(self):
@@ -305,6 +309,11 @@ class TestSessionConfigurationVars(BaseSessionTest):
         self.assertEqual(self.session.get_config_variable('foobar'), 'default')
         # Retrieve from os environment variable.
         self.environ['FOOBAR'] = 'fromenv'
+        # This line is added from the original tests. Since environment
+        # variables cannot be changed from outside the process it makes little
+        # sense to ensure that they respect changes in the session. Clearing
+        # cache manually here.
+        self.session.set_config_variable('foobar', None)
         self.assertEqual(self.session.get_config_variable('foobar'), 'fromenv')
 
         # Explicit override.

@@ -27,8 +27,8 @@ from botocore import __version__
 import botocore.configloader
 import botocore.credentials
 import botocore.client
-from botocore.configprovider import ConfigProviderComponent
-from botocore.configprovider import DefaultConfigChainBuilder
+from botocore.configprovider import ConfigValueStore
+from botocore.configprovider import ConfigChainFactory
 from botocore.configprovider import create_botocore_default_config_mapping
 from botocore.exceptions import ConfigNotFound, ProfileNotFound
 from botocore.exceptions import UnknownServiceError, PartialCredentialsError
@@ -116,10 +116,7 @@ class Session(object):
         self._components = ComponentLocator()
         self._internal_components = ComponentLocator()
         self._register_components()
-        if session_vars is not None:
-            self.session_var_map = SessionVarsShim(self, session_vars)
-        else:
-            self.session_var_map = SessionVarsShim(self)
+        self.session_var_map = SessionVarDict(self, session_vars)
 
     def _register_components(self):
         self._register_credential_provider()
@@ -172,8 +169,8 @@ class Session(object):
                     self._events.register_last(event_name, handler)
 
     def _register_config_provider(self):
-        chain_builder = DefaultConfigChainBuilder(session=self)
-        config_provider_component = ConfigProviderComponent(
+        chain_builder = ConfigChainFactory(session=self)
+        config_provider_component = ConfigValueStore(
             mapping=create_botocore_default_config_mapping(chain_builder)
         )
         self._components.register_component('config_provider',
@@ -212,15 +209,12 @@ class Session(object):
         # being added to the chain. This chain will be consulted for a value
         # and then thrown out. This is not efficient, nor is the methods arg
         # used in botocore, this is just for backwards compatibility.
-        chain_builder = DefaultConfigChainBuilder(
-            session=self,
-            methods=methods,
-        )
+        chain_builder = ConfigChainFactory(session=self)
         mapping = {}
         for name, config_options in self.session_var_map.items():
             config_name, env_vars, default, typecast = config_options
             build_chain_config_args = {
-                'cast': typecast,
+                'conversion_func': typecast,
                 'default': default,
             }
             if 'instance' not in methods:
@@ -230,9 +224,10 @@ class Session(object):
             if 'config' in methods:
                 build_chain_config_args['config_property'] = config_name
             mapping[name] = chain_builder.build_config_chain(
+                name,
                 **build_chain_config_args
             )
-        config_provider_component = ConfigProviderComponent(
+        config_provider_component = ConfigValueStore(
             mapping=mapping
         )
         value = config_provider_component.get_config_variable(logical_name)
@@ -268,6 +263,10 @@ class Session(object):
             value,
         )
         self._session_instance_vars[logical_name] = value
+        # Clear the cache in the provider since the new instance variable
+        # probably takes precendence, but maybe not.
+        self.get_component('config_provider'
+        ).set_config_variable(logical_name, None)
 
     def instance_variables(self):
         return copy.copy(self._session_instance_vars)
@@ -892,30 +891,29 @@ class ComponentLocator(object):
             pass
 
 
-class SessionVarsShim(collections.MutableMapping):
-    def __init__(self, session, *args, **kwargs):
+class SessionVarDict(collections.MutableMapping):
+    def __init__(self, session, session_vars):
         self._session = session
         self._store = dict()
-        self.update(dict(*args, **kwargs))
+        if session_vars is not None:
+            for key, value in session_vars.items():
+                self.__setitem__(key, value)
 
     def __getitem__(self, key):
-        return self._store[self.__keytransform__(key)]
+        return self._store[key]
 
     def __setitem__(self, key, value):
-        self._store[self.__keytransform__(key)] = value
+        self._store[key] = value
         self._update_config_provider_from_session_vars(key, value)
 
     def __delitem__(self, key):
-        del self._store[self.__keytransform__(key)]
+        del self._store[key]
 
     def __iter__(self):
         return iter(self._store)
 
     def __len__(self):
         return len(self._store)
-
-    def __keytransform__(self, key):
-        return key
 
     def _update_config_provider_from_session_vars(self, logical_name,
                                                   config_options):
@@ -926,16 +924,19 @@ class SessionVarsShim(collections.MutableMapping):
         # This backwards compatibility method takes the old session_vars
         # list of tuples and and transforms that into a set of updates to
         # the config_provider component.
-        config_chain_builder = DefaultConfigChainBuilder(session=self._session)
+        config_chain_builder = ConfigChainFactory(session=self._session)
         config_name, env_vars, default, typecast = config_options
-        self._session.get_component('config_provider').update_mapping({
-            logical_name: config_chain_builder.build_config_chain(
+        config_store = self._session.get_component('config_provider')
+        config_store.set_config_provider(
+            logical_name,
+            config_chain_builder.build_config_chain(
+                logical_name,
                 env_vars=env_vars,
                 config_property=config_name,
                 default=default,
-                cast=typecast,
-            ),
-        })
+                conversion_func=typecast,
+            )
+        )
 
 
 def get_session(env_vars=None):

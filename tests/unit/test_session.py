@@ -28,7 +28,7 @@ from botocore import client
 from botocore.hooks import HierarchicalEmitter
 from botocore.waiter import WaiterModel
 from botocore.paginate import PaginatorModel
-from botocore.configprovider import DefaultConfigChainBuilder
+from botocore.configprovider import ConfigChainFactory
 import botocore.loaders
 
 
@@ -46,48 +46,57 @@ class BaseSessionTest(unittest.TestCase):
                                    'foo_config')
         self.environ['FOO_CONFIG_FILE'] = config_path
         self.session = create_session()
-        config_chain_builder = DefaultConfigChainBuilder(
+        config_chain_builder = ConfigChainFactory(
             session=self.session,
             environ=self.environ,
         )
-        self.session.get_component('config_provider').update_mapping(
-            {
-                'profile': config_chain_builder.build_config_chain(
-                    env_vars='FOO_PROFILE',
-                ),
-                'region': config_chain_builder.build_config_chain(
-                    env_vars='FOO_REGION',
-                    config_property='foo_region',
-                ),
-                'data_path': config_chain_builder.build_config_chain(
-                    env_vars='FOO_DATA_PATH',
-                    config_property='data_path',
-                ),
-                'config_file': config_chain_builder.build_config_chain(
-                    env_vars='FOO_CONFIG_FILE',
-                ),
-                'credentials_file': config_chain_builder.build_config_chain(
-                    default='/tmp/nowhere',
-                ),
-                'ca_bundle': config_chain_builder.build_config_chain(
-                    env_vars='FOO_AWS_CA_BUNDLE',
-                    config_property='foo_ca_bundle',
-                ),
-                'api_versions': config_chain_builder.build_config_chain(
-                    config_property='foo_api_versions',
-                    default={},
-                ),
-            }
-        )
+        config_provider = self.session.get_component('config_provider')
+        config_updates = {
+            'profile': config_chain_builder.build_config_chain(
+                'profile',
+                env_vars='FOO_PROFILE',
+            ),
+            'region': config_chain_builder.build_config_chain(
+                'region',
+                env_vars='FOO_REGION',
+                config_property='foo_region',
+            ),
+            'data_path': config_chain_builder.build_config_chain(
+                'data_path',
+                env_vars='FOO_DATA_PATH',
+                config_property='data_path',
+            ),
+            'config_file': config_chain_builder.build_config_chain(
+                'config_file',
+                env_vars='FOO_CONFIG_FILE',
+            ),
+            'credentials_file': config_chain_builder.build_config_chain(
+                'credentials_file',
+                default='/tmp/nowhere',
+            ),
+            'ca_bundle': config_chain_builder.build_config_chain(
+                'ca_bundle',
+                env_vars='FOO_AWS_CA_BUNDLE',
+                config_property='foo_ca_bundle',
+            ),
+            'api_versions': config_chain_builder.build_config_chain(
+                'api_versions',
+                config_property='foo_api_versions',
+                default={},
+            ),
+        }
+        for name, provider in config_updates.items():
+            config_provider.set_config_provider(name, provider)
 
     def update_session_config_mapping(self, logical_name, **kwargs):
-        config_chain_builder = DefaultConfigChainBuilder(
+        config_chain_builder = ConfigChainFactory(
             session=self.session,
             environ=self.environ,
         )
-        self.session.get_component('config_provider').update_mapping({
-            logical_name: config_chain_builder.build_config_chain(**kwargs)
-        })
+        self.session.get_component('config_provider').set_config_provider(
+            logical_name,
+            config_chain_builder.build_config_chain(logical_name, **kwargs),
+        )
 
     def tearDown(self):
         self.environ_patch.stop()
@@ -163,7 +172,7 @@ class SessionTest(BaseSessionTest):
         self.update_session_config_mapping(
             'metadata_service_timeout',
             env_vars='FOO_TIMEOUT',
-            cast=int,
+            conversion_func=int,
         )
         # Environment variables are always strings.
         self.environ['FOO_TIMEOUT'] = '10'
@@ -317,6 +326,8 @@ class TestSessionConfigurationVars(BaseSessionTest):
         self.assertEqual(self.session.get_config_variable('foobar'), 'default')
         # Retrieve from os environment variable.
         self.environ['FOOBAR'] = 'fromenv'
+        # Clear the cache
+        self.session.set_config_variable('foobar', None)
         self.assertEqual(self.session.get_config_variable('foobar'), 'fromenv')
 
         # Explicit override.

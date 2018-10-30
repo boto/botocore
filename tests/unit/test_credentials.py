@@ -30,8 +30,8 @@ from botocore.credentials import CredentialProvider, AssumeRoleProvider
 from botocore.credentials import ConfigProvider, SharedCredentialProvider
 from botocore.credentials import Credentials
 from botocore.configprovider import create_botocore_default_config_mapping
-from botocore.configprovider import DefaultConfigChainBuilder
-from botocore.configprovider import ConfigProviderComponent
+from botocore.configprovider import ConfigChainFactory
+from botocore.configprovider import ConfigValueStore
 import botocore.exceptions
 import botocore.session
 from tests import unittest, BaseEnvVar, IntegerRefresher, skip_if_windows
@@ -1292,11 +1292,11 @@ class TestCreateCredentialResolver(BaseEnvVar):
         }
         self.fake_env_vars = {}
 
-        chain_builder = DefaultConfigChainBuilder(
+        chain_builder = ConfigChainFactory(
             session=self.session,
             environ=self.fake_env_vars,
         )
-        self.config_loader = ConfigProviderComponent(
+        self.config_loader = ConfigValueStore(
             mapping=create_botocore_default_config_mapping(chain_builder)
         )
         for name, value in self.fake_instance_variables.items():
