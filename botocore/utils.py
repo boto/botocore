@@ -263,7 +263,7 @@ class InstanceMetadataFetcher(object):
             proxies=get_environ_proxies(self._base_url),
         )
 
-    def get_request(self, url_path, custom_retry=None):
+    def get_request(self, url_path, retry_func=None):
         """Make a get request to the Instance Metadata Service.
 
         :type url_path: str
@@ -271,14 +271,16 @@ class InstanceMetadataFetcher(object):
             This arg is appended to the base_url taht was provided in the
             initializer.
 
-        :type custom_retry: callable
-        :param custom_retry: A function that takes the response as an argument
+        :type retry_func: callable
+        :param retry_func: A function that takes the response as an argument
              and determines if it needs to retry. By default empty and non
              200 OK responses are retried.
          """
         if self._disabled:
             logger.debug("Access to EC2 metadata has been disabled.")
             raise self._RETRIES_EXCEEDED_ERROR
+        if retry_func is None:
+            retry_func = self._default_retry
         url = self._base_url + url_path
         headers = {}
         if self._user_agent is not None:
@@ -289,7 +291,7 @@ class InstanceMetadataFetcher(object):
                 request = botocore.awsrequest.AWSRequest(
                     method='GET', url=url, headers=headers)
                 response = self._session.send(request.prepare())
-                if not self._needs_retry(response, custom_retry):
+                if not retry_func(response):
                     return response
             except RETRYABLE_HTTP_ERRORS as e:
                 logger.debug(
@@ -297,17 +299,11 @@ class InstanceMetadataFetcher(object):
                     "service request to %s: %s", url, e, exc_info=True)
         raise self._RETRIES_EXCEEDED_ERROR
 
-    def _needs_retry(self, response, custom_retry=None):
-        bad_response = (
+    def _default_retry(self, response):
+        return (
             self._is_non_ok_response(response) or
             self._is_empty(response)
         )
-        if bad_response:
-            return True
-
-        if custom_retry is not None:
-            return custom_retry(response)
-        return False
 
     def _is_non_ok_response(self, response):
         if response.status_code != 200:
@@ -378,13 +374,13 @@ class InstanceMetadataCredentialFetcher(InstanceMetadataFetcher):
     def _get_iam_role(self):
         return self.get_request(
             url_path=self._URL_PATH,
-            custom_retry=self._needs_retry_for_role_name
+            retry_func=self._needs_retry_for_role_name
         ).text
 
     def _get_credentials(self, role_name):
         r = self.get_request(
             url_path=self._URL_PATH + role_name,
-            custom_retry=self._needs_retry_for_credentials
+            retry_func=self._needs_retry_for_credentials
         )
         return json.loads(r.text)
 
