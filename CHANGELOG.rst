@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.35
+=======
+
+* api-change:``mediastore-data``: Update mediastore-data client to latest version
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+* api-change:``greengrass``: Update greengrass client to latest version
+* api-change:``config``: Update config client to latest version
+
+
 1.12.34
 =======
 
