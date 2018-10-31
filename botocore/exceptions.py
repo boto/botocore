@@ -16,6 +16,18 @@ from botocore.vendored import requests
 from botocore.vendored.requests.packages import urllib3
 
 
+def _exception_from_packed_args(exception_cls, args=None, kwargs=None):
+    # This is helpful for reducing Exceptions that only accept kwargs as
+    # only positional arguments can be provided for __reduce__
+    # Ideally, this would also be a class method on the BotoCoreError
+    # but instance methods cannot be pickled.
+    if args is None:
+        args = ()
+    if kwargs is None:
+        kwargs = {}
+    return exception_cls(*args, **kwargs)
+
+
 class BotoCoreError(Exception):
     """
     The base exception class for BotoCore exceptions.
@@ -28,6 +40,9 @@ class BotoCoreError(Exception):
         msg = self.fmt.format(**kwargs)
         Exception.__init__(self, msg)
         self.kwargs = kwargs
+
+    def __reduce__(self):
+        return _exception_from_packed_args, (self.__class__, None, self.kwargs)
 
 
 class DataNotFoundError(BotoCoreError):
@@ -67,6 +82,10 @@ class HTTPClientError(BotoCoreError):
         self.request = request
         self.response = response
         super(HTTPClientError, self).__init__(**kwargs)
+
+    def __reduce__(self):
+        return _exception_from_packed_args, (
+            self.__class__, (self.request, self.response), self.kwargs)
 
 
 class ConnectionError(BotoCoreError):
@@ -394,6 +413,12 @@ class ClientError(Exception):
                     retry_info = (' (reached max retries: %s)' %
                                   metadata['RetryAttempts'])
         return retry_info
+
+    def __reduce__(self):
+        # Subclasses of ClientError's are dynamically generated and
+        # cannot be pickled unless they are attributes of a
+        # module. So at the very least return a ClientError back.
+        return ClientError, (self.response, self.operation_name)
 
 
 class EventStreamError(ClientError):
