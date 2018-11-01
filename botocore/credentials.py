@@ -689,15 +689,19 @@ class AssumeRoleCredentialFetcher(CachedCredentialFetcher):
 
     def _assume_role_kwargs(self):
         """Get the arguments for assume role based on current configuration."""
-        assume_role_kwargs = self._assume_kwargs
+        assume_role_kwargs = deepcopy(self._assume_kwargs)
+
         mfa_serial = assume_role_kwargs.get('SerialNumber')
 
         if mfa_serial is not None:
             prompt = 'Enter MFA code for %s: ' % mfa_serial
             token_code = self._mfa_prompter(prompt)
-
-            assume_role_kwargs = deepcopy(assume_role_kwargs)
             assume_role_kwargs['TokenCode'] = token_code
+
+        duration_seconds = assume_role_kwargs.get('DurationSeconds')
+
+        if duration_seconds is not None:
+            assume_role_kwargs['DurationSeconds'] = duration_seconds
 
         return assume_role_kwargs
 
@@ -1235,6 +1239,10 @@ class AssumeRoleProvider(CredentialProvider):
         if mfa_serial is not None:
             extra_args['SerialNumber'] = mfa_serial
 
+        duration_seconds = role_config.get('duration_seconds')
+        if duration_seconds is not None:
+            extra_args['DurationSeconds'] = duration_seconds
+
         fetcher = AssumeRoleCredentialFetcher(
             client_creator=self._client_creator,
             source_credentials=source_credentials,
@@ -1267,6 +1275,7 @@ class AssumeRoleProvider(CredentialProvider):
         mfa_serial = profile.get('mfa_serial')
         external_id = profile.get('external_id')
         role_session_name = profile.get('role_session_name')
+        duration_seconds = profile.get('duration_seconds')
 
         role_config = {
             'role_arn': role_arn,
@@ -1276,6 +1285,12 @@ class AssumeRoleProvider(CredentialProvider):
             'source_profile': source_profile,
             'credential_source': credential_source
         }
+
+        if duration_seconds is not None:
+          try:
+            role_config['duration_seconds'] = int(duration_seconds)
+          except ValueError:
+            pass
 
         # Either the credential source or the source profile must be
         # specified, but not both.

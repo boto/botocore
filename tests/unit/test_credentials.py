@@ -1775,6 +1775,7 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
 
     def test_assume_role_with_mfa(self):
         self.fake_config['profiles']['development']['mfa_serial'] = 'mfa'
+        self.fake_config['profiles']['development']['duration_seconds'] = 7200 
         response = {
             'Credentials': {
                 'AccessKeyId': 'foo',
@@ -1799,7 +1800,7 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         # object).
         client.assume_role.assert_called_with(
             RoleArn='myrole', RoleSessionName=mock.ANY, SerialNumber='mfa',
-            TokenCode='token-code')
+            DurationSeconds=7200, TokenCode='token-code')
 
     def test_assume_role_populates_session_name_on_refresh(self):
         expiration_time = self.some_future_time()
