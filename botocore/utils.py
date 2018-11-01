@@ -243,7 +243,7 @@ class _RetriesExceededError(Exception):
     pass
 
 
-class InstanceMetadataFetcher(object):
+class IMDSFetcher(object):
 
     _RETRIES_EXCEEDED_ERROR_CLS = _RetriesExceededError
 
@@ -263,7 +263,7 @@ class InstanceMetadataFetcher(object):
             proxies=get_environ_proxies(self._base_url),
         )
 
-    def get_request(self, url_path, retry_func=None):
+    def _get_request(self, url_path, retry_func):
         """Make a get request to the Instance Metadata Service.
 
         :type url_path: str
@@ -331,14 +331,14 @@ class InstanceMetadataFetcher(object):
         logger.debug(statement, *logger_args)
 
 
-class InstanceMetadataCredentialFetcher(InstanceMetadataFetcher):
+class InstanceMetadataFetcher(IMDSFetcher):
     _URL_PATH = 'latest/meta-data/iam/security-credentials/'
     _REQUIRED_CREDENTIAL_FIELDS = [
         'AccessKeyId', 'SecretAccessKey', 'Token', 'Expiration'
     ]
 
     def __init__(self, **kwargs):
-        super(InstanceMetadataCredentialFetcher, self).__init__(**kwargs)
+        super(InstanceMetadataFetcher, self).__init__(**kwargs)
 
     def retrieve_iam_role_credentials(self):
         try:
@@ -372,13 +372,13 @@ class InstanceMetadataCredentialFetcher(InstanceMetadataFetcher):
         return {}
 
     def _get_iam_role(self):
-        return self.get_request(
+        return self._get_request(
             url_path=self._URL_PATH,
             retry_func=self._needs_retry_for_role_name
         ).text
 
     def _get_credentials(self, role_name):
-        r = self.get_request(
+        r = self._get_request(
             url_path=self._URL_PATH + role_name,
             retry_func=self._needs_retry_for_credentials
         )

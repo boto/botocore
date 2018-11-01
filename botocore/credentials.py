@@ -39,7 +39,7 @@ from botocore.exceptions import InfiniteLoopConfigError
 from botocore.exceptions import RefreshWithMFAUnsupportedError
 from botocore.exceptions import MetadataRetrievalError
 from botocore.exceptions import CredentialRetrievalError
-from botocore.utils import InstanceMetadataCredentialFetcher, parse_key_val_file
+from botocore.utils import InstanceMetadataFetcher, parse_key_val_file
 from botocore.utils import ContainerMetadataFetcher
 
 
@@ -67,7 +67,7 @@ def create_credential_resolver(session, cache=None):
     env_provider = EnvProvider()
     container_provider = ContainerProvider()
     instance_metadata_provider = InstanceMetadataProvider(
-        iam_role_fetcher=InstanceMetadataCredentialFetcher(
+        iam_role_fetcher=InstanceMetadataFetcher(
             timeout=metadata_timeout,
             num_attempts=num_attempts,
             user_agent=session.user_agent())
