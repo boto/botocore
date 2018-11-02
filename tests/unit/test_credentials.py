@@ -140,6 +140,30 @@ class TestRefreshableCredentials(TestCredentials):
         self.assertEqual(credential_set.secret_key, 'ORIGINAL-SECRET')
         self.assertEqual(credential_set.token, 'ORIGINAL-TOKEN')
 
+    def test_refresh_returns_empty_dict(self):
+        self.refresher.return_value = {}
+        self.mock_time.return_value = datetime.now(tzlocal())
+        self.assertTrue(self.creds.refresh_needed())
+
+        with self.assertRaises(botocore.exceptions.CredentialRetrievalError):
+            self.creds.access_key
+
+    def test_refresh_returns_none(self):
+        self.refresher.return_value = None
+        self.mock_time.return_value = datetime.now(tzlocal())
+        self.assertTrue(self.creds.refresh_needed())
+
+        with self.assertRaises(botocore.exceptions.CredentialRetrievalError):
+            self.creds.access_key
+
+    def test_refresh_returns_partial_credentials(self):
+        self.refresher.return_value = {'access_key': 'akid'}
+        self.mock_time.return_value = datetime.now(tzlocal())
+        self.assertTrue(self.creds.refresh_needed())
+
+        with self.assertRaises(botocore.exceptions.CredentialRetrievalError):
+            self.creds.access_key
+
 
 class TestDeferredRefreshableCredentials(unittest.TestCase):
     def setUp(self):

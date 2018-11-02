@@ -463,6 +463,19 @@ class RefreshableCredentials(Credentials):
         return parse(time_str)
 
     def _set_from_data(self, data):
+        expected_keys = ['access_key', 'secret_key', 'token', 'expiry_time']
+        if not data:
+            missing_keys = expected_keys
+        else:
+            missing_keys = [k for k in expected_keys if k not in data]
+
+        if missing_keys:
+            message = "Credential refresh failed, response did not contain: %s"
+            raise CredentialRetrievalError(
+                provider=self.method,
+                error_msg=message % ', '.join(missing_keys),
+            )
+
         self.access_key = data['access_key']
         self.secret_key = data['secret_key']
         self.token = data['token']
