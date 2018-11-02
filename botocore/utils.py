@@ -130,7 +130,6 @@ EVENT_ALIASES = {
 }
 
 
-
 def is_json_value_header(shape):
     """Determines if the provided shape is the special header type jsonvalue.
 
@@ -249,7 +248,7 @@ class IMDSFetcher(object):
 
     def __init__(self, timeout=DEFAULT_METADATA_SERVICE_TIMEOUT,
                  num_attempts=1, base_url=METADATA_BASE_URL,
-                  env=None, user_agent=None):
+                 env=None, user_agent=None):
         self._timeout = timeout
         self._num_attempts = num_attempts
         self._base_url = base_url
@@ -336,9 +335,6 @@ class InstanceMetadataFetcher(IMDSFetcher):
     _REQUIRED_CREDENTIAL_FIELDS = [
         'AccessKeyId', 'SecretAccessKey', 'Token', 'Expiration'
     ]
-
-    def __init__(self, **kwargs):
-        super(InstanceMetadataFetcher, self).__init__(**kwargs)
 
     def retrieve_iam_role_credentials(self):
         try:
@@ -1127,7 +1123,7 @@ class S3RegionRedirector(object):
             'Region' in error
         )
         is_redirect_status = response[0] is not None and \
-                response[0].status_code in [301, 302, 307]
+            response[0].status_code in [301, 302, 307]
         is_permanent_redirect = error_code == 'PermanentRedirect'
         if not any([is_special_head_object, is_wrong_signing_region,
                     is_permanent_redirect, is_special_head_bucket,
@@ -1281,7 +1277,8 @@ class ContainerMetadataFetcher(object):
         attempts = 0
         while True:
             try:
-                return self._get_response(full_url, headers, self.TIMEOUT_SECONDS)
+                return self._get_response(
+                    full_url, headers, self.TIMEOUT_SECONDS)
             except MetadataRetrievalError as e:
                 logger.debug("Received error when attempting to retrieve "
                              "container metadata: %s", e, exc_info=True)
@@ -1298,8 +1295,9 @@ class ContainerMetadataFetcher(object):
             response_text = response.content.decode('utf-8')
             if response.status_code != 200:
                 raise MetadataRetrievalError(
-                    error_msg="Received non 200 response (%s) from ECS metadata: %s"
-                    % (response.status_code, response_text))
+                    error_msg=(
+                        "Received non 200 response (%s) from ECS metadata: %s"
+                    ) % (response.status_code, response_text))
             try:
                 return json.loads(response_text)
             except ValueError:
