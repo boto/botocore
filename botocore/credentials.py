@@ -98,10 +98,7 @@ def create_credential_resolver(session, cache=None):
         container_provider,
         instance_metadata_provider
     ]
-
-    explicit_profile = session.get_config_variable('profile',
-                                                   methods=('instance',))
-    if explicit_profile is not None:
+    if session.instance_variables().get('profile') is not None:
         # An explicitly provided profile will negate an EnvProvider.
         # We will defer to providers that understand the "profile"
         # concept to retrieve credentials.

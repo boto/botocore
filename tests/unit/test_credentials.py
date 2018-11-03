@@ -29,6 +29,9 @@ from botocore.credentials import EnvProvider, create_assume_role_refresher
 from botocore.credentials import CredentialProvider, AssumeRoleProvider
 from botocore.credentials import ConfigProvider, SharedCredentialProvider
 from botocore.credentials import Credentials
+from botocore.configprovider import create_botocore_default_config_mapping
+from botocore.configprovider import ConfigChainFactory
+from botocore.configprovider import ConfigValueStore
 import botocore.exceptions
 import botocore.session
 from tests import unittest, BaseEnvVar, IntegerRefresher, skip_if_windows
@@ -1301,29 +1304,51 @@ class TestCreateCredentialResolver(BaseEnvVar):
     def setUp(self):
         super(TestCreateCredentialResolver, self).setUp()
 
-        self.session = mock.Mock()
-        self.session_instance_vars = {
+        self.session = mock.Mock(spec=botocore.session.Session)
+        self.session.get_component = self.fake_get_component
+
+        self.fake_instance_variables = {
             'credentials_file': 'a',
             'legacy_config_file': 'b',
             'config_file': 'c',
-            'metadata_service_timeout': 'd',
-            'metadata_service_num_attempts': 'e',
+            'metadata_service_timeout': 1,
+            'metadata_service_num_attempts': 1,
         }
         self.fake_env_vars = {}
-        self.session.get_config_variable = self.fake_get_config_variable
 
-    def fake_get_config_variable(self, name, methods=None):
-        if methods == ('instance',):
-            return self.session_instance_vars.get(name)
-        elif methods is not None and 'env' in methods:
-            return self.fake_env_vars.get(name)
+        chain_builder = ConfigChainFactory(
+            session=self.session,
+            environ=self.fake_env_vars,
+        )
+        self.config_loader = ConfigValueStore(
+            mapping=create_botocore_default_config_mapping(chain_builder)
+        )
+        for name, value in self.fake_instance_variables.items():
+            self.config_loader.set_config_variable(name, value)
+
+        self.session.get_config_variable = \
+            self.config_loader.get_config_variable
+        self.session.set_config_variable = \
+            self.fake_set_config_variable
+        self.session.instance_variables = self.fake_instance_variable_lookup
+
+    def fake_get_component(self, key):
+        if key == 'config_provider':
+            return self.config_loader
+        return None
+
+    def fake_instance_variable_lookup(self):
+        return self.fake_instance_variables
+
+    def fake_set_config_variable(self, logical_name, value):
+        self.fake_instance_variables[logical_name] = value
 
     def test_create_credential_resolver(self):
         resolver = credentials.create_credential_resolver(self.session)
         self.assertIsInstance(resolver, credentials.CredentialResolver)
 
     def test_explicit_profile_ignores_env_provider(self):
-        self.session_instance_vars['profile'] = 'dev'
+        self.session.set_config_variable('profile', 'dev')
         resolver = credentials.create_credential_resolver(self.session)
 
         self.assertTrue(
@@ -1331,7 +1356,7 @@ class TestCreateCredentialResolver(BaseEnvVar):
 
     def test_no_profile_checks_env_provider(self):
         # If no profile is provided,
-        self.session_instance_vars.pop('profile', None)
+        self.config_loader.set_config_variable('profile', None)
         resolver = credentials.create_credential_resolver(self.session)
         # Then an EnvProvider should be part of our credential lookup chain.
         self.assertTrue(
