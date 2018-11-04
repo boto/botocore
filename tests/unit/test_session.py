@@ -348,6 +348,16 @@ class TestSessionConfigurationVars(BaseSessionTest):
         )
         self.assertEqual(self.session.get_config_variable('foobar'), 'default')
 
+    def test_can_get_with_methods(self):
+        self.environ['AWS_DEFAULT_REGION'] = 'env-var'
+        self.session.set_config_variable('region', 'instance-var')
+        value = self.session.get_config_variable('region')
+        self.assertEqual(value, 'instance-var')
+
+        value = self.session.get_config_variable(
+            'region', methods=('env',))
+        self.assertEqual(value, 'env-var')
+
 
 class TestSessionPartitionFiles(BaseSessionTest):
     def test_lists_partitions_on_disk(self):
