@@ -1,5 +1,0 @@
-{
-  "type": "enhancement",
-  "category": "Configuration",
-  "description": "Added new configuration provider methods allowing for more flexibility in how a botocore session loads a particular configuration value."
-}
