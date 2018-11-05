@@ -1,0 +1,17 @@
+[
+  {
+    "category": "``eks``", 
+    "description": "Update eks client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "Configuration", 
+    "description": "Added new configuration provider methods allowing for more flexibility in how a botocore session loads a particular configuration value.", 
+    "type": "enhancement"
+  }, 
+  {
+    "category": "``serverlessrepo``", 
+    "description": "Update serverlessrepo client to latest version", 
+    "type": "api-change"
+  }
+]

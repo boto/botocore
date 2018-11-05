@@ -98,10 +98,7 @@ def create_credential_resolver(session, cache=None):
         container_provider,
         instance_metadata_provider
     ]
-
-    explicit_profile = session.get_config_variable('profile',
-                                                   methods=('instance',))
-    if explicit_profile is not None:
+    if session.instance_variables().get('profile') is not None:
         # An explicitly provided profile will negate an EnvProvider.
         # We will defer to providers that understand the "profile"
         # concept to retrieve credentials.
@@ -463,6 +460,19 @@ class RefreshableCredentials(Credentials):
         return parse(time_str)
 
     def _set_from_data(self, data):
+        expected_keys = ['access_key', 'secret_key', 'token', 'expiry_time']
+        if not data:
+            missing_keys = expected_keys
+        else:
+            missing_keys = [k for k in expected_keys if k not in data]
+
+        if missing_keys:
+            message = "Credential refresh failed, response did not contain: %s"
+            raise CredentialRetrievalError(
+                provider=self.method,
+                error_msg=message % ', '.join(missing_keys),
+            )
+
         self.access_key = data['access_key']
         self.secret_key = data['secret_key']
         self.token = data['token']

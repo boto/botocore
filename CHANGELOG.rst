@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.38
+=======
+
+* api-change:``eks``: Update eks client to latest version
+* enhancement:Configuration: Added new configuration provider methods allowing for more flexibility in how a botocore session loads a particular configuration value.
+* api-change:``serverlessrepo``: Update serverlessrepo client to latest version
+
+
 1.12.37
 =======
 

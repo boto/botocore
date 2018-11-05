@@ -30,7 +30,7 @@ class TestSession(unittest.TestCase):
 
     def test_profile_precedence(self):
         self.environ['AWS_PROFILE'] = 'from_env_var'
-        self.session.set_config_variable('profile',  'from_session_instance')
+        self.session.set_config_variable('profile', 'from_session_instance')
         self.assertEqual(self.session.profile, 'from_session_instance')
 
     def test_credentials_with_profile_precedence(self):
@@ -60,7 +60,8 @@ class TestSession(unittest.TestCase):
                 'aws_secret_access_key=shared_creds_sak\n'
             )
             f.flush()
-            self.session.set_config_variable('profile', 'from_session_instance')
+            self.session.set_config_variable('profile',
+                                             'from_session_instance')
             creds = self.session.get_credentials()
             self.assertEqual(creds.access_key, 'shared_creds_akid')
             self.assertEqual(creds.secret_key, 'shared_creds_sak')
