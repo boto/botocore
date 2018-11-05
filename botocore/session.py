@@ -44,7 +44,6 @@ from botocore import paginate
 from botocore import waiter
 from botocore import retryhandler, translate
 from botocore.utils import EVENT_ALIASES
-from botocore.utils import InstanceMetadataFetcher
 
 
 logger = logging.getLogger(__name__)
@@ -209,8 +208,10 @@ class Session(object):
         # being added to the chain. This chain will be consulted for a value
         # and then thrown out. This is not efficient, nor is the methods arg
         # used in botocore, this is just for backwards compatibility.
-        chain_builder = ConfigChainFactory(session=self)
-        mapping = {}
+        chain_builder = SubsetChainConfigFactory(session=self, methods=methods)
+        mapping = create_botocore_default_config_mapping(
+            chain_builder
+        )
         for name, config_options in self.session_var_map.items():
             config_name, env_vars, default, typecast = config_options
             build_chain_config_args = {
@@ -911,7 +912,7 @@ class SessionVarDict(collections.MutableMapping):
         return len(self._store)
 
     def _update_config_store_from_session_vars(self, logical_name,
-                                                  config_options):
+                                               config_options):
         # This is for backwards compatibility. The new preferred way to
         # modify configuration logic is to use the component system to get
         # the config_store component from the session, and then update
@@ -931,6 +932,46 @@ class SessionVarDict(collections.MutableMapping):
                 default=default,
                 conversion_func=typecast,
             )
+        )
+
+
+class SubsetChainConfigFactory(object):
+    """A class for creating backwards compatible configuration chains.
+
+    This class can be used instead of
+    :class:`botocore.configprovider.ConfigChainFactory` to make it honor the
+    methods argument to get_config_variable. This class can be used to filter
+    out providers that are not in the methods tuple when creating a new config
+    chain.
+    """
+    def __init__(self, session, methods, environ=None):
+        self._factory = ConfigChainFactory(session, environ)
+        self._supported_methods = methods
+
+    def create_config_chain(self, instance_name=None, env_var_names=None,
+                            config_property_name=None, default=None,
+                            conversion_func=None):
+        """Build a config chain following the standard botocore pattern.
+
+        This config chain factory will omit any providers not in the methods
+        tuple provided at initialization. For example if given the tuple
+        ('instance', 'config',) it will not inject the environment provider
+        into the standard config chain. This lets the botocore session support
+        the custom ``methods`` argument for all the default botocore config
+        variables when calling ``get_config_variable``.
+        """
+        if 'instance' not in self._supported_methods:
+            instance_name = None
+        if 'env' not in self._supported_methods:
+            env_var_names = None
+        if 'config' not in self._supported_methods:
+            config_property_name = None
+        return self._factory.create_config_chain(
+            instance_name=instance_name,
+            env_var_names=env_var_names,
+            config_property_name=config_property_name,
+            default=default,
+            conversion_func=conversion_func,
         )
 
 
