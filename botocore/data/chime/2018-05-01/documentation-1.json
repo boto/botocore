@@ -1,0 +1,23 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/chime-2018-05-01",
+      "methods" : {
+         "BatchSuspendUser" : "https://docs.aws.amazon.com/goto/WebAPI/chime/BatchSuspendUser",
+         "BatchUnsuspendUser" : "https://docs.aws.amazon.com/goto/WebAPI/chime/BatchUnsuspendUser",
+         "BatchUpdateUser" : "https://docs.aws.amazon.com/goto/WebAPI/chime/BatchUpdateUser",
+         "CreateAccount" : "https://docs.aws.amazon.com/goto/WebAPI/chime/CreateAccount",
+         "DeleteAccount" : "https://docs.aws.amazon.com/goto/WebAPI/chime/DeleteAccount",
+         "GetAccount" : "https://docs.aws.amazon.com/goto/WebAPI/chime/GetAccount",
+         "GetAccountSettings" : "https://docs.aws.amazon.com/goto/WebAPI/chime/GetAccountSettings",
+         "GetUser" : "https://docs.aws.amazon.com/goto/WebAPI/chime/GetUser",
+         "InviteUsers" : "https://docs.aws.amazon.com/goto/WebAPI/chime/InviteUsers",
+         "ListAccounts" : "https://docs.aws.amazon.com/goto/WebAPI/chime/ListAccounts",
+         "ListUsers" : "https://docs.aws.amazon.com/goto/WebAPI/chime/ListUsers",
+         "LogoutUser" : "https://docs.aws.amazon.com/goto/WebAPI/chime/LogoutUser",
+         "ResetPersonalPIN" : "https://docs.aws.amazon.com/goto/WebAPI/chime/ResetPersonalPIN",
+         "UpdateAccount" : "https://docs.aws.amazon.com/goto/WebAPI/chime/UpdateAccount",
+         "UpdateAccountSettings" : "https://docs.aws.amazon.com/goto/WebAPI/chime/UpdateAccountSettings",
+         "UpdateUser" : "https://docs.aws.amazon.com/goto/WebAPI/chime/UpdateUser"
+      }
+   }
+}
