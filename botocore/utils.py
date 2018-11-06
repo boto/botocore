@@ -40,9 +40,8 @@ from botocore.exceptions import (
 
 logger = logging.getLogger(__name__)
 DEFAULT_METADATA_SERVICE_TIMEOUT = 1
-METADATA_SECURITY_CREDENTIALS_URL = (
-    'http://169.254.169.254/latest/meta-data/iam/security-credentials/'
-)
+METADATA_BASE_URL = 'http://169.254.169.254/'
+
 # These are chars that do not need to be urlencoded.
 # Based on rfc2986, section 2.3
 SAFE_CHARS = '-._~'
@@ -129,11 +128,6 @@ EVENT_ALIASES = {
     "streams.dynamodb": "dynamodb-streams",
     "tagging": "resource-groups-tagging-api"
 }
-
-
-class _RetriesExceededError(Exception):
-    """Internal exception used when the number of retries are exceeded."""
-    pass
 
 
 def is_json_value_header(shape):
@@ -243,18 +237,21 @@ def set_value_from_jmespath(source, expression, value, is_first=True):
     source[current_key] = value
 
 
-class InstanceMetadataFetcher(object):
+class _RetriesExceededError(Exception):
+    """Internal exception used when the number of retries are exceeded."""
+    pass
 
-    _REQUIRED_CREDENTIAL_FIELDS = [
-        'AccessKeyId', 'SecretAccessKey', 'Token', 'Expiration'
-    ]
+
+class IMDSFetcher(object):
+
+    _RETRIES_EXCEEDED_ERROR_CLS = _RetriesExceededError
 
     def __init__(self, timeout=DEFAULT_METADATA_SERVICE_TIMEOUT,
-                 num_attempts=1, url=METADATA_SECURITY_CREDENTIALS_URL,
+                 num_attempts=1, base_url=METADATA_BASE_URL,
                  env=None, user_agent=None):
         self._timeout = timeout
         self._num_attempts = num_attempts
-        self._url = url
+        self._base_url = base_url
         if env is None:
             env = os.environ.copy()
         self._disabled = env.get('AWS_EC2_METADATA_DISABLED', 'false').lower()
@@ -262,8 +259,82 @@ class InstanceMetadataFetcher(object):
         self._user_agent = user_agent
         self._session = botocore.httpsession.URLLib3Session(
             timeout=self._timeout,
-            proxies=get_environ_proxies(self._url),
+            proxies=get_environ_proxies(self._base_url),
         )
+
+    def _get_request(self, url_path, retry_func):
+        """Make a get request to the Instance Metadata Service.
+
+        :type url_path: str
+        :param url_path: The path component of the URL to make a get request.
+            This arg is appended to the base_url taht was provided in the
+            initializer.
+
+        :type retry_func: callable
+        :param retry_func: A function that takes the response as an argument
+             and determines if it needs to retry. By default empty and non
+             200 OK responses are retried.
+         """
+        if self._disabled:
+            logger.debug("Access to EC2 metadata has been disabled.")
+            raise self._RETRIES_EXCEEDED_ERROR_CLS()
+        if retry_func is None:
+            retry_func = self._default_retry
+        url = self._base_url + url_path
+        headers = {}
+        if self._user_agent is not None:
+            headers['User-Agent'] = self._user_agent
+
+        for i in range(self._num_attempts):
+            try:
+                request = botocore.awsrequest.AWSRequest(
+                    method='GET', url=url, headers=headers)
+                response = self._session.send(request.prepare())
+                if not retry_func(response):
+                    return response
+            except RETRYABLE_HTTP_ERRORS as e:
+                logger.debug(
+                    "Caught retryable HTTP exception while making metadata "
+                    "service request to %s: %s", url, e, exc_info=True)
+        raise self._RETRIES_EXCEEDED_ERROR_CLS()
+
+    def _default_retry(self, response):
+        return (
+            self._is_non_ok_response(response) or
+            self._is_empty(response)
+        )
+
+    def _is_non_ok_response(self, response):
+        if response.status_code != 200:
+            self._log_imds_response(response, 'non-200', log_body=True)
+            return True
+        return False
+
+    def _is_empty(self, response):
+        if not response.content:
+            self._log_imds_response(response, 'no body', log_body=True)
+            return True
+        return False
+
+    def _log_imds_response(self, response, reason_to_log, log_body=False):
+        statement = (
+            "Metadata service returned %s response "
+            "with status code of %s for url: %s"
+        )
+        logger_args = [
+            reason_to_log, response.status_code, response.url
+        ]
+        if log_body:
+            statement += ", content body: %s"
+            logger_args.append(response.content)
+        logger.debug(statement, *logger_args)
+
+
+class InstanceMetadataFetcher(IMDSFetcher):
+    _URL_PATH = 'latest/meta-data/iam/security-credentials/'
+    _REQUIRED_CREDENTIAL_FIELDS = [
+        'AccessKeyId', 'SecretAccessKey', 'Token', 'Expiration'
+    ]
 
     def retrieve_iam_role_credentials(self):
         try:
@@ -290,7 +361,7 @@ class InstanceMetadataFetcher(object):
                     logger.debug('Error response received when retrieving'
                                  'credentials: %s.', credentials)
                 return {}
-        except _RetriesExceededError:
+        except self._RETRIES_EXCEEDED_ERROR_CLS:
             logger.debug("Max number of attempts exceeded (%s) when "
                          "attempting to retrieve data from metadata service.",
                          self._num_attempts)
@@ -298,37 +369,24 @@ class InstanceMetadataFetcher(object):
 
     def _get_iam_role(self):
         return self._get_request(
-            url=self._url,
-            needs_retry=self._needs_retry_for_role_name
+            url_path=self._URL_PATH,
+            retry_func=self._needs_retry_for_role_name
         ).text
 
     def _get_credentials(self, role_name):
         r = self._get_request(
-            url=self._url + role_name,
-            needs_retry=self._needs_retry_for_credentials
+            url_path=self._URL_PATH + role_name,
+            retry_func=self._needs_retry_for_credentials
         )
         return json.loads(r.text)
 
-    def _get_request(self, url, needs_retry):
-        if self._disabled:
-            logger.debug("Access to EC2 metadata has been disabled.")
-            raise _RetriesExceededError()
-        headers = {}
-        if self._user_agent is not None:
-            headers['User-Agent'] = self._user_agent
-
-        for i in range(self._num_attempts):
-            try:
-                request = botocore.awsrequest.AWSRequest(
-                    method='GET', url=url, headers=headers)
-                response = self._session.send(request.prepare())
-                if not needs_retry(response):
-                    return response
-            except RETRYABLE_HTTP_ERRORS as e:
-                logger.debug(
-                    "Caught retryable HTTP exception while making metadata "
-                    "service request to %s: %s", url, e, exc_info=True)
-        raise _RetriesExceededError()
+    def _is_invalid_json(self, response):
+        try:
+            json.loads(response.text)
+            return False
+        except ValueError:
+            self._log_imds_response(response, 'invalid json')
+            return True
 
     def _needs_retry_for_role_name(self, response):
         return (
@@ -351,39 +409,6 @@ class InstanceMetadataFetcher(object):
                     field)
                 return False
         return True
-
-    def _is_non_ok_response(self, response):
-        if response.status_code != 200:
-            self._log_imds_response(response, 'non-200', log_body=True)
-            return True
-        return False
-
-    def _is_empty(self, response):
-        if not response.content:
-            self._log_imds_response(response, 'no body', log_body=True)
-            return True
-        return False
-
-    def _is_invalid_json(self, response):
-        try:
-            json.loads(response.text)
-            return False
-        except ValueError:
-            self._log_imds_response(response, 'invalid json')
-            return True
-
-    def _log_imds_response(self, response, reason_to_log, log_body=False):
-        statement = (
-            "Metadata service returned %s response "
-            "with status code of %s for url: %s"
-        )
-        logger_args = [
-            reason_to_log, response.status_code, response.url
-        ]
-        if log_body:
-            statement += ", content body: %s"
-            logger_args.append(response.content)
-        logger.debug(statement, *logger_args)
 
 
 def merge_dicts(dict1, dict2, append_lists=False):
@@ -1098,7 +1123,7 @@ class S3RegionRedirector(object):
             'Region' in error
         )
         is_redirect_status = response[0] is not None and \
-                response[0].status_code in [301, 302, 307]
+            response[0].status_code in [301, 302, 307]
         is_permanent_redirect = error_code == 'PermanentRedirect'
         if not any([is_special_head_object, is_wrong_signing_region,
                     is_permanent_redirect, is_special_head_bucket,
@@ -1252,7 +1277,8 @@ class ContainerMetadataFetcher(object):
         attempts = 0
         while True:
             try:
-                return self._get_response(full_url, headers, self.TIMEOUT_SECONDS)
+                return self._get_response(
+                    full_url, headers, self.TIMEOUT_SECONDS)
             except MetadataRetrievalError as e:
                 logger.debug("Received error when attempting to retrieve "
                              "container metadata: %s", e, exc_info=True)
@@ -1269,8 +1295,9 @@ class ContainerMetadataFetcher(object):
             response_text = response.content.decode('utf-8')
             if response.status_code != 200:
                 raise MetadataRetrievalError(
-                    error_msg="Received non 200 response (%s) from ECS metadata: %s"
-                    % (response.status_code, response_text))
+                    error_msg=(
+                        "Received non 200 response (%s) from ECS metadata: %s"
+                    ) % (response.status_code, response_text))
             try:
                 return json.loads(response_text)
             except ValueError:

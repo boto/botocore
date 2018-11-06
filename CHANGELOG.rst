@@ -2,6 +2,79 @@
 CHANGELOG
 =========
 
+1.12.38
+=======
+
+* api-change:``eks``: Update eks client to latest version
+* enhancement:Configuration: Added new configuration provider methods allowing for more flexibility in how a botocore session loads a particular configuration value.
+* api-change:``serverlessrepo``: Update serverlessrepo client to latest version
+
+
+1.12.37
+=======
+
+* api-change:``rekognition``: Update rekognition client to latest version
+* api-change:``clouddirectory``: Update clouddirectory client to latest version
+
+
+1.12.36
+=======
+
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* enhancement:Exceptions: Add the ability to pickle botocore exceptions (`834 <https://github.com/boto/botocore/issues/834>`__)
+
+
+1.12.35
+=======
+
+* api-change:``mediastore-data``: Update mediastore-data client to latest version
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+* api-change:``greengrass``: Update greengrass client to latest version
+* api-change:``config``: Update config client to latest version
+
+
+1.12.34
+=======
+
+* api-change:``chime``: Update chime client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``dms``: Update dms client to latest version
+
+
+1.12.33
+=======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+
+
+1.12.32
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.12.31
+=======
+
+* api-change:``codestar``: Update codestar client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+
+
+1.12.30
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.12.29
+=======
+
+* api-change:``inspector``: Update inspector client to latest version
+* api-change:``shield``: Update shield client to latest version
+
+
 1.12.28
 =======
 
