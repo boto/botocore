@@ -30,6 +30,7 @@ import botocore.client
 from botocore.configprovider import ConfigValueStore
 from botocore.configprovider import ConfigChainFactory
 from botocore.configprovider import create_botocore_default_config_mapping
+from botocore.configprovider import BOTOCORE_DEFAUT_SESSION_VARIABLES
 from botocore.exceptions import ConfigNotFound, ProfileNotFound
 from botocore.exceptions import UnknownServiceError, PartialCredentialsError
 from botocore.errorfactory import ClientExceptionsFactory
@@ -59,6 +60,8 @@ class Session(object):
         file associated with this session.
     :ivar profile: The current profile.
     """
+
+    SESSION_VARIABLES = copy.copy(BOTOCORE_DEFAUT_SESSION_VARIABLES)
 
     #: The default format string to use when configuring the botocore logger.
     LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -115,7 +118,9 @@ class Session(object):
         self._components = ComponentLocator()
         self._internal_components = ComponentLocator()
         self._register_components()
-        self.session_var_map = SessionVarDict(self, session_vars)
+        self.session_var_map = SessionVarDict(self, self.SESSION_VARIABLES)
+        if session_vars is not None:
+            self.session_var_map.update(session_vars)
 
     def _register_components(self):
         self._register_credential_provider()
@@ -890,10 +895,7 @@ class ComponentLocator(object):
 class SessionVarDict(collections.MutableMapping):
     def __init__(self, session, session_vars):
         self._session = session
-        self._store = dict()
-        if session_vars is not None:
-            for key, value in session_vars.items():
-                self.__setitem__(key, value)
+        self._store = copy.copy(session_vars)
 
     def __getitem__(self, key):
         return self._store[key]
