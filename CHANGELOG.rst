@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.12.39
+=======
+
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``pinpoint-email``: Update pinpoint-email client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+* api-change:``waf-regional``: Update waf-regional client to latest version
+* bugfix:session config: Added the default session configuration tuples back to session.session_vars_map.
+
+
 1.12.38
 =======
 
