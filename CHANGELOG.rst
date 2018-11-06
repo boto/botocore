@@ -2,6 +2,60 @@
 CHANGELOG
 =========
 
+1.12.28
+=======
+
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+
+
+1.12.27
+=======
+
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``appstream``: Update appstream client to latest version
+
+
+1.12.26
+=======
+
+* api-change:``events``: Update events client to latest version
+* api-change:``apigateway``: Update apigateway client to latest version
+
+
+1.12.25
+=======
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``resource-groups``: Update resource-groups client to latest version
+
+
+1.12.24
+=======
+
+* api-change:``rds``: Update rds client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+
+
+1.12.23
+=======
+
+* api-change:``cloudtrail``: Update cloudtrail client to latest version
+
+
+1.12.22
+=======
+
+* api-change:``athena``: Update athena client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``directconnect``: Update directconnect client to latest version
+
+
 1.12.21
 =======
 

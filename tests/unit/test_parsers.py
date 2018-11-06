@@ -1144,8 +1144,10 @@ def test_can_handle_generic_error_message():
             '<html><body><b>Http/1.1 Service Unavailable</b></body></html>'
         ).encode('utf-8')
         empty_body = b''
+        none_body = None
         yield _assert_parses_generic_error, parser_cls(), generic_html_body
         yield _assert_parses_generic_error, parser_cls(), empty_body
+        yield _assert_parses_generic_error, parser_cls(), none_body
 
 
 def _assert_parses_generic_error(parser, body):

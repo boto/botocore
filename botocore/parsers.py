@@ -271,6 +271,9 @@ class ResponseParser(object):
         # To prevent this case from happening we first need to check
         # whether or not this response looks like the generic response.
         if response['status_code'] >= 500:
+            if 'body' not in response or response['body'] is None:
+                return True
+
             body = response['body'].strip()
             return body.startswith(b'<html>') or not body
 
@@ -431,7 +434,7 @@ class BaseXMLResponseParser(ResponseParser):
 
     def _replace_nodes(self, parsed):
         for key, value in parsed.items():
-            if value.getchildren():
+            if list(value):
                 sub_dict = self._build_name_to_xml_node(value)
                 parsed[key] = self._replace_nodes(sub_dict)
             else:
