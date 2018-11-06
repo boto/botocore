@@ -309,11 +309,6 @@ class TestSessionConfigurationVars(BaseSessionTest):
         self.assertEqual(self.session.get_config_variable('foobar'), 'default')
         # Retrieve from os environment variable.
         self.environ['FOOBAR'] = 'fromenv'
-        # This line is added from the original tests. Since environment
-        # variables cannot be changed from outside the process it makes little
-        # sense to ensure that they respect changes in the session. Clearing
-        # cache manually here.
-        self.session.set_config_variable('foobar', None)
         self.assertEqual(self.session.get_config_variable('foobar'), 'fromenv')
 
         # Explicit override.
@@ -330,6 +325,42 @@ class TestSessionConfigurationVars(BaseSessionTest):
         self.session.session_var_map['foobar'] = (None, 'FOOBAR', 'default',
                                                   None)
         self.assertEqual(self.session.get_config_variable('foobar'), 'default')
+
+    def test_can_get_session_vars_info_from_default_session(self):
+        # This test is to ensure that you can still reach the session_vars_map
+        # information from the session and that it has the expected value.
+        self.session = create_session()
+        self.assertEqual(self.session.session_var_map['region'],
+                         ('region', 'AWS_DEFAULT_REGION', None, None))
+        self.assertEqual(
+            self.session.session_var_map['profile'],
+            (None, ['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'], None, None))
+        self.assertEqual(
+            self.session.session_var_map['data_path'],
+            ('data_path', 'AWS_DATA_PATH', None, None))
+        self.assertEqual(
+            self.session.session_var_map['config_file'],
+            (None, 'AWS_CONFIG_FILE', '~/.aws/config', None))
+        self.assertEqual(
+            self.session.session_var_map['ca_bundle'],
+            ('ca_bundle', 'AWS_CA_BUNDLE', None, None))
+        self.assertEqual(
+            self.session.session_var_map['api_versions'],
+            ('api_versions', None, {}, None))
+        self.assertEqual(
+            self.session.session_var_map['credentials_file'],
+            (None, 'AWS_SHARED_CREDENTIALS_FILE', '~/.aws/credentials', None))
+        self.assertEqual(
+            self.session.session_var_map['metadata_service_timeout'],
+            ('metadata_service_timeout',
+             'AWS_METADATA_SERVICE_TIMEOUT', 1, int))
+        self.assertEqual(
+            self.session.session_var_map['metadata_service_num_attempts'],
+            ('metadata_service_num_attempts',
+             'AWS_METADATA_SERVICE_NUM_ATTEMPTS', 1, int))
+        self.assertEqual(
+            self.session.session_var_map['parameter_validation'],
+            ('parameter_validation', None, True, None))
 
 
 class TestSessionPartitionFiles(BaseSessionTest):

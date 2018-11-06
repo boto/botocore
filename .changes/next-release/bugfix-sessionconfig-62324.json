@@ -1,0 +1,5 @@
+{
+  "type": "bugfix",
+  "category": "session config",
+  "description": "Added the default session configuration tuples back to session.session_vars_map."
+}
