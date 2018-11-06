@@ -5308,12 +5308,17 @@
     "GetAppsResponse" : {
       "type" : "structure",
       "members" : {
-        "ApplicationsResponse" : {
-          "shape" : "ApplicationsResponse"
+        "Item" : {
+          "shape" : "ListOfApplicationResponse",
+          "documentation" : "A list of applications"
+        },
+        "NextToken" : {
+          "shape" : "__string",
+          "documentation" : "The string that you use in a subsequent request to get the next page of results in a paginated response."
         }
       },
-      "required" : [ "ApplicationsResponse" ],
-      "payload" : "ApplicationsResponse"
+      "documentation" : "Application list.",
+      "required" : [ ]
     },
     "GetBaiduChannelRequest" : {
       "type" : "structure",
