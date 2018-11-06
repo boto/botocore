@@ -45,7 +45,8 @@
          "DisassociateConnectionFromLag" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/DisassociateConnectionFromLag",
          "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/TagResource",
          "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/UntagResource",
-         "UpdateLag" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/UpdateLag"
+         "UpdateLag" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/UpdateLag",
+         "UpdateVirtualInterfaceAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/directconnect/UpdateVirtualInterfaceAttributes"
       }
    }
 }
