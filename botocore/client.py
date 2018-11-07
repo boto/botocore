@@ -631,6 +631,8 @@ class BaseClient(object):
             api_params, operation_model, context)
         request_dict = self._serializer.serialize_to_request(
             api_params, operation_model)
+        if not self._client_config.host_prefix_injection:
+            request_dict.pop('host_prefix', None)
         prepare_request_dict(request_dict, endpoint_url=self._endpoint.host,
                              user_agent=self._client_config.user_agent,
                              context=context)

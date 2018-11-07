@@ -113,6 +113,15 @@ class Config(object):
         client_cert should be set to a tuple of length two where the first
         element is the path to the client certificate and the second element is
         the path to the certificate key.
+
+    :type host_prefix_injection: bool
+    :param host_prefix_injection: Whether host prefix injection should occur.
+
+        Defaults to True.
+
+        Setting this to False disables the injection of operation parameters
+        into the prefix of the hostname. This is useful for clients providing
+        custom endpoints that should not have their host prefix modified.
     """
     OPTION_DEFAULTS = OrderedDict([
         ('region_name', None),
@@ -127,6 +136,7 @@ class Config(object):
         ('s3', None),
         ('retries', None),
         ('client_cert', None),
+        ('host_prefix_injection', True),
     ])
 
     def __init__(self, *args, **kwargs):
