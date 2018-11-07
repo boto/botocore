@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.40
+=======
+
+* api-change:``dms``: Update dms client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.12.39
 =======
 
