@@ -480,10 +480,6 @@ class OperationModel(object):
                 return member
         return None
 
-    def get_hostname_bindings(self):
-        return [name for name, member in self.input_shape.members.items()
-                if member.serialization.get('location') == 'host']
-
     @CachedProperty
     def has_streaming_input(self):
         return self.get_streaming_input() is not None

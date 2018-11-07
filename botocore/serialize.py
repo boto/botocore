@@ -88,7 +88,7 @@ class Serializer(object):
         a dictionary of:
 
             * 'url_path'
-            * 'host_template'
+            * 'host_prefix'
             * 'query_string'
             * 'headers'
             * 'body'
@@ -105,7 +105,7 @@ class Serializer(object):
              'headers': {},
              'method': 'POST',
              'query_string': '',
-             'host_template': 'value.{@}',
+             'host_prefix': 'value.',
              'url_path': '/'}
 
         :param parameters: The dictionary input parameters for the
@@ -169,19 +169,16 @@ class Serializer(object):
         return base64.b64encode(value).strip().decode(
             self.DEFAULT_ENCODING)
 
-    def _expand_hostname(self, parameters, operation_model):
+    def _expand_host_prefix(self, parameters, operation_model):
         operation_endpoint = operation_model.endpoint
         if operation_endpoint is None:
             return None
 
-        hostname_expression = operation_endpoint['host']
-        hostname_vars = operation_model.get_hostname_bindings()
-        format_args = dict((name, parameters[name]) for name in hostname_vars)
-        # The {@} placeholder will be replaced with the original hostname when
-        # the request_dict is prepared.
-        format_args['@'] = '{@}'
+        host_prefix_expression = operation_endpoint['hostPrefix']
+        host_vars = re.findall(r'{(.*?)}', host_prefix_expression)
+        format_kwargs = dict((name, parameters[name]) for name in host_vars)
 
-        return hostname_expression.format(**format_args)
+        return host_prefix_expression.format(**format_kwargs)
 
 
 
@@ -206,9 +203,9 @@ class QuerySerializer(Serializer):
             self._serialize(body_params, parameters, shape)
         serialized['body'] = body_params
 
-        host_template = self._expand_hostname(parameters, operation_model)
-        if host_template is not None:
-            serialized['host_template'] = host_template
+        host_prefix = self._expand_host_prefix(parameters, operation_model)
+        if host_prefix is not None:
+            serialized['host_prefix'] = host_prefix
 
         return serialized
 
@@ -228,10 +225,6 @@ class QuerySerializer(Serializer):
         members = shape.members
         for key, value in value.items():
             member_shape = members[key]
-            if member_shape.serialization.get('location') == 'host':
-                # Members bound to the host are serialized separately, and
-                # are not serialized as part of the query arguments
-                continue
             member_prefix = self._get_serialized_name(member_shape, key)
             if prefix:
                 member_prefix = '%s.%s' % (prefix, member_prefix)
@@ -343,9 +336,9 @@ class JSONSerializer(Serializer):
             self._serialize(body, parameters, input_shape)
         serialized['body'] = json.dumps(body).encode(self.DEFAULT_ENCODING)
 
-        host_template = self._expand_hostname(parameters, operation_model)
-        if host_template is not None:
-            serialized['host_template'] = host_template
+        host_prefix = self._expand_host_prefix(parameters, operation_model)
+        if host_prefix is not None:
+            serialized['host_prefix'] = host_prefix
 
         return serialized
 
@@ -367,10 +360,6 @@ class JSONSerializer(Serializer):
         members = shape.members
         for member_key, member_value in value.items():
             member_shape = members[member_key]
-            if member_shape.serialization.get('location') == 'host':
-                # Members bound to the host are serialized separately, and
-                # are not serialized as part of the request body
-                continue
             if 'name' in member_shape.serialization:
                 member_key = member_shape.serialization['name']
             self._serialize(serialized, member_value, member_shape, member_key)
@@ -419,7 +408,7 @@ class BaseRestSerializer(Serializer):
     # This is a list of known values for the "location" key in the
     # serialization dict.  The location key tells us where on the request
     # to put the serialized value.
-    KNOWN_LOCATIONS = ['uri', 'querystring', 'header', 'headers', 'host']
+    KNOWN_LOCATIONS = ['uri', 'querystring', 'header', 'headers']
 
     def serialize_to_request(self, parameters, operation_model):
         serialized = self._create_default_request()
@@ -464,9 +453,9 @@ class BaseRestSerializer(Serializer):
         self._serialize_payload(partitioned, parameters,
                                 serialized, shape, shape_members)
 
-        host_template = self._expand_hostname(parameters, operation_model)
-        if host_template is not None:
-            serialized['host_template'] = host_template
+        host_prefix = self._expand_host_prefix(parameters, operation_model)
+        if host_prefix is not None:
+            serialized['host_prefix'] = host_prefix
 
         return serialized
 
@@ -560,10 +549,6 @@ class BaseRestSerializer(Serializer):
             self._do_serialize_header_map(header_prefix,
                                           partitioned['headers'],
                                           param_value)
-        elif location == 'host':
-            # Parameters bound to the host name are handled separately as
-            # the host location can be used with any protocol
-            pass
         else:
             partitioned['body_kwargs'][param_name] = param_value
 
