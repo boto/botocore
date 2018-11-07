@@ -55,7 +55,7 @@ class Shape(object):
                         'payload', 'streaming', 'timestampFormat',
                         'xmlNamespace', 'resultWrapper', 'xmlAttribute',
                         'eventstream', 'event', 'eventheader', 'eventpayload',
-                        'jsonvalue', 'timestampFormat']
+                        'jsonvalue', 'timestampFormat', 'hostLabel']
     METADATA_ATTRS = ['required', 'min', 'max', 'sensitive', 'enum',
                       'idempotencyToken', 'error', 'exception']
     MAP_TYPE = OrderedDict
