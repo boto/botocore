@@ -54,6 +54,7 @@ SERVICE_RENAMES = {
     'marketplace-entitlement': 'marketplace-entitlement-service',
     'meteringmarketplace': 'marketplace-metering',
     'mgh': 'migration-hub',
+    'sms-voice': 'pinpoint-sms-voice',
     'resourcegroupstaggingapi': 'resource-groups-tagging-api',
     'route53': 'route-53',
     'route53domains': 'route-53-domains',
