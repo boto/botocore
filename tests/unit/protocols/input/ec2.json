@@ -36,8 +36,8 @@
         "serialized": {
           "uri": "/",
           "headers": {
-	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
-	  },
+              "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+          },
           "body": "Action=OperationName&Version=2014-01-01&Foo=val1&Bar=val2"
         }
       }
@@ -87,8 +87,8 @@
         "serialized": {
           "uri": "/",
           "headers": {
-	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
-	  },
+              "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+          },
           "body": "Action=OperationName&Version=2014-01-01&Foo=val1&BarLocationName=val2&yuckQueryName=val3"
         }
       }
@@ -139,8 +139,8 @@
         "serialized": {
           "uri": "/",
           "headers": {
-	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
-	  },
+              "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+          },
           "body": "Action=OperationName&Version=2014-01-01&Struct.Scalar=foo"
         }
       }
@@ -189,8 +189,8 @@
         "serialized": {
           "uri": "/",
           "headers": {
-	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
-	  },
+              "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+          },
           "body": "Action=OperationName&Version=2014-01-01&ListArg.1=foo&ListArg.2=bar&ListArg.3=baz"
         }
       }
@@ -241,8 +241,8 @@
         "serialized": {
           "uri": "/",
           "headers": {
-	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
-	  },
+              "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+          },
           "body": "Action=OperationName&Version=2014-01-01&ListMemberName.1=a&ListMemberName.2=b&ListMemberName.3=c"
         }
       }
@@ -294,8 +294,8 @@
         "serialized": {
           "uri": "/",
           "headers": {
-	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
-	  },
+              "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+          },
           "body": "Action=OperationName&Version=2014-01-01&ListQueryName.1=a&ListQueryName.2=b&ListQueryName.3=c"
         }
       }
@@ -334,8 +334,8 @@
         "serialized": {
           "uri": "/",
           "headers": {
-	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
-	  },
+              "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+          },
           "body": "Action=OperationName&Version=2014-01-01&BlobArg=Zm9v"
         }
       }
@@ -387,8 +387,8 @@
         "serialized": {
           "uri": "/",
           "headers": {
-	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
-	  },
+              "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+          },
           "body": "Action=OperationName&Version=2014-01-01&TimeArg=2015-01-25T08%3A00%3A00Z&TimeCustom=1422172800&TimeFormat=1422172800"
         }
       }
@@ -428,8 +428,8 @@
         "serialized": {
           "uri": "/",
           "headers": {
-	    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
-	  },
+              "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+          },
           "body": "Action=OperationName&Version=2014-01-01&Token=abc123"
         }
       },
@@ -473,7 +473,7 @@
         "members": {
           "Name": {
             "shape": "StringType",
-            "location": "host"
+            "hostLabel": true
           }
         }
       },
@@ -489,7 +489,7 @@
             "shape": "StaticInputShape"
           },
           "endpoint":{
-              "host": "data.{@}"
+              "hostPrefix": "data-"
           }
         },
         "params": {
@@ -501,7 +501,7 @@
               "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
           },
           "body": "Action=StaticOp&Version=2014-01-01&Name=myname",
-          "host": "data.service.region.amazonaws.com"
+          "host": "data-service.region.amazonaws.com"
         }
       },
       {
@@ -511,7 +511,7 @@
             "shape": "MemberRefInputShape"
           },
           "endpoint":{
-              "host": "{Name}.{@}"
+              "hostPrefix": "foo-{Name}."
           }
         },
         "params": {
@@ -522,8 +522,8 @@
           "headers": {
               "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
           },
-          "body": "Action=MemberRefOp&Version=2014-01-01",
-          "host": "myname.service.region.amazonaws.com"
+          "body": "Action=MemberRefOp&Version=2014-01-01&Name=myname",
+          "host": "foo-myname.service.region.amazonaws.com"
         }
       }
     ]

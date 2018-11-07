@@ -1420,7 +1420,7 @@
         "members": {
           "Name": {
             "shape": "StringType",
-            "location": "host"
+            "hostLabel": true
           }
         }
       },
@@ -1440,16 +1440,16 @@
             "requestUri": "/path"
           },
           "endpoint":{
-              "host": "data.{@}"
+              "hostPrefix": "data-"
           }
         },
         "params": {
           "Name": "myname"
         },
         "serialized": {
-          "body": "{\"Name\": \"myname\"}",
           "uri": "/path",
-          "host": "data.service.region.amazonaws.com"
+          "body": "{\"Name\": \"myname\"}",
+          "host": "data-service.region.amazonaws.com"
         }
       },
       {
@@ -1463,7 +1463,7 @@
             "requestUri": "/path"
           },
           "endpoint":{
-              "host": "{Name}.{@}"
+              "hostPrefix": "foo-{Name}."
           }
         },
         "params": {
@@ -1471,7 +1471,8 @@
         },
         "serialized": {
           "uri": "/path",
-          "host": "myname.service.region.amazonaws.com"
+          "body": "{\"Name\": \"myname\"}",
+          "host": "foo-myname.service.region.amazonaws.com"
         }
       }
     ]
