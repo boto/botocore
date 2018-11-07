@@ -175,11 +175,14 @@ class Serializer(object):
             return None
 
         host_prefix_expression = operation_endpoint['hostPrefix']
-        host_vars = re.findall(r'{(.*?)}', host_prefix_expression)
-        format_kwargs = dict((name, parameters[name]) for name in host_vars)
+        input_members = operation_model.input_shape.members
+        host_labels = [
+            member for member, shape in input_members.items()
+            if shape.serialization.get('hostLabel')
+        ]
+        format_kwargs = dict((name, parameters[name]) for name in host_labels)
 
         return host_prefix_expression.format(**format_kwargs)
-
 
 
 class QuerySerializer(Serializer):
