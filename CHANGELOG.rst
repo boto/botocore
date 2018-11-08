@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.41
+=======
+
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+* api-change:``events``: Update events client to latest version
+
+
 1.12.40
 =======
 
