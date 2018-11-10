@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.12.42
+=======
+
+* api-change:``mediapackage``: Update mediapackage client to latest version
+
+
 1.12.41
 =======
 
