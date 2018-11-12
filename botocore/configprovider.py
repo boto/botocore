@@ -15,65 +15,70 @@ is loaded.
 """
 import os
 
+#: A default dictionary that maps the logical names for session variables
+#: to the specific environment variables and configuration file names
+#: that contain the values for these variables.
+#: When creating a new Session object, you can pass in your own dictionary
+#: to remap the logical names or to add new logical names.  You can then
+#: get the current value for these variables by using the
+#: ``get_config_variable`` method of the :class:`botocore.session.Session`
+#: class.
+#: These form the keys of the dictionary.  The values in the dictionary
+#: are tuples of (<config_name>, <environment variable>, <default value>,
+#: <conversion func>).
+#: The conversion func is a function that takes the configuration value
+#: as an argument and returns the converted value.  If this value is
+#: None, then the configuration value is returned unmodified.  This
+#: conversion function can be used to type convert config values to
+#: values other than the default values of strings.
+#: The ``profile`` and ``config_file`` variables should always have a
+#: None value for the first entry in the tuple because it doesn't make
+#: sense to look inside the config file for the location of the config
+#: file or for the default profile to use.
+#: The ``config_name`` is the name to look for in the configuration file,
+#: the ``env var`` is the OS environment variable (``os.environ``) to
+#: use, and ``default_value`` is the value to use if no value is otherwise
+#: found.
+BOTOCORE_DEFAUT_SESSION_VARIABLES = {
+    # logical:  config_file, env_var,        default_value, conversion_func
+    'profile': (None, ['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'], None, None),
+    'region': ('region', 'AWS_DEFAULT_REGION', None, None),
+    'data_path': ('data_path', 'AWS_DATA_PATH', None, None),
+    'config_file': (None, 'AWS_CONFIG_FILE', '~/.aws/config', None),
+    'ca_bundle': ('ca_bundle', 'AWS_CA_BUNDLE', None, None),
+    'api_versions': ('api_versions', None, {}, None),
+
+    # This is the shared credentials file amongst sdks.
+    'credentials_file': (None, 'AWS_SHARED_CREDENTIALS_FILE',
+                         '~/.aws/credentials', None),
+
+    # These variables only exist in the config file.
+
+    # This is the number of seconds until we time out a request to
+    # the instance metadata service.
+    'metadata_service_timeout': (
+        'metadata_service_timeout',
+        'AWS_METADATA_SERVICE_TIMEOUT', 1, int),
+    # This is the number of request attempts we make until we give
+    # up trying to retrieve data from the instance metadata service.
+    'metadata_service_num_attempts': (
+        'metadata_service_num_attempts',
+        'AWS_METADATA_SERVICE_NUM_ATTEMPTS', 1, int),
+    'parameter_validation': ('parameter_validation', None, True, None),
+}
+
 
 def create_botocore_default_config_mapping(chain_builder):
-    return {
-        'profile': chain_builder.create_config_chain(
-            instance_name='profile',
-            env_var_names=['AWS_DEFAULT_PROFILE', 'AWS_PROFILE'],
-        ),
-        'region': chain_builder.create_config_chain(
-            instance_name='region',
-            env_var_names='AWS_DEFAULT_REGION',
-            config_property_name='region',
-            default=None,
-        ),
-        'data_path': chain_builder.create_config_chain(
-            instance_name='data_path',
-            env_var_names='AWS_DATA_PATH',
-            config_property_name='data_path',
-            default=None,
-        ),
-        'config_file': chain_builder.create_config_chain(
-            instance_name='config_file',
-            env_var_names='AWS_CONFIG_FILE',
-            default='~/.aws/config',
-        ),
-        'ca_bundle': chain_builder.create_config_chain(
-            instance_name='ca_bundle',
-            env_var_names='AWS_CA_BUNDLE',
-            config_property_name='ca_bundle',
-        ),
-        'api_versions': chain_builder.create_config_chain(
-            instance_name='api_versions',
-            config_property_name='api_versions',
-            default={},
-        ),
-        'credentials_file': chain_builder.create_config_chain(
-            instance_name='credentials_file',
-            env_var_names='AWS_SHARED_CREDENTIALS_FILE',
-            default='~/.aws/credentials',
-        ),
-        'metadata_service_timeout': chain_builder.create_config_chain(
-            instance_name='metadata_service_timeout',
-            env_var_names='AWS_METADATA_SERVICE_TIMEOUT',
-            config_property_name='metadata_service_timeout',
-            default=1,
-            conversion_func=int,
-        ),
-        'metadata_service_num_attempts': chain_builder.create_config_chain(
-            instance_name='metadata_service_num_attempts',
-            env_var_names='AWS_METADATA_SERVICE_NUM_ATTEMPTS',
-            config_property_name='metadata_service_num_attempts',
-            default=1,
-            conversion_func=int,
-        ),
-        'parameter_validation': chain_builder.create_config_chain(
-            instance_name='parameter_validation',
-            config_property_name='parameter_validation',
-            default=True,
-        ),
-    }
+    mapping = {}
+    for logical_name, config in BOTOCORE_DEFAUT_SESSION_VARIABLES.items():
+        mapping[logical_name] = chain_builder.create_config_chain(
+            instance_name=logical_name,
+            env_var_names=config[1],
+            config_property_name=config[0],
+            default=config[2],
+            conversion_func=config[3]
+        )
+    return mapping
 
 
 class ConfigChainFactory(object):
