@@ -1,0 +1,37 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/ses/",
+      "methods" : {
+         "CreateConfigurationSet" : "https://docs.aws.amazon.com/goto/WebAPI/email/CreateConfigurationSet",
+         "CreateConfigurationSetEventDestination" : "https://docs.aws.amazon.com/goto/WebAPI/email/CreateConfigurationSetEventDestination",
+         "CreateDedicatedIpPool" : "https://docs.aws.amazon.com/goto/WebAPI/email/CreateDedicatedIpPool",
+         "CreateEmailIdentity" : "https://docs.aws.amazon.com/goto/WebAPI/email/CreateEmailIdentity",
+         "DeleteConfigurationSet" : "https://docs.aws.amazon.com/goto/WebAPI/email/DeleteConfigurationSet",
+         "DeleteConfigurationSetEventDestination" : "https://docs.aws.amazon.com/goto/WebAPI/email/DeleteConfigurationSetEventDestination",
+         "DeleteDedicatedIpPool" : "https://docs.aws.amazon.com/goto/WebAPI/email/DeleteDedicatedIpPool",
+         "DeleteEmailIdentity" : "https://docs.aws.amazon.com/goto/WebAPI/email/DeleteEmailIdentity",
+         "GetAccount" : "https://docs.aws.amazon.com/goto/WebAPI/email/GetAccount",
+         "GetConfigurationSet" : "https://docs.aws.amazon.com/goto/WebAPI/email/GetConfigurationSet",
+         "GetConfigurationSetEventDestinations" : "https://docs.aws.amazon.com/goto/WebAPI/email/GetConfigurationSetEventDestinations",
+         "GetDedicatedIp" : "https://docs.aws.amazon.com/goto/WebAPI/email/GetDedicatedIp",
+         "GetDedicatedIps" : "https://docs.aws.amazon.com/goto/WebAPI/email/GetDedicatedIps",
+         "GetEmailIdentity" : "https://docs.aws.amazon.com/goto/WebAPI/email/GetEmailIdentity",
+         "ListConfigurationSets" : "https://docs.aws.amazon.com/goto/WebAPI/email/ListConfigurationSets",
+         "ListDedicatedIpPools" : "https://docs.aws.amazon.com/goto/WebAPI/email/ListDedicatedIpPools",
+         "ListEmailIdentities" : "https://docs.aws.amazon.com/goto/WebAPI/email/ListEmailIdentities",
+         "PutAccountDedicatedIpWarmupAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/email/PutAccountDedicatedIpWarmupAttributes",
+         "PutAccountSendingAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/email/PutAccountSendingAttributes",
+         "PutConfigurationSetDeliveryOptions" : "https://docs.aws.amazon.com/goto/WebAPI/email/PutConfigurationSetDeliveryOptions",
+         "PutConfigurationSetReputationOptions" : "https://docs.aws.amazon.com/goto/WebAPI/email/PutConfigurationSetReputationOptions",
+         "PutConfigurationSetSendingOptions" : "https://docs.aws.amazon.com/goto/WebAPI/email/PutConfigurationSetSendingOptions",
+         "PutConfigurationSetTrackingOptions" : "https://docs.aws.amazon.com/goto/WebAPI/email/PutConfigurationSetTrackingOptions",
+         "PutDedicatedIpInPool" : "https://docs.aws.amazon.com/goto/WebAPI/email/PutDedicatedIpInPool",
+         "PutDedicatedIpWarmupAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/email/PutDedicatedIpWarmupAttributes",
+         "PutEmailIdentityDkimAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/email/PutEmailIdentityDkimAttributes",
+         "PutEmailIdentityFeedbackAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/email/PutEmailIdentityFeedbackAttributes",
+         "PutEmailIdentityMailFromAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/email/PutEmailIdentityMailFromAttributes",
+         "SendEmail" : "https://docs.aws.amazon.com/goto/WebAPI/email/SendEmail",
+         "UpdateConfigurationSetEventDestination" : "https://docs.aws.amazon.com/goto/WebAPI/email/UpdateConfigurationSetEventDestination"
+      }
+   }
+}
