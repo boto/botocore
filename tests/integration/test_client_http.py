@@ -21,6 +21,7 @@ class TestClientHTTPBehavior(unittest.TestCase):
         self.localhost = 'http://localhost:%s/' % self.port
         self.session = botocore.session.get_session()
 
+    @unittest.skip('Test has suddenly become extremely flakey.')
     def test_can_proxy_https_request_with_auth(self):
         proxy_url = 'http://user:pass@localhost:%s/' % self.port
         config = Config(proxies={'https': proxy_url}, region_name='us-west-1')
