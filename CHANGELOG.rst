@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.12.43
+=======
+
+* api-change:``polly``: Update polly client to latest version
+* api-change:``batch``: Update batch client to latest version
+* api-change:``firehose``: Update firehose client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``budgets``: Update budgets client to latest version
+* api-change:``codepipeline``: Update codepipeline client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
 1.12.42
 =======
 
