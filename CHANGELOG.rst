@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.44
+=======
+
+* api-change:``chime``: Update chime client to latest version
+* api-change:``budgets``: Update budgets client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+
+
 1.12.43
 =======
 
