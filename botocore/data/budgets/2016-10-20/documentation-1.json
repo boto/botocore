@@ -9,6 +9,7 @@
          "DeleteNotification" : "https://docs.aws.amazon.com/goto/WebAPI/budgets/DeleteNotification",
          "DeleteSubscriber" : "https://docs.aws.amazon.com/goto/WebAPI/budgets/DeleteSubscriber",
          "DescribeBudget" : "https://docs.aws.amazon.com/goto/WebAPI/budgets/DescribeBudget",
+         "DescribeBudgetPerformanceHistory" : "https://docs.aws.amazon.com/goto/WebAPI/budgets/DescribeBudgetPerformanceHistory",
          "DescribeBudgets" : "https://docs.aws.amazon.com/goto/WebAPI/budgets/DescribeBudgets",
          "DescribeNotificationsForBudget" : "https://docs.aws.amazon.com/goto/WebAPI/budgets/DescribeNotificationsForBudget",
          "DescribeSubscribersForNotification" : "https://docs.aws.amazon.com/goto/WebAPI/budgets/DescribeSubscribersForNotification",

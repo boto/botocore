@@ -9,6 +9,8 @@
          "ListTagsForDeliveryStream" : "https://docs.aws.amazon.com/goto/WebAPI/firehose/ListTagsForDeliveryStream",
          "PutRecord" : "https://docs.aws.amazon.com/goto/WebAPI/firehose/PutRecord",
          "PutRecordBatch" : "https://docs.aws.amazon.com/goto/WebAPI/firehose/PutRecordBatch",
+         "StartDeliveryStreamEncryption" : "https://docs.aws.amazon.com/goto/WebAPI/firehose/StartDeliveryStreamEncryption",
+         "StopDeliveryStreamEncryption" : "https://docs.aws.amazon.com/goto/WebAPI/firehose/StopDeliveryStreamEncryption",
          "TagDeliveryStream" : "https://docs.aws.amazon.com/goto/WebAPI/firehose/TagDeliveryStream",
          "UntagDeliveryStream" : "https://docs.aws.amazon.com/goto/WebAPI/firehose/UntagDeliveryStream",
          "UpdateDestination" : "https://docs.aws.amazon.com/goto/WebAPI/firehose/UpdateDestination"
