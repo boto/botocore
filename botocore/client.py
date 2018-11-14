@@ -514,8 +514,8 @@ class ClientEndpointBridge(object):
                 return 'v4'
             # Now just iterate over the signature versions in order until we
             # find the first one that is known to Botocore.
-            for known in AUTH_TYPE_MAPS:
-                if known in potential_versions:
+            for known in potential_versions:
+                if known in AUTH_TYPE_MAPS:
                     return known
         raise UnknownSignatureVersionError(
             signature_version=resolved.get('signatureVersions'))
