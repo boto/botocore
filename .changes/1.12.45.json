@@ -1,0 +1,37 @@
+[
+  {
+    "category": "``resource-groups``", 
+    "description": "Update resource-groups client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``autoscaling``", 
+    "description": "Update autoscaling client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``mediatailor``", 
+    "description": "Update mediatailor client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sns``", 
+    "description": "Update sns client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sagemaker``", 
+    "description": "Update sagemaker client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``servicecatalog``", 
+    "description": "Update servicecatalog client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }
+]
