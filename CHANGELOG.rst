@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.12.45
+=======
+
+* api-change:``resource-groups``: Update resource-groups client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``mediatailor``: Update mediatailor client to latest version
+* api-change:``sns``: Update sns client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.12.44
 =======
 
