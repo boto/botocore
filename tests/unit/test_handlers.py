@@ -889,7 +889,7 @@ class TestHandlers(BaseSessionTest):
         }
         handlers.decode_list_object_v2(parsed, context={})
         self.assertEqual(parsed['Contents'][0]['Key'], u'%C3%A7%C3%B6s%25asd')
-        
+
     def test_decode_list_objects_v2_with_delimiter(self):
         parsed = {
             'Delimiter': "%C3%A7%C3%B6s%25%20asd%08+c",
@@ -907,7 +907,7 @@ class TestHandlers(BaseSessionTest):
         context = {'encoding_type_auto_set': True}
         handlers.decode_list_object_v2(parsed, context=context)
         self.assertEqual(parsed['Prefix'], u'\xe7\xf6s% asd\x08 c')
-        
+
     def test_decode_list_objects_v2_does_not_decode_continuationtoken(self):
         parsed = {
             'ContinuationToken': "%C3%A7%C3%B6s%25%20asd%08+c",
@@ -917,7 +917,7 @@ class TestHandlers(BaseSessionTest):
         handlers.decode_list_object_v2(parsed, context=context)
         self.assertEqual(
             parsed['ContinuationToken'], u"%C3%A7%C3%B6s%25%20asd%08+c")
-        
+
     def test_decode_list_objects_v2_with_startafter(self):
         parsed = {
             'StartAfter': "%C3%A7%C3%B6s%25%20asd%08+c",
@@ -926,7 +926,7 @@ class TestHandlers(BaseSessionTest):
         context = {'encoding_type_auto_set': True}
         handlers.decode_list_object_v2(parsed, context=context)
         self.assertEqual(parsed['StartAfter'], u'\xe7\xf6s% asd\x08 c')
-        
+
     def test_decode_list_objects_v2_with_common_prefixes(self):
         parsed = {
             'CommonPrefixes': [{'Prefix': "%C3%A7%C3%B6s%25%20asd%08+c"}],
@@ -936,7 +936,7 @@ class TestHandlers(BaseSessionTest):
         handlers.decode_list_object_v2(parsed, context=context)
         self.assertEqual(parsed['CommonPrefixes'][0]['Prefix'],
                          u'\xe7\xf6s% asd\x08 c')
-        
+
     def test_get_bucket_location_optional(self):
         # This handler should no-op if another hook (i.e. stubber) has already
         # filled in response
@@ -1330,3 +1330,36 @@ class TestCommandAlias(unittest.TestCase):
 
         response = alias(client=client)()
         self.assertEqual(response, 'bar')
+
+
+class TestPrependToHost(unittest.TestCase):
+    def setUp(self):
+        self.hoister = handlers.HeaderToHostHoister('test-header')
+
+    def _prepend_to_host(self, url, prepend_string):
+        params = {
+            'headers': {
+                'test-header': prepend_string,
+            },
+            'url': url,
+        }
+        self.hoister.hoist(params=params)
+        return params['url']
+
+    def test_does_prepend_to_host(self):
+        prepended = self._prepend_to_host('https://bar.example.com/', 'foo')
+        self.assertEqual(prepended, 'https://foo.bar.example.com/')
+
+    def test_does_prepend_to_host_with_http(self):
+        prepended = self._prepend_to_host('http://bar.example.com/', 'foo')
+        self.assertEqual(prepended, 'http://foo.bar.example.com/')
+
+    def test_does_prepend_to_host_with_path(self):
+        prepended = self._prepend_to_host(
+            'https://bar.example.com/path', 'foo')
+        self.assertEqual(prepended, 'https://foo.bar.example.com/path')
+
+    def test_does_prepend_to_host_with_more_components(self):
+        prepended = self._prepend_to_host(
+            'https://bar.baz.example.com/path', 'foo')
+        self.assertEqual(prepended, 'https://foo.bar.baz.example.com/path')

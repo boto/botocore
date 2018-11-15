@@ -2,6 +2,26 @@
 CHANGELOG
 =========
 
+1.12.46
+=======
+
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``sms-voice``: Update sms-voice client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``dms``: Update dms client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``s3control``: Update s3control client to latest version
+* api-change:``directconnect``: Update directconnect client to latest version
+* api-change:``ram``: Update ram client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``route53resolver``: Update route53resolver client to latest version
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``iam``: Update iam client to latest version
+
+
 1.12.45
 =======
 
