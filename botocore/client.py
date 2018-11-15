@@ -347,6 +347,7 @@ class ClientEndpointBridge(object):
     utilize "us-east-1" by default if no region can be resolved."""
 
     DEFAULT_ENDPOINT = '{service}.{region}.amazonaws.com'
+    _DUALSTACK_ENABLED_SERVICES = ['s3', 's3-control']
 
     def __init__(self, endpoint_resolver, scoped_config=None,
                  client_config=None, default_endpoint=None,
@@ -400,7 +401,7 @@ class ClientEndpointBridge(object):
             signature_version=signature_version)
 
     def _is_s3_dualstack_mode(self, service_name):
-        if service_name != 's3':
+        if service_name not in self._DUALSTACK_ENABLED_SERVICES:
             return False
         # TODO: This normalization logic is duplicated from the
         # ClientArgsCreator class.  Consolidate everything to
@@ -514,8 +515,8 @@ class ClientEndpointBridge(object):
                 return 'v4'
             # Now just iterate over the signature versions in order until we
             # find the first one that is known to Botocore.
-            for known in AUTH_TYPE_MAPS:
-                if known in potential_versions:
+            for known in potential_versions:
+                if known in AUTH_TYPE_MAPS:
                     return known
         raise UnknownSignatureVersionError(
             signature_version=resolved.get('signatureVersions'))

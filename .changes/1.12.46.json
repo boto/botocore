@@ -1,0 +1,77 @@
+[
+  {
+    "category": "``s3``", 
+    "description": "Update s3 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sms-voice``", 
+    "description": "Update sms-voice client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``redshift``", 
+    "description": "Update redshift client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``rds``", 
+    "description": "Update rds client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``dms``", 
+    "description": "Update dms client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codebuild``", 
+    "description": "Update codebuild client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``s3control``", 
+    "description": "Update s3control client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``directconnect``", 
+    "description": "Update directconnect client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ram``", 
+    "description": "Update ram client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``pinpoint``", 
+    "description": "Update pinpoint client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``route53resolver``", 
+    "description": "Update route53resolver client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``comprehend``", 
+    "description": "Update comprehend client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``transcribe``", 
+    "description": "Update transcribe client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ecs``", 
+    "description": "Update ecs client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iam``", 
+    "description": "Update iam client to latest version", 
+    "type": "api-change"
+  }
+]
