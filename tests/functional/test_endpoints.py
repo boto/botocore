@@ -57,6 +57,7 @@ SERVICE_RENAMES = {
     'resourcegroupstaggingapi': 'resource-groups-tagging-api',
     'route53': 'route-53',
     'route53domains': 'route-53-domains',
+    's3control': 's3-control',
     'sdb': 'simpledb',
     'secretsmanager': 'secrets-manager',
     'serverlessrepo': 'serverlessapplicationrepository',

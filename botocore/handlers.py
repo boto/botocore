@@ -25,7 +25,7 @@ import warnings
 import uuid
 
 from botocore.compat import unquote, json, six, unquote_str, \
-    ensure_bytes, get_md5, MD5_AVAILABLE, OrderedDict
+    ensure_bytes, get_md5, MD5_AVAILABLE, OrderedDict, urlsplit, urlunsplit
 from botocore.docs.utils import AutoPopulatedParam
 from botocore.docs.utils import HideParamFromOperations
 from botocore.docs.utils import AppendParamDocumentation
@@ -737,6 +737,7 @@ def decode_list_object(parsed, context, **kwargs):
         context=context
     )
 
+
 def decode_list_object_v2(parsed, context, **kwargs):
     # From the documentation: If you specify encoding-type request parameter,
     # Amazon S3 includes this element in the response, and returns encoded key
@@ -748,7 +749,8 @@ def decode_list_object_v2(parsed, context, **kwargs):
         parsed=parsed,
         context=context
     )
-                    
+
+
 def _decode_list_object(top_level_keys, nested_keys, parsed, context):
     if parsed.get('EncodingType') == 'url' and \
                     context.get('encoding_type_auto_set'):
@@ -761,6 +763,7 @@ def _decode_list_object(top_level_keys, nested_keys, parsed, context):
             if top_key in parsed:
                 for member in parsed[top_key]:
                     member[child_key] = unquote_str(member[child_key])
+
 
 def convert_body_to_file_like_object(params, **kwargs):
     if 'Body' in params:
@@ -868,6 +871,43 @@ def remove_subscribe_to_shard(class_attributes, **kwargs):
     if 'subscribe_to_shard' in class_attributes:
         # subscribe_to_shard requires HTTP 2 support
         del class_attributes['subscribe_to_shard']
+
+
+class HeaderToHostHoister(object):
+    """Takes a header and moves it to the front of the hoststring.
+    """
+    def __init__(self, header_name):
+        self._header_name = header_name
+
+    def hoist(self, params, **kwargs):
+        """Hoist a header to the hostname.
+
+        Hoist a header to the beginning of the hostname with a suffix "." after
+        it. The original header should be removed from the header map. This
+        method is intended to be used as a target for the before-call event.
+        """
+        if self._header_name not in params['headers']:
+            return
+        header_value = params['headers'][self._header_name]
+        original_url = params['url']
+        new_url = self._prepend_to_host(original_url, header_value)
+        params['url'] = new_url
+
+    def _prepend_to_host(self, url, prefix):
+        url_components = urlsplit(url)
+        parts = url_components.netloc.split('.')
+        parts = [prefix] + parts
+        new_netloc = '.'.join(parts)
+        new_components = (
+            url_components.scheme,
+            new_netloc,
+            url_components.path,
+            url_components.query,
+            ''
+        )
+        new_url = urlunsplit(new_components)
+        return new_url
+
 
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
@@ -1050,5 +1090,12 @@ BUILTIN_HANDLERS = [
      AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
     ('docs.*.neptune.CreateDBCluster.complete-section',
      AutoPopulatedParam('PreSignedUrl').document_auto_populated_param),
+
+    #############
+    # S3 Control
+    #############
+    ('before-call.s3-control.*',
+     HeaderToHostHoister('x-amz-account-id').hoist),
+
 ]
 _add_parameter_aliases(BUILTIN_HANDLERS)
