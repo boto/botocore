@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.12.47
+=======
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+
+
 1.12.46
 =======
 
