@@ -14,7 +14,6 @@
          "GetJob" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/GetJob",
          "GetJobTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/GetJobTemplate",
          "GetPreset" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/GetPreset",
-         "GetQueue" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/GetQueue",
          "ListJobTemplates" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/ListJobTemplates",
          "ListJobs" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/ListJobs",
          "ListPresets" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/ListPresets",

@@ -1,0 +1,29 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver-2018-04-01",
+      "methods" : {
+         "AssociateResolverEndpointIpAddress" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver/AssociateResolverEndpointIpAddress",
+         "AssociateResolverRule" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver/AssociateResolverRule",
+         "CreateResolverEndpoint" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver/CreateResolverEndpoint",
+         "CreateResolverRule" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver/CreateResolverRule",
+         "DeleteResolverEndpoint" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver/DeleteResolverEndpoint",
+         "DeleteResolverRule" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver/DeleteResolverRule",
+         "DisassociateResolverEndpointIpAddress" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver/DisassociateResolverEndpointIpAddress",
+         "DisassociateResolverRule" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver/DisassociateResolverRule",
+         "GetResolverEndpoint" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver/GetResolverEndpoint",
+         "GetResolverRule" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver/GetResolverRule",
+         "GetResolverRuleAssociation" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver/GetResolverRuleAssociation",
+         "GetResolverRulePolicy" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver/GetResolverRulePolicy",
+         "ListResolverEndpointIpAddresses" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver/ListResolverEndpointIpAddresses",
+         "ListResolverEndpoints" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver/ListResolverEndpoints",
+         "ListResolverRuleAssociations" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver/ListResolverRuleAssociations",
+         "ListResolverRules" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver/ListResolverRules",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver/ListTagsForResource",
+         "PutResolverRulePolicy" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver/PutResolverRulePolicy",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver/UntagResource",
+         "UpdateResolverEndpoint" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver/UpdateResolverEndpoint",
+         "UpdateResolverRule" : "https://docs.aws.amazon.com/goto/WebAPI/route53resolver/UpdateResolverRule"
+      }
+   }
+}

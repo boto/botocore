@@ -1,0 +1,10 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/s3-control-2018-08-20",
+      "methods" : {
+         "DeletePublicAccessBlock" : "https://docs.aws.amazon.com/goto/WebAPI/s3-control/DeletePublicAccessBlock",
+         "GetPublicAccessBlock" : "https://docs.aws.amazon.com/goto/WebAPI/s3-control/GetPublicAccessBlock",
+         "PutPublicAccessBlock" : "https://docs.aws.amazon.com/goto/WebAPI/s3-control/PutPublicAccessBlock"
+      }
+   }
+}

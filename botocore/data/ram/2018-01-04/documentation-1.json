@@ -1,0 +1,23 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/ram-2018-01-04",
+      "methods" : {
+         "AcceptResourceShareInvitation" : "https://docs.aws.amazon.com/goto/WebAPI/ram/AcceptResourceShareInvitation",
+         "AssociateResourceShare" : "https://docs.aws.amazon.com/goto/WebAPI/ram/AssociateResourceShare",
+         "CreateResourceShare" : "https://docs.aws.amazon.com/goto/WebAPI/ram/CreateResourceShare",
+         "DeleteResourceShare" : "https://docs.aws.amazon.com/goto/WebAPI/ram/DeleteResourceShare",
+         "DisassociateResourceShare" : "https://docs.aws.amazon.com/goto/WebAPI/ram/DisassociateResourceShare",
+         "EnableSharingWithAwsOrganization" : "https://docs.aws.amazon.com/goto/WebAPI/ram/EnableSharingWithAwsOrganization",
+         "GetResourcePolicies" : "https://docs.aws.amazon.com/goto/WebAPI/ram/GetResourcePolicies",
+         "GetResourceShareAssociations" : "https://docs.aws.amazon.com/goto/WebAPI/ram/GetResourceShareAssociations",
+         "GetResourceShareInvitations" : "https://docs.aws.amazon.com/goto/WebAPI/ram/GetResourceShareInvitations",
+         "GetResourceShares" : "https://docs.aws.amazon.com/goto/WebAPI/ram/GetResourceShares",
+         "ListPrincipals" : "https://docs.aws.amazon.com/goto/WebAPI/ram/ListPrincipals",
+         "ListResources" : "https://docs.aws.amazon.com/goto/WebAPI/ram/ListResources",
+         "RejectResourceShareInvitation" : "https://docs.aws.amazon.com/goto/WebAPI/ram/RejectResourceShareInvitation",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/ram/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/ram/UntagResource",
+         "UpdateResourceShare" : "https://docs.aws.amazon.com/goto/WebAPI/ram/UpdateResourceShare"
+      }
+   }
+}

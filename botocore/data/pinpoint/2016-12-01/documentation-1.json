@@ -22,6 +22,7 @@
          "DeleteSegment" : "https://docs.aws.amazon.com/goto/WebAPI/pinpoint/DeleteSegment",
          "DeleteSmsChannel" : "https://docs.aws.amazon.com/goto/WebAPI/pinpoint/DeleteSmsChannel",
          "DeleteUserEndpoints" : "https://docs.aws.amazon.com/goto/WebAPI/pinpoint/DeleteUserEndpoints",
+         "DeleteVoiceChannel" : "https://docs.aws.amazon.com/goto/WebAPI/pinpoint/DeleteVoiceChannel",
          "GetAdmChannel" : "https://docs.aws.amazon.com/goto/WebAPI/pinpoint/GetAdmChannel",
          "GetApnsChannel" : "https://docs.aws.amazon.com/goto/WebAPI/pinpoint/GetApnsChannel",
          "GetApnsSandboxChannel" : "https://docs.aws.amazon.com/goto/WebAPI/pinpoint/GetApnsSandboxChannel",
@@ -53,6 +54,7 @@
          "GetSegments" : "https://docs.aws.amazon.com/goto/WebAPI/pinpoint/GetSegments",
          "GetSmsChannel" : "https://docs.aws.amazon.com/goto/WebAPI/pinpoint/GetSmsChannel",
          "GetUserEndpoints" : "https://docs.aws.amazon.com/goto/WebAPI/pinpoint/GetUserEndpoints",
+         "GetVoiceChannel" : "https://docs.aws.amazon.com/goto/WebAPI/pinpoint/GetVoiceChannel",
          "PhoneNumberValidate" : "https://docs.aws.amazon.com/goto/WebAPI/pinpoint/PhoneNumberValidate",
          "PutEventStream" : "https://docs.aws.amazon.com/goto/WebAPI/pinpoint/PutEventStream",
          "PutEvents" : "https://docs.aws.amazon.com/goto/WebAPI/pinpoint/PutEvents",
@@ -72,7 +74,8 @@
          "UpdateEndpointsBatch" : "https://docs.aws.amazon.com/goto/WebAPI/pinpoint/UpdateEndpointsBatch",
          "UpdateGcmChannel" : "https://docs.aws.amazon.com/goto/WebAPI/pinpoint/UpdateGcmChannel",
          "UpdateSegment" : "https://docs.aws.amazon.com/goto/WebAPI/pinpoint/UpdateSegment",
-         "UpdateSmsChannel" : "https://docs.aws.amazon.com/goto/WebAPI/pinpoint/UpdateSmsChannel"
+         "UpdateSmsChannel" : "https://docs.aws.amazon.com/goto/WebAPI/pinpoint/UpdateSmsChannel",
+         "UpdateVoiceChannel" : "https://docs.aws.amazon.com/goto/WebAPI/pinpoint/UpdateVoiceChannel"
       }
    }
 }

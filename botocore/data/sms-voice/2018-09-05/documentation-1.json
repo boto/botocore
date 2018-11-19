@@ -1,0 +1,14 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/sms-voice.pinpoint-2018-09-05",
+      "methods" : {
+         "CreateConfigurationSet" : "https://docs.aws.amazon.com/goto/WebAPI/sms-voice.pinpoint/CreateConfigurationSet",
+         "CreateConfigurationSetEventDestination" : "https://docs.aws.amazon.com/goto/WebAPI/sms-voice.pinpoint/CreateConfigurationSetEventDestination",
+         "DeleteConfigurationSet" : "https://docs.aws.amazon.com/goto/WebAPI/sms-voice.pinpoint/DeleteConfigurationSet",
+         "DeleteConfigurationSetEventDestination" : "https://docs.aws.amazon.com/goto/WebAPI/sms-voice.pinpoint/DeleteConfigurationSetEventDestination",
+         "GetConfigurationSetEventDestinations" : "https://docs.aws.amazon.com/goto/WebAPI/sms-voice.pinpoint/GetConfigurationSetEventDestinations",
+         "SendVoiceMessage" : "https://docs.aws.amazon.com/goto/WebAPI/sms-voice.pinpoint/SendVoiceMessage",
+         "UpdateConfigurationSetEventDestination" : "https://docs.aws.amazon.com/goto/WebAPI/sms-voice.pinpoint/UpdateConfigurationSetEventDestination"
+      }
+   }
+}

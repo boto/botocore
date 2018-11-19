@@ -3,6 +3,7 @@
       "api_url" : "https://docs.aws.amazon.com/account-billing/",
       "methods" : {
          "GetCostAndUsage" : "https://docs.aws.amazon.com/goto/WebAPI/ce/GetCostAndUsage",
+         "GetCostForecast" : "https://docs.aws.amazon.com/goto/WebAPI/ce/GetCostForecast",
          "GetDimensionValues" : "https://docs.aws.amazon.com/goto/WebAPI/ce/GetDimensionValues",
          "GetReservationCoverage" : "https://docs.aws.amazon.com/goto/WebAPI/ce/GetReservationCoverage",
          "GetReservationPurchaseRecommendation" : "https://docs.aws.amazon.com/goto/WebAPI/ce/GetReservationPurchaseRecommendation",
