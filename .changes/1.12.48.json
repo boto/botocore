@@ -1,0 +1,67 @@
+[
+  {
+    "category": "``lightsail``", 
+    "description": "Update lightsail client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``workspaces``", 
+    "description": "Update workspaces client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``workdocs``", 
+    "description": "Update workdocs client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``batch``", 
+    "description": "Update batch client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ec2``", 
+    "description": "Update ec2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``devicefarm``", 
+    "description": "Update devicefarm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``rds``", 
+    "description": "Update rds client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cloudformation``", 
+    "description": "Update cloudformation client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``lambda``", 
+    "description": "Update lambda client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``config``", 
+    "description": "Update config client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cloudtrail``", 
+    "description": "Update cloudtrail client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``mediaconvert``", 
+    "description": "Update mediaconvert client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``iot``", 
+    "description": "Update iot client to latest version", 
+    "type": "api-change"
+  }
+]

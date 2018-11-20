@@ -2,6 +2,24 @@
 CHANGELOG
 =========
 
+1.12.48
+=======
+
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``workdocs``: Update workdocs client to latest version
+* api-change:``batch``: Update batch client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``devicefarm``: Update devicefarm client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``config``: Update config client to latest version
+* api-change:``cloudtrail``: Update cloudtrail client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``iot``: Update iot client to latest version
+
+
 1.12.47
 =======
 
