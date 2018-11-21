@@ -2,6 +2,46 @@
 CHANGELOG
 =========
 
+1.12.50
+=======
+
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
+1.12.49
+=======
+
+* api-change:``autoscaling-plans``: Update autoscaling-plans client to latest version
+* api-change:``xray``: Update xray client to latest version
+* api-change:``devicefarm``: Update devicefarm client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``rds-data``: Update rds-data client to latest version
+* api-change:``appsync``: Update appsync client to latest version
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+
+
+1.12.48
+=======
+
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``workdocs``: Update workdocs client to latest version
+* api-change:``batch``: Update batch client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``devicefarm``: Update devicefarm client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``config``: Update config client to latest version
+* api-change:``cloudtrail``: Update cloudtrail client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``iot``: Update iot client to latest version
+
+
 1.12.47
 =======
 

@@ -1,0 +1,57 @@
+[
+  {
+    "category": "``autoscaling-plans``", 
+    "description": "Update autoscaling-plans client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``xray``", 
+    "description": "Update xray client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``devicefarm``", 
+    "description": "Update devicefarm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ssm``", 
+    "description": "Update ssm client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``medialive``", 
+    "description": "Update medialive client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``redshift``", 
+    "description": "Update redshift client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``rds-data``", 
+    "description": "Update rds-data client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``appsync``", 
+    "description": "Update appsync client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cloudwatch``", 
+    "description": "Update cloudwatch client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``quicksight``", 
+    "description": "Update quicksight client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``cloudfront``", 
+    "description": "Update cloudfront client to latest version", 
+    "type": "api-change"
+  }
+]
