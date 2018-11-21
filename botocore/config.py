@@ -114,8 +114,8 @@ class Config(object):
         element is the path to the client certificate and the second element is
         the path to the certificate key.
 
-    :type host_prefix_injection: bool
-    :param host_prefix_injection: Whether host prefix injection should occur.
+    :type inject_host_prefix: bool
+    :param inject_host_prefix: Whether host prefix injection should occur.
 
         Defaults to True.
 
@@ -136,7 +136,7 @@ class Config(object):
         ('s3', None),
         ('retries', None),
         ('client_cert', None),
-        ('host_prefix_injection', True),
+        ('inject_host_prefix', True),
     ])
 
     def __init__(self, *args, **kwargs):
