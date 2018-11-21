@@ -1,0 +1,8 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/rds-data-2018-08-01",
+      "methods" : {
+         "ExecuteSql" : "https://docs.aws.amazon.com/goto/WebAPI/rds-data/ExecuteSql"
+      }
+   }
+}

@@ -2,6 +2,7 @@
    "documentation" : {
       "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12",
       "methods" : {
+         "BatchGetAggregateResourceConfig" : "https://docs.aws.amazon.com/goto/WebAPI/config/BatchGetAggregateResourceConfig",
          "BatchGetResourceConfig" : "https://docs.aws.amazon.com/goto/WebAPI/config/BatchGetResourceConfig",
          "DeleteAggregationAuthorization" : "https://docs.aws.amazon.com/goto/WebAPI/config/DeleteAggregationAuthorization",
          "DeleteConfigRule" : "https://docs.aws.amazon.com/goto/WebAPI/config/DeleteConfigRule",
@@ -28,12 +29,15 @@
          "DescribeRetentionConfigurations" : "https://docs.aws.amazon.com/goto/WebAPI/config/DescribeRetentionConfigurations",
          "GetAggregateComplianceDetailsByConfigRule" : "https://docs.aws.amazon.com/goto/WebAPI/config/GetAggregateComplianceDetailsByConfigRule",
          "GetAggregateConfigRuleComplianceSummary" : "https://docs.aws.amazon.com/goto/WebAPI/config/GetAggregateConfigRuleComplianceSummary",
+         "GetAggregateDiscoveredResourceCounts" : "https://docs.aws.amazon.com/goto/WebAPI/config/GetAggregateDiscoveredResourceCounts",
+         "GetAggregateResourceConfig" : "https://docs.aws.amazon.com/goto/WebAPI/config/GetAggregateResourceConfig",
          "GetComplianceDetailsByConfigRule" : "https://docs.aws.amazon.com/goto/WebAPI/config/GetComplianceDetailsByConfigRule",
          "GetComplianceDetailsByResource" : "https://docs.aws.amazon.com/goto/WebAPI/config/GetComplianceDetailsByResource",
          "GetComplianceSummaryByConfigRule" : "https://docs.aws.amazon.com/goto/WebAPI/config/GetComplianceSummaryByConfigRule",
          "GetComplianceSummaryByResourceType" : "https://docs.aws.amazon.com/goto/WebAPI/config/GetComplianceSummaryByResourceType",
          "GetDiscoveredResourceCounts" : "https://docs.aws.amazon.com/goto/WebAPI/config/GetDiscoveredResourceCounts",
          "GetResourceConfigHistory" : "https://docs.aws.amazon.com/goto/WebAPI/config/GetResourceConfigHistory",
+         "ListAggregateDiscoveredResources" : "https://docs.aws.amazon.com/goto/WebAPI/config/ListAggregateDiscoveredResources",
          "ListDiscoveredResources" : "https://docs.aws.amazon.com/goto/WebAPI/config/ListDiscoveredResources",
          "PutAggregationAuthorization" : "https://docs.aws.amazon.com/goto/WebAPI/config/PutAggregationAuthorization",
          "PutConfigRule" : "https://docs.aws.amazon.com/goto/WebAPI/config/PutConfigRule",

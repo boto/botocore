@@ -3,9 +3,13 @@
       "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12",
       "methods" : {
          "BatchGetTraces" : "https://docs.aws.amazon.com/goto/WebAPI/xray/BatchGetTraces",
+         "CreateGroup" : "https://docs.aws.amazon.com/goto/WebAPI/xray/CreateGroup",
          "CreateSamplingRule" : "https://docs.aws.amazon.com/goto/WebAPI/xray/CreateSamplingRule",
+         "DeleteGroup" : "https://docs.aws.amazon.com/goto/WebAPI/xray/DeleteGroup",
          "DeleteSamplingRule" : "https://docs.aws.amazon.com/goto/WebAPI/xray/DeleteSamplingRule",
          "GetEncryptionConfig" : "https://docs.aws.amazon.com/goto/WebAPI/xray/GetEncryptionConfig",
+         "GetGroup" : "https://docs.aws.amazon.com/goto/WebAPI/xray/GetGroup",
+         "GetGroups" : "https://docs.aws.amazon.com/goto/WebAPI/xray/GetGroups",
          "GetSamplingRules" : "https://docs.aws.amazon.com/goto/WebAPI/xray/GetSamplingRules",
          "GetSamplingStatisticSummaries" : "https://docs.aws.amazon.com/goto/WebAPI/xray/GetSamplingStatisticSummaries",
          "GetSamplingTargets" : "https://docs.aws.amazon.com/goto/WebAPI/xray/GetSamplingTargets",
@@ -15,6 +19,7 @@
          "PutEncryptionConfig" : "https://docs.aws.amazon.com/goto/WebAPI/xray/PutEncryptionConfig",
          "PutTelemetryRecords" : "https://docs.aws.amazon.com/goto/WebAPI/xray/PutTelemetryRecords",
          "PutTraceSegments" : "https://docs.aws.amazon.com/goto/WebAPI/xray/PutTraceSegments",
+         "UpdateGroup" : "https://docs.aws.amazon.com/goto/WebAPI/xray/UpdateGroup",
          "UpdateSamplingRule" : "https://docs.aws.amazon.com/goto/WebAPI/xray/UpdateSamplingRule"
       }
    }

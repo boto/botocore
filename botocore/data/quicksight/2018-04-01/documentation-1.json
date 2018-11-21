@@ -1,0 +1,22 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01",
+      "methods" : {
+         "CreateGroup" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight/CreateGroup",
+         "CreateGroupMembership" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight/CreateGroupMembership",
+         "DeleteGroup" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight/DeleteGroup",
+         "DeleteGroupMembership" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight/DeleteGroupMembership",
+         "DeleteUser" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight/DeleteUser",
+         "DescribeGroup" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight/DescribeGroup",
+         "DescribeUser" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight/DescribeUser",
+         "GetDashboardEmbedUrl" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight/GetDashboardEmbedUrl",
+         "ListGroupMemberships" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight/ListGroupMemberships",
+         "ListGroups" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight/ListGroups",
+         "ListUserGroups" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight/ListUserGroups",
+         "ListUsers" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight/ListUsers",
+         "RegisterUser" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight/RegisterUser",
+         "UpdateGroup" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight/UpdateGroup",
+         "UpdateUser" : "https://docs.aws.amazon.com/goto/WebAPI/quicksight/UpdateUser"
+      }
+   }
+}

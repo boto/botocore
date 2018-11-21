@@ -2,6 +2,7 @@
    "documentation" : {
       "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29",
       "methods" : {
+         "AssociateCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/AssociateCertificate",
          "CancelJob" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/CancelJob",
          "CreateJob" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/CreateJob",
          "CreateJobTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/CreateJobTemplate",
@@ -11,9 +12,11 @@
          "DeletePreset" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/DeletePreset",
          "DeleteQueue" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/DeleteQueue",
          "DescribeEndpoints" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/DescribeEndpoints",
+         "DisassociateCertificate" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/DisassociateCertificate",
          "GetJob" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/GetJob",
          "GetJobTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/GetJobTemplate",
          "GetPreset" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/GetPreset",
+         "GetQueue" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/GetQueue",
          "ListJobTemplates" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/ListJobTemplates",
          "ListJobs" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/ListJobs",
          "ListPresets" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconvert/ListPresets",

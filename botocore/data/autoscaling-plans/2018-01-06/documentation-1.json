@@ -6,6 +6,7 @@
          "DeleteScalingPlan" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/DeleteScalingPlan",
          "DescribeScalingPlanResources" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/DescribeScalingPlanResources",
          "DescribeScalingPlans" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/DescribeScalingPlans",
+         "GetScalingPlanResourceForecastData" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/GetScalingPlanResourceForecastData",
          "UpdateScalingPlan" : "https://docs.aws.amazon.com/goto/WebAPI/autoscaling/UpdateScalingPlan"
       }
    }

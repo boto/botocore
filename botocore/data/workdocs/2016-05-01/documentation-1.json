@@ -35,6 +35,7 @@
          "GetDocumentVersion" : "https://docs.aws.amazon.com/goto/WebAPI/workdocs/GetDocumentVersion",
          "GetFolder" : "https://docs.aws.amazon.com/goto/WebAPI/workdocs/GetFolder",
          "GetFolderPath" : "https://docs.aws.amazon.com/goto/WebAPI/workdocs/GetFolderPath",
+         "GetResources" : "https://docs.aws.amazon.com/goto/WebAPI/workdocs/GetResources",
          "InitiateDocumentVersionUpload" : "https://docs.aws.amazon.com/goto/WebAPI/workdocs/InitiateDocumentVersionUpload",
          "RemoveAllResourcePermissions" : "https://docs.aws.amazon.com/goto/WebAPI/workdocs/RemoveAllResourcePermissions",
          "RemoveResourcePermission" : "https://docs.aws.amazon.com/goto/WebAPI/workdocs/RemoveResourcePermission",
