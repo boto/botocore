@@ -2,6 +2,22 @@
 CHANGELOG
 =========
 
+1.12.49
+=======
+
+* api-change:``autoscaling-plans``: Update autoscaling-plans client to latest version
+* api-change:``xray``: Update xray client to latest version
+* api-change:``devicefarm``: Update devicefarm client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``rds-data``: Update rds-data client to latest version
+* api-change:``appsync``: Update appsync client to latest version
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``cloudfront``: Update cloudfront client to latest version
+
+
 1.12.48
 =======
 
