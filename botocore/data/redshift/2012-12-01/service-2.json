@@ -436,7 +436,7 @@
         "method":"POST",
         "requestUri":"/"
       },
-      "input":{"shape":"DeleteClusterSnapshotMessage"},
+      "input":{"shape":"DeleteClusterSnapshotRequest"},
       "output":{
         "shape":"DeleteClusterSnapshotResult",
         "resultWrapper":"DeleteClusterSnapshotResult"
@@ -3245,6 +3245,21 @@
         "ClusterSecurityGroupName":{
           "shape":"String",
           "documentation":"<p>The name of the cluster security group to be deleted.</p>"
+        }
+      },
+      "documentation":"<p/>"
+    },
+    "DeleteClusterSnapshotRequest":{
+      "type":"structure",
+      "required":["SnapshotIdentifier"],
+      "members":{
+        "SnapshotIdentifier":{
+          "shape":"String",
+          "documentation":"<p>The unique identifier of the manual snapshot to be deleted.</p> <p>Constraints: Must be the name of an existing snapshot that is in the <code>available</code>, <code>failed</code>, or <code>cancelled</code> state.</p>"
+        },
+        "SnapshotClusterIdentifier":{
+          "shape":"String",
+          "documentation":"<p>The unique identifier of the cluster the snapshot was created from. This parameter is required if your IAM user has a policy containing a snapshot resource element that specifies anything other than * for the cluster name.</p> <p>Constraints: Must be the name of valid cluster.</p>"
         }
       },
       "documentation":"<p/>"
