@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.12.51
+=======
+
+* api-change:``amplify``: Update amplify client to latest version
+* api-change:``transfer``: Update transfer client to latest version
+* api-change:``snowball``: Update snowball client to latest version
+* api-change:``robomaker``: Update robomaker client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``datasync``: Update datasync client to latest version
+
+
 1.12.50
 =======
 
