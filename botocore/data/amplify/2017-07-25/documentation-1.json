@@ -1,0 +1,27 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/amplify-2017-07-25",
+      "methods" : {
+         "CreateApp" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/CreateApp",
+         "CreateBranch" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/CreateBranch",
+         "CreateDomainAssociation" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/CreateDomainAssociation",
+         "DeleteApp" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/DeleteApp",
+         "DeleteBranch" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/DeleteBranch",
+         "DeleteDomainAssociation" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/DeleteDomainAssociation",
+         "DeleteJob" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/DeleteJob",
+         "GetApp" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/GetApp",
+         "GetBranch" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/GetBranch",
+         "GetDomainAssociation" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/GetDomainAssociation",
+         "GetJob" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/GetJob",
+         "ListApps" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/ListApps",
+         "ListBranches" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/ListBranches",
+         "ListDomainAssociations" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/ListDomainAssociations",
+         "ListJobs" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/ListJobs",
+         "StartJob" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/StartJob",
+         "StopJob" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/StopJob",
+         "UpdateApp" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/UpdateApp",
+         "UpdateBranch" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/UpdateBranch",
+         "UpdateDomainAssociation" : "https://docs.aws.amazon.com/goto/WebAPI/amplify/UpdateDomainAssociation"
+      }
+   }
+}

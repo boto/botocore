@@ -17,6 +17,7 @@
          "DeleteInvitations" : "https://docs.aws.amazon.com/goto/WebAPI/guardduty/DeleteInvitations",
          "DeleteMembers" : "https://docs.aws.amazon.com/goto/WebAPI/guardduty/DeleteMembers",
          "DeleteThreatIntelSet" : "https://docs.aws.amazon.com/goto/WebAPI/guardduty/DeleteThreatIntelSet",
+         "DisassociateFromMasterAccount" : "https://docs.aws.amazon.com/goto/WebAPI/guardduty/DisassociateFromMasterAccount",
          "DisassociateMembers" : "https://docs.aws.amazon.com/goto/WebAPI/guardduty/DisassociateMembers",
          "GetDetector" : "https://docs.aws.amazon.com/goto/WebAPI/guardduty/GetDetector",
          "GetFilter" : "https://docs.aws.amazon.com/goto/WebAPI/guardduty/GetFilter",

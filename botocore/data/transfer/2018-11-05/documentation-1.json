@@ -1,0 +1,25 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/transfer-2018-11-05",
+      "methods" : {
+         "CreateServer" : "https://docs.aws.amazon.com/goto/WebAPI/transfer/CreateServer",
+         "CreateUser" : "https://docs.aws.amazon.com/goto/WebAPI/transfer/CreateUser",
+         "DeleteServer" : "https://docs.aws.amazon.com/goto/WebAPI/transfer/DeleteServer",
+         "DeleteSshPublicKey" : "https://docs.aws.amazon.com/goto/WebAPI/transfer/DeleteSshPublicKey",
+         "DeleteUser" : "https://docs.aws.amazon.com/goto/WebAPI/transfer/DeleteUser",
+         "DescribeServer" : "https://docs.aws.amazon.com/goto/WebAPI/transfer/DescribeServer",
+         "DescribeUser" : "https://docs.aws.amazon.com/goto/WebAPI/transfer/DescribeUser",
+         "ImportSshPublicKey" : "https://docs.aws.amazon.com/goto/WebAPI/transfer/ImportSshPublicKey",
+         "ListServers" : "https://docs.aws.amazon.com/goto/WebAPI/transfer/ListServers",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/transfer/ListTagsForResource",
+         "ListUsers" : "https://docs.aws.amazon.com/goto/WebAPI/transfer/ListUsers",
+         "StartServer" : "https://docs.aws.amazon.com/goto/WebAPI/transfer/StartServer",
+         "StopServer" : "https://docs.aws.amazon.com/goto/WebAPI/transfer/StopServer",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/transfer/TagResource",
+         "TestIdentityProvider" : "https://docs.aws.amazon.com/goto/WebAPI/transfer/TestIdentityProvider",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/transfer/UntagResource",
+         "UpdateServer" : "https://docs.aws.amazon.com/goto/WebAPI/transfer/UpdateServer",
+         "UpdateUser" : "https://docs.aws.amazon.com/goto/WebAPI/transfer/UpdateUser"
+      }
+   }
+}

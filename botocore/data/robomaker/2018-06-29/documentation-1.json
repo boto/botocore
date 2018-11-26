@@ -1,0 +1,39 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker-2018-06-29",
+      "methods" : {
+         "BatchDescribeSimulationJob" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/BatchDescribeSimulationJob",
+         "CancelSimulationJob" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/CancelSimulationJob",
+         "CreateDeploymentJob" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/CreateDeploymentJob",
+         "CreateFleet" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/CreateFleet",
+         "CreateRobot" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/CreateRobot",
+         "CreateRobotApplication" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/CreateRobotApplication",
+         "CreateRobotApplicationVersion" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/CreateRobotApplicationVersion",
+         "CreateSimulationApplication" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/CreateSimulationApplication",
+         "CreateSimulationApplicationVersion" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/CreateSimulationApplicationVersion",
+         "CreateSimulationJob" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/CreateSimulationJob",
+         "DeleteFleet" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/DeleteFleet",
+         "DeleteRobot" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/DeleteRobot",
+         "DeleteRobotApplication" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/DeleteRobotApplication",
+         "DeleteSimulationApplication" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/DeleteSimulationApplication",
+         "DeregisterRobot" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/DeregisterRobot",
+         "DescribeDeploymentJob" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/DescribeDeploymentJob",
+         "DescribeFleet" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/DescribeFleet",
+         "DescribeRobot" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/DescribeRobot",
+         "DescribeRobotApplication" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/DescribeRobotApplication",
+         "DescribeSimulationApplication" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/DescribeSimulationApplication",
+         "DescribeSimulationJob" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/DescribeSimulationJob",
+         "ListDeploymentJobs" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/ListDeploymentJobs",
+         "ListFleets" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/ListFleets",
+         "ListRobotApplications" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/ListRobotApplications",
+         "ListRobots" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/ListRobots",
+         "ListSimulationApplications" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/ListSimulationApplications",
+         "ListSimulationJobs" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/ListSimulationJobs",
+         "RegisterRobot" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/RegisterRobot",
+         "RestartSimulationJob" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/RestartSimulationJob",
+         "SyncDeploymentJob" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/SyncDeploymentJob",
+         "UpdateRobotApplication" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/UpdateRobotApplication",
+         "UpdateSimulationApplication" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/UpdateSimulationApplication"
+      }
+   }
+}

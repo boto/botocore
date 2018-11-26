@@ -1,0 +1,32 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09",
+      "methods" : {
+         "CancelTaskExecution" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/CancelTaskExecution",
+         "CreateAgent" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/CreateAgent",
+         "CreateLocationEfs" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/CreateLocationEfs",
+         "CreateLocationNfs" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/CreateLocationNfs",
+         "CreateLocationS3" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/CreateLocationS3",
+         "CreateTask" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/CreateTask",
+         "DeleteAgent" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/DeleteAgent",
+         "DeleteLocation" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/DeleteLocation",
+         "DeleteTask" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/DeleteTask",
+         "DescribeAgent" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/DescribeAgent",
+         "DescribeLocationEfs" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/DescribeLocationEfs",
+         "DescribeLocationNfs" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/DescribeLocationNfs",
+         "DescribeLocationS3" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/DescribeLocationS3",
+         "DescribeTask" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/DescribeTask",
+         "DescribeTaskExecution" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/DescribeTaskExecution",
+         "ListAgents" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/ListAgents",
+         "ListLocations" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/ListLocations",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/ListTagsForResource",
+         "ListTaskExecutions" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/ListTaskExecutions",
+         "ListTasks" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/ListTasks",
+         "StartTaskExecution" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/StartTaskExecution",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/UntagResource",
+         "UpdateAgent" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/UpdateAgent",
+         "UpdateTask" : "https://docs.aws.amazon.com/goto/WebAPI/datasync/UpdateTask"
+      }
+   }
+}
