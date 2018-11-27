@@ -40,6 +40,7 @@ SERVICE_RENAMES = {
     'elbv2': 'elastic-load-balancing-v2',
     'es': 'elasticsearch-service',
     'events': 'cloudwatch-events',
+    'globalaccelerator': 'global-accelerator',
     'iot-data': 'iot-data-plane',
     'iot-jobs-data': 'iot-jobs-data-plane',
     'iot1click-devices': 'iot-1click-devices-service',
