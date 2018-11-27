@@ -2,16 +2,33 @@
    "documentation" : {
       "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/sms-2016-10-24",
       "methods" : {
+         "CreateApp" : "https://docs.aws.amazon.com/goto/WebAPI/sms/CreateApp",
          "CreateReplicationJob" : "https://docs.aws.amazon.com/goto/WebAPI/sms/CreateReplicationJob",
+         "DeleteApp" : "https://docs.aws.amazon.com/goto/WebAPI/sms/DeleteApp",
+         "DeleteAppLaunchConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/sms/DeleteAppLaunchConfiguration",
+         "DeleteAppReplicationConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/sms/DeleteAppReplicationConfiguration",
          "DeleteReplicationJob" : "https://docs.aws.amazon.com/goto/WebAPI/sms/DeleteReplicationJob",
          "DeleteServerCatalog" : "https://docs.aws.amazon.com/goto/WebAPI/sms/DeleteServerCatalog",
          "DisassociateConnector" : "https://docs.aws.amazon.com/goto/WebAPI/sms/DisassociateConnector",
+         "GenerateChangeSet" : "https://docs.aws.amazon.com/goto/WebAPI/sms/GenerateChangeSet",
+         "GenerateTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/sms/GenerateTemplate",
+         "GetApp" : "https://docs.aws.amazon.com/goto/WebAPI/sms/GetApp",
+         "GetAppLaunchConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/sms/GetAppLaunchConfiguration",
+         "GetAppReplicationConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/sms/GetAppReplicationConfiguration",
          "GetConnectors" : "https://docs.aws.amazon.com/goto/WebAPI/sms/GetConnectors",
          "GetReplicationJobs" : "https://docs.aws.amazon.com/goto/WebAPI/sms/GetReplicationJobs",
          "GetReplicationRuns" : "https://docs.aws.amazon.com/goto/WebAPI/sms/GetReplicationRuns",
          "GetServers" : "https://docs.aws.amazon.com/goto/WebAPI/sms/GetServers",
          "ImportServerCatalog" : "https://docs.aws.amazon.com/goto/WebAPI/sms/ImportServerCatalog",
+         "LaunchApp" : "https://docs.aws.amazon.com/goto/WebAPI/sms/LaunchApp",
+         "ListApps" : "https://docs.aws.amazon.com/goto/WebAPI/sms/ListApps",
+         "PutAppLaunchConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/sms/PutAppLaunchConfiguration",
+         "PutAppReplicationConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/sms/PutAppReplicationConfiguration",
+         "StartAppReplication" : "https://docs.aws.amazon.com/goto/WebAPI/sms/StartAppReplication",
          "StartOnDemandReplicationRun" : "https://docs.aws.amazon.com/goto/WebAPI/sms/StartOnDemandReplicationRun",
+         "StopAppReplication" : "https://docs.aws.amazon.com/goto/WebAPI/sms/StopAppReplication",
+         "TerminateApp" : "https://docs.aws.amazon.com/goto/WebAPI/sms/TerminateApp",
+         "UpdateApp" : "https://docs.aws.amazon.com/goto/WebAPI/sms/UpdateApp",
          "UpdateReplicationJob" : "https://docs.aws.amazon.com/goto/WebAPI/sms/UpdateReplicationJob"
       }
    }

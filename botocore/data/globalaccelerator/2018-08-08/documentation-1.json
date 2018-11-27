@@ -1,0 +1,24 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator-2018-08-08",
+      "methods" : {
+         "CreateAccelerator" : "https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator/CreateAccelerator",
+         "CreateEndpointGroup" : "https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator/CreateEndpointGroup",
+         "CreateListener" : "https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator/CreateListener",
+         "DeleteAccelerator" : "https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator/DeleteAccelerator",
+         "DeleteEndpointGroup" : "https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator/DeleteEndpointGroup",
+         "DeleteListener" : "https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator/DeleteListener",
+         "DescribeAccelerator" : "https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator/DescribeAccelerator",
+         "DescribeAcceleratorAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator/DescribeAcceleratorAttributes",
+         "DescribeEndpointGroup" : "https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator/DescribeEndpointGroup",
+         "DescribeListener" : "https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator/DescribeListener",
+         "ListAccelerators" : "https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator/ListAccelerators",
+         "ListEndpointGroups" : "https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator/ListEndpointGroups",
+         "ListListeners" : "https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator/ListListeners",
+         "UpdateAccelerator" : "https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator/UpdateAccelerator",
+         "UpdateAcceleratorAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator/UpdateAcceleratorAttributes",
+         "UpdateEndpointGroup" : "https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator/UpdateEndpointGroup",
+         "UpdateListener" : "https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator/UpdateListener"
+      }
+   }
+}

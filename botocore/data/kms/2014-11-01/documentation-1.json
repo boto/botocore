@@ -3,15 +3,20 @@
       "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/kms-2014-11-01",
       "methods" : {
          "CancelKeyDeletion" : "https://docs.aws.amazon.com/goto/WebAPI/kms/CancelKeyDeletion",
+         "ConnectCustomKeyStore" : "https://docs.aws.amazon.com/goto/WebAPI/kms/ConnectCustomKeyStore",
          "CreateAlias" : "https://docs.aws.amazon.com/goto/WebAPI/kms/CreateAlias",
+         "CreateCustomKeyStore" : "https://docs.aws.amazon.com/goto/WebAPI/kms/CreateCustomKeyStore",
          "CreateGrant" : "https://docs.aws.amazon.com/goto/WebAPI/kms/CreateGrant",
          "CreateKey" : "https://docs.aws.amazon.com/goto/WebAPI/kms/CreateKey",
          "Decrypt" : "https://docs.aws.amazon.com/goto/WebAPI/kms/Decrypt",
          "DeleteAlias" : "https://docs.aws.amazon.com/goto/WebAPI/kms/DeleteAlias",
+         "DeleteCustomKeyStore" : "https://docs.aws.amazon.com/goto/WebAPI/kms/DeleteCustomKeyStore",
          "DeleteImportedKeyMaterial" : "https://docs.aws.amazon.com/goto/WebAPI/kms/DeleteImportedKeyMaterial",
+         "DescribeCustomKeyStores" : "https://docs.aws.amazon.com/goto/WebAPI/kms/DescribeCustomKeyStores",
          "DescribeKey" : "https://docs.aws.amazon.com/goto/WebAPI/kms/DescribeKey",
          "DisableKey" : "https://docs.aws.amazon.com/goto/WebAPI/kms/DisableKey",
          "DisableKeyRotation" : "https://docs.aws.amazon.com/goto/WebAPI/kms/DisableKeyRotation",
+         "DisconnectCustomKeyStore" : "https://docs.aws.amazon.com/goto/WebAPI/kms/DisconnectCustomKeyStore",
          "EnableKey" : "https://docs.aws.amazon.com/goto/WebAPI/kms/EnableKey",
          "EnableKeyRotation" : "https://docs.aws.amazon.com/goto/WebAPI/kms/EnableKeyRotation",
          "Encrypt" : "https://docs.aws.amazon.com/goto/WebAPI/kms/Encrypt",
@@ -36,6 +41,7 @@
          "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/kms/TagResource",
          "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/kms/UntagResource",
          "UpdateAlias" : "https://docs.aws.amazon.com/goto/WebAPI/kms/UpdateAlias",
+         "UpdateCustomKeyStore" : "https://docs.aws.amazon.com/goto/WebAPI/kms/UpdateCustomKeyStore",
          "UpdateKeyDescription" : "https://docs.aws.amazon.com/goto/WebAPI/kms/UpdateKeyDescription"
       }
    }
