@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+1.12.52
+=======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``sms``: Update sms client to latest version
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``iotanalytics``: Update iotanalytics client to latest version
+* api-change:``greengrass``: Update greengrass client to latest version
+* api-change:``kms``: Update kms client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``globalaccelerator``: Update globalaccelerator client to latest version
+
+
 1.12.51
 =======
 
