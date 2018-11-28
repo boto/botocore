@@ -46,6 +46,7 @@ SERVICE_RENAMES = {
     'iot1click-devices': 'iot-1click-devices-service',
     'iot1click-projects': 'iot-1click-projects',
     'kinesisanalytics': 'kinesis-analytics',
+    'kinesisanalyticsv2': 'kinesis-analytics-v2',
     'kinesisvideo': 'kinesis-video',
     'lex-models': 'lex-model-building-service',
     'lex-runtime': 'lex-runtime-service',
