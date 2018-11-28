@@ -1,0 +1,18 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/fsx-2018-03-01",
+      "methods" : {
+         "CreateBackup" : "https://docs.aws.amazon.com/goto/WebAPI/fsx/CreateBackup",
+         "CreateFileSystem" : "https://docs.aws.amazon.com/goto/WebAPI/fsx/CreateFileSystem",
+         "CreateFileSystemFromBackup" : "https://docs.aws.amazon.com/goto/WebAPI/fsx/CreateFileSystemFromBackup",
+         "DeleteBackup" : "https://docs.aws.amazon.com/goto/WebAPI/fsx/DeleteBackup",
+         "DeleteFileSystem" : "https://docs.aws.amazon.com/goto/WebAPI/fsx/DeleteFileSystem",
+         "DescribeBackups" : "https://docs.aws.amazon.com/goto/WebAPI/fsx/DescribeBackups",
+         "DescribeFileSystems" : "https://docs.aws.amazon.com/goto/WebAPI/fsx/DescribeFileSystems",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/fsx/ListTagsForResource",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/fsx/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/fsx/UntagResource",
+         "UpdateFileSystem" : "https://docs.aws.amazon.com/goto/WebAPI/fsx/UpdateFileSystem"
+      }
+   }
+}

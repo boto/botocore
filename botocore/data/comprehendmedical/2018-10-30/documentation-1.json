@@ -1,0 +1,9 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/comprehendmedical-2018-10-30",
+      "methods" : {
+         "DetectEntities" : "https://docs.aws.amazon.com/goto/WebAPI/comprehendmedical/DetectEntities",
+         "DetectPHI" : "https://docs.aws.amazon.com/goto/WebAPI/comprehendmedical/DetectPHI"
+      }
+   }
+}

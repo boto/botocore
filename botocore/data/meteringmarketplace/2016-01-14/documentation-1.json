@@ -4,6 +4,7 @@
       "methods" : {
          "BatchMeterUsage" : "https://docs.aws.amazon.com/goto/WebAPI/metering.marketplace/BatchMeterUsage",
          "MeterUsage" : "https://docs.aws.amazon.com/goto/WebAPI/metering.marketplace/MeterUsage",
+         "RegisterUsage" : "https://docs.aws.amazon.com/goto/WebAPI/metering.marketplace/RegisterUsage",
          "ResolveCustomer" : "https://docs.aws.amazon.com/goto/WebAPI/metering.marketplace/ResolveCustomer"
       }
    }

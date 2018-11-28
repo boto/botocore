@@ -1,0 +1,36 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub-2018-10-26",
+      "methods" : {
+         "AcceptInvitation" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/AcceptInvitation",
+         "BatchDisableStandards" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/BatchDisableStandards",
+         "BatchEnableStandards" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/BatchEnableStandards",
+         "BatchImportFindings" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/BatchImportFindings",
+         "CreateInsight" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/CreateInsight",
+         "CreateMembers" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/CreateMembers",
+         "DeclineInvitations" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/DeclineInvitations",
+         "DeleteInsight" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/DeleteInsight",
+         "DeleteInvitations" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/DeleteInvitations",
+         "DeleteMembers" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/DeleteMembers",
+         "DisableImportFindingsForProduct" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/DisableImportFindingsForProduct",
+         "DisableSecurityHub" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/DisableSecurityHub",
+         "DisassociateFromMasterAccount" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/DisassociateFromMasterAccount",
+         "DisassociateMembers" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/DisassociateMembers",
+         "EnableImportFindingsForProduct" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/EnableImportFindingsForProduct",
+         "EnableSecurityHub" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/EnableSecurityHub",
+         "GetEnabledStandards" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/GetEnabledStandards",
+         "GetFindings" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/GetFindings",
+         "GetInsightResults" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/GetInsightResults",
+         "GetInsights" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/GetInsights",
+         "GetInvitationsCount" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/GetInvitationsCount",
+         "GetMasterAccount" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/GetMasterAccount",
+         "GetMembers" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/GetMembers",
+         "InviteMembers" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/InviteMembers",
+         "ListEnabledProductsForImport" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/ListEnabledProductsForImport",
+         "ListInvitations" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/ListInvitations",
+         "ListMembers" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/ListMembers",
+         "UpdateFindings" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/UpdateFindings",
+         "UpdateInsight" : "https://docs.aws.amazon.com/goto/WebAPI/securityhub/UpdateInsight"
+      }
+   }
+}

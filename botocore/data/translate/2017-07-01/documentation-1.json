@@ -2,6 +2,10 @@
    "documentation" : {
       "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01",
       "methods" : {
+         "DeleteTerminology" : "https://docs.aws.amazon.com/goto/WebAPI/translate/DeleteTerminology",
+         "GetTerminology" : "https://docs.aws.amazon.com/goto/WebAPI/translate/GetTerminology",
+         "ImportTerminology" : "https://docs.aws.amazon.com/goto/WebAPI/translate/ImportTerminology",
+         "ListTerminologies" : "https://docs.aws.amazon.com/goto/WebAPI/translate/ListTerminologies",
          "TranslateText" : "https://docs.aws.amazon.com/goto/WebAPI/translate/TranslateText"
       }
    }

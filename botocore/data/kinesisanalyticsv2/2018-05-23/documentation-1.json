@@ -1,0 +1,28 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics-2018-05-23",
+      "methods" : {
+         "AddApplicationCloudWatchLoggingOption" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/AddApplicationCloudWatchLoggingOption",
+         "AddApplicationInput" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/AddApplicationInput",
+         "AddApplicationInputProcessingConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/AddApplicationInputProcessingConfiguration",
+         "AddApplicationOutput" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/AddApplicationOutput",
+         "AddApplicationReferenceDataSource" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/AddApplicationReferenceDataSource",
+         "CreateApplication" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/CreateApplication",
+         "CreateApplicationSnapshot" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/CreateApplicationSnapshot",
+         "DeleteApplication" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/DeleteApplication",
+         "DeleteApplicationCloudWatchLoggingOption" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/DeleteApplicationCloudWatchLoggingOption",
+         "DeleteApplicationInputProcessingConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/DeleteApplicationInputProcessingConfiguration",
+         "DeleteApplicationOutput" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/DeleteApplicationOutput",
+         "DeleteApplicationReferenceDataSource" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/DeleteApplicationReferenceDataSource",
+         "DeleteApplicationSnapshot" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/DeleteApplicationSnapshot",
+         "DescribeApplication" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/DescribeApplication",
+         "DescribeApplicationSnapshot" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/DescribeApplicationSnapshot",
+         "DiscoverInputSchema" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/DiscoverInputSchema",
+         "ListApplicationSnapshots" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/ListApplicationSnapshots",
+         "ListApplications" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/ListApplications",
+         "StartApplication" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/StartApplication",
+         "StopApplication" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/StopApplication",
+         "UpdateApplication" : "https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics/UpdateApplication"
+      }
+   }
+}

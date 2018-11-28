@@ -29,6 +29,8 @@
          "RestoreTableToPointInTime" : "https://docs.aws.amazon.com/goto/WebAPI/dynamodb/RestoreTableToPointInTime",
          "Scan" : "https://docs.aws.amazon.com/goto/WebAPI/dynamodb/Scan",
          "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/dynamodb/TagResource",
+         "TransactGetItems" : "https://docs.aws.amazon.com/goto/WebAPI/dynamodb/TransactGetItems",
+         "TransactWriteItems" : "https://docs.aws.amazon.com/goto/WebAPI/dynamodb/TransactWriteItems",
          "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/dynamodb/UntagResource",
          "UpdateContinuousBackups" : "https://docs.aws.amazon.com/goto/WebAPI/dynamodb/UpdateContinuousBackups",
          "UpdateGlobalTable" : "https://docs.aws.amazon.com/goto/WebAPI/dynamodb/UpdateGlobalTable",

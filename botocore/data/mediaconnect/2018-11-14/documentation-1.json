@@ -1,0 +1,21 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14",
+      "methods" : {
+         "AddFlowOutputs" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/AddFlowOutputs",
+         "CreateFlow" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/CreateFlow",
+         "DeleteFlow" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/DeleteFlow",
+         "DescribeFlow" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/DescribeFlow",
+         "GrantFlowEntitlements" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/GrantFlowEntitlements",
+         "ListEntitlements" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/ListEntitlements",
+         "ListFlows" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/ListFlows",
+         "RemoveFlowOutput" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/RemoveFlowOutput",
+         "RevokeFlowEntitlement" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/RevokeFlowEntitlement",
+         "StartFlow" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/StartFlow",
+         "StopFlow" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/StopFlow",
+         "UpdateFlowEntitlement" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/UpdateFlowEntitlement",
+         "UpdateFlowOutput" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/UpdateFlowOutput",
+         "UpdateFlowSource" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/UpdateFlowSource"
+      }
+   }
+}
