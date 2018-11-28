@@ -2,6 +2,21 @@
 CHANGELOG
 =========
 
+1.12.53
+=======
+
+* api-change:``meteringmarketplace``: Update meteringmarketplace client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+* api-change:``translate``: Update translate client to latest version
+* api-change:``logs``: Update logs client to latest version
+* api-change:``kinesisanalytics``: Update kinesisanalytics client to latest version
+* api-change:``comprehendmedical``: Update comprehendmedical client to latest version
+* api-change:``mediaconnect``: Update mediaconnect client to latest version
+* api-change:``kinesisanalyticsv2``: Update kinesisanalyticsv2 client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+
+
 1.12.52
 =======
 
