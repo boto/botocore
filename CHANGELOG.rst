@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.54
+=======
+
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+
+
 1.12.53
 =======
 
