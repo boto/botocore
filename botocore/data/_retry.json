@@ -125,6 +125,14 @@
           "growth_factor": 2
         },
         "policies": {
+	  "still_processing": {
+	    "applies_when": {
+	      "response": {
+		"service_error_code": "TransactionInProgressException",
+		"http_status_code": 400
+	      }
+	    }
+	  },
           "throughput_exceeded": {
             "applies_when": {
               "response": {
