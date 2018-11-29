@@ -19,6 +19,7 @@ SERVICE_RENAMES = {
     'alexaforbusiness': 'alexa-for-business',
     'apigateway': 'api-gateway',
     'application-autoscaling': 'application-auto-scaling',
+    'appmesh': 'app-mesh',
     'autoscaling': 'auto-scaling',
     'autoscaling-plans': 'auto-scaling-plans',
     'ce': 'cost-explorer',

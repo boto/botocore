@@ -55,7 +55,7 @@ class Shape(object):
                         'payload', 'streaming', 'timestampFormat',
                         'xmlNamespace', 'resultWrapper', 'xmlAttribute',
                         'eventstream', 'event', 'eventheader', 'eventpayload',
-                        'jsonvalue', 'timestampFormat']
+                        'jsonvalue', 'timestampFormat', 'hostLabel']
     METADATA_ATTRS = ['required', 'min', 'max', 'sensitive', 'enum',
                       'idempotencyToken', 'error', 'exception']
     MAP_TYPE = OrderedDict
@@ -452,6 +452,10 @@ class OperationModel(object):
     def error_shapes(self):
         shapes = self._operation_model.get("errors", [])
         return list(self._service_model.resolve_shape_ref(s) for s in shapes)
+
+    @CachedProperty
+    def endpoint(self):
+        return self._operation_model.get('endpoint')
 
     @CachedProperty
     def has_event_stream_input(self):

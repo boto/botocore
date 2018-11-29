@@ -138,6 +138,7 @@ class ClientArgsCreator(object):
                 proxies=client_config.proxies,
                 retries=client_config.retries,
                 client_cert=client_config.client_cert,
+                inject_host_prefix=client_config.inject_host_prefix,
             )
         s3_config = self.compute_s3_config(scoped_config,
                                            client_config)
