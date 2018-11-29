@@ -88,6 +88,7 @@ class Serializer(object):
         a dictionary of:
 
             * 'url_path'
+            * 'host_prefix'
             * 'query_string'
             * 'headers'
             * 'body'
@@ -104,6 +105,7 @@ class Serializer(object):
              'headers': {},
              'method': 'POST',
              'query_string': '',
+             'host_prefix': 'value.',
              'url_path': '/'}
 
         :param parameters: The dictionary input parameters for the
@@ -167,6 +169,21 @@ class Serializer(object):
         return base64.b64encode(value).strip().decode(
             self.DEFAULT_ENCODING)
 
+    def _expand_host_prefix(self, parameters, operation_model):
+        operation_endpoint = operation_model.endpoint
+        if operation_endpoint is None:
+            return None
+
+        host_prefix_expression = operation_endpoint['hostPrefix']
+        input_members = operation_model.input_shape.members
+        host_labels = [
+            member for member, shape in input_members.items()
+            if shape.serialization.get('hostLabel')
+        ]
+        format_kwargs = dict((name, parameters[name]) for name in host_labels)
+
+        return host_prefix_expression.format(**format_kwargs)
+
 
 class QuerySerializer(Serializer):
 
@@ -188,6 +205,11 @@ class QuerySerializer(Serializer):
         if shape is not None:
             self._serialize(body_params, parameters, shape)
         serialized['body'] = body_params
+
+        host_prefix = self._expand_host_prefix(parameters, operation_model)
+        if host_prefix is not None:
+            serialized['host_prefix'] = host_prefix
+
         return serialized
 
     def _serialize(self, serialized, value, shape, prefix=''):
@@ -316,6 +338,11 @@ class JSONSerializer(Serializer):
         if input_shape is not None:
             self._serialize(body, parameters, input_shape)
         serialized['body'] = json.dumps(body).encode(self.DEFAULT_ENCODING)
+
+        host_prefix = self._expand_host_prefix(parameters, operation_model)
+        if host_prefix is not None:
+            serialized['host_prefix'] = host_prefix
+
         return serialized
 
     def _serialize(self, serialized, value, shape, key=None):
@@ -428,6 +455,11 @@ class BaseRestSerializer(Serializer):
             serialized['headers'] = partitioned['headers']
         self._serialize_payload(partitioned, parameters,
                                 serialized, shape, shape_members)
+
+        host_prefix = self._expand_host_prefix(parameters, operation_model)
+        if host_prefix is not None:
+            serialized['host_prefix'] = host_prefix
+
         return serialized
 
     def _render_uri_template(self, uri_template, params):

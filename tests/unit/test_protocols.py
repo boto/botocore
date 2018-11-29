@@ -56,7 +56,7 @@ import copy
 from base64 import b64decode
 from dateutil.tz import tzutc
 
-from botocore.compat import json, OrderedDict
+from botocore.compat import json, OrderedDict, urlsplit
 from botocore.eventstream import EventStream
 from botocore.model import ServiceModel, OperationModel
 from botocore.serialize import EC2Serializer, QuerySerializer, \
@@ -64,6 +64,7 @@ from botocore.serialize import EC2Serializer, QuerySerializer, \
 from botocore.parsers import QueryParser, JSONParser, \
         RestJSONParser, RestXMLParser
 from botocore.utils import parse_timestamp, percent_encode_sequence
+from botocore.awsrequest import prepare_request_dict
 from calendar import timegm
 
 from nose.tools import assert_equal as _assert_equal
@@ -120,9 +121,11 @@ def _test_input(json_description, case, basename):
     operation_model = OperationModel(case['given'], model)
     request = serializer.serialize_to_request(case['params'], operation_model)
     _serialize_request_description(request)
+    client_endpoint = service_description.get('clientEndpoint')
     try:
         _assert_request_body_is_bytes(request['body'])
         _assert_requests_equal(request, case['serialized'])
+        _assert_endpoints_equal(request, case['serialized'], client_endpoint)
     except AssertionError as e:
         _input_failure_message(protocol_type, case, request, e)
 
@@ -131,6 +134,14 @@ def _assert_request_body_is_bytes(body):
     if not isinstance(body, bytes):
         raise AssertionError("Expected body to be serialized as type "
                              "bytes(), instead got: %s" % type(body))
+
+
+def _assert_endpoints_equal(actual, expected, endpoint):
+    if 'host' not in expected:
+        return
+    prepare_request_dict(actual, endpoint)
+    actual_host = urlsplit(actual['url']).netloc
+    assert_equal(actual_host, expected['host'], 'Host')
 
 
 class MockRawResponse(object):
@@ -292,7 +303,7 @@ def _serialize_request_description(request_dict):
         encoded = percent_encode_sequence(request_dict['body']).encode('utf-8')
         request_dict['body'] = encoded
     if isinstance(request_dict.get('query_string'), dict):
-        encoded = percent_encode_sequence(request_dict.pop('query_string'))
+        encoded = percent_encode_sequence(request_dict.get('query_string'))
         if encoded:
             # 'requests' automatically handle this, but we in the
             # test runner we need to handle the case where the url_path
@@ -304,7 +315,7 @@ def _serialize_request_description(request_dict):
 
 
 def _assert_requests_equal(actual, expected):
-    assert_equal(actual['body'], expected['body'].encode('utf-8'),
+    assert_equal(actual['body'], expected.get('body', '').encode('utf-8'),
                  'Body value')
     actual_headers = dict(actual['headers'])
     expected_headers = expected.get('headers', {})
