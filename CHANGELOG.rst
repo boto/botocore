@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.12.55
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``appmesh``: Update appmesh client to latest version
+* api-change:``license-manager``: Update license-manager client to latest version
+* api-change:``servicediscovery``: Update servicediscovery client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+
+
 1.12.54
 =======
 
