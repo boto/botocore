@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+1.12.56
+=======
+
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``stepfunctions``: Update stepfunctions client to latest version
+* api-change:``xray``: Update xray client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``events``: Update events client to latest version
+* api-change:``serverlessrepo``: Update serverlessrepo client to latest version
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``s3``: Update s3 client to latest version
+
+
 1.12.55
 =======
 
