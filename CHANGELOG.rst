@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.57
+=======
+
+* bugfix:s3: Add md5 header injection to new operations that require it
+* api-change:``s3``: Update s3 client to latest version
+
+
 1.12.56
 =======
 

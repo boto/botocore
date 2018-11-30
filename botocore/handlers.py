@@ -955,6 +955,9 @@ BUILTIN_HANDLERS = [
     ('before-call.s3.PutBucketVersioning', conditionally_calculate_md5),
     ('before-call.s3.PutBucketWebsite', conditionally_calculate_md5),
     ('before-call.s3.PutObjectAcl', conditionally_calculate_md5),
+    ('before-call.s3.PutObjectLegalHold', calculate_md5),
+    ('before-call.s3.PutObjectRetention', calculate_md5),
+    ('before-call.s3.PutObjectLockConfiguration', calculate_md5),
 
     ('before-parameter-build.s3.CopyObject',
      handle_copy_source_param),
