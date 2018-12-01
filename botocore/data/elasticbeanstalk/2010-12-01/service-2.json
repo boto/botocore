@@ -1803,7 +1803,7 @@
       "members":{
         "EnvironmentName":{
           "shape":"EnvironmentName",
-          "documentation":"<p>Specify the environment by name.</p> <p>You must specify either this or an EnvironmentName, or both.</p>"
+          "documentation":"<p>Specify the environment by name.</p> <p>You must specify either this or an EnvironmentId, or both.</p>"
         },
         "EnvironmentId":{
           "shape":"EnvironmentId",
