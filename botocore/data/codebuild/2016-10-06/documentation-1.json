@@ -10,6 +10,7 @@
          "DeleteProject" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/DeleteProject",
          "DeleteWebhook" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/DeleteWebhook",
          "InvalidateProjectCache" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/InvalidateProjectCache",
+         "ListBuilds" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/ListBuilds",
          "ListBuildsForProject" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/ListBuildsForProject",
          "ListCuratedEnvironmentImages" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/ListCuratedEnvironmentImages",
          "ListProjects" : "https://docs.aws.amazon.com/goto/WebAPI/codebuild/ListProjects",

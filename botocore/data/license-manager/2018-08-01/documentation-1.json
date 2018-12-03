@@ -1,0 +1,22 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/license-manager-2018-08-01",
+      "methods" : {
+         "CreateLicenseConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/license-manager/CreateLicenseConfiguration",
+         "DeleteLicenseConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/license-manager/DeleteLicenseConfiguration",
+         "GetLicenseConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/license-manager/GetLicenseConfiguration",
+         "GetServiceSettings" : "https://docs.aws.amazon.com/goto/WebAPI/license-manager/GetServiceSettings",
+         "ListAssociationsForLicenseConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/license-manager/ListAssociationsForLicenseConfiguration",
+         "ListLicenseConfigurations" : "https://docs.aws.amazon.com/goto/WebAPI/license-manager/ListLicenseConfigurations",
+         "ListLicenseSpecificationsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/license-manager/ListLicenseSpecificationsForResource",
+         "ListResourceInventory" : "https://docs.aws.amazon.com/goto/WebAPI/license-manager/ListResourceInventory",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/license-manager/ListTagsForResource",
+         "ListUsageForLicenseConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/license-manager/ListUsageForLicenseConfiguration",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/license-manager/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/license-manager/UntagResource",
+         "UpdateLicenseConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/license-manager/UpdateLicenseConfiguration",
+         "UpdateLicenseSpecificationsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/license-manager/UpdateLicenseSpecificationsForResource",
+         "UpdateServiceSettings" : "https://docs.aws.amazon.com/goto/WebAPI/license-manager/UpdateServiceSettings"
+      }
+   }
+}

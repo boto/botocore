@@ -10,6 +10,7 @@
          "GetApplication" : "https://docs.aws.amazon.com/goto/WebAPI/serverlessrepo/GetApplication",
          "GetApplicationPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/serverlessrepo/GetApplicationPolicy",
          "GetCloudFormationTemplate" : "https://docs.aws.amazon.com/goto/WebAPI/serverlessrepo/GetCloudFormationTemplate",
+         "ListApplicationDependencies" : "https://docs.aws.amazon.com/goto/WebAPI/serverlessrepo/ListApplicationDependencies",
          "ListApplicationVersions" : "https://docs.aws.amazon.com/goto/WebAPI/serverlessrepo/ListApplicationVersions",
          "ListApplications" : "https://docs.aws.amazon.com/goto/WebAPI/serverlessrepo/ListApplications",
          "PutApplicationPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/serverlessrepo/PutApplicationPolicy",
