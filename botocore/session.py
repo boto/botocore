@@ -183,6 +183,7 @@ class Session(object):
         )
         self._components.register_component('config_store',
                                             config_store_component)
+
     def _register_monitor(self):
         self._internal_components.lazy_register_component(
             'monitor', self._create_csm_monitor)

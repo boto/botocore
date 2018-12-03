@@ -729,35 +729,30 @@ class TestClientMonitoring(BaseSessionTest):
         with temporary_file('w') as f:
             del self.environ['FOO_PROFILE']
             self.environ['FOO_CONFIG_FILE'] = f.name
-            session = create_session(session_vars=self.env_vars)
             f.write('[default]\n')
             f.write('csm_enabled=true\n')
             f.flush()
-            self.assert_created_client_is_monitored(session)
+            self.assert_created_client_is_monitored(self.session)
 
     def test_with_csm_enabled_from_env(self):
         self.environ['AWS_CSM_ENABLED'] = 'true'
-        session = create_session(session_vars=self.env_vars)
-        self.assert_created_client_is_monitored(session)
+        self.assert_created_client_is_monitored(self.session)
 
     def test_with_csm_disabled_from_config(self):
         with temporary_file('w') as f:
             del self.environ['FOO_PROFILE']
             self.environ['FOO_CONFIG_FILE'] = f.name
-            session = create_session(session_vars=self.env_vars)
             f.write('[default]\n')
             f.write('csm_enabled=false\n')
             f.flush()
-            self.assert_created_client_is_not_monitored(session)
+            self.assert_created_client_is_not_monitored(self.session)
 
     def test_with_csm_disabled_from_env(self):
         self.environ['AWS_CSM_ENABLED'] = 'false'
-        session = create_session(session_vars=self.env_vars)
-        self.assert_created_client_is_not_monitored(session)
+        self.assert_created_client_is_not_monitored(self.session)
 
     def test_csm_not_configured(self):
-        session = create_session(session_vars=self.env_vars)
-        self.assert_created_client_is_not_monitored(session)
+        self.assert_created_client_is_not_monitored(self.session)
 
 
 class TestComponentLocator(unittest.TestCase):
