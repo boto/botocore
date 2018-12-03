@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.58
+=======
+
+* api-change:``devicefarm``: Update devicefarm client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+
+
 1.12.57
 =======
 
