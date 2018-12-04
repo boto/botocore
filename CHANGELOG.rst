@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.59
+=======
+
+* api-change:``health``: Update health client to latest version
+* api-change:``s3``: Update s3 client to latest version
+
+
 1.12.58
 =======
 
