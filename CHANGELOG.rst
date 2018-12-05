@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.60
+=======
+
+* api-change:``mq``: Update mq client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``mediatailor``: Update mediatailor client to latest version
+
+
 1.12.59
 =======
 
