@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.61
+=======
+
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
 1.12.60
 =======
 
