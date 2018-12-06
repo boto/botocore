@@ -2562,7 +2562,7 @@ class TestProcessProvider(BaseEnvVar):
             'AccessKeyId': 'foo',
             'SecretAccessKey': 'bar',
             'SessionToken': 'baz',
-            'Expiration': '2020-01-01T00:00:00Z',
+            'Expiration': '2999-01-01T00:00:00Z',
         })
 
         provider = self.create_process_provider()
@@ -2588,7 +2588,7 @@ class TestProcessProvider(BaseEnvVar):
             'AccessKeyId': 'foo',
             'SecretAccessKey': 'bar',
             'SessionToken': 'baz',
-            'Expiration': '2020-01-01T00:00:00Z',
+            'Expiration': '2999-01-01T00:00:00Z',
         })
 
         provider = self.create_process_provider()
@@ -2655,7 +2655,7 @@ class TestProcessProvider(BaseEnvVar):
             'AccessKeyId': 'foo',
             'SecretAccessKey': 'bar',
             'SessionToken': 'baz',
-            'Expiration': '2020-01-01T00:00:00Z',
+            'Expiration': '2999-01-01T00:00:00Z',
         })
 
         provider = self.create_process_provider()
@@ -2672,7 +2672,7 @@ class TestProcessProvider(BaseEnvVar):
             'AccessKeyId': 'foo',
             'SecretAccessKey': 'bar',
             'SessionToken': 'baz',
-            'Expiration': '2020-01-01T00:00:00Z',
+            'Expiration': '2999-01-01T00:00:00Z',
         })
 
         provider = self.create_process_provider()
@@ -2689,7 +2689,7 @@ class TestProcessProvider(BaseEnvVar):
             # Missing access key.
             'SecretAccessKey': 'bar',
             'SessionToken': 'baz',
-            'Expiration': '2020-01-01T00:00:00Z',
+            'Expiration': '2999-01-01T00:00:00Z',
         })
 
         provider = self.create_process_provider()
@@ -2706,7 +2706,7 @@ class TestProcessProvider(BaseEnvVar):
             'AccessKeyId': 'foo',
             # Missing secret key.
             'SessionToken': 'baz',
-            'Expiration': '2020-01-01T00:00:00Z',
+            'Expiration': '2999-01-01T00:00:00Z',
         })
 
         provider = self.create_process_provider()
@@ -2723,7 +2723,7 @@ class TestProcessProvider(BaseEnvVar):
             'AccessKeyId': 'foo',
             'SecretAccessKey': 'bar',
             # Missing session token.
-            'Expiration': '2020-01-01T00:00:00Z',
+            'Expiration': '2999-01-01T00:00:00Z',
         })
 
         provider = self.create_process_provider()
