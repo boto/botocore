@@ -94,6 +94,15 @@ class TestStreamWrapper(unittest.TestCase):
         self.assertEqual(len(chunks), 2)
         self.assertEqual(chunks, [b'a' * 1024, b'a' * 1024])
 
+    def test_streaming_body_is_an_iterator(self):
+        body = six.BytesIO(b'a' * 1024 + b'b' * 1024 + b'c' * 2)
+        stream = response.StreamingBody(body, content_length=2050)
+        self.assertEqual(b'a' * 1024, next(stream))
+        self.assertEqual(b'b' * 1024, next(stream))
+        self.assertEqual(b'c' * 2, next(stream))
+        with self.assertRaises(StopIteration):
+            next(stream)
+
     def test_iter_chunks_single_byte(self):
         body = six.BytesIO(b'abcde')
         stream = response.StreamingBody(body, content_length=5)
