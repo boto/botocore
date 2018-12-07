@@ -1,5 +1,0 @@
-{
-  "type": "enhancement",
-  "category": "AssumeRole",
-  "description": "Add support for duration_seconds when assuming a role in the config file (`#1600 <https://github.com/boto/botocore/issues/1600>`__)."
-}
