@@ -1822,6 +1822,51 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
         client.assume_role.assert_called_with(
             RoleArn='myrole', ExternalId='myid', RoleSessionName=mock.ANY)
 
+    def test_assume_role_with_duration(self):
+        self.fake_config['profiles']['development']['duration_seconds'] = 7200 
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat(),
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        provider = credentials.AssumeRoleProvider(
+            self.create_config_loader(), client_creator,
+            cache={}, profile_name='development')
+
+        # The credentials won't actually be assumed until they're requested.
+        provider.load().get_frozen_credentials()
+
+        client = client_creator.return_value
+        client.assume_role.assert_called_with(
+            RoleArn='myrole', RoleSessionName=mock.ANY, 
+            DurationSeconds=7200)
+
+    def test_assume_role_with_bad_duration(self):
+        self.fake_config['profiles']['development']['duration_seconds'] = 'garbage value'
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': self.some_future_time().isoformat(),
+            },
+        }
+        client_creator = self.create_client_creator(with_response=response)
+        provider = credentials.AssumeRoleProvider(
+            self.create_config_loader(), client_creator,
+            cache={}, profile_name='development')
+
+        # The credentials won't actually be assumed until they're requested.
+        provider.load().get_frozen_credentials()
+
+        client = client_creator.return_value
+        client.assume_role.assert_called_with(
+            RoleArn='myrole', RoleSessionName=mock.ANY)
+
     def test_assume_role_with_mfa(self):
         self.fake_config['profiles']['development']['mfa_serial'] = 'mfa'
         response = {
@@ -2562,7 +2607,7 @@ class TestProcessProvider(BaseEnvVar):
             'AccessKeyId': 'foo',
             'SecretAccessKey': 'bar',
             'SessionToken': 'baz',
-            'Expiration': '2020-01-01T00:00:00Z',
+            'Expiration': '2999-01-01T00:00:00Z',
         })
 
         provider = self.create_process_provider()
@@ -2588,7 +2633,7 @@ class TestProcessProvider(BaseEnvVar):
             'AccessKeyId': 'foo',
             'SecretAccessKey': 'bar',
             'SessionToken': 'baz',
-            'Expiration': '2020-01-01T00:00:00Z',
+            'Expiration': '2999-01-01T00:00:00Z',
         })
 
         provider = self.create_process_provider()
@@ -2655,7 +2700,7 @@ class TestProcessProvider(BaseEnvVar):
             'AccessKeyId': 'foo',
             'SecretAccessKey': 'bar',
             'SessionToken': 'baz',
-            'Expiration': '2020-01-01T00:00:00Z',
+            'Expiration': '2999-01-01T00:00:00Z',
         })
 
         provider = self.create_process_provider()
@@ -2672,7 +2717,7 @@ class TestProcessProvider(BaseEnvVar):
             'AccessKeyId': 'foo',
             'SecretAccessKey': 'bar',
             'SessionToken': 'baz',
-            'Expiration': '2020-01-01T00:00:00Z',
+            'Expiration': '2999-01-01T00:00:00Z',
         })
 
         provider = self.create_process_provider()
@@ -2689,7 +2734,7 @@ class TestProcessProvider(BaseEnvVar):
             # Missing access key.
             'SecretAccessKey': 'bar',
             'SessionToken': 'baz',
-            'Expiration': '2020-01-01T00:00:00Z',
+            'Expiration': '2999-01-01T00:00:00Z',
         })
 
         provider = self.create_process_provider()
@@ -2706,7 +2751,7 @@ class TestProcessProvider(BaseEnvVar):
             'AccessKeyId': 'foo',
             # Missing secret key.
             'SessionToken': 'baz',
-            'Expiration': '2020-01-01T00:00:00Z',
+            'Expiration': '2999-01-01T00:00:00Z',
         })
 
         provider = self.create_process_provider()
@@ -2723,7 +2768,7 @@ class TestProcessProvider(BaseEnvVar):
             'AccessKeyId': 'foo',
             'SecretAccessKey': 'bar',
             # Missing session token.
-            'Expiration': '2020-01-01T00:00:00Z',
+            'Expiration': '2999-01-01T00:00:00Z',
         })
 
         provider = self.create_process_provider()

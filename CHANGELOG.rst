@@ -2,6 +2,40 @@
 CHANGELOG
 =========
 
+1.12.62
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* enhancement:AssumeRole: Add support for duration_seconds when assuming a role in the config file (`#1600 <https://github.com/boto/botocore/issues/1600>`__).
+* api-change:``iam``: Update iam client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+
+
+1.12.61
+=======
+
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``rds``: Update rds client to latest version
+
+
+1.12.60
+=======
+
+* api-change:``mq``: Update mq client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``mediatailor``: Update mediatailor client to latest version
+
+
+1.12.59
+=======
+
+* api-change:``health``: Update health client to latest version
+* api-change:``s3``: Update s3 client to latest version
+
+
 1.12.58
 =======
 
