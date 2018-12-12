@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.64
+=======
+
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``eks``: Update eks client to latest version
+
+
 1.12.63
 =======
 

@@ -30,14 +30,14 @@
       ]
     },
     "ListVPCAssociationAuthorizations": {
-        "input_token": "NextToken",
-        "output_token": "NextToken",
-        "non_aggregate_keys": [
-            "HostedZoneId"
-        ],
-        "result_key": [
-            "VPCs"
-        ]
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "non_aggregate_keys": [
+        "HostedZoneId"
+      ],
+      "result_key": [
+        "VPCs"
+      ]
     }
   }
 }
