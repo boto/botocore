@@ -49,7 +49,7 @@
           "state": "success"
         },
         {
-          "matcher": "jobs[].status",
+          "argument": "jobs[].status",
           "expected": "",
           "matcher": "error",
           "state": "failure"
