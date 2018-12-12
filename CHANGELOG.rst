@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.63
+=======
+
+* api-change:``mediastore``: Update mediastore client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``connect``: Update connect client to latest version
+
+
 1.12.62
 =======
 
