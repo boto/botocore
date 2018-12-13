@@ -57,7 +57,7 @@ def request(method, url, **kwargs):
     """
     warnings.warn(
         _WARNING_MSG.format(name=method),
-        PendingDeprecationWarning
+        DeprecationWarning
     )
 
     session = sessions.Session()
