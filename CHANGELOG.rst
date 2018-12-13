@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.65
+=======
+
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``pinpoint-email``: Update pinpoint-email client to latest version
+
+
 1.12.64
 =======
 
