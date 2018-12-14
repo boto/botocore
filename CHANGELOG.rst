@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.66
+=======
+
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+
+
 1.12.65
 =======
 
