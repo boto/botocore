@@ -55,7 +55,7 @@ class TestCredentialPrecedence(BaseEnvVar):
         # take precedence.
         os.environ['AWS_ACCESS_KEY_ID'] = 'env'
         os.environ['AWS_SECRET_ACCESS_KEY'] = 'env-secret'
-        os.environ['AWS_DEFAULT_PROFILE'] = 'test'
+        os.environ['AWS_PROFILE'] = 'test'
 
         s = self.create_session()
         credentials = s.get_credentials()
@@ -78,7 +78,7 @@ class TestCredentialPrecedence(BaseEnvVar):
     def test_profile_env_vs_code(self):
         # If the profile is set both by the env var and by code,
         # then the one set by code should take precedence.
-        os.environ['AWS_DEFAULT_PROFILE'] = 'test'
+        os.environ['AWS_PROFILE'] = 'test'
         s = self.create_session(profile='default')
 
         credentials = s.get_credentials()
