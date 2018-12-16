@@ -128,15 +128,17 @@ class EndpointResolver(BaseEndpointResolver):
         service_data = partition['services'].get(
             service_name, DEFAULT_SERVICE_DATA)
         # Use the partition endpoint if no region is supplied.
-        if region_name is None:
+        if not region_name:
             if 'partitionEndpoint' in service_data:
                 region_name = service_data['partitionEndpoint']
             else:
                 raise NoRegionError()
+
         # Attempt to resolve the exact region for this partition.
         if region_name in service_data['endpoints']:
             return self._resolve(
                 partition, service_name, service_data, region_name)
+
         # Check to see if the endpoint provided is valid for the partition.
         if self._region_match(partition, region_name):
             # Use the partition endpoint if set and not regionalized.

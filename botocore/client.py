@@ -376,8 +376,6 @@ class ClientEndpointBridge(object):
         # Use the client_config region if no explicit region was provided.
         if self.client_config and self.client_config.region_name:
             return self.client_config.region_name
-        else:
-            return 'us-east-1'
 
     def _create_endpoint(self, resolved, service_name, region_name,
                          endpoint_url, is_secure):
@@ -433,7 +431,7 @@ class ClientEndpointBridge(object):
 
     def _assume_endpoint(self, service_name, region_name, endpoint_url,
                          is_secure):
-        if endpoint_url is None:
+        if not endpoint_url:
             # Expand the default hostname URI template.
             hostname = self.default_endpoint.format(
                 service=service_name, region=region_name)
@@ -862,7 +860,7 @@ def _get_configured_signature_version(service_name, client_config,
         signature version was configured.
     """
     # Client config overrides everything.
-    if client_config and client_config.signature_version is not None:
+    if client_config and client_config.signature_version:
         return client_config.signature_version
 
     # Scoped config overrides picking from the endpoint metadata.

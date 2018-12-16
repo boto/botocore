@@ -112,14 +112,14 @@ class Session(object):
         # This is a dict that stores per session specific config variable
         # overrides via set_config_variable().
         self._session_instance_vars = {}
-        if profile is not None:
+        if profile:
             self._session_instance_vars['profile'] = profile
         self._client_config = None
         self._components = ComponentLocator()
         self._internal_components = ComponentLocator()
         self._register_components()
         self.session_var_map = SessionVarDict(self, self.SESSION_VARIABLES)
-        if session_vars is not None:
+        if session_vars:
             self.session_var_map.update(session_vars)
 
     def _register_components(self):
@@ -194,13 +194,13 @@ class Session(object):
 
     @property
     def profile(self):
-        if self._profile is None:
+        if not self._profile:
             profile = self.get_config_variable('profile')
             self._profile = profile
         return self._profile
 
     def get_config_variable(self, logical_name, methods=None):
-        if methods is not None:
+        if methods:
             return self._get_config_variable_with_custom_methods(
                 logical_name, methods)
         return self.get_component('config_store').get_config_variable(
@@ -299,7 +299,7 @@ class Session(object):
         # If a profile is not explicitly set return the default
         # profile config or an empty config dict if we don't have
         # a default profile.
-        if profile_name is None:
+        if not profile_name:
             return profile_map.get('default', {})
         elif profile_name not in profile_map:
             # Otherwise if they specified a profile, it has to
@@ -755,27 +755,27 @@ class Session(object):
         default_client_config = self.get_default_client_config()
         # If a config is provided and a default config is set, then
         # use the config resulting from merging the two.
-        if config is not None and default_client_config is not None:
+        if config and default_client_config:
             config = default_client_config.merge(config)
         # If a config was not provided then use the default
         # client config from the session
-        elif default_client_config is not None:
+        elif default_client_config:
             config = default_client_config
 
         # Figure out the user-provided region based on the various
         # configuration options.
-        if region_name is None:
-            if config and config.region_name is not None:
+        if not region_name:
+            if config and config.region_name:
                 region_name = config.region_name
             else:
                 region_name = self.get_config_variable('region')
 
         # Figure out the verify value base on the various
         # configuration options.
-        if verify is None:
+        if not verify:
             verify = self.get_config_variable('ca_bundle')
 
-        if api_version is None:
+        if not api_version:
             api_version = self.get_config_variable('api_versions').get(
                 service_name, None)
 
@@ -783,7 +783,8 @@ class Session(object):
         event_emitter = self.get_component('event_emitter')
         response_parser_factory = self.get_component(
             'response_parser_factory')
-        if aws_access_key_id is not None and aws_secret_access_key is not None:
+
+        if aws_access_key_id and aws_secret_access_key:
             credentials = botocore.credentials.Credentials(
                 access_key=aws_access_key_id,
                 secret_key=aws_secret_access_key,
@@ -796,6 +797,7 @@ class Session(object):
                                                  aws_secret_access_key))
         else:
             credentials = self.get_credentials()
+
         endpoint_resolver = self._get_internal_component('endpoint_resolver')
         exceptions_factory = self._get_internal_component('exceptions_factory')
         client_creator = botocore.client.ClientCreator(
