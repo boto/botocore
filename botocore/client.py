@@ -371,11 +371,13 @@ class ClientEndpointBridge(object):
                                          endpoint_url, is_secure)
 
     def _check_default_region(self, service_name, region_name):
-        if region_name is not None:
+        if region_name:
             return region_name
         # Use the client_config region if no explicit region was provided.
-        if self.client_config and self.client_config.region_name is not None:
+        if self.client_config and self.client_config.region_name:
             return self.client_config.region_name
+        else:
+            return 'us-east-1'
 
     def _create_endpoint(self, resolved, service_name, region_name,
                          endpoint_url, is_secure):
