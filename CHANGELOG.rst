@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.67
+=======
+
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``ecr``: Update ecr client to latest version
+
+
 1.12.66
 =======
 
