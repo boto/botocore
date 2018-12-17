@@ -326,7 +326,7 @@ class Stubber(object):
             raise UnStubbedResponseError(
                 operation_name=model.name,
                 reason=(
-                        'Unexpected API Call: A call was made but no additional calls expected.'
+                        'Unexpected API Call: A call was made but no additional calls expected. '
                         'Either the API Call was not stubbed or it was called multiple times.'
                         )
             )
