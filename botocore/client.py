@@ -377,7 +377,7 @@ class ClientEndpointBridge(object):
         # Use the client_config region if no explicit region was provided.
         if self.client_config and self.client_config.region_name:
             return self.client_config.region_name
-        raise NoRegionError()
+        raise ValueError("region must be provided.")
 
     def _create_endpoint(self, resolved, service_name, region_name,
                          endpoint_url, is_secure):
