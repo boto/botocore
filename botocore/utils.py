@@ -130,11 +130,6 @@ EVENT_ALIASES = {
 }
 
 
-class _RetriesExceededError(Exception):
-    """Internal exception used when the number of retries are exceeded."""
-    pass
-
-
 def ensure_boolean(val):
     """Ensures a boolean value if a string or boolean is provided
 
