@@ -315,7 +315,7 @@ def create_request_object(request_dict):
     r = request_dict
     request_object = AWSRequest(
         method=r['method'], url=r['url'], data=r['body'], headers=r['headers'])
-    request_object.context.update(r['context'])
+    request_object.context = r['context']
     return request_object
 
 
