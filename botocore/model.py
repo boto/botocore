@@ -15,7 +15,8 @@ from collections import defaultdict
 
 from botocore.utils import CachedProperty, instance_cache, hyphenize_service_id
 from botocore.compat import OrderedDict
-
+from botocore.exceptions import MissingServiceIdError
+from botocore.exceptions import UndefinedModelAttributeError
 
 NOT_SET = object()
 
@@ -33,10 +34,6 @@ class OperationNotFoundError(Exception):
 
 
 class InvalidShapeReferenceError(Exception):
-    pass
-
-
-class UndefinedModelAttributeError(Exception):
     pass
 
 
@@ -291,7 +288,12 @@ class ServiceModel(object):
 
     @CachedProperty
     def service_id(self):
-        return ServiceId(self._get_metadata_property('serviceId'))
+        try:
+            return ServiceId(self._get_metadata_property('serviceId'))
+        except UndefinedModelAttributeError:
+            raise MissingServiceIdError(
+                service_name=self._service_name
+            )
 
     @CachedProperty
     def signing_name(self):

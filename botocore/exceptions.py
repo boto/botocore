@@ -500,3 +500,19 @@ class MD5UnavailableError(BotoCoreError):
 
 class MetadataRetrievalError(BotoCoreError):
     fmt = "Error retrieving metadata: {error_msg}"
+
+
+class UndefinedModelAttributeError(Exception):
+    pass
+
+
+class MissingServiceIdError(UndefinedModelAttributeError):
+    fmt = (
+        "The model being used for the service {service_name} is missing the "
+        "serviceId metadata property, which is required."
+    )
+
+    def __init__(self, **kwargs):
+        msg = self.fmt.format(**kwargs)
+        Exception.__init__(self, msg)
+        self.kwargs = kwargs
