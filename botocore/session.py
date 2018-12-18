@@ -25,6 +25,7 @@ import warnings
 import collections
 
 from botocore import __version__
+from botocore import UNSIGNED
 import botocore.configloader
 import botocore.credentials
 import botocore.client
@@ -808,7 +809,9 @@ class Session(object):
         event_emitter = self.get_component('event_emitter')
         response_parser_factory = self.get_component(
             'response_parser_factory')
-        if aws_access_key_id is not None and aws_secret_access_key is not None:
+        if config is not None and config.signature_version is UNSIGNED:
+            credentials = None
+        elif aws_access_key_id is not None and aws_secret_access_key is not None:
             credentials = botocore.credentials.Credentials(
                 access_key=aws_access_key_id,
                 secret_key=aws_secret_access_key,
