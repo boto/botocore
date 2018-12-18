@@ -19,7 +19,6 @@ from botocore.awsrequest import prepare_request_dict
 from botocore.docs.docstring import ClientMethodDocstring
 from botocore.docs.docstring import PaginatorDocstring
 from botocore.exceptions import ClientError, DataNotFoundError
-from botocore.exceptions import NoRegionError
 from botocore.exceptions import OperationNotPageableError
 from botocore.exceptions import UnknownSignatureVersionError
 from botocore.hooks import first_non_none_response
@@ -377,7 +376,6 @@ class ClientEndpointBridge(object):
         # Use the client_config region if no explicit region was provided.
         if self.client_config and self.client_config.region_name:
             return self.client_config.region_name
-        raise ValueError("region must be provided.")
 
     def _create_endpoint(self, resolved, service_name, region_name,
                          endpoint_url, is_secure):
