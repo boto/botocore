@@ -1,0 +1,5 @@
+{
+  "category": "``globalaccelerator``", 
+  "type": "api-change", 
+  "description": "Update globalaccelerator client to latest version"
+}
