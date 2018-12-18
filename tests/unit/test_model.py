@@ -2,6 +2,7 @@ from tests import unittest
 
 from botocore import model
 from botocore.compat import OrderedDict
+from botocore.exceptions import MissingServiceIdError
 
 
 def test_missing_model_attribute_raises_exception():
@@ -74,6 +75,24 @@ class TestServiceModel(unittest.TestCase):
     def test_hyphenize_service_id(self):
         self.assertEqual(
             self.service_model.service_id.hyphenize(), 'myservice')
+
+    def test_service_id_does_not_exist(self):
+        service_model = {
+            'metadata': {
+                'protocol': 'query',
+                'endpointPrefix': 'endpoint-prefix',
+            },
+            'documentation': 'Documentation value',
+            'operations': {},
+            'shapes': {
+                'StringShape': {'type': 'string'}
+            }
+        }
+        service_name = 'myservice'
+        service_model = model.ServiceModel(service_model, service_name)
+        with self.assertRaisesRegexp(model.UndefinedModelAttributeError,
+                                     service_name):
+            service_model.service_id
 
     def test_operation_does_not_exist(self):
         with self.assertRaises(model.OperationNotFoundError):
