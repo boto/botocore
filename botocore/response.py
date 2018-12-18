@@ -108,25 +108,13 @@ class StreamingBody(object):
         This is achieved by reading chunk of bytes (of size chunk_size) at a
         time from the raw stream, and then yielding lines from there.
         """
-        pending = None
+        pending = b''
         for chunk in self.iter_chunks(chunk_size):
-            if pending is not None:
-                chunk = pending + chunk
-
-            lines = chunk.splitlines()
-
-            if lines and lines[-1] and chunk and lines[-1][-1] == chunk[-1]:
-                # We might be in the 'middle' of a line. Hence we keep the
-                # last line as pending.
-                pending = lines.pop()
-            else:
-                pending = None
-
-            for line in lines:
-                yield line
-
-        if pending is not None:
-            yield pending
+            lines = (pending + chunk).splitlines(True)
+            for line in lines[:-1]:
+                yield line.splitlines()[0]
+            pending = lines[-1]
+        yield pending.splitlines()[0]
 
     def iter_chunks(self, chunk_size=_DEFAULT_CHUNK_SIZE):
         """Return an iterator to yield chunks of chunk_size bytes from the raw
