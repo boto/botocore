@@ -8,7 +8,23 @@
     "DescribeChangeSet": {
       "input_token": "NextToken",
       "output_token": "NextToken",
-      "result_key": "Changes"
+      "result_key": "Changes",
+      "non_aggregate_keys": [
+          "ChangeSetName",
+          "ChangeSetId",
+          "StackId",
+          "StackName",
+          "Description",
+          "Parameters",
+          "CreationTime",
+          "ExecutionStatus",
+          "Status",
+          "StatusReason",
+          "NotificationARNs",
+          "RollbackConfiguration",
+          "Capabilities",
+          "Tags"
+      ]
     },
     "DescribeStackEvents": {
       "input_token": "NextToken",
