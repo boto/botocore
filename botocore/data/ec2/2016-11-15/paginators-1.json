@@ -94,6 +94,24 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "NetworkInterfaces"
+    },
+    "DescribeVpcEndpoints": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "VpcEndpoints"
+    },
+    "DescribeVpcEndpointServices": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "ServiceDetails"
+    },
+    "DescribeVpcEndpointConnections": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "VpcEndpointConnections"
     }
   }
 }

@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.69
+=======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``waf-regional``: Update waf-regional client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``waf``: Update waf client to latest version
+
+
 1.12.68
 =======
 
