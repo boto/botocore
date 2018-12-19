@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.12.68
+=======
+
+* api-change:``apigatewayv2``: Update apigatewayv2 client to latest version
+* bugfix:Credentials: Fixes an issue where credentials would be checked when creating an anonymous client. Fixes `#1472 <https://github.com/boto/botocore/issues/1472>`__
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* api-change:``globalaccelerator``: Update globalaccelerator client to latest version
+* enhancement:StreamingBody: Support iterating lines from a streaming response body with CRLF line endings
+* api-change:``apigatewaymanagementapi``: Update apigatewaymanagementapi client to latest version
+
+
 1.12.67
 =======
 
