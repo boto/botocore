@@ -158,6 +158,15 @@ class TestStreamWrapper(unittest.TestCase):
         with self.assertRaises(ReadTimeoutError):
             stream.read()
 
+    def test_streaming_line_abstruse_newline_standard(self):
+        for chunk_size in range(1, 30):
+            body = six.BytesIO(b'1234567890\r\n1234567890\r\n12345\r\n')
+            stream = response.StreamingBody(body, content_length=31)
+            self.assert_lines(
+                stream.iter_lines(chunk_size),
+                [b'1234567890', b'1234567890', b'12345'],
+            )
+
 
 class FakeRawResponse(six.BytesIO):
     def stream(self, amt=1024, decode_content=None):
