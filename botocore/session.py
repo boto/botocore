@@ -826,10 +826,11 @@ class Session(object):
             credentials = self.get_credentials()
         endpoint_resolver = self._get_internal_component('endpoint_resolver')
         exceptions_factory = self._get_internal_component('exceptions_factory')
+        config_store = self.get_component('config_store')
         client_creator = botocore.client.ClientCreator(
             loader, endpoint_resolver, self.user_agent(), event_emitter,
             retryhandler, translate, response_parser_factory,
-            exceptions_factory)
+            exceptions_factory, config_store)
         client = client_creator.create_client(
             service_name=service_name, region_name=region_name,
             is_secure=use_ssl, endpoint_url=endpoint_url, verify=verify,

@@ -54,7 +54,8 @@ class Shape(object):
                         'eventstream', 'event', 'eventheader', 'eventpayload',
                         'jsonvalue', 'timestampFormat', 'hostLabel']
     METADATA_ATTRS = ['required', 'min', 'max', 'sensitive', 'enum',
-                      'idempotencyToken', 'error', 'exception']
+                      'idempotencyToken', 'error', 'exception',
+                      'endpointdiscoveryid']
     MAP_TYPE = OrderedDict
 
     def __init__(self, shape_name, shape_model, shape_resolver=None):
@@ -319,6 +320,13 @@ class ServiceModel(object):
     def endpoint_prefix(self):
         return self._get_metadata_property('endpointPrefix')
 
+    @CachedProperty
+    def endpoint_discovery_operation(self):
+        for operation in self.operation_names:
+            model = self.operation_model(operation)
+            if model.is_endpoint_discovery_operation:
+                return model
+
     def _get_metadata_property(self, name):
         try:
             return self.metadata[name]
@@ -416,6 +424,16 @@ class OperationModel(object):
     @CachedProperty
     def deprecated(self):
         return self._operation_model.get('deprecated', False)
+
+    @CachedProperty
+    def endpoint_discovery(self):
+        # Explicit None default. An empty dictionary for this trait means it is
+        # enabled but not required to be used.
+        return self._operation_model.get('endpointdiscovery', None)
+
+    @CachedProperty
+    def is_endpoint_discovery_operation(self):
+        return self._operation_model.get('endpointoperation', False)
 
     @CachedProperty
     def input_shape(self):

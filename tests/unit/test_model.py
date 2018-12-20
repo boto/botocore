@@ -283,6 +283,33 @@ class TestOperationModelFromService(unittest.TestCase):
         operation_two = service_model.operation_model('OperationTwo')
         self.assertFalse(operation_two.deprecated)
 
+    def test_endpoint_operation_present(self):
+        self.model['operations']['OperationName']['endpointoperation'] = True
+        service_model = model.ServiceModel(self.model)
+        operation_name = service_model.operation_model('OperationName')
+        self.assertTrue(operation_name.is_endpoint_discovery_operation)
+
+    def test_endpoint_operation_present_false(self):
+        self.model['operations']['OperationName']['endpointoperation'] = False
+        service_model = model.ServiceModel(self.model)
+        operation_name = service_model.operation_model('OperationName')
+        self.assertFalse(operation_name.is_endpoint_discovery_operation)
+
+    def test_endpoint_operation_absent(self):
+        operation_two = self.service_model.operation_model('OperationName')
+        self.assertFalse(operation_two.is_endpoint_discovery_operation)
+
+    def test_endpoint_discovery_present(self):
+        operation = self.model['operations']['OperationName']
+        operation['endpointdiscovery'] = {'required': True}
+        service_model = model.ServiceModel(self.model)
+        operation_name = service_model.operation_model('OperationName')
+        self.assertTrue(operation_name.endpoint_discovery.get('required'))
+
+    def test_endpoint_discovery_absent(self):
+        operation_name = self.service_model.operation_model('OperationName')
+        self.assertIsNone(operation_name.endpoint_discovery)
+
 
 class TestOperationModelEventStreamTypes(unittest.TestCase):
     def setUp(self):

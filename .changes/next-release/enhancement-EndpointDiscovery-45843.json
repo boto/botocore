@@ -1,0 +1,5 @@
+{
+  "category": "EndpointDiscovery", 
+  "type": "enhancement", 
+  "description": "Add a config option, ``endpoint_discovery_enabled``, for automatically discovering endpoints"
+}
