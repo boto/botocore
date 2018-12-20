@@ -1,5 +1,5 @@
 import time
-from mock import Mock
+from mock import Mock, call
 from tests import unittest
 
 from botocore.awsrequest import AWSRequest
@@ -297,7 +297,7 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
         # This second call should be blocked as we just failed
         endpoint = self.manager.describe_endpoint(**kwargs)
         self.assertIsNone(endpoint)
-        self.client.describe_endpoints.assert_called_once()
+        self.client.describe_endpoints.call_args_list == [call()]
 
     def test_describe_endpoint_optional_fails_stale_cache(self):
         key = ()
@@ -312,7 +312,7 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
         # This second call shouldn't go through as we just failed
         endpoint = self.manager.describe_endpoint(**kwargs)
         self.assertEqual(endpoint, 'old.com')
-        self.client.describe_endpoints.assert_called_once()
+        self.client.describe_endpoints.call_args_list == [call()]
 
     def test_describe_endpoint_required_fails_no_cache(self):
         side_effect = [ConnectionError(error=None)] * 2
@@ -339,7 +339,7 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
         # We have a stale endpoint, so this shouldn't fail or force a refresh
         endpoint = self.manager.describe_endpoint(**kwargs)
         self.assertEqual(endpoint, 'old.com')
-        self.client.describe_endpoints.assert_called_once()
+        self.client.describe_endpoints.call_args_list == [call()]
 
     def test_describe_endpoint_required_force_refresh_success(self):
         side_effect = [
@@ -354,7 +354,7 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
         # First call will fail
         with self.assertRaises(EndpointDiscoveryRefreshFailed):
             self.manager.describe_endpoint(**kwargs)
-        self.client.describe_endpoints.assert_called_once()
+        self.client.describe_endpoints.call_args_list == [call()]
         # Force a refresh if the cache is empty but discovery is required
         endpoint = self.manager.describe_endpoint(**kwargs)
         self.assertEqual(endpoint, 'new.com')
@@ -373,7 +373,7 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
         kwargs = {'Operation': 'TestDiscoveryOptional'}
         endpoint = self.manager.describe_endpoint(**kwargs)
         self.assertIsNone(endpoint)
-        self.client.describe_endpoints.assert_called_once()
+        self.client.describe_endpoints.call_args_list == [call()]
         # Second time should try again as enough time has elapsed
         endpoint = self.manager.describe_endpoint(**kwargs)
         self.assertEqual(endpoint, 'new.com')
@@ -389,7 +389,6 @@ class TestEndpointDiscoveryHandler(BaseEndpointDiscoveryTest):
     def test_register_handler(self):
         events = Mock(spec=HierarchicalEmitter)
         self.handler.register(events, 'foo-bar')
-        print(events.register.call_count)
         events.register.assert_any_call(
             'before-parameter-build.foo-bar', self.handler.gather_identifiers
         )
