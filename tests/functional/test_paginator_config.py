@@ -95,8 +95,9 @@ def _validate_input_keys_match(operation_name, page_config, service_model):
         limit_key = page_config['limit_key']
         if limit_key not in valid_input_names:
             raise AssertionError("limit_key '%s' refers to a non existent "
-                                 "input member for operation: %s"
-                                 % (limit_key, operation_name))
+                                 "input member for operation: %s, valid keys: "
+                                 "%s" % (limit_key, operation_name,
+                                         ', '.join(list(valid_input_names))))
 
 
 def _validate_output_keys_match(operation_name, page_config, service_model):
