@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.12.70
+=======
+
+* api-change:``medialive``: Update medialive client to latest version
+* enhancement:EndpointDiscovery: Add a config option, ``endpoint_discovery_enabled``, for automatically discovering endpoints
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``firehose``: Update firehose client to latest version
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+
+
 1.12.69
 =======
 
