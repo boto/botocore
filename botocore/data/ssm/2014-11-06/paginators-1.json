@@ -42,6 +42,18 @@
       "limit_key": "MaxResults",
       "result_key": "Parameters"
     },
+    "DescribeAssociationExecutions": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "AssociationExecutions"
+    },
+    "DescribeAssociationExecutionTargets": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "AssociationExecutionTargets"
+    },
     "GetInventory": {
       "input_token": "NextToken",
       "output_token": "NextToken",

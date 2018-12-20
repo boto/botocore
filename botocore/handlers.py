@@ -912,6 +912,12 @@ class HeaderToHostHoister(object):
         return new_url
 
 
+def inject_api_version_header_if_needed(model, params, **kwargs):
+    if not model.is_endpoint_discovery_operation:
+        return
+    params['headers']['x-amz-api-version'] = model.service_model.api_version
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -1102,6 +1108,8 @@ BUILTIN_HANDLERS = [
     #############
     ('before-call.s3-control.*',
      HeaderToHostHoister('x-amz-account-id').hoist),
+
+    ('before-call', inject_api_version_header_if_needed),
 
 ]
 _add_parameter_aliases(BUILTIN_HANDLERS)
