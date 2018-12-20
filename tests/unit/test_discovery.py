@@ -7,6 +7,7 @@ from botocore.client import ClientMeta
 from botocore.hooks import HierarchicalEmitter
 from botocore.model import ServiceModel
 from botocore.exceptions import ConnectionError
+from botocore.handlers import inject_api_version_header_if_needed
 from botocore.discovery import (
     EndpointDiscoveryManager, EndpointDiscoveryHandler,
     EndpointDiscoveryRequired, EndpointDiscoveryRefreshFailed,
@@ -162,6 +163,19 @@ class TestEndpointDiscoveryManager(BaseEndpointDiscoveryTest):
         self.manager = EndpointDiscoveryManager(
             self.client, cache=cache, current_time=time
         )
+
+    def test_injects_api_version_if_endpoint_operation(self):
+        model = self.service_model.operation_model('DescribeEndpoints')
+        params = {'headers': {}}
+        inject_api_version_header_if_needed(model, params)
+        self.assertEqual(params['headers'].get('x-amz-api-version'),
+                         '2018-08-31')
+
+    def test_no_inject_api_version_if_not_endpoint_operation(self):
+        model = self.service_model.operation_model('TestDiscoveryRequired')
+        params = {'headers': {}}
+        inject_api_version_header_if_needed(model, params)
+        self.assertNotIn('x-amz-api-version', params['headers'])
 
     def test_gather_identifiers(self):
         params = {

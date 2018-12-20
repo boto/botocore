@@ -184,12 +184,6 @@ class Serializer(object):
 
         return host_prefix_expression.format(**format_kwargs)
 
-    def _serialize_api_version(self, serialized, operation_model):
-        if not operation_model.is_endpoint_discovery_operation:
-            return
-        api_version = operation_model.service_model.api_version
-        serialized['headers']['x-amz-api-version'] = api_version
-
 
 class QuerySerializer(Serializer):
 
@@ -215,8 +209,6 @@ class QuerySerializer(Serializer):
         host_prefix = self._expand_host_prefix(parameters, operation_model)
         if host_prefix is not None:
             serialized['host_prefix'] = host_prefix
-
-        self._serialize_api_version(serialized, operation_model)
 
         return serialized
 
@@ -351,8 +343,6 @@ class JSONSerializer(Serializer):
         if host_prefix is not None:
             serialized['host_prefix'] = host_prefix
 
-        self._serialize_api_version(serialized, operation_model)
-
         return serialized
 
     def _serialize(self, serialized, value, shape, key=None):
@@ -469,8 +459,6 @@ class BaseRestSerializer(Serializer):
         host_prefix = self._expand_host_prefix(parameters, operation_model)
         if host_prefix is not None:
             serialized['host_prefix'] = host_prefix
-
-        self._serialize_api_version(serialized, operation_model)
 
         return serialized
 
