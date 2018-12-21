@@ -37,6 +37,11 @@
       "non_aggregate_keys": [
         "ConsumedCapacity"
       ]
+    },
+    "ListTagsOfResource": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "result_key": "Tags"
     }
   }
 }

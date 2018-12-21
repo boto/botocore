@@ -1,3 +1,10 @@
 {
-  "pagination": {}
+  "pagination": {
+    "ListFragments": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Fragments"
+    }
+  }
 }
