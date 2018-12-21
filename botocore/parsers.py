@@ -232,7 +232,7 @@ class ResponseParser(object):
 
         """
         LOG.debug('Response headers: %s', response['headers'])
-        LOG.debug('Response body:\n%s', response['body'])
+        LOG.debug('Response body:\n%r', response['body'])
         if response['status_code'] >= 301:
             if self._is_generic_error_response(response):
                 parsed = self._do_generic_error_parse(response)
