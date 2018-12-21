@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.71
+=======
+
+* api-change:``acm-pca``: Update acm-pca client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``sms-voice``: Update sms-voice client to latest version
+* api-change:``stepfunctions``: Update stepfunctions client to latest version
+
+
 1.12.70
 =======
 
