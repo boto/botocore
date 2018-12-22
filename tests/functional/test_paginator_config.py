@@ -22,6 +22,112 @@ KNOWN_PAGE_KEYS = set(
     ['input_token', 'py_input_token', 'output_token', 'result_key',
      'limit_key', 'more_results', 'non_aggregate_keys'])
 MEMBER_NAME_CHARS = set(string.ascii_letters + string.digits)
+# The goal here should be to remove all of these by updating the paginators
+# to reference all the extra output keys. Nothing should ever be added to this
+# list, it represents all the current released paginators that fail this test.
+KNOWN_EXTRA_OUTPUT_KEYS = [
+    'alexaforbusiness.SearchUsers.TotalCount',
+    'alexaforbusiness.SearchProfiles.TotalCount',
+    'alexaforbusiness.SearchSkillGroups.TotalCount',
+    'alexaforbusiness.SearchDevices.TotalCount',
+    'alexaforbusiness.SearchRooms.TotalCount',
+    'apigateway.GetApiKeys.warnings',
+    'apigateway.GetUsage.usagePlanId',
+    'apigateway.GetUsage.startDate',
+    'apigateway.GetUsage.endDate',
+    'athena.GetQueryResults.ResultSet',
+    'cloudfront.ListCloudFrontOriginAccessIdentities.CloudFrontOriginAccessIdentityList',
+    'cloudfront.ListDistributions.DistributionList',
+    'cloudfront.ListInvalidations.InvalidationList',
+    'cloudfront.ListStreamingDistributions.StreamingDistributionList',
+    'codedeploy.ListDeploymentGroups.applicationName',
+    'dms.DescribeTableStatistics.ReplicationTaskArn',
+    'dms.DescribeReplicationTaskAssessmentResults.BucketName',
+    'ec2.DescribeSpotFleetInstances.SpotFleetRequestId',
+    'ec2.DescribeVpcEndpointServices.ServiceNames',
+    'efs.DescribeFileSystems.Marker',
+    'efs.DescribeMountTargets.Marker',
+    'efs.DescribeTags.Marker',
+    'elasticache.DescribeCacheParameters.CacheNodeTypeSpecificParameters',
+    'elasticache.DescribeEngineDefaultParameters.EngineDefaults',
+    'glacier.ListParts.PartSizeInBytes',
+    'glacier.ListParts.ArchiveDescription',
+    'glacier.ListParts.MultipartUploadId',
+    'glacier.ListParts.VaultARN',
+    'glacier.ListParts.CreationDate',
+    'kinesis.DescribeStream.StreamDescription',
+    'mturk.ListAssignmentsForHIT.NumResults',
+    'mturk.ListQualificationTypes.NumResults',
+    'mturk.ListHITs.NumResults',
+    'mturk.ListWorkerBlocks.NumResults',
+    'mturk.ListReviewableHITs.NumResults',
+    'mturk.ListHITsForQualificationType.NumResults',
+    'mturk.ListQualificationRequests.NumResults',
+    'mturk.ListWorkersWithQualificationType.NumResults',
+    'mturk.ListBonusPayments.NumResults',
+    'neptune.DescribeEngineDefaultParameters.EngineDefaults',
+    'rds.DescribeEngineDefaultClusterParameters.EngineDefaults',
+    'rds.DescribeEngineDefaultParameters.EngineDefaults',
+    'redshift.DescribeDefaultClusterParameters.DefaultClusterParameters',
+    'resource-groups.ListGroups.GroupIdentifiers',
+    'resource-groups.SearchResources.QueryErrors',
+    'resource-groups.ListGroupResources.QueryErrors',
+    'route53.ListHealthChecks.MaxItems',
+    'route53.ListHealthChecks.Marker',
+    'route53.ListHostedZones.MaxItems',
+    'route53.ListHostedZones.Marker',
+    'route53.ListResourceRecordSets.MaxItems',
+    's3.ListMultipartUploads.Delimiter',
+    's3.ListMultipartUploads.KeyMarker',
+    's3.ListMultipartUploads.Prefix',
+    's3.ListMultipartUploads.Bucket',
+    's3.ListMultipartUploads.MaxUploads',
+    's3.ListMultipartUploads.UploadIdMarker',
+    's3.ListMultipartUploads.EncodingType',
+    's3.ListObjectVersions.MaxKeys',
+    's3.ListObjectVersions.Delimiter',
+    's3.ListObjectVersions.VersionIdMarker',
+    's3.ListObjectVersions.KeyMarker',
+    's3.ListObjectVersions.Prefix',
+    's3.ListObjectVersions.Name',
+    's3.ListObjectVersions.EncodingType',
+    's3.ListObjects.MaxKeys',
+    's3.ListObjects.Delimiter',
+    's3.ListObjects.NextMarker',
+    's3.ListObjects.Prefix',
+    's3.ListObjects.Marker',
+    's3.ListObjects.Name',
+    's3.ListObjects.EncodingType',
+    's3.ListObjectsV2.StartAfter',
+    's3.ListObjectsV2.MaxKeys',
+    's3.ListObjectsV2.Delimiter',
+    's3.ListObjectsV2.ContinuationToken',
+    's3.ListObjectsV2.KeyCount',
+    's3.ListObjectsV2.Prefix',
+    's3.ListObjectsV2.Name',
+    's3.ListObjectsV2.EncodingType',
+    's3.ListParts.PartNumberMarker',
+    's3.ListParts.AbortDate',
+    's3.ListParts.MaxParts',
+    's3.ListParts.Bucket',
+    's3.ListParts.Key',
+    's3.ListParts.UploadId',
+    's3.ListParts.AbortRuleId',
+    's3.ListParts.RequestCharged',
+    'sms.GetReplicationRuns.replicationJob',
+    'sms.GetServers.lastModifiedOn',
+    'sms.GetServers.serverCatalogStatus',
+    'storagegateway.DescribeTapeRecoveryPoints.GatewayARN',
+    'storagegateway.DescribeVTLDevices.GatewayARN',
+    'storagegateway.ListVolumes.GatewayARN',
+    'workdocs.DescribeUsers.TotalNumberOfUsers',
+    'xray.BatchGetTraces.UnprocessedTraceIds',
+    'xray.GetServiceGraph.EndTime',
+    'xray.GetServiceGraph.ContainsOldGroupVersions',
+    'xray.GetServiceGraph.StartTime',
+    'xray.GetTraceSummaries.TracesProcessedCount',
+    'xray.GetTraceSummaries.ApproximateTime',
+]
 
 
 def test_lint_pagination_configs():
@@ -109,7 +215,7 @@ def _validate_output_keys_match(operation_name, page_config, service_model):
     # this is no longer a realistic thing to check.  Someone would have to
     # backport the missing keys to all the paginators.
     output_shape = service_model.operation_model(operation_name).output_shape
-    output_members = output_shape.members
+    output_members = set(output_shape.members)
     for key_name, output_key in _get_all_page_output_keys(page_config):
         if _looks_like_jmespath(output_key):
             _validate_jmespath_compiles(output_key)
@@ -118,6 +224,27 @@ def _validate_output_keys_match(operation_name, page_config, service_model):
                 raise AssertionError("Pagination key '%s' refers to an output "
                                      "member that does not exist: %s" % (
                                          key_name, output_key))
+            output_members.remove(output_key)
+
+    for member in list(output_members):
+        key = "%s.%s.%s" % (service_model.service_name,
+                            operation_name,
+                            member)
+        if key in KNOWN_EXTRA_OUTPUT_KEYS:
+            output_members.remove(member)
+
+    if output_members:
+        for member in output_members:
+            key = "%s.%s.%s" % (service_model.service_name,
+                                operation_name,
+                                member)
+            with open('/tmp/blah', 'a') as f:
+                f.write("'%s',\n" % key)
+        raise AssertionError("There are member names in the output shape of "
+                             "%s that are not accounted for in the pagination "
+                             "config for service %s: %s" % (
+                                 operation_name, service_model.service_name,
+                                 ', '.join(output_members)))
 
 
 def _looks_like_jmespath(expression):
