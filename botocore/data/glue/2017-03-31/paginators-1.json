@@ -77,6 +77,12 @@
       "output_token": "NextToken",
       "input_token": "NextToken",
       "limit_key": "MaxResults"
+    },
+    "GetSecurityConfigurations": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "SecurityConfigurations"
     }
   }
 }
