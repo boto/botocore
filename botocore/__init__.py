@@ -46,6 +46,10 @@ _xform_cache = {
     ('CreateStorediSCSIVolume', '-'): 'create-stored-iscsi-volume',
     ('ListHITsForQualificationType', '_'): 'list_hits_for_qualification_type',
     ('ListHITsForQualificationType', '-'): 'list-hits-for-qualification-type',
+    ('ListGitHubAccountTokenNames', '_'): 'list_github_account_token_names',
+    ('ListGitHubAccountTokenNames', '-'): 'list-github-account-token-names',
+    ('DeleteGitHubAccountToken', '_'): 'delete_github_account_token',
+    ('DeleteGitHubAccountToken', '-'): 'delete-github-account-token',
 }
 # The items in this dict represent partial renames to apply globally to all
 # services which might have a matching argument or operation. This way a
