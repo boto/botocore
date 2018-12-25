@@ -38,6 +38,10 @@ from botocore import UNSIGNED
 # "from botocore.client import Config".
 from botocore.config import Config
 from botocore.history import get_global_history_recorder
+from botocore.discovery import (
+    EndpointDiscoveryHandler, EndpointDiscoveryManager,
+    block_endpoint_discovery_required_operations
+)
 
 
 logger = logging.getLogger(__name__)
@@ -48,7 +52,8 @@ class ClientCreator(object):
     """Creates client objects for a service."""
     def __init__(self, loader, endpoint_resolver, user_agent, event_emitter,
                  retry_handler_factory, retry_config_translator,
-                 response_parser_factory=None, exceptions_factory=None):
+                 response_parser_factory=None, exceptions_factory=None,
+                 config_store=None):
         self._loader = loader
         self._endpoint_resolver = endpoint_resolver
         self._user_agent = user_agent
@@ -57,6 +62,11 @@ class ClientCreator(object):
         self._retry_config_translator = retry_config_translator
         self._response_parser_factory = response_parser_factory
         self._exceptions_factory = exceptions_factory
+        # TODO: Migrate things away from scoped_config in favor of the
+        # config_store.  The config store can pull things from both the scoped
+        # config and environment variables (and potentially more in the
+        # future).
+        self._config_store = config_store
 
     def create_client(self, service_name, region_name, is_secure=True,
                       endpoint_url=None, verify=None,
@@ -79,6 +89,9 @@ class ClientCreator(object):
         self._register_s3_events(
             service_client, endpoint_bridge, endpoint_url, client_config,
             scoped_config)
+        self._register_endpoint_discovery(
+            service_client, endpoint_url, client_config
+        )
         return service_client
 
     def create_client_class(self, service_name, api_version=None):
@@ -131,6 +144,30 @@ class ClientCreator(object):
             'needs-retry.%s' % service_event_name, handler,
             unique_id=unique_id
         )
+
+    def _register_endpoint_discovery(self, client, endpoint_url, config):
+        if endpoint_url is not None:
+            # Don't register any handlers in the case of a custom endpoint url
+            return
+        # Only attach handlers if the service supports discovery
+        if client.meta.service_model.endpoint_discovery_operation is None:
+            return
+        events = client.meta.events
+        service_id = client.meta.service_model.service_id.hyphenize()
+        enabled = False
+        if config and config.endpoint_discovery_enabled is not None:
+            enabled = config.endpoint_discovery_enabled
+        elif self._config_store:
+            enabled = self._config_store.get_config_variable(
+                'endpoint_discovery_enabled')
+        if enabled:
+            manager = EndpointDiscoveryManager(client)
+            handler = EndpointDiscoveryHandler(manager)
+            handler.register(events, service_id)
+        else:
+            events.register('before-parameter-build',
+                            block_endpoint_discovery_required_operations)
+
 
     def _register_s3_events(self, client, endpoint_bridge, endpoint_url,
                             client_config, scoped_config):
@@ -607,8 +644,8 @@ class BaseClient(object):
         if event_response is not None:
             http, parsed_response = event_response
         else:
-            http, parsed_response = self._endpoint.make_request(
-                operation_model, request_dict)
+            http, parsed_response = self._make_request(
+                operation_model, request_dict, request_context)
 
         self.meta.events.emit(
             'after-call.{service_id}.{operation_name}'.format(
@@ -624,6 +661,18 @@ class BaseClient(object):
             raise error_class(parsed_response, operation_name)
         else:
             return parsed_response
+
+    def _make_request(self, operation_model, request_dict, request_context):
+        try:
+            return self._endpoint.make_request(operation_model, request_dict)
+        except Exception as e:
+            self.meta.events.emit(
+                'after-call-error.{service_id}.{operation_name}'.format(
+                    service_id=self._service_model.service_id.hyphenize(),
+                    operation_name=operation_model.name),
+                exception=e, context=request_context
+            )
+            raise
 
     def _convert_to_request_dict(self, api_params, operation_model,
                                  context=None):

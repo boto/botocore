@@ -23,6 +23,7 @@ import mock
 
 import botocore.session
 import botocore.exceptions
+from botocore import UNSIGNED
 from botocore.model import ServiceModel
 from botocore import client
 from botocore.hooks import HierarchicalEmitter
@@ -499,6 +500,14 @@ class TestCreateClient(BaseSessionTest):
                 aws_secret_access_key='foo',
             )
 
+    def test_cred_provider_not_called_on_unsigned_client(self):
+        cred_provider = mock.Mock()
+        self.session.register_component(
+            'credential_provider', cred_provider)
+        config = botocore.config.Config(signature_version=UNSIGNED)
+        self.session.create_client('sts', 'us-west-2', config=config)
+        self.assertFalse(cred_provider.load_credentials.called)
+
     @mock.patch('botocore.client.ClientCreator')
     def test_config_passed_to_client_creator(self, client_creator):
         # Make sure there is no default set
@@ -709,6 +718,50 @@ class TestSessionComponent(BaseSessionTest):
             self.session.get_component('exceptions_factory'),
             exceptions_factory
         )
+
+
+class TestClientMonitoring(BaseSessionTest):
+    def assert_created_client_is_monitored(self, session):
+        with mock.patch('botocore.monitoring.Monitor',
+                        spec=True) as mock_monitor:
+            client = session.create_client('ec2', 'us-west-2')
+        mock_monitor.return_value.register.assert_called_with(
+            client.meta.events)
+
+    def assert_created_client_is_not_monitored(self, session):
+        with mock.patch('botocore.session.monitoring.Monitor',
+                        spec=True) as mock_monitor:
+            session.create_client('ec2', 'us-west-2')
+            mock_monitor.return_value.register.assert_not_called()
+
+    def test_with_csm_enabled_from_config(self):
+        with temporary_file('w') as f:
+            del self.environ['FOO_PROFILE']
+            self.environ['FOO_CONFIG_FILE'] = f.name
+            f.write('[default]\n')
+            f.write('csm_enabled=true\n')
+            f.flush()
+            self.assert_created_client_is_monitored(self.session)
+
+    def test_with_csm_enabled_from_env(self):
+        self.environ['AWS_CSM_ENABLED'] = 'true'
+        self.assert_created_client_is_monitored(self.session)
+
+    def test_with_csm_disabled_from_config(self):
+        with temporary_file('w') as f:
+            del self.environ['FOO_PROFILE']
+            self.environ['FOO_CONFIG_FILE'] = f.name
+            f.write('[default]\n')
+            f.write('csm_enabled=false\n')
+            f.flush()
+            self.assert_created_client_is_not_monitored(self.session)
+
+    def test_with_csm_disabled_from_env(self):
+        self.environ['AWS_CSM_ENABLED'] = 'false'
+        self.assert_created_client_is_not_monitored(self.session)
+
+    def test_csm_not_configured(self):
+        self.assert_created_client_is_not_monitored(self.session)
 
 
 class TestComponentLocator(unittest.TestCase):

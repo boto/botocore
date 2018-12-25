@@ -19,6 +19,21 @@
       "input_token": "NextToken",
       "output_token": "NextToken",
       "result_key": "TraceSummaries"
+    },
+    "GetGroups": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "result_key": "Groups"
+    },
+    "GetSamplingRules": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "result_key": "SamplingRuleRecords"
+    },
+    "GetSamplingStatisticSummaries": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "result_key": "SamplingStatisticSummaries"
     }
   }
 }

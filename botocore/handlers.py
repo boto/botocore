@@ -35,6 +35,7 @@ from botocore.signers import add_generate_db_auth_token
 from botocore.exceptions import ParamValidationError
 from botocore.exceptions import AliasConflictParameterError
 from botocore.exceptions import UnsupportedTLSVersionWarning
+from botocore.exceptions import MissingServiceIdError
 from botocore.utils import percent_encode, SAFE_CHARS
 from botocore.utils import switch_host_with_param
 from botocore.utils import hyphenize_service_id
@@ -280,6 +281,8 @@ def register_retries_for_service(service_data, session,
                      "prefix from model for service %s", service_name)
         return
     service_id = service_data.get('metadata', {}).get('serviceId')
+    if service_id is None:
+        raise MissingServiceIdError(service_name=service_name)
     service_event_name = hyphenize_service_id(service_id)
     config = _load_retry_config(loader, endpoint_prefix)
     if not config:
@@ -909,6 +912,12 @@ class HeaderToHostHoister(object):
         return new_url
 
 
+def inject_api_version_header_if_needed(model, params, **kwargs):
+    if not model.is_endpoint_discovery_operation:
+        return
+    params['headers']['x-amz-api-version'] = model.service_model.api_version
+
+
 # This is a list of (event_name, handler).
 # When a Session is created, everything in this list will be
 # automatically registered with that Session.
@@ -1099,6 +1108,8 @@ BUILTIN_HANDLERS = [
     #############
     ('before-call.s3-control.*',
      HeaderToHostHoister('x-amz-account-id').hoist),
+
+    ('before-call', inject_api_version_header_if_needed),
 
 ]
 _add_parameter_aliases(BUILTIN_HANDLERS)

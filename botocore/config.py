@@ -137,6 +137,7 @@ class Config(object):
         ('retries', None),
         ('client_cert', None),
         ('inject_host_prefix', True),
+        ('endpoint_discovery_enabled', None),
     ])
 
     def __init__(self, *args, **kwargs):

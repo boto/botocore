@@ -1,0 +1,22 @@
+[
+  {
+    "category": "``acm-pca``", 
+    "description": "Update acm-pca client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``dynamodb``", 
+    "description": "Update dynamodb client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sms-voice``", 
+    "description": "Update sms-voice client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``stepfunctions``", 
+    "description": "Update stepfunctions client to latest version", 
+    "type": "api-change"
+  }
+]

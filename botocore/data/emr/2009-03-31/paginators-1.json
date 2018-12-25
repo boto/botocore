@@ -29,6 +29,11 @@
       "input_token": "Marker",
       "output_token": "Marker",
       "result_key": "InstanceFleets"
+    },
+    "ListSecurityConfigurations": {
+      "input_token": "Marker",
+      "output_token": "Marker",
+      "result_key": "SecurityConfigurations"
     }
   }
 }

@@ -94,6 +94,264 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "NetworkInterfaces"
+    },
+    "DescribeVpcEndpoints": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "VpcEndpoints"
+    },
+    "DescribeVpcEndpointServices": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "ServiceDetails"
+    },
+    "DescribeVpcEndpointConnections": {
+      "input_token": "NextToken",
+      "output_token": "NextToken",
+      "limit_key": "MaxResults",
+      "result_key": "VpcEndpointConnections"
+    },
+    "DescribeByoipCidrs": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "ByoipCidrs"
+    },
+    "DescribeCapacityReservations": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "CapacityReservations"
+    },
+    "DescribeClassicLinkInstances": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Instances"
+    },
+    "DescribeClientVpnAuthorizationRules": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "AuthorizationRules"
+    },
+    "DescribeClientVpnConnections": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Connections"
+    },
+    "DescribeClientVpnEndpoints": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "ClientVpnEndpoints"
+    },
+    "DescribeClientVpnRoutes": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Routes"
+    },
+    "DescribeClientVpnTargetNetworks": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "ClientVpnTargetNetworks"
+    },
+    "DescribeEgressOnlyInternetGateways": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "EgressOnlyInternetGateways"
+    },
+    "DescribeFleets": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Fleets"
+    },
+    "DescribeFlowLogs": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "FlowLogs"
+    },
+    "DescribeFpgaImages": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "FpgaImages"
+    },
+    "DescribeHostReservationOfferings": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "OfferingSet"
+    },
+    "DescribeHostReservations": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "HostReservationSet"
+    },
+    "DescribeHosts": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Hosts"
+    },
+    "DescribeImportImageTasks": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "ImportImageTasks"
+    },
+    "DescribeImportSnapshotTasks": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "ImportSnapshotTasks"
+    },
+    "DescribeInstanceCreditSpecifications": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "InstanceCreditSpecifications"
+    },
+    "DescribeLaunchTemplateVersions": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "LaunchTemplateVersions"
+    },
+    "DescribeLaunchTemplates": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "LaunchTemplates"
+    },
+    "DescribeMovingAddresses": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "MovingAddressStatuses"
+    },
+    "DescribeNetworkInterfacePermissions": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "NetworkInterfacePermissions"
+    },
+    "DescribePrefixLists": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "PrefixLists"
+    },
+    "DescribePrincipalIdFormat": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Principals"
+    },
+    "DescribePublicIpv4Pools": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "PublicIpv4Pools"
+    },
+    "DescribeScheduledInstanceAvailability": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "ScheduledInstanceAvailabilitySet"
+    },
+    "DescribeScheduledInstances": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "ScheduledInstanceSet"
+    },
+    "DescribeStaleSecurityGroups": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "StaleSecurityGroupSet"
+    },
+    "DescribeTransitGatewayAttachments": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "TransitGatewayAttachments"
+    },
+    "DescribeTransitGatewayRouteTables": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "TransitGatewayRouteTables"
+    },
+    "DescribeTransitGatewayVpcAttachments": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "TransitGatewayVpcAttachments"
+    },
+    "DescribeTransitGateways": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "TransitGateways"
+    },
+    "DescribeVolumesModifications": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "VolumesModifications"
+    },
+    "DescribeVpcClassicLinkDnsSupport": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Vpcs"
+    },
+    "DescribeVpcEndpointConnectionNotifications": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "ConnectionNotificationSet"
+    },
+    "DescribeVpcEndpointServiceConfigurations": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "ServiceConfigurations"
+    },
+    "DescribeVpcEndpointServicePermissions": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "AllowedPrincipals"
+    },
+    "GetTransitGatewayAttachmentPropagations": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "TransitGatewayAttachmentPropagations"
+    },
+    "GetTransitGatewayRouteTableAssociations": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Associations"
+    },
+    "GetTransitGatewayRouteTablePropagations": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "TransitGatewayRouteTablePropagations"
     }
   }
 }

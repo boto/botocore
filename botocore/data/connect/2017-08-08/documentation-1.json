@@ -7,6 +7,7 @@
          "DescribeUser" : "https://docs.aws.amazon.com/goto/WebAPI/connect/DescribeUser",
          "DescribeUserHierarchyGroup" : "https://docs.aws.amazon.com/goto/WebAPI/connect/DescribeUserHierarchyGroup",
          "DescribeUserHierarchyStructure" : "https://docs.aws.amazon.com/goto/WebAPI/connect/DescribeUserHierarchyStructure",
+         "GetContactAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/connect/GetContactAttributes",
          "GetCurrentMetricData" : "https://docs.aws.amazon.com/goto/WebAPI/connect/GetCurrentMetricData",
          "GetFederationToken" : "https://docs.aws.amazon.com/goto/WebAPI/connect/GetFederationToken",
          "GetMetricData" : "https://docs.aws.amazon.com/goto/WebAPI/connect/GetMetricData",

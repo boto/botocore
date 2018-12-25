@@ -2,6 +2,69 @@
 CHANGELOG
 =========
 
+1.12.71
+=======
+
+* api-change:``acm-pca``: Update acm-pca client to latest version
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``sms-voice``: Update sms-voice client to latest version
+* api-change:``stepfunctions``: Update stepfunctions client to latest version
+
+
+1.12.70
+=======
+
+* api-change:``medialive``: Update medialive client to latest version
+* enhancement:EndpointDiscovery: Add a config option, ``endpoint_discovery_enabled``, for automatically discovering endpoints
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``firehose``: Update firehose client to latest version
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+
+
+1.12.69
+=======
+
+* api-change:``sagemaker``: Update sagemaker client to latest version
+* api-change:``waf-regional``: Update waf-regional client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``waf``: Update waf client to latest version
+
+
+1.12.68
+=======
+
+* api-change:``apigatewayv2``: Update apigatewayv2 client to latest version
+* bugfix:Credentials: Fixes an issue where credentials would be checked when creating an anonymous client. Fixes `#1472 <https://github.com/boto/botocore/issues/1472>`__
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* api-change:``globalaccelerator``: Update globalaccelerator client to latest version
+* enhancement:StreamingBody: Support iterating lines from a streaming response body with CRLF line endings
+* api-change:``apigatewaymanagementapi``: Update apigatewaymanagementapi client to latest version
+
+
+1.12.67
+=======
+
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``ecr``: Update ecr client to latest version
+
+
+1.12.66
+=======
+
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+
+
+1.12.65
+=======
+
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``pinpoint-email``: Update pinpoint-email client to latest version
+
+
 1.12.64
 =======
 

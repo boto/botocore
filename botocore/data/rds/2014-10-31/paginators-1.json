@@ -1,10 +1,40 @@
 {
   "pagination": {
+    "DescribeCertificates": {
+      "input_token": "Marker",
+      "output_token": "Marker",
+      "limit_key": "MaxRecords",
+      "result_key": "Certificates"
+    },
+    "DescribeDBClusterBacktracks": {
+      "input_token": "Marker",
+      "output_token": "Marker",
+      "limit_key": "MaxRecords",
+      "result_key": "DBClusterBacktracks"
+    },
+    "DescribeDBClusterParameterGroups": {
+      "input_token": "Marker",
+      "output_token": "Marker",
+      "limit_key": "MaxRecords",
+      "result_key": "DBClusterParameterGroups"
+    },
+    "DescribeDBClusterParameters": {
+      "input_token": "Marker",
+      "output_token": "Marker",
+      "limit_key": "MaxRecords",
+      "result_key": "Parameters"
+    },
     "DescribeDBClusterSnapshots": {
       "input_token": "Marker",
       "output_token": "Marker",
       "limit_key": "MaxRecords",
       "result_key": "DBClusterSnapshots"
+    },
+    "DescribeDBClusters": {
+      "input_token": "Marker",
+      "limit_key": "MaxRecords",
+      "output_token": "Marker",
+      "result_key": "DBClusters"
     },
     "DescribeDBEngineVersions": {
       "input_token": "Marker",
@@ -12,17 +42,17 @@
       "limit_key": "MaxRecords",
       "result_key": "DBEngineVersions"
     },
+    "DescribeDBInstanceAutomatedBackups": {
+      "input_token": "Marker",
+      "limit_key": "MaxRecords",
+      "output_token": "Marker",
+      "result_key": "DBInstanceAutomatedBackups"
+    },
     "DescribeDBInstances": {
       "input_token": "Marker",
       "output_token": "Marker",
       "limit_key": "MaxRecords",
       "result_key": "DBInstances"
-    },
-    "DescribeDBClusters": {
-      "input_token": "Marker",
-      "output_token": "Marker",
-      "limit_key": "MaxRecords",
-      "result_key": "DBClusters"
     },
     "DescribeDBLogFiles": {
       "input_token": "Marker",
@@ -60,6 +90,12 @@
       "limit_key": "MaxRecords",
       "result_key": "DBSubnetGroups"
     },
+    "DescribeEngineDefaultClusterParameters": {
+      "input_token": "Marker",
+      "output_token": "EngineDefaults.Marker",
+      "limit_key": "MaxRecords",
+      "result_key": "EngineDefaults.Parameters"
+    },
     "DescribeEngineDefaultParameters": {
       "input_token": "Marker",
       "output_token": "EngineDefaults.Marker",
@@ -77,6 +113,12 @@
       "output_token": "Marker",
       "limit_key": "MaxRecords",
       "result_key": "Events"
+    },
+    "DescribeGlobalClusters": {
+      "input_token": "Marker",
+      "limit_key": "MaxRecords",
+      "output_token": "Marker",
+      "result_key": "GlobalClusters"
     },
     "DescribeOptionGroupOptions": {
       "input_token": "Marker",
@@ -96,6 +138,12 @@
       "limit_key": "MaxRecords",
       "result_key": "OrderableDBInstanceOptions"
     },
+    "DescribePendingMaintenanceActions": {
+      "input_token": "Marker",
+      "output_token": "Marker",
+      "limit_key": "MaxRecords",
+      "result_key": "PendingMaintenanceActions"
+    },
     "DescribeReservedDBInstances": {
       "input_token": "Marker",
       "output_token": "Marker",
@@ -108,6 +156,12 @@
       "limit_key": "MaxRecords",
       "result_key": "ReservedDBInstancesOfferings"
     },
+    "DescribeSourceRegions": {
+      "input_token": "Marker",
+      "output_token": "Marker",
+      "limit_key": "MaxRecords",
+      "result_key": "SourceRegions"
+    },
     "DownloadDBLogFilePortion": {
       "input_token": "Marker",
       "output_token": "Marker",
@@ -115,17 +169,11 @@
       "more_results": "AdditionalDataPending",
       "result_key": "LogFileData"
     },
-    "DescribeDBInstanceAutomatedBackups": {
+    "DescribeDBClusterEndpoints": {
       "input_token": "Marker",
       "limit_key": "MaxRecords",
       "output_token": "Marker",
-      "result_key": "DBInstanceAutomatedBackups"
-    },
-    "DescribeGlobalClusters": {
-      "input_token": "Marker",
-      "limit_key": "MaxRecords",
-      "output_token": "Marker",
-      "result_key": "GlobalClusters"
+      "result_key": "DBClusterEndpoints"
     }
   }
 }

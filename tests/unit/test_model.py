@@ -2,6 +2,7 @@ from tests import unittest
 
 from botocore import model
 from botocore.compat import OrderedDict
+from botocore.exceptions import MissingServiceIdError
 
 
 def test_missing_model_attribute_raises_exception():
@@ -74,6 +75,24 @@ class TestServiceModel(unittest.TestCase):
     def test_hyphenize_service_id(self):
         self.assertEqual(
             self.service_model.service_id.hyphenize(), 'myservice')
+
+    def test_service_id_does_not_exist(self):
+        service_model = {
+            'metadata': {
+                'protocol': 'query',
+                'endpointPrefix': 'endpoint-prefix',
+            },
+            'documentation': 'Documentation value',
+            'operations': {},
+            'shapes': {
+                'StringShape': {'type': 'string'}
+            }
+        }
+        service_name = 'myservice'
+        service_model = model.ServiceModel(service_model, service_name)
+        with self.assertRaisesRegexp(model.UndefinedModelAttributeError,
+                                     service_name):
+            service_model.service_id
 
     def test_operation_does_not_exist(self):
         with self.assertRaises(model.OperationNotFoundError):
@@ -263,6 +282,33 @@ class TestOperationModelFromService(unittest.TestCase):
         service_model = model.ServiceModel(self.model)
         operation_two = service_model.operation_model('OperationTwo')
         self.assertFalse(operation_two.deprecated)
+
+    def test_endpoint_operation_present(self):
+        self.model['operations']['OperationName']['endpointoperation'] = True
+        service_model = model.ServiceModel(self.model)
+        operation_name = service_model.operation_model('OperationName')
+        self.assertTrue(operation_name.is_endpoint_discovery_operation)
+
+    def test_endpoint_operation_present_false(self):
+        self.model['operations']['OperationName']['endpointoperation'] = False
+        service_model = model.ServiceModel(self.model)
+        operation_name = service_model.operation_model('OperationName')
+        self.assertFalse(operation_name.is_endpoint_discovery_operation)
+
+    def test_endpoint_operation_absent(self):
+        operation_two = self.service_model.operation_model('OperationName')
+        self.assertFalse(operation_two.is_endpoint_discovery_operation)
+
+    def test_endpoint_discovery_present(self):
+        operation = self.model['operations']['OperationName']
+        operation['endpointdiscovery'] = {'required': True}
+        service_model = model.ServiceModel(self.model)
+        operation_name = service_model.operation_model('OperationName')
+        self.assertTrue(operation_name.endpoint_discovery.get('required'))
+
+    def test_endpoint_discovery_absent(self):
+        operation_name = self.service_model.operation_model('OperationName')
+        self.assertIsNone(operation_name.endpoint_discovery)
 
 
 class TestOperationModelEventStreamTypes(unittest.TestCase):

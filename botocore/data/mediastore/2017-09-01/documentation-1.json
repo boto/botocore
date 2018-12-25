@@ -6,12 +6,15 @@
          "DeleteContainer" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/DeleteContainer",
          "DeleteContainerPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/DeleteContainerPolicy",
          "DeleteCorsPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/DeleteCorsPolicy",
+         "DeleteLifecyclePolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/DeleteLifecyclePolicy",
          "DescribeContainer" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/DescribeContainer",
          "GetContainerPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/GetContainerPolicy",
          "GetCorsPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/GetCorsPolicy",
+         "GetLifecyclePolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/GetLifecyclePolicy",
          "ListContainers" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/ListContainers",
          "PutContainerPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/PutContainerPolicy",
-         "PutCorsPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/PutCorsPolicy"
+         "PutCorsPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/PutCorsPolicy",
+         "PutLifecyclePolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/PutLifecyclePolicy"
       }
    }
 }

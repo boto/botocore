@@ -5,7 +5,10 @@
          "CreateCluster" : "https://docs.aws.amazon.com/goto/WebAPI/eks/CreateCluster",
          "DeleteCluster" : "https://docs.aws.amazon.com/goto/WebAPI/eks/DeleteCluster",
          "DescribeCluster" : "https://docs.aws.amazon.com/goto/WebAPI/eks/DescribeCluster",
-         "ListClusters" : "https://docs.aws.amazon.com/goto/WebAPI/eks/ListClusters"
+         "DescribeUpdate" : "https://docs.aws.amazon.com/goto/WebAPI/eks/DescribeUpdate",
+         "ListClusters" : "https://docs.aws.amazon.com/goto/WebAPI/eks/ListClusters",
+         "ListUpdates" : "https://docs.aws.amazon.com/goto/WebAPI/eks/ListUpdates",
+         "UpdateClusterVersion" : "https://docs.aws.amazon.com/goto/WebAPI/eks/UpdateClusterVersion"
       }
    }
 }
