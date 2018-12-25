@@ -1,0 +1,8 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/execute-api-2018-11-29",
+      "methods" : {
+         "PostToConnection" : "https://docs.aws.amazon.com/goto/WebAPI/execute-api/PostToConnection"
+      }
+   }
+}

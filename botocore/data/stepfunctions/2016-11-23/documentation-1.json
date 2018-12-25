@@ -15,11 +15,14 @@
          "ListActivities" : "https://docs.aws.amazon.com/goto/WebAPI/states/ListActivities",
          "ListExecutions" : "https://docs.aws.amazon.com/goto/WebAPI/states/ListExecutions",
          "ListStateMachines" : "https://docs.aws.amazon.com/goto/WebAPI/states/ListStateMachines",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/states/ListTagsForResource",
          "SendTaskFailure" : "https://docs.aws.amazon.com/goto/WebAPI/states/SendTaskFailure",
          "SendTaskHeartbeat" : "https://docs.aws.amazon.com/goto/WebAPI/states/SendTaskHeartbeat",
          "SendTaskSuccess" : "https://docs.aws.amazon.com/goto/WebAPI/states/SendTaskSuccess",
          "StartExecution" : "https://docs.aws.amazon.com/goto/WebAPI/states/StartExecution",
          "StopExecution" : "https://docs.aws.amazon.com/goto/WebAPI/states/StopExecution",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/states/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/states/UntagResource",
          "UpdateStateMachine" : "https://docs.aws.amazon.com/goto/WebAPI/states/UpdateStateMachine"
       }
    }

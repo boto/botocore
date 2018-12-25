@@ -41,7 +41,9 @@
          "StopDominantLanguageDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StopDominantLanguageDetectionJob",
          "StopEntitiesDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StopEntitiesDetectionJob",
          "StopKeyPhrasesDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StopKeyPhrasesDetectionJob",
-         "StopSentimentDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StopSentimentDetectionJob"
+         "StopSentimentDetectionJob" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StopSentimentDetectionJob",
+         "StopTrainingDocumentClassifier" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StopTrainingDocumentClassifier",
+         "StopTrainingEntityRecognizer" : "https://docs.aws.amazon.com/goto/WebAPI/comprehend/StopTrainingEntityRecognizer"
       }
    }
 }

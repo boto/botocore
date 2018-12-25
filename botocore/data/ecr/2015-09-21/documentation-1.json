@@ -19,10 +19,13 @@
          "GetRepositoryPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/GetRepositoryPolicy",
          "InitiateLayerUpload" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/InitiateLayerUpload",
          "ListImages" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/ListImages",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/ListTagsForResource",
          "PutImage" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/PutImage",
          "PutLifecyclePolicy" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/PutLifecyclePolicy",
          "SetRepositoryPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/SetRepositoryPolicy",
          "StartLifecyclePolicyPreview" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/StartLifecyclePolicyPreview",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/UntagResource",
          "UploadLayerPart" : "https://docs.aws.amazon.com/goto/WebAPI/ecr/UploadLayerPart"
       }
    }

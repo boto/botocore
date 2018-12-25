@@ -95,6 +95,7 @@
          "UpdateUserAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-idp/UpdateUserAttributes",
          "UpdateUserPool" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-idp/UpdateUserPool",
          "UpdateUserPoolClient" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-idp/UpdateUserPoolClient",
+         "UpdateUserPoolDomain" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-idp/UpdateUserPoolDomain",
          "VerifySoftwareToken" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-idp/VerifySoftwareToken",
          "VerifyUserAttribute" : "https://docs.aws.amazon.com/goto/WebAPI/cognito-idp/VerifyUserAttribute"
       }
