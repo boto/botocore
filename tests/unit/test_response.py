@@ -167,6 +167,12 @@ class TestStreamWrapper(unittest.TestCase):
                 [b'1234567890', b'1234567890', b'12345'],
             )
 
+    def test_streaming_line_empty_body(self):
+        stream = response.StreamingBody(
+            six.BytesIO(b''), content_length=0,
+        )
+        self.assert_lines(stream.iter_lines(), [])
+
 
 class FakeRawResponse(six.BytesIO):
     def stream(self, amt=1024, decode_content=None):
