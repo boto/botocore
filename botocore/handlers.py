@@ -637,7 +637,7 @@ def add_glacier_checksums(params, **kwargs):
     request_dict = params
     headers = request_dict['headers']
     body = request_dict['body']
-    if isinstance(body, six.binary_type):
+    if isinstance(body, bytes):
         # If the user provided a bytes type instead of a file
         # like object, we're temporarily create a BytesIO object
         # so we can use the util functions to calculate the
@@ -772,7 +772,7 @@ def convert_body_to_file_like_object(params, **kwargs):
     if 'Body' in params:
         if isinstance(params['Body'], six.string_types):
             params['Body'] = six.BytesIO(ensure_bytes(params['Body']))
-        elif isinstance(params['Body'], six.binary_type):
+        elif isinstance(params['Body'], bytes):
             params['Body'] = six.BytesIO(params['Body'])
 
 

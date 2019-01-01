@@ -543,7 +543,7 @@ class AWSPreparedRequest(object):
         # the entire body contents again if we need to).
         # Same case if the body is a string/bytes/bytearray type.
 
-        non_seekable_types = (six.binary_type, six.text_type, bytearray)
+        non_seekable_types = (bytes, six.text_type, bytearray)
         if self.body is None or isinstance(self.body, non_seekable_types):
             return
         try:

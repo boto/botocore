@@ -340,7 +340,7 @@ class IntegerRefresher(credentials.RefreshableCredentials):
 
 
 def _urlparse(url):
-    if isinstance(url, six.binary_type):
+    if isinstance(url, bytes):
         # Not really necessary, but it helps to reduce noise on Python 2.x
         url = url.decode('utf8')
     return urlparse(url)

@@ -1015,7 +1015,7 @@ class TestConvertStringBodyToFileLikeObject(BaseSessionTest):
         handlers.convert_body_to_file_like_object(params)
         self.assertTrue(hasattr(params['Body'], 'read'))
         contents = params['Body'].read()
-        self.assertIsInstance(contents, six.binary_type)
+        self.assertIsInstance(contents, bytes)
         self.assertEqual(contents, body_bytes)
 
     def test_string(self):

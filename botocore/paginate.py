@@ -73,7 +73,7 @@ class TokenEncoder(object):
             return self._encode_dict(data, path)
         elif isinstance(data, list):
             return self._encode_list(data, path)
-        elif isinstance(data, six.binary_type):
+        elif isinstance(data, bytes):
             return self._encode_bytes(data, path)
         else:
             return data, []

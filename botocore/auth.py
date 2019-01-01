@@ -546,7 +546,7 @@ class SigV4QueryAuth(SigV4Auth):
         # string or bytes. In those cases we attempt to load the data as a
         # dict.
         data = request.data
-        if isinstance(data, six.binary_type):
+        if isinstance(data, bytes):
             data = json.loads(data.decode('utf-8'))
         elif isinstance(data, six.string_types):
             data = json.loads(data)

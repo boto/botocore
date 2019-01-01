@@ -532,10 +532,10 @@ def percent_encode(input_str, safe=SAFE_CHARS):
     first.
     """
     # If its not a binary or text string, make it a text string.
-    if not isinstance(input_str, (six.binary_type, six.text_type)):
+    if not isinstance(input_str, (bytes, six.text_type)):
         input_str = six.text_type(input_str)
     # If it's not bytes, make it bytes by UTF-8 encoding it.
-    if not isinstance(input_str, six.binary_type):
+    if not isinstance(input_str, bytes):
         input_str = input_str.encode('utf-8')
     return quote(input_str, safe=safe)
 
