@@ -114,7 +114,8 @@ class StreamingBody(object):
             for line in lines[:-1]:
                 yield line.splitlines()[0]
             pending = lines[-1]
-        yield pending.splitlines()[0]
+        if pending:
+            yield pending.splitlines()[0]
 
     def iter_chunks(self, chunk_size=_DEFAULT_CHUNK_SIZE):
         """Return an iterator to yield chunks of chunk_size bytes from the raw

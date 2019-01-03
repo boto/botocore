@@ -38,6 +38,12 @@
       "result_key": [
         "VPCs"
       ]
+    },
+    "ListQueryLoggingConfigs": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "QueryLoggingConfigs"
     }
   }
 }

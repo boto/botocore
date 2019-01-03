@@ -17,6 +17,24 @@
       "output_token": "NextMarker",
       "limit_key": "MaxItems",
       "result_key": "Aliases"
+    },
+    "ListLayerVersions": {
+      "input_token": "Marker",
+      "limit_key": "MaxItems",
+      "output_token": "NextMarker",
+      "result_key": "LayerVersions"
+    },
+    "ListLayers": {
+      "input_token": "Marker",
+      "limit_key": "MaxItems",
+      "output_token": "NextMarker",
+      "result_key": "Layers"
+    },
+    "ListVersionsByFunction": {
+      "input_token": "Marker",
+      "limit_key": "MaxItems",
+      "output_token": "NextMarker",
+      "result_key": "Versions"
     }
   }
 }

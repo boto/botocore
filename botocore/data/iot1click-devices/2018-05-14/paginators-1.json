@@ -1,16 +1,16 @@
 {
   "pagination": {
-    "ListCertificateAuthorities": {
+    "ListDeviceEvents": {
       "input_token": "NextToken",
       "limit_key": "MaxResults",
       "output_token": "NextToken",
-      "result_key": "CertificateAuthorities"
+      "result_key": "Events"
     },
-    "ListTags": {
+    "ListDevices": {
       "input_token": "NextToken",
       "limit_key": "MaxResults",
       "output_token": "NextToken",
-      "result_key": "Tags"
+      "result_key": "Devices"
     }
   }
 }
