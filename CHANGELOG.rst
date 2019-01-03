@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.72
+=======
+
+* enhancement:Paginator: Added over 400 new paginators.
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+
+
 1.12.71
 =======
 
