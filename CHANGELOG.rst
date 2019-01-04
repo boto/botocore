@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.74
+=======
+
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``devicefarm``: Update devicefarm client to latest version
+
+
 1.12.73
 =======
 
