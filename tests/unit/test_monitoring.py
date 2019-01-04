@@ -605,6 +605,51 @@ class TestCSMSerializer(unittest.TestCase):
         serialized_event_dict = self.get_serialized_event_dict(event)
         self.assertEqual(serialized_event_dict['Region'], 'my-region-1')
 
+    def test_serialize_api_call_event_user_agent(self):
+        event = APICallEvent(
+            service=self.service, operation=self.operation, timestamp=1000)
+        attempt = event.new_api_call_attempt(2000)
+        attempt.request_headers = {'User-Agent': self.user_agent}
+        serialized_event_dict = self.get_serialized_event_dict(event)
+        self.assertEqual(serialized_event_dict['UserAgent'], self.user_agent)
+
+    def test_serialize_api_call_event_http_status_code(self):
+        event = APICallEvent(
+            service=self.service, operation=self.operation, timestamp=1000)
+        attempt = event.new_api_call_attempt(2000)
+        attempt.http_status_code = 200
+        serialized_event_dict = self.get_serialized_event_dict(event)
+        self.assertEqual(serialized_event_dict['FinalHttpStatusCode'], 200)
+
+    def test_serialize_api_call_event_parsed_error(self):
+        event = APICallEvent(
+            service=self.service, operation=self.operation, timestamp=1000)
+        attempt = event.new_api_call_attempt(2000)
+        attempt.parsed_error = {
+            'Code': 'MyErrorCode',
+            'Message': 'My error message'
+        }
+        serialized_event_dict = self.get_serialized_event_dict(event)
+        self.assertEqual(
+            serialized_event_dict['FinalAwsException'], 'MyErrorCode')
+        self.assertEqual(
+            serialized_event_dict['FinalAwsExceptionMessage'],
+            'My error message'
+        )
+
+    def test_serialize_api_call_event_wire_exception(self):
+        event = APICallEvent(
+            service=self.service, operation=self.operation, timestamp=1000)
+        attempt = event.new_api_call_attempt(2000)
+        attempt.wire_exception = Exception('Error on the wire')
+        serialized_event_dict = self.get_serialized_event_dict(event)
+        self.assertEqual(
+            serialized_event_dict['FinalSdkException'], 'Exception')
+        self.assertEqual(
+            serialized_event_dict['FinalSdkExceptionMessage'],
+            'Error on the wire'
+        )
+
     def test_serialize_api_call_event_with_retries_exceeded(self):
         event = APICallEvent(
             service=self.service, operation=self.operation, timestamp=1000,
