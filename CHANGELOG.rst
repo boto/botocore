@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.12.75
+=======
+
+* api-change:``appmesh``: Update appmesh client to latest version
+
+
 1.12.74
 =======
 
