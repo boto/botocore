@@ -2,6 +2,32 @@
 CHANGELOG
 =========
 
+1.12.75
+=======
+
+* api-change:``appmesh``: Update appmesh client to latest version
+
+
+1.12.74
+=======
+
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``devicefarm``: Update devicefarm client to latest version
+
+
+1.12.73
+=======
+
+* api-change:``iotanalytics``: Update iotanalytics client to latest version
+
+
+1.12.72
+=======
+
+* enhancement:Paginator: Added over 400 new paginators.
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+
+
 1.12.71
 =======
 

@@ -388,12 +388,25 @@ class CSMSerializer(object):
     def _serialize_attempts(self, attempts, event_dict, **kwargs):
         event_dict['AttemptCount'] = len(attempts)
         if attempts:
+            self._add_fields_from_last_attempt(event_dict, attempts[-1])
+
+    def _add_fields_from_last_attempt(self, event_dict, last_attempt):
+        if last_attempt.request_headers:
             # It does not matter which attempt to use to grab the region
             # for the ApiCall event, but SDKs typically do the last one.
-            last_attempt = attempts[-1]
-            if last_attempt.request_headers:
-                event_dict['Region'] = self._get_region(
-                    last_attempt.request_headers)
+            region = self._get_region(last_attempt.request_headers)
+            if region is not None:
+                event_dict['Region'] = region
+            event_dict['UserAgent'] = self._get_user_agent(
+                last_attempt.request_headers)
+        if last_attempt.http_status_code is not None:
+            event_dict['FinalHttpStatusCode'] = last_attempt.http_status_code
+        if last_attempt.parsed_error is not None:
+            self._serialize_parsed_error(
+                last_attempt.parsed_error, event_dict, 'ApiCall')
+        if last_attempt.wire_exception is not None:
+            self._serialize_wire_exception(
+                last_attempt.wire_exception, event_dict, 'ApiCall')
 
     def _serialize_latency(self, latency, event_dict, event_type):
         if event_type == 'ApiCall':
@@ -410,16 +423,12 @@ class CSMSerializer(object):
 
     def _serialize_request_headers(self, request_headers, event_dict,
                                    **kwargs):
-        if 'User-Agent' in request_headers:
-            event_dict['UserAgent'] = self._truncate(
-                ensure_unicode(request_headers['User-Agent']),
-                self._MAX_USER_AGENT_LENGTH
-            )
+        event_dict['UserAgent'] = self._get_user_agent(request_headers)
         if self._is_signed(request_headers):
             event_dict['AccessKey'] = self._get_access_key(request_headers)
-            region = self._get_region(request_headers)
-            if region is not None:
-                event_dict['Region'] = region
+        region = self._get_region(request_headers)
+        if region is not None:
+            event_dict['Region'] = region
         if 'X-Amz-Security-Token' in request_headers:
             event_dict['SessionToken'] = request_headers[
                 'X-Amz-Security-Token']
@@ -434,17 +443,21 @@ class CSMSerializer(object):
             if header in response_headers:
                 event_dict[entry] = response_headers[header]
 
-    def _serialize_parsed_error(self, parsed_error, event_dict, **kwargs):
-        event_dict['AwsException'] = self._truncate(
+    def _serialize_parsed_error(self, parsed_error, event_dict, event_type,
+                                **kwargs):
+        field_prefix = 'Final' if event_type == 'ApiCall' else ''
+        event_dict[field_prefix + 'AwsException'] = self._truncate(
             parsed_error['Code'], self._MAX_ERROR_CODE_LENGTH)
-        event_dict['AwsExceptionMessage'] = self._truncate(
+        event_dict[field_prefix + 'AwsExceptionMessage'] = self._truncate(
             parsed_error['Message'], self._MAX_MESSAGE_LENGTH)
 
-    def _serialize_wire_exception(self, wire_exception, event_dict, **kwargs):
-        event_dict['SdkException'] = self._truncate(
+    def _serialize_wire_exception(self, wire_exception, event_dict, event_type,
+                                  **kwargs):
+        field_prefix = 'Final' if event_type == 'ApiCall' else ''
+        event_dict[field_prefix + 'SdkException'] = self._truncate(
             wire_exception.__class__.__name__,
             self._MAX_EXCEPTION_CLASS_LENGTH)
-        event_dict['SdkExceptionMessage'] = self._truncate(
+        event_dict[field_prefix + 'SdkExceptionMessage'] = self._truncate(
             str(wire_exception), self._MAX_MESSAGE_LENGTH)
 
     def _get_event_type(self, event):
@@ -459,11 +472,19 @@ class CSMSerializer(object):
         return auth_match.group('access_key')
 
     def _get_region(self, request_headers):
+        if not self._is_signed(request_headers):
+            return None
         auth_val = self._get_auth_value(request_headers)
         signature_version, auth_match = self._get_auth_match(auth_val)
         if signature_version != 'v4':
             return None
         return auth_match.group('signing_region')
+
+    def _get_user_agent(self, request_headers):
+        return self._truncate(
+            ensure_unicode(request_headers.get('User-Agent', '')),
+            self._MAX_USER_AGENT_LENGTH
+        )
 
     def _is_signed(self, request_headers):
         return 'Authorization' in request_headers
