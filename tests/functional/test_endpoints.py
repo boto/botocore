@@ -80,6 +80,7 @@ ENDPOINT_PREFIX_OVERRIDE = {
     'application-autoscaling': 'autoscaling',
     # For neptune, we send requests to the RDS endpoint.
     'neptune': 'rds',
+    'docdb': 'rds',
 }
 NOT_SUPPORTED_IN_SDK = [
     'mobileanalytics',
