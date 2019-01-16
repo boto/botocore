@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.80
+=======
+
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``backup``: Update backup client to latest version
+
+
 1.12.79
 =======
 
