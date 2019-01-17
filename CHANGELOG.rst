@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.81
+=======
+
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
 1.12.80
 =======
 
