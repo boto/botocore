@@ -3,20 +3,20 @@
   "waiters": {
     "StreamExists": {
       "delay": 10,
-      "operation": "DescribeStream",
+      "operation": "DescribeStreamSummary",
       "maxAttempts": 18,
       "acceptors": [
         {
           "expected": "ACTIVE",
           "matcher": "path",
           "state": "success",
-          "argument": "StreamDescription.StreamStatus"
+          "argument": "StreamDescriptionSummary.StreamStatus"
         }
       ]
     },
     "StreamNotExists": {
       "delay": 10,
-      "operation": "DescribeStream",
+      "operation": "DescribeStreamSummary",
       "maxAttempts": 18,
       "acceptors": [
         {
