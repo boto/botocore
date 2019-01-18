@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.82
+=======
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.12.81
 =======
 
