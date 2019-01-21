@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.12.83
+=======
+
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``discovery``: Update discovery client to latest version
+* api-change:``dms``: Update dms client to latest version
+* api-change:``fms``: Update fms client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+
+
 1.12.82
 =======
 
