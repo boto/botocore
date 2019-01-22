@@ -2,6 +2,70 @@
 CHANGELOG
 =========
 
+1.12.83
+=======
+
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``discovery``: Update discovery client to latest version
+* api-change:``dms``: Update dms client to latest version
+* api-change:``fms``: Update fms client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+
+
+1.12.82
+=======
+
+* api-change:``glue``: Update glue client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.12.81
+=======
+
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``lambda``: Update lambda client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
+1.12.80
+=======
+
+* api-change:``dynamodb``: Update dynamodb client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``backup``: Update backup client to latest version
+
+
+1.12.79
+=======
+
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+
+
+1.12.78
+=======
+
+* api-change:``rds-data``: Update rds-data client to latest version
+* api-change:``emr``: Update emr client to latest version
+
+
+1.12.77
+=======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+
+
+1.12.76
+=======
+
+* api-change:``docdb``: Update docdb client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+
+
 1.12.75
 =======
 
