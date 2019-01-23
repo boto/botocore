@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.84
+=======
+
+* api-change:``worklink``: Update worklink client to latest version
+* api-change:``apigatewaymanagementapi``: Update apigatewaymanagementapi client to latest version
+* api-change:``acm-pca``: Update acm-pca client to latest version
+
+
 1.12.83
 =======
 
