@@ -167,6 +167,10 @@ class Shape(object):
         return "<%s(%s)>" % (self.__class__.__name__,
                              self.name)
 
+    @property
+    def event_stream_name(self):
+        return None
+
 
 class StructureShape(Shape):
     @CachedProperty
@@ -182,6 +186,13 @@ class StructureShape(Shape):
         for name, shape_ref in members.items():
             shape_members[name] = self._resolve_shape_ref(shape_ref)
         return shape_members
+
+    @CachedProperty
+    def event_stream_name(self):
+        for member_name, member in self.members.items():
+            if member.serialization.get('eventstream'):
+                return member_name
+        return None
 
 
 class ListShape(Shape):
@@ -495,9 +506,9 @@ class OperationModel(object):
         """Returns the event stream member's shape if any or None otherwise."""
         if shape is None:
             return None
-        for member in shape.members.values():
-            if member.serialization.get('eventstream'):
-                return member
+        event_name = shape.event_stream_name
+        if event_name:
+            return shape.members[event_name]
         return None
 
     @CachedProperty

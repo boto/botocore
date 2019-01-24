@@ -121,7 +121,7 @@ import xml.etree.cElementTree
 import logging
 
 from botocore.compat import six, XMLParseError
-from botocore.eventstream import EventStream
+from botocore.eventstream import EventStream, NoInitialResponseError
 
 from botocore.utils import parse_timestamp, merge_dicts, \
     is_json_value_header, lowercase_dict
@@ -652,9 +652,8 @@ class BaseEventStreamParser(ResponseParser):
         exception_type = response['headers'].get(':exception-type')
         exception_shape = shape.members.get(exception_type)
         if exception_shape is not None:
-            body = {}
-            members = exception_shape.members
-            self._parse_payload(response, exception_shape, members, body)
+            original_parsed = self._initial_body_parse(response['body'])
+            body = self._parse_shape(exception_shape, original_parsed)
             error = {
                 'Error': {
                     'Code': exception_type,
@@ -671,7 +670,7 @@ class BaseEventStreamParser(ResponseParser):
         return error
 
     def _parse_payload(self, response, shape, member_shapes, final_parsed):
-        if shape.serialization.get('event') or shape.metadata.get('exception'):
+        if shape.serialization.get('event'):
             for name in member_shapes:
                 member_shape = member_shapes[name]
                 if member_shape.serialization.get('eventpayload'):
@@ -734,15 +733,24 @@ class JSONParser(BaseJSONParser):
     def _do_parse(self, response, shape):
         parsed = {}
         if shape is not None:
-            event_name, event_shape = self._get_event_stream_member(shape)
+            event_name = shape.event_stream_name
             if event_name:
-                event_stream = self._create_event_stream(response, event_shape)
-                event = event_stream.get_initial_response()
-                parsed = self._handle_json_body(event.payload, shape)
-                parsed[event_name] = event_stream
+                parsed = self._handle_event_stream(response, shape, event_name)
             else:
                 parsed = self._handle_json_body(response['body'], shape)
         self._inject_response_metadata(parsed, response['headers'])
+        return parsed
+
+    def _handle_event_stream(self, response, shape, event_name):
+        event_stream_shape = shape.members[event_name]
+        event_stream = self._create_event_stream(response, event_stream_shape)
+        try:
+            event = event_stream.get_initial_response()
+        except NoInitialResponseError:
+            error_msg = 'First event was not of type initial-response'
+            raise ResponseParserError(error_msg)
+        parsed = self._handle_json_body(event.payload, shape)
+        parsed[event_name] = event_stream
         return parsed
 
     def _handle_json_body(self, raw_body, shape):
@@ -751,12 +759,6 @@ class JSONParser(BaseJSONParser):
         # to richer types (blobs, timestamps, etc.
         parsed_json = self._parse_body_as_json(raw_body)
         return self._parse_shape(shape, parsed_json)
-
-    def _get_event_stream_member(self, shape):
-        for member_name, member in getattr(shape, 'members', {}).items():
-            if member.serialization.get('eventstream'):
-                return member_name, member
-        return None, None
 
 
 class BaseRestParser(ResponseParser):
