@@ -10,7 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import unittest
+from tests import unittest, RawResponse
 import datetime
 import collections
 
@@ -224,6 +224,35 @@ class TestResponseMetadataParsed(unittest.TestCase):
                      'ResponseMetadata': {'RequestId': 'request-id',
                                           'HTTPStatusCode': 200,
                                           'HTTPHeaders': headers}})
+
+    def test_response_no_initial_event_stream(self):
+        parser = parsers.JSONParser()
+        output_shape = model.StructureShape(
+            'OutputShape',
+            {
+                'type': 'structure',
+                'members': {
+                    'Payload': {'shape': 'Payload'}
+                }
+            },
+            model.ShapeResolver({
+                'Payload': {
+                    'type': 'structure',
+                    'members': [],
+                    'eventstream': True
+                }
+            })
+        )
+        with self.assertRaises(parsers.ResponseParserError):
+            response_dict = {
+                'status_code': 200,
+                'headers': {},
+                'body': RawResponse(b''),
+                'context': {
+                    'operation_name': 'TestOperation'
+                }
+            }
+            parser.parse(response_dict, output_shape)
 
     def test_metadata_always_exists_for_json(self):
         # ResponseMetadata is used for more than just the request id. It
