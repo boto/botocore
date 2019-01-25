@@ -2944,12 +2944,6 @@
           "cn-northwest-1" : { }
         }
       },
-      "ecr" : {
-        "endpoints" : {
-          "cn-north-1" : { },
-          "cn-northwest-1" : { }
-        }
-      },
       "ecs" : {
         "endpoints" : {
           "cn-north-1" : { },
@@ -3353,12 +3347,6 @@
         }
       },
       "ec2" : {
-        "endpoints" : {
-          "us-gov-east-1" : { },
-          "us-gov-west-1" : { }
-        }
-      },
-      "ecr" : {
         "endpoints" : {
           "us-gov-east-1" : { },
           "us-gov-west-1" : { }
