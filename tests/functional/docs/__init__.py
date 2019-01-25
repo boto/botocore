@@ -39,6 +39,15 @@ class BaseDocsFunctionalTest(unittest.TestCase):
         for line in lines:
             self.assertNotIn(line, contents)
 
+    def get_title_section_for(self, service_name):
+        contents = ServiceDocumenter(
+            service_name, self._session).document_service().decode('utf-8')
+        start_of_table_of_contents = 'Table of Contents'
+        start_index = contents.find(start_of_table_of_contents)
+        contents = contents[:start_index]
+        contents = contents.encode('utf-8')
+        return contents
+
     def get_method_document_block(self, operation_name, contents):
         contents = contents.decode('utf-8')
         start_method_document = '  .. py:method:: %s(' % operation_name
