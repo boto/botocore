@@ -338,6 +338,21 @@ def add_expect_header(model, params, **kwargs):
             params['headers']['Expect'] = '100-continue'
 
 
+class DeprecatedServiceDocumenter(object):
+    def __init__(self, replacement_service_name):
+        self._replacement_service_name = replacement_service_name
+
+    def inject_deprecation_notice(self, section, event_name, **kwargs):
+        section.style.start_important()
+        section.write('This service client is deprecated. Please use ')
+        section.style.ref(
+            self._replacement_service_name,
+            self._replacement_service_name,
+        )
+        section.write(' instead.')
+        section.style.end_important()
+
+
 def document_copy_source_form(section, event_name, **kwargs):
     if 'request-example' in event_name:
         parent = section.get_section('structure-value')
@@ -1109,6 +1124,12 @@ BUILTIN_HANDLERS = [
     ('before-call.s3-control.*',
      HeaderToHostHoister('x-amz-account-id').hoist),
 
+    ###########
+    # SMS Voice
+     ##########
+    ('docs.title.sms-voice',
+     DeprecatedServiceDocumenter(
+         'pinpoint-sms-voice').inject_deprecation_notice),
     ('before-call', inject_api_version_header_if_needed),
 
 ]
