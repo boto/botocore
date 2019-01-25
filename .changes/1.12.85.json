@@ -1,0 +1,32 @@
+[
+  {
+    "category": "``logs``", 
+    "description": "Update logs client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``elbv2``", 
+    "description": "Update elbv2 client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``rds``", 
+    "description": "Update rds client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``codebuild``", 
+    "description": "Update codebuild client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``sms-voice``", 
+    "description": "Update sms-voice client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``ecr``", 
+    "description": "Update ecr client to latest version", 
+    "type": "api-change"
+  }
+]
