@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.12.85
+=======
+
+* api-change:``logs``: Update logs client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``sms-voice``: Update sms-voice client to latest version
+* api-change:``ecr``: Update ecr client to latest version
+
+
 1.12.84
 =======
 
