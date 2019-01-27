@@ -1,4 +1,4 @@
-from collections import Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping
 try:
     from threading import RLock
 except ImportError:  # Platform-specific: No threads available
