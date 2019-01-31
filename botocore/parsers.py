@@ -121,7 +121,7 @@ import xml.etree.cElementTree
 import logging
 
 from botocore.compat import six, XMLParseError
-from botocore.eventstream import EventStream
+from botocore.eventstream import EventStream, NoInitialResponseError
 
 from botocore.utils import parse_timestamp, merge_dicts, \
     is_json_value_header, lowercase_dict
@@ -312,6 +312,11 @@ class ResponseParser(object):
 
     def _default_handle(self, shape, value):
         return value
+
+    def _create_event_stream(self, response, shape):
+        parser = self._event_stream_parser
+        name = response['context'].get('operation_name')
+        return EventStream(response['body'], shape, parser, name)
 
 
 class BaseXMLResponseParser(ResponseParser):
@@ -628,20 +633,6 @@ class BaseJSONParser(ResponseParser):
             return { 'message': body }
 
 
-class JSONParser(BaseJSONParser):
-    """Response parse for the "json" protocol."""
-    def _do_parse(self, response, shape):
-        # The json.loads() gives us the primitive JSON types,
-        # but we need to traverse the parsed JSON data to convert
-        # to richer types (blobs, timestamps, etc.
-        parsed = {}
-        if shape is not None:
-            original_parsed = self._parse_body_as_json(response['body'])
-            parsed = self._parse_shape(shape, original_parsed)
-        self._inject_response_metadata(parsed, response['headers'])
-        return parsed
-
-
 class BaseEventStreamParser(ResponseParser):
 
     def _do_parse(self, response, shape):
@@ -658,12 +649,24 @@ class BaseEventStreamParser(ResponseParser):
         return final_parsed
 
     def _do_error_parse(self, response, shape):
-        error = {
-            'Error': {
-                'Code': response['headers'].get(':error-code', ''),
-                'Message': response['headers'].get(':error-message', ''),
+        exception_type = response['headers'].get(':exception-type')
+        exception_shape = shape.members.get(exception_type)
+        if exception_shape is not None:
+            original_parsed = self._initial_body_parse(response['body'])
+            body = self._parse_shape(exception_shape, original_parsed)
+            error = {
+                'Error': {
+                    'Code': exception_type,
+                    'Message': body.get('Message', body.get('message', ''))
+                }
             }
-        }
+        else:
+            error = {
+                'Error': {
+                    'Code': response['headers'].get(':error-code', ''),
+                    'Message': response['headers'].get(':error-message', ''),
+                }
+            }
         return error
 
     def _parse_payload(self, response, shape, member_shapes, final_parsed):
@@ -722,6 +725,42 @@ class EventStreamXMLParser(BaseEventStreamParser, BaseXMLResponseParser):
         return self._parse_xml_string_to_dom(xml_string)
 
 
+class JSONParser(BaseJSONParser):
+
+    EVENT_STREAM_PARSER_CLS = EventStreamJSONParser
+
+    """Response parser for the "json" protocol."""
+    def _do_parse(self, response, shape):
+        parsed = {}
+        if shape is not None:
+            event_name = shape.event_stream_name
+            if event_name:
+                parsed = self._handle_event_stream(response, shape, event_name)
+            else:
+                parsed = self._handle_json_body(response['body'], shape)
+        self._inject_response_metadata(parsed, response['headers'])
+        return parsed
+
+    def _handle_event_stream(self, response, shape, event_name):
+        event_stream_shape = shape.members[event_name]
+        event_stream = self._create_event_stream(response, event_stream_shape)
+        try:
+            event = event_stream.get_initial_response()
+        except NoInitialResponseError:
+            error_msg = 'First event was not of type initial-response'
+            raise ResponseParserError(error_msg)
+        parsed = self._handle_json_body(event.payload, shape)
+        parsed[event_name] = event_stream
+        return parsed
+
+    def _handle_json_body(self, raw_body, shape):
+        # The json.loads() gives us the primitive JSON types,
+        # but we need to traverse the parsed JSON data to convert
+        # to richer types (blobs, timestamps, etc.
+        parsed_json = self._parse_body_as_json(raw_body)
+        return self._parse_shape(shape, parsed_json)
+
+
 class BaseRestParser(ResponseParser):
 
     def _do_parse(self, response, shape):
@@ -756,9 +795,7 @@ class BaseRestParser(ResponseParser):
             payload_member_name = shape.serialization['payload']
             body_shape = member_shapes[payload_member_name]
             if body_shape.serialization.get('eventstream'):
-                parser = self._event_stream_parser
-                name = response['context'].get('operation_name')
-                body = EventStream(response['body'], body_shape, parser, name)
+                body = self._create_event_stream(response, body_shape)
                 final_parsed[payload_member_name] = body
             elif body_shape.type_name in ['string', 'blob']:
                 # This is a stream

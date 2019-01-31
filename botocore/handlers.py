@@ -885,12 +885,6 @@ class ClientMethodAlias(object):
         return getattr(client, self._actual)
 
 
-def remove_subscribe_to_shard(class_attributes, **kwargs):
-    if 'subscribe_to_shard' in class_attributes:
-        # subscribe_to_shard requires HTTP 2 support
-        del class_attributes['subscribe_to_shard']
-
-
 class HeaderToHostHoister(object):
     """Takes a header and moves it to the front of the hoststring.
     """
@@ -945,7 +939,6 @@ BUILTIN_HANDLERS = [
      convert_body_to_file_like_object, REGISTER_LAST),
     ('before-parameter-build.s3.PutObject',
      convert_body_to_file_like_object, REGISTER_LAST),
-    ('creating-client-class.kinesis', remove_subscribe_to_shard),
     ('creating-client-class', add_generate_presigned_url),
     ('creating-client-class.s3', add_generate_presigned_post),
     ('creating-client-class.iot-data', check_openssl_supports_tls_version_1_2),
