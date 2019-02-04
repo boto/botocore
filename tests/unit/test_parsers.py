@@ -10,7 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import unittest
+from tests import unittest, RawResponse
 import datetime
 import collections
 
@@ -224,6 +224,35 @@ class TestResponseMetadataParsed(unittest.TestCase):
                      'ResponseMetadata': {'RequestId': 'request-id',
                                           'HTTPStatusCode': 200,
                                           'HTTPHeaders': headers}})
+
+    def test_response_no_initial_event_stream(self):
+        parser = parsers.JSONParser()
+        output_shape = model.StructureShape(
+            'OutputShape',
+            {
+                'type': 'structure',
+                'members': {
+                    'Payload': {'shape': 'Payload'}
+                }
+            },
+            model.ShapeResolver({
+                'Payload': {
+                    'type': 'structure',
+                    'members': [],
+                    'eventstream': True
+                }
+            })
+        )
+        with self.assertRaises(parsers.ResponseParserError):
+            response_dict = {
+                'status_code': 200,
+                'headers': {},
+                'body': RawResponse(b''),
+                'context': {
+                    'operation_name': 'TestOperation'
+                }
+            }
+            parser.parse(response_dict, output_shape)
 
     def test_metadata_always_exists_for_json(self):
         # ResponseMetadata is used for more than just the request id. It
@@ -626,6 +655,7 @@ class TestEventStreamParsers(unittest.TestCase):
                     'EventB': {'shape': 'EventBStructure'},
                     'EventC': {'shape': 'EventCStructure'},
                     'EventD': {'shape': 'EventDStructure'},
+                    'EventException': {'shape': 'ExceptionShape'},
                 }
             },
             model.ShapeResolver({
@@ -684,7 +714,14 @@ class TestEventStreamParsers(unittest.TestCase):
                 },
                 'BlobShape': {'type': 'blob'},
                 'StringShape': {'type': 'string'},
-                'IntShape': {'type': 'integer'}
+                'IntShape': {'type': 'integer'},
+                'ExceptionShape': {
+                    'exception': True,
+                    'type': 'structure',
+                    'members': {
+                        'message': {'shape': 'StringShape'}
+                    }
+                },
             })
         )
 
@@ -767,7 +804,7 @@ class TestEventStreamParsers(unittest.TestCase):
         self.assertEqual(parsed, expected)
 
     def test_parses_error_event(self):
-        error_code = 'client/SomeError',
+        error_code = 'client/SomeError'
         error_message = 'You did something wrong'
         headers = {
             ':message-type': 'error',
@@ -780,6 +817,23 @@ class TestEventStreamParsers(unittest.TestCase):
             'Error': {
                 'Code': error_code,
                 'Message': error_message
+            }
+        }
+        self.assertEqual(parsed, expected)
+
+    def test_parses_exception_event(self):
+        self.parser = parsers.EventStreamJSONParser()
+        error_code = 'EventException'
+        headers = {
+            ':message-type': 'exception',
+            ':exception-type': error_code,
+        }
+        body = b'{"message": "You did something wrong"}'
+        parsed = self.parse_event(headers, body, status_code=400)
+        expected = {
+            'Error': {
+                'Code': error_code,
+                'Message': 'You did something wrong'
             }
         }
         self.assertEqual(parsed, expected)

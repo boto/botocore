@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.87
+=======
+
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``codecommit``: Update codecommit client to latest version
+
+
 1.12.86
 =======
 
