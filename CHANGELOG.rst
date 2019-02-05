@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.88
+=======
+
+* api-change:``shield``: Update shield client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.12.87
 =======
 
