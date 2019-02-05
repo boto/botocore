@@ -335,6 +335,12 @@
       "output_token": "NextToken",
       "result_key": "AllowedPrincipals"
     },
+    "DescribeVpcPeeringConnections": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "VpcPeeringConnections"
+    },
     "GetTransitGatewayAttachmentPropagations": {
       "input_token": "NextToken",
       "limit_key": "MaxResults",
