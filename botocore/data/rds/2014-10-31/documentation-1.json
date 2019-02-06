@@ -3,6 +3,7 @@
       "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31",
       "methods" : {
          "AddRoleToDBCluster" : "https://docs.aws.amazon.com/goto/WebAPI/rds/AddRoleToDBCluster",
+         "AddRoleToDBInstance" : "https://docs.aws.amazon.com/goto/WebAPI/rds/AddRoleToDBInstance",
          "AddSourceIdentifierToSubscription" : "https://docs.aws.amazon.com/goto/WebAPI/rds/AddSourceIdentifierToSubscription",
          "AddTagsToResource" : "https://docs.aws.amazon.com/goto/WebAPI/rds/AddTagsToResource",
          "ApplyPendingMaintenanceAction" : "https://docs.aws.amazon.com/goto/WebAPI/rds/ApplyPendingMaintenanceAction",
@@ -94,6 +95,7 @@
          "RebootDBInstance" : "https://docs.aws.amazon.com/goto/WebAPI/rds/RebootDBInstance",
          "RemoveFromGlobalCluster" : "https://docs.aws.amazon.com/goto/WebAPI/rds/RemoveFromGlobalCluster",
          "RemoveRoleFromDBCluster" : "https://docs.aws.amazon.com/goto/WebAPI/rds/RemoveRoleFromDBCluster",
+         "RemoveRoleFromDBInstance" : "https://docs.aws.amazon.com/goto/WebAPI/rds/RemoveRoleFromDBInstance",
          "RemoveSourceIdentifierFromSubscription" : "https://docs.aws.amazon.com/goto/WebAPI/rds/RemoveSourceIdentifierFromSubscription",
          "RemoveTagsFromResource" : "https://docs.aws.amazon.com/goto/WebAPI/rds/RemoveTagsFromResource",
          "ResetDBClusterParameterGroup" : "https://docs.aws.amazon.com/goto/WebAPI/rds/ResetDBClusterParameterGroup",

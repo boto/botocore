@@ -9,10 +9,13 @@
          "GrantFlowEntitlements" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/GrantFlowEntitlements",
          "ListEntitlements" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/ListEntitlements",
          "ListFlows" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/ListFlows",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/ListTagsForResource",
          "RemoveFlowOutput" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/RemoveFlowOutput",
          "RevokeFlowEntitlement" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/RevokeFlowEntitlement",
          "StartFlow" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/StartFlow",
          "StopFlow" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/StopFlow",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/UntagResource",
          "UpdateFlowEntitlement" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/UpdateFlowEntitlement",
          "UpdateFlowOutput" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/UpdateFlowOutput",
          "UpdateFlowSource" : "https://docs.aws.amazon.com/goto/WebAPI/mediaconnect/UpdateFlowSource"
