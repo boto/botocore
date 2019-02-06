@@ -338,6 +338,21 @@ def add_expect_header(model, params, **kwargs):
             params['headers']['Expect'] = '100-continue'
 
 
+class DeprecatedServiceDocumenter(object):
+    def __init__(self, replacement_service_name):
+        self._replacement_service_name = replacement_service_name
+
+    def inject_deprecation_notice(self, section, event_name, **kwargs):
+        section.style.start_important()
+        section.write('This service client is deprecated. Please use ')
+        section.style.ref(
+            self._replacement_service_name,
+            self._replacement_service_name,
+        )
+        section.write(' instead.')
+        section.style.end_important()
+
+
 def document_copy_source_form(section, event_name, **kwargs):
     if 'request-example' in event_name:
         parent = section.get_section('structure-value')
@@ -870,12 +885,6 @@ class ClientMethodAlias(object):
         return getattr(client, self._actual)
 
 
-def remove_subscribe_to_shard(class_attributes, **kwargs):
-    if 'subscribe_to_shard' in class_attributes:
-        # subscribe_to_shard requires HTTP 2 support
-        del class_attributes['subscribe_to_shard']
-
-
 class HeaderToHostHoister(object):
     """Takes a header and moves it to the front of the hoststring.
     """
@@ -930,7 +939,6 @@ BUILTIN_HANDLERS = [
      convert_body_to_file_like_object, REGISTER_LAST),
     ('before-parameter-build.s3.PutObject',
      convert_body_to_file_like_object, REGISTER_LAST),
-    ('creating-client-class.kinesis', remove_subscribe_to_shard),
     ('creating-client-class', add_generate_presigned_url),
     ('creating-client-class.s3', add_generate_presigned_post),
     ('creating-client-class.iot-data', check_openssl_supports_tls_version_1_2),
@@ -1109,6 +1117,12 @@ BUILTIN_HANDLERS = [
     ('before-call.s3-control.*',
      HeaderToHostHoister('x-amz-account-id').hoist),
 
+    ###########
+    # SMS Voice
+     ##########
+    ('docs.title.sms-voice',
+     DeprecatedServiceDocumenter(
+         'pinpoint-sms-voice').inject_deprecation_notice),
     ('before-call', inject_api_version_header_if_needed),
 
 ]

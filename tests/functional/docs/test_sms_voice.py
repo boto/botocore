@@ -10,10 +10,15 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from tests import BaseSessionTest
+from tests.functional.docs import BaseDocsFunctionalTest
 
-class TestKinesis(BaseSessionTest):
-    def test_subscribe_to_shard_removed(self):
-        kinesis = self.session.create_client('kinesis', 'us-west-2')
-        with self.assertRaises(AttributeError):
-            kinesis.subscribe_to_shard
+
+class TestSMSVoiceDocs(BaseDocsFunctionalTest):
+
+    def test_warning_at_top(self):
+        docs = self.get_title_section_for('sms-voice')
+        self.assert_contains_lines_in_order([
+            '.. warning:',
+            ('This service client is deprecated. Please use '
+             ':doc:`pinpoint-sms-voice <pinpoint-sms-voice>` instead.'),
+        ], docs)
