@@ -2430,8 +2430,7 @@
       },
       "sqs" : {
         "defaults" : {
-          "protocols" : [ "http", "https" ],
-          "sslCommonName" : "{region}.queue.{dnsSuffix}"
+          "protocols" : [ "http", "https" ]
         },
         "endpoints" : {
           "ap-northeast-1" : { },
@@ -2470,9 +2469,7 @@
             "hostname" : "sqs-fips.us-west-2.amazonaws.com"
           },
           "sa-east-1" : { },
-          "us-east-1" : {
-            "sslCommonName" : "queue.{dnsSuffix}"
-          },
+          "us-east-1" : { },
           "us-east-2" : { },
           "us-west-1" : { },
           "us-west-2" : { }
@@ -3127,8 +3124,7 @@
       },
       "sqs" : {
         "defaults" : {
-          "protocols" : [ "http", "https" ],
-          "sslCommonName" : "{region}.queue.{dnsSuffix}"
+          "protocols" : [ "http", "https" ]
         },
         "endpoints" : {
           "cn-north-1" : { },
@@ -3613,7 +3609,6 @@
           "us-gov-east-1" : { },
           "us-gov-west-1" : {
             "protocols" : [ "http", "https" ],
-            "sslCommonName" : "{region}.queue.{dnsSuffix}"
           }
         }
       },
