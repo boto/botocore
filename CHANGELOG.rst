@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.89
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+
+
 1.12.88
 =======
 
