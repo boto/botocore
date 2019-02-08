@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.91
+=======
+
+* api-change:``discovery``: Update discovery client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+
+
 1.12.90
 =======
 
