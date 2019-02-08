@@ -2,6 +2,22 @@
 CHANGELOG
 =========
 
+1.12.90
+=======
+
+* api-change:``es``: Update es client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``robomaker``: Update robomaker client to latest version
+
+
+1.12.89
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+
+
 1.12.88
 =======
 
