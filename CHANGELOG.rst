@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.92
+=======
+
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``mediapackage``: Update mediapackage client to latest version
+
+
 1.12.91
 =======
 
