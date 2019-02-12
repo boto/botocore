@@ -2,6 +2,83 @@
 CHANGELOG
 =========
 
+1.12.92
+=======
+
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``mediapackage``: Update mediapackage client to latest version
+
+
+1.12.91
+=======
+
+* api-change:``discovery``: Update discovery client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``dlm``: Update dlm client to latest version
+
+
+1.12.90
+=======
+
+* api-change:``es``: Update es client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``robomaker``: Update robomaker client to latest version
+
+
+1.12.89
+=======
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``fsx``: Update fsx client to latest version
+
+
+1.12.88
+=======
+
+* api-change:``shield``: Update shield client to latest version
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.12.87
+=======
+
+* api-change:``ecs``: Update ecs client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``codecommit``: Update codecommit client to latest version
+
+
+1.12.86
+=======
+
+* api-change:``devicefarm``: Update devicefarm client to latest version
+* api-change:``codecommit``: Update codecommit client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``mediaconnect``: Update mediaconnect client to latest version
+
+
+1.12.85
+=======
+
+* api-change:``logs``: Update logs client to latest version
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``sms-voice``: Update sms-voice client to latest version
+* api-change:``ecr``: Update ecr client to latest version
+
+
+1.12.84
+=======
+
+* api-change:``worklink``: Update worklink client to latest version
+* api-change:``apigatewaymanagementapi``: Update apigatewaymanagementapi client to latest version
+* api-change:``acm-pca``: Update acm-pca client to latest version
+
+
 1.12.83
 =======
 
