@@ -29,9 +29,12 @@
          "ListRobots" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/ListRobots",
          "ListSimulationApplications" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/ListSimulationApplications",
          "ListSimulationJobs" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/ListSimulationJobs",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/ListTagsForResource",
          "RegisterRobot" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/RegisterRobot",
          "RestartSimulationJob" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/RestartSimulationJob",
          "SyncDeploymentJob" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/SyncDeploymentJob",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/UntagResource",
          "UpdateRobotApplication" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/UpdateRobotApplication",
          "UpdateSimulationApplication" : "https://docs.aws.amazon.com/goto/WebAPI/robomaker/UpdateSimulationApplication"
       }

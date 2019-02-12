@@ -19,6 +19,7 @@
          "DeleteFleet" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/DeleteFleet",
          "DeleteGameSessionQueue" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/DeleteGameSessionQueue",
          "DeleteMatchmakingConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/DeleteMatchmakingConfiguration",
+         "DeleteMatchmakingRuleSet" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/DeleteMatchmakingRuleSet",
          "DeleteScalingPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/DeleteScalingPolicy",
          "DeleteVpcPeeringAuthorization" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/DeleteVpcPeeringAuthorization",
          "DeleteVpcPeeringConnection" : "https://docs.aws.amazon.com/goto/WebAPI/gamelift/DeleteVpcPeeringConnection",

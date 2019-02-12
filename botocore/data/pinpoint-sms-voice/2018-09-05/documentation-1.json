@@ -7,7 +7,6 @@
          "DeleteConfigurationSet" : "https://docs.aws.amazon.com/goto/WebAPI/sms-voice.pinpoint/DeleteConfigurationSet",
          "DeleteConfigurationSetEventDestination" : "https://docs.aws.amazon.com/goto/WebAPI/sms-voice.pinpoint/DeleteConfigurationSetEventDestination",
          "GetConfigurationSetEventDestinations" : "https://docs.aws.amazon.com/goto/WebAPI/sms-voice.pinpoint/GetConfigurationSetEventDestinations",
-         "ListConfigurationSets" : "https://docs.aws.amazon.com/goto/WebAPI/sms-voice.pinpoint/ListConfigurationSets",
          "SendVoiceMessage" : "https://docs.aws.amazon.com/goto/WebAPI/sms-voice.pinpoint/SendVoiceMessage",
          "UpdateConfigurationSetEventDestination" : "https://docs.aws.amazon.com/goto/WebAPI/sms-voice.pinpoint/UpdateConfigurationSetEventDestination"
       }

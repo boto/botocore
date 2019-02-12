@@ -1,0 +1,27 @@
+{
+   "documentation" : {
+      "api_url" : "https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25",
+      "methods" : {
+         "AssociateWebsiteCertificateAuthority" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/AssociateWebsiteCertificateAuthority",
+         "CreateFleet" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/CreateFleet",
+         "DeleteFleet" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/DeleteFleet",
+         "DescribeAuditStreamConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/DescribeAuditStreamConfiguration",
+         "DescribeCompanyNetworkConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/DescribeCompanyNetworkConfiguration",
+         "DescribeDevice" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/DescribeDevice",
+         "DescribeDevicePolicyConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/DescribeDevicePolicyConfiguration",
+         "DescribeFleetMetadata" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/DescribeFleetMetadata",
+         "DescribeIdentityProviderConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/DescribeIdentityProviderConfiguration",
+         "DescribeWebsiteCertificateAuthority" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/DescribeWebsiteCertificateAuthority",
+         "DisassociateWebsiteCertificateAuthority" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/DisassociateWebsiteCertificateAuthority",
+         "ListDevices" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/ListDevices",
+         "ListFleets" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/ListFleets",
+         "ListWebsiteCertificateAuthorities" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/ListWebsiteCertificateAuthorities",
+         "SignOutUser" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/SignOutUser",
+         "UpdateAuditStreamConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/UpdateAuditStreamConfiguration",
+         "UpdateCompanyNetworkConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/UpdateCompanyNetworkConfiguration",
+         "UpdateDevicePolicyConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/UpdateDevicePolicyConfiguration",
+         "UpdateFleetMetadata" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/UpdateFleetMetadata",
+         "UpdateIdentityProviderConfiguration" : "https://docs.aws.amazon.com/goto/WebAPI/worklink/UpdateIdentityProviderConfiguration"
+      }
+   }
+}
