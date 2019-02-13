@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.94
+=======
+
+* api-change:``rekognition``: Update rekognition client to latest version
+* api-change:``mediatailor``: Update mediatailor client to latest version
+* api-change:``efs``: Update efs client to latest version
+
+
 1.12.93
 =======
 
