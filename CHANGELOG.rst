@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.95
+=======
+
+* api-change:``kinesisvideo``: Update kinesisvideo client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.12.94
 =======
 
