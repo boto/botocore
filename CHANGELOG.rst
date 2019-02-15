@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.96
+=======
+
+* api-change:``chime``: Update chime client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``iot``: Update iot client to latest version
+
+
 1.12.95
 =======
 
