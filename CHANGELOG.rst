@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.97
+=======
+
+* api-change:``athena``: Update athena client to latest version
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+
+
 1.12.96
 =======
 
