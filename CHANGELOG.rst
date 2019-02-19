@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.12.98
+=======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ds``: Update ds client to latest version
+* enhancement:Paginator: Add additional paginators for CloudFormation
+* api-change:``efs``: Update efs client to latest version
+
+
 1.12.97
 =======
 
