@@ -1,0 +1,5 @@
+{
+  "type": "enhancement",
+  "category": "Paginator",
+  "description": "Add additional paginators for CloudFormation"
+}
