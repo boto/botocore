@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.99
+=======
+
+* api-change:``codecommit``: Update codecommit client to latest version
+* api-change:``directconnect``: Update directconnect client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+
+
 1.12.98
 =======
 
