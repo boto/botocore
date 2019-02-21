@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+1.12.100
+========
+
+* api-change:``kinesis-video-archived-media``: Update kinesis-video-archived-media client to latest version
+* api-change:``workdocs``: Update workdocs client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``kinesisvideo``: Update kinesisvideo client to latest version
+* api-change:``kinesis-video-media``: Update kinesis-video-media client to latest version
+* api-change:``transfer``: Update transfer client to latest version
+
+
 1.12.99
 =======
 
