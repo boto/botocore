@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.101
+========
+
+* api-change:``athena``: Update athena client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``stepfunctions``: Update stepfunctions client to latest version
+* api-change:``cloud9``: Update cloud9 client to latest version
+
+
 1.12.100
 ========
 
