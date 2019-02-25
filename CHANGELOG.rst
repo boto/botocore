@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.102
+========
+
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``mediastore``: Update mediastore client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+
+
 1.12.101
 ========
 
