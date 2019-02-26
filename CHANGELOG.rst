@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.12.103
+========
+
+* api-change:``discovery``: Update discovery client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``resource-groups``: Update resource-groups client to latest version
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``cur``: Update cur client to latest version
+
+
 1.12.102
 ========
 
