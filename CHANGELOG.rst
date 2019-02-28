@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.105
+========
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``apigatewayv2``: Update apigatewayv2 client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+
+
 1.12.104
 ========
 
