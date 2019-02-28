@@ -921,7 +921,10 @@ class EnvProvider(CredentialProvider):
         """
         Search for credentials in explicit environment variables.
         """
-        if self._mapping['access_key'] in self.environ:
+
+        access_key_var = self._mapping['access_key']
+
+        if access_key_var in self.environ and not self.environ.get(access_key_var) == '':
             logger.info('Found credentials in environment variables.')
             fetcher = self._create_credentials_fetcher()
             credentials = fetcher(require_expiry=False)
@@ -951,20 +954,20 @@ class EnvProvider(CredentialProvider):
             credentials = {}
 
             access_key = environ.get(mapping['access_key'])
-            if access_key is None:
+            if access_key is None or access_key == '':
                 raise PartialCredentialsError(
                     provider=method, cred_var=mapping['access_key'])
             credentials['access_key'] = access_key
 
             secret_key = environ.get(mapping['secret_key'])
-            if secret_key is None:
+            if secret_key is None or secret_key == '':
                 raise PartialCredentialsError(
                     provider=method, cred_var=mapping['secret_key'])
             credentials['secret_key'] = secret_key
 
             token = None
             for token_env_var in mapping['token']:
-                if token_env_var in environ:
+                if token_env_var in environ and not environ[token_env_var] == '':
                     token = environ[token_env_var]
                     break
             credentials['token'] = token

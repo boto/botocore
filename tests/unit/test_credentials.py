@@ -691,6 +691,16 @@ class TestEnvVar(BaseEnvVar):
         creds = provider.load()
         self.assertIsNone(creds)
 
+    def test_envvars_empty_string(self):
+        environ = {
+            'AWS_ACCESS_KEY_ID': '',
+            'AWS_SECRET_ACCESS_KEY': '',
+            'AWS_SECURITY_TOKEN': '',
+        }
+        provider = credentials.EnvProvider(environ)
+        creds = provider.load()
+        self.assertIsNone(creds)
+
     def test_can_override_env_var_mapping(self):
         # We can change the env var provider to
         # use our specified env var names.
@@ -760,6 +770,18 @@ class TestEnvVar(BaseEnvVar):
         environ = {
             'AWS_ACCESS_KEY_ID': 'foo',
             # Missing the AWS_SECRET_ACCESS_KEY
+        }
+        provider = credentials.EnvProvider(environ)
+        with self.assertRaises(botocore.exceptions.PartialCredentialsError):
+            provider.load()
+
+    def test_partial_creds_is_an_error_empty_string(self):
+        # If the user provides an access key, they must also
+        # provide a secret key.  Not doing so will generate an
+        # error.
+        environ = {
+            'AWS_ACCESS_KEY_ID': 'foo',
+            'AWS_SECRET_ACCESS_KEY': '',
         }
         provider = credentials.EnvProvider(environ)
         with self.assertRaises(botocore.exceptions.PartialCredentialsError):
