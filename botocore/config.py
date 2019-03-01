@@ -35,12 +35,12 @@ class Config(object):
     :param user_agent_extra: The value to append to the current User-Agent
         header value.
 
-    :type connect_timeout: int
+    :type connect_timeout: float or int
     :param connect_timeout: The time in seconds till a timeout exception is
         thrown when attempting to make a connection. The default is 60
         seconds.
 
-    :type read_timeout: int
+    :type read_timeout: float or int
     :param read_timeout: The time in seconds till a timeout exception is
         thrown when attempting to read from a connection. The default is
         60 seconds.

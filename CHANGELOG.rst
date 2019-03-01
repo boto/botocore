@@ -2,6 +2,127 @@
 CHANGELOG
 =========
 
+1.12.105
+========
+
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``apigatewayv2``: Update apigatewayv2 client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+
+
+1.12.104
+========
+
+* api-change:``waf-regional``: Update waf-regional client to latest version
+* api-change:``waf``: Update waf client to latest version
+
+
+1.12.103
+========
+
+* api-change:``discovery``: Update discovery client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``resource-groups``: Update resource-groups client to latest version
+* api-change:``opsworkscm``: Update opsworkscm client to latest version
+* api-change:``pinpoint``: Update pinpoint client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``cur``: Update cur client to latest version
+
+
+1.12.102
+========
+
+* api-change:``elbv2``: Update elbv2 client to latest version
+* api-change:``mediastore``: Update mediastore client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+
+
+1.12.101
+========
+
+* api-change:``athena``: Update athena client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``stepfunctions``: Update stepfunctions client to latest version
+* api-change:``cloud9``: Update cloud9 client to latest version
+
+
+1.12.100
+========
+
+* api-change:``kinesis-video-archived-media``: Update kinesis-video-archived-media client to latest version
+* api-change:``workdocs``: Update workdocs client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``kinesisvideo``: Update kinesisvideo client to latest version
+* api-change:``kinesis-video-media``: Update kinesis-video-media client to latest version
+* api-change:``transfer``: Update transfer client to latest version
+
+
+1.12.99
+=======
+
+* api-change:``codecommit``: Update codecommit client to latest version
+* api-change:``directconnect``: Update directconnect client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+
+
+1.12.98
+=======
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``ds``: Update ds client to latest version
+* enhancement:Paginator: Add additional paginators for CloudFormation
+* api-change:``efs``: Update efs client to latest version
+
+
+1.12.97
+=======
+
+* api-change:``athena``: Update athena client to latest version
+* api-change:``secretsmanager``: Update secretsmanager client to latest version
+
+
+1.12.96
+=======
+
+* api-change:``chime``: Update chime client to latest version
+* api-change:``application-autoscaling``: Update application-autoscaling client to latest version
+* api-change:``iot``: Update iot client to latest version
+
+
+1.12.95
+=======
+
+* api-change:``kinesisvideo``: Update kinesisvideo client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
+1.12.94
+=======
+
+* api-change:``rekognition``: Update rekognition client to latest version
+* api-change:``mediatailor``: Update mediatailor client to latest version
+* api-change:``efs``: Update efs client to latest version
+
+
+1.12.93
+=======
+
+* api-change:``lambda``: Update lambda client to latest version
+
+
+1.12.92
+=======
+
+* api-change:``appstream``: Update appstream client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``mediapackage``: Update mediapackage client to latest version
+
+
 1.12.91
 =======
 
