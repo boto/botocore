@@ -14,7 +14,9 @@
          "ListContainers" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/ListContainers",
          "PutContainerPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/PutContainerPolicy",
          "PutCorsPolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/PutCorsPolicy",
-         "PutLifecyclePolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/PutLifecyclePolicy"
+         "PutLifecyclePolicy" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/PutLifecyclePolicy",
+         "StartAccessLogging" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/StartAccessLogging",
+         "StopAccessLogging" : "https://docs.aws.amazon.com/goto/WebAPI/mediastore/StopAccessLogging"
       }
    }
 }

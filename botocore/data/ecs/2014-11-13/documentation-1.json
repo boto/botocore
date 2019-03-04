@@ -26,6 +26,7 @@
          "ListTaskDefinitions" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/ListTaskDefinitions",
          "ListTasks" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/ListTasks",
          "PutAccountSetting" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/PutAccountSetting",
+         "PutAccountSettingDefault" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/PutAccountSettingDefault",
          "PutAttributes" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/PutAttributes",
          "RegisterContainerInstance" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/RegisterContainerInstance",
          "RegisterTaskDefinition" : "https://docs.aws.amazon.com/goto/WebAPI/ecs/RegisterTaskDefinition",

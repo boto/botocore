@@ -5,14 +5,22 @@
          "BatchGetNamedQuery" : "https://docs.aws.amazon.com/goto/WebAPI/athena/BatchGetNamedQuery",
          "BatchGetQueryExecution" : "https://docs.aws.amazon.com/goto/WebAPI/athena/BatchGetQueryExecution",
          "CreateNamedQuery" : "https://docs.aws.amazon.com/goto/WebAPI/athena/CreateNamedQuery",
+         "CreateWorkGroup" : "https://docs.aws.amazon.com/goto/WebAPI/athena/CreateWorkGroup",
          "DeleteNamedQuery" : "https://docs.aws.amazon.com/goto/WebAPI/athena/DeleteNamedQuery",
+         "DeleteWorkGroup" : "https://docs.aws.amazon.com/goto/WebAPI/athena/DeleteWorkGroup",
          "GetNamedQuery" : "https://docs.aws.amazon.com/goto/WebAPI/athena/GetNamedQuery",
          "GetQueryExecution" : "https://docs.aws.amazon.com/goto/WebAPI/athena/GetQueryExecution",
          "GetQueryResults" : "https://docs.aws.amazon.com/goto/WebAPI/athena/GetQueryResults",
+         "GetWorkGroup" : "https://docs.aws.amazon.com/goto/WebAPI/athena/GetWorkGroup",
          "ListNamedQueries" : "https://docs.aws.amazon.com/goto/WebAPI/athena/ListNamedQueries",
          "ListQueryExecutions" : "https://docs.aws.amazon.com/goto/WebAPI/athena/ListQueryExecutions",
+         "ListTagsForResource" : "https://docs.aws.amazon.com/goto/WebAPI/athena/ListTagsForResource",
+         "ListWorkGroups" : "https://docs.aws.amazon.com/goto/WebAPI/athena/ListWorkGroups",
          "StartQueryExecution" : "https://docs.aws.amazon.com/goto/WebAPI/athena/StartQueryExecution",
-         "StopQueryExecution" : "https://docs.aws.amazon.com/goto/WebAPI/athena/StopQueryExecution"
+         "StopQueryExecution" : "https://docs.aws.amazon.com/goto/WebAPI/athena/StopQueryExecution",
+         "TagResource" : "https://docs.aws.amazon.com/goto/WebAPI/athena/TagResource",
+         "UntagResource" : "https://docs.aws.amazon.com/goto/WebAPI/athena/UntagResource",
+         "UpdateWorkGroup" : "https://docs.aws.amazon.com/goto/WebAPI/athena/UpdateWorkGroup"
       }
    }
 }
