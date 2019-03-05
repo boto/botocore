@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.108
+========
+
+* api-change:``textract``: Update textract client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``codedeploy``: Update codedeploy client to latest version
+
+
 1.12.107
 ========
 
