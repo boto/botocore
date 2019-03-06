@@ -358,6 +358,24 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "TransitGatewayRouteTablePropagations"
+    },
+    "DescribeInternetGateways": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "InternetGateways"
+    },
+    "DescribeNetworkAcls": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "NetworkAcls"
+    },
+    "DescribeVpcs": {
+      "input_token": "NextToken",
+      "limit_key": "MaxResults",
+      "output_token": "NextToken",
+      "result_key": "Vpcs"
     }
   }
 }

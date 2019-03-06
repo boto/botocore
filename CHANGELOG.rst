@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.109
+========
+
+* api-change:``directconnect``: Update directconnect client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.12.108
 ========
 
