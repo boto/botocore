@@ -3091,5 +3091,5 @@
     },
     "errorMessage":{"type":"string"}
   },
-  "documentation":"<p>his section provides documentation for the AWS RoboMaker API operations.</p>"
+  "documentation":"<p>This section provides documentation for the AWS RoboMaker API operations.</p>"
 }
