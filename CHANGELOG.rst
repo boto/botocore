@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.12.110
+========
+
+* api-change:``gamelift``: Update gamelift client to latest version
+* api-change:``greengrass``: Update greengrass client to latest version
+* api-change:``appmesh``: Update appmesh client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``ecs``: Update ecs client to latest version
+
+
 1.12.109
 ========
 
