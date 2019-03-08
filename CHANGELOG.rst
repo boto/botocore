@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.111
+========
+
+* api-change:``s3``: Update s3 client to latest version
+* api-change:``codebuild``: Update codebuild client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+
+
 1.12.110
 ========
 
