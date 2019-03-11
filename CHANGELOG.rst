@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.12.112
+========
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``quicksight``: Update quicksight client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``ce``: Update ce client to latest version
+* api-change:``elasticbeanstalk``: Update elasticbeanstalk client to latest version
+* api-change:``rekognition``: Update rekognition client to latest version
+
+
 1.12.111
 ========
 
