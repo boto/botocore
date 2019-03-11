@@ -433,7 +433,8 @@ class TestS3Objects(TestS3BaseWithBucket):
 
     def test_thread_safe_auth(self):
         self.auth_paths = []
-        self.session.register('before-sign', self.increment_auth)
+        emitter = self.session.get_component('event_emitter')
+        emitter.register_last('before-sign.s3', self.increment_auth)
         # This test depends on auth_path, which is only added in virtual host
         # style requests.
         config = Config(s3={'addressing_style': 'virtual'})
