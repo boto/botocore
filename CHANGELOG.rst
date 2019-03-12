@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+1.12.113
+========
+
+* api-change:``serverlessrepo``: Update serverlessrepo client to latest version
+
+
 1.12.112
 ========
 
