@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.114
+========
+
+* api-change:``config``: Update config client to latest version
+* api-change:``logs``: Update logs client to latest version
+
+
 1.12.113
 ========
 
