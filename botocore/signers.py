@@ -671,9 +671,15 @@ def generate_presigned_post(self, Bucket, Key, Fields=None, Conditions=None,
 
     if fields is None:
         fields = {}
+    else:
+        # We should ensure we don't modify arguments.
+        fields = fields.copy()
 
     if conditions is None:
         conditions = []
+    else:
+        # We should ensure we don't modify arguments.
+        conditions = conditions.copy()
 
     post_presigner = S3PostPresigner(self._request_signer)
     serializer = self._serializer

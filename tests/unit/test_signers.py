@@ -906,6 +906,10 @@ class TestGeneratePresignedPost(unittest.TestCase):
         self.client.generate_presigned_post(
             self.bucket, self.key, Fields=fields, Conditions=conditions)
 
+        # The arguments should not be modified
+        self.assertEqual(conditions, [{'acl': 'public-read'}])
+        self.assertEqual(fields, {'acl': 'public-read'})
+
         _, post_kwargs = self.presign_post_mock.call_args
         request_dict = post_kwargs['request_dict']
         fields = post_kwargs['fields']
