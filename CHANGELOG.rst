@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.12.115
+========
+
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``config``: Update config client to latest version
+* api-change:``acm``: Update acm client to latest version
+* api-change:``iot``: Update iot client to latest version
+* api-change:``acm-pca``: Update acm-pca client to latest version
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``sagemaker``: Update sagemaker client to latest version
+
+
 1.12.114
 ========
 
