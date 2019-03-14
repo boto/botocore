@@ -26,7 +26,10 @@
       "input_token": "NextToken",
       "limit_key": "MaxDatapoints",
       "output_token": "NextToken",
-      "result_key": "MetricDataResults"
+      "result_key": [
+        "MetricDataResults",
+        "Messages"
+      ]
     }
   }
 }
