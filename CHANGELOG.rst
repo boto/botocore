@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.116
+========
+
+* api-change:``dms``: Update dms client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``chime``: Update chime client to latest version
+
+
 1.12.115
 ========
 
