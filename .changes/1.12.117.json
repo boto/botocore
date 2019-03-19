@@ -1,0 +1,12 @@
+[
+  {
+    "category": "``config``", 
+    "description": "Update config client to latest version", 
+    "type": "api-change"
+  }, 
+  {
+    "category": "``eks``", 
+    "description": "Update eks client to latest version", 
+    "type": "api-change"
+  }
+]
