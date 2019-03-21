@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.12.119
+========
+
+* api-change:``iot``: Update iot client to latest version
+* api-change:``lightsail``: Update lightsail client to latest version
+* api-change:``autoscaling``: Update autoscaling client to latest version
+* api-change:``events``: Update events client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+
+
 1.12.118
 ========
 
