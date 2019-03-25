@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.12.121
+========
+
+* api-change:``iotanalytics``: Update iotanalytics client to latest version
+* api-change:``robomaker``: Update robomaker client to latest version
+* api-change:``directconnect``: Update directconnect client to latest version
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``fms``: Update fms client to latest version
+* api-change:``iot1click-devices``: Update iot1click-devices client to latest version
+
+
 1.12.120
 ========
 
