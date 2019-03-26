@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.122
+========
+
+* api-change:``workmail``: Update workmail client to latest version
+* api-change:``glue``: Update glue client to latest version
+
+
 1.12.121
 ========
 
