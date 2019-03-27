@@ -29,6 +29,12 @@
       "limit_key": "limit",
       "output_token": "nextToken",
       "result_key": "virtualServices"
+    },
+    "ListTagsForResource": {
+      "input_token": "nextToken",
+      "limit_key": "limit",
+      "output_token": "nextToken",
+      "result_key": "tags"
     }
   }
 }
