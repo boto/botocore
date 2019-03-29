@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.12.124
+========
+
+* api-change:``servicecatalog``: Update servicecatalog client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+* api-change:``pinpoint-email``: Update pinpoint-email client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+
+
 1.12.123
 ========
 
