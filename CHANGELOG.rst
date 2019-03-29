@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.125
+========
+
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``greengrass``: Update greengrass client to latest version
+
+
 1.12.124
 ========
 
