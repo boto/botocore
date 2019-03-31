@@ -992,7 +992,7 @@
       "members":{
         "jobs":{
           "shape":"StringList",
-          "documentation":"<p>A space-separated list of up to 100 job IDs.</p>"
+          "documentation":"<p>A list of up to 100 job IDs.</p>"
         }
       }
     },
