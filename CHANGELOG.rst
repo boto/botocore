@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.126
+========
+
+* api-change:``emr``: Update emr client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+
+
 1.12.125
 ========
 
