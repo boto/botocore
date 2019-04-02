@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.127
+========
+
+* api-change:``securityhub``: Update securityhub client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``acm``: Update acm client to latest version
+
+
 1.12.126
 ========
 
