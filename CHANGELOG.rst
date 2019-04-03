@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.128
+========
+
+* api-change:``batch``: Update batch client to latest version
+* api-change:``comprehend``: Update comprehend client to latest version
+
+
 1.12.127
 ========
 
