@@ -126,6 +126,28 @@ class BaseS3ClientTest(unittest.TestCase):
         self.addCleanup(shutil.rmtree, tempdir)
         return tempdir
 
+    def wait_until_key_exists(self, bucket_name, key_name, extra_params=None,
+                              min_successes=3):
+        self._wait_for_key(bucket_name, key_name, extra_params,
+                           min_successes, exists=True)
+
+    def wait_until_key_not_exists(self, bucket_name, key_name, extra_params=None,
+                                  min_successes=3):
+        self._wait_for_key(bucket_name, key_name, extra_params,
+                           min_successes, exists=False)
+
+    def _wait_for_key(self, bucket_name, key_name, extra_params=None,
+                      min_successes=3, exists=True):
+        if exists:
+            waiter = self.client.get_waiter('object_exists')
+        else:
+            waiter = self.client.get_waiter('object_not_exists')
+        params = {'Bucket': bucket_name, 'Key': key_name}
+        if extra_params is not None:
+            params.update(extra_params)
+        for _ in range(min_successes):
+            waiter.wait(**params)
+
 
 class TestS3BaseWithBucket(BaseS3ClientTest):
     def setUp(self):
@@ -559,6 +581,7 @@ class BaseS3PresignTest(BaseS3ClientTest):
         self.client.put_object(
             Bucket=self.bucket_name, Key=key_name,
             Body=body)
+        self.wait_until_key_exists(self.bucket_name, key_name)
 
 
 class TestS3PresignUsStandard(BaseS3PresignTest):
