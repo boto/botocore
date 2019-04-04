@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.129
+========
+
+* api-change:``eks``: Update eks client to latest version
+* api-change:``iam``: Update iam client to latest version
+
+
 1.12.128
 ========
 
