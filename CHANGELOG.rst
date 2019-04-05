@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+1.12.130
+========
+
+* api-change:``mediaconvert``: Update mediaconvert client to latest version
+* api-change:``glue``: Update glue client to latest version
+* api-change:``comprehend``: Update comprehend client to latest version
+* api-change:``iot1click-devices``: Update iot1click-devices client to latest version
+* api-change:``medialive``: Update medialive client to latest version
+
+
 1.12.129
 ========
 
