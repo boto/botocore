@@ -121,6 +121,12 @@ class BaseS3ClientTest(unittest.TestCase):
         self.addCleanup(clear_out_bucket, bucket_name, region_name, True)
         return bucket_name
 
+    def create_object(self, key_name, body='foo'):
+        self.client.put_object(
+            Bucket=self.bucket_name, Key=key_name,
+            Body=body)
+        self.wait_until_key_exists(self.bucket_name, key_name)
+
     def make_tempdir(self):
         tempdir = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, tempdir)
@@ -153,11 +159,6 @@ class TestS3BaseWithBucket(BaseS3ClientTest):
     def setUp(self):
         super(TestS3BaseWithBucket, self).setUp()
         self.caught_exceptions = []
-
-    def create_object(self, key_name, body='foo'):
-        self.client.put_object(
-            Bucket=self.bucket_name, Key=key_name,
-            Body=body)
 
     def create_multipart_upload(self, key_name):
         parsed = self.client.create_multipart_upload(
@@ -576,12 +577,6 @@ class BaseS3PresignTest(BaseS3ClientTest):
     def setup_bucket(self):
         self.key = 'myobject'
         self.create_object(key_name=self.key)
-
-    def create_object(self, key_name, body='foo'):
-        self.client.put_object(
-            Bucket=self.bucket_name, Key=key_name,
-            Body=body)
-        self.wait_until_key_exists(self.bucket_name, key_name)
 
 
 class TestS3PresignUsStandard(BaseS3PresignTest):
