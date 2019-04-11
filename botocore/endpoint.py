@@ -31,7 +31,7 @@ from botocore import parsers
 
 logger = logging.getLogger(__name__)
 history_recorder = get_global_history_recorder()
-DEFAULT_TIMEOUT = 60
+DEFAULT_TIMEOUT = 3600
 MAX_POOL_CONNECTIONS = 10
 
 
