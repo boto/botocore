@@ -217,3 +217,8 @@ class TestEndpointResolver(unittest.TestCase):
         resolver = regions.EndpointResolver(self._template())
         result = resolver.construct_endpoint('not-regionalized')
         self.assertEqual(result['dnsSuffix'], 'amazonaws.com')
+
+    def test_returns_correct_partition_for_region(self):
+        resolver = regions.EndpointResolver(self._template())
+        partition = resolver.get_partition_for_region('us-foo')
+        self.assertEqual(partition, 'aws')

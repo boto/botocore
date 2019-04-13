@@ -135,6 +135,16 @@ class EndpointResolver(BaseEndpointResolver):
                 return result
             return None
 
+    def get_partition_for_region(self, region_name):
+        for partition in self._endpoint_data['partitions']:
+            if region_name in partition['regions']:
+                return partition['partition']
+            if 'regionRegex' not in partition:
+                continue
+            if re.compile(partition['regionRegex']).match(region_name):
+                return partition['partition']
+        raise ValueError('Invalid region name: {0}'.format(region_name))
+
         # Iterate over each partition until a match is found.
         for partition in self._endpoint_data['partitions']:
             result = self._endpoint_for_partition(
