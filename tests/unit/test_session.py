@@ -380,6 +380,13 @@ class TestSessionPartitionFiles(BaseSessionTest):
         regions = self.session.get_available_regions('__foo__')
         self.assertEqual([], regions)
 
+    def test_provides_correct_partition_for_region(self):
+        partition = self.session.get_partition_for_region('us-west-2')
+        self.assertEqual(partition, 'aws')
+
+    def test_raises_exception_for_invalid_region(self):
+        with self.assertRaises(ValueError):
+            self.session.get_partition_for_region('no-good-1')
 
 class TestSessionUserAgent(BaseSessionTest):
     def test_can_change_user_agent_name(self):
