@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+1.12.131
+========
+
+* api-change:``organizations``: Update organizations client to latest version
+* api-change:``mq``: Update mq client to latest version
+* api-change:``redshift``: Update redshift client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``cloudwatch``: Update cloudwatch client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+
+
 1.12.130
 ========
 
