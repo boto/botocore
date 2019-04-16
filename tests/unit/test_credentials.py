@@ -1845,7 +1845,7 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
             RoleArn='myrole', ExternalId='myid', RoleSessionName=mock.ANY)
 
     def test_assume_role_with_duration(self):
-        self.fake_config['profiles']['development']['duration_seconds'] = 7200 
+        self.fake_config['profiles']['development']['duration_seconds'] = 7200
         response = {
             'Credentials': {
                 'AccessKeyId': 'foo',
@@ -1864,7 +1864,7 @@ class TestAssumeRoleCredentialProvider(unittest.TestCase):
 
         client = client_creator.return_value
         client.assume_role.assert_called_with(
-            RoleArn='myrole', RoleSessionName=mock.ANY, 
+            RoleArn='myrole', RoleSessionName=mock.ANY,
             DurationSeconds=7200)
 
     def test_assume_role_with_bad_duration(self):

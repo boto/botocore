@@ -922,9 +922,9 @@ class EnvProvider(CredentialProvider):
         Search for credentials in explicit environment variables.
         """
 
-        access_key_var = self._mapping['access_key']
+        access_key = self.environ.get(self._mapping['access_key'], '')
 
-        if access_key_var in self.environ and not self.environ.get(access_key_var) == '':
+        if access_key:
             logger.info('Found credentials in environment variables.')
             fetcher = self._create_credentials_fetcher()
             credentials = fetcher(require_expiry=False)
@@ -953,30 +953,32 @@ class EnvProvider(CredentialProvider):
         def fetch_credentials(require_expiry=True):
             credentials = {}
 
-            access_key = environ.get(mapping['access_key'])
-            if access_key is None or access_key == '':
+            access_key = environ.get(mapping['access_key'], '')
+            if not access_key:
                 raise PartialCredentialsError(
                     provider=method, cred_var=mapping['access_key'])
             credentials['access_key'] = access_key
 
-            secret_key = environ.get(mapping['secret_key'])
-            if secret_key is None or secret_key == '':
+            secret_key = environ.get(mapping['secret_key'], '')
+            if not secret_key:
                 raise PartialCredentialsError(
                     provider=method, cred_var=mapping['secret_key'])
             credentials['secret_key'] = secret_key
 
-            token = None
+            credentials['token'] = None
             for token_env_var in mapping['token']:
-                if token_env_var in environ and not environ[token_env_var] == '':
-                    token = environ[token_env_var]
+                token = environ.get(token_env_var, '')
+                if token:
+                    credentials['token'] = token
                     break
-            credentials['token'] = token
 
-            expiry_time = environ.get(mapping['expiry_time'])
-            if require_expiry and expiry_time is None:
+            credentials['expiry_time'] = None
+            expiry_time = environ.get(mapping['expiry_time'], '')
+            if expiry_time:
+                credentials['expiry_time'] = expiry_time
+            if require_expiry and not expiry_time:
                 raise PartialCredentialsError(
                     provider=method, cred_var=mapping['expiry_time'])
-            credentials['expiry_time'] = expiry_time
 
             return credentials
 
