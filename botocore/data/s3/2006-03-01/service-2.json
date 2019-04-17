@@ -1601,6 +1601,7 @@
     "ContentLanguage":{"type":"string"},
     "ContentLength":{"type":"long"},
     "ContentMD5":{"type":"string"},
+    "ContentSHA256":{"type":"string"},
     "ContentRange":{"type":"string"},
     "ContentType":{"type":"string"},
     "ContinuationEvent":{
@@ -6787,6 +6788,12 @@
           "documentation":"<p>The base64-encoded 128-bit MD5 digest of the part data. This parameter is auto-populated when using the command from the CLI</p>",
           "location":"header",
           "locationName":"Content-MD5"
+        },
+        "ContentSHA256":{
+          "shape":"ContentSHA256",
+          "documentation":"<p>SHA-256 digest of the part data.</p>",
+          "location":"header",
+          "locationName":"X-Amz-Content-SHA256"
         },
         "ContentType":{
           "shape":"ContentType",
