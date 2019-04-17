@@ -552,59 +552,6 @@ class TestHandlers(BaseSessionTest):
                   'UserData': b64_user_data}
         self.assertEqual(params, result)
 
-    def test_register_retry_for_handlers_with_no_metadata(self):
-        no_endpoint_prefix = {'metadata': {}}
-        session = mock.Mock()
-        handlers.register_retries_for_service(service_data=no_endpoint_prefix,
-                                              session=mock.Mock(),
-                                              service_name='foo')
-        self.assertFalse(session.register.called)
-
-    def test_register_retry_for_handlers_with_no_service_id(self):
-        service_data = {
-            'metadata': {
-                'endpointPrefix': 'foo',
-            },
-        }
-        session = mock.Mock(spec=Session)
-        loader = mock.Mock(spec=Loader)
-        session.get_component.return_value = loader
-        service_name = 'foo'
-        with self.assertRaisesRegexp(MissingServiceIdError, service_name):
-            handlers.register_retries_for_service(
-                service_data=service_data,
-                session=session,
-                service_name=service_name,
-            )
-
-    def test_register_retry_handlers(self):
-        service_data = {
-            'metadata': {
-                'endpointPrefix': 'foo',
-                'serviceId': 'foo',
-            },
-        }
-        session = mock.Mock()
-        loader = mock.Mock()
-        session.get_component.return_value = loader
-        loader.load_data.return_value = {
-            'retry': {
-                '__default__': {
-                    'max_attempts': 10,
-                    'delay': {
-                        'type': 'exponential',
-                        'base': 2,
-                        'growth_factor': 5,
-                    },
-                },
-            },
-        }
-        handlers.register_retries_for_service(service_data=service_data,
-                                              session=session,
-                                              service_name='foo')
-        session.register.assert_called_with('needs-retry.foo', mock.ANY,
-                                            unique_id='retry-config-foo')
-
     def test_get_template_has_error_response(self):
         original = {'Error': {'Code': 'Message'}}
         handler_input = copy.deepcopy(original)
@@ -1054,10 +1001,12 @@ class TestRetryHandlerOrder(BaseSessionTest):
         return names
 
     def test_s3_special_case_is_before_other_retry(self):
+        client = self.session.create_client('s3')
         service_model = self.session.get_service_model('s3')
         operation = service_model.operation_model('CopyObject')
-        responses = self.session.emit(
+        responses = client.meta.events.emit(
             'needs-retry.s3.CopyObject',
+            request_dict={},
             response=(mock.Mock(), mock.Mock()), endpoint=mock.Mock(),
             operation=operation, attempts=1, caught_exception=None)
         # This is implementation specific, but we're trying to verify that
