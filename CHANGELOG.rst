@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.132
+========
+
+* api-change:``polly``: Update polly client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+
+
 1.12.131
 ========
 
