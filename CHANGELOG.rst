@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+1.12.133
+========
+
+* api-change:``kafka``: Update kafka client to latest version
+* api-change:``cognito-idp``: Update cognito-idp client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``worklink``: Update worklink client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+* api-change:``discovery``: Update discovery client to latest version
+* api-change:``organizations``: Update organizations client to latest version
+
+
 1.12.132
 ========
 
