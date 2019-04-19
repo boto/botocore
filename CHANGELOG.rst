@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.12.134
+========
+
+* api-change:``resource-groups``: Update resource-groups client to latest version
+* api-change:``transcribe``: Update transcribe client to latest version
+* api-change:``workspaces``: Update workspaces client to latest version
+
+
 1.12.133
 ========
 
