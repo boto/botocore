@@ -2,6 +2,21 @@
 CHANGELOG
 =========
 
+1.12.135
+========
+
+* api-change:``mediatailor``: Update mediatailor client to latest version
+* api-change:``rds``: Update rds client to latest version
+* api-change:``cloudformation``: Update cloudformation client to latest version
+* api-change:``ssm``: Update ssm client to latest version
+* api-change:``storagegateway``: Update storagegateway client to latest version
+* api-change:``route53``: Update route53 client to latest version
+* api-change:``alexaforbusiness``: Update alexaforbusiness client to latest version
+* api-change:``ec2``: Update ec2 client to latest version
+* api-change:``mediaconnect``: Update mediaconnect client to latest version
+* api-change:``textract``: Update textract client to latest version
+
+
 1.12.134
 ========
 
