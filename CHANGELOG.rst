@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.12.137
+========
+
+* api-change:``iam``: Update iam client to latest version
+* api-change:``sns``: Update sns client to latest version
+
+
 1.12.136
 ========
 
